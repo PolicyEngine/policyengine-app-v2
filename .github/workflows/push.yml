@@ -1,0 +1,40 @@
+name: Push
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  test:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install repository
+        run: npm ci
+      - name: Run tests
+        run: npm test
+      # Commenting out until Codecov is set up
+      # - name: Upload coverage reports to Codecov
+      #   uses: codecov/codecov-action@v4.2.0
+      #   env:
+      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      #   with:
+      #     verbose: true
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: policyengine-app-v2
+      - name: "Authenticate to Google Cloud"
+        uses: "google-github-actions/auth@v2"
+        with:
+          workload_identity_provider: "projects/83599293185/locations/global/workloadIdentityPools/prod-github-provider/providers/prod-github-provider"
+          service_account: "workflow-identity-provider@policyengine-app-v2.iam.gserviceaccount.com"
+      - name: Deploy
+        run: make deploy
