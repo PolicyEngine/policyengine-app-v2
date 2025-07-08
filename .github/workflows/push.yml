@@ -1,9 +1,10 @@
-name: Push
+name: PR
 
 on:
-  push:
+  pull_request:
     branches:
       - master
+      - feat/deploy
 
 jobs:
   test:
