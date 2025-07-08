@@ -28,14 +28,14 @@ jobs:
       #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       #   with:
       #     verbose: true
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: policyengine-app-v2
       - name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@v2"
         with:
           workload_identity_provider: "projects/83599293185/locations/global/workloadIdentityPools/prod-github-provider/providers/prod-github-provider"
           service_account: "workflow-identity-provider@policyengine-app-v2.iam.gserviceaccount.com"
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: policyengine-app-v2
       - name: Deploy
         run: make deploy
