@@ -5,7 +5,7 @@ handlers:
 - url: /assets
   static_dir: dist/assets
   secure: always
-  expiration: "1y"
+  expiration: "365d"
 
 # Common static files
 - url: /favicon.ico
