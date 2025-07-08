@@ -31,18 +31,6 @@ handlers:
   upload: dist/index.html
   secure: always
 
-# Skip unnecessary files
-skip_files:
-- node_modules/
-- src/                   # Source files (Vite builds to dist/)
-- ^(.*/)?\..*$           # Hidden files (starting with .)
-- ^(.*/)?.*\.md$         # Markdown files
-- ^(.*/)?.*\.ts$         # TypeScript files
-- ^(.*/)?.*\.tsx$        # TypeScript React files
-- ^(.*/)?Makefile$       # Makefile
-- ^\.git/                # .git directory
-- ^\.github/             # .github directory
-
 automatic_scaling:
   min_instances: 0
   max_instances: 5
