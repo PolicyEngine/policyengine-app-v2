@@ -1,0 +1,49 @@
+runtime: nodejs20
+
+handlers:
+# Vite builds assets with hashed filenames in /assets/
+- url: /assets
+  static_dir: dist/assets
+  secure: always
+  expiration: "1y"
+
+# Common static files
+- url: /favicon.ico
+  static_files: dist/favicon.ico
+  upload: dist/favicon.ico
+  secure: always
+
+- url: /manifest.json
+  static_files: dist/manifest.json
+  upload: dist/manifest.json
+  secure: always
+
+# Any other static files in dist root
+- url: /(.+\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))$
+  static_files: dist/\1
+  upload: dist/(.+\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))$
+  secure: always
+  expiration: "1y"
+
+# Handle React Router - serve index.html for all other routes
+- url: /.*
+  static_files: dist/index.html
+  upload: dist/index.html
+  secure: always
+
+# Skip unnecessary files
+skip_files:
+- node_modules/
+- src/
+- public/
+- "*.md"
+- "*.json"
+- "*.ts"
+- "*.tsx"
+- ".git/"
+- ".github/"
+- Makefile
+
+automatic_scaling:
+  min_instances: 0
+  max_instances: 5

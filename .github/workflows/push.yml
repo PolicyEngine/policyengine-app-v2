@@ -1,44 +1,48 @@
-name: PR
+name: Deploy to App Engine
 
 on:
-  pull_request:
+  pull_request: # For testing purposes; will be changed to push later
     branches:
       - master
-      - feat/deploy
+      - feat/deploy # For testing purposes; will be changed later
+
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
-  test:
-    name: Deploy
+  deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: "read"
-      id-token: "write"
+    
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-      - name: Install repository
-        run: npm ci
-      - name: Run tests
-        run: npm test
-      # Commenting out until Codecov is set up
-      # - name: Upload coverage reports to Codecov
-      #   uses: codecov/codecov-action@v4.2.0
-      #   env:
-      #     CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      #   with:
-      #     verbose: true
-      - name: "Authenticate to Google Cloud"
-        uses: "google-github-actions/auth@v2"
-        with:
-          workload_identity_provider: "projects/83599293185/locations/global/workloadIdentityPools/prod-github-provider/providers/prod-github-provider"
-          service_account: "workflow-identity-provider@policyengine-app-v2.iam.gserviceaccount.com"
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: policyengine-app-v2
-      - name: Deploy
-        run: make deploy
+    - name: Checkout repo
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests
+      run: npm test
+    
+    - name: Build application
+      run: npm run build
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: "projects/83599293185/locations/global/workloadIdentityPools/prod-github-provider/providers/prod-github-provider"
+        service_account: "workflow-identity-provider@policyengine-app-v2.iam.gserviceaccount.com"
+    
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: policyengine-app-v2
+    
+    - name: Deploy to App Engine
+      run: gcloud app deploy --quiet --project policyengine-app-v2
