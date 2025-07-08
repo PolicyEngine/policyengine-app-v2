@@ -23,7 +23,7 @@ handlers:
   static_files: dist/\1
   upload: dist/(.+\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2|ttf|eot))$
   secure: always
-  expiration: "1y"
+  expiration: "365d"
 
 # Handle React Router - serve index.html for all other routes
 - url: /.*
