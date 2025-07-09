@@ -2,9 +2,7 @@ name: Deploy to App Engine
 
 on:
   push:
-    branches: 
-      - master
-      - feat/deploy
+    branches: [master]
 
 permissions:
   id-token: write
@@ -31,12 +29,7 @@ jobs:
       run: npm test
     
     - name: Build application with Vite
-      run: |
-        npm run build
-        echo "Build completed. Contents of dist/:"
-        ls -la dist/
-        echo "Verifying index.html exists:"
-        test -f dist/index.html && echo "✓ index.html found" || echo "✗ index.html missing"
+      run: ../scripts/build-with-vite.sh
     
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
