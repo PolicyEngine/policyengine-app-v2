@@ -31,7 +31,7 @@ jobs:
       run: npm test
     
     - name: Build application with Vite
-      run: ../scripts/build-with-vite.sh
+      run: .github/scripts/build-with-vite.sh
     
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
