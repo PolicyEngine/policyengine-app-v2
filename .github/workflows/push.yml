@@ -1,10 +1,9 @@
 name: Deploy to App Engine
 
 on:
-  pull_request:
+  push:
     branches: 
       - master
-      - feat/deploy
 
 permissions:
   id-token: write
