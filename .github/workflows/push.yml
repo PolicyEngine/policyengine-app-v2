@@ -1,10 +1,10 @@
 name: Deploy to App Engine
 
 on:
-  pull_request: # For testing purposes; will be changed to push later
-    branches:
+  push:
+    branches: 
       - master
-      - feat/deploy # For testing purposes; will be changed later
+      - feat/deploy
 
 permissions:
   id-token: write
@@ -27,11 +27,16 @@ jobs:
     - name: Install dependencies
       run: npm ci
     
-    - name: Run tests
+    - name: Run tests (includes type checking)
       run: npm test
     
-    - name: Build application
-      run: npm run build
+    - name: Build application with Vite
+      run: |
+        npm run build
+        echo "Build completed. Contents of dist/:"
+        ls -la dist/
+        echo "Verifying index.html exists:"
+        test -f dist/index.html && echo "✓ index.html found" || echo "✗ index.html missing"
     
     - name: Authenticate to Google Cloud
       uses: google-github-actions/auth@v2
