@@ -1,5 +1,7 @@
 runtime: nodejs20
 
+service_account: workflow-identity-provider@policyengine-app-v2.iam.gserviceaccount.com
+
 handlers:
 # Vite builds assets with hashed filenames in /assets/
 - url: /assets
