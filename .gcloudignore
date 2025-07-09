@@ -16,11 +16,11 @@
 # Node.js dependencies:
 node_modules/
 
-# Source files (we only need the built dist/ directory)
+# Source files - we only need the built dist/ directory
 src/
 public/
 
-# Development files
+# Development and config files
 *.md
 *.ts
 *.tsx
@@ -33,7 +33,7 @@ eslint.config.js
 .prettierrc*
 .stylelintrc*
 
-# Build tools
+# Build tools and scripts
 Makefile
 package-lock.json
 

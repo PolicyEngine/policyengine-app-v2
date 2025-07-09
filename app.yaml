@@ -1,5 +1,8 @@
 runtime: nodejs20
 
+env_variables:
+  GOOGLE_NODE_RUN_SCRIPTS: ""
+
 handlers:
 # Vite builds assets with hashed filenames in /assets/
 - url: /assets
