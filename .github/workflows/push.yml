@@ -43,6 +43,9 @@ jobs:
       uses: google-github-actions/setup-gcloud@v2
       with:
         project_id: policyengine-app-v2
+        service_account: "workflow-identity-provider@policyengine-app-v2.iam.gserviceaccount.com"
     
     - name: Deploy to App Engine
       run: gcloud app deploy --quiet --project policyengine-app-v2
+      with:
+        service_account: "workflow-identity-provider@policyengine-app-v2.iam.gserviceaccount.com"
