@@ -1,8 +1,8 @@
-import IngredientCreationStartView from "../components/IngredientCreationModal";
-import { useDispatch } from 'react-redux'
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { TextInput } from '@mantine/core';
+import IngredientCreationStartView from '../components/IngredientCreationStartView';
 import { updateLabel } from '../reducers/policyReducer';
-import { TextInput } from "@mantine/core";
-import { useState } from "react";
 
 export default function PolicyCreationModal() {
   const dispatch = useDispatch();
@@ -10,10 +10,10 @@ export default function PolicyCreationModal() {
   // Manage instantaneous changes to the label input
   // locally, then emit the final to the reducer to avoid
   // visual lag in reducer updates
-  const [localLabel, setLocalLabel] = useState("");
+  const [localLabel, setLocalLabel] = useState('');
 
   function handleLocalLabelChange(value: string) {
-    console.log("Updating local label:", value);
+    console.log('Updating local label:', value);
     setLocalLabel(value);
   }
 
@@ -24,7 +24,7 @@ export default function PolicyCreationModal() {
       value={localLabel}
       onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
     />
-  )
+  );
 
   function submissionHandler() {
     dispatch(updateLabel(localLabel));

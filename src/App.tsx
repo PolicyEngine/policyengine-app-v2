@@ -1,9 +1,10 @@
 import '@mantine/core/styles.css';
+
+import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
 import { Router } from './Router';
-import { Provider } from 'react-redux';
-import { theme } from './theme';
 import { store } from './store';
+import { theme } from './theme';
 
 export default function App() {
   return (
