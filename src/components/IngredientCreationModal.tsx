@@ -1,15 +1,16 @@
-import { Button, Modal } from "@mantine/core";
+import { Button, Grid, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 import FormInputs, { FormInput } from "./FormInputs"; 
 
 
 interface IngredientCreationModalProps {
   title: string;
-  activationButtonText: string;
+  submitButtonText?: string; // Defaults to title
+  activationButtonText?: string; // Defaults to title
   formInputs?: FormInput[]; // Optional array of form inputs
 }
 
-export default function IngredientCreationModal({ title, activationButtonText, formInputs }: IngredientCreationModalProps) {
+export default function IngredientCreationModal({ title, activationButtonText, formInputs, submitButtonText }: IngredientCreationModalProps) {
 
   const [opened, {open, close}] = useDisclosure(false);
 
@@ -22,9 +23,13 @@ export default function IngredientCreationModal({ title, activationButtonText, f
       {/*form labels and inputs*/}
         {formInputs && <FormInputs formInputs={formInputs} />}
       {/*button panel: Cancel and Create X*/}
+        <Grid>
+          <Grid.Col span={6}><Button variant="default" onClick={close} fullWidth>Cancel</Button></Grid.Col>
+          <Grid.Col span={6}><Button variant="filled" fullWidth>{submitButtonText || title}</Button></Grid.Col>
+        </Grid>
       </Modal>
       <Button variant="default" onClick={open}>
-        {activationButtonText}
+        {activationButtonText || title}
       </Button>
     </>
   )

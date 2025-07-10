@@ -14,8 +14,7 @@ export default function PolicyCreationModal() {
 
   return (
     <IngredientCreationModal
-      title="Create Policy"
-      activationButtonText="Create Policy"
+      title="Create policy"
       formInputs={formInputs}
     />
   );
