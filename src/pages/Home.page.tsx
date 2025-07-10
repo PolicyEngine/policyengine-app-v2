@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@mantine/core';
-import PolicyCreationModal from '../modals/PolicyCreationModal';
+import PolicyCreationView from '../policyFlow/PolicyCreationView';
 
 export function HomePage() {
   // Note: This pagination function is for testing purposes only.
   const pages = [
     { name: 'home', component: null },
-    { name: 'policy-input-1', component: <PolicyCreationModal /> },
+    { name: 'policy-input-1', component: <PolicyCreationView /> },
   ];
 
   const [currentPage, setCurrentPage] = useState(pages[0]);

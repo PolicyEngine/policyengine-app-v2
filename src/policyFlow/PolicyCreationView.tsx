@@ -4,7 +4,7 @@ import { TextInput } from '@mantine/core';
 import IngredientCreationStartView from '../components/IngredientCreationStartView';
 import { updateLabel } from '../reducers/policyReducer';
 
-export default function PolicyCreationModal() {
+export default function PolicyCreationView() {
   const dispatch = useDispatch();
 
   // Manage instantaneous changes to the label input
