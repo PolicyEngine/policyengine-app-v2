@@ -1,8 +1,8 @@
-import { Button, Grid, Modal } from "@mantine/core";
+import { Button, Container, Grid, Modal } from "@mantine/core";
 import { useDisclosure } from "@mantine/hooks";
 
 
-interface IngredientCreationModalProps {
+interface IngredientCreationStartViewProps {
   title: string;
   submitButtonText?: string; // Defaults to title
   activationButtonText?: string; // Defaults to title
@@ -10,13 +10,14 @@ interface IngredientCreationModalProps {
   submissionHandler: CallableFunction; // Function to handle form submission
 }
 
-export default function IngredientCreationModal({ title, activationButtonText, formInputs, submitButtonText, submissionHandler }: IngredientCreationModalProps) {
+export default function IngredientCreationStartView({ title, activationButtonText, formInputs, submitButtonText, submissionHandler }: IngredientCreationStartViewProps) {
 
   const [opened, {open, close}] = useDisclosure(false);
 
   return (
     <>
-      <Modal opened={opened} onClose={close} title={title} centered>
+      {/*<Modal opened={opened} onClose={close} title={title} centered>*/}
+      <Container >
       {/*icon*/}
       {/*subtitle*/}
       {/*break*/}
@@ -27,10 +28,8 @@ export default function IngredientCreationModal({ title, activationButtonText, f
           <Grid.Col span={6}><Button variant="default" onClick={close} fullWidth>Cancel</Button></Grid.Col>
           <Grid.Col span={6}><Button variant="filled" fullWidth onClick={() => submissionHandler()}>{submitButtonText || title}</Button></Grid.Col>
         </Grid>
-      </Modal>
-      <Button variant="default" onClick={open}>
-        {activationButtonText || title}
-      </Button>
+      </Container>
+      {/*</Modal>*/}
     </>
   )
 }

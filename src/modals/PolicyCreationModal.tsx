@@ -1,4 +1,4 @@
-import IngredientCreationModal from "../components/IngredientCreationModal";
+import IngredientCreationStartView from "../components/IngredientCreationModal";
 import { useDispatch } from 'react-redux'
 import { updateLabel } from '../reducers/policyReducer';
 import { TextInput } from "@mantine/core";
@@ -31,7 +31,7 @@ export default function PolicyCreationModal() {
   }
 
   return (
-    <IngredientCreationModal
+    <IngredientCreationStartView
       title="Create policy"
       formInputs={formInputs}
       submissionHandler={submissionHandler}
