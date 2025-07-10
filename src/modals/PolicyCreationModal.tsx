@@ -11,11 +11,17 @@ export default function PolicyCreationModal() {
     }
   ];
 
+  function submissionHandler() {
+    // Handle the form submission logic here
+    console.log("Form submitted");
+  }
+
 
   return (
     <IngredientCreationModal
       title="Create policy"
       formInputs={formInputs}
+      submissionHandler={submissionHandler}
     />
   );
 }
