@@ -1,21 +1,26 @@
-import { FormInput } from "@/components/FormInputs";
 import IngredientCreationModal from "../components/IngredientCreationModal";
+import { useDispatch } from 'react-redux'
+import { updateLabel } from '../reducers/policyReducer';
+import { TextInput } from "@mantine/core";
+import { useState } from "react";
 
 export default function PolicyCreationModal() {
+  const dispatch = useDispatch();
 
-  const formInputs: FormInput[] = [
-    {
-      label: "Reform title",
-      inputType: "text",
-      placeholder: "Policy name"
-    }
-  ];
+  const [localPolicyLabel, setLocalPolicyLabel] = useState("");
+
+  const formInputs = (
+    <TextInput
+      label="Reform title"
+      placeholder="Policy name"
+      value={localPolicyLabel}
+      onChange={(e) => setLocalPolicyLabel(e.currentTarget.value)}
+    />
+  )
 
   function submissionHandler() {
-    // Handle the form submission logic here
-    console.log("Form submitted");
+    dispatch(updateLabel(localPolicyLabel));
   }
-
 
   return (
     <IngredientCreationModal
