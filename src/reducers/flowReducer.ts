@@ -1,25 +1,30 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Flow, FlowCollection } from '../flows/types';
+import { Flow } from '../flows/types';
 
-const initialState: FlowCollection = [];
+const initialState: Flow = {
+  name: '',
+  initialFrame: null,
+  frames: {},
+}
 
 export const flowSlice = createSlice({
   name: 'flow',
   initialState,
   reducers: {
-    addFlow: (state, action: PayloadAction<Flow>) => {
-      state.push(action.payload);
+    clearFlow: (state) => {
+      state.name = '';
+      state.initialFrame = null;
+      state.frames = {};
     },
-    removeFlowByName: (state, action: PayloadAction<string>) => {
-      return state.filter(flow => flow.name !== action.payload);
+    setFlow: (state, action: PayloadAction<Flow>) => {
+      state.name = action.payload.name;
+      state.initialFrame = action.payload.initialFrame;
+      state.frames = action.payload.frames;
     },
-    clearFlows: (state) => {
-      state = [];
-    }
   }
 });
 
 // Action creators are generated for each case reducer function
-export const { addFlow, removeFlowByName } = flowSlice.actions;
+export const { clearFlow, setFlow } = flowSlice.actions;
 
 export default flowSlice.reducer;

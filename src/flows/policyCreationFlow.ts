@@ -1,12 +1,12 @@
-import { Flow, FlowFrame, FlowCollection } from "./types";
-import PolicyCreationView from "@/policyFlow/PolicyCreationView";
+import { Flow } from "./types";
 
 export const policyCreationFlow: Flow = {
-  name: "policy-creation",
+  name: "policyCreation",
+  initialFrame: "PolicyCreationView",
   frames: [
     {
-      name: "policy-input-1",
-      frame: PolicyCreationView,
+      name: "policyCreationView",
+      component: "PolicyCreationView",
       nextButtonText: "Next",
     },
   ],

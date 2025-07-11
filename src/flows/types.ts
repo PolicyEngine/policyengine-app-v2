@@ -1,12 +1,17 @@
+import { ComponentKey } from "./registry";
+
+export interface EventList {
+  [eventName: string]: string
+}
+
 export interface FlowFrame {
   name: string;
-  frame: React.ComponentType;
-  nextButtonText?: string; // Defaults to "Next"
+  component: string;
+  on: EventList;
 }
 
 export interface Flow {
   name: string;
-  frames: FlowFrame[];
+  initialFrame: ComponentKey | null;
+  frames: Record<string, ComponentKey> | {};
 }
-
-export type FlowCollection = Flow[]
