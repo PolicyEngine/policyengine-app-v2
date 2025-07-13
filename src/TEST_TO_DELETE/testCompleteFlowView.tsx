@@ -1,18 +1,19 @@
-import { Button } from "@mantine/core";
-
-import { FlowComponentProps } from "@/flows/types";
+import { Button } from '@mantine/core';
+import { FlowComponentProps } from '@/flows/types';
 
 export default function TestCompleteView({ onNavigate, onReturn, flowConfig }: FlowComponentProps) {
-
   function handleNext() {
-    console.log("Navigating to next view");
+    console.log('Navigating to next view');
     onNavigate('next');
   }
 
   return (
     <div>
       <h1>Complete Flow View</h1>
-      <p>This is a test component from the "complete" flow, which integrates the policy flow inside a dead-end loop that returns back to this component after completion.</p>
+      <p>
+        This is a test component from the "complete" flow, which integrates the policy flow inside a
+        dead-end loop that returns back to this component after completion.
+      </p>
       <Button variant="default" onClick={handleNext}>
         Next
       </Button>

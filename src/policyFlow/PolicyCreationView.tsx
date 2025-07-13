@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
+import { FlowComponentProps } from '@/flows/types';
 import IngredientCreationStartView from '../components/IngredientCreationStartView';
 import { updateLabel } from '../reducers/policyReducer';
-import { FlowComponentProps } from "@/flows/types";
 
-export default function PolicyCreationView({ onNavigate, onReturn, flowConfig }: FlowComponentProps) {
+export default function PolicyCreationView({
+  onNavigate,
+  onReturn,
+  flowConfig,
+}: FlowComponentProps) {
   const dispatch = useDispatch();
 
   // Manage instantaneous changes to the label input

@@ -1,11 +1,9 @@
-import { Button } from "@mantine/core";
-
-import { FlowComponentProps } from "@/flows/types";
+import { Button } from '@mantine/core';
+import { FlowComponentProps } from '@/flows/types';
 
 export default function PolicyTestView({ onNavigate, onReturn, flowConfig }: FlowComponentProps) {
-
   function handleNext() {
-    console.log("Navigating to next view");
+    console.log('Navigating to next view');
     onNavigate('next');
   }
 

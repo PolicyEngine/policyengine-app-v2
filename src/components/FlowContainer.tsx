@@ -1,7 +1,7 @@
-import { useSelector, useDispatch } from "react-redux";
-import { componentRegistry, flowRegistry } from "@/flows/registry";
-import { isFlowKey, isComponentKey } from "@/flows/types";
-import { navigateToFrame, navigateToFlow, returnFromFlow } from "@/reducers/flowReducer";
+import { useDispatch, useSelector } from 'react-redux';
+import { componentRegistry, flowRegistry } from '@/flows/registry';
+import { isComponentKey, isFlowKey } from '@/flows/types';
+import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flowReducer';
 
 export default function FlowContainer() {
   const { currentFlow, currentFrame } = useSelector((state: any) => state.flow);
@@ -17,7 +17,7 @@ export default function FlowContainer() {
 
     const frameConfig = currentFlow.frames[currentFrame];
     const target = frameConfig.on[eventName];
-    
+
     if (!target) {
       console.error(`No target defined for event ${eventName} in frame ${currentFrame}`);
       console.log('Available events:', Object.keys(frameConfig.on));
@@ -27,7 +27,7 @@ export default function FlowContainer() {
     console.log(`Navigating from ${currentFrame} via ${eventName} to ${target}`);
 
     // Handle special return keyword
-    if (target === "__return__") {
+    if (target === '__return__') {
       dispatch(returnFromFlow());
       return;
     }
@@ -50,7 +50,7 @@ export default function FlowContainer() {
 
   // Get the component to render
   const componentKey = currentFrame as keyof typeof componentRegistry;
-  
+
   // Check if the component exists in the registry
   if (!(componentKey in componentRegistry)) {
     return (
@@ -65,7 +65,7 @@ export default function FlowContainer() {
 
   return (
     <>
-      <Component 
+      <Component
         onNavigate={handleNavigate}
         onReturn={handleReturn}
         flowConfig={currentFlow.frames[currentFrame]}

@@ -1,50 +1,50 @@
-import { Flow } from "./types";
+import { Flow } from './types';
 
 export const PolicyCreationFlow: Flow = {
-  initialFrame: "PolicyCreationView",
+  initialFrame: 'PolicyCreationView',
   frames: {
     PolicyCreationView: {
-      component: "PolicyCreationView",
+      component: 'PolicyCreationView',
       on: {
-        "next": "PolicyTestView"
-      }
+        next: 'PolicyTestView',
+      },
     },
     PolicyTestView: {
-      component: "PolicyTestView",
+      component: 'PolicyTestView',
       on: {
-        "next": "__return__"
-      }
-    }
-  }
+        next: '__return__',
+      },
+    },
+  },
 };
 
 // TODO: Delete TestFlow and TestCompleteFlow once testing is complete
 export const TestFlow: Flow = {
-  initialFrame: "TestView2",
+  initialFrame: 'TestView2',
   frames: {
     TestView2: {
-      component: "TestView2",
+      component: 'TestView2',
       on: {
-        "next": "TestView3"
-      }
+        next: 'TestView3',
+      },
     },
     TestView3: {
-      component: "TestView3",
+      component: 'TestView3',
       on: {
-        "next": "__return__"
-      }
-    }
+        next: '__return__',
+      },
+    },
   },
-}
+};
 
 export const TestCompleteFlow: Flow = {
-  initialFrame: "TestCompleteView",
+  initialFrame: 'TestCompleteView',
   frames: {
     TestCompleteView: {
-      component: "TestCompleteView",
+      component: 'TestCompleteView',
       on: {
-        "next": "PolicyCreationFlow"
-      }
-    }
+        next: 'PolicyCreationFlow',
+      },
+    },
   },
-}
+};

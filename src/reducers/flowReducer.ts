@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Flow } from '../flows/types';
 import { ComponentKey } from '../flows/registry';
+import { Flow } from '../flows/types';
 
 interface FlowState {
   currentFlow: Flow | null;
@@ -16,7 +16,7 @@ const initialState: FlowState = {
   currentFlow: null,
   currentFrame: null,
   flowStack: [],
-}
+};
 
 export const flowSlice = createSlice({
   name: 'flow',
@@ -47,10 +47,13 @@ export const flowSlice = createSlice({
           frame: action.payload.returnFrame || state.currentFrame,
         });
       }
-      
+
       // Set new flow as current
       state.currentFlow = action.payload.flow;
-      if (action.payload.flow.initialFrame && typeof action.payload.flow.initialFrame === 'string') {
+      if (
+        action.payload.flow.initialFrame &&
+        typeof action.payload.flow.initialFrame === 'string'
+      ) {
         state.currentFrame = action.payload.flow.initialFrame as ComponentKey;
       }
     },
@@ -62,15 +65,10 @@ export const flowSlice = createSlice({
         state.currentFrame = previousState.frame;
       }
     },
-  }
+  },
 });
 
-export const { 
-  clearFlow, 
-  setFlow, 
-  navigateToFrame, 
-  navigateToFlow, 
-  returnFromFlow 
-} = flowSlice.actions;
+export const { clearFlow, setFlow, navigateToFrame, navigateToFlow, returnFromFlow } =
+  flowSlice.actions;
 
 export default flowSlice.reducer;

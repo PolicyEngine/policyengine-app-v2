@@ -1,8 +1,8 @@
-import { ComponentKey, FlowKey, componentRegistry, flowRegistry } from "./registry";
+import { ComponentKey, componentRegistry, FlowKey, flowRegistry } from './registry';
 
 export interface EventList {
   // TODO: Define events in a more structured way
-  [eventName: string]: string | FlowKey; 
+  [eventName: string]: string | FlowKey;
 }
 
 export interface FlowFrame {
@@ -11,8 +11,8 @@ export interface FlowFrame {
 }
 
 export interface Flow {
-  initialFrame: ComponentKey | FlowKey | null; 
-  frames: Record<string, FlowFrame>; 
+  initialFrame: ComponentKey | FlowKey | null;
+  frames: Record<string, FlowFrame>;
 }
 
 // Helper type to distinguish between component and flow references
