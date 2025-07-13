@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
+import flowReducer from './reducers/flowReducer';
 import policyReducer from './reducers/policyReducer';
 
 export const store = configureStore({
   reducer: {
     policy: policyReducer,
+    flow: flowReducer,
   },
 });
 
