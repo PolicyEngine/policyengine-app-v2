@@ -5,11 +5,7 @@ import { FlowComponentProps } from '@/flows/types';
 import IngredientCreationStartView from '../components/IngredientCreationStartView';
 import { updateLabel } from '../reducers/policyReducer';
 
-export default function PolicyCreationView({
-  onNavigate,
-  onReturn,
-  flowConfig,
-}: FlowComponentProps) {
+export default function PolicyCreationView({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
 
   // Manage instantaneous changes to the label input

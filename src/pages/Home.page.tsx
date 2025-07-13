@@ -1,9 +1,7 @@
-import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow, TestCompleteFlow, TestFlow } from '@/flows/policyCreationFlow';
-import PolicyCreationView from '../policyFlow/PolicyCreationView';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 export function HomePage() {

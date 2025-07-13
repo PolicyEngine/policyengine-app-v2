@@ -1,7 +1,7 @@
 import { Button } from '@mantine/core';
 import { FlowComponentProps } from '@/flows/types';
 
-export default function TestCompleteView({ onNavigate, onReturn, flowConfig }: FlowComponentProps) {
+export default function TestCompleteView({ onNavigate }: FlowComponentProps) {
   function handleNext() {
     console.log('Navigating to next view');
     onNavigate('next');

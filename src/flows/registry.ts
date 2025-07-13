@@ -6,17 +6,17 @@ import TestView3 from '@/TEST_TO_DELETE/testView3';
 import { PolicyCreationFlow, TestCompleteFlow, TestFlow } from './policyCreationFlow';
 
 export const componentRegistry = {
-  PolicyCreationView: PolicyCreationView,
-  PolicyTestView: PolicyTestView,
-  TestView2: TestView2,
-  TestView3: TestView3,
-  TestCompleteView: TestCompleteView,
+  PolicyCreationView,
+  PolicyTestView,
+  TestView2,
+  TestView3,
+  TestCompleteView,
 } as const;
 
 export const flowRegistry = {
-  PolicyCreationFlow: PolicyCreationFlow,
-  TestFlow: TestFlow,
-  TestCompleteFlow: TestCompleteFlow,
+  PolicyCreationFlow,
+  TestFlow,
+  TestCompleteFlow,
 } as const;
 
 export type ComponentKey = keyof typeof componentRegistry;
