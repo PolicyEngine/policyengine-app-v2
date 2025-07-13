@@ -3,8 +3,9 @@ import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import IngredientCreationStartView from '../components/IngredientCreationStartView';
 import { updateLabel } from '../reducers/policyReducer';
+import { FlowComponentProps } from "@/flows/types";
 
-export default function PolicyCreationView() {
+export default function PolicyCreationView({ onNavigate, onReturn, flowConfig }: FlowComponentProps) {
   const dispatch = useDispatch();
 
   // Manage instantaneous changes to the label input
@@ -13,7 +14,6 @@ export default function PolicyCreationView() {
   const [localLabel, setLocalLabel] = useState('');
 
   function handleLocalLabelChange(value: string) {
-    console.log('Updating local label:', value);
     setLocalLabel(value);
   }
 
@@ -28,6 +28,7 @@ export default function PolicyCreationView() {
 
   function submissionHandler() {
     dispatch(updateLabel(localLabel));
+    onNavigate('next');
   }
 
   return (

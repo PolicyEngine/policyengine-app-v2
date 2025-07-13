@@ -1,33 +1,75 @@
-import { useSelector } from "react-redux"
-import { componentRegistry } from "@/flows/registry";
+import { useSelector, useDispatch } from "react-redux";
+import { componentRegistry, flowRegistry } from "@/flows/registry";
+import { isFlowKey, isComponentKey } from "@/flows/types";
+import { navigateToFrame, navigateToFlow, returnFromFlow } from "@/reducers/flowReducer";
 
 export default function FlowContainer() {
-  const flow = useSelector((state: any) => state.flow);
+  const { currentFlow, currentFrame } = useSelector((state: any) => state.flow);
+  const dispatch = useDispatch();
 
-  if (!flow || !flow.initialFrame) {
+  if (!currentFlow || !currentFrame) {
     return <p>No flow available</p>;
   }
 
-  // Temporarily just get the initial frame from the flow
-  const componentName = flow.initialFrame;
+  // Handle navigation function that components can use
+  const handleNavigate = (eventName: string) => {
+    console.log(`Handling navigation for event: ${eventName}`);
 
+    const frameConfig = currentFlow.frames[currentFrame];
+    const target = frameConfig.on[eventName];
+    
+    if (!target) {
+      console.error(`No target defined for event ${eventName} in frame ${currentFrame}`);
+      console.log('Available events:', Object.keys(frameConfig.on));
+      return;
+    }
+
+    console.log(`Navigating from ${currentFrame} via ${eventName} to ${target}`);
+
+    // Handle special return keyword
+    if (target === "__return__") {
+      dispatch(returnFromFlow());
+      return;
+    }
+
+    // Check if target is a flow or component
+    if (isFlowKey(target)) {
+      const targetFlow = flowRegistry[target];
+      dispatch(navigateToFlow({ flow: targetFlow }));
+    } else if (isComponentKey(target)) {
+      dispatch(navigateToFrame(target));
+    } else {
+      console.error(`Unknown target type: ${target}`);
+    }
+  };
+
+  // Handle returning from a subflow
+  const handleReturn = () => {
+    dispatch(returnFromFlow());
+  };
+
+  // Get the component to render
+  const componentKey = currentFrame as keyof typeof componentRegistry;
+  
   // Check if the component exists in the registry
-  const hasKey = componentName in componentRegistry;
-
-  const Component = componentRegistry[componentName as keyof typeof componentRegistry];
-
-  if (!Component) {
+  if (!(componentKey in componentRegistry)) {
     return (
       <div>
-        <p>Component not found: {componentName}</p>
+        <p>Component not found: {currentFrame}</p>
         <p>Available components: {Object.keys(componentRegistry).join(', ')}</p>
       </div>
     );
   }
 
+  const Component = componentRegistry[componentKey];
+
   return (
     <>
-      <Component />
+      <Component 
+        onNavigate={handleNavigate}
+        onReturn={handleReturn}
+        flowConfig={currentFlow.frames[currentFrame]}
+      />
     </>
   );
 }

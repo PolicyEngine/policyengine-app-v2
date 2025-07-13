@@ -1,17 +1,34 @@
-import { ComponentKey } from "./registry";
+import { ComponentKey, FlowKey, componentRegistry, flowRegistry } from "./registry";
 
 export interface EventList {
-  [eventName: string]: string
+  // TODO: Define events in a more structured way
+  [eventName: string]: string | FlowKey; 
 }
 
 export interface FlowFrame {
-  name: string;
-  component: string;
+  component: ComponentKey;
   on: EventList;
 }
 
 export interface Flow {
-  name: string;
-  initialFrame: ComponentKey | null;
-  frames: Record<string, ComponentKey> | {};
+  initialFrame: ComponentKey | FlowKey | null; 
+  frames: Record<string, FlowFrame>; 
+}
+
+// Helper type to distinguish between component and flow references
+export type FrameTarget = ComponentKey | FlowKey;
+
+export function isFlowKey(target: string): target is FlowKey {
+  return target in flowRegistry;
+}
+
+export function isComponentKey(target: string): target is ComponentKey {
+  return !isFlowKey(target);
+}
+
+// Define the props that all flow components receive
+export interface FlowComponentProps {
+  onNavigate: (eventName: string) => void;
+  onReturn: () => void;
+  flowConfig: FlowFrame;
 }

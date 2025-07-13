@@ -1,8 +1,23 @@
 import PolicyCreationView from "@/policyFlow/PolicyCreationView";
+import PolicyTestView from "@/TEST_TO_DELETE/policyTestView";
+import TestView2 from "@/TEST_TO_DELETE/testView2";
+import TestView3 from "@/TEST_TO_DELETE/testView3";
+import { PolicyCreationFlow, TestCompleteFlow, TestFlow } from "./policyCreationFlow";
+import TestCompleteView from "@/TEST_TO_DELETE/testCompleteFlowView";
 
 export const componentRegistry = {
-  'PolicyCreationView': PolicyCreationView,
-  // Add other components here as needed
+  "PolicyCreationView": PolicyCreationView,
+  "PolicyTestView": PolicyTestView,
+  "TestView2": TestView2,
+  "TestView3": TestView3,
+  "TestCompleteView": TestCompleteView
+} as const;
+
+export const flowRegistry = {
+  "PolicyCreationFlow": PolicyCreationFlow,
+  "TestFlow": TestFlow,
+  "TestCompleteFlow": TestCompleteFlow
 } as const;
 
 export type ComponentKey = keyof typeof componentRegistry;
+export type FlowKey = keyof typeof flowRegistry;
