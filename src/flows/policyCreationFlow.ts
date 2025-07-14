@@ -1,10 +1,16 @@
 import { Flow } from './types';
 
 export const PolicyCreationFlow: Flow = {
-  initialFrame: 'PolicyCreationView',
+  initialFrame: 'PolicyCreationFrame',
   frames: {
-    PolicyCreationView: {
-      component: 'PolicyCreationView',
+    PolicyCreationFrame: {
+      component: 'PolicyCreationFrame',
+      on: {
+        next: 'PolicyParameterSelectorFrame',
+      },
+    },
+    PolicyParameterSelectorFrame: {
+      component: 'PolicyParameterSelectorFrame',
       on: {
         next: 'PolicyTestView',
       },
