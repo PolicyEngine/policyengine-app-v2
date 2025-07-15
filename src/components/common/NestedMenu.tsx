@@ -13,6 +13,9 @@ interface NestedMenuProps {
 
 export default function NestedMenu({ menuOptions }: NestedMenuProps) {
   const [active, setActive] = useState<string | null>(null);
+
+  // Manually control what's been selected so that we render deeper menu levels
+  // on demand; vastly improves runtime for larger menu sets, e.g., US policy params
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
 
   function handleClick(name: string) {
