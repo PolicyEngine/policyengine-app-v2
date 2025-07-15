@@ -4,22 +4,12 @@ import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow, TestCompleteFlow, TestFlow } from '@/flows/policyCreationFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
-import NestedMenu from '@/components/common/NestedMenu';
-import { mockParamFolder } from '@/TEST_TO_DELETE/mockParamFolder';
-
 export function HomePage() {
   const dispatch = useDispatch();
   // Note: Below is for testing purposes only
   return (
     <>
       <h1>TODO: Home Page</h1>
-          <div style={{ padding: 20, maxWidth: 400 }}>
-      <h2>Nested Parameter Menu</h2>
-      <NestedMenu 
-        data={mockParamFolder}
-        onItemClick={(item) => console.log('Parent received click:', item)}
-      />
-    </div>
       <Button variant="default" onClick={() => dispatch(clearFlow())}>
         Clear all flows
       </Button>

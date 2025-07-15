@@ -1,10 +1,9 @@
-import PolicyParameterSelectorHeader from "@/components/policyParameterSelectorFrame/header";
-import PolicyParameterSelectorMenu from "@/components/policyParameterSelectorFrame/paramSelectorMenu";
-import { FlowComponentProps } from "@/flows/types";
-import { Box, Grid, Stack } from "@mantine/core";
+import { Box, Grid, Stack } from '@mantine/core';
+import PolicyParameterSelectorHeader from '@/components/policyParameterSelectorFrame/header';
+import PolicyParameterSelectorMenu from '@/components/policyParameterSelectorFrame/paramSelectorMenu';
+import { FlowComponentProps } from '@/flows/types';
 
 export default function PolicyParameterSelectorFrame({ onNavigate }: FlowComponentProps) {
-
   return (
     <>
       <Box h="100%" maw="100vw">
@@ -22,6 +21,5 @@ export default function PolicyParameterSelectorFrame({ onNavigate }: FlowCompone
         </Stack>
       </Box>
     </>
-  )
-
+  );
 }
