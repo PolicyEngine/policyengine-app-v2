@@ -10,6 +10,19 @@ export const mockParamMetadata: {"parameters": ParameterMetadata} = {
       "economy": true,
       "household": true
     },
+    "gov.aca.max_child_count": {
+      "type": "parameter",
+      "parameter": "gov.aca.max_child_count",
+      "description": "Maximum number of children who pay an age-based ACA plan premium. This parameter is yearly.",
+      "label": "ACA maximum child count",
+      "unit": null,
+      "period": null,
+      "values": {
+        "2014-01-01": 3
+      },
+      "economy": true,
+      "household": true
+    },
     "gov.states": {
       "type": "parameterNode",
       "parameter": "gov.states",
