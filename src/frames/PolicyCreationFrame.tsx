@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
-import { FlowComponentProps } from '@/flows/types';
+import { FlowComponentProps } from '@/types/flow';
 import IngredientCreationStartView from '../components/IngredientCreationStartView';
 import { updateLabel } from '../reducers/policyReducer';
 

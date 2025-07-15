@@ -1,4 +1,4 @@
-import { ComponentKey, FlowKey, flowRegistry } from './registry';
+import { ComponentKey, FlowKey, flowRegistry } from '../flows/registry';
 
 export interface EventList {
   // TODO: Define events in a more structured way

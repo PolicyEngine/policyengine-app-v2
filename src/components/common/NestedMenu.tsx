@@ -9,9 +9,10 @@ interface NestedMenuOptions {
 
 interface NestedMenuProps {
   menuOptions: NestedMenuOptions[];
+  onItemClick?: (name: string) => void; // Optional callback for item click
 }
 
-export default function NestedMenu({ menuOptions }: NestedMenuProps) {
+export default function NestedMenu({ menuOptions, onItemClick }: NestedMenuProps) {
   const [active, setActive] = useState<string | null>(null);
 
   // Manually control what's been selected so that we render deeper menu levels
@@ -19,6 +20,9 @@ export default function NestedMenu({ menuOptions }: NestedMenuProps) {
   const [selectedSet, setSelectedSet] = useState<Set<string>>(new Set());
 
   function handleClick(name: string) {
+    if (onItemClick) {
+      onItemClick(name); // Call the optional callback if provided
+    }
     setActive(name);
     setSelectedSet((prev) => {
       const newSet = new Set(prev);
@@ -32,7 +36,6 @@ export default function NestedMenu({ menuOptions }: NestedMenuProps) {
   }
 
   function mapOverOneParamLevel(list: NestedMenuOptions[]) {
-    console.log('Mapping over one parameter level:', list);
     return list.map((item: NestedMenuOptions) => {
       return (
         <NavLink

@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { componentRegistry, flowRegistry } from '@/flows/registry';
-import { isComponentKey, isFlowKey } from '@/flows/types';
+import { isComponentKey, isFlowKey } from '@/types/flow';
 import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flowReducer';
 
 export default function FlowContainer() {

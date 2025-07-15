@@ -1,4 +1,4 @@
-import { Flow } from './types';
+import { Flow } from '../types/flow';
 
 export const PolicyCreationFlow: Flow = {
   initialFrame: 'PolicyCreationFrame',
