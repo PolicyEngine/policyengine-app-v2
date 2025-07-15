@@ -1,14 +1,13 @@
 import { Box, Divider, Stack, Text } from '@mantine/core';
 import { mockParamFolder } from '@/TEST_TO_DELETE/mockParamFolder';
-import NestedMenu from '../common/NestedMenu';
+import NestedMenu from '../common/nestedMenu';
 
 export default function PolicyParameterSelectorMenu() {
   return (
     <Stack>
       <SelectorMenuHeader />
       <Divider my="xs" />
-      <Text>TODO: Search feature</Text>
-      {/* list of parameters */}
+      <Text fw={700}>TODO: Search feature</Text>
       <NestedMenu menuOptions={mockParamFolder} />
     </Stack>
   );

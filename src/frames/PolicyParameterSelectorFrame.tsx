@@ -1,7 +1,8 @@
-import { Box, Grid, Stack } from '@mantine/core';
+import { Box, Grid, Stack, Text } from '@mantine/core';
 import PolicyParameterSelectorHeader from '@/components/policyParameterSelectorFrame/header';
-import PolicyParameterSelectorMenu from '@/components/policyParameterSelectorFrame/paramSelectorMenu';
+import PolicyParameterSelectorMenu from '@/components/policyParameterSelectorFrame/menu';
 import { FlowComponentProps } from '@/flows/types';
+import PolicyParameterSelectorEmptyMain from '@/components/policyParameterSelectorFrame/mainEmpty';
 
 export default function PolicyParameterSelectorFrame({ onNavigate }: FlowComponentProps) {
   return (
@@ -14,10 +15,10 @@ export default function PolicyParameterSelectorFrame({ onNavigate }: FlowCompone
               <PolicyParameterSelectorMenu />
             </Grid.Col>
             <Grid.Col span={9}>
-              <p>TODO: Main Content</p>
+              <PolicyParameterSelectorEmptyMain />
             </Grid.Col>
           </Grid>
-          <h3>TODO: Footer</h3>
+          <Text fw={700}>TODO: Footer</Text>
         </Stack>
       </Box>
     </>
