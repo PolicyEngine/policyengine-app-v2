@@ -1,7 +1,13 @@
+import { FOREVER } from '../constants';
+
 export interface ValueInterval {
   startDate: string; // ISO date string (YYYY-MM-DD)
   endDate: string; // ISO date string (YYYY-MM-DD)
   value: any;
+}
+
+export interface ValuesList {
+  [startDate: string]: any; // Maps ISO-formatted date string to value
 }
 
 export enum OverlapType {
@@ -36,6 +42,41 @@ export class ValueIntervalCollection {
     const modifiedIntervals = this.processExistingIntervals(newInterval);
     this.intervals = [...modifiedIntervals, newInterval];
     this.sortIntervalsByStartDate();
+  }
+
+  /**
+   * Used to add data from Parameter.values, which only maps 
+   * start dates to values, not end dates
+   * @param valuesList A record of date strings to values, e.g. 
+   * { "2023-01-01": 100, "2023-02-01": 200 }
+   */
+  addValuesList(valuesList: ValuesList): void {
+    const sortedList = this.sortValuesList(valuesList);
+    const allStartDates = Object.keys(sortedList);
+
+    for (const [date, value] of Object.entries(sortedList)) {
+      // If last entry in Object, add an interval until FOREVER
+      if (allStartDates.indexOf(date) === allStartDates.length - 1) {
+        this.addInterval(date, FOREVER, value);
+      } 
+      // Otherwise, add an interval with end date of the day before the next date in the Object
+      else {
+        const nextDate = allStartDates[allStartDates.indexOf(date) + 1];
+        this.addInterval(date, this.getDayBefore(this.parseDate(nextDate)), value);
+      }
+    }
+  }
+
+  getAllStartDates(): string[] {
+    return this.intervals.map(interval => interval.startDate);
+  }
+
+  getAllEndDates(): string[] {
+    return this.intervals.map(interval => interval.endDate);
+  }
+
+  getAllValues(): any[] {
+    return this.intervals.map(interval => interval.value);
   }
 
   private processExistingIntervals(newInterval: ValueInterval): ValueInterval[] {
@@ -159,15 +200,17 @@ export class ValueIntervalCollection {
   }
 
   private getDayBefore(timestamp: number): string {
+    const ISO_STRING_SEPARATOR = 'T';
     const date = new Date(timestamp);
     date.setDate(date.getDate() - 1);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split(ISO_STRING_SEPARATOR)[0];
   }
 
   private getDayAfter(timestamp: number): string {
+    const ISO_STRING_SEPARATOR = 'T';
     const date = new Date(timestamp);
     date.setDate(date.getDate() + 1);
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split(ISO_STRING_SEPARATOR)[0];
   }
 
   private sortIntervalsByStartDate(): void {
@@ -195,6 +238,12 @@ export class ValueIntervalCollection {
     if (this.parseDate(startDate) >= this.parseDate(endDate)) {
       throw new Error(`Invalid interval: start date ${startDate} must be before end date ${endDate}`);
     }
+  }
+
+  private sortValuesList(valuesList: ValuesList): ValuesList {
+    return Object.fromEntries(
+      Object.entries(valuesList).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
+    );
   }
 
   getIntervals(): ValueInterval[] {
