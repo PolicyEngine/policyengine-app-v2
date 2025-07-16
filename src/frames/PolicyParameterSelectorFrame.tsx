@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Box, Grid, Stack, Text } from '@mantine/core';
-import Header from '@/components/policyParameterSelectorFrame/header';
-import Menu from '@/components/policyParameterSelectorFrame/menu';
+import Header from '@/components/policyParameterSelectorFrame/Header';
+import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import { FlowComponentProps } from '@/types/flow';
-import MainEmpty from '@/components/policyParameterSelectorFrame/mainEmpty';
-import Main from '@/components/policyParameterSelectorFrame/main';
+import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
+import Main from '@/components/policyParameterSelectorFrame/Main';
 import { mockParamMetadata } from '@/TEST_TO_DELETE/mockParamMetadata';
 import { Parameter } from '@/types/parameter';
 

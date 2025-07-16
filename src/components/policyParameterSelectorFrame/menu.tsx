@@ -1,6 +1,6 @@
 import { Box, Divider, Stack, Text } from '@mantine/core';
 import { mockParamFolder } from '@/TEST_TO_DELETE/mockParamFolder';
-import NestedMenu from '../common/nestedMenu';
+import NestedMenu from '../common/NestedMenu';
 
 interface PolicyParameterSelectorMenuProps {
   setSelectedParamLabel: (param: string) => void;
