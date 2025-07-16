@@ -1,3 +1,4 @@
+import { ValueIntervalCollection } from '@/types/valueInterval';
 import { Parameter } from '@/types/parameter';
 import { Stack, Text } from '@mantine/core';
 
