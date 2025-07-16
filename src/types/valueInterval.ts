@@ -22,8 +22,20 @@ export enum OverlapType {
 export class ValueIntervalCollection {
   private intervals: ValueInterval[];
 
-  constructor() {
+  constructor(input?: ValueInterval[] | ValuesList | ValueIntervalCollection) {
     this.intervals = [];
+    if (!input) {
+      return;
+    }
+    if (Array.isArray(input)) {
+      this.intervals = input;
+    } else if (input instanceof ValueIntervalCollection) {
+      this.intervals = input.getIntervals();
+    } else if (typeof input === 'object') {
+      this.addValuesList(input as ValuesList);
+    } else {
+      throw new Error('Invalid input type for ValueIntervalCollection');
+    }
   }
 
   addInterval(startDate: string, endDate: string, value: any): void {
