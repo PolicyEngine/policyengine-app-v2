@@ -1,5 +1,6 @@
 import { Parameter } from "@/types/parameter";
 import { Center, Text, Stack } from "@mantine/core";
+import HistoricalValues from "@/components/policyParameterSelectorFrame/HistoricalValues";
 
 interface PolicyParameterSelectorMainProps {
   param: Parameter;
@@ -18,7 +19,7 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
           <Text>{param.description}</Text>
         </>)}
         <Text fw={700}>TODO: Param value setter</Text>
-        <Text fw={700}>TODO: Param historical values chart</Text>
+        <HistoricalValues param={param} />
       </Stack>
     </Center>
 
