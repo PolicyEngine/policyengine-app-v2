@@ -26,7 +26,6 @@ export const policySlice = createSlice({
   name: 'policy',
   initialState,
   reducers: {
-    
     addPolicyParam: (state, action: PayloadAction<ValueInterval>) => {
       const newParam = action.payload;
       const paramCollection = new ValueIntervalCollection(state.policy_params);

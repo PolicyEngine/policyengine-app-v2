@@ -2,6 +2,7 @@ import { Parameter } from "@/types/parameter";
 import { Center, Text, Stack } from "@mantine/core";
 import HistoricalValues from "@/components/policyParameterSelectorFrame/HistoricalValues";
 import { ValueIntervalCollection, ValuesList } from "@/types/valueInterval";
+import { useSelector } from "react-redux";
 
 interface PolicyParameterSelectorMainProps {
   param: Parameter;
@@ -9,8 +10,10 @@ interface PolicyParameterSelectorMainProps {
 
 export default function PolicyParameterSelectorMain(props: PolicyParameterSelectorMainProps) {
   const { param } = props;
+  const { userDefinedPolicy } = useSelector((state: any) => state.policy);
 
   const baseValuesCollection = new ValueIntervalCollection(param.values as ValuesList);
+  const reformValuesCollection = new ValueIntervalCollection(userDefinedPolicy.policy_params as ValuesList);
 
   return (
     <Center h="100%">
@@ -22,7 +25,7 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
           <Text>{param.description}</Text>
         </>)}
         <Text fw={700}>TODO: Param value setter</Text>
-        <HistoricalValues param={param} baseValuesCollection={baseValuesCollection} />
+        <HistoricalValues param={param} baseValuesCollection={baseValuesCollection} reformValuesCollection={reformValuesCollection} />
       </Stack>
     </Center>
 
