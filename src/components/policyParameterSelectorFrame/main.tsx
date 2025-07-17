@@ -25,7 +25,7 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
           <Text fw={700}>Description</Text>
           <Text>{param.description}</Text>
         </>)}
-        <ValueSetter />
+        <ValueSetter param={param} />
         <HistoricalValues param={param} baseValuesCollection={baseValuesCollection} reformValuesCollection={reformValuesCollection} />
       </Stack>
     </Center>
