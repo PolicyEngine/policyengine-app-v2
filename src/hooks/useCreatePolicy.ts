@@ -21,7 +21,7 @@ export function useCreatePolicy() {
       return res.json();
     },
     onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['policies'] });
+      queryClient.invalidateQueries({ queryKey: ['policies'] });
     },
   });
 }

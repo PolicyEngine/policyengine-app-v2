@@ -1,6 +1,4 @@
-// components/common/EmptyState.tsx
-
-import { Stack, Text, Button } from '@mantine/core';
+import { Button, Stack, Text } from '@mantine/core';
 
 interface EmptyStateProps {
   ingredient: string; // e.g., "Policy"
