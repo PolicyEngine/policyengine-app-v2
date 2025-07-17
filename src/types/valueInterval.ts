@@ -31,15 +31,24 @@ export class ValueIntervalCollection {
     if (!input) {
       return;
     }
+
     if (Array.isArray(input)) {
       this.intervals = input;
-    } else if (input instanceof ValueIntervalCollection) {
+      return;
+    } 
+    
+    if (input instanceof ValueIntervalCollection) {
       this.intervals = input.getIntervals();
-    } else if (typeof input === 'object') {
+      return;
+    } 
+    
+    if (typeof input === 'object') {
       this.addValuesList(input as ValuesList);
-    } else {
-      throw new Error('Invalid input type for ValueIntervalCollection');
-    }
+      return;
+    } 
+
+    // At this point, something has gone wrong
+    throw new Error('Invalid input type for ValueIntervalCollection');
   }
 
   // addInterval(startDate: string, endDate: string, value: any): void {
