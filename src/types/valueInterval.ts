@@ -1,11 +1,15 @@
 import { FOREVER } from '../constants';
 
+// This is the standard way of serializing intervals, including
+// for parameter values within a given policy
 export interface ValueInterval {
   startDate: string; // ISO date string (YYYY-MM-DD)
   endDate: string; // ISO date string (YYYY-MM-DD)
   value: any;
 }
 
+// These are used when reading parameter metadata, as 
+// the API returns values as map of start dates to values, no intervals
 export interface ValuesList {
   [startDate: string]: any; // Maps ISO-formatted date string to value
 }
@@ -38,7 +42,9 @@ export class ValueIntervalCollection {
     }
   }
 
-  addInterval(startDate: string, endDate: string, value: any): void {
+  // addInterval(startDate: string, endDate: string, value: any): void {
+  addInterval(interval: ValueInterval): void {
+    const { startDate, endDate, value } = interval;
     this.validateISODateString(startDate);
     this.validateISODateString(endDate);
 
@@ -69,12 +75,12 @@ export class ValueIntervalCollection {
     for (const [date, value] of Object.entries(sortedList)) {
       // If last entry in Object, add an interval until FOREVER
       if (allStartDates.indexOf(date) === allStartDates.length - 1) {
-        this.addInterval(date, FOREVER, value);
+        this.addInterval({startDate: date, endDate: FOREVER, value} as ValueInterval);
       } 
       // Otherwise, add an interval with end date of the day before the next date in the Object
       else {
         const nextDate = allStartDates[allStartDates.indexOf(date) + 1];
-        this.addInterval(date, this.getDayBefore(this.parseDate(nextDate)), value);
+        this.addInterval({startDate: date, endDate: this.getDayBefore(this.parseDate(nextDate)), value} as ValueInterval);
       }
     }
   }

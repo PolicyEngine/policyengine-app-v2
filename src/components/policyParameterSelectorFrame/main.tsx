@@ -1,7 +1,7 @@
 import { Parameter } from "@/types/parameter";
 import { Center, Text, Stack } from "@mantine/core";
 import HistoricalValues from "@/components/policyParameterSelectorFrame/HistoricalValues";
-import { ValueIntervalCollection } from "@/types/valueInterval";
+import { ValueIntervalCollection, ValuesList } from "@/types/valueInterval";
 
 interface PolicyParameterSelectorMainProps {
   param: Parameter;
@@ -10,12 +10,7 @@ interface PolicyParameterSelectorMainProps {
 export default function PolicyParameterSelectorMain(props: PolicyParameterSelectorMainProps) {
   const { param } = props;
 
-  const baseValuesCollection = new ValueIntervalCollection();
-  if (param.values) {
-    baseValuesCollection.addValuesList(param.values);
-  }
-
-  // TODO: Add reform values collection
+  const baseValuesCollection = new ValueIntervalCollection(param.values as ValuesList);
 
   return (
     <Center h="100%">
