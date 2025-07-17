@@ -5,12 +5,11 @@ export function useCreatePolicy() {
 
   return useMutation({
     mutationFn: async (data: any) => {
-        if (import.meta.env.DEV) {
-            return new Promise((res) =>
-                setTimeout(() => res({ ...data, id: String(Date.now()), policy_hash: 'xyz789' }), 500)
-            );
-        }
-          
+      if (import.meta.env.DEV) {
+        return new Promise((res) =>
+          setTimeout(() => res({ ...data, id: String(Date.now()), policy_hash: 'xyz789' }), 500)
+        );
+      }
 
       const res = await fetch('/api/policies', {
         method: 'POST',
