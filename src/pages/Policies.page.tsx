@@ -1,13 +1,15 @@
 import IngredientReadView from '@/components/IngredientReadView';
-import { usePolicies } from '@/hooks/usePolicies'; 
 import { useCreatePolicy } from '@/hooks/useCreatePolicy'; // optional, for mutation
+import { usePolicies } from '@/hooks/usePolicies';
 
 export default function PoliciesPage() {
   const { data, isLoading, isError, error } = usePolicies();
   const { mutate: createPolicy } = useCreatePolicy();
 
   const handleCreate = () => {
-    createPolicy({ /* draft payload here */ });
+    createPolicy({
+      /* draft payload here */
+    });
   };
 
   const columns = [

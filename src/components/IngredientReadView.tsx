@@ -37,9 +37,7 @@ export default function IngredientReadView<T>({
         {/* Content */}
         {isLoading && <Loader />}
         {isError && (
-          <Text color="red">
-            Error: {(error as Error)?.message || 'Something went wrong.'}
-          </Text>
+          <Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
         )}
         {!isLoading && !isError && (
           <>

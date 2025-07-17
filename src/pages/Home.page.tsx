@@ -1,10 +1,10 @@
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 import PoliciesPage from './Policies.page';
-import { useState } from 'react';
 
 export function HomePage() {
   const dispatch = useDispatch();
