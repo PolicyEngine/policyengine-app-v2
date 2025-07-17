@@ -10,10 +10,12 @@ interface PolicyParameterSelectorMainProps {
 
 export default function PolicyParameterSelectorMain(props: PolicyParameterSelectorMainProps) {
   const { param } = props;
-  const { userDefinedPolicy } = useSelector((state: any) => state.policy);
+  const userDefinedPolicy = useSelector((state: any) => state.policy);
+
+  console.log("userDefinedPolicy", userDefinedPolicy);
 
   const baseValuesCollection = new ValueIntervalCollection(param.values as ValuesList);
-  const reformValuesCollection = new ValueIntervalCollection(userDefinedPolicy.policy_params as ValuesList);
+  const reformValuesCollection = new ValueIntervalCollection(userDefinedPolicy.policyParams as ValuesList);
 
   return (
     <Center h="100%">
