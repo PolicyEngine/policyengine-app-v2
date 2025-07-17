@@ -1,5 +1,6 @@
 import { Box, Button, Divider, Group, Stack, Text } from "@mantine/core";
-import { Component, useState } from "react";
+import { YearPickerInput } from "@mantine/dates";
+import { useState } from "react";
 
 enum ValueSetterMode {
   DEFAULT = "default",
@@ -50,12 +51,35 @@ export function ParamDateSelector() {
   return (
     <Group>
       <ValueSetterToRender />
+      <Text>TODO: Gear icon</Text>
+      <Text>TODO: Reset button</Text>
+      <Text>TODO: Add button</Text>
     </Group>
   )
 }
 
 export function DefaultValueSelector() {
+
+  // TODO: Pull min and max dates from country metadata
+  const minDate = "2022-01-01";
+  const maxDate = "2035-12-31";
+
   return (
-    <Text>TODO: Default value selector</Text>
+    <Group>
+      <Stack>
+        <Text size="sm" fw={700}>From</Text>
+        <YearPickerInput
+          placeholder="Pick a year"
+          label="Year"
+          minDate={minDate}
+          maxDate={maxDate}
+          withAsterisk
+        />
+      </Stack>
+      <Stack>
+        <Text size="sm" fw={700}>Onward</Text>
+        <Text>TODO: Value input box</Text>
+      </Stack>
+    </Group>
   )
 }
