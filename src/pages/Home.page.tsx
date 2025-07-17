@@ -3,9 +3,12 @@ import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow, TestCompleteFlow, TestFlow } from '@/flows/policyCreationFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
+import PoliciesPage from './Policies.page';
+import { useState } from 'react';
 
 export function HomePage() {
   const dispatch = useDispatch();
+  const [showPolicyView, setShowPolicyView] = useState(false);
   // Note: Below is for testing purposes only
   return (
     <>
@@ -22,6 +25,10 @@ export function HomePage() {
       <Button variant="default" onClick={() => dispatch(setFlow(TestCompleteFlow))}>
         Execute "complete" testing flow
       </Button>
+      <Button variant="default" onClick={() => setShowPolicyView(true)}>
+        Show Policy View
+      </Button>
+      {showPolicyView && <PoliciesPage />}
       <FlowContainer />
     </>
   );

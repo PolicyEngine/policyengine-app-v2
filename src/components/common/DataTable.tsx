@@ -1,5 +1,3 @@
-// components/common/DataTable.tsx
-
 import { Table } from '@mantine/core';
 
 interface DataTableProps<T> {
