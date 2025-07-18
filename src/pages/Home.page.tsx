@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
-import { PolicyCreationFlow, TestCompleteFlow, TestFlow } from '@/flows/policyCreationFlow';
+import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 export function HomePage() {
@@ -15,12 +15,6 @@ export function HomePage() {
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(PolicyCreationFlow))}>
         Execute policy creation flow
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(TestFlow))}>
-        Execute test flow
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(TestCompleteFlow))}>
-        Execute "complete" testing flow
       </Button>
       <FlowContainer />
     </>

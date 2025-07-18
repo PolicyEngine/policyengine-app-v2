@@ -8,7 +8,7 @@ import Main from '@/components/policyParameterSelectorFrame/Main';
 import { mockParamMetadata } from '@/TEST_TO_DELETE/mockParamMetadata';
 import { Parameter } from '@/types/parameter';
 
-export default function PolicyParameterSelectorFrame({ onNavigate }: FlowComponentProps) {
+export default function PolicyParameterSelectorFrame({ onNavigate, onReturn, flowConfig }: FlowComponentProps) {
 
   const [selectedLeafParam, setSelectedLeafParam] = useState<Parameter | null>(null);
 
@@ -23,7 +23,7 @@ export default function PolicyParameterSelectorFrame({ onNavigate }: FlowCompone
     <>
       <Box h="100%" maw="100vw">
         <Stack>
-          <Header />
+          <Header onNavigate={onNavigate} onReturn={onReturn} flowConfig={flowConfig} />
           <Grid>
             <Grid.Col span={3}>
               <Menu setSelectedParamLabel={handleMenuItemClick}/>
