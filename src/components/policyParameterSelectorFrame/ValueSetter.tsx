@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import {
   ActionIcon,
   Box,
@@ -65,7 +65,6 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
   const { param } = props;
 
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
-  const userDefinedPolicy = useSelector((state: any) => state.policy);
 
   const dispatch = useDispatch();
 
@@ -101,8 +100,8 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
     }
 
     const newInterval: ValueInterval = {
-      startDate: startDate,
-      endDate: endDate,
+      startDate,
+      endDate,
       value: paramValue,
     };
 
@@ -111,7 +110,9 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
 
   // For multi-year mode, consolidate consecutive years with the same value into single intervals
   function consolidateYearValues(intervals: ValueInterval[]): ValueInterval[] {
-    if (intervals.length === 0) return [];
+    if (intervals.length === 0) {
+      return [];
+    }
 
     // Sort intervals by start date
     const sortedIntervals = [...intervals].sort((a, b) => a.startDate.localeCompare(b.startDate));
@@ -121,8 +122,8 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
 
     for (let i = 1; i < sortedIntervals.length; i++) {
       const interval = sortedIntervals[i];
-      const currentYear = parseInt(currentInterval.endDate.split('-')[0]);
-      const nextYear = parseInt(interval.startDate.split('-')[0]);
+      const currentYear = parseInt(currentInterval.endDate.split('-')[0], 10);
+      const nextYear = parseInt(interval.startDate.split('-')[0], 10);
 
       // If consecutive years have the same value, extend the current interval
       if (nextYear === currentYear + 1 && interval.value === currentInterval.value) {
@@ -318,7 +319,7 @@ export function MultiYearValueSelector(props: MultiYearValueSetterProps) {
 
   // On update of yearValues, update parent's params state
   useEffect(() => {
-    let finalState = [];
+    const finalState: ValueInterval[] = [];
 
     Object.keys(yearValues).forEach((year: string) => {
       const value = yearValues[year];
@@ -326,7 +327,7 @@ export function MultiYearValueSelector(props: MultiYearValueSetterProps) {
       finalState.push({
         startDate: `${year}-01-01`,
         endDate: `${year}-12-31`,
-        value: value,
+        value,
       });
 
       setParams(finalState);

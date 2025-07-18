@@ -64,7 +64,7 @@ function getReformPolicyLabel(policy) {
   */
 
 export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
-  const { param, baseValuesCollection, reformValuesCollection } = props;
+  const { baseValuesCollection, reformValuesCollection } = props;
   // const { baseMap, reformMap, parameter, policy, metadata } = props;
   // const mobile = useMobile();
   // const windowHeight = useWindowHeight();
@@ -84,17 +84,19 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
 
   const reformedX = reformValuesCollection ? reformValuesCollection.getAllStartDates() : [];
   const reformedY = reformValuesCollection ? reformValuesCollection.getAllValues() : [];
-  if (reformValuesCollection) extendForDisplay(reformedX, reformedY);
+  if (reformValuesCollection) {
+    extendForDisplay(reformedX, reformedY);
+  }
 
-  let xaxisValues = reformedX ? x.concat(reformedX) : x;
-  xaxisValues = xaxisValues.filter((e) => e !== '0000-01-01' && e < '2099-12-31');
+  // let xaxisValues = reformedX ? x.concat(reformedX) : x;
+  // xaxisValues = xaxisValues.filter((e) => e !== '0000-01-01' && e < '2099-12-31');
 
   // xaxisValues.push(defaultStartDate);
   // This value is used for preventing the chart from expanding
   // beyond 10 years past the current date for policy changes
   // defined until "forever" (i.e., 2100-12-31)
   // xaxisValues.push(defaultPOTEndDate);
-  const yaxisValues = reformedY ? y.concat(reformedY) : y;
+  // const yaxisValues = reformedY ? y.concat(reformedY) : y;
   // const xaxisFormat = getPlotlyAxisFormat("date", xaxisValues);
   // const yaxisFormat = getPlotlyAxisFormat(param.unit, yaxisValues);
 
@@ -128,7 +130,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
             hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
           },
           {
-            x: x,
+            x,
             y: y.map((y) => +y),
             type: 'line',
             mode: 'lines+markers',

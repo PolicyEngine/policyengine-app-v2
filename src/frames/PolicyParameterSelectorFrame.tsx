@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box, Grid, Stack, Text } from '@mantine/core';
 import Header from '@/components/policyParameterSelectorFrame/Header';
 import Main from '@/components/policyParameterSelectorFrame/Main';
