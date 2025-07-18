@@ -6,6 +6,8 @@ import { useState, SetStateAction, Dispatch } from "react";
 import { IconSettings } from "@tabler/icons-react";
 import { ValueInterval } from "@/types/valueInterval";
 import dayjs from "dayjs";
+import { useDispatch, useSelector } from "react-redux";
+import { addPolicyParam } from "@/reducers/policyReducer";
 
 enum ValueSetterMode {
   DEFAULT = "default",
@@ -50,6 +52,9 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
   const { param } = props;
 
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
+  const userDefinedPolicy = useSelector((state: any) => state.policy);
+
+  const dispatch = useDispatch();
 
   // Props for single-year inputs only
   const [startDate, setStartDate] = useState<string>("");
@@ -78,13 +83,15 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
       console.log("Submitting multi-year values:", params);
       return;
     } 
-    
-    // Logic for single-year modes
-    console.log("Submitting single-year values:", {
-      startDate,
-      endDate,
+
+    const newInterval: ValueInterval = {
+      startDate: startDate,
+      endDate: endDate,
       value: paramValue,
-    });
+    };
+
+    dispatch(addPolicyParam(newInterval))
+    
   }
 
   const ValueSetterToRender = ValueSetterComponents[mode];
