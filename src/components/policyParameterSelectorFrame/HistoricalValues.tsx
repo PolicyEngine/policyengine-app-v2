@@ -107,18 +107,19 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
   );
   */
 
+  // TODO: Typing on Plotly is not good; improve the typing here
   return (
     <>
       <Plot
         data={[
-          reformValuesCollection && {
+          ...(reformValuesCollection ? [{
             x: reformedX,
             y: reformedY.map((y) => +y),
-            type: 'line',
-            mode: 'lines+markers',
+            type: 'line' as any,
+            mode: 'lines+markers' as any,
             line: {
-              shape: 'hv',
-              dash: 'dot',
+              shape: 'hv' as any,
+              dash: 'dot' as any,
             },
             /*
             marker: {
@@ -128,14 +129,14 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
             // name: getReformPolicyLabel(policy),
             // customdata: reformedCustomData,
             hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
-          },
+          }] : []),
           {
             x,
             y: y.map((y) => +y),
-            type: 'line',
-            mode: 'lines+markers',
+            type: 'line' as any,
+            mode: 'lines+markers' as any,
             line: {
-              shape: 'hv',
+              shape: 'hv' as any,
             },
             /*
             marker: {
