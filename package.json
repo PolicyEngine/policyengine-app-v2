@@ -25,6 +25,7 @@
     "@mantine/dates": "^8.1.2",
     "@mantine/hooks": "8.1.2",
     "@reduxjs/toolkit": "^2.8.2",
+    "@tabler/icons-react": "^3.34.0",
     "dayjs": "^1.11.13",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

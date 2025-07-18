@@ -1,8 +1,9 @@
 import { FOREVER } from "@/constants";
 import { Parameter } from "@/types/parameter";
-import { Box, Button, Divider, Group, NumberInput, Stack, Text } from "@mantine/core";
+import { ActionIcon, Box, Button, Divider, Group, Menu, NumberInput, Stack, Text } from "@mantine/core";
 import { YearPickerInput } from "@mantine/dates";
 import { useState } from "react";
+import { IconSettings } from "@tabler/icons-react";
 
 enum ValueSetterMode {
   DEFAULT = "default",
@@ -60,7 +61,7 @@ export default function PolicyParameterSelectorValueSetter(props: ValueSetterPro
           <Group>
             <ValueSetterToRender setStartDate={setStartDate} setEndDate={setEndDate} />
             <ValueInputBox param={param} />
-            <Text>TODO: Gear icon</Text>
+            <ModeSelectorButton mode={mode} setMode={handleModeChange} />
             <Text>TODO: Reset button</Text>
             <Text>TODO: Add button</Text>
           </Group>
@@ -70,6 +71,41 @@ export default function PolicyParameterSelectorValueSetter(props: ValueSetterPro
         Show {isNewSetter ? "Figma-based" : "prototype"} value setter
       </Button>
     </Box>
+  );
+}
+
+export function ModeSelectorButton(props: { mode: ValueSetterMode; setMode: (mode: ValueSetterMode) => void }) {
+  const { mode, setMode } = props;
+  return (
+    <Menu>
+      <Menu.Target>
+        <ActionIcon aria-label="Select value setter mode" variant="default">
+          <IconSettings />
+        </ActionIcon>
+      </Menu.Target>
+      <Menu.Dropdown>
+        <Menu.Item
+          onClick={() => setMode(ValueSetterMode.DEFAULT)}
+        >
+          Default
+        </Menu.Item>
+        <Menu.Item
+          onClick={() => setMode(ValueSetterMode.YEARLY)}
+        >
+          Yearly
+        </Menu.Item>
+        <Menu.Item
+          onClick={() => setMode(ValueSetterMode.DATE)}
+        >
+          Advanced
+        </Menu.Item>
+        <Menu.Item
+          onClick={() => setMode(ValueSetterMode.MULTI_YEAR)}
+        >
+          Multi-year
+        </Menu.Item>
+      </Menu.Dropdown>
+    </Menu>
   );
 }
 
@@ -94,6 +130,34 @@ export function DefaultValueSelector(props: DateSetterProps) {
         onChange={handleStartDateChange}
       />
       <Text>onward</Text>
+    </Group>
+  )
+}
+
+export function YearlyValueSelector(props: DateSetterProps) {
+  const { setStartDate, setEndDate } = props;
+
+  function handleStartDateChange(value: string | null) {
+    setStartDate(value || "");
+  }
+
+  function handleEndDateChange(value: string | null) {
+    setEndDate(value || "");
+  }
+
+  return (
+    <Group>
+      <YearPickerInput
+        placeholder="Pick a year"
+        label="From"
+        onChange={handleStartDateChange}
+      />
+      <Text>to</Text>
+      <YearPickerInput
+        placeholder="Pick a year"
+        label="To"
+        onChange={handleEndDateChange}
+      />
     </Group>
   )
 }
