@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { ComponentKey } from '../flows/registry';
-import { Flow } from '../flows/types';
+import { Flow } from '../types/flow';
 
 interface FlowState {
   currentFlow: Flow | null;

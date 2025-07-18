@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { componentRegistry, flowRegistry } from '@/flows/registry';
-import { isComponentKey, isFlowKey } from '@/flows/types';
 import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flowReducer';
+import { isComponentKey, isFlowKey } from '@/types/flow';
 
 export default function FlowContainer() {
   const { currentFlow, currentFrame } = useSelector((state: any) => state.flow);

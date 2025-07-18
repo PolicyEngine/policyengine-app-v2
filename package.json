@@ -22,10 +22,14 @@
   },
   "dependencies": {
     "@mantine/core": "8.1.2",
+    "@mantine/dates": "^8.1.2",
     "@mantine/hooks": "8.1.2",
     "@reduxjs/toolkit": "^2.8.2",
+    "@tabler/icons-react": "^3.34.0",
+    "dayjs": "^1.11.13",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-plotly.js": "^2.6.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.2"
   },
@@ -41,6 +45,7 @@
     "@types/node": "^22.15.11",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/react-plotly.js": "^2.6.3",
     "@vitejs/plugin-react": "^4.5.2",
     "eslint": "^9.29.0",
     "eslint-config-mantine": "^4.0.3",
