@@ -1,7 +1,7 @@
 import { FOREVER } from "@/constants";
 import { Parameter } from "@/types/parameter";
 import { ActionIcon, Box, Button, Divider, Group, Menu, NumberInput, Stack, Text } from "@mantine/core";
-import { YearPickerInput } from "@mantine/dates";
+import { YearPickerInput, DatePickerInput } from "@mantine/dates";
 import { useState } from "react";
 import { IconSettings } from "@tabler/icons-react";
 
@@ -16,10 +16,13 @@ interface ValueSetterProps {
   param: Parameter;
 }
 
-// Shared by all date setter components
-interface DateSetterProps {
+// Shared by all value setter mode components
+interface ValueSetterModeProps {
   setStartDate: (date: string) => void;
   setEndDate: (date: string) => void;
+  minDate: string; // ISO date string (YYYY-MM-DD)
+  maxDate: string; // ISO date string (YYYY-MM-DD)
+  param: Parameter;
 }
 
 interface ValueInputBoxProps {
@@ -28,19 +31,22 @@ interface ValueInputBoxProps {
 
 const ValueSetterComponents = {
   [ValueSetterMode.DEFAULT]: DefaultValueSelector,
-  [ValueSetterMode.YEARLY]: () => <Text>TODO: Yearly value selector
-  </Text>,
-  [ValueSetterMode.DATE]: () => <Text>TODO: Date value selector</Text>,
+  [ValueSetterMode.YEARLY]: YearlyValueSelector,
+  [ValueSetterMode.DATE]: DateValueSelector,
   [ValueSetterMode.MULTI_YEAR]: () => <Text>TODO: Multi-year value selector</Text>,
 } as const;
 
 export default function PolicyParameterSelectorValueSetter(props: ValueSetterProps) {
   const { param } = props;
 
-  const [isNewSetter, setIsNewSetter] = useState(false);
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+
+  // TODO: Pull min and max dates from country metadata
+  const minDate = "2022-01-01";
+  const maxDate = "2035-12-31";
+
 
   const handleModeChange = (newMode: ValueSetterMode) => {
     if (newMode === ValueSetterMode.DEFAULT) {
@@ -55,21 +61,13 @@ export default function PolicyParameterSelectorValueSetter(props: ValueSetterPro
       <Stack>
         <Text fw={700}>Current value</Text>
         <Divider my="xs" />
-        {isNewSetter ? (
-          <Text>TODO: New value setter component</Text>
-        ) : (
           <Group>
-            <ValueSetterToRender setStartDate={setStartDate} setEndDate={setEndDate} />
-            <ValueInputBox param={param} />
+            <ValueSetterToRender setStartDate={setStartDate} setEndDate={setEndDate} minDate={minDate} maxDate={maxDate} param={param} />
             <ModeSelectorButton mode={mode} setMode={handleModeChange} />
             <Text>TODO: Reset button</Text>
             <Text>TODO: Add button</Text>
           </Group>
-        )}
       </Stack>
-      <Button onClick={() => setIsNewSetter(!isNewSetter)}>
-        Show {isNewSetter ? "Figma-based" : "prototype"} value setter
-      </Button>
     </Box>
   );
 }
@@ -109,12 +107,8 @@ export function ModeSelectorButton(props: { mode: ValueSetterMode; setMode: (mod
   );
 }
 
-export function DefaultValueSelector(props: DateSetterProps) {
-  const { setStartDate } = props;
-
-  // TODO: Pull min and max dates from country metadata
-  const minDate = "2022-01-01";
-  const maxDate = "2035-12-31";
+export function DefaultValueSelector(props: ValueSetterModeProps) {
+  const { setStartDate, minDate, maxDate, param } = props;
 
   function handleStartDateChange(value: string | null) {
     setStartDate(value || "");
@@ -130,12 +124,13 @@ export function DefaultValueSelector(props: DateSetterProps) {
         onChange={handleStartDateChange}
       />
       <Text>onward</Text>
+      <ValueInputBox param={param} />
     </Group>
   )
 }
 
-export function YearlyValueSelector(props: DateSetterProps) {
-  const { setStartDate, setEndDate } = props;
+export function YearlyValueSelector(props: ValueSetterModeProps) {
+  const { setStartDate, setEndDate, minDate, maxDate, param } = props;
 
   function handleStartDateChange(value: string | null) {
     setStartDate(value || "");
@@ -150,14 +145,47 @@ export function YearlyValueSelector(props: DateSetterProps) {
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
+        minDate={minDate}
+        maxDate={maxDate}
         onChange={handleStartDateChange}
       />
-      <Text>to</Text>
       <YearPickerInput
         placeholder="Pick a year"
         label="To"
+        minDate={minDate}
+        maxDate={maxDate}
         onChange={handleEndDateChange}
       />
+      <ValueInputBox param={param} />
+    </Group>
+  )
+}
+
+export function DateValueSelector(props: ValueSetterModeProps) {
+  const { setStartDate, setEndDate, minDate, maxDate, param } = props;
+  function handleStartDateChange(value: string | null) {
+    setStartDate(value || "");
+  }
+  function handleEndDateChange(value: string | null) {
+    setEndDate(value || "");
+  }
+  return (
+    <Group>
+      <DatePickerInput
+        placeholder="Pick a start date"
+        label="From"
+        minDate={minDate}
+        maxDate={maxDate}
+        onChange={handleStartDateChange}
+      />
+      <DatePickerInput
+        placeholder="Pick an end date"
+        label="To"
+        minDate={minDate}
+        maxDate={maxDate}
+        onChange={handleEndDateChange}
+      />
+      <ValueInputBox param={param} />
     </Group>
   )
 }
