@@ -1,8 +1,8 @@
 import { FOREVER } from "@/constants";
 import { Parameter } from "@/types/parameter";
-import { ActionIcon, Box, Button, Divider, Group, Menu, NumberInput, Stack, Text } from "@mantine/core";
+import { ActionIcon, Box, Button, Divider, Group, Menu, NumberInput, Stack, Text, SimpleGrid } from "@mantine/core";
 import { YearPickerInput, DatePickerInput } from "@mantine/dates";
-import { useState, SetStateAction, Dispatch } from "react";
+import { useState, SetStateAction, Dispatch, useEffect } from "react";
 import { IconSettings } from "@tabler/icons-react";
 import { ValueInterval } from "@/types/valueInterval";
 import dayjs from "dayjs";
@@ -34,11 +34,13 @@ interface SingleYearValueSetterProps extends SharedValueSetterProps {
 
 interface MultiYearValueSetterProps extends SharedValueSetterProps {
   setParams: Dispatch<SetStateAction<ValueInterval[]>>;
+  param: Parameter; 
 }
 
 interface ValueInputBoxProps {
   param: Parameter;
-  onSubmit?: (value: any) => void; // Optional submit handler for value input
+  value?: any; 
+  onChange?: (value: any) => void; 
 }
 
 const ValueSetterComponents = {
@@ -78,9 +80,13 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
 
   function handleSubmit() {
     if (mode === ValueSetterMode.MULTI_YEAR) {
-      // Logic to handle multi-year submission
-      // This could involve sending the params array to a backend or updating state
-      console.log("Submitting multi-year values:", params);
+      // Collapse years with shared values into consolidated intervals
+      const consolidatedIntervals = consolidateYearValues(params);
+      
+      // Dispatch each consolidated interval
+      consolidatedIntervals.forEach(interval => {
+        dispatch(addPolicyParam(interval));
+      });
       return;
     } 
 
@@ -92,6 +98,37 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
 
     dispatch(addPolicyParam(newInterval))
     
+  }
+
+  // For multi-year mode, consolidate consecutive years with the same value into single intervals
+  function consolidateYearValues(intervals: ValueInterval[]): ValueInterval[] {
+    if (intervals.length === 0) return [];
+    
+    // Sort intervals by start date
+    const sortedIntervals = [...intervals].sort((a, b) => a.startDate.localeCompare(b.startDate));
+    
+    const consolidated: ValueInterval[] = [];
+    let currentInterval = { ...sortedIntervals[0] };
+    
+    for (let i = 1; i < sortedIntervals.length; i++) {
+      const interval = sortedIntervals[i];
+      const currentYear = parseInt(currentInterval.endDate.split('-')[0]);
+      const nextYear = parseInt(interval.startDate.split('-')[0]);
+      
+      // If consecutive years have the same value, extend the current interval
+      if (nextYear === currentYear + 1 && interval.value === currentInterval.value) {
+        currentInterval.endDate = interval.endDate;
+      } else {
+        // Different value or non-consecutive year, finalize current interval
+        consolidated.push(currentInterval);
+        currentInterval = { ...interval };
+      }
+    }
+    
+    // Add the last interval
+    consolidated.push(currentInterval);
+    
+    return consolidated;
   }
 
   const ValueSetterToRender = ValueSetterComponents[mode];
@@ -115,8 +152,8 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
   const multiYearProps = {
     ...sharedProps,
     setParams,
+    param, 
   }
-
 
   return (
     <Box>
@@ -129,7 +166,7 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
             ) : (
               <>
                 <SingleYearComponent {...singleYearProps} />
-                <ValueInputBox param={param} onSubmit={setParamValue} />
+                <ValueInputBox param={param} onChange={setParamValue} />
               </>
             )}
             <ModeSelectorButton setMode={handleModeChange} />
@@ -260,17 +297,95 @@ export function DateValueSelector(props: SingleYearValueSetterProps) {
 }
 
 export function MultiYearValueSelector(props: MultiYearValueSetterProps) {
-  const { setParams, minDate, maxDate } = props;
+  const { setParams, minDate, maxDate, param } = props;
+
+  const MAX_YEARS = 10;
+  
+  // Generate years from minDate to maxDate
+  const generateYears = () => {
+    const startYear = dayjs(minDate).year();
+    const endYear = dayjs(maxDate).year();
+    const years = [];
+    for (let year = startYear; year <= endYear; year++) {
+      years.push(year);
+    }
+    return years.slice(0, MAX_YEARS);
+  };
+
+  const years = generateYears();
+
+  const [yearValues, setYearValues] = useState<Record<string, any>>(() => {
+    const initialValues: Record<string, any> = {};
+    years.forEach(year => {
+      initialValues[year] = param.unit === "bool" ? false : 0;
+    });
+    return initialValues;
+  });
+
+  // On update of yearValues, update parent's params state
+  useEffect(() => {
+    
+    let finalState = [];
+
+    Object.keys(yearValues).forEach((year: string) => {
+      const value = yearValues[year];
+
+      finalState.push({
+        startDate: `${year}-01-01`,
+        endDate: `${year}-12-31`,
+        value: value,
+      });
+
+      setParams(finalState);
+    });
+  }, [yearValues]);
+
+  const handleYearValueChange = (year: number, value: any) => {
+    setYearValues(prev => ({
+      ...prev,
+      [year]: value
+    }));
+  };
+
+  // Split years into two columns
+  const midpoint = Math.ceil(years.length / 2);
+  const leftColumn = years.slice(0, midpoint);
+  const rightColumn = years.slice(midpoint);
+
   return (
-    <></>
-  )
+    <Box>
+      <SimpleGrid cols={2} spacing="md">
+        <Stack>
+          {leftColumn.map(year => (
+            <Group key={year}>
+              <Text fw={500} style={{ minWidth: '50px' }}>{year}</Text>
+              <ValueInputBox 
+                param={param} 
+                value={yearValues[year]}
+                onChange={(value) => handleYearValueChange(year, value)}
+              />
+            </Group>
+          ))}
+        </Stack>
+        <Stack>
+          {rightColumn.map(year => (
+            <Group key={year}>
+              <Text fw={500} style={{ minWidth: '50px' }}>{year}</Text>
+              <ValueInputBox 
+                param={param} 
+                value={yearValues[year]}
+                onChange={(value) => handleYearValueChange(year, value)}
+              />
+            </Group>
+          ))}
+        </Stack>
+      </SimpleGrid>
+    </Box>
+  );
 }
 
-
 export function ValueInputBox(props: ValueInputBoxProps) {
-
-  const { param, onSubmit } = props;
-
+  const { param, value, onChange } = props;
 
   // US and UK packages use these inconsistently
   const USD_UNITS = ["currency-USD", "currency_USD", "USD"]; 
@@ -283,6 +398,12 @@ export function ValueInputBox(props: ValueInputBoxProps) {
     return <NumberInput disabled value={0} />;
   }
 
+  const handleChange = (newValue: any) => {
+    if (onChange) {
+      onChange(newValue);
+    }
+  };
+
   return (
     param.unit === "bool" ? (
       <Text>TODO: Switch for boolean value</Text>
@@ -292,58 +413,11 @@ export function ValueInputBox(props: ValueInputBoxProps) {
         min={0}
         prefix={prefix}
         suffix={param.unit === "/1" ? "%" : ""}
-        defaultValue={0} // TODO: Logic around setting default input values; this requires pulling from reform interval values
+        value={value !== undefined ? value : 0}
+        onChange={handleChange}
         thousandSeparator=","
       />
     )
   )
-
-  /*
-
-  NumberInput
-  -----------
-  * /1 (with % marker)
-  * Child care facility quality rating?
-  * USD
-  * Age
-  * Child
-  * currency-USD
-  * currency_USD
-  * day
-  * dependent
-  * float
-  * hour
-  * hours
-  * int
-  * kilowatt-hour
-  * miles
-  * month
-  * motor-vehicle
-  * people
-  * person
-  * persons
-  * quarters
-  * week
-  * year
-  * years
-  
-  Switch
-  -----------
-  * Bool
-
-
-  Unknown
-  -----------
-  * Abolition
-  * list
-  * single_amount
-
-
-
-  */
-
-
-
-
 
 }
