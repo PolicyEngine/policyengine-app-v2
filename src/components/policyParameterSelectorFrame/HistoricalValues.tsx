@@ -112,24 +112,28 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
     <>
       <Plot
         data={[
-          ...(reformValuesCollection ? [{
-            x: reformedX,
-            y: reformedY.map((y) => +y),
-            type: 'line' as any,
-            mode: 'lines+markers' as any,
-            line: {
-              shape: 'hv' as any,
-              dash: 'dot' as any,
-            },
-            /*
+          ...(reformValuesCollection
+            ? [
+                {
+                  x: reformedX,
+                  y: reformedY.map((y) => +y),
+                  type: 'line' as any,
+                  mode: 'lines+markers' as any,
+                  line: {
+                    shape: 'hv' as any,
+                    dash: 'dot' as any,
+                  },
+                  /*
             marker: {
               color: style.colors.BLUE,
             },
             */
-            // name: getReformPolicyLabel(policy),
-            // customdata: reformedCustomData,
-            hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
-          }] : []),
+                  // name: getReformPolicyLabel(policy),
+                  // customdata: reformedCustomData,
+                  hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
+                },
+              ]
+            : []),
           {
             x,
             y: y.map((y) => +y),
