@@ -73,7 +73,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
 
   // Extend the last value to 2099 so that the line appears to extend to +inf in
   // the chart
-  const extendForDisplay = (x, y) => {
+  const extendForDisplay = (x: any[], y: any[]) => {
     x.push('2099-12-31');
     y.push(y[y.length - 1]);
   };
