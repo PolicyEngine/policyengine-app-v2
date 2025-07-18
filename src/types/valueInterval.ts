@@ -8,7 +8,7 @@ export interface ValueInterval {
   value: any;
 }
 
-// These are used when reading parameter metadata, as 
+// These are used when reading parameter metadata, as
 // the API returns values as map of start dates to values, no intervals
 export interface ValuesList {
   [startDate: string]: any; // Maps ISO-formatted date string to value
@@ -20,7 +20,7 @@ export enum OverlapType {
   NEW_CONTAINS_EXISTING = 'NEW_CONTAINS_EXISTING',
   EXISTING_CONTAINS_NEW = 'EXISTING_CONTAINS_NEW',
   OVERLAP_START = 'OVERLAP_START',
-  OVERLAP_END = 'OVERLAP_END'
+  OVERLAP_END = 'OVERLAP_END',
 }
 
 export class ValueIntervalCollection {
@@ -35,17 +35,17 @@ export class ValueIntervalCollection {
     if (Array.isArray(input)) {
       this.intervals = input;
       return;
-    } 
-    
+    }
+
     if (input instanceof ValueIntervalCollection) {
       this.intervals = input.getIntervals();
       return;
-    } 
-    
+    }
+
     if (typeof input === 'object') {
       this.addValuesList(input as ValuesList);
       return;
-    } 
+    }
 
     // At this point, something has gone wrong
     throw new Error('Invalid input type for ValueIntervalCollection');
@@ -60,7 +60,7 @@ export class ValueIntervalCollection {
     this.validateValidInterval(startDate, endDate);
 
     const newInterval: ValueInterval = { startDate, endDate, value };
-    
+
     if (this.intervals.length === 0) {
       this.intervals.push(newInterval);
       return;
@@ -72,9 +72,9 @@ export class ValueIntervalCollection {
   }
 
   /**
-   * Used to add data from Parameter.values, which only maps 
+   * Used to add data from Parameter.values, which only maps
    * start dates to values, not end dates
-   * @param valuesList A record of date strings to values, e.g. 
+   * @param valuesList A record of date strings to values, e.g.
    * { "2023-01-01": 100, "2023-02-01": 200 }
    */
   addValuesList(valuesList: ValuesList): void {
@@ -84,26 +84,30 @@ export class ValueIntervalCollection {
     for (const [date, value] of Object.entries(sortedList)) {
       // If last entry in Object, add an interval until FOREVER
       if (allStartDates.indexOf(date) === allStartDates.length - 1) {
-        this.addInterval({startDate: date, endDate: FOREVER, value} as ValueInterval);
-      } 
+        this.addInterval({ startDate: date, endDate: FOREVER, value } as ValueInterval);
+      }
       // Otherwise, add an interval with end date of the day before the next date in the Object
       else {
         const nextDate = allStartDates[allStartDates.indexOf(date) + 1];
-        this.addInterval({startDate: date, endDate: this.getDayBefore(this.parseDate(nextDate)), value} as ValueInterval);
+        this.addInterval({
+          startDate: date,
+          endDate: this.getDayBefore(this.parseDate(nextDate)),
+          value,
+        } as ValueInterval);
       }
     }
   }
 
   getAllStartDates(): string[] {
-    return this.intervals.map(interval => interval.startDate);
+    return this.intervals.map((interval) => interval.startDate);
   }
 
   getAllEndDates(): string[] {
-    return this.intervals.map(interval => interval.endDate);
+    return this.intervals.map((interval) => interval.endDate);
   }
 
   getAllValues(): any[] {
-    return this.intervals.map(interval => interval.value);
+    return this.intervals.map((interval) => interval.value);
   }
 
   private processExistingIntervals(newInterval: ValueInterval): ValueInterval[] {
@@ -111,7 +115,7 @@ export class ValueIntervalCollection {
 
     for (const existingInterval of this.intervals) {
       const modifiedIntervals = this.handleIntervalOverlap(existingInterval, newInterval);
-      
+
       for (const interval of modifiedIntervals) {
         if (this.isValidInterval(interval)) {
           processedIntervals.push(interval);
@@ -122,45 +126,52 @@ export class ValueIntervalCollection {
     return processedIntervals;
   }
 
-  private handleIntervalOverlap(existingInterval: ValueInterval, newInterval: ValueInterval): ValueInterval[] {
+  private handleIntervalOverlap(
+    existingInterval: ValueInterval,
+    newInterval: ValueInterval
+  ): ValueInterval[] {
     const overlapType = this.analyzeOverlap(existingInterval, newInterval);
-    
+
     switch (overlapType) {
       case OverlapType.NO_OVERLAP_BEFORE:
       case OverlapType.NO_OVERLAP_AFTER:
         return [existingInterval];
-      
+
       case OverlapType.NEW_CONTAINS_EXISTING:
         return [this.createInvalidInterval()];
-      
+
       case OverlapType.OVERLAP_END:
-        return [this.createShortenedInterval(
-          existingInterval, 
-          this.getDayBefore(this.parseDate(newInterval.startDate)), 
-          'end'
-        )];
-      
+        return [
+          this.createShortenedInterval(
+            existingInterval,
+            this.getDayBefore(this.parseDate(newInterval.startDate)),
+            'end'
+          ),
+        ];
+
       case OverlapType.OVERLAP_START:
-        return [this.createShortenedInterval(
-          existingInterval, 
-          this.getDayAfter(this.parseDate(newInterval.endDate)), 
-          'start'
-        )];
-      
+        return [
+          this.createShortenedInterval(
+            existingInterval,
+            this.getDayAfter(this.parseDate(newInterval.endDate)),
+            'start'
+          ),
+        ];
+
       case OverlapType.EXISTING_CONTAINS_NEW:
         return [
           this.createShortenedInterval(
-            existingInterval, 
-            this.getDayBefore(this.parseDate(newInterval.startDate)), 
+            existingInterval,
+            this.getDayBefore(this.parseDate(newInterval.startDate)),
             'end'
           ),
           this.createShortenedInterval(
-            existingInterval, 
-            this.getDayAfter(this.parseDate(newInterval.endDate)), 
+            existingInterval,
+            this.getDayAfter(this.parseDate(newInterval.endDate)),
             'start'
-          )
+          ),
         ];
-      
+
       default:
         return [existingInterval];
     }
@@ -206,11 +217,15 @@ export class ValueIntervalCollection {
     return OverlapType.NO_OVERLAP_AFTER;
   }
 
-  private createShortenedInterval(interval: ValueInterval, newDate: string, shortenFrom: 'start' | 'end'): ValueInterval {
+  private createShortenedInterval(
+    interval: ValueInterval,
+    newDate: string,
+    shortenFrom: 'start' | 'end'
+  ): ValueInterval {
     return {
       ...interval,
       startDate: shortenFrom === 'start' ? newDate : interval.startDate,
-      endDate: shortenFrom === 'end' ? newDate : interval.endDate
+      endDate: shortenFrom === 'end' ? newDate : interval.endDate,
     };
   }
 
@@ -256,14 +271,16 @@ export class ValueIntervalCollection {
   }
 
   private validateValidInterval(startDate: string, endDate: string) {
-    console.log("startDate:", startDate, "endDate:", endDate);
+    console.log('startDate:', startDate, 'endDate:', endDate);
 
     if (startDate === '' || endDate === '') {
       throw new Error(`Invalid interval: start date and end date cannot be empty`);
     }
 
     if (this.parseDate(startDate) >= this.parseDate(endDate)) {
-      throw new Error(`Invalid interval: start date ${startDate} must be before end date ${endDate}`);
+      throw new Error(
+        `Invalid interval: start date ${startDate} must be before end date ${endDate}`
+      );
     }
   }
 

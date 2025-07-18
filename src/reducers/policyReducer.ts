@@ -1,5 +1,5 @@
-import { ValueInterval, ValueIntervalCollection } from '@/types/valueInterval';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { ValueInterval, ValueIntervalCollection } from '@/types/valueInterval';
 
 export interface PolicyState {
   id: string | null;
@@ -79,6 +79,7 @@ export const policySlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { addPolicyParam, setPolicy, clearPolicy, updatePolicy, updateLabel } = policySlice.actions;
+export const { addPolicyParam, setPolicy, clearPolicy, updatePolicy, updateLabel } =
+  policySlice.actions;
 
 export default policySlice.reducer;

@@ -6,8 +6,9 @@ interface PolicyParameterSelectorMenuProps {
   setSelectedParamLabel: (param: string) => void;
 }
 
-export default function PolicyParameterSelectorMenu({ setSelectedParamLabel }: PolicyParameterSelectorMenuProps) {
-
+export default function PolicyParameterSelectorMenu({
+  setSelectedParamLabel,
+}: PolicyParameterSelectorMenuProps) {
   return (
     <Stack>
       <SelectorMenuHeader />

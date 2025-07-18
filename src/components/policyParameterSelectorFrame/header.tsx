@@ -1,9 +1,12 @@
-import { FlowComponentProps } from '@/types/flow';
-import { Button, Group, Text } from '@mantine/core';
 import { useDispatch } from 'react-redux';
+import { Button, Group, Text } from '@mantine/core';
 import { clearPolicy } from '@/reducers/policyReducer';
+import { FlowComponentProps } from '@/types/flow';
 
-export default function PolicyParameterSelectorHeader({onNavigate, onReturn}: FlowComponentProps) {
+export default function PolicyParameterSelectorHeader({
+  onNavigate,
+  onReturn,
+}: FlowComponentProps) {
   // TODO: Determine how to handle policy number
 
   const dispatch = useDispatch();
@@ -21,9 +24,13 @@ export default function PolicyParameterSelectorHeader({onNavigate, onReturn}: Fl
 
   return (
     <Group justify="space-between" align="center">
-      <Button variant="outline" onClick={handleCancel}>Cancel</Button>
+      <Button variant="outline" onClick={handleCancel}>
+        Cancel
+      </Button>
       <Text fw={700}>Policy #NUMBER</Text>
-      <Button variant="default" onClick={handleNext}>Next</Button>
+      <Button variant="default" onClick={handleNext}>
+        Next
+      </Button>
     </Group>
   );
 }

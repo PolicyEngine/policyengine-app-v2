@@ -1,7 +1,7 @@
-import { ValueIntervalCollection } from '@/types/valueInterval';
-import { Parameter } from '@/types/parameter';
-import { Stack, Text } from '@mantine/core';
 import Plot from 'react-plotly.js';
+import { Stack, Text } from '@mantine/core';
+import { Parameter } from '@/types/parameter';
+import { ValueIntervalCollection } from '@/types/valueInterval';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: Parameter;
@@ -15,7 +15,9 @@ interface ParameterOverTimeChartProps {
   reformValuesCollection?: ValueIntervalCollection;
 }
 
-export default function PolicyParameterSelectorHistoricalValues(props: PolicyParameterSelectorHistoricalValuesProps) {
+export default function PolicyParameterSelectorHistoricalValues(
+  props: PolicyParameterSelectorHistoricalValuesProps
+) {
   const { param, baseValues = new ValueIntervalCollection(), reformValues } = props;
 
   return (
@@ -28,7 +30,7 @@ export default function PolicyParameterSelectorHistoricalValues(props: PolicyPar
         reformValuesCollection={reformValues}
       />
     </Stack>
-  )
+  );
 }
 
 /*
@@ -72,7 +74,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
   // Extend the last value to 2099 so that the line appears to extend to +inf in
   // the chart
   const extendForDisplay = (x, y) => {
-    x.push("2099-12-31");
+    x.push('2099-12-31');
     y.push(y[y.length - 1]);
   };
 
@@ -85,9 +87,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
   if (reformValuesCollection) extendForDisplay(reformedX, reformedY);
 
   let xaxisValues = reformedX ? x.concat(reformedX) : x;
-  xaxisValues = xaxisValues.filter(
-    (e) => e !== "0000-01-01" && e < "2099-12-31",
-  );
+  xaxisValues = xaxisValues.filter((e) => e !== '0000-01-01' && e < '2099-12-31');
 
   // xaxisValues.push(defaultStartDate);
   // This value is used for preventing the chart from expanding
@@ -112,11 +112,11 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
           reformValuesCollection && {
             x: reformedX,
             y: reformedY.map((y) => +y),
-            type: "line",
-            mode: "lines+markers",
+            type: 'line',
+            mode: 'lines+markers',
             line: {
-              shape: "hv",
-              dash: "dot",
+              shape: 'hv',
+              dash: 'dot',
             },
             /*
             marker: {
@@ -125,15 +125,15 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
             */
             // name: getReformPolicyLabel(policy),
             // customdata: reformedCustomData,
-            hovertemplate: "%{x|%b, %Y}: %{customdata}<extra></extra>",
+            hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
           },
           {
             x: x,
             y: y.map((y) => +y),
-            type: "line",
-            mode: "lines+markers",
+            type: 'line',
+            mode: 'lines+markers',
             line: {
-              shape: "hv",
+              shape: 'hv',
             },
             /*
             marker: {
@@ -142,9 +142,9 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
                 : style.colors.MEDIUM_LIGHT_GRAY,
             },
             */
-            name: "Current law",
+            name: 'Current law',
             // customdata: customData,
-            hovertemplate: "%{x|%b, %Y}: %{customdata}<extra></extra>",
+            hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
           },
         ].filter((x) => x)}
         layout={{
@@ -153,7 +153,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
           legend: {
             // Position above the plot
             y: 1.2,
-            orientation: "h",
+            orientation: 'h',
           },
           // ...ChartLogo,
           /*
@@ -167,7 +167,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
           // ...plotLayoutFont,
           title: {
             // text: `${parameter.label} over time`,
-            xanchor: "left",
+            xanchor: 'left',
             // x: mobile ? 0.05 : 0.04,
           },
           // dragmode: mobile ? false : "zoom",

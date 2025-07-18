@@ -1,9 +1,9 @@
-import { Parameter } from "@/types/parameter";
-import { Center, Text, Stack } from "@mantine/core";
-import HistoricalValues from "@/components/policyParameterSelectorFrame/HistoricalValues";
-import ValueSetter from "@/components/policyParameterSelectorFrame/ValueSetter";
-import { ValueIntervalCollection, ValuesList } from "@/types/valueInterval";
-import { useSelector } from "react-redux";
+import { useSelector } from 'react-redux';
+import { Center, Stack, Text } from '@mantine/core';
+import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
+import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
+import { Parameter } from '@/types/parameter';
+import { ValueIntervalCollection, ValuesList } from '@/types/valueInterval';
 
 /* TODO:
 - Implement reset functionality
@@ -33,15 +33,16 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
     <Center h="100%">
       <Stack>
         <Text fw={700}>TODO: Provision Counter</Text>
-        <Text>{param.label || "Label unavailable"}</Text>
-        {param.description && (<>
-          <Text fw={700}>Description</Text>
-          <Text>{param.description}</Text>
-        </>)}
+        <Text>{param.label || 'Label unavailable'}</Text>
+        {param.description && (
+          <>
+            <Text fw={700}>Description</Text>
+            <Text>{param.description}</Text>
+          </>
+        )}
         <ValueSetter param={param} />
         <HistoricalValues param={param} baseValues={baseValues} reformValues={reformValues} />
       </Stack>
     </Center>
-
-  )
+  );
 }
