@@ -5,6 +5,14 @@ import ValueSetter from "@/components/policyParameterSelectorFrame/ValueSetter";
 import { ValueIntervalCollection, ValuesList } from "@/types/valueInterval";
 import { useSelector } from "react-redux";
 
+/* TODO:
+- Implement reset functionality
+- Implement a switch for boolean values
+- Implement a dropdown for selecting predefined values
+- Implement search feature
+- Properly fill default values based on pre-existing param values
+*/
+
 interface PolicyParameterSelectorMainProps {
   param: Parameter;
 }
