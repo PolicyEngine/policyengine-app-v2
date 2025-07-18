@@ -5,8 +5,8 @@ import Plot from 'react-plotly.js';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: Parameter;
-  baseValuesCollection: ValueIntervalCollection;
-  reformValuesCollection?: ValueIntervalCollection;
+  baseValues: ValueIntervalCollection;
+  reformValues?: ValueIntervalCollection;
 }
 
 interface ParameterOverTimeChartProps {
@@ -16,7 +16,7 @@ interface ParameterOverTimeChartProps {
 }
 
 export default function PolicyParameterSelectorHistoricalValues(props: PolicyParameterSelectorHistoricalValuesProps) {
-  const { param, baseValuesCollection = new ValueIntervalCollection(), reformValuesCollection } = props;
+  const { param, baseValues = new ValueIntervalCollection(), reformValues } = props;
 
   return (
     <Stack>
@@ -24,8 +24,8 @@ export default function PolicyParameterSelectorHistoricalValues(props: PolicyPar
       <Text>{param.label} over time</Text>
       <ParameterOverTimeChart
         param={param}
-        baseValuesCollection={baseValuesCollection}
-        reformValuesCollection={reformValuesCollection}
+        baseValuesCollection={baseValues}
+        reformValuesCollection={reformValues}
       />
     </Stack>
   )

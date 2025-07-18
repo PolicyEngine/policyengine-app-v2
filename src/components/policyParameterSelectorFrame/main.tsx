@@ -13,8 +13,13 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
   const { param } = props;
   const userDefinedPolicy = useSelector((state: any) => state.policy);
 
-  const baseValuesCollection = new ValueIntervalCollection(param.values as ValuesList);
-  const reformValuesCollection = new ValueIntervalCollection(userDefinedPolicy.policyParams as ValuesList);
+  const baseValues = new ValueIntervalCollection(param.values as ValuesList);
+  let reformValues = null;
+  if (userDefinedPolicy && userDefinedPolicy.policyParams) {
+    reformValues = new ValueIntervalCollection(userDefinedPolicy.policyParams as ValuesList);
+  } else {
+    reformValues = new ValueIntervalCollection(baseValues);
+  }
 
   return (
     <Center h="100%">
@@ -26,7 +31,7 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
           <Text>{param.description}</Text>
         </>)}
         <ValueSetter param={param} />
-        <HistoricalValues param={param} baseValuesCollection={baseValuesCollection} reformValuesCollection={reformValuesCollection} />
+        <HistoricalValues param={param} baseValues={baseValues} reformValues={reformValues} />
       </Stack>
     </Center>
 
