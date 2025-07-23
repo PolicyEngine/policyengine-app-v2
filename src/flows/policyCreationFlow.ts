@@ -12,7 +12,7 @@ export const PolicyCreationFlow: Flow = {
     PolicyParameterSelectorFrame: {
       component: 'PolicyParameterSelectorFrame',
       on: {
-        next: 'PolicyTestView',
+        next: 'PolicySubmitFrame',
       },
     },
   },

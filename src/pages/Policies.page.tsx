@@ -1,15 +1,19 @@
 import IngredientReadView from '@/components/IngredientReadView';
-import { useCreatePolicy } from '@/hooks/useCreatePolicy'; // optional, for mutation
-import { usePolicies } from '@/hooks/usePolicies';
+import { usePolicy } from '@/hooks/usePolicy';
+import { useDispatch } from 'react-redux';
+import { setFlow } from '@/reducers/flowReducer';
+import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
+// import { FlowComponentProps } from '@/types/flow';
 
-export default function PoliciesPage() {
-  const { data, isLoading, isError, error } = usePolicies();
-  const { mutate: createPolicy } = useCreatePolicy();
 
-  const handleCreate = () => {
-    createPolicy({
-      /* draft payload here */
-    });
+// export default function PoliciesPage({ onNavigate }: FlowComponentProps) {
+  export default function PoliciesPage() {
+  const { data, isLoading, isError, error } = usePolicy();
+  const dispatch = useDispatch();
+
+  const handleNavigateToCreate = () => {
+    dispatch(setFlow(PolicyCreationFlow));
+    // onNavigate('next')
   };
 
   const columns = [
@@ -22,7 +26,7 @@ export default function PoliciesPage() {
   return (
     <IngredientReadView
       title="Policies"
-      onCreate={handleCreate}
+      onCreate={handleNavigateToCreate}
       isLoading={isLoading}
       isError={isError}
       error={error}
