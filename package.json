@@ -27,6 +27,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "@tabler/icons-react": "^3.34.0",
     "dayjs": "^1.11.13",
+    "@tanstack/react-query-devtools": "^5.83.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-plotly.js": "^2.6.0",
