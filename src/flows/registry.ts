@@ -1,9 +1,9 @@
+import { PolicyViewFlow } from '@/flows/policyViewFlow';
 import PolicyCreationFrame from '@/frames/PolicyCreationFrame';
 import PolicyParameterSelectorFrame from '@/frames/PolicyParameterSelectorFrame';
-import { PolicyCreationFlow } from './policyCreationFlow';
-import PoliciesPage from '@/pages/Policies.page';
-import { PolicyViewFlow } from '@/flows/policyViewFlow';
 import PolicySubmitFrame from '@/frames/PolicySubmitFrame';
+import PoliciesPage from '@/pages/Policies.page';
+import { PolicyCreationFlow } from './policyCreationFlow';
 
 export const componentRegistry = {
   PolicyCreationFrame,

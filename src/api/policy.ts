@@ -21,7 +21,6 @@ export async function fetchPolicyById(country: string, policyId: string) {
   return Array.isArray(json.result) ? json.result : [json.result];
 }
 
-
 export async function createPolicy(data: any) {
   const url = `${BASE_URL}/us/policy`;
 
@@ -37,4 +36,3 @@ export async function createPolicy(data: any) {
 
   return res.json();
 }
-

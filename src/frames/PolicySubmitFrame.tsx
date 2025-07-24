@@ -1,8 +1,8 @@
-import { useSelector, useDispatch } from 'react-redux';
-import { Button, Container, Grid, Text, Stack } from '@mantine/core';
-import { RootState } from '@/store';
-import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { useSelector } from 'react-redux';
+import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { FOREVER } from '@/constants';
+import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { RootState } from '@/store';
 
 interface PolicySubmitFrameProps {
   onNavigate: (action: string) => void;
@@ -10,7 +10,7 @@ interface PolicySubmitFrameProps {
 }
 
 export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmitFrameProps) {
-  const dispatch = useDispatch();
+  //   const dispatch = useDispatch();
   const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.policyParams);
   const { mutate: createPolicy, isPending } = useCreatePolicy();
@@ -19,12 +19,12 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
     Object.entries(params).map(([key, value]) => {
       // If value is already in correct shape (has a dotted key), pass it through
       const isWrapped =
-        typeof value === 'object' &&
-        value !== null &&
-        Object.keys(value)[0]?.includes('.');
-  
-      if (isWrapped) return [key, value];
-  
+        typeof value === 'object' && value !== null && Object.keys(value)[0]?.includes('.');
+
+      if (isWrapped) {
+        return [key, value];
+      }
+
       // If value is like { startDate, endDate, value }, unwrap it
       if (
         typeof value === 'object' &&
@@ -35,15 +35,14 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
         const dateKey = `${value.startDate}..${value.endDate}`;
         return [key, { [dateKey]: value.value }];
       }
-  
+
       // Otherwise fallback to default FOREVER case
       return [key, { [`2025-01-01..${FOREVER}`]: value }];
     })
-  );  
+  );
 
   function handleSubmit() {
-    createPolicy(
-      { data: wrappedParams });
+    createPolicy({ data: wrappedParams });
   }
 
   return (
@@ -55,7 +54,11 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
 
         <Grid>
           <Grid.Col span={6}>
-            <Button variant="default" fullWidth onClick={onCancel || (() => onNavigate('__return__'))}>
+            <Button
+              variant="default"
+              fullWidth
+              onClick={onCancel || (() => onNavigate('__return__'))}
+            >
               Cancel
             </Button>
           </Grid.Col>

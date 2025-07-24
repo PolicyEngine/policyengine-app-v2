@@ -1,4 +1,4 @@
-import { Button, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 
 interface EmptyStateProps {
   ingredient: string; // e.g., "Policy"
