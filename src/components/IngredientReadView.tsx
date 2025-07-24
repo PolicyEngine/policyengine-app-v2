@@ -1,6 +1,6 @@
-import { ReactNode } from 'react';
 import { Box, Button, Group, Loader, Stack, Text, Title } from '@mantine/core';
 import DataTable from '@/components/common/DataTable';
+import EmptyState from './common/EmptyState';
 
 interface IngredientReadViewProps<T> {
   title: string;
@@ -10,7 +10,6 @@ interface IngredientReadViewProps<T> {
   error?: unknown;
   data: T[];
   columns: { key: keyof T; header: string }[];
-  emptyComponent?: ReactNode; // Optional custom empty state
 }
 
 export default function IngredientReadView<T>({
@@ -21,7 +20,6 @@ export default function IngredientReadView<T>({
   error,
   data,
   columns,
-  emptyComponent,
 }: IngredientReadViewProps<T>) {
   return (
     <Box p="md">
@@ -32,7 +30,7 @@ export default function IngredientReadView<T>({
           <Button onClick={onCreate}>Create {title}</Button>
         </Group>
 
-        {/* TODO: Future search/filter could go here */}
+        {/* TODO: Future search/filter could go here; can use existing components from Mantine */}
 
         {/* Content */}
         {isLoading && <Loader />}
@@ -42,7 +40,7 @@ export default function IngredientReadView<T>({
         {!isLoading && !isError && (
           <>
             {data.length === 0 ? (
-              emptyComponent || <Text>No {title.toLowerCase()} found.</Text>
+              <EmptyState ingredient="Policy"/>
             ) : (
               <DataTable data={data} columns={columns} />
             )}
