@@ -80,10 +80,18 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
   const minDate = '2022-01-01';
   const maxDate = '2035-12-31';
 
+  function resetValueSettingState(newMode: ValueSetterMode) {
+    setStartDate('');
+    setEndDate(newMode === ValueSetterMode.DEFAULT ? FOREVER : '');
+    setParamValue(0);
+    setParams([]);
+  }
+
   function handleModeChange(newMode: ValueSetterMode) {
     if (newMode === ValueSetterMode.DEFAULT) {
       setEndDate(FOREVER); // Reset end date to FOREVER for default mode
     }
+    resetValueSettingState(newMode);
     setMode(newMode);
   }
 
