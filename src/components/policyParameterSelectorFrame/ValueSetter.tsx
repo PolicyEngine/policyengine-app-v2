@@ -89,11 +89,7 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
 
   function handleSubmit() {
     if (mode === ValueSetterMode.MULTI_YEAR) {
-      // Collapse years with shared values into consolidated intervals
-      const consolidatedIntervals = consolidateYearValues(params);
-
-      // Dispatch each consolidated interval
-      consolidatedIntervals.forEach((interval) => {
+      params.forEach((interval) => {
         dispatch(addPolicyParam(interval));
       });
       return;
@@ -106,39 +102,6 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
     };
 
     dispatch(addPolicyParam(newInterval));
-  }
-
-  // For multi-year mode, consolidate consecutive years with the same value into single intervals
-  function consolidateYearValues(intervals: ValueInterval[]): ValueInterval[] {
-    if (intervals.length === 0) {
-      return [];
-    }
-
-    // Sort intervals by start date
-    const sortedIntervals = [...intervals].sort((a, b) => a.startDate.localeCompare(b.startDate));
-
-    const consolidated: ValueInterval[] = [];
-    let currentInterval = { ...sortedIntervals[0] };
-
-    for (let i = 1; i < sortedIntervals.length; i++) {
-      const interval = sortedIntervals[i];
-      const currentYear = parseInt(currentInterval.endDate.split('-')[0], 10);
-      const nextYear = parseInt(interval.startDate.split('-')[0], 10);
-
-      // If consecutive years have the same value, extend the current interval
-      if (nextYear === currentYear + 1 && interval.value === currentInterval.value) {
-        currentInterval.endDate = interval.endDate;
-      } else {
-        // Different value or non-consecutive year, finalize current interval
-        consolidated.push(currentInterval);
-        currentInterval = { ...interval };
-      }
-    }
-
-    // Add the last interval
-    consolidated.push(currentInterval);
-
-    return consolidated;
   }
 
   const ValueSetterToRender = ValueSetterComponents[mode];
