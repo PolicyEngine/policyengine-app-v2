@@ -27,7 +27,7 @@ enum ValueSetterMode {
   MULTI_YEAR = 'multi-year',
 }
 
-interface ValueSetterProps {
+interface ValueSetterContainerProps {
   param: Parameter;
   onSubmit?: () => void;
 }
@@ -53,7 +53,9 @@ const ValueSetterComponents = {
   [ValueSetterMode.MULTI_YEAR]: MultiYearValueSelector,
 } as const;
 
-export default function PolicyParameterSelectorValueSetterContainer(props: ValueSetterProps) {
+export default function PolicyParameterSelectorValueSetterContainer(
+  props: ValueSetterContainerProps
+) {
   const { param } = props;
 
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
@@ -125,8 +127,8 @@ export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => 
 }
 
 export function DefaultValueSelector(props: ValueSetterProps) {
-  const { param, intervals, setIntervals, minDate, maxDate } = props;
-  
+  const { param, setIntervals, minDate, maxDate } = props;
+
   // Local state for form inputs
   const [startDate, setStartDate] = useState<string>('');
   const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
@@ -165,8 +167,8 @@ export function DefaultValueSelector(props: ValueSetterProps) {
 }
 
 export function YearlyValueSelector(props: ValueSetterProps) {
-  const { param, intervals, setIntervals, minDate, maxDate } = props;
-  
+  const { param, setIntervals, minDate, maxDate } = props;
+
   // Local state for form inputs
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -191,7 +193,9 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   }
 
   function handleEndDateChange(value: string | null) {
-    const endOfYearDate = dayjs(value || '').endOf('year').format('YYYY-MM-DD');
+    const endOfYearDate = dayjs(value || '')
+      .endOf('year')
+      .format('YYYY-MM-DD');
     setEndDate(endOfYearDate);
   }
 
@@ -217,8 +221,8 @@ export function YearlyValueSelector(props: ValueSetterProps) {
 }
 
 export function DateValueSelector(props: ValueSetterProps) {
-  const { param, intervals, setIntervals, minDate, maxDate } = props;
-  
+  const { param, setIntervals, minDate, maxDate } = props;
+
   // Local state for form inputs
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -268,7 +272,7 @@ export function DateValueSelector(props: ValueSetterProps) {
 }
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
-  const { param, intervals, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, minDate, maxDate } = props;
 
   const MAX_YEARS = 10;
 

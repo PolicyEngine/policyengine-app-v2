@@ -307,12 +307,13 @@ export class ValueIntervalCollection {
 
     for (let i = 1; i < sortedIntervals.length; i++) {
       const nextInterval = sortedIntervals[i];
-      
+
       // Check if current and next intervals are adjacent with same value
       const dayAfterCurrentEnd = this.getDayAfter(this.parseDate(currentInterval.endDate));
-      const isAdjacent = this.parseDate(nextInterval.startDate) === this.parseDate(dayAfterCurrentEnd);
+      const isAdjacent =
+        this.parseDate(nextInterval.startDate) === this.parseDate(dayAfterCurrentEnd);
       const hasSameValue = currentInterval.value === nextInterval.value;
-      
+
       if (isAdjacent && hasSameValue) {
         // Merge: extend current interval's end date to include next interval
         currentInterval.endDate = nextInterval.endDate;
@@ -322,10 +323,10 @@ export class ValueIntervalCollection {
         currentInterval = { ...nextInterval };
       }
     }
-    
+
     // Don't forget to add the last interval
     merged.push(currentInterval);
-    
+
     return merged;
   }
 
