@@ -27,25 +27,17 @@ enum ValueSetterMode {
   MULTI_YEAR = 'multi-year',
 }
 
+interface ValueSetterContainerProps {
+  param: Parameter;
+  onSubmit?: () => void;
+}
+
 interface ValueSetterProps {
+  minDate: string;
+  maxDate: string;
   param: Parameter;
-  onSubmit?: () => void; // Optional submit handler
-}
-
-interface SharedValueSetterProps {
-  minDate: string; // ISO date string (YYYY-MM-DD)
-  maxDate: string; // ISO date string (YYYY-MM-DD)
-}
-
-interface SingleYearValueSetterProps extends SharedValueSetterProps {
-  setStartDate: Dispatch<SetStateAction<string>>;
-  setEndDate: Dispatch<SetStateAction<string>>;
-  setParamValue: Dispatch<SetStateAction<any>>;
-}
-
-interface MultiYearValueSetterProps extends SharedValueSetterProps {
-  setParams: Dispatch<SetStateAction<ValueInterval[]>>;
-  param: Parameter;
+  intervals: ValueInterval[];
+  setIntervals: Dispatch<SetStateAction<ValueInterval[]>>;
 }
 
 interface ValueInputBoxProps {
@@ -61,109 +53,42 @@ const ValueSetterComponents = {
   [ValueSetterMode.MULTI_YEAR]: MultiYearValueSelector,
 } as const;
 
-export default function PolicyParameterSelectorValueSetterContainer(props: ValueSetterProps) {
+export default function PolicyParameterSelectorValueSetterContainer(
+  props: ValueSetterContainerProps
+) {
   const { param } = props;
 
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
-
   const dispatch = useDispatch();
 
-  // Props for single-year inputs only
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>(mode === ValueSetterMode.DEFAULT ? FOREVER : ''); // Default to FOREVER for default mode
-  const [paramValue, setParamValue] = useState<any>(0); // Default value, can be adjusted based on param type
+  const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
-  // Props for multi-year inputs
-  const [params, setParams] = useState<ValueInterval[]>([]); // Array of ValueInterval objects for multi-year inputs
-
-  // TODO: Pull min and max dates from country metadata
   const minDate = '2022-01-01';
   const maxDate = '2035-12-31';
 
+  function resetValueSettingState() {
+    setIntervals([]);
+  }
+
   function handleModeChange(newMode: ValueSetterMode) {
-    if (newMode === ValueSetterMode.DEFAULT) {
-      setEndDate(FOREVER); // Reset end date to FOREVER for default mode
-    }
+    resetValueSettingState();
     setMode(newMode);
   }
 
   function handleSubmit() {
-    if (mode === ValueSetterMode.MULTI_YEAR) {
-      // Collapse years with shared values into consolidated intervals
-      const consolidatedIntervals = consolidateYearValues(params);
-
-      // Dispatch each consolidated interval
-      consolidatedIntervals.forEach((interval) => {
-        dispatch(addPolicyParam(interval));
-      });
-      return;
-    }
-
-    const newInterval: ValueInterval = {
-      startDate,
-      endDate,
-      value: paramValue,
-    };
-
-    dispatch(addPolicyParam(newInterval));
-  }
-
-  // For multi-year mode, consolidate consecutive years with the same value into single intervals
-  function consolidateYearValues(intervals: ValueInterval[]): ValueInterval[] {
-    if (intervals.length === 0) {
-      return [];
-    }
-
-    // Sort intervals by start date
-    const sortedIntervals = [...intervals].sort((a, b) => a.startDate.localeCompare(b.startDate));
-
-    const consolidated: ValueInterval[] = [];
-    let currentInterval = { ...sortedIntervals[0] };
-
-    for (let i = 1; i < sortedIntervals.length; i++) {
-      const interval = sortedIntervals[i];
-      const currentYear = parseInt(currentInterval.endDate.split('-')[0], 10);
-      const nextYear = parseInt(interval.startDate.split('-')[0], 10);
-
-      // If consecutive years have the same value, extend the current interval
-      if (nextYear === currentYear + 1 && interval.value === currentInterval.value) {
-        currentInterval.endDate = interval.endDate;
-      } else {
-        // Different value or non-consecutive year, finalize current interval
-        consolidated.push(currentInterval);
-        currentInterval = { ...interval };
-      }
-    }
-
-    // Add the last interval
-    consolidated.push(currentInterval);
-
-    return consolidated;
+    intervals.forEach((interval) => {
+      dispatch(addPolicyParam(interval));
+    });
   }
 
   const ValueSetterToRender = ValueSetterComponents[mode];
 
-  // Use type assertions to ensure correct prop types are passed in render
-  const MultiYearComponent = ValueSetterToRender as React.ComponentType<MultiYearValueSetterProps>;
-  const SingleYearComponent =
-    ValueSetterToRender as React.ComponentType<SingleYearValueSetterProps>;
-
-  const sharedProps = {
+  const valueSetterProps: ValueSetterProps = {
     minDate,
     maxDate,
-  };
-
-  const singleYearProps = {
-    ...sharedProps,
-    setStartDate,
-    setEndDate,
-    setParamValue,
-  };
-
-  const multiYearProps = {
-    ...sharedProps,
-    setParams,
     param,
+    intervals,
+    setIntervals,
   };
 
   return (
@@ -172,14 +97,7 @@ export default function PolicyParameterSelectorValueSetterContainer(props: Value
         <Text fw={700}>Current value</Text>
         <Divider my="xs" />
         <Group>
-          {mode === ValueSetterMode.MULTI_YEAR ? (
-            <MultiYearComponent {...multiYearProps} />
-          ) : (
-            <>
-              <SingleYearComponent {...singleYearProps} />
-              <ValueInputBox param={param} onChange={setParamValue} />
-            </>
-          )}
+          <ValueSetterToRender {...valueSetterProps} />
           <ModeSelectorButton setMode={handleModeChange} />
           <Text>TODO: Reset button</Text>
           <Button onClick={handleSubmit}>Add</Button>
@@ -208,8 +126,26 @@ export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => 
   );
 }
 
-export function DefaultValueSelector(props: SingleYearValueSetterProps) {
-  const { setStartDate, minDate, maxDate } = props;
+export function DefaultValueSelector(props: ValueSetterProps) {
+  const { param, setIntervals, minDate, maxDate } = props;
+
+  // Local state for form inputs
+  const [startDate, setStartDate] = useState<string>('');
+  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+
+  // Update intervals whenever local state changes
+  useEffect(() => {
+    if (startDate) {
+      const newInterval: ValueInterval = {
+        startDate,
+        endDate: FOREVER,
+        value: paramValue,
+      };
+      setIntervals([newInterval]);
+    } else {
+      setIntervals([]);
+    }
+  }, [startDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: string | null) {
     setStartDate(value || '');
@@ -225,12 +161,32 @@ export function DefaultValueSelector(props: SingleYearValueSetterProps) {
         onChange={handleStartDateChange}
       />
       <Text>onward</Text>
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </Group>
   );
 }
 
-export function YearlyValueSelector(props: SingleYearValueSetterProps) {
-  const { setStartDate, setEndDate, minDate, maxDate } = props;
+export function YearlyValueSelector(props: ValueSetterProps) {
+  const { param, setIntervals, minDate, maxDate } = props;
+
+  // Local state for form inputs
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+
+  // Update intervals whenever local state changes
+  useEffect(() => {
+    if (startDate && endDate) {
+      const newInterval: ValueInterval = {
+        startDate,
+        endDate,
+        value: paramValue,
+      };
+      setIntervals([newInterval]);
+    } else {
+      setIntervals([]);
+    }
+  }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: string | null) {
     setStartDate(value || '');
@@ -259,18 +215,41 @@ export function YearlyValueSelector(props: SingleYearValueSetterProps) {
         maxDate={maxDate}
         onChange={handleEndDateChange}
       />
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </Group>
   );
 }
 
-export function DateValueSelector(props: SingleYearValueSetterProps) {
-  const { setStartDate, setEndDate, minDate, maxDate } = props;
+export function DateValueSelector(props: ValueSetterProps) {
+  const { param, setIntervals, minDate, maxDate } = props;
+
+  // Local state for form inputs
+  const [startDate, setStartDate] = useState<string>('');
+  const [endDate, setEndDate] = useState<string>('');
+  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+
+  // Update intervals whenever local state changes
+  useEffect(() => {
+    if (startDate && endDate) {
+      const newInterval: ValueInterval = {
+        startDate,
+        endDate,
+        value: paramValue,
+      };
+      setIntervals([newInterval]);
+    } else {
+      setIntervals([]);
+    }
+  }, [startDate, endDate, paramValue, setIntervals]);
+
   function handleStartDateChange(value: string | null) {
     setStartDate(value || '');
   }
+
   function handleEndDateChange(value: string | null) {
     setEndDate(value || '');
   }
+
   return (
     <Group>
       <DatePickerInput
@@ -287,12 +266,13 @@ export function DateValueSelector(props: SingleYearValueSetterProps) {
         maxDate={maxDate}
         onChange={handleEndDateChange}
       />
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </Group>
   );
 }
 
-export function MultiYearValueSelector(props: MultiYearValueSetterProps) {
-  const { setParams, minDate, maxDate, param } = props;
+export function MultiYearValueSelector(props: ValueSetterProps) {
+  const { param, setIntervals, minDate, maxDate } = props;
 
   const MAX_YEARS = 10;
 
@@ -317,22 +297,16 @@ export function MultiYearValueSelector(props: MultiYearValueSetterProps) {
     return initialValues;
   });
 
-  // On update of yearValues, update parent's params state
+  // Update intervals whenever yearValues changes
   useEffect(() => {
-    const finalState: ValueInterval[] = [];
+    const newIntervals: ValueInterval[] = Object.keys(yearValues).map((year: string) => ({
+      startDate: `${year}-01-01`,
+      endDate: `${year}-12-31`,
+      value: yearValues[year],
+    }));
 
-    Object.keys(yearValues).forEach((year: string) => {
-      const value = yearValues[year];
-
-      finalState.push({
-        startDate: `${year}-01-01`,
-        endDate: `${year}-12-31`,
-        value,
-      });
-
-      setParams(finalState);
-    });
-  }, [yearValues]);
+    setIntervals(newIntervals);
+  }, [yearValues, setIntervals]);
 
   const handleYearValueChange = (year: number, value: any) => {
     setYearValues((prev) => ({
@@ -385,7 +359,7 @@ export function MultiYearValueSelector(props: MultiYearValueSetterProps) {
 export function ValueInputBox(props: ValueInputBoxProps) {
   const { param, value, onChange } = props;
 
-  // US and UK packages use these inconsistently
+  // US and UK packages use these type designations inconsistently
   const USD_UNITS = ['currency-USD', 'currency_USD', 'USD'];
   const GBP_UNITS = ['currency-GBP', 'currency_GBP', 'GBP'];
 

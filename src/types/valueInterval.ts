@@ -68,7 +68,8 @@ export class ValueIntervalCollection {
 
     const modifiedIntervals = this.processExistingIntervals(newInterval);
     this.intervals = [...modifiedIntervals, newInterval];
-    this.sortIntervalsByStartDate();
+    this.intervals = this.sortIntervalsByStartDate(this.intervals);
+    this.intervals = this.mergeSortedAdjacentSameValueIntervals(this.intervals);
   }
 
   /**
@@ -255,8 +256,8 @@ export class ValueIntervalCollection {
     return date.toISOString().split(ISO_STRING_SEPARATOR)[0];
   }
 
-  private sortIntervalsByStartDate(): void {
-    this.intervals.sort((a, b) => this.parseDate(a.startDate) - this.parseDate(b.startDate));
+  private sortIntervalsByStartDate(intervals: ValueInterval[]): ValueInterval[] {
+    return intervals.sort((a, b) => this.parseDate(a.startDate) - this.parseDate(b.startDate));
   }
 
   private validateISODateString(dateString: string) {
@@ -288,6 +289,45 @@ export class ValueIntervalCollection {
     return Object.fromEntries(
       Object.entries(valuesList).sort(([a], [b]) => new Date(a).getTime() - new Date(b).getTime())
     );
+  }
+
+  /**
+   * Merges adjacent intervals with the same value from a sorted interval list.
+   * PRECONDITION: intervals must be sorted by start date
+   * @param sortedIntervals - Array of intervals sorted by startDate
+   * @returns New array with adjacent same-value intervals merged
+   */
+  private mergeSortedAdjacentSameValueIntervals(sortedIntervals: ValueInterval[]): ValueInterval[] {
+    if (sortedIntervals.length <= 1) {
+      return [...sortedIntervals];
+    }
+
+    const merged: ValueInterval[] = [];
+    let currentInterval = { ...sortedIntervals[0] };
+
+    for (let i = 1; i < sortedIntervals.length; i++) {
+      const nextInterval = sortedIntervals[i];
+
+      // Check if current and next intervals are adjacent with same value
+      const dayAfterCurrentEnd = this.getDayAfter(this.parseDate(currentInterval.endDate));
+      const isAdjacent =
+        this.parseDate(nextInterval.startDate) === this.parseDate(dayAfterCurrentEnd);
+      const hasSameValue = currentInterval.value === nextInterval.value;
+
+      if (isAdjacent && hasSameValue) {
+        // Merge: extend current interval's end date to include next interval
+        currentInterval.endDate = nextInterval.endDate;
+      } else {
+        // No merge: push current interval and start tracking the next one
+        merged.push(currentInterval);
+        currentInterval = { ...nextInterval };
+      }
+    }
+
+    // Don't forget to add the last interval
+    merged.push(currentInterval);
+
+    return merged;
   }
 
   getIntervals(): ValueInterval[] {
