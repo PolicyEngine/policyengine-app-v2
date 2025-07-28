@@ -1,7 +1,8 @@
 import { useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
-import { FOREVER } from '@/constants';
+import { serializePolicyCreationPayload } from '@/api/policy';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { PolicyState } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 
 interface PolicySubmitFrameProps {
@@ -12,37 +13,15 @@ interface PolicySubmitFrameProps {
 export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmitFrameProps) {
   //   const dispatch = useDispatch();
   const label = useSelector((state: RootState) => state.policy.label);
-  const params = useSelector((state: RootState) => state.policy.policyParams);
+  const params = useSelector((state: RootState) => state.policy.params);
   const { mutate: createPolicy, isPending } = useCreatePolicy();
 
-  const wrappedParams = Object.fromEntries(
-    Object.entries(params).map(([key, value]) => {
-      // If value is already in correct shape (has a dotted key), pass it through
-      const isWrapped =
-        typeof value === 'object' && value !== null && Object.keys(value)[0]?.includes('.');
-
-      if (isWrapped) {
-        return [key, value];
-      }
-
-      // If value is like { startDate, endDate, value }, unwrap it
-      if (
-        typeof value === 'object' &&
-        'startDate' in value &&
-        'endDate' in value &&
-        'value' in value
-      ) {
-        const dateKey = `${value.startDate}..${value.endDate}`;
-        return [key, { [dateKey]: value.value }];
-      }
-
-      // Otherwise fallback to default FOREVER case
-      return [key, { [`2025-01-01..${FOREVER}`]: value }];
-    })
-  );
+  const policy: PolicyState = useSelector((state: RootState) => state.policy);
 
   function handleSubmit() {
-    createPolicy({ data: wrappedParams });
+    const serializedPolicyCreationPayload: Record<string, any> =
+      serializePolicyCreationPayload(policy);
+    createPolicy(serializedPolicyCreationPayload);
   }
 
   return (

@@ -13,8 +13,6 @@ export default function FlowContainer() {
 
   // Handle navigation function that components can use
   const handleNavigate = (eventName: string) => {
-    console.log(`Handling navigation for event: ${eventName}`);
-
     const frameConfig = currentFlow.frames[currentFrame];
     const target = frameConfig.on[eventName];
 
@@ -23,8 +21,6 @@ export default function FlowContainer() {
       console.log('Available events:', Object.keys(frameConfig.on));
       return;
     }
-
-    console.log(`Navigating from ${currentFrame} via ${eventName} to ${target}`);
 
     // Handle special return keyword
     if (target === '__return__') {

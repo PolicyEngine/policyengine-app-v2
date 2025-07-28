@@ -1,5 +1,5 @@
 // Based on what the API currently exposes
-export interface Parameter {
+export interface ParameterMetadataModule {
   label: string;
   type: 'parameter' | 'parameterNode' | any; // TODO: Add more types as needed
   parameter: string; // Dot-separated path to parameter; often used as 'name' elsewhere in app
@@ -11,4 +11,4 @@ export interface Parameter {
   household?: boolean;
 }
 
-export type ParameterMetadata = Record<string, Parameter>;
+export type ParameterMetadata = Record<string, ParameterMetadataModule>;

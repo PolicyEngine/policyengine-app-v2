@@ -2,7 +2,8 @@ import { useSelector } from 'react-redux';
 import { Center, Stack, Text } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
-import { Parameter } from '@/types/parameter';
+import { getParamByName } from '@/reducers/policyReducer';
+import { ParameterMetadataModule } from '@/types/parameter';
 import { ValueIntervalCollection, ValuesList } from '@/types/valueInterval';
 
 /* TODO:
@@ -14,7 +15,7 @@ import { ValueIntervalCollection, ValuesList } from '@/types/valueInterval';
 */
 
 interface PolicyParameterSelectorMainProps {
-  param: Parameter;
+  param: ParameterMetadataModule;
 }
 
 export default function PolicyParameterSelectorMain(props: PolicyParameterSelectorMainProps) {
@@ -23,8 +24,9 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
 
   const baseValues = new ValueIntervalCollection(param.values as ValuesList);
   let reformValues = null;
-  if (userDefinedPolicy && userDefinedPolicy.policyParams) {
-    reformValues = new ValueIntervalCollection(userDefinedPolicy.policyParams as ValuesList);
+  if (userDefinedPolicy && userDefinedPolicy.params) {
+    const paramToChart = getParamByName(userDefinedPolicy, param.parameter);
+    reformValues = new ValueIntervalCollection(paramToChart?.values as ValuesList);
   } else {
     reformValues = new ValueIntervalCollection(baseValues);
   }
