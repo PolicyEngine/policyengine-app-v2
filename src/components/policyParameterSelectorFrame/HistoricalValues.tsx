@@ -1,16 +1,16 @@
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
-import { Parameter } from '@/types/parameter';
+import { ParameterMetadataModule } from '@/types/parameter';
 import { ValueIntervalCollection } from '@/types/valueInterval';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
-  param: Parameter;
+  param: ParameterMetadataModule;
   baseValues: ValueIntervalCollection;
   reformValues?: ValueIntervalCollection;
 }
 
 interface ParameterOverTimeChartProps {
-  param: Parameter;
+  param: ParameterMetadataModule;
   baseValuesCollection: ValueIntervalCollection;
   reformValuesCollection?: ValueIntervalCollection;
 }
