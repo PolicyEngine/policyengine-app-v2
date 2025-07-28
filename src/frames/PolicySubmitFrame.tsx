@@ -1,10 +1,8 @@
 import { useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { RootState } from '@/store';
 import { PolicyState } from '@/reducers/policyReducer';
-
-type JSONString = string & { readonly __brand: 'JSONString' };
+import { RootState } from '@/store';
 
 interface PolicySubmitFrameProps {
   onNavigate: (action: string) => void;
@@ -20,19 +18,15 @@ export function serializePolicyCreationPayload(policy: PolicyState): PolicyCreat
   const { label, params } = policy;
 
   // Fill payload with keys we already know
-  let payload = {
+  const payload = {
     label,
-    data: {} as Record<string, any>
-  }
+    data: {} as Record<string, any>,
+  };
 
   // Convert params and their valueIntervals into expected JSON format
   params.forEach((param) => {
     payload.data[param.name] = param.values.reduce((acc, cur) => {
-      acc = {
-        ...acc,
-        [`${cur.startDate}..${cur.endDate}`]: cur.value
-      };
-      return acc;
+      return { ...acc, [`${cur.startDate}..${cur.endDate}`]: cur.value };
     }, {});
   });
 
@@ -48,7 +42,8 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
   const policy: PolicyState = useSelector((state: RootState) => state.policy);
 
   function handleSubmit() {
-    const serializedPolicyCreationPayload: Record<string, any> = serializePolicyCreationPayload(policy);
+    const serializedPolicyCreationPayload: Record<string, any> =
+      serializePolicyCreationPayload(policy);
     createPolicy(serializedPolicyCreationPayload);
   }
 

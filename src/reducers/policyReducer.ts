@@ -35,7 +35,7 @@ export const policySlice = createSlice({
 
       let param = getParamByName(state, name);
       if (!param) {
-        param = { name, values: [] }
+        param = { name, values: [] };
         state.params.push(param);
       }
 
@@ -60,7 +60,6 @@ export const policySlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { addPolicyParam, clearPolicy, updatePolicy, updateLabel } =
-  policySlice.actions;
+export const { addPolicyParam, clearPolicy, updatePolicy, updateLabel } = policySlice.actions;
 
 export default policySlice.reducer;

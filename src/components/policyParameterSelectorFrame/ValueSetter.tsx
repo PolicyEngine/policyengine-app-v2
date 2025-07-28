@@ -77,7 +77,7 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   function handleSubmit() {
     intervals.forEach((interval) => {
-      dispatch(addPolicyParam({name: param.parameter, valueInterval: interval}));
+      dispatch(addPolicyParam({ name: param.parameter, valueInterval: interval }));
     });
   }
 
