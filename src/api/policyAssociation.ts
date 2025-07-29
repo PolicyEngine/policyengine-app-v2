@@ -3,15 +3,18 @@ import { UserPolicyAssociation } from '../types/userIngredientAssociations';
 export interface UserPolicyStore {
   create(association: Omit<UserPolicyAssociation, 'createdAt'>): Promise<UserPolicyAssociation>;
   findByUser(userId: string): Promise<UserPolicyAssociation[]>;
-  findByPolicy(policyId: string): Promise<UserPolicyAssociation[]>;
   findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null>;
-  update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation>;
-  delete(userId: string, policyId: string): Promise<void>;
+  // The below are not yet implemented, but keeping for future use
+  // update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation>;
+  // delete(userId: string, policyId: string): Promise<void>;
 }
 
 export class ApiPolicyStore implements UserPolicyStore {
+  // TODO: Modify value to match to-be-created API endpoint structure
+  private readonly BASE_URL = '/api/user-policy-associations';
+
   async create(association: Omit<UserPolicyAssociation, 'createdAt'>): Promise<UserPolicyAssociation> {
-    const response = await fetch('/api/user-policy-associations', {
+    const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(association),
@@ -24,10 +27,8 @@ export class ApiPolicyStore implements UserPolicyStore {
     return response.json();
   }
 
-  // TODO: Check if this method is needed
   async findByUser(userId: string): Promise<UserPolicyAssociation[]> {
-    const response = await fetch(`/api/user-policy-associations/user/${userId}`);
-    
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -35,19 +36,9 @@ export class ApiPolicyStore implements UserPolicyStore {
     return response.json();
   }
 
-  async findByPolicy(policyId: string): Promise<UserPolicyAssociation[]> {
-    const response = await fetch(`/api/user-policy-associations/policy/${policyId}`);
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch policy associations');
-    }
-
-    return response.json();
-  }
-
   async findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null> {
-    const response = await fetch(`/api/user-policy-associations/${userId}/${policyId}`);
-    
+    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`);
+
     if (response.status === 404) {
       return null;
     }
@@ -59,6 +50,8 @@ export class ApiPolicyStore implements UserPolicyStore {
     return response.json();
   }
 
+  // Not yet implemented, but keeping for future use
+  /*
   async update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation> {
     const response = await fetch(`/api/user-policy-associations/${userId}/${policyId}`, {
       method: 'PUT',
@@ -72,7 +65,10 @@ export class ApiPolicyStore implements UserPolicyStore {
 
     return response.json();
   }
+  */
 
+  // Not yet implemented, but keeping for future use
+  /*
   async delete(userId: string, policyId: string): Promise<void> {
     const response = await fetch(`/api/user-policy-associations/${userId}/${policyId}`, {
       method: 'DELETE',
@@ -82,6 +78,7 @@ export class ApiPolicyStore implements UserPolicyStore {
       throw new Error('Failed to delete association');
     }
   }
+  */
 }
 
 export class SessionStoragePolicyStore implements UserPolicyStore {
@@ -115,16 +112,13 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
     return associations.filter(a => a.userId === userId);
   }
 
-  async findByPolicy(policyId: string): Promise<UserPolicyAssociation[]> {
-    const associations = this.getStoredAssociations();
-    return associations.filter(a => a.policyId === policyId);
-  }
-
   async findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null> {
     const associations = this.getStoredAssociations();
     return associations.find(a => a.userId === userId && a.policyId === policyId) || null;
   }
 
+  // Not yet implemented, but keeping for future use
+  /*
   async update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation> {
     const associations = this.getStoredAssociations();
     const index = associations.findIndex(a => a.userId === userId && a.policyId === policyId);
@@ -139,7 +133,10 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
     this.setStoredAssociations(associations);
     return updatedAssociation;
   }
+  */
 
+  // Not yet implemented, but keeping for future use
+  /*
   async delete(userId: string, policyId: string): Promise<void> {
     const associations = this.getStoredAssociations();
     const filtered = associations.filter(a => !(a.userId === userId && a.policyId === policyId));
@@ -150,6 +147,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
 
     this.setStoredAssociations(filtered);
   }
+  */
 
   private getStoredAssociations(): UserPolicyAssociation[] {
     try {
@@ -168,7 +166,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
     }
   }
 
-  // Utility for syncing when user logs in
+  // Currently unused utility for syncing when user logs in
   getAllAssociations(): UserPolicyAssociation[] {
     return this.getStoredAssociations();
   }

@@ -25,7 +25,6 @@ const initialState: PolicyState = {
   params: [],
 };
 
-// TODO: Some of this code is a bit naive
 export const policySlice = createSlice({
   name: 'policy',
   initialState,

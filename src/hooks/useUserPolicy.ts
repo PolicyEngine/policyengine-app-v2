@@ -25,20 +25,6 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   });
 };
 
-// TODO: Check if we need this method
-export const usePolicyAssociationsByPolicy = (policyId: string) => {
-  const store = useUserPolicyStore();
-  const isLoggedIn = false; // Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
-
-  return useQuery({
-    queryKey: associationKeys.byPolicy(policyId),
-    queryFn: () => store.findByPolicy(policyId),
-    ...config,
-  });
-};
-
-// TODO: Check how this method compares with a couple others here
 export const usePolicyAssociation = (userId: string, policyId: string) => {
   const store = useUserPolicyStore();
   const isLoggedIn = false; // Replace with actual auth check in future
@@ -72,7 +58,8 @@ export const useCreatePolicyAssociation = () => {
   });
 };
 
-// TODO: Check if we need this method
+// Not yet implemented, but keeping for future use
+/*
 export const useUpdateAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
@@ -94,8 +81,10 @@ export const useUpdateAssociation = () => {
     },
   });
 };
+*/
 
-// TODO: Check if we need this method
+// Not yet implemented, but keeping for future use
+/*
 export const useDeleteAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
@@ -114,3 +103,4 @@ export const useDeleteAssociation = () => {
     },
   });
 };
+*/
