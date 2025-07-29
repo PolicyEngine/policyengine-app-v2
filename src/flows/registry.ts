@@ -2,6 +2,8 @@ import { PolicyViewFlow } from '@/flows/policyViewFlow';
 import PolicyCreationFrame from '@/frames/PolicyCreationFrame';
 import PolicyParameterSelectorFrame from '@/frames/PolicyParameterSelectorFrame';
 import PolicySubmitFrame from '@/frames/PolicySubmitFrame';
+import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
+import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import SimulationCreationFrame from '@/frames/SimulationCreationFrame';
 import SimulationSelectExistingPolicyFrame from '@/frames/SimulationSelectExistingPolicyFrame';
 import SimulationSetupFrame from '@/frames/SimulationSetupFrame';
@@ -10,6 +12,7 @@ import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
 import PoliciesPage from '@/pages/Policies.page';
 import SimulationsPage from '@/pages/Simulations.page';
 import { PolicyCreationFlow } from './policyCreationFlow';
+import { PopulationFlow } from './populationCreationFlow';
 import { SimulationCreationFlow } from './simulationCreationFlow';
 import { SimulationViewFlow } from './simulationViewFlow';
 
@@ -18,6 +21,8 @@ export const componentRegistry = {
   PolicyParameterSelectorFrame,
   PolicySubmitFrame,
   PolicyReadView: PoliciesPage,
+  SelectGeographicScopeFrame,
+  HouseholdBuilderFrame,
   SimulationCreationFrame,
   SimulationSetupFrame,
   SimulationSubmitFrame,
@@ -29,6 +34,7 @@ export const componentRegistry = {
 export const flowRegistry = {
   PolicyCreationFlow,
   PolicyViewFlow,
+  PopulationFlow,
   SimulationCreationFlow,
   SimulationViewFlow,
 } as const;
