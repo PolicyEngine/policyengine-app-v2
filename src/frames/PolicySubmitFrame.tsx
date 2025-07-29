@@ -14,7 +14,7 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
   //   const dispatch = useDispatch();
   const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.params);
-  const { mutate: createPolicy, isPending } = useCreatePolicy();
+  const { createPolicy, isPending } = useCreatePolicy();
 
   const policy: PolicyState = useSelector((state: RootState) => state.policy);
 
