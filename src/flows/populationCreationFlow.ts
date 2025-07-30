@@ -7,14 +7,14 @@ export const PopulationFlow: Flow = {
       component: 'SelectGeographicScopeFrame',
       on: {
         household: 'HouseholdBuilderFrame',
-        state: 'StateScopeFrame', // if needed later
-        national: 'NationalScopeFrame', // if needed later
+        state: '__return__',
+        national: '__return__',
       },
     },
     HouseholdBuilderFrame: {
       component: 'HouseholdBuilderFrame',
       on: {
-        next: 'SimulationReturnFrame', // or go back to sim frame
+        next: '__return__',
         back: 'SelectGeographicScopeFrame',
       },
     },
