@@ -21,6 +21,9 @@ export default function IngredientReadView<T>({
   data,
   columns,
 }: IngredientReadViewProps<T>) {
+
+  console.log('IngredientReadView data:', data);
+
   return (
     <Box p="md">
       <Stack>

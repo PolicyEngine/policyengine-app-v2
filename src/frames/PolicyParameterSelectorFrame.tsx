@@ -6,17 +6,17 @@ import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import { mockParamMetadata } from '@/TEST_TO_DELETE/mockParamMetadata';
 import { FlowComponentProps } from '@/types/flow';
-import { ParameterMetadataModule } from '@/types/parameter';
+import { ParameterMetadata } from '@/types/parameterMetadata';
 
 export default function PolicyParameterSelectorFrame({
   onNavigate,
   onReturn,
   flowConfig,
 }: FlowComponentProps) {
-  const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadataModule | null>(null);
+  const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
 
   function handleMenuItemClick(paramLabel: string) {
-    const param: ParameterMetadataModule | null = mockParamMetadata.parameters[paramLabel] || null;
+    const param: ParameterMetadata | null = mockParamMetadata.parameters[paramLabel] || null;
     if (param && param.type === 'parameter') {
       setSelectedLeafParam(param);
     }

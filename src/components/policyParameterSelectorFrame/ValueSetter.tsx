@@ -17,7 +17,7 @@ import {
 import { DatePickerInput, YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { addPolicyParam } from '@/reducers/policyReducer';
-import { ParameterMetadataModule } from '@/types/parameter';
+import { ParameterMetadata } from '@/types/parameterMetadata';
 import { ValueInterval } from '@/types/valueInterval';
 
 enum ValueSetterMode {
@@ -28,20 +28,20 @@ enum ValueSetterMode {
 }
 
 interface ValueSetterContainerProps {
-  param: ParameterMetadataModule;
+  param: ParameterMetadata;
   onSubmit?: () => void;
 }
 
 interface ValueSetterProps {
   minDate: string;
   maxDate: string;
-  param: ParameterMetadataModule;
+  param: ParameterMetadata;
   intervals: ValueInterval[];
   setIntervals: Dispatch<SetStateAction<ValueInterval[]>>;
 }
 
 interface ValueInputBoxProps {
-  param: ParameterMetadataModule;
+  param: ParameterMetadata;
   value?: any;
   onChange?: (value: any) => void;
 }

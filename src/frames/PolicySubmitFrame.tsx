@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { serializePolicyCreationPayload } from '@/api/policy';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { PolicyState } from '@/reducers/policyReducer';
+import { Policy } from '@/types/policy';
 import { RootState } from '@/store';
 
 interface PolicySubmitFrameProps {
@@ -16,7 +16,7 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
   const params = useSelector((state: RootState) => state.policy.params);
   const { createPolicy, isPending } = useCreatePolicy();
 
-  const policy: PolicyState = useSelector((state: RootState) => state.policy);
+  const policy: Policy = useSelector((state: RootState) => state.policy);
 
   function handleSubmit() {
     const serializedPolicyCreationPayload: Record<string, any> =

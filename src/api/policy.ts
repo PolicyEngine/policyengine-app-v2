@@ -1,5 +1,5 @@
 import { BASE_URL } from '@/constants';
-import { PolicyState } from '@/reducers/policyReducer';
+import { Policy } from '@/types/policy';
 
 export async function fetchPolicyById(country: string, policyId: string) {
   const url = `${BASE_URL}/${country}/policy/${policyId}`;
@@ -43,7 +43,7 @@ interface PolicyCreationPayload {
   data: Record<string, any>;
 }
 
-export function serializePolicyCreationPayload(policy: PolicyState): PolicyCreationPayload {
+export function serializePolicyCreationPayload(policy: Policy): PolicyCreationPayload {
   const { label, params } = policy;
 
   // Fill payload with keys we already know
