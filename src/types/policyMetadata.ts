@@ -1,8 +1,8 @@
 import { countryIds } from '@/libs/countries';
 
 export interface PolicyMetadata {
-  id: Number;
-  country_id: typeof countryIds[number];
+  id: number;
+  country_id: (typeof countryIds)[number];
   label?: string;
   api_version: string;
   policy_json: PolicyMetadataParams;
@@ -10,7 +10,7 @@ export interface PolicyMetadata {
 }
 
 export interface PolicyMetadataParams {
-  [param: string]: PolicyMetadataParamValues
+  [param: string]: PolicyMetadataParamValues;
 }
 
 export interface PolicyMetadataParamValues {

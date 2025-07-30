@@ -1,11 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
-import { useCreatePolicyAssociation } from './useUserPolicy';
 import { policyKeys } from '@/libs/queryKeys';
+import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy() {
   const queryClient = useQueryClient();
-  const user = undefined; // TODO: Replace with actual user context or auth hook in future
+  // const user = undefined; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreatePolicyAssociation();
 
   const mutation = useMutation({
@@ -31,5 +31,4 @@ export function useCreatePolicy() {
     isPending: mutation.isPending,
     error: mutation.error,
   };
-
 }

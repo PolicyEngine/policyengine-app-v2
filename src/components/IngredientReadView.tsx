@@ -21,7 +21,6 @@ export default function IngredientReadView<T>({
   data,
   columns,
 }: IngredientReadViewProps<T>) {
-
   return (
     <Box p="md">
       <Stack>

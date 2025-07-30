@@ -1,15 +1,14 @@
 import { useDispatch } from 'react-redux';
 import IngredientReadView from '@/components/IngredientReadView';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
-import { usePolicy } from '@/hooks/usePolicy';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { setFlow } from '@/reducers/flowReducer';
-import { usePolicyAssociationsByUser, useUserPolicies } from '@/hooks/useUserPolicy';
 
 // import { FlowComponentProps } from '@/types/flow';
 
 // export default function PoliciesPage({ onNavigate }: FlowComponentProps) {
 export default function PoliciesPage() {
-  const userId = "anonymous"; // TODO: Replace with actual user ID retrieval logic
+  const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
 
   // TODO: All we're doing right now is fetching user-policy associations;
@@ -30,12 +29,13 @@ export default function PoliciesPage() {
     { key: 'api_version', header: 'API Version' } as const,
   ];
 
-  const tableData = data?.map(item => ({
-    id: item.association.policyId,
-    label: item.policy?.label || 'Unknown',
-    country_id: item.policy?.country_id || 'Unknown',
-    api_version: item.policy?.api_version || 'Unknown',
-  })) || [];
+  const tableData =
+    data?.map((item) => ({
+      id: item.association.policyId,
+      label: item.policy?.label || 'Unknown',
+      country_id: item.policy?.country_id || 'Unknown',
+      api_version: item.policy?.api_version || 'Unknown',
+    })) || [];
 
   return (
     <IngredientReadView

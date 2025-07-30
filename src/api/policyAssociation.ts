@@ -1,9 +1,9 @@
 import { UserPolicyAssociation } from '../types/userIngredientAssociations';
 
 export interface UserPolicyStore {
-  create(association: Omit<UserPolicyAssociation, 'createdAt'>): Promise<UserPolicyAssociation>;
-  findByUser(userId: string): Promise<UserPolicyAssociation[]>;
-  findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null>;
+  create: (association: Omit<UserPolicyAssociation, 'createdAt'>) => Promise<UserPolicyAssociation>;
+  findByUser: (userId: string) => Promise<UserPolicyAssociation[]>;
+  findById: (userId: string, policyId: string) => Promise<UserPolicyAssociation | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation>;
   // delete(userId: string, policyId: string): Promise<void>;
@@ -13,7 +13,9 @@ export class ApiPolicyStore implements UserPolicyStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-policy-associations';
 
-  async create(association: Omit<UserPolicyAssociation, 'createdAt'>): Promise<UserPolicyAssociation> {
+  async create(
+    association: Omit<UserPolicyAssociation, 'createdAt'>
+  ): Promise<UserPolicyAssociation> {
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,37 +86,39 @@ export class ApiPolicyStore implements UserPolicyStore {
 export class SessionStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
-  async create(association: Omit<UserPolicyAssociation, 'createdAt'>): Promise<UserPolicyAssociation> {
+  async create(
+    association: Omit<UserPolicyAssociation, 'createdAt'>
+  ): Promise<UserPolicyAssociation> {
     const newAssociation: UserPolicyAssociation = {
       ...association,
       createdAt: new Date().toISOString(),
     };
 
     const associations = this.getStoredAssociations();
-    
+
     // Check for duplicates
     const exists = associations.some(
-      a => a.userId === association.userId && a.policyId === association.policyId
+      (a) => a.userId === association.userId && a.policyId === association.policyId
     );
-    
+
     if (exists) {
       throw new Error('Association already exists');
     }
 
     const updatedAssociations = [...associations, newAssociation];
     this.setStoredAssociations(updatedAssociations);
-    
+
     return newAssociation;
   }
 
   async findByUser(userId: string): Promise<UserPolicyAssociation[]> {
     const associations = this.getStoredAssociations();
-    return associations.filter(a => a.userId === userId);
+    return associations.filter((a) => a.userId === userId);
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null> {
     const associations = this.getStoredAssociations();
-    return associations.find(a => a.userId === userId && a.policyId === policyId) || null;
+    return associations.find((a) => a.userId === userId && a.policyId === policyId) || null;
   }
 
   // Not yet implemented, but keeping for future use

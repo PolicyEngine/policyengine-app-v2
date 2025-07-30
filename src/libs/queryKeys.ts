@@ -3,7 +3,7 @@ export const associationKeys = {
   all: ['associations'] as const,
   byUser: (userId: string) => [...associationKeys.all, 'user_id', userId] as const,
   byPolicy: (policyId: string) => [...associationKeys.all, 'policy_id', policyId] as const,
-  specific: (userId: string, policyId: string) => 
+  specific: (userId: string, policyId: string) =>
     [...associationKeys.all, 'specific', userId, policyId] as const,
 };
 

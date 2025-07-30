@@ -1,5 +1,5 @@
-import { ValueInterval } from './valueInterval';
 import { Policy } from './policy';
+import { ValueInterval } from './valueInterval';
 
 export interface Parameter {
   name: string;

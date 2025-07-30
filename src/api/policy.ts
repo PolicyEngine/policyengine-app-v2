@@ -18,11 +18,13 @@ export async function fetchPolicyById(country: string, policyId: string): Promis
   }
 
   const json = await res.json();
-  
+
   return json.result;
 }
 
-export async function createPolicy(data: PolicyCreationPayload): Promise<{ result: { policy_id: string } }> {
+export async function createPolicy(
+  data: PolicyCreationPayload
+): Promise<{ result: { policy_id: string } }> {
   const url = `${BASE_URL}/us/policy`;
 
   const res = await fetch(url, {

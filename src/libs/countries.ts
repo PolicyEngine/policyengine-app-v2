@@ -1,7 +1,1 @@
-export const countryIds = [
-  'us',
-  'uk',
-  'ca',
-  'ng',
-  'il'
-] as const;
+export const countryIds = ['us', 'uk', 'ca', 'ng', 'il'] as const;

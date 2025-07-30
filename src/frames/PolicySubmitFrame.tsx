@@ -1,9 +1,9 @@
 import { useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
-import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { Policy } from '@/types/policy';
 import { RootState } from '@/store';
+import { Policy } from '@/types/policy';
+import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
 
 interface PolicySubmitFrameProps {
   onNavigate: (action: string) => void;
