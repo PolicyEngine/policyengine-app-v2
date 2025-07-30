@@ -17,8 +17,9 @@ export default function FlowContainer() {
     const target = frameConfig.on[eventName];
 
     if (!target) {
-      console.error(`No target defined for event ${eventName} in frame ${currentFrame}`);
-      console.log('Available events:', Object.keys(frameConfig.on));
+      console.error(
+        `No target defined for event ${eventName} in frame ${currentFrame}; available events: ${Object.keys(frameConfig.on).join(', ')}`
+      );
       return;
     }
 

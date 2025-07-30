@@ -1,14 +1,11 @@
-// Based on what the API currently exposes
-export interface ParameterMetadataModule {
-  label: string;
-  type: 'parameter' | 'parameterNode' | any; // TODO: Add more types as needed
-  parameter: string; // Dot-separated path to parameter; often used as 'name' elsewhere in app
-  description?: string | null;
-  unit?: string | null;
-  period?: string | null; // TODO: Specify period values
-  values?: Record<string, number>; // Historical values
-  economy?: boolean;
-  household?: boolean;
+import { Policy } from './policy';
+import { ValueInterval } from './valueInterval';
+
+export interface Parameter {
+  name: string;
+  values: ValueInterval[]; // Redux requires serializable state, so we use ValueInterval[] instead of ValueIntervalCollection
 }
 
-export type ParameterMetadata = Record<string, ParameterMetadataModule>;
+export function getParameterByName(policy: Policy, name: string): Parameter | undefined {
+  return policy.params.find((param) => param.name === name);
+}

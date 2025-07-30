@@ -272,8 +272,6 @@ export class ValueIntervalCollection {
   }
 
   private validateValidInterval(startDate: string, endDate: string) {
-    console.log('startDate:', startDate, 'endDate:', endDate);
-
     if (startDate === '' || endDate === '') {
       throw new Error(`Invalid interval: start date and end date cannot be empty`);
     }

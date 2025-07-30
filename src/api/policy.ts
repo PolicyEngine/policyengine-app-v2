@@ -1,7 +1,8 @@
 import { BASE_URL } from '@/constants';
-import { PolicyState } from '@/reducers/policyReducer';
+import { PolicyMetadata } from '@/types/policyMetadata';
+import { PolicyCreationPayload } from '@/types/policyPayloads';
 
-export async function fetchPolicyById(country: string, policyId: string) {
+export async function fetchPolicyById(country: string, policyId: string): Promise<PolicyMetadata> {
   const url = `${BASE_URL}/${country}/policy/${policyId}`;
 
   const res = await fetch(url, {
@@ -18,11 +19,12 @@ export async function fetchPolicyById(country: string, policyId: string) {
 
   const json = await res.json();
 
-  // Normalize as array (if you ever want to display a list)
-  return Array.isArray(json.result) ? json.result : [json.result];
+  return json.result;
 }
 
-export async function createPolicy(data: any) {
+export async function createPolicy(
+  data: PolicyCreationPayload
+): Promise<{ result: { policy_id: string } }> {
   const url = `${BASE_URL}/us/policy`;
 
   const res = await fetch(url, {
@@ -36,28 +38,4 @@ export async function createPolicy(data: any) {
   }
 
   return res.json();
-}
-
-interface PolicyCreationPayload {
-  label?: string;
-  data: Record<string, any>;
-}
-
-export function serializePolicyCreationPayload(policy: PolicyState): PolicyCreationPayload {
-  const { label, params } = policy;
-
-  // Fill payload with keys we already know
-  const payload = {
-    label,
-    data: {} as Record<string, any>,
-  };
-
-  // Convert params and their valueIntervals into expected JSON format
-  params.forEach((param) => {
-    payload.data[param.name] = param.values.reduce((acc, cur) => {
-      return { ...acc, [`${cur.startDate}..${cur.endDate}`]: cur.value };
-    }, {});
-  });
-
-  return payload;
 }

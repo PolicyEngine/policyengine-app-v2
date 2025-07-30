@@ -1,31 +1,18 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { getParameterByName } from '@/types/parameter';
+import { Policy } from '@/types/policy';
 import { ValueInterval, ValueIntervalCollection } from '@/types/valueInterval';
-
-export interface PolicyState {
-  label?: string;
-  params: ParamState[];
-}
-
-export interface ParamState {
-  name: string;
-  values: ValueInterval[]; // Redux requires serializable state, so we use ValueInterval[] instead of ValueIntervalCollection
-}
 
 export interface PolicyParamAdditionPayload {
   name: string;
   valueInterval: ValueInterval;
 }
 
-export function getParamByName(policy: PolicyState, name: string): ParamState | undefined {
-  return policy.params.find((param) => param.name === name);
-}
-
-const initialState: PolicyState = {
+const initialState: Policy = {
   label: undefined,
   params: [],
 };
 
-// TODO: Some of this code is a bit naive
 export const policySlice = createSlice({
   name: 'policy',
   initialState,
@@ -33,7 +20,7 @@ export const policySlice = createSlice({
     addPolicyParam: (state, action: PayloadAction<PolicyParamAdditionPayload>) => {
       const { name, valueInterval } = action.payload;
 
-      let param = getParamByName(state, name);
+      let param = getParameterByName(state, name);
       if (!param) {
         param = { name, values: [] };
         state.params.push(param);
@@ -48,7 +35,7 @@ export const policySlice = createSlice({
       state.label = undefined;
       state.params = [];
     },
-    updatePolicy: (state, action: PayloadAction<Partial<PolicyState>>) => {
+    updatePolicy: (state, action: PayloadAction<Partial<Policy>>) => {
       if (action.payload.label !== undefined) {
         state.label = action.payload.label;
       }
