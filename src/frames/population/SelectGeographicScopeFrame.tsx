@@ -21,7 +21,7 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
 
   function submissionHandler() {
     dispatch(setGeographicScope(scope as any));
-    onNavigate(scope); // directs to correct frame in flow
+    onNavigate(scope);
   }
 
   return (

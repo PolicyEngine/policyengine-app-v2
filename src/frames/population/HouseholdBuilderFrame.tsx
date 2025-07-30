@@ -2,15 +2,14 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
 import IngredientCreationStartView from '@/components/IngredientCreationStartView';
+import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { childOptions, maritalOptions, taxYears } from '@/mocks/householdOptions';
 import { updateChildInfo, updateHousehold } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
 
-const taxYears = ['2021', '2022', '2023'];
-const maritalOptions = ['Single', 'Married'];
-const childOptions = ['0', '1', '2', '3', '4'];
-
 export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
+  const { mutateAsync: createHousehold } = useCreateHousehold();
 
   const [taxYear, setTaxYear] = useState('2023');
   const [maritalStatus, setMaritalStatus] = useState('Single');
@@ -29,9 +28,22 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
     setChildren(updated);
   }
 
-  function submissionHandler() {
+  async function submissionHandler() {
     dispatch(updateHousehold({ taxYear, maritalStatus, numChildren }));
     dispatch(updateChildInfo(children));
+
+    // TODO: payload for creating household needs to be structured correctly to work with the post api
+    await createHousehold({
+      taxYear,
+      maritalStatus,
+      numChildren,
+      children,
+      // children: children.map((c) => ({
+      //   age: parseInt(c.age, 10),
+      //   income: parseFloat(c.income),
+      // })),
+    });
+
     onNavigate('next');
   }
 
@@ -92,7 +104,7 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
 
   return (
     <IngredientCreationStartView
-      title="Household Builder"
+      title="Create Household"
       formInputs={formInputs}
       submissionHandler={submissionHandler}
     />
