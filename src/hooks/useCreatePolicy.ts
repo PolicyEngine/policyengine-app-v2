@@ -15,7 +15,7 @@ export function useCreatePolicy() {
         queryClient.invalidateQueries({ queryKey: policyKeys.all });
 
         // Create association with current user (or anonymous for session storage)
-        const userId = user?.id || 'anonymous'; // TODO: Replace with actual user ID retrieval logic
+        const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
         await createAssociation.mutateAsync({
           userId,
           policyId: data.result.policy_id, // This is from the API response structure; may be modified in API v2

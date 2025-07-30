@@ -1,6 +1,6 @@
-import { ParameterMetadata } from '@/types/parameterMetadata';
+import { ParameterMetadataCollection } from '@/types/parameterMetadata';
 
-export const mockParamMetadata: { parameters: ParameterMetadata } = {
+export const mockParamMetadata: { parameters: ParameterMetadataCollection } = {
   parameters: {
     gov: {
       type: 'parameterNode',
