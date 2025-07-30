@@ -4,6 +4,3 @@ export interface Policy {
   label?: string;
   params: Parameter[];
 }
-
-
-

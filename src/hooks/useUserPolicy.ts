@@ -6,6 +6,7 @@ import { queryConfig } from '../libs/queryConfig';
 import { UserPolicyAssociation } from '../types/userIngredientAssociations';
 import { usePolicy } from './usePolicy';
 import { fetchPolicyById } from '@/api/policy';
+import { PolicyMetadata } from '@/types/policyMetadata';
 
 const apiPolicyStore = new ApiPolicyStore();
 const sessionPolicyStore = new SessionStoragePolicyStore();
@@ -110,11 +111,16 @@ export const useDeleteAssociation = () => {
 };
 */
 
-export const useUserPolicies = (userId: string) => {
-  // TODO: Create more robust way of accessing country ID
-  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
+// Type for the combined data structure
+interface UserPolicyMetadataWithAssociation {
+  association: UserPolicyAssociation;
+  policy: PolicyMetadata | undefined;
+  isLoading: boolean;
+  error: Error | null | undefined;
+}
 
-  // TODO: Determine why output structure is incorrect
+export const useUserPolicies = (userId: string) => {
+  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
 
   // First, get the associations
   const { 
@@ -129,36 +135,32 @@ export const useUserPolicies = (userId: string) => {
   // Fetch all policies in parallel
   const policyQueries = useQueries({
     queries: policyIds.map(policyId => ({
-      queryKey: policyKeys.byId(policyId), // Assuming your usePolicy uses this pattern
-      queryFn: () => fetchPolicyById(country, policyId), // Your policy fetching function
+      queryKey: policyKeys.byId(policyId),
+      queryFn: () => fetchPolicyById(country, policyId),
       enabled: !!associations, // Only run when associations are loaded
-      staleTime: 5 * 60 * 1000, // Same config as other queries
+      staleTime: 5 * 60 * 1000,
     })),
   });
 
   // Combine the results
   const isLoading = associationsLoading || policyQueries.some(q => q.isLoading);
   const error = associationsError || policyQueries.find(q => q.error)?.error;
+  const isError = !!error;
   
-  const policiesWithAssociations = associations?.map(association => {
-    const policyQuery = policyQueries.find(q => 
-      q.data?.id === association.policyId
-    );
-    
-    return {
-      association,
-      policy: policyQuery?.data,
-      isLoading: policyQuery?.isLoading,
-      error: policyQuery?.error,
-    };
-  });
-
-  console.log("policiesWithAssociations:", policiesWithAssociations);
+  // Simple index-based mapping since queries are in same order as associations
+  const policiesWithAssociations: UserPolicyMetadataWithAssociation[] | undefined = associations?.map((association, index) => ({
+    association, 
+    policy: policyQueries[index]?.data, 
+    isLoading: policyQueries[index]?.isLoading ?? false,
+    error: policyQueries[index]?.error ?? null,
+    isError: !!error
+  }));
 
   return {
     data: policiesWithAssociations,
     isLoading,
+    isError,
     error,
-    associations, // Still available if needed
+    associations, // Still available if needed separately
   };
 };

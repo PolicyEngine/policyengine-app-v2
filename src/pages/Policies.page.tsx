@@ -18,19 +18,24 @@ export default function PoliciesPage() {
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const dispatch = useDispatch();
 
-  console.log('PoliciesPage data:', data);
-
   const handleNavigateToCreate = () => {
     dispatch(setFlow(PolicyCreationFlow));
     // onNavigate('next')
   };
 
   const columns = [
-    { key: 'id', header: 'ID' },
-    { key: 'label', header: 'Label' },
-    { key: 'country_id', header: 'Country' },
-    { key: 'api_version', header: 'API Version' },
+    { key: 'id', header: 'ID' } as const,
+    { key: 'label', header: 'Label' } as const,
+    { key: 'country_id', header: 'Country' } as const,
+    { key: 'api_version', header: 'API Version' } as const,
   ];
+
+  const tableData = data?.map(item => ({
+    id: item.association.policyId,
+    label: item.policy?.label || 'Unknown',
+    country_id: item.policy?.country_id || 'Unknown',
+    api_version: item.policy?.api_version || 'Unknown',
+  })) || [];
 
   return (
     <IngredientReadView
@@ -39,7 +44,7 @@ export default function PoliciesPage() {
       isLoading={isLoading}
       isError={isError}
       error={error}
-      data={data || []}
+      data={tableData || []}
       columns={columns}
     />
   );

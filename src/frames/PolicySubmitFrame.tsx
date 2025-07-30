@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
-import { serializePolicyCreationPayload } from '@/api/policy';
+import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { Policy } from '@/types/policy';
 import { RootState } from '@/store';
@@ -19,7 +19,7 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
   const policy: Policy = useSelector((state: RootState) => state.policy);
 
   function handleSubmit() {
-    const serializedPolicyCreationPayload: Record<string, any> =
+    const serializedPolicyCreationPayload: PolicyCreationPayload =
       serializePolicyCreationPayload(policy);
     createPolicy(serializedPolicyCreationPayload);
   }
