@@ -8,6 +8,7 @@ import SimulationCreationFrame from '@/frames/SimulationCreationFrame';
 import SimulationSetupFrame from '@/frames/SimulationSetupFrame';
 import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
 import SimulationsPage from '@/pages/Simulations.page';
+import SimulationSetupPolicyFrame from '@/frames/SimulationSetupPolicyFrame';
 import { SimulationCreationFlow } from './simulationCreationFlow';
 
 export const componentRegistry = {
@@ -18,6 +19,7 @@ export const componentRegistry = {
   SimulationCreationFrame,
   SimulationSetupFrame,
   SimulationSubmitFrame,
+  SimulationSetupPolicyFrame,
   SimulationReadView: SimulationsPage,
 } as const;
 
