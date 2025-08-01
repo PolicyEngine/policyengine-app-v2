@@ -1,17 +1,17 @@
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { RootState } from '@/store';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
+import { markPolicyAsCreated } from '@/reducers/policyReducer';
+import { FlowComponentProps } from '@/types/flow';
 
-interface PolicySubmitFrameProps {
-  onNavigate: (action: string) => void;
-  onCancel?: () => void;
-}
-
-export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmitFrameProps) {
-  //   const dispatch = useDispatch();
+export default function PolicyParameterSelectorFrame({
+  onNavigate,
+  onReturn,
+}: FlowComponentProps) {
+  const dispatch = useDispatch();
   const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.params);
   const { createPolicy, isPending } = useCreatePolicy();
@@ -21,7 +21,12 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
   function handleSubmit() {
     const serializedPolicyCreationPayload: PolicyCreationPayload =
       serializePolicyCreationPayload(policy);
-    createPolicy(serializedPolicyCreationPayload);
+    createPolicy(serializedPolicyCreationPayload, {
+      onSuccess: () => {
+        dispatch(markPolicyAsCreated());
+        onReturn();
+      },
+    });
   }
 
   return (
@@ -36,7 +41,7 @@ export default function PolicySubmitFrame({ onNavigate, onCancel }: PolicySubmit
             <Button
               variant="default"
               fullWidth
-              onClick={onCancel || (() => onNavigate('__return__'))}
+              onClick={onReturn}
             >
               Cancel
             </Button>

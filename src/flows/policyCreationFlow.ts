@@ -15,5 +15,11 @@ export const PolicyCreationFlow: Flow = {
         next: 'PolicySubmitFrame',
       },
     },
+    PolicySubmitFrame: {
+      component: 'PolicySubmitFrame',
+      on: {
+        cancel: '__return__',
+      },
+    }
   },
 };

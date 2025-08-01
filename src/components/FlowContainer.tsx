@@ -60,6 +60,8 @@ export default function FlowContainer() {
 
   const Component = componentRegistry[componentKey];
 
+  console.log(`Rendering component: ${componentKey} for frame: ${currentFrame}`);
+
   return (
     <>
       <Component

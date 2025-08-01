@@ -12,3 +12,9 @@ export const policyKeys = {
   byId: (policyId: string) => [...policyKeys.all, 'policy_id', policyId] as const,
   byUser: (userId: string) => [...policyKeys.all, 'user_id', userId] as const,
 };
+
+export const simulationKeys = {
+  all: ['simulations'] as const,
+  byId: (simulationId: string) => [...simulationKeys.all, 'simulation_id', simulationId] as const,
+  byUser: (userId: string) => [...simulationKeys.all, 'user_id', userId] as const,
+};
