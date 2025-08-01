@@ -1,7 +1,7 @@
 import { countryIds } from '@/libs/countries';
 
 export interface SimulationMetadata {
-  id: number;
+  simulation_id: string;
   country_id: (typeof countryIds)[number];
   api_version: string;
   population_id: number;

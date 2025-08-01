@@ -1,7 +1,11 @@
 import { BASE_URL } from '@/constants';
+import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/simulationPayload';
 
+// The required API endpoint to fetch a simulation by ID
+// doesn't exist yet. The code below will be used once the endpoint is created.
+/*
 export async function fetchSimulationById(
   country: string,
   simulationId: string
@@ -24,7 +28,11 @@ export async function fetchSimulationById(
 
   return json.result;
 }
+*/
 
+// The required API endpoint to create a simulation doesn't
+// exist yet. The code below will be used once the endpoint is created.
+/*
 export async function createSimulation(
   data: SimulationCreationPayload
 ): Promise<{ result: { simulation_id: string } }> {
@@ -41,4 +49,38 @@ export async function createSimulation(
   }
 
   return res.json();
+}
+*/
+
+const mockSimulationId = 'mock-simulation-id'; 
+const mockCountryId = 'us'; 
+const mockApiVersion = '0.0.0'; 
+const mockPopulationId = 1; 
+const mockPolicyId = 89013;
+
+export async function fetchSimulationById(
+  countryId: typeof countryIds[number],
+  simulationId: string
+): Promise<SimulationMetadata> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({
+        simulation_id: simulationId,
+        country_id: countryId,
+        api_version: mockApiVersion,
+        population_id: mockPopulationId,
+        policy_id: mockPolicyId,
+      });
+    }, 1000); // Simulate network delay
+  });
+}
+
+export async function createSimulation(
+  data: SimulationCreationPayload
+): Promise<{ result: { simulation_id: string } }> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve({ result: { simulation_id: mockSimulationId } });
+    }, 1000); // Simulate network delay
+  });
 }

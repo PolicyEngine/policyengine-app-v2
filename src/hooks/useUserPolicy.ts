@@ -4,7 +4,7 @@ import { fetchPolicyById } from '@/api/policy';
 import { PolicyMetadata } from '@/types/policyMetadata';
 import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
-import { associationKeys, policyKeys } from '../libs/queryKeys';
+import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
 import { UserPolicyAssociation } from '../types/userIngredientAssociations';
 
 const apiPolicyStore = new ApiPolicyStore();
@@ -24,7 +24,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
 
   return useQuery({
-    queryKey: associationKeys.byUser(userId),
+    queryKey: policyAssociationKeys.byUser(userId),
     queryFn: () => store.findByUser(userId),
     ...config,
   });
@@ -36,7 +36,7 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
   const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
 
   return useQuery({
-    queryKey: associationKeys.specific(userId, policyId),
+    queryKey: policyAssociationKeys.specific(userId, policyId),
     queryFn: () => store.findById(userId, policyId),
     ...config,
   });
@@ -51,14 +51,14 @@ export const useCreatePolicyAssociation = () => {
       store.create(association),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
-      queryClient.invalidateQueries({ queryKey: associationKeys.byUser(newAssociation.userId) });
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(newAssociation.userId) });
       queryClient.invalidateQueries({
-        queryKey: associationKeys.byPolicy(newAssociation.policyId),
+        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        associationKeys.specific(newAssociation.userId, newAssociation.policyId),
+        policyAssociationKeys.specific(newAssociation.userId, newAssociation.policyId),
         newAssociation
       );
     },
@@ -78,11 +78,11 @@ export const useUpdateAssociation = () => {
       updates: Partial<UserPolicyAssociation>;
     }) => store.update(userId, policyId, updates),
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: associationKeys.byUser(updatedAssociation.userId) });
-      queryClient.invalidateQueries({ queryKey: associationKeys.byPolicy(updatedAssociation.policyId) });
-      
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(updatedAssociation.userId) });
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(updatedAssociation.policyId) });
+
       queryClient.setQueryData(
-        associationKeys.specific(updatedAssociation.userId, updatedAssociation.policyId),
+        policyAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.policyId),
         updatedAssociation
       );
     },
@@ -100,11 +100,11 @@ export const useDeleteAssociation = () => {
     mutationFn: ({ userId, policyId }: { userId: string; policyId: string }) =>
       store.delete(userId, policyId),
     onSuccess: (_, { userId, policyId }) => {
-      queryClient.invalidateQueries({ queryKey: associationKeys.byUser(userId) });
-      queryClient.invalidateQueries({ queryKey: associationKeys.byPolicy(policyId) });
-      
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId) });
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(policyId) });
+
       queryClient.setQueryData(
-        associationKeys.specific(userId, policyId),
+        policyAssociationKeys.specific(userId, policyId),
         null
       );
     },

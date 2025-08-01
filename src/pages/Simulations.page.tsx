@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import IngredientReadView from '@/components/IngredientReadView';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
-import { useUserSimulations } from '@/hooks/useUserSimulations';
+import { useUserSimulations } from '@/hooks/useUserSimulation';
 import { setFlow } from '@/reducers/flowReducer';
 
 export default function SimulationsPage() {

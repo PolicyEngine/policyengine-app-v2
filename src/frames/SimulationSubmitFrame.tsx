@@ -13,6 +13,8 @@ export default function SimulationSubmitFrame({ onNavigate, onReturn }: FlowComp
   function handleSubmit() {
     const serializedSimulationCreationPayload: SimulationCreationPayload =
       serializeSimulationCreationPayload(simulation);
+
+      console.log('Submitting simulation:', serializedSimulationCreationPayload);
     createSimulation(serializedSimulationCreationPayload, {
       onSuccess: () => {
         onNavigate('submit');
