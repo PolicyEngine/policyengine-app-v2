@@ -24,7 +24,6 @@ export const SimulationCreationFlow: Flow = {
           flow: 'PolicyCreationFlow',
           returnTo: 'SimulationSetupFrame'
         },
-        policyCreated: 'SimulationSetupFrame',
       }
     },
     SimulationSubmitFrame: {
