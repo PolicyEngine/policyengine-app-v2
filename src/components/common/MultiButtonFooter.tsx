@@ -2,7 +2,7 @@ import { Button, Grid } from "@mantine/core";
 
 export interface ButtonConfig {
   label: string;
-  variant?: "filled" | "outline";
+  variant?: "filled" | "outline" | "disabled";
   onClick: () => void;
 }
 
@@ -21,7 +21,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
     <Grid>
       {buttons.map((button, index) => (
         <Grid.Col span={gridSize} key={index}>
-          <Button variant={button.variant} onClick={button.onClick} fullWidth>
+          <Button variant={button.variant} disabled={button.variant === 'disabled'} onClick={button.onClick} fullWidth>
             {button.label}
           </Button>
         </Grid.Col>

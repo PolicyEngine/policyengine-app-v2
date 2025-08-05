@@ -42,7 +42,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     }
   }, [simulation.policyId, simulation.populationId, dispatch]);
 
-  const canProceed = simulation.policyId && simulation.populationId;
+  const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
 
   return (
     <SimulationSetupView

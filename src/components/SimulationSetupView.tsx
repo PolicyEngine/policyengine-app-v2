@@ -3,6 +3,7 @@ import SimulationSetupPopulationFrame from '@/frames/SimulationSetupPopulationFr
 import { Button, Container, Grid, Stack, Text, Card } from '@mantine/core';
 import { useSelector, useDispatch } from 'react-redux';
 import { useEffect } from 'react';
+import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface SimulationSetupViewProps {
   onPopulationSelect?: () => void;
@@ -29,6 +30,30 @@ export default function SimulationSetupView({
 
   const userDefinedPolicy = useSelector((state: any) => state.policy);
 
+  const canProceedNextButtonConfig: ButtonConfig = {
+    label: 'Next',
+    variant: 'filled' as const,
+    onClick: onNext,
+  }
+
+  const cantProceedNextButtonConfig: ButtonConfig = {
+    label: 'Next',
+    variant: 'disabled' as const,
+    onClick: () => {return null},
+  }
+
+  const cancelButtonConfig: ButtonConfig = {
+    label: 'Cancel',
+    variant: 'outline' as const,
+    onClick: () => {
+      console.log('Cancel clicked');
+    }
+  }
+
+  const buttonConfig: ButtonConfig[] = canProceed
+    ? [cancelButtonConfig, canProceedNextButtonConfig]
+    : [cancelButtonConfig, cantProceedNextButtonConfig];
+
   return (
     <Container size="md" py="xl">
       <Stack>
@@ -45,6 +70,7 @@ export default function SimulationSetupView({
         ) : (
           <CardCreatePolicy onClick={onPolicySelect} />
         )}
+        <MultiButtonFooter buttons={buttonConfig}/>
       </Stack>
     </Container>
   );

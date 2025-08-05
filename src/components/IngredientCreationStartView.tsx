@@ -1,5 +1,5 @@
 import { Button, Container, Grid, Space } from '@mantine/core';
-import MultiButtonFooter from './common/MultiButtonFooter';
+import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface IngredientCreationStartViewProps {
   title: string;
@@ -15,7 +15,7 @@ export default function IngredientCreationStartView({
   submissionHandler,
 }: IngredientCreationStartViewProps) {
 
-  const buttonConfig = [
+  const buttonConfig: ButtonConfig[] = [
     {
       label: 'Cancel',
       variant: 'outline' as const,
