@@ -4,12 +4,21 @@ import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flow
 import { isComponentKey, isFlowKey } from '@/types/flow';
 
 export default function FlowContainer() {
-  const { currentFlow, currentFrame } = useSelector((state: any) => state.flow);
+  const { currentFlow, currentFrame, flowStack } = useSelector((state: any) => state.flow);
   const dispatch = useDispatch();
 
   if (!currentFlow || !currentFrame) {
     return <p>No flow available</p>;
   }
+
+  const isInSubflow = flowStack.length > 0;
+  const flowDepth = flowStack.length;
+  const parentFlowContext = isInSubflow
+    ? {
+        flowName: flowStack[flowStack.length - 1].flow.name,
+        parentFrame: flowStack[flowStack.length - 1].frame,
+      }
+    : undefined;
 
   // Handle navigation function that components can use
   const handleNavigate = (eventName: string) => {
@@ -67,7 +76,10 @@ export default function FlowContainer() {
       <Component
         onNavigate={handleNavigate}
         onReturn={handleReturn}
-        flowConfig={currentFlow.frames[currentFrame]}
+        flowConfig={currentFlow}
+        isInSubflow={isInSubflow}
+        flowDepth={flowDepth}
+        parentFlowContext={parentFlowContext}
       />
     </>
   );

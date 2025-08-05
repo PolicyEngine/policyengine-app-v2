@@ -31,4 +31,10 @@ export interface FlowComponentProps {
   onNavigate: (eventName: string) => void;
   onReturn: () => void;
   flowConfig: FlowFrame;
+  isInSubflow: boolean;
+  flowDepth: number;
+  parentFlowContext?: {
+    flowName: string;
+    parentFrame: ComponentKey;
+  }
 }

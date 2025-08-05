@@ -4,12 +4,13 @@ import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { RootState } from '@/store';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
-import { markPolicyAsCreated } from '@/reducers/policyReducer';
+import { clearPolicy, markPolicyAsCreated } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function PolicyParameterSelectorFrame({
   onNavigate,
   onReturn,
+  isInSubflow,
 }: FlowComponentProps) {
   const dispatch = useDispatch();
   const label = useSelector((state: RootState) => state.policy.label);
@@ -24,6 +25,11 @@ export default function PolicyParameterSelectorFrame({
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: () => {
         dispatch(markPolicyAsCreated());
+        // If we've created this policy as part of a standalone policy creation flow,
+        // we're done; clear the policy reducer
+        if (!isInSubflow) {
+          dispatch(clearPolicy());
+        }
         onReturn();
       },
     });
