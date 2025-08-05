@@ -11,7 +11,8 @@ export default function NewExistingIngredientSelector(props: NewExistingIngredie
     <Box p="md">
       <Stack>
         <Text size="lg" fw={700}>TODO: Title</Text>
-          <Card disabled withBorder p="md" h="100%" component="button" onClick={() => {console.log('Existing Ingredient Clicked');}}>
+          {/* Temporarily make gray to show disabled state */}
+          <Card disabled withBorder p="md" h="100%" component="button" onClick={() => {console.log('Existing Ingredient Clicked');}} bg="gray">
             <Stack>
               <Text fw={600}>Load existing {`${ingredientName}`}</Text>
               <Text size="sm" c="dimmed">

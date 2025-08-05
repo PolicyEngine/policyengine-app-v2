@@ -32,14 +32,14 @@ export default function SimulationSetupView({
   return (
     <Container size="md" py="xl">
       <Stack>
-        <Card withBorder p="md" mb="xl" component="button" onClick={onPopulationSelect} disabled={isPopulationDisabled}>
+        {/* Temporarily add color to demonstrate disabled*/}
+        <Card withBorder p="md" mb="xl" component="button" onClick={onPopulationSelect} disabled={isPopulationDisabled} bg="gray">
           <Text fw={700}>TODO: ICON</Text>
           <Text>Add population</Text>
           <Text size="sm" c="dimmed">
             Select a geographic scope or specific household
           </Text>
         </Card>
-        {/* TODO: Add pointer cursor on hover over card*/}
         {userDefinedPolicy && userDefinedPolicy.isCreated ? (
           <CardSelectedPolicy label={userDefinedPolicy.label} />
         ) : (
