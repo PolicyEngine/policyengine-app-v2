@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { componentRegistry, flowRegistry } from '@/flows/registry';
 import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flowReducer';
-import { isComponentKey, isFlowKey } from '@/types/flow';
+import { isComponentKey, isFlowKey, isNavigationObject } from '@/types/flow';
 
 export default function FlowContainer() {
   const { currentFlow, currentFrame, flowStack } = useSelector((state: any) => state.flow);
@@ -38,14 +38,27 @@ export default function FlowContainer() {
       return;
     }
 
-    // Check if target is a flow or component
-    if (isFlowKey(target)) {
-      const targetFlow = flowRegistry[target];
-      dispatch(navigateToFlow({ flow: targetFlow }));
-    } else if (isComponentKey(target)) {
-      dispatch(navigateToFrame(target));
-    } else {
-      console.error(`Unknown target type: ${target}`);
+    // Handle navigation object with flow and returnTo
+    if (isNavigationObject(target)) {
+      const targetFlow = flowRegistry[target.flow];
+      dispatch(navigateToFlow({ 
+        flow: targetFlow, 
+        returnFrame: target.returnTo 
+      }));
+      return;
+    }
+
+    // Handle string targets (existing logic)
+    if (typeof target === 'string') {
+      // Check if target is a flow or component
+      if (isFlowKey(target)) {
+        const targetFlow = flowRegistry[target];
+        dispatch(navigateToFlow({ flow: targetFlow }));
+      } else if (isComponentKey(target)) {
+        dispatch(navigateToFrame(target));
+      } else {
+        console.error(`Unknown target type: ${target}`);
+      }
     }
   };
 

@@ -20,7 +20,10 @@ export const SimulationCreationFlow: Flow = {
     SimulationSetupPolicyFrame: {
       component: 'SimulationSetupPolicyFrame',
       on: {
-        createNew: 'PolicyCreationFlow',
+        createNew: {
+          flow: 'PolicyCreationFlow',
+          returnTo: 'SimulationSetupFrame'
+        },
         policyCreated: 'SimulationSetupFrame',
       }
     },
