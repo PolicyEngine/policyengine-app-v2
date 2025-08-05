@@ -1,4 +1,5 @@
-import { Button, Container, Grid } from '@mantine/core';
+import { Button, Container, Grid, Space } from '@mantine/core';
+import TwoButtonFooter from './common/TwoButtonFooter';
 
 interface IngredientCreationStartViewProps {
   title: string;
@@ -23,18 +24,13 @@ export default function IngredientCreationStartView({
         {/*form labels and inputs*/}
         {formInputs}
         {/*button panel: Cancel and Create X*/}
-        <Grid>
-          <Grid.Col span={6}>
-            <Button variant="default" onClick={close} fullWidth>
-              Cancel
-            </Button>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Button variant="filled" fullWidth onClick={() => submissionHandler()}>
-              {submitButtonText || title}
-            </Button>
-          </Grid.Col>
-        </Grid>
+        <Space h="xs" />
+        <TwoButtonFooter
+          onPrimaryClick={() => submissionHandler()}
+          onSecondaryClick={() => console.log('Cancel clicked')}
+          primaryLabel={submitButtonText || title}
+          secondaryLabel="Cancel"
+        />
       </Container>
       {/*</Modal>*/}
     </>
