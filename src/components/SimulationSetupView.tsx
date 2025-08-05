@@ -29,10 +29,6 @@ export default function SimulationSetupView({
 
   const userDefinedPolicy = useSelector((state: any) => state.policy);
 
-  useEffect(() => {
-    console.log('User defined policy updated:', userDefinedPolicy);
-  }, [userDefinedPolicy]);
-
   return (
     <Container size="md" py="xl">
       <Stack>
@@ -64,7 +60,8 @@ interface CardCreatePolicyProps {
 
 function CardSelectedPolicy({ label }: CardSelectedPolicyProps) {
   return (
-    <Card withBorder p="md" mb="xl" component="button">
+    <Card withBorder p="md" mb="xl" component="button" bg={'lightblue'}>
+      {/* TODO: Remove hardcoded color*/}
       <Text fw={700}>TODO: ICON</Text>
       <Text>{label}</Text>
       <Text size="sm" c="dimmed">

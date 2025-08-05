@@ -1,4 +1,3 @@
-import SimulationSetupPolicyFrame from '@/frames/SimulationSetupPolicyFrame';
 import { Flow } from '../types/flow';
 
 export const SimulationCreationFlow: Flow = {
@@ -22,6 +21,7 @@ export const SimulationCreationFlow: Flow = {
       component: 'SimulationSetupPolicyFrame',
       on: {
         createNew: 'PolicyCreationFlow',
+        policyCreated: 'SimulationSetupFrame',
       }
     },
     SimulationSubmitFrame: {
