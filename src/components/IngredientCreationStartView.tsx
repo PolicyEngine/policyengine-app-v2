@@ -1,5 +1,5 @@
 import { Button, Container, Grid, Space } from '@mantine/core';
-import TwoButtonFooter from './common/TwoButtonFooter';
+import MultiButtonFooter from './common/MultiButtonFooter';
 
 interface IngredientCreationStartViewProps {
   title: string;
@@ -14,6 +14,20 @@ export default function IngredientCreationStartView({
   submitButtonText,
   submissionHandler,
 }: IngredientCreationStartViewProps) {
+
+  const buttonConfig = [
+    {
+      label: 'Cancel',
+      variant: 'outline' as const,
+      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+    },
+    {
+      label: submitButtonText || title,
+      variant: 'filled' as const,
+      onClick: () => submissionHandler(),
+    },
+  ]
+
   return (
     <>
       {/*<Modal opened={opened} onClose={close} title={title} centered>*/}
@@ -25,11 +39,8 @@ export default function IngredientCreationStartView({
         {formInputs}
         {/*button panel: Cancel and Create X*/}
         <Space h="xs" />
-        <TwoButtonFooter
-          onPrimaryClick={() => submissionHandler()}
-          onSecondaryClick={() => console.log('Cancel clicked')}
-          primaryLabel={submitButtonText || title}
-          secondaryLabel="Cancel"
+        <MultiButtonFooter
+          buttons={buttonConfig}
         />
       </Container>
       {/*</Modal>*/}
