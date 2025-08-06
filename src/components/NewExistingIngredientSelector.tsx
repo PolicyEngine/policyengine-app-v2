@@ -1,18 +1,20 @@
-import { Box, Stack, Text, Card } from '@mantine/core';
+import { Box, Stack, Text, Card } from '@mantine/core'
+import { ingredients } from '@/types/ingredient';
 
 export interface NewExistingIngredientSelectorProps {
-  ingredientName: string;
+  ingredientName: typeof ingredients[number];
   onClickCreateNew: () => void;
+  onClickExisting: () => void;
 }
 export default function NewExistingIngredientSelector(props: NewExistingIngredientSelectorProps) {
-  const { ingredientName, onClickCreateNew } = props;
+  const { ingredientName, onClickCreateNew, onClickExisting } = props;
 
   return (
     <Box p="md">
       <Stack>
         <Text size="lg" fw={700}>TODO: Title</Text>
           {/* Temporarily make gray to show disabled state */}
-          <Card disabled withBorder p="md" h="100%" component="button" onClick={() => {console.log('Existing Ingredient Clicked');}} bg="gray">
+          <Card withBorder p="md" h="100%" component="button" onClick={onClickExisting} bg="gray">
             <Stack>
               <Text fw={600}>Load existing {`${ingredientName}`}</Text>
               <Text size="sm" c="dimmed">

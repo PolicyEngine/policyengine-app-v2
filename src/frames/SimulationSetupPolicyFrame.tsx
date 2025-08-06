@@ -11,7 +11,11 @@ export default function SimulationSetupPolicyFrame({ onNavigate, onReturn }: Flo
     onNavigate('createNew');
   }
 
+  function onClickExisting() {
+    onNavigate('loadExisting');
+  }
+
   return (
-    <NewExistingIngredientSelector ingredientName="policy" onClickCreateNew={onClickCreateNew} />
+    <NewExistingIngredientSelector ingredientName="policy" onClickCreateNew={onClickCreateNew} onClickExisting={onClickExisting} />
   );
 }

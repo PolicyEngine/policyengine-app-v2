@@ -24,6 +24,13 @@ export const SimulationCreationFlow: Flow = {
           flow: 'PolicyCreationFlow',
           returnTo: 'SimulationSetupFrame'
         },
+        loadExisting: 'SimulationSelectExistingPolicyFrame',
+      }
+    },
+    SimulationSelectExistingPolicyFrame: {
+      component: 'SimulationSelectExistingPolicyFrame',
+      on: {
+        next: 'SimulationSetupFrame'
       }
     },
     SimulationSubmitFrame: {
