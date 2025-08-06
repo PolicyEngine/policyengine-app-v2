@@ -1,13 +1,33 @@
 import { BASE_URL } from '@/constants';
+import { HouseholdMetadata } from '@/types/householdMetadata';
+import { HouseholdCreationPayload } from '@/types/householdPayloads';
 
-export interface HouseholdPayload {
-  taxYear: string;
-  maritalStatus: string;
-  numChildren: number;
-  children: { age: string; income: string }[];
+export async function fetchHouseholdById(
+  country: string,
+  household: string
+): Promise<HouseholdMetadata> {
+  const url = `${BASE_URL}/${country}/household/${household}`;
+
+  const res = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error(`Failed to fetch household ${household}`);
+  }
+
+  const json = await res.json();
+
+  return json.result;
 }
 
-export async function createHousehold(data: HouseholdPayload) {
+export async function createHousehold(
+  data: HouseholdCreationPayload
+): Promise<{ result: { household_id: string } }> {
   const url = `${BASE_URL}/us/household`;
 
   const res = await fetch(url, {

@@ -28,8 +28,3 @@ export interface HouseholdPerson {
 export interface MemberGroup {
   members: string[];
 }
-
-// Models the POST household api payload
-export interface HouseholdCreationPayload {
-  data: HouseholdData;
-}

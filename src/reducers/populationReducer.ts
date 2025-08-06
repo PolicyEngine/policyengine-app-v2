@@ -1,34 +1,32 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Household } from '@/types/household';
 
 export interface ChildInfo {
   age: string;
   income: string;
 }
 
-export interface HouseholdState {
+// Extend Population type locally to include UI-specific fields
+interface Population extends Household {
   geographicScope: 'national' | 'state' | 'household' | '';
-  maritalStatus: string;
-  taxYear: string;
-  numChildren: number;
-  children: ChildInfo[];
 }
 
-const initialState: HouseholdState = {
-  geographicScope: '',
-  maritalStatus: '',
+const initialState: Population = {
   taxYear: '',
+  maritalStatus: 'single',
   numChildren: 0,
   children: [],
+  geographicScope: '',
 };
 
 export const populationSlice = createSlice({
   name: 'population',
   initialState,
   reducers: {
-    setGeographicScope: (state, action: PayloadAction<HouseholdState['geographicScope']>) => {
+    setGeographicScope: (state, action: PayloadAction<Population['geographicScope']>) => {
       state.geographicScope = action.payload;
     },
-    updateHousehold: (state, action: PayloadAction<Partial<HouseholdState>>) => {
+    updatePopulation: (state, action: PayloadAction<Partial<Population>>) => {
       Object.assign(state, action.payload);
     },
     updateChildInfo: (state, action: PayloadAction<ChildInfo[]>) => {
@@ -37,6 +35,6 @@ export const populationSlice = createSlice({
   },
 });
 
-export const { setGeographicScope, updateHousehold, updateChildInfo } = populationSlice.actions;
+export const { setGeographicScope, updatePopulation, updateChildInfo } = populationSlice.actions;
 
 export default populationSlice.reducer;

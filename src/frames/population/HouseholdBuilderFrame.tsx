@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
 import IngredientCreationStartView from '@/components/IngredientCreationStartView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { childOptions, maritalOptions, taxYears } from '@/mocks/householdOptions';
-import { updateChildInfo, updateHousehold } from '@/reducers/populationReducer';
-import { FlowComponentProps } from '@/types/flow';
+import { RootState } from '@/store';
+import { Household } from '@/types/household';
+import {
+  HouseholdCreationPayload,
+  serializeHouseholdCreationPayload,
+} from '@/types/householdPayloads';
 
-export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps) {
-  const dispatch = useDispatch();
-  const { mutateAsync: createHousehold } = useCreateHousehold();
+export default function HouseholdBuilderFrame() {
+  // const dispatch = useDispatch();
+  // const { mutateAsync: createHousehold } = useCreateHousehold();
 
   const [taxYear, setTaxYear] = useState('2023');
   const [maritalStatus, setMaritalStatus] = useState('Single');
@@ -28,23 +32,33 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
     setChildren(updated);
   }
 
-  async function submissionHandler() {
-    dispatch(updateHousehold({ taxYear, maritalStatus, numChildren }));
-    dispatch(updateChildInfo(children));
+  // async function submissionHandler() {
+  //   dispatch(updateHousehold({ taxYear, maritalStatus, numChildren }));
+  //   dispatch(updateChildInfo(children));
 
-    // TODO: payload for creating household needs to be structured correctly to work with the post api
-    await createHousehold({
-      taxYear,
-      maritalStatus,
-      numChildren,
-      children,
-      // children: children.map((c) => ({
-      //   age: parseInt(c.age, 10),
-      //   income: parseFloat(c.income),
-      // })),
-    });
+  //   // TODO: payload for creating household needs to be structured correctly to work with the post api
+  //   await createHousehold({
+  //     taxYear,
+  //     maritalStatus,
+  //     numChildren,
+  //     children,
+  //     // children: children.map((c) => ({
+  //     //   age: parseInt(c.age, 10),
+  //     //   income: parseFloat(c.income),
+  //     // })),
+  //   });
 
-    onNavigate('next');
+  //   onNavigate('next');
+  // }
+
+  const { createHousehold } = useCreateHousehold();
+
+  const household: Household = useSelector((state: RootState) => state.household);
+
+  function handleSubmit() {
+    const serializedHouseholdCreationPayload: HouseholdCreationPayload =
+      serializeHouseholdCreationPayload(household);
+    createHousehold(serializedHouseholdCreationPayload);
   }
 
   const formInputs = (
@@ -106,7 +120,7 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
     <IngredientCreationStartView
       title="Create Household"
       formInputs={formInputs}
-      submissionHandler={submissionHandler}
+      submissionHandler={handleSubmit}
     />
   );
 }

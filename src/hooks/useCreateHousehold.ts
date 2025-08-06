@@ -1,17 +1,52 @@
+// import { useMutation, useQueryClient } from '@tanstack/react-query';
+// import { createHousehold } from '@/api/household';
+
+// export function useCreateHousehold() {
+//   const queryClient = useQueryClient();
+
+//   return useMutation({
+//     mutationFn: createHousehold,
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ['household'] });
+//     },
+//     onError: (err) => {
+//       console.error('Household creation failed', err);
+//       // TODO show a toast or alert here if desired?
+//     },
+//   });
+// }
+
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
+import { householdKeys } from '@/libs/queryKeys';
+import { useCreateHouseholdAssociation } from './useUserHousehold';
 
 export function useCreateHousehold() {
   const queryClient = useQueryClient();
+  // const user = undefined; // TODO: Replace with actual user context or auth hook in future
+  const createAssociation = useCreateHouseholdAssociation();
 
-  return useMutation({
+  const mutation = useMutation({
     mutationFn: createHousehold,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['household'] });
-    },
-    onError: (err) => {
-      console.error('Household creation failed', err);
-      // TODO show a toast or alert here if desired?
+    onSuccess: async (data) => {
+      try {
+        queryClient.invalidateQueries({ queryKey: householdKeys.all });
+
+        // Create association with current user (or anonymous for session storage)
+        const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
+        await createAssociation.mutateAsync({
+          userId,
+          householdId: data.result.household_id, // This is from the API response structure; may be modified in API v2
+        });
+      } catch (error) {
+        console.error('Household created but association failed:', error);
+      }
     },
   });
+
+  return {
+    createHousehold: mutation.mutateAsync,
+    isPending: mutation.isPending,
+    error: mutation.error,
+  };
 }

@@ -12,3 +12,10 @@ export interface UserPolicyAssociation extends UserIngredientAssociation {
 export interface UserSimulationAssociation extends UserIngredientAssociation {
   simulationId: string; // TODO: Verify type; see if we want to integrate with UserPolicy or Policy
 }
+
+export interface UserHouseholdAssociation {
+  userId: string; // TODO: Verify type
+  householdId: string; // TODO: Verify type
+  createdAt?: string;
+  updatedAt?: string;
+}
