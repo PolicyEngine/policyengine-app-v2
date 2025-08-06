@@ -10,9 +10,11 @@ export interface PolicyParamAdditionPayload {
 
 interface PolicyState extends Policy {
   isCreated: boolean;
+  id: string | undefined; // TODO: Check type on this
 }
 
 const initialState: PolicyState = {
+  id: undefined,
   label: undefined,
   params: [],
   isCreated: false,
@@ -40,11 +42,10 @@ export const policySlice = createSlice({
       state.label = undefined;
       state.params = [];
       state.isCreated = false;
+      state.id = undefined;
     },
-    updatePolicy: (state, action: PayloadAction<Partial<Policy>>) => {
-      if (action.payload.label !== undefined) {
-        state.label = action.payload.label;
-      }
+    updateId: (state, action: PayloadAction<string>) => {
+      state.id = action.payload;
     },
     updateLabel: (state, action: PayloadAction<string>) => {
       state.label = action.payload;
@@ -56,6 +57,6 @@ export const policySlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { addPolicyParam, clearPolicy, updatePolicy, updateLabel, markPolicyAsCreated } = policySlice.actions;
+export const { addPolicyParam, clearPolicy, updateLabel, updateId, markPolicyAsCreated } = policySlice.actions;
 
 export default policySlice.reducer;

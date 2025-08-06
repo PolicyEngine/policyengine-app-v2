@@ -4,7 +4,7 @@ import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { RootState } from '@/store';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
-import { clearPolicy, markPolicyAsCreated } from '@/reducers/policyReducer';
+import { clearPolicy, updateId, markPolicyAsCreated } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function PolicyParameterSelectorFrame({
@@ -23,7 +23,9 @@ export default function PolicyParameterSelectorFrame({
     const serializedPolicyCreationPayload: PolicyCreationPayload =
       serializePolicyCreationPayload(policy);
     createPolicy(serializedPolicyCreationPayload, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('Policy created successfully:', data);
+        dispatch(updateId(data.result.policy_id));
         dispatch(markPolicyAsCreated());
         // If we've created this policy as part of a standalone policy creation flow,
         // we're done; clear the policy reducer

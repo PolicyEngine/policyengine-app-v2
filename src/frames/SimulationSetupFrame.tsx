@@ -25,15 +25,11 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   };
 
   // Listen for policy creation and update simulation with policy ID
-  // Use the isCreated flag as the reliable indicator of policy completion
   useEffect(() => {
-    if (policy.isCreated && !simulation.policyId) {
-      // In real implementation, this would come from the API response
-      // when the policy is actually created/submitted
-      const mockPolicyId = `policy_${Date.now()}`;
-      dispatch(updatePolicyId(mockPolicyId));
+    if (policy.isCreated && policy.id && !simulation.policyId) {
+      dispatch(updatePolicyId(policy.id));
     }
-  }, [policy.isCreated, simulation.policyId, dispatch]);
+  }, [policy.isCreated, policy.id, simulation.policyId, dispatch]);
 
   // Set default population ID when policy is selected
   useEffect(() => {
