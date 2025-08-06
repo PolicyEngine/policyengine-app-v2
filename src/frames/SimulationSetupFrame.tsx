@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { FlowComponentProps } from '@/types/flow';
 import { RootState } from '@/store';
-import { updatePolicyId, updatePopulationId } from '@/reducers/simulationReducer';
+import { updateSimulationPolicyId, updateSimulationPopulationId } from '@/reducers/simulationReducer';
 import SimulationSetupView from '@/components/SimulationSetupView';
 
 export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps) {
@@ -27,14 +27,14 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   // Listen for policy creation and update simulation with policy ID
   useEffect(() => {
     if (policy.isCreated && policy.id && !simulation.policyId) {
-      dispatch(updatePolicyId(policy.id));
+      dispatch(updateSimulationPolicyId(policy.id));
     }
   }, [policy.isCreated, policy.id, simulation.policyId, dispatch]);
 
   // Set default population ID when policy is selected
   useEffect(() => {
     if (simulation.policyId && !simulation.populationId) {
-      dispatch(updatePopulationId('default-population'));
+      dispatch(updateSimulationPopulationId('default-population'));
     }
   }, [simulation.policyId, simulation.populationId, dispatch]);
 

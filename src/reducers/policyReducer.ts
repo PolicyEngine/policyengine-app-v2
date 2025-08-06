@@ -44,7 +44,7 @@ export const policySlice = createSlice({
       state.isCreated = false;
       state.id = undefined;
     },
-    updateId: (state, action: PayloadAction<string>) => {
+    updatePolicyId: (state, action: PayloadAction<string>) => {
       state.id = action.payload;
     },
     updateLabel: (state, action: PayloadAction<string>) => {
@@ -57,6 +57,6 @@ export const policySlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { addPolicyParam, clearPolicy, updateLabel, updateId, markPolicyAsCreated } = policySlice.actions;
+export const { addPolicyParam, clearPolicy, updateLabel, updatePolicyId, markPolicyAsCreated } = policySlice.actions;
 
 export default policySlice.reducer;

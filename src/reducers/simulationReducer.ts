@@ -10,10 +10,10 @@ export const simulationSlice = createSlice({
   name: 'simulation',
   initialState,
   reducers: {
-    updatePopulationId: (state, action: PayloadAction<string>) => {
+    updateSimulationPopulationId: (state, action: PayloadAction<string>) => {
       state.populationId = action.payload;
     },
-    updatePolicyId: (state, action: PayloadAction<string>) => {
+    updateSimulationPolicyId: (state, action: PayloadAction<string>) => {
       state.policyId = action.payload;
     },
     clearSimulation: (state) => {
@@ -23,7 +23,7 @@ export const simulationSlice = createSlice({
   },
 });
 
-export const { updatePopulationId, updatePolicyId, clearSimulation } =
+export const { updateSimulationPopulationId, updateSimulationPolicyId, clearSimulation } =
   simulationSlice.actions;
 
 export default simulationSlice.reducer;
