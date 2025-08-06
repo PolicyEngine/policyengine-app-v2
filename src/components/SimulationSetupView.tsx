@@ -91,7 +91,7 @@ function CardSelectedPolicy({ label }: CardSelectedPolicyProps) {
       <Text fw={700}>TODO: ICON</Text>
       <Text>{label}</Text>
       <Text size="sm" c="dimmed">
-        TODO: Policy description and details
+        {label}
       </Text>
     </Card>
   );
