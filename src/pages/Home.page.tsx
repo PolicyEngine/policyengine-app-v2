@@ -10,7 +10,7 @@ import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 // import PoliciesPage from './Policies.page';
 
-export function HomePage() {
+export default function HomePage() {
   const dispatch = useDispatch();
   // const [showPolicyView, setShowPolicyView] = useState(false);
   // Note: Below is for testing purposes only
