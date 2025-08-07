@@ -13,7 +13,7 @@ export default function PolicyParameterSelectorFrame({
   onReturn,
   flowConfig,
   isInSubflow,
-  flowDepth
+  flowDepth,
 }: FlowComponentProps) {
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
 
@@ -28,7 +28,13 @@ export default function PolicyParameterSelectorFrame({
     <>
       <Box h="100%" maw="100vw">
         <Stack>
-          <Header onNavigate={onNavigate} onReturn={onReturn} flowConfig={flowConfig} isInSubflow={isInSubflow} flowDepth={flowDepth}/>
+          <Header
+            onNavigate={onNavigate}
+            onReturn={onReturn}
+            flowConfig={flowConfig}
+            isInSubflow={isInSubflow}
+            flowDepth={flowDepth}
+          />
           <Grid>
             <Grid.Col span={3}>
               <Menu setSelectedParamLabel={handleMenuItemClick} />

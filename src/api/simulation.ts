@@ -52,14 +52,14 @@ export async function createSimulation(
 }
 */
 
-const mockSimulationId = `mock-simulation-id-${Date.now()}`; 
-const mockCountryId = 'us'; 
-const mockApiVersion = 'mock-api-version'; 
-const mockPopulationId = 1; 
+const mockSimulationId = `mock-simulation-id-${Date.now()}`;
+const mockCountryId = 'us';
+const mockApiVersion = 'mock-api-version';
+const mockPopulationId = 1;
 const mockPolicyId = 89013;
 
 export async function fetchSimulationById(
-  countryId: typeof countryIds[number],
+  countryId: (typeof countryIds)[number],
   simulationId: string
 ): Promise<SimulationMetadata> {
   return new Promise((resolve) => {

@@ -20,6 +20,6 @@ export const PolicyCreationFlow: Flow = {
       on: {
         cancel: '__return__',
       },
-    }
+    },
   },
 };

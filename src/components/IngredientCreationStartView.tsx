@@ -14,7 +14,6 @@ export default function IngredientCreationStartView({
   submitButtonText,
   submissionHandler,
 }: IngredientCreationStartViewProps) {
-
   const buttonConfig: ButtonConfig[] = [
     {
       label: 'Cancel',
@@ -26,7 +25,7 @@ export default function IngredientCreationStartView({
       variant: 'filled' as const,
       onClick: () => submissionHandler(),
     },
-  ]
+  ];
 
   return (
     <>
@@ -39,9 +38,7 @@ export default function IngredientCreationStartView({
         {formInputs}
         {/*button panel: Cancel and Create X*/}
         <Space h="xs" />
-        <MultiButtonFooter
-          buttons={buttonConfig}
-        />
+        <MultiButtonFooter buttons={buttonConfig} />
       </Container>
       {/*</Modal>*/}
     </>

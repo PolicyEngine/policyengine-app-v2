@@ -1,16 +1,20 @@
-import MultiButtonFooter, { ButtonConfig } from '@/components/common/MultiButtonFooter';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { clearPolicy, markPolicyAsCreated, updateLabel, updatePolicyId } from '@/reducers/policyReducer';
-import { FlowComponentProps } from '@/types/flow';
-import { Stack, Text, Card } from '@mantine/core';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { Card, Stack, Text } from '@mantine/core';
+import MultiButtonFooter, { ButtonConfig } from '@/components/common/MultiButtonFooter';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
+import {
+  clearPolicy,
+  markPolicyAsCreated,
+  updateLabel,
+  updatePolicyId,
+} from '@/reducers/policyReducer';
+import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyMetadata } from '@/types/policyMetadata';
-import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
-
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
 
@@ -20,11 +24,11 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   const canProceed = localPolicyId !== null;
 
   const dispatch = useDispatch();
-  
+
   function handlePolicySelect(policy: PolicyMetadata) {
     // Blank out any existing policy
     dispatch(clearPolicy());
-    
+
     // Fill in all policy details
     // TODO: Fix ID types
     dispatch(updatePolicyId(policy.id.toString()));
@@ -32,7 +36,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
     // Load all policy parameters using the utility function
     loadPolicyParametersToStore(policy.policy_json, dispatch);
-    
+
     dispatch(markPolicyAsCreated());
     setLocalPolicyId(policy.id.toString());
   }
@@ -47,21 +51,23 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     label: 'Next',
     variant: 'filled' as const,
     onClick: handleSubmit,
-  }
+  };
 
   const cantProceedNextButtonConfig: ButtonConfig = {
     label: 'Next',
     variant: 'disabled' as const,
-    onClick: () => {return null},
-  }
+    onClick: () => {
+      return null;
+    },
+  };
 
   const cancelButtonConfig: ButtonConfig = {
     label: 'Cancel',
     variant: 'outline' as const,
     onClick: () => {
       console.log('Cancel clicked');
-    }
-  }
+    },
+  };
 
   const buttonConfig: ButtonConfig[] = canProceed
     ? [cancelButtonConfig, canProceedNextButtonConfig]
@@ -87,7 +93,13 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       .filter((association) => association.policy) // Only include associations with loaded policies
       .map((association) => (
         // TODO: Fix ID types
-        <Card key={association.policy!.id} withBorder p="md" component="button" onClick={() => handlePolicySelect(association.policy!)}>
+        <Card
+          key={association.policy!.id}
+          withBorder
+          p="md"
+          component="button"
+          onClick={() => handlePolicySelect(association.policy!)}
+        >
           <Stack>
             <Text fw={600}>{association.policy!.label}</Text>
           </Stack>
@@ -98,15 +110,11 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   return (
     <Stack>
       <Text fw={700}>Select an Existing Policy</Text>
-      <Text size="sm">
-        Search
-      </Text>
+      <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
       <Text fw={700}>Recents</Text>
-      <Stack>
-        {displayPolicies}
-      </Stack>
+      <Stack>{displayPolicies}</Stack>
       <MultiButtonFooter buttons={buttonConfig} />
     </Stack>
-  )
+  );
 }

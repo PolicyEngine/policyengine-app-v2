@@ -51,7 +51,9 @@ export const useCreatePolicyAssociation = () => {
       store.create(association),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(newAssociation.userId) });
+      queryClient.invalidateQueries({
+        queryKey: policyAssociationKeys.byUser(newAssociation.userId),
+      });
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId),
       });

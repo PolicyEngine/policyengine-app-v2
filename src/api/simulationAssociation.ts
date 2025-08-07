@@ -1,7 +1,9 @@
 import { UserSimulationAssociation } from '../types/userIngredientAssociations';
 
 export interface UserSimulationStore {
-  create: (association: Omit<UserSimulationAssociation, 'createdAt'>) => Promise<UserSimulationAssociation>;
+  create: (
+    association: Omit<UserSimulationAssociation, 'createdAt'>
+  ) => Promise<UserSimulationAssociation>;
   findByUser: (userId: string) => Promise<UserSimulationAssociation[]>;
   findById: (userId: string, simulationId: string) => Promise<UserSimulationAssociation | null>;
   // The below are not yet implemented, but keeping for future use

@@ -1,8 +1,8 @@
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Button, Card, Container, Grid, Stack, Text } from '@mantine/core';
 import SimulationSetupPolicyFrame from '@/frames/SimulationSetupPolicyFrame';
 import SimulationSetupPopulationFrame from '@/frames/SimulationSetupPopulationFrame';
-import { Button, Container, Grid, Stack, Text, Card } from '@mantine/core';
-import { useSelector, useDispatch } from 'react-redux';
-import { useEffect } from 'react';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface SimulationSetupViewProps {
@@ -24,7 +24,6 @@ export default function SimulationSetupView({
   onNext,
   canProceed,
 }: SimulationSetupViewProps) {
-
   // TODO: Handle navigation/display after a user goes through policy creation flow;
   // policies not yet actually selecting after creation
 
@@ -36,21 +35,23 @@ export default function SimulationSetupView({
     label: 'Next',
     variant: 'filled' as const,
     onClick: onNext,
-  }
+  };
 
   const cantProceedNextButtonConfig: ButtonConfig = {
     label: 'Next',
     variant: 'disabled' as const,
-    onClick: () => {return null},
-  }
+    onClick: () => {
+      return null;
+    },
+  };
 
   const cancelButtonConfig: ButtonConfig = {
     label: 'Cancel',
     variant: 'outline' as const,
     onClick: () => {
       console.log('Cancel clicked');
-    }
-  }
+    },
+  };
 
   const buttonConfig: ButtonConfig[] = canProceed
     ? [cancelButtonConfig, canProceedNextButtonConfig]
@@ -60,7 +61,15 @@ export default function SimulationSetupView({
     <Container size="md" py="xl">
       <Stack>
         {/* Temporarily add color to demonstrate disabled*/}
-        <Card withBorder p="md" mb="xl" component="button" onClick={onPopulationSelect} disabled={isPopulationDisabled} bg="gray">
+        <Card
+          withBorder
+          p="md"
+          mb="xl"
+          component="button"
+          onClick={onPopulationSelect}
+          disabled={isPopulationDisabled}
+          bg="gray"
+        >
           <Text fw={700}>TODO: ICON</Text>
           <Text>Add population</Text>
           <Text size="sm" c="dimmed">
@@ -72,7 +81,7 @@ export default function SimulationSetupView({
         ) : (
           <CardCreatePolicy onClick={onPolicySelect} />
         )}
-        <MultiButtonFooter buttons={buttonConfig}/>
+        <MultiButtonFooter buttons={buttonConfig} />
       </Stack>
     </Container>
   );

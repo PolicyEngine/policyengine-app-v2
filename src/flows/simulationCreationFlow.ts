@@ -22,16 +22,16 @@ export const SimulationCreationFlow: Flow = {
       on: {
         createNew: {
           flow: 'PolicyCreationFlow',
-          returnTo: 'SimulationSetupFrame'
+          returnTo: 'SimulationSetupFrame',
         },
         loadExisting: 'SimulationSelectExistingPolicyFrame',
-      }
+      },
     },
     SimulationSelectExistingPolicyFrame: {
       component: 'SimulationSelectExistingPolicyFrame',
       on: {
-        next: 'SimulationSetupFrame'
-      }
+        next: 'SimulationSetupFrame',
+      },
     },
     SimulationSubmitFrame: {
       component: 'SimulationSubmitFrame',

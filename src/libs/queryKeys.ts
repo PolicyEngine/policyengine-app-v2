@@ -9,7 +9,8 @@ export const policyAssociationKeys = {
 export const simulationAssociationKeys = {
   all: ['simulation-associations'] as const,
   byUser: (userId: string) => [...simulationAssociationKeys.all, 'user_id', userId] as const,
-  bySimulation: (simulationId: string) => [...simulationAssociationKeys.all, 'simulation_id', simulationId] as const,
+  bySimulation: (simulationId: string) =>
+    [...simulationAssociationKeys.all, 'simulation_id', simulationId] as const,
   specific: (userId: string, simulationId: string) =>
     [...simulationAssociationKeys.all, 'specific', userId, simulationId] as const,
 };

@@ -1,6 +1,1 @@
-export const ingredients = [
-  "policy",
-  "population",
-  "simulation",
-  "report"
-] as const;
+export const ingredients = ['policy', 'population', 'simulation', 'report'] as const;

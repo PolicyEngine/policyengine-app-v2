@@ -32,4 +32,3 @@ export function useCreateSimulation() {
     error: mutation.error,
   };
 }
-

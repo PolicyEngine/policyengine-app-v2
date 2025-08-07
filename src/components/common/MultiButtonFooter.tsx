@@ -1,8 +1,8 @@
-import { Button, Grid } from "@mantine/core";
+import { Button, Grid } from '@mantine/core';
 
 export interface ButtonConfig {
   label: string;
-  variant?: "filled" | "outline" | "disabled";
+  variant?: 'filled' | 'outline' | 'disabled';
   onClick: () => void;
 }
 
@@ -15,13 +15,18 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
 
   // Determine grid size based on number of buttons
   const GRID_WIDTH = 12;
-  const gridSize = buttons.length > 2 ? 4 : 6; 
+  const gridSize = buttons.length > 2 ? 4 : 6;
 
   return (
     <Grid>
       {buttons.map((button, index) => (
         <Grid.Col span={gridSize} key={index}>
-          <Button variant={button.variant} disabled={button.variant === 'disabled'} onClick={button.onClick} fullWidth>
+          <Button
+            variant={button.variant}
+            disabled={button.variant === 'disabled'}
+            onClick={button.onClick}
+            fullWidth
+          >
             {button.label}
           </Button>
         </Grid.Col>

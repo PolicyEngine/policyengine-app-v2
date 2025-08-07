@@ -41,10 +41,12 @@ export default function FlowContainer() {
     // Handle navigation object with flow and returnTo
     if (isNavigationObject(target)) {
       const targetFlow = flowRegistry[target.flow];
-      dispatch(navigateToFlow({ 
-        flow: targetFlow, 
-        returnFrame: target.returnTo 
-      }));
+      dispatch(
+        navigateToFlow({
+          flow: targetFlow,
+          returnFrame: target.returnTo,
+        })
+      );
       return;
     }
 

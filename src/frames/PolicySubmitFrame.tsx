@@ -1,11 +1,11 @@
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { clearPolicy, markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
+import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
-import { clearPolicy, updatePolicyId, markPolicyAsCreated } from '@/reducers/policyReducer';
-import { FlowComponentProps } from '@/types/flow';
 
 export default function PolicyParameterSelectorFrame({
   onNavigate,
@@ -47,11 +47,7 @@ export default function PolicyParameterSelectorFrame({
 
         <Grid>
           <Grid.Col span={6}>
-            <Button
-              variant="default"
-              fullWidth
-              onClick={onReturn}
-            >
+            <Button variant="default" fullWidth onClick={onReturn}>
               Cancel
             </Button>
           </Grid.Col>

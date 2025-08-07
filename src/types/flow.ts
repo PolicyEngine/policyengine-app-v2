@@ -1,9 +1,9 @@
 import { ComponentKey, FlowKey, flowRegistry } from '../flows/registry';
 
 // Navigation target can be a simple string or an object with flow and returnTo
-export type NavigationTarget = 
-  | string 
-  | FlowKey 
+export type NavigationTarget =
+  | string
+  | FlowKey
   | {
       flow: FlowKey;
       returnTo: ComponentKey;
@@ -27,7 +27,9 @@ export interface Flow {
 // Helper type to distinguish between component and flow references
 export type FrameTarget = ComponentKey | FlowKey;
 
-export function isNavigationObject(target: NavigationTarget): target is { flow: FlowKey; returnTo: ComponentKey } {
+export function isNavigationObject(
+  target: NavigationTarget
+): target is { flow: FlowKey; returnTo: ComponentKey } {
   return typeof target === 'object' && target !== null && 'flow' in target && 'returnTo' in target;
 }
 
@@ -49,5 +51,5 @@ export interface FlowComponentProps {
   parentFlowContext?: {
     flowName: string;
     parentFrame: ComponentKey;
-  }
+  };
 }

@@ -57,6 +57,7 @@ export const policySlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const { addPolicyParam, clearPolicy, updateLabel, updatePolicyId, markPolicyAsCreated } = policySlice.actions;
+export const { addPolicyParam, clearPolicy, updateLabel, updatePolicyId, markPolicyAsCreated } =
+  policySlice.actions;
 
 export default policySlice.reducer;

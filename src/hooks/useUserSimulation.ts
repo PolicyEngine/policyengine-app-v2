@@ -51,7 +51,9 @@ export const useCreateSimulationAssociation = () => {
       store.create(association),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
-      queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.byUser(newAssociation.userId) });
+      queryClient.invalidateQueries({
+        queryKey: simulationAssociationKeys.byUser(newAssociation.userId),
+      });
       queryClient.invalidateQueries({
         queryKey: simulationAssociationKeys.bySimulation(newAssociation.simulationId),
       });

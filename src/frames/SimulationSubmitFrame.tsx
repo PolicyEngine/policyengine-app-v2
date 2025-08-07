@@ -2,9 +2,12 @@ import { useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { RootState } from '@/store';
-import { Simulation } from '@/types/simulation';
-import { SimulationCreationPayload, serializeSimulationCreationPayload } from '@/types/simulationPayload';
 import { FlowComponentProps } from '@/types/flow';
+import { Simulation } from '@/types/simulation';
+import {
+  serializeSimulationCreationPayload,
+  SimulationCreationPayload,
+} from '@/types/simulationPayload';
 
 export default function SimulationSubmitFrame({ onNavigate, onReturn }: FlowComponentProps) {
   const simulation: Simulation = useSelector((state: RootState) => state.simulation);
@@ -14,7 +17,7 @@ export default function SimulationSubmitFrame({ onNavigate, onReturn }: FlowComp
     const serializedSimulationCreationPayload: SimulationCreationPayload =
       serializeSimulationCreationPayload(simulation);
 
-      console.log('Submitting simulation:', serializedSimulationCreationPayload);
+    console.log('Submitting simulation:', serializedSimulationCreationPayload);
     createSimulation(serializedSimulationCreationPayload, {
       onSuccess: () => {
         onNavigate('submit');
@@ -31,11 +34,7 @@ export default function SimulationSubmitFrame({ onNavigate, onReturn }: FlowComp
 
         <Grid>
           <Grid.Col span={6}>
-            <Button
-              variant="default"
-              fullWidth
-              onClick={onReturn}
-            >
+            <Button variant="default" fullWidth onClick={onReturn}>
               Cancel
             </Button>
           </Grid.Col>

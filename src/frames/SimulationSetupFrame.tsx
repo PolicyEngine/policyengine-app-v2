@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { FlowComponentProps } from '@/types/flow';
-import { RootState } from '@/store';
-import { updateSimulationPolicyId, updateSimulationPopulationId } from '@/reducers/simulationReducer';
+import { useDispatch, useSelector } from 'react-redux';
 import SimulationSetupView from '@/components/SimulationSetupView';
+import {
+  updateSimulationPolicyId,
+  updateSimulationPopulationId,
+} from '@/reducers/simulationReducer';
+import { RootState } from '@/store';
+import { FlowComponentProps } from '@/types/flow';
 
 export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -45,7 +48,9 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
       onPolicySelect={handlePolicySelect}
       onPopulationSelect={handlePopulationSelect}
       selectedPolicy={simulation.policyId ? `Policy: ${simulation.policyId}` : undefined}
-      selectedPopulation={simulation.populationId ? `Population: ${simulation.populationId}` : undefined}
+      selectedPopulation={
+        simulation.populationId ? `Population: ${simulation.populationId}` : undefined
+      }
       isPopulationDisabled={true}
       onNext={handleNext}
       canProceed={canProceed}

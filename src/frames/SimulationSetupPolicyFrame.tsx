@@ -1,10 +1,9 @@
-import NewExistingIngredientSelector from "@/components/NewExistingIngredientSelector";
-import { FlowComponentProps } from "@/types/flow";
-import { useSelector } from "react-redux";
-import { useEffect } from "react";
+import { useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import NewExistingIngredientSelector from '@/components/NewExistingIngredientSelector';
+import { FlowComponentProps } from '@/types/flow';
 
 export default function SimulationSetupPolicyFrame({ onNavigate, onReturn }: FlowComponentProps) {
-
   const policy = useSelector((state: any) => state.policy);
 
   function onClickCreateNew() {
@@ -16,6 +15,10 @@ export default function SimulationSetupPolicyFrame({ onNavigate, onReturn }: Flo
   }
 
   return (
-    <NewExistingIngredientSelector ingredientName="policy" onClickCreateNew={onClickCreateNew} onClickExisting={onClickExisting} />
+    <NewExistingIngredientSelector
+      ingredientName="policy"
+      onClickCreateNew={onClickCreateNew}
+      onClickExisting={onClickExisting}
+    />
   );
 }
