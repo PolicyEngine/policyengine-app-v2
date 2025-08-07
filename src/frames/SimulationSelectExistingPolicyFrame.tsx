@@ -1,3 +1,4 @@
+import MultiButtonFooter, { ButtonConfig } from '@/components/common/MultiButtonFooter';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { FlowComponentProps } from '@/types/flow';
 import { Stack, Text, Card } from '@mantine/core';
@@ -10,10 +11,40 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicyId, setLocalPolicyId] = useState<string | null>(null);
+
+  const canProceed = localPolicyId !== null;
   
   function handlePolicySelect(policyId: string) {
     setLocalPolicyId(policyId);
   }
+
+  function handleSubmit() {
+    onNavigate('next');
+  }
+
+  const canProceedNextButtonConfig: ButtonConfig = {
+    label: 'Next',
+    variant: 'filled' as const,
+    onClick: handleSubmit,
+  }
+
+  const cantProceedNextButtonConfig: ButtonConfig = {
+    label: 'Next',
+    variant: 'disabled' as const,
+    onClick: () => {return null},
+  }
+
+  const cancelButtonConfig: ButtonConfig = {
+    label: 'Cancel',
+    variant: 'outline' as const,
+    onClick: () => {
+      console.log('Cancel clicked');
+    }
+  }
+
+  const buttonConfig: ButtonConfig[] = canProceed
+    ? [cancelButtonConfig, canProceedNextButtonConfig]
+    : [cancelButtonConfig, cantProceedNextButtonConfig];
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -52,6 +83,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       <Stack>
         {displayPolicies}
       </Stack>
+      <MultiButtonFooter buttons={buttonConfig} />
     </Stack>
   )
 }
