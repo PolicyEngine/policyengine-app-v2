@@ -13,8 +13,7 @@ export default function NewExistingIngredientSelector(props: NewExistingIngredie
     <Box p="md">
       <Stack>
         <Text size="lg" fw={700}>TODO: Title</Text>
-          {/* Temporarily make gray to show disabled state */}
-          <Card withBorder p="md" h="100%" component="button" onClick={onClickExisting} bg="gray">
+          <Card withBorder p="md" h="100%" component="button" onClick={onClickExisting}>
             <Stack>
               <Text fw={600}>Load existing {`${ingredientName}`}</Text>
               <Text size="sm" c="dimmed">

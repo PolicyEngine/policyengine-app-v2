@@ -5,6 +5,7 @@ import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { PolicyViewFlow } from '@/flows/policyViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
+import { SimulationViewFlow } from '@/flows/simulationViewFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 // import PoliciesPage from './Policies.page';
@@ -27,6 +28,9 @@ export function HomePage() {
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(SimulationCreationFlow))}>
         Execute simulation creation flow
+      </Button>
+      <Button variant="default" onClick={() => dispatch(setFlow(SimulationViewFlow))}>
+        Show Simulation View
       </Button>
       {/* {showPolicyView && <PoliciesPage />} */}
       <FlowContainer />

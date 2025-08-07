@@ -23,11 +23,11 @@ export default function SimulationsPage() {
 
   const tableData =
     data?.map((item) => ({
-      id: item.id,
-      population_id: item.population_id || 'Unknown',
-      policy_id: item.policy_id || 'Unknown',
-      country_id: item.country_id || 'Unknown',
-      api_version: item.api_version || 'Unknown',
+      id: item.association.simulationId,
+      population_id: item.simulation?.population_id || 'Unknown',
+      policy_id: item.simulation?.policy_id || 'Unknown',
+      country_id: item.simulation?.country_id || 'Unknown',
+      api_version: item.simulation?.api_version || 'Unknown',
     })) || [];
 
   return (

@@ -11,6 +11,7 @@ import SimulationsPage from '@/pages/Simulations.page';
 import SimulationSetupPolicyFrame from '@/frames/SimulationSetupPolicyFrame';
 import SimulationSelectExistingPolicyFrame from '@/frames/SimulationSelectExistingPolicyFrame';
 import { SimulationCreationFlow } from './simulationCreationFlow';
+import { SimulationViewFlow } from './simulationViewFlow';
 
 export const componentRegistry = {
   PolicyCreationFrame,
@@ -29,6 +30,7 @@ export const flowRegistry = {
   PolicyCreationFlow,
   PolicyViewFlow,
   SimulationCreationFlow,
+  SimulationViewFlow,
 } as const;
 
 export type ComponentKey = keyof typeof componentRegistry;
