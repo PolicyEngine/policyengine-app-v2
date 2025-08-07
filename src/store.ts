@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import flowReducer from './reducers/flowReducer';
 import policyReducer from './reducers/policyReducer';
+import simulationReducer from './reducers/simulationReducer';
 
 export const store = configureStore({
   reducer: {
     policy: policyReducer,
     flow: flowReducer,
+    simulation: simulationReducer,
   },
 });
 

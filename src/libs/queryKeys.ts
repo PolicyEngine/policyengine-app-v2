@@ -1,14 +1,29 @@
-// Contains query keys for use with Tanstack Query to centralize cache management
-export const associationKeys = {
-  all: ['associations'] as const,
-  byUser: (userId: string) => [...associationKeys.all, 'user_id', userId] as const,
-  byPolicy: (policyId: string) => [...associationKeys.all, 'policy_id', policyId] as const,
+export const policyAssociationKeys = {
+  all: ['policy-associations'] as const,
+  byUser: (userId: string) => [...policyAssociationKeys.all, 'user_id', userId] as const,
+  byPolicy: (policyId: string) => [...policyAssociationKeys.all, 'policy_id', policyId] as const,
   specific: (userId: string, policyId: string) =>
-    [...associationKeys.all, 'specific', userId, policyId] as const,
+    [...policyAssociationKeys.all, 'specific', userId, policyId] as const,
 };
 
+export const simulationAssociationKeys = {
+  all: ['simulation-associations'] as const,
+  byUser: (userId: string) => [...simulationAssociationKeys.all, 'user_id', userId] as const,
+  bySimulation: (simulationId: string) =>
+    [...simulationAssociationKeys.all, 'simulation_id', simulationId] as const,
+  specific: (userId: string, simulationId: string) =>
+    [...simulationAssociationKeys.all, 'specific', userId, simulationId] as const,
+};
+
+// Keep your existing keys unchanged
 export const policyKeys = {
   all: ['policies'] as const,
   byId: (policyId: string) => [...policyKeys.all, 'policy_id', policyId] as const,
   byUser: (userId: string) => [...policyKeys.all, 'user_id', userId] as const,
+};
+
+export const simulationKeys = {
+  all: ['simulations'] as const,
+  byId: (simulationId: string) => [...simulationKeys.all, 'simulation_id', simulationId] as const,
+  byUser: (userId: string) => [...simulationKeys.all, 'user_id', userId] as const,
 };

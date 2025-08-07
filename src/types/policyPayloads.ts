@@ -17,7 +17,7 @@ export function serializePolicyCreationPayload(policy: Policy): PolicyCreationPa
   // Convert params and their valueIntervals into expected JSON format
   params.forEach((param) => {
     payload.data[param.name] = param.values.reduce((acc, cur) => {
-      return { ...acc, [`${cur.startDate}..${cur.endDate}`]: cur.value };
+      return { ...acc, [`${cur.startDate}.${cur.endDate}`]: cur.value };
     }, {});
   });
 

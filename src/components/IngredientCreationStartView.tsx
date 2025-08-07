@@ -1,4 +1,5 @@
-import { Button, Container, Grid } from '@mantine/core';
+import { Container, Space } from '@mantine/core';
+import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface IngredientCreationStartViewProps {
   title: string;
@@ -13,6 +14,19 @@ export default function IngredientCreationStartView({
   submitButtonText,
   submissionHandler,
 }: IngredientCreationStartViewProps) {
+  const buttonConfig: ButtonConfig[] = [
+    {
+      label: 'Cancel',
+      variant: 'outline' as const,
+      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+    },
+    {
+      label: submitButtonText || title,
+      variant: 'filled' as const,
+      onClick: () => submissionHandler(),
+    },
+  ];
+
   return (
     <>
       {/*<Modal opened={opened} onClose={close} title={title} centered>*/}
@@ -23,18 +37,8 @@ export default function IngredientCreationStartView({
         {/*form labels and inputs*/}
         {formInputs}
         {/*button panel: Cancel and Create X*/}
-        <Grid>
-          <Grid.Col span={6}>
-            <Button variant="default" onClick={close} fullWidth>
-              Cancel
-            </Button>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Button variant="filled" fullWidth onClick={() => submissionHandler()}>
-              {submitButtonText || title}
-            </Button>
-          </Grid.Col>
-        </Grid>
+        <Space h="xs" />
+        <MultiButtonFooter buttons={buttonConfig} />
       </Container>
       {/*</Modal>*/}
     </>

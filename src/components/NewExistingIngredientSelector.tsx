@@ -1,0 +1,37 @@
+import { Box, Card, Stack, Text } from '@mantine/core';
+import { ingredients } from '@/types/ingredient';
+
+export interface NewExistingIngredientSelectorProps {
+  ingredientName: (typeof ingredients)[number];
+  onClickCreateNew: () => void;
+  onClickExisting: () => void;
+}
+export default function NewExistingIngredientSelector(props: NewExistingIngredientSelectorProps) {
+  const { ingredientName, onClickCreateNew, onClickExisting } = props;
+
+  return (
+    <Box p="md">
+      <Stack>
+        <Text size="lg" fw={700}>
+          TODO: Title
+        </Text>
+        <Card withBorder p="md" h="100%" component="button" onClick={onClickExisting}>
+          <Stack>
+            <Text fw={600}>Load existing {`${ingredientName}`}</Text>
+            <Text size="sm" c="dimmed">
+              Use a {`${ingredientName}`} you have already created
+            </Text>
+          </Stack>
+        </Card>
+        <Card withBorder p="md" h="100%" component="button" onClick={onClickCreateNew}>
+          <Stack>
+            <Text fw={600}>Create new {`${ingredientName}`}</Text>
+            <Text size="sm" c="dimmed">
+              Build a new {`${ingredientName}`}
+            </Text>
+          </Stack>
+        </Card>
+      </Stack>
+    </Box>
+  );
+}
