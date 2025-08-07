@@ -4,7 +4,6 @@ import { PopulationFlow } from '@/flows/populationCreationFlow';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { setFlow } from '@/reducers/flowReducer';
 
-
 export default function PopulationsPage() {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything

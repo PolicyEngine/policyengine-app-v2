@@ -9,7 +9,6 @@ import { SimulationViewFlow } from '@/flows/simulationViewFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 import { PopulationViewFlow } from '@/flows/populationViewFlow';
 
-
 export default function HomePage() {
   const dispatch = useDispatch();
   // Note: Below is for testing purposes only

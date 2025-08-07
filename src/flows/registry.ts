@@ -10,10 +10,10 @@ import SimulationSetupFrame from '@/frames/SimulationSetupFrame';
 import SimulationSetupPolicyFrame from '@/frames/SimulationSetupPolicyFrame';
 import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
 import PoliciesPage from '@/pages/Policies.page';
+import PopulationsPage from '@/pages/Populations.page';
 import SimulationsPage from '@/pages/Simulations.page';
 import { PolicyCreationFlow } from './policyCreationFlow';
 import { PopulationFlow } from './populationCreationFlow';
-import PopulationsPage from '@/pages/Populations.page';
 import { SimulationCreationFlow } from './simulationCreationFlow';
 import { SimulationViewFlow } from './simulationViewFlow';
 
