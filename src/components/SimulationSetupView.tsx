@@ -1,15 +1,12 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Button, Card, Container, Grid, Stack, Text } from '@mantine/core';
-import SimulationSetupPolicyFrame from '@/frames/SimulationSetupPolicyFrame';
-import SimulationSetupPopulationFrame from '@/frames/SimulationSetupPopulationFrame';
+import { useSelector } from 'react-redux';
+import { Card, Container, Stack, Text } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
+// TODO: Refactor these props based on integration of population
 interface SimulationSetupViewProps {
   onPopulationSelect?: () => void;
   onPolicySelect: () => void;
   selectedPopulation?: string;
-  selectedPolicy?: string;
   isPopulationDisabled?: boolean;
   onNext: () => void;
   canProceed: boolean;
@@ -18,8 +15,7 @@ interface SimulationSetupViewProps {
 export default function SimulationSetupView({
   onPopulationSelect,
   onPolicySelect,
-  selectedPopulation,
-  selectedPolicy,
+  // selectedPopulation,
   isPopulationDisabled = true,
   onNext,
   canProceed,
@@ -28,8 +24,6 @@ export default function SimulationSetupView({
   // policies not yet actually selecting after creation
 
   const userDefinedPolicy = useSelector((state: any) => state.policy);
-
-  console.log('userDefinedPolicy', userDefinedPolicy);
 
   const canProceedNextButtonConfig: ButtonConfig = {
     label: 'Next',
@@ -49,6 +43,7 @@ export default function SimulationSetupView({
     label: 'Cancel',
     variant: 'outline' as const,
     onClick: () => {
+      // TODO: Fix when cancel buttons are fixed
       console.log('Cancel clicked');
     },
   };
@@ -97,7 +92,7 @@ interface CardCreatePolicyProps {
 
 function CardSelectedPolicy({ label }: CardSelectedPolicyProps) {
   return (
-    <Card withBorder p="md" mb="xl" component="button" bg={'lightblue'}>
+    <Card withBorder p="md" mb="xl" component="button" bg="lightblue">
       {/* TODO: Remove hardcoded color*/}
       <Text fw={700}>TODO: ICON</Text>
       <Text>{label}</Text>

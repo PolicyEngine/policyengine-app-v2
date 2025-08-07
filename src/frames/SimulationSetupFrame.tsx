@@ -14,12 +14,10 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const policy = useSelector((state: RootState) => state.policy);
 
   const handlePolicySelect = () => {
-    console.log('Policy selection triggered');
     onNavigate('setupPolicy');
   };
 
   const handlePopulationSelect = () => {
-    console.log('Population selection triggered');
     onNavigate('setupPopulation');
   };
 
@@ -47,11 +45,10 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     <SimulationSetupView
       onPolicySelect={handlePolicySelect}
       onPopulationSelect={handlePopulationSelect}
-      selectedPolicy={simulation.policyId ? `Policy: ${simulation.policyId}` : undefined}
       selectedPopulation={
         simulation.populationId ? `Population: ${simulation.populationId}` : undefined
       }
-      isPopulationDisabled={true}
+      isPopulationDisabled
       onNext={handleNext}
       canProceed={canProceed}
     />

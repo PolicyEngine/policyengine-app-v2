@@ -15,7 +15,13 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
 
   // Determine grid size based on number of buttons
   const GRID_WIDTH = 12;
-  const gridSize = buttons.length > 2 ? 4 : 6;
+  const DESIRED_COLS_FOR_TWO_BUTTONS = 2;
+  const DESIRED_COLS_OTHERWISE = 3;
+
+  const gridSize =
+    buttons.length <= 2
+      ? GRID_WIDTH / DESIRED_COLS_FOR_TWO_BUTTONS
+      : GRID_WIDTH / DESIRED_COLS_OTHERWISE;
 
   return (
     <Grid>

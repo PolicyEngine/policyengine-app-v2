@@ -11,7 +11,6 @@ import {
   updatePolicyId,
 } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
-import { Policy } from '@/types/policy';
 import { PolicyMetadata } from '@/types/policyMetadata';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {

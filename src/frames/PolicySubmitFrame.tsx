@@ -8,7 +8,6 @@ import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
 
 export default function PolicyParameterSelectorFrame({
-  onNavigate,
   onReturn,
   isInSubflow,
 }: FlowComponentProps) {

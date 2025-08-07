@@ -1,4 +1,4 @@
-import { Button, Container, Grid, Space } from '@mantine/core';
+import { Container, Space } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface IngredientCreationStartViewProps {

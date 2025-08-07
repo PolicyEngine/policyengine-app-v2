@@ -1,4 +1,3 @@
-import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/simulationPayload';
@@ -53,7 +52,6 @@ export async function createSimulation(
 */
 
 const mockSimulationId = `mock-simulation-id-${Date.now()}`;
-const mockCountryId = 'us';
 const mockApiVersion = 'mock-api-version';
 const mockPopulationId = 1;
 const mockPolicyId = 89013;
@@ -76,6 +74,9 @@ export async function fetchSimulationById(
 }
 
 export async function createSimulation(
+  // TODO: Integrate actual simulation creation payload when API is configured for it;
+  // remove the ESLint disable statement when this is done
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   data: SimulationCreationPayload
 ): Promise<{ result: { simulation_id: string } }> {
   return new Promise((resolve) => {

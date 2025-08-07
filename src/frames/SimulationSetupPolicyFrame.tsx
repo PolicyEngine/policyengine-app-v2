@@ -1,11 +1,7 @@
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
 import NewExistingIngredientSelector from '@/components/NewExistingIngredientSelector';
 import { FlowComponentProps } from '@/types/flow';
 
-export default function SimulationSetupPolicyFrame({ onNavigate, onReturn }: FlowComponentProps) {
-  const policy = useSelector((state: any) => state.policy);
-
+export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponentProps) {
   function onClickCreateNew() {
     onNavigate('createNew');
   }

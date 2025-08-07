@@ -3,7 +3,7 @@ import NewExistingIngredientSelector from '@/components/NewExistingIngredientSel
 export default function SimulationSetupPopulationFrame() {
   // TODO: After roping in population ingredient, write correct functions
   function temporaryNullFunc() {
-    return;
+    return 'success';
   }
 
   return (
