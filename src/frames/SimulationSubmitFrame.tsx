@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
+import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/simulation';
@@ -8,9 +9,12 @@ import {
   serializeSimulationCreationPayload,
   SimulationCreationPayload,
 } from '@/types/simulationPayload';
-import { useIngredientReset } from '@/hooks/useIngredientReset';
 
-export default function SimulationSubmitFrame({ onNavigate, onReturn, isInSubflow }: FlowComponentProps) {
+export default function SimulationSubmitFrame({
+  onNavigate,
+  onReturn,
+  isInSubflow,
+}: FlowComponentProps) {
   const simulation: Simulation = useSelector((state: RootState) => state.simulation);
   const { createSimulation, isPending } = useCreateSimulation();
   const { resetIngredient } = useIngredientReset();

@@ -1,12 +1,12 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
-import { useIngredientReset } from '@/hooks/useIngredientReset';
 
 export default function PolicyParameterSelectorFrame({
   onReturn,
