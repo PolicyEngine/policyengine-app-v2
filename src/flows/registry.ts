@@ -13,6 +13,7 @@ import PoliciesPage from '@/pages/Policies.page';
 import SimulationsPage from '@/pages/Simulations.page';
 import { PolicyCreationFlow } from './policyCreationFlow';
 import { PopulationFlow } from './populationCreationFlow';
+import PopulationsPage from '@/pages/Populations.page';
 import { SimulationCreationFlow } from './simulationCreationFlow';
 import { SimulationViewFlow } from './simulationViewFlow';
 
@@ -23,6 +24,7 @@ export const componentRegistry = {
   PolicyReadView: PoliciesPage,
   SelectGeographicScopeFrame,
   HouseholdBuilderFrame,
+  PopulationReadView: PopulationsPage,
   SimulationCreationFrame,
   SimulationSetupFrame,
   SimulationSubmitFrame,

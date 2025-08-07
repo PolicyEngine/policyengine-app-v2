@@ -7,6 +7,7 @@ import { PopulationFlow } from '@/flows/populationCreationFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
+import { PopulationViewFlow } from '@/flows/populationViewFlow';
 
 
 export default function HomePage() {
@@ -32,6 +33,9 @@ export default function HomePage() {
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(PopulationFlow))}>
         Execute Population Flow
+      </Button>
+      <Button variant="default" onClick={() => dispatch(setFlow(PopulationViewFlow))}>
+        View Populations
       </Button>
       <FlowContainer />
     </>

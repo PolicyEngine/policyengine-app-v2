@@ -16,7 +16,7 @@ export const useUserHouseholdStore = () => {
 };
 
 // This fetches only the user-household associations; see
-// 'useUserPolicies' below to also fetch full household details
+// 'useUserHouseholds' below to also fetch full household details
 export const useHouseholdAssociationsByUser = (userId: string) => {
   const store = useUserHouseholdStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
@@ -120,7 +120,7 @@ interface UserHouseholdMetadataWithAssociation {
   error: Error | null | undefined;
 }
 
-export const useUserPolicies = (userId: string) => {
+export const useUserHouseholds = (userId: string) => {
   const country = 'us'; // TODO: Replace with actual country ID retrieval logic
 
   // First, get the associations
@@ -133,7 +133,7 @@ export const useUserPolicies = (userId: string) => {
   // Extract household IDs
   const householdIds = associations?.map((a) => a.householdId) ?? [];
 
-  // Fetch all policies in parallel
+  // Fetch all households in parallel
   const householdQueries = useQueries({
     queries: householdIds.map((householdId) => ({
       queryKey: householdKeys.byId(householdId),
@@ -149,7 +149,7 @@ export const useUserPolicies = (userId: string) => {
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
-  const policiesWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
+  const householdsWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
     associations?.map((association, index) => ({
       association,
       household: householdQueries[index]?.data,
@@ -159,7 +159,7 @@ export const useUserPolicies = (userId: string) => {
     }));
 
   return {
-    data: policiesWithAssociations,
+    data: householdsWithAssociations,
     isLoading,
     isError,
     error,
