@@ -30,6 +30,8 @@ export default function SimulationSetupView({
 
   const userDefinedPolicy = useSelector((state: any) => state.policy);
 
+  console.log('userDefinedPolicy', userDefinedPolicy);
+
   const canProceedNextButtonConfig: ButtonConfig = {
     label: 'Next',
     variant: 'filled' as const,

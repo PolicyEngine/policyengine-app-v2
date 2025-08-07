@@ -22,6 +22,7 @@ export default function PolicyParameterSelectorFrame({
   function handleSubmit() {
     const serializedPolicyCreationPayload: PolicyCreationPayload =
       serializePolicyCreationPayload(policy);
+    console.log('serializedPolicyCreationPayload', serializedPolicyCreationPayload);
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
         console.log('Policy created successfully:', data);

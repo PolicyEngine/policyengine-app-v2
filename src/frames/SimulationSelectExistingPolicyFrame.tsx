@@ -1,8 +1,13 @@
 import MultiButtonFooter, { ButtonConfig } from '@/components/common/MultiButtonFooter';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { clearPolicy, markPolicyAsCreated, updateLabel, updatePolicyId } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
 import { Stack, Text, Card } from '@mantine/core';
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { Policy } from '@/types/policy';
+import { PolicyMetadata } from '@/types/policyMetadata';
+import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
 
@@ -13,12 +18,28 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   const [localPolicyId, setLocalPolicyId] = useState<string | null>(null);
 
   const canProceed = localPolicyId !== null;
+
+  const dispatch = useDispatch();
   
-  function handlePolicySelect(policyId: string) {
-    setLocalPolicyId(policyId);
+  function handlePolicySelect(policy: PolicyMetadata) {
+    // Blank out any existing policy
+    dispatch(clearPolicy());
+    
+    // Fill in all policy details
+    // TODO: Fix ID types
+    dispatch(updatePolicyId(policy.id.toString()));
+    dispatch(updateLabel(policy.label || ''));
+
+    // Load all policy parameters using the utility function
+    loadPolicyParametersToStore(policy.policy_json, dispatch);
+    
+    dispatch(markPolicyAsCreated());
+    setLocalPolicyId(policy.id.toString());
   }
 
   function handleSubmit() {
+    dispatch(updatePolicyId(localPolicyId || ''));
+    dispatch(markPolicyAsCreated());
     onNavigate('next');
   }
 
@@ -62,14 +83,16 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     displayPolicies = <Text>No policies available. Please create a new policy.</Text>;
   } else {
     const recentUserPolicies = userPolicies.slice(0, 5); // Display only the first 3 policies
-    displayPolicies = recentUserPolicies.map((association) => (
-      // TODO: Fix ID types
-      <Card key={association.policy?.id} withBorder p="md" component="button" onClick={() => handlePolicySelect(association.policy?.id.toString() || '')}>
-        <Stack>
-          <Text fw={600}>{association.policy?.label}</Text>
-        </Stack>
-      </Card>
-    ));
+    displayPolicies = recentUserPolicies
+      .filter((association) => association.policy) // Only include associations with loaded policies
+      .map((association) => (
+        // TODO: Fix ID types
+        <Card key={association.policy!.id} withBorder p="md" component="button" onClick={() => handlePolicySelect(association.policy!)}>
+          <Stack>
+            <Text fw={600}>{association.policy!.label}</Text>
+          </Stack>
+        </Card>
+      ));
   }
 
   return (
