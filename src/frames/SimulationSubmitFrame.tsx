@@ -8,10 +8,12 @@ import {
   serializeSimulationCreationPayload,
   SimulationCreationPayload,
 } from '@/types/simulationPayload';
+import { useIngredientReset } from '@/hooks/useIngredientReset';
 
-export default function SimulationSubmitFrame({ onNavigate, onReturn }: FlowComponentProps) {
+export default function SimulationSubmitFrame({ onNavigate, onReturn, isInSubflow }: FlowComponentProps) {
   const simulation: Simulation = useSelector((state: RootState) => state.simulation);
   const { createSimulation, isPending } = useCreateSimulation();
+  const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
     const serializedSimulationCreationPayload: SimulationCreationPayload =
@@ -21,6 +23,9 @@ export default function SimulationSubmitFrame({ onNavigate, onReturn }: FlowComp
     createSimulation(serializedSimulationCreationPayload, {
       onSuccess: () => {
         onNavigate('submit');
+        if (!isInSubflow) {
+          resetIngredient('simulation');
+        }
       },
     });
   }
