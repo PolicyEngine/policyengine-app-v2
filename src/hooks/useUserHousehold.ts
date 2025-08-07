@@ -4,7 +4,7 @@ import { fetchHouseholdById } from '@/api/household';
 import { HouseholdMetadata } from '@/types/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
-import { associationKeys, householdKeys } from '../libs/queryKeys';
+import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 import { UserHouseholdAssociation } from '../types/userIngredientAssociations';
 
 const apiHouseholdStore = new ApiHouseholdStore();
@@ -24,7 +24,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
 
   return useQuery({
-    queryKey: associationKeys.byUser(userId),
+    queryKey: householdAssociationKeys.byUser(userId),
     queryFn: () => store.findByUser(userId),
     ...config,
   });
@@ -36,7 +36,7 @@ export const useHouseholdAssociation = (userId: string, householdId: string) => 
   const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
 
   return useQuery({
-    queryKey: associationKeys.specific(userId, householdId),
+    queryKey: householdAssociationKeys.specific(userId, householdId),
     queryFn: () => store.findById(userId, householdId),
     ...config,
   });
@@ -51,14 +51,16 @@ export const useCreateHouseholdAssociation = () => {
       store.create(association),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
-      queryClient.invalidateQueries({ queryKey: associationKeys.byUser(newAssociation.userId) });
       queryClient.invalidateQueries({
-        queryKey: associationKeys.byHousehold(newAssociation.householdId),
+        queryKey: householdAssociationKeys.byUser(newAssociation.userId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        associationKeys.specific(newAssociation.userId, newAssociation.householdId),
+        householdAssociationKeys.specific(newAssociation.userId, newAssociation.householdId),
         newAssociation
       );
     },

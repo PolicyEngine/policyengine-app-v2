@@ -4,13 +4,15 @@ export const policyAssociationKeys = {
   byPolicy: (policyId: string) => [...policyAssociationKeys.all, 'policy_id', policyId] as const,
   specific: (userId: string, policyId: string) =>
     [...policyAssociationKeys.all, 'specific', userId, policyId] as const,
-  // Household association keys
-  householdsByUser: (userId: string) =>
-    [...associationKeys.all, 'user_id', userId, 'households'] as const,
+};
+
+export const householdAssociationKeys = {
+  all: ['simulation-associations'] as const,
+  byUser: (userId: string) => [...householdAssociationKeys.all, 'user_id', userId] as const,
   byHousehold: (householdId: string) =>
-    [...associationKeys.all, 'household_id', householdId] as const,
-  specificHousehold: (userId: string, householdId: string) =>
-    [...associationKeys.all, 'specific_household', userId, householdId] as const,
+    [...householdAssociationKeys.all, 'simulation_id', householdId] as const,
+  specific: (userId: string, householdId: string) =>
+    [...householdAssociationKeys.all, 'specific', userId, householdId] as const,
 };
 
 export const simulationAssociationKeys = {
