@@ -52,9 +52,9 @@ export async function createSimulation(
 }
 */
 
-const mockSimulationId = 'mock-simulation-id'; 
+const mockSimulationId = `mock-simulation-id-${Date.now()}`; 
 const mockCountryId = 'us'; 
-const mockApiVersion = '0.0.0'; 
+const mockApiVersion = 'mock-api-version'; 
 const mockPopulationId = 1; 
 const mockPolicyId = 89013;
 
