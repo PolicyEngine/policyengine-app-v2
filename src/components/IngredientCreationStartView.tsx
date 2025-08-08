@@ -17,7 +17,7 @@ export default function IngredientCreationStartView({
   const buttonConfig: ButtonConfig[] = [
     {
       label: 'Cancel',
-      variant: 'outline' as const,
+      variant: 'default' as const,
       onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
     },
     {

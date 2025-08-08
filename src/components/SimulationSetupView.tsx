@@ -41,7 +41,7 @@ export default function SimulationSetupView({
 
   const cancelButtonConfig: ButtonConfig = {
     label: 'Cancel',
-    variant: 'outline' as const,
+    variant: 'default' as const,
     onClick: () => {
       // TODO: Fix when cancel buttons are fixed
       console.log('Cancel clicked');
