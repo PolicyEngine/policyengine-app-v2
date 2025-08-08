@@ -1,7 +1,8 @@
 // Colors submodule for Mantine theme
 import { colors } from '../designTokens';
+import type { MantineColorsTuple } from '@mantine/core';
 
-export const themeColors = {
+export const themeColors: Record<string, MantineColorsTuple> = {
   primary: [
     colors.primary[50],
     colors.primary[100],
@@ -13,7 +14,8 @@ export const themeColors = {
     colors.primary[700],
     colors.primary[800],
     colors.primary[900],
-  ],
+  ] as MantineColorsTuple,
+  
   secondary: [
     colors.secondary[50],
     colors.secondary[100],
@@ -25,7 +27,8 @@ export const themeColors = {
     colors.secondary[700],
     colors.secondary[800],
     colors.secondary[900],
-  ],
+  ] as MantineColorsTuple,
+  
   blue: [
     colors.blue[50],
     colors.blue[100],
@@ -37,7 +40,8 @@ export const themeColors = {
     colors.blue[700],
     colors.blue[800],
     colors.blue[900],
-  ],
+  ] as MantineColorsTuple,
+  
   gray: [
     colors.gray[50],
     colors.gray[100],
@@ -49,5 +53,18 @@ export const themeColors = {
     colors.gray[700],
     colors.gray[800],
     colors.gray[900],
-  ],
+  ] as MantineColorsTuple,
+
+  teal: [
+    colors.primary[50],
+    colors.primary[100],
+    colors.primary[200],
+    colors.primary[300],
+    colors.primary[400],
+    colors.primary[500],
+    colors.primary[600],
+    colors.primary[700],
+    colors.primary[800],
+    colors.primary[900],
+  ] as MantineColorsTuple,
 };
