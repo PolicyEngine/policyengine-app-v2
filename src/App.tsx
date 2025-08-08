@@ -7,14 +7,14 @@ import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
 import { Router } from './Router';
 import { store } from './store';
-import { theme } from './theme';
+import { policyEngineTheme } from './theme';
 
 const queryClient = new QueryClient();
 
 export default function App() {
   return (
     <Provider store={store}>
-      <MantineProvider theme={theme}>
+      <MantineProvider theme={policyEngineTheme}>
         <QueryClientProvider client={queryClient}>
           <Router />
           <ReactQueryDevtools initialIsOpen={false} />

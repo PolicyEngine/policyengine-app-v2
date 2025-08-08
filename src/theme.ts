@@ -1,5 +1,49 @@
 import { createTheme } from '@mantine/core';
+import { colors, typography } from './designTokens';
 
-export const theme = createTheme({
-  /** Put your mantine theme override here */
+export const policyEngineTheme = createTheme({
+  colors: {
+    primary: [
+      colors.primary[50],
+      colors.primary[100],
+      colors.primary[200],
+      colors.primary[300],
+      colors.primary[400],
+      colors.primary[500],
+      colors.primary[600],
+      colors.primary[700],
+      colors.primary[800],
+      colors.primary[900],
+    ],
+    secondary: [
+      colors.secondary[50],
+      colors.secondary[100],
+      colors.secondary[200],
+      colors.secondary[300],
+      colors.secondary[400],
+      colors.secondary[500],
+      colors.secondary[600],
+      colors.secondary[700],
+      colors.secondary[800],
+      colors.secondary[900],
+    ],
+    gray: [
+      colors.gray[50],
+      colors.gray[100],
+      colors.gray[200],
+      colors.gray[300],
+      colors.gray[400],
+      colors.gray[500],
+      colors.gray[600],
+      colors.gray[700],
+      colors.gray[800],
+      colors.gray[900],
+    ],
+  },
+
+  fontFamily: typography.fontFamily.primary,
+  fontFamilyMonospace: typography.fontFamily.mono,
+
+  primaryColor: 'primary',
+  focusRing: 'auto',
 });
