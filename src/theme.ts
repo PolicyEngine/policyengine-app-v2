@@ -4,7 +4,6 @@ import {
   themeTypography, 
   themeSpacing, 
   themeComponents, 
-  themeDefaults 
 } from './styles';
 
 export const policyEngineTheme = createTheme({
@@ -16,7 +15,6 @@ export const policyEngineTheme = createTheme({
   fontFamilyMonospace: themeTypography.fontFamilyMonospace,
   fontSizes: themeTypography.fontSizes,
   lineHeights: themeTypography.lineHeights,
-  fontWeights: themeTypography.fontWeights,
 
   // Spacing from design tokens
   spacing: themeSpacing.spacing,
@@ -27,9 +25,6 @@ export const policyEngineTheme = createTheme({
   primaryColor: 'primary',
   focusRing: 'auto',
   
-  // Default props for components
-  defaultProps: themeDefaults,
-
   // Component styles from design tokens
   components: themeComponents,
 });
