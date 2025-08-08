@@ -7,6 +7,7 @@ export const themeComponents = {
       primary: () => ({ root: componentStyles.Button.primary }),
       secondary: () => ({ root: componentStyles.Button.secondary }),
       ghost: () => ({ root: componentStyles.Button.ghost }),
+      accent: () => ({ root: componentStyles.Button.accent }),
     },
   },
   
