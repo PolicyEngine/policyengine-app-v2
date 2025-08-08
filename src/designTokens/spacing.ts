@@ -13,6 +13,7 @@ export const spacing = {
   '4xl': '48px',
   '5xl': '64px',
   
+  // TODO: Evaluate these spacing values
   // Component-specific spacing
   component: {
     button: {
@@ -35,6 +36,7 @@ export const spacing = {
     },
   },
   
+  // TODO: See if these values can be made dynamic
   // Layout spacing from Figma
   layout: {
     sidebar: '79px',

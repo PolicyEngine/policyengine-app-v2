@@ -1,5 +1,5 @@
 // Component-specific styles using design tokens
-import { colors, typography, spacing } from '.';
+import { colors, typography, spacing } from '../designTokens';
 
 export const componentStyles = {
   // Button styles
