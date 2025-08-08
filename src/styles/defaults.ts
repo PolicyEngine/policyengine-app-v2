@@ -16,4 +16,8 @@ export const themeDefaults = {
     size: 'md',
     lineHeight: '24',
   },
+  Badge: {
+    radius: 'xl',
+    size: 'md',
+  },
 };
