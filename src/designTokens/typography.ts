@@ -32,12 +32,12 @@ export const typography = {
   },
   
   lineHeight: {
-    none: 1,
-    tight: 1.25,
-    snug: 1.375,
-    normal: 1.5,
-    relaxed: 1.625,
-    loose: 2,
+    none: '1',
+    tight: '1.25',
+    snug: '1.375',
+    normal: '1.5',
+    relaxed: '1.625',
+    loose: '2',
     // Specific line heights from Figma
     '20': '20px', // Text sm/Medium, Text sm/Semibold from Figma
     '22': '22px', // Body/regular from Figma
