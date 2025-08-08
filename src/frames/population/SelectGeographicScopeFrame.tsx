@@ -1,26 +1,143 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Radio, Stack } from '@mantine/core';
+import { Box, Radio, Select, Stack } from '@mantine/core';
 import IngredientCreationStartView from '@/components/IngredientCreationStartView';
-import { setGeographicScope } from '@/reducers/populationReducer';
+import { uk_regions, us_regions } from '@/mocks/regions';
+import { setGeographicScope, setRegion } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
-  const [scope, setScope] = useState('national');
+  const [scope, setScope] = useState<'national' | 'state' | 'household'>('national');
+  const [selectedCountry, setSelectedCountry] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('');
+
+  // Hardcoded for now
+  const currentCountry: string = 'us';
+
+  const usStates = us_regions.result.economy_options.region
+    .filter((r) => r.name !== 'us')
+    .map((s) => ({ value: s.name, label: s.label }));
+
+  const ukCountryOptions = uk_regions.result.economy_options.region
+    .filter((r) => r.name.startsWith('country/'))
+    .map((c) => ({ value: c.name, label: c.label }));
+
+  // Show ALL constituencies (for now)
+  const ukRegionOptions = uk_regions.result.economy_options.region
+    .filter((r) => r.name.startsWith('constituency/'))
+    .map((r) => ({ value: r.name, label: r.label }));
+
+  /*
+  // Previous filtering by UK country:
+  const ukRegionOptions = uk_regions.result.economy_options.region.filter(r =>
+    r.name.startsWith('constituency/') &&
+    (selectedCountry ? r.name.toLowerCase().includes(selectedCountry.split('/')[1]) : true)
+  );
+  */
+
+  const handleScopeChange = (value: string) => {
+    setScope(value as 'national' | 'state' | 'household');
+
+    if (value !== 'state') {
+      setSelectedCountry('');
+      setSelectedRegion('');
+      dispatch(setRegion('')); // clear from Redux
+    }
+  };
+
+  // Helper function to extract value after last slash
+  const extractRegionValue = (fullValue: string) => {
+    return fullValue.split('/').pop() || fullValue;
+  };
 
   const formInputs = (
     <Stack>
-      <Radio.Group label="Geographic Scope" value={scope} onChange={setScope}>
-        <Radio value="national" label="National" />
-        <Radio value="state" label="State" />
-        <Radio value="household" label="Household" />
-      </Radio.Group>
+      <Radio
+        value="national"
+        label="National"
+        checked={scope === 'national'}
+        onChange={() => handleScopeChange('national')}
+      />
+
+      <Box>
+        <Radio
+          value="state"
+          label="State"
+          checked={scope === 'state'}
+          onChange={() => handleScopeChange('state')}
+        />
+
+        {scope === 'state' && (
+          <Box ml={24} mt="xs">
+            {currentCountry === 'us' && (
+              <Select
+                label="Select State"
+                placeholder="Pick a state"
+                data={usStates}
+                value={selectedRegion}
+                onChange={(val) => {
+                  setSelectedRegion(val || '');
+                  // Extract just the state name (e.g., 'california' from 'state/california')
+                  dispatch(setRegion(val ? extractRegionValue(val) : ''));
+                }}
+              />
+            )}
+
+            {currentCountry === 'uk' && (
+              <>
+                {/* Note: Only storing final constituency selection, not country selection */}
+                <Select
+                  label="Select Country"
+                  placeholder="Pick a country"
+                  data={ukCountryOptions}
+                  value={selectedCountry}
+                  onChange={(val) => {
+                    setSelectedCountry(val || '');
+                    setSelectedRegion('');
+                    dispatch(setRegion(''));
+                  }}
+                />
+                {selectedCountry && (
+                  <Select
+                    label="Select Constituency"
+                    placeholder="Pick a constituency"
+                    data={ukRegionOptions}
+                    value={selectedRegion}
+                    onChange={(val) => {
+                      setSelectedRegion(val || '');
+                      // Extract just the constituency name (e.g., 'birmingham-edgbaston' from 'constituency/birmingham-edgbaston')
+                      dispatch(setRegion(val ? extractRegionValue(val) : ''));
+                    }}
+                    searchable
+                    mt="xs"
+                  />
+                )}
+              </>
+            )}
+          </Box>
+        )}
+      </Box>
+
+      <Radio
+        value="household"
+        label="Household"
+        checked={scope === 'household'}
+        onChange={() => handleScopeChange('household')}
+      />
     </Stack>
   );
 
   function submissionHandler() {
-    dispatch(setGeographicScope(scope as any));
+    // Validate that if state is selected, a region must be chosen
+    if (scope === 'state' && !selectedRegion) {
+      // TODO: Add proper error handling/notification here
+      console.warn('State selected but no region chosen');
+      return;
+    }
+
+    dispatch(setGeographicScope(scope));
+    // Note: Region is already dispatched immediately when selected above
     onNavigate(scope);
   }
 

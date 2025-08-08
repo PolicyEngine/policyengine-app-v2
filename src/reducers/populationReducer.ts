@@ -9,6 +9,7 @@ export interface ChildInfo {
 // Extend Population type locally to include UI-specific fields
 interface Population extends Household {
   geographicScope: 'national' | 'state' | 'household' | '';
+  region: string; //holds name value of selected region/state
 }
 
 const initialState: Population = {
@@ -17,6 +18,7 @@ const initialState: Population = {
   numChildren: 0,
   children: [],
   geographicScope: '',
+  region: '',
 };
 
 export const populationSlice = createSlice({
@@ -25,6 +27,9 @@ export const populationSlice = createSlice({
   reducers: {
     setGeographicScope: (state, action: PayloadAction<Population['geographicScope']>) => {
       state.geographicScope = action.payload;
+    },
+    setRegion: (state, action: PayloadAction<string>) => {
+      state.region = action.payload;
     },
     updatePopulation: (state, action: PayloadAction<Partial<Population>>) => {
       Object.assign(state, action.payload);
@@ -35,6 +40,7 @@ export const populationSlice = createSlice({
   },
 });
 
-export const { setGeographicScope, updatePopulation, updateChildInfo } = populationSlice.actions;
+export const { setGeographicScope, setRegion, updatePopulation, updateChildInfo } =
+  populationSlice.actions;
 
 export default populationSlice.reducer;
