@@ -108,7 +108,6 @@ export const themeComponents = {
   },
   
   Badge: {
-    defaultProps: themeDefaults.Badge,
     styles: {
       root: {
         fontFamily: typography.fontFamily.primary,
