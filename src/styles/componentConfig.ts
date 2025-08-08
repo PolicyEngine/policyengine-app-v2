@@ -5,6 +5,21 @@ export const componentStyles = {
   // Button styles
   Button: {
     primary: {
+      backgroundColor: colors.primary[500],
+      color: colors.white,
+      border: 'none',
+      borderRadius: spacing.radius.md,
+      padding: spacing.component.button.padding,
+      fontSize: typography.fontSize.sm,
+      fontWeight: typography.fontWeight.semibold,
+      lineHeight: typography.lineHeight['20'],
+      fontFamily: typography.fontFamily.primary,
+      boxShadow: '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
+      '&:hover': {
+        backgroundColor: colors.primary[600],
+      },
+    },
+    accent: {
       backgroundColor: colors.warning,
       color: colors.black,
       border: 'none',
