@@ -62,7 +62,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   const cancelButtonConfig: ButtonConfig = {
     label: 'Cancel',
-    variant: 'outline' as const,
+    variant: 'default' as const,
     onClick: () => {
       console.log('Cancel clicked');
     },

@@ -2,63 +2,9 @@
 import { colors, typography, spacing } from '../designTokens';
 import { themeDefaults } from './defaults';
 
+// TODO: Remove variants from components, as these do not work correctly;
+// determine how to correctly code each case
 export const themeComponents = {
-  Button: {
-    defaultProps: themeDefaults.Button,
-    styles: {
-      root: {
-        fontFamily: typography.fontFamily.primary,
-        fontSize: typography.fontSize.sm,
-        fontWeight: typography.fontWeight.semibold,
-        lineHeight: typography.lineHeight['20'],
-        borderRadius: spacing.radius.md,
-        padding: spacing.component.button.padding,
-        boxShadow: '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
-        border: 'none',
-        transition: 'all 0.2s ease',
-      },
-    },
-    variants: {
-      primary: () => ({
-        root: {
-          backgroundColor: colors.primary[500],
-          color: colors.white,
-          '&:hover': {
-            backgroundColor: colors.primary[600],
-          },
-        },
-      }),
-      secondary: () => ({
-        root: {
-          backgroundColor: colors.white,
-          color: colors.text.secondary,
-          border: `1px solid ${colors.border.light}`,
-          '&:hover': {
-            backgroundColor: colors.background.secondary,
-          },
-        },
-      }),
-      ghost: () => ({
-        root: {
-          backgroundColor: 'transparent',
-          color: colors.text.secondary,
-          '&:hover': {
-            backgroundColor: colors.background.secondary,
-          },
-        },
-      }),
-      accent: () => ({
-        root: {
-          backgroundColor: colors.warning,
-          color: colors.black,
-          '&:hover': {
-            backgroundColor: '#E6B300',
-          },
-        },
-      }),
-    },
-  },
-  
   Text: {
     defaultProps: themeDefaults.Text,
     styles: {

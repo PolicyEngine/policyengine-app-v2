@@ -2,7 +2,7 @@ import { Button, Grid } from '@mantine/core';
 
 export interface ButtonConfig {
   label: string;
-  variant?: 'filled' | 'outline' | 'disabled';
+  variant?: 'filled' | 'outline' | 'disabled' | 'default';
   onClick: () => void;
 }
 
