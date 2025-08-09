@@ -77,7 +77,7 @@ export default function FlowView<T>({
                 component="button"
                 onClick={card.onClick}
                 disabled={card.isDisabled}
-                bg={card.isSelected ? 'lightblue' : undefined}
+                variant={card.isSelected ? 'selectActive' : 'selectInactive'}
               >
                 <Text fw={700}>TODO: ICON</Text>
                 <Text>{card.title}</Text>

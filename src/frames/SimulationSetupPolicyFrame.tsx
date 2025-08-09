@@ -2,20 +2,17 @@ import { FlowComponentProps } from '@/types/flow';
 import FlowView, { ButtonConfig } from '@/components/common/FlowView';
 import { useState } from "react";
 
-// TODO: Determine enum syntax for setupActions
-const setupActions = ""
+type SetupAction = 'createNew' | 'loadExisting';
 
 export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponentProps) {
-
-  // TODO: Fix typing
-  const [selectedAction, setSelectedAction]: setupActions | null = useState(null);
+  const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
 
   function handleClickCreateNew() {
-    setSelectedAction("createNew");
+    setSelectedAction('createNew');
   }
 
   function handleClickExisting() {
-    setSelectedAction("loadExisting");
+    setSelectedAction('loadExisting');
   }
 
   function handleClickSubmit() {
@@ -29,11 +26,13 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
       title: 'Load existing policy',
       description: 'Use a policy you have already created',
       onClick: handleClickExisting,
+      isSelected: selectedAction === "loadExisting",
     },
     {
       title: 'Create new policy',
       description: 'Build a new policy',
       onClick: handleClickCreateNew,
+      isSelected: selectedAction === "createNew",
     },
   ];
 

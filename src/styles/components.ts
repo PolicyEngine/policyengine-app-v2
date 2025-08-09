@@ -1,5 +1,5 @@
 // Components submodule for Mantine theme
-import { Container, Title } from '@mantine/core';
+import { Card, Container, Title } from '@mantine/core';
 import { colors, typography, spacing } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -90,6 +90,19 @@ export const themeComponents = {
             paddingBottom: spacing.container.lg,
           },
         };
+      }
+      return {};
+    },
+  }),
+  Card: Card.extend({
+    styles: (theme, params) => {
+      if (params.variant === 'selectActive') {
+        return {
+          root: {
+            backgroundColor: colors.secondary[100],
+            border: `1px solid ${colors.primary[500]}`
+          }
+        }
       }
       return {};
     },
