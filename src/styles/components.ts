@@ -96,14 +96,74 @@ export const themeComponents = {
   }),
   Card: Card.extend({
     styles: (theme, params) => {
-      if (params.variant === 'active') {
+      // Card List variants - compact styling for variable-length lists
+      if (params.variant === 'cardList--active') {
         return {
           root: {
+            padding: spacing.sm,
             backgroundColor: colors.secondary[100],
-            border: `1px solid ${colors.primary[500]}`
-          }
-        }
+            border: `1px solid ${colors.primary[500]}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.secondary[200],
+              borderColor: colors.primary[600],
+            },
+          },
+        };
       }
+      
+      if (params.variant === 'cardList--inactive') {
+        return {
+          root: {
+            padding: spacing.sm,
+            backgroundColor: colors.white,
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.gray[50],
+              borderColor: colors.border.medium,
+            },
+          },
+        };
+      }
+      
+      // Selection variants - larger styling for prominent choices
+      if (params.variant === 'selection--active') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.secondary[100],
+            border: `1px solid ${colors.primary[500]}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.secondary[200],
+              borderColor: colors.primary[600],
+            },
+          },
+        };
+      }
+      
+      if (params.variant === 'selection--inactive') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.white,
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.gray[50],
+              borderColor: colors.border.medium,
+            },
+          },
+        };
+      }
+
       return {};
     },
   }),

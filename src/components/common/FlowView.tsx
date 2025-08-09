@@ -1,5 +1,6 @@
 import { Card, Container, Divider, Stack, Text, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
+import { spacing } from '@/designTokens';
 
 interface FlowViewProps<T = any> {
   title: string;
@@ -49,12 +50,10 @@ export default function FlowView<T>({
               <Card
                 key={index}
                 withBorder
-                p="md"
-                mb="md"
                 component="button"
                 onClick={card.onClick}
                 disabled={card.isDisabled}
-                variant={card.isSelected ? 'active' : 'inactive'}
+                variant={card.isSelected ? 'selection--active' : 'selection--inactive'}
               >
                 <Text fw={700}>TODO: ICON</Text>
                 <Text>{card.title}</Text>
@@ -68,18 +67,17 @@ export default function FlowView<T>({
       
       case 'cardList':
         return (
-          <Stack gap="sm">
+          <Stack gap={spacing.sm}>
             {cardListItems?.map((item, index) => (
               <Card
                 key={index}
                 withBorder
-                p="sm"
                 component="button"
                 onClick={item.onClick}
                 disabled={item.isDisabled}
-                variant={item.isSelected ? 'active' : undefined}
+                variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
               >
-                <Stack gap="xs">
+                <Stack gap={spacing.xs}>
                   <Text fw={600}>{item.title}</Text>
                   {item.subtitle && (
                     <Text size="sm" c="dimmed">{item.subtitle}</Text>

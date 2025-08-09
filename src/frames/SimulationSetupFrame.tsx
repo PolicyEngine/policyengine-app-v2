@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Card, Stack, Text } from '@mantine/core';
 import {
   updateSimulationPolicyId,
   updateSimulationPopulationId,
@@ -55,51 +54,30 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     },
   ];
 
-  const content = (
-    <Stack>
-      {/* Temporarily add color to demonstrate disabled*/}
-      <Card
-        withBorder
-        p="md"
-        mb="xl"
-        component="button"
-        onClick={handlePopulationSelect}
-        disabled={true} // isPopulationDisabled
-        bg="gray"
-      >
-        <Text fw={700}>TODO: ICON</Text>
-        <Text>Add population</Text>
-        <Text size="sm" c="dimmed">
-          Select a geographic scope or specific household
-        </Text>
-      </Card>
-      
-      {policy && policy.isCreated ? (
-        <Card withBorder p="md" mb="xl" component="button" bg="lightblue">
-          {/* TODO: Remove hardcoded color*/}
-          <Text fw={700}>TODO: ICON</Text>
-          <Text>{policy.label}</Text>
-          <Text size="sm" c="dimmed">
-            {policy.label}
-          </Text>
-        </Card>
-      ) : (
-        <Card withBorder p="md" mb="xl" component="button" onClick={handlePolicySelect}>
-          <Text fw={700}>TODO: ICON</Text>
-          <Text>Add policy</Text>
-          <Text size="sm" c="dimmed">
-            Select a policy to apply to the simulation
-          </Text>
-        </Card>
-      )}
-    </Stack>
-  );
+  const selectionCards = [
+    {
+      title: 'Add population',
+      description: 'Select a geographic scope or specific household',
+      onClick: handlePopulationSelect,
+      isSelected: !!simulation.populationId,
+      isDisabled: true, // Currently disabled
+    },
+    {
+      title: policy && policy.isCreated ? policy.label : 'Add policy',
+      description: policy && policy.isCreated 
+        ? policy.label 
+        : 'Select a policy to apply to the simulation',
+      onClick: policy && policy.isCreated ? () => {} : handlePolicySelect, // No-op if already selected
+      isSelected: policy && policy.isCreated,
+      isDisabled: false,
+    },
+  ];
 
   return (
     <FlowView
       title="Setup Simulation"
-      variant="custom"
-      content={content}
+      variant="selection"
+      selectionCards={selectionCards}
       buttons={buttons}
     />
   );
