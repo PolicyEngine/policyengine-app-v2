@@ -49,7 +49,7 @@ export default function PolicyParameterSelectorFrame({
         />
       </AppShell.Header>
 
-      <AppShell.Navbar p="md">
+      <AppShell.Navbar p="md" bg="gray.0">
         <Menu setSelectedParamLabel={handleMenuItemClick} />
       </AppShell.Navbar>
 
