@@ -34,11 +34,11 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
   return (
     <Container variant="guttered">
         <Text fw={700}>TODO: Provision Counter</Text>
-        <Title order={3}>{param.label || 'Label unavailable'}</Title>
+        <Title order={3} pb="xl">{param.label || 'Label unavailable'}</Title>
         {param.description && (
           <>
-            <Text fw={700}>Description</Text>
-            <Text>{param.description}</Text>
+            <Text fw={600} pb="xs">Description</Text>
+            <Text pb="sm">{param.description}</Text>
           </>
         )}
         <ValueSetter param={param} />
