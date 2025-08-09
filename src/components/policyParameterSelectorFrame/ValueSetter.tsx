@@ -96,11 +96,11 @@ export default function PolicyParameterSelectorValueSetterContainer(
   };
 
   return (
-    <Container bg="gray.0" bd="1px solid gray.2" m="0" p="m">
+    <Container bg="gray.0" bd="1px solid gray.2" m="0" p="lg">
       <Stack>
         <Text fw={700}>Current value</Text>
         <Divider style={{ padding: 0 }} />
-        <Group align="flex-end">
+        <Group align="flex-end" w="100%">
           <ValueSetterToRender {...valueSetterProps} />
           <ModeSelectorButton setMode={handleModeChange} />
           <Text>TODO: Reset button</Text>
@@ -156,15 +156,16 @@ export function DefaultValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group align="flex-end">
+    <Group align="flex-end" style={{ flex: 1 }}>
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleStartDateChange}
+        style={{ flex: 1 }}
       />
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward" />
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward"/>
     </Group>
   );
 }
@@ -203,13 +204,14 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group align="flex-end">
+    <Group align="flex-end" style={{ flex: 1 }}>
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleStartDateChange}
+        style={{ flex: 1}}
       />
       <YearPickerInput
         placeholder="Pick a year"
@@ -217,6 +219,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleEndDateChange}
+        style={{ flex: 1 }}
       />
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </Group>
@@ -261,6 +264,7 @@ export function DateValueSelector(props: ValueSetterProps) {
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleStartDateChange}
+        style={{ flex: 1 }}
       />
       <DatePickerInput
         placeholder="Pick an end date"
@@ -268,6 +272,7 @@ export function DateValueSelector(props: ValueSetterProps) {
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleEndDateChange}
+        style={{ flex: 1 }}
       />
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </Group>
@@ -395,6 +400,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
       value={value !== undefined ? value : 0}
       onChange={handleChange}
       thousandSeparator=","
+      style={{ flex: 1 }}
     />
   );
 }
