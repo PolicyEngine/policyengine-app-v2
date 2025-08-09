@@ -9,6 +9,7 @@ import {
   serializeSimulationCreationPayload,
   SimulationCreationPayload,
 } from '@/types/simulationPayload';
+import IngredientSubmissionView from '@/components/IngredientSubmissionView';
 
 export default function SimulationSubmitFrame({
   onNavigate,
@@ -34,26 +35,20 @@ export default function SimulationSubmitFrame({
     });
   }
 
-  return (
-    <Container size="sm" py="xl">
-      <Stack>
-        <Text fw={700}>Review Simulation</Text>
-        <Text>Population ID: {simulation.populationId}</Text>
-        <Text>Policy ID: {simulation.policyId}</Text>
+  const content = (
+    <Stack>
+      <Text>Population ID: {simulation.populationId}</Text>
+      <Text>Policy ID: {simulation.policyId}</Text>
+    </Stack>
+  );
 
-        <Grid>
-          <Grid.Col span={6}>
-            <Button variant="default" fullWidth onClick={onReturn}>
-              Cancel
-            </Button>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Button variant="filled" fullWidth loading={isPending} onClick={handleSubmit}>
-              Submit
-            </Button>
-          </Grid.Col>
-        </Grid>
-      </Stack>
-    </Container>
+  return (
+    <IngredientSubmissionView
+      title="Review simulation"
+      content={content}
+      submissionHandler={handleSubmit}
+      submitButtonLoading={isPending}
+      submitButtonText="Submit"
+    />
   );
 }

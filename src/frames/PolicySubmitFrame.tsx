@@ -7,6 +7,7 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
+import IngredientSubmissionView from '@/components/IngredientSubmissionView';
 
 export default function PolicyParameterSelectorFrame({
   onReturn,
@@ -39,26 +40,20 @@ export default function PolicyParameterSelectorFrame({
     });
   }
 
-  return (
-    <Container size="sm" py="xl">
-      <Stack>
-        <Text fw={700}>Review Policy</Text>
-        <Text>Label: {label}</Text>
-        <Text>Params: {Object.keys(params).length} added</Text>
+  const content = (
+    <Stack>
+      <Text>Label: {label}</Text>
+      <Text>Params: {Object.keys(params).length} added</Text>
+    </Stack>
+  );
 
-        <Grid>
-          <Grid.Col span={6}>
-            <Button variant="default" fullWidth onClick={onReturn}>
-              Cancel
-            </Button>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Button variant="filled" fullWidth loading={isPending} onClick={handleSubmit}>
-              Submit
-            </Button>
-          </Grid.Col>
-        </Grid>
-      </Stack>
-    </Container>
+  return (
+    <IngredientSubmissionView
+      title="Review policy"
+      content={content}
+      submissionHandler={handleSubmit}
+      submitButtonLoading={isPending}
+      submitButtonText="Submit"
+    />
   );
 }
