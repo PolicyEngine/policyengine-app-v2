@@ -1,12 +1,10 @@
-import { Box, Card, Container, Divider, Loader, Stack, Text, Title } from '@mantine/core';
+import { Card, Container, Divider, Stack, Text, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
-import DataTable from './DataTable';
-import EmptyState from './EmptyState';
 
 interface FlowViewProps<T = any> {
   title: string;
   subtitle?: string;
-  variant?: 'form' | 'list' | 'selection' | 'custom';
+  variant?: 'form' | 'selection' | 'cardList' | 'custom';
   
   // Button configuration - the key improvement
   buttons: ButtonConfig[];
@@ -14,17 +12,19 @@ interface FlowViewProps<T = any> {
   // Content props for different variants
   content?: React.ReactNode;
   
-  // List variant props
-  isLoading?: boolean;
-  isError?: boolean;
-  error?: unknown;
-  data?: T[];
-  columns?: { key: keyof T; header: string }[];
-  
   // Selection variant props
   selectionCards?: {
     title: string;
     description: string;
+    onClick: () => void;
+    isSelected?: boolean;
+    isDisabled?: boolean;
+  }[];
+
+  // Card list variant props
+  cardListItems?: {
+    title: string;
+    subtitle?: string;
     onClick: () => void;
     isSelected?: boolean;
     isDisabled?: boolean;
@@ -37,34 +37,11 @@ export default function FlowView<T>({
   variant = 'form',
   buttons,
   content,
-  isLoading,
-  isError,
-  error,
-  data,
-  columns,
   selectionCards,
+  cardListItems,
 }: FlowViewProps<T>) {
   const renderContent = () => {
     switch (variant) {
-      case 'list':
-        return (
-          <>
-            {isLoading && <Loader />}
-            {isError && (
-              <Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
-            )}
-            {!isLoading && !isError && data && (
-              <>
-                {data.length === 0 ? (
-                  <EmptyState ingredient="Item" />
-                ) : (
-                  <DataTable data={data} columns={columns || []} />
-                )}
-              </>
-            )}
-          </>
-        );
-      
       case 'selection':
         return (
           <Stack>
@@ -77,13 +54,37 @@ export default function FlowView<T>({
                 component="button"
                 onClick={card.onClick}
                 disabled={card.isDisabled}
-                variant={card.isSelected ? 'selectActive' : 'selectInactive'}
+                variant={card.isSelected ? 'active' : 'inactive'}
               >
                 <Text fw={700}>TODO: ICON</Text>
                 <Text>{card.title}</Text>
                 <Text size="sm" c="dimmed">
                   {card.description}
                 </Text>
+              </Card>
+            ))}
+          </Stack>
+        );
+      
+      case 'cardList':
+        return (
+          <Stack gap="sm">
+            {cardListItems?.map((item, index) => (
+              <Card
+                key={index}
+                withBorder
+                p="sm"
+                component="button"
+                onClick={item.onClick}
+                disabled={item.isDisabled}
+                variant={item.isSelected ? 'active' : undefined}
+              >
+                <Stack gap="xs">
+                  <Text fw={600}>{item.title}</Text>
+                  {item.subtitle && (
+                    <Text size="sm" c="dimmed">{item.subtitle}</Text>
+                  )}
+                </Stack>
               </Card>
             ))}
           </Stack>
@@ -111,11 +112,6 @@ export default function FlowView<T>({
       <MultiButtonFooter buttons={buttons} />
     </>
   );
-
-  // For list variant, use Box instead of Container for better layout
-  if (variant === 'list') {
-    return <Box p="md">{containerContent}</Box>;
-  }
 
   return <Container variant="guttered">{containerContent}</Container>;
 }

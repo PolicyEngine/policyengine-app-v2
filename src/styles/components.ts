@@ -96,7 +96,7 @@ export const themeComponents = {
   }),
   Card: Card.extend({
     styles: (theme, params) => {
-      if (params.variant === 'selectActive') {
+      if (params.variant === 'active') {
         return {
           root: {
             backgroundColor: colors.secondary[100],

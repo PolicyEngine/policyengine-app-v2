@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Card, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
 import {
@@ -58,48 +58,64 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   ];
 
   const userPolicies = data || [];
-  let displayPolicies = null;
+  
+  if (isLoading) {
+    return (
+      <FlowView
+        title="Select an Existing Policy"
+        variant="custom"
+        content={<Text>Loading policies...</Text>}
+        buttons={buttons}
+      />
+    );
+  }
+
+  if (isError) {
+    return (
+      <FlowView
+        title="Select an Existing Policy"
+        variant="custom"
+        content={<Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        buttons={buttons}
+      />
+    );
+  }
 
   if (userPolicies.length === 0) {
-    displayPolicies = <Text>No policies available. Please create a new policy.</Text>;
-  } else {
-    const recentUserPolicies = userPolicies.slice(0, 5); // Display only the first 5 policies
-    displayPolicies = recentUserPolicies
-      .filter((association) => association.policy) // Only include associations with loaded policies
-      .map((association) => (
-        // TODO: Fix ID types
-        <Card
-          key={association.policy!.id}
-          withBorder
-          p="md"
-          component="button"
-          onClick={() => handlePolicySelect(association.policy!)}
-        >
-          <Stack>
-            <Text fw={600}>{association.policy!.label}</Text>
-          </Stack>
-        </Card>
-      ));
+    return (
+      <FlowView
+        title="Select an Existing Policy"
+        variant="custom"
+        content={<Text>No policies available. Please create a new policy.</Text>}
+        buttons={buttons}
+      />
+    );
   }
+
+  const recentUserPolicies = userPolicies.slice(0, 5); // Display only the first 5 policies
+  const cardListItems = recentUserPolicies
+    .filter((association) => association.policy) // Only include associations with loaded policies
+    .map((association) => ({
+      title: association.policy!.label || 'Untitled Policy',
+      onClick: () => handlePolicySelect(association.policy!),
+      isSelected: localPolicyId === association.policy!.id.toString(),
+    }));
 
   const content = (
     <Stack>
       <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
       <Text fw={700}>Recents</Text>
-      <Stack>{displayPolicies}</Stack>
     </Stack>
   );
 
   return (
     <FlowView
       title="Select an Existing Policy"
-      variant="custom"
+      variant="cardList"
       content={content}
+      cardListItems={cardListItems}
       buttons={buttons}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
     />
   );
 }
