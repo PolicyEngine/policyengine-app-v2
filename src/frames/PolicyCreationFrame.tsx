@@ -19,7 +19,7 @@ export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) 
 
   const formInputs = (
     <TextInput
-      label="Reform title"
+      label="Policy title"
       placeholder="Policy name"
       value={localLabel}
       onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
@@ -33,7 +33,7 @@ export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) 
 
   return (
     <IngredientCreationStartView
-      title="Create policy"
+      title="Create a policy"
       formInputs={formInputs}
       submissionHandler={submissionHandler}
     />

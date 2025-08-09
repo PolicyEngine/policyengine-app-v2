@@ -1,5 +1,5 @@
 // Components submodule for Mantine theme
-import { Container } from '@mantine/core';
+import { Container, Title } from '@mantine/core';
 import { colors, typography, spacing } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -86,8 +86,22 @@ export const themeComponents = {
           root: {
             paddingLeft: spacing.container['2xl'],
             paddingRight: spacing.container['2xl'],
+            paddingTop: spacing.container.lg,
+            paddingBottom: spacing.container.lg,
           },
         };
+      }
+      return {};
+    },
+  }),
+  Title: Title.extend({
+    styles: (theme, params) => {
+      if (params.variant === 'colored') {
+        return {
+          root: {
+            color: colors.primary[700],
+          }
+        }
       }
       return {};
     },

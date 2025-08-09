@@ -1,4 +1,4 @@
-import { Container, Space } from '@mantine/core';
+import { Container, Divider, Space, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface IngredientCreationStartViewProps {
@@ -29,10 +29,10 @@ export default function IngredientCreationStartView({
 
   return (
     <>
-      {/*<Modal opened={opened} onClose={close} title={title} centered>*/}
       <Container variant="guttered">
-        {/*icon*/}
-        {/*subtitle*/}
+        <Title order={2} variant="colored">{title}</Title>
+        <Divider my="sm" />
+        {/*TODO: subtitle?*/}
         {/*break*/}
         {/*form labels and inputs*/}
         {formInputs}
