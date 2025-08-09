@@ -43,6 +43,7 @@ export const spacing = {
     header: '76px',
     content: '1361px',
     container: '976px',
+    sideGutter: '200px' // TODO: Make this responsive/attempt to use 'container'
   },
   
   // Container padding
@@ -52,6 +53,7 @@ export const spacing = {
     md: '32px',
     lg: '48px',
     xl: '64px',
+    '2xl': '80px',
   },
   
   // Border radius scale

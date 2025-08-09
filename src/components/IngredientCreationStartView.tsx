@@ -30,7 +30,7 @@ export default function IngredientCreationStartView({
   return (
     <>
       {/*<Modal opened={opened} onClose={close} title={title} centered>*/}
-      <Container>
+      <Container variant="guttered">
         {/*icon*/}
         {/*subtitle*/}
         {/*break*/}
