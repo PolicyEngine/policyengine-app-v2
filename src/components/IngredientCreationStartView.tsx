@@ -1,4 +1,4 @@
-import { Container, Divider, Space, Title } from '@mantine/core';
+import { Container, Divider, Space, Stack, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface IngredientCreationStartViewProps {
@@ -35,9 +35,10 @@ export default function IngredientCreationStartView({
         {/*TODO: subtitle?*/}
         {/*break*/}
         {/*form labels and inputs*/}
-        {formInputs}
+        <Stack gap="md" pb="lg">
+          {formInputs}
+        </Stack>
         {/*button panel: Cancel and Create X*/}
-        <Space h="xs" />
         <MultiButtonFooter buttons={buttonConfig} />
       </Container>
       {/*</Modal>*/}
