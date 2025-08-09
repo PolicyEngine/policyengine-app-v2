@@ -1,6 +1,5 @@
 // Spacing design tokens extracted from Figma design
 // Comments indicate spacing usage from Figma; these can be removed in the future
-
 export const spacing = {
   // Base spacing scale
   xs: '4px',
@@ -12,6 +11,7 @@ export const spacing = {
   '3xl': '32px',
   '4xl': '48px',
   '5xl': '64px',
+
   
   // TODO: Evaluate these spacing values
   // Component-specific spacing

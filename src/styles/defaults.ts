@@ -1,3 +1,5 @@
+import { spacing } from "@/designTokens";
+
 // Defaults submodule for Mantine theme
 export const themeDefaults = {
   Button: {
@@ -19,5 +21,8 @@ export const themeDefaults = {
   Badge: {
     radius: 'xl',
     size: 'md',
+  },
+  ActionIcon: {
+    size: 'input-sm',
   },
 };
