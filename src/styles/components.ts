@@ -94,6 +94,9 @@ export const themeComponents = {
       return {};
     },
   }),
+  ActionIcon: {
+    defaultProps: themeDefaults.ActionIcon,
+  },
   Title: Title.extend({
     styles: (theme, params) => {
       if (params.variant === 'colored') {

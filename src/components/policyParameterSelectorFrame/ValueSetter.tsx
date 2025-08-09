@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Divider,
+  Container,
   Group,
   Menu,
   NumberInput,
@@ -19,6 +20,7 @@ import { FOREVER } from '@/constants';
 import { addPolicyParam } from '@/reducers/policyReducer';
 import { ParameterMetadata } from '@/types/parameterMetadata';
 import { ValueInterval } from '@/types/valueInterval';
+import { spacing } from '@/designTokens';
 
 enum ValueSetterMode {
   DEFAULT = 'default',
@@ -41,6 +43,7 @@ interface ValueSetterProps {
 }
 
 interface ValueInputBoxProps {
+  label?: string;
   param: ParameterMetadata;
   value?: any;
   onChange?: (value: any) => void;
@@ -63,6 +66,7 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
+  // TODO: Get these from metadata
   const minDate = '2022-01-01';
   const maxDate = '2035-12-31';
 
@@ -92,18 +96,18 @@ export default function PolicyParameterSelectorValueSetterContainer(
   };
 
   return (
-    <Box>
+    <Container bg="gray.0" bd="1px solid gray.2" m="0" p="m">
       <Stack>
         <Text fw={700}>Current value</Text>
-        <Divider my="xs" />
-        <Group>
+        <Divider style={{ padding: 0 }} />
+        <Group align="flex-end">
           <ValueSetterToRender {...valueSetterProps} />
           <ModeSelectorButton setMode={handleModeChange} />
           <Text>TODO: Reset button</Text>
           <Button onClick={handleSubmit}>Add</Button>
         </Group>
       </Stack>
-    </Box>
+    </Container>
   );
 }
 
@@ -152,7 +156,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group>
+    <Group align="flex-end">
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
@@ -160,8 +164,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         maxDate={maxDate}
         onChange={handleStartDateChange}
       />
-      <Text>onward</Text>
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward" />
     </Group>
   );
 }
@@ -200,7 +203,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group>
+    <Group align="flex-end">
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
@@ -251,7 +254,7 @@ export function DateValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group>
+    <Group align="flex-end">
       <DatePickerInput
         placeholder="Pick a start date"
         label="From"
@@ -357,7 +360,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 }
 
 export function ValueInputBox(props: ValueInputBoxProps) {
-  const { param, value, onChange } = props;
+  const { param, value, onChange, label } = props;
 
   // US and UK packages use these type designations inconsistently
   const USD_UNITS = ['currency-USD', 'currency_USD', 'USD'];
@@ -384,6 +387,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
     <Text>TODO: Switch for boolean value</Text>
   ) : (
     <NumberInput
+      label={label}
       placeholder="Enter value"
       min={0}
       prefix={prefix}

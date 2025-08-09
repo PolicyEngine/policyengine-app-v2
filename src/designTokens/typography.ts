@@ -44,6 +44,7 @@ export const typography = {
     '24': '24px', // text-md/lineHeight-6/font-normal, H5/regular from Figma
   },
   
+  // TODO: Do we, in fact, use these styles?
   // Text styles from Figma design
   textStyles: {
     // Small text styles
