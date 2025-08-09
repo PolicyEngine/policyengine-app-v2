@@ -45,7 +45,7 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
     },
     {
       label: 'Next',
-      variant: 'filled',
+      variant: selectedAction ? 'filled': 'disabled',
       onClick: () => handleClickSubmit()
     }
   ];
