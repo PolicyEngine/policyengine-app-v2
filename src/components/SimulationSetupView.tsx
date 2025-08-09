@@ -53,7 +53,7 @@ export default function SimulationSetupView({
     : [cancelButtonConfig, cantProceedNextButtonConfig];
 
   return (
-    <Container size="md" py="xl">
+    <Container variant="guttered">
       <Stack>
         {/* Temporarily add color to demonstrate disabled*/}
         <Card

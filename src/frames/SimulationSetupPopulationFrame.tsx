@@ -1,16 +1,37 @@
-import NewExistingIngredientSelector from '@/components/NewExistingIngredientSelector';
+import FlowView, { ButtonConfig } from '@/components/common/FlowView';
 
 export default function SimulationSetupPopulationFrame() {
-  // TODO: After roping in population ingredient, write correct functions
   function temporaryNullFunc() {
     return 'success';
   }
 
+  const selectionCards = [
+    {
+      title: 'Load existing population',
+      description: 'Use a population you have already created',
+      onClick: temporaryNullFunc,
+    },
+    {
+      title: 'Create new population',
+      description: 'Build a new population',
+      onClick: temporaryNullFunc,
+    },
+  ];
+
+  const buttons: ButtonConfig[] = [
+    {
+      label: 'Cancel',
+      variant: 'default',
+      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+    },
+  ];
+
   return (
-    <NewExistingIngredientSelector
-      ingredientName="population"
-      onClickCreateNew={temporaryNullFunc}
-      onClickExisting={temporaryNullFunc}
+    <FlowView
+      title="Select Population"
+      variant="selection"
+      selectionCards={selectionCards}
+      buttons={buttons}
     />
   );
 }

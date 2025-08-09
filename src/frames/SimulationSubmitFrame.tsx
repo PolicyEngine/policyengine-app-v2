@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { Button, Container, Grid, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
@@ -9,7 +9,7 @@ import {
   serializeSimulationCreationPayload,
   SimulationCreationPayload,
 } from '@/types/simulationPayload';
-import IngredientSubmissionView from '@/components/IngredientSubmissionView';
+import FlowView, { ButtonConfig } from '@/components/common/FlowView';
 
 export default function SimulationSubmitFrame({
   onNavigate,
@@ -42,13 +42,26 @@ export default function SimulationSubmitFrame({
     </Stack>
   );
 
+  const buttons: ButtonConfig[] = [
+    {
+      label: 'Cancel',
+      variant: 'default',
+      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+    },
+    {
+      label: 'Submit',
+      variant: 'filled',
+      onClick: handleSubmit,
+      isLoading: isPending,
+    },
+  ];
+
   return (
-    <IngredientSubmissionView
+    <FlowView
       title="Review simulation"
+      variant="form"
       content={content}
-      submissionHandler={handleSubmit}
-      submitButtonLoading={isPending}
-      submitButtonText="Submit"
+      buttons={buttons}
     />
   );
 }
