@@ -1,4 +1,5 @@
 // Components submodule for Mantine theme
+import { Container } from '@mantine/core';
 import { colors, typography, spacing } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -78,4 +79,17 @@ export const themeComponents = {
       }),
     },
   },
+  Container: Container.extend({
+    styles: (theme, params) => {
+      if (params.variant === 'guttered') {
+        return {
+          root: {
+            paddingLeft: spacing.container['2xl'],
+            paddingRight: spacing.container['2xl'],
+          },
+        };
+      }
+      return {};
+    },
+  }),
 };
