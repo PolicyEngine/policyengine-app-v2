@@ -59,7 +59,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
       title: 'Add population',
       description: 'Select a geographic scope or specific household',
       onClick: handlePopulationSelect,
-      isSelected: !!simulation.populationId,
+      // isSelected: !!simulation.populationId,
       isDisabled: true, // Currently disabled
     },
     {
