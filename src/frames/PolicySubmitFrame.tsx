@@ -1,7 +1,8 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Button, Container, Grid, Stack, Text } from '@mantine/core';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { clearPolicy, markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
+import { useIngredientReset } from '@/hooks/useIngredientReset';
+import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
@@ -11,9 +12,10 @@ export default function PolicyParameterSelectorFrame({
   onReturn,
   isInSubflow,
 }: FlowComponentProps) {
-  const dispatch = useDispatch();
   const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.params);
+  const dispatch = useDispatch();
+  const { resetIngredient } = useIngredientReset();
   const { createPolicy, isPending } = useCreatePolicy();
 
   const policy: Policy = useSelector((state: RootState) => state.policy);
@@ -30,7 +32,7 @@ export default function PolicyParameterSelectorFrame({
         // If we've created this policy as part of a standalone policy creation flow,
         // we're done; clear the policy reducer
         if (!isInSubflow) {
-          dispatch(clearPolicy());
+          resetIngredient('policy');
         }
         onReturn();
       },
