@@ -60,14 +60,14 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
       description: 'Select a geographic scope or specific household',
       onClick: handlePopulationSelect,
       // isSelected: !!simulation.populationId,
-      isDisabled: true, // Currently disabled
+      isDisabled: true, 
     },
     {
       title: policy && policy.isCreated ? policy.label : 'Add policy',
       description: policy && policy.isCreated 
         ? policy.label 
         : 'Select a policy to apply to the simulation',
-      onClick: policy && policy.isCreated ? () => {} : handlePolicySelect, // No-op if already selected
+      onClick: policy && policy.isCreated ? () => {} : handlePolicySelect,
       isSelected: policy && policy.isCreated,
       isDisabled: false,
     },
