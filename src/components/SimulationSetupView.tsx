@@ -16,14 +16,12 @@ export default function SimulationSetupView({
   onPopulationSelect,
   onPolicySelect,
   // selectedPopulation,
-  isPopulationDisabled = true,
+  isPopulationDisabled = false, // defaulted to false so clickable; TODO remove disabling logic?
   onNext,
   canProceed,
 }: SimulationSetupViewProps) {
-  // TODO: Handle navigation/display after a user goes through policy creation flow;
-  // policies not yet actually selecting after creation
-
   const userDefinedPolicy = useSelector((state: any) => state.policy);
+  const userDefinedPopulation = useSelector((state: any) => state.population);
 
   const canProceedNextButtonConfig: ButtonConfig = {
     label: 'Next',
@@ -34,16 +32,13 @@ export default function SimulationSetupView({
   const cantProceedNextButtonConfig: ButtonConfig = {
     label: 'Next',
     variant: 'disabled' as const,
-    onClick: () => {
-      return null;
-    },
+    onClick: () => null,
   };
 
   const cancelButtonConfig: ButtonConfig = {
     label: 'Cancel',
     variant: 'outline' as const,
     onClick: () => {
-      // TODO: Fix when cancel buttons are fixed
       console.log('Cancel clicked');
     },
   };
@@ -55,24 +50,27 @@ export default function SimulationSetupView({
   return (
     <Container size="md" py="xl">
       <Stack>
-        {/* Temporarily add color to demonstrate disabled*/}
-        <Card
-          withBorder
-          p="md"
-          mb="xl"
-          component="button"
-          onClick={onPopulationSelect}
-          disabled={isPopulationDisabled}
-          bg="gray"
-        >
-          <Text fw={700}>TODO: ICON</Text>
-          <Text>Add population</Text>
-          <Text size="sm" c="dimmed">
-            Select a geographic scope or specific household
-          </Text>
-        </Card>
+        {userDefinedPopulation && userDefinedPopulation.isCreated ? (
+          <CardSelectedPopulation label={userDefinedPopulation.label ?? ''} />
+        ) : (
+          <Card
+            withBorder
+            p="md"
+            mb="xl"
+            component="button"
+            onClick={onPopulationSelect}
+            disabled={isPopulationDisabled}
+          >
+            <Text fw={700}>TODO: ICON</Text>
+            <Text>Add population</Text>
+            <Text size="sm" c="dimmed">
+              Select a geographic scope or specific household
+            </Text>
+          </Card>
+        )}
+
         {userDefinedPolicy && userDefinedPolicy.isCreated ? (
-          <CardSelectedPolicy label={userDefinedPolicy.label} />
+          <CardSelectedPolicy label={userDefinedPolicy.label ?? ''} />
         ) : (
           <CardCreatePolicy onClick={onPolicySelect} />
         )}
@@ -86,6 +84,10 @@ interface CardSelectedPolicyProps {
   label: string;
 }
 
+interface CardSelectedPopulationProps {
+  label: string;
+}
+
 interface CardCreatePolicyProps {
   onClick: () => void;
 }
@@ -93,7 +95,18 @@ interface CardCreatePolicyProps {
 function CardSelectedPolicy({ label }: CardSelectedPolicyProps) {
   return (
     <Card withBorder p="md" mb="xl" component="button" bg="lightblue">
-      {/* TODO: Remove hardcoded color*/}
+      <Text fw={700}>TODO: ICON</Text>
+      <Text>{label}</Text>
+      <Text size="sm" c="dimmed">
+        {label}
+      </Text>
+    </Card>
+  );
+}
+
+function CardSelectedPopulation({ label }: CardSelectedPopulationProps) {
+  return (
+    <Card withBorder p="md" mb="xl" component="button" bg="lightgreen">
       <Text fw={700}>TODO: ICON</Text>
       <Text>{label}</Text>
       <Text size="sm" c="dimmed">

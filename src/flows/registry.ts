@@ -6,8 +6,10 @@ import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import SimulationCreationFrame from '@/frames/SimulationCreationFrame';
 import SimulationSelectExistingPolicyFrame from '@/frames/SimulationSelectExistingPolicyFrame';
+import SimulationSelectExistingPopulationFrame from '@/frames/SimulationSelectExistingPopulationFrame';
 import SimulationSetupFrame from '@/frames/SimulationSetupFrame';
 import SimulationSetupPolicyFrame from '@/frames/SimulationSetupPolicyFrame';
+import SimulationSetupPopulationFrame from '@/frames/SimulationSetupPopulationFrame';
 import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
 import PoliciesPage from '@/pages/Policies.page';
 import PopulationsPage from '@/pages/Populations.page';
@@ -31,6 +33,8 @@ export const componentRegistry = {
   SimulationSetupPolicyFrame,
   SimulationSelectExistingPolicyFrame,
   SimulationReadView: SimulationsPage,
+  SimulationSetupPopulationFrame,
+  SimulationSelectExistingPopulationFrame,
 } as const;
 
 export const flowRegistry = {
