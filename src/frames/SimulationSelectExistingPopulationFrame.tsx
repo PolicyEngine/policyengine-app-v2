@@ -10,7 +10,6 @@ import {
   updatePopulationLabel,
 } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
-import { HouseholdMetadata } from '@/types/householdMetadata';
 
 export default function SimulationSelectExistingPopulationFrame({
   onNavigate,
@@ -23,11 +22,12 @@ export default function SimulationSelectExistingPopulationFrame({
   const canProceed = localPopulationId !== null;
   const dispatch = useDispatch();
 
-  function handlePopulationSelect(population: HouseholdMetadata) {
-    // Blank out any existing population
+  function handlePopulationSelect(population: NonNullable<typeof data>[number]['household']) {
+    if (!population) {
+      return;
+    }
     dispatch(clearPopulation());
 
-    // Fill in all population details
     dispatch(updatePopulationId(population.id.toString()));
     dispatch(updatePopulationLabel(population.label || ''));
 
@@ -39,6 +39,7 @@ export default function SimulationSelectExistingPopulationFrame({
     if (!localPopulationId) {
       return;
     }
+
     dispatch(updatePopulationId(localPopulationId));
     dispatch(markPopulationAsCreated());
     onNavigate('next');
@@ -85,20 +86,20 @@ export default function SimulationSelectExistingPopulationFrame({
   } else {
     const recentUserPopulations = userPopulations.slice(0, 5);
     displayPopulations = recentUserPopulations
-      .filter((p) => p.household)
-      .map((p) => (
+      .filter(({ household }) => household) // filter out any missing households
+      .map(({ household }) => (
         <Card
-          key={p.household!.id}
+          key={household!.id}
           withBorder
           p="md"
           component="button"
-          onClick={() => handlePopulationSelect(p.household!)}
+          onClick={() => handlePopulationSelect(household!)}
         >
           <Stack>
-            <Text fw={600}>{p.household!.label}</Text>
+            <Text fw={600}>{household!.id}</Text>
           </Stack>
         </Card>
-      ));
+      )); // TODO Update the content to be displayed for available households
   }
 
   return (

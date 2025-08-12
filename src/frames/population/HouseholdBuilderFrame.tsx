@@ -1,65 +1,49 @@
-import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
 import IngredientCreationStartView from '@/components/IngredientCreationStartView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { childOptions, maritalOptions, taxYears } from '@/mocks/householdOptions';
+import { updateChildInfo, updatePopulation } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
-import { Household } from '@/types/household';
+import { FlowComponentProps } from '@/types/flow';
 import {
   HouseholdCreationPayload,
   serializeHouseholdCreationPayload,
 } from '@/types/householdPayloads';
 
-export default function HouseholdBuilderFrame() {
-  // const dispatch = useDispatch();
-  // const { mutateAsync: createHousehold } = useCreateHousehold();
-
-  const [taxYear, setTaxYear] = useState('2023');
-  const [maritalStatus, setMaritalStatus] = useState('Single');
-  const [numChildren, setNumChildren] = useState(0);
-  const [children, setChildren] = useState<{ age: string; income: string }[]>([]);
-
-  function handleNumChildrenChange(val: string) {
-    const count = parseInt(val, 10);
-    setNumChildren(count);
-    setChildren(Array.from({ length: count }, () => ({ age: '', income: '' })));
-  }
-
-  function handleChildChange(index: number, field: 'age' | 'income', value: string) {
-    const updated = [...children];
-    updated[index][field] = value;
-    setChildren(updated);
-  }
-
-  // async function submissionHandler() {
-  //   dispatch(updateHousehold({ taxYear, maritalStatus, numChildren }));
-  //   dispatch(updateChildInfo(children));
-
-  //   // TODO: payload for creating household needs to be structured correctly to work with the post api
-  //   await createHousehold({
-  //     taxYear,
-  //     maritalStatus,
-  //     numChildren,
-  //     children,
-  //     // children: children.map((c) => ({
-  //     //   age: parseInt(c.age, 10),
-  //     //   income: parseFloat(c.income),
-  //     // })),
-  //   });
-
-  //   onNavigate('next');
-  // }
-
+export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps) {
+  const dispatch = useDispatch();
+  const household = useSelector((state: RootState) => state.household);
   const { createHousehold } = useCreateHousehold();
 
-  const household: Household = useSelector((state: RootState) => state.household);
+  // Generic updater for top-level household fields
+  const handleChange = (field: string, value: string | number) => {
+    dispatch(updatePopulation({ [field]: value }));
+  };
 
-  function handleSubmit() {
-    const serializedHouseholdCreationPayload: HouseholdCreationPayload =
-      serializeHouseholdCreationPayload(household);
-    createHousehold(serializedHouseholdCreationPayload);
-  }
+  // Handle number of children change
+  const handleNumChildrenChange = (val: string) => {
+    const count = parseInt(val || '0', 10);
+    handleChange('numChildren', count);
+    dispatch(updateChildInfo(Array.from({ length: count }, () => ({ age: '', income: '' }))));
+  };
+
+  // Handle changes to a specific child
+  const handleChildChange = (index: number, field: 'age' | 'income', value: string) => {
+    const updated = [...household.children];
+    updated[index] = { ...updated[index], [field]: value };
+    dispatch(updateChildInfo(updated));
+  };
+
+  const handleSubmit = async () => {
+    const payload: HouseholdCreationPayload = serializeHouseholdCreationPayload(household);
+    try {
+      await createHousehold(payload);
+      onNavigate('next');
+    } catch (err) {
+      console.error('Failed to create household:', err);
+    }
+  };
 
   const formInputs = (
     <Stack gap="md">
@@ -69,29 +53,29 @@ export default function HouseholdBuilderFrame() {
 
       <Select
         label="Tax Year"
-        value={taxYear}
-        onChange={(val) => setTaxYear(val || '')}
+        value={household.taxYear}
+        onChange={(val) => handleChange('taxYear', val || '')}
         data={taxYears}
         required
       />
 
       <Select
         label="Marital Status"
-        value={maritalStatus}
-        onChange={(val) => setMaritalStatus(val || '')}
+        value={household.maritalStatus}
+        onChange={(val) => handleChange('maritalStatus', val || '')}
         data={maritalOptions}
         required
       />
 
       <Select
         label="Number of Children"
-        value={numChildren.toString()}
+        value={household.numChildren.toString()}
         onChange={(val) => handleNumChildrenChange(val || '0')}
         data={childOptions}
         required
       />
 
-      {children.map((child, idx) => (
+      {household.children.map((child, idx) => (
         <Stack key={idx} gap="xs">
           <Text fw={500}>Child {idx + 1}</Text>
           <Group grow>
