@@ -39,7 +39,6 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
   return (
     <FlowView
       title="Create simulation"
-      variant="form"
       content={formInputs}
       buttons={buttons}
     />

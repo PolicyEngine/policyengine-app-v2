@@ -59,7 +59,6 @@ export default function SimulationSubmitFrame({
   return (
     <FlowView
       title="Review simulation"
-      variant="form"
       content={content}
       buttons={buttons}
     />

@@ -64,7 +64,6 @@ export default function PolicySubmitFrame({
   return (
     <FlowView
       title="Review policy"
-      variant="form"
       content={content}
       buttons={buttons}
     />

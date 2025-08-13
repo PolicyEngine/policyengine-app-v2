@@ -63,7 +63,6 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     return (
       <FlowView
         title="Select an Existing Policy"
-        variant="custom"
         content={<Text>Loading policies...</Text>}
         buttons={buttons}
       />
@@ -74,7 +73,6 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     return (
       <FlowView
         title="Select an Existing Policy"
-        variant="custom"
         content={<Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttons={buttons}
       />
@@ -85,7 +83,6 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     return (
       <FlowView
         title="Select an Existing Policy"
-        variant="custom"
         content={<Text>No policies available. Please create a new policy.</Text>}
         buttons={buttons}
       />

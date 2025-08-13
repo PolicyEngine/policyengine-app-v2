@@ -43,7 +43,6 @@ export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) 
   return (
     <FlowView
       title="Create a policy"
-      variant="form"
       content={formInputs}
       buttons={buttons}
     />

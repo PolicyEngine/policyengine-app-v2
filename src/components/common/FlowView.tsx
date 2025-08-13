@@ -88,10 +88,6 @@ export default function FlowView<T>({
           </Stack>
         );
       
-      case 'custom':
-        return content;
-      
-      case 'form':
       default:
         return content;
     }
