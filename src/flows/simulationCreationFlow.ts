@@ -33,6 +33,22 @@ export const SimulationCreationFlow: Flow = {
         next: 'SimulationSetupFrame',
       },
     },
+    SimulationSetupPopulationFrame: {
+      component: 'SimulationSetupPopulationFrame',
+      on: {
+        createNew: {
+          flow: 'PopulationFlow',
+          returnTo: 'SimulationSetupFrame',
+        },
+        loadExisting: 'SimulationSelectExistingPopulationFrame',
+      },
+    },
+    SimulationSelectExistingPopulationFrame: {
+      component: 'SimulationSelectExistingPopulationFrame',
+      on: {
+        next: 'SimulationSetupFrame',
+      },
+    },
     SimulationSubmitFrame: {
       component: 'SimulationSubmitFrame',
       on: {

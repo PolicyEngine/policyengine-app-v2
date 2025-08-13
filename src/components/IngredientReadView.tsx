@@ -40,7 +40,7 @@ export default function IngredientReadView<T>({
         {!isLoading && !isError && (
           <>
             {data.length === 0 ? (
-              <EmptyState ingredient="Policy" />
+              <EmptyState ingredient={title} />
             ) : (
               <DataTable data={data} columns={columns} />
             )}

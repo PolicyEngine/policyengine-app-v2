@@ -1,12 +1,14 @@
 import { configureStore } from '@reduxjs/toolkit';
 import flowReducer from './reducers/flowReducer';
 import policyReducer from './reducers/policyReducer';
+import populationReducer from './reducers/populationReducer';
 import simulationReducer from './reducers/simulationReducer';
 
 export const store = configureStore({
   reducer: {
     policy: policyReducer,
     flow: flowReducer,
+    household: populationReducer,
     simulation: simulationReducer,
   },
 });

@@ -48,7 +48,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
       selectedPopulation={
         simulation.populationId ? `Population: ${simulation.populationId}` : undefined
       }
-      isPopulationDisabled
+      // isPopulationDisabled
       onNext={handleNext}
       canProceed={canProceed}
     />
