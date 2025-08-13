@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
-import IngredientCreationStartView from '@/components/IngredientCreationStartView';
+import FlowView, { ButtonConfig } from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
 import { setGeographicScope, setRegion } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
@@ -50,6 +50,19 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
   const extractRegionValue = (fullValue: string) => {
     return fullValue.split('/').pop() || fullValue;
   };
+
+  function submissionHandler() {
+    // Validate that if state is selected, a region must be chosen
+    if (scope === 'state' && !selectedRegion) {
+      // TODO: Add proper error handling/notification here
+      console.warn('State selected but no region chosen');
+      return;
+    }
+
+    dispatch(setGeographicScope(scope));
+    // Note: Region is already dispatched immediately when selected above
+    onNavigate(scope);
+  }
 
   const formInputs = (
     <Stack>
@@ -128,24 +141,24 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
     </Stack>
   );
 
-  function submissionHandler() {
-    // Validate that if state is selected, a region must be chosen
-    if (scope === 'state' && !selectedRegion) {
-      // TODO: Add proper error handling/notification here
-      console.warn('State selected but no region chosen');
-      return;
-    }
-
-    dispatch(setGeographicScope(scope));
-    // Note: Region is already dispatched immediately when selected above
-    onNavigate(scope);
-  }
+  const buttons: ButtonConfig[] = [
+    {
+      label: 'Cancel',
+      variant: 'default',
+      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+    },
+    {
+      label: 'Select Scope',
+      variant: 'filled',
+      onClick: submissionHandler,
+    },
+  ];
 
   return (
-    <IngredientCreationStartView
+    <FlowView
       title="Select Scope"
-      formInputs={formInputs}
-      submissionHandler={submissionHandler}
+      content={formInputs}
+      buttons={buttons}
     />
   );
 }
