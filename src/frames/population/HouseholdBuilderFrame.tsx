@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
-import IngredientCreationStartView from '@/components/IngredientCreationStartView';
+import FlowView, { ButtonConfig } from '@/components/common/FlowView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { childOptions, maritalOptions, taxYears } from '@/mocks/householdOptions';
 import { updateChildInfo, updatePopulation } from '@/reducers/populationReducer';
@@ -100,11 +100,24 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
     </Stack>
   );
 
+  const buttons: ButtonConfig[] = [
+    {
+      label: 'Cancel',
+      variant: 'default',
+      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+    },
+    {
+      label: 'Create Household',
+      variant: 'filled',
+      onClick: handleSubmit,
+    },
+  ];
+
   return (
-    <IngredientCreationStartView
+    <FlowView
       title="Create Household"
-      formInputs={formInputs}
-      submissionHandler={handleSubmit}
+      content={formInputs}
+      buttons={buttons}
     />
   );
 }
