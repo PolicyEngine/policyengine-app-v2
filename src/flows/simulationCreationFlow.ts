@@ -37,7 +37,7 @@ export const SimulationCreationFlow: Flow = {
       component: 'SimulationSetupPopulationFrame',
       on: {
         createNew: {
-          flow: 'PopulationFlow',
+          flow: 'PopulationCreationFlow',
           returnTo: 'SimulationSetupFrame',
         },
         loadExisting: 'SimulationSelectExistingPopulationFrame',

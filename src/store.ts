@@ -10,6 +10,7 @@ export const store = configureStore({
     flow: flowReducer,
     household: populationReducer,
     simulation: simulationReducer,
+    population: populationReducer,
   },
 });
 

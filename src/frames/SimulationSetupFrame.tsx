@@ -12,6 +12,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const dispatch = useDispatch();
   const simulation = useSelector((state: RootState) => state.simulation);
   const policy = useSelector((state: RootState) => state.policy);
+  const population = useSelector((state: RootState) => state.population);
 
   const handlePolicySelect = () => {
     onNavigate('setupPolicy');
@@ -41,13 +42,16 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
 
+  // TODO: May consider moving to an explicit "isCreated" state entry
   const selectionCards = [
     {
-      title: 'Add population',
-      description: 'Select a geographic scope or specific household',
-      onClick: handlePopulationSelect,
-      // isSelected: !!simulation.populationId,
-      isDisabled: true, 
+      title: population && population.id ? population.label : 'Add population',
+      description: population && population.id 
+        ? population.label 
+        : 'Select a geographic scope or specific household',
+      onClick: population && population.id ? () => {} : handlePopulationSelect,
+      isSelected: !!simulation.populationId,
+      isDisabled: false, 
     },
     {
       title: policy && policy.isCreated ? policy.label : 'Add policy',

@@ -3,7 +3,7 @@ import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { PolicyViewFlow } from '@/flows/policyViewFlow';
-import { PopulationFlow } from '@/flows/populationCreationFlow';
+import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { PopulationViewFlow } from '@/flows/populationViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
@@ -30,7 +30,7 @@ export default function HomePage() {
       <Button variant="default" onClick={() => dispatch(setFlow(SimulationViewFlow))}>
         Show Simulation View
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PopulationFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow(PopulationCreationFlow))}>
         Execute Population Flow
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(PopulationViewFlow))}>

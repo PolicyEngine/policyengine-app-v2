@@ -15,7 +15,7 @@ import PoliciesPage from '@/pages/Policies.page';
 import PopulationsPage from '@/pages/Populations.page';
 import SimulationsPage from '@/pages/Simulations.page';
 import { PolicyCreationFlow } from './policyCreationFlow';
-import { PopulationFlow } from './populationCreationFlow';
+import { PopulationCreationFlow } from './populationCreationFlow';
 import { SimulationCreationFlow } from './simulationCreationFlow';
 import { SimulationViewFlow } from './simulationViewFlow';
 
@@ -40,7 +40,7 @@ export const componentRegistry = {
 export const flowRegistry = {
   PolicyCreationFlow,
   PolicyViewFlow,
-  PopulationFlow,
+  PopulationCreationFlow,
   SimulationCreationFlow,
   SimulationViewFlow,
 } as const;
