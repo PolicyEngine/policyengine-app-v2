@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import { FlowComponentProps } from '@/types/flow';
 import { updateLabel } from '../reducers/policyReducer';
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 
 export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -27,24 +27,16 @@ export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) 
     />
   );
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
-    },
-    {
-      label: 'Create a policy',
-      variant: 'filled',
-      onClick: submissionHandler,
-    },
-  ];
+  const primaryAction = {
+    label: 'Create a policy',
+    onClick: submissionHandler,
+  };
 
   return (
     <FlowView
       title="Create a policy"
       content={formInputs}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }

@@ -7,7 +7,7 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 
 export default function PolicySubmitFrame({
   onReturn,
@@ -47,25 +47,17 @@ export default function PolicySubmitFrame({
     </Stack>
   );
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
-    },
-    {
-      label: 'Submit',
-      variant: 'filled',
-      onClick: handleSubmit,
-      isLoading: isPending,
-    },
-  ];
+  const primaryAction = {
+    label: 'Submit',
+    onClick: handleSubmit,
+    isLoading: isPending,
+  };
 
   return (
     <FlowView
       title="Review policy"
       content={content}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }

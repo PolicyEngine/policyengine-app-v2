@@ -11,7 +11,7 @@ import {
 } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
 import { PolicyMetadata } from '@/types/policyMetadata';
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
@@ -44,27 +44,15 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     onNavigate('next');
   }
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'),
-    },
-    {
-      label: 'Next',
-      variant: canProceed ? 'filled' : 'disabled',
-      onClick: canProceed ? handleSubmit : () => null,
-    },
-  ];
-
   const userPolicies = data || [];
   
+  // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
     return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text>Loading policies...</Text>}
-        buttons={buttons}
+        buttonPreset="cancel-only"
       />
     );
   }
@@ -74,7 +62,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       <FlowView
         title="Select an Existing Policy"
         content={<Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
-        buttons={buttons}
+        buttonPreset="cancel-only"
       />
     );
   }
@@ -84,7 +72,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       <FlowView
         title="Select an Existing Policy"
         content={<Text>No policies available. Please create a new policy.</Text>}
-        buttons={buttons}
+        buttonPreset="cancel-only"
       />
     );
   }
@@ -106,13 +94,19 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     </Stack>
   );
 
+  const primaryAction = {
+    label: 'Next',
+    onClick: handleSubmit,
+    isDisabled: !canProceed
+  };
+
   return (
     <FlowView
       title="Select an Existing Policy"
       variant="cardList"
       content={content}
       cardListItems={cardListItems}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }

@@ -6,7 +6,7 @@ import {
 } from '@/reducers/simulationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 
 export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -41,19 +41,6 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // TODO: Fix when cancel buttons are fixed
-    },
-    {
-      label: 'Next',
-      variant: canProceed ? 'filled' : 'disabled',
-      onClick: canProceed ? handleNext : () => null,
-    },
-  ];
-
   const selectionCards = [
     {
       title: 'Add population',
@@ -73,12 +60,18 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     },
   ];
 
+  const primaryAction = {
+    label: 'Next',
+    onClick: handleNext,
+    isDisabled: !canProceed
+  };
+
   return (
     <FlowView
       title="Setup Simulation"
       variant="selection"
       selectionCards={selectionCards}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }

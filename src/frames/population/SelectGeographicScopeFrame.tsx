@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
 import { setGeographicScope, setRegion } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
@@ -141,24 +141,16 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
     </Stack>
   );
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
-    },
-    {
-      label: 'Select Scope',
-      variant: 'filled',
-      onClick: submissionHandler,
-    },
-  ];
+  const primaryAction = {
+    label: 'Select Scope',
+    onClick: submissionHandler,
+  };
 
   return (
     <FlowView
       title="Select Scope"
       content={formInputs}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }

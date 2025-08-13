@@ -2,13 +2,10 @@ import { Card, Container, Divider, Stack, Text, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 import { spacing } from '@/designTokens';
 
-interface FlowViewProps<T = any> {
+interface FlowViewProps {
   title: string;
   subtitle?: string;
-  variant?: 'form' | 'selection' | 'cardList' | 'custom';
-  
-  // Button configuration - the key improvement
-  buttons: ButtonConfig[];
+  variant?: 'selection' | 'cardList';
   
   // Content props for different variants
   content?: React.ReactNode;
@@ -30,17 +27,87 @@ interface FlowViewProps<T = any> {
     isSelected?: boolean;
     isDisabled?: boolean;
   }[];
+
+  // Button configuration - can use explicit buttons or convenience props
+  buttons?: ButtonConfig[];
+  
+  // Convenience props for common button patterns (only used if buttons is undefined)
+  primaryAction?: {
+    label: string;
+    onClick: () => void;
+    isLoading?: boolean;
+    isDisabled?: boolean;
+  };
+  
+  cancelAction?: {
+    label?: string; // defaults to "Cancel"
+    onClick?: () => void; // defaults to console.log placeholder
+  };
+  
+  // Preset configurations
+  buttonPreset?: 'cancel-only' | 'cancel-primary' | 'none';
 }
 
 export default function FlowView<T>({
   title,
   subtitle,
-  variant = 'form',
+  variant,
   buttons,
+  primaryAction,
+  cancelAction,
+  buttonPreset,
   content,
   selectionCards,
   cardListItems,
 }: FlowViewProps<T>) {
+  
+  // Generate buttons from convenience props if explicit buttons not provided
+  function getButtons(): ButtonConfig[] {
+    // If explicit buttons provided, use them
+    if (buttons) {
+      return buttons;
+    }
+    
+    // Handle preset configurations
+    if (buttonPreset === 'none') {
+      return [];
+    }
+    
+    if (buttonPreset === 'cancel-only') {
+      return [
+        {
+          label: cancelAction?.label || 'Cancel',
+          variant: 'default',
+          onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
+        },
+      ];
+    }
+    
+    // Default behavior: cancel + primary (or just cancel if no primary action)
+    const generatedButtons: ButtonConfig[] = [];
+    
+    // Always add cancel button unless explicitly disabled
+    generatedButtons.push({
+      label: cancelAction?.label || 'Cancel',
+      variant: 'default',
+      onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
+    });
+    
+    // Add primary action if provided
+    if (primaryAction) {
+      generatedButtons.push({
+        label: primaryAction.label,
+        variant: primaryAction.isDisabled ? 'disabled' : 'filled',
+        onClick: primaryAction.onClick,
+        isLoading: primaryAction.isLoading,
+      });
+    }
+    
+    return generatedButtons;
+  };
+
+  const finalButtons = getButtons();
+
   const renderContent = () => {
     switch (variant) {
       case 'selection':
@@ -103,7 +170,7 @@ export default function FlowView<T>({
         {renderContent()}
       </Stack>
       
-      <MultiButtonFooter buttons={buttons} />
+      {finalButtons.length > 0 && <MultiButtonFooter buttons={finalButtons} />}
     </>
   );
 

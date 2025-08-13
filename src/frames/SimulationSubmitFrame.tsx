@@ -9,7 +9,7 @@ import {
   serializeSimulationCreationPayload,
   SimulationCreationPayload,
 } from '@/types/simulationPayload';
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 
 export default function SimulationSubmitFrame({
   onNavigate,
@@ -42,25 +42,17 @@ export default function SimulationSubmitFrame({
     </Stack>
   );
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
-    },
-    {
-      label: 'Submit',
-      variant: 'filled',
-      onClick: handleSubmit,
-      isLoading: isPending,
-    },
-  ];
+  const primaryAction = {
+    label: 'Submit',
+    onClick: handleSubmit,
+    isLoading: isPending,
+  };
 
   return (
     <FlowView
       title="Review simulation"
       content={content}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }

@@ -1,4 +1,4 @@
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function SimulationSetupPopulationFrame({ onNavigate }: FlowComponentProps) {
@@ -23,20 +23,14 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
     },
   ];
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
-    },
-  ];
+  // Note: This uses cancel-only pattern temporarily. We'll want to modify this as we rope in population flow.
 
   return (
     <FlowView
       title="Select Population"
       variant="selection"
       selectionCards={selectionCards}
-      buttons={buttons}
+      buttonPreset="cancel-only"
     />
   );
 }

@@ -1,6 +1,6 @@
-import { FlowComponentProps } from '@/types/flow';
-import FlowView, { ButtonConfig } from '@/components/common/FlowView';
 import { useState } from "react";
+import FlowView from '@/components/common/FlowView';
+import { FlowComponentProps } from '@/types/flow';
 
 type SetupAction = 'createNew' | 'loadExisting';
 
@@ -35,26 +35,19 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
       isSelected: selectedAction === "createNew",
     },
   ];
-
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
-    },
-    {
-      label: 'Next',
-      variant: selectedAction ? 'filled': 'disabled',
-      onClick: () => handleClickSubmit()
-    }
-  ];
+  
+  const primaryAction = {
+    label: 'Next',
+    onClick: handleClickSubmit,
+    isDisabled: !selectedAction
+  };
 
   return (
     <FlowView
       title="Select Policy"
       variant="selection"
       selectionCards={selectionCards}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }

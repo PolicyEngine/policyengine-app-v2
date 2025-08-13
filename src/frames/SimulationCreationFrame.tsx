@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TextInput } from '@mantine/core';
 import { FlowComponentProps } from '@/types/flow';
-import FlowView, { ButtonConfig } from '../components/common/FlowView';
+import FlowView from '@/components/common/FlowView';
 
 export default function SimulationCreationFrame({ onNavigate }: FlowComponentProps) {
   const [localLabel, setLocalLabel] = useState('');
@@ -23,24 +23,16 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
     />
   );
 
-  const buttons: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'default',
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
-    },
-    {
-      label: 'Create simulation',
-      variant: 'filled',
-      onClick: submissionHandler,
-    },
-  ];
+  const primaryAction = {
+    label: 'Create simulation',
+    onClick: submissionHandler,
+  };
 
   return (
     <FlowView
       title="Create simulation"
       content={formInputs}
-      buttons={buttons}
+      primaryAction={primaryAction}
     />
   );
 }
