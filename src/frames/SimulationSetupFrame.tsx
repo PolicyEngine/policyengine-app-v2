@@ -33,25 +33,25 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     }
   }, [policy.isCreated, policy.id, simulation.policyId, dispatch]);
 
-  // Set default population ID when policy is selected
+  // Listen for population creation and update simulation with population ID
   useEffect(() => {
-    if (simulation.policyId && !simulation.populationId) {
-      dispatch(updateSimulationPopulationId('default-population'));
+    if (population.isCreated && population.id && !simulation.populationId) {
+      dispatch(updateSimulationPopulationId(population.id));
     }
-  }, [simulation.policyId, simulation.populationId, dispatch]);
+  }, [population.isCreated, population.id, simulation.populationId, dispatch]);
 
   const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
 
   // TODO: May consider moving to an explicit "isCreated" state entry
   const selectionCards = [
     {
-      title: population && population.id ? population.label || '' : 'Add population',
+      title: population && population.isCreated ? population.label || '' : 'Add population',
       description:
-        population && population.id
+        population && population.isCreated
           ? population.label || ''
           : 'Select a geographic scope or specific household',
-      onClick: population && population.id ? () => {} : handlePopulationSelect,
-      isSelected: !!simulation.populationId,
+      onClick: population && population.isCreated ? () => {} : handlePopulationSelect,
+      isSelected: population && population.isCreated,
       isDisabled: false,
     },
     {

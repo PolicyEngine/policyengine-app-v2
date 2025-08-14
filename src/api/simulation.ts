@@ -51,10 +51,12 @@ export async function createSimulation(
 }
 */
 
-const mockSimulationId = `mock-simulation-id-${Date.now()}`;
 const mockApiVersion = 'mock-api-version';
-const mockPopulationId = 1;
-const mockPolicyId = 89013;
+const mockPopulationId = 0;
+const mockPolicyId = 0;
+
+// Store created simulations to return proper data when fetched
+const mockSimulationStore: Map<string, SimulationMetadata> = new Map();
 
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
@@ -62,26 +64,44 @@ export async function fetchSimulationById(
 ): Promise<SimulationMetadata> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({
-        simulation_id: simulationId,
-        country_id: countryId,
-        api_version: mockApiVersion,
-        population_id: mockPopulationId,
-        policy_id: mockPolicyId,
-      });
+      // Check if we have stored data for this simulation
+      const storedSimulation = mockSimulationStore.get(simulationId);
+      if (storedSimulation) {
+        resolve(storedSimulation);
+      } else {
+        // Fallback for simulations not in our store (legacy or external)
+        resolve({
+          simulation_id: simulationId,
+          country_id: countryId,
+          api_version: mockApiVersion,
+          population_id: mockPopulationId,
+          policy_id: 89013, // Keep the original fallback for existing simulations
+        });
+      }
     }, 1000); // Simulate network delay
   });
 }
 
 export async function createSimulation(
-  // TODO: Integrate actual simulation creation payload when API is configured for it;
-  // remove the ESLint disable statement when this is done
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   data: SimulationCreationPayload
 ): Promise<{ result: { simulation_id: string } }> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve({ result: { simulation_id: mockSimulationId } });
+      // Generate a unique simulation ID
+      const simulationId = `mock-simulation-id-${Date.now()}`;
+      
+      // Store the simulation data for later retrieval
+      const simulationMetadata: SimulationMetadata = {
+        simulation_id: simulationId,
+        country_id: 'us', // Default to US for now
+        api_version: mockApiVersion,
+        population_id: data.populationId ? parseInt(data.populationId, 10) : mockPopulationId,
+        policy_id: data.policyId ? parseInt(data.policyId, 10) : mockPolicyId,
+      };
+      
+      mockSimulationStore.set(simulationId, simulationMetadata);
+      
+      resolve({ result: { simulation_id: simulationId } });
     }, 1000); // Simulate network delay
   });
 }

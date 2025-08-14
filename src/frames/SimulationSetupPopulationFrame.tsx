@@ -1,36 +1,53 @@
+import { useState } from 'react';
 import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
 
+type SetupAction = 'createNew' | 'loadExisting';
+
 export default function SimulationSetupPopulationFrame({ onNavigate }: FlowComponentProps) {
-  function onClickCreateNew() {
-    onNavigate('createNew');
+  const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
+
+  function handleClickCreateNew() {
+    setSelectedAction('createNew');
   }
 
-  function onClickExisting() {
-    onNavigate('loadExisting');
+  function handleClickExisting() {
+    setSelectedAction('loadExisting');
+  }
+
+  function handleClickSubmit() {
+    if (selectedAction) {
+      onNavigate(selectedAction);
+    }
   }
 
   const selectionCards = [
     {
       title: 'Load existing population',
       description: 'Use a population you have already created',
-      onClick: onClickExisting,
+      onClick: handleClickExisting,
+      isSelected: selectedAction === 'loadExisting',
     },
     {
       title: 'Create new population',
       description: 'Build a new population',
-      onClick: onClickCreateNew,
+      onClick: handleClickCreateNew,
+      isSelected: selectedAction === 'createNew',
     },
   ];
 
-  // Note: This uses cancel-only pattern temporarily. We'll want to modify this as we rope in population flow.
+  const primaryAction = {
+    label: 'Next',
+    onClick: handleClickSubmit,
+    isDisabled: !selectedAction,
+  };
 
   return (
     <FlowView
       title="Select Population"
       variant="selection"
       selectionCards={selectionCards}
-      buttonPreset="cancel-only"
+      primaryAction={primaryAction}
     />
   );
 }
