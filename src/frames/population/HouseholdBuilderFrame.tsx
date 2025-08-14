@@ -2,8 +2,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { childOptions, maritalOptions, taxYears } from '@/mocks/householdOptions';
-import { updateChildInfo, updatePopulation } from '@/reducers/populationReducer';
+import {
+  markPopulationAsCreated,
+  updateChildInfo,
+  updatePopulation,
+  updatePopulationId,
+  updatePopulationLabel,
+} from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import {
@@ -11,10 +18,15 @@ import {
   serializeHouseholdCreationPayload,
 } from '@/types/householdPayloads';
 
-export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps) {
+export default function HouseholdBuilderFrame({
+  onNavigate,
+  onReturn,
+  isInSubflow,
+}: FlowComponentProps) {
   const dispatch = useDispatch();
-  const household = useSelector((state: RootState) => state.household);
-  const { createHousehold } = useCreateHousehold();
+  const household = useSelector((state: RootState) => state.population);
+  const { createHousehold, isPending } = useCreateHousehold();
+  const { resetIngredient } = useIngredientReset();
 
   // Generic updater for top-level household fields
   const handleChange = (field: string, value: string | number) => {
@@ -37,9 +49,29 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
 
   const handleSubmit = async () => {
     const payload: HouseholdCreationPayload = serializeHouseholdCreationPayload(household);
+    console.log('serializedHouseholdCreationPayload', payload);
+
     try {
-      await createHousehold(payload);
-      onNavigate('next');
+      const result = await createHousehold(payload);
+      console.log('Household created successfully:', result);
+
+      // Update population state with the created household ID and mark as created
+      dispatch(updatePopulationId(result.result.household_id));
+      dispatch(updatePopulationLabel(household.label || ''));
+      dispatch(markPopulationAsCreated());
+
+      // If we've created this population as part of a standalone population creation flow,
+      // we're done; clear the population reducer
+      if (!isInSubflow) {
+        resetIngredient('population');
+      }
+
+      // Return to calling flow (simulation setup) or navigate to next frame
+      if (onReturn) {
+        onReturn();
+      } else {
+        onNavigate('next');
+      }
     } catch (err) {
       console.error('Failed to create household:', err);
     }
@@ -103,6 +135,7 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
   const primaryAction = {
     label: 'Create Household',
     onClick: handleSubmit,
+    isLoading: isPending,
   };
 
   return <FlowView title="Create Household" content={formInputs} primaryAction={primaryAction} />;
