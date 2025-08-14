@@ -41,7 +41,7 @@ interface IngredientReadViewProps {
 export default function IngredientReadView({
   ingredient,
   title,
-  subtitle = `Build and save ${ingredient} scenarios for quick access when creating impact reports. Pre-configured ${ingredient}s accelerate report generation by up to X%`,
+  subtitle,
   onCreate,
   onBuild,
   isLoading,
