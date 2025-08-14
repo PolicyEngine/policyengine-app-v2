@@ -24,7 +24,9 @@ export default function PolicyParameterSelectorFrame({
     if (param && param.type === 'parameter') {
       setSelectedLeafParam(param);
       // Close mobile menu when item is selected
-      if (mobileOpened) toggleMobile();
+      if (mobileOpened) {
+        toggleMobile();
+      }
     }
   }
 

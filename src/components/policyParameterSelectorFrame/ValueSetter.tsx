@@ -20,7 +20,6 @@ import { FOREVER } from '@/constants';
 import { addPolicyParam } from '@/reducers/policyReducer';
 import { ParameterMetadata } from '@/types/parameterMetadata';
 import { ValueInterval } from '@/types/valueInterval';
-import { spacing } from '@/designTokens';
 
 enum ValueSetterMode {
   DEFAULT = 'default',

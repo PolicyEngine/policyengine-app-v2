@@ -1,5 +1,3 @@
-import { spacing } from "@/designTokens";
-
 // Defaults submodule for Mantine theme
 export const themeDefaults = {
   Button: {

@@ -14,44 +14,6 @@ export const themeComponents = {
         color: colors.text.primary,
       },
     },
-    variants: {
-      heading: () => ({
-        root: {
-          fontFamily: typography.fontFamily.secondary,
-          fontSize: typography.fontSize['3xl'],
-          fontWeight: typography.fontWeight.bold,
-          lineHeight: '1.33',
-          color: colors.primary[900],
-        },
-      }),
-      body: () => ({
-        root: {
-          fontFamily: typography.fontFamily.body,
-          fontSize: typography.fontSize.sm,
-          fontWeight: typography.fontWeight.normal,
-          lineHeight: typography.lineHeight['22'],
-          color: colors.text.primary,
-        },
-      }),
-      small: () => ({
-        root: {
-          fontFamily: typography.fontFamily.primary,
-          fontSize: typography.fontSize.sm,
-          fontWeight: typography.fontWeight.medium,
-          lineHeight: typography.lineHeight['20'],
-          color: colors.text.secondary,
-        },
-      }),
-      caption: () => ({
-        root: {
-          fontFamily: typography.fontFamily.primary,
-          fontSize: typography.fontSize.sm,
-          fontWeight: typography.fontWeight.normal,
-          lineHeight: typography.lineHeight['24'],
-          color: colors.text.secondary,
-        },
-      }),
-    },
   },
   
   Badge: {
@@ -64,23 +26,9 @@ export const themeComponents = {
         padding: spacing.component.badge.padding,
       },
     },
-    variants: {
-      blue: () => ({
-        root: {
-          backgroundColor: colors.blue[50],
-          color: colors.blue[700],
-        },
-      }),
-      gray: () => ({
-        root: {
-          backgroundColor: colors.gray[100],
-          color: colors.gray[700],
-        },
-      }),
-    },
   },
   Container: Container.extend({
-    styles: (theme, params) => {
+    styles: (_theme, params) => {
       if (params.variant === 'guttered') {
         return {
           root: {
@@ -95,7 +43,7 @@ export const themeComponents = {
     },
   }),
   Card: Card.extend({
-    styles: (theme, params) => {
+    styles: (_theme, params) => {
       // Card List variants - compact styling for variable-length lists
       if (params.variant === 'cardList--active') {
         return {
@@ -171,7 +119,7 @@ export const themeComponents = {
     defaultProps: themeDefaults.ActionIcon,
   },
   Title: Title.extend({
-    styles: (theme, params) => {
+    styles: (_theme, params) => {
       if (params.variant === 'colored') {
         return {
           root: {

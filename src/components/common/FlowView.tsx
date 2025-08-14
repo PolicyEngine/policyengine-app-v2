@@ -52,7 +52,7 @@ interface FlowViewProps {
   buttonPreset?: 'cancel-only' | 'cancel-primary' | 'none';
 }
 
-export default function FlowView<T>({
+export default function FlowView({
   title,
   subtitle,
   variant,

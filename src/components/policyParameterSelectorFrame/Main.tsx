@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { Center, Container, Stack, Text, Title } from '@mantine/core';
+import { Container, Text, Title } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
 import { getParameterByName } from '@/types/parameter';

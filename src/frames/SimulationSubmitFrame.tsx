@@ -13,7 +13,6 @@ import FlowView from '@/components/common/FlowView';
 
 export default function SimulationSubmitFrame({
   onNavigate,
-  onReturn,
   isInSubflow,
 }: FlowComponentProps) {
   const simulation: Simulation = useSelector((state: RootState) => state.simulation);

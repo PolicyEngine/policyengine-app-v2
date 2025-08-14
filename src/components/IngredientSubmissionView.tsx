@@ -1,4 +1,4 @@
-import { Container, Divider, Space, Stack, Title } from '@mantine/core';
+import { Container, Divider, Stack, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface IngredientSubmissionViewProps {
