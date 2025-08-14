@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Card, Stack, Text } from '@mantine/core';
-import MultiButtonFooter, { ButtonConfig } from '@/components/common/MultiButtonFooter';
+import { Stack, Text } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
 import {
@@ -15,14 +15,12 @@ import { PolicyMetadata } from '@/types/policyMetadata';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
-  // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicyId, setLocalPolicyId] = useState<string | null>(null);
+  const dispatch = useDispatch();
 
   const canProceed = localPolicyId !== null;
-
-  const dispatch = useDispatch();
 
   function handlePolicySelect(policy: PolicyMetadata) {
     // Blank out any existing policy
@@ -46,74 +44,71 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     onNavigate('next');
   }
 
-  const canProceedNextButtonConfig: ButtonConfig = {
-    label: 'Next',
-    variant: 'filled' as const,
-    onClick: handleSubmit,
-  };
+  const userPolicies = data || [];
 
-  const cantProceedNextButtonConfig: ButtonConfig = {
-    label: 'Next',
-    variant: 'disabled' as const,
-    onClick: () => {
-      return null;
-    },
-  };
-
-  const cancelButtonConfig: ButtonConfig = {
-    label: 'Cancel',
-    variant: 'outline' as const,
-    onClick: () => {
-      console.log('Cancel clicked');
-    },
-  };
-
-  const buttonConfig: ButtonConfig[] = canProceed
-    ? [cancelButtonConfig, canProceedNextButtonConfig]
-    : [cancelButtonConfig, cantProceedNextButtonConfig];
-
+  // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <FlowView
+        title="Select an Existing Policy"
+        content={<Text>Loading policies...</Text>}
+        buttonPreset="none"
+      />
+    );
   }
 
   if (isError) {
-    return <div>Error: {error?.message}</div>;
+    return (
+      <FlowView
+        title="Select an Existing Policy"
+        content={
+          <Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
+        }
+        buttonPreset="none"
+      />
+    );
   }
-
-  const userPolicies = data || [];
-
-  let displayPolicies = null;
 
   if (userPolicies.length === 0) {
-    displayPolicies = <Text>No policies available. Please create a new policy.</Text>;
-  } else {
-    const recentUserPolicies = userPolicies.slice(0, 5); // Display only the first 3 policies
-    displayPolicies = recentUserPolicies
-      .filter((association) => association.policy) // Only include associations with loaded policies
-      .map((association) => (
-        // TODO: Fix ID types
-        <Card
-          key={association.policy!.id}
-          withBorder
-          p="md"
-          component="button"
-          onClick={() => handlePolicySelect(association.policy!)}
-        >
-          <Stack>
-            <Text fw={600}>{association.policy!.label}</Text>
-          </Stack>
-        </Card>
-      ));
+    return (
+      <FlowView
+        title="Select an Existing Policy"
+        content={<Text>No policies available. Please create a new policy.</Text>}
+        buttonPreset="cancel-only"
+      />
+    );
   }
 
-  return (
+  const recentUserPolicies = userPolicies.slice(0, 5); // Display only the first 5 policies
+  const cardListItems = recentUserPolicies
+    .filter((association) => association.policy) // Only include associations with loaded policies
+    .map((association) => ({
+      title: association.policy!.label || 'Untitled Policy',
+      onClick: () => handlePolicySelect(association.policy!),
+      isSelected: localPolicyId === association.policy!.id.toString(),
+    }));
+
+  const content = (
     <Stack>
-      <Text fw={700}>Select an Existing Policy</Text>
       <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
       <Text fw={700}>Recents</Text>
-      <Stack>{displayPolicies}</Stack>
-      <MultiButtonFooter buttons={buttonConfig} />
     </Stack>
+  );
+
+  const primaryAction = {
+    label: 'Next',
+    onClick: handleSubmit,
+    isDisabled: !canProceed,
+  };
+
+  return (
+    <FlowView
+      title="Select an Existing Policy"
+      variant="cardList"
+      content={content}
+      cardListItems={cardListItems}
+      primaryAction={primaryAction}
+    />
   );
 }

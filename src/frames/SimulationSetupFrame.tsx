@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import SimulationSetupView from '@/components/SimulationSetupView';
+import FlowView from '@/components/common/FlowView';
 import {
   updateSimulationPolicyId,
   updateSimulationPopulationId,
@@ -12,6 +12,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const dispatch = useDispatch();
   const simulation = useSelector((state: RootState) => state.simulation);
   const policy = useSelector((state: RootState) => state.policy);
+  const population = useSelector((state: RootState) => state.population);
 
   const handlePolicySelect = () => {
     onNavigate('setupPolicy');
@@ -41,16 +42,42 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
 
+  // TODO: May consider moving to an explicit "isCreated" state entry
+  const selectionCards = [
+    {
+      title: population && population.id ? population.label || '' : 'Add population',
+      description:
+        population && population.id
+          ? population.label || ''
+          : 'Select a geographic scope or specific household',
+      onClick: population && population.id ? () => {} : handlePopulationSelect,
+      isSelected: !!simulation.populationId,
+      isDisabled: false,
+    },
+    {
+      title: policy && policy.isCreated ? policy.label || '' : 'Add policy',
+      description:
+        policy && policy.isCreated
+          ? policy.label || ''
+          : 'Select a policy to apply to the simulation',
+      onClick: policy && policy.isCreated ? () => {} : handlePolicySelect,
+      isSelected: policy && policy.isCreated,
+      isDisabled: false,
+    },
+  ];
+
+  const primaryAction = {
+    label: 'Next',
+    onClick: handleNext,
+    isDisabled: !canProceed,
+  };
+
   return (
-    <SimulationSetupView
-      onPolicySelect={handlePolicySelect}
-      onPopulationSelect={handlePopulationSelect}
-      selectedPopulation={
-        simulation.populationId ? `Population: ${simulation.populationId}` : undefined
-      }
-      // isPopulationDisabled
-      onNext={handleNext}
-      canProceed={canProceed}
+    <FlowView
+      title="Setup Simulation"
+      variant="selection"
+      selectionCards={selectionCards}
+      primaryAction={primaryAction}
     />
   );
 }

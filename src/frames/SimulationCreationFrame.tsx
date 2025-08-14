@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { TextInput } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
-import IngredientCreationStartView from '../components/IngredientCreationStartView';
 
 export default function SimulationCreationFrame({ onNavigate }: FlowComponentProps) {
-  // Manage local label state for the simulation name
   const [localLabel, setLocalLabel] = useState('');
 
   function handleLocalLabelChange(value: string) {
     setLocalLabel(value);
+  }
+
+  function submissionHandler() {
+    onNavigate('next');
   }
 
   const formInputs = (
@@ -20,17 +23,10 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
     />
   );
 
-  function submissionHandler() {
-    // For now, we just proceed to the next frame
-    // The label will be handled at the UserSimulation level later
-    onNavigate('next');
-  }
+  const primaryAction = {
+    label: 'Create simulation',
+    onClick: submissionHandler,
+  };
 
-  return (
-    <IngredientCreationStartView
-      title="Create simulation"
-      formInputs={formInputs}
-      submissionHandler={submissionHandler}
-    />
-  );
+  return <FlowView title="Create simulation" content={formInputs} primaryAction={primaryAction} />;
 }

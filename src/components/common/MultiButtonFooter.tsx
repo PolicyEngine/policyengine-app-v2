@@ -2,8 +2,9 @@ import { Button, Grid } from '@mantine/core';
 
 export interface ButtonConfig {
   label: string;
-  variant?: 'filled' | 'outline' | 'disabled';
+  variant?: 'filled' | 'outline' | 'disabled' | 'default';
   onClick: () => void;
+  isLoading?: boolean;
 }
 
 export interface MultiButtonFooterProps {
@@ -32,6 +33,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
             disabled={button.variant === 'disabled'}
             onClick={button.onClick}
             fullWidth
+            loading={button.isLoading}
           >
             {button.label}
           </Button>

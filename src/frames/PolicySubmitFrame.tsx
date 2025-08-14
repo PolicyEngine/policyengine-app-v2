@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Container, Grid, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
@@ -8,10 +9,7 @@ import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
 
-export default function PolicyParameterSelectorFrame({
-  onReturn,
-  isInSubflow,
-}: FlowComponentProps) {
+export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
   const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.params);
   const dispatch = useDispatch();
@@ -39,26 +37,18 @@ export default function PolicyParameterSelectorFrame({
     });
   }
 
-  return (
-    <Container size="sm" py="xl">
-      <Stack>
-        <Text fw={700}>Review Policy</Text>
-        <Text>Label: {label}</Text>
-        <Text>Params: {Object.keys(params).length} added</Text>
-
-        <Grid>
-          <Grid.Col span={6}>
-            <Button variant="default" fullWidth onClick={onReturn}>
-              Cancel
-            </Button>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Button variant="filled" fullWidth loading={isPending} onClick={handleSubmit}>
-              Submit
-            </Button>
-          </Grid.Col>
-        </Grid>
-      </Stack>
-    </Container>
+  const content = (
+    <Stack>
+      <Text>Label: {label}</Text>
+      <Text>Params: {Object.keys(params).length} added</Text>
+    </Stack>
   );
+
+  const primaryAction = {
+    label: 'Submit',
+    onClick: handleSubmit,
+    isLoading: isPending,
+  };
+
+  return <FlowView title="Review policy" content={content} primaryAction={primaryAction} />;
 }

@@ -24,11 +24,11 @@ export default function PolicyParameterSelectorHeader({
 
   return (
     <Group justify="space-between" align="center">
-      <Button variant="outline" onClick={handleCancel}>
+      <Button variant="default" onClick={handleCancel}>
         Cancel
       </Button>
       <Text fw={700}>Policy #NUMBER</Text>
-      <Button variant="default" onClick={handleNext}>
+      <Button variant="filled" onClick={handleNext}>
         Next
       </Button>
     </Group>

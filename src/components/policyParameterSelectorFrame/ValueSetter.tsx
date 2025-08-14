@@ -6,6 +6,7 @@ import {
   ActionIcon,
   Box,
   Button,
+  Container,
   Divider,
   Group,
   Menu,
@@ -41,6 +42,7 @@ interface ValueSetterProps {
 }
 
 interface ValueInputBoxProps {
+  label?: string;
   param: ParameterMetadata;
   value?: any;
   onChange?: (value: any) => void;
@@ -63,6 +65,7 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
+  // TODO: Get these from metadata
   const minDate = '2022-01-01';
   const maxDate = '2035-12-31';
 
@@ -92,18 +95,18 @@ export default function PolicyParameterSelectorValueSetterContainer(
   };
 
   return (
-    <Box>
+    <Container bg="gray.0" bd="1px solid gray.2" m="0" p="lg">
       <Stack>
         <Text fw={700}>Current value</Text>
-        <Divider my="xs" />
-        <Group>
+        <Divider style={{ padding: 0 }} />
+        <Group align="flex-end" w="100%">
           <ValueSetterToRender {...valueSetterProps} />
           <ModeSelectorButton setMode={handleModeChange} />
           <Text>TODO: Reset button</Text>
           <Button onClick={handleSubmit}>Add</Button>
         </Group>
       </Stack>
-    </Box>
+    </Container>
   );
 }
 
@@ -152,16 +155,16 @@ export function DefaultValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group>
+    <Group align="flex-end" style={{ flex: 1 }}>
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleStartDateChange}
+        style={{ flex: 1 }}
       />
-      <Text>onward</Text>
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward" />
     </Group>
   );
 }
@@ -200,13 +203,14 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group>
+    <Group align="flex-end" style={{ flex: 1 }}>
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleStartDateChange}
+        style={{ flex: 1 }}
       />
       <YearPickerInput
         placeholder="Pick a year"
@@ -214,6 +218,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleEndDateChange}
+        style={{ flex: 1 }}
       />
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </Group>
@@ -251,13 +256,14 @@ export function DateValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group>
+    <Group align="flex-end">
       <DatePickerInput
         placeholder="Pick a start date"
         label="From"
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleStartDateChange}
+        style={{ flex: 1 }}
       />
       <DatePickerInput
         placeholder="Pick an end date"
@@ -265,6 +271,7 @@ export function DateValueSelector(props: ValueSetterProps) {
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleEndDateChange}
+        style={{ flex: 1 }}
       />
       <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
     </Group>
@@ -357,7 +364,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 }
 
 export function ValueInputBox(props: ValueInputBoxProps) {
-  const { param, value, onChange } = props;
+  const { param, value, onChange, label } = props;
 
   // US and UK packages use these type designations inconsistently
   const USD_UNITS = ['currency-USD', 'currency_USD', 'USD'];
@@ -384,6 +391,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
     <Text>TODO: Switch for boolean value</Text>
   ) : (
     <NumberInput
+      label={label}
       placeholder="Enter value"
       min={0}
       prefix={prefix}
@@ -391,6 +399,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
       value={value !== undefined ? value : 0}
       onChange={handleChange}
       thousandSeparator=","
+      style={{ flex: 1 }}
     />
   );
 }

@@ -37,7 +37,7 @@ export default function SimulationSetupView({
 
   const cancelButtonConfig: ButtonConfig = {
     label: 'Cancel',
-    variant: 'outline' as const,
+    variant: 'default' as const,
     onClick: () => {
       console.log('Cancel clicked');
     },
@@ -48,7 +48,7 @@ export default function SimulationSetupView({
     : [cancelButtonConfig, cantProceedNextButtonConfig];
 
   return (
-    <Container size="md" py="xl">
+    <Container variant="guttered">
       <Stack>
         {userDefinedPopulation && userDefinedPopulation.isCreated ? (
           <CardSelectedPopulation label={userDefinedPopulation.label ?? ''} />

@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { Center, Stack, Text } from '@mantine/core';
+import { Container, Text, Title } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
 import { getParameterByName } from '@/types/parameter';
@@ -32,19 +32,21 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
   }
 
   return (
-    <Center h="100%">
-      <Stack>
-        <Text fw={700}>TODO: Provision Counter</Text>
-        <Text>{param.label || 'Label unavailable'}</Text>
-        {param.description && (
-          <>
-            <Text fw={700}>Description</Text>
-            <Text>{param.description}</Text>
-          </>
-        )}
-        <ValueSetter param={param} />
-        <HistoricalValues param={param} baseValues={baseValues} reformValues={reformValues} />
-      </Stack>
-    </Center>
+    <Container variant="guttered">
+      <Text fw={700}>TODO: Provision Counter</Text>
+      <Title order={3} pb="xl">
+        {param.label || 'Label unavailable'}
+      </Title>
+      {param.description && (
+        <>
+          <Text fw={600} pb="xs">
+            Description
+          </Text>
+          <Text pb="sm">{param.description}</Text>
+        </>
+      )}
+      <ValueSetter param={param} />
+      <HistoricalValues param={param} baseValues={baseValues} reformValues={reformValues} />
+    </Container>
   );
 }

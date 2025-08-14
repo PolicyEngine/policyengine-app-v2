@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
 import IngredientReadView from '@/components/IngredientReadView';
-import { PopulationFlow } from '@/flows/populationCreationFlow';
+import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { setFlow } from '@/reducers/flowReducer';
 
@@ -15,7 +15,7 @@ export default function PopulationsPage() {
   const dispatch = useDispatch();
 
   const handleNavigateToCreate = () => {
-    dispatch(setFlow(PopulationFlow));
+    dispatch(setFlow(PopulationCreationFlow));
     // onNavigate('next')
   };
 

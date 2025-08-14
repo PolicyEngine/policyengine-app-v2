@@ -1,6 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
-import IngredientCreationStartView from '@/components/IngredientCreationStartView';
+import FlowView from '@/components/common/FlowView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { childOptions, maritalOptions, taxYears } from '@/mocks/householdOptions';
 import { updateChildInfo, updatePopulation } from '@/reducers/populationReducer';
@@ -100,11 +100,10 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
     </Stack>
   );
 
-  return (
-    <IngredientCreationStartView
-      title="Create Household"
-      formInputs={formInputs}
-      submissionHandler={handleSubmit}
-    />
-  );
+  const primaryAction = {
+    label: 'Create Household',
+    onClick: handleSubmit,
+  };
+
+  return <FlowView title="Create Household" content={formInputs} primaryAction={primaryAction} />;
 }

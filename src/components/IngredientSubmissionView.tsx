@@ -1,19 +1,21 @@
 import { Container, Divider, Stack, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
-interface IngredientCreationStartViewProps {
+interface IngredientSubmissionViewProps {
   title: string;
   submitButtonText?: string; // Defaults to title
-  formInputs?: React.ReactNode;
+  content?: React.ReactNode;
   submissionHandler: CallableFunction; // Function to handle form submission
+  submitButtonLoading?: boolean;
 }
 
-export default function IngredientCreationStartView({
+export default function IngredientSubmissionView({
   title,
-  formInputs,
+  content,
   submitButtonText,
   submissionHandler,
-}: IngredientCreationStartViewProps) {
+  submitButtonLoading,
+}: IngredientSubmissionViewProps) {
   const buttonConfig: ButtonConfig[] = [
     {
       label: 'Cancel',
@@ -24,6 +26,7 @@ export default function IngredientCreationStartView({
       label: submitButtonText || title,
       variant: 'filled' as const,
       onClick: () => submissionHandler(),
+      isLoading: submitButtonLoading,
     },
   ];
 
@@ -38,7 +41,7 @@ export default function IngredientCreationStartView({
         {/*break*/}
         {/*form labels and inputs*/}
         <Stack gap="md" pb="lg">
-          {formInputs}
+          {content}
         </Stack>
         {/*button panel: Cancel and Create X*/}
         <MultiButtonFooter buttons={buttonConfig} />

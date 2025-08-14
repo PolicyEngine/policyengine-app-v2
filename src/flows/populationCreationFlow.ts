@@ -1,6 +1,6 @@
 import { Flow } from '../types/flow';
 
-export const PopulationFlow: Flow = {
+export const PopulationCreationFlow: Flow = {
   initialFrame: 'SelectGeographicScopeFrame',
   frames: {
     SelectGeographicScopeFrame: {

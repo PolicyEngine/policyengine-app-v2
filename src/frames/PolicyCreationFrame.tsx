@@ -1,41 +1,36 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
-import IngredientCreationStartView from '../components/IngredientCreationStartView';
 import { updateLabel } from '../reducers/policyReducer';
 
 export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
-
-  // Manage instantaneous changes to the label input
-  // locally, then emit the final to the reducer to avoid
-  // visual lag in reducer updates
   const [localLabel, setLocalLabel] = useState('');
 
   function handleLocalLabelChange(value: string) {
     setLocalLabel(value);
   }
 
+  function submissionHandler() {
+    dispatch(updateLabel(localLabel));
+    onNavigate('next');
+  }
+
   const formInputs = (
     <TextInput
-      label="Reform title"
+      label="Policy title"
       placeholder="Policy name"
       value={localLabel}
       onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
     />
   );
 
-  function submissionHandler() {
-    dispatch(updateLabel(localLabel));
-    onNavigate('next');
-  }
+  const primaryAction = {
+    label: 'Create a policy',
+    onClick: submissionHandler,
+  };
 
-  return (
-    <IngredientCreationStartView
-      title="Create policy"
-      formInputs={formInputs}
-      submissionHandler={submissionHandler}
-    />
-  );
+  return <FlowView title="Create a policy" content={formInputs} primaryAction={primaryAction} />;
 }
