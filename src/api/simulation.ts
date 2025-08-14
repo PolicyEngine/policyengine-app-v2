@@ -56,7 +56,7 @@ const mockPopulationId = 0;
 const mockPolicyId = 0;
 
 // Store created simulations to return proper data when fetched
-const mockSimulationStore: Map<string, SimulationMetadata> = new Map();
+const mockSimulationStore = new Map<string, SimulationMetadata>();
 
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
