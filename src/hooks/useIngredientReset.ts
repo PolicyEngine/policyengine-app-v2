@@ -1,4 +1,5 @@
 import { useDispatch } from 'react-redux';
+import { clearPopulation } from '@/reducers/populationReducer';
 import { clearPolicy } from '@/reducers/policyReducer';
 import { clearSimulation } from '@/reducers/simulationReducer';
 import { AppDispatch } from '@/store';
@@ -15,19 +16,16 @@ export const useIngredientReset = () => {
         break;
       case 'simulation':
         dispatch(clearSimulation());
-        dispatch(clearPolicy()); // Clear dependency
-        // TODO: Add population reset when population reducer is created
+        dispatch(clearPolicy());
+        dispatch(clearPopulation());
         break;
       case 'population':
-        // TODO: Add when population reducer is created
-        // dispatch(clearPopulation());
+        dispatch(clearPopulation());
         break;
       case 'report':
-        // TODO: Add when report reducer is created
-        // dispatch(clearReport());
-        dispatch(clearSimulation()); // Clear dependencies
+        dispatch(clearSimulation());
         dispatch(clearPolicy());
-        // TODO: Add population reset when population reducer is created
+        dispatch(clearPopulation());
         break;
       default:
         console.error(`Unknown ingredient: ${ingredientName}`);

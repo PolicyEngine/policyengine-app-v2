@@ -53,7 +53,7 @@ export default function HouseholdBuilderFrame({ onNavigate, onReturn, isInSubflo
       
       // Update population state with the created household ID and mark as created
       dispatch(updatePopulationId(result.result.household_id));
-      dispatch(updatePopulationLabel(household.label || 'Custom Household'));
+      dispatch(updatePopulationLabel(household.label || ''));
       dispatch(markPopulationAsCreated());
       
       // If we've created this population as part of a standalone population creation flow,
