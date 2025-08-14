@@ -1,16 +1,17 @@
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
+import { Box, Text, Anchor, Badge, Group, Stack } from '@mantine/core';
 import IngredientReadView, { 
   ColumnConfig, 
   IngredientRecord,
   TextValue,
   LinkValue,
-  AvatarTextValue,
   BulletsValue
 } from '@/components/IngredientReadView';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulation';
 import { setFlow } from '@/reducers/flowReducer';
+import { colors, spacing, typography } from '@/designTokens';
 
 export default function SimulationsPage() {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
@@ -18,6 +19,7 @@ export default function SimulationsPage() {
   const dispatch = useDispatch();
   
   const [searchValue, setSearchValue] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [filters, setFilters] = useState([
     { label: "Most Recent", value: "most-recent" },
     { label: "Type", value: "type" }
@@ -55,38 +57,37 @@ export default function SimulationsPage() {
     }
   };
 
+  const handleSelectionChange = (recordId: string, selected: boolean) => {
+    setSelectedIds(prev => 
+      selected 
+        ? [...prev, recordId]
+        : prev.filter(id => id !== recordId)
+    );
+  };
+
+  const isSelected = (recordId: string) => selectedIds.includes(recordId);
+
   // Define column configurations for simulations
   const simulationColumns: ColumnConfig[] = [
     {
       key: 'simulation',
       header: 'Simulation',
-      type: 'avatar-text',
-      avatarKey: 'avatar',
-      textKey: 'text',
-      linkKey: 'link',
-      avatarColor: 'primary',
-      avatarSize: 32
+      type: 'text'
     },
     {
       key: 'dateCreated',
       header: 'Date Created',
-      type: 'text',
-      size: 'sm',
-      color: '#6B7280' // colors.text.secondary
+      type: 'text'
     },
     {
       key: 'policy',
       header: 'Policy',
-      type: 'text',
-      size: 'sm',
-      weight: 'medium'
+      type: 'text'
     },
     {
       key: 'population',
       header: 'Population',
-      type: 'link',
-      size: 'sm',
-      color: '#0284C7' // colors.blue[600]
+      type: 'link'
     },
     {
       key: 'connected',
@@ -115,15 +116,13 @@ export default function SimulationsPage() {
   const transformedData: IngredientRecord[] = data?.map((item) => ({
     id: item.association.simulationId,
     simulation: {
-      avatar: item.association.simulationId.slice(-1),
-      text: 'Simulation',
-      link: `#${item.association.simulationId}`
-    } as AvatarTextValue,
+      text: `Simulation #${item.association.simulationId}`
+    } as TextValue,
     dateCreated: {
       text: 'Just now' // TODO: Format actual date from item data
     } as TextValue,
     policy: {
-      text: `Policy Name\n7 Provisions` // TODO: Get actual policy data
+      text: 'Policy Name\n7 Provisions' // TODO: Get actual policy data
     } as TextValue,
     population: {
       text: item.simulation?.population_id || "Unknown",
@@ -156,6 +155,9 @@ export default function SimulationsPage() {
       filters={filters}
       onFilterRemove={handleFilterRemove}
       onMoreFilters={handleMoreFilters}
+      enableSelection={true}
+      isSelected={isSelected}
+      onSelectionChange={handleSelectionChange}
     />
   );
 }

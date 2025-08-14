@@ -12,10 +12,10 @@ import {
   Paper,
   Table,
   Anchor,
-  Avatar,
   Badge,
   Group,
-  Stack
+  Stack,
+  Checkbox
 } from '@mantine/core';
 import { IconSearch, IconFilter, IconDots, IconCirclePlus } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
@@ -42,16 +42,6 @@ export interface LinkColumnConfig extends BaseColumnConfig {
   urlPrefix?: string;
 }
 
-// TODO: This is meant to be a radio button allowing selection of a single value from the list.
-export interface AvatarTextColumnConfig extends BaseColumnConfig {
-  type: 'avatar-text';
-  avatarKey: string;
-  textKey: string;
-  linkKey?: string;
-  avatarColor?: string;
-  avatarSize?: number;
-}
-
 export interface BulletsColumnConfig extends BaseColumnConfig {
   type: 'bullets';
   items: Array<{
@@ -74,7 +64,6 @@ export interface MenuColumnConfig extends BaseColumnConfig {
 export type ColumnConfig = 
   | TextColumnConfig 
   | LinkColumnConfig 
-  | AvatarTextColumnConfig 
   | BulletsColumnConfig 
   | MenuColumnConfig;
 
@@ -88,12 +77,6 @@ export interface LinkValue {
   url?: string;
 }
 
-export interface AvatarTextValue {
-  avatar: string;
-  text: string;
-  link?: string;
-}
-
 export interface BulletValue {
   text: string;
   badge?: string | number;
@@ -103,7 +86,7 @@ export interface BulletsValue {
   items: BulletValue[];
 }
 
-export type ColumnValue = TextValue | LinkValue | AvatarTextValue | BulletsValue | null;
+export type ColumnValue = TextValue | LinkValue | BulletsValue | null;
 
 // Record interface
 export interface IngredientRecord {
@@ -134,34 +117,6 @@ function LinkColumn({ config, value }: { config: LinkColumnConfig; value: LinkVa
     >
       {value.text}
     </Anchor>
-  );
-}
-
-function AvatarTextColumn({ config, value, record }: { config: AvatarTextColumnConfig; value: AvatarTextValue; record: IngredientRecord }) {
-  return (
-    <Flex align="center" gap={spacing.sm}>
-      <Avatar 
-        size={config.avatarSize || 32} 
-        color={config.avatarColor || "primary"}
-      >
-        {value.avatar}
-      </Avatar>
-      <Box>
-        <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
-          {value.text}
-        </Text>
-        {value.link && (
-          <Anchor 
-            size="sm" 
-            c={colors.blue[600]}
-            href={`#${value.link}`}
-            td="none"
-          >
-            {value.link}
-          </Anchor>
-        )}
-      </Box>
-    </Flex>
   );
 }
 
@@ -229,15 +184,6 @@ function ColumnRenderer({ config, record }: {
     case 'link':
       return <LinkColumn config={config as LinkColumnConfig} value={value as LinkValue} />;
     
-    case 'avatar-text':
-      return (
-        <AvatarTextColumn 
-          config={config as AvatarTextColumnConfig} 
-          value={value as AvatarTextValue}
-          record={record}
-        />
-      );
-    
     case 'bullets':
       return <BulletsColumn config={config as BulletsColumnConfig} value={value as BulletsValue} />;
     
@@ -266,6 +212,9 @@ interface IngredientReadViewProps {
   filters?: Array<{ label: string; value: string }>;
   onFilterRemove?: (filter: string) => void;
   onMoreFilters?: () => void;
+  enableSelection?: boolean;
+  isSelected?: (recordId: string) => boolean;
+  onSelectionChange?: (recordId: string, selected: boolean) => void;
 }
 
 export default function IngredientReadView({
@@ -287,6 +236,9 @@ export default function IngredientReadView({
   ],
   onFilterRemove,
   onMoreFilters,
+  enableSelection = true,
+  isSelected = () => false,
+  onSelectionChange,
 }: IngredientReadViewProps) {
   return (
     <Box>
@@ -355,7 +307,7 @@ export default function IngredientReadView({
               {filter.label}
             </Pill>
           ))}
-            */}
+           */}
           
           <Button
             variant="outline"
@@ -413,6 +365,16 @@ export default function IngredientReadView({
               <Table>
                 <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
                   <Table.Tr>
+                    {enableSelection && (
+                      <Table.Th 
+                        style={{ 
+                          width: '48px',
+                          padding: `${spacing.md} ${spacing.lg}`,
+                        }}
+                      >
+                        {/* Optional: Add "select all" checkbox here in the future */}
+                      </Table.Th>
+                    )}
                     {columns.map((column) => (
                       <Table.Th 
                         key={column.key}
@@ -431,18 +393,47 @@ export default function IngredientReadView({
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
-                  {data.map((record) => (
-                    <Table.Tr key={record.id}>
-                      {columns.map((column) => (
-                        <Table.Td 
-                          key={column.key}
-                          style={{ padding: `${spacing.md} ${spacing.lg}` }}
-                        >
-                          <ColumnRenderer config={column} record={record} />
-                        </Table.Td>
-                      ))}
-                    </Table.Tr>
-                  ))}
+                  {data.map((record) => {
+                    const selected = isSelected(record.id);
+                    return (
+                      <Table.Tr 
+                        key={record.id}
+                        style={{
+                          backgroundColor: selected ? colors.blue[50] : 'transparent',
+                          borderLeft: selected ? `3px solid ${colors.primary[500]}` : '3px solid transparent',
+                          cursor: enableSelection ? 'pointer' : 'default',
+                        }}
+                        onClick={() => {
+                          if (enableSelection && onSelectionChange) {
+                            onSelectionChange(record.id, !selected);
+                          }
+                        }}
+                      >
+                        {enableSelection && (
+                          <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                            <Checkbox
+                              checked={selected}
+                              onChange={(event) => {
+                                event.stopPropagation();
+                                if (onSelectionChange) {
+                                  onSelectionChange(record.id, event.currentTarget.checked);
+                                }
+                              }}
+                              size="sm"
+                            />
+                          </Table.Td>
+                        )}
+                        {columns.map((column) => (
+                          <Table.Td 
+                            key={column.key}
+                            style={{ padding: `${spacing.md} ${spacing.lg}` }}
+                          >
+                            <ColumnRenderer config={column} record={record} />
+                          </Table.Td>
+                        ))}
+                      </Table.Tr>
+                    );
+                  })}
                 </Table.Tbody>
               </Table>
             )}
