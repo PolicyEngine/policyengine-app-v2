@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import {
   clearPopulation,
@@ -10,11 +11,12 @@ import {
 } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
 import { HouseholdMetadata } from '@/types/householdMetadata';
-import FlowView from '@/components/common/FlowView';
 
-export default function SimulationSelectExistingPopulationFrame({ onNavigate }: FlowComponentProps) {
+export default function SimulationSelectExistingPopulationFrame({
+  onNavigate,
+}: FlowComponentProps) {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
-  
+
   const { data, isLoading, isError, error } = useUserHouseholds(userId);
   const [localPopulationId, setLocalPopulationId] = useState<string | null>(null);
   const dispatch = useDispatch();
@@ -41,7 +43,7 @@ export default function SimulationSelectExistingPopulationFrame({ onNavigate }: 
   }
 
   const userPopulations = data || [];
-  
+
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
     return (
@@ -57,7 +59,9 @@ export default function SimulationSelectExistingPopulationFrame({ onNavigate }: 
     return (
       <FlowView
         title="Select an Existing Population"
-        content={<Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        content={
+          <Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
+        }
         buttonPreset="none"
       />
     );
@@ -93,7 +97,7 @@ export default function SimulationSelectExistingPopulationFrame({ onNavigate }: 
   const primaryAction = {
     label: 'Next',
     onClick: handleSubmit,
-    isDisabled: !canProceed
+    isDisabled: !canProceed,
   };
 
   return (

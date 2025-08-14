@@ -13,7 +13,7 @@ export const themeSpacing = {
     '4xl': spacing['4xl'],
     '5xl': spacing['5xl'],
   },
-  
+
   radius: {
     xs: spacing.radius.xs,
     sm: spacing.radius.sm,
@@ -24,7 +24,7 @@ export const themeSpacing = {
     '3xl': spacing.radius['3xl'],
     '4xl': spacing.radius['4xl'],
   },
-  
+
   shadows: {
     xs: '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',
     sm: '0px 1px 3px 0px rgba(16, 24, 40, 0.1)',

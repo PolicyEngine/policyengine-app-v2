@@ -36,7 +36,7 @@ export default function PolicyParameterSelectorFrame({
       navbar={{
         width: 300,
         breakpoint: 'sm',
-        collapsed: { mobile: !mobileOpened }
+        collapsed: { mobile: !mobileOpened },
       }}
       footer={{ height: 60 }}
       padding="md"

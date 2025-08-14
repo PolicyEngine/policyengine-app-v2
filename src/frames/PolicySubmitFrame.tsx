@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
@@ -7,12 +8,8 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
-import FlowView from '@/components/common/FlowView';
 
-export default function PolicySubmitFrame({
-  onReturn,
-  isInSubflow,
-}: FlowComponentProps) {
+export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
   const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.params);
   const dispatch = useDispatch();
@@ -53,11 +50,5 @@ export default function PolicySubmitFrame({
     isLoading: isPending,
   };
 
-  return (
-    <FlowView
-      title="Review policy"
-      content={content}
-      primaryAction={primaryAction}
-    />
-  );
+  return <FlowView title="Review policy" content={content} primaryAction={primaryAction} />;
 }

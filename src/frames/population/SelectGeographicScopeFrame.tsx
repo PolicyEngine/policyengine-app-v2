@@ -146,11 +146,5 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
     onClick: submissionHandler,
   };
 
-  return (
-    <FlowView
-      title="Select Scope"
-      content={formInputs}
-      primaryAction={primaryAction}
-    />
-  );
+  return <FlowView title="Select Scope" content={formInputs} primaryAction={primaryAction} />;
 }

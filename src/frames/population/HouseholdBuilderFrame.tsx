@@ -105,11 +105,5 @@ export default function HouseholdBuilderFrame({ onNavigate }: FlowComponentProps
     onClick: handleSubmit,
   };
 
-  return (
-    <FlowView
-      title="Create Household"
-      content={formInputs}
-      primaryAction={primaryAction}
-    />
-  );
+  return <FlowView title="Create Household" content={formInputs} primaryAction={primaryAction} />;
 }

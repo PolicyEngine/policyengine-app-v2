@@ -12,7 +12,6 @@ export const spacing = {
   '4xl': '48px',
   '5xl': '64px',
 
-  
   // TODO: Evaluate these spacing values
   // Component-specific spacing
   component: {
@@ -35,7 +34,7 @@ export const spacing = {
       padding: '12px 16px',
     },
   },
-  
+
   // TODO: See if these values can be made dynamic
   // Layout spacing from Figma
   layout: {
@@ -43,9 +42,9 @@ export const spacing = {
     header: '76px',
     content: '1361px',
     container: '976px',
-    sideGutter: '200px' // TODO: Make this responsive/attempt to use 'container'
+    sideGutter: '200px', // TODO: Make this responsive/attempt to use 'container'
   },
-  
+
   // Container padding
   container: {
     xs: '16px',
@@ -55,7 +54,7 @@ export const spacing = {
     xl: '64px',
     '2xl': '80px',
   },
-  
+
   // Border radius scale
   radius: {
     xs: '2px',

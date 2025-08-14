@@ -4,7 +4,7 @@ import { typography } from '../designTokens';
 export const themeTypography = {
   fontFamily: typography.fontFamily.primary,
   fontFamilyMonospace: typography.fontFamily.mono,
-  
+
   fontSizes: {
     xs: typography.fontSize.xs,
     sm: typography.fontSize.sm,
@@ -15,7 +15,7 @@ export const themeTypography = {
     '3xl': typography.fontSize['3xl'],
     '4xl': typography.fontSize['4xl'],
   },
-  
+
   lineHeights: {
     xs: typography.lineHeight.tight,
     sm: typography.lineHeight.snug,
@@ -26,7 +26,7 @@ export const themeTypography = {
     '22': typography.lineHeight['22'],
     '24': typography.lineHeight['24'],
   },
-  
+
   fontWeights: {
     thin: typography.fontWeight.thin,
     light: typography.fontWeight.light,

@@ -30,7 +30,9 @@ export default function IngredientCreationStartView({
   return (
     <>
       <Container variant="guttered">
-        <Title order={2} variant="colored">{title}</Title>
+        <Title order={2} variant="colored">
+          {title}
+        </Title>
         <Divider my="sm" />
         {/*TODO: subtitle?*/}
         {/*break*/}

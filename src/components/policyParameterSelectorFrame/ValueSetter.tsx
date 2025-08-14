@@ -6,8 +6,8 @@ import {
   ActionIcon,
   Box,
   Button,
-  Divider,
   Container,
+  Divider,
   Group,
   Menu,
   NumberInput,
@@ -164,7 +164,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward"/>
+      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward" />
     </Group>
   );
 }
@@ -210,7 +210,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
         minDate={minDate}
         maxDate={maxDate}
         onChange={handleStartDateChange}
-        style={{ flex: 1}}
+        style={{ flex: 1 }}
       />
       <YearPickerInput
         placeholder="Pick a year"

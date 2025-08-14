@@ -1,6 +1,6 @@
 // Components submodule for Mantine theme
 import { Card, Container, Title } from '@mantine/core';
-import { colors, typography, spacing } from '../designTokens';
+import { colors, spacing, typography } from '../designTokens';
 import { themeDefaults } from './defaults';
 
 // TODO: Remove variants from components, as these do not work correctly;
@@ -15,7 +15,7 @@ export const themeComponents = {
       },
     },
   },
-  
+
   Badge: {
     styles: {
       root: {
@@ -60,7 +60,7 @@ export const themeComponents = {
           },
         };
       }
-      
+
       if (params.variant === 'cardList--inactive') {
         return {
           root: {
@@ -76,7 +76,7 @@ export const themeComponents = {
           },
         };
       }
-      
+
       // Selection variants - larger styling for prominent choices
       if (params.variant === 'selection--active') {
         return {
@@ -94,7 +94,7 @@ export const themeComponents = {
           },
         };
       }
-      
+
       if (params.variant === 'selection--inactive') {
         return {
           root: {
@@ -124,8 +124,8 @@ export const themeComponents = {
         return {
           root: {
             color: colors.primary[700],
-          }
-        }
+          },
+        };
       }
       return {};
     },

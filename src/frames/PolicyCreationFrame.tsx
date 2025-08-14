@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
 import { updateLabel } from '../reducers/policyReducer';
-import FlowView from '@/components/common/FlowView';
 
 export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -32,11 +32,5 @@ export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) 
     onClick: submissionHandler,
   };
 
-  return (
-    <FlowView
-      title="Create a policy"
-      content={formInputs}
-      primaryAction={primaryAction}
-    />
-  );
+  return <FlowView title="Create a policy" content={formInputs} primaryAction={primaryAction} />;
 }

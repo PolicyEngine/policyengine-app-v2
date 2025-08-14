@@ -7,7 +7,7 @@ export const typography = {
     body: 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     mono: 'JetBrains Mono, "Fira Code", Consolas, monospace',
   },
-  
+
   fontWeight: {
     thin: 100,
     light: 300,
@@ -18,7 +18,7 @@ export const typography = {
     extrabold: 800,
     black: 900,
   },
-  
+
   // Font sizes and line heights from Figma
   fontSize: {
     xs: '12px',
@@ -30,7 +30,7 @@ export const typography = {
     '3xl': '28px',
     '4xl': '32px',
   },
-  
+
   lineHeight: {
     none: '1',
     tight: '1.25',
@@ -43,7 +43,7 @@ export const typography = {
     '22': '22px', // Body/regular from Figma
     '24': '24px', // text-md/lineHeight-6/font-normal, H5/regular from Figma
   },
-  
+
   // TODO: Do we, in fact, use these styles?
   // Text styles from Figma design
   textStyles: {
@@ -60,7 +60,7 @@ export const typography = {
       fontWeight: 600,
       lineHeight: '20px',
     },
-    
+
     // Medium text styles
     'md-normal': {
       fontFamily: 'Public Sans',
@@ -68,7 +68,7 @@ export const typography = {
       fontWeight: 400,
       lineHeight: '24px',
     },
-    
+
     // Body text styles
     'body-regular': {
       fontFamily: 'Roboto',
@@ -76,7 +76,7 @@ export const typography = {
       fontWeight: 400,
       lineHeight: '22px',
     },
-    
+
     // Heading styles
     'h5-regular': {
       fontFamily: 'Roboto',

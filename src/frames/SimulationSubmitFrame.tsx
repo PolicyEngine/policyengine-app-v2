@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
@@ -9,12 +10,8 @@ import {
   serializeSimulationCreationPayload,
   SimulationCreationPayload,
 } from '@/types/simulationPayload';
-import FlowView from '@/components/common/FlowView';
 
-export default function SimulationSubmitFrame({
-  onNavigate,
-  isInSubflow,
-}: FlowComponentProps) {
+export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const simulation: Simulation = useSelector((state: RootState) => state.simulation);
   const { createSimulation, isPending } = useCreateSimulation();
   const { resetIngredient } = useIngredientReset();
@@ -47,11 +44,5 @@ export default function SimulationSubmitFrame({
     isLoading: isPending,
   };
 
-  return (
-    <FlowView
-      title="Review simulation"
-      content={content}
-      primaryAction={primaryAction}
-    />
-  );
+  return <FlowView title="Review simulation" content={content} primaryAction={primaryAction} />;
 }

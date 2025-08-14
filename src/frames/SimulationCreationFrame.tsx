@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { TextInput } from '@mantine/core';
-import { FlowComponentProps } from '@/types/flow';
 import FlowView from '@/components/common/FlowView';
+import { FlowComponentProps } from '@/types/flow';
 
 export default function SimulationCreationFrame({ onNavigate }: FlowComponentProps) {
   const [localLabel, setLocalLabel] = useState('');
@@ -28,11 +28,5 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
     onClick: submissionHandler,
   };
 
-  return (
-    <FlowView
-      title="Create simulation"
-      content={formInputs}
-      primaryAction={primaryAction}
-    />
-  );
+  return <FlowView title="Create simulation" content={formInputs} primaryAction={primaryAction} />;
 }

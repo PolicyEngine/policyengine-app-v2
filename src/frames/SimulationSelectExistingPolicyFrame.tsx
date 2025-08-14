@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
+import FlowView from '@/components/common/FlowView';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
 import {
@@ -11,11 +12,10 @@ import {
 } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
 import { PolicyMetadata } from '@/types/policyMetadata';
-import FlowView from '@/components/common/FlowView';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
-  
+
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicyId, setLocalPolicyId] = useState<string | null>(null);
   const dispatch = useDispatch();
@@ -45,7 +45,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   }
 
   const userPolicies = data || [];
-  
+
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
     return (
@@ -61,7 +61,9 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     return (
       <FlowView
         title="Select an Existing Policy"
-        content={<Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        content={
+          <Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
+        }
         buttonPreset="none"
       />
     );
@@ -97,7 +99,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   const primaryAction = {
     label: 'Next',
     onClick: handleSubmit,
-    isDisabled: !canProceed
+    isDisabled: !canProceed,
   };
 
   return (

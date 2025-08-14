@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import FlowView from '@/components/common/FlowView';
 import {
   updateSimulationPolicyId,
   updateSimulationPopulationId,
 } from '@/reducers/simulationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import FlowView from '@/components/common/FlowView';
 
 export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -45,19 +45,21 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   // TODO: May consider moving to an explicit "isCreated" state entry
   const selectionCards = [
     {
-      title: population && population.id ? (population.label || '') : 'Add population',
-      description: population && population.id 
-        ? (population.label || '')
-        : 'Select a geographic scope or specific household',
+      title: population && population.id ? population.label || '' : 'Add population',
+      description:
+        population && population.id
+          ? population.label || ''
+          : 'Select a geographic scope or specific household',
       onClick: population && population.id ? () => {} : handlePopulationSelect,
       isSelected: !!simulation.populationId,
-      isDisabled: false, 
+      isDisabled: false,
     },
     {
-      title: policy && policy.isCreated ? (policy.label || '') : 'Add policy',
-      description: policy && policy.isCreated 
-        ? (policy.label || '')
-        : 'Select a policy to apply to the simulation',
+      title: policy && policy.isCreated ? policy.label || '' : 'Add policy',
+      description:
+        policy && policy.isCreated
+          ? policy.label || ''
+          : 'Select a policy to apply to the simulation',
       onClick: policy && policy.isCreated ? () => {} : handlePolicySelect,
       isSelected: policy && policy.isCreated,
       isDisabled: false,
@@ -67,7 +69,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const primaryAction = {
     label: 'Next',
     onClick: handleNext,
-    isDisabled: !canProceed
+    isDisabled: !canProceed,
   };
 
   return (

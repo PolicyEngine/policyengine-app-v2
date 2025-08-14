@@ -14,7 +14,7 @@ export const colors = {
     800: '#234E52',
     900: '#1D4044', // Vector color from Figma
   },
-  
+
   // Secondary colors - extracted from Figma design
   secondary: {
     50: '#F0F9FF', // Blue light/50 from Figma
@@ -28,7 +28,7 @@ export const colors = {
     800: '#1E293B',
     900: '#101828', // Gray/900 from Figma
   },
-  
+
   // Blue colors from Figma
   blue: {
     50: '#F0F9FF', // Blue light/50
@@ -42,17 +42,17 @@ export const colors = {
     800: '#075985',
     900: '#0C4A6E',
   },
-  
+
   // Semantic colors - extracted from design elements
   success: '#22C55E',
   warning: '#FEC601', // Yellow button color from design
   error: '#EF4444',
   info: '#1890FF', // Primary/6 from Figma
-  
+
   // Neutral colors
   white: '#FFFFFF', // White from Figma
   black: '#000000', // Character/Title .85 from Figma
-  
+
   // Gray scale - updated to match Figma
   gray: {
     50: '#F9FAFB',
@@ -66,7 +66,7 @@ export const colors = {
     800: '#1F2937',
     900: '#101828', // Gray/900 from Figma
   },
-  
+
   // Background colors - from Figma design
   background: {
     primary: '#FFFFFF', // White from Figma
@@ -74,7 +74,7 @@ export const colors = {
     tertiary: '#F1F5F9',
     sider: '#FFFFFF', // Conditional / sider-background from Figma
   },
-  
+
   // Text colors - from Figma design
   text: {
     primary: '#000000', // Character/Primary .85 from Figma
@@ -83,19 +83,19 @@ export const colors = {
     inverse: '#FFFFFF',
     title: '#000000', // Character/Title .85 from Figma
   },
-  
+
   // Additional colors from the design
   teal: {
     500: '#319795', // teal/500 from Figma
   },
-  
+
   // Border colors from design
   border: {
     light: '#E2E8F0', // gray/200 from Figma
     medium: '#CBD5E1',
     dark: '#94A3B8',
   },
-  
+
   // Shadow colors (if needed)
   shadow: {
     light: 'rgba(16, 24, 40, 0.05)',

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from 'react';
 import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
 
@@ -26,20 +26,20 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
       title: 'Load existing policy',
       description: 'Use a policy you have already created',
       onClick: handleClickExisting,
-      isSelected: selectedAction === "loadExisting",
+      isSelected: selectedAction === 'loadExisting',
     },
     {
       title: 'Create new policy',
       description: 'Build a new policy',
       onClick: handleClickCreateNew,
-      isSelected: selectedAction === "createNew",
+      isSelected: selectedAction === 'createNew',
     },
   ];
-  
+
   const primaryAction = {
     label: 'Next',
     onClick: handleClickSubmit,
-    isDisabled: !selectedAction
+    isDisabled: !selectedAction,
   };
 
   return (

@@ -1,4 +1,4 @@
-import { Box, Divider, Stack, Text, ScrollArea } from '@mantine/core';
+import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
 import { mockParamFolder } from '@/TEST_TO_DELETE/mockParamFolder';
 import NestedMenu from '../common/NestedMenu';
 
@@ -14,9 +14,11 @@ export default function PolicyParameterSelectorMenu({
       <Box>
         <SelectorMenuHeader />
         <Divider my="xs" />
-        <Text fw={700} mb="md">TODO: Search feature</Text>
+        <Text fw={700} mb="md">
+          TODO: Search feature
+        </Text>
       </Box>
-      
+
       <ScrollArea flex={1} type="scroll">
         <NestedMenu menuOptions={mockParamFolder} onItemClick={setSelectedParamLabel} />
       </ScrollArea>
