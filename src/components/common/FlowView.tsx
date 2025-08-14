@@ -2,6 +2,22 @@ import { Card, Container, Divider, Stack, Text, Title } from '@mantine/core';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 import { spacing } from '@/designTokens';
 
+interface SelectionCard {
+  title: string;
+  description: string;
+  onClick: () => void;
+  isSelected?: boolean;
+  isDisabled?: boolean;
+}
+
+interface CardListItem {
+  title: string;
+  subtitle?: string;
+  onClick: () => void;
+  isSelected?: boolean;
+  isDisabled?: boolean;
+}
+
 interface FlowViewProps {
   title: string;
   subtitle?: string;
@@ -11,22 +27,10 @@ interface FlowViewProps {
   content?: React.ReactNode;
   
   // Selection variant props
-  selectionCards?: {
-    title: string;
-    description: string;
-    onClick: () => void;
-    isSelected?: boolean;
-    isDisabled?: boolean;
-  }[];
+  selectionCards?: SelectionCard[];
 
   // Card list variant props
-  cardListItems?: {
-    title: string;
-    subtitle?: string;
-    onClick: () => void;
-    isSelected?: boolean;
-    isDisabled?: boolean;
-  }[];
+  cardListItems?: CardListItem[];
 
   // Button configuration - can use explicit buttons or convenience props
   buttons?: ButtonConfig[];
@@ -59,7 +63,7 @@ export default function FlowView<T>({
   content,
   selectionCards,
   cardListItems,
-}: FlowViewProps<T>) {
+}: FlowViewProps) {
   
   // Generate buttons from convenience props if explicit buttons not provided
   function getButtons(): ButtonConfig[] {
@@ -113,7 +117,7 @@ export default function FlowView<T>({
       case 'selection':
         return (
           <Stack>
-            {selectionCards?.map((card, index) => (
+            {selectionCards?.map((card: SelectionCard, index: number) => (
               <Card
                 key={index}
                 withBorder
@@ -135,7 +139,7 @@ export default function FlowView<T>({
       case 'cardList':
         return (
           <Stack gap={spacing.sm}>
-            {cardListItems?.map((item, index) => (
+            {cardListItems?.map((item: CardListItem, index: number) => (
               <Card
                 key={index}
                 withBorder

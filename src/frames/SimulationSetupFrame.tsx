@@ -45,18 +45,18 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   // TODO: May consider moving to an explicit "isCreated" state entry
   const selectionCards = [
     {
-      title: population && population.id ? population.label : 'Add population',
+      title: population && population.id ? (population.label || '') : 'Add population',
       description: population && population.id 
-        ? population.label 
+        ? (population.label || '')
         : 'Select a geographic scope or specific household',
       onClick: population && population.id ? () => {} : handlePopulationSelect,
       isSelected: !!simulation.populationId,
       isDisabled: false, 
     },
     {
-      title: policy && policy.isCreated ? policy.label : 'Add policy',
+      title: policy && policy.isCreated ? (policy.label || '') : 'Add policy',
       description: policy && policy.isCreated 
-        ? policy.label 
+        ? (policy.label || '')
         : 'Select a policy to apply to the simulation',
       onClick: policy && policy.isCreated ? () => {} : handlePolicySelect,
       isSelected: policy && policy.isCreated,
