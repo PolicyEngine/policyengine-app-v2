@@ -316,13 +316,7 @@ export default function IngredientReadView({
             <Button
               leftSection={<IconPlus size={16} />}
               onClick={onBuild}
-              size="md"
-              radius={spacing.radius.md}
-              style={{
-                backgroundColor: colors.primary[500],
-                color: colors.white,
-                fontWeight: typography.fontWeight.medium,
-              }}
+              variant="filled"
             >
               Build {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
             </Button>
@@ -364,12 +358,7 @@ export default function IngredientReadView({
             variant="outline"
             leftSection={<IconFilter size={14} />}
             size="sm"
-            radius={spacing.radius.md}
             onClick={onMoreFilters}
-            style={{
-              borderColor: colors.border.light,
-              color: colors.text.secondary,
-            }}
           >
             More filters
           </Button>
@@ -381,13 +370,6 @@ export default function IngredientReadView({
                 leftSection={<IconSearch size={16} />}
                 value={searchValue}
                 onChange={(e) => onSearchChange(e.currentTarget.value)}
-                radius={spacing.radius.md}
-                style={{
-                  input: {
-                    borderColor: colors.border.light,
-                    fontSize: typography.fontSize.sm,
-                  }
-                }}
               />
             </Box>
           )}
