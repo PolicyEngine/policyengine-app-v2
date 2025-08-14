@@ -18,10 +18,10 @@ export default function HomePage() {
       <Button variant="default" onClick={() => dispatch(clearFlow())}>
         Clear all flows
       </Button>
-      <Button variant="filled" onClick={() => dispatch(setFlow(PolicyCreationFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow(PolicyCreationFlow))}>
         Execute policy creation flow
       </Button>
-      <Button variant="outline" onClick={() => dispatch(setFlow(PolicyViewFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow(PolicyViewFlow))}>
         Show Policy View
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(SimulationCreationFlow))}>
