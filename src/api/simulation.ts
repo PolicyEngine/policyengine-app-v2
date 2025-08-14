@@ -89,7 +89,7 @@ export async function createSimulation(
     setTimeout(() => {
       // Generate a unique simulation ID
       const simulationId = `mock-simulation-id-${Date.now()}`;
-      
+
       // Store the simulation data for later retrieval
       const simulationMetadata: SimulationMetadata = {
         simulation_id: simulationId,
@@ -98,9 +98,9 @@ export async function createSimulation(
         population_id: data.populationId ? parseInt(data.populationId, 10) : mockPopulationId,
         policy_id: data.policyId ? parseInt(data.policyId, 10) : mockPolicyId,
       };
-      
+
       mockSimulationStore.set(simulationId, simulationMetadata);
-      
+
       resolve({ result: { simulation_id: simulationId } });
     }, 1000); // Simulate network delay
   });

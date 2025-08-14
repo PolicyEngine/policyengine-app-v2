@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
-import { clearPopulation } from '@/reducers/populationReducer';
 import { clearPolicy } from '@/reducers/policyReducer';
+import { clearPopulation } from '@/reducers/populationReducer';
 import { clearSimulation } from '@/reducers/simulationReducer';
 import { AppDispatch } from '@/store';
 
