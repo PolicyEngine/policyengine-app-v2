@@ -17,7 +17,7 @@ import {
   Group,
   Stack
 } from '@mantine/core';
-import { IconSearch, IconFilter, IconDots, IconPlus } from '@tabler/icons-react';
+import { IconSearch, IconFilter, IconDots, IconCirclePlus } from '@tabler/icons-react';
 import { colors, spacing, typography } from '@/designTokens';
 import EmptyState from './common/EmptyState';
 
@@ -314,7 +314,7 @@ export default function IngredientReadView({
           
           {onBuild && (
             <Button
-              leftSection={<IconPlus size={16} />}
+              rightSection={<IconCirclePlus size={16} />}
               onClick={onBuild}
               variant="filled"
             >
@@ -338,6 +338,8 @@ export default function IngredientReadView({
         
         {/* Filters and Search */}
         <Flex gap={spacing.md} align="center" mb={spacing.lg}>
+          {/* TODO: Future filters */}
+          {/*}
           {filters.map((filter) => (
             <Pill 
               key={filter.value}
@@ -353,9 +355,11 @@ export default function IngredientReadView({
               {filter.label}
             </Pill>
           ))}
+            */}
           
           <Button
             variant="outline"
+            disabled
             leftSection={<IconFilter size={14} />}
             size="sm"
             onClick={onMoreFilters}
@@ -366,6 +370,7 @@ export default function IngredientReadView({
           {onSearchChange && (
             <Box style={{ marginLeft: 'auto', width: '300px' }}>
               <TextInput
+                disabled
                 placeholder="Search"
                 leftSection={<IconSearch size={16} />}
                 value={searchValue}
