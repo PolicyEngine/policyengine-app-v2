@@ -75,7 +75,7 @@ export async function fetchSimulationById(
           country_id: countryId,
           api_version: mockApiVersion,
           population_id: mockPopulationId,
-          policy_id: 89013, // Keep the original fallback for existing simulations
+          policy_id: mockPolicyId,
         });
       }
     }, 1000); // Simulate network delay
