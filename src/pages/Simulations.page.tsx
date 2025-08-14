@@ -1,13 +1,14 @@
 import { useDispatch } from 'react-redux';
 import { useState } from 'react';
 import { Box, Text, Anchor, Badge, Group, Stack } from '@mantine/core';
-import IngredientReadView, { 
+import IngredientReadView from '@/components/IngredientReadView';
+import { 
   ColumnConfig, 
   IngredientRecord,
   TextValue,
   LinkValue,
   BulletsValue
-} from '@/components/IngredientReadView';
+} from '@/components/columns';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulation';
 import { setFlow } from '@/reducers/flowReducer';
