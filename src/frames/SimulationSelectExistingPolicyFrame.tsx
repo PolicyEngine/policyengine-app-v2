@@ -52,7 +52,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       <FlowView
         title="Select an Existing Policy"
         content={<Text>Loading policies...</Text>}
-        buttonPreset="cancel-only"
+        buttonPreset="none"
       />
     );
   }
@@ -62,7 +62,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       <FlowView
         title="Select an Existing Policy"
         content={<Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
-        buttonPreset="cancel-only"
+        buttonPreset="none"
       />
     );
   }

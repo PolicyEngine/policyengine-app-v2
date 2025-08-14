@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Card, Stack, Text } from '@mantine/core';
-import MultiButtonFooter, { ButtonConfig } from '@/components/common/MultiButtonFooter';
+import { Stack, Text } from '@mantine/core';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import {
   clearPopulation,
@@ -10,24 +9,24 @@ import {
   updatePopulationLabel,
 } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
+import { HouseholdMetadata } from '@/types/householdMetadata';
+import FlowView from '@/components/common/FlowView';
 
-export default function SimulationSelectExistingPopulationFrame({
-  onNavigate,
-}: FlowComponentProps) {
+export default function SimulationSelectExistingPopulationFrame({ onNavigate }: FlowComponentProps) {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
-
+  
   const { data, isLoading, isError, error } = useUserHouseholds(userId);
   const [localPopulationId, setLocalPopulationId] = useState<string | null>(null);
-
-  const canProceed = localPopulationId !== null;
   const dispatch = useDispatch();
 
-  function handlePopulationSelect(population: NonNullable<typeof data>[number]['household']) {
-    if (!population) {
-      return;
-    }
+  const canProceed = localPopulationId !== null;
+
+  function handlePopulationSelect(population: HouseholdMetadata) {
+    // Blank out any existing population
     dispatch(clearPopulation());
 
+    // Fill in all population details
+    // TODO: Fix ID types
     dispatch(updatePopulationId(population.id.toString()));
     dispatch(updatePopulationLabel(population.label || ''));
 
@@ -36,80 +35,74 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   function handleSubmit() {
-    if (!localPopulationId) {
-      return;
-    }
-
-    dispatch(updatePopulationId(localPopulationId));
+    dispatch(updatePopulationId(localPopulationId || ''));
     dispatch(markPopulationAsCreated());
     onNavigate('next');
   }
 
-  const canProceedNextButtonConfig: ButtonConfig = {
-    label: 'Next',
-    variant: 'filled',
-    onClick: handleSubmit,
-  };
-
-  const cantProceedNextButtonConfig: ButtonConfig = {
-    label: 'Next',
-    variant: 'disabled',
-    onClick: () => null,
-  };
-
-  const cancelButtonConfig: ButtonConfig = {
-    label: 'Cancel',
-    variant: 'outline',
-    onClick: () => {
-      console.log('Cancel clicked');
-    },
-  };
-
-  const buttonConfig: ButtonConfig[] = canProceed
-    ? [cancelButtonConfig, canProceedNextButtonConfig]
-    : [cancelButtonConfig, cantProceedNextButtonConfig];
-
+  const userPopulations = data || [];
+  
+  // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <FlowView
+        title="Select an Existing Population"
+        content={<Text>Loading populations...</Text>}
+        buttonPreset="none"
+      />
+    );
   }
 
   if (isError) {
-    return <div>Error: {error?.message}</div>;
+    return (
+      <FlowView
+        title="Select an Existing Population"
+        content={<Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        buttonPreset="none"
+      />
+    );
   }
-
-  const userPopulations = data || [];
-
-  let displayPopulations = null;
 
   if (userPopulations.length === 0) {
-    displayPopulations = <Text>No populations available. Please create a new population.</Text>;
-  } else {
-    const recentUserPopulations = userPopulations.slice(0, 5);
-    displayPopulations = recentUserPopulations
-      .filter(({ household }) => household) // filter out any missing households
-      .map(({ household }) => (
-        <Card
-          key={household!.id}
-          withBorder
-          p="md"
-          component="button"
-          onClick={() => handlePopulationSelect(household!)}
-        >
-          <Stack>
-            <Text fw={600}>{household!.id}</Text>
-          </Stack>
-        </Card>
-      )); // TODO Update the content to be displayed for available households
+    return (
+      <FlowView
+        title="Select an Existing Population"
+        content={<Text>No populations available. Please create a new population.</Text>}
+        buttonPreset="cancel-only"
+      />
+    );
   }
 
-  return (
+  const recentUserPopulations = userPopulations.slice(0, 5); // Display only the first 5 populations
+  const cardListItems = recentUserPopulations
+    .filter((association) => association.household) // Only include associations with loaded households
+    .map((association) => ({
+      title: association.household!.label || `Population ${association.household!.id}`,
+      onClick: () => handlePopulationSelect(association.household!),
+      isSelected: localPopulationId === association.household!.id.toString(),
+    }));
+
+  const content = (
     <Stack>
-      <Text fw={700}>Select an Existing Population</Text>
       <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
       <Text fw={700}>Recents</Text>
-      <Stack>{displayPopulations}</Stack>
-      <MultiButtonFooter buttons={buttonConfig} />
     </Stack>
+  );
+
+  const primaryAction = {
+    label: 'Next',
+    onClick: handleSubmit,
+    isDisabled: !canProceed
+  };
+
+  return (
+    <FlowView
+      title="Select an Existing Population"
+      variant="cardList"
+      content={content}
+      cardListItems={cardListItems}
+      primaryAction={primaryAction}
+    />
   );
 }
