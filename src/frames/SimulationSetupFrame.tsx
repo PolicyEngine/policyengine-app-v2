@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
 import {
@@ -8,22 +8,32 @@ import {
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
+type SetupCard = 'population' | 'policy';
+
 export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
   const simulation = useSelector((state: RootState) => state.simulation);
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
-
-  const handlePolicySelect = () => {
-    onNavigate('setupPolicy');
-  };
+  const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
 
   const handlePopulationSelect = () => {
-    onNavigate('setupPopulation');
+    setSelectedCard('population');
+  };
+
+  const handlePolicySelect = () => {
+    setSelectedCard('policy');
   };
 
   const handleNext = () => {
-    onNavigate('next');
+    if (selectedCard === 'population' && !population.isCreated) {
+      onNavigate('setupPopulation');
+    } else if (selectedCard === 'policy' && !policy.isCreated) {
+      onNavigate('setupPolicy');
+    } else if (simulation.policyId && simulation.populationId) {
+      // Both are fulfilled, proceed to next step
+      onNavigate('next');
+    }
   };
 
   // Listen for policy creation and update simulation with policy ID
@@ -44,32 +54,59 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   const setupConditionCards = [
     {
-      title: population && population.isCreated ? population.label || '' : 'Add Population',
+      title: population && population.isCreated ? population.label || `Population #${population.id}` : 'Add Population',
       description:
         population && population.isCreated
           ? population.label || ''
           : 'Select a geographic scope or specific household',
-      onClick: population && population.isCreated ? () => {} : handlePopulationSelect,
+      onClick: handlePopulationSelect,
+      isSelected: selectedCard === 'population',
       isFulfilled: population && population.isCreated,
       isDisabled: false,
     },
     {
-      title: policy && policy.isCreated ? policy.label || '' : 'Add Policy',
+      title: policy && policy.isCreated ? policy.label || `Policy #${policy.id}` : 'Add Policy',
       description:
         policy && policy.isCreated
           ? policy.label || ''
           : 'Select a policy to apply to the simulation',
-      onClick: policy && policy.isCreated ? () => {} : handlePolicySelect,
+      onClick: handlePolicySelect,
+      isSelected: selectedCard === 'policy',
       isFulfilled: policy && policy.isCreated,
       isDisabled: false,
     },
   ];
 
-  const primaryAction = {
-    label: 'Next',
-    onClick: handleNext,
-    isDisabled: !canProceed,
+  // Determine the primary action label and state
+  const getPrimaryAction = () => {
+    if (selectedCard === 'population' && !population.isCreated) {
+      return {
+        label: 'Setup Population',
+        onClick: handleNext,
+        isDisabled: false,
+      };
+    } else if (selectedCard === 'policy' && !policy.isCreated) {
+      return {
+        label: 'Setup Policy',
+        onClick: handleNext,
+        isDisabled: false,
+      };
+    } else if (canProceed) {
+      return {
+        label: 'Next',
+        onClick: handleNext,
+        isDisabled: false,
+      };
+    } else {
+      return {
+        label: 'Next',
+        onClick: handleNext,
+        isDisabled: true,
+      };
+    }
   };
+
+  const primaryAction = getPrimaryAction();
 
   return (
     <FlowView

@@ -145,7 +145,7 @@ export default function FlowView({
                     : 'setupCondition--unfulfilled'
                 }
               >
-                <Group gap={spacing.sm} align="flex-start">
+                <Group gap={spacing.sm} align="center">
                   {card.isFulfilled && (
                     <IconCheck
                       size={20}
@@ -180,7 +180,7 @@ export default function FlowView({
                 disabled={card.isDisabled}
                 variant={card.isSelected ? 'buttonPanel--active' : 'buttonPanel--inactive'}
               >
-                <Group justify="space-between" align="flex-start">
+                <Group justify="space-between" align="center">
                   <Stack gap={spacing.xs} style={{ flex: 1 }}>
                     <Text fw={700}>{card.title}</Text>
                     <Text size="sm" c="dimmed">
