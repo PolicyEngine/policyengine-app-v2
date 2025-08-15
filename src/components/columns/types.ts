@@ -38,11 +38,22 @@ export interface MenuColumnConfig extends BaseColumnConfig {
   onAction: (action: string, recordId: string) => void;
 }
 
+export interface SplitMenuColumnConfig extends BaseColumnConfig {
+  type: 'split-menu';
+  actions: Array<{
+    label: string;
+    action: string;
+    color?: string;
+  }>;
+  onAction: (action: string, recordId: string) => void;
+}
+
 export type ColumnConfig = 
   | TextColumnConfig 
   | LinkColumnConfig 
   | BulletsColumnConfig 
-  | MenuColumnConfig;
+  | MenuColumnConfig
+  | SplitMenuColumnConfig;
 
 // Data value interfaces
 export interface TextValue {

@@ -5,6 +5,7 @@ import { TextColumn } from './TextColumn';
 import { LinkColumn } from './LinkColumn';
 import { BulletsColumn } from './BulletsColumn';
 import { MenuColumn } from './MenuColumn';
+import { SplitMenuColumn } from './SplitMenuColumn';
 import { 
   TextColumnConfig, 
   TextValue, 
@@ -12,7 +13,8 @@ import {
   LinkValue, 
   BulletsColumnConfig, 
   BulletsValue, 
-  MenuColumnConfig 
+  MenuColumnConfig,
+  SplitMenuColumnConfig
 } from './types';
 
 interface ColumnRendererProps {
@@ -23,7 +25,7 @@ interface ColumnRendererProps {
 export function ColumnRenderer({ config, record }: ColumnRendererProps) {
   const value = record[config.key] as ColumnValue;
 
-  if (!value && config.type !== 'menu') {
+  if (!value && config.type !== 'menu' && config.type !== 'split-menu') {
     return <Text size="sm" c={colors.text.secondary}>—</Text>;
   }
 
@@ -39,6 +41,9 @@ export function ColumnRenderer({ config, record }: ColumnRendererProps) {
     
     case 'menu':
       return <MenuColumn config={config as MenuColumnConfig} record={record} />;
+    
+    case 'split-menu':
+      return <SplitMenuColumn config={config as SplitMenuColumnConfig} record={record} />;
     
     default:
       return <Text size="sm">{String(value)}</Text>;

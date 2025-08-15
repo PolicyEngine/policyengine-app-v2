@@ -104,7 +104,7 @@ export default function SimulationsPage() {
     {
       key: 'actions',
       header: '',
-      type: 'menu',
+      type: 'split-menu',
       actions: [
         { label: 'Add to Report', action: 'add-to-report' },
         { label: 'Delete', action: 'delete', color: 'red' }

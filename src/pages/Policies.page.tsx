@@ -47,7 +47,7 @@ export default function PoliciesPage() {
     switch (action) {
       case 'view-policy':
         // TODO: Implement view reform functionality
-        console.log('View policy:', recordId);
+        console.log('View details:', recordId);
         break;
       case 'bookmark':
         // TODO: Implement bookmark functionality
@@ -111,9 +111,9 @@ export default function PoliciesPage() {
     {
       key: 'actions',
       header: '',
-      type: 'menu',
+      type: 'split-menu',
       actions: [
-        { label: 'View policy', action: 'view-policy' },
+        { label: 'View details', action: 'view-policy' },
         { label: 'Bookmark', action: 'bookmark' },
         { label: 'Edit', action: 'edit' },
         { label: 'Share', action: 'share' },

@@ -52,7 +52,7 @@ export default function PopulationsPage() {
     switch (action) {
       case 'view-population':
         // TODO: Implement view population functionality
-        console.log('View population:', recordId);
+        console.log('View details:', recordId);
         break;
       case 'bookmark':
         // TODO: Implement bookmark functionality
@@ -146,9 +146,9 @@ export default function PopulationsPage() {
     {
       key: 'actions',
       header: '',
-      type: 'menu',
+      type: 'split-menu',
       actions: [
-        { label: 'View population', action: 'view-population' },
+        { label: 'View details', action: 'view-population' },
         { label: 'Bookmark', action: 'bookmark' },
         { label: 'Edit', action: 'edit' },
         { label: 'Share', action: 'share' },
