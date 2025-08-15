@@ -9,8 +9,8 @@ interface TextColumnProps {
 
 export function TextColumn({ config, value }: TextColumnProps) {
   return (
-    <Text 
-      size={config.size || 'sm'} 
+    <Text
+      size={config.size || 'sm'}
       fw={typography.fontWeight[config.weight || 'normal']}
       c={config.color || colors.text.primary}
     >

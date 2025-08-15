@@ -1,41 +1,27 @@
-import { useDispatch } from 'react-redux';
 import { useState } from 'react';
-import { Box, Text, Anchor, Badge, Group, Stack } from '@mantine/core';
-import IngredientReadView from '@/components/IngredientReadView';
-import { 
-  ColumnConfig, 
+import { useDispatch } from 'react-redux';
+import {
+  BulletsValue,
+  ColumnConfig,
   IngredientRecord,
-  TextValue,
   LinkValue,
-  BulletsValue
+  TextValue,
 } from '@/components/columns';
+import IngredientReadView from '@/components/IngredientReadView';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulation';
 import { setFlow } from '@/reducers/flowReducer';
-import { colors, spacing, typography } from '@/designTokens';
 
 export default function SimulationsPage() {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const dispatch = useDispatch();
-  
-  const [searchValue, setSearchValue] = useState("");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [filters, setFilters] = useState([
-    { label: "Most Recent", value: "most-recent" },
-    { label: "Type", value: "type" }
-  ]);
 
-  const handleNavigateToCreate = () => {
-    dispatch(setFlow(SimulationCreationFlow));
-  };
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildSimulation = () => {
     dispatch(setFlow(SimulationCreationFlow));
-  };
-
-  const handleFilterRemove = (filterValue: string) => {
-    setFilters(prev => prev.filter(f => f.value !== filterValue));
   };
 
   const handleMoreFilters = () => {
@@ -59,10 +45,8 @@ export default function SimulationsPage() {
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds(prev => 
-      selected 
-        ? [...prev, recordId]
-        : prev.filter(id => id !== recordId)
+    setSelectedIds((prev) =>
+      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
     );
   };
 
@@ -73,22 +57,22 @@ export default function SimulationsPage() {
     {
       key: 'simulation',
       header: 'Simulation',
-      type: 'text'
+      type: 'text',
     },
     {
       key: 'dateCreated',
       header: 'Date Created',
-      type: 'text'
+      type: 'text',
     },
     {
       key: 'policy',
       header: 'Policy',
-      type: 'text'
+      type: 'text',
     },
     {
       key: 'population',
       header: 'Population',
-      type: 'link'
+      type: 'link',
     },
     {
       key: 'connected',
@@ -97,9 +81,9 @@ export default function SimulationsPage() {
       items: [
         {
           textKey: 'text',
-          badgeKey: 'badge'
-        }
-      ]
+          badgeKey: 'badge',
+        },
+      ],
     },
     {
       key: 'actions',
@@ -107,44 +91,44 @@ export default function SimulationsPage() {
       type: 'split-menu',
       actions: [
         { label: 'Add to Report', action: 'add-to-report' },
-        { label: 'Delete', action: 'delete', color: 'red' }
+        { label: 'Delete', action: 'delete', color: 'red' },
       ],
-      onAction: handleMenuAction
-    }
+      onAction: handleMenuAction,
+    },
   ];
 
   // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] = data?.map((item) => ({
-    id: item.association.simulationId,
-    simulation: {
-      text: `Simulation #${item.association.simulationId}`
-    } as TextValue,
-    dateCreated: {
-      text: 'Just now' // TODO: Format actual date from item data
-    } as TextValue,
-    policy: {
-      text: 'Policy Name\n7 Provisions' // TODO: Get actual policy data
-    } as TextValue,
-    population: {
-      text: item.simulation?.population_id || "Unknown",
-      url: `#${item.simulation?.population_id || "unknown"}`
-    } as LinkValue,
-    connected: {
-      items: [
-        {
-          text: 'Report Title',
-          badge: 1
-        }
-      ]
-    } as BulletsValue,
-  })) || [];
+  const transformedData: IngredientRecord[] =
+    data?.map((item) => ({
+      id: item.association.simulationId,
+      simulation: {
+        text: `Simulation #${item.association.simulationId}`,
+      } as TextValue,
+      dateCreated: {
+        text: 'Just now', // TODO: Format actual date from item data
+      } as TextValue,
+      policy: {
+        text: 'Policy Name\n7 Provisions', // TODO: Get actual policy data
+      } as TextValue,
+      population: {
+        text: item.simulation?.population_id || 'Unknown',
+        url: `#${item.simulation?.population_id || 'unknown'}`,
+      } as LinkValue,
+      connected: {
+        items: [
+          {
+            text: 'Report Title',
+            badge: 1,
+          },
+        ],
+      } as BulletsValue,
+    })) || [];
 
   return (
     <IngredientReadView
       ingredient="simulation"
       title="Simulations"
       subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
-      onCreate={handleNavigateToCreate}
       onBuild={handleBuildSimulation}
       isLoading={isLoading}
       isError={isError}
@@ -153,10 +137,8 @@ export default function SimulationsPage() {
       columns={simulationColumns}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
-      filters={filters}
-      onFilterRemove={handleFilterRemove}
       onMoreFilters={handleMoreFilters}
-      enableSelection={true}
+      enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
     />

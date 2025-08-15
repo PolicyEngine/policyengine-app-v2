@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Button, Menu, Group, rem } from '@mantine/core';
 import { IconChevronDown } from '@tabler/icons-react';
-import { SplitMenuColumnConfig, IngredientRecord } from './types';
+import { Button, Group, Menu, rem } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
+import { IngredientRecord, SplitMenuColumnConfig } from './types';
 
 interface SplitMenuColumnProps {
   config: SplitMenuColumnConfig;
@@ -11,7 +11,7 @@ interface SplitMenuColumnProps {
 
 export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
   const [opened, setOpened] = useState(false);
-  
+
   // Use the first action as the primary action
   const primaryAction = config.actions[0];
   const secondaryActions = config.actions.slice(1);
@@ -71,30 +71,30 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
               minWidth: rem(32),
             }}
           >
-            <IconChevronDown 
-              size={14} 
-              style={{ 
+            <IconChevronDown
+              size={14}
+              style={{
                 transform: opened ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 150ms ease'
-              }} 
+                transition: 'transform 150ms ease',
+              }}
             />
           </Button>
         </Menu.Target>
 
         <Menu.Dropdown style={{ minWidth: rem(152) }}>
           {/* Include primary action in dropdown as well */}
-          <Menu.Item 
+          <Menu.Item
             onClick={() => handleSecondaryAction(primaryAction.action)}
             color={primaryAction.color}
           >
             {primaryAction.label}
           </Menu.Item>
-          
+
           {secondaryActions.length > 0 && <Menu.Divider />}
-          
+
           {/* Secondary actions */}
           {secondaryActions.map((action) => (
-            <Menu.Item 
+            <Menu.Item
               key={action.action}
               color={action.color}
               onClick={() => handleSecondaryAction(action.action)}

@@ -1,18 +1,10 @@
-import { useDispatch } from 'react-redux';
 import { useState } from 'react';
-import { Box, Text, Anchor, Badge, Group, Stack } from '@mantine/core';
+import { useDispatch } from 'react-redux';
+import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
-import { 
-  ColumnConfig, 
-  IngredientRecord,
-  TextValue,
-  LinkValue,
-  BulletsValue
-} from '@/components/columns';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { setFlow } from '@/reducers/flowReducer';
-import { colors, spacing, typography } from '@/designTokens';
 
 export default function PopulationsPage() {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
@@ -23,24 +15,12 @@ export default function PopulationsPage() {
   // TODO: Fix isError
   const { data, isLoading, isError, error } = useUserHouseholds(userId);
   const dispatch = useDispatch();
-  
-  const [searchValue, setSearchValue] = useState("");
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [filters, setFilters] = useState([
-    { label: "Most Recent", value: "most-recent" },
-    { label: "Type", value: "type" }
-  ]);
 
-  const handleNavigateToCreate = () => {
-    dispatch(setFlow(PopulationCreationFlow));
-  };
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildPopulation = () => {
     dispatch(setFlow(PopulationCreationFlow));
-  };
-
-  const handleFilterRemove = (filterValue: string) => {
-    setFilters(prev => prev.filter(f => f.value !== filterValue));
   };
 
   const handleMoreFilters = () => {
@@ -76,24 +56,23 @@ export default function PopulationsPage() {
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds(prev => 
-      selected 
-        ? [...prev, recordId]
-        : prev.filter(id => id !== recordId)
+    setSelectedIds((prev) =>
+      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
     );
   };
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
+  // TODO: Refactor this func to accurately determine scope, depending on schema changes
   // Helper function to determine if a household has geographic scope or household configuration
-  const getDetailsType = (household: any): 'geographic' | 'household' => {
+  const getDetailsType = (/*geography: any*/): 'geographic' | 'household' => {
     // To implement: check if household has state information (geographic scope)
     // Default to household configuration
     return 'household';
   };
 
   // To implement: Helper function to get geographic scope details
-  const getGeographicDetails = (household: any) => {
+  const getGeographicDetails = (/*geography: any*/) => {
     // To implement: get geographic scope details
     return [];
   };
@@ -105,7 +84,7 @@ export default function PopulationsPage() {
     const familiesCount = Object.keys(household?.household_json?.families || {}).length;
     return [
       { text: `${peopleCount} person${peopleCount !== 1 ? 's' : ''}`, badge: '' },
-      { text: `${familiesCount} household${familiesCount !== 1 ? 's' : ''}`, badge: '' }
+      { text: `${familiesCount} household${familiesCount !== 1 ? 's' : ''}`, badge: '' },
     ];
   };
 
@@ -114,12 +93,12 @@ export default function PopulationsPage() {
     {
       key: 'populationName',
       header: 'Population name',
-      type: 'text'
+      type: 'text',
     },
     {
       key: 'dateCreated',
       header: 'Date created',
-      type: 'text'
+      type: 'text',
     },
     {
       key: 'details',
@@ -128,9 +107,9 @@ export default function PopulationsPage() {
       items: [
         {
           textKey: 'text',
-          badgeKey: 'badge'
-        }
-      ]
+          badgeKey: 'badge',
+        },
+      ],
     },
     {
       key: 'connections',
@@ -139,9 +118,9 @@ export default function PopulationsPage() {
       items: [
         {
           textKey: 'text',
-          badgeKey: 'badge'
-        }
-      ]
+          badgeKey: 'badge',
+        },
+      ],
     },
     {
       key: 'actions',
@@ -152,51 +131,53 @@ export default function PopulationsPage() {
         { label: 'Bookmark', action: 'bookmark' },
         { label: 'Edit', action: 'edit' },
         { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' }
+        { label: 'Delete', action: 'delete', color: 'red' },
       ],
-      onAction: handleMenuAction
-    }
+      onAction: handleMenuAction,
+    },
   ];
 
   // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] = data?.map((item) => {
-    const detailsType = getDetailsType(item.household);
-    const detailsItems = detailsType === 'geographic' 
-      ? getGeographicDetails(item.household)
-      : getHouseholdDetails(item.household);
+  const transformedData: IngredientRecord[] =
+    data?.map((item) => {
+      // TODO: Implement this
+      const detailsType = getDetailsType(/*item.household*/);
+      const detailsItems =
+        detailsType === 'geographic'
+          ? getGeographicDetails(/*item.household*/)
+          : getHouseholdDetails(item.household);
 
-    return {
-      id: item.association.householdId,
-      populationName: {
-        text: item.household?.label || `Population #${item.association.householdId}`
-      } as TextValue,
-      dateCreated: {
-        text: 'Just now' // TODO: Format actual date from item data
-      } as TextValue,
-      details: {
-        items: detailsItems
-      } as BulletsValue,
-      connections: {
-        items: [
-          {
-            text: 'Sample simulation',
-            badge: ''
-          },
-          {
-            text: 'Sample report',
-            badge: ''
-          }
-        ]
-      } as BulletsValue,
-    };
-  }) || [];
+      return {
+        id: item.association.householdId,
+        populationName: {
+          text: item.household?.label || `Population #${item.association.householdId}`,
+        } as TextValue,
+        dateCreated: {
+          text: 'Just now', // TODO: Format actual date from item data
+        } as TextValue,
+        details: {
+          items: detailsItems,
+        } as BulletsValue,
+        connections: {
+          items: [
+            {
+              text: 'Sample simulation',
+              badge: '',
+            },
+            {
+              text: 'Sample report',
+              badge: '',
+            },
+          ],
+        } as BulletsValue,
+      };
+    }) || [];
 
   return (
     <IngredientReadView
       ingredient="population"
       title="Your populations"
       subtitle="Create a population configuration or find and save existing populations to use in your simulation configurations."
-      onCreate={handleNavigateToCreate}
       onBuild={handleBuildPopulation}
       isLoading={isLoading}
       isError={isError}
@@ -205,10 +186,8 @@ export default function PopulationsPage() {
       columns={populationColumns}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
-      filters={filters}
-      onFilterRemove={handleFilterRemove}
       onMoreFilters={handleMoreFilters}
-      enableSelection={true}
+      enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
     />

@@ -48,10 +48,10 @@ export interface SplitMenuColumnConfig extends BaseColumnConfig {
   onAction: (action: string, recordId: string) => void;
 }
 
-export type ColumnConfig = 
-  | TextColumnConfig 
-  | LinkColumnConfig 
-  | BulletsColumnConfig 
+export type ColumnConfig =
+  | TextColumnConfig
+  | LinkColumnConfig
+  | BulletsColumnConfig
   | MenuColumnConfig
   | SplitMenuColumnConfig;
 

@@ -1,6 +1,6 @@
-import { Menu, ActionIcon } from '@mantine/core';
 import { IconDots } from '@tabler/icons-react';
-import { MenuColumnConfig, IngredientRecord } from './types';
+import { ActionIcon, Menu } from '@mantine/core';
+import { IngredientRecord, MenuColumnConfig } from './types';
 
 interface MenuColumnProps {
   config: MenuColumnConfig;
@@ -17,7 +17,7 @@ export function MenuColumn({ config, record }: MenuColumnProps) {
       </Menu.Target>
       <Menu.Dropdown>
         {config.actions.map((action) => (
-          <Menu.Item 
+          <Menu.Item
             key={action.action}
             color={action.color}
             onClick={() => config.onAction(action.action, record.id)}
