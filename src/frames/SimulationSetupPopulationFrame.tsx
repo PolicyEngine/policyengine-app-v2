@@ -21,15 +21,15 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
     }
   }
 
-  const selectionCards = [
+  const buttonPanelCards = [
     {
-      title: 'Load existing population',
+      title: 'Load Existing Population',
       description: 'Use a population you have already created',
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
     },
     {
-      title: 'Create new population',
+      title: 'Create New Population',
       description: 'Build a new population',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
@@ -45,8 +45,8 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
   return (
     <FlowView
       title="Select Population"
-      variant="selection"
-      selectionCards={selectionCards}
+      variant="buttonPanel"
+      buttonPanelCards={buttonPanelCards}
       primaryAction={primaryAction}
     />
   );

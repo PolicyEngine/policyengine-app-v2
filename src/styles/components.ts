@@ -77,7 +77,94 @@ export const themeComponents = {
         };
       }
 
-      // Selection variants - larger styling for prominent choices
+      // Setup Condition variants - for setup steps with fulfillment indicators
+      if (params.variant === 'setupCondition--active') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.secondary[100],
+            border: `1px solid ${colors.primary[500]}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.secondary[200],
+              borderColor: colors.primary[600],
+            },
+          },
+        };
+      }
+
+      if (params.variant === 'setupCondition--fulfilled') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.white,
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.gray[50],
+              borderColor: colors.border.medium,
+            },
+          },
+        };
+      }
+
+      if (params.variant === 'setupCondition--unfulfilled') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.white,
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.gray[50],
+              borderColor: colors.border.medium,
+            },
+          },
+        };
+      }
+
+      // Button Panel variants - for navigation/action panels with carets
+      if (params.variant === 'buttonPanel--active') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.secondary[100],
+            border: `1px solid ${colors.primary[500]}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.secondary[200],
+              borderColor: colors.primary[600],
+            },
+          },
+        };
+      }
+
+      if (params.variant === 'buttonPanel--inactive') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.white,
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+              backgroundColor: colors.gray[50],
+              borderColor: colors.border.medium,
+            },
+          },
+        };
+      }
+
+      // Legacy selection variants - kept for backward compatibility
       if (params.variant === 'selection--active') {
         return {
           root: {

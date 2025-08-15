@@ -1,8 +1,18 @@
-import { Card, Container, Divider, Stack, Text, Title } from '@mantine/core';
+import { Card, Container, Divider, Stack, Text, Title, Group } from '@mantine/core';
+import { IconCheck, IconChevronRight } from '@tabler/icons-react';
 import { spacing } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
-interface SelectionCard {
+interface SetupConditionCard {
+  title: string;
+  description: string;
+  onClick: () => void;
+  isSelected?: boolean;
+  isDisabled?: boolean;
+  isFulfilled?: boolean; // New property to track if the condition is satisfied
+}
+
+interface ButtonPanelCard {
   title: string;
   description: string;
   onClick: () => void;
@@ -21,13 +31,16 @@ interface CardListItem {
 interface FlowViewProps {
   title: string;
   subtitle?: string;
-  variant?: 'selection' | 'cardList';
+  variant?: 'setupConditions' | 'buttonPanel' | 'cardList';
 
   // Content props for different variants
   content?: React.ReactNode;
 
-  // Selection variant props
-  selectionCards?: SelectionCard[];
+  // Setup conditions variant props
+  setupConditionCards?: SetupConditionCard[];
+
+  // Button panel variant props
+  buttonPanelCards?: ButtonPanelCard[];
 
   // Card list variant props
   cardListItems?: CardListItem[];
@@ -61,7 +74,8 @@ export default function FlowView({
   cancelAction,
   buttonPreset,
   content,
-  selectionCards,
+  setupConditionCards,
+  buttonPanelCards,
   cardListItems,
 }: FlowViewProps) {
   // Generate buttons from convenience props if explicit buttons not provided
@@ -113,23 +127,75 @@ export default function FlowView({
 
   const renderContent = () => {
     switch (variant) {
-      case 'selection':
+      case 'setupConditions':
         return (
           <Stack>
-            {selectionCards?.map((card: SelectionCard, index: number) => (
+            {setupConditionCards?.map((card: SetupConditionCard, index: number) => (
               <Card
                 key={index}
                 withBorder
                 component="button"
                 onClick={card.onClick}
                 disabled={card.isDisabled}
-                variant={card.isSelected ? 'selection--active' : 'selection--inactive'}
+                variant={
+                  card.isSelected
+                    ? 'setupCondition--active'
+                    : card.isFulfilled
+                    ? 'setupCondition--fulfilled'
+                    : 'setupCondition--unfulfilled'
+                }
               >
-                <Text fw={700}>TODO: ICON</Text>
-                <Text>{card.title}</Text>
-                <Text size="sm" c="dimmed">
-                  {card.description}
-                </Text>
+                <Group gap={spacing.sm} align="flex-start">
+                  {card.isFulfilled && (
+                    <IconCheck
+                      size={20}
+                      style={{ 
+                        color: 'var(--mantine-color-primary-6)',
+                        marginTop: '2px',
+                        flexShrink: 0
+                      }}
+                    />
+                  )}
+                  <Stack gap={spacing.xs} style={{ flex: 1 }}>
+                    <Text fw={700}>{card.title}</Text>
+                    <Text size="sm" c="dimmed">
+                      {card.description}
+                    </Text>
+                  </Stack>
+                </Group>
+              </Card>
+            ))}
+          </Stack>
+        );
+
+      case 'buttonPanel':
+        return (
+          <Stack>
+            {buttonPanelCards?.map((card: ButtonPanelCard, index: number) => (
+              <Card
+                key={index}
+                withBorder
+                component="button"
+                onClick={card.onClick}
+                disabled={card.isDisabled}
+                variant={card.isSelected ? 'buttonPanel--active' : 'buttonPanel--inactive'}
+              >
+                <Group justify="space-between" align="flex-start">
+                  <Stack gap={spacing.xs} style={{ flex: 1 }}>
+                    <Text fw={700}>{card.title}</Text>
+                    <Text size="sm" c="dimmed">
+                      {card.description}
+                    </Text>
+                  </Stack>
+                  <IconChevronRight
+                    size={20}
+                    style={{ 
+                      color: 'var(--mantine-color-gray-6)',
+                      marginTop: '2px',
+                      flexShrink: 0
+                    }}
+                  />
+                </Group>
               </Card>
             ))}
           </Stack>

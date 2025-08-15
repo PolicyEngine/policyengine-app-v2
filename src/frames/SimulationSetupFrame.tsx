@@ -42,26 +42,25 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
 
-  // TODO: May consider moving to an explicit "isCreated" state entry
-  const selectionCards = [
+  const setupConditionCards = [
     {
-      title: population && population.isCreated ? population.label || '' : 'Add population',
+      title: population && population.isCreated ? population.label || '' : 'Add Population',
       description:
         population && population.isCreated
           ? population.label || ''
           : 'Select a geographic scope or specific household',
       onClick: population && population.isCreated ? () => {} : handlePopulationSelect,
-      isSelected: population && population.isCreated,
+      isFulfilled: population && population.isCreated,
       isDisabled: false,
     },
     {
-      title: policy && policy.isCreated ? policy.label || '' : 'Add policy',
+      title: policy && policy.isCreated ? policy.label || '' : 'Add Policy',
       description:
         policy && policy.isCreated
           ? policy.label || ''
           : 'Select a policy to apply to the simulation',
       onClick: policy && policy.isCreated ? () => {} : handlePolicySelect,
-      isSelected: policy && policy.isCreated,
+      isFulfilled: policy && policy.isCreated,
       isDisabled: false,
     },
   ];
@@ -75,8 +74,8 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   return (
     <FlowView
       title="Setup Simulation"
-      variant="selection"
-      selectionCards={selectionCards}
+      variant="setupConditions"
+      setupConditionCards={setupConditionCards}
       primaryAction={primaryAction}
     />
   );
