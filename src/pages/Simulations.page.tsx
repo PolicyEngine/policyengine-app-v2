@@ -1,4 +1,12 @@
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import {
+  BulletsValue,
+  ColumnConfig,
+  IngredientRecord,
+  LinkValue,
+  TextValue,
+} from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulation';
@@ -9,36 +17,130 @@ export default function SimulationsPage() {
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const dispatch = useDispatch();
 
-  const handleNavigateToCreate = () => {
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const handleBuildSimulation = () => {
     dispatch(setFlow(SimulationCreationFlow));
   };
 
-  const columns = [
-    { key: 'id', header: 'ID' } as const,
-    { key: 'population_id', header: 'Population' } as const,
-    { key: 'policy_id', header: 'Policy' } as const,
-    { key: 'country_id', header: 'Country' } as const,
-    { key: 'api_version', header: 'API Version' } as const,
+  const handleMoreFilters = () => {
+    // TODO: Implement more filters modal/dropdown
+    console.log('More filters clicked');
+  };
+
+  const handleMenuAction = (action: string, recordId: string) => {
+    switch (action) {
+      case 'add-to-report':
+        // TODO: Implement add to report functionality
+        console.log('Add to report:', recordId);
+        break;
+      case 'delete':
+        // TODO: Implement delete functionality
+        console.log('Delete simulation:', recordId);
+        break;
+      default:
+        console.log('Unknown action:', action);
+    }
+  };
+
+  const handleSelectionChange = (recordId: string, selected: boolean) => {
+    setSelectedIds((prev) =>
+      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
+    );
+  };
+
+  const isSelected = (recordId: string) => selectedIds.includes(recordId);
+
+  // Define column configurations for simulations
+  const simulationColumns: ColumnConfig[] = [
+    {
+      key: 'simulation',
+      header: 'Simulation',
+      type: 'text',
+    },
+    {
+      key: 'dateCreated',
+      header: 'Date Created',
+      type: 'text',
+    },
+    {
+      key: 'policy',
+      header: 'Policy',
+      type: 'text',
+    },
+    {
+      key: 'population',
+      header: 'Population',
+      type: 'link',
+    },
+    {
+      key: 'connected',
+      header: 'Connected',
+      type: 'bullets',
+      items: [
+        {
+          textKey: 'text',
+          badgeKey: 'badge',
+        },
+      ],
+    },
+    {
+      key: 'actions',
+      header: '',
+      type: 'split-menu',
+      actions: [
+        { label: 'Add to Report', action: 'add-to-report' },
+        { label: 'Delete', action: 'delete', color: 'red' },
+      ],
+      onAction: handleMenuAction,
+    },
   ];
 
-  const tableData =
+  // Transform the data to match the new structure
+  const transformedData: IngredientRecord[] =
     data?.map((item) => ({
       id: item.association.simulationId,
-      population_id: item.simulation?.population_id || 'Unknown',
-      policy_id: item.simulation?.policy_id || 'Unknown',
-      country_id: item.simulation?.country_id || 'Unknown',
-      api_version: item.simulation?.api_version || 'Unknown',
+      simulation: {
+        text: `Simulation #${item.association.simulationId}`,
+      } as TextValue,
+      dateCreated: {
+        text: 'Just now', // TODO: Format actual date from item data
+      } as TextValue,
+      policy: {
+        text: 'Policy Name\n7 Provisions', // TODO: Get actual policy data
+      } as TextValue,
+      population: {
+        text: item.simulation?.population_id || 'Unknown',
+        url: `#${item.simulation?.population_id || 'unknown'}`,
+      } as LinkValue,
+      connected: {
+        items: [
+          {
+            text: 'Report Title',
+            badge: 1,
+          },
+        ],
+      } as BulletsValue,
     })) || [];
 
   return (
     <IngredientReadView
+      ingredient="simulation"
       title="Simulations"
-      onCreate={handleNavigateToCreate}
+      subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
+      onBuild={handleBuildSimulation}
       isLoading={isLoading}
       isError={isError}
       error={error}
-      data={tableData || []}
-      columns={columns}
+      data={transformedData}
+      columns={simulationColumns}
+      searchValue={searchValue}
+      onSearchChange={setSearchValue}
+      onMoreFilters={handleMoreFilters}
+      enableSelection
+      isSelected={isSelected}
+      onSelectionChange={handleSelectionChange}
     />
   );
 }
