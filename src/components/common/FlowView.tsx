@@ -1,5 +1,5 @@
-import { Card, Container, Divider, Stack, Text, Title, Group } from '@mantine/core';
 import { IconCheck, IconChevronRight } from '@tabler/icons-react';
+import { Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
@@ -141,18 +141,18 @@ export default function FlowView({
                   card.isSelected
                     ? 'setupCondition--active'
                     : card.isFulfilled
-                    ? 'setupCondition--fulfilled'
-                    : 'setupCondition--unfulfilled'
+                      ? 'setupCondition--fulfilled'
+                      : 'setupCondition--unfulfilled'
                 }
               >
                 <Group gap={spacing.sm} align="center">
                   {card.isFulfilled && (
                     <IconCheck
                       size={20}
-                      style={{ 
+                      style={{
                         color: 'var(--mantine-color-primary-6)',
                         marginTop: '2px',
-                        flexShrink: 0
+                        flexShrink: 0,
                       }}
                     />
                   )}
@@ -189,10 +189,10 @@ export default function FlowView({
                   </Stack>
                   <IconChevronRight
                     size={20}
-                    style={{ 
+                    style={{
                       color: 'var(--mantine-color-gray-6)',
                       marginTop: '2px',
-                      flexShrink: 0
+                      flexShrink: 0,
                     }}
                   />
                 </Group>

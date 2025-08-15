@@ -54,7 +54,10 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   const setupConditionCards = [
     {
-      title: population && population.isCreated ? population.label || `Population #${population.id}` : 'Add Population',
+      title:
+        population && population.isCreated
+          ? population.label || `Population #${population.id}`
+          : 'Add Population',
       description:
         population && population.isCreated
           ? population.label || ''
@@ -97,13 +100,12 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
         onClick: handleNext,
         isDisabled: false,
       };
-    } else {
-      return {
-        label: 'Next',
-        onClick: handleNext,
-        isDisabled: true,
-      };
     }
+    return {
+      label: 'Next',
+      onClick: handleNext,
+      isDisabled: true,
+    };
   };
 
   const primaryAction = getPrimaryAction();
