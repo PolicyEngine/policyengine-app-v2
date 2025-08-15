@@ -21,15 +21,15 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
     }
   }
 
-  const selectionCards = [
+  const buttonPanelCards = [
     {
-      title: 'Load existing policy',
+      title: 'Load Existing Policy',
       description: 'Use a policy you have already created',
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
     },
     {
-      title: 'Create new policy',
+      title: 'Create New Policy',
       description: 'Build a new policy',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
@@ -45,8 +45,8 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
   return (
     <FlowView
       title="Select Policy"
-      variant="selection"
-      selectionCards={selectionCards}
+      variant="buttonPanel"
+      buttonPanelCards={buttonPanelCards}
       primaryAction={primaryAction}
     />
   );
