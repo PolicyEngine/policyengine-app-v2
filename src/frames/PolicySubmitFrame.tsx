@@ -10,7 +10,6 @@ import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/p
 import { formatDate } from '@/utils/dateFormatter';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
-  const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.params);
   const dispatch = useDispatch();
   const { resetIngredient } = useIngredientReset();
@@ -57,7 +56,7 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
 
         return {
           label: param.name, // Parameter name
-          dateIntervals: dateIntervals
+          dateIntervals 
         } as TextListSubItem;
       })
     }

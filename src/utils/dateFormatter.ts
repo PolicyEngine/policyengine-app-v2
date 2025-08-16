@@ -16,7 +16,7 @@ export type DateFormatType =
  */
 export function formatDate(dateStr: string, formatType: DateFormatType): string {
   // Ensure UTC interpretation by appending timezone
-  const date = new Date(dateStr + 'T00:00:00.000Z');
+  const date = new Date(`${dateStr}T00:00:00.000Z`);
   
   const formatOptions = getFormatOptions(formatType);
   
