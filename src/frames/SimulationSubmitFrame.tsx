@@ -1,6 +1,5 @@
 import { useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
@@ -13,6 +12,8 @@ import {
 
 export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const simulation: Simulation = useSelector((state: RootState) => state.simulation);
+  const policy = useSelector((state: RootState) => state.policy);
+  const population = useSelector((state: RootState) => state.population);
   const { createSimulation, isPending } = useCreateSimulation();
   const { resetIngredient } = useIngredientReset();
 
@@ -31,18 +32,30 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
     });
   }
 
-  const content = (
-    <Stack>
-      <Text>Population ID: {simulation.populationId}</Text>
-      <Text>Policy ID: {simulation.policyId}</Text>
-    </Stack>
+  // Create summary boxes based on the current simulation state
+  const summaryBoxes: SummaryBoxItem[] = [
+    {
+      title: "Population Added",
+      description: population.label || `Household #${simulation.populationId}`,
+      isFulfilled: !!simulation.populationId,
+      badge: population.label || `Household #${simulation.populationId}`,
+    },
+    {
+      title: "Policy Reform Added", 
+      description: policy.label || `Detail 1`,
+      isFulfilled: !!simulation.policyId,
+      badge: policy.label || `Detail 1`,
+    }
+  ];
+
+  return (
+    <IngredientSubmissionView
+      title="Summary of Selections"
+      subtitle="Review your configurations and add additional criteria before running your simulation."
+      summaryBoxes={summaryBoxes}
+      submitButtonText="Save Simulation"
+      submissionHandler={handleSubmit}
+      submitButtonLoading={isPending}
+    />
   );
-
-  const primaryAction = {
-    label: 'Submit',
-    onClick: handleSubmit,
-    isLoading: isPending,
-  };
-
-  return <FlowView title="Review simulation" content={content} primaryAction={primaryAction} />;
 }
