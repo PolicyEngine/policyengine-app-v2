@@ -42,9 +42,9 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
     },
     {
       title: "Policy Reform Added", 
-      description: policy.label || `Detail 1`,
+      description: policy.label || `Policy #${simulation.policyId}`,
       isFulfilled: !!simulation.policyId,
-      badge: policy.label || `Detail 1`,
+      badge: policy.label || `Policy #${simulation.policyId}`,
     }
   ];
 

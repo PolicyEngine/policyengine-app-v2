@@ -14,6 +14,18 @@ export interface SummaryBoxItem {
 export interface TextListItem {
   text: string;
   badge?: string | number;
+  isHeader?: boolean; // NEW: Mark as header for larger sizing
+  subItems?: TextListSubItem[]; // Optional hierarchical sub-items
+}
+
+export interface TextListSubItem {
+  label: string;
+  dateIntervals?: DateIntervalValue[]; // NEW: For date-based intervals
+}
+
+export interface DateIntervalValue {
+  dateRange: string;
+  value: string | number;
 }
 
 interface IngredientSubmissionViewProps {
@@ -98,21 +110,55 @@ export default function IngredientSubmissionView({
 
     if (textList && textList.length > 0) {
       return (
-        <Stack gap={spacing.xs}>
+        <Stack gap={spacing.md}>
           {textList.map((item, index) => (
-            <Group key={index} gap={spacing.xs} align="center">
-              <Text size="xs" c={colors.text.secondary}>
-                •
-              </Text>
-              <Text size="sm" style={{ flex: 1 }}>
-                {item.text}
-              </Text>
-              {item.badge && (
-                <Badge size="xs" variant="light" color="gray" radius={spacing.radius.sm}>
-                  {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
-                </Badge>
+            <Stack key={index} gap={spacing.xs}>
+              {/* Main item with optional header styling */}
+              <Group gap={spacing.xs} align="center">
+                <Text 
+                  size={item.isHeader ? "lg" : "sm"} 
+                  fw={item.isHeader ? 700 : 600} 
+                  style={{ flex: 1 }}
+                >
+                  {item.text}
+                </Text>
+                {item.badge && (
+                  <Badge size="xs" variant="light" color="gray" radius={spacing.radius.sm}>
+                    {typeof item.badge === 'number' ? `${item.badge}` : item.badge}
+                  </Badge>
+                )}
+              </Group>
+              
+              {/* Sub-items with parameter names and date intervals */}
+              {item.subItems && item.subItems.length > 0 && (
+                <Stack gap={spacing.md} ml={spacing.md}>
+                  {item.subItems.map((subItem, subIndex) => (
+                    <Stack key={subIndex} gap={spacing.xs}>
+                      {/* Parameter name */}
+                      <Text size="sm" fw={500}>
+                        {subItem.label}
+                      </Text>
+                      
+                      {/* Date intervals in two columns */}
+                      {subItem.dateIntervals && subItem.dateIntervals.length > 0 && (
+                        <Stack gap={spacing.xs} ml={spacing.sm}>
+                          {subItem.dateIntervals.map((interval, intervalIndex) => (
+                            <Group key={intervalIndex} gap={spacing.sm} align="center">
+                              <Text size="sm" c={colors.text.secondary} style={{ flex: 1 }}>
+                                {interval.dateRange}
+                              </Text>
+                              <Text size="sm">
+                                {interval.value}
+                              </Text>
+                            </Group>
+                          ))}
+                        </Stack>
+                      )}
+                    </Stack>
+                  ))}
+                </Stack>
               )}
-            </Group>
+            </Stack>
           ))}
         </Stack>
       );
@@ -142,3 +188,4 @@ export default function IngredientSubmissionView({
     </>
   );
 }
+
