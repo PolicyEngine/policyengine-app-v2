@@ -1,6 +1,6 @@
-import { Container, Divider, Stack, Title, Card, Group, Text, Badge } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
-import { spacing, colors } from '@/designTokens';
+import { Badge, Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
+import { colors, spacing } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // Interfaces for different content types
@@ -34,7 +34,7 @@ interface IngredientSubmissionViewProps {
   submitButtonText?: string; // Defaults to title
   submissionHandler: CallableFunction; // Function to handle form submission
   submitButtonLoading?: boolean;
-  
+
   // Content modes - only one should be provided
   content?: React.ReactNode; // Original free-form content
   summaryBoxes?: SummaryBoxItem[]; // Box-based formatting like in the image
@@ -75,7 +75,9 @@ export default function IngredientSubmissionView({
             <Card
               key={index}
               withBorder
-              variant={item.isFulfilled ? 'setupCondition--fulfilled' : 'setupCondition--unfulfilled'}
+              variant={
+                item.isFulfilled ? 'setupCondition--fulfilled' : 'setupCondition--unfulfilled'
+              }
             >
               <Group gap={spacing.sm} align="center">
                 {item.isFulfilled && (
@@ -115,9 +117,9 @@ export default function IngredientSubmissionView({
             <Stack key={index} gap={spacing.xs}>
               {/* Main item with optional header styling */}
               <Group gap={spacing.xs} align="center">
-                <Text 
-                  size={item.isHeader ? "lg" : "sm"} 
-                  fw={item.isHeader ? 700 : 600} 
+                <Text
+                  size={item.isHeader ? 'lg' : 'sm'}
+                  fw={item.isHeader ? 700 : 600}
                   style={{ flex: 1 }}
                 >
                   {item.text}
@@ -128,7 +130,7 @@ export default function IngredientSubmissionView({
                   </Badge>
                 )}
               </Group>
-              
+
               {/* Sub-items with parameter names and date intervals */}
               {item.subItems && item.subItems.length > 0 && (
                 <Stack gap={spacing.md} ml={spacing.md}>
@@ -138,7 +140,7 @@ export default function IngredientSubmissionView({
                       <Text size="sm" fw={500}>
                         {subItem.label}
                       </Text>
-                      
+
                       {/* Date intervals in two columns */}
                       {subItem.dateIntervals && subItem.dateIntervals.length > 0 && (
                         <Stack gap={spacing.xs} ml={spacing.sm}>
@@ -147,9 +149,7 @@ export default function IngredientSubmissionView({
                               <Text size="sm" c={colors.text.secondary} style={{ flex: 1 }}>
                                 {interval.dateRange}
                               </Text>
-                              <Text size="sm">
-                                {interval.value}
-                              </Text>
+                              <Text size="sm">{interval.value}</Text>
                             </Group>
                           ))}
                         </Stack>
@@ -188,4 +188,3 @@ export default function IngredientSubmissionView({
     </>
   );
 }
-

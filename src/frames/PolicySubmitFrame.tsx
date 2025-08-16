@@ -1,5 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
-import IngredientSubmissionView, { TextListItem, TextListSubItem, DateIntervalValue } from '@/components/IngredientSubmissionView';
+import IngredientSubmissionView, {
+  DateIntervalValue,
+  TextListItem,
+  TextListSubItem,
+} from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
@@ -46,20 +50,20 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
   // Create hierarchical provisions list with header and date intervals
   const provisions: TextListItem[] = [
     {
-      text: "Provision",
+      text: 'Provision',
       isHeader: true, // Use larger size for header
       subItems: params.map((param) => {
         const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
           dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-          value: valueInterval.value
+          value: valueInterval.value,
         }));
 
         return {
           label: param.name, // Parameter name
-          dateIntervals 
+          dateIntervals,
         } as TextListSubItem;
-      })
-    }
+      }),
+    },
   ];
 
   return (

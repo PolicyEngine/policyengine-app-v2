@@ -35,17 +35,17 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
   // Create summary boxes based on the current simulation state
   const summaryBoxes: SummaryBoxItem[] = [
     {
-      title: "Population Added",
+      title: 'Population Added',
       description: population.label || `Household #${simulation.populationId}`,
       isFulfilled: !!simulation.populationId,
       badge: population.label || `Household #${simulation.populationId}`,
     },
     {
-      title: "Policy Reform Added", 
+      title: 'Policy Reform Added',
       description: policy.label || `Policy #${simulation.policyId}`,
       isFulfilled: !!simulation.policyId,
       badge: policy.label || `Policy #${simulation.policyId}`,
-    }
+    },
   ];
 
   return (

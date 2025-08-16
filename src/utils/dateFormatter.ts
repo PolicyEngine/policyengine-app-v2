@@ -1,12 +1,12 @@
 /**
  * Date formatting types available for use across the application
  */
-export type DateFormatType = 
-  | 'short-month-day-year'  // e.g., "Jan 1, 2023"
-  | 'full-date'             // e.g., "January 1, 2023"
-  | 'numeric-date'          // e.g., "1/1/2023"
-  | 'iso-date'              // e.g., "2023-01-01"
-  | 'year-only';            // e.g., "2023"
+export type DateFormatType =
+  | 'short-month-day-year' // e.g., "Jan 1, 2023"
+  | 'full-date' // e.g., "January 1, 2023"
+  | 'numeric-date' // e.g., "1/1/2023"
+  | 'iso-date' // e.g., "2023-01-01"
+  | 'year-only'; // e.g., "2023"
 
 /**
  * Formats a date string using Intl.DateTimeFormat with UTC timezone
@@ -17,12 +17,12 @@ export type DateFormatType =
 export function formatDate(dateStr: string, formatType: DateFormatType): string {
   // Ensure UTC interpretation by appending timezone
   const date = new Date(`${dateStr}T00:00:00.000Z`);
-  
+
   const formatOptions = getFormatOptions(formatType);
-  
+
   return new Intl.DateTimeFormat('en-US', {
     ...formatOptions,
-    timeZone: 'UTC'
+    timeZone: 'UTC',
   }).format(date);
 }
 
@@ -37,35 +37,35 @@ function getFormatOptions(formatType: DateFormatType): Intl.DateTimeFormatOption
       return {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       };
     case 'full-date':
       return {
         year: 'numeric',
         month: 'long',
-        day: 'numeric'
+        day: 'numeric',
       };
     case 'numeric-date':
       return {
         year: 'numeric',
         month: 'numeric',
-        day: 'numeric'
+        day: 'numeric',
       };
     case 'iso-date':
       return {
         year: 'numeric',
         month: '2-digit',
-        day: '2-digit'
+        day: '2-digit',
       };
     case 'year-only':
       return {
-        year: 'numeric'
+        year: 'numeric',
       };
     default:
       return {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       };
   }
 }
