@@ -1,6 +1,9 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import IngredientSubmissionView, {
+  DateIntervalValue,
+  TextListItem,
+  TextListSubItem,
+} from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
@@ -8,9 +11,9 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/policy';
 import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
+import { formatDate } from '@/utils/dateFormatter';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
-  const label = useSelector((state: RootState) => state.policy.label);
   const params = useSelector((state: RootState) => state.policy.params);
   const dispatch = useDispatch();
   const { resetIngredient } = useIngredientReset();
@@ -37,18 +40,40 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
     });
   }
 
-  const content = (
-    <Stack>
-      <Text>Label: {label}</Text>
-      <Text>Params: {Object.keys(params).length} added</Text>
-    </Stack>
-  );
-
-  const primaryAction = {
-    label: 'Submit',
-    onClick: handleSubmit,
-    isLoading: isPending,
+  // Helper function to format date range string (UTC timezone-agnostic)
+  const formatDateRange = (startDate: string, endDate: string): string => {
+    const start = formatDate(startDate, 'short-month-day-year');
+    const end = endDate === '9999-12-31' ? 'Ongoing' : formatDate(endDate, 'short-month-day-year');
+    return `${start} - ${end}`;
   };
 
-  return <FlowView title="Review policy" content={content} primaryAction={primaryAction} />;
+  // Create hierarchical provisions list with header and date intervals
+  const provisions: TextListItem[] = [
+    {
+      text: 'Provision',
+      isHeader: true, // Use larger size for header
+      subItems: params.map((param) => {
+        const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
+          dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
+          value: valueInterval.value,
+        }));
+
+        return {
+          label: param.name, // Parameter name
+          dateIntervals,
+        } as TextListSubItem;
+      }),
+    },
+  ];
+
+  return (
+    <IngredientSubmissionView
+      title="Review Policy"
+      subtitle="Review your policy configurations before submitting."
+      textList={provisions}
+      submitButtonText="Submit Policy"
+      submissionHandler={handleSubmit}
+      submitButtonLoading={isPending}
+    />
+  );
 }
