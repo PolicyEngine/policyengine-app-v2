@@ -14,6 +14,7 @@ interface Population extends Household {
   isCreated: boolean;
   geographicScope: 'national' | 'state' | 'household' | '';
   region: string; //holds name value of selected region/state
+  geographicAssociationId: string | undefined;
 }
 
 const initialState: Population = {
@@ -26,6 +27,7 @@ const initialState: Population = {
   children: [],
   geographicScope: '',
   region: '',
+  geographicAssociationId: undefined,
 };
 
 export const populationSlice = createSlice({
@@ -42,6 +44,7 @@ export const populationSlice = createSlice({
       state.children = [];
       state.geographicScope = '';
       state.region = '';
+      state.geographicAssociationId = undefined;
     },
     updatePopulationId: (state, action: PayloadAction<string>) => {
       state.id = action.payload;
@@ -64,6 +67,9 @@ export const populationSlice = createSlice({
     updateChildInfo: (state, action: PayloadAction<ChildInfo[]>) => {
       state.children = action.payload;
     },
+    updateGeographicAssociationId: (state, action: PayloadAction<string>) => {
+      state.geographicAssociationId = action.payload;
+    },
   },
 });
 
@@ -76,6 +82,7 @@ export const {
   setRegion,
   updatePopulation,
   updateChildInfo,
+  updateGeographicAssociationId,
 } = populationSlice.actions;
 
 export default populationSlice.reducer;

@@ -19,3 +19,15 @@ export interface UserHouseholdAssociation {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface UserGeographicAssociation {
+  id: string; // Should we associate some kind of ID only for the app or not?
+  userId: string;
+  geographyType: 'national' | 'subnational';
+  geographyIdentifier: string; // e.g., 'us', 'us-california', 'uk-birmingham-edgbaston'
+  countryCode: string; // 'us', 'uk'
+  regionCode?: string; // 'california', 'birmingham-edgbaston' (only for subnational)
+  regionType?: 'state' | 'constituency'; // (only for subnational)
+  label: string; // 'United States', 'California', 'Birmingham Edgbaston'
+  createdAt: string;
+}
