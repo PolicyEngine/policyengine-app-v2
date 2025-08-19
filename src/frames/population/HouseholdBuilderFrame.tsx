@@ -3,7 +3,8 @@ import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { childOptions, maritalOptions, taxYears } from '@/mocks/householdOptions';
+import { getTaxYears } from '@/libs/metadataUtils';
+import { childOptions, maritalOptions } from '@/mocks/householdOptions';
 import {
   markPopulationAsCreated,
   updateChildInfo,
@@ -27,6 +28,12 @@ export default function HouseholdBuilderFrame({
   const household = useSelector((state: RootState) => state.population);
   const { createHousehold, isPending } = useCreateHousehold();
   const { resetIngredient } = useIngredientReset();
+
+  // Get tax years from Redux state using the utility
+  const taxYears = useSelector((state: RootState) => getTaxYears(state));
+
+  const { loading, error } = useSelector((state: RootState) => state.metadata);
+  const isMetadataLoaded = !loading && !error;
 
   // Generic updater for top-level household fields
   const handleChange = (field: string, value: string | number) => {
@@ -89,6 +96,8 @@ export default function HouseholdBuilderFrame({
         onChange={(val) => handleChange('taxYear', val || '')}
         data={taxYears}
         required
+        disabled={!isMetadataLoaded} // disables until metadata is available
+        placeholder={isMetadataLoaded ? undefined : 'Loading...'}
       />
 
       <Select
