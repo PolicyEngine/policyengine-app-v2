@@ -14,8 +14,10 @@ export interface HouseholdData {
   families: Record<string, MemberGroup>;
   tax_units: Record<string, MemberGroup>;
   spm_units: Record<string, MemberGroup>;
-  households: Record<string, MemberGroup & { state_name?: Record<string, string> }>; // TODO: Import state names as constants based on metadata
+  households: Record<string, MemberGroup & HouseholdProperties>;
   marital_units: Record<string, MemberGroup & { marital_unit_id?: Record<string, number> }>;
+  // UK-specific structure
+  benunits?: Record<string, MemberGroup & { is_married?: Record<string, boolean> }>;
 }
 
 export interface HouseholdPerson {
@@ -24,7 +26,20 @@ export interface HouseholdPerson {
   is_tax_unit_dependent?: Record<string, boolean>;
 }
 
-// TODO members could be enumerated?
 export interface MemberGroup {
   members: string[];
+}
+
+// Extended household properties to support dynamic fields
+export interface HouseholdProperties {
+  // US fields
+  state_name?: Record<string, string>;
+
+  // UK fields
+  brma?: Record<string, string>;
+  region?: Record<string, string>;
+  local_authority?: Record<string, string>;
+
+  // Allow for other dynamic fields based on basicInputs
+  [key: string]: Record<string, string | number | boolean> | string[] | undefined;
 }

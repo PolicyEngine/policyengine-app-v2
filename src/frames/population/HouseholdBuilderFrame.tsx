@@ -1,16 +1,26 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { Group, NumberInput, Select, Stack, Text } from '@mantine/core';
+import { Divider, Group, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { getTaxYears } from '@/libs/metadataUtils';
+import {
+  getBasicInputFields,
+  getFieldLabel,
+  getFieldOptions,
+  getTaxYears,
+  isDropdownField,
+} from '@/libs/metadataUtils';
 import { childOptions, maritalOptions } from '@/mocks/householdOptions';
 import {
   markPopulationAsCreated,
+  updateAdultInfo,
   updateChildInfo,
-  updatePopulation,
+  updateHouseholdInfo,
+  updateMaritalStatus,
+  updateNumChildren,
   updatePopulationId,
   updatePopulationLabel,
+  updateTaxYear,
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -29,29 +39,70 @@ export default function HouseholdBuilderFrame({
   const { createHousehold, isPending } = useCreateHousehold();
   const { resetIngredient } = useIngredientReset();
 
-  // Get tax years from Redux state using the utility
-  const taxYears = useSelector((state: RootState) => getTaxYears(state));
+  // Get metadata-driven options
+  const taxYears = useSelector(getTaxYears);
+  const basicInputFields = useSelector(getBasicInputFields);
 
   const { loading, error } = useSelector((state: RootState) => state.metadata);
   const isMetadataLoaded = !loading && !error;
 
-  // Generic updater for top-level household fields
-  const handleChange = (field: string, value: string | number) => {
-    dispatch(updatePopulation({ [field]: value }));
+  // Get field options for all household fields at once
+  const fieldOptionsMap = useSelector((state: RootState) => {
+    const options: Record<string, Array<{ value: string; label: string }>> = {};
+    basicInputFields.household.forEach((field) => {
+      if (isDropdownField(field)) {
+        options[field] = getFieldOptions(state, field);
+      }
+    });
+    return options;
+  });
+
+  // Handlers for core fields
+  const handleTaxYearChange = (value: string | null) => {
+    dispatch(updateTaxYear(value || ''));
   };
 
-  // Handle number of children change
-  const handleNumChildrenChange = (val: string) => {
-    const count = parseInt(val || '0', 10);
-    handleChange('numChildren', count);
-    dispatch(updateChildInfo(Array.from({ length: count }, () => ({ age: '', income: '' }))));
+  const handleMaritalStatusChange = (value: string | null) => {
+    dispatch(updateMaritalStatus((value || 'single') as 'single' | 'married'));
   };
 
-  // Handle changes to a specific child
-  const handleChildChange = (index: number, field: 'age' | 'income', value: string) => {
-    const updated = [...household.children];
-    updated[index] = { ...updated[index], [field]: value };
-    dispatch(updateChildInfo(updated));
+  const handleNumChildrenChange = (value: string | null) => {
+    const count = parseInt(value || '0', 10);
+    dispatch(updateNumChildren(count));
+  };
+
+  // Handlers for household-level fields
+  const handleHouseholdFieldChange = (field: string, value: string | null) => {
+    dispatch(updateHouseholdInfo({ field, value: value || '' }));
+  };
+
+  // Handlers for person-level fields
+  const handleAdultChange = (
+    person: 'primary' | 'spouse',
+    field: 'age' | 'employment_income',
+    value: number | string
+  ) => {
+    dispatch(
+      updateAdultInfo({
+        person,
+        field,
+        value: value?.toString() || '',
+      })
+    );
+  };
+
+  const handleChildChange = (
+    index: number,
+    field: 'age' | 'employment_income',
+    value: number | string
+  ) => {
+    dispatch(
+      updateChildInfo({
+        index,
+        field,
+        value: value?.toString() || '',
+      })
+    );
   };
 
   const handleSubmit = async () => {
@@ -84,60 +135,214 @@ export default function HouseholdBuilderFrame({
     }
   };
 
-  const formInputs = (
-    <Stack gap="md">
-      <Text fw={600} fz="lg">
-        Household Info
-      </Text>
+  // Render household-level fields dynamically
+  const renderHouseholdFields = () => {
+    if (!basicInputFields.household.length) {
+      return null;
+    }
 
-      <Select
-        label="Tax Year"
-        value={household.taxYear}
-        onChange={(val) => handleChange('taxYear', val || '')}
-        data={taxYears}
-        required
-        disabled={!isMetadataLoaded} // disables until metadata is available
-        placeholder={isMetadataLoaded ? undefined : 'Loading...'}
-      />
+    return (
+      <Stack gap="xs">
+        <Text fw={500} size="sm" c="dimmed">
+          Location & Geographic Information
+        </Text>
+        {basicInputFields.household.map((field) => {
+          const isDropdown = isDropdownField(field);
+          const fieldLabel = getFieldLabel(field);
+          const fieldValue = household.householdInfo[field] || '';
 
-      <Select
-        label="Marital Status"
-        value={household.maritalStatus}
-        onChange={(val) => handleChange('maritalStatus', val || '')}
-        data={maritalOptions}
-        required
-      />
+          if (isDropdown) {
+            const options = fieldOptionsMap[field] || [];
+            return (
+              <Select
+                key={field}
+                label={fieldLabel}
+                value={fieldValue}
+                onChange={(val) => handleHouseholdFieldChange(field, val)}
+                data={options}
+                disabled={!isMetadataLoaded}
+                placeholder={isMetadataLoaded ? `Select ${fieldLabel}` : 'Loading...'}
+              />
+            );
+          }
+          return (
+            <TextInput
+              key={field}
+              label={fieldLabel}
+              value={fieldValue}
+              onChange={(e) => handleHouseholdFieldChange(field, e.target.value)}
+              disabled={!isMetadataLoaded}
+            />
+          );
+        })}
+      </Stack>
+    );
+  };
 
-      <Select
-        label="Number of Children"
-        value={household.numChildren.toString()}
-        onChange={(val) => handleNumChildrenChange(val || '0')}
-        data={childOptions}
-        required
-      />
+  // Render person-level fields for adults
+  const renderAdultFields = () => {
+    return (
+      <Stack gap="xs">
+        <Text fw={500} size="sm" c="dimmed">
+          Adult Information
+        </Text>
 
-      {household.children.map((child, idx) => (
-        <Stack key={idx} gap="xs">
-          <Text fw={500}>Child {idx + 1}</Text>
+        {/* Primary Adult */}
+        <Stack gap="xs">
+          <Text fw={500}>You</Text>
           <Group grow>
             <NumberInput
               label="Age"
-              value={child.age ? parseInt(child.age, 10) : undefined}
-              onChange={(val) => handleChildChange(idx, 'age', val?.toString() || '')}
+              value={
+                household.adults.primary.age
+                  ? parseInt(household.adults.primary.age, 10)
+                  : undefined
+              }
+              onChange={(val) => handleAdultChange('primary', 'age', val || '')}
               min={0}
-              max={25}
+              max={120}
               required
             />
             <NumberInput
               label="Employment Income"
-              value={child.income ? parseFloat(child.income) : undefined}
-              onChange={(val) => handleChildChange(idx, 'income', val?.toString() || '')}
+              value={
+                household.adults.primary.employment_income
+                  ? parseFloat(household.adults.primary.employment_income)
+                  : undefined
+              }
+              onChange={(val) => handleAdultChange('primary', 'employment_income', val || '')}
               min={0}
               required
             />
           </Group>
         </Stack>
-      ))}
+
+        {/* Spouse (if married) */}
+        {household.maritalStatus === 'married' && (
+          <Stack gap="xs">
+            <Text fw={500}>Your Partner</Text>
+            <Group grow>
+              <NumberInput
+                label="Age"
+                value={
+                  household.adults.spouse?.age
+                    ? parseInt(household.adults.spouse.age, 10)
+                    : undefined
+                }
+                onChange={(val) => handleAdultChange('spouse', 'age', val || '')}
+                min={0}
+                max={120}
+                required
+              />
+              <NumberInput
+                label="Employment Income"
+                value={
+                  household.adults.spouse?.employment_income
+                    ? parseFloat(household.adults.spouse.employment_income)
+                    : undefined
+                }
+                onChange={(val) => handleAdultChange('spouse', 'employment_income', val || '')}
+                min={0}
+                required
+              />
+            </Group>
+          </Stack>
+        )}
+      </Stack>
+    );
+  };
+
+  // Render children fields
+  const renderChildrenFields = () => {
+    if (household.numChildren === 0) {
+      return null;
+    }
+
+    return (
+      <Stack gap="xs">
+        <Text fw={500} size="sm" c="dimmed">
+          Children Information
+        </Text>
+        {household.children.map((child, idx) => (
+          <Stack key={idx} gap="xs">
+            <Text fw={500}>Child {idx + 1}</Text>
+            <Group grow>
+              <NumberInput
+                label="Age"
+                value={child.age ? parseInt(child.age, 10) : undefined}
+                onChange={(val) => handleChildChange(idx, 'age', val || '')}
+                min={0}
+                max={25}
+                required
+              />
+              <NumberInput
+                label="Employment Income"
+                value={child.employment_income ? parseFloat(child.employment_income) : undefined}
+                onChange={(val) => handleChildChange(idx, 'employment_income', val || '')}
+                min={0}
+                required
+              />
+            </Group>
+          </Stack>
+        ))}
+      </Stack>
+    );
+  };
+
+  const formInputs = (
+    <Stack gap="lg">
+      <Text fw={600} fz="lg">
+        Household Information
+      </Text>
+
+      {/* Core household settings */}
+      <Stack gap="md">
+        <Select
+          label="Tax Year"
+          value={household.taxYear}
+          onChange={handleTaxYearChange}
+          data={taxYears}
+          required
+          disabled={!isMetadataLoaded}
+          placeholder={isMetadataLoaded ? undefined : 'Loading...'}
+        />
+
+        <Select
+          label="Marital Status"
+          value={household.maritalStatus}
+          onChange={handleMaritalStatusChange}
+          data={maritalOptions}
+          required
+        />
+
+        <Select
+          label="Number of Children"
+          value={household.numChildren.toString()}
+          onChange={handleNumChildrenChange}
+          data={childOptions}
+          required
+        />
+      </Stack>
+
+      {/* Dynamic household-level fields */}
+      {renderHouseholdFields() && (
+        <>
+          <Divider />
+          {renderHouseholdFields()}
+        </>
+      )}
+
+      {/* Adult information */}
+      <Divider />
+      {renderAdultFields()}
+
+      {/* Children information */}
+      {household.numChildren > 0 && (
+        <>
+          <Divider />
+          {renderChildrenFields()}
+        </>
+      )}
     </Stack>
   );
 
