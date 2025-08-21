@@ -1,34 +1,89 @@
-# Mantine Vite template
+# PolicyEngine app v2
 
-## Features
+A modern web application for policy analysis and simulation, built with React, TypeScript, and Mantine.
 
-This template comes with the following features:
+## Getting started
 
-- [PostCSS](https://postcss.org/) with [mantine-postcss-preset](https://mantine.dev/styles/postcss-preset)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Storybook](https://storybook.js.org/)
-- [Vitest](https://vitest.dev/) setup with [React Testing Library](https://testing-library.com/docs/react-testing-library/intro)
-- ESLint setup with [eslint-config-mantine](https://github.com/mantinedev/eslint-config-mantine)
+### Prerequisites
 
-## npm scripts
+- Node.js 20 or higher
+- npm
 
-## Build and dev scripts
+### Installation
 
-- `dev` – start development server
-- `build` – build production version of the app
-- `preview` – locally preview production build
+```bash
+make install
+```
 
-### Testing scripts
+### Development
 
-- `typecheck` – checks TypeScript types
-- `lint` – runs ESLint
-- `prettier:check` – checks files with Prettier
-- `vitest` – runs vitest tests
-- `vitest:watch` – starts vitest watch
-- `test` – runs `vitest`, `prettier:check`, `lint` and `typecheck` scripts
+Start the development server:
 
-### Other scripts
+```bash
+make dev
+```
 
-- `storybook` – starts storybook dev server
-- `storybook:build` – build production storybook bundle to `storybook-static`
-- `prettier:write` – formats all files with Prettier
+The application will be available at http://localhost:5173
+
+### Building
+
+Build for production:
+
+```bash
+make build
+```
+
+### Testing
+
+Run tests:
+
+```bash
+make test
+```
+
+Run linters:
+
+```bash
+make lint
+```
+
+Format code:
+
+```bash
+make format
+```
+
+## Project structure
+
+```
+.
+├── app/                  # Main application code
+│   ├── src/             # Source files
+│   ├── public/          # Static assets
+│   └── package.json     # Dependencies
+├── .github/             # GitHub Actions workflows
+└── Makefile            # Build commands
+```
+
+## Deployment
+
+The application automatically deploys to GitHub Pages when changes are pushed to the main branch.
+
+## Development workflow
+
+1. Create a new branch from main
+2. Make your changes
+3. Run tests and linting: `make test && make lint`
+4. Create a pull request
+5. Once approved and merged, changes deploy automatically
+
+## Technologies
+
+- React 19
+- TypeScript
+- Mantine UI
+- Vite
+- Redux Toolkit
+- React Query
+- React Router
+- Plotly.js for visualisations
