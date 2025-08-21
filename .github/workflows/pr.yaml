@@ -7,8 +7,8 @@ on:
       - master
 
 jobs:
-  test-and-build:
-    name: Build and test
+  lint:
+    name: Lint and format
     runs-on: ubuntu-latest
     
     defaults:
@@ -29,17 +29,86 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Run type checks
-        run: npm run typecheck
-
-      - name: Check formatting
+      - name: Check formatting with Prettier
         run: npm run prettier
 
-      - name: Run linter
-        run: npm run lint
+      - name: Run ESLint
+        run: npm run eslint
+
+      - name: Run Stylelint
+        run: npm run stylelint
+
+  typecheck:
+    name: Type checking
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript type checks
+        run: npm run typecheck
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Run tests
         run: npm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    
+    defaults:
+      run:
+        working-directory: ./app
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: app/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build application
         run: npm run build
