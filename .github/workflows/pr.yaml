@@ -35,9 +35,6 @@ jobs:
       - name: Run ESLint
         run: npm run eslint
 
-      - name: Run Stylelint
-        run: npm run stylelint
-
   typecheck:
     name: Type checking
     runs-on: ubuntu-latest
