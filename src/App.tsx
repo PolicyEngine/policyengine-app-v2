@@ -1,3 +1,4 @@
+import { Embed } from "./components/Embed/Embed";
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 
@@ -13,9 +14,11 @@ const queryClient = new QueryClient();
 
 export default function App() {
   return (
+    
     <Provider store={store}>
       <MantineProvider theme={policyEngineTheme}>
         <QueryClientProvider client={queryClient}>
+
           <Router />
           <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
