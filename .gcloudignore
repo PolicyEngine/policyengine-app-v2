@@ -1,8 +1,0 @@
-# This file specifies files that are *not* uploaded to Google Cloud
-# Only upload app.yaml and the built dist/ directory
-
-# Exclude ALL source and config files
-*
-!app.yaml
-!dist/
-!dist/**
