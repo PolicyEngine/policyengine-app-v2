@@ -1,7 +1,7 @@
 import { Dispatch } from '@reduxjs/toolkit';
 import { addPolicyParam } from '@/reducers/policyReducer';
 import { PolicyAdapter, convertPolicyJsonToParameters } from '@/adapters';
-import { PolicyMetadata } from '@/types/policyMetadata';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 
 /**
  * Bulk loads policy parameters from PolicyMetadata.policy_json into the Redux store

@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Parameter, ValueInterval } from '@/types/ingredients/Policy';
-import { ValueIntervalCollection } from '@/types/valueInterval';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 export interface PolicyParamAdditionPayload {
   name: string;

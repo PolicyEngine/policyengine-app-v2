@@ -1,4 +1,4 @@
-import { Policy } from './policy';
+import { Policy } from '../ingredients/Policy';
 import { ValueInterval } from './valueInterval';
 
 export interface Parameter {

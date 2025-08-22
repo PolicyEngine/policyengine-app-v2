@@ -11,7 +11,7 @@ import {
   updatePolicyId,
 } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
-import { PolicyMetadata } from '@/types/policyMetadata';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic

@@ -1,5 +1,5 @@
 import { countryIds } from '@/libs/countries';
-import { Parameter } from '@/types/parameter';
+import { Parameter } from '@/types/subIngredients/parameter';
 
 /**
  * Base Policy type containing only immutable values sent to the API

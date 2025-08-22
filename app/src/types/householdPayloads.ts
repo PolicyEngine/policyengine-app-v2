@@ -1,5 +1,7 @@
+
+// TODO: Verify that ModernHousehold is the right type and not Household
 import { ModernHousehold } from './household';
-import { HouseholdData } from './householdMetadata';
+import { HouseholdData } from './metadata/householdMetadata';
 
 // Models the POST household api payload
 export interface HouseholdCreationPayload {

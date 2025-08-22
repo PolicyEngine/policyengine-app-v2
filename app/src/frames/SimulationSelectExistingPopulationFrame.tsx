@@ -11,7 +11,7 @@ import {
   updatePopulationLabel,
 } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
-import { HouseholdMetadata } from '@/types/householdMetadata';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 
 export default function SimulationSelectExistingPopulationFrame({

@@ -1,5 +1,5 @@
 import { BASE_URL } from '@/constants';
-import { HouseholdMetadata } from '@/types/householdMetadata';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/householdPayloads';
 
 export async function fetchHouseholdById(

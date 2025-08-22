@@ -1,4 +1,4 @@
-import { ParameterMetadataCollection } from '@/types/parameterMetadata';
+import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
 
 export const mockParamMetadata: { parameters: ParameterMetadataCollection } = {
   parameters: {

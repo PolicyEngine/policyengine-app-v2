@@ -3,8 +3,8 @@ import { Container, Text, Title } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
 import { Parameter } from '@/types/ingredients/Policy';
-import { ParameterMetadata } from '@/types/parameterMetadata';
-import { ValueIntervalCollection, ValuesList } from '@/types/valueInterval';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 
 /* TODO:
 - Implement reset functionality

@@ -8,7 +8,7 @@ import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { ParameterMetadata } from '@/types/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 
 export default function PolicyParameterSelectorFrame({
   onNavigate,

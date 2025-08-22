@@ -1,5 +1,5 @@
 import { Simulation } from '@/types/ingredients';
-import { SimulationMetadata } from '@/types/simulationMetadata';
+import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 
 /**
  * Adapter for converting between Simulation and API formats

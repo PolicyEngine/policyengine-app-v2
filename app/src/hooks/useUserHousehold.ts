@@ -3,7 +3,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { useSelector } from 'react-redux';
 import { fetchHouseholdById } from '@/api/household';
 import { RootState } from '@/store';
-import { HouseholdMetadata } from '@/types/householdMetadata';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';

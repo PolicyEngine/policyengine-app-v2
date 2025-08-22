@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { fetchSimulationById } from '@/api/simulation';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
-import { SimulationMetadata } from '@/types/simulationMetadata';
+import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { ApiSimulationStore, SessionStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys, simulationKeys } from '../libs/queryKeys';

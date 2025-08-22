@@ -1,5 +1,5 @@
 import { Parameter, ValueInterval } from '@/types/ingredients';
-import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/policyMetadata';
+import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
 
 /**
  * Converts PolicyMetadataParamValues (with "startDate.endDate" keys) into ValueInterval array

@@ -1,5 +1,5 @@
 import { Policy } from '@/types/ingredients';
-import { PolicyMetadata, PolicyMetadataParams } from '@/types/policyMetadata';
+import { PolicyMetadata, PolicyMetadataParams } from '@/types/metadata/policyMetadata';
 import { convertPolicyJsonToParameters, convertParametersToPolicyJson } from './conversionHelpers';
 
 /**

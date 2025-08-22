@@ -3,7 +3,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { useSelector } from 'react-redux';
 import { fetchPolicyById } from '@/api/policy';
 import { RootState } from '@/store';
-import { PolicyMetadata } from '@/types/policyMetadata';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';

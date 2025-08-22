@@ -19,8 +19,8 @@ import { DatePickerInput, YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
 import { addPolicyParam } from '@/reducers/policyReducer';
-import { ParameterMetadata } from '@/types/parameterMetadata';
-import { ValueInterval } from '@/types/valueInterval';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 enum ValueSetterMode {
   DEFAULT = 'default',
