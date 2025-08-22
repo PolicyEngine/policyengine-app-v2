@@ -13,7 +13,7 @@ export interface HouseholdInfo {
 // Updated Population type to support dynamic structure
 interface Population {
   id: string | undefined;
-  label: string | undefined;
+  label: string | null;
   isCreated: boolean;
 
   // Core household info
@@ -39,7 +39,7 @@ interface Population {
 
 const initialState: Population = {
   id: undefined,
-  label: undefined,
+  label: null,
   isCreated: false,
   taxYear: '',
   maritalStatus: 'single',
@@ -60,7 +60,7 @@ export const populationSlice = createSlice({
   reducers: {
     clearPopulation: (state) => {
       state.id = undefined;
-      state.label = undefined;
+      state.label = null;
       state.isCreated = false;
       state.taxYear = '';
       state.maritalStatus = 'single';

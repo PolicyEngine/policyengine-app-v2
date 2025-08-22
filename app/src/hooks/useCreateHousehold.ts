@@ -6,7 +6,7 @@ import { useCreateHouseholdAssociation } from './useUserHousehold';
 
 export function useCreateHousehold() {
   const queryClient = useQueryClient();
-  // const user = undefined; // TODO: Replace with actual user context or auth hook in future
+  const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateHouseholdAssociation();
 
   const mutation = useMutation({

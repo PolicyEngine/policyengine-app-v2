@@ -11,14 +11,14 @@ export interface PolicyParamAdditionPayload {
 // It doesn't extend the immutable Policy type but contains the fields we need
 interface PolicyState {
   id: string | undefined;
-  label: string | undefined;
+  label: string | null;
   params: Parameter[];
   isCreated: boolean;
 }
 
 const initialState: PolicyState = {
   id: undefined,
-  label: undefined,
+  label: null,
   params: [],
   isCreated: false,
 };
@@ -47,7 +47,7 @@ export const policySlice = createSlice({
     },
 
     clearPolicy: (state) => {
-      state.label = undefined;
+      state.label = null;
       state.params = [];
       state.isCreated = false;
       state.id = undefined;

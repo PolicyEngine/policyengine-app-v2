@@ -29,7 +29,6 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
   function handleSubmit() {
     const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
       policy as Policy,
-      policyState.label
     );
     console.log('serializedPolicyCreationPayload', serializedPolicyCreationPayload);
     createPolicy(serializedPolicyCreationPayload, {

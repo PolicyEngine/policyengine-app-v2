@@ -23,9 +23,8 @@ export class PolicyAdapter {
    * Converts Policy to format for API POST request
    * Note: API expects snake_case, but we handle that at the API layer
    */
-  static toCreationPayload(policy: Policy, label?: string): PolicyCreationPayload {
+  static toCreationPayload(policy: Policy): PolicyCreationPayload {
     return {
-      label,
       data: convertParametersToPolicyJson(policy.parameters),
     };
   }
