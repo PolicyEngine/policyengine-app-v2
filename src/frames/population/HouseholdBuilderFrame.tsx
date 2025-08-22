@@ -1,5 +1,15 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { Divider, Group, NumberInput, Select, Stack, Text, TextInput } from '@mantine/core';
+import {
+  Box,
+  Divider,
+  Group,
+  LoadingOverlay,
+  NumberInput,
+  Select,
+  Stack,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
@@ -45,6 +55,26 @@ export default function HouseholdBuilderFrame({
 
   const { loading, error } = useSelector((state: RootState) => state.metadata);
   const isMetadataLoaded = !loading && !error;
+
+  // Show error state if metadata failed to load
+  if (error) {
+    return (
+      <FlowView
+        title="Create Household"
+        content={
+          <Stack align="center" gap="md" p="xl">
+            <Text c="red" fw={600}>
+              Failed to Load Required Data
+            </Text>
+            <Text c="dimmed" ta="center">
+              Unable to load household configuration data. Please refresh the page and try again.
+            </Text>
+          </Stack>
+        }
+        buttonPreset="cancel-only"
+      />
+    );
+  }
 
   // Get field options for all household fields at once
   const fieldOptionsMap = useSelector((state: RootState) => {
@@ -160,8 +190,7 @@ export default function HouseholdBuilderFrame({
                 value={fieldValue}
                 onChange={(val) => handleHouseholdFieldChange(field, val)}
                 data={options}
-                disabled={!isMetadataLoaded}
-                placeholder={isMetadataLoaded ? `Select ${fieldLabel}` : 'Loading...'}
+                placeholder={`Select ${fieldLabel}`}
               />
             );
           }
@@ -171,7 +200,6 @@ export default function HouseholdBuilderFrame({
               label={fieldLabel}
               value={fieldValue}
               onChange={(e) => handleHouseholdFieldChange(field, e.target.value)}
-              disabled={!isMetadataLoaded}
             />
           );
         })}
@@ -290,66 +318,75 @@ export default function HouseholdBuilderFrame({
   };
 
   const formInputs = (
-    <Stack gap="lg">
-      <Text fw={600} fz="lg">
-        Household Information
-      </Text>
+    <Box pos="relative">
+      {/* Loading overlay blocks interaction until metadata is ready */}
+      <LoadingOverlay
+        visible={!isMetadataLoaded}
+        overlayProps={{ radius: 'sm', blur: 2 }}
+        loaderProps={{ type: 'dots' }}
+      />
 
-      {/* Core household settings */}
-      <Stack gap="md">
-        <Select
-          label="Tax Year"
-          value={household.taxYear}
-          onChange={handleTaxYearChange}
-          data={taxYears}
-          required
-          disabled={!isMetadataLoaded}
-          placeholder={isMetadataLoaded ? undefined : 'Loading...'}
-        />
+      <Stack gap="lg">
+        <Text fw={600} fz="lg">
+          Household Information
+        </Text>
 
-        <Select
-          label="Marital Status"
-          value={household.maritalStatus}
-          onChange={handleMaritalStatusChange}
-          data={maritalOptions}
-          required
-        />
+        {/* Core household settings */}
+        <Stack gap="md">
+          <Select
+            label="Tax Year"
+            value={household.taxYear}
+            onChange={handleTaxYearChange}
+            data={taxYears}
+            required
+            placeholder={isMetadataLoaded ? undefined : 'Loading...'}
+          />
 
-        <Select
-          label="Number of Children"
-          value={household.numChildren.toString()}
-          onChange={handleNumChildrenChange}
-          data={childOptions}
-          required
-        />
+          <Select
+            label="Marital Status"
+            value={household.maritalStatus}
+            onChange={handleMaritalStatusChange}
+            data={maritalOptions}
+            required
+          />
+
+          <Select
+            label="Number of Children"
+            value={household.numChildren.toString()}
+            onChange={handleNumChildrenChange}
+            data={childOptions}
+            required
+          />
+        </Stack>
+
+        {/* Dynamic household-level fields */}
+        {renderHouseholdFields() && (
+          <>
+            <Divider />
+            {renderHouseholdFields()}
+          </>
+        )}
+
+        {/* Adult information */}
+        <Divider />
+        {renderAdultFields()}
+
+        {/* Children information */}
+        {household.numChildren > 0 && (
+          <>
+            <Divider />
+            {renderChildrenFields()}
+          </>
+        )}
       </Stack>
-
-      {/* Dynamic household-level fields */}
-      {renderHouseholdFields() && (
-        <>
-          <Divider />
-          {renderHouseholdFields()}
-        </>
-      )}
-
-      {/* Adult information */}
-      <Divider />
-      {renderAdultFields()}
-
-      {/* Children information */}
-      {household.numChildren > 0 && (
-        <>
-          <Divider />
-          {renderChildrenFields()}
-        </>
-      )}
-    </Stack>
+    </Box>
   );
 
   const primaryAction = {
     label: 'Create Household',
     onClick: handleSubmit,
     isLoading: isPending,
+    isDisabled: !isMetadataLoaded || isPending,
   };
 
   return <FlowView title="Create Household" content={formInputs} primaryAction={primaryAction} />;
