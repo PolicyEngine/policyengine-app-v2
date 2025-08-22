@@ -1,19 +1,25 @@
-import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { normalize, denormalize } from 'normy';
 import { fetchPolicyById } from '@/api/policy';
 import { PolicyAdapter } from '@/adapters';
 import { policySchema, userPolicySchema } from '@/schemas/ingredientSchemas';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { policyKeys } from '../libs/queryKeys';
+import { Policy } from '@/types/ingredients/Policy';
+import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import {
+  NormalizedData,
+  useParallelQueries,
+  normalizeData,
+  createDenormalizer,
+  createBatchDenormalizer,
+  createSearchFunction,
+  combineLoadingStates,
+} from './utils/normalizedUtils';
 
-interface NormalizedPolicyData {
+interface PolicyNormalizedData extends NormalizedData {
   entities: {
-    policies?: Record<string, any>;
-    userPolicies?: Record<string, any>;
+    policies?: Record<string, Policy>;
+    userPolicies?: Record<string, UserPolicy>;
   };
-  result: string[];
-  isLoading: boolean;
-  error: Error | null;
 }
 
 /**
@@ -21,10 +27,9 @@ interface NormalizedPolicyData {
  * Implements intelligent caching to avoid redundant API calls
  */
 export const useUserPoliciesNormalized = (userId: string) => {
-  const queryClient = useQueryClient();
   const country = 'us'; // TODO: Replace with actual country ID retrieval logic
 
-  // First, get the user-policy associations
+  // Fetch user-policy associations
   const {
     data: policyAssociations,
     isLoading: associationsLoading,
@@ -34,31 +39,24 @@ export const useUserPoliciesNormalized = (userId: string) => {
   // Extract policy IDs
   const policyIds = policyAssociations?.map((a) => a.policyId) ?? [];
 
-  // Fetch all policies in parallel, checking cache first
-  const policyQueries = useQueries({
-    queries: policyIds.map((policyId) => ({
-      queryKey: policyKeys.byId(policyId),
-      queryFn: async () => {
-        // Check cache first
-        const cached = queryClient.getQueryData(policyKeys.byId(policyId));
-        if (cached) {
-          return cached;
-        }
-        
-        // Fetch from API and convert using adapter
+  // Fetch all policies in parallel with caching
+  const { queries: policyQueries, isLoading: policiesLoading, error: policiesError } = 
+    useParallelQueries<Policy>(policyIds.map(id => id.toString()), {
+      queryKey: policyKeys.byId,
+      queryFn: async (policyId) => {
         const metadata = await fetchPolicyById(country, policyId);
         return PolicyAdapter.fromMetadata(metadata);
       },
       enabled: !!policyAssociations,
-      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
-    })),
-  });
+    });
 
   // Combine loading and error states
-  const isLoading = associationsLoading || policyQueries.some((q) => q.isLoading);
-  const error = associationsError || policyQueries.find((q) => q.error)?.error || null;
+  const { isLoading, error } = combineLoadingStates(
+    { isLoading: associationsLoading, error: associationsError },
+    { isLoading: policiesLoading, error: policiesError }
+  );
 
-  // Build the denormalized data structure for normalization
+  // Build denormalized data structure
   const denormalizedData = policyAssociations?.map((association, index) => {
     const policy = policyQueries[index]?.data;
     
@@ -70,55 +68,29 @@ export const useUserPoliciesNormalized = (userId: string) => {
   }) ?? [];
 
   // Normalize the data
-  let normalizedData: NormalizedPolicyData = {
-    entities: {},
-    result: [],
+  const normalizedData = normalizeData<any>(
+    denormalizedData,
+    [userPolicySchema],
     isLoading,
-    error: error as Error | null,
-  };
+    error
+  ) as PolicyNormalizedData;
 
-  if (!isLoading && !error && denormalizedData.length > 0) {
-    const normalized = normalize(denormalizedData, [userPolicySchema]);
-    normalizedData = {
-      ...normalized,
-      isLoading,
-      error: null,
-    };
-  }
+  // Create helper functions
+  const getPolicy = createDenormalizer<Policy>('policies', policySchema);
+  const getUserPolicy = createDenormalizer<UserPolicy>('userPolicies', userPolicySchema);
+  const getAllPolicies = createBatchDenormalizer<Policy>('policies');
+  const getAllUserPolicies = createBatchDenormalizer<UserPolicy>('userPolicies');
+  const searchPoliciesByLabel = createSearchFunction<UserPolicy>('userPolicies', 'label');
 
   return {
     ...normalizedData,
-    // Helper functions to denormalize specific entities
-    getPolicy: (id: string) => {
-      if (!normalizedData.entities.policies?.[id]) return null;
-      return denormalize(id, policySchema, normalizedData.entities);
-    },
-    getUserPolicy: (id: string) => {
-      if (!normalizedData.entities.userPolicies?.[id]) return null;
-      return denormalize(id, userPolicySchema, normalizedData.entities);
-    },
-    // Get all policies as an array
-    getAllPolicies: () => {
-      const policies = normalizedData.entities.policies;
-      if (!policies) return [];
-      return Object.keys(policies).map(id => policies[id]);
-    },
-    // Get all user policies as an array
-    getAllUserPolicies: () => {
-      const userPolicies = normalizedData.entities.userPolicies;
-      if (!userPolicies) return [];
-      return Object.keys(userPolicies).map(id => userPolicies[id]);
-    },
-    // Search policies by label
-    searchPoliciesByLabel: (searchTerm: string) => {
-      const userPolicies = normalizedData.entities.userPolicies;
-      if (!userPolicies) return [];
-      
-      const lowerSearchTerm = searchTerm.toLowerCase();
-      return Object.values(userPolicies).filter((userPolicy: any) => 
-        userPolicy.label?.toLowerCase().includes(lowerSearchTerm)
-      );
-    },
+    // Helper functions using the normalized entities
+    getPolicy: (id: string) => getPolicy(id, normalizedData.entities),
+    getUserPolicy: (id: string) => getUserPolicy(id, normalizedData.entities),
+    getAllPolicies: () => getAllPolicies(normalizedData.entities),
+    getAllUserPolicies: () => getAllUserPolicies(normalizedData.entities),
+    searchPoliciesByLabel: (searchTerm: string) => 
+      searchPoliciesByLabel(normalizedData.entities, searchTerm),
   };
 };
 

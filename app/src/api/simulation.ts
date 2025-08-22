@@ -95,8 +95,8 @@ export async function createSimulation(
         simulation_id: simulationId,
         country_id: 'us', // Default to US for now
         api_version: mockApiVersion,
-        population_id: data.populationId ? parseInt(data.populationId, 10) : mockPopulationId,
-        policy_id: data.policyId ? parseInt(data.policyId, 10) : mockPolicyId,
+        population_id: data.population_id ? Number(data.population_id) : mockPopulationId,
+        policy_id: data.policy_id ? Number(data.policy_id) : mockPolicyId,
       };
 
       mockSimulationStore.set(simulationId, simulationMetadata);

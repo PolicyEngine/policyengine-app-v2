@@ -104,7 +104,7 @@ export default function PoliciesPage() {
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.association.policyId,
+      id: item.association.policyId.toString(),
       policyName: {
         text: item.policy?.label || `Policy #${item.association.policyId}`,
       } as TextValue,

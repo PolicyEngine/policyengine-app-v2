@@ -7,7 +7,8 @@ import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
-import { UserPolicyAssociation } from '../types/userIngredientAssociations';
+import { UserPolicy } from '../types/ingredients/UserPolicy';
+import { UserPolicyAdapter } from '../adapters/UserPolicyAdapter';
 
 const apiPolicyStore = new ApiPolicyStore();
 const sessionPolicyStore = new SessionStoragePolicyStore();
@@ -27,7 +28,10 @@ export const usePolicyAssociationsByUser = (userId: string) => {
 
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryFn: async () => {
+      const apiResponses = await store.findByUser(userId);
+      return apiResponses.map(UserPolicyAdapter.fromApi);
+    },
     ...config,
   });
 };
@@ -39,7 +43,10 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
 
   return useQuery({
     queryKey: policyAssociationKeys.specific(userId, policyId),
-    queryFn: () => store.findById(userId, policyId),
+    queryFn: async () => {
+      const apiResponse = await store.findById(userId, policyId);
+      return apiResponse ? UserPolicyAdapter.fromApi(apiResponse) : null;
+    },
     ...config,
   });
 };
@@ -49,20 +56,23 @@ export const useCreatePolicyAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (association: Omit<UserPolicyAssociation, 'createdAt'>) =>
-      store.create(association),
+    mutationFn: async (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => {
+      const apiPayload = UserPolicyAdapter.toApi(userPolicy as UserPolicy);
+      const apiResponse = await store.create(apiPayload);
+      return UserPolicyAdapter.fromApi(apiResponse);
+    },
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(newAssociation.userId),
+        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString()),
       });
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId),
+        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        policyAssociationKeys.specific(newAssociation.userId, newAssociation.policyId),
+        policyAssociationKeys.specific(newAssociation.userId.toString(), newAssociation.policyId.toString()),
         newAssociation
       );
     },
@@ -118,7 +128,7 @@ export const useDeleteAssociation = () => {
 
 // Type for the combined data structure
 interface UserPolicyMetadataWithAssociation {
-  association: UserPolicyAssociation;
+  association: UserPolicy;
   policy: PolicyMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
@@ -141,8 +151,8 @@ export const useUserPolicies = (userId: string) => {
   // Fetch all policies in parallel
   const policyQueries = useQueries({
     queries: policyIds.map((policyId) => ({
-      queryKey: policyKeys.byId(policyId),
-      queryFn: () => fetchPolicyById(country, policyId),
+      queryKey: policyKeys.byId(policyId.toString()),
+      queryFn: () => fetchPolicyById(country, policyId.toString()),
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),

@@ -100,7 +100,7 @@ export default function SimulationsPage() {
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.association.simulationId,
+      id: item.association.simulationId.toString(),
       simulation: {
         text: `Simulation #${item.association.simulationId}`,
       } as TextValue,

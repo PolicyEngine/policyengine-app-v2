@@ -1,3 +1,4 @@
+// This file contains type guards and union types for ingredients
 
 import { Policy } from './Policy';
 import { Simulation } from './Simulation';

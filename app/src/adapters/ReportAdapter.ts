@@ -1,4 +1,4 @@
-import { Report } from '@/types/ingredients';
+import { Report } from '@/types/ingredients/Report';
 
 /**
  * Adapter for converting between Report and API formats

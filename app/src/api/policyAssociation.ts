@@ -1,11 +1,22 @@
-import { UserPolicyAssociation } from '../types/userIngredientAssociations';
+import { UserPolicy } from '../types/ingredients/UserPolicy';
+import { UserPolicyAdapter } from '../adapters/UserPolicyAdapter';
+
+// API response type with string IDs
+type UserPolicyApiResponse = {
+  userId: string;
+  policyId: string;
+  label?: string;
+  createdAt: string;
+  updatedAt?: string;
+  isCreated?: boolean;
+};
 
 export interface UserPolicyStore {
-  create: (association: Omit<UserPolicyAssociation, 'createdAt'>) => Promise<UserPolicyAssociation>;
-  findByUser: (userId: string) => Promise<UserPolicyAssociation[]>;
-  findById: (userId: string, policyId: string) => Promise<UserPolicyAssociation | null>;
+  create: (association: Omit<UserPolicyApiResponse, 'createdAt'>) => Promise<UserPolicyApiResponse>;
+  findByUser: (userId: string) => Promise<UserPolicyApiResponse[]>;
+  findById: (userId: string, policyId: string) => Promise<UserPolicyApiResponse | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation>;
+  // update(userId: string, policyId: string, updates: Partial<UserPolicyApiResponse>): Promise<UserPolicyApiResponse>;
   // delete(userId: string, policyId: string): Promise<void>;
 }
 
@@ -14,8 +25,8 @@ export class ApiPolicyStore implements UserPolicyStore {
   private readonly BASE_URL = '/api/user-policy-associations';
 
   async create(
-    association: Omit<UserPolicyAssociation, 'createdAt'>
-  ): Promise<UserPolicyAssociation> {
+    association: Omit<UserPolicyApiResponse, 'createdAt'>
+  ): Promise<UserPolicyApiResponse> {
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -29,7 +40,7 @@ export class ApiPolicyStore implements UserPolicyStore {
     return response.json();
   }
 
-  async findByUser(userId: string): Promise<UserPolicyAssociation[]> {
+  async findByUser(userId: string): Promise<UserPolicyApiResponse[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
@@ -38,7 +49,7 @@ export class ApiPolicyStore implements UserPolicyStore {
     return response.json();
   }
 
-  async findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null> {
+  async findById(userId: string, policyId: string): Promise<UserPolicyApiResponse | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`);
 
     if (response.status === 404) {
@@ -54,7 +65,7 @@ export class ApiPolicyStore implements UserPolicyStore {
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation> {
+  async update(userId: string, policyId: string, updates: Partial<UserPolicyApiResponse>): Promise<UserPolicyApiResponse> {
     const response = await fetch(`/api/user-policy-associations/${userId}/${policyId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -87,9 +98,9 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
   async create(
-    association: Omit<UserPolicyAssociation, 'createdAt'>
-  ): Promise<UserPolicyAssociation> {
-    const newAssociation: UserPolicyAssociation = {
+    association: Omit<UserPolicyApiResponse, 'createdAt'>
+  ): Promise<UserPolicyApiResponse> {
+    const newAssociation: UserPolicyApiResponse = {
       ...association,
       createdAt: new Date().toISOString(),
     };
@@ -111,19 +122,19 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
     return newAssociation;
   }
 
-  async findByUser(userId: string): Promise<UserPolicyAssociation[]> {
+  async findByUser(userId: string): Promise<UserPolicyApiResponse[]> {
     const associations = this.getStoredAssociations();
     return associations.filter((a) => a.userId === userId);
   }
 
-  async findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null> {
+  async findById(userId: string, policyId: string): Promise<UserPolicyApiResponse | null> {
     const associations = this.getStoredAssociations();
     return associations.find((a) => a.userId === userId && a.policyId === policyId) || null;
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation> {
+  async update(userId: string, policyId: string, updates: Partial<UserPolicyApiResponse>): Promise<UserPolicyApiResponse> {
     const associations = this.getStoredAssociations();
     const index = associations.findIndex(a => a.userId === userId && a.policyId === policyId);
     
@@ -153,7 +164,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
   }
   */
 
-  private getStoredAssociations(): UserPolicyAssociation[] {
+  private getStoredAssociations(): UserPolicyApiResponse[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -162,7 +173,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
     }
   }
 
-  private setStoredAssociations(associations: UserPolicyAssociation[]): void {
+  private setStoredAssociations(associations: UserPolicyApiResponse[]): void {
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(associations));
     } catch (error) {
@@ -171,7 +182,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
   }
 
   // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserPolicyAssociation[] {
+  getAllAssociations(): UserPolicyApiResponse[] {
     return this.getStoredAssociations();
   }
 

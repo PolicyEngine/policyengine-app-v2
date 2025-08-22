@@ -8,7 +8,8 @@ import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { ApiSimulationStore, SessionStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys, simulationKeys } from '../libs/queryKeys';
-import { UserSimulationAssociation } from '../types/userIngredientAssociations';
+import { UserSimulation } from '../types/ingredients/UserSimulation';
+import { UserSimulationAdapter } from '../adapters/UserSimulationAdapter';
 
 const apiSimulationStore = new ApiSimulationStore();
 const sessionSimulationStore = new SessionStorageSimulationStore();
@@ -28,7 +29,10 @@ export const useSimulationAssociationsByUser = (userId: string) => {
 
   return useQuery({
     queryKey: simulationAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryFn: async () => {
+      const apiResponses = await store.findByUser(userId);
+      return apiResponses.map(UserSimulationAdapter.fromApi);
+    },
     ...config,
   });
 };
@@ -50,20 +54,23 @@ export const useCreateSimulationAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (association: Omit<UserSimulationAssociation, 'createdAt'>) =>
-      store.create(association),
+    mutationFn: async (userSimulation: Omit<UserSimulation, 'id' | 'createdAt'>) => {
+      const apiPayload = UserSimulationAdapter.toApi(userSimulation as UserSimulation);
+      const apiResponse = await store.create(apiPayload);
+      return UserSimulationAdapter.fromApi(apiResponse);
+    },
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: simulationAssociationKeys.byUser(newAssociation.userId),
+        queryKey: simulationAssociationKeys.byUser(newAssociation.userId.toString()),
       });
       queryClient.invalidateQueries({
-        queryKey: simulationAssociationKeys.bySimulation(newAssociation.simulationId),
+        queryKey: simulationAssociationKeys.bySimulation(newAssociation.simulationId.toString()),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        simulationAssociationKeys.specific(newAssociation.userId, newAssociation.simulationId),
+        simulationAssociationKeys.specific(newAssociation.userId.toString(), newAssociation.simulationId.toString()),
         newAssociation
       );
     },
@@ -80,7 +87,7 @@ export const useUpdateAssociation = () => {
     mutationFn: ({ userId, simulationId, updates }: {
       userId: string;
       simulationId: string;
-      updates: Partial<UserSimulationAssociation>;
+      updates: Partial<UserSimulation>;
     }) => store.update(userId, simulationId, updates),
     onSuccess: (updatedAssociation) => {
       queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.byUser(updatedAssociation.userId) });
@@ -119,7 +126,7 @@ export const useDeleteAssociation = () => {
 
 // Type for the combined data structure
 interface UserSimulationMetadataWithAssociation {
-  association: UserSimulationAssociation;
+  association: UserSimulation;
   simulation: SimulationMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
@@ -146,8 +153,8 @@ export const useUserSimulations = (userId: string) => {
   // Fetch all policies in parallel
   const simulationQueries = useQueries({
     queries: simulationIds.map((simulationId) => ({
-      queryKey: simulationKeys.byId(simulationId),
-      queryFn: () => fetchSimulationById(country, simulationId),
+      queryKey: simulationKeys.byId(simulationId.toString()),
+      queryFn: () => fetchSimulationById(country, simulationId.toString()),
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),

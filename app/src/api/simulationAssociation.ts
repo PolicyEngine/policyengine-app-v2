@@ -1,13 +1,24 @@
-import { UserSimulationAssociation } from '../types/userIngredientAssociations';
+import { UserSimulation } from '../types/ingredients/UserSimulation';
+import { UserSimulationAdapter } from '../adapters/UserSimulationAdapter';
+
+// API response type with string IDs
+type UserSimulationApiResponse = {
+  userId: string;
+  simulationId: string;
+  label?: string;
+  createdAt: string;
+  updatedAt?: string;
+  isCreated?: boolean;
+};
 
 export interface UserSimulationStore {
   create: (
-    association: Omit<UserSimulationAssociation, 'createdAt'>
-  ) => Promise<UserSimulationAssociation>;
-  findByUser: (userId: string) => Promise<UserSimulationAssociation[]>;
-  findById: (userId: string, simulationId: string) => Promise<UserSimulationAssociation | null>;
+    association: Omit<UserSimulationApiResponse, 'createdAt'>
+  ) => Promise<UserSimulationApiResponse>;
+  findByUser: (userId: string) => Promise<UserSimulationApiResponse[]>;
+  findById: (userId: string, simulationId: string) => Promise<UserSimulationApiResponse | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, simulationId: string, updates: Partial<UserSimulationAssociation>): Promise<UserSimulationAssociation>;
+  // update(userId: string, simulationId: string, updates: Partial<UserSimulationApiResponse>): Promise<UserSimulationApiResponse>;
   // delete(userId: string, simulationId: string): Promise<void>;
 }
 
@@ -16,8 +27,8 @@ export class ApiSimulationStore implements UserSimulationStore {
   private readonly BASE_URL = '/api/user-simulation-associations';
 
   async create(
-    association: Omit<UserSimulationAssociation, 'createdAt'>
-  ): Promise<UserSimulationAssociation> {
+    association: Omit<UserSimulationApiResponse, 'createdAt'>
+  ): Promise<UserSimulationApiResponse> {
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,7 +42,7 @@ export class ApiSimulationStore implements UserSimulationStore {
     return response.json();
   }
 
-  async findByUser(userId: string): Promise<UserSimulationAssociation[]> {
+  async findByUser(userId: string): Promise<UserSimulationApiResponse[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
@@ -40,7 +51,7 @@ export class ApiSimulationStore implements UserSimulationStore {
     return response.json();
   }
 
-  async findById(userId: string, simulationId: string): Promise<UserSimulationAssociation | null> {
+  async findById(userId: string, simulationId: string): Promise<UserSimulationApiResponse | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`);
 
     if (response.status === 404) {
@@ -56,7 +67,7 @@ export class ApiSimulationStore implements UserSimulationStore {
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, simulationId: string, updates: Partial<UserSimulationAssociation>): Promise<UserSimulationAssociation> {
+  async update(userId: string, simulationId: string, updates: Partial<UserSimulationApiResponse>): Promise<UserSimulationApiResponse> {
     const response = await fetch(`/api/user-simulation-associations/${userId}/${simulationId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -89,9 +100,9 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   private readonly STORAGE_KEY = 'user-simulation-associations';
 
   async create(
-    association: Omit<UserSimulationAssociation, 'createdAt'>
-  ): Promise<UserSimulationAssociation> {
-    const newAssociation: UserSimulationAssociation = {
+    association: Omit<UserSimulationApiResponse, 'createdAt'>
+  ): Promise<UserSimulationApiResponse> {
+    const newAssociation: UserSimulationApiResponse = {
       ...association,
       createdAt: new Date().toISOString(),
     };
@@ -113,19 +124,19 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
     return newAssociation;
   }
 
-  async findByUser(userId: string): Promise<UserSimulationAssociation[]> {
+  async findByUser(userId: string): Promise<UserSimulationApiResponse[]> {
     const associations = this.getStoredAssociations();
     return associations.filter((a) => a.userId === userId);
   }
 
-  async findById(userId: string, simulationId: string): Promise<UserSimulationAssociation | null> {
+  async findById(userId: string, simulationId: string): Promise<UserSimulationApiResponse | null> {
     const associations = this.getStoredAssociations();
     return associations.find((a) => a.userId === userId && a.simulationId === simulationId) || null;
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, simulationId: string, updates: Partial<UserSimulationAssociation>): Promise<UserSimulationAssociation> {
+  async update(userId: string, simulationId: string, updates: Partial<UserSimulationApiResponse>): Promise<UserSimulationApiResponse> {
     const associations = this.getStoredAssociations();
     const index = associations.findIndex(a => a.userId === userId && a.simulationId === simulationId);
     
@@ -155,7 +166,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   }
   */
 
-  private getStoredAssociations(): UserSimulationAssociation[] {
+  private getStoredAssociations(): UserSimulationApiResponse[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -164,7 +175,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
     }
   }
 
-  private setStoredAssociations(associations: UserSimulationAssociation[]): void {
+  private setStoredAssociations(associations: UserSimulationApiResponse[]): void {
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(associations));
     } catch (error) {
@@ -173,7 +184,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   }
 
   // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserSimulationAssociation[] {
+  getAllAssociations(): UserSimulationApiResponse[] {
     return this.getStoredAssociations();
   }
 

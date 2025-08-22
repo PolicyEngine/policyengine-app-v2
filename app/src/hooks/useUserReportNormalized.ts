@@ -1,37 +1,37 @@
-import { useQueries, useQueryClient } from '@tanstack/react-query';
-import { normalize, denormalize } from 'normy';
-import { fetchSimulationById } from '@/api/simulation';
-import { fetchPolicyById } from '@/api/policy';
-import { SimulationAdapter, PolicyAdapter, ReportAdapter } from '@/adapters';
 import { 
   reportSchema,
   simulationSchema, 
   policySchema, 
-  populationSchema,
   userReportSchema,
   userSimulationSchema,
-  userPolicySchema,
-  userPopulationSchema 
+  userPolicySchema
 } from '@/schemas/ingredientSchemas';
 import { useUserSimulationsNormalized } from './useUserSimulationNormalized';
-import { simulationKeys, policyKeys } from '../libs/queryKeys';
+import { Policy } from '@/types/ingredients/Policy';
+import { Simulation } from '@/types/ingredients/Simulation';
+import { Report } from '@/types/ingredients/Report';
+import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { UserReport } from '@/types/ingredients/UserReport';
+import {
+  NormalizedData,
+  normalizeData,
+  createDenormalizer,
+  mergeEntities,
+} from './utils/normalizedUtils';
 
-interface NormalizedReportData {
+interface ReportNormalizedData extends NormalizedData {
   entities: {
-    policies?: Record<string, any>;
+    policies?: Record<string, Policy>;
     populations?: Record<string, any>;
-    simulations?: Record<string, any>;
-    reports?: Record<string, any>;
-    userPolicies?: Record<string, any>;
+    simulations?: Record<string, Simulation>;
+    reports?: Record<string, Report>;
+    userPolicies?: Record<string, UserPolicy>;
     userPopulations?: Record<string, any>;
-    userSimulations?: Record<string, any>;
-    userReports?: Record<string, any>;
+    userSimulations?: Record<string, UserSimulation>;
+    userReports?: Record<string, UserReport>;
   };
-  result: string[];
-  isLoading: boolean;
-  error: Error | null;
 }
-
 
 // TODO: Modify this file based on API structure, etc.
 /**
@@ -42,9 +42,6 @@ interface NormalizedReportData {
  * in the React Query cache, avoiding unnecessary API calls
  */
 export const useUserReportsNormalized = (userId: string) => {
-  const queryClient = useQueryClient();
-  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
-
   // Get all user simulations with their dependencies (this includes policies)
   const {
     entities: simulationEntities,
@@ -58,8 +55,87 @@ export const useUserReportsNormalized = (userId: string) => {
   } = useUserSimulationsNormalized(userId);
 
   // TODO: Fetch user report associations when the API is ready
-  // For now, we'll create mock report data based on simulations
-  const mockReports = userSimulationIds.map((simId) => {
+  // For now, create mock report data based on simulations
+  const mockReports = createMockReports(
+    userId,
+    userSimulationIds,
+    simulationEntities
+  );
+
+  // Normalize the report data
+  const normalizedReportData = normalizeData<any>(
+    mockReports,
+    [userReportSchema],
+    simulationsLoading,
+    simulationsError
+  );
+
+  // Merge entities from simulations and reports
+  const mergedEntities = mergeEntities(
+    simulationEntities,
+    normalizedReportData.entities
+  );
+
+  const normalizedData: ReportNormalizedData = {
+    entities: mergedEntities,
+    result: normalizedReportData.result,
+    isLoading: simulationsLoading,
+    error: simulationsError,
+  };
+
+  // Create helper functions
+  const getReport = createDenormalizer<Report>('reports', reportSchema);
+  const getUserReport = createDenormalizer<UserReport>('userReports', userReportSchema);
+
+  return {
+    ...normalizedData,
+    // Reuse helpers from simulations
+    getSimulation: (id: string) => getSimulation(id),
+    getPolicy: (id: string) => getPolicy(id),
+    getUserSimulation: (id: string) => getUserSimulation(id),
+    getUserPolicy: (id: string) => getUserPolicy(id),
+    
+    // Report-specific helpers
+    getReport: (id: string) => getReport(id, normalizedData.entities),
+    getUserReport: (id: string) => getUserReport(id, normalizedData.entities),
+    
+    // Convenience method to get all data for a report including all nested dependencies
+    getFullReportData: (reportId: string) => {
+      const userReport = normalizedData.entities.userReports?.[reportId];
+      if (!userReport) return null;
+
+      // Use denormalize to get the full nested structure
+      return createDenormalizer<UserReport>(
+        'userReports',
+        userReportSchema
+      )(reportId, normalizedData.entities);
+    },
+  };
+};
+
+/**
+ * Hook to fetch a single user report with all its dependencies
+ */
+export const useUserReportNormalized = (userId: string, reportId: string) => {
+  const allReports = useUserReportsNormalized(userId);
+  
+  return {
+    ...allReports,
+    data: allReports.getUserReport(reportId),
+    fullData: allReports.getFullReportData(reportId),
+  };
+};
+
+/**
+ * Creates mock report data based on simulations
+ * TODO: Replace with actual API calls when ready
+ */
+function createMockReports(
+  userId: string,
+  userSimulationIds: string[],
+  simulationEntities: Record<string, any>
+): any[] {
+  return userSimulationIds.map((simId) => {
     const userSim = simulationEntities.userSimulations?.[simId];
     const sim = simulationEntities.simulations?.[userSim?.simulationId];
     
@@ -96,87 +172,4 @@ export const useUserReportsNormalized = (userId: string) => {
       } : undefined,
     };
   });
-
-  // Normalize the report data
-  let normalizedData: NormalizedReportData = {
-    entities: {
-      ...simulationEntities, // Include all entities from simulations
-    },
-    result: [],
-    isLoading: simulationsLoading,
-    error: simulationsError as Error | null,
-  };
-
-  if (!simulationsLoading && !simulationsError && mockReports.length > 0) {
-    const normalized = normalize(mockReports, [userReportSchema]);
-    
-    // Merge entities from both normalizations
-    normalizedData = {
-      entities: {
-        ...simulationEntities,
-        ...normalized.entities,
-        // Ensure we don't overwrite existing entities, just add new ones
-        reports: {
-          ...simulationEntities.reports,
-          ...normalized.entities.reports,
-        },
-        userReports: {
-          ...simulationEntities.userReports,
-          ...normalized.entities.userReports,
-        },
-      },
-      result: normalized.result as string[],
-      isLoading: false,
-      error: null,
-    };
-  }
-
-  return {
-    ...normalizedData,
-    // Helper functions to denormalize specific entities
-    getReport: (id: string) => {
-      if (!normalizedData.entities.reports?.[id]) return null;
-      return denormalize(id, reportSchema, normalizedData.entities);
-    },
-    getSimulation: (id: string) => {
-      if (!normalizedData.entities.simulations?.[id]) return null;
-      return denormalize(id, simulationSchema, normalizedData.entities);
-    },
-    getPolicy: (id: string) => {
-      if (!normalizedData.entities.policies?.[id]) return null;
-      return denormalize(id, policySchema, normalizedData.entities);
-    },
-    getUserReport: (id: string) => {
-      if (!normalizedData.entities.userReports?.[id]) return null;
-      return denormalize(id, userReportSchema, normalizedData.entities);
-    },
-    getUserSimulation: (id: string) => {
-      if (!normalizedData.entities.userSimulations?.[id]) return null;
-      return denormalize(id, userSimulationSchema, normalizedData.entities);
-    },
-    getUserPolicy: (id: string) => {
-      if (!normalizedData.entities.userPolicies?.[id]) return null;
-      return denormalize(id, userPolicySchema, normalizedData.entities);
-    },
-    // Convenience method to get all data for a report including all nested dependencies
-    getFullReportData: (reportId: string) => {
-      const userReport = normalizedData.entities.userReports?.[reportId];
-      if (!userReport) return null;
-
-      return denormalize(reportId, userReportSchema, normalizedData.entities);
-    },
-  };
-};
-
-/**
- * Hook to fetch a single user report with all its dependencies
- */
-export const useUserReportNormalized = (userId: string, reportId: string) => {
-  const allReports = useUserReportsNormalized(userId);
-  
-  return {
-    ...allReports,
-    data: allReports.getUserReport(reportId),
-    fullData: allReports.getFullReportData(reportId),
-  };
-};
+}

@@ -1,4 +1,4 @@
-import { Policy } from '@/types/ingredients';
+import { Policy } from '@/types/ingredients/Policy';
 import { PolicyMetadata, PolicyMetadataParams } from '@/types/metadata/policyMetadata';
 import { convertPolicyJsonToParameters, convertParametersToPolicyJson } from './conversionHelpers';
 

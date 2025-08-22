@@ -9,7 +9,7 @@ import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Policy } from '@/types/ingredients';
+import { Policy } from '@/types/ingredients/Policy';
 import { PolicyAdapter, PolicyCreationPayload } from '@/adapters';
 import { formatDate } from '@/utils/dateFormatter';
 

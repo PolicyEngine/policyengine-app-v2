@@ -1,4 +1,4 @@
-import { UserReport } from '@/types/ingredients';
+import { UserReport } from '@/types/ingredients/UserReport';
 
 /**
  * Adapter for converting between UserReport and API formats

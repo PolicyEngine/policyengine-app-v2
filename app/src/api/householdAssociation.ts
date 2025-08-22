@@ -1,13 +1,22 @@
-import { UserHouseholdAssociation } from '../types/userIngredientAssociations';
+// TODO: Replace with UserHousehold from ingredients when implemented
+// For now, using a temporary type definition
+type UserHouseholdApiResponse = {
+  userId: string;
+  householdId: string;
+  label?: string;
+  createdAt: string;
+  updatedAt?: string;
+  isCreated?: boolean;
+};
 
 export interface UserHouseholdStore {
   create: (
-    association: Omit<UserHouseholdAssociation, 'createdAt'>
-  ) => Promise<UserHouseholdAssociation>;
-  findByUser: (userId: string) => Promise<UserHouseholdAssociation[]>;
-  findById: (userId: string, householdId: string) => Promise<UserHouseholdAssociation | null>;
+    association: Omit<UserHouseholdApiResponse, 'createdAt'>
+  ) => Promise<UserHouseholdApiResponse>;
+  findByUser: (userId: string) => Promise<UserHouseholdApiResponse[]>;
+  findById: (userId: string, householdId: string) => Promise<UserHouseholdApiResponse | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, householdId: string, updates: Partial<UserHouseholdAssociation>): Promise<UserHouseholdAssociation>;
+  // update(userId: string, householdId: string, updates: Partial<UserHouseholdApiResponse>): Promise<UserHouseholdApiResponse>;
   // delete(userId: string, householdId: string): Promise<void>;
 }
 
@@ -16,8 +25,8 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   private readonly BASE_URL = '/api/user-household-associations';
 
   async create(
-    association: Omit<UserHouseholdAssociation, 'createdAt'>
-  ): Promise<UserHouseholdAssociation> {
+    association: Omit<UserHouseholdApiResponse, 'createdAt'>
+  ): Promise<UserHouseholdApiResponse> {
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -31,7 +40,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     return response.json();
   }
 
-  async findByUser(userId: string): Promise<UserHouseholdAssociation[]> {
+  async findByUser(userId: string): Promise<UserHouseholdApiResponse[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
@@ -40,7 +49,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     return response.json();
   }
 
-  async findById(userId: string, householdId: string): Promise<UserHouseholdAssociation | null> {
+  async findById(userId: string, householdId: string): Promise<UserHouseholdApiResponse | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`);
 
     if (response.status === 404) {
@@ -56,7 +65,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, householdId: string, updates: Partial<UserHouseholdAssociation>): Promise<UserHouseholdAssociation> {
+  async update(userId: string, householdId: string, updates: Partial<UserHouseholdApiResponse>): Promise<UserHouseholdApiResponse> {
     const response = await fetch(`/api/user-household-associations/${userId}/${householdId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -89,9 +98,9 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   private readonly STORAGE_KEY = 'user-household-associations';
 
   async create(
-    association: Omit<UserHouseholdAssociation, 'createdAt'>
-  ): Promise<UserHouseholdAssociation> {
-    const newAssociation: UserHouseholdAssociation = {
+    association: Omit<UserHouseholdApiResponse, 'createdAt'>
+  ): Promise<UserHouseholdApiResponse> {
+    const newAssociation: UserHouseholdApiResponse = {
       ...association,
       createdAt: new Date().toISOString(),
     };
@@ -113,19 +122,19 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
     return newAssociation;
   }
 
-  async findByUser(userId: string): Promise<UserHouseholdAssociation[]> {
+  async findByUser(userId: string): Promise<UserHouseholdApiResponse[]> {
     const associations = this.getStoredAssociations();
     return associations.filter((a) => a.userId === userId);
   }
 
-  async findById(userId: string, householdId: string): Promise<UserHouseholdAssociation | null> {
+  async findById(userId: string, householdId: string): Promise<UserHouseholdApiResponse | null> {
     const associations = this.getStoredAssociations();
     return associations.find((a) => a.userId === userId && a.householdId === householdId) || null;
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, householdId: string, updates: Partial<UserHouseholdAssociation>): Promise<UserHouseholdAssociation> {
+  async update(userId: string, householdId: string, updates: Partial<UserHouseholdApiResponse>): Promise<UserHouseholdApiResponse> {
     const associations = this.getStoredAssociations();
     const index = associations.findIndex(a => a.userId === userId && a.householdId === householdId);
     
@@ -155,7 +164,7 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   }
   */
 
-  private getStoredAssociations(): UserHouseholdAssociation[] {
+  private getStoredAssociations(): UserHouseholdApiResponse[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -164,7 +173,7 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
     }
   }
 
-  private setStoredAssociations(associations: UserHouseholdAssociation[]): void {
+  private setStoredAssociations(associations: UserHouseholdApiResponse[]): void {
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(associations));
     } catch (error) {
@@ -173,7 +182,7 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   }
 
   // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserHouseholdAssociation[] {
+  getAllAssociations(): UserHouseholdApiResponse[] {
     return this.getStoredAssociations();
   }
 

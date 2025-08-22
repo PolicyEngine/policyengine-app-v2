@@ -1,4 +1,5 @@
-import { Parameter, ValueInterval } from '@/types/ingredients';
+import { Parameter } from '@/types/subIngredients/parameter';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
 
 /**

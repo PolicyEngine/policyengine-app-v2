@@ -7,5 +7,5 @@ export interface Parameter {
 }
 
 export function getParameterByName(policy: Policy, name: string): Parameter | undefined {
-  return policy.params.find((param) => param.name === name);
+  return policy.parameters.find((param) => param.name === name);
 }

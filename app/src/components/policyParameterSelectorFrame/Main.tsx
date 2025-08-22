@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux';
 import { Container, Text, Title } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
-import { Parameter } from '@/types/ingredients/Policy';
+import { Parameter } from '@/types/subIngredients/parameter';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 

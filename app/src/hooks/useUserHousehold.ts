@@ -7,7 +7,16 @@ import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
-import { UserHouseholdAssociation } from '../types/userIngredientAssociations';
+// TODO: Replace with UserHousehold from ingredients when implemented
+// For now, using the API response type directly
+type UserHouseholdAssociation = {
+  userId: string;
+  householdId: string;
+  label?: string;
+  createdAt: string;
+  updatedAt?: string;
+  isCreated?: boolean;
+};
 
 const apiHouseholdStore = new ApiHouseholdStore();
 const sessionHouseholdStore = new SessionStorageHouseholdStore();

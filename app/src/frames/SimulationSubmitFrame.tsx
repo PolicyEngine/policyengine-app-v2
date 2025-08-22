@@ -4,7 +4,7 @@ import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Simulation } from '@/types/ingredients';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationAdapter, SimulationCreationPayload } from '@/adapters';
 
 export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {

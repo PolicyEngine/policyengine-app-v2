@@ -1,12 +1,12 @@
-import { Policy } from '@/types/policy';
+import { Policy } from '@/types/ingredients/Policy';
 
 export interface PolicyCreationPayload {
   label?: string;
   data: Record<string, any>;
 }
 
-export function serializePolicyCreationPayload(policy: Policy): PolicyCreationPayload {
-  const { label, params } = policy;
+export function serializePolicyCreationPayload(policy: Policy, label?: string): PolicyCreationPayload {
+  const { parameters } = policy;
 
   // Fill payload with keys we already know
   const payload = {
@@ -15,8 +15,8 @@ export function serializePolicyCreationPayload(policy: Policy): PolicyCreationPa
   };
 
   // Convert params and their valueIntervals into expected JSON format
-  params.forEach((param) => {
-    payload.data[param.name] = param.values.reduce((acc, cur) => {
+  parameters.forEach((param: any) => {
+    payload.data[param.name] = param.values.reduce((acc: any, cur: any) => {
       return { ...acc, [`${cur.startDate}.${cur.endDate}`]: cur.value };
     }, {});
   });

@@ -1,15 +1,15 @@
-import { Simulation } from '@/types/simulation';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 export interface SimulationCreationPayload {
-  populationId?: string;
-  policyId?: string;
+  population_id?: string;
+  policy_id?: string;
 }
 
 export function serializeSimulationCreationPayload(
   simulation: Simulation
 ): SimulationCreationPayload {
   return {
-    populationId: simulation.populationId,
-    policyId: simulation.policyId,
+    population_id: simulation.populationId.toString(),
+    policy_id: simulation.policyId.toString(),
   };
 }

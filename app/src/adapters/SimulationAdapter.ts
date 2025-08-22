@@ -1,4 +1,4 @@
-import { Simulation } from '@/types/ingredients';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 
 /**

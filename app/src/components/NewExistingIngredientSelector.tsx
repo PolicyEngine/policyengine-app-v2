@@ -1,8 +1,9 @@
 import { Box, Card, Stack, Text } from '@mantine/core';
-import { ingredients } from '@/types/ingredient';
+
+type IngredientName = 'Policy' | 'Population' | 'Simulation' | 'Report';
 
 export interface NewExistingIngredientSelectorProps {
-  ingredientName: (typeof ingredients)[number];
+  ingredientName: IngredientName;
   onClickCreateNew: () => void;
   onClickExisting: () => void;
 }

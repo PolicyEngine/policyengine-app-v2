@@ -1,34 +1,46 @@
-import { UserSimulation } from '@/types/ingredients';
-import { UserSimulationAssociation } from '@/types/userIngredientAssociations';
+import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
 /**
  * Adapter for converting between UserSimulation and API formats
  */
 export class UserSimulationAdapter {
   /**
-   * Converts UserSimulationAssociation from API/storage to UserSimulation type
+   * Converts API response to UserSimulation type
+   * The API typically returns string IDs which we convert to numbers
    */
-  static fromAssociation(association: UserSimulationAssociation): UserSimulation {
+  static fromApi(apiData: {
+    userId: string;
+    simulationId: string;
+    label?: string;
+    createdAt: string;
+    updatedAt?: string;
+    isCreated?: boolean;
+  }): UserSimulation {
     return {
-      id: parseInt(association.simulationId),
-      userId: parseInt(association.userId),
-      simulationId: parseInt(association.simulationId),
-      label: association.label,
-      createdAt: association.createdAt,
-      updatedAt: association.updatedAt,
-      isCreated: true,
+      id: parseInt(apiData.simulationId),
+      userId: parseInt(apiData.userId),
+      simulationId: parseInt(apiData.simulationId),
+      label: apiData.label,
+      createdAt: apiData.createdAt,
+      updatedAt: apiData.updatedAt,
+      isCreated: apiData.isCreated ?? true,
     };
   }
   
   /**
-   * Converts UserSimulation to format for creating/updating association
+   * Converts UserSimulation to format for API requests
    */
-  static toAssociation(userSimulation: UserSimulation): Omit<UserSimulationAssociation, 'createdAt'> {
+  static toApi(userSimulation: UserSimulation): {
+    userId: string;
+    simulationId: string;
+    label?: string;
+    updatedAt?: string;
+  } {
     return {
       userId: userSimulation.userId.toString(),
       simulationId: userSimulation.simulationId.toString(),
       label: userSimulation.label,
-      updatedAt: new Date().toISOString(),
+      updatedAt: userSimulation.updatedAt || new Date().toISOString(),
     };
   }
 }
