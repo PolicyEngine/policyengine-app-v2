@@ -35,6 +35,6 @@ export class ReportAdapter {
 }
 
 export interface ReportCreationPayload {
-  simulation_id?: number;
+  simulation_id?: string;
   // Add other fields as the API evolves
 }

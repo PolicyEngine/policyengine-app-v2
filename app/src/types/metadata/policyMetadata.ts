@@ -1,7 +1,7 @@
 import { countryIds } from '@/libs/countries';
 
 export interface PolicyMetadata {
-  id: number;
+  id: string;
   country_id: (typeof countryIds)[number];
   label?: string;
   api_version: string;

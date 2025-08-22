@@ -11,9 +11,9 @@ import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 // TODO: Replace with UserHousehold from ingredients when implemented
 // For now, using the API response type directly
 type UserHousehold = {
-  id?: number;
-  userId: number;
-  householdId: number;
+  id?: string;
+  userId: string;
+  householdId: string;
   label?: string;
   createdAt?: string;
   updatedAt?: string;

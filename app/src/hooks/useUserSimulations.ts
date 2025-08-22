@@ -165,15 +165,15 @@ export const useUserSimulations = (userId: string) => {
     }) ?? [];
 
   // Step 9: Helper functions for accessing specific data
-  const getSimulationWithFullContext = (simulationId: number) => {
+  const getSimulationWithFullContext = (simulationId: string) => {
     return enhancedSimulations.find((es) => es.userSimulation.simulationId === simulationId);
   };
 
-  const getSimulationsByPolicy = (policyId: number) => {
+  const getSimulationsByPolicy = (policyId: string) => {
     return enhancedSimulations.filter((es) => es.simulation?.policyId === policyId);
   };
 
-  const getSimulationsByHousehold = (householdId: number) => {
+  const getSimulationsByHousehold = (householdId: string) => {
     return enhancedSimulations.filter((es) => es.simulation?.populationId === householdId);
   };
 

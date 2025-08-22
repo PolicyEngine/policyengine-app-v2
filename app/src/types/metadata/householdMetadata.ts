@@ -1,6 +1,6 @@
 // Models the GET household api payload
 export interface HouseholdMetadata {
-  id: number;
+  id: string;
   country_id: string;
   label?: string | null;
   api_version: string;

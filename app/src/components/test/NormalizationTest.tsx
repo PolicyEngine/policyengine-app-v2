@@ -42,7 +42,7 @@ export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) 
   };
 
   // Test 3: Filter by policy
-  const testFilterByPolicy = (policyId: number) => {
+  const testFilterByPolicy = (policyId: string) => {
     console.log(`Test 3: Get all simulations for policy ${policyId}`);
     const sims = getSimulationsByPolicy(policyId);
     console.log(`  Found ${sims.length} simulations`);

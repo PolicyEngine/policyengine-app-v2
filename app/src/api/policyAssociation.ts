@@ -36,9 +36,9 @@ export class ApiPolicyStore implements UserPolicyStore {
 
     // Convert API response back to UserPolicy
     return {
-      id: parseInt(apiResponse.policyId, 10),
-      userId: parseInt(apiResponse.userId, 10),
-      policyId: parseInt(apiResponse.policyId, 10),
+      id: apiResponse.policyId,
+      userId: apiResponse.userId,
+      policyId: apiResponse.policyId,
       label: apiResponse.label,
       createdAt: apiResponse.createdAt,
       updatedAt: apiResponse.updatedAt,
@@ -56,9 +56,9 @@ export class ApiPolicyStore implements UserPolicyStore {
 
     // Convert each API response to UserPolicy
     return apiResponses.map((apiData: any) => ({
-      id: parseInt(apiData.policyId, 10),
-      userId: parseInt(apiData.userId, 10),
-      policyId: parseInt(apiData.policyId, 10),
+      id: apiData.policyId,
+      userId: apiData.userId,
+      policyId: apiData.policyId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -81,9 +81,9 @@ export class ApiPolicyStore implements UserPolicyStore {
 
     // Convert API response to UserPolicy
     return {
-      id: parseInt(apiData.policyId, 10),
-      userId: parseInt(apiData.userId, 10),
-      policyId: parseInt(apiData.policyId, 10),
+      id: apiData.policyId,
+      userId: apiData.userId,
+      policyId: apiData.policyId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -151,17 +151,14 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
   }
 
   async findByUser(userId: string): Promise<UserPolicy[]> {
-    const numericUserId = parseInt(userId, 10);
     const policies = this.getStoredPolicies();
-    return policies.filter((p) => p.userId === numericUserId);
+    return policies.filter((p) => p.userId === userId);
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
-    const numericUserId = parseInt(userId, 10);
-    const numericPolicyId = parseInt(policyId, 10);
     const policies = this.getStoredPolicies();
     return (
-      policies.find((p) => p.userId === numericUserId && p.policyId === numericPolicyId) || null
+      policies.find((p) => p.userId === userId && p.policyId === policyId) || null
     );
   }
 

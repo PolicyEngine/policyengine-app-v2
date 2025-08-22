@@ -2,9 +2,9 @@
  * UserPolicy type containing mutable user-specific data
  */
 export interface UserPolicy {
-  id?: number;
-  userId: number;
-  policyId: number;
+  id?: string;
+  userId: string;
+  policyId: string;
   label?: string;
   createdAt?: string;
   updatedAt?: string;

@@ -2,9 +2,9 @@
  * UserReport type containing mutable user-specific data
  */
 export interface UserReport {
-  id?: number;
-  userId: number;
-  reportId: number;
+  id?: string;
+  userId: string;
+  reportId: string;
   label?: string;
   createdAt?: string;
   updatedAt?: string;

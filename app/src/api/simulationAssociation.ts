@@ -36,9 +36,9 @@ export class ApiSimulationStore implements UserSimulationStore {
 
     // Convert API response back to UserSimulation
     return {
-      id: parseInt(apiResponse.simulationId, 10),
-      userId: parseInt(apiResponse.userId, 10),
-      simulationId: parseInt(apiResponse.simulationId, 10),
+      id: apiResponse.simulationId,
+      userId: apiResponse.userId,
+      simulationId: apiResponse.simulationId,
       label: apiResponse.label,
       createdAt: apiResponse.createdAt,
       updatedAt: apiResponse.updatedAt,
@@ -56,9 +56,9 @@ export class ApiSimulationStore implements UserSimulationStore {
 
     // Convert each API response to UserSimulation
     return apiResponses.map((apiData: any) => ({
-      id: parseInt(apiData.simulationId, 10),
-      userId: parseInt(apiData.userId, 10),
-      simulationId: parseInt(apiData.simulationId, 10),
+      id: apiData.simulationId,
+      userId: apiData.userId,
+      simulationId: apiData.simulationId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -81,9 +81,9 @@ export class ApiSimulationStore implements UserSimulationStore {
 
     // Convert API response to UserSimulation
     return {
-      id: parseInt(apiData.simulationId, 10),
-      userId: parseInt(apiData.userId, 10),
-      simulationId: parseInt(apiData.simulationId, 10),
+      id: apiData.simulationId,
+      userId: apiData.userId,
+      simulationId: apiData.simulationId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -151,18 +151,15 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   }
 
   async findByUser(userId: string): Promise<UserSimulation[]> {
-    const numericUserId = parseInt(userId, 10);
     const simulations = this.getStoredSimulations();
-    return simulations.filter((s) => s.userId === numericUserId);
+    return simulations.filter((s) => s.userId === userId);
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
-    const numericUserId = parseInt(userId, 10);
-    const numericSimulationId = parseInt(simulationId, 10);
     const simulations = this.getStoredSimulations();
     return (
       simulations.find(
-        (s) => s.userId === numericUserId && s.simulationId === numericSimulationId
+        (s) => s.userId === userId && s.simulationId === simulationId
       ) || null
     );
   }

@@ -5,7 +5,7 @@ import { Parameter } from '@/types/subIngredients/parameter';
  * Base Policy type containing only immutable values sent to the API
  */
 export interface Policy {
-  id: number;
+  id: string;
   countryId: (typeof countryIds)[number];
   apiVersion: string;
   parameters: Parameter[];

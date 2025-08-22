@@ -52,8 +52,8 @@ export async function createSimulation(
 */
 
 const mockApiVersion = 'mock-api-version';
-const mockPopulationId = 0;
-const mockPolicyId = 0;
+const mockPopulationId = '0';
+const mockPolicyId = '0';
 
 // Store created simulations to return proper data when fetched
 const mockSimulationStore = new Map<string, SimulationMetadata>();
@@ -95,8 +95,8 @@ export async function createSimulation(
         simulation_id: simulationId,
         country_id: 'us', // Default to US for now
         api_version: mockApiVersion,
-        population_id: data.population_id ? Number(data.population_id) : mockPopulationId,
-        policy_id: data.policy_id ? Number(data.policy_id) : mockPolicyId,
+        population_id: data.population_id || mockPopulationId,
+        policy_id: data.policy_id || mockPolicyId,
       };
 
       mockSimulationStore.set(simulationId, simulationMetadata);

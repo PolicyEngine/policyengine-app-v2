@@ -8,12 +8,13 @@ import {
   TextValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
+import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { setFlow } from '@/reducers/flowReducer';
 
 export default function SimulationsPage() {
-  const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
+  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const dispatch = useDispatch();
 

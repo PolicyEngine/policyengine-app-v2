@@ -5,10 +5,10 @@ import { countryIds } from '@/libs/countries';
  * NOTE: This is a template and open to modification in the future
  */
 export interface Report {
-  id: number;
+  id: string;
   countryId: (typeof countryIds)[number];
   apiVersion: string;
-  simulationId: number;
+  simulationId: string;
   reportData: ReportData;
   reportHash: string;
 }

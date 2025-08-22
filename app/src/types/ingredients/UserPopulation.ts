@@ -4,9 +4,9 @@
  */
 /*
 export interface UserPopulation {
-  id?: number;
-  userId: number;
-  populationId: number;
+  id?: string;
+  userId: string;
+  populationId: string;
   label?: string;
   createdAt?: string;
   updatedAt?: string;

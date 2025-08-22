@@ -17,8 +17,8 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
   function handleSubmit() {
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
-      populationId: parseInt(simulationState.populationId, 10) || undefined,
-      policyId: parseInt(simulationState.policyId, 10) || undefined,
+      populationId: simulationState.populationId || undefined,
+      policyId: simulationState.policyId || undefined,
     };
 
     const serializedSimulationCreationPayload: SimulationCreationPayload =

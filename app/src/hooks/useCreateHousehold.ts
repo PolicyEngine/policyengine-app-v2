@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createHousehold } from '@/api/household';
+import { MOCK_USER_ID } from '@/constants';
 import { householdKeys } from '@/libs/queryKeys';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 
@@ -15,10 +16,10 @@ export function useCreateHousehold() {
         queryClient.invalidateQueries({ queryKey: householdKeys.all });
 
         // Create association with current user (or anonymous for session storage)
-        const userId = 0; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
+        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
         await createAssociation.mutateAsync({
           userId,
-          householdId: parseInt(data.result.household_id, 10), // This is from the API response structure; may be modified in API v2
+          householdId: data.result.household_id, // This is from the API response structure; may be modified in API v2
         });
       } catch (error) {
         console.error('Household created but association failed:', error);

@@ -8,7 +8,7 @@
  */
 /*
 export interface Population {
-  id: number;
+  id: string;
   countryId: (typeof countryIds)[number];
   apiVersion: string;
   populationData: PopulationData;

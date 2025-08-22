@@ -11,9 +11,9 @@ export class UserReportAdapter {
    */
   static fromAssociation(association: any): UserReport {
     return {
-      id: association.id || parseInt(association.reportId, 10),
-      userId: parseInt(association.userId, 10),
-      reportId: parseInt(association.reportId, 10),
+      id: association.id || association.reportId,
+      userId: association.userId,
+      reportId: association.reportId,
       label: association.label,
       createdAt: association.createdAt,
       updatedAt: association.updatedAt,

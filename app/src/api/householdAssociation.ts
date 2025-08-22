@@ -1,9 +1,9 @@
 // TODO: Replace with UserHousehold from ingredients when implemented
 // For now, using a temporary type definition
 type UserHousehold = {
-  id?: number;
-  userId: number;
-  householdId: number;
+  id?: string;
+  userId: string;
+  householdId: string;
   label?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -47,9 +47,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 
     // Convert each API response to UserHousehold
     return apiResponses.map((apiData: any) => ({
-      id: parseInt(apiData.householdId, 10),
-      userId: parseInt(apiData.userId, 10),
-      householdId: parseInt(apiData.householdId, 10),
+      id: apiData.householdId,
+      userId: apiData.userId,
+      householdId: apiData.householdId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -72,9 +72,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 
     // Convert API response to UserHousehold
     return {
-      id: parseInt(apiData.householdId, 10),
-      userId: parseInt(apiData.userId, 10),
-      householdId: parseInt(apiData.householdId, 10),
+      id: apiData.householdId,
+      userId: apiData.userId,
+      householdId: apiData.householdId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -142,17 +142,14 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   }
 
   async findByUser(userId: string): Promise<UserHousehold[]> {
-    const numericUserId = parseInt(userId, 10);
     const households = this.getStoredHouseholds();
-    return households.filter((h) => h.userId === numericUserId);
+    return households.filter((h) => h.userId === userId);
   }
 
   async findById(userId: string, householdId: string): Promise<UserHousehold | null> {
-    const numericUserId = parseInt(userId, 10);
-    const numericHouseholdId = parseInt(householdId, 10);
     const households = this.getStoredHouseholds();
     return (
-      households.find((h) => h.userId === numericUserId && h.householdId === numericHouseholdId) ||
+      households.find((h) => h.userId === userId && h.householdId === householdId) ||
       null
     );
   }
