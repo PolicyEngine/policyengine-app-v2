@@ -79,7 +79,7 @@ export const useUserSimulations = (userId: string) => {
   console.log('householdAssociations', householdAssociations);
 
   // Step 2: Extract IDs for fetching
-  const simulationIds = simulationAssociations?.map((a) => a.simulationId.toString()) ?? [];
+  const simulationIds = simulationAssociations?.map((a) => a.simulationId).filter(Boolean) ?? [];
 
   console.log('simulationIds', simulationIds);
 
@@ -147,42 +147,41 @@ export const useUserSimulations = (userId: string) => {
 
   // Step 8: Build enhanced results with all relationships
   const enhancedSimulations: EnhancedUserSimulation[] =
-    simulationAssociations?.map((userSim) => {
-      // Get simulation from normalized cache or query results
-      const simulation =
-        (queryNormalizer.getObjectById(userSim.simulationId.toString()) as
-          | Simulation
-          | undefined) || simulations.find((s) => s.id === userSim.simulationId);
+    simulationAssociations
+      ?.filter((userSim) => userSim.simulationId) // Filter out associations without simulationId
+      .map((userSim) => {
+        // Get simulation from normalized cache or query results
+        const simulation =
+          (queryNormalizer.getObjectById(userSim.simulationId) as Simulation | undefined) ||
+          simulations.find((s) => s.id === userSim.simulationId);
 
-      // Get related entities from normalized cache
-      const policy = simulation?.policyId
-        ? (queryNormalizer.getObjectById(simulation.policyId.toString()) as Policy | undefined)
-        : undefined;
+        // Get related entities from normalized cache
+        const policy = simulation?.policyId
+          ? (queryNormalizer.getObjectById(simulation.policyId) as Policy | undefined)
+          : undefined;
 
-      const household = simulation?.populationId
-        ? (queryNormalizer.getObjectById(simulation.populationId.toString()) as
-            | HouseholdMetadata
-            | undefined)
-        : undefined;
+        const household = simulation?.populationId
+          ? (queryNormalizer.getObjectById(simulation.populationId) as HouseholdMetadata | undefined)
+          : undefined;
 
-      // Find user associations for related entities
-      const userPolicy = policyAssociations?.find((pa) => pa.policyId === simulation?.policyId);
+        // Find user associations for related entities
+        const userPolicy = policyAssociations?.find((pa) => pa.policyId === simulation?.policyId);
 
-      const userHousehold = householdAssociations?.find(
-        (ha) => simulation?.populationId && ha.householdId === simulation.populationId
-      );
+        const userHousehold = householdAssociations?.find(
+          (ha) => simulation?.populationId && ha.householdId === simulation.populationId
+        );
 
-      return {
-        userSimulation: userSim,
-        simulation,
-        policy,
-        household,
-        userPolicy,
-        userHousehold,
-        isLoading: false,
-        error: null,
-      };
-    }) ?? [];
+        return {
+          userSimulation: userSim,
+          simulation,
+          policy,
+          household,
+          userPolicy,
+          userHousehold,
+          isLoading: false,
+          error: null,
+        };
+      }) ?? [];
 
   // Step 9: Helper functions for accessing specific data
   const getSimulationWithFullContext = (simulationId: string) => {

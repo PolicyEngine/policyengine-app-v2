@@ -15,7 +15,7 @@ import { FlowComponentProps } from '@/types/flow';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicyId, setLocalPolicyId] = useState<string | null>(null);
