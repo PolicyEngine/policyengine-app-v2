@@ -45,7 +45,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Contact Support', icon: IconExternalLink, path: '/support' },
   ];
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <Stack
