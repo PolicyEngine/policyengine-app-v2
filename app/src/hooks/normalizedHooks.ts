@@ -1,51 +1,85 @@
 /**
- * Centralized exports for all normalized hooks
- * These hooks provide intelligent caching and normalized data structures
- * for easy access to ingredients and their dependencies
+ * Centralized exports for simulation and policy hooks
+ * These hooks leverage @normy/react-query for automatic normalization
+ * and intelligent caching of ingredients and their dependencies
  */
 
+// Primary hooks with full data fetching
 export { 
-  useUserPoliciesNormalized, 
-  useUserPolicyNormalized 
-} from './useUserPolicyNormalized';
+  useUserSimulations,
+  useUserSimulationById
+} from './useUserSimulations';
 
+// Lightweight association hooks
 export { 
-  useUserSimulationsNormalized 
-} from './useUserSimulationNormalized';
+  useSimulationAssociationsByUser,
+  useSimulationAssociation,
+  useCreateSimulationAssociation
+} from './useUserSimulationAssociations';
 
-export { 
-  useUserReportsNormalized, 
-  useUserReportNormalized 
-} from './useUserReportNormalized';
+export {
+  usePolicyAssociationsByUser,
+  usePolicyAssociation,
+  useCreatePolicyAssociation,
+  useUserPolicies
+} from './useUserPolicy';
+
+export {
+  useHouseholdAssociationsByUser,
+  useHouseholdAssociation,
+  useCreateHouseholdAssociation,
+  useUserHouseholds
+} from './useUserHousehold';
+
+// Utility hooks for normalized data access
+export {
+  useNormalizedData,
+  useAllEntities,
+  useSearchEntities,
+  useManualNormalization
+} from './utils/normalizedUtils';
 
 /**
- * Usage Examples:
+ * Usage Guide:
  * 
- * 1. Get all user policies with normalized access:
+ * ## Full Data Hooks (for detailed views)
+ * 
  * ```typescript
- * const { entities, getPolicy, getUserPolicy } = useUserPoliciesNormalized(userId);
- * const specificPolicy = getPolicy('policy-123');
+ * // Get all user simulations with policies and households
+ * const { data, isLoading } = useUserSimulations(userId);
+ * 
+ * // Get a single simulation with full context
+ * const { simulation, policy, household } = useUserSimulationById(userId, simId);
  * ```
  * 
- * 2. Get user simulations with all dependencies:
+ * ## Lightweight Hooks (for lists and navigation)
+ * 
  * ```typescript
- * const { entities, getSimulation, getPolicy } = useUserSimulationsNormalized(userId);
- * // Access simulation with its policy already loaded
- * const simulation = getSimulation('sim-123');
- * const policy = getPolicy(simulation.policyId);
+ * // Just get simulation associations (IDs and labels)
+ * const { data } = useSimulationAssociationsByUser(userId);
+ * 
+ * // Just get policy associations
+ * const { data } = usePolicyAssociationsByUser(userId);
  * ```
  * 
- * 3. Get user reports with complete dependency tree:
+ * ## Direct Normalized Cache Access
+ * 
  * ```typescript
- * const { getFullReportData } = useUserReportsNormalized(userId);
- * const reportWithAllDeps = getFullReportData('report-123');
- * // This includes the report, its simulations, and their policies
+ * // Get any entity by ID from the normalized cache
+ * const policy = useNormalizedData('policies', policyId);
+ * 
+ * // Get all entities of a type
+ * const allSimulations = useAllEntities('simulations');
+ * 
+ * // Search entities
+ * const results = useSearchEntities('policies', 'label', searchTerm);
  * ```
  * 
- * Benefits:
- * - Automatic caching: Only fetches data not already in React Query cache
- * - Normalized structure: Easy lookup by ID without nested loops
- * - Dependency fetching: Automatically fetches related entities
- * - Type safety: Full TypeScript support
- * - Performance: Parallel fetching of all required data
+ * ## Benefits with @normy/react-query:
+ * 
+ * - **Automatic Normalization**: Objects with 'id' fields are automatically normalized
+ * - **Data Sharing**: Same objects are shared across all queries
+ * - **Automatic Updates**: Mutations update all references automatically
+ * - **Cache First**: Always checks cache before fetching
+ * - **Type Safety**: Full TypeScript support throughout
  */

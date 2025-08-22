@@ -9,7 +9,7 @@ import {
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
-import { useUserSimulations } from '@/hooks/useUserSimulation';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { setFlow } from '@/reducers/flowReducer';
 
 export default function SimulationsPage() {
@@ -100,25 +100,31 @@ export default function SimulationsPage() {
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.association.simulationId.toString(),
+      id: item.userSimulation.simulationId.toString(),
       simulation: {
-        text: `Simulation #${item.association.simulationId}`,
+        text: item.userSimulation.label || `Simulation #${item.userSimulation.simulationId}`,
       } as TextValue,
       dateCreated: {
-        text: 'Just now', // TODO: Format actual date from item data
+        text: item.userSimulation.createdAt ? 
+          new Date(item.userSimulation.createdAt).toLocaleDateString() : 
+          'Just now',
       } as TextValue,
       policy: {
-        text: 'Policy Name\n7 Provisions', // TODO: Get actual policy data
+        text: item.userPolicy?.label || 
+          (item.policy ? `Policy #${item.policy.id}` : 'No policy'),
       } as TextValue,
       population: {
-        text: item.simulation?.population_id || 'Unknown',
-        url: `#${item.simulation?.population_id || 'unknown'}`,
+        text: item.household?.label || 
+          (item.simulation?.populationId ? `Household #${item.simulation.populationId}` : 'No household'),
+        url: item.household?.id ? 
+          `#household-${item.household.id}` : 
+          '#',
       } as LinkValue,
       connected: {
         items: [
           {
-            text: 'Report Title',
-            badge: 1,
+            text: 'No reports yet', // TODO: Connect to actual reports
+            badge: 0,
           },
         ],
       } as BulletsValue,

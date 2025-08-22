@@ -1,5 +1,5 @@
 import React from 'react';
-import { useUserSimulationsNormalized } from '@/hooks/useUserSimulationNormalized';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 
 interface NormalizationTestProps {
   userId: string;
@@ -11,13 +11,12 @@ interface NormalizationTestProps {
  */
 export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) => {
   const {
-    entities,
-    result,
+    data,
     isLoading,
     error,
-    getPolicyLabelForSimulation,
-    getSimulationsWithPolicyLabels,
-  } = useUserSimulationsNormalized(userId);
+    getSimulationWithFullContext,
+    getSimulationsByPolicy,
+  } = useUserSimulations(userId);
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error: {error.message}</div>;
@@ -25,81 +24,65 @@ export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) 
   // Test 1: Direct access through helper method
   const testDirectAccess = () => {
     console.log('Test 1: Direct Policy Label Access');
-    result.forEach(simId => {
-      const label = getPolicyLabelForSimulation(simId);
-      console.log(`  Simulation ${simId}: Policy Label = ${label || 'Not found'}`);
+    data.forEach(({ userSimulation, userPolicy, policy }) => {
+      const label = userPolicy?.label || policy?.id || 'Not found';
+      console.log(`  Simulation ${userSimulation.simulationId}: Policy Label = ${label}`);
     });
   };
 
   // Test 2: Batch access with all data
   const testBatchAccess = () => {
     console.log('Test 2: Batch Access with Policy Labels');
-    const simulationsWithLabels = getSimulationsWithPolicyLabels();
-    simulationsWithLabels.forEach(item => {
-      console.log(`  Simulation: ${item.label}`);
-      console.log(`    - ID: ${item.id}`);
-      console.log(`    - Policy Label: ${item.policyLabel}`);
-      console.log(`    - Has UserPolicy: ${!!item.userPolicy}`);
+    data.forEach((item) => {
+      console.log(`  Simulation: ${item.userSimulation.label}`);
+      console.log(`    Policy Label: ${item.userPolicy?.label || 'Unnamed'}`);
+      console.log(`    Policy ID: ${item.policy?.id || 'No policy'}`);
+      console.log(`    Household: ${item.household?.label || item.household?.id || 'No household'}`);
     });
   };
 
-  // Test 3: Verify normalized structure relationships
-  const testNormalizedStructure = () => {
-    console.log('Test 3: Normalized Structure Verification');
-    
-    // Check userSimulations have userPolicyId references
-    Object.entries(entities.userSimulations || {}).forEach(([id, userSim]: [string, any]) => {
-      console.log(`  UserSimulation ${id}:`);
-      console.log(`    - Has userPolicy ref: ${!!userSim.userPolicy}`);
-      console.log(`    - Has userPolicyId: ${!!userSim.userPolicyId}`);
-      console.log(`    - Policy ID from simulation: ${userSim.simulation}`);
-    });
-
-    // Check userPolicies are properly stored
-    console.log(`  Total UserPolicies: ${Object.keys(entities.userPolicies || {}).length}`);
-    console.log(`  Total Policies: ${Object.keys(entities.policies || {}).length}`);
+  // Test 3: Filter by policy
+  const testFilterByPolicy = (policyId: number) => {
+    console.log(`Test 3: Get all simulations for policy ${policyId}`);
+    const sims = getSimulationsByPolicy(policyId);
+    console.log(`  Found ${sims.length} simulations`);
   };
 
   // Run tests on mount
   React.useEffect(() => {
-    if (!isLoading && !error && result.length > 0) {
-      console.log('=== Running Normalization Tests ===');
+    if (!isLoading && !error && data.length > 0) {
       testDirectAccess();
       testBatchAccess();
-      testNormalizedStructure();
-      console.log('=== Tests Complete ===');
+      if (data[0]?.policy?.id) {
+        testFilterByPolicy(data[0].policy.id);
+      }
     }
-  }, [isLoading, error, result]);
+  }, [data, isLoading, error]);
 
   return (
     <div>
       <h2>Normalization Test Results</h2>
-      <p>Check console for detailed test output</p>
+      <div>Total Simulations: {data.length}</div>
       
-      <h3>Simulations Dashboard Preview</h3>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {getSimulationsWithPolicyLabels().map(item => (
-          <div key={item.id} style={{ 
-            border: '1px solid #ccc', 
-            padding: '1rem', 
-            borderRadius: '4px' 
-          }}>
-            <h4>{item.label || `Simulation ${item.id}`}</h4>
-            <p><strong>Policy:</strong> {item.policyLabel}</p>
-            <p><strong>Simulation ID:</strong> {item.id}</p>
-            {item.userSimulation && (
-              <p><strong>Created:</strong> {new Date(item.userSimulation.createdAt).toLocaleDateString()}</p>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <h3>Raw Entities Count</h3>
+      <h3>Simulations with Policy Labels:</h3>
       <ul>
-        <li>UserSimulations: {Object.keys(entities.userSimulations || {}).length}</li>
-        <li>Simulations: {Object.keys(entities.simulations || {}).length}</li>
-        <li>UserPolicies: {Object.keys(entities.userPolicies || {}).length}</li>
-        <li>Policies: {Object.keys(entities.policies || {}).length}</li>
+        {data.map((item) => (
+          <li key={item.userSimulation.id}>
+            <strong>{item.userSimulation.label || `Simulation ${item.userSimulation.simulationId}`}</strong>
+            <ul>
+              <li>Policy: {item.userPolicy?.label || item.policy?.id || 'No policy'}</li>
+              <li>Household: {item.household?.label || item.household?.id || 'No household'}</li>
+              <li>Created: {item.userSimulation.createdAt || 'Unknown'}</li>
+            </ul>
+          </li>
+        ))}
+      </ul>
+
+      <h3>Normalized Entities Count:</h3>
+      <ul>
+        <li>UserSimulations: {data.length}</li>
+        <li>Policies: {data.filter(d => d.policy).length}</li>
+        <li>Households: {data.filter(d => d.household).length}</li>
       </ul>
     </div>
   );

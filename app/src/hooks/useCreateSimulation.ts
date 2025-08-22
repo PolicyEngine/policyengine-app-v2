@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createSimulation } from '@/api/simulation';
 import { simulationKeys } from '@/libs/queryKeys';
-import { useCreateSimulationAssociation } from './useUserSimulation';
+import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export function useCreateSimulation() {
   const queryClient = useQueryClient();

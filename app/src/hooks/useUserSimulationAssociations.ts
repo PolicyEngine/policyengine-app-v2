@@ -18,8 +18,16 @@ export const useUserSimulationStore = () => {
   return isLoggedIn ? apiSimulationStore : sessionSimulationStore;
 };
 
-// This fetches only the user-simulation associations; see
-// 'useUserPolicies' below to also fetch full simulation details
+/**
+ * Lightweight hook that fetches only the user-simulation associations
+ * 
+ * Use this hook when you need:
+ * - Just the list of user's simulations (IDs and labels)
+ * - Simulation counts or simple lists
+ * - Navigation menus or sidebars
+ * 
+ * For full simulation data with policies and households, use useUserSimulations
+ */
 export const useSimulationAssociationsByUser = (userId: string) => {
   const store = useUserSimulationStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
@@ -117,6 +125,7 @@ export const useDeleteAssociation = () => {
 };
 */
 
+// TODO: Verify that useUserSimulations is valid code
 // Type for the combined data structure
 interface UserSimulationMetadataWithAssociation {
   association: UserSimulation;
@@ -176,3 +185,8 @@ export const useUserSimulations = (userId: string) => {
     associations, // Still available if needed separately
   };
 };
+/**
+ * @deprecated Use useUserSimulations from './useUserSimulations' for full data,
+ * or useSimulationAssociationsByUser for just associations
+ */
+// This function has been moved to its own file as the primary useUserSimulations hook
