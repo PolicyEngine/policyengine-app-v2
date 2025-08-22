@@ -28,7 +28,9 @@ function capitalize(str: string): string {
  * Adapted from V1's sortTreeInPlace function
  */
 function sortTreeInPlace(tree: ParameterTreeNode[]): ParameterTreeNode[] {
-  if (!Array.isArray(tree)) return [];
+  if (!Array.isArray(tree)) {
+    return [];
+  }
 
   tree.sort((a, b) => a.label.localeCompare(b.label));
 
@@ -45,22 +47,20 @@ function sortTreeInPlace(tree: ParameterTreeNode[]): ParameterTreeNode[] {
  * Builds a hierarchical parameter tree from flat metadata parameters
  * Adapted from policyengine-app/src/api/parameters.js
  */
-export function buildParameterTree(
-  parameters: Record<string, any>
-): ParameterTreeNode | undefined {
+export function buildParameterTree(parameters: Record<string, any>): ParameterTreeNode | undefined {
   const tree: { children?: ParameterTreeNode[] } = {};
 
   for (const parameter of Object.values(parameters).filter(
-    (param: any) => 
+    (param: any) =>
       (param.economy || param.household) &&
-      !param.parameter.includes("taxsim") &&
-      !param.parameter.includes("gov.abolitions")
+      !param.parameter.includes('taxsim') &&
+      !param.parameter.includes('gov.abolitions')
   )) {
     const nodeToInsert: ParameterTreeNode = {
       name: parameter.parameter,
-      label: capitalize((
-        parameter.label || parameter.parameter.split(/\.|\[/).pop()
-      ).replaceAll('_', ' ')),
+      label: capitalize(
+        (parameter.label || parameter.parameter.split(/\.|\[/).pop()).replaceAll('_', ' ')
+      ),
       index: parameter.indexInModule || 0,
       type: parameter.type,
       parameter: parameter.parameter,
@@ -80,48 +80,40 @@ export function buildParameterTree(
 
     let currentNode = tree;
     let cumulativePath = '';
-    
+
     for (const key of pathComponents.slice(0, -1)) {
       cumulativePath += key;
       const fixedCumulativePath = cumulativePath;
-      let label =
-        (cumulativePath in parameters && parameters[cumulativePath].label) ||
-        key;
-      
+      let label = (cumulativePath in parameters && parameters[cumulativePath].label) || key;
+
       // Transform e.g. "0]" -> "Bracket 1"
       if (key.endsWith(']')) {
-        label = `Bracket ${parseInt(key.slice(0, -1)) + 1}`;
+        label = `Bracket ${parseInt(key.slice(0, -1), 10) + 1}`;
       }
       label = capitalize(label.replaceAll('_', ' '));
-      
+
       if (!currentNode.children) {
         currentNode.children = [];
       }
-      
-      if (
-        !currentNode.children.find(
-          (child) => child.name === fixedCumulativePath
-        )
-      ) {
+
+      if (!currentNode.children.find((child) => child.name === fixedCumulativePath)) {
         currentNode.children.push({
-          label: label,
+          label,
           name: cumulativePath,
           index: 0,
           children: [],
           type: 'parameterNode',
         });
       }
-      
-      currentNode = currentNode.children.find(
-        (child) => child.name === fixedCumulativePath
-      )!;
-      
+
+      currentNode = currentNode.children.find((child) => child.name === fixedCumulativePath)!;
+
       // Re-add the delimiter to the cumulative path
       if (delimiters) {
         cumulativePath += delimiters.shift();
       }
     }
-    
+
     try {
       if (!currentNode.children) {
         currentNode.children = [];
@@ -131,14 +123,14 @@ export function buildParameterTree(
       console.error('Error inserting node', nodeToInsert, 'into', currentNode);
     }
   }
-  
+
   const govTree = tree.children?.find((child) => child.name === 'gov');
-  
+
   // Sort the tree alphabetically by label (matching V1 behavior)
   if (govTree?.children) {
     sortTreeInPlace(govTree.children);
   }
-  
+
   return govTree;
 }
 

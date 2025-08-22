@@ -63,7 +63,7 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
   const dispatch = useDispatch();
-  
+
   // Get date ranges from metadata using utility selector
   const { minDate, maxDate } = useSelector(getDateRange);
 

@@ -58,7 +58,7 @@ export interface MetadataState {
     filtered: Record<string, any>;
   };
   version: string | null;
-  
+
   // Computed parameter tree for policy creation UI (built when metadata is fetched)
   parameterTree: ParameterTreeNode | null;
 }

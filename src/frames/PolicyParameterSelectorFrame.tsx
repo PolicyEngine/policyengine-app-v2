@@ -6,7 +6,6 @@ import Header from '@/components/policyParameterSelectorFrame/Header';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
-import { mockParamMetadata } from '@/TEST_TO_DELETE/mockParamMetadata';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { ParameterMetadata } from '@/types/parameterMetadata';
@@ -22,7 +21,9 @@ export default function PolicyParameterSelectorFrame({
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
 
   // Get metadata from Redux state
-  const { parameterTree, parameters, loading, error } = useSelector((state: RootState) => state.metadata);
+  const { parameterTree, parameters, loading, error } = useSelector(
+    (state: RootState) => state.metadata
+  );
 
   // Show error if metadata failed to load
   if (error) {

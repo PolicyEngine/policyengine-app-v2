@@ -24,7 +24,7 @@ export const getDateRange = createSelector(
 
     // Calculate min/max dates from metadata.economy_options.time_period (following V1 approach)
     const possibleYears = timePeriods.map((period) => period.name).sort();
-    
+
     return {
       minDate: `${possibleYears[0]}-01-01`,
       maxDate: `${possibleYears[possibleYears.length - 1]}-12-31`,

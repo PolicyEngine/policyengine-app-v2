@@ -1,5 +1,4 @@
 import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
-import { mockParamFolder } from '@/TEST_TO_DELETE/mockParamFolder';
 import { ParameterTreeNode } from '@/types/metadata';
 import NestedMenu from '../common/NestedMenu';
 
