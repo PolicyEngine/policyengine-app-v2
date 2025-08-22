@@ -6,7 +6,7 @@ import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy() {
   const queryClient = useQueryClient();
-  const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
+  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreatePolicyAssociation();
 
   const mutation = useMutation({

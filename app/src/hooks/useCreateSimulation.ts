@@ -6,7 +6,7 @@ import { useCreateSimulationAssociation } from './useUserSimulationAssociations'
 
 export function useCreateSimulation() {
   const queryClient = useQueryClient();
-  const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
+  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateSimulationAssociation();
 
   const mutation = useMutation({
