@@ -21,7 +21,7 @@ export interface UserHouseholdStore {
 
 export class ApiHouseholdStore implements UserHouseholdStore {
   // TODO: Modify value to match to-be-created API endpoint structure
-  private readonly BASE_URL = '/api/user-household-households';
+  private readonly BASE_URL = '/api/user-household-associations';
 
   async create(association: Omit<UserHousehold, 'createdAt'>): Promise<UserHousehold> {
     const response = await fetch(`${this.BASE_URL}`, {

@@ -36,6 +36,14 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
 
+  console.log('userId', userId);
+  console.log('store', store);
+  console.log('isLoggedIn', isLoggedIn);
+  console.log('config', config);
+
+  console.log('householdAssociationKeys.byUser(userId)', householdAssociationKeys.byUser(userId));
+  console.log('store.findByUser(userId)', store.findByUser(userId));
+
   return useQuery({
     queryKey: householdAssociationKeys.byUser(userId),
     queryFn: () => store.findByUser(userId),
@@ -64,17 +72,17 @@ export const useCreateHouseholdAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byUser(newAssociation.userId.toString()),
+        queryKey: householdAssociationKeys.byUser(newAssociation.userId),
       });
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId.toString()),
+        queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
         householdAssociationKeys.specific(
-          newAssociation.userId.toString(),
-          newAssociation.householdId.toString()
+          newAssociation.userId,
+          newAssociation.householdId
         ),
         newAssociation
       );
@@ -149,14 +157,18 @@ export const useUserHouseholds = (userId: string) => {
     error: associationsError,
   } = useHouseholdAssociationsByUser(userId);
 
+  console.log('associations', associations);
+
   // Extract household IDs
-  const householdIds = associations?.map((a) => a.householdId.toString()) ?? [];
+  const householdIds = associations?.map((a) => a.householdId) ?? [];
+
+  console.log('householdIds', householdIds);
 
   // Fetch all households in parallel
   const householdQueries = useQueries({
     queries: householdIds.map((householdId) => ({
-      queryKey: householdKeys.byId(householdId.toString()),
-      queryFn: () => fetchHouseholdById(country, householdId.toString()),
+      queryKey: householdKeys.byId(householdId),
+      queryFn: () => fetchHouseholdById(country, householdId),
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),
@@ -167,15 +179,17 @@ export const useUserHouseholds = (userId: string) => {
   const error = associationsError || householdQueries.find((q) => q.error)?.error;
   const isError = !!error;
 
-  // Simple index-based mapping since queries are in same order as associations
+  // Map associations to households - filter out associations without householdId
   const householdsWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
-    associations?.map((association, index) => ({
-      association,
-      household: householdQueries[index]?.data,
-      isLoading: householdQueries[index]?.isLoading ?? false,
-      error: householdQueries[index]?.error ?? null,
-      isError: !!householdQueries[index]?.error,
-    }));
+    associations
+      ?.filter((association) => association.householdId)
+      .map((association, index) => ({
+        association,
+        household: householdQueries[index]?.data,
+        isLoading: householdQueries[index]?.isLoading ?? false,
+        error: householdQueries[index]?.error ?? null,
+        isError: !!householdQueries[index]?.error,
+      }));
 
   return {
     data: householdsWithAssociations,
