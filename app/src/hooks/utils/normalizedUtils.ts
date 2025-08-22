@@ -1,5 +1,5 @@
 import { UseQueryResult, useQueries, useQueryClient } from '@tanstack/react-query';
-import { normalize, denormalize, Schema } from 'normy';
+import { useQueryNormalizer } from '@normy/react-query';
 
 /**
  * Generic interface for normalized data structure
@@ -77,93 +77,38 @@ export function combineLoadingStates(
 }
 
 /**
- * Generic normalization function with error handling
+ * Hook for accessing normalized data via @normy/react-query
  */
-export function normalizeData<T>(
-  data: T[],
-  schema: Schema | Schema[],
-  isLoading: boolean,
-  error: Error | null
-): NormalizedData {
-  if (isLoading || error || data.length === 0) {
-    return {
-      entities: {},
-      result: [],
-      isLoading,
-      error,
-    };
-  }
-
-  const normalized = normalize(data, schema);
-  return {
-    ...normalized,
-    isLoading,
-    error,
-  } as NormalizedData;
+export function useNormalizedData<T>(entityKey: string, id: string): T | null {
+  const queryNormalizer = useQueryNormalizer();
+  return queryNormalizer.getObjectById(id) || null;
 }
 
 /**
- * Creates a denormalization helper function for a specific entity type
+ * Hook for getting all entities of a type
  */
-export function createDenormalizer<T>(
+export function useAllEntities<T>(entityKey: string): T[] {
+  const queryNormalizer = useQueryNormalizer();
+  const data = queryNormalizer.getNormalizedData(entityKey);
+  return data ? Object.values(data) : [];
+}
+
+/**
+ * Hook for searching entities by a specific field
+ */
+export function useSearchEntities<T extends Record<string, any>>(
   entityKey: string,
-  schema: Schema
-) {
-  return (id: string, entities: Record<string, any>): T | null => {
-    if (!entities[entityKey]?.[id]) return null;
-    return denormalize(id, schema, entities) as T;
-  };
-}
-
-/**
- * Creates a batch denormalization helper function
- */
-export function createBatchDenormalizer<T>(
-  entityKey: string
-) {
-  return (entities: Record<string, any>): T[] => {
-    const entityMap = entities[entityKey];
-    if (!entityMap) return [];
-    return Object.values(entityMap) as T[];
-  };
-}
-
-/**
- * Creates a search function for entities by a specific field
- */
-export function createSearchFunction<T extends Record<string, any>>(
-  entityKey: string,
-  searchField: keyof T
-) {
-  return (entities: Record<string, any>, searchTerm: string): T[] => {
-    const entityMap = entities[entityKey];
-    if (!entityMap) return [];
-    
-    const lowerSearchTerm = searchTerm.toLowerCase();
-    return Object.values(entityMap).filter((entity: any) => 
-      entity[searchField]?.toString().toLowerCase().includes(lowerSearchTerm)
-    ) as T[];
-  };
-}
-
-/**
- * Merges multiple entity collections, preserving existing data
- */
-export function mergeEntities(
-  ...entityCollections: Array<Record<string, Record<string, any>>>
-): Record<string, Record<string, any>> {
-  const merged: Record<string, Record<string, any>> = {};
-
-  for (const collection of entityCollections) {
-    for (const [entityType, entities] of Object.entries(collection)) {
-      if (!merged[entityType]) {
-        merged[entityType] = {};
-      }
-      Object.assign(merged[entityType], entities);
-    }
-  }
-
-  return merged;
+  searchField: keyof T,
+  searchTerm: string
+): T[] {
+  const entities = useAllEntities<T>(entityKey);
+  
+  if (!searchTerm) return entities;
+  
+  const lowerSearchTerm = searchTerm.toLowerCase();
+  return entities.filter((entity) => 
+    entity[searchField]?.toString().toLowerCase().includes(lowerSearchTerm)
+  );
 }
 
 /**
@@ -199,35 +144,65 @@ export function createLookupMap<T extends { id: string | number }>(
 }
 
 /**
- * Safe getter for nested entity references
+ * Safe getter for nested entity references using @normy/react-query
  */
-export function getNestedEntity<T>(
-  entities: Record<string, any>,
+export function useNestedEntity<T>(
   entityType: string,
   id: string | number | undefined | null
 ): T | null {
+  const queryNormalizer = useQueryNormalizer();
+  
   if (id == null) return null;
-  return entities[entityType]?.[id.toString()] || null;
+  
+  const entities = queryNormalizer.getNormalizedData(entityType);
+  return entities?.[id.toString()] || null;
 }
 
 /**
- * Creates a helper to get related entities through a junction table
+ * Hook to get related entities through a junction table
  */
-export function createRelationshipGetter<T, U>(
+export function useRelatedEntity<T, U>(
   primaryEntityKey: string,
   relatedEntityKey: string,
-  relationshipField: keyof T
-) {
-  return (
-    id: string,
-    entities: Record<string, any>
-  ): U | null => {
-    const primaryEntity = entities[primaryEntityKey]?.[id];
-    if (!primaryEntity) return null;
-    
-    const relatedId = primaryEntity[relationshipField];
-    if (!relatedId) return null;
-    
-    return entities[relatedEntityKey]?.[relatedId] || null;
+  relationshipField: keyof T,
+  id: string
+): U | null {
+  const queryNormalizer = useQueryNormalizer();
+  
+  const primaryEntities = queryNormalizer.getNormalizedData(primaryEntityKey);
+  const primaryEntity = primaryEntities?.[id];
+  
+  if (!primaryEntity) return null;
+  
+  const relatedId = primaryEntity[relationshipField];
+  if (!relatedId) return null;
+  
+  const relatedEntities = queryNormalizer.getNormalizedData(relatedEntityKey);
+  return relatedEntities?.[relatedId] || null;
+}
+
+/**
+ * Hook for manual data normalization updates
+ */
+export function useManualNormalization() {
+  const queryNormalizer = useQueryNormalizer();
+  
+  return {
+    updateEntity: <T extends { id: string | number }>(entityKey: string, entity: T) => {
+      queryNormalizer.setNormalizedData({
+        [entityKey]: {
+          [entity.id]: entity
+        }
+      });
+    },
+    updateEntities: <T extends { id: string | number }>(entityKey: string, entities: T[]) => {
+      const normalized: Record<string, T> = {};
+      entities.forEach(entity => {
+        normalized[entity.id] = entity;
+      });
+      queryNormalizer.setNormalizedData({
+        [entityKey]: normalized
+      });
+    }
   };
 }
