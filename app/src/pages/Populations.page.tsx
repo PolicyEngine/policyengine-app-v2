@@ -178,7 +178,7 @@ export default function PopulationsPage() {
       const detailsItems = getHouseholdDetails(item.household);
 
       return {
-        id: `household-${item.association.householdId}`,
+        id: item.association.householdId.toString(),
         populationName: {
           text: item.household?.label || `Population #${item.association.householdId}`,
         } as TextValue,

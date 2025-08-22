@@ -151,7 +151,7 @@ export const useUserSimulations = (userId: string) => {
     );
 
     const userHousehold = householdAssociations?.find(
-      ha => simulation?.populationId && ha.householdId === simulation.populationId.toString()
+      ha => simulation?.populationId && ha.householdId === simulation.populationId
     );
 
     return {
@@ -256,7 +256,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   );
 
   const userHousehold = householdAssociations?.find(
-    ha => finalSimulation?.populationId && ha.householdId === finalSimulation.populationId.toString()
+    ha => finalSimulation?.populationId && ha.householdId === finalSimulation.populationId
   );
 
   return {

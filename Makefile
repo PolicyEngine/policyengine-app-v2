@@ -20,6 +20,9 @@ dev:
 build:
 	cd app && npm run build-with-types
 
+typecheck:
+	cd app && npm run typecheck
+
 test:
 	cd app && npm run test
 

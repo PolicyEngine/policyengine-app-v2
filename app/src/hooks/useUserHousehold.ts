@@ -10,10 +10,11 @@ import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 // TODO: Replace with UserHousehold from ingredients when implemented
 // For now, using the API response type directly
 type UserHousehold = {
-  userId: string;
-  householdId: string;
+  id?: number;
+  userId: number;
+  householdId: number;
   label?: string;
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
   isCreated?: boolean;
 };
@@ -58,7 +59,7 @@ export const useCreateHouseholdAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (household: Omit<UserHousehold, 'id' | 'createdAt'>) =>
+    mutationFn: (household: Omit<UserHousehold, 'createdAt'>) =>
       store.create(household),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
@@ -131,6 +132,7 @@ interface UserHouseholdMetadataWithAssociation {
   household: HouseholdMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
+  isError?: boolean;
 }
 
 export const useUserHouseholds = (userId: string) => {
@@ -145,7 +147,7 @@ export const useUserHouseholds = (userId: string) => {
   } = useHouseholdAssociationsByUser(userId);
 
   // Extract household IDs
-  const householdIds = associations?.map((a) => a.householdId) ?? [];
+  const householdIds = associations?.map((a) => a.householdId.toString()) ?? [];
 
   // Fetch all households in parallel
   const householdQueries = useQueries({
@@ -169,7 +171,7 @@ export const useUserHouseholds = (userId: string) => {
       household: householdQueries[index]?.data,
       isLoading: householdQueries[index]?.isLoading ?? false,
       error: householdQueries[index]?.error ?? null,
-      isError: !!error,
+      isError: !!householdQueries[index]?.error,
     }));
 
   return {
