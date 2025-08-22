@@ -12,6 +12,26 @@ export const getTaxYears = createSelector(
     })) || []
 );
 
+export const getDateRange = createSelector(
+  (state: RootState) => state.metadata.economyOptions.time_period,
+  (timePeriods) => {
+    if (!timePeriods || timePeriods.length === 0) {
+      return {
+        minDate: '2022-01-01',
+        maxDate: '2035-12-31',
+      };
+    }
+
+    // Calculate min/max dates from metadata.economy_options.time_period (following V1 approach)
+    const possibleYears = timePeriods.map((period) => period.name).sort();
+    
+    return {
+      minDate: `${possibleYears[0]}-01-01`,
+      maxDate: `${possibleYears[possibleYears.length - 1]}-12-31`,
+    };
+  }
+);
+
 export const getRegions = createSelector(
   (state: RootState) => state.metadata.economyOptions.region,
   (regions) =>
