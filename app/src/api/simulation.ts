@@ -51,9 +51,10 @@ export async function createSimulation(
 }
 */
 
+// TODO: This needs fixing once we have a simulation endpoint on API.
 const mockApiVersion = 'mock-api-version';
-const mockPopulationId = '0';
-const mockPolicyId = '0';
+const mockPopulationId = '55453';
+const mockPolicyId = '14';
 
 // Store created simulations to return proper data when fetched
 const mockSimulationStore = new Map<string, SimulationMetadata>();
