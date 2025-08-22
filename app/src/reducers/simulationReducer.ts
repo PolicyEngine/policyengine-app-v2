@@ -1,7 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Simulation } from '@/types/simulation';
 
-const initialState: Simulation = {
+// SimulationState represents the mutable state for building a simulation
+interface SimulationState {
+  populationId: string;
+  policyId: string;
+}
+
+const initialState: SimulationState = {
   populationId: '',
   policyId: '',
 };

@@ -7,26 +7,28 @@ import { Report } from '@/types/ingredients';
 export class ReportAdapter {
   /**
    * Converts Report metadata from API GET response to Report type
+   * Handles snake_case to camelCase conversion
    * NOTE: This is a placeholder - actual implementation will depend on API structure
    */
   static fromMetadata(metadata: any): Report {
     return {
       id: metadata.id || metadata.report_id,
-      country_id: metadata.country_id,
-      api_version: metadata.api_version,
-      simulation_id: metadata.simulation_id,
-      report_data: metadata.report_data || {},
-      report_hash: metadata.report_hash || '',
+      countryId: metadata.country_id,
+      apiVersion: metadata.api_version,
+      simulationId: metadata.simulation_id,
+      reportData: metadata.report_data || {},
+      reportHash: metadata.report_hash || '',
     };
   }
   
   /**
    * Converts Report to format for API POST request
+   * API expects snake_case format
    * NOTE: This is a placeholder - actual implementation will depend on API structure
    */
   static toCreationPayload(report: Partial<Report>): ReportCreationPayload {
     return {
-      simulation_id: report.simulation_id,
+      simulation_id: report.simulationId,
       // Add other fields as the API evolves
     };
   }

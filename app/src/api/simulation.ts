@@ -1,6 +1,6 @@
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/simulationMetadata';
-import { SimulationCreationPayload } from '@/types/simulationPayload';
+import { SimulationCreationPayload } from '@/adapters';
 
 // The required API endpoint to fetch a simulation by ID
 // doesn't exist yet. The code below will be used once the endpoint is created.

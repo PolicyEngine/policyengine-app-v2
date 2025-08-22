@@ -7,24 +7,26 @@ import { SimulationMetadata } from '@/types/simulationMetadata';
 export class SimulationAdapter {
   /**
    * Converts SimulationMetadata from API GET response to Simulation type
+   * Handles snake_case to camelCase conversion
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
     return {
       id: parseInt(metadata.simulation_id), // Convert string ID to number
-      country_id: metadata.country_id,
-      api_version: metadata.api_version,
-      population_id: metadata.population_id,
-      policy_id: metadata.policy_id,
+      countryId: metadata.country_id,
+      apiVersion: metadata.api_version,
+      populationId: metadata.population_id,
+      policyId: metadata.policy_id,
     };
   }
   
   /**
    * Converts Simulation to format for API POST request
+   * API expects snake_case format
    */
   static toCreationPayload(simulation: Partial<Simulation>): SimulationCreationPayload {
     return {
-      population_id: simulation.population_id,
-      policy_id: simulation.policy_id,
+      population_id: simulation.populationId,
+      policy_id: simulation.policyId,
     };
   }
 }

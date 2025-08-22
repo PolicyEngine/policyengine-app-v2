@@ -9,8 +9,8 @@ import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Policy } from '@/types/policy';
-import { PolicyCreationPayload, serializePolicyCreationPayload } from '@/types/policyPayloads';
+import { Policy } from '@/types/ingredients';
+import { PolicyAdapter, PolicyCreationPayload } from '@/adapters';
 import { formatDate } from '@/utils/dateFormatter';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
@@ -19,11 +19,16 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
   const { resetIngredient } = useIngredientReset();
   const { createPolicy, isPending } = useCreatePolicy();
 
-  const policy: Policy = useSelector((state: RootState) => state.policy);
+  const policyState = useSelector((state: RootState) => state.policy);
+  
+  // Convert Redux state to Policy type structure
+  const policy: Partial<Policy> = {
+    parameters: policyState.params,
+  };
 
   function handleSubmit() {
     const serializedPolicyCreationPayload: PolicyCreationPayload =
-      serializePolicyCreationPayload(policy);
+      PolicyAdapter.toCreationPayload(policy as Policy, policyState.label);
     console.log('serializedPolicyCreationPayload', serializedPolicyCreationPayload);
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {

@@ -4,22 +4,25 @@ import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Simulation } from '@/types/simulation';
-import {
-  serializeSimulationCreationPayload,
-  SimulationCreationPayload,
-} from '@/types/simulationPayload';
+import { Simulation } from '@/types/ingredients';
+import { SimulationAdapter, SimulationCreationPayload } from '@/adapters';
 
 export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
-  const simulation: Simulation = useSelector((state: RootState) => state.simulation);
+  const simulationState = useSelector((state: RootState) => state.simulation);
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
   const { createSimulation, isPending } = useCreateSimulation();
   const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
+    // Convert state to partial Simulation for adapter
+    const simulationData: Partial<Simulation> = {
+      populationId: parseInt(simulationState.populationId) || undefined,
+      policyId: parseInt(simulationState.policyId) || undefined,
+    };
+    
     const serializedSimulationCreationPayload: SimulationCreationPayload =
-      serializeSimulationCreationPayload(simulation);
+      SimulationAdapter.toCreationPayload(simulationData);
 
     console.log('Submitting simulation:', serializedSimulationCreationPayload);
     createSimulation(serializedSimulationCreationPayload, {
@@ -36,15 +39,15 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'Population Added',
-      description: population.label || `Household #${simulation.populationId}`,
-      isFulfilled: !!simulation.populationId,
-      badge: population.label || `Household #${simulation.populationId}`,
+      description: population.label || `Household #${simulationState.populationId}`,
+      isFulfilled: !!simulationState.populationId,
+      badge: population.label || `Household #${simulationState.populationId}`,
     },
     {
       title: 'Policy Reform Added',
-      description: policy.label || `Policy #${simulation.policyId}`,
-      isFulfilled: !!simulation.policyId,
-      badge: policy.label || `Policy #${simulation.policyId}`,
+      description: policy.label || `Policy #${simulationState.policyId}`,
+      isFulfilled: !!simulationState.policyId,
+      badge: policy.label || `Policy #${simulationState.policyId}`,
     },
   ];
 
