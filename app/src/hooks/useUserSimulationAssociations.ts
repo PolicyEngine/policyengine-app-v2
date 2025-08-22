@@ -7,7 +7,7 @@ import { RootState } from '@/store';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { ApiSimulationStore, SessionStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
-import { simulationAssociationKeys, simulationKeys } from '../libs/queryKeys';
+import { simulationAssociationKeys } from '../libs/queryKeys';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 const apiSimulationStore = new ApiSimulationStore();
@@ -20,12 +20,12 @@ export const useUserSimulationStore = () => {
 
 /**
  * Lightweight hook that fetches only the user-simulation associations
- * 
+ *
  * Use this hook when you need:
  * - Just the list of user's simulations (IDs and labels)
  * - Simulation counts or simple lists
  * - Navigation menus or sidebars
- * 
+ *
  * For full simulation data with policies and households, use useUserSimulations
  */
 export const useSimulationAssociationsByUser = (userId: string) => {
@@ -71,7 +71,10 @@ export const useCreateSimulationAssociation = () => {
 
       // Update specific query cache
       queryClient.setQueryData(
-        simulationAssociationKeys.specific(newAssociation.userId.toString(), newAssociation.simulationId.toString()),
+        simulationAssociationKeys.specific(
+          newAssociation.userId.toString(),
+          newAssociation.simulationId.toString()
+        ),
         newAssociation
       );
     },

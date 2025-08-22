@@ -1,6 +1,6 @@
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyMetadata, PolicyMetadataParams } from '@/types/metadata/policyMetadata';
-import { convertPolicyJsonToParameters, convertParametersToPolicyJson } from './conversionHelpers';
+import { convertParametersToPolicyJson, convertPolicyJsonToParameters } from './conversionHelpers';
 
 /**
  * Adapter for converting between Policy and API formats
@@ -18,7 +18,7 @@ export class PolicyAdapter {
       parameters: convertPolicyJsonToParameters(metadata.policy_json),
     };
   }
-  
+
   /**
    * Converts Policy to format for API POST request
    * Note: API expects snake_case, but we handle that at the API layer

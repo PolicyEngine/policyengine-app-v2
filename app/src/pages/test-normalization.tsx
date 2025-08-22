@@ -13,8 +13,8 @@ export default function TestNormalizationPage() {
     <div style={{ padding: '2rem', maxWidth: '1200px', margin: '0 auto' }}>
       <h1>Normalization Structure Test</h1>
       <p>
-        This page tests that policy labels are properly accessible through 
-        the normalized structure when displaying user simulations.
+        This page tests that policy labels are properly accessible through the normalized structure
+        when displaying user simulations.
       </p>
       <hr style={{ margin: '2rem 0' }} />
       <NormalizationTest userId={testUserId} />

@@ -1,9 +1,7 @@
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
-  create: (
-    simulation: Omit<UserSimulation, 'id' | 'createdAt'>
-  ) => Promise<UserSimulation>;
+  create: (simulation: Omit<UserSimulation, 'id' | 'createdAt'>) => Promise<UserSimulation>;
   findByUser: (userId: string) => Promise<UserSimulation[]>;
   findById: (userId: string, simulationId: string) => Promise<UserSimulation | null>;
   // The below are not yet implemented, but keeping for future use
@@ -15,9 +13,7 @@ export class ApiSimulationStore implements UserSimulationStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-simulation-associations';
 
-  async create(
-    simulation: Omit<UserSimulation, 'id' | 'createdAt'>
-  ): Promise<UserSimulation> {
+  async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
     // Convert to API format (string IDs)
     const apiPayload = {
       userId: simulation.userId.toString(),
@@ -37,12 +33,12 @@ export class ApiSimulationStore implements UserSimulationStore {
     }
 
     const apiResponse = await response.json();
-    
+
     // Convert API response back to UserSimulation
     return {
-      id: parseInt(apiResponse.simulationId),
-      userId: parseInt(apiResponse.userId),
-      simulationId: parseInt(apiResponse.simulationId),
+      id: parseInt(apiResponse.simulationId, 10),
+      userId: parseInt(apiResponse.userId, 10),
+      simulationId: parseInt(apiResponse.simulationId, 10),
       label: apiResponse.label,
       createdAt: apiResponse.createdAt,
       updatedAt: apiResponse.updatedAt,
@@ -57,12 +53,12 @@ export class ApiSimulationStore implements UserSimulationStore {
     }
 
     const apiResponses = await response.json();
-    
+
     // Convert each API response to UserSimulation
     return apiResponses.map((apiData: any) => ({
-      id: parseInt(apiData.simulationId),
-      userId: parseInt(apiData.userId),
-      simulationId: parseInt(apiData.simulationId),
+      id: parseInt(apiData.simulationId, 10),
+      userId: parseInt(apiData.userId, 10),
+      simulationId: parseInt(apiData.simulationId, 10),
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -82,12 +78,12 @@ export class ApiSimulationStore implements UserSimulationStore {
     }
 
     const apiData = await response.json();
-    
+
     // Convert API response to UserSimulation
     return {
-      id: parseInt(apiData.simulationId),
-      userId: parseInt(apiData.userId),
-      simulationId: parseInt(apiData.simulationId),
+      id: parseInt(apiData.simulationId, 10),
+      userId: parseInt(apiData.userId, 10),
+      simulationId: parseInt(apiData.simulationId, 10),
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -129,9 +125,7 @@ export class ApiSimulationStore implements UserSimulationStore {
 export class SessionStorageSimulationStore implements UserSimulationStore {
   private readonly STORAGE_KEY = 'user-simulation-associations';
 
-  async create(
-    simulation: Omit<UserSimulation, 'id' | 'createdAt'>
-  ): Promise<UserSimulation> {
+  async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
     const newSimulation: UserSimulation = {
       ...simulation,
       id: simulation.simulationId, // Use simulationId as the ID
@@ -157,14 +151,14 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   }
 
   async findByUser(userId: string): Promise<UserSimulation[]> {
-    const numericUserId = parseInt(userId);
+    const numericUserId = parseInt(userId, 10);
     const simulations = this.getStoredSimulations();
     return simulations.filter((s) => s.userId === numericUserId);
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
-    const numericUserId = parseInt(userId);
-    const numericSimulationId = parseInt(simulationId);
+    const numericUserId = parseInt(userId, 10);
+    const numericSimulationId = parseInt(simulationId, 10);
     const simulations = this.getStoredSimulations();
     return (
       simulations.find(

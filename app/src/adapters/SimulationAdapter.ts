@@ -11,14 +11,14 @@ export class SimulationAdapter {
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
     return {
-      id: parseInt(metadata.simulation_id), // Convert string ID to number
+      id: parseInt(metadata.simulation_id, 10), // Convert string ID to number
       countryId: metadata.country_id,
       apiVersion: metadata.api_version,
       populationId: metadata.population_id,
       policyId: metadata.policy_id,
     };
   }
-  
+
   /**
    * Converts Simulation to format for API POST request
    * API expects snake_case format

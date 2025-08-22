@@ -1,9 +1,9 @@
 import '@mantine/core/styles.css';
 import '@mantine/dates/styles.css';
 
+import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import { QueryNormalizerProvider } from '@normy/react-query';
 import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
 import { Router } from './Router';

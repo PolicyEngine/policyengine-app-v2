@@ -105,20 +105,20 @@ export default function SimulationsPage() {
         text: item.userSimulation.label || `Simulation #${item.userSimulation.simulationId}`,
       } as TextValue,
       dateCreated: {
-        text: item.userSimulation.createdAt ? 
-          new Date(item.userSimulation.createdAt).toLocaleDateString() : 
-          'Just now',
+        text: item.userSimulation.createdAt
+          ? new Date(item.userSimulation.createdAt).toLocaleDateString()
+          : 'Just now',
       } as TextValue,
       policy: {
-        text: item.userPolicy?.label || 
-          (item.policy ? `Policy #${item.policy.id}` : 'No policy'),
+        text: item.userPolicy?.label || (item.policy ? `Policy #${item.policy.id}` : 'No policy'),
       } as TextValue,
       population: {
-        text: item.household?.label || 
-          (item.simulation?.populationId ? `Household #${item.simulation.populationId}` : 'No household'),
-        url: item.household?.id ? 
-          `#household-${item.household.id}` : 
-          '#',
+        text:
+          item.household?.label ||
+          (item.simulation?.populationId
+            ? `Household #${item.simulation.populationId}`
+            : 'No household'),
+        url: item.household?.id ? `#household-${item.household.id}` : '#',
       } as LinkValue,
       connected: {
         items: [

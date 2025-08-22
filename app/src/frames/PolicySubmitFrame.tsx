@@ -1,4 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
+import { PolicyAdapter, PolicyCreationPayload } from '@/adapters';
 import IngredientSubmissionView, {
   DateIntervalValue,
   TextListItem,
@@ -10,7 +11,6 @@ import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/ingredients/Policy';
-import { PolicyAdapter, PolicyCreationPayload } from '@/adapters';
 import { formatDate } from '@/utils/dateFormatter';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
@@ -20,15 +20,17 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
   const { createPolicy, isPending } = useCreatePolicy();
 
   const policyState = useSelector((state: RootState) => state.policy);
-  
+
   // Convert Redux state to Policy type structure
   const policy: Partial<Policy> = {
     parameters: policyState.params,
   };
 
   function handleSubmit() {
-    const serializedPolicyCreationPayload: PolicyCreationPayload =
-      PolicyAdapter.toCreationPayload(policy as Policy, policyState.label);
+    const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
+      policy as Policy,
+      policyState.label
+    );
     console.log('serializedPolicyCreationPayload', serializedPolicyCreationPayload);
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {

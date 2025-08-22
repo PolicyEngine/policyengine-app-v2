@@ -7,6 +7,7 @@ import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
+
 // TODO: Replace with UserHousehold from ingredients when implemented
 // For now, using the API response type directly
 type UserHousehold = {
@@ -59,8 +60,7 @@ export const useCreateHouseholdAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (household: Omit<UserHousehold, 'createdAt'>) =>
-      store.create(household),
+    mutationFn: (household: Omit<UserHousehold, 'createdAt'>) => store.create(household),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
@@ -72,7 +72,10 @@ export const useCreateHouseholdAssociation = () => {
 
       // Update specific query cache
       queryClient.setQueryData(
-        householdAssociationKeys.specific(newAssociation.userId.toString(), newAssociation.householdId.toString()),
+        householdAssociationKeys.specific(
+          newAssociation.userId.toString(),
+          newAssociation.householdId.toString()
+        ),
         newAssociation
       );
     },

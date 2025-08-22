@@ -1,5 +1,5 @@
-import { UseQueryResult, useQueries, useQueryClient } from '@tanstack/react-query';
 import { useQueryNormalizer } from '@normy/react-query';
+import { useQueries, useQueryClient, UseQueryResult } from '@tanstack/react-query';
 
 /**
  * Generic interface for normalized data structure
@@ -79,7 +79,7 @@ export function combineLoadingStates(
 /**
  * Hook for accessing normalized data via @normy/react-query
  */
-export function useNormalizedData<T>(entityKey: string, id: string): T | null {
+export function useNormalizedData<T>(_entityKey: string, id: string): T | null {
   const queryNormalizer = useQueryNormalizer();
   return queryNormalizer.getObjectById(id) || null;
 }
@@ -102,11 +102,13 @@ export function useSearchEntities<T extends Record<string, any>>(
   searchTerm: string
 ): T[] {
   const entities = useAllEntities<T>(entityKey);
-  
-  if (!searchTerm) return entities;
-  
+
+  if (!searchTerm) {
+    return entities;
+  }
+
   const lowerSearchTerm = searchTerm.toLowerCase();
-  return entities.filter((entity) => 
+  return entities.filter((entity) =>
     entity[searchField]?.toString().toLowerCase().includes(lowerSearchTerm)
   );
 }
@@ -131,9 +133,7 @@ export function extractUniqueIds<T extends { [key: string]: any }>(
 /**
  * Helper to create a lookup map from an array of objects
  */
-export function createLookupMap<T extends { id: string | number }>(
-  items: T[]
-): Record<string, T> {
+export function createLookupMap<T extends { id: string | number }>(items: T[]): Record<string, T> {
   const map: Record<string, T> = {};
   items.forEach((item) => {
     if (item?.id != null) {
@@ -151,9 +151,11 @@ export function useNestedEntity<T>(
   id: string | number | undefined | null
 ): T | null {
   const queryNormalizer = useQueryNormalizer();
-  
-  if (id == null) return null;
-  
+
+  if (id == null) {
+    return null;
+  }
+
   const entities = queryNormalizer.getNormalizedData(entityType);
   return entities?.[id.toString()] || null;
 }
@@ -168,15 +170,19 @@ export function useRelatedEntity<T, U>(
   id: string
 ): U | null {
   const queryNormalizer = useQueryNormalizer();
-  
+
   const primaryEntities = queryNormalizer.getNormalizedData(primaryEntityKey);
   const primaryEntity = primaryEntities?.[id];
-  
-  if (!primaryEntity) return null;
-  
+
+  if (!primaryEntity) {
+    return null;
+  }
+
   const relatedId = primaryEntity[relationshipField];
-  if (!relatedId) return null;
-  
+  if (!relatedId) {
+    return null;
+  }
+
   const relatedEntities = queryNormalizer.getNormalizedData(relatedEntityKey);
   return relatedEntities?.[relatedId] || null;
 }
@@ -186,23 +192,23 @@ export function useRelatedEntity<T, U>(
  */
 export function useManualNormalization() {
   const queryNormalizer = useQueryNormalizer();
-  
+
   return {
     updateEntity: <T extends { id: string | number }>(entityKey: string, entity: T) => {
       queryNormalizer.setNormalizedData({
         [entityKey]: {
-          [entity.id]: entity
-        }
+          [entity.id]: entity,
+        },
       });
     },
     updateEntities: <T extends { id: string | number }>(entityKey: string, entities: T[]) => {
       const normalized: Record<string, T> = {};
-      entities.forEach(entity => {
+      entities.forEach((entity) => {
         normalized[entity.id] = entity;
       });
       queryNormalizer.setNormalizedData({
-        [entityKey]: normalized
+        [entityKey]: normalized,
       });
-    }
+    },
   };
 }

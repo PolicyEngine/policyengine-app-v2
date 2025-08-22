@@ -1,11 +1,11 @@
 import { useSelector } from 'react-redux';
+import { SimulationAdapter, SimulationCreationPayload } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { SimulationAdapter, SimulationCreationPayload } from '@/adapters';
 
 export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const simulationState = useSelector((state: RootState) => state.simulation);
@@ -17,10 +17,10 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
   function handleSubmit() {
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
-      populationId: parseInt(simulationState.populationId) || undefined,
-      policyId: parseInt(simulationState.policyId) || undefined,
+      populationId: parseInt(simulationState.populationId, 10) || undefined,
+      policyId: parseInt(simulationState.policyId, 10) || undefined,
     };
-    
+
     const serializedSimulationCreationPayload: SimulationCreationPayload =
       SimulationAdapter.toCreationPayload(simulationData);
 

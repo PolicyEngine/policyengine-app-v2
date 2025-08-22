@@ -1,16 +1,16 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useQueryNormalizer } from '@normy/react-query';
-import { 
-  useNormalizedData, 
-  useAllEntities, 
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useAllEntities,
+  useManualNormalization,
+  useNormalizedData,
   useSearchEntities,
-  useManualNormalization 
 } from './utils/normalizedUtils';
 
 /**
  * Example hook demonstrating how to use @normy/react-query for
  * automatic normalization of ingredient data
- * 
+ *
  * @normy/react-query automatically normalizes any objects with an 'id' field,
  * making them available across all queries without manual data management
  */
@@ -76,7 +76,6 @@ export const useSearchIngredients = (searchTerm: string) => {
  */
 export const useCreateUserIngredient = () => {
   const queryClient = useQueryClient();
-  const { updateEntity } = useManualNormalization();
 
   return useMutation({
     mutationFn: async (data: Omit<UserIngredient, 'id'>) => {
@@ -128,17 +127,17 @@ export const useUpdateIngredient = () => {
  */
 export const useIngredientStats = () => {
   const queryNormalizer = useQueryNormalizer();
-  
+
   // Get all ingredients from normalized store
   const ingredients = queryNormalizer.getNormalizedData('ingredients');
-  
+
   if (!ingredients) {
     return { totalIngredients: 0, categories: [] };
   }
-  
+
   const allIngredients = Object.values(ingredients) as Ingredient[];
-  const categories = [...new Set(allIngredients.map(i => i.category))];
-  
+  const categories = [...new Set(allIngredients.map((i) => i.category))];
+
   return {
     totalIngredients: allIngredients.length,
     categories,

@@ -11,16 +11,16 @@ export class UserReportAdapter {
    */
   static fromAssociation(association: any): UserReport {
     return {
-      id: association.id || parseInt(association.reportId),
-      userId: parseInt(association.userId),
-      reportId: parseInt(association.reportId),
+      id: association.id || parseInt(association.reportId, 10),
+      userId: parseInt(association.userId, 10),
+      reportId: parseInt(association.reportId, 10),
       label: association.label,
       createdAt: association.createdAt,
       updatedAt: association.updatedAt,
       isCreated: true,
     };
   }
-  
+
   /**
    * Converts UserReport to format for creating/updating association
    * NOTE: This is a placeholder - actual implementation will depend on API structure

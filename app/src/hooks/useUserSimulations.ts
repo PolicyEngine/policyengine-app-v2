@@ -1,19 +1,23 @@
-import { useQueries, useQuery } from '@tanstack/react-query';
 import { useQueryNormalizer } from '@normy/react-query';
-import { fetchSimulationById } from '@/api/simulation';
-import { fetchPolicyById } from '@/api/policy';
+import { useQuery } from '@tanstack/react-query';
+import { PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
-import { SimulationAdapter, PolicyAdapter } from '@/adapters';
-import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
-import { usePolicyAssociationsByUser } from './useUserPolicy';
-import { useHouseholdAssociationsByUser } from './useUserHousehold';
-import { simulationKeys, policyKeys, householdKeys } from '../libs/queryKeys';
-import { useParallelQueries, extractUniqueIds, combineLoadingStates } from './utils/normalizedUtils';
-import { Simulation } from '@/types/ingredients/Simulation';
+import { fetchPolicyById } from '@/api/policy';
+import { fetchSimulationById } from '@/api/simulation';
 import { Policy } from '@/types/ingredients/Policy';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
+import { useHouseholdAssociationsByUser } from './useUserHousehold';
+import { usePolicyAssociationsByUser } from './useUserPolicy';
+import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
+import {
+  combineLoadingStates,
+  extractUniqueIds,
+  useParallelQueries,
+} from './utils/normalizedUtils';
 
 /**
  * Enhanced result type that includes all relationships
@@ -22,15 +26,15 @@ interface EnhancedUserSimulation {
   // Core associations
   userSimulation: UserSimulation;
   simulation?: Simulation;
-  
+
   // Related entities
   policy?: Policy;
   household?: HouseholdMetadata;
-  
+
   // User associations for related entities
   userPolicy?: UserPolicy;
   userHousehold?: any; // Type to be defined when UserHousehold is implemented
-  
+
   // Status
   isLoading: boolean;
   error: Error | null;
@@ -39,12 +43,12 @@ interface EnhancedUserSimulation {
 /**
  * Primary hook for fetching user simulations with all related data
  * Leverages @normy/react-query for automatic normalization and caching
- * 
+ *
  * Use this hook when you need:
  * - Full simulation context (policy, household, user associations)
  * - Detailed views or simulation pages
  * - Access to related entities
- * 
+ *
  * For simple lists or counts, use useSimulationAssociationsByUser instead
  */
 export const useUserSimulations = (userId: string) => {
@@ -71,54 +75,45 @@ export const useUserSimulations = (userId: string) => {
   } = useHouseholdAssociationsByUser(userId);
 
   // Step 2: Extract IDs for fetching
-  const simulationIds = simulationAssociations?.map(a => a.simulationId.toString()) ?? [];
+  const simulationIds = simulationAssociations?.map((a) => a.simulationId.toString()) ?? [];
 
   // Step 3: Fetch simulations using parallel queries utility
-  const simulationResults = useParallelQueries<Simulation>(
-    simulationIds,
-    {
-      queryKey: simulationKeys.byId,
-      queryFn: async (id) => {
-        const metadata = await fetchSimulationById(country, id);
-        return SimulationAdapter.fromMetadata(metadata);
-      },
-      enabled: !!simulationAssociations && simulationAssociations.length > 0,
-      staleTime: 5 * 60 * 1000,
-    }
-  );
+  const simulationResults = useParallelQueries<Simulation>(simulationIds, {
+    queryKey: simulationKeys.byId,
+    queryFn: async (id) => {
+      const metadata = await fetchSimulationById(country, id);
+      return SimulationAdapter.fromMetadata(metadata);
+    },
+    enabled: !!simulationAssociations && simulationAssociations.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Step 4: Extract policy and household IDs from fetched simulations
   const simulations = simulationResults.queries
-    .map(q => q.data)
+    .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
 
   const policyIds = extractUniqueIds(simulations, 'policyId');
   const householdIds = extractUniqueIds(simulations, 'populationId'); // populationId is actually householdId
 
   // Step 5: Fetch policies (only those not already in cache)
-  const policyResults = useParallelQueries<Policy>(
-    policyIds,
-    {
-      queryKey: policyKeys.byId,
-      queryFn: async (id) => {
-        const metadata = await fetchPolicyById(country, id);
-        return PolicyAdapter.fromMetadata(metadata);
-      },
-      enabled: policyIds.length > 0,
-      staleTime: 5 * 60 * 1000,
-    }
-  );
+  const policyResults = useParallelQueries<Policy>(policyIds, {
+    queryKey: policyKeys.byId,
+    queryFn: async (id) => {
+      const metadata = await fetchPolicyById(country, id);
+      return PolicyAdapter.fromMetadata(metadata);
+    },
+    enabled: policyIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Step 6: Fetch households (populations)
-  const householdResults = useParallelQueries<HouseholdMetadata>(
-    householdIds,
-    {
-      queryKey: householdKeys.byId,
-      queryFn: (id) => fetchHouseholdById(country, id),
-      enabled: householdIds.length > 0,
-      staleTime: 5 * 60 * 1000,
-    }
-  );
+  const householdResults = useParallelQueries<HouseholdMetadata>(householdIds, {
+    queryKey: householdKeys.byId,
+    queryFn: (id) => fetchHouseholdById(country, id),
+    enabled: householdIds.length > 0,
+    staleTime: 5 * 60 * 1000,
+  });
 
   // Step 7: Combine loading states
   const { isLoading, error } = combineLoadingStates(
@@ -131,52 +126,55 @@ export const useUserSimulations = (userId: string) => {
   );
 
   // Step 8: Build enhanced results with all relationships
-  const enhancedSimulations: EnhancedUserSimulation[] = simulationAssociations?.map(userSim => {
-    // Get simulation from normalized cache or query results
-    const simulation = queryNormalizer.getObjectById(userSim.simulationId.toString()) as Simulation | undefined
-      || simulations.find(s => s.id === userSim.simulationId);
+  const enhancedSimulations: EnhancedUserSimulation[] =
+    simulationAssociations?.map((userSim) => {
+      // Get simulation from normalized cache or query results
+      const simulation =
+        (queryNormalizer.getObjectById(userSim.simulationId.toString()) as
+          | Simulation
+          | undefined) || simulations.find((s) => s.id === userSim.simulationId);
 
-    // Get related entities from normalized cache
-    const policy = simulation?.policyId 
-      ? queryNormalizer.getObjectById(simulation.policyId.toString()) as Policy | undefined
-      : undefined;
+      // Get related entities from normalized cache
+      const policy = simulation?.policyId
+        ? (queryNormalizer.getObjectById(simulation.policyId.toString()) as Policy | undefined)
+        : undefined;
 
-    const household = simulation?.populationId
-      ? queryNormalizer.getObjectById(simulation.populationId.toString()) as HouseholdMetadata | undefined
-      : undefined;
+      const household = simulation?.populationId
+        ? (queryNormalizer.getObjectById(simulation.populationId.toString()) as
+            | HouseholdMetadata
+            | undefined)
+        : undefined;
 
-    // Find user associations for related entities
-    const userPolicy = policyAssociations?.find(
-      pa => pa.policyId === simulation?.policyId
-    );
+      // Find user associations for related entities
+      const userPolicy = policyAssociations?.find((pa) => pa.policyId === simulation?.policyId);
 
-    const userHousehold = householdAssociations?.find(
-      ha => simulation?.populationId && ha.householdId === simulation.populationId
-    );
+      const userHousehold = householdAssociations?.find(
+        (ha) => simulation?.populationId && ha.householdId === simulation.populationId
+      );
 
-    return {
-      userSimulation: userSim,
-      simulation,
-      policy,
-      household,
-      userPolicy,
-      userHousehold,
-      isLoading: false,
-      error: null,
-    };
-  }) ?? [];
+      return {
+        userSimulation: userSim,
+        simulation,
+        policy,
+        household,
+        userPolicy,
+        userHousehold,
+        isLoading: false,
+        error: null,
+      };
+    }) ?? [];
 
   // Step 9: Helper functions for accessing specific data
   const getSimulationWithFullContext = (simulationId: number) => {
-    return enhancedSimulations.find(es => es.userSimulation.simulationId === simulationId);
+    return enhancedSimulations.find((es) => es.userSimulation.simulationId === simulationId);
   };
 
   const getSimulationsByPolicy = (policyId: number) => {
-    return enhancedSimulations.filter(es => es.simulation?.policyId === policyId);
+    return enhancedSimulations.filter((es) => es.simulation?.policyId === policyId);
   };
 
   const getSimulationsByHousehold = (householdId: number) => {
-    return enhancedSimulations.filter(es => es.simulation?.populationId === householdId);
+    return enhancedSimulations.filter((es) => es.simulation?.populationId === householdId);
   };
 
   return {
@@ -185,23 +183,25 @@ export const useUserSimulations = (userId: string) => {
     isLoading,
     isError: !!error,
     error,
-    
+
     // Raw associations (if needed)
     associations: {
       simulations: simulationAssociations,
       policies: policyAssociations,
       households: householdAssociations,
     },
-    
+
     // Helper functions
     getSimulationWithFullContext,
     getSimulationsByPolicy,
     getSimulationsByHousehold,
-    
+
     // Direct access to normalized cache
-    getNormalizedSimulation: (id: string) => queryNormalizer.getObjectById(id) as Simulation | undefined,
+    getNormalizedSimulation: (id: string) =>
+      queryNormalizer.getObjectById(id) as Simulation | undefined,
     getNormalizedPolicy: (id: string) => queryNormalizer.getObjectById(id) as Policy | undefined,
-    getNormalizedHousehold: (id: string) => queryNormalizer.getObjectById(id) as HouseholdMetadata | undefined,
+    getNormalizedHousehold: (id: string) =>
+      queryNormalizer.getObjectById(id) as HouseholdMetadata | undefined,
   };
 };
 
@@ -217,7 +217,11 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   const cachedSimulation = queryNormalizer.getObjectById(simulationId) as Simulation | undefined;
 
   // Fetch if not in cache
-  const { data: simulation, isLoading: simLoading, error: simError } = useQuery({
+  const {
+    data: simulation,
+    isLoading: simLoading,
+    error: simError,
+  } = useQuery({
     queryKey: simulationKeys.byId(simulationId),
     queryFn: async () => {
       const metadata = await fetchSimulationById(country, simulationId);
@@ -251,12 +255,10 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId);
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId);
 
-  const userPolicy = policyAssociations?.find(
-    pa => pa.policyId === finalSimulation?.policyId
-  );
+  const userPolicy = policyAssociations?.find((pa) => pa.policyId === finalSimulation?.policyId);
 
   const userHousehold = householdAssociations?.find(
-    ha => finalSimulation?.populationId && ha.householdId === finalSimulation.populationId
+    (ha) => finalSimulation?.populationId && ha.householdId === finalSimulation.populationId
   );
 
   return {

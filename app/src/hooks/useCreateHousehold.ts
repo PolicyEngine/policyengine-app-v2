@@ -18,7 +18,7 @@ export function useCreateHousehold() {
         const userId = 0; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
         await createAssociation.mutateAsync({
           userId,
-          householdId: parseInt(data.result.household_id), // This is from the API response structure; may be modified in API v2
+          householdId: parseInt(data.result.household_id, 10), // This is from the API response structure; may be modified in API v2
         });
       } catch (error) {
         console.error('Household created but association failed:', error);

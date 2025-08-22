@@ -49,8 +49,7 @@ export const useCreatePolicyAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => 
-      store.create(userPolicy),
+    mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
@@ -62,7 +61,10 @@ export const useCreatePolicyAssociation = () => {
 
       // Update specific query cache
       queryClient.setQueryData(
-        policyAssociationKeys.specific(newAssociation.userId.toString(), newAssociation.policyId.toString()),
+        policyAssociationKeys.specific(
+          newAssociation.userId.toString(),
+          newAssociation.policyId.toString()
+        ),
         newAssociation
       );
     },

@@ -11,9 +11,7 @@ type UserHousehold = {
 };
 
 export interface UserHouseholdStore {
-  create: (
-    association: Omit<UserHousehold, 'createdAt'>
-  ) => Promise<UserHousehold>;
+  create: (association: Omit<UserHousehold, 'createdAt'>) => Promise<UserHousehold>;
   findByUser: (userId: string) => Promise<UserHousehold[]>;
   findById: (userId: string, householdId: string) => Promise<UserHousehold | null>;
   // The below are not yet implemented, but keeping for future use
@@ -25,9 +23,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-household-households';
 
-  async create(
-    association: Omit<UserHousehold, 'createdAt'>
-  ): Promise<UserHousehold> {
+  async create(association: Omit<UserHousehold, 'createdAt'>): Promise<UserHousehold> {
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -48,12 +44,12 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     }
 
     const apiResponses = await response.json();
-    
+
     // Convert each API response to UserHousehold
     return apiResponses.map((apiData: any) => ({
-      id: parseInt(apiData.householdId),
-      userId: parseInt(apiData.userId),
-      householdId: parseInt(apiData.householdId),
+      id: parseInt(apiData.householdId, 10),
+      userId: parseInt(apiData.userId, 10),
+      householdId: parseInt(apiData.householdId, 10),
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -73,12 +69,12 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     }
 
     const apiData = await response.json();
-    
+
     // Convert API response to UserHousehold
     return {
-      id: parseInt(apiData.householdId),
-      userId: parseInt(apiData.userId),
-      householdId: parseInt(apiData.householdId),
+      id: parseInt(apiData.householdId, 10),
+      userId: parseInt(apiData.userId, 10),
+      householdId: parseInt(apiData.householdId, 10),
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -120,9 +116,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 export class SessionStorageHouseholdStore implements UserHouseholdStore {
   private readonly STORAGE_KEY = 'user-household-households';
 
-  async create(
-    household: Omit<UserHousehold, 'id' | 'createdAt'>
-  ): Promise<UserHousehold> {
+  async create(household: Omit<UserHousehold, 'id' | 'createdAt'>): Promise<UserHousehold> {
     const newHousehold: UserHousehold = {
       ...household,
       id: household.householdId, // Use householdId as the ID
@@ -148,16 +142,19 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   }
 
   async findByUser(userId: string): Promise<UserHousehold[]> {
-    const numericUserId = parseInt(userId);
+    const numericUserId = parseInt(userId, 10);
     const households = this.getStoredHouseholds();
     return households.filter((h) => h.userId === numericUserId);
   }
 
   async findById(userId: string, householdId: string): Promise<UserHousehold | null> {
-    const numericUserId = parseInt(userId);
-    const numericHouseholdId = parseInt(householdId);
+    const numericUserId = parseInt(userId, 10);
+    const numericHouseholdId = parseInt(householdId, 10);
     const households = this.getStoredHouseholds();
-    return households.find((h) => h.userId === numericUserId && h.householdId === numericHouseholdId) || null;
+    return (
+      households.find((h) => h.userId === numericUserId && h.householdId === numericHouseholdId) ||
+      null
+    );
   }
 
   // Not yet implemented, but keeping for future use

@@ -1,11 +1,11 @@
 // This file contains type guards and union types for ingredients
 
 import { Policy } from './Policy';
-import { Simulation } from './Simulation';
 import { Report } from './Report';
+import { Simulation } from './Simulation';
 import { UserPolicy } from './UserPolicy';
-import { UserSimulation } from './UserSimulation';
 import { UserReport } from './UserReport';
+import { UserSimulation } from './UserSimulation';
 
 // Union types for all ingredients
 export type BaseIngredient = Policy | Simulation | Report; // | Population

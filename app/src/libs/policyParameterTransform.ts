@@ -1,6 +1,6 @@
 import { Dispatch } from '@reduxjs/toolkit';
+import { convertPolicyJsonToParameters } from '@/adapters';
 import { addPolicyParam } from '@/reducers/policyReducer';
-import { PolicyAdapter, convertPolicyJsonToParameters } from '@/adapters';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 
 /**

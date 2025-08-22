@@ -10,16 +10,14 @@ interface NormalizationTestProps {
  * the normalized structure when displaying simulations
  */
 export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) => {
-  const {
-    data,
-    isLoading,
-    error,
-    getSimulationWithFullContext,
-    getSimulationsByPolicy,
-  } = useUserSimulations(userId);
+  const { data, isLoading, error, getSimulationsByPolicy } = useUserSimulations(userId);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error.message}</div>;
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  if (error) {
+    return <div>Error: {error.message}</div>;
+  }
 
   // Test 1: Direct access through helper method
   const testDirectAccess = () => {
@@ -37,7 +35,9 @@ export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) 
       console.log(`  Simulation: ${item.userSimulation.label}`);
       console.log(`    Policy Label: ${item.userPolicy?.label || 'Unnamed'}`);
       console.log(`    Policy ID: ${item.policy?.id || 'No policy'}`);
-      console.log(`    Household: ${item.household?.label || item.household?.id || 'No household'}`);
+      console.log(
+        `    Household: ${item.household?.label || item.household?.id || 'No household'}`
+      );
     });
   };
 
@@ -63,12 +63,14 @@ export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) 
     <div>
       <h2>Normalization Test Results</h2>
       <div>Total Simulations: {data.length}</div>
-      
+
       <h3>Simulations with Policy Labels:</h3>
       <ul>
         {data.map((item) => (
           <li key={item.userSimulation.id}>
-            <strong>{item.userSimulation.label || `Simulation ${item.userSimulation.simulationId}`}</strong>
+            <strong>
+              {item.userSimulation.label || `Simulation ${item.userSimulation.simulationId}`}
+            </strong>
             <ul>
               <li>Policy: {item.userPolicy?.label || item.policy?.id || 'No policy'}</li>
               <li>Household: {item.household?.label || item.household?.id || 'No household'}</li>
@@ -81,8 +83,8 @@ export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) 
       <h3>Normalized Entities Count:</h3>
       <ul>
         <li>UserSimulations: {data.length}</li>
-        <li>Policies: {data.filter(d => d.policy).length}</li>
-        <li>Households: {data.filter(d => d.household).length}</li>
+        <li>Policies: {data.filter((d) => d.policy).length}</li>
+        <li>Households: {data.filter((d) => d.household).length}</li>
       </ul>
     </div>
   );

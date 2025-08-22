@@ -5,7 +5,10 @@ export interface PolicyCreationPayload {
   data: Record<string, any>;
 }
 
-export function serializePolicyCreationPayload(policy: Policy, label?: string): PolicyCreationPayload {
+export function serializePolicyCreationPayload(
+  policy: Policy,
+  label?: string
+): PolicyCreationPayload {
   const { parameters } = policy;
 
   // Fill payload with keys we already know

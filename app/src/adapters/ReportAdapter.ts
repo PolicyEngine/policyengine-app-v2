@@ -20,7 +20,7 @@ export class ReportAdapter {
       reportHash: metadata.report_hash || '',
     };
   }
-  
+
   /**
    * Converts Report to format for API POST request
    * API expects snake_case format

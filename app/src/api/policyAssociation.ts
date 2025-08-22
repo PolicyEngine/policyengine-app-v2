@@ -13,9 +13,7 @@ export class ApiPolicyStore implements UserPolicyStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-policy-associations';
 
-  async create(
-    policy: Omit<UserPolicy, 'id' | 'createdAt'>
-  ): Promise<UserPolicy> {
+  async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
     // Convert to API format (string IDs)
     const apiPayload = {
       userId: policy.userId.toString(),
@@ -35,12 +33,12 @@ export class ApiPolicyStore implements UserPolicyStore {
     }
 
     const apiResponse = await response.json();
-    
+
     // Convert API response back to UserPolicy
     return {
-      id: parseInt(apiResponse.policyId),
-      userId: parseInt(apiResponse.userId),
-      policyId: parseInt(apiResponse.policyId),
+      id: parseInt(apiResponse.policyId, 10),
+      userId: parseInt(apiResponse.userId, 10),
+      policyId: parseInt(apiResponse.policyId, 10),
       label: apiResponse.label,
       createdAt: apiResponse.createdAt,
       updatedAt: apiResponse.updatedAt,
@@ -55,12 +53,12 @@ export class ApiPolicyStore implements UserPolicyStore {
     }
 
     const apiResponses = await response.json();
-    
+
     // Convert each API response to UserPolicy
     return apiResponses.map((apiData: any) => ({
-      id: parseInt(apiData.policyId),
-      userId: parseInt(apiData.userId),
-      policyId: parseInt(apiData.policyId),
+      id: parseInt(apiData.policyId, 10),
+      userId: parseInt(apiData.userId, 10),
+      policyId: parseInt(apiData.policyId, 10),
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -80,12 +78,12 @@ export class ApiPolicyStore implements UserPolicyStore {
     }
 
     const apiData = await response.json();
-    
+
     // Convert API response to UserPolicy
     return {
-      id: parseInt(apiData.policyId),
-      userId: parseInt(apiData.userId),
-      policyId: parseInt(apiData.policyId),
+      id: parseInt(apiData.policyId, 10),
+      userId: parseInt(apiData.userId, 10),
+      policyId: parseInt(apiData.policyId, 10),
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
@@ -127,9 +125,7 @@ export class ApiPolicyStore implements UserPolicyStore {
 export class SessionStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
-  async create(
-    policy: Omit<UserPolicy, 'id' | 'createdAt'>
-  ): Promise<UserPolicy> {
+  async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
     const newPolicy: UserPolicy = {
       ...policy,
       id: policy.policyId, // Use policyId as the ID
@@ -155,19 +151,17 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
   }
 
   async findByUser(userId: string): Promise<UserPolicy[]> {
-    const numericUserId = parseInt(userId);
+    const numericUserId = parseInt(userId, 10);
     const policies = this.getStoredPolicies();
     return policies.filter((p) => p.userId === numericUserId);
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
-    const numericUserId = parseInt(userId);
-    const numericPolicyId = parseInt(policyId);
+    const numericUserId = parseInt(userId, 10);
+    const numericPolicyId = parseInt(policyId, 10);
     const policies = this.getStoredPolicies();
     return (
-      policies.find(
-        (p) => p.userId === numericUserId && p.policyId === numericPolicyId
-      ) || null
+      policies.find((p) => p.userId === numericUserId && p.policyId === numericPolicyId) || null
     );
   }
 
