@@ -1,32 +1,33 @@
 // TODO: Replace with UserHousehold from ingredients when implemented
 // For now, using a temporary type definition
-type UserHouseholdApiResponse = {
-  userId: string;
-  householdId: string;
+type UserHousehold = {
+  id?: number;
+  userId: number;
+  householdId: number;
   label?: string;
-  createdAt: string;
+  createdAt?: string;
   updatedAt?: string;
   isCreated?: boolean;
 };
 
 export interface UserHouseholdStore {
   create: (
-    association: Omit<UserHouseholdApiResponse, 'createdAt'>
-  ) => Promise<UserHouseholdApiResponse>;
-  findByUser: (userId: string) => Promise<UserHouseholdApiResponse[]>;
-  findById: (userId: string, householdId: string) => Promise<UserHouseholdApiResponse | null>;
+    association: Omit<UserHousehold, 'createdAt'>
+  ) => Promise<UserHousehold>;
+  findByUser: (userId: string) => Promise<UserHousehold[]>;
+  findById: (userId: string, householdId: string) => Promise<UserHousehold | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, householdId: string, updates: Partial<UserHouseholdApiResponse>): Promise<UserHouseholdApiResponse>;
+  // update(userId: string, householdId: string, updates: Partial<UserHousehold>): Promise<UserHousehold>;
   // delete(userId: string, householdId: string): Promise<void>;
 }
 
 export class ApiHouseholdStore implements UserHouseholdStore {
   // TODO: Modify value to match to-be-created API endpoint structure
-  private readonly BASE_URL = '/api/user-household-associations';
+  private readonly BASE_URL = '/api/user-household-households';
 
   async create(
-    association: Omit<UserHouseholdApiResponse, 'createdAt'>
-  ): Promise<UserHouseholdApiResponse> {
+    association: Omit<UserHousehold, 'createdAt'>
+  ): Promise<UserHousehold> {
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -40,16 +41,27 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     return response.json();
   }
 
-  async findByUser(userId: string): Promise<UserHouseholdApiResponse[]> {
+  async findByUser(userId: string): Promise<UserHousehold[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
-      throw new Error('Failed to fetch user associations');
+      throw new Error('Failed to fetch user households');
     }
 
-    return response.json();
+    const apiResponses = await response.json();
+    
+    // Convert each API response to UserHousehold
+    return apiResponses.map((apiData: any) => ({
+      id: parseInt(apiData.householdId),
+      userId: parseInt(apiData.userId),
+      householdId: parseInt(apiData.householdId),
+      label: apiData.label,
+      createdAt: apiData.createdAt,
+      updatedAt: apiData.updatedAt,
+      isCreated: true,
+    }));
   }
 
-  async findById(userId: string, householdId: string): Promise<UserHouseholdApiResponse | null> {
+  async findById(userId: string, householdId: string): Promise<UserHousehold | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`);
 
     if (response.status === 404) {
@@ -60,13 +72,24 @@ export class ApiHouseholdStore implements UserHouseholdStore {
       throw new Error('Failed to fetch association');
     }
 
-    return response.json();
+    const apiData = await response.json();
+    
+    // Convert API response to UserHousehold
+    return {
+      id: parseInt(apiData.householdId),
+      userId: parseInt(apiData.userId),
+      householdId: parseInt(apiData.householdId),
+      label: apiData.label,
+      createdAt: apiData.createdAt,
+      updatedAt: apiData.updatedAt,
+      isCreated: true,
+    };
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, householdId: string, updates: Partial<UserHouseholdApiResponse>): Promise<UserHouseholdApiResponse> {
-    const response = await fetch(`/api/user-household-associations/${userId}/${householdId}`, {
+  async update(userId: string, householdId: string, updates: Partial<UserHousehold>): Promise<UserHousehold> {
+    const response = await fetch(`/api/user-household-households/${userId}/${householdId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -83,7 +106,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   // Not yet implemented, but keeping for future use
   /*
   async delete(userId: string, householdId: string): Promise<void> {
-    const response = await fetch(`/api/user-household-associations/${userId}/${householdId}`, {
+    const response = await fetch(`/api/user-household-households/${userId}/${householdId}`, {
       method: 'DELETE',
     });
 
@@ -95,57 +118,62 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 }
 
 export class SessionStorageHouseholdStore implements UserHouseholdStore {
-  private readonly STORAGE_KEY = 'user-household-associations';
+  private readonly STORAGE_KEY = 'user-household-households';
 
   async create(
-    association: Omit<UserHouseholdApiResponse, 'createdAt'>
-  ): Promise<UserHouseholdApiResponse> {
-    const newAssociation: UserHouseholdApiResponse = {
-      ...association,
+    household: Omit<UserHousehold, 'id' | 'createdAt'>
+  ): Promise<UserHousehold> {
+    const newHousehold: UserHousehold = {
+      ...household,
+      id: household.householdId, // Use householdId as the ID
       createdAt: new Date().toISOString(),
+      isCreated: true,
     };
 
-    const associations = this.getStoredAssociations();
+    const households = this.getStoredHouseholds();
 
     // Check for duplicates
-    const exists = associations.some(
-      (a) => a.userId === association.userId && a.householdId === association.householdId
+    const exists = households.some(
+      (h) => h.userId === household.userId && h.householdId === household.householdId
     );
 
     if (exists) {
       throw new Error('Association already exists');
     }
 
-    const updatedAssociations = [...associations, newAssociation];
-    this.setStoredAssociations(updatedAssociations);
+    const updatedHouseholds = [...households, newHousehold];
+    this.setStoredHouseholds(updatedHouseholds);
 
-    return newAssociation;
+    return newHousehold;
   }
 
-  async findByUser(userId: string): Promise<UserHouseholdApiResponse[]> {
-    const associations = this.getStoredAssociations();
-    return associations.filter((a) => a.userId === userId);
+  async findByUser(userId: string): Promise<UserHousehold[]> {
+    const numericUserId = parseInt(userId);
+    const households = this.getStoredHouseholds();
+    return households.filter((h) => h.userId === numericUserId);
   }
 
-  async findById(userId: string, householdId: string): Promise<UserHouseholdApiResponse | null> {
-    const associations = this.getStoredAssociations();
-    return associations.find((a) => a.userId === userId && a.householdId === householdId) || null;
+  async findById(userId: string, householdId: string): Promise<UserHousehold | null> {
+    const numericUserId = parseInt(userId);
+    const numericHouseholdId = parseInt(householdId);
+    const households = this.getStoredHouseholds();
+    return households.find((h) => h.userId === numericUserId && h.householdId === numericHouseholdId) || null;
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, householdId: string, updates: Partial<UserHouseholdApiResponse>): Promise<UserHouseholdApiResponse> {
-    const associations = this.getStoredAssociations();
-    const index = associations.findIndex(a => a.userId === userId && a.householdId === householdId);
+  async update(userId: string, householdId: string, updates: Partial<UserHousehold>): Promise<UserHousehold> {
+    const households = this.getStoredHouseholds();
+    const index = households.findIndex(a => a.userId === userId && a.householdId === householdId);
     
     if (index === -1) {
       throw new Error('Association not found');
     }
 
-    const updatedAssociation = { ...associations[index], ...updates };
-    associations[index] = updatedAssociation;
+    const updatedAssociation = { ...households[index], ...updates };
+    households[index] = updatedAssociation;
     
-    this.setStoredAssociations(associations);
+    this.setStoredHouseholds(households);
     return updatedAssociation;
   }
   */
@@ -153,18 +181,18 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   // Not yet implemented, but keeping for future use
   /*
   async delete(userId: string, householdId: string): Promise<void> {
-    const associations = this.getStoredAssociations();
-    const filtered = associations.filter(a => !(a.userId === userId && a.householdId === householdId));
+    const households = this.getStoredHouseholds();
+    const filtered = households.filter(a => !(a.userId === userId && a.householdId === householdId));
     
-    if (filtered.length === associations.length) {
+    if (filtered.length === households.length) {
       throw new Error('Association not found');
     }
 
-    this.setStoredAssociations(filtered);
+    this.setStoredHouseholds(filtered);
   }
   */
 
-  private getStoredAssociations(): UserHouseholdApiResponse[] {
+  private getStoredHouseholds(): UserHousehold[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -173,17 +201,17 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
     }
   }
 
-  private setStoredAssociations(associations: UserHouseholdApiResponse[]): void {
+  private setStoredHouseholds(households: UserHousehold[]): void {
     try {
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(associations));
+      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(households));
     } catch (error) {
-      throw new Error('Failed to store associations in session storage');
+      throw new Error('Failed to store households in session storage');
     }
   }
 
   // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserHouseholdApiResponse[] {
-    return this.getStoredAssociations();
+  getAllAssociations(): UserHousehold[] {
+    return this.getStoredHouseholds();
   }
 
   clearAllAssociations(): void {

@@ -9,8 +9,6 @@ export { ReportAdapter } from './ReportAdapter';
 export type { ReportCreationPayload } from './ReportAdapter';
 
 // User Ingredient Adapters
-export { UserPolicyAdapter } from './UserPolicyAdapter';
-export { UserSimulationAdapter } from './UserSimulationAdapter';
 export { UserReportAdapter } from './UserReportAdapter';
 
 // Conversion Helpers

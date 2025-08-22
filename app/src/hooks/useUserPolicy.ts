@@ -8,7 +8,6 @@ import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociat
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
-import { UserPolicyAdapter } from '../adapters/UserPolicyAdapter';
 
 const apiPolicyStore = new ApiPolicyStore();
 const sessionPolicyStore = new SessionStoragePolicyStore();
@@ -28,10 +27,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
 
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId),
-    queryFn: async () => {
-      const apiResponses = await store.findByUser(userId);
-      return apiResponses.map(UserPolicyAdapter.fromApi);
-    },
+    queryFn: () => store.findByUser(userId),
     ...config,
   });
 };
@@ -43,10 +39,7 @@ export const usePolicyAssociation = (userId: string, policyId: string) => {
 
   return useQuery({
     queryKey: policyAssociationKeys.specific(userId, policyId),
-    queryFn: async () => {
-      const apiResponse = await store.findById(userId, policyId);
-      return apiResponse ? UserPolicyAdapter.fromApi(apiResponse) : null;
-    },
+    queryFn: () => store.findById(userId, policyId),
     ...config,
   });
 };
@@ -56,11 +49,8 @@ export const useCreatePolicyAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => {
-      const apiPayload = UserPolicyAdapter.toApi(userPolicy as UserPolicy);
-      const apiResponse = await store.create(apiPayload);
-      return UserPolicyAdapter.fromApi(apiResponse);
-    },
+    mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => 
+      store.create(userPolicy),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({

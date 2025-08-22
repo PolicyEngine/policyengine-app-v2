@@ -9,7 +9,7 @@ import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 // TODO: Replace with UserHousehold from ingredients when implemented
 // For now, using the API response type directly
-type UserHouseholdAssociation = {
+type UserHousehold = {
   userId: string;
   householdId: string;
   label?: string;
@@ -58,20 +58,20 @@ export const useCreateHouseholdAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (association: Omit<UserHouseholdAssociation, 'createdAt'>) =>
-      store.create(association),
+    mutationFn: (household: Omit<UserHousehold, 'id' | 'createdAt'>) =>
+      store.create(household),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byUser(newAssociation.userId),
+        queryKey: householdAssociationKeys.byUser(newAssociation.userId.toString()),
       });
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId),
+        queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId.toString()),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        householdAssociationKeys.specific(newAssociation.userId, newAssociation.householdId),
+        householdAssociationKeys.specific(newAssociation.userId.toString(), newAssociation.householdId.toString()),
         newAssociation
       );
     },
@@ -88,7 +88,7 @@ export const useUpdateAssociation = () => {
     mutationFn: ({ userId, householdId, updates }: {
       userId: string;
       householdId: string;
-      updates: Partial<UserHouseholdAssociation>;
+      updates: Partial<UserHousehold>;
     }) => store.update(userId, householdId, updates),
     onSuccess: (updatedAssociation) => {
       queryClient.invalidateQueries({ queryKey: associationKeys.byUser(updatedAssociation.userId) });
@@ -127,7 +127,7 @@ export const useDeleteAssociation = () => {
 
 // Type for the combined data structure
 interface UserHouseholdMetadataWithAssociation {
-  association: UserHouseholdAssociation;
+  association: UserHousehold;
   household: HouseholdMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
@@ -150,8 +150,8 @@ export const useUserHouseholds = (userId: string) => {
   // Fetch all households in parallel
   const householdQueries = useQueries({
     queries: householdIds.map((householdId) => ({
-      queryKey: householdKeys.byId(householdId),
-      queryFn: () => fetchHouseholdById(country, householdId),
+      queryKey: householdKeys.byId(householdId.toString()),
+      queryFn: () => fetchHouseholdById(country, householdId.toString()),
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),

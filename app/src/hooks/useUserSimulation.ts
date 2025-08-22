@@ -9,7 +9,6 @@ import { ApiSimulationStore, SessionStorageSimulationStore } from '../api/simula
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys, simulationKeys } from '../libs/queryKeys';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
-import { UserSimulationAdapter } from '../adapters/UserSimulationAdapter';
 
 const apiSimulationStore = new ApiSimulationStore();
 const sessionSimulationStore = new SessionStorageSimulationStore();
@@ -29,10 +28,7 @@ export const useSimulationAssociationsByUser = (userId: string) => {
 
   return useQuery({
     queryKey: simulationAssociationKeys.byUser(userId),
-    queryFn: async () => {
-      const apiResponses = await store.findByUser(userId);
-      return apiResponses.map(UserSimulationAdapter.fromApi);
-    },
+    queryFn: () => store.findByUser(userId),
     ...config,
   });
 };
@@ -54,11 +50,8 @@ export const useCreateSimulationAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (userSimulation: Omit<UserSimulation, 'id' | 'createdAt'>) => {
-      const apiPayload = UserSimulationAdapter.toApi(userSimulation as UserSimulation);
-      const apiResponse = await store.create(apiPayload);
-      return UserSimulationAdapter.fromApi(apiResponse);
-    },
+    mutationFn: (userSimulation: Omit<UserSimulation, 'id' | 'createdAt'>) =>
+      store.create(userSimulation),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
