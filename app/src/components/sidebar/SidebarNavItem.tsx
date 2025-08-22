@@ -1,6 +1,6 @@
-import { UnstyledButton, Group, Text } from '@mantine/core';
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
+import { Group, Text, UnstyledButton } from '@mantine/core';
 
 interface SidebarNavItemProps {
   label: string;
@@ -19,13 +19,9 @@ export default function SidebarNavItem({
 }: SidebarNavItemProps) {
   const content = (
     <Group gap={20} wrap="nowrap">
-      <Icon 
-        size={20} 
-        stroke={1.5} 
-        color={isActive ? '#344054' : '#667085'}
-      />
-      <Text 
-        size="sm" 
+      <Icon size={20} stroke={1.5} color={isActive ? '#344054' : '#667085'} />
+      <Text
+        size="sm"
         fw={isActive ? 500 : 400}
         c={isActive ? '#101828' : '#344054'}
         style={{ flex: 1 }}
@@ -63,11 +59,7 @@ export default function SidebarNavItem({
   }
 
   return (
-    <UnstyledButton
-      component={Link}
-      to={path}
-      style={buttonStyles}
-    >
+    <UnstyledButton component={Link} to={path} style={buttonStyles}>
       {content}
     </UnstyledButton>
   );

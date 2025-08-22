@@ -3,20 +3,20 @@ import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 
 export default function SidebarLogo() {
   return (
-    <Box 
-      style={{ 
+    <Box
+      style={{
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
       }}
     >
-      <img 
-        src={PolicyEngineLogo} 
-        alt="PolicyEngine" 
-        style={{ 
+      <img
+        src={PolicyEngineLogo}
+        alt="PolicyEngine"
+        style={{
           height: 24,
           width: 'auto',
-        }} 
+        }}
       />
     </Box>
   );

@@ -15,10 +15,10 @@ export default function SidebarSection({ title, children }: SidebarSectionProps)
           c="#667085"
           px={12}
           pb={4}
-          style={{ 
+          style={{
             fontSize: 12,
             lineHeight: '18px',
-            letterSpacing: 0
+            letterSpacing: 0,
           }}
         >
           {title}

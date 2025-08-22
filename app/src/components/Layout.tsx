@@ -1,5 +1,5 @@
-import { Box, AppShell } from '@mantine/core';
 import { Outlet } from 'react-router-dom';
+import { AppShell, Box } from '@mantine/core';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
@@ -14,13 +14,13 @@ export default function Layout() {
       <AppShell.Navbar p={0} withBorder={false}>
         <Sidebar />
       </AppShell.Navbar>
-      
+
       <AppShell.Main>
-        <Box 
-          style={{ 
+        <Box
+          style={{
             minHeight: '100vh',
             backgroundColor: '#f9fafb',
-            padding: '24px'
+            padding: '24px',
           }}
         >
           <Outlet />

@@ -1,15 +1,15 @@
-import { Stack, Button, Box, Text, Divider } from '@mantine/core';
-import { 
-  IconHome, 
-  IconFileDescription, 
+import {
+  IconBook,
+  IconExternalLink,
+  IconFileDescription,
   IconGitBranch,
+  IconHome,
+  IconPlus,
   IconSettings2,
   IconUsers,
-  IconBook,
-  IconPlus,
-  IconExternalLink
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
+import { Box, Button, Divider, Stack, Text } from '@mantine/core';
 import SidebarLogo from './sidebar/SidebarLogo';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
@@ -29,9 +29,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Configurations', icon: IconSettings2, path: '/configurations' },
   ];
 
-  const policyItems = [
-    { label: 'Populations', icon: IconUsers, path: '/populations' },
-  ];
+  const policyItems = [{ label: 'Populations', icon: IconUsers, path: '/populations' }];
 
   const resourceItems = [
     { label: 'GitHub', icon: IconGitBranch, path: 'https://github.com', external: true },
@@ -68,7 +66,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
           <SidebarLogo />
         </Box>
         <Box px={16} py={16}>
-          <Button 
+          <Button
             leftSection={<IconPlus size={16} stroke={2} />}
             fullWidth
             variant="filled"
@@ -93,11 +91,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       <Stack gap={0} style={{ flex: 1 }}>
         <SidebarSection>
           {navItems.map((item) => (
-            <SidebarNavItem
-              key={item.path}
-              {...item}
-              isActive={location.pathname === item.path}
-            />
+            <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
           ))}
         </SidebarSection>
 
@@ -105,11 +99,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
         <SidebarSection title="Policies">
           {policyItems.map((item) => (
-            <SidebarNavItem
-              key={item.path}
-              {...item}
-              isActive={location.pathname === item.path}
-            />
+            <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
           ))}
         </SidebarSection>
 
@@ -129,11 +119,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
         <SidebarSection title="My account">
           {accountItems.map((item) => (
-            <SidebarNavItem
-              key={item.path}
-              {...item}
-              isActive={location.pathname === item.path}
-            />
+            <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
           ))}
         </SidebarSection>
       </Stack>
@@ -144,9 +130,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
           <Text size="xs" c="#667085" style={{ fontSize: 10 }}>
             Running 2 items
           </Text>
-          <Box 
+          <Box
             p={8}
-            style={{ 
+            style={{
               border: '1px solid #E2E8F0',
               borderRadius: 6,
               cursor: 'pointer',
@@ -161,9 +147,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
               </Text>
             </Stack>
           </Box>
-          <Button 
-            variant="subtle" 
-            size="xs" 
+          <Button
+            variant="subtle"
+            size="xs"
             c="#344054"
             styles={{
               root: {
