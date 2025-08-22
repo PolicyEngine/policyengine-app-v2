@@ -1,6 +1,8 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { fetchHouseholdById } from '@/api/household';
+import { RootState } from '@/store';
 import { HouseholdMetadata } from '@/types/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -123,7 +125,8 @@ interface UserHouseholdMetadataWithAssociation {
 }
 
 export const useUserHouseholds = (userId: string) => {
-  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
+  // Get country from metadata state, fallback to 'us' if not available
+  const country = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
 
   // First, get the associations
   const {

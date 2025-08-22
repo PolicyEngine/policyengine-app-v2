@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import flowReducer from './reducers/flowReducer';
+import metadataReducer from './reducers/metadataReducer';
 import policyReducer from './reducers/policyReducer';
 import populationReducer from './reducers/populationReducer';
 import simulationReducer from './reducers/simulationReducer';
@@ -11,6 +12,7 @@ export const store = configureStore({
     household: populationReducer,
     simulation: simulationReducer,
     population: populationReducer,
+    metadata: metadataReducer,
   },
 });
 

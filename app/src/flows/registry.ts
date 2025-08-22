@@ -2,6 +2,7 @@ import { PolicyViewFlow } from '@/flows/policyViewFlow';
 import PolicyCreationFrame from '@/frames/PolicyCreationFrame';
 import PolicyParameterSelectorFrame from '@/frames/PolicyParameterSelectorFrame';
 import PolicySubmitFrame from '@/frames/PolicySubmitFrame';
+import GeographicConfirmationFrame from '@/frames/population/GeographicConfirmationFrame';
 import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import SimulationCreationFrame from '@/frames/SimulationCreationFrame';
@@ -25,6 +26,7 @@ export const componentRegistry = {
   PolicySubmitFrame,
   PolicyReadView: PoliciesPage,
   SelectGeographicScopeFrame,
+  GeographicConfirmationFrame,
   HouseholdBuilderFrame,
   PopulationReadView: PopulationsPage,
   SimulationCreationFrame,

@@ -37,6 +37,15 @@ export const householdKeys = {
   byUser: (userId: string) => [...householdKeys.all, 'user_id', userId] as const,
 };
 
+export const geographicAssociationKeys = {
+  all: ['geographic-associations'] as const,
+  byUser: (userId: string) => [...geographicAssociationKeys.all, 'user', userId] as const,
+  byGeography: (geographyId: string) =>
+    [...geographicAssociationKeys.all, 'geography', geographyId] as const,
+  specific: (userId: string, geographyId: string) =>
+    [...geographicAssociationKeys.all, 'user', userId, 'geography', geographyId] as const,
+};
+
 export const simulationKeys = {
   all: ['simulations'] as const,
   byId: (simulationId: string) => [...simulationKeys.all, 'simulation_id', simulationId] as const,

@@ -1,7 +1,7 @@
 import dayjs from 'dayjs';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   ActionIcon,
   Box,
@@ -17,6 +17,7 @@ import {
 } from '@mantine/core';
 import { DatePickerInput, YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
+import { getDateRange } from '@/libs/metadataUtils';
 import { addPolicyParam } from '@/reducers/policyReducer';
 import { ParameterMetadata } from '@/types/parameterMetadata';
 import { ValueInterval } from '@/types/valueInterval';
@@ -63,11 +64,10 @@ export default function PolicyParameterSelectorValueSetterContainer(
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
   const dispatch = useDispatch();
 
-  const [intervals, setIntervals] = useState<ValueInterval[]>([]);
+  // Get date ranges from metadata using utility selector
+  const { minDate, maxDate } = useSelector(getDateRange);
 
-  // TODO: Get these from metadata
-  const minDate = '2022-01-01';
-  const maxDate = '2035-12-31';
+  const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
   function resetValueSettingState() {
     setIntervals([]);

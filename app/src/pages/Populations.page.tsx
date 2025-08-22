@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
+import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { setFlow } from '@/reducers/flowReducer';
 
@@ -10,14 +11,31 @@ export default function PopulationsPage() {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
 
-  // TODO: All we're doing right now is fetching user-household associations;
-  // we should also fetch policies and display them in the view
-  // TODO: Fix isError
-  const { data, isLoading, isError, error } = useUserHouseholds(userId);
+  // Fetch household associations
+  const {
+    data: householdData,
+    isLoading: isHouseholdLoading,
+    isError: isHouseholdError,
+    error: householdError,
+  } = useUserHouseholds(userId);
+
+  // Fetch geographic associations
+  const {
+    data: geographicData,
+    isLoading: isGeographicLoading,
+    isError: isGeographicError,
+    error: geographicError,
+  } = useGeographicAssociationsByUser(userId);
+
   const dispatch = useDispatch();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Combined loading and error states
+  const isLoading = isHouseholdLoading || isGeographicLoading;
+  const isError = isHouseholdError || isGeographicError;
+  const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
     dispatch(setFlow(PopulationCreationFlow));
@@ -63,18 +81,35 @@ export default function PopulationsPage() {
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
-  // TODO: Refactor this func to accurately determine scope, depending on schema changes
-  // Helper function to determine if a household has geographic scope or household configuration
-  const getDetailsType = (/*geography: any*/): 'geographic' | 'household' => {
-    // To implement: check if household has state information (geographic scope)
-    // Default to household configuration
-    return 'household';
-  };
+  // We have separate sources of data for household vs geographies. Can we remove this?
+  // // Helper function to determine if an item is geographic or household
+  // const getDetailsType = (item: any): 'geographic' | 'household' => {
+  //   // If item has geographyType, it's a geographic association
+  //   if (item.geographyType) {
+  //     return 'geographic';
+  //   }
+  //   // Otherwise it's a household
+  //   return 'household';
+  // };
 
-  // To implement: Helper function to get geographic scope details
-  const getGeographicDetails = (/*geography: any*/) => {
-    // To implement: get geographic scope details
-    return [];
+  // Helper function to get geographic scope details
+  const getGeographicDetails = (geography: any) => {
+    const details = [];
+
+    // Add geography type
+    const typeLabel = geography.geographyType === 'national' ? 'National' : 'Subnational';
+    details.push({ text: typeLabel, badge: '' });
+
+    // Add country
+    details.push({ text: geography.countryCode.toUpperCase(), badge: '' });
+
+    // Add region if subnational
+    if (geography.geographyType === 'subnational' && geography.regionCode) {
+      const regionTypeLabel = geography.regionType === 'state' ? 'State' : 'Constituency';
+      details.push({ text: `${regionTypeLabel}: ${geography.regionCode}`, badge: '' });
+    }
+
+    return details;
   };
 
   // Helper function to get household configuration details
@@ -137,18 +172,13 @@ export default function PopulationsPage() {
     },
   ];
 
-  // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] =
-    data?.map((item) => {
-      // TODO: Implement this
-      const detailsType = getDetailsType(/*item.household*/);
-      const detailsItems =
-        detailsType === 'geographic'
-          ? getGeographicDetails(/*item.household*/)
-          : getHouseholdDetails(item.household);
+  // Transform household data
+  const householdRecords: IngredientRecord[] =
+    householdData?.map((item) => {
+      const detailsItems = getHouseholdDetails(item.household);
 
       return {
-        id: item.association.householdId,
+        id: `household-${item.association.householdId}`,
         populationName: {
           text: item.household?.label || `Population #${item.association.householdId}`,
         } as TextValue,
@@ -172,6 +202,36 @@ export default function PopulationsPage() {
         } as BulletsValue,
       };
     }) || [];
+
+  // Transform geographic data
+  const geographicRecords: IngredientRecord[] =
+    geographicData?.map((association) => {
+      const detailsItems = getGeographicDetails(association);
+
+      return {
+        id: `geographic-${association.id}`,
+        populationName: {
+          text: association.label,
+        } as TextValue,
+        dateCreated: {
+          text: new Date(association.createdAt).toLocaleDateString(),
+        } as TextValue,
+        details: {
+          items: detailsItems,
+        } as BulletsValue,
+        connections: {
+          items: [
+            {
+              text: 'Available for simulations',
+              badge: '',
+            },
+          ],
+        } as BulletsValue,
+      };
+    }) || [];
+
+  // Combine both data sources
+  const transformedData: IngredientRecord[] = [...householdRecords, ...geographicRecords];
 
   return (
     <IngredientReadView

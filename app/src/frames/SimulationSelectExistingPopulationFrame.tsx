@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import {
   clearPopulation,
@@ -11,19 +12,40 @@ import {
 } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
 import { HouseholdMetadata } from '@/types/householdMetadata';
+import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 
 export default function SimulationSelectExistingPopulationFrame({
   onNavigate,
 }: FlowComponentProps) {
   const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
 
-  const { data, isLoading, isError, error } = useUserHouseholds(userId);
+  // Fetch household populations
+  const {
+    data: householdData,
+    isLoading: isHouseholdLoading,
+    isError: isHouseholdError,
+    error: householdError,
+  } = useUserHouseholds(userId);
+
+  // Fetch geographic populations
+  const {
+    data: geographicData,
+    isLoading: isGeographicLoading,
+    isError: isGeographicError,
+    error: geographicError,
+  } = useGeographicAssociationsByUser(userId);
+
   const [localPopulationId, setLocalPopulationId] = useState<string | null>(null);
   const dispatch = useDispatch();
 
+  // Combined loading and error states
+  const isLoading = isHouseholdLoading || isGeographicLoading;
+  const isError = isHouseholdError || isGeographicError;
+  const error = householdError || geographicError;
+
   const canProceed = localPopulationId !== null;
 
-  function handlePopulationSelect(population: HouseholdMetadata) {
+  function handleHouseholdPopulationSelect(population: HouseholdMetadata) {
     // Blank out any existing population
     dispatch(clearPopulation());
 
@@ -33,7 +55,19 @@ export default function SimulationSelectExistingPopulationFrame({
     dispatch(updatePopulationLabel(population.label || ''));
 
     dispatch(markPopulationAsCreated());
-    setLocalPopulationId(population.id.toString());
+    setLocalPopulationId(`household-${population.id}`);
+  }
+
+  function handleGeographicPopulationSelect(population: UserGeographicAssociation) {
+    // Blank out any existing population
+    dispatch(clearPopulation());
+
+    // Fill in all population details
+    dispatch(updatePopulationId(population.id.toString()));
+    dispatch(updatePopulationLabel(population.label));
+
+    dispatch(markPopulationAsCreated());
+    setLocalPopulationId(`geographic-${population.id}`);
   }
 
   function handleSubmit() {
@@ -42,7 +76,8 @@ export default function SimulationSelectExistingPopulationFrame({
     onNavigate('next');
   }
 
-  const userPopulations = data || [];
+  const householdPopulations = householdData || [];
+  const geographicPopulations = geographicData || [];
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -67,7 +102,7 @@ export default function SimulationSelectExistingPopulationFrame({
     );
   }
 
-  if (userPopulations.length === 0) {
+  if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
     return (
       <FlowView
         title="Select an Existing Population"
@@ -77,20 +112,37 @@ export default function SimulationSelectExistingPopulationFrame({
     );
   }
 
-  const recentUserPopulations = userPopulations.slice(0, 5); // Display only the first 5 populations
-  const cardListItems = recentUserPopulations
+  // Build card list items from household populations
+  const householdCardItems = householdPopulations
     .filter((association) => association.household) // Only include associations with loaded households
+    .slice(0, 5) // Display only the first 5 populations
     .map((association) => ({
       title: association.household!.label || `Population ${association.household!.id}`,
-      onClick: () => handlePopulationSelect(association.household!),
-      isSelected: localPopulationId === association.household!.id.toString(),
+      onClick: () => handleHouseholdPopulationSelect(association.household!),
+      isSelected: localPopulationId === `household-${association.household!.id}`,
     }));
+
+  // Build card list items from geographic populations
+  const geographicCardItems = geographicPopulations
+    .slice(0, 5) // Display only the first 5 populations
+    .map((association) => ({
+      title: association.label,
+      onClick: () => handleGeographicPopulationSelect(association),
+      isSelected: localPopulationId === `geographic-${association.id}`,
+    }));
+
+  // Combine both types of populations
+  const cardListItems = [...householdCardItems, ...geographicCardItems];
 
   const content = (
     <Stack>
       <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
-      <Text fw={700}>Recents</Text>
+      <Text fw={700}>Your Populations</Text>
+      <Text size="sm" c="dimmed">
+        Showing {householdCardItems.length} household and {geographicCardItems.length} geographic
+        populations
+      </Text>
     </Stack>
   );
 
