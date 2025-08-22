@@ -1,6 +1,9 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { fetchSimulationById } from '@/api/simulation';
+import { countryIds } from '@/libs/countries';
+import { RootState } from '@/store';
 import { SimulationMetadata } from '@/types/simulationMetadata';
 import { ApiSimulationStore, SessionStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -123,7 +126,12 @@ interface UserSimulationMetadataWithAssociation {
 }
 
 export const useUserSimulations = (userId: string) => {
-  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
+  // Get country from metadata state, fallback to 'us' if not available
+  const metadataCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  // Ensure country is a valid country ID, fallback to 'us' if not recognized
+  const country = countryIds.includes(metadataCountry as any)
+    ? (metadataCountry as (typeof countryIds)[number])
+    : 'us';
 
   // First, get the associations
   const {

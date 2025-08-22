@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
 import { setGeographicScope, setRegion } from '@/reducers/populationReducer';
+import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponentProps) {
@@ -12,8 +13,9 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
 
-  // Hardcoded for now
-  const currentCountry: string = 'us';
+  // Get current country from metadata state, fallback to 'us' if not available
+  const currentCountry: string =
+    useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
 
   const usStates = us_regions.result.economy_options.region
     .filter((r) => r.name !== 'us')

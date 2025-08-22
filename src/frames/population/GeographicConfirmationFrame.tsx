@@ -27,7 +27,8 @@ export default function GeographicConfirmationFrame({
 
   // Hardcoded for now - TODO: Replace with actual user from auth context
   const currentUserId = 'anonymous';
-  const currentCountry = 'us'; // Hardcoded for now
+  // Get current country from metadata state, fallback to 'us' if not available
+  const currentCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
 
   // Helper function to get region label
   const getRegionLabel = (regionCode: string, countryCode: string): string => {

@@ -1,5 +1,4 @@
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
@@ -8,21 +7,20 @@ import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { PopulationViewFlow } from '@/flows/populationViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
-import { fetchMetadataThunk } from '@/reducers/metadataReducer';
-import { AppDispatch, RootState } from '@/store';
+import { useFetchMetadata } from '@/hooks/useMetadata';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 export default function HomePage() {
-  const dispatch = useDispatch<AppDispatch>();
+  const dispatch = useDispatch();
 
-  const currentCountryInState = useSelector((state: RootState) => state.metadata.currentCountry);
-  // Mocking countryId since route not defined yet. TODO: useParams(countryId) instead
+  // TODO: Replace with dynamic country from URL route parameter
+  // When routing is implemented, this will become:
+  // const { countryId } = useParams();
+  // This approach ensures metadata is fetched when:
+  // 1. Component mounts (initial load)
+  // 2. countryId changes (when user navigates between countries)
   const countryId = 'us';
-  useEffect(() => {
-    if (countryId !== currentCountryInState) {
-      dispatch(fetchMetadataThunk(countryId));
-    }
-  }, [countryId, currentCountryInState]);
+  useFetchMetadata(countryId);
 
   // Note: Below is for testing purposes only
   return (
