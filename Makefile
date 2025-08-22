@@ -5,6 +5,7 @@ help:
 	@echo "  make install    - Install dependencies"
 	@echo "  make dev        - Start development server"
 	@echo "  make build      - Build production version"
+	@echo "  make typecheck  - Run type checks"
 	@echo "  make test       - Run tests"
 	@echo "  make lint       - Run linters"
 	@echo "  make format     - Format code"
