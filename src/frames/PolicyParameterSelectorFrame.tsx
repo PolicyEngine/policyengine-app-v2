@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSelector } from 'react-redux';
 import { AppShell, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import Header from '@/components/policyParameterSelectorFrame/Header';
@@ -6,6 +7,7 @@ import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import { mockParamMetadata } from '@/TEST_TO_DELETE/mockParamMetadata';
+import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { ParameterMetadata } from '@/types/parameterMetadata';
 
@@ -19,8 +21,22 @@ export default function PolicyParameterSelectorFrame({
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
 
+  // Get metadata from Redux state
+  const { parameterTree, parameters, loading, error } = useSelector((state: RootState) => state.metadata);
+
+  // Show error if metadata failed to load
+  if (error) {
+    return (
+      <div>
+        <Text c="red">Error loading parameters: {error}</Text>
+        <Text>Please try refreshing the page.</Text>
+      </div>
+    );
+  }
+
   function handleMenuItemClick(paramLabel: string) {
-    const param: ParameterMetadata | null = mockParamMetadata.parameters[paramLabel] || null;
+    // Use real parameters instead of mock data
+    const param: ParameterMetadata | null = parameters[paramLabel] || null;
     if (param && param.type === 'parameter') {
       setSelectedLeafParam(param);
       // Close mobile menu when item is selected
@@ -52,11 +68,21 @@ export default function PolicyParameterSelectorFrame({
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
-        <Menu setSelectedParamLabel={handleMenuItemClick} />
+        {loading || !parameterTree ? (
+          <div>Loading parameters...</div>
+        ) : (
+          <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
+        )}
       </AppShell.Navbar>
 
       <AppShell.Main>
-        {selectedLeafParam ? <Main param={selectedLeafParam} /> : <MainEmpty />}
+        {loading || !parameterTree ? (
+          <MainEmpty />
+        ) : selectedLeafParam ? (
+          <Main param={selectedLeafParam} />
+        ) : (
+          <MainEmpty />
+        )}
       </AppShell.Main>
 
       <AppShell.Footer p="md">

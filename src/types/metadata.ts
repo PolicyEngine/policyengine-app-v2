@@ -21,6 +21,22 @@ export interface MetadataApiPayload {
   };
 }
 
+// Re-export ParameterTreeNode type from buildParameterTree
+export interface ParameterTreeNode {
+  name: string;
+  label: string;
+  index: number;
+  children?: ParameterTreeNode[];
+  type?: 'parameterNode' | 'parameter';
+  parameter?: string;
+  description?: string | null;
+  unit?: string | null;
+  period?: string | null;
+  values?: Record<string, any>;
+  economy?: boolean;
+  household?: boolean;
+}
+
 export interface MetadataState {
   currentCountry: string | null;
   loading: boolean;
@@ -42,4 +58,7 @@ export interface MetadataState {
     filtered: Record<string, any>;
   };
   version: string | null;
+  
+  // Computed parameter tree for policy creation UI (built when metadata is fetched)
+  parameterTree: ParameterTreeNode | null;
 }

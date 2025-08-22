@@ -1,14 +1,20 @@
 import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
 import { mockParamFolder } from '@/TEST_TO_DELETE/mockParamFolder';
+import { ParameterTreeNode } from '@/types/metadata';
 import NestedMenu from '../common/NestedMenu';
 
 interface PolicyParameterSelectorMenuProps {
   setSelectedParamLabel: (param: string) => void;
+  parameterTree: ParameterTreeNode;
 }
 
 export default function PolicyParameterSelectorMenu({
   setSelectedParamLabel,
+  parameterTree,
 }: PolicyParameterSelectorMenuProps) {
+  // Convert parameter tree to format expected by NestedMenu
+  const menuOptions = parameterTree.children || [];
+
   return (
     <Stack h="100%">
       <Box>
@@ -20,7 +26,7 @@ export default function PolicyParameterSelectorMenu({
       </Box>
 
       <ScrollArea flex={1} type="scroll">
-        <NestedMenu menuOptions={mockParamFolder} onItemClick={setSelectedParamLabel} />
+        <NestedMenu menuOptions={menuOptions} onItemClick={setSelectedParamLabel} />
       </ScrollArea>
     </Stack>
   );

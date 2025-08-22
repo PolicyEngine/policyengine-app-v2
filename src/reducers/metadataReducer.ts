@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 // Import the API function
 import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
+import { buildParameterTree } from '@/libs/buildParameterTree';
 import { MetadataState } from '@/types/metadata';
 
 const initialState: MetadataState = {
@@ -17,6 +18,7 @@ const initialState: MetadataState = {
   basicInputs: [],
   modelledPolicies: { core: {}, filtered: {} },
   version: null,
+  parameterTree: null,
 };
 
 // Async thunk for fetching metadata
@@ -54,6 +56,7 @@ const metadataSlice = createSlice({
         state.basicInputs = [];
         state.modelledPolicies = { core: {}, filtered: {} };
         state.version = null;
+        state.parameterTree = null;
       }
     },
     clearMetadata(state) {
@@ -89,6 +92,15 @@ const metadataSlice = createSlice({
         state.basicInputs = body.basicInputs;
         state.modelledPolicies = body.modelled_policies;
         state.version = body.version;
+
+        // Build parameter tree from parameters (following V1 approach)
+        try {
+          state.parameterTree = buildParameterTree(body.parameters) || null;
+          console.log('Parameter tree built successfully:', state.parameterTree);
+        } catch (error) {
+          console.error('Failed to build parameter tree:', error);
+          state.parameterTree = null;
+        }
       })
       .addCase(fetchMetadataThunk.rejected, (state, action) => {
         state.loading = false;

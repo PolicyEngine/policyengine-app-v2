@@ -119,5 +119,6 @@ export function transformMetadataPayload(
     basicInputs: data.basicInputs ?? [],
     modelledPolicies: data.modelled_policies ?? { core: {}, filtered: {} },
     version: data.version ?? null,
+    parameterTree: null, // Will be built separately in the reducer
   };
 }
