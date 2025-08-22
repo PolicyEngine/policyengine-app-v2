@@ -1,4 +1,4 @@
-import { NavLink } from '@mantine/core';
+import { UnstyledButton, Group, Text } from '@mantine/core';
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 
@@ -17,52 +17,58 @@ export default function SidebarNavItem({
   isActive,
   external,
 }: SidebarNavItemProps) {
-  const navLinkStyles = {
-    root: {
-      borderRadius: 6,
-      padding: '8px 12px',
-      color: isActive ? '#101828' : '#344054',
-      fontSize: 14,
-      lineHeight: '20px',
-      fontWeight: isActive ? 500 : 400,
-      backgroundColor: isActive ? '#F9FAFB' : 'transparent',
-      '&:hover': {
-        backgroundColor: '#F9FAFB',
-      },
-    },
-    section: {
-      marginRight: 0,
-      marginLeft: 0,
-    },
-    leftSection: {
-      color: isActive ? '#344054' : '#667085',
-      marginRight: 24,
+  const content = (
+    <Group gap={20} wrap="nowrap">
+      <Icon 
+        size={20} 
+        stroke={1.5} 
+        color={isActive ? '#344054' : '#667085'}
+      />
+      <Text 
+        size="sm" 
+        fw={isActive ? 500 : 400}
+        c={isActive ? '#101828' : '#344054'}
+        style={{ flex: 1 }}
+      >
+        {label}
+      </Text>
+      {external && <IconExternalLink size={14} stroke={1.5} color="#667085" />}
+    </Group>
+  );
+
+  const buttonStyles = {
+    display: 'block',
+    width: '100%',
+    borderRadius: 6,
+    padding: '8px 12px',
+    backgroundColor: isActive ? '#F9FAFB' : 'transparent',
+    textDecoration: 'none',
+    '&:hover': {
+      backgroundColor: '#F9FAFB',
     },
   };
 
   if (external) {
     return (
-      <NavLink
+      <UnstyledButton
         component="a"
         href={path}
         target="_blank"
         rel="noopener noreferrer"
-        label={label}
-        leftSection={<Icon size={20} stroke={1.5} />}
-        rightSection={<IconExternalLink size={14} stroke={1.5} />}
-        styles={navLinkStyles}
-      />
+        style={buttonStyles}
+      >
+        {content}
+      </UnstyledButton>
     );
   }
 
   return (
-    <NavLink
+    <UnstyledButton
       component={Link}
       to={path}
-      label={label}
-      leftSection={<Icon size={20} stroke={1.5} />}
-      active={isActive}
-      styles={navLinkStyles}
-    />
+      style={buttonStyles}
+    >
+      {content}
+    </UnstyledButton>
   );
 }
