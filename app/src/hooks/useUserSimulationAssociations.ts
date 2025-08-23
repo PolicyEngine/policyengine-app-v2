@@ -1,10 +1,5 @@
 // Import auth hook here in future; for now, mocked out below
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
-import { fetchSimulationById } from '@/api/simulation';
-import { countryIds } from '@/libs/countries';
-import { RootState } from '@/store';
-import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiSimulationStore, SessionStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys } from '../libs/queryKeys';
@@ -127,69 +122,3 @@ export const useDeleteAssociation = () => {
   });
 };
 */
-
-// TODO: Verify that useUserSimulations is valid code
-// Type for the combined data structure
-interface UserSimulationMetadataWithAssociation {
-  association: UserSimulation;
-  simulation: SimulationMetadata | undefined;
-  isLoading: boolean;
-  error: Error | null | undefined;
-}
-
-export const useUserSimulations = (userId: string) => {
-  // Get country from metadata state, fallback to 'us' if not available
-  const metadataCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
-  // Ensure country is a valid country ID, fallback to 'us' if not recognized
-  const country = countryIds.includes(metadataCountry as any)
-    ? (metadataCountry as (typeof countryIds)[number])
-    : 'us';
-
-  // First, get the associations
-  const {
-    data: associations,
-    isLoading: associationsLoading,
-    error: associationsError,
-  } = useSimulationAssociationsByUser(userId);
-
-  // Extract simulation IDs
-  const simulationIds = associations?.map((a) => a.simulationId) ?? [];
-
-  // Fetch all policies in parallel
-  const simulationQueries = useQueries({
-    queries: simulationIds.map((simulationId) => ({
-      queryKey: simulationKeys.byId(simulationId.toString()),
-      queryFn: () => fetchSimulationById(country, simulationId.toString()),
-      enabled: !!associations, // Only run when associations are loaded
-      staleTime: 5 * 60 * 1000,
-    })),
-  });
-
-  // Combine the results
-  const isLoading = associationsLoading || simulationQueries.some((q) => q.isLoading);
-  const error = associationsError || simulationQueries.find((q) => q.error)?.error;
-  const isError = !!error;
-
-  // Simple index-based mapping since queries are in same order as associations
-  const policiesWithAssociations: UserSimulationMetadataWithAssociation[] | undefined =
-    associations?.map((association, index) => ({
-      association,
-      simulation: simulationQueries[index]?.data,
-      isLoading: simulationQueries[index]?.isLoading ?? false,
-      error: simulationQueries[index]?.error ?? null,
-      isError: !!error,
-    }));
-
-  return {
-    data: policiesWithAssociations,
-    isLoading,
-    isError,
-    error,
-    associations, // Still available if needed separately
-  };
-};
-/**
- * @deprecated Use useUserSimulations from './useUserSimulations' for full data,
- * or useSimulationAssociationsByUser for just associations
- */
-// This function has been moved to its own file as the primary useUserSimulations hook
