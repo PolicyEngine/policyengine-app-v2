@@ -10,12 +10,12 @@ import {
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';
-import { colors, typography, spacing } from '../designTokens';
+import { colors, spacing, typography } from '../designTokens';
+import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarLogo from './sidebar/SidebarLogo';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
 import SidebarUser from './sidebar/SidebarUser';
-import SidebarDivider from './sidebar/SidebarDivider';
 
 interface SidebarProps {
   isOpen?: boolean;

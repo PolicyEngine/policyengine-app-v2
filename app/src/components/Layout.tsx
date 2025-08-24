@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { AppShell, Box } from '@mantine/core';
-import Sidebar from './Sidebar';
 import { spacing } from '../designTokens';
+import Sidebar from './Sidebar';
 
 export default function Layout() {
   return (
