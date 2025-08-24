@@ -39,6 +39,7 @@ export const spacing = {
   // Layout spacing from Figma
   layout: {
     sidebar: '79px',
+    sidebarWidth: '280px', // Width of the navigation sidebar
     header: '76px',
     content: '1361px',
     container: '976px',
