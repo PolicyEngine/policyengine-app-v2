@@ -10,10 +10,12 @@ import {
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';
+import { colors, typography, spacing } from '../designTokens';
 import SidebarLogo from './sidebar/SidebarLogo';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
 import SidebarUser from './sidebar/SidebarUser';
+import SidebarDivider from './sidebar/SidebarDivider';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -52,8 +54,8 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       h="100vh"
       bg="white"
       style={{
-        borderRight: '1px solid #E2E8F0',
-        width: 280,
+        borderRight: `1px solid ${colors.border.light}`,
+        width: parseInt(spacing.layout.sidebarWidth, 10),
         position: 'fixed',
         left: 0,
         top: 0,
@@ -62,7 +64,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       gap={0}
     >
       <Stack gap={0}>
-        <Box bg="#319795" px={16} py={20}>
+        <Box bg={colors.primary[500]} px={16} py={20}>
           <SidebarLogo />
         </Box>
         <Box px={16} py={16}>
@@ -74,11 +76,11 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             h={36}
             styles={{
               root: {
-                backgroundColor: '#319795',
-                fontSize: 14,
-                fontWeight: 500,
+                backgroundColor: colors.primary[500],
+                fontSize: typography.fontSize.sm,
+                fontWeight: typography.fontWeight.medium,
                 '&:hover': {
-                  backgroundColor: '#2C7A7B',
+                  backgroundColor: colors.primary[600],
                 },
               },
             }}
@@ -95,7 +97,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
           ))}
         </SidebarSection>
 
-        <Divider mx={16} color="#E2E8F0" />
+        <SidebarDivider />
 
         <SidebarSection title="Policies">
           {policyItems.map((item) => (
@@ -103,7 +105,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
           ))}
         </SidebarSection>
 
-        <Divider mx={16} color="#E2E8F0" />
+        <SidebarDivider />
 
         <SidebarSection title="Resources">
           {resourceItems.map((item) => (
@@ -115,7 +117,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
           ))}
         </SidebarSection>
 
-        <Divider mx={16} color="#E2E8F0" />
+        <SidebarDivider />
 
         <SidebarSection title="My account">
           {accountItems.map((item) => (
@@ -127,22 +129,22 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       <Box p={16}>
         <Divider mb={16} color="#E2E8F0" />
         <Stack gap={8}>
-          <Text size="xs" c="#667085" style={{ fontSize: 10 }}>
+          <Text size="xs" c={colors.text.secondary} style={{ fontSize: 10 }}>
             Running 2 items
           </Text>
           <Box
             p={8}
             style={{
-              border: '1px solid #E2E8F0',
+              border: `1px solid ${colors.border.light}`,
               borderRadius: 6,
               cursor: 'pointer',
             }}
           >
             <Stack gap={4}>
-              <Text size="xs" fw={600} c="#101828" style={{ fontSize: 12 }}>
+              <Text size="xs" fw={600} c={colors.gray[900]} style={{ fontSize: 12 }}>
                 Report title
               </Text>
-              <Text size="xs" c="#667085" style={{ fontSize: 11 }}>
+              <Text size="xs" c={colors.text.secondary} style={{ fontSize: 11 }}>
                 300 KB
               </Text>
             </Stack>
@@ -150,7 +152,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
           <Button
             variant="subtle"
             size="xs"
-            c="#344054"
+            c={colors.gray[700]}
             styles={{
               root: {
                 fontSize: 12,

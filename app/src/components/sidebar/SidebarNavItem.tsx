@@ -1,6 +1,7 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { Group, Text, UnstyledButton } from '@mantine/core';
+import { colors } from '../../designTokens';
 
 interface SidebarNavItemProps {
   label: string;
@@ -19,16 +20,16 @@ export default function SidebarNavItem({
 }: SidebarNavItemProps) {
   const content = (
     <Group gap={20} wrap="nowrap">
-      <Icon size={20} stroke={1.5} color={isActive ? '#344054' : '#667085'} />
+      <Icon size={20} stroke={1.5} color={isActive ? colors.gray[700] : colors.text.secondary} />
       <Text
         size="sm"
         fw={isActive ? 500 : 400}
-        c={isActive ? '#101828' : '#344054'}
+        c={isActive ? colors.gray[900] : colors.gray[700]}
         style={{ flex: 1 }}
       >
         {label}
       </Text>
-      {external && <IconExternalLink size={14} stroke={1.5} color="#667085" />}
+      {external && <IconExternalLink size={14} stroke={1.5} color={colors.text.secondary} />}
     </Group>
   );
 
@@ -37,10 +38,10 @@ export default function SidebarNavItem({
     width: '100%',
     borderRadius: 6,
     padding: '8px 12px',
-    backgroundColor: isActive ? '#F9FAFB' : 'transparent',
+    backgroundColor: isActive ? colors.gray[50] : 'transparent',
     textDecoration: 'none',
     '&:hover': {
-      backgroundColor: '#F9FAFB',
+      backgroundColor: colors.gray[50],
     },
   };
 

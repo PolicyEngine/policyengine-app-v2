@@ -1,4 +1,5 @@
 import { Avatar, Group, Text } from '@mantine/core';
+import { colors } from '../../designTokens';
 
 interface SidebarUserProps {
   name: string;
@@ -11,8 +12,8 @@ export default function SidebarUser({ name, initials }: SidebarUserProps) {
       <Avatar
         size={32}
         radius="xl"
-        bg="#F2F4F7"
-        c="#344054"
+        bg={colors.gray[100]}
+        c={colors.gray[700]}
         styles={{
           root: {
             fontSize: 12,
@@ -24,7 +25,7 @@ export default function SidebarUser({ name, initials }: SidebarUserProps) {
       </Avatar>
       <Text
         size="sm"
-        c="#101828"
+        c={colors.gray[900]}
         fw={500}
         style={{
           fontSize: 14,

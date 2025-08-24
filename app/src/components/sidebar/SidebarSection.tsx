@@ -1,4 +1,5 @@
 import { Stack, Text } from '@mantine/core';
+import { colors } from '../../designTokens';
 
 interface SidebarSectionProps {
   title?: string;
@@ -12,7 +13,7 @@ export default function SidebarSection({ title, children }: SidebarSectionProps)
         <Text
           size="xs"
           fw={500}
-          c="#667085"
+          c={colors.text.secondary}
           px={12}
           pb={4}
           style={{

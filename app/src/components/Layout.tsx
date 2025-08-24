@@ -1,13 +1,14 @@
 import { Outlet } from 'react-router-dom';
 import { AppShell, Box } from '@mantine/core';
 import Sidebar from './Sidebar';
+import { spacing } from '../designTokens';
 
 export default function Layout() {
   return (
     <AppShell
       padding={0}
       navbar={{
-        width: 280,
+        width: parseInt(spacing.layout.sidebarWidth, 10),
         breakpoint: 'sm',
       }}
     >
