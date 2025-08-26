@@ -11,6 +11,8 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
   const simulationState = useSelector((state: RootState) => state.simulation);
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
+
+  console.log("Simulation label: ", simulationState.label);
   const { createSimulation, isPending } = useCreateSimulation(simulationState.label || undefined);
   const { resetIngredient } = useIngredientReset();
 

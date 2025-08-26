@@ -56,7 +56,7 @@ export default function SimulationSelectExistingPopulationFrame({
     dispatch(updatePopulationLabel(population.label || ''));
 
     dispatch(markPopulationAsCreated());
-    setLocalPopulationId(`household-${population.id}`);
+    setLocalPopulationId(population.id);
   }
 
   function handleGeographicPopulationSelect(population: UserGeographicAssociation) {

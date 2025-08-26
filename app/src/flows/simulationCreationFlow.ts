@@ -14,7 +14,7 @@ export const SimulationCreationFlow: Flow = {
       on: {
         setupPolicy: 'SimulationSetupPolicyFrame',
         setupPopulation: 'SimulationSetupPopulationFrame',
-        next: 'SetSimulationLabelFrame',
+        next: 'SimulationSubmitFrame',
       },
     },
     SimulationSetupPolicyFrame: {
@@ -47,13 +47,6 @@ export const SimulationCreationFlow: Flow = {
       component: 'SimulationSelectExistingPopulationFrame',
       on: {
         next: 'SimulationSetupFrame',
-      },
-    },
-    SetSimulationLabelFrame: {
-      component: 'SetSimulationLabelFrame',
-      on: {
-        next: 'SimulationSubmitFrame',
-        back: 'SimulationSetupFrame',
       },
     },
     SimulationSubmitFrame: {
