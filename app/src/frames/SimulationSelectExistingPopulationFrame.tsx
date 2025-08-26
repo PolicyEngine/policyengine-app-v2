@@ -118,7 +118,7 @@ export default function SimulationSelectExistingPopulationFrame({
     .filter((association) => association.household) // Only include associations with loaded households
     .slice(0, 5) // Display only the first 5 populations
     .map((association) => ({
-      title: association.household!.label || `Population ${association.household!.id}`,
+      title: `Population ${association.household!.id}`,
       onClick: () => handleHouseholdPopulationSelect(association.household!),
       isSelected: localPopulationId === `household-${association.household!.id}`,
     }));

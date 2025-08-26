@@ -35,9 +35,7 @@ export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) 
       console.log(`  Simulation: ${item.userSimulation.label}`);
       console.log(`    Policy Label: ${item.userPolicy?.label || 'Unnamed'}`);
       console.log(`    Policy ID: ${item.policy?.id || 'No policy'}`);
-      console.log(
-        `    Household: ${item.household?.label || item.household?.id || 'No household'}`
-      );
+      console.log(`    Household: ${item.household?.id || 'No household'}`);
     });
   };
 
@@ -73,7 +71,7 @@ export const NormalizationTest: React.FC<NormalizationTestProps> = ({ userId }) 
             </strong>
             <ul>
               <li>Policy: {item.userPolicy?.label || item.policy?.id || 'No policy'}</li>
-              <li>Household: {item.household?.label || item.household?.id || 'No household'}</li>
+              <li>Household: {item.household?.id || 'No household'}</li>
               <li>Created: {item.userSimulation.createdAt || 'Unknown'}</li>
             </ul>
           </li>

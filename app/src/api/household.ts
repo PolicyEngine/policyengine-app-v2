@@ -1,6 +1,16 @@
 import { BASE_URL } from '@/constants';
-import { HouseholdCreationPayload } from '@/types/householdPayloads';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import {
+  HouseholdData as APIHouseholdData,
+  HouseholdMetadata,
+} from '@/types/metadata/householdMetadata';
+
+// Define the payload type locally since we're removing householdPayloads.ts
+export interface HouseholdCreationPayload {
+  country_id: string;
+  api_version: string;
+  household_json: APIHouseholdData;
+  label?: string;
+}
 
 export async function fetchHouseholdById(
   country: string,
@@ -28,12 +38,17 @@ export async function fetchHouseholdById(
 export async function createHousehold(
   data: HouseholdCreationPayload
 ): Promise<{ result: { household_id: string } }> {
-  const url = `${BASE_URL}/us/household`;
+  const url = `${BASE_URL}/${data.country_id}/household`;
+
+  // Wrap the data in the expected API format
+  const apiPayload = {
+    data: data.household_json,
+  };
 
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+    body: JSON.stringify(apiPayload),
   });
 
   if (!res.ok) {

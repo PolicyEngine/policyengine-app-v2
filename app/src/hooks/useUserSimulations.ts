@@ -1,12 +1,17 @@
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { PolicyAdapter, SimulationAdapter } from '@/adapters';
+import { useSelector } from 'react-redux';
+import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { RootState } from '@/store';
+import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
@@ -29,11 +34,12 @@ interface EnhancedUserSimulation {
 
   // Related entities
   policy?: Policy;
-  household?: HouseholdMetadata;
+  household?: Household;
+  geography?: Geography;
 
   // User associations for related entities
   userPolicy?: UserPolicy;
-  userHousehold?: any; // Type to be defined when UserHousehold is implemented
+  userHousehold?: UserHouseholdPopulation;
 
   // Status
   isLoading: boolean;
@@ -54,6 +60,9 @@ interface EnhancedUserSimulation {
 export const useUserSimulations = (userId: string) => {
   const country = 'us'; // TODO: Replace with actual country ID retrieval logic
   const queryNormalizer = useQueryNormalizer();
+
+  // Get geography data from metadata
+  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
 
   // Step 1: Fetch all user associations in parallel
   const {
@@ -104,7 +113,18 @@ export const useUserSimulations = (userId: string) => {
   console.log('simulations', simulations);
 
   const policyIds = extractUniqueIds(simulations, 'policyId');
-  const householdIds = extractUniqueIds(simulations, 'populationId'); // populationId is actually householdId
+
+  // Separate household and geography IDs based on populationType
+  const householdIds = simulations
+    .filter((s) => s.populationType === 'household')
+    .map((s) => s.populationId)
+    .filter((id, index, self) => id && self.indexOf(id) === index);
+
+  // Geography IDs for future use when we need to fetch geography data
+  // const geographyIds = simulations
+  //   .filter(s => s.populationType === 'geography')
+  //   .map(s => s.populationId)
+  //   .filter((id, index, self) => id && self.indexOf(id) === index);
 
   console.log('policyIds', policyIds);
   console.log('householdIds', householdIds);
@@ -123,9 +143,12 @@ export const useUserSimulations = (userId: string) => {
   console.log('policyResults', policyResults);
 
   // Step 6: Fetch households (populations)
-  const householdResults = useParallelQueries<HouseholdMetadata>(householdIds, {
+  const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,
-    queryFn: (id) => fetchHouseholdById(country, id),
+    queryFn: async (id) => {
+      const metadata = await fetchHouseholdById(country, id);
+      return HouseholdAdapter.fromAPI(metadata);
+    },
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
@@ -143,7 +166,7 @@ export const useUserSimulations = (userId: string) => {
   );
 
   console.log('isLoading', isLoading);
-  console.log('error', error);  
+  console.log('error', error);
 
   // Step 8: Build enhanced results with all relationships
   const enhancedSimulations: EnhancedUserSimulation[] =
@@ -160,22 +183,44 @@ export const useUserSimulations = (userId: string) => {
           ? (queryNormalizer.getObjectById(simulation.policyId) as Policy | undefined)
           : undefined;
 
-        const household = simulation?.populationId
-          ? (queryNormalizer.getObjectById(simulation.populationId) as HouseholdMetadata | undefined)
-          : undefined;
+        // Determine if populationId is household or geography based on populationType
+        let household: Household | undefined;
+        let geography: Geography | undefined;
+        let userHousehold: UserHouseholdPopulation | undefined;
+
+        if (simulation?.populationId && simulation?.populationType) {
+          if (simulation.populationType === 'household') {
+            household = queryNormalizer.getObjectById(simulation.populationId) as
+              | Household
+              | undefined;
+            userHousehold = householdAssociations?.find(
+              (ha) => ha.householdId === simulation.populationId
+            );
+          } else if (simulation.populationType === 'geography') {
+            // Treat as geography - create a Geography object from the ID
+            const regionData = geographyOptions?.find((r) => r.name === simulation.populationId);
+
+            if (regionData) {
+              geography = {
+                id: `${simulation.countryId}-${simulation.populationId}`,
+                countryId: simulation.countryId,
+                scope: 'subnational' as const,
+                geographyId: simulation.populationId,
+                name: regionData.label || regionData.name,
+              } as Geography;
+            }
+          }
+        }
 
         // Find user associations for related entities
         const userPolicy = policyAssociations?.find((pa) => pa.policyId === simulation?.policyId);
-
-        const userHousehold = householdAssociations?.find(
-          (ha) => simulation?.populationId && ha.householdId === simulation.populationId
-        );
 
         return {
           userSimulation: userSim,
           simulation,
           policy,
           household,
+          geography,
           userPolicy,
           userHousehold,
           isLoading: false,
@@ -263,12 +308,19 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: household } = useQuery({
-    queryKey: householdKeys.byId(finalSimulation?.populationId?.toString() ?? ''),
-    queryFn: () => fetchHouseholdById(country, finalSimulation!.populationId.toString()),
-    enabled: !!finalSimulation?.populationId,
+  // Determine if populationId is a household or geography
+  // Try to fetch as household first
+  const populationId = finalSimulation?.populationId;
+
+  const { data: householdMetadata } = useQuery({
+    queryKey: householdKeys.byId(populationId ?? ''),
+    queryFn: () => fetchHouseholdById(country, populationId!),
+    enabled: !!populationId,
     staleTime: 5 * 60 * 1000,
+    retry: 1, // Only retry once if it's not a household
   });
+
+  const household = householdMetadata ? HouseholdAdapter.fromAPI(householdMetadata) : undefined;
 
   // Get user associations
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId);
@@ -276,9 +328,11 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
 
   const userPolicy = policyAssociations?.find((pa) => pa.policyId === finalSimulation?.policyId);
 
-  const userHousehold = householdAssociations?.find(
-    (ha) => finalSimulation?.populationId && ha.householdId === finalSimulation.populationId
-  );
+  // Only get userHousehold if we actually have a household (not a geography)
+  const userHousehold =
+    finalSimulation?.populationId && household
+      ? householdAssociations?.find((ha) => ha.householdId === finalSimulation.populationId)
+      : undefined;
 
   return {
     simulation: finalSimulation,

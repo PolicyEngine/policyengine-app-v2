@@ -3,22 +3,11 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { useSelector } from 'react-redux';
 import { fetchHouseholdById } from '@/api/household';
 import { RootState } from '@/store';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
-
-// TODO: Replace with UserHousehold from ingredients when implemented
-// For now, using the API response type directly
-type UserHousehold = {
-  id?: string;
-  userId: string;
-  householdId: string;
-  label?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  isCreated?: boolean;
-};
 
 const apiHouseholdStore = new ApiHouseholdStore();
 const sessionHouseholdStore = new SessionStorageHouseholdStore();
@@ -68,7 +57,8 @@ export const useCreateHouseholdAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (household: Omit<UserHousehold, 'createdAt'>) => store.create(household),
+    mutationFn: (household: Omit<UserHouseholdPopulation, 'createdAt' | 'type'>) =>
+      store.create({ ...household, type: 'household' as const }),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
@@ -80,10 +70,7 @@ export const useCreateHouseholdAssociation = () => {
 
       // Update specific query cache
       queryClient.setQueryData(
-        householdAssociationKeys.specific(
-          newAssociation.userId,
-          newAssociation.householdId
-        ),
+        householdAssociationKeys.specific(newAssociation.userId, newAssociation.householdId),
         newAssociation
       );
     },
@@ -139,7 +126,7 @@ export const useDeleteAssociation = () => {
 
 // Type for the combined data structure
 interface UserHouseholdMetadataWithAssociation {
-  association: UserHousehold;
+  association: UserHouseholdPopulation;
   household: HouseholdMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;

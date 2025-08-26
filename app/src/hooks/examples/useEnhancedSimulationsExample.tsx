@@ -45,7 +45,7 @@ export const SimulationsPageExample: React.FC = () => {
           {/* All related data is automatically available and normalized */}
           <div>
             <p>Policy: {userPolicy?.label || policy?.id || 'Unknown'}</p>
-            <p>Household: {household?.label || household?.id || 'Unknown'}</p>
+            <p>Household: {household?.id || 'Unknown'}</p>
             <p>Created: {userSimulation.createdAt}</p>
           </div>
 
@@ -208,7 +208,7 @@ const SimulationCards: React.FC<{ userId: string }> = ({ userId }) => {
         <div key={userSimulation.id} className="card">
           <h3>{userSimulation.label}</h3>
           <p>Policy: {policy?.id}</p>
-          <p>Household: {household?.label || household?.id}</p>
+          <p>Household: {household?.id}</p>
         </div>
       ))}
     </div>

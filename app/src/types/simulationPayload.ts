@@ -9,7 +9,7 @@ export function serializeSimulationCreationPayload(
   simulation: Simulation
 ): SimulationCreationPayload {
   return {
-    population_id: simulation.populationId.toString(),
-    policy_id: simulation.policyId.toString(),
+    population_id: simulation.populationId,
+    policy_id: simulation.policyId,
   };
 }

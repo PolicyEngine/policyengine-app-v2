@@ -5,4 +5,4 @@ export const BASE_URL = 'https://api.policyengine.org';
  * Mock user ID used for anonymous/unauthenticated users
  * TODO: Replace with actual user ID from auth context when authentication is implemented
  */
-export const MOCK_USER_ID = "anonymous";
+export const MOCK_USER_ID = 'anonymous';

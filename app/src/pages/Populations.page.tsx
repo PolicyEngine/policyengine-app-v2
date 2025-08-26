@@ -181,7 +181,7 @@ export default function PopulationsPage() {
       return {
         id: item.association.householdId.toString(),
         populationName: {
-          text: item.household?.label || `Population #${item.association.householdId}`,
+          text: `Population #${item.association.householdId}`,
         } as TextValue,
         dateCreated: {
           text: 'Just now', // TODO: Format actual date from item data

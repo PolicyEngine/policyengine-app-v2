@@ -157,11 +157,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
     const simulations = this.getStoredSimulations();
-    return (
-      simulations.find(
-        (s) => s.userId === userId && s.simulationId === simulationId
-      ) || null
-    );
+    return simulations.find((s) => s.userId === userId && s.simulationId === simulationId) || null;
   }
 
   private getStoredSimulations(): UserSimulation[] {

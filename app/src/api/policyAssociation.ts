@@ -157,9 +157,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
     const policies = this.getStoredPolicies();
-    return (
-      policies.find((p) => p.userId === userId && p.policyId === policyId) || null
-    );
+    return policies.find((p) => p.userId === userId && p.policyId === policyId) || null;
   }
 
   private getStoredPolicies(): UserPolicy[] {

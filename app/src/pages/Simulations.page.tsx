@@ -115,11 +115,9 @@ export default function SimulationsPage() {
       } as TextValue,
       population: {
         text:
-          item.household?.label ||
-          (item.simulation?.populationId
-            ? `Household #${item.simulation.populationId}`
-            : 'No household'),
-        url: item.household?.id ? `#household-${item.household.id}` : '#',
+          item.geography?.name ||
+          (item.household ? `Household #${item.household.id}` : 'No population'),
+        url: item.household?.id ? `#${item.household.id}` : '#',
       } as LinkValue,
       connected: {
         items: [

@@ -76,6 +76,7 @@ export async function fetchSimulationById(
           country_id: countryId,
           api_version: mockApiVersion,
           population_id: mockPopulationId,
+          population_type: 'household' as const, // Default to household for legacy simulations
           policy_id: mockPolicyId,
         });
       }
@@ -97,6 +98,7 @@ export async function createSimulation(
         country_id: 'us', // Default to US for now
         api_version: mockApiVersion,
         population_id: data.population_id || mockPopulationId,
+        population_type: data.population_type || 'household', // Use provided type or default to household
         policy_id: data.policy_id || mockPolicyId,
       };
 

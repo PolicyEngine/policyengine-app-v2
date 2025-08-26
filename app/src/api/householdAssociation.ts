@@ -1,21 +1,11 @@
-// TODO: Replace with UserHousehold from ingredients when implemented
-// For now, using a temporary type definition
-type UserHousehold = {
-  id?: string;
-  userId: string;
-  householdId: string;
-  label?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  isCreated?: boolean;
-};
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserHouseholdStore {
-  create: (association: Omit<UserHousehold, 'createdAt'>) => Promise<UserHousehold>;
-  findByUser: (userId: string) => Promise<UserHousehold[]>;
-  findById: (userId: string, householdId: string) => Promise<UserHousehold | null>;
+  create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
+  findByUser: (userId: string) => Promise<UserHouseholdPopulation[]>;
+  findById: (userId: string, householdId: string) => Promise<UserHouseholdPopulation | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, householdId: string, updates: Partial<UserHousehold>): Promise<UserHousehold>;
+  // update(userId: string, householdId: string, updates: Partial<UserHouseholdPopulation>): Promise<UserHouseholdPopulation>;
   // delete(userId: string, householdId: string): Promise<void>;
 }
 
@@ -23,7 +13,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-household-associations';
 
-  async create(association: Omit<UserHousehold, 'createdAt'>): Promise<UserHousehold> {
+  async create(association: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -37,7 +27,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     return response.json();
   }
 
-  async findByUser(userId: string): Promise<UserHousehold[]> {
+  async findByUser(userId: string): Promise<UserHouseholdPopulation[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user households');
@@ -45,8 +35,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 
     const apiResponses = await response.json();
 
-    // Convert each API response to UserHousehold
+    // Convert each API response to UserHouseholdPopulation
     return apiResponses.map((apiData: any) => ({
+      type: 'household' as const,
       id: apiData.householdId,
       userId: apiData.userId,
       householdId: apiData.householdId,
@@ -57,7 +48,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     }));
   }
 
-  async findById(userId: string, householdId: string): Promise<UserHousehold | null> {
+  async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`);
 
     if (response.status === 404) {
@@ -70,8 +61,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 
     const apiData = await response.json();
 
-    // Convert API response to UserHousehold
+    // Convert API response to UserHouseholdPopulation
     return {
+      type: 'household' as const,
       id: apiData.householdId,
       userId: apiData.userId,
       householdId: apiData.householdId,
@@ -116,11 +108,12 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 export class SessionStorageHouseholdStore implements UserHouseholdStore {
   private readonly STORAGE_KEY = 'user-household-households';
 
-  async create(household: Omit<UserHousehold, 'id' | 'createdAt'>): Promise<UserHousehold> {
-    const newHousehold: UserHousehold = {
+  async create(household: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
+    const newHousehold: UserHouseholdPopulation = {
       ...household,
+      type: 'household' as const,
       id: household.householdId, // Use householdId as the ID
-      createdAt: new Date().toISOString(),
+      createdAt: household.createdAt || new Date().toISOString(),
       isCreated: true,
     };
 
@@ -141,17 +134,14 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
     return newHousehold;
   }
 
-  async findByUser(userId: string): Promise<UserHousehold[]> {
+  async findByUser(userId: string): Promise<UserHouseholdPopulation[]> {
     const households = this.getStoredHouseholds();
     return households.filter((h) => h.userId === userId);
   }
 
-  async findById(userId: string, householdId: string): Promise<UserHousehold | null> {
+  async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
     const households = this.getStoredHouseholds();
-    return (
-      households.find((h) => h.userId === userId && h.householdId === householdId) ||
-      null
-    );
+    return households.find((h) => h.userId === userId && h.householdId === householdId) || null;
   }
 
   // Not yet implemented, but keeping for future use
@@ -186,7 +176,7 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   }
   */
 
-  private getStoredHouseholds(): UserHousehold[] {
+  private getStoredHouseholds(): UserHouseholdPopulation[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -195,7 +185,7 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
     }
   }
 
-  private setStoredHouseholds(households: UserHousehold[]): void {
+  private setStoredHouseholds(households: UserHouseholdPopulation[]): void {
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(households));
     } catch (error) {
@@ -204,7 +194,7 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   }
 
   // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserHousehold[] {
+  getAllAssociations(): UserHouseholdPopulation[] {
     return this.getStoredHouseholds();
   }
 

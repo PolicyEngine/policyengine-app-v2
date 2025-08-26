@@ -8,6 +8,8 @@ export type { SimulationCreationPayload } from './SimulationAdapter';
 export { ReportAdapter } from './ReportAdapter';
 export type { ReportCreationPayload } from './ReportAdapter';
 
+export { HouseholdAdapter } from './HouseholdAdapter';
+
 // User Ingredient Adapters
 export { UserReportAdapter } from './UserReportAdapter';
 
