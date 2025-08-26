@@ -103,14 +103,16 @@ export default function PoliciesPage() {
   ];
 
   // Transform the data to match the new structure
+  console.log('Raw user policies data:', data);
+
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
       id: item.association.policyId.toString(),
       policyName: {
-        text: item.policy?.label || `Policy #${item.association.policyId}`,
+        text: item.association.label || `Policy #${item.association.policyId}`,
       } as TextValue,
       dateCreated: {
-        text: 'Just now', // TODO: Format actual date from item data
+        text: item.association.createdAt ? new Date(item.association.createdAt).toLocaleDateString() : 'Just now',
       } as TextValue,
       provisions: {
         text: '7 provisions', // TODO: Get actual provisions count

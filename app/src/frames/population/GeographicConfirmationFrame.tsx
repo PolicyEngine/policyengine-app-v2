@@ -14,6 +14,7 @@ import {
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
+import { MOCK_USER_ID } from '@/constants';
 
 export default function GeographicConfirmationFrame({
   onNavigate,
@@ -26,7 +27,7 @@ export default function GeographicConfirmationFrame({
   const { resetIngredient } = useIngredientReset();
 
   // Hardcoded for now - TODO: Replace with actual user from auth context
-  const currentUserId = 'anonymous';
+  const currentUserId = MOCK_USER_ID;
   // Get current country from metadata state, fallback to 'us' if not available
   const currentCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
 

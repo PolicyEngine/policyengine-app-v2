@@ -34,6 +34,7 @@ import { Household } from '@/types/ingredients/Household';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
+import { MOCK_USER_ID } from '@/constants';
 
 export default function HouseholdBuilderFrame({
   onNavigate,
@@ -42,7 +43,7 @@ export default function HouseholdBuilderFrame({
 }: FlowComponentProps) {
   const dispatch = useDispatch();
   const populationState = useSelector((state: RootState) => state.population);
-  const { createHousehold, isPending } = useCreateHousehold();
+  const { createHousehold, isPending } = useCreateHousehold(populationState.label || '');
   const { resetIngredient } = useIngredientReset();
   const countryId = 'us'; // TODO: Get from application state when available
 
@@ -315,9 +316,12 @@ export default function HouseholdBuilderFrame({
       const result = await createHousehold(payload);
       console.log('Household created successfully:', result);
 
+      const householdId = result.result.household_id;
+      const label = populationState.label || '';
+      
       // Update population state with the created household ID
-      dispatch(updatePopulationId(result.result.household_id));
-      dispatch(updatePopulationLabel(populationState.label || ''));
+      dispatch(updatePopulationId(householdId));
+      dispatch(updatePopulationLabel(label));
       dispatch(markPopulationAsCreated());
 
       // If standalone flow, reset

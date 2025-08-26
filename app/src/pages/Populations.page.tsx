@@ -181,10 +181,10 @@ export default function PopulationsPage() {
       return {
         id: item.association.householdId.toString(),
         populationName: {
-          text: `Population #${item.association.householdId}`,
+          text: item.association.label || `Household #${item.association.householdId}`,
         } as TextValue,
         dateCreated: {
-          text: 'Just now', // TODO: Format actual date from item data
+          text: item.association.createdAt ? new Date(item.association.createdAt).toLocaleDateString() : 'Just now',
         } as TextValue,
         details: {
           items: detailsItems,

@@ -4,11 +4,17 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 interface SimulationState {
   populationId: string;
   policyId: string;
+  label: string | null;
+  id: string | undefined;
+  isCreated: boolean;
 }
 
 const initialState: SimulationState = {
   populationId: '',
   policyId: '',
+  label: null,
+  id: undefined,
+  isCreated: false,
 };
 
 export const simulationSlice = createSlice({
@@ -21,14 +27,32 @@ export const simulationSlice = createSlice({
     updateSimulationPolicyId: (state, action: PayloadAction<string>) => {
       state.policyId = action.payload;
     },
+    updateSimulationLabel: (state, action: PayloadAction<string>) => {
+      state.label = action.payload;
+    },
+    updateSimulationId: (state, action: PayloadAction<string>) => {
+      state.id = action.payload;
+    },
+    markSimulationAsCreated: (state) => {
+      state.isCreated = true;
+    },
     clearSimulation: (state) => {
       state.populationId = '';
       state.policyId = '';
+      state.label = null;
+      state.id = undefined;
+      state.isCreated = false;
     },
   },
 });
 
-export const { updateSimulationPopulationId, updateSimulationPolicyId, clearSimulation } =
-  simulationSlice.actions;
+export const { 
+  updateSimulationPopulationId, 
+  updateSimulationPolicyId, 
+  updateSimulationLabel,
+  updateSimulationId,
+  markSimulationAsCreated,
+  clearSimulation 
+} = simulationSlice.actions;
 
 export default simulationSlice.reducer;

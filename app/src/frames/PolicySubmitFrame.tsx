@@ -12,14 +12,15 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/ingredients/Policy';
 import { formatDate } from '@/utils/dateFormatter';
+import { useCreatePolicyAssociation } from '@/hooks/useUserPolicy';
+import { MOCK_USER_ID } from '@/constants';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
   const params = useSelector((state: RootState) => state.policy.params);
   const dispatch = useDispatch();
   const { resetIngredient } = useIngredientReset();
-  const { createPolicy, isPending } = useCreatePolicy();
-
   const policyState = useSelector((state: RootState) => state.policy);
+  const { createPolicy, isPending } = useCreatePolicy(policyState.label || undefined);
 
   // Convert Redux state to Policy type structure
   const policy: Partial<Policy> = {

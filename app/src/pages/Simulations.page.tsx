@@ -115,6 +115,7 @@ export default function SimulationsPage() {
       } as TextValue,
       population: {
         text:
+          item.userHousehold?.label ||
           item.geography?.name ||
           (item.household ? `Household #${item.household.id}` : 'No population'),
         url: item.household?.id ? `#${item.household.id}` : '#',

@@ -4,7 +4,7 @@ import { MOCK_USER_ID } from '@/constants';
 import { householdKeys } from '@/libs/queryKeys';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 
-export function useCreateHousehold() {
+export function useCreateHousehold(householdLabel?: string) {
   const queryClient = useQueryClient();
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateHouseholdAssociation();
@@ -20,6 +20,7 @@ export function useCreateHousehold() {
         await createAssociation.mutateAsync({
           userId,
           householdId: data.result.household_id, // This is from the API response structure; may be modified in API v2
+          label: householdLabel,
         });
       } catch (error) {
         console.error('Household created but association failed:', error);
