@@ -21,7 +21,7 @@ build:
 	cd app && npm run build-with-types
 
 test:
-	cd app && npm run test
+	cd app && npm run test-all
 
 lint:
 	cd app && npm run lint
