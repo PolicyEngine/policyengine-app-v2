@@ -13,6 +13,7 @@ dist/
 dist-ssr/
 build/
 *.local
+.vite/
 
 # Debug
 npm-debug.log*
