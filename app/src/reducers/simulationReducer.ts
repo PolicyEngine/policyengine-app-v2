@@ -46,13 +46,13 @@ export const simulationSlice = createSlice({
   },
 });
 
-export const { 
-  updateSimulationPopulationId, 
-  updateSimulationPolicyId, 
+export const {
+  updateSimulationPopulationId,
+  updateSimulationPolicyId,
   updateSimulationLabel,
   updateSimulationId,
   markSimulationAsCreated,
-  clearSimulation 
+  clearSimulation,
 } = simulationSlice.actions;
 
 export default simulationSlice.reducer;

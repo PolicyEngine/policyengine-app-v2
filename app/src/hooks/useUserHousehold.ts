@@ -58,14 +58,14 @@ export const useCreateHouseholdAssociation = () => {
 
   return useMutation({
     mutationFn: (household: Omit<UserHouseholdPopulation, 'createdAt' | 'type'>) => {
-      console.log("household in useCreateHouseholdAssociation");
+      console.log('household in useCreateHouseholdAssociation');
       console.log(household);
       return store.create({ ...household, type: 'household' as const });
     },
     onSuccess: (newAssociation) => {
-      console.log("new association");
+      console.log('new association');
       console.log(newAssociation);
-      
+
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
         queryKey: householdAssociationKeys.byUser(newAssociation.userId),

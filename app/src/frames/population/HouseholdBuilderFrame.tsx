@@ -34,7 +34,6 @@ import { Household } from '@/types/ingredients/Household';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
-import { MOCK_USER_ID } from '@/constants';
 
 export default function HouseholdBuilderFrame({
   onNavigate,
@@ -318,7 +317,7 @@ export default function HouseholdBuilderFrame({
 
       const householdId = result.result.household_id;
       const label = populationState.label || '';
-      
+
       // Update population state with the created household ID
       dispatch(updatePopulationId(householdId));
       dispatch(updatePopulationLabel(label));
@@ -399,7 +398,10 @@ export default function HouseholdBuilderFrame({
           You
         </Text>
         <NumberInput
-          value={HouseholdQueries.getPersonVariable(household, 'you', 'age', taxYear) || getVariableDefault('age')}
+          value={
+            HouseholdQueries.getPersonVariable(household, 'you', 'age', taxYear) ||
+            getVariableDefault('age')
+          }
           onChange={(val) => handleAdultChange('you', 'age', val || 0)}
           min={18}
           max={120}
@@ -408,9 +410,9 @@ export default function HouseholdBuilderFrame({
         />
         <NumberInput
           value={
-            HouseholdQueries.getPersonVariable(household, 'you', 'employmentIncome', taxYear) || 0
+            HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', taxYear) || 0
           }
-          onChange={(val) => handleAdultChange('you', 'employmentIncome', val || 0)}
+          onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
           min={0}
           prefix="$"
           thousandSeparator=","
@@ -427,7 +429,8 @@ export default function HouseholdBuilderFrame({
           </Text>
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'your partner', 'age', taxYear) || getVariableDefault('age')
+              HouseholdQueries.getPersonVariable(household, 'your partner', 'age', taxYear) ||
+              getVariableDefault('age')
             }
             onChange={(val) => handleAdultChange('your partner', 'age', val || 0)}
             min={18}
@@ -440,11 +443,11 @@ export default function HouseholdBuilderFrame({
               HouseholdQueries.getPersonVariable(
                 household,
                 'your partner',
-                'employmentIncome',
+                'employment_income',
                 taxYear
               ) || 0
             }
-            onChange={(val) => handleAdultChange('your partner', 'employmentIncome', val || 0)}
+            onChange={(val) => handleAdultChange('your partner', 'employment_income', val || 0)}
             min={0}
             prefix="$"
             thousandSeparator=","
@@ -492,11 +495,11 @@ export default function HouseholdBuilderFrame({
                   HouseholdQueries.getPersonVariable(
                     household,
                     childKey,
-                    'employmentIncome',
+                    'employment_income',
                     taxYear
                   ) || 0
                 }
-                onChange={(val) => handleChildChange(childKey, 'employmentIncome', val || 0)}
+                onChange={(val) => handleChildChange(childKey, 'employment_income', val || 0)}
                 min={0}
                 prefix="$"
                 thousandSeparator=","

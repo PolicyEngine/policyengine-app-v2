@@ -184,7 +184,9 @@ export default function PopulationsPage() {
           text: item.association.label || `Household #${item.association.householdId}`,
         } as TextValue,
         dateCreated: {
-          text: item.association.createdAt ? new Date(item.association.createdAt).toLocaleDateString() : 'Just now',
+          text: item.association.createdAt
+            ? new Date(item.association.createdAt).toLocaleDateString()
+            : 'Just now',
         } as TextValue,
         details: {
           items: detailsItems,

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, TextInput, Text } from '@mantine/core';
+import { Stack, Text, TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { updatePopulationLabel } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
@@ -9,13 +9,13 @@ import { FlowComponentProps } from '@/types/flow';
 export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
   const populationState = useSelector((state: RootState) => state.population);
-  
+
   // Initialize with existing label or generate a default based on population type
   const getDefaultLabel = () => {
     if (populationState.label) {
       return populationState.label;
     }
-    
+
     if (populationState.geographicScope) {
       // Geographic population
       if (populationState.geographicScope === 'national') {
@@ -24,12 +24,11 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
         return `${populationState.region} Population`;
       }
       return 'Geographic Population';
-    } else {
-      // Household population
-      return 'Custom Household';
     }
+    // Household population
+    return 'Custom Household';
   };
-  
+
   const [label, setLabel] = useState<string>(getDefaultLabel());
   const [error, setError] = useState<string>('');
 
@@ -39,17 +38,20 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
       setError('Please enter a label for your population');
       return;
     }
-    
+
     if (label.length > 100) {
       setError('Label must be less than 100 characters');
       return;
     }
-    
+
     // Update the population label in Redux
     dispatch(updatePopulationLabel(label.trim()));
-    
+
     // Navigate based on population type
-    if (populationState.geographicScope === 'state' || populationState.geographicScope === 'national') {
+    if (
+      populationState.geographicScope === 'state' ||
+      populationState.geographicScope === 'national'
+    ) {
       onNavigate('geographic');
     } else {
       onNavigate('household');
@@ -61,7 +63,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
       <Text size="sm" c="dimmed">
         Give your population a descriptive name to help identify it later.
       </Text>
-      
+
       <TextInput
         label="Population Label"
         placeholder="e.g., My Family 2024, California Low Income, UK National Average"
@@ -74,7 +76,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
         required
         maxLength={100}
       />
-      
+
       <Text size="xs" c="dimmed">
         This label will help you identify this population when creating simulations.
       </Text>

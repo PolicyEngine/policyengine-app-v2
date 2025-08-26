@@ -128,7 +128,7 @@ export class HouseholdBuilder {
 
     // Add country-specific child defaults
     if (this.household.countryId === 'us') {
-      child.isTaxUnitDependent = { [this.currentYear]: true };
+      child.is_tax_unit_dependent = { [this.currentYear]: true };
     }
 
     // Add child to people collection

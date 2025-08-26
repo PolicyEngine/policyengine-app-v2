@@ -3,6 +3,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { MOCK_USER_ID } from '@/constants';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
 import { uk_regions, us_regions } from '@/mocks/regions';
@@ -14,7 +15,6 @@ import {
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
-import { MOCK_USER_ID } from '@/constants';
 
 export default function GeographicConfirmationFrame({
   onNavigate,

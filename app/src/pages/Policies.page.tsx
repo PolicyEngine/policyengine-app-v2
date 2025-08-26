@@ -112,7 +112,9 @@ export default function PoliciesPage() {
         text: item.association.label || `Policy #${item.association.policyId}`,
       } as TextValue,
       dateCreated: {
-        text: item.association.createdAt ? new Date(item.association.createdAt).toLocaleDateString() : 'Just now',
+        text: item.association.createdAt
+          ? new Date(item.association.createdAt).toLocaleDateString()
+          : 'Just now',
       } as TextValue,
       provisions: {
         text: '7 provisions', // TODO: Get actual provisions count

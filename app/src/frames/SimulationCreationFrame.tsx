@@ -1,9 +1,9 @@
 import { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { FlowComponentProps } from '@/types/flow';
 import { updateSimulationLabel } from '@/reducers/simulationReducer';
-import { useDispatch } from 'react-redux';
+import { FlowComponentProps } from '@/types/flow';
 
 export default function SimulationCreationFrame({ onNavigate }: FlowComponentProps) {
   const [localLabel, setLocalLabel] = useState('');
