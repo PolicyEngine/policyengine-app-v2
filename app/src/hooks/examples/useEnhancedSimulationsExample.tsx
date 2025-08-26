@@ -50,7 +50,7 @@ export const SimulationsPageExample: React.FC = () => {
           </div>
 
           {/* Data is automatically consistent across components */}
-          {policy && <PolicyDetails policyId={policy.id.toString()} />}
+          {policy && policy.id && <PolicyDetails policyId={policy.id.toString()} />}
         </div>
       ))}
 

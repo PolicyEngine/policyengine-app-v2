@@ -16,12 +16,12 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
       return populationState.label;
     }
 
-    if (populationState.geographicScope) {
+    if (populationState.geography) {
       // Geographic population
-      if (populationState.geographicScope === 'national') {
+      if (populationState.geography.scope === 'national') {
         return 'National Population';
-      } else if (populationState.region) {
-        return `${populationState.region} Population`;
+      } else if (populationState.geography.geographyId) {
+        return `${populationState.geography.geographyId} Population`;
       }
       return 'Geographic Population';
     }
@@ -48,10 +48,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
     dispatch(updatePopulationLabel(label.trim()));
 
     // Navigate based on population type
-    if (
-      populationState.geographicScope === 'state' ||
-      populationState.geographicScope === 'national'
-    ) {
+    if (populationState.geography) {
       onNavigate('geographic');
     } else {
       onNavigate('household');

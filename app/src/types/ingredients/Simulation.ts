@@ -6,10 +6,12 @@ import { countryIds } from '@/libs/countries';
  * The Simulation is agnostic to which type of population it references
  */
 export interface Simulation {
-  id: string;
-  countryId: (typeof countryIds)[number];
-  apiVersion: string;
-  policyId: string;
-  populationId: string; // Can be either householdId or geographyId
-  populationType: 'household' | 'geography'; // Indicates the type of populationId
+  id?: string;
+  countryId?: (typeof countryIds)[number];
+  apiVersion?: string;
+  policyId?: string;
+  populationId?: string; // Can be either householdId or geographyId
+  populationType?: 'household' | 'geography'; // Indicates the type of populationId
+  label?: string | null;
+  isCreated?: boolean;
 }

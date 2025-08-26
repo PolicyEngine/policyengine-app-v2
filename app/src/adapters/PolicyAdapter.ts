@@ -25,7 +25,7 @@ export class PolicyAdapter {
    */
   static toCreationPayload(policy: Policy): PolicyCreationPayload {
     return {
-      data: convertParametersToPolicyJson(policy.parameters),
+      data: convertParametersToPolicyJson(policy.parameters || []),
     };
   }
 }

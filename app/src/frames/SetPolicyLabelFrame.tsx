@@ -17,11 +17,11 @@ export default function SetPolicyLabelFrame({ onNavigate }: FlowComponentProps) 
     }
 
     // Generate a default based on the number of parameters
-    const paramCount = policyState.params.length;
+    const paramCount = policyState.parameters?.length || 0;
     if (paramCount === 0) {
       return 'Custom policy';
     } else if (paramCount === 1) {
-      return `${policyState.params[0].name} reform`;
+      return `${policyState.parameters![0].name} reform`;
     }
     return `Policy reform (${paramCount} changes)`;
   };

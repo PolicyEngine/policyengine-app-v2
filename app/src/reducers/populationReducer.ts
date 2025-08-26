@@ -1,29 +1,15 @@
 // src/reducers/populationReducer.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Household } from '@/types/ingredients/Household';
+import { Geography } from '@/types/ingredients/Geography';
+import { Population } from '@/types/ingredients/Population';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 
-// Population state that wraps Household with metadata
-interface PopulationState {
-  id: string | undefined;
-  label: string | null;
-  isCreated: boolean;
-  household: Household | null;
-
-  // Geographic info for non-household populations
-  geographicScope: 'national' | 'state' | '';
-  region: string;
-  geographicAssociationId: string | undefined;
-}
-
-const initialState: PopulationState = {
-  id: undefined,
+const initialState: Population = {
   label: null,
   isCreated: false,
   household: null,
-  geographicScope: '',
-  region: '',
-  geographicAssociationId: undefined,
+  geography: null,
 };
 
 export const populationSlice = createSlice({
@@ -31,17 +17,19 @@ export const populationSlice = createSlice({
   initialState,
   reducers: {
     clearPopulation: (state) => {
-      state.id = undefined;
       state.label = null;
       state.isCreated = false;
       state.household = null;
-      state.geographicScope = '';
-      state.region = '';
-      state.geographicAssociationId = undefined;
+      state.geography = null;
     },
 
     updatePopulationId: (state, action: PayloadAction<string>) => {
-      state.id = action.payload;
+      // Update ID in the appropriate population type
+      if (state.household) {
+        state.household.id = action.payload;
+      } else if (state.geography) {
+        state.geography.id = action.payload;
+      }
     },
 
     updatePopulationLabel: (state, action: PayloadAction<string>) => {
@@ -55,6 +43,7 @@ export const populationSlice = createSlice({
     // Set the entire household
     setHousehold: (state, action: PayloadAction<Household>) => {
       state.household = action.payload;
+      state.geography = null; // Clear geography when setting household
     },
 
     // Initialize a new household
@@ -64,21 +53,14 @@ export const populationSlice = createSlice({
       state.household = builder.build();
     },
 
-    // Geographic scope actions
-    setGeographicScope: (state, action: PayloadAction<PopulationState['geographicScope']>) => {
-      state.geographicScope = action.payload;
-    },
-
-    setRegion: (state, action: PayloadAction<string>) => {
-      state.region = action.payload;
-    },
-
-    updateGeographicAssociationId: (state, action: PayloadAction<string>) => {
-      state.geographicAssociationId = action.payload;
+    // Set geography
+    setGeography: (state, action: PayloadAction<Geography>) => {
+      state.geography = action.payload;
+      state.household = null; // Clear household when setting geography
     },
 
     // Generic updater for backward compatibility
-    updatePopulation: (state, action: PayloadAction<Partial<PopulationState>>) => {
+    updatePopulation: (state, action: PayloadAction<Partial<Population>>) => {
       Object.assign(state, action.payload);
     },
   },
@@ -91,13 +73,8 @@ export const {
   markPopulationAsCreated,
   setHousehold,
   initializeHousehold,
-  setGeographicScope,
-  setRegion,
-  updateGeographicAssociationId,
+  setGeography,
   updatePopulation,
 } = populationSlice.actions;
 
 export default populationSlice.reducer;
-
-// Export types for use in components
-export type { PopulationState };

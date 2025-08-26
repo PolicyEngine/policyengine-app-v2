@@ -3,6 +3,7 @@
 import { Geography } from './Geography';
 import { Household } from './Household';
 import { Policy } from './Policy';
+import { Population } from './Population';
 import { Report } from './Report';
 import { Simulation } from './Simulation';
 import { UserPolicy } from './UserPolicy';
@@ -100,3 +101,7 @@ export function isUserSimulation(obj: UserIngredient): obj is UserSimulation {
 export function isUserReport(obj: UserIngredient): obj is UserReport {
   return 'reportId' in obj;
 }
+
+// Export all types
+export type { Geography, Household, Policy, Population, Report, Simulation };
+export type { UserPolicy, UserGeographyPopulation, UserHouseholdPopulation, UserPopulation, UserReport, UserSimulation };

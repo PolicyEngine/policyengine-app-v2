@@ -116,9 +116,9 @@ export const useUserSimulations = (userId: string) => {
 
   // Separate household and geography IDs based on populationType
   const householdIds = simulations
-    .filter((s) => s.populationType === 'household')
-    .map((s) => s.populationId)
-    .filter((id, index, self) => id && self.indexOf(id) === index);
+    .filter((s) => s.populationType === 'household' && s.populationId)
+    .map((s) => s.populationId as string)
+    .filter((id, index, self) => self.indexOf(id) === index);
 
   // Geography IDs for future use when we need to fetch geography data
   // const geographyIds = simulations
@@ -301,7 +301,7 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
   const { data: policy } = useQuery({
     queryKey: policyKeys.byId(finalSimulation?.policyId?.toString() ?? ''),
     queryFn: async () => {
-      const metadata = await fetchPolicyById(country, finalSimulation!.policyId.toString());
+      const metadata = await fetchPolicyById(country, finalSimulation!.policyId!.toString());
       return PolicyAdapter.fromMetadata(metadata);
     },
     enabled: !!finalSimulation?.policyId,

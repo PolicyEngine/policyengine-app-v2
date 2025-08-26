@@ -14,7 +14,7 @@ import { Policy } from '@/types/ingredients/Policy';
 import { formatDate } from '@/utils/dateFormatter';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
-  const params = useSelector((state: RootState) => state.policy.params);
+  const params = useSelector((state: RootState) => state.policy.parameters || []);
   const dispatch = useDispatch();
   const { resetIngredient } = useIngredientReset();
   const policyState = useSelector((state: RootState) => state.policy);
@@ -22,7 +22,7 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
 
   // Convert Redux state to Policy type structure
   const policy: Partial<Policy> = {
-    parameters: policyState.params,
+    parameters: policyState.parameters,
   };
 
   function handleSubmit() {
