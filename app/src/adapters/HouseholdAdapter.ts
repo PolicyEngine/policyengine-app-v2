@@ -100,40 +100,6 @@ export class HouseholdAdapter {
   }
 
   /**
-   * Convert internal Household to API request format
-   * Dynamically handles all entity types based on metadata
-   */
-  static toAPI(household: Household): Partial<HouseholdMetadata> {
-    const household_json: any = {
-      people: household.householdData.people as any,
-    };
-
-    // Iterate over all keys in householdData
-    for (const [key, value] of Object.entries(household.householdData)) {
-      if (key === 'people') {
-        continue; // Already handled
-      }
-
-      // Get the plural form from metadata
-      const pluralKey = getEntityPluralKey(key);
-      if (pluralKey) {
-        household_json[pluralKey] = value as any;
-      } else {
-        // If not found in metadata, try snake_case conversion
-        const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-        console.warn(`Entity "${key}" not found in metadata, using snake_case "${snakeKey}"`);
-        household_json[snakeKey] = value as any;
-      }
-    }
-
-    return {
-      id: household.id,
-      country_id: household.countryId,
-      household_json,
-    };
-  }
-
-  /**
    * Create a minimal Household for creation requests
    * Dynamically handles all entity types based on metadata
    */
