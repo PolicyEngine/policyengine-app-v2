@@ -96,26 +96,28 @@ export default function HouseholdBuilderFrame({
       builder.loadHousehold(household);
     } else {
       // Add new "you" person with defaults from metadata
+      const ageDefault = getVariableDefault('age');
       const defaults: Record<string, any> = {};
       basicInputFields.person.forEach((field: string) => {
         if (field !== 'age') {
           defaults[field] = getVariableDefault(field);
         }
       });
-      builder.addAdult('you', 30, defaults);
+      builder.addAdult('you', ageDefault, defaults);
     }
 
     // Handle spouse based on marital status
     if (maritalStatus === 'married') {
       if (!hasPartner) {
         // Add partner with defaults from metadata
+        const ageDefault = getVariableDefault('age');
         const defaults: Record<string, any> = {};
         basicInputFields.person.forEach((field: string) => {
           if (field !== 'age') {
             defaults[field] = getVariableDefault(field);
           }
         });
-        builder.addAdult('your partner', 30, defaults);
+        builder.addAdult('your partner', ageDefault, defaults);
       }
       builder.setMaritalStatus('you', 'your partner');
     } else if (hasPartner) {
@@ -393,7 +395,7 @@ export default function HouseholdBuilderFrame({
           You
         </Text>
         <NumberInput
-          value={HouseholdQueries.getPersonVariable(household, 'you', 'age', taxYear) || 30}
+          value={HouseholdQueries.getPersonVariable(household, 'you', 'age', taxYear) || getVariableDefault('age')}
           onChange={(val) => handleAdultChange('you', 'age', val || 0)}
           min={18}
           max={120}
@@ -421,7 +423,7 @@ export default function HouseholdBuilderFrame({
           </Text>
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'your partner', 'age', taxYear) || 30
+              HouseholdQueries.getPersonVariable(household, 'your partner', 'age', taxYear) || getVariableDefault('age')
             }
             onChange={(val) => handleAdultChange('your partner', 'age', val || 0)}
             min={18}

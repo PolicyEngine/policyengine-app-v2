@@ -61,7 +61,10 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
       return;
     }
 
-    dispatch(setGeographicScope(scope));
+    // Only dispatch geographic scope for non-household selections
+    if (scope !== 'household') {
+      dispatch(setGeographicScope(scope));
+    }
     // Note: Region is already dispatched immediately when selected above
     onNavigate(scope);
   }
