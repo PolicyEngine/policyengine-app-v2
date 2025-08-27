@@ -1,4 +1,5 @@
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
 
 export interface UserHouseholdStore {
   create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
@@ -14,17 +15,20 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   private readonly BASE_URL = '/api/user-household-associations';
 
   async create(association: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
+    const payload = UserHouseholdAdapter.toCreationPayload(association);
+    
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(association),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       throw new Error('Failed to create household association');
     }
 
-    return response.json();
+    const apiResponse = await response.json();
+    return UserHouseholdAdapter.fromApiResponse(apiResponse);
   }
 
   async findByUser(userId: string): Promise<UserHouseholdPopulation[]> {
@@ -34,18 +38,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     }
 
     const apiResponses = await response.json();
-
-    // Convert each API response to UserHouseholdPopulation
-    return apiResponses.map((apiData: any) => ({
-      type: 'household' as const,
-      id: apiData.householdId,
-      userId: apiData.userId,
-      householdId: apiData.householdId,
-      label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
-      isCreated: true,
-    }));
+    return apiResponses.map((apiData: any) => UserHouseholdAdapter.fromApiResponse(apiData));
   }
 
   async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
@@ -60,18 +53,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     }
 
     const apiData = await response.json();
-
-    // Convert API response to UserHouseholdPopulation
-    return {
-      type: 'household' as const,
-      id: apiData.householdId,
-      userId: apiData.userId,
-      householdId: apiData.householdId,
-      label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
-      isCreated: true,
-    };
+    return UserHouseholdAdapter.fromApiResponse(apiData);
   }
 
   // Not yet implemented, but keeping for future use

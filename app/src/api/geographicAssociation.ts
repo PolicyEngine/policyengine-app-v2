@@ -1,6 +1,7 @@
 // src/api/geographicAssociation.ts
 
 import { UserGeographicAssociation } from '../types/userIngredientAssociations';
+import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
 
 export interface UserGeographicStore {
   create: (
@@ -20,17 +21,20 @@ export class ApiGeographicStore implements UserGeographicStore {
   async create(
     association: Omit<UserGeographicAssociation, 'createdAt'>
   ): Promise<UserGeographicAssociation> {
+    const payload = UserGeographicAdapter.toCreationPayload(association);
+    
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(association),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       throw new Error('Failed to create geographic association');
     }
 
-    return response.json();
+    const apiResponse = await response.json();
+    return UserGeographicAdapter.fromApiResponse(apiResponse);
   }
 
   async findByUser(userId: string): Promise<UserGeographicAssociation[]> {
@@ -39,7 +43,8 @@ export class ApiGeographicStore implements UserGeographicStore {
       throw new Error('Failed to fetch user associations');
     }
 
-    return response.json();
+    const apiResponses = await response.json();
+    return apiResponses.map((apiData: any) => UserGeographicAdapter.fromApiResponse(apiData));
   }
 
   async findById(userId: string, geographyId: string): Promise<UserGeographicAssociation | null> {
@@ -53,7 +58,8 @@ export class ApiGeographicStore implements UserGeographicStore {
       throw new Error('Failed to fetch association');
     }
 
-    return response.json();
+    const apiData = await response.json();
+    return UserGeographicAdapter.fromApiResponse(apiData);
   }
 
   // Not yet implemented, but keeping for future use
