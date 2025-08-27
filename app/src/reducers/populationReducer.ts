@@ -58,7 +58,6 @@ export const populationSlice = createSlice({
       state.geography = action.payload;
       state.household = null; // Clear household when setting geography
     },
-
   },
 });
 
