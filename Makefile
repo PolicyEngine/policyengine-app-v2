@@ -5,6 +5,7 @@ help:
 	@echo "  make install    - Install dependencies"
 	@echo "  make dev        - Start development server"
 	@echo "  make build      - Build production version"
+	@echo "  make typecheck  - Run type checks"
 	@echo "  make test       - Run tests"
 	@echo "  make lint       - Run linters"
 	@echo "  make format     - Format code"
@@ -19,6 +20,9 @@ dev:
 
 build:
 	cd app && npm run build-with-types
+
+typecheck:
+	cd app && npm run typecheck
 
 test:
 	cd app && npm run test-all

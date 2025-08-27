@@ -45,10 +45,20 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   // Listen for population creation and update simulation with population ID
   useEffect(() => {
-    if (population.isCreated && population.id && !simulation.populationId) {
-      dispatch(updateSimulationPopulationId(population.id));
+    if (population.isCreated && !simulation.populationId) {
+      if (population.household?.id) {
+        dispatch(updateSimulationPopulationId({ id: population.household.id, type: 'household' }));
+      } else if (population.geography?.id) {
+        dispatch(updateSimulationPopulationId({ id: population.geography.id, type: 'geography' }));
+      }
     }
-  }, [population.isCreated, population.id, simulation.populationId, dispatch]);
+  }, [
+    population.isCreated,
+    population.household,
+    population.geography,
+    simulation.populationId,
+    dispatch,
+  ]);
 
   const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
 
@@ -56,7 +66,8 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     {
       title:
         population && population.isCreated
-          ? population.label || `Population #${population.id}`
+          ? population.label ||
+            `Population #${population.household?.id || population.geography?.id}`
           : 'Add Population',
       description:
         population && population.isCreated

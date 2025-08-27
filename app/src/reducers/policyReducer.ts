@@ -1,22 +1,17 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { getParameterByName } from '@/types/parameter';
-import { Policy } from '@/types/policy';
-import { ValueInterval, ValueIntervalCollection } from '@/types/valueInterval';
+import { Policy } from '@/types/ingredients/Policy';
+import { getParameterByName } from '@/types/subIngredients/parameter';
+import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 export interface PolicyParamAdditionPayload {
   name: string;
   valueInterval: ValueInterval;
 }
 
-interface PolicyState extends Policy {
-  isCreated: boolean;
-  id: string | undefined; // TODO: Check type on this
-}
-
-const initialState: PolicyState = {
+const initialState: Policy = {
   id: undefined,
-  label: undefined,
-  params: [],
+  label: null,
+  parameters: [],
   isCreated: false,
 };
 
@@ -27,10 +22,14 @@ export const policySlice = createSlice({
     addPolicyParam: (state, action: PayloadAction<PolicyParamAdditionPayload>) => {
       const { name, valueInterval } = action.payload;
 
+      if (!state.parameters) {
+        state.parameters = [];
+      }
+
       let param = getParameterByName(state, name);
       if (!param) {
         param = { name, values: [] };
-        state.params.push(param);
+        state.parameters.push(param);
       }
 
       const paramCollection = new ValueIntervalCollection(param.values);
@@ -39,8 +38,8 @@ export const policySlice = createSlice({
     },
 
     clearPolicy: (state) => {
-      state.label = undefined;
-      state.params = [];
+      state.label = null;
+      state.parameters = [];
       state.isCreated = false;
       state.id = undefined;
     },

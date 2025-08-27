@@ -1,6 +1,6 @@
 import { BASE_URL } from '@/constants';
-import { HouseholdMetadata } from '@/types/householdMetadata';
-import { HouseholdCreationPayload } from '@/types/householdPayloads';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import { HouseholdCreationPayload } from '@/types/payloads';
 
 export async function fetchHouseholdById(
   country: string,
@@ -28,7 +28,7 @@ export async function fetchHouseholdById(
 export async function createHousehold(
   data: HouseholdCreationPayload
 ): Promise<{ result: { household_id: string } }> {
-  const url = `${BASE_URL}/us/household`;
+  const url = `${BASE_URL}/${data.country_id}/household`;
 
   const res = await fetch(url, {
     method: 'POST',

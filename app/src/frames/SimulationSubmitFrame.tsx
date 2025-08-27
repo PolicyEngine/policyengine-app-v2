@@ -1,25 +1,31 @@
 import { useSelector } from 'react-redux';
+import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Simulation } from '@/types/simulation';
-import {
-  serializeSimulationCreationPayload,
-  SimulationCreationPayload,
-} from '@/types/simulationPayload';
+import { Simulation } from '@/types/ingredients/Simulation';
+import { SimulationCreationPayload } from '@/types/payloads';
 
 export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
-  const simulation: Simulation = useSelector((state: RootState) => state.simulation);
+  const simulation = useSelector((state: RootState) => state.simulation);
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
-  const { createSimulation, isPending } = useCreateSimulation();
+
+  console.log('Simulation label: ', simulation.label);
+  const { createSimulation, isPending } = useCreateSimulation(simulation.label || undefined);
   const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
+    // Convert state to partial Simulation for adapter
+    const simulationData: Partial<Simulation> = {
+      populationId: simulation.populationId || undefined,
+      policyId: simulation.policyId || undefined,
+    };
+
     const serializedSimulationCreationPayload: SimulationCreationPayload =
-      serializeSimulationCreationPayload(simulation);
+      SimulationAdapter.toCreationPayload(simulationData);
 
     console.log('Submitting simulation:', serializedSimulationCreationPayload);
     createSimulation(serializedSimulationCreationPayload, {

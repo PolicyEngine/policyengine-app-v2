@@ -6,23 +6,31 @@ export const PopulationCreationFlow: Flow = {
     SelectGeographicScopeFrame: {
       component: 'SelectGeographicScopeFrame',
       on: {
+        household: 'SetPopulationLabelFrame',
+        state: 'SetPopulationLabelFrame',
+        national: 'SetPopulationLabelFrame',
+      },
+    },
+    SetPopulationLabelFrame: {
+      component: 'SetPopulationLabelFrame',
+      on: {
         household: 'HouseholdBuilderFrame',
-        state: 'GeographicConfirmationFrame',
-        national: 'GeographicConfirmationFrame',
+        geographic: 'GeographicConfirmationFrame',
+        back: 'SelectGeographicScopeFrame',
       },
     },
     HouseholdBuilderFrame: {
       component: 'HouseholdBuilderFrame',
       on: {
         next: '__return__',
-        back: 'SelectGeographicScopeFrame',
+        back: 'SetPopulationLabelFrame',
       },
     },
     GeographicConfirmationFrame: {
       component: 'GeographicConfirmationFrame',
       on: {
         next: '__return__',
-        back: 'SelectGeographicScopeFrame',
+        back: 'SetPopulationLabelFrame',
       },
     },
   },

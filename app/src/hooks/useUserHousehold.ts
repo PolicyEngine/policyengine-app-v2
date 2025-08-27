@@ -3,11 +3,11 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { useSelector } from 'react-redux';
 import { fetchHouseholdById } from '@/api/household';
 import { RootState } from '@/store';
-import { HouseholdMetadata } from '@/types/householdMetadata';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
-import { UserHouseholdAssociation } from '../types/userIngredientAssociations';
 
 const apiHouseholdStore = new ApiHouseholdStore();
 const sessionHouseholdStore = new SessionStorageHouseholdStore();
@@ -24,6 +24,14 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+
+  console.log('userId', userId);
+  console.log('store', store);
+  console.log('isLoggedIn', isLoggedIn);
+  console.log('config', config);
+
+  console.log('householdAssociationKeys.byUser(userId)', householdAssociationKeys.byUser(userId));
+  console.log('store.findByUser(userId)', store.findByUser(userId));
 
   return useQuery({
     queryKey: householdAssociationKeys.byUser(userId),
@@ -49,9 +57,15 @@ export const useCreateHouseholdAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (association: Omit<UserHouseholdAssociation, 'createdAt'>) =>
-      store.create(association),
+    mutationFn: (household: Omit<UserHouseholdPopulation, 'createdAt' | 'type'>) => {
+      console.log('household in useCreateHouseholdAssociation');
+      console.log(household);
+      return store.create({ ...household, type: 'household' as const });
+    },
     onSuccess: (newAssociation) => {
+      console.log('new association');
+      console.log(newAssociation);
+
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
         queryKey: householdAssociationKeys.byUser(newAssociation.userId),
@@ -79,7 +93,7 @@ export const useUpdateAssociation = () => {
     mutationFn: ({ userId, householdId, updates }: {
       userId: string;
       householdId: string;
-      updates: Partial<UserHouseholdAssociation>;
+      updates: Partial<UserHousehold>;
     }) => store.update(userId, householdId, updates),
     onSuccess: (updatedAssociation) => {
       queryClient.invalidateQueries({ queryKey: associationKeys.byUser(updatedAssociation.userId) });
@@ -118,10 +132,11 @@ export const useDeleteAssociation = () => {
 
 // Type for the combined data structure
 interface UserHouseholdMetadataWithAssociation {
-  association: UserHouseholdAssociation;
+  association: UserHouseholdPopulation;
   household: HouseholdMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
+  isError?: boolean;
 }
 
 export const useUserHouseholds = (userId: string) => {
@@ -135,8 +150,12 @@ export const useUserHouseholds = (userId: string) => {
     error: associationsError,
   } = useHouseholdAssociationsByUser(userId);
 
+  console.log('associations', associations);
+
   // Extract household IDs
   const householdIds = associations?.map((a) => a.householdId) ?? [];
+
+  console.log('householdIds', householdIds);
 
   // Fetch all households in parallel
   const householdQueries = useQueries({
@@ -153,15 +172,18 @@ export const useUserHouseholds = (userId: string) => {
   const error = associationsError || householdQueries.find((q) => q.error)?.error;
   const isError = !!error;
 
-  // Simple index-based mapping since queries are in same order as associations
+  // Map associations to households - filter out associations without householdId
+  // TODO: Determine if this filter action is needed
   const householdsWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
-    associations?.map((association, index) => ({
-      association,
-      household: householdQueries[index]?.data,
-      isLoading: householdQueries[index]?.isLoading ?? false,
-      error: householdQueries[index]?.error ?? null,
-      isError: !!error,
-    }));
+    associations
+      ?.filter((association) => association.householdId)
+      .map((association, index) => ({
+        association,
+        household: householdQueries[index]?.data,
+        isLoading: householdQueries[index]?.isLoading ?? false,
+        error: householdQueries[index]?.error ?? null,
+        isError: !!householdQueries[index]?.error,
+      }));
 
   return {
     data: householdsWithAssociations,

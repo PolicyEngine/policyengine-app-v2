@@ -1,6 +1,6 @@
 import { BASE_URL } from '@/constants';
-import { PolicyMetadata } from '@/types/policyMetadata';
-import { PolicyCreationPayload } from '@/types/policyPayloads';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
+import { PolicyCreationPayload } from '@/types/payloads';
 
 export async function fetchPolicyById(country: string, policyId: string): Promise<PolicyMetadata> {
   const url = `${BASE_URL}/${country}/policy/${policyId}`;

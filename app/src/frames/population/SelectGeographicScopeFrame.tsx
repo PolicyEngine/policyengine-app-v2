@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
-import { setGeographicScope, setRegion } from '@/reducers/populationReducer';
+import { setGeography } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+import { Geography } from '@/types/ingredients/Geography';
 
 export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -44,7 +45,7 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
     if (value !== 'state') {
       setSelectedCountry('');
       setSelectedRegion('');
-      dispatch(setRegion('')); // clear from Redux
+      // clear from local state only
     }
   };
 
@@ -61,8 +62,19 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
       return;
     }
 
-    dispatch(setGeographicScope(scope));
-    // Note: Region is already dispatched immediately when selected above
+    // Create Geography object for non-household selections
+    if (scope !== 'household') {
+      const geography: Geography = {
+        id:
+          scope === 'national'
+            ? currentCountry
+            : `${currentCountry}-${extractRegionValue(selectedRegion)}`,
+        countryId: currentCountry as any,
+        scope: scope === 'national' ? 'national' : 'subnational',
+        geographyId: scope === 'national' ? currentCountry : extractRegionValue(selectedRegion),
+      };
+      dispatch(setGeography(geography));
+    }
     onNavigate(scope);
   }
 
@@ -93,8 +105,7 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
                 value={selectedRegion}
                 onChange={(val) => {
                   setSelectedRegion(val || '');
-                  // Extract just the state name (e.g., 'california' from 'state/california')
-                  dispatch(setRegion(val ? extractRegionValue(val) : ''));
+                  // State will be handled in submissionHandler
                 }}
               />
             )}
@@ -110,7 +121,7 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
                   onChange={(val) => {
                     setSelectedCountry(val || '');
                     setSelectedRegion('');
-                    dispatch(setRegion(''));
+                    // Region cleared in local state above
                   }}
                 />
                 {selectedCountry && (
@@ -121,8 +132,7 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
                     value={selectedRegion}
                     onChange={(val) => {
                       setSelectedRegion(val || '');
-                      // Extract just the constituency name (e.g., 'birmingham-edgbaston' from 'constituency/birmingham-edgbaston')
-                      dispatch(setRegion(val ? extractRegionValue(val) : ''));
+                      // Region will be handled in submissionHandler
                     }}
                     searchable
                     mt="xs"

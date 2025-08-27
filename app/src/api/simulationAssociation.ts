@@ -1,13 +1,13 @@
-import { UserSimulationAssociation } from '../types/userIngredientAssociations';
+import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
+import { UserSimulationCreationPayload } from '@/types/payloads';
+import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
-  create: (
-    association: Omit<UserSimulationAssociation, 'createdAt'>
-  ) => Promise<UserSimulationAssociation>;
-  findByUser: (userId: string) => Promise<UserSimulationAssociation[]>;
-  findById: (userId: string, simulationId: string) => Promise<UserSimulationAssociation | null>;
+  create: (simulation: Omit<UserSimulation, 'id' | 'createdAt'>) => Promise<UserSimulation>;
+  findByUser: (userId: string) => Promise<UserSimulation[]>;
+  findById: (userId: string, simulationId: string) => Promise<UserSimulation | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, simulationId: string, updates: Partial<UserSimulationAssociation>): Promise<UserSimulationAssociation>;
+  // update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation>;
   // delete(userId: string, simulationId: string): Promise<void>;
 }
 
@@ -15,32 +15,37 @@ export class ApiSimulationStore implements UserSimulationStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-simulation-associations';
 
-  async create(
-    association: Omit<UserSimulationAssociation, 'createdAt'>
-  ): Promise<UserSimulationAssociation> {
+  async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
+    const payload: UserSimulationCreationPayload =
+      UserSimulationAdapter.toCreationPayload(simulation);
+
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(association),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       throw new Error('Failed to create simulation association');
     }
 
-    return response.json();
+    const apiResponse = await response.json();
+    return UserSimulationAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserSimulationAssociation[]> {
+  async findByUser(userId: string): Promise<UserSimulation[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
 
-    return response.json();
+    const apiResponses = await response.json();
+
+    // Convert each API response to UserSimulation
+    return apiResponses.map((apiData: any) => UserSimulationAdapter.fromApiResponse(apiData));
   }
 
-  async findById(userId: string, simulationId: string): Promise<UserSimulationAssociation | null> {
+  async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`);
 
     if (response.status === 404) {
@@ -51,12 +56,13 @@ export class ApiSimulationStore implements UserSimulationStore {
       throw new Error('Failed to fetch association');
     }
 
-    return response.json();
+    const apiData = await response.json();
+    return UserSimulationAdapter.fromApiResponse(apiData);
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, simulationId: string, updates: Partial<UserSimulationAssociation>): Promise<UserSimulationAssociation> {
+  async update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation> {
     const response = await fetch(`/api/user-simulation-associations/${userId}/${simulationId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -88,74 +94,42 @@ export class ApiSimulationStore implements UserSimulationStore {
 export class SessionStorageSimulationStore implements UserSimulationStore {
   private readonly STORAGE_KEY = 'user-simulation-associations';
 
-  async create(
-    association: Omit<UserSimulationAssociation, 'createdAt'>
-  ): Promise<UserSimulationAssociation> {
-    const newAssociation: UserSimulationAssociation = {
-      ...association,
+  async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
+    const newSimulation: UserSimulation = {
+      ...simulation,
+      id: simulation.simulationId, // Use simulationId as the ID
       createdAt: new Date().toISOString(),
+      isCreated: true,
     };
 
-    const associations = this.getStoredAssociations();
+    const simulations = this.getStoredSimulations();
 
     // Check for duplicates
-    const exists = associations.some(
-      (a) => a.userId === association.userId && a.simulationId === association.simulationId
+    const exists = simulations.some(
+      (s) => s.userId === simulation.userId && s.simulationId === simulation.simulationId
     );
 
     if (exists) {
       throw new Error('Association already exists');
     }
 
-    const updatedAssociations = [...associations, newAssociation];
-    this.setStoredAssociations(updatedAssociations);
+    const updatedSimulations = [...simulations, newSimulation];
+    this.setStoredSimulations(updatedSimulations);
 
-    return newAssociation;
+    return newSimulation;
   }
 
-  async findByUser(userId: string): Promise<UserSimulationAssociation[]> {
-    const associations = this.getStoredAssociations();
-    return associations.filter((a) => a.userId === userId);
+  async findByUser(userId: string): Promise<UserSimulation[]> {
+    const simulations = this.getStoredSimulations();
+    return simulations.filter((s) => s.userId === userId);
   }
 
-  async findById(userId: string, simulationId: string): Promise<UserSimulationAssociation | null> {
-    const associations = this.getStoredAssociations();
-    return associations.find((a) => a.userId === userId && a.simulationId === simulationId) || null;
+  async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
+    const simulations = this.getStoredSimulations();
+    return simulations.find((s) => s.userId === userId && s.simulationId === simulationId) || null;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, simulationId: string, updates: Partial<UserSimulationAssociation>): Promise<UserSimulationAssociation> {
-    const associations = this.getStoredAssociations();
-    const index = associations.findIndex(a => a.userId === userId && a.simulationId === simulationId);
-    
-    if (index === -1) {
-      throw new Error('Association not found');
-    }
-
-    const updatedAssociation = { ...associations[index], ...updates };
-    associations[index] = updatedAssociation;
-    
-    this.setStoredAssociations(associations);
-    return updatedAssociation;
-  }
-  */
-
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, simulationId: string): Promise<void> {
-    const associations = this.getStoredAssociations();
-    const filtered = associations.filter(a => !(a.userId === userId && a.simulationId === simulationId));
-    
-    if (filtered.length === associations.length) {
-      throw new Error('Association not found');
-    }
-
-    this.setStoredAssociations(filtered);
-  }
-  */
-
-  private getStoredAssociations(): UserSimulationAssociation[] {
+  private getStoredSimulations(): UserSimulation[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -164,20 +138,38 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
     }
   }
 
-  private setStoredAssociations(associations: UserSimulationAssociation[]): void {
-    try {
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(associations));
-    } catch (error) {
-      throw new Error('Failed to store associations in session storage');
+  private setStoredSimulations(simulations: UserSimulation[]): void {
+    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(simulations));
+  }
+
+  // Not yet implemented, but keeping for future use
+  /*
+  async update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation> {
+    const simulations = this.getStoredSimulations();
+    const index = simulations.findIndex(
+      a => a.userId === userId && a.simulationId === simulationId
+    );
+
+    if (index === -1) {
+      throw new Error('Association not found');
     }
-  }
 
-  // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserSimulationAssociation[] {
-    return this.getStoredAssociations();
-  }
+    const updated = { ...simulations[index], ...updates };
+    simulations[index] = updated;
+    this.setStoredSimulations(simulations);
 
-  clearAllAssociations(): void {
-    sessionStorage.removeItem(this.STORAGE_KEY);
+    return updated;
   }
+  */
+
+  // Not yet implemented, but keeping for future use
+  /*
+  async delete(userId: string, simulationId: string): Promise<void> {
+    const simulations = this.getStoredSimulations();
+    const filtered = simulations.filter(
+      a => !(a.userId === userId && a.simulationId === simulationId)
+    );
+    this.setStoredSimulations(filtered);
+  }
+  */
 }

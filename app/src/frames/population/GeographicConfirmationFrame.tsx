@@ -3,12 +3,13 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { MOCK_USER_ID } from '@/constants';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
 import { uk_regions, us_regions } from '@/mocks/regions';
 import {
   markPopulationAsCreated,
-  updateGeographicAssociationId,
+  updatePopulationId,
   updatePopulationLabel,
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
@@ -26,7 +27,7 @@ export default function GeographicConfirmationFrame({
   const { resetIngredient } = useIngredientReset();
 
   // Hardcoded for now - TODO: Replace with actual user from auth context
-  const currentUserId = 'anonymous';
+  const currentUserId = MOCK_USER_ID;
   // Get current country from metadata state, fallback to 'us' if not available
   const currentCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
 
@@ -71,7 +72,7 @@ export default function GeographicConfirmationFrame({
       countryCode: currentCountry,
     };
 
-    if (population.geographicScope === 'national') {
+    if (population.geography?.scope === 'national') {
       return {
         ...baseAssociation,
         geographyType: 'national' as const,
@@ -82,13 +83,14 @@ export default function GeographicConfirmationFrame({
 
     // Subnational (state/constituency)
     const regionType = getRegionType(currentCountry);
+    const regionCode = population.geography?.geographyId || '';
     return {
       ...baseAssociation,
       geographyType: 'subnational' as const,
-      geographyIdentifier: `${currentCountry}-${population.region}`,
-      regionCode: population.region,
+      geographyIdentifier: population.geography?.id || `${currentCountry}-${regionCode}`,
+      regionCode,
       regionType,
-      label: getRegionLabel(population.region, currentCountry),
+      label: getRegionLabel(regionCode, currentCountry),
     };
   };
 
@@ -101,7 +103,7 @@ export default function GeographicConfirmationFrame({
       console.log('Geographic association created successfully:', result);
 
       // Update population state with the created association ID and mark as created
-      dispatch(updateGeographicAssociationId(result.geographyIdentifier));
+      dispatch(updatePopulationId(result.geographyIdentifier));
       dispatch(updatePopulationLabel(result.label));
       dispatch(markPopulationAsCreated());
 
@@ -125,7 +127,7 @@ export default function GeographicConfirmationFrame({
 
   // Build display content based on geographic scope
   const buildDisplayContent = () => {
-    if (population.geographicScope === 'national') {
+    if (population.geography?.scope === 'national') {
       return (
         <Stack gap="md">
           <Text fw={600} fz="lg">
@@ -142,7 +144,8 @@ export default function GeographicConfirmationFrame({
     }
 
     // Subnational
-    const regionLabel = getRegionLabel(population.region, currentCountry);
+    const regionCode = population.geography?.geographyId || '';
+    const regionLabel = getRegionLabel(regionCode, currentCountry);
     const regionTypeName = getRegionType(currentCountry) === 'state' ? 'State' : 'Constituency';
 
     return (

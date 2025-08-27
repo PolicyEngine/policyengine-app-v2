@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { MOCK_USER_ID } from '@/constants';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
 import {
@@ -11,10 +12,10 @@ import {
   updatePolicyId,
 } from '@/reducers/policyReducer';
 import { FlowComponentProps } from '@/types/flow';
-import { PolicyMetadata } from '@/types/policyMetadata';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
-  const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
+  const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicyId, setLocalPolicyId] = useState<string | null>(null);

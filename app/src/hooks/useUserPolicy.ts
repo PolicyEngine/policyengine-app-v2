@@ -3,11 +3,11 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { useSelector } from 'react-redux';
 import { fetchPolicyById } from '@/api/policy';
 import { RootState } from '@/store';
-import { PolicyMetadata } from '@/types/policyMetadata';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
-import { UserPolicyAssociation } from '../types/userIngredientAssociations';
+import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 const apiPolicyStore = new ApiPolicyStore();
 const sessionPolicyStore = new SessionStoragePolicyStore();
@@ -49,20 +49,22 @@ export const useCreatePolicyAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (association: Omit<UserPolicyAssociation, 'createdAt'>) =>
-      store.create(association),
+    mutationFn: (userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>) => store.create(userPolicy),
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(newAssociation.userId),
+        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString()),
       });
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId),
+        queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
-        policyAssociationKeys.specific(newAssociation.userId, newAssociation.policyId),
+        policyAssociationKeys.specific(
+          newAssociation.userId.toString(),
+          newAssociation.policyId.toString()
+        ),
         newAssociation
       );
     },
@@ -118,7 +120,7 @@ export const useDeleteAssociation = () => {
 
 // Type for the combined data structure
 interface UserPolicyMetadataWithAssociation {
-  association: UserPolicyAssociation;
+  association: UserPolicy;
   policy: PolicyMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
@@ -141,8 +143,8 @@ export const useUserPolicies = (userId: string) => {
   // Fetch all policies in parallel
   const policyQueries = useQueries({
     queries: policyIds.map((policyId) => ({
-      queryKey: policyKeys.byId(policyId),
-      queryFn: () => fetchPolicyById(country, policyId),
+      queryKey: policyKeys.byId(policyId.toString()),
+      queryFn: () => fetchPolicyById(country, policyId.toString()),
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),

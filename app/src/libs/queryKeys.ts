@@ -7,10 +7,10 @@ export const policyAssociationKeys = {
 };
 
 export const householdAssociationKeys = {
-  all: ['simulation-associations'] as const,
+  all: ['household-associations'] as const,
   byUser: (userId: string) => [...householdAssociationKeys.all, 'user_id', userId] as const,
   byHousehold: (householdId: string) =>
-    [...householdAssociationKeys.all, 'simulation_id', householdId] as const,
+    [...householdAssociationKeys.all, 'household_id', householdId] as const,
   specific: (userId: string, householdId: string) =>
     [...householdAssociationKeys.all, 'specific', userId, householdId] as const,
 };

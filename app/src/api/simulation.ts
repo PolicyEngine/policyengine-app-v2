@@ -1,6 +1,6 @@
 import { countryIds } from '@/libs/countries';
-import { SimulationMetadata } from '@/types/simulationMetadata';
-import { SimulationCreationPayload } from '@/types/simulationPayload';
+import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
+import { SimulationCreationPayload } from '@/types/payloads';
 
 // The required API endpoint to fetch a simulation by ID
 // doesn't exist yet. The code below will be used once the endpoint is created.
@@ -51,9 +51,10 @@ export async function createSimulation(
 }
 */
 
+// TODO: This needs fixing once we have a simulation endpoint on API.
 const mockApiVersion = 'mock-api-version';
-const mockPopulationId = 0;
-const mockPolicyId = 0;
+const mockPopulationId = '55453';
+const mockPolicyId = '14';
 
 // Store created simulations to return proper data when fetched
 const mockSimulationStore = new Map<string, SimulationMetadata>();
@@ -70,11 +71,13 @@ export async function fetchSimulationById(
         resolve(storedSimulation);
       } else {
         // Fallback for simulations not in our store (legacy or external)
+        // TODO: Remove this once we have the necessary API endpoints
         resolve({
           simulation_id: simulationId,
           country_id: countryId,
           api_version: mockApiVersion,
           population_id: mockPopulationId,
+          population_type: 'household' as const,
           policy_id: mockPolicyId,
         });
       }
@@ -95,8 +98,9 @@ export async function createSimulation(
         simulation_id: simulationId,
         country_id: 'us', // Default to US for now
         api_version: mockApiVersion,
-        population_id: data.populationId ? parseInt(data.populationId, 10) : mockPopulationId,
-        policy_id: data.policyId ? parseInt(data.policyId, 10) : mockPolicyId,
+        population_id: data.population_id || mockPopulationId,
+        population_type: data.population_type || 'household', // Use provided type or default to household
+        policy_id: data.policy_id || mockPolicyId,
       };
 
       mockSimulationStore.set(simulationId, simulationMetadata);

@@ -2,9 +2,9 @@ import { useSelector } from 'react-redux';
 import { Container, Text, Title } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
-import { getParameterByName } from '@/types/parameter';
-import { ParameterMetadata } from '@/types/parameterMetadata';
-import { ValueIntervalCollection, ValuesList } from '@/types/valueInterval';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { getParameterByName } from '@/types/subIngredients/parameter';
+import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 
 /* TODO:
 - Implement reset functionality

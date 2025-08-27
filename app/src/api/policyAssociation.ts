@@ -1,11 +1,13 @@
-import { UserPolicyAssociation } from '../types/userIngredientAssociations';
+import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
+import { UserPolicyCreationPayload } from '@/types/payloads';
+import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 export interface UserPolicyStore {
-  create: (association: Omit<UserPolicyAssociation, 'createdAt'>) => Promise<UserPolicyAssociation>;
-  findByUser: (userId: string) => Promise<UserPolicyAssociation[]>;
-  findById: (userId: string, policyId: string) => Promise<UserPolicyAssociation | null>;
+  create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
+  findByUser: (userId: string) => Promise<UserPolicy[]>;
+  findById: (userId: string, policyId: string) => Promise<UserPolicy | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation>;
+  // update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy>;
   // delete(userId: string, policyId: string): Promise<void>;
 }
 
@@ -13,32 +15,36 @@ export class ApiPolicyStore implements UserPolicyStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-policy-associations';
 
-  async create(
-    association: Omit<UserPolicyAssociation, 'createdAt'>
-  ): Promise<UserPolicyAssociation> {
+  async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
+    const payload: UserPolicyCreationPayload = UserPolicyAdapter.toCreationPayload(policy);
+
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(association),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       throw new Error('Failed to create policy association');
     }
 
-    return response.json();
+    const apiResponse = await response.json();
+    return UserPolicyAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserPolicyAssociation[]> {
+  async findByUser(userId: string): Promise<UserPolicy[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
 
-    return response.json();
+    const apiResponses = await response.json();
+
+    // Convert each API response to UserPolicy
+    return apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
   }
 
-  async findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null> {
+  async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`);
 
     if (response.status === 404) {
@@ -49,12 +55,13 @@ export class ApiPolicyStore implements UserPolicyStore {
       throw new Error('Failed to fetch association');
     }
 
-    return response.json();
+    const apiData = await response.json();
+    return UserPolicyAdapter.fromApiResponse(apiData);
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation> {
+  async update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
     const response = await fetch(`/api/user-policy-associations/${userId}/${policyId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -86,74 +93,42 @@ export class ApiPolicyStore implements UserPolicyStore {
 export class SessionStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
-  async create(
-    association: Omit<UserPolicyAssociation, 'createdAt'>
-  ): Promise<UserPolicyAssociation> {
-    const newAssociation: UserPolicyAssociation = {
-      ...association,
+  async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
+    const newPolicy: UserPolicy = {
+      ...policy,
+      id: policy.policyId, // Use policyId as the ID
       createdAt: new Date().toISOString(),
+      isCreated: true,
     };
 
-    const associations = this.getStoredAssociations();
+    const policies = this.getStoredPolicies();
 
     // Check for duplicates
-    const exists = associations.some(
-      (a) => a.userId === association.userId && a.policyId === association.policyId
+    const exists = policies.some(
+      (p) => p.userId === policy.userId && p.policyId === policy.policyId
     );
 
     if (exists) {
       throw new Error('Association already exists');
     }
 
-    const updatedAssociations = [...associations, newAssociation];
-    this.setStoredAssociations(updatedAssociations);
+    const updatedPolicies = [...policies, newPolicy];
+    this.setStoredPolicies(updatedPolicies);
 
-    return newAssociation;
+    return newPolicy;
   }
 
-  async findByUser(userId: string): Promise<UserPolicyAssociation[]> {
-    const associations = this.getStoredAssociations();
-    return associations.filter((a) => a.userId === userId);
+  async findByUser(userId: string): Promise<UserPolicy[]> {
+    const policies = this.getStoredPolicies();
+    return policies.filter((p) => p.userId === userId);
   }
 
-  async findById(userId: string, policyId: string): Promise<UserPolicyAssociation | null> {
-    const associations = this.getStoredAssociations();
-    return associations.find((a) => a.userId === userId && a.policyId === policyId) || null;
+  async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
+    const policies = this.getStoredPolicies();
+    return policies.find((p) => p.userId === userId && p.policyId === policyId) || null;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, policyId: string, updates: Partial<UserPolicyAssociation>): Promise<UserPolicyAssociation> {
-    const associations = this.getStoredAssociations();
-    const index = associations.findIndex(a => a.userId === userId && a.policyId === policyId);
-    
-    if (index === -1) {
-      throw new Error('Association not found');
-    }
-
-    const updatedAssociation = { ...associations[index], ...updates };
-    associations[index] = updatedAssociation;
-    
-    this.setStoredAssociations(associations);
-    return updatedAssociation;
-  }
-  */
-
-  // Not yet implemented, but keeping for future use
-  /*
-  async delete(userId: string, policyId: string): Promise<void> {
-    const associations = this.getStoredAssociations();
-    const filtered = associations.filter(a => !(a.userId === userId && a.policyId === policyId));
-    
-    if (filtered.length === associations.length) {
-      throw new Error('Association not found');
-    }
-
-    this.setStoredAssociations(filtered);
-  }
-  */
-
-  private getStoredAssociations(): UserPolicyAssociation[] {
+  private getStoredPolicies(): UserPolicy[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -162,20 +137,38 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
     }
   }
 
-  private setStoredAssociations(associations: UserPolicyAssociation[]): void {
-    try {
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(associations));
-    } catch (error) {
-      throw new Error('Failed to store associations in session storage');
+  private setStoredPolicies(policies: UserPolicy[]): void {
+    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
+  }
+
+  // Not yet implemented, but keeping for future use
+  /*
+  async update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
+    const policies = this.getStoredPolicies();
+    const index = policies.findIndex(
+      a => a.userId === userId && a.policyId === policyId
+    );
+
+    if (index === -1) {
+      throw new Error('Association not found');
     }
-  }
 
-  // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserPolicyAssociation[] {
-    return this.getStoredAssociations();
-  }
+    const updated = { ...policies[index], ...updates };
+    policies[index] = updated;
+    this.setStoredPolicies(policies);
 
-  clearAllAssociations(): void {
-    sessionStorage.removeItem(this.STORAGE_KEY);
+    return updated;
   }
+  */
+
+  // Not yet implemented, but keeping for future use
+  /*
+  async delete(userId: string, policyId: string): Promise<void> {
+    const policies = this.getStoredPolicies();
+    const filtered = policies.filter(
+      a => !(a.userId === userId && a.policyId === policyId)
+    );
+    this.setStoredPolicies(filtered);
+  }
+  */
 }

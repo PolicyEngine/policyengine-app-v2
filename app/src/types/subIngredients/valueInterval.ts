@@ -1,4 +1,4 @@
-import { FOREVER } from '../constants';
+import { FOREVER } from '../../constants';
 
 // This is the standard way of serializing intervals, including
 // for parameter values within a given policy

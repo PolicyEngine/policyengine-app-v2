@@ -1,7 +1,7 @@
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
-import { ParameterMetadata } from '@/types/parameterMetadata';
-import { ValueIntervalCollection } from '@/types/valueInterval';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;

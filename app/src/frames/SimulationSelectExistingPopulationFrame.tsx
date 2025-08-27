@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { MOCK_USER_ID } from '@/constants';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import {
@@ -11,13 +12,13 @@ import {
   updatePopulationLabel,
 } from '@/reducers/populationReducer';
 import { FlowComponentProps } from '@/types/flow';
-import { HouseholdMetadata } from '@/types/householdMetadata';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 
 export default function SimulationSelectExistingPopulationFrame({
   onNavigate,
 }: FlowComponentProps) {
-  const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
+  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
 
   // Fetch household populations
   const {
@@ -55,7 +56,7 @@ export default function SimulationSelectExistingPopulationFrame({
     dispatch(updatePopulationLabel(population.label || ''));
 
     dispatch(markPopulationAsCreated());
-    setLocalPopulationId(`household-${population.id}`);
+    setLocalPopulationId(population.id);
   }
 
   function handleGeographicPopulationSelect(population: UserGeographicAssociation) {

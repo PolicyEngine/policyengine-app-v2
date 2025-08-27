@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
+import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { setFlow } from '@/reducers/flowReducer';
 
 export default function PoliciesPage() {
-  const userId = 'anonymous'; // TODO: Replace with actual user ID retrieval logic
+  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const dispatch = useDispatch();
 
@@ -102,14 +103,18 @@ export default function PoliciesPage() {
   ];
 
   // Transform the data to match the new structure
+  console.log('Raw user policies data:', data);
+
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.association.policyId,
+      id: item.association.policyId.toString(),
       policyName: {
-        text: item.policy?.label || `Policy #${item.association.policyId}`,
+        text: item.association.label || `Policy #${item.association.policyId}`,
       } as TextValue,
       dateCreated: {
-        text: 'Just now', // TODO: Format actual date from item data
+        text: item.association.createdAt
+          ? new Date(item.association.createdAt).toLocaleDateString()
+          : 'Just now',
       } as TextValue,
       provisions: {
         text: '7 provisions', // TODO: Get actual provisions count
