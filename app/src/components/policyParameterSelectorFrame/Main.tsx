@@ -3,7 +3,7 @@ import { Container, Text, Title } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { getParameterByName, Parameter } from '@/types/subIngredients/parameter';
+import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 
 /* TODO:

@@ -77,7 +77,7 @@ export async function fetchSimulationById(
           country_id: countryId,
           api_version: mockApiVersion,
           population_id: mockPopulationId,
-          population_type: 'household' as const, 
+          population_type: 'household' as const,
           policy_id: mockPolicyId,
         });
       }
