@@ -5,7 +5,6 @@ import { HouseholdData as APIHouseholdData } from '@/types/metadata/householdMet
  */
 export interface HouseholdCreationPayload {
   country_id: string;
-  api_version: string;
   data: APIHouseholdData;
   label?: string;
 }

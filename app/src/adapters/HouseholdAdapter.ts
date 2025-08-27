@@ -129,7 +129,6 @@ export class HouseholdAdapter {
 
     return {
       country_id: countryId,
-      api_version: '2024-01-01', // Default API version
       data: household_json,
     };
   }
