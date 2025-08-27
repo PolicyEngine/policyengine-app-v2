@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Policy } from '@/types/ingredients/Policy';
-import { Parameter } from '@/types/subIngredients/parameter';
+import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 export interface PolicyParamAdditionPayload {
@@ -14,11 +14,6 @@ const initialState: Policy = {
   parameters: [],
   isCreated: false,
 };
-
-// Helper function to find parameter by name
-function getParameterByName(state: Policy, name: string): Parameter | undefined {
-  return state.parameters?.find((param) => param.name === name);
-}
 
 export const policySlice = createSlice({
   name: 'policy',
