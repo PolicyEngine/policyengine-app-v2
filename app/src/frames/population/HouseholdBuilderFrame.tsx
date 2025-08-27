@@ -516,16 +516,12 @@ export default function HouseholdBuilderFrame({
   const validation = HouseholdValidation.isReadyForSimulation(household);
   const canProceed = validation.isValid;
 
-  // Define primary action
-  const primaryAction =
-    canProceed && !isPending
-      ? {
-          label: 'Create Household',
-          onClick: handleSubmit,
-          isLoading: isPending,
-          isDisabled: !canProceed,
-        }
-      : undefined;
+  const primaryAction = {
+    label: 'Create household',
+    onClick: handleSubmit,
+    isLoading: isPending,
+    isDisabled: !canProceed,
+  };
 
   const content = (
     <Stack gap="lg" pos="relative">
@@ -591,7 +587,7 @@ export default function HouseholdBuilderFrame({
       cancelAction={{
         onClick: onReturn,
       }}
-      buttonPreset={canProceed && !isPending ? 'cancel-primary' : 'cancel-only'}
+      buttonPreset={'cancel-primary'}
     />
   );
 }

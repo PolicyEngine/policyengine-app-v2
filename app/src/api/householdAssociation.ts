@@ -59,7 +59,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   // Not yet implemented, but keeping for future use
   /*
   async update(userId: string, householdId: string, updates: Partial<UserHousehold>): Promise<UserHousehold> {
-    const response = await fetch(`/api/user-household-households/${userId}/${householdId}`, {
+    const response = await fetch(`/api/user-population-households/${userId}/${householdId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(updates),
@@ -76,7 +76,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   // Not yet implemented, but keeping for future use
   /*
   async delete(userId: string, householdId: string): Promise<void> {
-    const response = await fetch(`/api/user-household-households/${userId}/${householdId}`, {
+    const response = await fetch(`/api/user-population-households/${userId}/${householdId}`, {
       method: 'DELETE',
     });
 
@@ -88,7 +88,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 }
 
 export class SessionStorageHouseholdStore implements UserHouseholdStore {
-  private readonly STORAGE_KEY = 'user-household-households';
+  private readonly STORAGE_KEY = 'user-population-households';
 
   async create(household: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
     const newHousehold: UserHouseholdPopulation = {
