@@ -1,13 +1,7 @@
 // Base Ingredient Adapters
 export { PolicyAdapter } from './PolicyAdapter';
-export type { PolicyCreationPayload } from './PolicyAdapter';
-
 export { SimulationAdapter } from './SimulationAdapter';
-export type { SimulationCreationPayload } from './SimulationAdapter';
-
 export { ReportAdapter } from './ReportAdapter';
-export type { ReportCreationPayload } from './ReportAdapter';
-
 export { HouseholdAdapter } from './HouseholdAdapter';
 
 // User Ingredient Adapters

@@ -1,4 +1,5 @@
 import { Report } from '@/types/ingredients/Report';
+import { ReportCreationPayload } from '@/types/payloads';
 
 /**
  * Adapter for converting between Report and API formats
@@ -32,9 +33,4 @@ export class ReportAdapter {
       // Add other fields as the API evolves
     };
   }
-}
-
-export interface ReportCreationPayload {
-  simulation_id?: string;
-  // Add other fields as the API evolves
 }

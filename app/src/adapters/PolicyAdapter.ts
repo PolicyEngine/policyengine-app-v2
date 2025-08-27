@@ -1,5 +1,6 @@
 import { Policy } from '@/types/ingredients/Policy';
-import { PolicyMetadata, PolicyMetadataParams } from '@/types/metadata/policyMetadata';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
+import { PolicyCreationPayload } from '@/types/payloads';
 import { convertParametersToPolicyJson, convertPolicyJsonToParameters } from './conversionHelpers';
 
 /**
@@ -28,9 +29,4 @@ export class PolicyAdapter {
       data: convertParametersToPolicyJson(policy.parameters || []),
     };
   }
-}
-
-export interface PolicyCreationPayload {
-  label?: string;
-  data: PolicyMetadataParams;
 }

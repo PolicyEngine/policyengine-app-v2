@@ -1,4 +1,4 @@
-import { PolicyCreationPayload } from '@/adapters';
+import { PolicyCreationPayload } from '@/types/payloads';
 import { BASE_URL } from '@/constants';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 

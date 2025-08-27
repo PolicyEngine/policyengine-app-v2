@@ -1,5 +1,6 @@
 import { useDispatch, useSelector } from 'react-redux';
-import { PolicyAdapter, PolicyCreationPayload } from '@/adapters';
+import { PolicyAdapter } from '@/adapters';
+import { PolicyCreationPayload } from '@/types/payloads';
 import IngredientSubmissionView, {
   DateIntervalValue,
   TextListItem,

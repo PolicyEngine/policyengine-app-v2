@@ -1,4 +1,4 @@
-import { SimulationCreationPayload } from '@/adapters';
+import { SimulationCreationPayload } from '@/types/payloads';
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 

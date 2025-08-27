@@ -43,7 +43,6 @@ export function convertPolicyJsonToParameters(policyJson: PolicyMetadataParams):
 
 /**
  * Converts Parameter[] to PolicyMetadataParams format for API payloads
- * Based on src/types/policyPayloads.ts serializePolicyCreationPayload
  */
 export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMetadataParams {
   const data: PolicyMetadataParams = {};

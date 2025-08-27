@@ -1,5 +1,6 @@
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
+import { SimulationCreationPayload } from '@/types/payloads';
 
 /**
  * Adapter for converting between Simulation and API formats
@@ -47,10 +48,4 @@ export class SimulationAdapter {
       policy_id: simulation.policyId,
     };
   }
-}
-
-export interface SimulationCreationPayload {
-  population_id: string;
-  population_type?: 'household' | 'geography';
-  policy_id?: string;
 }

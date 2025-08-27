@@ -1,16 +1,6 @@
 import { BASE_URL } from '@/constants';
-import {
-  HouseholdData as APIHouseholdData,
-  HouseholdMetadata,
-} from '@/types/metadata/householdMetadata';
-
-// Define the payload type locally since we're removing householdPayloads.ts
-export interface HouseholdCreationPayload {
-  country_id: string;
-  api_version: string;
-  household_json: APIHouseholdData;
-  label?: string;
-}
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import { HouseholdCreationPayload } from '@/types/payloads';
 
 export async function fetchHouseholdById(
   country: string,

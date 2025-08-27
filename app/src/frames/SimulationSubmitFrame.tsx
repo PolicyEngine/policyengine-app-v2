@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
-import { SimulationAdapter, SimulationCreationPayload } from '@/adapters';
+import { SimulationAdapter } from '@/adapters';
+import { SimulationCreationPayload } from '@/types/payloads';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
