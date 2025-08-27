@@ -1,5 +1,5 @@
-import { Household } from './Household';
 import { Geography } from './Geography';
+import { Household } from './Household';
 
 /**
  * Population type for Redux state management

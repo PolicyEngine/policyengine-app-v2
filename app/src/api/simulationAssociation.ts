@@ -1,6 +1,6 @@
-import { UserSimulation } from '../types/ingredients/UserSimulation';
 import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
 import { UserSimulationCreationPayload } from '@/types/payloads';
+import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
   create: (simulation: Omit<UserSimulation, 'id' | 'createdAt'>) => Promise<UserSimulation>;
@@ -16,7 +16,8 @@ export class ApiSimulationStore implements UserSimulationStore {
   private readonly BASE_URL = '/api/user-simulation-associations';
 
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
-    const payload: UserSimulationCreationPayload = UserSimulationAdapter.toCreationPayload(simulation);
+    const payload: UserSimulationCreationPayload =
+      UserSimulationAdapter.toCreationPayload(simulation);
 
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',

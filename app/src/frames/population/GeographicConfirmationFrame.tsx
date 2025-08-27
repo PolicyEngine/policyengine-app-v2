@@ -88,7 +88,7 @@ export default function GeographicConfirmationFrame({
       ...baseAssociation,
       geographyType: 'subnational' as const,
       geographyIdentifier: population.geography?.id || `${currentCountry}-${regionCode}`,
-      regionCode: regionCode,
+      regionCode,
       regionType,
       label: getRegionLabel(regionCode, currentCountry),
     };

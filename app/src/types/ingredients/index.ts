@@ -104,4 +104,11 @@ export function isUserReport(obj: UserIngredient): obj is UserReport {
 
 // Export all types
 export type { Geography, Household, Policy, Population, Report, Simulation };
-export type { UserPolicy, UserGeographyPopulation, UserHouseholdPopulation, UserPopulation, UserReport, UserSimulation };
+export type {
+  UserPolicy,
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+  UserPopulation,
+  UserReport,
+  UserSimulation,
+};

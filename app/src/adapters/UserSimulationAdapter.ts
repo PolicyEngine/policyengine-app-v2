@@ -8,7 +8,9 @@ export class UserSimulationAdapter {
   /**
    * Convert UserSimulation to API creation payload
    */
-  static toCreationPayload(userSimulation: Omit<UserSimulation, 'id' | 'createdAt'>): UserSimulationCreationPayload {
+  static toCreationPayload(
+    userSimulation: Omit<UserSimulation, 'id' | 'createdAt'>
+  ): UserSimulationCreationPayload {
     return {
       userId: userSimulation.userId.toString(),
       simulationId: userSimulation.simulationId.toString(),

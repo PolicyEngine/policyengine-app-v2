@@ -104,7 +104,10 @@ export class HouseholdAdapter {
    * Create a minimal Household for creation requests
    * Dynamically handles all entity types based on metadata
    */
-  static toCreationPayload(householdData: HouseholdData, countryId: string): HouseholdCreationPayload {
+  static toCreationPayload(
+    householdData: HouseholdData,
+    countryId: string
+  ): HouseholdCreationPayload {
     const household_json: any = {
       people: householdData.people as any,
     };

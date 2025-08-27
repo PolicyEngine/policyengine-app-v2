@@ -1,7 +1,7 @@
 // src/reducers/populationReducer.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
 import { Population } from '@/types/ingredients/Population';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 

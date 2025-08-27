@@ -1,5 +1,5 @@
-import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserHouseholdStore {
   create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
@@ -16,7 +16,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
 
   async create(association: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
     const payload = UserHouseholdAdapter.toCreationPayload(association);
-    
+
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

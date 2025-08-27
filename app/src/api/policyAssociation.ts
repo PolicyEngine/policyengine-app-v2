@@ -1,6 +1,6 @@
-import { UserPolicy } from '../types/ingredients/UserPolicy';
 import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
 import { UserPolicyCreationPayload } from '@/types/payloads';
+import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;

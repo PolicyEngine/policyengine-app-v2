@@ -4,9 +4,9 @@ import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
 import { setGeography } from '@/reducers/populationReducer';
-import { Geography } from '@/types/ingredients/Geography';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+import { Geography } from '@/types/ingredients/Geography';
 
 export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -65,7 +65,10 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
     // Create Geography object for non-household selections
     if (scope !== 'household') {
       const geography: Geography = {
-        id: scope === 'national' ? currentCountry : `${currentCountry}-${extractRegionValue(selectedRegion)}`,
+        id:
+          scope === 'national'
+            ? currentCountry
+            : `${currentCountry}-${extractRegionValue(selectedRegion)}`,
         countryId: currentCountry as any,
         scope: scope === 'national' ? 'national' : 'subnational',
         geographyId: scope === 'national' ? currentCountry : extractRegionValue(selectedRegion),

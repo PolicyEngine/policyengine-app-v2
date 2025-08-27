@@ -1,6 +1,5 @@
 import { useDispatch, useSelector } from 'react-redux';
 import { PolicyAdapter } from '@/adapters';
-import { PolicyCreationPayload } from '@/types/payloads';
 import IngredientSubmissionView, {
   DateIntervalValue,
   TextListItem,
@@ -12,6 +11,7 @@ import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/ingredients/Policy';
+import { PolicyCreationPayload } from '@/types/payloads';
 import { formatDate } from '@/utils/dateFormatter';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {

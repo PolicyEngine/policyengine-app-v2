@@ -14,7 +14,10 @@ export const simulationSlice = createSlice({
   name: 'simulation',
   initialState,
   reducers: {
-    updateSimulationPopulationId: (state, action: PayloadAction<{ id: string; type: 'household' | 'geography' }>) => {
+    updateSimulationPopulationId: (
+      state,
+      action: PayloadAction<{ id: string; type: 'household' | 'geography' }>
+    ) => {
       state.populationId = action.payload.id;
       state.populationType = action.payload.type;
     },

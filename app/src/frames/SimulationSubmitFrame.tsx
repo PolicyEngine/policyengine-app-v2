@@ -1,12 +1,12 @@
 import { useSelector } from 'react-redux';
 import { SimulationAdapter } from '@/adapters';
-import { SimulationCreationPayload } from '@/types/payloads';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
+import { SimulationCreationPayload } from '@/types/payloads';
 
 export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const simulationState = useSelector((state: RootState) => state.simulation);

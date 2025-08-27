@@ -8,7 +8,9 @@ export class UserPolicyAdapter {
   /**
    * Convert UserPolicy to API creation payload
    */
-  static toCreationPayload(userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>): UserPolicyCreationPayload {
+  static toCreationPayload(
+    userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>
+  ): UserPolicyCreationPayload {
     return {
       userId: userPolicy.userId.toString(),
       policyId: userPolicy.policyId.toString(),

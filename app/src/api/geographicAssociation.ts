@@ -1,7 +1,7 @@
 // src/api/geographicAssociation.ts
 
-import { UserGeographicAssociation } from '../types/userIngredientAssociations';
 import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
+import { UserGeographicAssociation } from '../types/userIngredientAssociations';
 
 export interface UserGeographicStore {
   create: (
@@ -22,7 +22,7 @@ export class ApiGeographicStore implements UserGeographicStore {
     association: Omit<UserGeographicAssociation, 'createdAt'>
   ): Promise<UserGeographicAssociation> {
     const payload = UserGeographicAdapter.toCreationPayload(association);
-    
+
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
