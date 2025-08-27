@@ -173,6 +173,7 @@ export const useUserHouseholds = (userId: string) => {
   const isError = !!error;
 
   // Map associations to households - filter out associations without householdId
+  // TODO: Determine if this filter action is needed
   const householdsWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
     associations
       ?.filter((association) => association.householdId)
