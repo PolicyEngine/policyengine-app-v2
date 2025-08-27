@@ -6,7 +6,6 @@ import GeographicConfirmationFrame from '@/frames/population/GeographicConfirmat
 import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
-import SetPolicyLabelFrame from '@/frames/SetPolicyLabelFrame';
 import SimulationCreationFrame from '@/frames/SimulationCreationFrame';
 import SimulationSelectExistingPolicyFrame from '@/frames/SimulationSelectExistingPolicyFrame';
 import SimulationSelectExistingPopulationFrame from '@/frames/SimulationSelectExistingPopulationFrame';
@@ -25,7 +24,6 @@ import { SimulationViewFlow } from './simulationViewFlow';
 export const componentRegistry = {
   PolicyCreationFrame,
   PolicyParameterSelectorFrame,
-  SetPolicyLabelFrame,
   PolicySubmitFrame,
   PolicyReadView: PoliciesPage,
   SelectGeographicScopeFrame,
