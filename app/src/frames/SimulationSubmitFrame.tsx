@@ -9,19 +9,19 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationCreationPayload } from '@/types/payloads';
 
 export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
-  const simulationState = useSelector((state: RootState) => state.simulation);
+  const simulation = useSelector((state: RootState) => state.simulation);
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
 
-  console.log('Simulation label: ', simulationState.label);
-  const { createSimulation, isPending } = useCreateSimulation(simulationState.label || undefined);
+  console.log('Simulation label: ', simulation.label);
+  const { createSimulation, isPending } = useCreateSimulation(simulation.label || undefined);
   const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
-      populationId: simulationState.populationId || undefined,
-      policyId: simulationState.policyId || undefined,
+      populationId: simulation.populationId || undefined,
+      policyId: simulation.policyId || undefined,
     };
 
     const serializedSimulationCreationPayload: SimulationCreationPayload =
@@ -42,15 +42,15 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'Population Added',
-      description: population.label || `Household #${simulationState.populationId}`,
-      isFulfilled: !!simulationState.populationId,
-      badge: population.label || `Household #${simulationState.populationId}`,
+      description: population.label || `Household #${simulation.populationId}`,
+      isFulfilled: !!simulation.populationId,
+      badge: population.label || `Household #${simulation.populationId}`,
     },
     {
       title: 'Policy Reform Added',
-      description: policy.label || `Policy #${simulationState.policyId}`,
-      isFulfilled: !!simulationState.policyId,
-      badge: policy.label || `Policy #${simulationState.policyId}`,
+      description: policy.label || `Policy #${simulation.policyId}`,
+      isFulfilled: !!simulation.policyId,
+      badge: policy.label || `Policy #${simulation.policyId}`,
     },
   ];
 
