@@ -30,15 +30,10 @@ export async function createHousehold(
 ): Promise<{ result: { household_id: string } }> {
   const url = `${BASE_URL}/${data.country_id}/household`;
 
-  // Wrap the data in the expected API format
-  const apiPayload = {
-    data: data.household_json,
-  };
-
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(apiPayload),
+    body: JSON.stringify(data),
   });
 
   if (!res.ok) {

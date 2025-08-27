@@ -1,4 +1,6 @@
 import { UserPolicy } from '../types/ingredients/UserPolicy';
+import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
+import { UserPolicyCreationPayload } from '@/types/payloads';
 
 export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
@@ -14,18 +16,12 @@ export class ApiPolicyStore implements UserPolicyStore {
   private readonly BASE_URL = '/api/user-policy-associations';
 
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
-    // Convert to API format (string IDs)
-    const apiPayload = {
-      userId: policy.userId.toString(),
-      policyId: policy.policyId.toString(),
-      label: policy.label,
-      updatedAt: policy.updatedAt || new Date().toISOString(),
-    };
+    const payload: UserPolicyCreationPayload = UserPolicyAdapter.toCreationPayload(policy);
 
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiPayload),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -33,17 +29,7 @@ export class ApiPolicyStore implements UserPolicyStore {
     }
 
     const apiResponse = await response.json();
-
-    // Convert API response back to UserPolicy
-    return {
-      id: apiResponse.policyId,
-      userId: apiResponse.userId,
-      policyId: apiResponse.policyId,
-      label: apiResponse.label,
-      createdAt: apiResponse.createdAt,
-      updatedAt: apiResponse.updatedAt,
-      isCreated: true,
-    };
+    return UserPolicyAdapter.fromApiResponse(apiResponse);
   }
 
   async findByUser(userId: string): Promise<UserPolicy[]> {
@@ -55,15 +41,7 @@ export class ApiPolicyStore implements UserPolicyStore {
     const apiResponses = await response.json();
 
     // Convert each API response to UserPolicy
-    return apiResponses.map((apiData: any) => ({
-      id: apiData.policyId,
-      userId: apiData.userId,
-      policyId: apiData.policyId,
-      label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
-      isCreated: true,
-    }));
+    return apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
@@ -78,17 +56,7 @@ export class ApiPolicyStore implements UserPolicyStore {
     }
 
     const apiData = await response.json();
-
-    // Convert API response to UserPolicy
-    return {
-      id: apiData.policyId,
-      userId: apiData.userId,
-      policyId: apiData.policyId,
-      label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
-      isCreated: true,
-    };
+    return UserPolicyAdapter.fromApiResponse(apiData);
   }
 
   // Not yet implemented, but keeping for future use

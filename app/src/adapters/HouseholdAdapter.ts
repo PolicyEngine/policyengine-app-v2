@@ -2,6 +2,7 @@ import { countryIds } from '@/libs/countries';
 import { store } from '@/store';
 import { Household, HouseholdData } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import { HouseholdCreationPayload } from '@/types/payloads';
 
 /**
  * Get entity metadata from the Redux store
@@ -103,7 +104,7 @@ export class HouseholdAdapter {
    * Create a minimal Household for creation requests
    * Dynamically handles all entity types based on metadata
    */
-  static toCreationPayload(householdData: HouseholdData, countryId: string) {
+  static toCreationPayload(householdData: HouseholdData, countryId: string): HouseholdCreationPayload {
     const household_json: any = {
       people: householdData.people as any,
     };
@@ -129,7 +130,7 @@ export class HouseholdAdapter {
     return {
       country_id: countryId,
       api_version: '2024-01-01', // Default API version
-      household_json,
+      data: household_json,
     };
   }
 }

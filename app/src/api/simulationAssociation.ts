@@ -1,4 +1,6 @@
 import { UserSimulation } from '../types/ingredients/UserSimulation';
+import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
+import { UserSimulationCreationPayload } from '@/types/payloads';
 
 export interface UserSimulationStore {
   create: (simulation: Omit<UserSimulation, 'id' | 'createdAt'>) => Promise<UserSimulation>;
@@ -14,18 +16,12 @@ export class ApiSimulationStore implements UserSimulationStore {
   private readonly BASE_URL = '/api/user-simulation-associations';
 
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
-    // Convert to API format (string IDs)
-    const apiPayload = {
-      userId: simulation.userId.toString(),
-      simulationId: simulation.simulationId.toString(),
-      label: simulation.label,
-      updatedAt: simulation.updatedAt || new Date().toISOString(),
-    };
+    const payload: UserSimulationCreationPayload = UserSimulationAdapter.toCreationPayload(simulation);
 
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(apiPayload),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -33,17 +29,7 @@ export class ApiSimulationStore implements UserSimulationStore {
     }
 
     const apiResponse = await response.json();
-
-    // Convert API response back to UserSimulation
-    return {
-      id: apiResponse.simulationId,
-      userId: apiResponse.userId,
-      simulationId: apiResponse.simulationId,
-      label: apiResponse.label,
-      createdAt: apiResponse.createdAt,
-      updatedAt: apiResponse.updatedAt,
-      isCreated: true,
-    };
+    return UserSimulationAdapter.fromApiResponse(apiResponse);
   }
 
   async findByUser(userId: string): Promise<UserSimulation[]> {
@@ -55,15 +41,7 @@ export class ApiSimulationStore implements UserSimulationStore {
     const apiResponses = await response.json();
 
     // Convert each API response to UserSimulation
-    return apiResponses.map((apiData: any) => ({
-      id: apiData.simulationId,
-      userId: apiData.userId,
-      simulationId: apiData.simulationId,
-      label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
-      isCreated: true,
-    }));
+    return apiResponses.map((apiData: any) => UserSimulationAdapter.fromApiResponse(apiData));
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
@@ -78,17 +56,7 @@ export class ApiSimulationStore implements UserSimulationStore {
     }
 
     const apiData = await response.json();
-
-    // Convert API response to UserSimulation
-    return {
-      id: apiData.simulationId,
-      userId: apiData.userId,
-      simulationId: apiData.simulationId,
-      label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
-      isCreated: true,
-    };
+    return UserSimulationAdapter.fromApiResponse(apiData);
   }
 
   // Not yet implemented, but keeping for future use

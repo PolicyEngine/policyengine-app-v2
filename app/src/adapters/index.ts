@@ -6,6 +6,8 @@ export { HouseholdAdapter } from './HouseholdAdapter';
 
 // User Ingredient Adapters
 export { UserReportAdapter } from './UserReportAdapter';
+export { UserPolicyAdapter } from './UserPolicyAdapter';
+export { UserSimulationAdapter } from './UserSimulationAdapter';
 
 // Conversion Helpers
 export {
