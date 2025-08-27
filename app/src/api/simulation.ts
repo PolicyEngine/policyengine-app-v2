@@ -71,12 +71,13 @@ export async function fetchSimulationById(
         resolve(storedSimulation);
       } else {
         // Fallback for simulations not in our store (legacy or external)
+        // TODO: Remove this once we have the necessary API endpoints
         resolve({
           simulation_id: simulationId,
           country_id: countryId,
           api_version: mockApiVersion,
           population_id: mockPopulationId,
-          population_type: 'household' as const, // Default to household for legacy simulations
+          population_type: 'household' as const, 
           policy_id: mockPolicyId,
         });
       }
