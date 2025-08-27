@@ -5,7 +5,7 @@ import {
   useManualNormalization,
   useNormalizedData,
   useSearchEntities,
-} from './utils/normalizedUtils';
+} from '../utils/normalizedUtils';
 
 /**
  * Example hook demonstrating how to use @normy/react-query for
