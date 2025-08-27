@@ -59,10 +59,6 @@ export const populationSlice = createSlice({
       state.household = null; // Clear household when setting geography
     },
 
-    // Generic updater for backward compatibility
-    updatePopulation: (state, action: PayloadAction<Partial<Population>>) => {
-      Object.assign(state, action.payload);
-    },
   },
 });
 
@@ -74,7 +70,6 @@ export const {
   setHousehold,
   initializeHousehold,
   setGeography,
-  updatePopulation,
 } = populationSlice.actions;
 
 export default populationSlice.reducer;
