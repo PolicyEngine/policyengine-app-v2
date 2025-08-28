@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { Box, Card, Group, Text } from '@mantine/core';
+import { Box, Card } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { BodyText } from '../../common/BodyText';
+import { TitleText } from '../../common/TitleText';
 
 export interface CardProps {
   title: string;
@@ -13,12 +15,19 @@ export interface CardProps {
 export function SingleCard({ title, description, onClick, icon, background = 'white' }: CardProps) {
   const [hovered, setHovered] = useState(false);
 
-  const backgroundColor =
-    background === 'green'
-      ? colors.primary[700]
-      : background === 'gray'
-        ? colors.gray[100]
-        : colors.white;
+  let backgroundColor: string;
+  switch (background) {
+    case 'green':
+      backgroundColor = colors.primary[700];
+      break;
+    case 'gray':
+      backgroundColor = colors.gray[100];
+      break;
+    case 'white':
+    default:
+      backgroundColor = colors.white;
+      break;
+  }
 
   return (
     <Card
@@ -39,26 +48,9 @@ export function SingleCard({ title, description, onClick, icon, background = 'wh
     >
       {icon && <Box mb={spacing.sm}>{icon}</Box>}
 
-      <Group justify="apart" mb={spacing.sm}>
-        <Text
-          fw={typography.fontWeight.medium}
-          fz={typography.fontSize['2xl']}
-          lh={typography.lineHeight.normal}
-          c={background === 'green' ? colors.text.inverse : colors.text.primary}
-          style={{ fontFamily: typography.fontFamily.primary }}
-        >
-          {title}
-        </Text>
-      </Group>
+      <TitleText background={background}>{title}</TitleText>
 
-      <Text
-        fz={typography.fontSize.lg}
-        lh={typography.lineHeight.relaxed}
-        c={background === 'green' ? colors.text.inverse : colors.text.secondary}
-        style={{ fontFamily: typography.fontFamily.body }}
-      >
-        {description}
-      </Text>
+      <BodyText background={background}>{description}</BodyText>
     </Card>
   );
 }
