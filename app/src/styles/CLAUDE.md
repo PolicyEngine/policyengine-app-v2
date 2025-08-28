@@ -1,5 +1,3 @@
-# PolicyEngine App v2 Development Guidelines
-
 ## Styling conventions
 
 1. **No CSS modules**: Don't use `.module.css` files. Instead use Mantine's built-in styling system with inline styles, style props, and the theme.
