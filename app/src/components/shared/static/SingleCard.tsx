@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Card } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { BodyText } from '../../common/BodyText';
 import { TitleText } from '../../common/TitleText';
 
