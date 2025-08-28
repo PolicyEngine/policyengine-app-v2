@@ -45,8 +45,8 @@ export default function PageHeader({ title, description }: PageHeaderProps) {
               fontSize: typography.fontSize.lg,
               lineHeight: typography.lineHeight.relaxed,
               fontFamily: typography.fontFamily.body,
-              textAlign: { base: 'left', md: 'center' },
             }}
+            ta={{ base: 'left', md: 'center' }}
           >
             {description}
           </Text>
