@@ -7,7 +7,11 @@ export interface CalloutWithImageProps {
   buttonLabel?: string;
   onButtonClick?: () => void;
   imageSrc: string;
-  imageAlt?: string;
+  /** 
+   * Provide meaningful alt text for accessibility. 
+   * Use an empty string ("") if the image is decorative. 
+   */
+  imageAlt: string;
 }
 
 export default function CalloutWithImage({
@@ -16,7 +20,7 @@ export default function CalloutWithImage({
   buttonLabel,
   onButtonClick,
   imageSrc,
-  imageAlt = 'Callout image',
+  imageAlt,
 }: CalloutWithImageProps) 
 {
   return (
@@ -25,10 +29,10 @@ export default function CalloutWithImage({
         {/* Left Column */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Stack gap="md">
-            <Title size={typography.fontSize['4xl']} style={{ fontWeight: typography.fontWeight.medium, fontFamily: typography.fontFamily.primary }}>
+            <Title size={typography.fontSize['4xl']} style={{ color: colors.text.primary, fontWeight: typography.fontWeight.medium, fontFamily: typography.fontFamily.primary }}>
               {title}
             </Title>
-            <Text size="lg" c="dimmed" style={{ lineHeight: 1.6, }}>
+            <Text size="lg" style={{ color: colors.text.secondary, lineHeight: typography.lineHeight.snug }}>
               {description}
             </Text>
             {buttonLabel && (
