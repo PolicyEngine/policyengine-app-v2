@@ -24,7 +24,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         width: "100%",
         maxWidth: 900,
         margin: "0 auto",
-        padding: 16, // accessible fixed padding in px
+        padding: 16, 
       }}
     >
       {/* Main Title */}
@@ -34,7 +34,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
           root: {
             color: colors.text.primary,
             fontSize: 40,
-            textAlign: "left", // left-aligned across all breakpoints
+            textAlign: "left", 
             lineHeight: 1.2,
           },
         })}
@@ -46,7 +46,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       <Card
         shadow="sm"
         radius="lg"
-        p="xl" // Mantine spacing token for consistent accessible padding
+        p="xl" 
         styles={() => ({
           root: {
             backgroundColor: colors.gray[100],
@@ -63,7 +63,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
                   root: {
                     color: colors.blue[700],
                     lineHeight: 1.3,
-                    textAlign: "left", // left-aligned
+                    textAlign: "left", 
                   },
                 })}
               >
