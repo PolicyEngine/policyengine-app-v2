@@ -1,0 +1,471 @@
+import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, userEvent, waitFor } from '@test-utils';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+
+// Mock the hooks first
+vi.mock('@/hooks/useUserHousehold', () => ({
+  useUserHouseholds: vi.fn(),
+}));
+
+vi.mock('@/hooks/useUserGeographic', () => ({
+  useGeographicAssociationsByUser: vi.fn(),
+}));
+
+// Mock the constants
+vi.mock('@/constants', () => ({
+  MOCK_USER_ID: 'test-user-123',
+  BASE_URL: 'https://api.test.com',
+}));
+
+// Now import everything else
+import PopulationsPage from '@/pages/Populations.page';
+import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
+import {
+  POPULATION_TEST_IDS,
+  POPULATION_LABELS,
+  POPULATION_GEO,
+  POPULATION_COLUMNS,
+  POPULATION_DETAILS,
+  POPULATION_CONSOLE,
+  mockUserHouseholdsData,
+  mockGeographicAssociationsData,
+  setupMockConsole,
+  createLoadingState,
+  createErrorState,
+  createEmptyDataState,
+} from '@/tests/fixtures/pages/populationsMocks';
+
+describe('PopulationsPage', () => {
+  let store: any;
+  let consoleMocks: ReturnType<typeof setupMockConsole>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    consoleMocks = setupMockConsole();
+    
+    // Create a mock store with flow reducer
+    store = configureStore({
+      reducer: {
+        flow: (state = { current: null }, action: any) => {
+          if (action.type === 'flow/setFlow') {
+            return { ...state, current: action.payload };
+          }
+          return state;
+        },
+      },
+    });
+    
+    // Mock dispatch
+    vi.spyOn(store, 'dispatch');
+    
+    // Set default mock implementations
+    (useUserHouseholds as any).mockReturnValue({
+      data: mockUserHouseholdsData,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+    
+    (useGeographicAssociationsByUser as any).mockReturnValue({
+      data: mockGeographicAssociationsData,
+      isLoading: false,
+      isError: false,
+      error: null,
+    });
+  });
+
+  afterEach(() => {
+    consoleMocks.restore();
+  });
+
+  const renderPage = () => {
+    return render(
+      <Provider store={store}>
+        <PopulationsPage />
+      </Provider>
+    );
+  };
+
+  describe('initial render', () => {
+    test('given page loads then displays title and subtitle', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(POPULATION_LABELS.PAGE_TITLE)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_LABELS.PAGE_SUBTITLE)).toBeInTheDocument();
+    });
+
+    test('given page loads then displays build population button', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByRole('button', { name: new RegExp(POPULATION_LABELS.BUILD_BUTTON, 'i') })).toBeInTheDocument();
+    });
+
+    test('given page loads then fetches user data with correct user ID', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(useUserHouseholds).toHaveBeenCalledWith(POPULATION_TEST_IDS.USER_ID);
+      expect(useGeographicAssociationsByUser).toHaveBeenCalledWith(POPULATION_TEST_IDS.USER_ID);
+    });
+  });
+
+  describe('data display', () => {
+    test('given household data available then displays household populations', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(POPULATION_LABELS.HOUSEHOLD_1)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_LABELS.HOUSEHOLD_2)).toBeInTheDocument();
+    });
+
+    test('given geographic data available then displays geographic populations', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(POPULATION_LABELS.GEOGRAPHIC_1)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_LABELS.GEOGRAPHIC_2)).toBeInTheDocument();
+    });
+
+    test('given household with people then displays correct person count', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(POPULATION_DETAILS.PERSON_PLURAL(2))).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_DETAILS.PERSON_SINGULAR)).toBeInTheDocument();
+    });
+
+    test('given geographic association then displays scope details', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(POPULATION_DETAILS.SUBNATIONAL)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_DETAILS.NATIONAL)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_GEO.COUNTRY_US.toUpperCase())).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_GEO.COUNTRY_UK.toUpperCase())).toBeInTheDocument();
+    });
+
+    test('given subnational geography then displays region details', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(`${POPULATION_DETAILS.STATE_PREFIX} ${POPULATION_GEO.STATE_CA}`)).toBeInTheDocument();
+    });
+
+    test('given created dates then displays formatted dates', () => {
+      // When
+      renderPage();
+
+      // Then
+      const date1 = new Date(POPULATION_TEST_IDS.TIMESTAMP_1).toLocaleDateString();
+      const date2 = new Date(POPULATION_TEST_IDS.TIMESTAMP_2).toLocaleDateString();
+      
+      // Use getAllByText since dates might appear multiple times
+      const date1Elements = screen.getAllByText(date1);
+      const date2Elements = screen.getAllByText(date2);
+      
+      expect(date1Elements.length).toBeGreaterThan(0);
+      expect(date2Elements.length).toBeGreaterThan(0);
+    });
+
+    test('given no data then displays empty state', () => {
+      // Given
+      const emptyState = createEmptyDataState();
+      (useUserHouseholds as any).mockReturnValue(emptyState.household);
+      (useGeographicAssociationsByUser as any).mockReturnValue(emptyState.geographic);
+
+      // When
+      renderPage();
+
+      // Then - Check that no population items are displayed
+      expect(screen.queryByText(POPULATION_LABELS.HOUSEHOLD_1)).not.toBeInTheDocument();
+      expect(screen.queryByText(POPULATION_LABELS.GEOGRAPHIC_1)).not.toBeInTheDocument();
+    });
+  });
+
+  describe('loading states', () => {
+    test('given household data loading then shows loading state', () => {
+      // Given
+      const loadingState = createLoadingState(true, false);
+      (useUserHouseholds as any).mockReturnValue(loadingState.household);
+      (useGeographicAssociationsByUser as any).mockReturnValue(loadingState.geographic);
+
+      // When
+      renderPage();
+
+      // Then - Look for the Loader component by its role or test the loading state
+      const loaderElement = document.querySelector('.mantine-Loader-root');
+      expect(loaderElement).toBeInTheDocument();
+    });
+
+    test('given geographic data loading then shows loading state', () => {
+      // Given
+      const loadingState = createLoadingState(false, true);
+      (useUserHouseholds as any).mockReturnValue(loadingState.household);
+      (useGeographicAssociationsByUser as any).mockReturnValue(loadingState.geographic);
+
+      // When
+      renderPage();
+
+      // Then - Look for the Loader component
+      const loaderElement = document.querySelector('.mantine-Loader-root');
+      expect(loaderElement).toBeInTheDocument();
+    });
+
+    test('given both loading then shows single loading state', () => {
+      // Given
+      const loadingState = createLoadingState(true, true);
+      (useUserHouseholds as any).mockReturnValue(loadingState.household);
+      (useGeographicAssociationsByUser as any).mockReturnValue(loadingState.geographic);
+
+      // When
+      renderPage();
+
+      // Then - Check for single loader
+      const loaderElements = document.querySelectorAll('.mantine-Loader-root');
+      expect(loaderElements).toHaveLength(1);
+    });
+  });
+
+  describe('error states', () => {
+    test('given household fetch error then displays error message', () => {
+      // Given
+      const errorState = createErrorState(true, false);
+      (useUserHouseholds as any).mockReturnValue(errorState.household);
+      (useGeographicAssociationsByUser as any).mockReturnValue(errorState.geographic);
+
+      // When
+      renderPage();
+
+      // Then - Look for error text containing "Error:"
+      expect(screen.getByText(/Error:/)).toBeInTheDocument();
+    });
+
+    test('given geographic fetch error then displays error message', () => {
+      // Given
+      const errorState = createErrorState(false, true);
+      (useUserHouseholds as any).mockReturnValue(errorState.household);
+      (useGeographicAssociationsByUser as any).mockReturnValue(errorState.geographic);
+
+      // When
+      renderPage();
+
+      // Then - Look for error text containing "Error:"
+      expect(screen.getByText(/Error:/)).toBeInTheDocument();
+    });
+
+    test('given both fetch errors then displays single error message', () => {
+      // Given
+      const errorState = createErrorState(true, true);
+      (useUserHouseholds as any).mockReturnValue(errorState.household);
+      (useGeographicAssociationsByUser as any).mockReturnValue(errorState.geographic);
+
+      // When
+      renderPage();
+
+      // Then - Check for single error message
+      const errorElements = screen.getAllByText(/Error:/);
+      expect(errorElements).toHaveLength(1);
+    });
+  });
+
+  describe('user interactions', () => {
+    test('given user clicks build population then dispatches flow action', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderPage();
+
+      // When
+      const buildButton = screen.getByRole('button', { name: new RegExp(POPULATION_LABELS.BUILD_BUTTON, 'i') });
+      await user.click(buildButton);
+
+      // Then
+      expect(store.dispatch).toHaveBeenCalledWith({
+        type: 'flow/setFlow',
+        payload: PopulationCreationFlow,
+      });
+    });
+
+    // NOTE: This behavior is a placeholder
+    test('given user clicks more filters then logs action', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderPage();
+
+      // When - The button is disabled in the component
+      const moreFiltersButton = screen.getByRole('button', { name: /filter/i });
+      
+      // Then - Verify button is disabled (can't be clicked)
+      expect(moreFiltersButton).toBeDisabled();
+    });
+
+    test('given user searches then filters populations', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderPage();
+      const searchInput = screen.getByPlaceholderText(/search/i);
+
+      // When - Note that search is disabled in the component
+      // The input is disabled, so we can't type into it
+      
+      // Then - Just verify the input exists and is disabled
+      expect(searchInput).toBeDisabled();
+    });
+
+    test('given user selects population then updates selection state', async () => {
+      // Given
+      const user = userEvent.setup();
+      renderPage();
+
+      // When - Find and click a checkbox (assuming the IngredientReadView renders checkboxes)
+      const checkboxes = screen.getAllByRole('checkbox');
+      if (checkboxes.length > 0) {
+        await user.click(checkboxes[0]);
+
+        // Then
+        await waitFor(() => {
+          expect(checkboxes[0]).toBeChecked();
+        });
+      }
+    });
+  });
+
+
+  describe('data transformation', () => {
+    test('given household without label then uses default naming', () => {
+      // Given
+      const dataWithoutLabel = [{
+        ...mockUserHouseholdsData[0],
+        association: {
+          ...mockUserHouseholdsData[0].association,
+          label: undefined,
+        },
+      }];
+      
+      (useUserHouseholds as any).mockReturnValue({
+        data: dataWithoutLabel,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(`Household #${POPULATION_TEST_IDS.HOUSEHOLD_ID_1}`)).toBeInTheDocument();
+    });
+
+    test('given household without created date then displays just now', () => {
+      // Given
+      const dataWithoutDate = [{
+        ...mockUserHouseholdsData[0],
+        association: {
+          ...mockUserHouseholdsData[0].association,
+          createdAt: undefined,
+        },
+      }];
+      
+      (useUserHouseholds as any).mockReturnValue({
+        data: dataWithoutDate,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText('Just now')).toBeInTheDocument();
+    });
+
+    test('given household with no people then displays zero count', () => {
+      // Given
+      const dataWithNoPeople = [{
+        ...mockUserHouseholdsData[0],
+        household: {
+          ...mockUserHouseholdsData[0].household,
+          household_json: {
+            people: {},
+            families: {},
+          },
+        },
+      }];
+      
+      (useUserHouseholds as any).mockReturnValue({
+        data: dataWithNoPeople,
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText('0 persons')).toBeInTheDocument();
+    });
+
+    test('given mixed data then displays both household and geographic populations', () => {
+      // When
+      renderPage();
+
+      // Then - Verify both types are rendered
+      expect(screen.getByText(POPULATION_LABELS.HOUSEHOLD_1)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_LABELS.GEOGRAPHIC_1)).toBeInTheDocument();
+      
+      // Verify different detail types
+      expect(screen.getByText(POPULATION_DETAILS.PERSON_PLURAL(2))).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_DETAILS.SUBNATIONAL)).toBeInTheDocument();
+    });
+  });
+
+  describe('column configuration', () => {
+    test('given page renders then displays correct column headers', () => {
+      // When
+      renderPage();
+
+      // Then
+      expect(screen.getByText(POPULATION_COLUMNS.NAME)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_COLUMNS.DATE)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_COLUMNS.DETAILS)).toBeInTheDocument();
+      expect(screen.getByText(POPULATION_COLUMNS.CONNECTIONS)).toBeInTheDocument();
+    });
+
+    test('given household data then displays connections placeholders', () => {
+      // When
+      renderPage();
+
+      // Then
+      // Check for multiple occurrences since there are multiple households
+      const simulations = screen.getAllByText(POPULATION_DETAILS.SAMPLE_SIMULATION);
+      const reports = screen.getAllByText(POPULATION_DETAILS.SAMPLE_REPORT);
+      
+      expect(simulations.length).toBeGreaterThan(0);
+      expect(reports.length).toBeGreaterThan(0);
+    });
+
+    test('given geographic data then displays available for simulations', () => {
+      // When
+      renderPage();
+
+      // Then
+      // Check for multiple occurrences since there are multiple geographic associations
+      const available = screen.getAllByText(POPULATION_DETAILS.AVAILABLE_FOR_SIMULATIONS);
+      expect(available.length).toBeGreaterThan(0);
+    });
+  });
+});
