@@ -406,7 +406,8 @@ describe('populationReducer', () => {
       expect(state.household?.countryId).toBe(POPULATION_COUNTRIES.US);
     });
 
-    test('given no year when initializeHousehold then uses default year 2024', () => {
+    test('given no year when initializeHousehold then uses default year', () => {
+      const DEFAULT_YEAR = "2024";
       // Given
       const initialState = { ...mockInitialState };
       (HouseholdBuilder as any).mockClear();
@@ -422,7 +423,7 @@ describe('populationReducer', () => {
       // Verify HouseholdBuilder was called with default year '2024'
       expect(HouseholdBuilder).toHaveBeenCalledWith(
         POPULATION_COUNTRIES.US,
-        '2024' // Default year
+        DEFAULT_YEAR
       );
     });
 
