@@ -12,9 +12,16 @@
    import { render, screen, userEvent } from '@test-utils';
    ```
 
-2. **File location**: Place tests in `src/tests/` mirroring the source structure
-   - `src/components/Button.tsx` → `src/tests/components/Button.test.tsx`
-   - `src/hooks/useAuth.ts` → `src/tests/hooks/useAuth.test.ts`
+2. **File location**: Place tests in `src/tests/TYPE/` mirroring the source structure, where TYPE is:
+   - `unit` for unit tests (most common)
+   - `integration` for integration tests
+   - Other types as needed
+   
+   Examples:
+   - `src/components/Button.tsx` → `src/tests/unit/components/Button.test.tsx`
+   - `src/hooks/useAuth.ts` → `src/tests/unit/hooks/useAuth.test.ts`
+   - `src/adapters/HouseholdAdapter.ts` → `src/tests/unit/adapters/HouseholdAdapter.test.ts`
+   - API integration test → `src/tests/integration/api/PolicyEngine.test.ts`
 
 3. **Test naming**: Use Given-When-Then pattern for clear, descriptive test names
    ```typescript
