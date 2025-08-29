@@ -1,5 +1,6 @@
 /** @type {import("@ianvs/prettier-plugin-sort-imports").PrettierConfig} */
 const config = {
+  endOfLine: 'lf',
   printWidth: 100,
   singleQuote: true,
   trailingComma: 'es5',
