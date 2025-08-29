@@ -81,6 +81,63 @@
    └── hooks/
        └── useAuthMocks.ts
    ```
+   
+   **Fixture best practices**:
+   - **Use descriptive constants**: Define constants that explain their purpose
+     ```typescript
+     // Good - Clear what each ID represents
+     export const EXISTING_HOUSEHOLD_ID = '12345';
+     export const NON_EXISTENT_HOUSEHOLD_ID = '99999';
+     export const NEW_HOUSEHOLD_ID = 'household-123';
+     
+     // Bad - Magic numbers/strings in tests
+     const householdId = '12345'; // What does this represent?
+     ```
+   
+   - **Group related constants**: Organize constants by their domain
+     ```typescript
+     export const TEST_COUNTRIES = {
+       US: 'us',
+       UK: 'uk',
+       CA: 'ca',
+     } as const;
+     
+     export const HTTP_STATUS = {
+       OK: 200,
+       NOT_FOUND: 404,
+       INTERNAL_SERVER_ERROR: 500,
+     } as const;
+     ```
+   
+   - **Create helper functions for common patterns**:
+     ```typescript
+     export const mockSuccessResponse = (data: any) => ({
+       ok: true,
+       status: HTTP_STATUS.OK,
+       json: vi.fn().mockResolvedValue(data),
+     });
+     
+     export const mockErrorResponse = (status: number) => ({
+       ok: false,
+       status,
+       statusText: status === HTTP_STATUS.NOT_FOUND ? 'Not Found' : 'Error',
+     });
+     ```
+   
+   - **Match implementation error messages**: Keep error constants in sync
+     ```typescript
+     export const ERROR_MESSAGES = {
+       FETCH_FAILED: (id: string) => `Failed to fetch household ${id}`,
+       CREATE_FAILED: 'Failed to create household',
+     } as const;
+     ```
+   
+   - **Provide variants for different test scenarios**:
+     ```typescript
+     export const mockHouseholdPayload = { /* base payload */ };
+     export const mockHouseholdPayloadUK = { ...mockHouseholdPayload, country_id: 'uk' };
+     export const mockLargeHouseholdPayload = { /* complex payload with all fields */ };
+     ```
 
 7. **Always mock Plotly**: Add to test file or setup
    ```typescript
@@ -92,10 +149,25 @@
    - Mock API calls at module level
    - Reset mocks with `vi.clearAllMocks()` in `beforeEach`
    - Import mocks from fixtures: `import { mockPolicyData } from '@/tests/fixtures/api/policyMocks';`
+   - Keep test data in fixtures, not inline in tests (improves maintainability)
 
 9. **Async patterns**: Use `userEvent.setup()` for interactions, `waitFor` for async updates
 
 10. **Coverage targets**: Aim for 80% overall, 90% for critical paths (adapters, utils, hooks)
+
+11. **Test readability principles**:
+    - **Use constants over magic values**: Makes tests self-documenting
+      ```typescript
+      // Good - Intent is clear
+      const result = await fetchHouseholdById(TEST_COUNTRIES.US, EXISTING_HOUSEHOLD_ID);
+      
+      // Bad - What do these values represent?
+      const result = await fetchHouseholdById('us', '12345');
+      ```
+    
+    - **One assertion per test when possible**: Makes failures easier to diagnose
+    - **Test the "what", not the "how"**: Focus on behavior, not implementation
+    - **Use fixture data that represents real scenarios**: Don't use "foo", "bar", "test123"
 
 ## What to test
 - User interactions and state changes
