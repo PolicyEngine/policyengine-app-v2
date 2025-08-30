@@ -287,7 +287,9 @@ export const verifyPersonNotInAnyGroup = (
   personName: string
 ): void => {
   Object.keys(household.householdData).forEach((entityName) => {
-    if (entityName === 'people') return;
+    if (entityName === 'people') {
+      return;
+    }
     
     const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
     Object.values(entities).forEach((group) => {
@@ -321,14 +323,18 @@ export const countGroupMembers = (
   groupKey: string
 ): number => {
   const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
-  if (!entities || !entities[groupKey]) return 0;
+  if (!entities || !entities[groupKey]) {
+    return 0;
+  }
   return entities[groupKey].members?.length || 0;
 };
 
 // Helper to get all group keys for an entity
 export const getGroupKeys = (household: Household, entityName: string): string[] => {
   const entities = household.householdData[entityName];
-  if (!entities || typeof entities !== 'object') return [];
+  if (!entities || typeof entities !== 'object') {
+    return [];
+  }
   return Object.keys(entities);
 };
 

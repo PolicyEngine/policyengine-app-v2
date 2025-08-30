@@ -29,7 +29,6 @@ import {
   POPULATION_GEO,
   POPULATION_COLUMNS,
   POPULATION_DETAILS,
-  POPULATION_CONSOLE,
   mockUserHouseholdsData,
   mockGeographicAssociationsData,
   setupMockConsole,
@@ -301,7 +300,7 @@ describe('PopulationsPage', () => {
     // NOTE: This behavior is a placeholder
     test('given user clicks more filters then logs action', async () => {
       // Given
-      const user = userEvent.setup();
+      userEvent.setup();
       renderPage();
 
       // When - The button is disabled in the component
@@ -313,7 +312,7 @@ describe('PopulationsPage', () => {
 
     test('given user searches then filters populations', async () => {
       // Given
-      const user = userEvent.setup();
+      userEvent.setup();
       renderPage();
       const searchInput = screen.getByPlaceholderText(/search/i);
 

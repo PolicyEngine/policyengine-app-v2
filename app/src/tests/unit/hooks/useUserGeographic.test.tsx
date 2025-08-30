@@ -46,7 +46,7 @@ import {
   useGeographicAssociation,
   useCreateGeographicAssociation,
 } from '@/hooks/useUserGeographic';
-import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geographicAssociation';
+import { SessionStorageGeographicStore } from '@/api/geographicAssociation';
 import {
   TEST_IDS,
   TEST_LABELS,

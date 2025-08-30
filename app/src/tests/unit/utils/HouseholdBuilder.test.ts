@@ -12,8 +12,6 @@ import {
   ERROR_MESSAGES,
   EXPECTED_COUNTRY_ENTITIES,
   createEmptyHousehold,
-  mockUSHouseholdOneAdult,
-  mockUKHouseholdOneAdult,
   verifyHouseholdStructure,
   verifyPersonExists,
   verifyPersonInGroup,
@@ -21,7 +19,6 @@ import {
   verifyVariableValue,
   countPeople,
   countGroupMembers,
-  getGroupKeys,
   createMockVariables,
   createYearKeyedValue,
 } from '@/tests/fixtures/utils/householdBuilderMocks';

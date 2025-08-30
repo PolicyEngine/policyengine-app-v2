@@ -39,7 +39,7 @@ import {
 
 // Set up the mock implementation
 const mockBuildMethod = vi.fn();
-(HouseholdBuilder as any).mockImplementation((countryId: string, year: string) => {
+(HouseholdBuilder as any).mockImplementation((countryId: string) => {
   mockBuildMethod.mockReturnValue(createMockHouseholdForCountry(countryId));
   return {
     build: mockBuildMethod,

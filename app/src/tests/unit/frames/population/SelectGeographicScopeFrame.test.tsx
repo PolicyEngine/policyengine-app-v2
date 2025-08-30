@@ -10,7 +10,6 @@ import populationReducer from '@/reducers/populationReducer';
 import metadataReducer from '@/reducers/metadataReducer';
 import {
   TEST_COUNTRIES,
-  TEST_REGIONS,
   GEOGRAPHIC_SCOPES,
   mockFlowProps,
   mockUSRegions,

@@ -7,11 +7,9 @@ import {
 } from '@/utils/PopulationOps';
 import {
   POPULATION_IDS,
-  POPULATION_LABELS,
   POPULATION_COUNTRIES,
   POPULATION_SCOPES,
   EXPECTED_LABELS,
-  EXPECTED_CACHE_KEYS,
   API_PAYLOAD_KEYS,
   mockHouseholdPopRef1,
   mockHouseholdPopRef2,
@@ -39,7 +37,6 @@ import {
   expectedUserGeographyNationalLabel,
   createHouseholdPopRef,
   createGeographyPopRef,
-  createUserHouseholdPop,
   createUserGeographyPop,
   verifyAPIPayload,
   mockHandlers,

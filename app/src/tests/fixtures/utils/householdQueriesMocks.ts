@@ -1,4 +1,4 @@
-import { Household, HouseholdData, HouseholdPerson, HouseholdGroupEntity } from '@/types/ingredients/Household';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 import { PersonWithName } from '@/utils/HouseholdQueries';
 
 // ============= TEST CONSTANTS =============

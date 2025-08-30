@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor, fireEvent } from '@test-utils';
+import { screen, waitFor } from '@test-utils';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { MantineProvider } from '@mantine/core';
@@ -9,7 +9,6 @@ import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import populationReducer from '@/reducers/populationReducer';
 import metadataReducer from '@/reducers/metadataReducer';
 import {
-  TEST_HOUSEHOLD_ID,
   mockHousehold,
   mockFlowProps,
   mockCreateHouseholdResponse,
@@ -18,7 +17,7 @@ import {
 
 // Mock household utilities
 vi.mock('@/utils/HouseholdBuilder', () => ({
-  HouseholdBuilder: vi.fn().mockImplementation((countryId, taxYear) => ({
+  HouseholdBuilder: vi.fn().mockImplementation((_countryId, _taxYear) => ({
     build: vi.fn(() => mockHousehold),
     loadHousehold: vi.fn(),
     addAdult: vi.fn(),
@@ -32,9 +31,13 @@ vi.mock('@/utils/HouseholdBuilder', () => ({
 vi.mock('@/utils/HouseholdQueries', () => ({
   getChildCount: vi.fn(() => 0),
   getChildren: vi.fn(() => []),
-  getPersonVariable: vi.fn((household, person, variable, year) => {
-    if (variable === 'age') return 30;
-    if (variable === 'employment_income') return 50000;
+  getPersonVariable: vi.fn((_household, _person, variable, _year) => {
+    if (variable === 'age') {
+      return 30;
+    }
+    if (variable === 'employment_income') {
+      return 50000;
+    }
     return 0;
   }),
 }));
@@ -441,7 +444,7 @@ describe('HouseholdBuilderFrame', () => {
       // When - Set to married first
       const maritalSelect = screen.getByLabelText('Marital Status');
       await user.click(maritalSelect);
-      let marriedOption = await screen.findByText('Married');
+      const marriedOption = await screen.findByText('Married');
       await user.click(marriedOption);
 
       // Verify partner appears

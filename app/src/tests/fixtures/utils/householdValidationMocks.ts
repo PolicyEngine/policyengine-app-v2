@@ -1,4 +1,4 @@
-import { Household, HouseholdData, HouseholdPerson, HouseholdGroupEntity } from '@/types/ingredients/Household';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 import { ValidationResult, ValidationError, ValidationWarning, VariableMetadata } from '@/utils/HouseholdValidation';
 import { RootState } from '@/store';
 

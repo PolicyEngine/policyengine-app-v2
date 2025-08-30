@@ -295,7 +295,7 @@ export const mockUseCreateHousehold = () => ({
 });
 
 // Mock household utilities
-export const mockHouseholdBuilder = vi.fn().mockImplementation((countryId, taxYear) => ({
+export const mockHouseholdBuilder = vi.fn().mockImplementation((_countryId, _taxYear) => ({
   build: vi.fn(() => mockHousehold),
   loadHousehold: vi.fn(),
   addAdult: vi.fn(),
@@ -308,9 +308,13 @@ export const mockHouseholdBuilder = vi.fn().mockImplementation((countryId, taxYe
 export const mockHouseholdQueries = {
   getChildCount: vi.fn(() => 0),
   getChildren: vi.fn(() => []),
-  getPersonVariable: vi.fn((household, person, variable, year) => {
-    if (variable === 'age') return TEST_VALUES.DEFAULT_AGE;
-    if (variable === 'employment_income') return TEST_VALUES.DEFAULT_INCOME;
+  getPersonVariable: vi.fn((_household, _person, variable, _year) => {
+    if (variable === 'age') {
+      return TEST_VALUES.DEFAULT_AGE;
+    }
+    if (variable === 'employment_income') {
+      return TEST_VALUES.DEFAULT_INCOME;
+    }
     return 0;
   }),
 };

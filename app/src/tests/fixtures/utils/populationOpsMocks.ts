@@ -2,9 +2,8 @@ import { vi } from 'vitest';
 import {
   HouseholdPopulationRef,
   GeographyPopulationRef,
-  PopulationRef,
 } from '@/utils/PopulationOps';
-import { UserPopulation, UserHouseholdPopulation, UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation, UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 // ============= TEST CONSTANTS =============
 
