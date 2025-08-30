@@ -529,7 +529,7 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const members = household.householdData.households![GROUP_KEYS.DEFAULT_HOUSEHOLD].members;
-      expect(members.filter(m => m === PERSON_NAMES.ADULT_1)).toHaveLength(1);
+      expect(members.filter((m: string) => m === PERSON_NAMES.ADULT_1)).toHaveLength(1);
     });
 
     test('given entity not exists when assignToGroupEntity then creates entity', () => {
