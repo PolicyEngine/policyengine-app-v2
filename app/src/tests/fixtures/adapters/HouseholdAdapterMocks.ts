@@ -1,5 +1,5 @@
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdData } from '@/types/ingredients/Household';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 export const mockEntityMetadata = {
   person: {
@@ -30,7 +30,7 @@ export const mockEntityMetadata = {
 };
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
-  id: "12345",
+  id: '12345',
   country_id: 'us',
   household_json: {
     people: {
@@ -69,12 +69,12 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
       },
     },
   },
-  api_version: "v1",
-  household_hash: "<household_hash>"
+  api_version: 'v1',
+  household_hash: '<household_hash>',
 };
 
 export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
-  id: "67890",
+  id: '67890',
   country_id: 'uk',
   household_json: {
     people: {

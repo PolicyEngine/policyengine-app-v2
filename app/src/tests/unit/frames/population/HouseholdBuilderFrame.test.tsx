@@ -1,17 +1,17 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@test-utils';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { MantineProvider } from '@mantine/core';
+import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { MantineProvider } from '@mantine/core';
 import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
-import populationReducer from '@/reducers/populationReducer';
 import metadataReducer from '@/reducers/metadataReducer';
+import populationReducer from '@/reducers/populationReducer';
 import {
-  mockHousehold,
-  mockFlowProps,
   mockCreateHouseholdResponse,
+  mockFlowProps,
+  mockHousehold,
   mockTaxYears,
 } from '@/tests/fixtures/frames/populationMocks';
 
@@ -191,9 +191,7 @@ describe('HouseholdBuilderFrame', () => {
 
       // Then
       expect(screen.getByText('Failed to Load Required Data')).toBeInTheDocument();
-      expect(
-        screen.getByText(/Unable to load household configuration data/)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Unable to load household configuration data/)).toBeInTheDocument();
     });
 
     test('given loading state then shows loading overlay', () => {
@@ -271,11 +269,11 @@ describe('HouseholdBuilderFrame', () => {
     test('given adult age changed then updates household data', async () => {
       // Given
       renderComponent();
-      
+
       // When
       const ageInputs = screen.getAllByPlaceholderText('Age');
       const primaryAdultAge = ageInputs[0];
-      
+
       await user.clear(primaryAdultAge);
       await user.type(primaryAdultAge, '35');
 
@@ -288,11 +286,11 @@ describe('HouseholdBuilderFrame', () => {
     test('given employment income changed then updates household data', async () => {
       // Given
       renderComponent();
-      
+
       // When
       const incomeInputs = screen.getAllByPlaceholderText('Employment Income');
       const primaryIncome = incomeInputs[0];
-      
+
       await user.clear(primaryIncome);
       await user.type(primaryIncome, '75000');
 
@@ -356,12 +354,12 @@ describe('HouseholdBuilderFrame', () => {
         isValid: false,
         errors: ['Missing required fields'],
       });
-      
+
       renderComponent();
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create household/i });
-      
+
       // Then
       expect(submitButton).toBeDisabled();
     });
@@ -389,7 +387,7 @@ describe('HouseholdBuilderFrame', () => {
       // Given
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockCreateHousehold.mockRejectedValue(new Error('API Error'));
-      
+
       const populationState = {
         label: 'Test Household',
         household: mockHousehold,
@@ -402,10 +400,7 @@ describe('HouseholdBuilderFrame', () => {
 
       // Then
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
-          'Failed to create household:',
-          expect.any(Error)
-        );
+        expect(consoleSpy).toHaveBeenCalledWith('Failed to create household:', expect.any(Error));
       });
 
       consoleSpy.mockRestore();

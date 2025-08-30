@@ -114,22 +114,30 @@ export const QUERY_EXPECTED_COUNTS = {
 // Mock person objects
 export const mockAdult30: HouseholdPerson = {
   age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.ADULT_30 },
-  [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: { [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.INCOME_50K },
+  [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: {
+    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.INCOME_50K,
+  },
 };
 
 export const mockAdult25: HouseholdPerson = {
   age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.ADULT_25 },
-  [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: { [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.INCOME_75K },
+  [QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME]: {
+    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.INCOME_75K,
+  },
 };
 
 export const mockChild10: HouseholdPerson = {
   age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.CHILD_10 },
-  [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: { [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE },
+  [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: {
+    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
+  },
 };
 
 export const mockChild5: HouseholdPerson = {
   age: { [QUERY_YEARS.CURRENT]: QUERY_AGES.CHILD_5 },
-  [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: { [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE },
+  [QUERY_VARIABLE_NAMES.IS_TAX_UNIT_DEPENDENT]: {
+    [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.BOOLEAN_TRUE,
+  },
 };
 
 // Person with age changing over years
@@ -178,7 +186,9 @@ export const mockHouseholdTwoAdultsTwoChildren: Household = {
           QUERY_PERSON_NAMES.CHILD_1,
           QUERY_PERSON_NAMES.CHILD_2,
         ],
-        [QUERY_VARIABLE_NAMES.STATE_CODE]: { [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.STATE_CA },
+        [QUERY_VARIABLE_NAMES.STATE_CODE]: {
+          [QUERY_YEARS.CURRENT]: QUERY_VARIABLE_VALUES.STATE_CA,
+        },
       },
     },
     families: {
@@ -360,7 +370,10 @@ export const createHouseholdWithPeople = (
 });
 
 // Helper to create a person with age
-export const createPersonWithAge = (age: number, year: string = QUERY_YEARS.CURRENT): HouseholdPerson => ({
+export const createPersonWithAge = (
+  age: number,
+  year: string = QUERY_YEARS.CURRENT
+): HouseholdPerson => ({
   age: { [year]: age },
 });
 
@@ -388,12 +401,9 @@ export const verifyPersonWithName = (
 };
 
 // Helper to verify array of PersonWithName
-export const verifyPeopleArray = (
-  actual: PersonWithName[],
-  expectedNames: string[]
-): void => {
+export const verifyPeopleArray = (actual: PersonWithName[], expectedNames: string[]): void => {
   expect(actual).toHaveLength(expectedNames.length);
-  const actualNames = actual.map(p => p.name).sort();
+  const actualNames = actual.map((p) => p.name).sort();
   const sortedExpectedNames = [...expectedNames].sort();
   expect(actualNames).toEqual(sortedExpectedNames);
 };

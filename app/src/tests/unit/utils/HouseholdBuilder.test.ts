@@ -1,27 +1,27 @@
-import { describe, test, expect, beforeEach } from 'vitest';
-import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+import { beforeEach, describe, expect, test } from 'vitest';
 import {
-  PERSON_NAMES,
-  PERSON_AGES,
+  countGroupMembers,
+  countPeople,
   COUNTRIES,
-  YEARS,
+  createEmptyHousehold,
+  createMockVariables,
+  createYearKeyedValue,
   ENTITY_NAMES,
-  GROUP_KEYS,
-  VARIABLE_NAMES,
-  VARIABLE_VALUES,
   ERROR_MESSAGES,
   EXPECTED_COUNTRY_ENTITIES,
-  createEmptyHousehold,
+  GROUP_KEYS,
+  PERSON_AGES,
+  PERSON_NAMES,
+  VARIABLE_NAMES,
+  VARIABLE_VALUES,
   verifyHouseholdStructure,
   verifyPersonExists,
   verifyPersonInGroup,
   verifyPersonNotInAnyGroup,
   verifyVariableValue,
-  countPeople,
-  countGroupMembers,
-  createMockVariables,
-  createYearKeyedValue,
+  YEARS,
 } from '@/tests/fixtures/utils/householdBuilderMocks';
+import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 
 describe('HouseholdBuilder', () => {
   let builder: HouseholdBuilder;
@@ -152,7 +152,10 @@ describe('HouseholdBuilder', () => {
 
     test('given adult with variables when addAdult then includes variables', () => {
       // Given
-      const variables = createMockVariables(VARIABLE_VALUES.INCOME_DEFAULT, VARIABLE_VALUES.STATE_CA);
+      const variables = createMockVariables(
+        VARIABLE_VALUES.INCOME_DEFAULT,
+        VARIABLE_VALUES.STATE_CA
+      );
 
       // When
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT, variables);
@@ -170,8 +173,18 @@ describe('HouseholdBuilder', () => {
       const household = builder.build();
 
       // Then
-      verifyPersonInGroup(household, PERSON_NAMES.ADULT_1, ENTITY_NAMES.TAX_UNITS, GROUP_KEYS.DEFAULT_TAX_UNIT);
-      verifyPersonInGroup(household, PERSON_NAMES.ADULT_1, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD);
+      verifyPersonInGroup(
+        household,
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.TAX_UNITS,
+        GROUP_KEYS.DEFAULT_TAX_UNIT
+      );
+      verifyPersonInGroup(
+        household,
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.HOUSEHOLDS,
+        GROUP_KEYS.DEFAULT_HOUSEHOLD
+      );
     });
 
     test('given UK adult when addAdult then adds to benefit unit and household', () => {
@@ -183,8 +196,18 @@ describe('HouseholdBuilder', () => {
       const household = builder.build();
 
       // Then
-      verifyPersonInGroup(household, PERSON_NAMES.ADULT_1, ENTITY_NAMES.BEN_UNITS, GROUP_KEYS.DEFAULT_BEN_UNIT);
-      verifyPersonInGroup(household, PERSON_NAMES.ADULT_1, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD);
+      verifyPersonInGroup(
+        household,
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.BEN_UNITS,
+        GROUP_KEYS.DEFAULT_BEN_UNIT
+      );
+      verifyPersonInGroup(
+        household,
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.HOUSEHOLDS,
+        GROUP_KEYS.DEFAULT_HOUSEHOLD
+      );
     });
 
     test('given multiple adults when addAdult then adds all to same default groups', () => {
@@ -194,14 +217,21 @@ describe('HouseholdBuilder', () => {
       const household = builder.build();
 
       // Then
-      expect(countGroupMembers(household, ENTITY_NAMES.TAX_UNITS, GROUP_KEYS.DEFAULT_TAX_UNIT)).toBe(2);
-      expect(countGroupMembers(household, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD)).toBe(2);
+      expect(
+        countGroupMembers(household, ENTITY_NAMES.TAX_UNITS, GROUP_KEYS.DEFAULT_TAX_UNIT)
+      ).toBe(2);
+      expect(
+        countGroupMembers(household, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD)
+      ).toBe(2);
     });
 
     test('given year-keyed variables when addAdult then preserves structure', () => {
       // Given
       const variables = {
-        [VARIABLE_NAMES.EMPLOYMENT_INCOME]: createYearKeyedValue(VARIABLE_VALUES.INCOME_DEFAULT, YEARS.PAST),
+        [VARIABLE_NAMES.EMPLOYMENT_INCOME]: createYearKeyedValue(
+          VARIABLE_VALUES.INCOME_DEFAULT,
+          YEARS.PAST
+        ),
       };
 
       // When
@@ -210,7 +240,9 @@ describe('HouseholdBuilder', () => {
 
       // Then
       const person = household.householdData.people[PERSON_NAMES.ADULT_1];
-      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.PAST]).toBe(VARIABLE_VALUES.INCOME_DEFAULT);
+      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.PAST]).toBe(
+        VARIABLE_VALUES.INCOME_DEFAULT
+      );
     });
   });
 
@@ -258,8 +290,15 @@ describe('HouseholdBuilder', () => {
       const household = builder.build();
 
       // Then
-      verifyPersonInGroup(household, PERSON_NAMES.CHILD_1, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD);
-      expect(countGroupMembers(household, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD)).toBe(3);
+      verifyPersonInGroup(
+        household,
+        PERSON_NAMES.CHILD_1,
+        ENTITY_NAMES.HOUSEHOLDS,
+        GROUP_KEYS.DEFAULT_HOUSEHOLD
+      );
+      expect(
+        countGroupMembers(household, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD)
+      ).toBe(3);
     });
 
     test('given child with variables when addChild then includes variables', () => {
@@ -279,7 +318,12 @@ describe('HouseholdBuilder', () => {
   describe('addChildren method', () => {
     test('given count of 1 when addChildren then adds single child with base name', () => {
       // When
-      const childKeys = builder.addChildren(PERSON_NAMES.CHILD_BASE, 1, PERSON_AGES.CHILD_DEFAULT, []);
+      const childKeys = builder.addChildren(
+        PERSON_NAMES.CHILD_BASE,
+        1,
+        PERSON_AGES.CHILD_DEFAULT,
+        []
+      );
       const household = builder.build();
 
       // Then
@@ -290,7 +334,12 @@ describe('HouseholdBuilder', () => {
 
     test('given count of 3 when addChildren then adds numbered children', () => {
       // When
-      const childKeys = builder.addChildren(PERSON_NAMES.CHILD_BASE, 3, PERSON_AGES.CHILD_DEFAULT, []);
+      const childKeys = builder.addChildren(
+        PERSON_NAMES.CHILD_BASE,
+        3,
+        PERSON_AGES.CHILD_DEFAULT,
+        []
+      );
       const household = builder.build();
 
       // Then
@@ -343,8 +392,12 @@ describe('HouseholdBuilder', () => {
 
       // Then
       verifyPersonNotInAnyGroup(household, PERSON_NAMES.ADULT_1);
-      expect(countGroupMembers(household, ENTITY_NAMES.TAX_UNITS, GROUP_KEYS.DEFAULT_TAX_UNIT)).toBe(1);
-      expect(countGroupMembers(household, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD)).toBe(1);
+      expect(
+        countGroupMembers(household, ENTITY_NAMES.TAX_UNITS, GROUP_KEYS.DEFAULT_TAX_UNIT)
+      ).toBe(1);
+      expect(
+        countGroupMembers(household, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD)
+      ).toBe(1);
     });
 
     test('given person not exists when removePerson then does nothing', () => {
@@ -380,7 +433,11 @@ describe('HouseholdBuilder', () => {
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
 
       // When
-      builder.setPersonVariable(PERSON_NAMES.ADULT_1, VARIABLE_NAMES.EMPLOYMENT_INCOME, VARIABLE_VALUES.INCOME_HIGH);
+      builder.setPersonVariable(
+        PERSON_NAMES.ADULT_1,
+        VARIABLE_NAMES.EMPLOYMENT_INCOME,
+        VARIABLE_VALUES.INCOME_HIGH
+      );
       const household = builder.build();
 
       // Then
@@ -390,8 +447,12 @@ describe('HouseholdBuilder', () => {
 
     test('given person not exists when setPersonVariable then throws error', () => {
       // When/Then
-      expect(() => 
-        builder.setPersonVariable('non-existent', VARIABLE_NAMES.EMPLOYMENT_INCOME, VARIABLE_VALUES.INCOME_DEFAULT)
+      expect(() =>
+        builder.setPersonVariable(
+          'non-existent',
+          VARIABLE_NAMES.EMPLOYMENT_INCOME,
+          VARIABLE_VALUES.INCOME_DEFAULT
+        )
       ).toThrow(ERROR_MESSAGES.PERSON_NOT_FOUND('non-existent'));
     });
 
@@ -401,12 +462,18 @@ describe('HouseholdBuilder', () => {
       const yearKeyedValue = createYearKeyedValue(VARIABLE_VALUES.INCOME_HIGH, YEARS.FUTURE);
 
       // When
-      builder.setPersonVariable(PERSON_NAMES.ADULT_1, VARIABLE_NAMES.EMPLOYMENT_INCOME, yearKeyedValue);
+      builder.setPersonVariable(
+        PERSON_NAMES.ADULT_1,
+        VARIABLE_NAMES.EMPLOYMENT_INCOME,
+        yearKeyedValue
+      );
       const household = builder.build();
 
       // Then
       const person = household.householdData.people[PERSON_NAMES.ADULT_1];
-      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.FUTURE]).toBe(VARIABLE_VALUES.INCOME_HIGH);
+      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.FUTURE]).toBe(
+        VARIABLE_VALUES.INCOME_HIGH
+      );
     });
 
     test('given existing variable when setPersonVariable then overwrites', () => {
@@ -416,7 +483,11 @@ describe('HouseholdBuilder', () => {
       });
 
       // When
-      builder.setPersonVariable(PERSON_NAMES.ADULT_1, VARIABLE_NAMES.EMPLOYMENT_INCOME, VARIABLE_VALUES.INCOME_HIGH);
+      builder.setPersonVariable(
+        PERSON_NAMES.ADULT_1,
+        VARIABLE_NAMES.EMPLOYMENT_INCOME,
+        VARIABLE_VALUES.INCOME_HIGH
+      );
       const household = builder.build();
 
       // Then
@@ -494,11 +565,20 @@ describe('HouseholdBuilder', () => {
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
 
       // When
-      builder.assignToGroupEntity(PERSON_NAMES.ADULT_1, ENTITY_NAMES.FAMILIES, GROUP_KEYS.DEFAULT_FAMILY);
+      builder.assignToGroupEntity(
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.FAMILIES,
+        GROUP_KEYS.DEFAULT_FAMILY
+      );
       const household = builder.build();
 
       // Then
-      verifyPersonInGroup(household, PERSON_NAMES.ADULT_1, ENTITY_NAMES.FAMILIES, GROUP_KEYS.DEFAULT_FAMILY);
+      verifyPersonInGroup(
+        household,
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.FAMILIES,
+        GROUP_KEYS.DEFAULT_FAMILY
+      );
     });
 
     test('given group not exists when assignToGroupEntity then creates group', () => {
@@ -506,7 +586,11 @@ describe('HouseholdBuilder', () => {
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
 
       // When
-      builder.assignToGroupEntity(PERSON_NAMES.ADULT_1, ENTITY_NAMES.FAMILIES, GROUP_KEYS.CUSTOM_GROUP);
+      builder.assignToGroupEntity(
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.FAMILIES,
+        GROUP_KEYS.CUSTOM_GROUP
+      );
       const household = builder.build();
 
       // Then
@@ -520,8 +604,16 @@ describe('HouseholdBuilder', () => {
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
 
       // When
-      builder.assignToGroupEntity(PERSON_NAMES.ADULT_1, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD);
-      builder.assignToGroupEntity(PERSON_NAMES.ADULT_1, ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD);
+      builder.assignToGroupEntity(
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.HOUSEHOLDS,
+        GROUP_KEYS.DEFAULT_HOUSEHOLD
+      );
+      builder.assignToGroupEntity(
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.HOUSEHOLDS,
+        GROUP_KEYS.DEFAULT_HOUSEHOLD
+      );
       const household = builder.build();
 
       // Then
@@ -535,12 +627,21 @@ describe('HouseholdBuilder', () => {
       delete builder.getHousehold().householdData.families;
 
       // When
-      builder.assignToGroupEntity(PERSON_NAMES.ADULT_1, ENTITY_NAMES.FAMILIES, GROUP_KEYS.DEFAULT_FAMILY);
+      builder.assignToGroupEntity(
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.FAMILIES,
+        GROUP_KEYS.DEFAULT_FAMILY
+      );
       const household = builder.build();
 
       // Then
       expect(household.householdData.families).toBeDefined();
-      verifyPersonInGroup(household, PERSON_NAMES.ADULT_1, ENTITY_NAMES.FAMILIES, GROUP_KEYS.DEFAULT_FAMILY);
+      verifyPersonInGroup(
+        household,
+        PERSON_NAMES.ADULT_1,
+        ENTITY_NAMES.FAMILIES,
+        GROUP_KEYS.DEFAULT_FAMILY
+      );
     });
   });
 
@@ -623,12 +724,18 @@ describe('HouseholdBuilder', () => {
       builder.setCurrentYear(YEARS.PAST);
 
       // When
-      builder.setPersonVariable(PERSON_NAMES.ADULT_1, VARIABLE_NAMES.EMPLOYMENT_INCOME, VARIABLE_VALUES.INCOME_DEFAULT);
+      builder.setPersonVariable(
+        PERSON_NAMES.ADULT_1,
+        VARIABLE_NAMES.EMPLOYMENT_INCOME,
+        VARIABLE_VALUES.INCOME_DEFAULT
+      );
       const household = builder.build();
 
       // Then
       const person = household.householdData.people[PERSON_NAMES.ADULT_1];
-      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.PAST]).toBe(VARIABLE_VALUES.INCOME_DEFAULT);
+      expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.PAST]).toBe(
+        VARIABLE_VALUES.INCOME_DEFAULT
+      );
       expect(person[VARIABLE_NAMES.EMPLOYMENT_INCOME][YEARS.CURRENT]).toBeUndefined();
     });
   });
@@ -701,13 +808,25 @@ describe('HouseholdBuilder', () => {
       // Note: addAdult and addChild return person IDs, not the builder instance
       const adult1Id = builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);
       const adult2Id = builder.addAdult(PERSON_NAMES.ADULT_2, PERSON_AGES.ADULT_DEFAULT);
-      const childId = builder.addChild(PERSON_NAMES.CHILD_1, PERSON_AGES.CHILD_DEFAULT, [adult1Id, adult2Id]);
-      
+      const childId = builder.addChild(PERSON_NAMES.CHILD_1, PERSON_AGES.CHILD_DEFAULT, [
+        adult1Id,
+        adult2Id,
+      ]);
+
       // These methods support chaining (return 'this')
       const household = builder
         .setMaritalStatus(adult1Id, adult2Id)
-        .setPersonVariable(adult1Id, VARIABLE_NAMES.EMPLOYMENT_INCOME, VARIABLE_VALUES.INCOME_DEFAULT)
-        .setGroupVariable(ENTITY_NAMES.HOUSEHOLDS, GROUP_KEYS.DEFAULT_HOUSEHOLD, VARIABLE_NAMES.STATE_CODE, VARIABLE_VALUES.STATE_CA)
+        .setPersonVariable(
+          adult1Id,
+          VARIABLE_NAMES.EMPLOYMENT_INCOME,
+          VARIABLE_VALUES.INCOME_DEFAULT
+        )
+        .setGroupVariable(
+          ENTITY_NAMES.HOUSEHOLDS,
+          GROUP_KEYS.DEFAULT_HOUSEHOLD,
+          VARIABLE_NAMES.STATE_CODE,
+          VARIABLE_VALUES.STATE_CA
+        )
         .build();
 
       // Then
@@ -715,13 +834,17 @@ describe('HouseholdBuilder', () => {
       verifyPersonExists(household, adult1Id);
       verifyPersonExists(household, adult2Id);
       verifyPersonExists(household, childId);
-      
+
       const person1 = household.householdData.people[adult1Id];
-      verifyVariableValue(person1, VARIABLE_NAMES.EMPLOYMENT_INCOME, VARIABLE_VALUES.INCOME_DEFAULT);
-      
+      verifyVariableValue(
+        person1,
+        VARIABLE_NAMES.EMPLOYMENT_INCOME,
+        VARIABLE_VALUES.INCOME_DEFAULT
+      );
+
       const householdGroup = household.householdData.households![GROUP_KEYS.DEFAULT_HOUSEHOLD];
       verifyVariableValue(householdGroup, VARIABLE_NAMES.STATE_CODE, VARIABLE_VALUES.STATE_CA);
-      
+
       const maritalUnit = household.householdData.maritalUnits![GROUP_KEYS.DEFAULT_MARITAL_UNIT];
       expect(maritalUnit.members).toHaveLength(2);
     });
@@ -731,18 +854,19 @@ describe('HouseholdBuilder', () => {
     test('given each supported country when constructed then creates appropriate structure', () => {
       // Test each country
       const countries = [COUNTRIES.US, COUNTRIES.UK, COUNTRIES.CA, COUNTRIES.NG, COUNTRIES.IL];
-      
-      countries.forEach(country => {
+
+      countries.forEach((country) => {
         // Given/When
         const countryBuilder = new HouseholdBuilder(country as any, YEARS.CURRENT);
         const household = countryBuilder.build();
-        
+
         // Then
         verifyHouseholdStructure(household, country);
-        
-        const expectedEntities = EXPECTED_COUNTRY_ENTITIES[country as keyof typeof EXPECTED_COUNTRY_ENTITIES];
+
+        const expectedEntities =
+          EXPECTED_COUNTRY_ENTITIES[country as keyof typeof EXPECTED_COUNTRY_ENTITIES];
         if (expectedEntities) {
-          expectedEntities.forEach(entity => {
+          expectedEntities.forEach((entity) => {
             if (entity !== 'people') {
               expect(household.householdData[entity]).toBeDefined();
             }

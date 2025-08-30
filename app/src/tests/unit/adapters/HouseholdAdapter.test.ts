@@ -1,14 +1,14 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import { store } from '@/store';
 import {
+  mockEmptyHouseholdData,
   mockEntityMetadata,
-  mockHouseholdMetadata,
-  mockHouseholdMetadataWithUnknownEntity,
   mockHouseholdData,
   mockHouseholdDataWithMultipleEntities,
-  mockEmptyHouseholdData,
   mockHouseholdDataWithUnknownEntity,
+  mockHouseholdMetadata,
+  mockHouseholdMetadataWithUnknownEntity,
 } from '@/tests/fixtures/adapters/HouseholdAdapterMocks';
 
 vi.mock('@/store', () => ({
@@ -21,7 +21,7 @@ describe('HouseholdAdapter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    
+
     (store.getState as any).mockReturnValue({
       metadata: {
         entities: mockEntityMetadata,
@@ -32,7 +32,7 @@ describe('HouseholdAdapter', () => {
   describe('fromAPI', () => {
     test('given valid household metadata from API then converts to internal Household format', () => {
       const result = HouseholdAdapter.fromAPI(mockHouseholdMetadata);
-      
+
       expect(result).toEqual({
         id: 12345,
         countryId: 'us',
@@ -58,7 +58,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.fromAPI(metadata as any);
-      
+
       expect(result.householdData).toHaveProperty('taxUnits');
       expect(result.householdData).toHaveProperty('maritalUnits');
       expect(result.householdData.taxUnits).toEqual(metadata.household_json.tax_units);
@@ -67,13 +67,13 @@ describe('HouseholdAdapter', () => {
 
     test('given entity not in metadata then logs warning but includes it anyway', () => {
       const result = HouseholdAdapter.fromAPI(mockHouseholdMetadataWithUnknownEntity);
-      
+
       expect(console.warn).toHaveBeenCalledWith(
         'Entity "unknown_entity" not found in metadata, including anyway'
       );
       expect(result.householdData).toHaveProperty('unknownEntity');
       expect(result.householdData.unknownEntity).toEqual(
-      // @ts-expect-error
+        // @ts-expect-error
         mockHouseholdMetadataWithUnknownEntity.household_json.unknown_entity
       );
     });
@@ -91,7 +91,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.fromAPI(metadata as any);
-      
+
       expect(result.householdData.people).toEqual(metadata.household_json.people);
       expect(console.warn).not.toHaveBeenCalled();
     });
@@ -106,7 +106,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.fromAPI(metadata as any);
-      
+
       expect(result).toEqual({
         id: 789,
         countryId: 'ca',
@@ -120,7 +120,7 @@ describe('HouseholdAdapter', () => {
   describe('toCreationPayload', () => {
     test('given household data then creates proper payload structure', () => {
       const result = HouseholdAdapter.toCreationPayload(mockHouseholdData, 'us');
-      
+
       expect(result).toEqual({
         country_id: 'us',
         data: {
@@ -138,7 +138,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.toCreationPayload(householdData as any, 'uk');
-      
+
       expect(result.data).toHaveProperty('tax_units');
       expect(result.data.tax_units).toEqual(householdData.taxUnits);
     });
@@ -150,7 +150,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.toCreationPayload(householdData as any, 'us');
-      
+
       expect(result.data).toHaveProperty('tax_units');
       expect(result.data).not.toHaveProperty('taxUnits');
     });
@@ -160,7 +160,7 @@ describe('HouseholdAdapter', () => {
         mockHouseholdDataWithMultipleEntities,
         'us'
       );
-      
+
       expect(result.data).toHaveProperty('people');
       expect(result.data).toHaveProperty('tax_units');
       expect(result.data).toHaveProperty('marital_units');
@@ -169,7 +169,7 @@ describe('HouseholdAdapter', () => {
 
     test('given empty household data then creates minimal payload with only people', () => {
       const result = HouseholdAdapter.toCreationPayload(mockEmptyHouseholdData, 'ca');
-      
+
       expect(result).toEqual({
         country_id: 'ca',
         data: {
@@ -179,11 +179,8 @@ describe('HouseholdAdapter', () => {
     });
 
     test('given entity not in metadata then toCreationPayload logs warning and uses snake_case', () => {
-      const result = HouseholdAdapter.toCreationPayload(
-        mockHouseholdDataWithUnknownEntity,
-        'uk'
-      );
-      
+      const result = HouseholdAdapter.toCreationPayload(mockHouseholdDataWithUnknownEntity, 'uk');
+
       expect(console.warn).toHaveBeenCalledWith(
         'Entity "customEntity" not found in metadata, using snake_case "custom_entity"'
       );
@@ -201,7 +198,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.toCreationPayload(householdData as any, 'us');
-      
+
       expect(result.data.people).toEqual(householdData.people);
       expect(console.warn).not.toHaveBeenCalled();
     });
@@ -213,7 +210,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.toCreationPayload(householdData as any, 'uk');
-      
+
       expect(result.data).toHaveProperty('marital_units');
       expect(result.data.marital_units).toEqual(householdData.maritalUnits);
     });
@@ -234,7 +231,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.fromAPI(metadata as any);
-      
+
       expect(result.householdData.people).toEqual(metadata.household_json.people);
     });
 
@@ -253,7 +250,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.fromAPI(metadata as any);
-      
+
       expect(result.householdData.people).toBeDefined();
       expect(console.warn).toHaveBeenCalled();
     });
@@ -269,7 +266,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.fromAPI(metadata as any);
-      
+
       expect(result.householdData).toHaveProperty('veryLongEntityName');
       expect(result.householdData.veryLongEntityName).toEqual({ data: 'test' });
     });
@@ -281,7 +278,7 @@ describe('HouseholdAdapter', () => {
       };
 
       const result = HouseholdAdapter.toCreationPayload(householdData as any, 'us');
-      
+
       expect(result.data).toHaveProperty('very_long_entity_name');
       // @ts-expect-error
       expect(result.data.very_long_entity_name).toEqual({ data: 'test' });

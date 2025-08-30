@@ -1,19 +1,19 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@test-utils';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { MantineProvider } from '@mantine/core';
+import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { MantineProvider } from '@mantine/core';
 import GeographicConfirmationFrame from '@/frames/population/GeographicConfirmationFrame';
-import populationReducer from '@/reducers/populationReducer';
 import metadataReducer from '@/reducers/metadataReducer';
+import populationReducer from '@/reducers/populationReducer';
 import {
-  TEST_USER_ID,
-  TEST_COUNTRIES,
-  mockNationalGeography,
-  mockStateGeography,
   mockFlowProps,
   mockGeographicAssociation,
+  mockNationalGeography,
+  mockStateGeography,
+  TEST_COUNTRIES,
+  TEST_USER_ID,
 } from '@/tests/fixtures/frames/populationMocks';
 
 // Mock the regions data
@@ -328,10 +328,10 @@ describe('GeographicConfirmationFrame', () => {
         geography: mockNationalGeography,
       };
       const mockOnNavigate = vi.fn();
-      const props = { 
-        ...mockFlowProps, 
-        onReturn: undefined as any,  // Testing edge case where onReturn is not provided
-        onNavigate: mockOnNavigate 
+      const props = {
+        ...mockFlowProps,
+        onReturn: undefined as any, // Testing edge case where onReturn is not provided
+        onNavigate: mockOnNavigate,
       };
       renderComponent(populationState, undefined, props);
 

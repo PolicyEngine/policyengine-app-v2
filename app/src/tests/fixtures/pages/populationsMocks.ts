@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 
 // ============= TEST CONSTANTS =============
 
@@ -23,7 +23,8 @@ export const POPULATION_LABELS = {
   GEOGRAPHIC_1: 'California Population',
   GEOGRAPHIC_2: 'United Kingdom National',
   PAGE_TITLE: 'Your populations',
-  PAGE_SUBTITLE: 'Create a population configuration or find and save existing populations to use in your simulation configurations.',
+  PAGE_SUBTITLE:
+    'Create a population configuration or find and save existing populations to use in your simulation configurations.',
   BUILD_BUTTON: 'Build population',
   SEARCH_PLACEHOLDER: 'Search populations',
   MORE_FILTERS: 'More filters',
@@ -143,10 +144,10 @@ export const mockHouseholdMetadata1: HouseholdMetadata = {
       unit1: {
         members: ['person1', 'person2'],
       },
-    }
+    },
   },
-  api_version: "v1",
-  household_hash: "<household_hash>"
+  api_version: 'v1',
+  household_hash: '<household_hash>',
 };
 
 export const mockHouseholdMetadata2: HouseholdMetadata = {
@@ -178,10 +179,10 @@ export const mockHouseholdMetadata2: HouseholdMetadata = {
       unit1: {
         members: ['person1', 'person2'],
       },
-    }
+    },
   },
-  api_version: "v1",
-  household_hash: "<household_hash>"
+  api_version: 'v1',
+  household_hash: '<household_hash>',
 };
 
 // Mock household associations
@@ -279,7 +280,7 @@ export const setupMockConsole = () => {
     error: vi.spyOn(console, 'error').mockImplementation(() => {}),
     warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
   };
-  
+
   return {
     consoleSpy,
     restore: () => {

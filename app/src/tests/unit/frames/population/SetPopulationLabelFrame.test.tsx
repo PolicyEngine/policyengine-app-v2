@@ -1,21 +1,21 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { screen } from '@test-utils';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { MantineProvider } from '@mantine/core';
+import { screen } from '@test-utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { MantineProvider } from '@mantine/core';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
 import populationReducer from '@/reducers/populationReducer';
 import {
-  TEST_POPULATION_LABEL,
   LONG_LABEL,
-  UI_TEXT,
-  TEST_VALUES,
+  mockFlowProps,
+  mockHousehold,
   mockNationalGeography,
   mockStateGeography,
-  mockHousehold,
-  mockFlowProps,
+  TEST_POPULATION_LABEL,
+  TEST_VALUES,
+  UI_TEXT,
 } from '@/tests/fixtures/frames/populationMocks';
 
 describe('SetPopulationLabelFrame', () => {
@@ -26,10 +26,7 @@ describe('SetPopulationLabelFrame', () => {
     vi.clearAllMocks();
   });
 
-  const renderComponent = (
-    populationState = {},
-    props = mockFlowProps
-  ) => {
+  const renderComponent = (populationState = {}, props = mockFlowProps) => {
     store = configureStore({
       reducer: {
         population: populationReducer,
@@ -135,7 +132,7 @@ describe('SetPopulationLabelFrame', () => {
       // Given
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-      
+
       // When
       await user.clear(input);
       const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
@@ -149,7 +146,7 @@ describe('SetPopulationLabelFrame', () => {
       // Given
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-      
+
       // When
       await user.clear(input);
       await user.type(input, '   ');
@@ -164,7 +161,7 @@ describe('SetPopulationLabelFrame', () => {
       // Given
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-      
+
       // When
       await user.clear(input);
       await user.type(input, LONG_LABEL);
@@ -179,12 +176,12 @@ describe('SetPopulationLabelFrame', () => {
       // Given
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-      
+
       // Create error first
       await user.clear(input);
       const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
       await user.click(submitButton);
-      
+
       expect(screen.getByText(UI_TEXT.ERROR_EMPTY_LABEL)).toBeInTheDocument();
 
       // When - User starts typing
@@ -214,7 +211,7 @@ describe('SetPopulationLabelFrame', () => {
 
       // Then
       expect(props.onNavigate).toHaveBeenCalledWith('geographic');
-      
+
       // Verify Redux action was dispatched
       const state = store.getState();
       expect(state.population.label).toBe('My National Population');
@@ -238,7 +235,7 @@ describe('SetPopulationLabelFrame', () => {
 
       // Then
       expect(props.onNavigate).toHaveBeenCalledWith('household');
-      
+
       const state = store.getState();
       expect(state.population.label).toBe('My Family 2024');
     });

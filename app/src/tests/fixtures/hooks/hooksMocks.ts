@@ -1,9 +1,9 @@
-import { vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
+import { vi } from 'vitest';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
+import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 
 // ============= TEST CONSTANTS =============
 
@@ -66,10 +66,20 @@ export const QUERY_KEY_PATTERNS = {
   HOUSEHOLD_BY_ID: (id: string) => ['households', 'byId', id],
   ASSOCIATION_BY_USER: (userId: string) => ['household-associations', 'byUser', userId],
   ASSOCIATION_BY_HOUSEHOLD: (id: string) => ['household-associations', 'byHousehold', id],
-  ASSOCIATION_SPECIFIC: (userId: string, id: string) => ['household-associations', 'specific', userId, id],
+  ASSOCIATION_SPECIFIC: (userId: string, id: string) => [
+    'household-associations',
+    'specific',
+    userId,
+    id,
+  ],
   GEO_ASSOCIATION_BY_USER: (userId: string) => ['geographic-associations', 'byUser', userId],
   GEO_ASSOCIATION_BY_GEOGRAPHY: (id: string) => ['geographic-associations', 'byGeography', id],
-  GEO_ASSOCIATION_SPECIFIC: (userId: string, id: string) => ['geographic-associations', 'specific', userId, id],
+  GEO_ASSOCIATION_SPECIFIC: (userId: string, id: string) => [
+    'geographic-associations',
+    'specific',
+    userId,
+    id,
+  ],
 } as const;
 
 // Numeric values
@@ -101,15 +111,12 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
         members: ['person1'],
       },
     },
-    households: {
-    },
-    marital_units: {
-    },
-    families: {
-    },
+    households: {},
+    marital_units: {},
+    families: {},
   },
-  api_version: "v1",
-  household_hash: "<household_hash>"
+  api_version: 'v1',
+  household_hash: '<household_hash>',
 };
 
 export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
@@ -188,7 +195,7 @@ export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
       family1: {
         members: ['person1', 'person2'],
       },
-    }
+    },
   },
 };
 
@@ -227,11 +234,11 @@ export const createMockQueryClient = () => {
       mutations: { retry: false },
     },
   });
-  
+
   // Spy on methods we'll assert against
   vi.spyOn(queryClient, 'invalidateQueries');
   vi.spyOn(queryClient, 'setQueryData');
-  
+
   return queryClient;
 };
 
@@ -312,7 +319,7 @@ export const setupMockConsole = () => {
     error: vi.spyOn(console, 'error').mockImplementation(() => {}),
     warn: vi.spyOn(console, 'warn').mockImplementation(() => {}),
   };
-  
+
   return {
     consoleSpy,
     restore: () => {

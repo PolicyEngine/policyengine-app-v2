@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
-import { Population } from '@/types/ingredients/Population';
-import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { Population } from '@/types/ingredients/Population';
 
 // ============= TEST CONSTANTS =============
 
@@ -269,10 +269,7 @@ export const createMockGeography = (
 };
 
 // Helper to verify state matches expected
-export const expectStateToMatch = (
-  actualState: Population,
-  expectedState: Population
-): void => {
+export const expectStateToMatch = (actualState: Population, expectedState: Population): void => {
   expect(actualState.label).toBe(expectedState.label);
   expect(actualState.isCreated).toBe(expectedState.isCreated);
   expect(actualState.household).toEqual(expectedState.household);

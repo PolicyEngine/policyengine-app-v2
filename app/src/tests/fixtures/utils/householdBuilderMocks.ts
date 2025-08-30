@@ -1,4 +1,9 @@
-import { Household, HouseholdData, HouseholdPerson, HouseholdGroupEntity } from '@/types/ingredients/Household';
+import {
+  Household,
+  HouseholdData,
+  HouseholdGroupEntity,
+  HouseholdPerson,
+} from '@/types/ingredients/Household';
 
 // ============= TEST CONSTANTS =============
 
@@ -128,8 +133,10 @@ export const createEmptyHouseholdData = (countryId: string): HouseholdData => {
     people: {},
   };
 
-  const entities = EXPECTED_COUNTRY_ENTITIES[countryId as keyof typeof EXPECTED_COUNTRY_ENTITIES] || ['people', 'households'];
-  
+  const entities = EXPECTED_COUNTRY_ENTITIES[
+    countryId as keyof typeof EXPECTED_COUNTRY_ENTITIES
+  ] || ['people', 'households'];
+
   for (const entity of entities) {
     if (entity !== 'people') {
       data[entity] = {};
@@ -242,8 +249,9 @@ export const verifyHouseholdStructure = (household: Household, countryId: string
   expect(household.countryId).toBe(countryId);
   expect(household.householdData).toBeDefined();
   expect(household.householdData.people).toBeDefined();
-  
-  const expectedEntities = EXPECTED_COUNTRY_ENTITIES[countryId as keyof typeof EXPECTED_COUNTRY_ENTITIES];
+
+  const expectedEntities =
+    EXPECTED_COUNTRY_ENTITIES[countryId as keyof typeof EXPECTED_COUNTRY_ENTITIES];
   if (expectedEntities) {
     for (const entity of expectedEntities) {
       if (entity !== 'people') {
@@ -261,7 +269,7 @@ export const verifyPersonExists = (
 ): void => {
   const person = household.householdData.people[personName];
   expect(person).toBeDefined();
-  
+
   if (expectedAge !== undefined) {
     const ageValues = Object.values(person.age);
     expect(ageValues[0]).toBe(expectedAge);
@@ -282,15 +290,12 @@ export const verifyPersonInGroup = (
 };
 
 // Helper to verify person not in any group
-export const verifyPersonNotInAnyGroup = (
-  household: Household,
-  personName: string
-): void => {
+export const verifyPersonNotInAnyGroup = (household: Household, personName: string): void => {
   Object.keys(household.householdData).forEach((entityName) => {
     if (entityName === 'people') {
       return;
     }
-    
+
     const entities = household.householdData[entityName] as Record<string, HouseholdGroupEntity>;
     Object.values(entities).forEach((group) => {
       if (group.members) {
@@ -341,19 +346,22 @@ export const getGroupKeys = (household: Household, entityName: string): string[]
 // Helper to create mock variables object
 export const createMockVariables = (income?: number, state?: string): Record<string, any> => {
   const vars: Record<string, any> = {};
-  
+
   if (income !== undefined) {
     vars[VARIABLE_NAMES.EMPLOYMENT_INCOME] = income;
   }
-  
+
   if (state !== undefined) {
     vars[VARIABLE_NAMES.STATE_CODE] = state;
   }
-  
+
   return vars;
 };
 
 // Helper to create year-keyed value
-export const createYearKeyedValue = (value: any, year: string = YEARS.CURRENT): Record<string, any> => {
+export const createYearKeyedValue = (
+  value: any,
+  year: string = YEARS.CURRENT
+): Record<string, any> => {
   return { [year]: value };
 };

@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
 import { RootState } from '@/store';
+import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
-import { FlowComponentProps } from '@/types/flow';
 
 // Test IDs and labels
 export const TEST_USER_ID = 'test-user-123';
@@ -17,7 +17,7 @@ export const UI_TEXT = {
   // Common
   CONTINUE_BUTTON: /Continue/i,
   BACK_BUTTON: /Back/i,
-  
+
   // GeographicConfirmationFrame
   CONFIRM_GEOGRAPHIC_TITLE: 'Confirm Geographic Selection',
   CREATE_ASSOCIATION_BUTTON: /Create Geographic Association/i,
@@ -28,7 +28,7 @@ export const UI_TEXT = {
   COUNTRY_UK: 'United Kingdom',
   STATE_CALIFORNIA: 'California',
   CONSTITUENCY_LONDON: 'London',
-  
+
   // HouseholdBuilderFrame
   BUILD_HOUSEHOLD_TITLE: 'Build Your Household',
   CREATE_HOUSEHOLD_BUTTON: /Create household/i,
@@ -42,7 +42,7 @@ export const UI_TEXT = {
   MARITAL_MARRIED: 'Married',
   ERROR_LOAD_DATA: 'Failed to Load Required Data',
   ERROR_LOAD_MESSAGE: /Unable to load household configuration data/,
-  
+
   // SelectGeographicScopeFrame
   CHOOSE_SCOPE_TITLE: 'Choose Geographic Scope',
   SCOPE_NATIONAL_LABEL: 'National',
@@ -56,7 +56,7 @@ export const UI_TEXT = {
   STATE_NEW_YORK: 'New York',
   STATE_TEXAS: 'Texas',
   CONSTITUENCY_MANCHESTER: 'Manchester',
-  
+
   // SetPopulationLabelFrame
   NAME_POPULATION_TITLE: 'Name Your Population',
   POPULATION_LABEL: 'Population Label',

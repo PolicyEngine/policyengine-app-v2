@@ -1,19 +1,19 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { screen, waitFor } from '@test-utils';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import { MantineProvider } from '@mantine/core';
+import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { MantineProvider } from '@mantine/core';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
-import populationReducer from '@/reducers/populationReducer';
 import metadataReducer from '@/reducers/metadataReducer';
+import populationReducer from '@/reducers/populationReducer';
 import {
-  TEST_COUNTRIES,
   GEOGRAPHIC_SCOPES,
   mockFlowProps,
-  mockUSRegions,
   mockUKRegions,
+  mockUSRegions,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/frames/populationMocks';
 
 // Mock the regions data
@@ -110,7 +110,7 @@ describe('SelectGeographicScopeFrame', () => {
       // And the dropdown should have US states
       const dropdown = screen.getByPlaceholderText('Select a state');
       await user.click(dropdown);
-      
+
       await waitFor(() => {
         expect(screen.getByText('California')).toBeInTheDocument();
         expect(screen.getByText('New York')).toBeInTheDocument();
@@ -138,7 +138,7 @@ describe('SelectGeographicScopeFrame', () => {
         expect(screen.getByText('England')).toBeInTheDocument();
         expect(screen.getByText('Scotland')).toBeInTheDocument();
       });
-      
+
       await user.click(screen.getByText('England'));
 
       // Then shows constituency selector
@@ -148,7 +148,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       const constituencyDropdown = screen.getByPlaceholderText('Select a constituency');
       await user.click(constituencyDropdown);
-      
+
       await waitFor(() => {
         expect(screen.getByText('London')).toBeInTheDocument();
         expect(screen.getByText('Manchester')).toBeInTheDocument();
@@ -162,7 +162,7 @@ describe('SelectGeographicScopeFrame', () => {
       // First select state to show dropdown
       const stateRadio = screen.getByLabelText('State');
       await user.click(stateRadio);
-      
+
       await waitFor(() => {
         expect(screen.getByPlaceholderText('Select a state')).toBeInTheDocument();
       });
@@ -214,7 +214,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       const dropdown = await screen.findByPlaceholderText('Select a state');
       await user.click(dropdown);
-      
+
       const california = await screen.findByText('California');
       await user.click(california);
 
@@ -288,7 +288,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       const dropdown = await screen.findByPlaceholderText('Select a state');
       await user.click(dropdown);
-      
+
       // Select state/ca which should extract to 'ca'
       const california = await screen.findByText('California');
       await user.click(california);

@@ -1,21 +1,24 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
-
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { createHousehold } from '@/api/household';
+// Now import the actual implementations
+import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useCreateHouseholdAssociation } from '@/hooks/useUserHousehold';
 // Import fixtures first
 import {
-  TEST_IDS,
-  TEST_LABELS,
-  ERROR_MESSAGES,
   CONSOLE_MESSAGES,
-  QUERY_KEY_PATTERNS,
-  mockCreateHouseholdResponse,
-  mockHouseholdCreationPayload,
   createMockQueryClient,
-  setupMockConsole,
+  ERROR_MESSAGES,
   mockCreateHousehold,
   mockCreateHouseholdAssociationMutateAsync,
+  mockCreateHouseholdResponse,
+  mockHouseholdCreationPayload,
+  QUERY_KEY_PATTERNS,
+  setupMockConsole,
+  TEST_IDS,
+  TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
 
 // Mock the modules before importing them
@@ -38,11 +41,6 @@ vi.mock('@/hooks/useUserHousehold', () => ({
   useCreateHouseholdAssociation: vi.fn(),
 }));
 
-// Now import the actual implementations
-import { useCreateHousehold } from '@/hooks/useCreateHousehold';
-import { createHousehold } from '@/api/household';
-import { useCreateHouseholdAssociation } from '@/hooks/useUserHousehold';
-
 describe('useCreateHousehold', () => {
   let queryClient: QueryClient;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
@@ -51,13 +49,13 @@ describe('useCreateHousehold', () => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     consoleMocks = setupMockConsole();
-    
+
     // Set up the mocked functions
     (createHousehold as any).mockImplementation(mockCreateHousehold);
     (useCreateHouseholdAssociation as any).mockReturnValue({
       mutateAsync: mockCreateHouseholdAssociationMutateAsync,
     });
-    
+
     // Set default mock implementations
     mockCreateHousehold.mockResolvedValue(mockCreateHouseholdResponse);
     mockCreateHouseholdAssociationMutateAsync.mockResolvedValue({
@@ -85,7 +83,7 @@ describe('useCreateHousehold', () => {
 
       // Wait for completion
       const response = await promise;
-      
+
       await waitFor(() => {
         expect(result.current.isPending).toBe(false);
       });
@@ -174,7 +172,7 @@ describe('useCreateHousehold', () => {
         CONSOLE_MESSAGES.ASSOCIATION_ERROR,
         associationError
       );
-      
+
       // Household creation should succeed
       expect(mockCreateHousehold).toHaveBeenCalledWith(mockHouseholdCreationPayload);
     });
@@ -197,7 +195,7 @@ describe('useCreateHousehold', () => {
         resolveMutation = resolve;
       });
       mockCreateHousehold.mockReturnValue(pendingPromise);
-      
+
       const { result } = renderHook(() => useCreateHousehold(TEST_LABELS.HOUSEHOLD), { wrapper });
 
       // When
@@ -264,7 +262,7 @@ describe('useCreateHousehold', () => {
     test('given multiple concurrent calls then handles correctly', async () => {
       // Given
       const { result } = renderHook(() => useCreateHousehold(TEST_LABELS.HOUSEHOLD), { wrapper });
-      
+
       // When - Create multiple households concurrently
       const promises = [
         result.current.createHousehold(mockHouseholdCreationPayload),
@@ -273,7 +271,7 @@ describe('useCreateHousehold', () => {
 
       // Then
       const results = await Promise.all(promises);
-      
+
       expect(results).toHaveLength(2);
       expect(mockCreateHousehold).toHaveBeenCalledTimes(2);
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledTimes(2);

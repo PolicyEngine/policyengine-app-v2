@@ -1,7 +1,25 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent, waitFor } from '@test-utils';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
+import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+// Now import everything else
+import PopulationsPage from '@/pages/Populations.page';
+import {
+  createEmptyDataState,
+  createErrorState,
+  createLoadingState,
+  mockGeographicAssociationsData,
+  mockUserHouseholdsData,
+  POPULATION_COLUMNS,
+  POPULATION_DETAILS,
+  POPULATION_GEO,
+  POPULATION_LABELS,
+  POPULATION_TEST_IDS,
+  setupMockConsole,
+} from '@/tests/fixtures/pages/populationsMocks';
 
 // Mock the hooks first
 vi.mock('@/hooks/useUserHousehold', () => ({
@@ -18,25 +36,6 @@ vi.mock('@/constants', () => ({
   BASE_URL: 'https://api.test.com',
 }));
 
-// Now import everything else
-import PopulationsPage from '@/pages/Populations.page';
-import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
-import {
-  POPULATION_TEST_IDS,
-  POPULATION_LABELS,
-  POPULATION_GEO,
-  POPULATION_COLUMNS,
-  POPULATION_DETAILS,
-  mockUserHouseholdsData,
-  mockGeographicAssociationsData,
-  setupMockConsole,
-  createLoadingState,
-  createErrorState,
-  createEmptyDataState,
-} from '@/tests/fixtures/pages/populationsMocks';
-
 describe('PopulationsPage', () => {
   let store: any;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
@@ -44,7 +43,7 @@ describe('PopulationsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     consoleMocks = setupMockConsole();
-    
+
     // Create a mock store with flow reducer
     store = configureStore({
       reducer: {
@@ -56,10 +55,10 @@ describe('PopulationsPage', () => {
         },
       },
     });
-    
+
     // Mock dispatch
     vi.spyOn(store, 'dispatch');
-    
+
     // Set default mock implementations
     (useUserHouseholds as any).mockReturnValue({
       data: mockUserHouseholdsData,
@@ -67,7 +66,7 @@ describe('PopulationsPage', () => {
       isError: false,
       error: null,
     });
-    
+
     (useGeographicAssociationsByUser as any).mockReturnValue({
       data: mockGeographicAssociationsData,
       isLoading: false,
@@ -103,7 +102,9 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then
-      expect(screen.getByRole('button', { name: new RegExp(POPULATION_LABELS.BUILD_BUTTON, 'i') })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: new RegExp(POPULATION_LABELS.BUILD_BUTTON, 'i') })
+      ).toBeInTheDocument();
     });
 
     test('given page loads then fetches user data with correct user ID', () => {
@@ -160,7 +161,9 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then
-      expect(screen.getByText(`${POPULATION_DETAILS.STATE_PREFIX} ${POPULATION_GEO.STATE_CA}`)).toBeInTheDocument();
+      expect(
+        screen.getByText(`${POPULATION_DETAILS.STATE_PREFIX} ${POPULATION_GEO.STATE_CA}`)
+      ).toBeInTheDocument();
     });
 
     test('given created dates then displays formatted dates', () => {
@@ -170,11 +173,11 @@ describe('PopulationsPage', () => {
       // Then
       const date1 = new Date(POPULATION_TEST_IDS.TIMESTAMP_1).toLocaleDateString();
       const date2 = new Date(POPULATION_TEST_IDS.TIMESTAMP_2).toLocaleDateString();
-      
+
       // Use getAllByText since dates might appear multiple times
       const date1Elements = screen.getAllByText(date1);
       const date2Elements = screen.getAllByText(date2);
-      
+
       expect(date1Elements.length).toBeGreaterThan(0);
       expect(date2Elements.length).toBeGreaterThan(0);
     });
@@ -287,7 +290,9 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // When
-      const buildButton = screen.getByRole('button', { name: new RegExp(POPULATION_LABELS.BUILD_BUTTON, 'i') });
+      const buildButton = screen.getByRole('button', {
+        name: new RegExp(POPULATION_LABELS.BUILD_BUTTON, 'i'),
+      });
       await user.click(buildButton);
 
       // Then
@@ -305,7 +310,7 @@ describe('PopulationsPage', () => {
 
       // When - The button is disabled in the component
       const moreFiltersButton = screen.getByRole('button', { name: /filter/i });
-      
+
       // Then - Verify button is disabled (can't be clicked)
       expect(moreFiltersButton).toBeDisabled();
     });
@@ -318,7 +323,7 @@ describe('PopulationsPage', () => {
 
       // When - Note that search is disabled in the component
       // The input is disabled, so we can't type into it
-      
+
       // Then - Just verify the input exists and is disabled
       expect(searchInput).toBeDisabled();
     });
@@ -341,18 +346,19 @@ describe('PopulationsPage', () => {
     });
   });
 
-
   describe('data transformation', () => {
     test('given household without label then uses default naming', () => {
       // Given
-      const dataWithoutLabel = [{
-        ...mockUserHouseholdsData[0],
-        association: {
-          ...mockUserHouseholdsData[0].association,
-          label: undefined,
+      const dataWithoutLabel = [
+        {
+          ...mockUserHouseholdsData[0],
+          association: {
+            ...mockUserHouseholdsData[0].association,
+            label: undefined,
+          },
         },
-      }];
-      
+      ];
+
       (useUserHouseholds as any).mockReturnValue({
         data: dataWithoutLabel,
         isLoading: false,
@@ -364,19 +370,23 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then
-      expect(screen.getByText(`Household #${POPULATION_TEST_IDS.HOUSEHOLD_ID_1}`)).toBeInTheDocument();
+      expect(
+        screen.getByText(`Household #${POPULATION_TEST_IDS.HOUSEHOLD_ID_1}`)
+      ).toBeInTheDocument();
     });
 
     test('given household without created date then displays just now', () => {
       // Given
-      const dataWithoutDate = [{
-        ...mockUserHouseholdsData[0],
-        association: {
-          ...mockUserHouseholdsData[0].association,
-          createdAt: undefined,
+      const dataWithoutDate = [
+        {
+          ...mockUserHouseholdsData[0],
+          association: {
+            ...mockUserHouseholdsData[0].association,
+            createdAt: undefined,
+          },
         },
-      }];
-      
+      ];
+
       (useUserHouseholds as any).mockReturnValue({
         data: dataWithoutDate,
         isLoading: false,
@@ -393,17 +403,19 @@ describe('PopulationsPage', () => {
 
     test('given household with no people then displays zero count', () => {
       // Given
-      const dataWithNoPeople = [{
-        ...mockUserHouseholdsData[0],
-        household: {
-          ...mockUserHouseholdsData[0].household,
-          household_json: {
-            people: {},
-            families: {},
+      const dataWithNoPeople = [
+        {
+          ...mockUserHouseholdsData[0],
+          household: {
+            ...mockUserHouseholdsData[0].household,
+            household_json: {
+              people: {},
+              families: {},
+            },
           },
         },
-      }];
-      
+      ];
+
       (useUserHouseholds as any).mockReturnValue({
         data: dataWithNoPeople,
         isLoading: false,
@@ -425,7 +437,7 @@ describe('PopulationsPage', () => {
       // Then - Verify both types are rendered
       expect(screen.getByText(POPULATION_LABELS.HOUSEHOLD_1)).toBeInTheDocument();
       expect(screen.getByText(POPULATION_LABELS.GEOGRAPHIC_1)).toBeInTheDocument();
-      
+
       // Verify different detail types
       expect(screen.getByText(POPULATION_DETAILS.PERSON_PLURAL(2))).toBeInTheDocument();
       expect(screen.getByText(POPULATION_DETAILS.SUBNATIONAL)).toBeInTheDocument();
@@ -452,7 +464,7 @@ describe('PopulationsPage', () => {
       // Check for multiple occurrences since there are multiple households
       const simulations = screen.getAllByText(POPULATION_DETAILS.SAMPLE_SIMULATION);
       const reports = screen.getAllByText(POPULATION_DETAILS.SAMPLE_REPORT);
-      
+
       expect(simulations.length).toBeGreaterThan(0);
       expect(reports.length).toBeGreaterThan(0);
     });

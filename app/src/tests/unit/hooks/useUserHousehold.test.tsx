@@ -1,9 +1,32 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
 import React from 'react';
+import { configureStore } from '@reduxjs/toolkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { fetchHouseholdById } from '@/api/household';
+import { SessionStorageHouseholdStore } from '@/api/householdAssociation';
+// Now import everything
+import {
+  useCreateHouseholdAssociation,
+  useHouseholdAssociation,
+  useHouseholdAssociationsByUser,
+  useUserHouseholds,
+  useUserHouseholdStore,
+} from '@/hooks/useUserHousehold';
+import {
+  CONSOLE_MESSAGES,
+  createMockQueryClient,
+  GEO_CONSTANTS,
+  mockHouseholdMetadata,
+  mockReduxState,
+  mockUserHouseholdPopulation,
+  mockUserHouseholdPopulationList,
+  QUERY_KEY_PATTERNS,
+  setupMockConsole,
+  TEST_IDS,
+  TEST_LABELS,
+} from '@/tests/fixtures/hooks/hooksMocks';
 
 // Mock the stores first
 vi.mock('@/api/householdAssociation', () => {
@@ -49,30 +72,6 @@ vi.mock('@/libs/queryKeys', () => ({
   },
 }));
 
-// Now import everything
-import {
-  useUserHouseholdStore,
-  useHouseholdAssociationsByUser,
-  useHouseholdAssociation,
-  useCreateHouseholdAssociation,
-  useUserHouseholds,
-} from '@/hooks/useUserHousehold';
-import { fetchHouseholdById } from '@/api/household';
-import { SessionStorageHouseholdStore } from '@/api/householdAssociation';
-import {
-  TEST_IDS,
-  TEST_LABELS,
-  GEO_CONSTANTS,
-  CONSOLE_MESSAGES,
-  QUERY_KEY_PATTERNS,
-  mockUserHouseholdPopulation,
-  mockUserHouseholdPopulationList,
-  mockHouseholdMetadata,
-  mockReduxState,
-  createMockQueryClient,
-  setupMockConsole,
-} from '@/tests/fixtures/hooks/hooksMocks';
-
 describe('useUserHousehold hooks', () => {
   let queryClient: QueryClient;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
@@ -82,18 +81,19 @@ describe('useUserHousehold hooks', () => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     consoleMocks = setupMockConsole();
-    
+
     // Create Redux store for useUserHouseholds
     store = configureStore({
       reducer: {
         metadata: () => mockReduxState.metadata,
       },
     });
-    
+
     // Get the mock store instance
-    const mockStore = (SessionStorageHouseholdStore as any).mock.results[0]?.value || 
-                     (SessionStorageHouseholdStore as any)();
-    
+    const mockStore =
+      (SessionStorageHouseholdStore as any).mock.results[0]?.value ||
+      (SessionStorageHouseholdStore as any)();
+
     // Set default mock implementations
     mockStore.create.mockResolvedValue(mockUserHouseholdPopulation);
     mockStore.findByUser.mockResolvedValue(mockUserHouseholdPopulationList);
@@ -130,10 +130,7 @@ describe('useUserHousehold hooks', () => {
       const userId = TEST_IDS.USER_ID;
 
       // When
-      const { result } = renderHook(
-        () => useHouseholdAssociationsByUser(userId),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useHouseholdAssociationsByUser(userId), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -143,9 +140,12 @@ describe('useUserHousehold hooks', () => {
       expect(result.current.data).toEqual(mockUserHouseholdPopulationList);
       const mockStore = (SessionStorageHouseholdStore as any)();
       expect(mockStore.findByUser).toHaveBeenCalledWith(userId);
-      
+
       // Verify console logs
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(CONSOLE_MESSAGES.USER_ID_LOG, userId);
+      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
+        CONSOLE_MESSAGES.USER_ID_LOG,
+        userId
+      );
       expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
         CONSOLE_MESSAGES.STORE_LOG,
         expect.any(Object)
@@ -154,10 +154,7 @@ describe('useUserHousehold hooks', () => {
 
     test('given empty user ID when fetching then still attempts fetch', async () => {
       // When
-      const { result } = renderHook(
-        () => useHouseholdAssociationsByUser(''),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useHouseholdAssociationsByUser(''), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -175,10 +172,9 @@ describe('useUserHousehold hooks', () => {
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
-      const { result } = renderHook(
-        () => useHouseholdAssociationsByUser(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useHouseholdAssociationsByUser(TEST_IDS.USER_ID), {
+        wrapper,
+      });
 
       // Then
       await waitFor(() => {
@@ -196,10 +192,9 @@ describe('useUserHousehold hooks', () => {
       const householdId = TEST_IDS.HOUSEHOLD_ID;
 
       // When
-      const { result } = renderHook(
-        () => useHouseholdAssociation(userId, householdId),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useHouseholdAssociation(userId, householdId), {
+        wrapper,
+      });
 
       // Then
       await waitFor(() => {
@@ -259,9 +254,7 @@ describe('useUserHousehold hooks', () => {
       });
 
       // Verify console logs
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
-        CONSOLE_MESSAGES.HOUSEHOLD_LOG
-      );
+      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(CONSOLE_MESSAGES.HOUSEHOLD_LOG);
       expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(newHousehold);
       expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
         CONSOLE_MESSAGES.NEW_ASSOCIATION_LOG
@@ -307,10 +300,7 @@ describe('useUserHousehold hooks', () => {
       const userId = TEST_IDS.USER_ID;
 
       // When
-      const { result } = renderHook(
-        () => useUserHouseholds(userId),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useUserHouseholds(userId), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -319,16 +309,16 @@ describe('useUserHousehold hooks', () => {
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toHaveLength(2); // Two households in mock list
-      
+
       // Verify console logs
       expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
         CONSOLE_MESSAGES.ASSOCIATIONS_LOG,
         mockUserHouseholdPopulationList
       );
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
-        CONSOLE_MESSAGES.HOUSEHOLD_IDS_LOG,
-        [TEST_IDS.HOUSEHOLD_ID, TEST_IDS.HOUSEHOLD_ID_2]
-      );
+      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(CONSOLE_MESSAGES.HOUSEHOLD_IDS_LOG, [
+        TEST_IDS.HOUSEHOLD_ID,
+        TEST_IDS.HOUSEHOLD_ID_2,
+      ]);
 
       // Verify each household has association and metadata
       const firstHousehold = result.current.data![0];
@@ -344,10 +334,7 @@ describe('useUserHousehold hooks', () => {
       mockStore.findByUser.mockResolvedValue([]);
 
       // When
-      const { result } = renderHook(
-        () => useUserHouseholds(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useUserHouseholds(TEST_IDS.USER_ID), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -365,10 +352,7 @@ describe('useUserHousehold hooks', () => {
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
-      const { result } = renderHook(
-        () => useUserHouseholds(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useUserHouseholds(TEST_IDS.USER_ID), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -385,10 +369,7 @@ describe('useUserHousehold hooks', () => {
         .mockRejectedValueOnce(new Error('Household fetch failed')); // Second fails
 
       // When
-      const { result } = renderHook(
-        () => useUserHouseholds(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useUserHouseholds(TEST_IDS.USER_ID), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -396,10 +377,10 @@ describe('useUserHousehold hooks', () => {
       });
 
       expect(result.current.data).toBeDefined();
-      
+
       // First household should have data
       expect(result.current.data![0].household).toEqual(mockHouseholdMetadata);
-      
+
       // Second household should have error
       expect(result.current.data![1].error).toBeDefined();
       expect(result.current.data![1].isError).toBe(true);
@@ -412,7 +393,7 @@ describe('useUserHousehold hooks', () => {
           metadata: () => ({ currentCountry: GEO_CONSTANTS.COUNTRY_UK }),
         },
       });
-      
+
       const customWrapper = ({ children }: { children: React.ReactNode }) => (
         <Provider store={store}>
           <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -420,20 +401,16 @@ describe('useUserHousehold hooks', () => {
       );
 
       // When
-      const { result } = renderHook(
-        () => useUserHouseholds(TEST_IDS.USER_ID),
-        { wrapper: customWrapper }
-      );
+      const { result } = renderHook(() => useUserHouseholds(TEST_IDS.USER_ID), {
+        wrapper: customWrapper,
+      });
 
       // Then
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(fetchHouseholdById).toHaveBeenCalledWith(
-        GEO_CONSTANTS.COUNTRY_UK,
-        expect.any(String)
-      );
+      expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_UK, expect.any(String));
     });
 
     test('given no country in metadata then defaults to us', async () => {
@@ -443,7 +420,7 @@ describe('useUserHousehold hooks', () => {
           metadata: () => ({ currentCountry: null }),
         },
       });
-      
+
       const customWrapper = ({ children }: { children: React.ReactNode }) => (
         <Provider store={store}>
           <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
@@ -451,20 +428,16 @@ describe('useUserHousehold hooks', () => {
       );
 
       // When
-      const { result } = renderHook(
-        () => useUserHouseholds(TEST_IDS.USER_ID),
-        { wrapper: customWrapper }
-      );
+      const { result } = renderHook(() => useUserHouseholds(TEST_IDS.USER_ID), {
+        wrapper: customWrapper,
+      });
 
       // Then
       await waitFor(() => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(fetchHouseholdById).toHaveBeenCalledWith(
-        GEO_CONSTANTS.COUNTRY_US,
-        expect.any(String)
-      );
+      expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_US, expect.any(String));
     });
 
     test('given associations without household IDs then filters them out', async () => {
@@ -477,10 +450,7 @@ describe('useUserHousehold hooks', () => {
       mockStore.findByUser.mockResolvedValue(associationsWithNullId);
 
       // When
-      const { result } = renderHook(
-        () => useUserHouseholds(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useUserHouseholds(TEST_IDS.USER_ID), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -491,7 +461,10 @@ describe('useUserHousehold hooks', () => {
       expect(result.current.data).toHaveLength(1);
       // But fetchHouseholdById is called for both (including null)
       expect(fetchHouseholdById).toHaveBeenCalledTimes(2);
-      expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_US, TEST_IDS.HOUSEHOLD_ID);
+      expect(fetchHouseholdById).toHaveBeenCalledWith(
+        GEO_CONSTANTS.COUNTRY_US,
+        TEST_IDS.HOUSEHOLD_ID
+      );
       expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_US, null);
     });
   });

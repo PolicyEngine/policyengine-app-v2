@@ -1,12 +1,12 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ApiHouseholdStore, SessionStorageHouseholdStore } from '@/api/householdAssociation';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
+import { ApiHouseholdStore, SessionStorageHouseholdStore } from '@/api/householdAssociation';
 import {
-  mockUserHouseholdPopulation,
-  mockUserHouseholdPopulationList,
   mockApiResponse,
   mockApiResponseList,
   mockCreationPayload,
+  mockUserHouseholdPopulation,
+  mockUserHouseholdPopulationList,
 } from '@/tests/fixtures/api/householdAssociationMocks';
 
 global.fetch = vi.fn();
@@ -45,15 +45,14 @@ describe('ApiHouseholdStore', () => {
       const result = await store.create(mockUserHouseholdPopulation);
 
       // Then
-      expect(UserHouseholdAdapter.toCreationPayload).toHaveBeenCalledWith(mockUserHouseholdPopulation);
-      expect(global.fetch).toHaveBeenCalledWith(
-        '/api/user-household-associations',
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockCreationPayload),
-        }
+      expect(UserHouseholdAdapter.toCreationPayload).toHaveBeenCalledWith(
+        mockUserHouseholdPopulation
       );
+      expect(global.fetch).toHaveBeenCalledWith('/api/user-household-associations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mockCreationPayload),
+      });
       expect(UserHouseholdAdapter.fromApiResponse).toHaveBeenCalledWith(mockApiResponse);
       expect(result).toEqual(mockUserHouseholdPopulation);
     });
@@ -205,7 +204,7 @@ describe('SessionStorageHouseholdStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockSessionStorage = {};
-    
+
     // Mock sessionStorage
     Object.defineProperty(window, 'sessionStorage', {
       value: {
@@ -251,7 +250,9 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given duplicate association then throws error', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify([mockUserHouseholdPopulation]);
+      mockSessionStorage['user-population-households'] = JSON.stringify([
+        mockUserHouseholdPopulation,
+      ]);
 
       // When/Then
       await expect(store.create(mockUserHouseholdPopulation)).rejects.toThrow(
@@ -315,7 +316,9 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given user with no households then returns empty array', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(mockUserHouseholdPopulationList);
+      mockSessionStorage['user-population-households'] = JSON.stringify(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       const result = await store.findByUser('user-with-no-households');
@@ -347,7 +350,9 @@ describe('SessionStorageHouseholdStore', () => {
   describe('findById', () => {
     test('given existing association then returns household', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(mockUserHouseholdPopulationList);
+      mockSessionStorage['user-population-households'] = JSON.stringify(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       const result = await store.findById('user-456', 'household-1');
@@ -358,7 +363,9 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given non-existent association then returns null', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(mockUserHouseholdPopulationList);
+      mockSessionStorage['user-population-households'] = JSON.stringify(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       const result = await store.findById('user-456', 'non-existent');
@@ -369,7 +376,9 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given wrong user ID then returns null', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(mockUserHouseholdPopulationList);
+      mockSessionStorage['user-population-households'] = JSON.stringify(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       const result = await store.findById('wrong-user', 'household-1');
@@ -382,7 +391,9 @@ describe('SessionStorageHouseholdStore', () => {
   describe('utility methods', () => {
     test('given households in storage then getAllAssociations returns all', () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(mockUserHouseholdPopulationList);
+      mockSessionStorage['user-population-households'] = JSON.stringify(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       const result = store.getAllAssociations();
@@ -393,7 +404,9 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given households in storage then clearAllAssociations removes them', () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(mockUserHouseholdPopulationList);
+      mockSessionStorage['user-population-households'] = JSON.stringify(
+        mockUserHouseholdPopulationList
+      );
 
       // When
       store.clearAllAssociations();

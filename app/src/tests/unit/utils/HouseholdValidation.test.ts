@@ -1,38 +1,38 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { HouseholdValidation } from '@/utils/HouseholdValidation';
-import * as HouseholdQueries from '@/utils/HouseholdQueries';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
-  VALIDATION_ERROR_CODES,
-  VALIDATION_WARNING_CODES,
-  VALIDATION_PERSON_NAMES,
-  VALIDATION_COUNTRIES,
-  VALIDATION_YEARS,
-  VALIDATION_ENTITY_NAMES,
-  VALIDATION_GROUP_KEYS,
-  VALIDATION_VARIABLE_NAMES,
-  VALIDATION_TEST_VALUES,
-  mockValidUSHousehold,
-  mockUSHouseholdOrphanPerson,
-  mockUSHouseholdNoTaxUnits,
-  mockUSHouseholdInvalidMaritalUnit,
-  mockValidUKHousehold,
-  mockUKHouseholdEmptyBenUnit,
-  mockHouseholdCountryMismatch,
-  mockHouseholdMissingAge,
-  mockHouseholdInvalidGroupStructure,
+  mockBoolMetadata,
   mockEmptyHousehold,
   mockFloatMetadata,
+  mockHouseholdCountryMismatch,
+  mockHouseholdInvalidGroupStructure,
+  mockHouseholdMissingAge,
   mockIntMetadata,
-  mockBoolMetadata,
-  mockStringMetadata,
-  mockReduxStateWithMetadata,
   mockReduxStateNoMetadata,
+  mockReduxStateWithMetadata,
+  mockStringMetadata,
+  mockUKHouseholdEmptyBenUnit,
+  mockUSHouseholdInvalidMaritalUnit,
+  mockUSHouseholdNoTaxUnits,
+  mockUSHouseholdOrphanPerson,
+  mockValidUKHousehold,
+  mockValidUSHousehold,
+  VALIDATION_COUNTRIES,
+  VALIDATION_ENTITY_NAMES,
+  VALIDATION_ERROR_CODES,
+  VALIDATION_GROUP_KEYS,
+  VALIDATION_PERSON_NAMES,
+  VALIDATION_TEST_VALUES,
+  VALIDATION_VARIABLE_NAMES,
+  VALIDATION_WARNING_CODES,
+  VALIDATION_YEARS,
+  verifyHasErrors,
+  verifyNoErrors,
   verifyValidationError,
   verifyValidationWarning,
-  verifyNoErrors,
-  verifyHasErrors,
   verifyWarningCount,
 } from '@/tests/fixtures/utils/householdValidationMocks';
+import * as HouseholdQueries from '@/utils/HouseholdQueries';
+import { HouseholdValidation } from '@/utils/HouseholdValidation';
 
 // Mock HouseholdQueries
 vi.mock('@/utils/HouseholdQueries', () => ({
@@ -208,7 +208,7 @@ describe('HouseholdValidation', () => {
       // Then
       // Should have warnings for missing age in future year
       expect(warnings.length).toBeGreaterThan(0);
-      const ageWarning = warnings.find(w => w.code === VALIDATION_WARNING_CODES.MISSING_AGE);
+      const ageWarning = warnings.find((w) => w.code === VALIDATION_WARNING_CODES.MISSING_AGE);
       expect(ageWarning?.message).toContain(VALIDATION_YEARS.FUTURE);
     });
 

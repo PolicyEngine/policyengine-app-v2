@@ -58,8 +58,8 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
     },
     marital_units: {},
   },
-  api_version: "v1",
-  household_hash: "<household_hash>"
+  api_version: 'v1',
+  household_hash: '<household_hash>',
 };
 
 export const mockHouseholdCreationPayload: HouseholdCreationPayload = {

@@ -1,4 +1,33 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import populationReducer, {
+  clearPopulation,
+  initializeHousehold,
+  markPopulationAsCreated,
+  setGeography,
+  setHousehold,
+  updatePopulationId,
+  updatePopulationLabel,
+} from '@/reducers/populationReducer';
+import {
+  createMockGeography,
+  createMockHouseholdForCountry,
+  expectStateToMatch,
+  mockGeography,
+  mockGeographyNational,
+  mockHousehold,
+  mockHouseholdUK,
+  mockInitialState,
+  mockStateCreated,
+  mockStateWithGeography,
+  mockStateWithHousehold,
+  POPULATION_COUNTRIES,
+  POPULATION_IDS,
+  POPULATION_LABELS,
+  POPULATION_REGIONS,
+  POPULATION_YEARS,
+  resetAllMocks,
+} from '@/tests/fixtures/reducers/populationReducerMocks';
+import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 
 // Mock HouseholdBuilder before any imports that use it
 vi.mock('@/utils/HouseholdBuilder', () => {
@@ -6,36 +35,6 @@ vi.mock('@/utils/HouseholdBuilder', () => {
     HouseholdBuilder: vi.fn(),
   };
 });
-
-import populationReducer, {
-  clearPopulation,
-  updatePopulationId,
-  updatePopulationLabel,
-  markPopulationAsCreated,
-  setHousehold,
-  initializeHousehold,
-  setGeography,
-} from '@/reducers/populationReducer';
-import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
-import {
-  POPULATION_IDS,
-  POPULATION_LABELS,
-  POPULATION_COUNTRIES,
-  POPULATION_REGIONS,
-  POPULATION_YEARS,
-  mockInitialState,
-  mockStateWithHousehold,
-  mockStateWithGeography,
-  mockStateCreated,
-  mockHousehold,
-  mockHouseholdUK,
-  mockGeography,
-  mockGeographyNational,
-  createMockHouseholdForCountry,
-  createMockGeography,
-  expectStateToMatch,
-  resetAllMocks,
-} from '@/tests/fixtures/reducers/populationReducerMocks';
 
 // Set up the mock implementation
 const mockBuildMethod = vi.fn();
@@ -177,10 +176,7 @@ describe('populationReducer', () => {
       };
 
       // When
-      const state = populationReducer(
-        initialState,
-        updatePopulationId('any-id')
-      );
+      const state = populationReducer(initialState, updatePopulationId('any-id'));
 
       // Then
       expectStateToMatch(state, initialState);
@@ -407,7 +403,7 @@ describe('populationReducer', () => {
     });
 
     test('given no year when initializeHousehold then uses default year', () => {
-      const DEFAULT_YEAR = "2024";
+      const DEFAULT_YEAR = '2024';
       // Given
       const initialState = { ...mockInitialState };
       (HouseholdBuilder as any).mockClear();
@@ -421,10 +417,7 @@ describe('populationReducer', () => {
       // Then
       expect(state.household).toBeDefined();
       // Verify HouseholdBuilder was called with default year '2024'
-      expect(HouseholdBuilder).toHaveBeenCalledWith(
-        POPULATION_COUNTRIES.US,
-        DEFAULT_YEAR
-      );
+      expect(HouseholdBuilder).toHaveBeenCalledWith(POPULATION_COUNTRIES.US, DEFAULT_YEAR);
     });
 
     test('given existing household when initializeHousehold then replaces household', () => {
@@ -488,10 +481,7 @@ describe('populationReducer', () => {
       const initialState = { ...mockStateWithGeography };
 
       // When
-      const state = populationReducer(
-        initialState,
-        setGeography(mockGeographyNational)
-      );
+      const state = populationReducer(initialState, setGeography(mockGeographyNational));
 
       // Then
       expect(state.geography).toEqual(mockGeographyNational);
@@ -542,7 +532,9 @@ describe('populationReducer', () => {
 
       // Then
       expect(state.geography).toEqual(subnationalGeo);
-      expect(state.geography?.geographyId).toBe(`${POPULATION_COUNTRIES.US}-${POPULATION_REGIONS.CALIFORNIA}`);
+      expect(state.geography?.geographyId).toBe(
+        `${POPULATION_COUNTRIES.US}-${POPULATION_REGIONS.CALIFORNIA}`
+      );
       expect(state.geography?.scope).toBe('subnational');
     });
   });
@@ -572,7 +564,7 @@ describe('populationReducer', () => {
       // When
       state = populationReducer(state, setHousehold(mockHousehold));
       expect(state.household).toEqual(mockHousehold);
-      
+
       state = populationReducer(state, setGeography(mockGeography));
 
       // Then
@@ -587,7 +579,7 @@ describe('populationReducer', () => {
       // When
       state = populationReducer(state, setGeography(mockGeography));
       expect(state.geography).toEqual(mockGeography);
-      
+
       state = populationReducer(state, setHousehold(mockHousehold));
 
       // Then
@@ -598,12 +590,12 @@ describe('populationReducer', () => {
     test('given complete state when clearPopulation then resets everything', () => {
       // Given
       let state = { ...mockInitialState };
-      
+
       // Build up a complete state
       state = populationReducer(state, setHousehold(mockHousehold));
       state = populationReducer(state, updatePopulationLabel(POPULATION_LABELS.DEFAULT));
       state = populationReducer(state, markPopulationAsCreated());
-      
+
       // When
       state = populationReducer(state, clearPopulation());
 
@@ -618,10 +610,7 @@ describe('populationReducer', () => {
       const initialState = { ...mockStateWithHousehold };
 
       // When - Pass undefined to updatePopulationId
-      const state = populationReducer(
-        initialState,
-        updatePopulationId(undefined as any)
-      );
+      const state = populationReducer(initialState, updatePopulationId(undefined as any));
 
       // Then - Should update with undefined
       expect(state.household?.id).toBeUndefined();

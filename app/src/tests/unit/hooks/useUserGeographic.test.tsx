@@ -1,7 +1,24 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { SessionStorageGeographicStore } from '@/api/geographicAssociation';
+// Now import everything
+import {
+  useCreateGeographicAssociation,
+  useGeographicAssociation,
+  useGeographicAssociationsByUser,
+  useUserGeographicStore,
+} from '@/hooks/useUserGeographic';
+import {
+  createMockQueryClient,
+  GEO_CONSTANTS,
+  mockUserGeographicAssociation,
+  mockUserGeographicAssociationList,
+  QUERY_KEY_PATTERNS,
+  TEST_IDS,
+  TEST_LABELS,
+} from '@/tests/fixtures/hooks/hooksMocks';
 
 // Mock the stores first
 vi.mock('@/api/geographicAssociation', () => {
@@ -39,35 +56,18 @@ vi.mock('@/libs/queryKeys', () => ({
   },
 }));
 
-// Now import everything
-import {
-  useUserGeographicStore,
-  useGeographicAssociationsByUser,
-  useGeographicAssociation,
-  useCreateGeographicAssociation,
-} from '@/hooks/useUserGeographic';
-import { SessionStorageGeographicStore } from '@/api/geographicAssociation';
-import {
-  TEST_IDS,
-  TEST_LABELS,
-  GEO_CONSTANTS,
-  QUERY_KEY_PATTERNS,
-  mockUserGeographicAssociation,
-  mockUserGeographicAssociationList,
-  createMockQueryClient,
-} from '@/tests/fixtures/hooks/hooksMocks';
-
 describe('useUserGeographic hooks', () => {
   let queryClient: QueryClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
-    
+
     // Get the mock store instance
-    const mockStore = (SessionStorageGeographicStore as any).mock.results[0]?.value || 
-                     (SessionStorageGeographicStore as any)();
-    
+    const mockStore =
+      (SessionStorageGeographicStore as any).mock.results[0]?.value ||
+      (SessionStorageGeographicStore as any)();
+
     // Set default mock implementations
     mockStore.create.mockResolvedValue(mockUserGeographicAssociation);
     mockStore.findByUser.mockResolvedValue(mockUserGeographicAssociationList);
@@ -100,10 +100,7 @@ describe('useUserGeographic hooks', () => {
       const userId = TEST_IDS.USER_ID;
 
       // When
-      const { result } = renderHook(
-        () => useGeographicAssociationsByUser(userId),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGeographicAssociationsByUser(userId), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -122,10 +119,9 @@ describe('useUserGeographic hooks', () => {
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
-      const { result } = renderHook(
-        () => useGeographicAssociationsByUser(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
+        wrapper,
+      });
 
       // Then
       await waitFor(() => {
@@ -137,10 +133,7 @@ describe('useUserGeographic hooks', () => {
 
     test('given empty user ID when fetching then still attempts fetch', async () => {
       // When
-      const { result } = renderHook(
-        () => useGeographicAssociationsByUser(''),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGeographicAssociationsByUser(''), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -157,10 +150,9 @@ describe('useUserGeographic hooks', () => {
       mockStore.findByUser.mockResolvedValue([]);
 
       // When
-      const { result } = renderHook(
-        () => useGeographicAssociationsByUser(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
+        wrapper,
+      });
 
       // Then
       await waitFor(() => {
@@ -178,10 +170,9 @@ describe('useUserGeographic hooks', () => {
       const geographyId = TEST_IDS.GEOGRAPHY_ID;
 
       // When
-      const { result } = renderHook(
-        () => useGeographicAssociation(userId, geographyId),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGeographicAssociation(userId, geographyId), {
+        wrapper,
+      });
 
       // Then
       await waitFor(() => {
@@ -264,12 +255,17 @@ describe('useUserGeographic hooks', () => {
         queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(TEST_IDS.USER_ID),
       });
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_GEOGRAPHY(`${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`),
+        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_GEOGRAPHY(
+          `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`
+        ),
       });
 
       // Verify cache update
       expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(TEST_IDS.USER_ID, `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`),
+        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(
+          TEST_IDS.USER_ID,
+          `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`
+        ),
         mockUserGeographicAssociation
       );
     });
@@ -327,7 +323,7 @@ describe('useUserGeographic hooks', () => {
     test('given multiple associations created then each updates cache independently', async () => {
       // Given
       const { result } = renderHook(() => useCreateGeographicAssociation(), { wrapper });
-      
+
       const association1 = {
         id: TEST_IDS.GEOGRAPHY_ID,
         userId: TEST_IDS.USER_ID,
@@ -364,10 +360,9 @@ describe('useUserGeographic hooks', () => {
   describe('query configuration', () => {
     test('given session storage mode then uses session storage config', async () => {
       // When
-      const { result } = renderHook(
-        () => useGeographicAssociationsByUser(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
+        wrapper,
+      });
 
       // Then
       await waitFor(() => {
@@ -383,22 +378,21 @@ describe('useUserGeographic hooks', () => {
 
     test('given refetch called then fetches fresh data', async () => {
       // Given
-      const { result } = renderHook(
-        () => useGeographicAssociationsByUser(TEST_IDS.USER_ID),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
+        wrapper,
+      });
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true);
       });
-      
+
       // Initial data should be the mock list
       expect(result.current.data).toEqual(mockUserGeographicAssociationList);
 
       // When
       const mockStore = (SessionStorageGeographicStore as any)();
       mockStore.findByUser.mockResolvedValue([]);
-      
+
       // Force refetch
       const refetchResult = await result.current.refetch();
 

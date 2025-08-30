@@ -1,6 +1,11 @@
-import { Household, HouseholdPerson } from '@/types/ingredients/Household';
-import { ValidationResult, ValidationError, ValidationWarning, VariableMetadata } from '@/utils/HouseholdValidation';
 import { RootState } from '@/store';
+import { Household, HouseholdPerson } from '@/types/ingredients/Household';
+import {
+  ValidationError,
+  ValidationResult,
+  ValidationWarning,
+  VariableMetadata,
+} from '@/utils/HouseholdValidation';
 
 // ============= TEST CONSTANTS =============
 
@@ -438,7 +443,7 @@ export const verifyValidationError = (
   expectedCode: string,
   expectedField?: string
 ): void => {
-  const error = errors.find(e => e.code === expectedCode);
+  const error = errors.find((e) => e.code === expectedCode);
   expect(error).toBeDefined();
   if (expectedField) {
     expect(error?.field).toBe(expectedField);
@@ -450,7 +455,7 @@ export const verifyValidationWarning = (
   expectedCode: string,
   expectedField?: string
 ): void => {
-  const warning = warnings.find(w => w.code === expectedCode);
+  const warning = warnings.find((w) => w.code === expectedCode);
   expect(warning).toBeDefined();
   if (expectedField) {
     expect(warning?.field).toBe(expectedField);

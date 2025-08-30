@@ -1,39 +1,39 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
-  getAllPeople,
-  getAdults,
-  getChildren,
-  getPersonVariable,
-  getGroupVariable,
-  getPersonCount,
-  getAdultCount,
-  getChildCount,
-  isEmpty,
-  getGroupMembers,
-  getGroups,
-} from '@/utils/HouseholdQueries';
-import {
-  QUERY_PERSON_NAMES,
-  QUERY_AGES,
-  QUERY_YEARS,
-  QUERY_ENTITY_NAMES,
-  QUERY_GROUP_KEYS,
-  QUERY_VARIABLE_NAMES,
-  QUERY_VARIABLE_VALUES,
-  QUERY_EXPECTED_COUNTS,
-  mockEmptyHousehold,
-  mockHouseholdTwoAdultsTwoChildren,
-  mockHouseholdAgeTransition,
-  mockHouseholdMultiYear,
-  mockHouseholdMultipleGroups,
-  mockUKHousehold,
-  expectedGroupsHouseholds,
-  expectedGroupsMultiple,
   createHouseholdWithPeople,
   createPersonWithAge,
-  verifyPersonWithName,
+  expectedGroupsHouseholds,
+  expectedGroupsMultiple,
+  mockEmptyHousehold,
+  mockHouseholdAgeTransition,
+  mockHouseholdMultipleGroups,
+  mockHouseholdMultiYear,
+  mockHouseholdTwoAdultsTwoChildren,
+  mockUKHousehold,
+  QUERY_AGES,
+  QUERY_ENTITY_NAMES,
+  QUERY_EXPECTED_COUNTS,
+  QUERY_GROUP_KEYS,
+  QUERY_PERSON_NAMES,
+  QUERY_VARIABLE_NAMES,
+  QUERY_VARIABLE_VALUES,
+  QUERY_YEARS,
   verifyPeopleArray,
+  verifyPersonWithName,
 } from '@/tests/fixtures/utils/householdQueriesMocks';
+import {
+  getAdultCount,
+  getAdults,
+  getAllPeople,
+  getChildCount,
+  getChildren,
+  getGroupMembers,
+  getGroups,
+  getGroupVariable,
+  getPersonCount,
+  getPersonVariable,
+  isEmpty,
+} from '@/utils/HouseholdQueries';
 
 describe('HouseholdQueries', () => {
   describe('getAllPeople', () => {
@@ -59,7 +59,7 @@ describe('HouseholdQueries', () => {
       ]);
 
       // Verify structure
-      const adult1 = result.find(p => p.name === QUERY_PERSON_NAMES.ADULT_1);
+      const adult1 = result.find((p) => p.name === QUERY_PERSON_NAMES.ADULT_1);
       expect(adult1).toBeDefined();
       expect(adult1!.age[QUERY_YEARS.CURRENT]).toBe(QUERY_AGES.ADULT_30);
       expect(adult1![QUERY_VARIABLE_NAMES.EMPLOYMENT_INCOME][QUERY_YEARS.CURRENT]).toBe(
@@ -95,23 +95,33 @@ describe('HouseholdQueries', () => {
     test('given person turning 18 when querying different years then returns correct adults', () => {
       // When - Past year (age 17)
       const pastResult = getAdults(mockHouseholdAgeTransition, QUERY_YEARS.PAST);
-      
+
       // Then
       expect(pastResult).toHaveLength(0);
 
       // When - Current year (age 18)
       const currentResult = getAdults(mockHouseholdAgeTransition, QUERY_YEARS.CURRENT);
-      
+
       // Then
       expect(currentResult).toHaveLength(1);
-      verifyPersonWithName(currentResult[0], QUERY_PERSON_NAMES.TEEN, QUERY_AGES.ADULT_EXACTLY_18, QUERY_YEARS.CURRENT);
+      verifyPersonWithName(
+        currentResult[0],
+        QUERY_PERSON_NAMES.TEEN,
+        QUERY_AGES.ADULT_EXACTLY_18,
+        QUERY_YEARS.CURRENT
+      );
 
       // When - Future year (age 25)
       const futureResult = getAdults(mockHouseholdAgeTransition, QUERY_YEARS.FUTURE);
-      
+
       // Then
       expect(futureResult).toHaveLength(1);
-      verifyPersonWithName(futureResult[0], QUERY_PERSON_NAMES.TEEN, QUERY_AGES.ADULT_25, QUERY_YEARS.FUTURE);
+      verifyPersonWithName(
+        futureResult[0],
+        QUERY_PERSON_NAMES.TEEN,
+        QUERY_AGES.ADULT_25,
+        QUERY_YEARS.FUTURE
+      );
     });
 
     test('given empty household when getting adults then returns empty array', () => {
@@ -172,20 +182,25 @@ describe('HouseholdQueries', () => {
     test('given person turning 18 when querying different years then returns correct children', () => {
       // When - Past year (age 17)
       const pastResult = getChildren(mockHouseholdAgeTransition, QUERY_YEARS.PAST);
-      
+
       // Then
       expect(pastResult).toHaveLength(1);
-      verifyPersonWithName(pastResult[0], QUERY_PERSON_NAMES.TEEN, QUERY_AGES.CHILD_ALMOST_18, QUERY_YEARS.PAST);
+      verifyPersonWithName(
+        pastResult[0],
+        QUERY_PERSON_NAMES.TEEN,
+        QUERY_AGES.CHILD_ALMOST_18,
+        QUERY_YEARS.PAST
+      );
 
       // When - Current year (age 18)
       const currentResult = getChildren(mockHouseholdAgeTransition, QUERY_YEARS.CURRENT);
-      
+
       // Then
       expect(currentResult).toHaveLength(0);
 
       // When - Future year (age 25)
       const futureResult = getChildren(mockHouseholdAgeTransition, QUERY_YEARS.FUTURE);
-      
+
       // Then
       expect(futureResult).toHaveLength(0);
     });
@@ -257,7 +272,7 @@ describe('HouseholdQueries', () => {
         QUERY_VARIABLE_NAMES.MULTI_YEAR,
         QUERY_YEARS.PAST
       );
-      
+
       // Then
       expect(pastResult).toBe(QUERY_VARIABLE_VALUES.NUMBER_VALUE);
 
@@ -268,7 +283,7 @@ describe('HouseholdQueries', () => {
         QUERY_VARIABLE_NAMES.MULTI_YEAR,
         QUERY_YEARS.CURRENT
       );
-      
+
       // Then
       expect(currentResult).toBe(QUERY_VARIABLE_VALUES.STRING_VALUE);
 
@@ -279,7 +294,7 @@ describe('HouseholdQueries', () => {
         QUERY_VARIABLE_NAMES.MULTI_YEAR,
         QUERY_YEARS.FUTURE
       );
-      
+
       // Then
       expect(futureResult).toBe(QUERY_VARIABLE_VALUES.BOOLEAN_TRUE);
     });

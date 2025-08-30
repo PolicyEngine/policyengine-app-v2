@@ -1,9 +1,9 @@
 import { vi } from 'vitest';
 import {
-  HouseholdPopulationRef,
-  GeographyPopulationRef,
-} from '@/utils/PopulationOps';
-import { UserHouseholdPopulation, UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
+import { GeographyPopulationRef, HouseholdPopulationRef } from '@/utils/PopulationOps';
 
 // ============= TEST CONSTANTS =============
 
@@ -181,7 +181,9 @@ export const expectedGeographyCacheKey = EXPECTED_CACHE_KEYS.GEOGRAPHY(POPULATIO
 
 // Expected user population labels
 export const expectedUserHouseholdLabel = POPULATION_LABELS.HOUSEHOLD_LABEL;
-export const expectedUserHouseholdDefaultLabel = EXPECTED_LABELS.HOUSEHOLD_DEFAULT(POPULATION_IDS.HOUSEHOLD_2);
+export const expectedUserHouseholdDefaultLabel = EXPECTED_LABELS.HOUSEHOLD_DEFAULT(
+  POPULATION_IDS.HOUSEHOLD_2
+);
 export const expectedUserGeographyLabel = POPULATION_LABELS.GEOGRAPHY_LABEL;
 export const expectedUserGeographyNationalLabel = `${EXPECTED_LABELS.NATIONAL_PREFIX}: ${POPULATION_IDS.GEOGRAPHY_2}`;
 export const expectedUserGeographyRegionalLabel = `${EXPECTED_LABELS.REGIONAL_PREFIX}: ${POPULATION_IDS.GEOGRAPHY_1}`;
@@ -234,7 +236,7 @@ export const verifyAPIPayload = (
   expectedKeys: string[],
   expectedValues: Record<string, any>
 ): void => {
-  expectedKeys.forEach(key => {
+  expectedKeys.forEach((key) => {
     expect(payload).toHaveProperty(key);
     expect(payload[key]).toBe(expectedValues[key]);
   });
