@@ -32,7 +32,7 @@ describe('SelectGeographicScopeFrame', () => {
   });
 
   const renderComponent = (
-    metadataState = { currentCountry: TEST_COUNTRIES.US },
+    metadataState = { currentCountry: TEST_COUNTRIES.US as string },
     props = mockFlowProps
   ) => {
     store = configureStore({
@@ -318,7 +318,8 @@ describe('SelectGeographicScopeFrame', () => {
   describe('Country-specific behavior', () => {
     test('given no metadata country then defaults to US', () => {
       // Given
-      renderComponent({ currentCountry: null });
+      // Incredibly, the "null as unknown as string" conversion is required
+      renderComponent({ currentCountry: null as unknown as string });
 
       // When
       const stateRadio = screen.getByLabelText('State');
@@ -332,7 +333,7 @@ describe('SelectGeographicScopeFrame', () => {
 
     test('given unknown country then defaults to US behavior', () => {
       // Given
-      renderComponent({ currentCountry: 'ca' }); // Canada not implemented
+      renderComponent({ currentCountry: 'ca' as string}); // Canada not implemented
 
       // When
       const stateRadio = screen.getByLabelText('State');
