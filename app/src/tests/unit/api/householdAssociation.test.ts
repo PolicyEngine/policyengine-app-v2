@@ -88,7 +88,7 @@ describe('ApiHouseholdStore', () => {
     test('given valid user ID then returns list of households', async () => {
       // Given
       const userId = 'user-456';
-      (UserHouseholdAdapter.fromApiResponse as any).mockImplementation((data) => {
+      (UserHouseholdAdapter.fromApiResponse as any).mockImplementation((data: any) => {
         const index = mockApiResponseList.indexOf(data);
         return mockUserHouseholdPopulationList[index];
       });

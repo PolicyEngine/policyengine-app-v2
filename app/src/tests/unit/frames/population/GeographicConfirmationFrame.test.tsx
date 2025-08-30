@@ -72,10 +72,27 @@ describe('GeographicConfirmationFrame', () => {
   });
 
   const renderComponent = (
-    populationState = {},
-    metadataState = { currentCountry: TEST_COUNTRIES.US },
+    populationState: any = {},
+    metadataState: Partial<any> = { currentCountry: TEST_COUNTRIES.US },
     props = mockFlowProps
   ) => {
+    const fullMetadataState = {
+      loading: false,
+      error: null,
+      currentCountry: TEST_COUNTRIES.US as string,
+      variables: {},
+      parameters: {},
+      entities: {},
+      variableModules: {},
+      economyOptions: { region: [], time_period: [], datasets: [] },
+      currentLawId: 0,
+      basicInputs: [],
+      modelledPolicies: { core: {}, filtered: {} },
+      version: null,
+      parameterTree: null,
+      ...metadataState,
+    };
+
     store = configureStore({
       reducer: {
         population: populationReducer,
@@ -83,7 +100,7 @@ describe('GeographicConfirmationFrame', () => {
       },
       preloadedState: {
         population: populationState,
-        metadata: metadataState,
+        metadata: fullMetadataState,
       },
     });
 
@@ -310,7 +327,12 @@ describe('GeographicConfirmationFrame', () => {
       const populationState = {
         geography: mockNationalGeography,
       };
-      const props = { ...mockFlowProps, onReturn: undefined };
+      const mockOnNavigate = vi.fn();
+      const props = { 
+        ...mockFlowProps, 
+        onReturn: undefined as any,  // Testing edge case where onReturn is not provided
+        onNavigate: mockOnNavigate 
+      };
       renderComponent(populationState, undefined, props);
 
       // When
@@ -319,7 +341,7 @@ describe('GeographicConfirmationFrame', () => {
 
       // Then
       await waitFor(() => {
-        expect(props.onNavigate).toHaveBeenCalledWith('__return__');
+        expect(mockOnNavigate).toHaveBeenCalledWith('__return__');
       });
     });
 

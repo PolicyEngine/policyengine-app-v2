@@ -31,7 +31,7 @@ export const ERROR_MESSAGES = {
 } as const;
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
-  id: 12345,
+  id: '12345',
   country_id: 'us',
   household_json: {
     people: {
@@ -44,12 +44,19 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
         employment_income: { 2024: 45000 },
       },
     },
+    families: {},
     tax_units: {
       tax_unit1: {
         members: ['person1', 'person2'],
-        head: 'person1',
       },
     },
+    spm_units: {},
+    households: {
+      household1: {
+        members: ['person1', 'person2'],
+      },
+    },
+    marital_units: {},
   },
 };
 
@@ -61,6 +68,11 @@ export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
         age: { 2024: 25 },
       },
     },
+    families: {},
+    tax_units: {},
+    spm_units: {},
+    households: {},
+    marital_units: {},
   },
 };
 

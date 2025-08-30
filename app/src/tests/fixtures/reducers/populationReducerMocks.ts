@@ -67,8 +67,8 @@ export const POPULATION_ACTION_TYPES = {
 // Mock household data
 export const mockHousehold: Household = {
   id: POPULATION_IDS.HOUSEHOLD_ID,
-  countryId: POPULATION_COUNTRIES.US,
-  data: {
+  countryId: POPULATION_COUNTRIES.US as any,
+  householdData: {
     people: {
       [POPULATION_IDS.PERSON_ID_1]: {
         age: {
@@ -102,8 +102,8 @@ export const mockHousehold: Household = {
 
 export const mockHouseholdUK: Household = {
   id: POPULATION_IDS.HOUSEHOLD_ID,
-  countryId: POPULATION_COUNTRIES.UK,
-  data: {
+  countryId: POPULATION_COUNTRIES.UK as any,
+  householdData: {
     people: {
       [POPULATION_IDS.PERSON_ID_1]: {
         age: {
@@ -197,8 +197,8 @@ export const setupMockHouseholdBuilder = (returnValue: Household = mockHousehold
 export const createMockHouseholdForCountry = (countryId: string): Household => {
   const baseHousehold: Household = {
     id: `household-${countryId}`,
-    countryId,
-    data: {
+    countryId: countryId as any,
+    householdData: {
       people: {
         [POPULATION_IDS.PERSON_ID_1]: {
           age: {
@@ -217,29 +217,29 @@ export const createMockHouseholdForCountry = (countryId: string): Household => {
   // Add country-specific entities
   switch (countryId) {
     case POPULATION_COUNTRIES.US:
-      baseHousehold.data.families = {
+      baseHousehold.householdData.families = {
         [POPULATION_IDS.FAMILY_ID]: {
           members: [POPULATION_IDS.PERSON_ID_1],
         },
       };
-      baseHousehold.data.taxUnits = {
+      baseHousehold.householdData.taxUnits = {
         [POPULATION_IDS.TAX_UNIT_ID]: {
           members: [POPULATION_IDS.PERSON_ID_1],
         },
       };
-      baseHousehold.data.spmUnits = {
+      baseHousehold.householdData.spmUnits = {
         [POPULATION_IDS.SPM_UNIT_ID]: {
           members: [POPULATION_IDS.PERSON_ID_1],
         },
       };
-      baseHousehold.data.maritalUnits = {
+      baseHousehold.householdData.maritalUnits = {
         [POPULATION_IDS.MARITAL_UNIT_ID]: {
           members: [POPULATION_IDS.PERSON_ID_1],
         },
       };
       break;
     case POPULATION_COUNTRIES.UK:
-      baseHousehold.data.benunits = {
+      baseHousehold.householdData.benunits = {
         [POPULATION_IDS.BENEFIT_UNIT_ID]: {
           members: [POPULATION_IDS.PERSON_ID_1],
         },

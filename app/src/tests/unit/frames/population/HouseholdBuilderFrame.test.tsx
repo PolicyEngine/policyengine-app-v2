@@ -104,8 +104,8 @@ describe('HouseholdBuilderFrame', () => {
   });
 
   const renderComponent = (
-    populationState = {},
-    metadataState = {
+    populationState: any = {},
+    metadataState: Partial<any> = {
       currentCountry: 'us',
       variables: {
         age: { defaultValue: 30 },
@@ -120,6 +120,30 @@ describe('HouseholdBuilderFrame', () => {
     },
     props = mockFlowProps
   ) => {
+    const fullMetadataState = {
+      loading: false,
+      error: null,
+      currentCountry: 'us',
+      variables: {
+        age: { defaultValue: 30 },
+        employment_income: { defaultValue: 0 },
+      },
+      parameters: {},
+      entities: {},
+      variableModules: {},
+      economyOptions: { region: [], time_period: [], datasets: [] },
+      currentLawId: 0,
+      basicInputs: ['age', 'employment_income'],
+      basic_inputs: {
+        person: ['age', 'employment_income'],
+        household: ['state_code'],
+      },
+      modelledPolicies: { core: {}, filtered: {} },
+      version: null,
+      parameterTree: null,
+      ...metadataState,
+    };
+
     store = configureStore({
       reducer: {
         population: populationReducer,
@@ -127,7 +151,7 @@ describe('HouseholdBuilderFrame', () => {
       },
       preloadedState: {
         population: populationState,
-        metadata: metadataState,
+        metadata: fullMetadataState,
       },
     });
 

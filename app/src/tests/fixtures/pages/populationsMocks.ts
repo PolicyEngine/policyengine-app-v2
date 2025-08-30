@@ -106,7 +106,7 @@ export const POPULATION_ERRORS = {
 
 // Mock household metadata
 export const mockHouseholdMetadata1: HouseholdMetadata = {
-  id: parseInt(POPULATION_TEST_IDS.HOUSEHOLD_ID_1.split('-')[1]),
+  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1.split('-')[1],
   country_id: POPULATION_GEO.COUNTRY_US,
   household_json: {
     people: {
@@ -124,12 +124,34 @@ export const mockHouseholdMetadata1: HouseholdMetadata = {
         members: ['person1', 'person2'],
       },
     },
+    tax_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    spm_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    households: {
+      household1: {
+        members: ['person1', 'person2'],
+      },
+    },
+    marital_units: {
+      unit1: {
+        members: ['person1', 'person2'],
+      },
+    }
   },
+  api_version: "v1",
+  household_hash: "<household_hash>"
 };
 
 export const mockHouseholdMetadata2: HouseholdMetadata = {
-  id: parseInt(POPULATION_TEST_IDS.HOUSEHOLD_ID_2.split('-')[1]),
-  country_id: POPULATION_GEO.COUNTRY_UK,
+  id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2.split('-')[1],
+  country_id: POPULATION_GEO.COUNTRY_US,
   household_json: {
     people: {
       person1: {
@@ -137,7 +159,29 @@ export const mockHouseholdMetadata2: HouseholdMetadata = {
       },
     },
     families: {},
+    tax_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    spm_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    households: {
+      household1: {
+        members: ['person1', 'person2'],
+      },
+    },
+    marital_units: {
+      unit1: {
+        members: ['person1', 'person2'],
+      },
+    }
   },
+  api_version: "v1",
+  household_hash: "<household_hash>"
 };
 
 // Mock household associations

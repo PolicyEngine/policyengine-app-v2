@@ -73,6 +73,7 @@ describe('HouseholdAdapter', () => {
       );
       expect(result.householdData).toHaveProperty('unknownEntity');
       expect(result.householdData.unknownEntity).toEqual(
+      // @ts-expect-error
         mockHouseholdMetadataWithUnknownEntity.household_json.unknown_entity
       );
     });
@@ -187,6 +188,7 @@ describe('HouseholdAdapter', () => {
         'Entity "customEntity" not found in metadata, using snake_case "custom_entity"'
       );
       expect(result.data).toHaveProperty('custom_entity');
+      // @ts-expect-error
       expect(result.data.custom_entity).toEqual(mockHouseholdDataWithUnknownEntity.customEntity);
     });
 
@@ -281,6 +283,7 @@ describe('HouseholdAdapter', () => {
       const result = HouseholdAdapter.toCreationPayload(householdData as any, 'us');
       
       expect(result.data).toHaveProperty('very_long_entity_name');
+      // @ts-expect-error
       expect(result.data.very_long_entity_name).toEqual({ data: 'test' });
     });
   });
