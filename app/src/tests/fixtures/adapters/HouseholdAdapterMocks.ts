@@ -30,7 +30,7 @@ export const mockEntityMetadata = {
 };
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
-  id: 12345,
+  id: "12345",
   country_id: 'us',
   household_json: {
     people: {
@@ -46,7 +46,6 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
     tax_units: {
       tax_unit1: {
         members: ['person1', 'person2'],
-        head: 'person1',
       },
     },
     marital_units: {
@@ -64,11 +63,18 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
         members: ['person1', 'person2'],
       },
     },
+    families: {
+      family1: {
+        members: ['person1', 'person2'],
+      },
+    },
   },
+  api_version: "v1",
+  household_hash: "<household_hash>"
 };
 
 export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
-  id: 67890,
+  id: "67890",
   country_id: 'uk',
   household_json: {
     people: {
@@ -76,6 +82,7 @@ export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
         age: { 2024: 40 },
       },
     },
+    // @ts-expect-error
     unknown_entity: {
       entity1: {
         some_property: 'value',

@@ -82,7 +82,7 @@ export const TEST_VALUES = {
 // ============= MOCK DATA OBJECTS =============
 
 export const mockHouseholdMetadata: HouseholdMetadata = {
-  id: parseInt(TEST_IDS.HOUSEHOLD_ID.split('-')[1]),
+  id: TEST_IDS.HOUSEHOLD_ID.split('-')[1],
   country_id: GEO_CONSTANTS.COUNTRY_US,
   household_json: {
     people: {
@@ -91,7 +91,25 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
         employment_income: { 2024: TEST_VALUES.INCOME },
       },
     },
+    tax_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    spm_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    households: {
+    },
+    marital_units: {
+    },
+    families: {
+    },
   },
+  api_version: "v1",
+  household_hash: "<household_hash>"
 };
 
 export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
@@ -146,6 +164,31 @@ export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
         age: { 2024: TEST_VALUES.AGE },
       },
     },
+    tax_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    spm_units: {
+      unit1: {
+        members: ['person1'],
+      },
+    },
+    households: {
+      household1: {
+        members: ['person1', 'person2'],
+      },
+    },
+    marital_units: {
+      unit1: {
+        members: ['person1', 'person2'],
+      },
+    },
+    families: {
+      family1: {
+        members: ['person1', 'person2'],
+      },
+    }
   },
 };
 
