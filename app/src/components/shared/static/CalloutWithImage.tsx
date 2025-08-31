@@ -1,4 +1,4 @@
-import { Button, Container, Grid, Stack, Text, Title, Image } from '@mantine/core';
+import { Button, Container, Grid, Image, Stack, Text, Title } from '@mantine/core';
 import { colors, typography } from '@/designTokens';
 
 export interface CalloutWithImageProps {
@@ -7,9 +7,9 @@ export interface CalloutWithImageProps {
   buttonLabel?: string;
   onButtonClick?: () => void;
   imageSrc: string;
-  /** 
-   * Provide meaningful alt text for accessibility. 
-   * Use an empty string ("") if the image is decorative. 
+  /**
+   * Provide meaningful alt text for accessibility.
+   * Use an empty string ("") if the image is decorative.
    */
   imageAlt: string;
 }
@@ -21,18 +21,27 @@ export default function CalloutWithImage({
   onButtonClick,
   imageSrc,
   imageAlt,
-}: CalloutWithImageProps) 
-{
+}: CalloutWithImageProps) {
   return (
-    <Container size="xl" px="sm" py="3xl" >
+    <Container size="xl" px="sm" py="3xl">
       <Grid align="center" gutter="xl">
         {/* Left Column */}
         <Grid.Col span={{ base: 12, md: 6 }}>
           <Stack gap="md">
-            <Title size={typography.fontSize['4xl']} style={{ color: colors.text.primary, fontWeight: typography.fontWeight.medium, fontFamily: typography.fontFamily.primary }}>
+            <Title
+              size={typography.fontSize['4xl']}
+              style={{
+                color: colors.text.primary,
+                fontWeight: typography.fontWeight.medium,
+                fontFamily: typography.fontFamily.primary,
+              }}
+            >
               {title}
             </Title>
-            <Text size="lg" style={{ color: colors.text.secondary, lineHeight: typography.lineHeight.snug }}>
+            <Text
+              size="lg"
+              style={{ color: colors.text.secondary, lineHeight: typography.lineHeight.snug }}
+            >
               {description}
             </Text>
             {buttonLabel && (
@@ -41,11 +50,11 @@ export default function CalloutWithImage({
                 radius="md"
                 color={colors.primary[400]}
                 onClick={onButtonClick}
-                style={{ 
+                style={{
                   borderRadius: 0,
-                  alignSelf: 'flex-start', 
-                  marginTop: '14px', 
-                  }}
+                  alignSelf: 'flex-start',
+                  marginTop: '14px',
+                }}
               >
                 {buttonLabel}
               </Button>
