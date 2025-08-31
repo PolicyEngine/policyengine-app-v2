@@ -1,6 +1,7 @@
-import React from "react";
+// import React from "react";
 import { Card, Title, Text, Flex } from "@mantine/core";
 import { colors } from "../../../designTokens/colors";
+import { typography } from "@/designTokens";
 
 interface Section {
   heading: string;
@@ -32,8 +33,8 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         order={1}
         styles={() => ({
           root: {
-            color: colors.text.primary,
-            fontSize: 40,
+            color: colors.black,
+            fontSize: typography.fontSize['4xl'],
             textAlign: "left", 
             lineHeight: 1.2,
           },
