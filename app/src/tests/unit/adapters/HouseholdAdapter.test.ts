@@ -42,6 +42,7 @@ describe('HouseholdAdapter', () => {
           maritalUnits: mockHouseholdMetadata.household_json.marital_units,
           spmUnits: mockHouseholdMetadata.household_json.spm_units,
           households: mockHouseholdMetadata.household_json.households,
+          families: mockHouseholdMetadata.household_json.families,
         },
       });
     });

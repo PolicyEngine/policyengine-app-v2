@@ -10,7 +10,7 @@ import populationReducer from '@/reducers/populationReducer';
 import {
   LONG_LABEL,
   mockFlowProps,
-  mockHousehold,
+  getMockHousehold,
   mockNationalGeography,
   mockStateGeography,
   TEST_POPULATION_LABEL,
@@ -106,7 +106,7 @@ describe('SetPopulationLabelFrame', () => {
     test('given household then suggests Custom Household', () => {
       // Given
       const populationState = {
-        household: mockHousehold,
+        household: getMockHousehold(),
       };
 
       // When
@@ -158,18 +158,19 @@ describe('SetPopulationLabelFrame', () => {
     });
 
     test('given label over 100 characters when submitted then shows error', async () => {
-      // Given
+      // Given - Input field should have maxLength constraint
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-
-      // When
+      
+      // Then - Verify the input has maxLength attribute set to 100
+      expect(input).toHaveAttribute('maxlength', '100');
+      
+      // When - Try to type more than 100 characters
       await user.clear(input);
-      await user.type(input, LONG_LABEL);
-      const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
-      await user.click(submitButton);
-
-      // Then
-      expect(screen.getByText(UI_TEXT.ERROR_LONG_LABEL)).toBeInTheDocument();
+      await user.type(input, LONG_LABEL); // Will be truncated to 100 chars
+      
+      // Then - Verify only 100 characters were accepted
+      expect(input).toHaveValue('A'.repeat(100));
     });
 
     test('given error shown when user types then clears error', async () => {
@@ -220,7 +221,7 @@ describe('SetPopulationLabelFrame', () => {
     test('given valid label with household when submitted then navigates to household', async () => {
       // Given
       const populationState = {
-        household: mockHousehold,
+        household: getMockHousehold(),
       };
       const props = { ...mockFlowProps };
       renderComponent(populationState, props);

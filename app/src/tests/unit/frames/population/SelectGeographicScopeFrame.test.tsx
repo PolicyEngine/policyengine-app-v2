@@ -18,8 +18,31 @@ import {
 
 // Mock the regions data
 vi.mock('@/mocks/regions', () => ({
-  us_regions: mockUSRegions,
-  uk_regions: mockUKRegions,
+  us_regions: {
+    result: {
+      economy_options: {
+        region: [
+          { name: 'us', label: 'United States' },
+          { name: 'state/ca', label: 'California' },
+          { name: 'state/ny', label: 'New York' },
+          { name: 'state/tx', label: 'Texas' },
+        ],
+      },
+    },
+  },
+  uk_regions: {
+    result: {
+      economy_options: {
+        region: [
+          { name: 'uk', label: 'United Kingdom' },
+          { name: 'country/england', label: 'England' },
+          { name: 'country/scotland', label: 'Scotland' },
+          { name: 'constituency/london', label: 'London' },
+          { name: 'constituency/manchester', label: 'Manchester' },
+        ],
+      },
+    },
+  },
 }));
 
 describe('SelectGeographicScopeFrame', () => {

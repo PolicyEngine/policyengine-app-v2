@@ -136,8 +136,7 @@ export const mockStateGeography: Geography = {
   geographyId: 'ca',
 };
 
-// Mock household
-export const mockHousehold: Household = {
+// Mock household - using a function to return a fresh mutable object each time
   id: TEST_HOUSEHOLD_ID,
   countryId: TEST_COUNTRIES.US as any,
   householdData: {
@@ -161,7 +160,8 @@ export const mockHousehold: Household = {
       },
     },
   },
-};
+});
+
 
 // Mock Redux state
 export const mockPopulationState = {
@@ -173,14 +173,16 @@ export const mockPopulationState = {
   isCreated: false,
 };
 
-export const mockHouseholdPopulationState = {
+export const getMockHouseholdPopulationState = () => ({
   type: 'household' as const,
   id: TEST_HOUSEHOLD_ID,
   label: TEST_POPULATION_LABEL,
   geography: null,
-  household: mockHousehold,
+  household: getMockHousehold(),
   isCreated: false,
-};
+});
+
+export const mockHouseholdPopulationState = getMockHouseholdPopulationState();
 
 export const mockMetadataState = {
   currentCountry: TEST_COUNTRIES.US,
@@ -296,7 +298,7 @@ export const mockUseCreateHousehold = () => ({
 
 // Mock household utilities
 export const mockHouseholdBuilder = vi.fn().mockImplementation((_countryId, _taxYear) => ({
-  build: vi.fn(() => mockHousehold),
+  build: vi.fn(() => getMockHousehold()),
   loadHousehold: vi.fn(),
   addAdult: vi.fn(),
   addChild: vi.fn(),
@@ -326,7 +328,7 @@ export const mockHouseholdValidation = {
 export const mockHouseholdAdapter = {
   toCreationPayload: vi.fn(() => ({
     country_id: TEST_COUNTRIES.US,
-    data: mockHousehold.householdData,
+    data: getMockHousehold().householdData,
   })),
 };
 

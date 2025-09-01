@@ -11,14 +11,14 @@ import populationReducer from '@/reducers/populationReducer';
 import {
   mockCreateHouseholdResponse,
   mockFlowProps,
-  mockHousehold,
+  getMockHousehold,
   mockTaxYears,
 } from '@/tests/fixtures/frames/populationMocks';
 
 // Mock household utilities
 vi.mock('@/utils/HouseholdBuilder', () => ({
   HouseholdBuilder: vi.fn().mockImplementation((_countryId, _taxYear) => ({
-    build: vi.fn(() => mockHousehold),
+    build: vi.fn(() => getMockHousehold()),
     loadHousehold: vi.fn(),
     addAdult: vi.fn(),
     addChild: vi.fn(),
@@ -53,7 +53,7 @@ vi.mock('@/adapters/HouseholdAdapter', () => ({
   HouseholdAdapter: {
     toCreationPayload: vi.fn(() => ({
       country_id: 'us',
-      data: mockHousehold.householdData,
+      data: getMockHousehold().householdData,
     })),
   },
 }));
@@ -76,12 +76,19 @@ vi.mock('@/hooks/useIngredientReset', () => ({
 }));
 
 // Mock metadata selectors
+const mockBasicInputFields = {
+  person: ['age', 'employment_income'],
+  household: ['state_code'],
+};
+
+const mockFieldOptions = [
+  { value: 'CA', label: 'California' },
+  { value: 'NY', label: 'New York' },
+];
+
 vi.mock('@/libs/metadataUtils', () => ({
   getTaxYears: () => mockTaxYears,
-  getBasicInputFields: () => ({
-    person: ['age', 'employment_income'],
-    household: ['state_code'],
-  }),
+  getBasicInputFields: () => mockBasicInputFields,
   getFieldLabel: (field: string) => {
     const labels: Record<string, string> = {
       state_code: 'State',
@@ -91,10 +98,7 @@ vi.mock('@/libs/metadataUtils', () => ({
     return labels[field] || field;
   },
   isDropdownField: (field: string) => field === 'state_code',
-  getFieldOptions: () => [
-    { value: 'CA', label: 'California' },
-    { value: 'NY', label: 'New York' },
-  ],
+  getFieldOptions: () => mockFieldOptions,
 }));
 
 describe('HouseholdBuilderFrame', () => {
@@ -321,9 +325,10 @@ describe('HouseholdBuilderFrame', () => {
   describe('Form submission', () => {
     test('given valid household when submitted then creates household', async () => {
       // Given
+      const mockHouseholdData = getMockHousehold();
       const populationState = {
         label: 'Test Household',
-        household: mockHousehold,
+        household: mockHouseholdData,
       };
       const props = { ...mockFlowProps };
       renderComponent(populationState, undefined, props);
@@ -337,7 +342,7 @@ describe('HouseholdBuilderFrame', () => {
         expect(mockCreateHousehold).toHaveBeenCalledWith(
           expect.objectContaining({
             country_id: 'us',
-            data: mockHousehold.householdData,
+            data: mockHouseholdData.householdData,
           })
         );
       });
@@ -368,7 +373,7 @@ describe('HouseholdBuilderFrame', () => {
       // Given
       const populationState = {
         label: 'Test Household',
-        household: mockHousehold,
+        household: getMockHousehold(),
       };
       const props = { ...mockFlowProps, isInSubflow: false };
       renderComponent(populationState, undefined, props);
@@ -390,7 +395,7 @@ describe('HouseholdBuilderFrame', () => {
 
       const populationState = {
         label: 'Test Household',
-        household: mockHousehold,
+        household: getMockHousehold(),
       };
       renderComponent(populationState);
 
