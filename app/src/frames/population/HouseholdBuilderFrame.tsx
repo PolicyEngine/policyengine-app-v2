@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import {
   Divider,
   Group,
@@ -293,7 +293,7 @@ export default function HouseholdBuilderFrame({
       }
     });
     return options;
-  });
+  }, shallowEqual);
 
   const handleSubmit = async () => {
     // Sync final household to Redux before submit
