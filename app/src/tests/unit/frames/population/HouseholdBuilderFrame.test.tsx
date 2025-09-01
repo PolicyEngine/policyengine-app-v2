@@ -9,9 +9,9 @@ import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import metadataReducer from '@/reducers/metadataReducer';
 import populationReducer from '@/reducers/populationReducer';
 import {
+  getMockHousehold,
   mockCreateHouseholdResponse,
   mockFlowProps,
-  getMockHousehold,
   mockTaxYears,
 } from '@/tests/fixtures/frames/populationMocks';
 

@@ -8,9 +8,9 @@ import { MantineProvider } from '@mantine/core';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
 import populationReducer from '@/reducers/populationReducer';
 import {
+  getMockHousehold,
   LONG_LABEL,
   mockFlowProps,
-  getMockHousehold,
   mockNationalGeography,
   mockStateGeography,
   TEST_POPULATION_LABEL,
@@ -161,14 +161,14 @@ describe('SetPopulationLabelFrame', () => {
       // Given - Input field should have maxLength constraint
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-      
+
       // Then - Verify the input has maxLength attribute set to 100
       expect(input).toHaveAttribute('maxlength', '100');
-      
+
       // When - Try to type more than 100 characters
       await user.clear(input);
       await user.type(input, LONG_LABEL); // Will be truncated to 100 chars
-      
+
       // Then - Verify only 100 characters were accepted
       expect(input).toHaveValue('A'.repeat(100));
     });
