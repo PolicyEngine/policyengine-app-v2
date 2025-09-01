@@ -137,6 +137,7 @@ export const mockStateGeography: Geography = {
 };
 
 // Mock household - using a function to return a fresh mutable object each time
+export const getMockHousehold = (): Household => ({
   id: TEST_HOUSEHOLD_ID,
   countryId: TEST_COUNTRIES.US as any,
   householdData: {
@@ -162,6 +163,8 @@ export const mockStateGeography: Geography = {
   },
 });
 
+// Keep a static version for backward compatibility but note it should not be mutated
+export const mockHousehold: Household = getMockHousehold();
 
 // Mock Redux state
 export const mockPopulationState = {

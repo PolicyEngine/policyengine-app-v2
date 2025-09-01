@@ -11,8 +11,6 @@ import populationReducer from '@/reducers/populationReducer';
 import {
   GEOGRAPHIC_SCOPES,
   mockFlowProps,
-  mockUKRegions,
-  mockUSRegions,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/frames/populationMocks';
 

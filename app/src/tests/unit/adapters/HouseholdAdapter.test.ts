@@ -34,7 +34,7 @@ describe('HouseholdAdapter', () => {
       const result = HouseholdAdapter.fromAPI(mockHouseholdMetadata);
 
       expect(result).toEqual({
-        id: 12345,
+        id: '12345',
         countryId: 'us',
         householdData: {
           people: mockHouseholdMetadata.household_json.people,
