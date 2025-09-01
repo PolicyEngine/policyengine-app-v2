@@ -98,10 +98,10 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent();
 
       // Then
-      expect(screen.getByText('Choose Geographic Scope')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Select Scope' })).toBeInTheDocument();
       expect(screen.getByLabelText('National')).toBeInTheDocument();
       expect(screen.getByLabelText('State')).toBeInTheDocument();
-      expect(screen.getByLabelText('Custom Household')).toBeInTheDocument();
+      expect(screen.getByLabelText('Household')).toBeInTheDocument();
     });
 
     test('given initial state then national is selected by default', () => {
@@ -125,11 +125,11 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Select a state')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
       });
 
       // And the dropdown should have US states
-      const dropdown = screen.getByPlaceholderText('Select a state');
+      const dropdown = screen.getByPlaceholderText('Pick a state');
       await user.click(dropdown);
 
       await waitFor(() => {
@@ -149,11 +149,11 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then - Shows UK country selector
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Select a UK country')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Pick a country')).toBeInTheDocument();
       });
 
       // Select a UK country
-      const countryDropdown = screen.getByPlaceholderText('Select a UK country');
+      const countryDropdown = screen.getByPlaceholderText('Pick a country');
       await user.click(countryDropdown);
       await waitFor(() => {
         expect(screen.getByText('England')).toBeInTheDocument();
@@ -164,10 +164,10 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then shows constituency selector
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Select a constituency')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Pick a constituency')).toBeInTheDocument();
       });
 
-      const constituencyDropdown = screen.getByPlaceholderText('Select a constituency');
+      const constituencyDropdown = screen.getByPlaceholderText('Pick a constituency');
       await user.click(constituencyDropdown);
 
       await waitFor(() => {
@@ -185,16 +185,16 @@ describe('SelectGeographicScopeFrame', () => {
       await user.click(stateRadio);
 
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Select a state')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
       });
 
       // When - Switch to household
-      const householdRadio = screen.getByLabelText('Custom Household');
+      const householdRadio = screen.getByLabelText('Household');
       await user.click(householdRadio);
 
       // Then - Dropdown should be hidden
       await waitFor(() => {
-        expect(screen.queryByPlaceholderText('Select a state')).not.toBeInTheDocument();
+        expect(screen.queryByPlaceholderText('Pick a state')).not.toBeInTheDocument();
       });
     });
   });
@@ -206,7 +206,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent(undefined, props);
 
       // When
-      const submitButton = screen.getByRole('button', { name: /Continue/i });
+      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
       // Then
@@ -233,13 +233,13 @@ describe('SelectGeographicScopeFrame', () => {
       const stateRadio = screen.getByLabelText('State');
       await user.click(stateRadio);
 
-      const dropdown = await screen.findByPlaceholderText('Select a state');
+      const dropdown = await screen.findByPlaceholderText('Pick a state');
       await user.click(dropdown);
 
       const california = await screen.findByText('California');
       await user.click(california);
 
-      const submitButton = screen.getByRole('button', { name: /Continue/i });
+      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
       // Then
@@ -266,7 +266,7 @@ describe('SelectGeographicScopeFrame', () => {
       const stateRadio = screen.getByLabelText('State');
       await user.click(stateRadio);
 
-      const submitButton = screen.getByRole('button', { name: /Continue/i });
+      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
       // Then
@@ -282,10 +282,10 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent(undefined, props);
 
       // When
-      const householdRadio = screen.getByLabelText('Custom Household');
+      const householdRadio = screen.getByLabelText('Household');
       await user.click(householdRadio);
 
-      const submitButton = screen.getByRole('button', { name: /Continue/i });
+      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
       // Then
@@ -293,7 +293,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Geography should not be set for household scope
       const state = store.getState();
-      expect(state.population.geography).toBeNull();
+      expect(state.population.geography).toBeUndefined();
     });
   });
 
@@ -307,14 +307,14 @@ describe('SelectGeographicScopeFrame', () => {
       const stateRadio = screen.getByLabelText('State');
       await user.click(stateRadio);
 
-      const dropdown = await screen.findByPlaceholderText('Select a state');
+      const dropdown = await screen.findByPlaceholderText('Pick a state');
       await user.click(dropdown);
 
       // Select state/ca which should extract to 'ca'
       const california = await screen.findByText('California');
       await user.click(california);
 
-      const submitButton = screen.getByRole('button', { name: /Continue/i });
+      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
       // Then
@@ -332,18 +332,18 @@ describe('SelectGeographicScopeFrame', () => {
       await user.click(stateRadio);
 
       // Select UK country
-      const countryDropdown = await screen.findByPlaceholderText('Select a UK country');
+      const countryDropdown = await screen.findByPlaceholderText('Pick a country');
       await user.click(countryDropdown);
       const england = await screen.findByText('England');
       await user.click(england);
 
       // Select constituency
-      const constituencyDropdown = await screen.findByPlaceholderText('Select a constituency');
+      const constituencyDropdown = await screen.findByPlaceholderText('Pick a constituency');
       await user.click(constituencyDropdown);
       const london = await screen.findByText('London');
       await user.click(london);
 
-      const submitButton = screen.getByRole('button', { name: /Continue/i });
+      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
       // Then
@@ -363,7 +363,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then - Should show US states
       waitFor(() => {
-        expect(screen.getByPlaceholderText('Select a state')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
       });
     });
 
@@ -377,7 +377,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then - Should show US states as fallback
       waitFor(() => {
-        expect(screen.getByPlaceholderText('Select a state')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
       });
     });
   });
