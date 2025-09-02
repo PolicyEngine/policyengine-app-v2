@@ -1,6 +1,21 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
 import { useSelector } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import FlowContainer from '@/components/FlowContainer';
+import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flowReducer';
+import {
+  addEventToMockFlow,
+  cleanupDynamicEvents,
+  createMockState,
+  mockFlow,
+  mockFlowRegistry,
+  mockSubflowStack,
+  TEST_EVENTS,
+  TEST_FLOW_NAMES,
+  TEST_FRAME_NAMES,
+  TEST_STRINGS,
+  TestComponent,
+} from '@/tests/fixtures/components/FlowContainerMocks';
 
 const mockDispatch = vi.fn();
 
@@ -34,31 +49,19 @@ vi.mock('@/types/flow', async () => {
   return {
     ...actual,
     isFlowKey: vi.fn((target: string) => {
-      return target === mocks.TEST_FLOW_NAMES.ANOTHER_FLOW || target === mocks.TEST_FLOW_NAMES.TEST_FLOW;
+      return (
+        target === mocks.TEST_FLOW_NAMES.ANOTHER_FLOW || target === mocks.TEST_FLOW_NAMES.TEST_FLOW
+      );
     }),
     isComponentKey: vi.fn((target: string) => {
-      return target === mocks.TEST_FRAME_NAMES.TEST_FRAME || 
-             target === mocks.TEST_FRAME_NAMES.NEXT_FRAME || 
-             target === mocks.TEST_FRAME_NAMES.NON_EXISTENT_COMPONENT;
+      return (
+        target === mocks.TEST_FRAME_NAMES.TEST_FRAME ||
+        target === mocks.TEST_FRAME_NAMES.NEXT_FRAME ||
+        target === mocks.TEST_FRAME_NAMES.NON_EXISTENT_COMPONENT
+      );
     }),
   };
 });
-
-import FlowContainer from '@/components/FlowContainer';
-import {
-  mockFlow,
-  mockSubflowStack,
-  TestComponent,
-  mockFlowRegistry,
-  createMockState,
-  TEST_STRINGS,
-  TEST_FRAME_NAMES,
-  TEST_FLOW_NAMES,
-  TEST_EVENTS,
-  addEventToMockFlow,
-  cleanupDynamicEvents,
-} from '@/tests/fixtures/components/FlowContainerMocks';
-import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flowReducer';
 
 describe('FlowContainer', () => {
   beforeEach(() => {
@@ -69,12 +72,14 @@ describe('FlowContainer', () => {
 
   describe('Error States', () => {
     test('given no current flow then displays no flow message', () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
-        selector({ flow: {
-          currentFlow: null,
-          currentFrame: null,
-          flowStack: [],
-        }})
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
+        selector({
+          flow: {
+            currentFlow: null,
+            currentFrame: null,
+            flowStack: [],
+          },
+        })
       );
 
       render(<FlowContainer />);
@@ -83,12 +88,14 @@ describe('FlowContainer', () => {
     });
 
     test('given no current frame then displays no flow message', () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
-        selector({ flow: {
-          currentFlow: mockFlow,
-          currentFrame: null,
-          flowStack: [],
-        }})
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
+        selector({
+          flow: {
+            currentFlow: mockFlow,
+            currentFrame: null,
+            flowStack: [],
+          },
+        })
       );
 
       render(<FlowContainer />);
@@ -97,24 +104,32 @@ describe('FlowContainer', () => {
     });
 
     test('given component not in registry then displays error message', () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
-        selector({ flow: {
-          currentFlow: mockFlow,
-          currentFrame: TEST_FRAME_NAMES.NON_EXISTENT_COMPONENT,
-          flowStack: [],
-        }})
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
+        selector({
+          flow: {
+            currentFlow: mockFlow,
+            currentFrame: TEST_FRAME_NAMES.NON_EXISTENT_COMPONENT,
+            flowStack: [],
+          },
+        })
       );
 
       render(<FlowContainer />);
 
-      expect(screen.getByText(`${TEST_STRINGS.COMPONENT_NOT_FOUND_PREFIX} ${TEST_FRAME_NAMES.NON_EXISTENT_COMPONENT}`)).toBeInTheDocument();
-      expect(screen.getByText(new RegExp(TEST_STRINGS.AVAILABLE_COMPONENTS_PREFIX))).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          `${TEST_STRINGS.COMPONENT_NOT_FOUND_PREFIX} ${TEST_FRAME_NAMES.NON_EXISTENT_COMPONENT}`
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(new RegExp(TEST_STRINGS.AVAILABLE_COMPONENTS_PREFIX))
+      ).toBeInTheDocument();
     });
   });
 
   describe('Component Rendering', () => {
     test('given valid flow and frame then renders correct component', () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState().flow })
       );
 
@@ -135,7 +150,7 @@ describe('FlowContainer', () => {
     });
 
     test('given subflow context then passes correct props to component', () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState({ flowStack: mockSubflowStack }).flow })
       );
 
@@ -143,8 +158,10 @@ describe('FlowContainer', () => {
 
       expect(screen.getByText(TEST_STRINGS.IN_SUBFLOW_TEXT)).toBeInTheDocument();
       expect(screen.getByText(`${TEST_STRINGS.FLOW_DEPTH_PREFIX} 1`)).toBeInTheDocument();
-      expect(screen.getByText(`${TEST_STRINGS.PARENT_PREFIX} ${TEST_FLOW_NAMES.PARENT_FLOW}`)).toBeInTheDocument();
-      
+      expect(
+        screen.getByText(`${TEST_STRINGS.PARENT_PREFIX} ${TEST_FLOW_NAMES.PARENT_FLOW}`)
+      ).toBeInTheDocument();
+
       expect(TestComponent).toHaveBeenCalledWith(
         expect.objectContaining({
           isInSubflow: true,
@@ -162,7 +179,7 @@ describe('FlowContainer', () => {
   describe('Navigation Event Handling', () => {
     test('given user navigates to frame then dispatches navigateToFrame action', async () => {
       const user = userEvent.setup();
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState().flow })
       );
 
@@ -170,12 +187,14 @@ describe('FlowContainer', () => {
 
       await user.click(screen.getByRole('button', { name: /navigate next/i }));
 
-      expect(mockDispatch).toHaveBeenCalledWith(navigateToFrame(TEST_FRAME_NAMES.NEXT_FRAME as any));
+      expect(mockDispatch).toHaveBeenCalledWith(
+        navigateToFrame(TEST_FRAME_NAMES.NEXT_FRAME as any)
+      );
     });
 
     test('given user navigates with return keyword then dispatches returnFromFlow action', async () => {
       const user = userEvent.setup();
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState().flow })
       );
 
@@ -188,7 +207,7 @@ describe('FlowContainer', () => {
 
     test('given user navigates to flow with navigation object then dispatches navigateToFlow with returnFrame', async () => {
       const user = userEvent.setup();
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState().flow })
       );
 
@@ -205,7 +224,7 @@ describe('FlowContainer', () => {
     });
 
     test('given navigation event with no target defined then logs error', async () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState().flow })
       );
 
@@ -221,14 +240,14 @@ describe('FlowContainer', () => {
     });
 
     test('given navigation to flow key then dispatches navigateToFlow action', () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState().flow })
       );
 
       render(<FlowContainer />);
 
       const component = TestComponent.mock.calls[0][0];
-      
+
       addEventToMockFlow(TEST_EVENTS.DIRECT_FLOW, TEST_FLOW_NAMES.ANOTHER_FLOW);
       component.onNavigate(TEST_EVENTS.DIRECT_FLOW);
 
@@ -238,14 +257,14 @@ describe('FlowContainer', () => {
     });
 
     test('given navigation to unknown target type then logs error', () => {
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState().flow })
       );
 
       render(<FlowContainer />);
 
       const component = TestComponent.mock.calls[0][0];
-      
+
       addEventToMockFlow(TEST_EVENTS.UNKNOWN_TARGET, TEST_FRAME_NAMES.UNKNOWN_TARGET);
       component.onNavigate(TEST_EVENTS.UNKNOWN_TARGET);
 
@@ -258,7 +277,7 @@ describe('FlowContainer', () => {
   describe('Return From Subflow', () => {
     test('given user returns from subflow then dispatches returnFromFlow action', async () => {
       const user = userEvent.setup();
-      vi.mocked(useSelector).mockImplementation((selector: any) => 
+      vi.mocked(useSelector).mockImplementation((selector: any) =>
         selector({ flow: createMockState({ flowStack: mockSubflowStack }).flow })
       );
 

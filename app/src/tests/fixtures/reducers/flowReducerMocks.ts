@@ -1,5 +1,5 @@
-import { Flow } from '@/types/flow';
 import { ComponentKey } from '@/flows/registry';
+import { Flow } from '@/types/flow';
 
 // Define FlowState interface to match the reducer
 interface FlowState {
@@ -219,17 +219,13 @@ export const expectedStateAfterNavigateToFrame: FlowState = {
 export const expectedStateAfterNavigateToFlow: FlowState = {
   currentFlow: mockSubFlow,
   currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
-  flowStack: [
-    createFlowStackEntry(mockMainFlow, FRAME_NAMES.INITIAL_FRAME),
-  ],
+  flowStack: [createFlowStackEntry(mockMainFlow, FRAME_NAMES.INITIAL_FRAME)],
 };
 
 export const expectedStateAfterNavigateToFlowWithReturn: FlowState = {
   currentFlow: mockSubFlow,
   currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
-  flowStack: [
-    createFlowStackEntry(mockMainFlow, FRAME_NAMES.RETURN_FRAME),
-  ],
+  flowStack: [createFlowStackEntry(mockMainFlow, FRAME_NAMES.RETURN_FRAME)],
 };
 
 export const expectedStateAfterReturnFromFlow: FlowState = {

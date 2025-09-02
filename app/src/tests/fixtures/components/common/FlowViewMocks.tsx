@@ -6,13 +6,13 @@ export const FLOW_VIEW_STRINGS = {
   // Titles
   MAIN_TITLE: 'Test Flow Title',
   SUBTITLE: 'This is a test subtitle',
-  
+
   // Button labels
   CANCEL_BUTTON: 'Cancel',
   SUBMIT_BUTTON: 'Submit',
   CONTINUE_BUTTON: 'Continue',
   BACK_BUTTON: 'Back',
-  
+
   // Setup condition cards
   SETUP_CARD_1_TITLE: 'First Setup Condition',
   SETUP_CARD_1_DESC: 'Description for first setup condition',
@@ -20,23 +20,23 @@ export const FLOW_VIEW_STRINGS = {
   SETUP_CARD_2_DESC: 'Description for second setup condition',
   SETUP_CARD_3_TITLE: 'Third Setup Condition',
   SETUP_CARD_3_DESC: 'Description for third setup condition',
-  
+
   // Button panel cards
   PANEL_CARD_1_TITLE: 'Option One',
   PANEL_CARD_1_DESC: 'Description for option one',
   PANEL_CARD_2_TITLE: 'Option Two',
   PANEL_CARD_2_DESC: 'Description for option two',
-  
+
   // Card list items
   LIST_ITEM_1_TITLE: 'List Item One',
   LIST_ITEM_1_SUBTITLE: 'Subtitle for item one',
   LIST_ITEM_2_TITLE: 'List Item Two',
   LIST_ITEM_2_SUBTITLE: 'Subtitle for item two',
   LIST_ITEM_3_TITLE: 'List Item Three',
-  
+
   // Content
   CUSTOM_CONTENT: 'Custom content for testing',
-  
+
   // Console log messages
   CANCEL_CLICKED_MSG: 'Cancel clicked',
 } as const;

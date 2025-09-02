@@ -54,8 +54,8 @@ export const mockFlow = {
       on: {
         [TEST_EVENTS.NEXT]: TEST_FRAME_NAMES.NEXT_FRAME,
         [TEST_EVENTS.SUBMIT]: NAVIGATION_TARGETS.RETURN_KEYWORD,
-        [TEST_EVENTS.GO_TO_FLOW]: { 
-          flow: TEST_FLOW_NAMES.ANOTHER_FLOW, 
+        [TEST_EVENTS.GO_TO_FLOW]: {
+          flow: TEST_FLOW_NAMES.ANOTHER_FLOW,
           returnTo: TEST_FRAME_NAMES.RETURN_FRAME as any,
         },
         [TEST_EVENTS.INVALID_EVENT]: null,
@@ -83,7 +83,7 @@ export const mockFlowWithoutEvents = {
 
 export const mockSubflowStack = [
   {
-    flow: { 
+    flow: {
       initialFrame: TEST_FRAME_NAMES.PARENT_FRAME as any,
       frames: {},
     },
@@ -91,20 +91,38 @@ export const mockSubflowStack = [
   },
 ];
 
-export const TestComponent = vi.fn(({ onNavigate, onReturn, isInSubflow, flowDepth, parentFlowContext }: any) => {
-  return (
-    <div>
-      <p>{TEST_STRINGS.TEST_COMPONENT_TEXT}</p>
-      <button type="button" onClick={() => onNavigate(TEST_EVENTS.NEXT)}>Navigate Next</button>
-      <button type="button" onClick={() => onNavigate(TEST_EVENTS.SUBMIT)}>Submit</button>
-      <button type="button" onClick={() => onNavigate(TEST_EVENTS.GO_TO_FLOW)}>Go to Flow</button>
-      <button type="button" onClick={() => onReturn()}>Return</button>
-      {isInSubflow && <p>{TEST_STRINGS.IN_SUBFLOW_TEXT}</p>}
-      {flowDepth > 0 && <p>{TEST_STRINGS.FLOW_DEPTH_PREFIX} {flowDepth}</p>}
-      {parentFlowContext && <p>{TEST_STRINGS.PARENT_PREFIX} {parentFlowContext.flowName}</p>}
-    </div>
-  );
-});
+export const TestComponent = vi.fn(
+  ({ onNavigate, onReturn, isInSubflow, flowDepth, parentFlowContext }: any) => {
+    return (
+      <div>
+        <p>{TEST_STRINGS.TEST_COMPONENT_TEXT}</p>
+        <button type="button" onClick={() => onNavigate(TEST_EVENTS.NEXT)}>
+          Navigate Next
+        </button>
+        <button type="button" onClick={() => onNavigate(TEST_EVENTS.SUBMIT)}>
+          Submit
+        </button>
+        <button type="button" onClick={() => onNavigate(TEST_EVENTS.GO_TO_FLOW)}>
+          Go to Flow
+        </button>
+        <button type="button" onClick={() => onReturn()}>
+          Return
+        </button>
+        {isInSubflow && <p>{TEST_STRINGS.IN_SUBFLOW_TEXT}</p>}
+        {flowDepth > 0 && (
+          <p>
+            {TEST_STRINGS.FLOW_DEPTH_PREFIX} {flowDepth}
+          </p>
+        )}
+        {parentFlowContext && (
+          <p>
+            {TEST_STRINGS.PARENT_PREFIX} {parentFlowContext.flowName}
+          </p>
+        )}
+      </div>
+    );
+  }
+);
 
 export const AnotherTestComponent = vi.fn(() => {
   return <div>{TEST_STRINGS.ANOTHER_COMPONENT_TEXT}</div>;
@@ -153,8 +171,8 @@ export const cleanupDynamicEvents = () => {
     testFrame.on = {
       [TEST_EVENTS.NEXT]: TEST_FRAME_NAMES.NEXT_FRAME,
       [TEST_EVENTS.SUBMIT]: NAVIGATION_TARGETS.RETURN_KEYWORD,
-      [TEST_EVENTS.GO_TO_FLOW]: { 
-        flow: TEST_FLOW_NAMES.ANOTHER_FLOW, 
+      [TEST_EVENTS.GO_TO_FLOW]: {
+        flow: TEST_FLOW_NAMES.ANOTHER_FLOW,
         returnTo: TEST_FRAME_NAMES.RETURN_FRAME as any,
       },
       [TEST_EVENTS.INVALID_EVENT]: null,
