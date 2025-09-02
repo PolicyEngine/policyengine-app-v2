@@ -159,9 +159,6 @@ export const createMockMetadataState = (overrides?: Partial<MetadataState>): Met
   },
   version: EXPECTED_VERSION,
   parameterTree: null,
-  lastFetched: {
-    [EXPECTED_COUNTRY]: Date.now(),
-  },
   ...overrides,
 });
 
@@ -193,7 +190,6 @@ export const MOCK_EMPTY_METADATA_STATE: MetadataState = {
   },
   version: null,
   parameterTree: null,
-  lastFetched: {},
 };
 
 // Mock API payload

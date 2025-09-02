@@ -6,7 +6,6 @@ import {
   mockCountryId,
   mockInvalidCountryId,
   mockUSCountryId,
-  mockEmptyCountryId,
   mockCustomResponse,
   TEST_PARAMETER_KEY,
   TEST_PARAMETER_VALUE,

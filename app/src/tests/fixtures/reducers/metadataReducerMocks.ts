@@ -104,7 +104,10 @@ export const MOCK_ECONOMY_OPTIONS = {
     { name: 2023, label: '2023' },
     { name: 2024, label: '2024' },
   ],
-  datasets: ['cps_2022', 'acs_2021'],
+  datasets: [
+    { name: 'cps_2022', label: 'CPS 2022', title: 'Current Population Survey 2022', default: true },
+    { name: 'acs_2021', label: 'ACS 2021', title: 'American Community Survey 2021', default: false },
+  ],
 };
 
 // Mock basic inputs

@@ -53,7 +53,7 @@ const createTestSetup = (metadataState: any) => {
   }) as any;
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    React.createElement(Provider, { store, children })
+    <Provider store={store}>{children}</Provider>
   );
 
   return { store, wrapper };

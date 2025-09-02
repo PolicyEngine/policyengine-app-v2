@@ -448,13 +448,19 @@ export const expectNodeToHaveChildren = (node: ParameterTreeNode | undefined, co
 };
 
 export const findNodeByName = (tree: ParameterTreeNode | undefined, name: string): ParameterTreeNode | undefined => {
-  if (!tree) return undefined;
-  if (tree.name === name) return tree;
+  if (!tree) {
+    return undefined;
+  }
+  if (tree.name === name) {
+    return tree;
+  }
   
   if (tree.children) {
     for (const child of tree.children) {
       const found = findNodeByName(child, name);
-      if (found) return found;
+      if (found) {
+        return found;
+      }
     }
   }
   
