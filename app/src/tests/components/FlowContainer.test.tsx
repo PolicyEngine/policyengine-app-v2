@@ -159,7 +159,7 @@ describe('FlowContainer', () => {
       expect(screen.getByText(TEST_STRINGS.IN_SUBFLOW_TEXT)).toBeInTheDocument();
       expect(screen.getByText(`${TEST_STRINGS.FLOW_DEPTH_PREFIX} 1`)).toBeInTheDocument();
       expect(
-        screen.getByText(`${TEST_STRINGS.PARENT_PREFIX} ${TEST_FLOW_NAMES.PARENT_FLOW}`)
+        screen.getByText(`${TEST_STRINGS.PARENT_PREFIX} ${TEST_FRAME_NAMES.PARENT_FRAME}`)
       ).toBeInTheDocument();
 
       expect(TestComponent).toHaveBeenCalledWith(
@@ -167,7 +167,6 @@ describe('FlowContainer', () => {
           isInSubflow: true,
           flowDepth: 1,
           parentFlowContext: {
-            flowName: TEST_FLOW_NAMES.PARENT_FLOW,
             parentFrame: TEST_FRAME_NAMES.PARENT_FRAME,
           },
         }),

@@ -15,7 +15,6 @@ export default function FlowContainer() {
   const flowDepth = flowStack.length;
   const parentFlowContext = isInSubflow
     ? {
-        flowName: flowStack[flowStack.length - 1].flow.name,
         parentFrame: flowStack[flowStack.length - 1].frame,
       }
     : undefined;

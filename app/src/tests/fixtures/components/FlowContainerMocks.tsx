@@ -46,7 +46,6 @@ export const NAVIGATION_TARGETS = {
 } as const;
 
 export const mockFlow = {
-  name: TEST_FLOW_NAMES.TEST_FLOW,
   initialFrame: TEST_FRAME_NAMES.TEST_FRAME as any,
   frames: {
     [TEST_FRAME_NAMES.TEST_FRAME]: {
@@ -71,7 +70,6 @@ export const mockFlow = {
 };
 
 export const mockFlowWithoutEvents = {
-  name: TEST_FLOW_NAMES.FLOW_WITHOUT_EVENTS,
   initialFrame: TEST_FRAME_NAMES.FRAME_WITH_NO_EVENTS as any,
   frames: {
     [TEST_FRAME_NAMES.FRAME_WITH_NO_EVENTS]: {
@@ -116,7 +114,7 @@ export const TestComponent = vi.fn(
         )}
         {parentFlowContext && (
           <p>
-            {TEST_STRINGS.PARENT_PREFIX} {parentFlowContext.flowName}
+            {TEST_STRINGS.PARENT_PREFIX} {parentFlowContext.parentFrame}
           </p>
         )}
       </div>
@@ -136,7 +134,6 @@ export const mockComponentRegistry = {
 export const mockFlowRegistry = {
   [TEST_FLOW_NAMES.TEST_FLOW]: mockFlow,
   [TEST_FLOW_NAMES.ANOTHER_FLOW]: {
-    name: TEST_FLOW_NAMES.ANOTHER_FLOW,
     initialFrame: TEST_FRAME_NAMES.START_FRAME as any,
     frames: {
       [TEST_FRAME_NAMES.START_FRAME]: {
