@@ -51,7 +51,14 @@ export const mockLoadedMetadataState: MetadataState = {
   economyOptions: {
     region: [{ name: 'us', label: 'United States' }],
     time_period: [{ name: 2024, label: '2024' }],
-    datasets: [{ name: 'cps_2024', label: 'CPS 2024', title: 'Current Population Survey 2024', default: true }],
+    datasets: [
+      {
+        name: 'cps_2024',
+        label: 'CPS 2024',
+        title: 'Current Population Survey 2024',
+        default: true,
+      },
+    ],
   },
   currentLawId: 1,
   basicInputs: ['income', 'age'],
@@ -77,7 +84,9 @@ export const mockUKMetadataState: MetadataState = {
   economyOptions: {
     region: [{ name: 'uk', label: 'United Kingdom' }],
     time_period: [{ name: 2024, label: '2024' }],
-    datasets: [{ name: 'frs_2024', label: 'FRS 2024', title: 'Family Resources Survey 2024', default: true }],
+    datasets: [
+      { name: 'frs_2024', label: 'FRS 2024', title: 'Family Resources Survey 2024', default: true },
+    ],
   },
   version: '2.0.0',
 };

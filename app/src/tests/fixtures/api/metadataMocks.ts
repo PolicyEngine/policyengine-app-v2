@@ -74,7 +74,12 @@ export const mockMetadataResponse: MetadataApiPayload = {
         { name: 2025, label: '2025' },
       ],
       datasets: [
-        { name: 'frs_2022', label: 'FRS 2022', title: 'Family Resources Survey 2022', default: true },
+        {
+          name: 'frs_2022',
+          label: 'FRS 2022',
+          title: 'Family Resources Survey 2022',
+          default: true,
+        },
       ],
     },
     current_law_id: 1,
@@ -166,5 +171,5 @@ export const mockCustomSuccessResponse = {
 } as Response;
 
 // Expected error messages
-export const getExpectedFetchError = (countryId: string) => 
+export const getExpectedFetchError = (countryId: string) =>
   `Failed to fetch metadata for ${countryId}`;

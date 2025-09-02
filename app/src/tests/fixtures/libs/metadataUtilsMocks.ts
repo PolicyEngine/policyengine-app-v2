@@ -73,12 +73,7 @@ export const EXPECTED_LABEL_EMPLOYMENT_INCOME = 'Employment Income';
 export const EXPECTED_LABEL_CUSTOM = 'Custom Field Name';
 
 // Dropdown field list
-export const DROPDOWN_FIELDS = [
-  FIELD_STATE_NAME,
-  FIELD_REGION,
-  FIELD_BRMA,
-  FIELD_LOCAL_AUTHORITY,
-];
+export const DROPDOWN_FIELDS = [FIELD_STATE_NAME, FIELD_REGION, FIELD_BRMA, FIELD_LOCAL_AUTHORITY];
 
 // Non-dropdown fields
 export const NON_DROPDOWN_FIELDS = [
@@ -163,10 +158,11 @@ export const createMockMetadataState = (overrides?: Partial<MetadataState>): Met
 });
 
 // Mock root state with metadata
-export const createMockRootState = (metadataOverrides?: Partial<MetadataState>): RootState => ({
-  metadata: createMockMetadataState(metadataOverrides),
-  // Add other slices as needed for tests
-} as RootState);
+export const createMockRootState = (metadataOverrides?: Partial<MetadataState>): RootState =>
+  ({
+    metadata: createMockMetadataState(metadataOverrides),
+    // Add other slices as needed for tests
+  }) as RootState;
 
 // Mock empty metadata state
 export const MOCK_EMPTY_METADATA_STATE: MetadataState = {

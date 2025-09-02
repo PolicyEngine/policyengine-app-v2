@@ -1,5 +1,5 @@
-import { MetadataState, MetadataApiPayload } from '@/types/metadata';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
+import { MetadataApiPayload, MetadataState } from '@/types/metadata';
 
 // Test constants
 export const TEST_COUNTRY_US = 'us';
@@ -106,7 +106,12 @@ export const MOCK_ECONOMY_OPTIONS = {
   ],
   datasets: [
     { name: 'cps_2022', label: 'CPS 2022', title: 'Current Population Survey 2022', default: true },
-    { name: 'acs_2021', label: 'ACS 2021', title: 'American Community Survey 2021', default: false },
+    {
+      name: 'acs_2021',
+      label: 'ACS 2021',
+      title: 'American Community Survey 2021',
+      default: false,
+    },
   ],
 };
 
@@ -170,9 +175,7 @@ export const createMockApiPayload = (
 });
 
 // Mock state with data
-export const createMockStateWithData = (
-  overrides?: Partial<MetadataState>
-): MetadataState => ({
+export const createMockStateWithData = (overrides?: Partial<MetadataState>): MetadataState => ({
   loading: false,
   error: null,
   currentCountry: TEST_COUNTRY_US,
@@ -248,10 +251,7 @@ export const expectVersion = (state: MetadataState, version: string | null) => {
   expect(state.version).toBe(version);
 };
 
-export const expectParameterTree = (
-  state: MetadataState,
-  hasTree: boolean
-) => {
+export const expectParameterTree = (state: MetadataState, hasTree: boolean) => {
   if (hasTree) {
     expect(state.parameterTree).toBeDefined();
     expect(state.parameterTree).not.toBeNull();

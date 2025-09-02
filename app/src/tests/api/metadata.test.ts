@@ -1,22 +1,22 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchMetadata } from '@/api/metadata';
 import { BASE_URL } from '@/constants';
 import {
-  mockMetadataResponse,
-  mockCountryId,
-  mockInvalidCountryId,
-  mockUSCountryId,
-  mockCustomResponse,
-  TEST_PARAMETER_KEY,
-  TEST_PARAMETER_VALUE,
-  mockNetworkError,
-  mockJSONParseError,
-  mockSuccessResponse,
+  getExpectedFetchError,
   mock404Response,
   mock500Response,
-  mockInvalidJSONResponse,
+  mockCountryId,
+  mockCustomResponse,
   mockCustomSuccessResponse,
-  getExpectedFetchError,
+  mockInvalidCountryId,
+  mockInvalidJSONResponse,
+  mockJSONParseError,
+  mockMetadataResponse,
+  mockNetworkError,
+  mockSuccessResponse,
+  mockUSCountryId,
+  TEST_PARAMETER_KEY,
+  TEST_PARAMETER_VALUE,
 } from '@/tests/fixtures/api/metadataMocks';
 
 describe('fetchMetadata', () => {
@@ -31,16 +31,13 @@ describe('fetchMetadata', () => {
 
     const result = await fetchMetadata(mockCountryId);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${mockCountryId}/metadata`,
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${mockCountryId}/metadata`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
     expect(result).toEqual(mockMetadataResponse);
   });
 
@@ -78,16 +75,13 @@ describe('fetchMetadata', () => {
 
     await fetchMetadata(mockCountryId);
 
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.any(String),
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(expect.any(String), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+    });
   });
 
   test('given server returns 500 then throws error', async () => {

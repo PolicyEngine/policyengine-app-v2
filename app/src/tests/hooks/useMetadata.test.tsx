@@ -1,8 +1,20 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
+import { configureStore } from '@reduxjs/toolkit';
 import { renderHook } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useFetchMetadata } from '@/hooks/useMetadata';
+import {
+  mockErrorState,
+  mockInitialMetadataState,
+  mockLoadedMetadataState,
+  mockLoadingMetadataState,
+  mockStateWithCurrentCountry,
+  mockStateWithoutVersion,
+  TEST_COUNTRY_CA,
+  TEST_COUNTRY_UK,
+  TEST_COUNTRY_US,
+} from '@/tests/fixtures/hooks/useMetadataMocks';
 
 // Mock must be before imports that use it
 vi.mock('@/reducers/metadataReducer', () => ({
@@ -14,26 +26,13 @@ vi.mock('@/reducers/metadataReducer', () => ({
   default: (state = {}) => state,
 }));
 
-import { useFetchMetadata } from '@/hooks/useMetadata';
-import {
-  TEST_COUNTRY_US,
-  TEST_COUNTRY_UK,
-  TEST_COUNTRY_CA,
-  mockInitialMetadataState,
-  mockLoadedMetadataState,
-  mockLoadingMetadataState,
-  mockStateWithCurrentCountry,
-  mockStateWithoutVersion,
-  mockErrorState,
-} from '@/tests/fixtures/hooks/useMetadataMocks';
-
 // Track dispatched thunks
 let dispatchedThunks: any[] = [];
 
 // Helper to create test store and wrapper
 const createTestSetup = (metadataState: any) => {
   dispatchedThunks = [];
-  
+
   const store = configureStore({
     reducer: {
       metadata: () => metadataState,
@@ -178,14 +177,11 @@ describe('useFetchMetadata', () => {
   test('given country changes in props then handles re-render correctly', () => {
     // Given - metadata already loaded for US
     const { wrapper } = createTestSetup(mockLoadedMetadataState);
-    const { rerender } = renderHook(
-      ({ country }) => useFetchMetadata(country),
-      { 
-        wrapper,
-        initialProps: { country: TEST_COUNTRY_US }
-      }
-    );
-    
+    const { rerender } = renderHook(({ country }) => useFetchMetadata(country), {
+      wrapper,
+      initialProps: { country: TEST_COUNTRY_US },
+    });
+
     // When - change to UK which needs fetching
     dispatchedThunks = [];
     rerender({ country: TEST_COUNTRY_UK });
@@ -200,10 +196,10 @@ describe('useFetchMetadata', () => {
 
     // When
     const { unmount } = renderHook(() => useFetchMetadata(TEST_COUNTRY_UK), { wrapper });
-    
+
     // Verify dispatch was called before unmount
     expect(dispatchedThunks).toContain(TEST_COUNTRY_UK);
-    
+
     // Then - unmount should not throw
     expect(() => unmount()).not.toThrow();
   });

@@ -1,39 +1,39 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { configureStore } from '@reduxjs/toolkit';
-import metadataReducer, {
-  setCurrentCountry,
-  clearMetadata,
-  fetchMetadataThunk,
-} from '@/reducers/metadataReducer';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as metadataApi from '@/api/metadata';
 import * as buildParameterTreeModule from '@/libs/buildParameterTree';
+import metadataReducer, {
+  clearMetadata,
+  fetchMetadataThunk,
+  setCurrentCountry,
+} from '@/reducers/metadataReducer';
 import {
+  createMockApiPayload,
+  createMockClearedState,
+  createMockStateWithData,
+  expectCurrentCountry,
   EXPECTED_INITIAL_STATE,
-  TEST_COUNTRY_US,
-  TEST_COUNTRY_UK,
-  TEST_COUNTRY_CA,
-  TEST_ERROR_MESSAGE,
-  TEST_VERSION,
-  TEST_CURRENT_LAW_ID,
-  MOCK_VARIABLES,
-  MOCK_PARAMETERS,
-  MOCK_ENTITIES,
-  MOCK_VARIABLE_MODULES,
-  MOCK_ECONOMY_OPTIONS,
+  expectEmptyMetadata,
+  expectErrorState,
+  expectLoadingState,
+  expectParameterTree,
+  expectStateToEqual,
+  expectVersion,
   MOCK_BASIC_INPUTS,
+  MOCK_ECONOMY_OPTIONS,
+  MOCK_ENTITIES,
+  MOCK_LOADING_STATE,
   MOCK_MODELLED_POLICIES,
   MOCK_PARAMETER_TREE,
-  MOCK_LOADING_STATE,
-  createMockApiPayload,
-  createMockStateWithData,
-  createMockClearedState,
-  expectStateToEqual,
-  expectLoadingState,
-  expectErrorState,
-  expectCurrentCountry,
-  expectVersion,
-  expectParameterTree,
-  expectEmptyMetadata,
+  MOCK_PARAMETERS,
+  MOCK_VARIABLE_MODULES,
+  MOCK_VARIABLES,
+  TEST_COUNTRY_CA,
+  TEST_COUNTRY_UK,
+  TEST_COUNTRY_US,
+  TEST_CURRENT_LAW_ID,
+  TEST_ERROR_MESSAGE,
+  TEST_VERSION,
 } from '@/tests/fixtures/reducers/metadataReducerMocks';
 
 // Mock the API and buildParameterTree modules
@@ -228,7 +228,10 @@ describe('metadataReducer', () => {
 
       // Then
       expectParameterTree(state, false);
-      expect(console.error).toHaveBeenCalledWith('Failed to build parameter tree:', expect.any(Error));
+      expect(console.error).toHaveBeenCalledWith(
+        'Failed to build parameter tree:',
+        expect.any(Error)
+      );
     });
 
     test('given rejected action then sets error state', () => {

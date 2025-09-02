@@ -39,7 +39,7 @@ export const mockSimpleParameters = {
 
 // Mock parameters - Nested structure
 export const mockNestedParameters = {
-  'gov': {
+  gov: {
     parameter: 'gov',
     label: 'Government',
     type: 'parameterNode' as const,
@@ -388,7 +388,7 @@ export const mockBracketIndicesParameters = {
     values: { '2024': 0 },
   },
   'gov.tax.rates[1].threshold': {
-    parameter: 'gov.tax.rates[1].threshold', 
+    parameter: 'gov.tax.rates[1].threshold',
     label: 'threshold',
     economy: true,
     household: false,
@@ -447,14 +447,17 @@ export const expectNodeToHaveChildren = (node: ParameterTreeNode | undefined, co
   expect(node?.children?.length).toBe(count);
 };
 
-export const findNodeByName = (tree: ParameterTreeNode | undefined, name: string): ParameterTreeNode | undefined => {
+export const findNodeByName = (
+  tree: ParameterTreeNode | undefined,
+  name: string
+): ParameterTreeNode | undefined => {
   if (!tree) {
     return undefined;
   }
   if (tree.name === name) {
     return tree;
   }
-  
+
   if (tree.children) {
     for (const child of tree.children) {
       const found = findNodeByName(child, name);
@@ -463,6 +466,6 @@ export const findNodeByName = (tree: ParameterTreeNode | undefined, name: string
       }
     }
   }
-  
+
   return undefined;
 };

@@ -1,58 +1,58 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { buildParameterTree, convertMetadataToParameterTree } from '@/libs/buildParameterTree';
 import {
-  TEST_UNIT,
-  TEST_DESCRIPTION,
-  TEST_PERIOD,
-  TEST_VALUE_2024,
-  mockSimpleParameters,
-  mockNestedParameters,
-  mockBracketParameters,
-  mockFilteredParameters,
-  mockNonApplicableParameters,
-  mockEmptyParameters,
-  mockNonGovParameters,
-  mockSpecialCharParameters,
-  mockAlphabeticalParameters,
-  mockCustomLabelParameters,
-  mockDeepNestedParameters,
-  mockBracketIndicesParameters,
-  mockMetadataApiPayload,
-  expectNodeToHaveLabel,
-  expectNodeToHaveChildren,
-  findNodeByName,
-  EXPECTED_SORTED_LABELS,
-  EXPECTED_TAXATION_LABEL,
-  EXPECTED_PERSONAL_INCOME_LABEL,
-  EXPECTED_TAX_LABEL,
-  EXPECTED_INCOME_LABEL,
-  EXPECTED_PERSONAL_LABEL,
   EXPECTED_ALLOWANCE_LABEL,
+  EXPECTED_BENEFITS_LABEL,
   EXPECTED_BRACKET_1_LABEL,
   EXPECTED_BRACKET_2_LABEL,
-  EXPECTED_GOV_LABEL,
-  EXPECTED_GOVERNMENT_LABEL,
-  EXPECTED_TAXATION_NODE_LABEL,
-  EXPECTED_BENEFITS_LABEL,
   EXPECTED_BRACKETS_LABEL,
-  EXPECTED_INCOME_TAX_RATE_LABEL,
   EXPECTED_CHILD_CARE_SUPPORT_LABEL,
   EXPECTED_FIRST_BRACKET_LABEL,
-  EXPECTED_SECOND_BRACKET_LABEL,
-  EXPECTED_THIRD_BRACKET_LABEL,
-  EXPECTED_TWO_CHILDREN,
-  EXPECTED_THREE_CHILDREN,
+  EXPECTED_GOV_LABEL,
+  EXPECTED_GOVERNMENT_LABEL,
+  EXPECTED_INCOME_LABEL,
+  EXPECTED_INCOME_TAX_RATE_LABEL,
   EXPECTED_ONE_CHILD,
-  GOV_TAX_NODE_NAME,
-  GOV_BENEFIT_NODE_NAME,
-  GOV_TAX_BRACKETS_NODE_NAME,
-  GOV_TAX_RATES_NODE_NAME,
-  GOV_TAX_INCOME_NODE_NAME,
-  GOV_TAX_INCOME_PERSONAL_NODE_NAME,
-  GOV_TAX_INCOME_PERSONAL_ALLOWANCE_NODE_NAME,
-  GOV_TAXSIM_NODE_NAME,
+  EXPECTED_PERSONAL_INCOME_LABEL,
+  EXPECTED_PERSONAL_LABEL,
+  EXPECTED_SECOND_BRACKET_LABEL,
+  EXPECTED_SORTED_LABELS,
+  EXPECTED_TAX_LABEL,
+  EXPECTED_TAXATION_LABEL,
+  EXPECTED_TAXATION_NODE_LABEL,
+  EXPECTED_THIRD_BRACKET_LABEL,
+  EXPECTED_THREE_CHILDREN,
+  EXPECTED_TWO_CHILDREN,
+  expectNodeToHaveChildren,
+  expectNodeToHaveLabel,
+  findNodeByName,
   GOV_ABOLITIONS_NODE_NAME,
+  GOV_BENEFIT_NODE_NAME,
   GOV_INTERNAL_NODE_NAME,
+  GOV_TAX_BRACKETS_NODE_NAME,
+  GOV_TAX_INCOME_NODE_NAME,
+  GOV_TAX_INCOME_PERSONAL_ALLOWANCE_NODE_NAME,
+  GOV_TAX_INCOME_PERSONAL_NODE_NAME,
+  GOV_TAX_NODE_NAME,
+  GOV_TAX_RATES_NODE_NAME,
+  GOV_TAXSIM_NODE_NAME,
+  mockAlphabeticalParameters,
+  mockBracketIndicesParameters,
+  mockBracketParameters,
+  mockCustomLabelParameters,
+  mockDeepNestedParameters,
+  mockEmptyParameters,
+  mockFilteredParameters,
+  mockMetadataApiPayload,
+  mockNestedParameters,
+  mockNonApplicableParameters,
+  mockNonGovParameters,
+  mockSimpleParameters,
+  mockSpecialCharParameters,
+  TEST_DESCRIPTION,
+  TEST_PERIOD,
+  TEST_UNIT,
+  TEST_VALUE_2024,
 } from '@/tests/fixtures/libs/buildParameterTreeMocks';
 
 describe('buildParameterTree', () => {
@@ -85,12 +85,12 @@ describe('buildParameterTree', () => {
     // Then
     expect(tree).toBeDefined();
     expectNodeToHaveLabel(tree, EXPECTED_GOVERNMENT_LABEL);
-    
+
     const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
     expect(taxNode).toBeDefined();
     expectNodeToHaveLabel(taxNode, EXPECTED_TAXATION_NODE_LABEL);
     expectNodeToHaveChildren(taxNode, EXPECTED_TWO_CHILDREN); // income_tax and capital_gains
-    
+
     const benefitNode = findNodeByName(tree, GOV_BENEFIT_NODE_NAME);
     expect(benefitNode).toBeDefined();
     expectNodeToHaveLabel(benefitNode, EXPECTED_BENEFITS_LABEL);
@@ -108,21 +108,21 @@ describe('buildParameterTree', () => {
     expect(tree).toBeDefined();
     const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
     expect(taxNode).toBeDefined();
-    
+
     // Check bracket container node exists
     const bracketsNode = findNodeByName(tree, GOV_TAX_BRACKETS_NODE_NAME);
     expect(bracketsNode).toBeDefined();
     expectNodeToHaveLabel(bracketsNode, EXPECTED_BRACKETS_LABEL);
-    
+
     // Check that bracket parameters are added
     const brackets = bracketsNode?.children || [];
     expect(brackets.length).toBe(EXPECTED_THREE_CHILDREN);
-    
+
     // The parameter nodes themselves keep their labels from the data
-    const bracket0Node = brackets.find(b => b.parameter === 'gov.tax.brackets[0]');
-    const bracket1Node = brackets.find(b => b.parameter === 'gov.tax.brackets[1]');
-    const bracket2Node = brackets.find(b => b.parameter === 'gov.tax.brackets[2]');
-    
+    const bracket0Node = brackets.find((b) => b.parameter === 'gov.tax.brackets[0]');
+    const bracket1Node = brackets.find((b) => b.parameter === 'gov.tax.brackets[1]');
+    const bracket2Node = brackets.find((b) => b.parameter === 'gov.tax.brackets[2]');
+
     expect(bracket0Node?.label).toBe(EXPECTED_FIRST_BRACKET_LABEL);
     expect(bracket1Node?.label).toBe(EXPECTED_SECOND_BRACKET_LABEL);
     expect(bracket2Node?.label).toBe(EXPECTED_THIRD_BRACKET_LABEL);
@@ -138,11 +138,11 @@ describe('buildParameterTree', () => {
     // Then
     const ratesNode = findNodeByName(tree, GOV_TAX_RATES_NODE_NAME);
     expect(ratesNode).toBeDefined();
-    
+
     // The intermediate bracket index nodes should have "Bracket N" labels
     const rate0Node = findNodeByName(tree, 'gov.tax.rates[0]');
     const rate1Node = findNodeByName(tree, 'gov.tax.rates[1]');
-    
+
     expect(rate0Node?.label).toBe(EXPECTED_BRACKET_1_LABEL);
     expect(rate1Node?.label).toBe(EXPECTED_BRACKET_2_LABEL);
   });
@@ -156,16 +156,16 @@ describe('buildParameterTree', () => {
 
     // Then
     expect(tree).toBeDefined();
-    
+
     // Should only have the income_tax parameter
     const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
     expect(taxNode).toBeDefined();
     expectNodeToHaveChildren(taxNode, EXPECTED_ONE_CHILD);
-    
+
     // Should not have taxsim or abolitions nodes
     const taxsimNode = findNodeByName(tree, GOV_TAXSIM_NODE_NAME);
     expect(taxsimNode).toBeUndefined();
-    
+
     const abolitionsNode = findNodeByName(tree, GOV_ABOLITIONS_NODE_NAME);
     expect(abolitionsNode).toBeUndefined();
   });
@@ -179,12 +179,12 @@ describe('buildParameterTree', () => {
 
     // Then
     expect(tree).toBeDefined();
-    
+
     // Should only have the income_tax parameter
     const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
     expect(taxNode).toBeDefined();
     expectNodeToHaveChildren(taxNode, EXPECTED_ONE_CHILD);
-    
+
     // Should not have internal config
     const internalNode = findNodeByName(tree, GOV_INTERNAL_NODE_NAME);
     expect(internalNode).toBeUndefined();
@@ -221,11 +221,11 @@ describe('buildParameterTree', () => {
 
     // Then
     expect(tree).toBeDefined();
-    
+
     const incomeTaxNode = findNodeByName(tree, 'gov.tax.income_tax_rate');
     expect(incomeTaxNode).toBeDefined();
     expectNodeToHaveLabel(incomeTaxNode, EXPECTED_INCOME_TAX_RATE_LABEL);
-    
+
     const childCareNode = findNodeByName(tree, 'gov.benefit.child_care_support');
     expect(childCareNode).toBeDefined();
     expectNodeToHaveLabel(childCareNode, EXPECTED_CHILD_CARE_SUPPORT_LABEL);
@@ -258,7 +258,7 @@ describe('buildParameterTree', () => {
     const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
     expect(taxNode).toBeDefined();
     expectNodeToHaveLabel(taxNode, EXPECTED_TAXATION_LABEL);
-    
+
     const incomeNode = findNodeByName(tree, GOV_TAX_INCOME_NODE_NAME);
     expect(incomeNode).toBeDefined();
     expectNodeToHaveLabel(incomeNode, EXPECTED_PERSONAL_INCOME_LABEL);
@@ -292,20 +292,20 @@ describe('buildParameterTree', () => {
 
     // Then
     expect(tree).toBeDefined();
-    
+
     // Check all intermediate nodes exist
     const taxNode = findNodeByName(tree, GOV_TAX_NODE_NAME);
     expect(taxNode).toBeDefined();
     expectNodeToHaveLabel(taxNode, EXPECTED_TAX_LABEL);
-    
+
     const incomeNode = findNodeByName(tree, GOV_TAX_INCOME_NODE_NAME);
     expect(incomeNode).toBeDefined();
     expectNodeToHaveLabel(incomeNode, EXPECTED_INCOME_LABEL);
-    
+
     const personalNode = findNodeByName(tree, GOV_TAX_INCOME_PERSONAL_NODE_NAME);
     expect(personalNode).toBeDefined();
     expectNodeToHaveLabel(personalNode, EXPECTED_PERSONAL_LABEL);
-    
+
     const allowanceNode = findNodeByName(tree, GOV_TAX_INCOME_PERSONAL_ALLOWANCE_NODE_NAME);
     expect(allowanceNode).toBeDefined();
     expectNodeToHaveLabel(allowanceNode, EXPECTED_ALLOWANCE_LABEL);
@@ -337,7 +337,7 @@ describe('convertMetadataToParameterTree', () => {
     expect(tree).toBeDefined();
     expectNodeToHaveLabel(tree, EXPECTED_GOV_LABEL);
     expectNodeToHaveChildren(tree, EXPECTED_TWO_CHILDREN);
-    
+
     // Verify it used the parameters from the metadata
     const incomeTaxNode = findNodeByName(tree, 'gov.tax.income_tax');
     expect(incomeTaxNode).toBeDefined();
