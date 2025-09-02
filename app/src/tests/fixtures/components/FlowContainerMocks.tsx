@@ -84,8 +84,8 @@ export const mockFlowWithoutEvents = {
 export const mockSubflowStack = [
   {
     flow: { 
-      name: TEST_FLOW_NAMES.PARENT_FLOW,
       initialFrame: TEST_FRAME_NAMES.PARENT_FRAME as any,
+      frames: {},
     },
     frame: TEST_FRAME_NAMES.PARENT_FRAME,
   },
