@@ -36,6 +36,9 @@ export function CardsWithHeader({ containerTitle, cards }: CardsContainerProps) 
             onClick={card.onClick}
             icon={card.icon}
             background={card.background}
+            tags={card.tags}
+            footerText={card.footerText}
+            image={card.image}
           />
         ))}
       </SimpleGrid>
