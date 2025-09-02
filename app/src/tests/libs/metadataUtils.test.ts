@@ -1,10 +1,9 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect } from 'vitest';
 import {
   getTaxYears,
   getDateRange,
   getRegions,
   getBasicInputFields,
-  makeGetFieldOptions,
   getFieldOptions,
   isDropdownField,
   getFieldLabel,
@@ -12,17 +11,12 @@ import {
 } from '@/libs/metadataUtils';
 import {
   createMockRootState,
-  createMockMetadataState,
   createMockMetadataApiPayload,
-  MOCK_EMPTY_METADATA_STATE,
   EXPECTED_MIN_DATE_DEFAULT,
   EXPECTED_MAX_DATE_DEFAULT,
   EXPECTED_MIN_DATE,
   EXPECTED_MAX_DATE,
   EXPECTED_COUNTRY,
-  EXPECTED_VERSION,
-  EXPECTED_CURRENT_LAW_ID,
-  MOCK_TIME_PERIODS,
   MOCK_REGIONS,
   FIELD_AGE,
   FIELD_EMPLOYMENT_INCOME,
@@ -31,7 +25,6 @@ import {
   FIELD_BRMA,
   FIELD_LOCAL_AUTHORITY,
   FIELD_MARITAL_STATUS,
-  FIELD_CHILDREN_COUNT,
   FIELD_UNKNOWN,
   FIELD_CUSTOM,
   EXPECTED_LABEL_STATE,
@@ -45,8 +38,6 @@ import {
   NON_DROPDOWN_FIELDS,
   PERSON_FIELDS,
   HOUSEHOLD_FIELDS,
-  ALL_BASIC_INPUT_FIELDS,
-  MOCK_VARIABLES_WITH_OPTIONS,
   EXPECTED_MARITAL_STATUS_OPTIONS,
   EXPECTED_REGION_OPTIONS,
   EXPECTED_TAX_YEAR_OPTIONS,
