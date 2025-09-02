@@ -24,8 +24,6 @@ import {
   NAVIGATION_OBJECT_WITH_NULL_FLOW,
   NAVIGATION_OBJECT_WITH_NULL_RETURN,
   STRING_TARGET,
-  FLOW_KEY_TARGET,
-  COMPONENT_KEY_TARGET,
   EMPTY_OBJECT,
   NULL_OBJECT,
   ARRAY_OBJECT,
@@ -36,9 +34,6 @@ import {
   ALL_INVALID_KEYS,
   TRUTHY_NAVIGATION_OBJECTS,
   FALSY_NAVIGATION_OBJECTS,
-  TRUTHY_FLOW_KEYS,
-  FALSY_FLOW_KEYS,
-  mockFlowRegistry,
 } from '@/tests/fixtures/types/flowMocks';
 
 describe('flow type utilities', () => {

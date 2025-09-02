@@ -7,7 +7,6 @@ import flowReducer, {
   returnFromFlow,
 } from '@/reducers/flowReducer';
 import {
-  FLOW_NAMES,
   FRAME_NAMES,
   INITIAL_STATE,
   mockMainFlow,
@@ -21,7 +20,6 @@ import {
   mockStateWithMainFlow,
   mockStateWithSubFlow,
   mockStateWithNestedFlow,
-  mockStateInMiddleFrame,
   mockStateWithoutCurrentFlow,
   mockStateWithoutCurrentFrame,
   createFlowState,
