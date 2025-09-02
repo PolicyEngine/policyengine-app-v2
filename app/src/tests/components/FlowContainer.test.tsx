@@ -63,7 +63,7 @@ import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flow
 describe('FlowContainer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    console.error = vi.fn();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
     cleanupDynamicEvents();
   });
 
@@ -214,7 +214,7 @@ describe('FlowContainer', () => {
       const component = TestComponent.mock.calls[0][0];
       component.onNavigate(TEST_EVENTS.NON_EXISTENT_EVENT);
 
-      expect(console.error).toHaveBeenCalledWith(
+      expect(vi.mocked(console.error)).toHaveBeenCalledWith(
         expect.stringContaining(`No target defined for event ${TEST_EVENTS.NON_EXISTENT_EVENT}`)
       );
       expect(mockDispatch).not.toHaveBeenCalled();
@@ -249,7 +249,7 @@ describe('FlowContainer', () => {
       addEventToMockFlow(TEST_EVENTS.UNKNOWN_TARGET, TEST_FRAME_NAMES.UNKNOWN_TARGET);
       component.onNavigate(TEST_EVENTS.UNKNOWN_TARGET);
 
-      expect(console.error).toHaveBeenCalledWith(
+      expect(vi.mocked(console.error)).toHaveBeenCalledWith(
         expect.stringContaining(`Unknown target type: ${TEST_FRAME_NAMES.UNKNOWN_TARGET}`)
       );
     });

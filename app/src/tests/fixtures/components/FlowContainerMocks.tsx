@@ -91,14 +91,14 @@ export const mockSubflowStack = [
   },
 ];
 
-export const TestComponent = vi.fn(({ onNavigate, onReturn, flowConfig, isInSubflow, flowDepth, parentFlowContext }: any) => {
+export const TestComponent = vi.fn(({ onNavigate, onReturn, isInSubflow, flowDepth, parentFlowContext }: any) => {
   return (
     <div>
       <p>{TEST_STRINGS.TEST_COMPONENT_TEXT}</p>
-      <button onClick={() => onNavigate(TEST_EVENTS.NEXT)}>Navigate Next</button>
-      <button onClick={() => onNavigate(TEST_EVENTS.SUBMIT)}>Submit</button>
-      <button onClick={() => onNavigate(TEST_EVENTS.GO_TO_FLOW)}>Go to Flow</button>
-      <button onClick={() => onReturn()}>Return</button>
+      <button type="button" onClick={() => onNavigate(TEST_EVENTS.NEXT)}>Navigate Next</button>
+      <button type="button" onClick={() => onNavigate(TEST_EVENTS.SUBMIT)}>Submit</button>
+      <button type="button" onClick={() => onNavigate(TEST_EVENTS.GO_TO_FLOW)}>Go to Flow</button>
+      <button type="button" onClick={() => onReturn()}>Return</button>
       {isInSubflow && <p>{TEST_STRINGS.IN_SUBFLOW_TEXT}</p>}
       {flowDepth > 0 && <p>{TEST_STRINGS.FLOW_DEPTH_PREFIX} {flowDepth}</p>}
       {parentFlowContext && <p>{TEST_STRINGS.PARENT_PREFIX} {parentFlowContext.flowName}</p>}
