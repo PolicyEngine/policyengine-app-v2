@@ -1,6 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { RootState } from '@/store';
 
 interface SimulationsState {
   entities: Record<string, Simulation>;
@@ -24,7 +23,7 @@ export const simulationsSlice = createSlice({
   name: 'simulations',
   initialState,
   reducers: {
-    // COMPAT: Mode control: "single" allows storage of only one simulation for backward compatibility reasons;
+    // @compat Mode control: "single" allows storage of only one simulation for backward compatibility reasons;
     // will be removed when simulationReducer is replaced
     setSimulationsMode: (state, action: PayloadAction<'single' | 'multi'>) => {
       state.mode = action.payload;
@@ -203,31 +202,31 @@ export const {
 } = simulationsSlice.actions;
 
 // Selectors
-export const selectSimulationById = (state: RootState, id: string): Simulation | undefined =>
+export const selectSimulationById = (state: { simulations: SimulationsState }, id: string): Simulation | undefined =>
   state.simulations?.entities[id];
 
-export const selectActiveSimulation = (state: RootState): Simulation | undefined => {
+export const selectActiveSimulation = (state: { simulations: SimulationsState }): Simulation | undefined => {
   const activeId = state.simulations?.activeId;
   return activeId ? state.simulations.entities[activeId] : undefined;
 };
 
-export const selectAllSimulations = (state: RootState): Simulation[] =>
-  state.simulations?.ids.map(id => state.simulations.entities[id]) || [];
+export const selectAllSimulations = (state: { simulations: SimulationsState }): Simulation[] =>
+  state.simulations?.ids.map((id: string) => state.simulations.entities[id]) || [];
 
-// COMPAT: Selector for simulation mode
-export const selectSimulationsMode = (state: RootState): 'single' | 'multi' =>
+// @compat Selector for simulation mode
+export const selectSimulationsMode = (state: { simulations: SimulationsState }): 'single' | 'multi' =>
   state.simulations?.mode || 'single';
 
-// COMPAT: Compatibility selector - bridges between old and new state structure
-export const selectSimulationCompat = (state: RootState): Simulation | undefined => {
+// @compat Compatibility selector - bridges between old and new state structure
+export const selectSimulationCompat = (state: { simulations?: SimulationsState; simulation?: Simulation }): Simulation | undefined => {
   // If in single mode and we have an active simulation in the new structure, use it
   if (state.simulations?.mode === 'single' && state.simulations?.activeId) {
-    return selectActiveSimulation(state);
+    return selectActiveSimulation(state as { simulations: SimulationsState });
   }
   
   // Otherwise fall back to the old simulation state if it exists
   // This allows gradual migration
-  return (state as any).simulation || selectActiveSimulation(state);
+  return state.simulation || selectActiveSimulation(state as { simulations: SimulationsState });
 };
 
 export default simulationsSlice.reducer;
