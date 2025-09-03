@@ -4,7 +4,7 @@ import metadataReducer from './reducers/metadataReducer';
 import policyReducer from './reducers/policyReducer';
 import populationReducer from './reducers/populationReducer';
 import simulationReducer from './reducers/simulationReducer';
-import simulationsReducer from './reducers/simulationReducer';
+import simulationsReducer from './reducers/simulationsReducer';
 
 export const store = configureStore({
   reducer: {
