@@ -4,6 +4,7 @@ import metadataReducer from './reducers/metadataReducer';
 import policyReducer from './reducers/policyReducer';
 import populationReducer from './reducers/populationReducer';
 import simulationReducer from './reducers/simulationReducer';
+import simulationsReducer from './reducers/simulationReducer';
 
 export const store = configureStore({
   reducer: {
@@ -13,6 +14,7 @@ export const store = configureStore({
     simulation: simulationReducer,
     population: populationReducer,
     metadata: metadataReducer,
+    simulations: simulationsReducer,
   },
 });
 
