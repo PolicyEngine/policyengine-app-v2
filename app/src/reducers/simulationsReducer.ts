@@ -205,8 +205,11 @@ export const {
 export const selectSimulationById = (state: { simulations: SimulationsState }, id: string): Simulation | undefined =>
   state.simulations?.entities[id];
 
+export const selectActiveSimulationId = (state: { simulations: SimulationsState }): string | null =>
+  state.simulations?.activeId || null;
+
 export const selectActiveSimulation = (state: { simulations: SimulationsState }): Simulation | undefined => {
-  const activeId = state.simulations?.activeId;
+  const activeId = selectActiveSimulationId(state);
   return activeId ? state.simulations.entities[activeId] : undefined;
 };
 

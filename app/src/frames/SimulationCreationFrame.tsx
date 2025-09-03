@@ -5,7 +5,8 @@ import FlowView from '@/components/common/FlowView';
 import { updateSimulationLabel } from '@/reducers/simulationReducer';
 import { 
   createSimulation, 
-  updateSimulationLabel as updateSimulationLabelNew 
+  updateSimulationLabel as updateSimulationLabelNew,
+  selectActiveSimulationId 
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -15,7 +16,7 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
   const dispatch = useDispatch();
   
   // Get the active simulation ID from the new reducer (if it exists)
-  const activeSimulationId = useSelector((state: RootState) => state.simulations?.activeId);
+  const activeSimulationId = useSelector((state: RootState) => selectActiveSimulationId(state));
 
   // TODO: Make sure this effect hook is compatible with how we want to set up ingredients
   useEffect(() => {

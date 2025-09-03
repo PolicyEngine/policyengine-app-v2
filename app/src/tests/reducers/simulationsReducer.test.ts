@@ -14,6 +14,7 @@ import simulationsReducer, {
   clearAllSimulations,
   replaceSimulationId,
   selectSimulationById,
+  selectActiveSimulationId,
   selectActiveSimulation,
   selectAllSimulations,
   selectSimulationsMode,
@@ -396,6 +397,39 @@ describe('simulationsReducer', () => {
       
       // Then
       expect(simulation).toBeUndefined();
+    });
+
+    test('given selectActiveSimulationId then returns active simulation ID', () => {
+      // Given
+      const state = { simulations: singleSimulationState };
+      
+      // When
+      const activeId = selectActiveSimulationId(state);
+      
+      // Then
+      expect(activeId).toBe(TEST_TEMP_ID_1);
+    });
+
+    test('given selectActiveSimulationId with no active simulation then returns null', () => {
+      // Given
+      const state = { simulations: emptyInitialState };
+      
+      // When
+      const activeId = selectActiveSimulationId(state);
+      
+      // Then
+      expect(activeId).toBeNull();
+    });
+
+    test('given selectActiveSimulationId with missing simulations state then returns null', () => {
+      // Given - state without simulations (edge case during initialization)
+      const state = {} as { simulations: any };
+      
+      // When
+      const activeId = selectActiveSimulationId(state);
+      
+      // Then
+      expect(activeId).toBeNull();
     });
 
     test('given selectActiveSimulation then returns active simulation', () => {
