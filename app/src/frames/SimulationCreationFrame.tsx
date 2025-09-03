@@ -5,7 +5,7 @@ import FlowView from '@/components/common/FlowView';
 import { updateSimulationLabel } from '@/reducers/simulationReducer';
 import { 
   createSimulation, 
-  updateSimulationLabel as updateSimulationsLabel 
+  updateSimulationLabel as updateSimulationLabelNew 
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -36,7 +36,7 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
     
     // Dispatch to new reducer (for forward compatibility)
     if (activeSimulationId) {
-      dispatch(updateSimulationsLabel({ label: localLabel }));
+      dispatch(updateSimulationLabelNew({ label: localLabel }));
     }
     
     onNavigate('next');
