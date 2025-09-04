@@ -15,6 +15,8 @@ interface TitleCardWithHeaderProps {
   grayBackground?: boolean; 
   buttonLabel : string;
   onButtonClick : () => void;
+  titleAlign?: "left" | "center" | "right";
+  contentAlign?: "left" | "center" | "right";
 }
 
 export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
@@ -23,6 +25,8 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   grayBackground = false,
   buttonLabel,
   onButtonClick,
+  titleAlign,
+  contentAlign, 
 }) => {
   return (
     
@@ -35,7 +39,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
           root: {
             color: colors.black,
             fontSize: typography.fontSize['4xl'],
-            textAlign: "left",
+            textAlign: titleAlign || "center",
             lineHeight: typography.lineHeight.normal,
           },
         })}
@@ -44,21 +48,25 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       </Title>
 
       {/* Card with content */}
-      <Card shadow="sm" radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : "white"}>
+      <Card radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : "white"}
+      style={{
+    marginLeft: grayBackground ? '5rem' : 0,
+    marginRight: grayBackground ? '5rem' : 0,
+  }}>
         <Stack gap="md">
           {sections.map((section, idx) => (
             <div key={idx}>
-              <Title order={3} c={colors.blue[700]} lh={1.3} ta="left">
+              <Title order={3} c={colors.blue[700]} lh={1.3} ta={contentAlign || "center"}>
                 {section.heading}
               </Title>
               {Array.isArray(section.body) ? (
                 section.body.map((para, pIdx) => (
-                  <Text key={pIdx} size="md" c={colors.text.primary} lh={1.5} ta="left" mb="xs">
+                  <Text key={pIdx} size="md" c={colors.text.primary} lh={1.5} ta={contentAlign || "center"} mb="xs">
                     {para}
                   </Text>
                 ))
               ) : (
-                <Text size="md" c={colors.text.primary} lh={1.5} ta="left">
+                <Text size="md" c={colors.text.primary} lh={1.5} ta={contentAlign || "center"}>
                   {section.body}
                 </Text>
               )}
@@ -69,9 +77,9 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
             <Button
               onClick={onButtonClick}
               variant="filled"
-              color="blue"
+              color={colors.blue[700]}
               mt="md"
-              style={{ alignSelf: "flex-start" }}
+              style={{ alignSelf: "center" }}
             >
               {buttonLabel}
             </Button>
