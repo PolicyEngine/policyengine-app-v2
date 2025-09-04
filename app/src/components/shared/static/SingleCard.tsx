@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { Badge, Box, Card, Flex, Group, Image, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { BodyText } from '../../common/BodyText';
-import { TitleText } from '../../common/TitleText';
 
 export interface CardProps {
   title: string;
@@ -60,7 +58,15 @@ export function SingleCard({
     >
       {icon && <Box mb={spacing.sm}>{icon}</Box>}
 
-      <TitleText background={background}>{title}</TitleText>
+        <Text
+          fw={typography.fontWeight.medium}
+          fz={typography.fontSize['2xl']}
+          lh={typography.lineHeight.normal}
+          c={background === 'green' ? colors.text.inverse : colors.text.primary}
+          style={{ fontFamily: typography.fontFamily.primary }}
+        >
+          {title}
+        </Text>
 
       {tags.length > 0 && (
         <Group mb={spacing.lg} align="left" style={{ flexWrap: 'wrap' }} mt={spacing.md}>
@@ -80,7 +86,14 @@ export function SingleCard({
         </Group>
       )}
 
-      <BodyText background={background}>{description}</BodyText>
+      <Text
+        fz={typography.fontSize.lg}
+        lh={typography.lineHeight.relaxed}
+        c={background === 'green' ? colors.text.inverse : colors.text.secondary}
+        style={{ fontFamily: typography.fontFamily.body }}
+      >
+        {description}
+      </Text>
 
       {(footerText || image) && (
         <Flex

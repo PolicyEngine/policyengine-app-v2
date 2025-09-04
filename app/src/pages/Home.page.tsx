@@ -9,6 +9,7 @@ import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
 import { useFetchMetadata } from '@/hooks/useMetadata';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
+import { CardsWithHeader } from '@/components/shared/static/CardsWithHeader';
 
 export default function HomePage() {
   const dispatch = useDispatch();
@@ -48,6 +49,32 @@ export default function HomePage() {
         View Populations
       </Button>
       <FlowContainer />
+      <CardsWithHeader
+        containerTitle="Example Cards"
+        cards={[
+          {
+            title: 'MyFriendBen',
+            description: 'An open-source multi-benefit screener operating in Colorado, currently expanding to North Carolina and Massachusetts. MyFriendBen helps individuals quickly identify benefits they may qualify for through an accessible, user-friendly interface.',
+            background: 'white',
+            onClick: () => window.open('https://www.myfriendben.org', '_blank'),
+            tags: ['Colorado', 'Masachusetts', 'North Carolina'],
+            footerText: 'Visit Website ->',
+          },
+          {
+            title: 'Card 2',
+            description: 'This is the description for card 2.',
+            background: 'green',
+            tags: ['TagA'],
+            footerText: 'Details',
+          },
+          {
+            title: 'Card 3',
+            description: 'This is the description for card 3.',
+            background: 'gray',
+
+          },
+        ]}
+      />  
     </>
   );
 }
