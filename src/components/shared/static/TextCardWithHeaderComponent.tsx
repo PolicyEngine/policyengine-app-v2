@@ -25,10 +25,9 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   onButtonClick,
 }) => {
   return (
-    <Stack
+    
       // direction="column"
-      gap="xl" w="100%" maw={900} mx="auto" p="md"
-    >
+       <div>
       {/* Main Title */}
       <Title
         order={1}
@@ -36,7 +35,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
           root: {
             color: colors.black,
             fontSize: typography.fontSize['4xl'],
-            textAlign: "left", 
+            textAlign: "left",
             lineHeight: typography.lineHeight.normal,
           },
         })}
@@ -44,46 +43,47 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         {title}
       </Title>
 
-     {/* Card with content */}
+      {/* Card with content */}
       <Card shadow="sm" radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : "white"}>
-  <Stack gap="md">
-    {sections.map((section, idx) => (
-      <div key={idx}>
-        <Title order={3} c={colors.blue[700]} lh={1.3} ta="left">
-          {section.heading}
-        </Title>
-        {Array.isArray(section.body) ? (
-          section.body.map((para, pIdx) => (
-            <Text key={pIdx} size="md" c={colors.text.primary} lh={1.5} ta="left" mb="xs" >
-              {para}
-            </Text>
-          ))
-        ) : (
-          <Text size="md" c={colors.text.primary} lh={1.5} ta="left">
-            {section.body}
-          </Text>
-        )}
-      </div>
-    ))}
+        <Stack gap="md">
+          {sections.map((section, idx) => (
+            <div key={idx}>
+              <Title order={3} c={colors.blue[700]} lh={1.3} ta="left">
+                {section.heading}
+              </Title>
+              {Array.isArray(section.body) ? (
+                section.body.map((para, pIdx) => (
+                  <Text key={pIdx} size="md" c={colors.text.primary} lh={1.5} ta="left" mb="xs">
+                    {para}
+                  </Text>
+                ))
+              ) : (
+                <Text size="md" c={colors.text.primary} lh={1.5} ta="left">
+                  {section.body}
+                </Text>
+              )}
+            </div>
+          ))}
 
-    {buttonLabel && (
-      <Button
-        onClick={onButtonClick}
-        variant="filled"
-        color="blue"
-        mt="md"
-        style={{ alignSelf: "flex-start" }}
-      >
-        {buttonLabel}
-      </Button>
-    )}
-  </Stack>
-</Card>
-
-
-    </Stack>
+          {buttonLabel && (
+            <Button
+              onClick={onButtonClick}
+              variant="filled"
+              color="blue"
+              mt="md"
+              style={{ alignSelf: "flex-start" }}
+            >
+              {buttonLabel}
+            </Button>
+          )}
+        </Stack>
+      </Card>
+    </div>
   );
 };
+
+    
+
 
 export default function TextCardWithHeaderComponent() {
   return <TitleCardWithHeader title={""} buttonLabel={""} onButtonClick={function (): void {
