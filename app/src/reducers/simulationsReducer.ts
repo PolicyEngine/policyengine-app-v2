@@ -223,7 +223,10 @@ export const selectSimulationsMode = (state: { simulations: SimulationsState }):
 // @compat Compatibility selector - bridges between old and new state structure
 export const selectSimulationCompat = (state: { simulations?: SimulationsState; simulation?: Simulation }): Simulation | undefined => {
   // If in single mode and we have an active simulation in the new structure, use it
-  if (state.simulations?.mode === 'single' && state.simulations?.activeId) {
+  console.log('Active simulation ID: ', state.simulations?.activeId);
+  console.log('Multi mode: ', state.simulations);
+  console.log('Old simulation state: ', state.simulation);
+  if (state.simulations?.mode === 'multi' && state.simulations?.activeId) {
     return selectActiveSimulation(state as { simulations: SimulationsState });
   }
   

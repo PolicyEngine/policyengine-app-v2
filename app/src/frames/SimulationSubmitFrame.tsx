@@ -31,6 +31,9 @@ export default function SimulationSubmitFrame({
     // Otherwise use compatibility selector to get from either old or new state
     return selectSimulationCompat(state);
   });
+
+  console.log('Active simulation ID: ', simulationId);
+  console.log('Active simulation from state: ', simulation);
   
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
