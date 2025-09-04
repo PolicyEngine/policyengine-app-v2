@@ -1,32 +1,33 @@
 // import React from "react";
-import { Card, Title, Text, Flex } from "@mantine/core";
+import { Card, Title, Text, Flex, Stack, Button } from "@mantine/core";
 import { colors } from "../../../designTokens/colors";
 import { typography } from "@/designTokens";
 
 interface Section {
   heading: string;
   body: string | string[];
+  
 }
 
 interface TitleCardWithHeaderProps {
   title: string;
   sections?: Section[];
+  grayBackground?: boolean; 
+  buttonLabel : string;
+  onButtonClick : () => void;
 }
 
 export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   title,
   sections = [],
+  grayBackground = false,
+  buttonLabel,
+  onButtonClick,
 }) => {
   return (
-    <Flex
-      direction="column"
-      gap="xl"
-      style={{
-        width: "100%",
-        maxWidth: 900,
-        margin: "0 auto",
-        padding: 16, 
-      }}
+    <Stack
+      // direction="column"
+      gap="xl" w="100%" maw={900} mx="auto" p="md"
     >
       {/* Main Title */}
       <Title
@@ -36,70 +37,56 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
             color: colors.black,
             fontSize: typography.fontSize['4xl'],
             textAlign: "left", 
-            lineHeight: 1.2,
+            lineHeight: typography.lineHeight.normal,
           },
         })}
       >
         {title}
       </Title>
 
-      {/* Wrapper Card */}
-      <Card
-        shadow="sm"
-        radius="lg"
-        p="xl" 
-        styles={() => ({
-          root: {
-            backgroundColor: colors.gray[100],
-          },
-        })}
-      >
-        <Flex direction="column" gap="md">
-          {sections.map((section, idx) => (
-            <Flex key={idx} direction="column" gap={8}>
-              {/* Section Heading */}
-              <Title
-                order={3}
-                styles={() => ({
-                  root: {
-                    color: colors.blue[700],
-                    lineHeight: 1.3,
-                    textAlign: "left", 
-                  },
-                })}
-              >
-                {section.heading}
-              </Title>
+     {/* Card with content */}
+      <Card shadow="sm" radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : "white"}>
+  <Stack gap="md">
+    {sections.map((section, idx) => (
+      <div key={idx}>
+        <Title order={3} c={colors.blue[700]} lh={1.3} ta="left">
+          {section.heading}
+        </Title>
+        {Array.isArray(section.body) ? (
+          section.body.map((para, pIdx) => (
+            <Text key={pIdx} size="md" c={colors.text.primary} lh={1.5} ta="left" mb="xs" >
+              {para}
+            </Text>
+          ))
+        ) : (
+          <Text size="md" c={colors.text.primary} lh={1.5} ta="left">
+            {section.body}
+          </Text>
+        )}
+      </div>
+    ))}
 
-              {/* Section Body */}
-              {Array.isArray(section.body)
-                ? section.body.map((para, pIdx) => (
-                    <Text
-                      key={pIdx}
-                      size="md"
-                      styles={() => ({
-                        root: { color: colors.text.primary, lineHeight: 1.5, textAlign: "left" },
-                      })}
-                    >
-                      {para}
-                    </Text>
-                  ))
-                : (
-                    <Text
-                      size="md"
-                      styles={() => ({
-                        root: { color: colors.text.primary, lineHeight: 1.5, textAlign: "left" },
-                      })}
-                    >
-                      {section.body}
-                    </Text>
-                  )}
-            </Flex>
-          ))}
-        </Flex>
-      </Card>
-    </Flex>
+    {buttonLabel && (
+      <Button
+        onClick={onButtonClick}
+        variant="filled"
+        color="blue"
+        mt="md"
+        style={{ alignSelf: "flex-start" }}
+      >
+        {buttonLabel}
+      </Button>
+    )}
+  </Stack>
+</Card>
+
+
+    </Stack>
   );
 };
 
-export default TitleCardWithHeader;
+export default function TextCardWithHeaderComponent() {
+  return <TitleCardWithHeader title={""} buttonLabel={""} onButtonClick={function (): void {
+    throw new Error("Function not implemented.");
+  } } />;
+}
