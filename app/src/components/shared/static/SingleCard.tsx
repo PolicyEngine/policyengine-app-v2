@@ -58,15 +58,15 @@ export function SingleCard({
     >
       {icon && <Box mb={spacing.sm}>{icon}</Box>}
 
-        <Text
-          fw={typography.fontWeight.medium}
-          fz={typography.fontSize['2xl']}
-          lh={typography.lineHeight.normal}
-          c={background === 'green' ? colors.text.inverse : colors.text.primary}
-          style={{ fontFamily: typography.fontFamily.primary }}
-        >
-          {title}
-        </Text>
+      <Text
+        fw={typography.fontWeight.medium}
+        fz={typography.fontSize['2xl']}
+        lh={typography.lineHeight.normal}
+        c={background === 'green' ? colors.text.inverse : colors.text.primary}
+        style={{ fontFamily: typography.fontFamily.primary }}
+      >
+        {title}
+      </Text>
 
       {tags.length > 0 && (
         <Group mb={spacing.lg} align="left" style={{ flexWrap: 'wrap' }} mt={spacing.md}>
