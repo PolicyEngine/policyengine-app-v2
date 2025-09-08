@@ -28,6 +28,11 @@ export default function SimulationSelectExistingPopulationFrame({
     error: householdError,
   } = useUserHouseholds(userId);
 
+  console.log('Household Data:', householdData);
+  console.log('Household Loading:', isHouseholdLoading);
+  console.log('Household Error:', isHouseholdError);
+  console.log('Household Error Message:', householdError);
+
   // Fetch geographic populations
   const {
     data: geographicData,
@@ -35,6 +40,11 @@ export default function SimulationSelectExistingPopulationFrame({
     isError: isGeographicError,
     error: geographicError,
   } = useGeographicAssociationsByUser(userId);
+
+  console.log('Geographic Data:', geographicData);
+  console.log('Geographic Loading:', isGeographicLoading);
+  console.log('Geographic Error:', isGeographicError);
+  console.log('Geographic Error Message:', geographicError);
 
   const [localPopulationId, setLocalPopulationId] = useState<string | null>(null);
   const dispatch = useDispatch();
@@ -47,6 +57,8 @@ export default function SimulationSelectExistingPopulationFrame({
   const canProceed = localPopulationId !== null;
 
   function handleHouseholdPopulationSelect(population: HouseholdMetadata) {
+
+    console.log("Selected Household Population:", population);
     // Blank out any existing population
     dispatch(clearPopulation());
 
@@ -69,6 +81,8 @@ export default function SimulationSelectExistingPopulationFrame({
 
     dispatch(markPopulationAsCreated());
     setLocalPopulationId(`geographic-${population.id}`);
+
+    // TODO: What's going on with labels here?
   }
 
   function handleSubmit() {
@@ -120,7 +134,7 @@ export default function SimulationSelectExistingPopulationFrame({
     .map((association) => ({
       title: association.household!.label || `Population ${association.household!.id}`,
       onClick: () => handleHouseholdPopulationSelect(association.household!),
-      isSelected: localPopulationId === `household-${association.household!.id}`,
+      isSelected: localPopulationId === association.household!.id,
     }));
 
   // Build card list items from geographic populations
