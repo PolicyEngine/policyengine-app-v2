@@ -50,8 +50,8 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       {/* Card with content */}
       <Card radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : "white"}
       style={{
-    marginLeft: grayBackground ? '5rem' : 0,
-    marginRight: grayBackground ? '5rem' : 0,
+    // marginLeft: grayBackground ? '5rem' : 0,
+    // marginRight: grayBackground ? '5rem' : 0,
   }}>
         <Stack gap="md">
           {sections.map((section, idx) => (
