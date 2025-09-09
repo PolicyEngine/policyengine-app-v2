@@ -140,6 +140,29 @@ export default function SimulationSetupFrameMulti({
 
   }
 
+  function generatePolicyCardTitle() {
+    if (!policy || !policy.isCreated) {
+      return 'Add Policy';
+    }
+    if (policy.label) {
+      return policy.label;
+    }
+    if (policy.id) {
+      return `Policy #${policy.id}`;
+    }
+    return '';
+  }
+
+  function generatePolicyCardDescription() {
+    if (!policy || !policy.isCreated) {
+      return 'Select a policy to apply to the simulation';
+    }
+    if (policy.label && policy.id) {
+      return `Policy #${policy.id}`;
+    }
+    return '';
+  }
+
   const setupConditionCards = [
     {
       title: generatePopulationCardTitle(),
@@ -150,11 +173,8 @@ export default function SimulationSetupFrameMulti({
       isDisabled: false,
     },
     {
-      title: policy && policy.isCreated ? policy.label || `Policy #${policy.id}` : 'Add Policy',
-      description:
-        policy && policy.isCreated
-          ? policy.label || ''
-          : 'Select a policy to apply to the simulation',
+      title: generatePolicyCardTitle(),
+      description: generatePolicyCardDescription(),
       onClick: handlePolicySelect,
       isSelected: selectedCard === 'policy',
       isFulfilled: policy && policy.isCreated,

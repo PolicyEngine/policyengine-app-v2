@@ -169,14 +169,13 @@ export default function SimulationSelectExistingPopulationFrame({
     .filter((association) => isHouseholdMetadataWithAssociation(association)) // Only include associations with loaded households
     .slice(0, 5) // Display only the first 5 populations
     .map((association) => {
-      let title = null;
-      let subtitle = null;
+      let title = "";
+      let subtitle = "";
       if ('label' in association.association && association.association.label) {
         title = association.association.label;
         subtitle = `Population #${association.household!.id}`;
       } else {
         title = `Population #${association.household!.id}`;
-        subtitle = null;
       }
 
       return {
