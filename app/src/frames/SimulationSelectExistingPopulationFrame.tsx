@@ -168,11 +168,24 @@ export default function SimulationSelectExistingPopulationFrame({
   const householdCardItems = householdPopulations
     .filter((association) => isHouseholdMetadataWithAssociation(association)) // Only include associations with loaded households
     .slice(0, 5) // Display only the first 5 populations
-    .map((association) => ({
-      title: association.household!.label || `Population ${association.household!.id}`,
-      onClick: () => handleHouseholdPopulationSelect(association!),
-      isSelected: isHouseholdMetadataWithAssociation(localPopulation) && localPopulation.household?.id === association.household!.id,
-    }));
+    .map((association) => {
+      let title = null;
+      let subtitle = null;
+      if ('label' in association.association && association.association.label) {
+        title = association.association.label;
+        subtitle = `Population #${association.household!.id}`;
+      } else {
+        title = `Population #${association.household!.id}`;
+        subtitle = null;
+      }
+
+      return {
+        title: title,
+        subtitle: subtitle,
+        onClick: () => handleHouseholdPopulationSelect(association!),
+        isSelected: isHouseholdMetadataWithAssociation(localPopulation) && localPopulation.household?.id === association.household!.id,
+      }
+    });
 
   // Build card list items from geographic populations
   const geographicCardItems = geographicPopulations

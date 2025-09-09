@@ -107,17 +107,43 @@ export default function SimulationSetupFrameMulti({
 
   const canProceed: boolean = !!(simulation?.policyId && simulation?.populationId);
 
+  function generatePopulationCardTitle() {
+    if (!population || !population.isCreated) {
+      return 'Add Population';
+    }
+    if (population.label) {
+      return population.label;
+    }
+    if (population.household) {
+      return `Population #${population.household.id}`;
+    }
+    // TODO: Add proper labelling for geographic populations here
+    if (population.geography) {
+      return `Population #${population.geography.id}`;
+    }
+    return "";
+
+  }
+
+  function generatePopulationCardDescription() {
+    if (!population || !population.isCreated) {
+      return 'Select a geographic scope or specific household';
+    }
+    if (population.label && population.household) {
+      return `Population #${population.household.id}`;
+    }
+    // TODO: Add proper descriptions for geographic populations here
+    if (population.label && population.geography) {
+      return `Population #${population.geography.id}`;
+    }
+    return '';
+
+  }
+
   const setupConditionCards = [
     {
-      title:
-        population && population.isCreated
-          ? population.label ||
-            `Population #${population.household?.id || population.geography?.id}`
-          : 'Add Population',
-      description:
-        population && population.isCreated
-          ? population.label || ''
-          : 'Select a geographic scope or specific household',
+      title: generatePopulationCardTitle(),
+      description: generatePopulationCardDescription(),
       onClick: handlePopulationSelect,
       isSelected: selectedCard === 'population',
       isFulfilled: population && population.isCreated,
