@@ -1,7 +1,7 @@
 // import React from "react";
 import { Card, Title, Text, Flex, Stack, Button } from "@mantine/core";
-import { colors } from "../../../designTokens/colors";
-import { typography } from "@/designTokens";
+import { colors } from "../../../designTokens";
+import { typography } from "../../../designTokens";
 
 interface Section {
   heading: string;
