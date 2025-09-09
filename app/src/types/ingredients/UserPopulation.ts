@@ -1,3 +1,5 @@
+import { countryIds } from '@/libs/countries';
+
 /**
  * UserPopulation type using discriminated union for Household and Geography
  * This allows users to associate with either a household or geographic area
@@ -20,7 +22,7 @@ export interface UserHouseholdPopulation extends BaseUserPopulation {
 export interface UserGeographyPopulation extends BaseUserPopulation {
   type: 'geography';
   geographyId: string; // References Geography.id
-  countryId: string;
+  countryId: (typeof countryIds)[number];
   scope: 'national' | 'subnational';
 }
 

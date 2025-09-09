@@ -6,7 +6,7 @@ import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { uk_regions, us_regions } from '@/mocks/regions';
+import { countryIds } from '@/libs/countries';
 import {
   markPopulationAsCreated,
   updatePopulationId,
@@ -28,26 +28,19 @@ export default function GeographicConfirmationFrame({
 
   // Hardcoded for now - TODO: Replace with actual user from auth context
   const currentUserId = MOCK_USER_ID;
-  // Get current country from metadata state, fallback to 'us' if not available
+  // Get current country and metadata from state
   const currentCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  const metadata = useSelector((state: RootState) => state.metadata);
 
-  // Helper function to get region label
-  const getRegionLabel = (regionCode: string, countryCode: string): string => {
-    if (countryCode === 'us') {
-      const region = us_regions.result.economy_options.region.find(
-        (r) => r.name === regionCode || r.name === `state/${regionCode}`
-      );
-      return region?.label || regionCode;
-    }
-
-    if (countryCode === 'uk') {
-      const region = uk_regions.result.economy_options.region.find(
-        (r) => r.name === regionCode || r.name === `constituency/${regionCode}`
-      );
-      return region?.label || regionCode;
-    }
-
-    return regionCode;
+  // Helper function to get region label from metadata
+  const getRegionLabel = (regionCode: string): string => {
+    // Use actual metadata to find the region
+    const region = metadata.economyOptions.region.find(
+      (r) => r.name === regionCode ||
+             r.name === `state/${regionCode}` ||
+             r.name === `constituency/${regionCode}`
+    );
+    return region?.label || regionCode;
   };
 
   // Helper function to get country label
@@ -69,7 +62,7 @@ export default function GeographicConfirmationFrame({
     const basePopulation = {
       id: `${currentUserId}-${Date.now()}`, // TODO: May need to modify this after changes to API
       userId: currentUserId,
-      countryId: currentCountry,
+      countryId: currentCountry as (typeof countryIds)[number],
       geographyId: population.geography?.id || '',
       scope: population.geography?.scope || 'national' as const,
     };
@@ -85,7 +78,7 @@ export default function GeographicConfirmationFrame({
     const regionCode = population.geography?.geographyId || '';
     return {
       ...basePopulation,
-      label: getRegionLabel(regionCode, currentCountry),
+      label: getRegionLabel(regionCode),
     };
   };
 
@@ -140,7 +133,7 @@ export default function GeographicConfirmationFrame({
 
     // Subnational
     const regionCode = population.geography?.geographyId || '';
-    const regionLabel = getRegionLabel(regionCode, currentCountry);
+    const regionLabel = getRegionLabel(regionCode);
     const regionTypeName = getRegionType(currentCountry) === 'state' ? 'State' : 'Constituency';
 
     return (

@@ -104,7 +104,7 @@ export const useUserGeographics = (userId: string) => {
       // Construct a Geography object from the population data
       const geography: Geography = {
         id: population.geographyId,
-        countryId: population.countryId as any, // Type assertion needed for countryIds type
+        countryId: population.countryId,
         scope: population.scope,
         geographyId: population.geographyId,
         name: population.label,
