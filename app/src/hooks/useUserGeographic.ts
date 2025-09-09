@@ -3,6 +3,7 @@ import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geograp
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
 import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
+import { Geography } from '@/types/ingredients/Geography';
 
 const apiGeographicStore = new ApiGeographicStore();
 const sessionGeographicStore = new SessionStorageGeographicStore();
@@ -64,3 +65,26 @@ export const useCreateGeographicAssociation = () => {
     },
   });
 };
+
+// Type for the combined data structure
+export interface UserGeographicMetadataWithAssociation {
+  association: UserGeographicAssociation;
+  geography: Geography | undefined;
+  isLoading: boolean;
+  error: Error | null | undefined;
+  isError?: boolean;
+}
+
+export function isGeographicMetadataWithAssociation(
+  obj: any
+): obj is UserGeographicMetadataWithAssociation {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    'association' in obj &&
+    'geography' in obj &&
+    (obj.geography === undefined || typeof obj.geography === 'object') &&
+    typeof obj.isLoading === 'boolean' &&
+    ('error' in obj ? obj.error === null || obj.error instanceof Error : true)
+  );
+}
