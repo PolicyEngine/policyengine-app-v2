@@ -17,6 +17,10 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const population = useSelector((state: RootState) => state.population);
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
 
+  useEffect(() => {
+    console.log("Current Simulation State:", simulation);
+  }, [simulation]);
+
   const handlePopulationSelect = () => {
     setSelectedCard('population');
   };
@@ -45,11 +49,15 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   // Listen for population creation and update simulation with population ID
   useEffect(() => {
+    console.log("Population state in effect hook:", population);
+    console.log("Simulation state in effect hook:", simulation)
     if (population.isCreated && !simulation.populationId) {
       if (population.household?.id) {
         dispatch(updateSimulationPopulationId({ id: population.household.id, type: 'household' }));
+        console.log("Dispatched updateSimulationPopulationId with household ID:", population.household.id);
       } else if (population.geography?.id) {
         dispatch(updateSimulationPopulationId({ id: population.geography.id, type: 'geography' }));
+        console.log("Dispatched updateSimulationPopulationId with geography ID:", population.geography.id);
       }
     }
   }, [

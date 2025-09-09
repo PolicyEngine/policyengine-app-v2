@@ -25,6 +25,7 @@ export const populationSlice = createSlice({
 
     updatePopulationId: (state, action: PayloadAction<string>) => {
       // Update ID in the appropriate population type
+      console.log("State inside updatePopulationId:", state);
       if (state.household) {
         state.household.id = action.payload;
       } else if (state.geography) {

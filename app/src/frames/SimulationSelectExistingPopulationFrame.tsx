@@ -4,15 +4,16 @@ import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserHouseholds, UserHouseholdMetadataWithAssociation, isHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import {
   clearPopulation,
   markPopulationAsCreated,
   updatePopulationId,
   updatePopulationLabel,
+  setHousehold,
 } from '@/reducers/populationReducer';
+import { HouseholdAdapter } from '@/adapters';
 import { FlowComponentProps } from '@/types/flow';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 
 export default function SimulationSelectExistingPopulationFrame({
@@ -46,7 +47,9 @@ export default function SimulationSelectExistingPopulationFrame({
   console.log('Geographic Error:', isGeographicError);
   console.log('Geographic Error Message:', geographicError);
 
-  const [localPopulationId, setLocalPopulationId] = useState<string | null>(null);
+  // TODO: After adding geographic API handling, UserGeographicAssociation will likely be replaced
+  // by a different type 
+  const [localPopulation, setLocalPopulation] = useState<UserHouseholdMetadataWithAssociation | UserGeographicAssociation | null>(null);
   const dispatch = useDispatch();
 
   // Combined loading and error states
@@ -54,45 +57,79 @@ export default function SimulationSelectExistingPopulationFrame({
   const isError = isHouseholdError || isGeographicError;
   const error = householdError || geographicError;
 
-  const canProceed = localPopulationId !== null;
-
-  function handleHouseholdPopulationSelect(population: HouseholdMetadata) {
-
-    console.log("Selected Household Population:", population);
-    // Blank out any existing population
-    dispatch(clearPopulation());
-
-    // Fill in all population details
-    // TODO: Fix ID types
-    dispatch(updatePopulationId(population.id.toString()));
-    dispatch(updatePopulationLabel(population.label || ''));
-
-    dispatch(markPopulationAsCreated());
-    setLocalPopulationId(population.id);
+  function canProceed() {
+    if (!localPopulation) {
+      return false;
+    }
+    if (isHouseholdMetadataWithAssociation(localPopulation)) {
+      return localPopulation.household?.id !== null;
+    }
+    return false;
+    // TODO: Add handling for geographies here
   }
 
-  function handleGeographicPopulationSelect(population: UserGeographicAssociation) {
+  function handleHouseholdPopulationSelect(association: UserHouseholdMetadataWithAssociation) {
+    if (!association) return;
+
+    setLocalPopulation(association);
+  }
+
+
+  // TODO: Update this to work correctly with geographic populations
+  function handleGeographicPopulationSelect(geography: UserGeographicAssociation) {
+    console.log("Selected Geographic Population:", geography);
+    if (!geography || !('id' in geography)) return;
     // Blank out any existing population
     dispatch(clearPopulation());
 
     // Fill in all population details
-    dispatch(updatePopulationId(population.id.toString()));
-    dispatch(updatePopulationLabel(population.label));
+    dispatch(updatePopulationId(geography.id.toString()));
+    dispatch(updatePopulationLabel(geography.label));
 
     dispatch(markPopulationAsCreated());
-    setLocalPopulationId(`geographic-${population.id}`);
+    // setLocalPopulationId(`geographic-${geography.id}`);
+    setLocalPopulation(geography);
 
     // TODO: What's going on with labels here?
   }
 
   function handleSubmit() {
-    dispatch(updatePopulationId(localPopulationId || ''));
-    dispatch(markPopulationAsCreated());
+    if (!localPopulation) return;
+
+    console.log("Submitting Population in handleSubmit:", localPopulation);
+
+    if (isHouseholdMetadataWithAssociation(localPopulation)) {
+      console.log("Use household handler");
+      handleSubmitHouseholdPopulation();
+    }
+
+    // TODO: Add handling for geographic populations here
+
     onNavigate('next');
   }
 
+  function handleSubmitHouseholdPopulation() {
+    if (!localPopulation || !isHouseholdMetadataWithAssociation(localPopulation)) return;
+
+    dispatch(clearPopulation());
+
+    console.log("Local Population on Submit:", localPopulation);
+    dispatch(updatePopulationId(localPopulation.household?.id || ''));
+    dispatch(updatePopulationLabel(localPopulation.association?.label || ''));
+
+    const householdToSet = HouseholdAdapter.fromAPI(localPopulation.household!);
+    console.log("Setting household in population:", householdToSet);
+    dispatch(setHousehold(householdToSet));
+
+    dispatch(markPopulationAsCreated());
+  }
+
+
   const householdPopulations = householdData || [];
   const geographicPopulations = geographicData || [];
+
+  console.log("Household Populations:", householdPopulations);
+  console.log("Geographic Populations:", geographicPopulations);
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -129,12 +166,12 @@ export default function SimulationSelectExistingPopulationFrame({
 
   // Build card list items from household populations
   const householdCardItems = householdPopulations
-    .filter((association) => association.household) // Only include associations with loaded households
+    .filter((association) => isHouseholdMetadataWithAssociation(association)) // Only include associations with loaded households
     .slice(0, 5) // Display only the first 5 populations
     .map((association) => ({
       title: association.household!.label || `Population ${association.household!.id}`,
-      onClick: () => handleHouseholdPopulationSelect(association.household!),
-      isSelected: localPopulationId === association.household!.id,
+      onClick: () => handleHouseholdPopulationSelect(association!),
+      isSelected: isHouseholdMetadataWithAssociation(localPopulation) && localPopulation.household?.id === association.household!.id,
     }));
 
   // Build card list items from geographic populations
@@ -143,7 +180,9 @@ export default function SimulationSelectExistingPopulationFrame({
     .map((association) => ({
       title: association.label,
       onClick: () => handleGeographicPopulationSelect(association),
-      isSelected: localPopulationId === `geographic-${association.id}`,
+      // TODO: Update this selection logic to work properly after overhauling geography types
+      // isSelected: localPopulation?.id === association.id,
+      isSelected: false,
     }));
 
   // Combine both types of populations
@@ -164,7 +203,7 @@ export default function SimulationSelectExistingPopulationFrame({
   const primaryAction = {
     label: 'Next',
     onClick: handleSubmit,
-    isDisabled: !canProceed,
+    isDisabled: !canProceed(),
   };
 
   return (
