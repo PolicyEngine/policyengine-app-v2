@@ -1,7 +1,6 @@
 // import React from "react";
-import { Card, Title, Text, Flex, Stack, Button } from "@mantine/core";
-import { colors } from "../../../designTokens";
-import { typography } from "../../../designTokens";
+import { Card, Title, Text, Stack, Button } from "@mantine/core";
+import { colors, typography } from "../../../designTokens";
 
 interface Section {
   heading: string;
@@ -94,7 +93,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
 
 
 export default function TextCardWithHeaderComponent() {
-  return <TitleCardWithHeader title={""} buttonLabel={""} onButtonClick={function (): void {
+  return <TitleCardWithHeader title="" buttonLabel="" onButtonClick={function (): void {
     throw new Error("Function not implemented.");
-  } } />;
+  }} />;
 }
