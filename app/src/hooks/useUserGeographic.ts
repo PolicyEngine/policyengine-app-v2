@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geographicAssociation';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
@@ -87,4 +87,43 @@ export function isGeographicMetadataWithAssociation(
     typeof obj.isLoading === 'boolean' &&
     ('error' in obj ? obj.error === null || obj.error instanceof Error : true)
   );
+}
+
+export const useUserGeographics = (userId: string) => {
+  // First, get the associations
+  const {
+    data: associations,
+    isLoading: associationsLoading,
+    error: associationsError,
+  } = useGeographicAssociationsByUser(userId);
+
+  // For geographic populations, we construct Geography objects from the associations
+  // since they don't require API fetching like households do
+  const geographicsWithAssociations: UserGeographicMetadataWithAssociation[] | undefined =
+    associations?.map((association) => {
+      // Construct a Geography object from the association data
+      const geography: Geography = {
+        id: association.geographyIdentifier,
+        countryId: association.countryCode as any, // Type assertion needed for countryIds type
+        scope: association.geographyType,
+        geographyId: association.regionCode || association.countryCode,
+        name: association.label,
+      };
+
+      return {
+        association,
+        geography,
+        isLoading: false,
+        error: null,
+        isError: false,
+      };
+    });
+
+  return {
+    data: geographicsWithAssociations,
+    isLoading: associationsLoading,
+    isError: !!associationsError,
+    error: associationsError,
+    associations, // Still available if needed separately
+  };
 }
