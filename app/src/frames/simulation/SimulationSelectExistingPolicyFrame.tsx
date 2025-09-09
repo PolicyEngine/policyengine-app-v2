@@ -3,7 +3,11 @@ import { useDispatch } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
-import { useUserPolicies, UserPolicyMetadataWithAssociation, isPolicyMetadataWithAssociation } from '@/hooks/useUserPolicy';
+import {
+  isPolicyMetadataWithAssociation,
+  UserPolicyMetadataWithAssociation,
+  useUserPolicies,
+} from '@/hooks/useUserPolicy';
 import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
 import {
   clearPolicy,
@@ -48,10 +52,10 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       return;
     }
 
-    console.log("Submitting Policy in handleSubmit:", localPolicy);
+    console.log('Submitting Policy in handleSubmit:', localPolicy);
 
     if (isPolicyMetadataWithAssociation(localPolicy)) {
-      console.log("Use policy handler");
+      console.log('Use policy handler');
       handleSubmitPolicy();
     }
 
@@ -65,7 +69,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
     dispatch(clearPolicy());
 
-    console.log("Local Policy on Submit:", localPolicy);
+    console.log('Local Policy on Submit:', localPolicy);
     dispatch(updatePolicyId(localPolicy.policy?.id?.toString() || ''));
     dispatch(updateLabel(localPolicy.association?.label || ''));
 
@@ -79,7 +83,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   const userPolicies = data || [];
 
-  console.log("User Policies:", userPolicies);
+  console.log('User Policies:', userPolicies);
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -119,8 +123,8 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     .filter((association) => isPolicyMetadataWithAssociation(association)) // Only include associations with loaded policies
     .slice(0, 5) // Display only the first 5 policies
     .map((association) => {
-      let title = "";
-      let subtitle = "";
+      let title = '';
+      let subtitle = '';
       if ('label' in association.association && association.association.label) {
         title = association.association.label;
         subtitle = `Policy #${association.policy!.id}`;
@@ -132,8 +136,10 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
         title,
         subtitle,
         onClick: () => handlePolicySelect(association),
-        isSelected: isPolicyMetadataWithAssociation(localPolicy) && localPolicy.policy?.id === association.policy!.id,
-      }
+        isSelected:
+          isPolicyMetadataWithAssociation(localPolicy) &&
+          localPolicy.policy?.id === association.policy!.id,
+      };
     });
 
   const content = (

@@ -3,10 +3,7 @@ import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { 
-  selectSimulationById, 
-  selectActiveSimulation 
-} from '@/reducers/simulationsReducer';
+import { selectActiveSimulation, selectSimulationById } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -16,10 +13,10 @@ interface SimulationSubmitFrameProps extends FlowComponentProps {
   simulationId?: string; // Optional specific simulation ID to submit
 }
 
-export default function SimulationSubmitFrame({ 
-  onNavigate, 
+export default function SimulationSubmitFrame({
+  onNavigate,
   isInSubflow,
-  simulationId 
+  simulationId,
 }: SimulationSubmitFrameProps) {
   // Get simulation from the normalized state
   const simulation = useSelector((state: RootState) => {
@@ -30,7 +27,7 @@ export default function SimulationSubmitFrame({
     // Otherwise get the active simulation
     return selectActiveSimulation(state);
   });
-  
+
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
 

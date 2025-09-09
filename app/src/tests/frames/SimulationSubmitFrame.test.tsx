@@ -1,26 +1,27 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen } from '@test-utils';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSubmitFrame from '@/frames/simulation/SimulationSubmitFrame';
-import simulationsReducer from '@/reducers/simulationsReducer';
 import flowReducer from '@/reducers/flowReducer';
-import populationReducer from '@/reducers/populationReducer';
 import metadataReducer from '@/reducers/metadataReducer';
+import populationReducer from '@/reducers/populationReducer';
+import simulationsReducer from '@/reducers/simulationsReducer';
 import {
-  TEST_SIMULATION_ID,
-  TEST_SIMULATION_ID_MISSING,
-  TEST_POPULATION_LABEL,
-  TEST_POLICY_LABEL,
-  SUBMIT_VIEW_TITLE,
-  POPULATION_ADDED_TITLE,
-  POLICY_REFORM_ADDED_TITLE,
   mockSimulationComplete,
   mockSimulationPartial,
-  mockStateWithOldSimulation,
-  mockStateWithNewSimulation,
   mockStateWithBothSimulations,
+  mockStateWithNewSimulation,
+  mockStateWithOldSimulation,
+  POLICY_REFORM_ADDED_TITLE,
+  POPULATION_ADDED_TITLE,
+  SUBMIT_VIEW_TITLE,
+  TEST_POLICY_LABEL,
+  TEST_POPULATION_LABEL,
+  TEST_SIMULATION_ID,
+  TEST_SIMULATION_ID_MISSING,
 } from '@/tests/fixtures/frames/SimulationSubmitFrame';
+
 // Mock the hooks - must be defined inline due to hoisting
 vi.mock('@/hooks/useCreateSimulation', () => ({
   useCreateSimulation: vi.fn(() => ({
@@ -43,10 +44,10 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     mockOnNavigate = vi.fn();
     mockOnReturn = vi.fn();
-    
+
     defaultFlowProps = {
       onNavigate: mockOnNavigate,
       onReturn: mockOnReturn,
@@ -87,7 +88,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       expect(screen.getByText(SUBMIT_VIEW_TITLE)).toBeInTheDocument();
       expect(screen.getByText(POPULATION_ADDED_TITLE)).toBeInTheDocument();
       expect(screen.getByText(POLICY_REFORM_ADDED_TITLE)).toBeInTheDocument();
-      
+
       // Check that population and policy data are shown (multiple elements may have this text)
       const populationElements = screen.getAllByText(TEST_POPULATION_LABEL);
       expect(populationElements.length).toBeGreaterThan(0);
@@ -165,10 +166,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       // When - pass specific simulation ID
       render(
         <Provider store={store}>
-          <SimulationSubmitFrame 
-            {...defaultFlowProps} 
-            simulationId={TEST_SIMULATION_ID}
-          />
+          <SimulationSubmitFrame {...defaultFlowProps} simulationId={TEST_SIMULATION_ID} />
         </Provider>
       );
 
@@ -194,16 +192,13 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       // When - pass non-existent simulation ID
       render(
         <Provider store={store}>
-          <SimulationSubmitFrame 
-            {...defaultFlowProps} 
-            simulationId={TEST_SIMULATION_ID_MISSING}
-          />
+          <SimulationSubmitFrame {...defaultFlowProps} simulationId={TEST_SIMULATION_ID_MISSING} />
         </Provider>
       );
 
       // Then - should still render without crashing
       expect(screen.getByText(SUBMIT_VIEW_TITLE)).toBeInTheDocument();
-      
+
       // Population and policy cards should still appear, but without fulfilled state
       expect(screen.getByText(POPULATION_ADDED_TITLE)).toBeInTheDocument();
       expect(screen.getByText(POLICY_REFORM_ADDED_TITLE)).toBeInTheDocument();
@@ -263,7 +258,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       // Then
       expect(screen.getByText(POPULATION_ADDED_TITLE)).toBeInTheDocument();
       expect(screen.getByText(POLICY_REFORM_ADDED_TITLE)).toBeInTheDocument();
-      
+
       // Should show population label (may appear multiple times)
       const populationElements = screen.getAllByText(TEST_POPULATION_LABEL);
       expect(populationElements.length).toBeGreaterThan(0);

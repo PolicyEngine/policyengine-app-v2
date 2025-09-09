@@ -1,48 +1,47 @@
-import { describe, test, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test } from 'vitest';
 import simulationsReducer, {
-  createSimulation,
-  updateSimulationPopulationId,
-  updateSimulationPolicyId,
-  updateSimulationLabel,
-  updateSimulationId,
-  markSimulationAsCreated,
-  updateSimulationField,
-  setActiveSimulation,
-  removeSimulation,
-  clearSimulation,
   clearAllSimulations,
+  clearSimulation,
+  createSimulation,
+  markSimulationAsCreated,
+  removeSimulation,
   replaceSimulationId,
-  selectSimulationById,
-  selectActiveSimulationId,
   selectActiveSimulation,
+  selectActiveSimulationId,
   selectAllSimulations,
+  selectSimulationById,
+  setActiveSimulation,
+  updateSimulationField,
+  updateSimulationId,
+  updateSimulationLabel,
+  updateSimulationPolicyId,
+  updateSimulationPopulationId,
 } from '@/reducers/simulationsReducer';
 import {
-  TEST_TEMP_ID_1,
-  TEST_TEMP_ID_2,
-  TEST_PERMANENT_ID_1,
-  TEST_HOUSEHOLD_ID,
-  TEST_POLICY_ID_1,
-  TEST_LABEL_1,
-  TEST_LABEL_UPDATED,
+  emptyInitialState,
+  mockEmptySimulation,
   mockSimulation1,
   mockSimulation2,
-  mockEmptySimulation,
-  emptyInitialState,
-  singleSimulationState,
   multipleSimulationsState,
+  singleSimulationState,
+  TEST_HOUSEHOLD_ID,
+  TEST_LABEL_1,
+  TEST_LABEL_UPDATED,
+  TEST_PERMANENT_ID_1,
+  TEST_POLICY_ID_1,
+  TEST_TEMP_ID_1,
+  TEST_TEMP_ID_2,
 } from '@/tests/fixtures/reducers/simulationsReducer';
 
 describe('simulationsReducer', () => {
-
   describe('Creating Simulations', () => {
     test('given createSimulation action then new simulation is added and set as active', () => {
       // Given
       const state = emptyInitialState;
-      
+
       // When
       const newState = simulationsReducer(state, createSimulation());
-      
+
       // Then
       expect(Object.keys(newState.entities)).toHaveLength(1);
       expect(newState.ids).toHaveLength(1);
@@ -57,10 +56,10 @@ describe('simulationsReducer', () => {
         label: TEST_LABEL_1,
         policyId: TEST_POLICY_ID_1,
       };
-      
+
       // When
       const newState = simulationsReducer(state, createSimulation(initialData));
-      
+
       // Then
       const createdSimulation = newState.entities[newState.ids[0]];
       expect(createdSimulation.label).toBe(TEST_LABEL_1);
@@ -85,7 +84,7 @@ describe('simulationsReducer', () => {
           populationType: 'household',
         })
       );
-      
+
       // Then
       const activeSimulation = newState.entities[newState.activeId!];
       expect(activeSimulation.populationId).toBe(TEST_HOUSEHOLD_ID);
@@ -98,7 +97,7 @@ describe('simulationsReducer', () => {
         initialState,
         updateSimulationPolicyId({ policyId: TEST_POLICY_ID_1 })
       );
-      
+
       // Then
       const activeSimulation = newState.entities[newState.activeId!];
       expect(activeSimulation.policyId).toBe(TEST_POLICY_ID_1);
@@ -110,7 +109,7 @@ describe('simulationsReducer', () => {
         initialState,
         updateSimulationLabel({ label: TEST_LABEL_1 })
       );
-      
+
       // Then
       const activeSimulation = newState.entities[newState.activeId!];
       expect(activeSimulation.label).toBe(TEST_LABEL_1);
@@ -122,7 +121,7 @@ describe('simulationsReducer', () => {
         initialState,
         updateSimulationId({ id: TEST_PERMANENT_ID_1 })
       );
-      
+
       // Then
       const activeSimulation = newState.entities[newState.activeId!];
       expect(activeSimulation.id).toBe(TEST_PERMANENT_ID_1);
@@ -130,11 +129,8 @@ describe('simulationsReducer', () => {
 
     test('given markSimulationAsCreated then active simulation isCreated is true', () => {
       // When
-      const newState = simulationsReducer(
-        initialState,
-        markSimulationAsCreated({})
-      );
-      
+      const newState = simulationsReducer(initialState, markSimulationAsCreated({}));
+
       // Then
       const activeSimulation = newState.entities[newState.activeId!];
       expect(activeSimulation.isCreated).toBe(true);
@@ -149,7 +145,7 @@ describe('simulationsReducer', () => {
           value: TEST_LABEL_UPDATED,
         })
       );
-      
+
       // Then
       const activeSimulation = newState.entities[newState.activeId!];
       expect(activeSimulation.label).toBe(TEST_LABEL_UPDATED);
@@ -160,7 +156,7 @@ describe('simulationsReducer', () => {
     test('given update action with simulationId then specific simulation is updated', () => {
       // Given
       const state = multipleSimulationsState;
-      
+
       // When
       const newState = simulationsReducer(
         state,
@@ -169,7 +165,7 @@ describe('simulationsReducer', () => {
           label: TEST_LABEL_UPDATED,
         })
       );
-      
+
       // Then
       expect(newState.entities[TEST_TEMP_ID_2].label).toBe(TEST_LABEL_UPDATED);
       expect(newState.entities[TEST_TEMP_ID_1].label).toBe(TEST_LABEL_1); // Unchanged
@@ -180,13 +176,10 @@ describe('simulationsReducer', () => {
     test('given setActiveSimulation then active simulation changes', () => {
       // Given
       const state = multipleSimulationsState;
-      
+
       // When
-      const newState = simulationsReducer(
-        state,
-        setActiveSimulation(TEST_TEMP_ID_2)
-      );
-      
+      const newState = simulationsReducer(state, setActiveSimulation(TEST_TEMP_ID_2));
+
       // Then
       expect(newState.activeId).toBe(TEST_TEMP_ID_2);
     });
@@ -194,13 +187,10 @@ describe('simulationsReducer', () => {
     test('given setActiveSimulation with invalid id then active simulation does not change', () => {
       // Given
       const state = multipleSimulationsState;
-      
+
       // When
-      const newState = simulationsReducer(
-        state,
-        setActiveSimulation('invalid-id')
-      );
-      
+      const newState = simulationsReducer(state, setActiveSimulation('invalid-id'));
+
       // Then
       expect(newState.activeId).toBe(TEST_TEMP_ID_1); // Unchanged
     });
@@ -208,13 +198,10 @@ describe('simulationsReducer', () => {
     test('given removeSimulation then simulation is removed from state', () => {
       // Given
       const state = multipleSimulationsState;
-      
+
       // When
-      const newState = simulationsReducer(
-        state,
-        removeSimulation(TEST_TEMP_ID_2)
-      );
-      
+      const newState = simulationsReducer(state, removeSimulation(TEST_TEMP_ID_2));
+
       // Then
       expect(newState.entities[TEST_TEMP_ID_2]).toBeUndefined();
       expect(newState.ids).not.toContain(TEST_TEMP_ID_2);
@@ -224,13 +211,13 @@ describe('simulationsReducer', () => {
     test('given removeSimulation of active simulation then new active is set', () => {
       // Given
       const state = multipleSimulationsState;
-      
+
       // When
       const newState = simulationsReducer(
         state,
         removeSimulation(TEST_TEMP_ID_1) // Remove the active one
       );
-      
+
       // Then
       expect(newState.activeId).toBe(TEST_TEMP_ID_2); // Should switch to remaining
     });
@@ -238,13 +225,10 @@ describe('simulationsReducer', () => {
     test('given removeSimulation of last simulation then activeId is null', () => {
       // Given
       const state = singleSimulationState;
-      
+
       // When
-      const newState = simulationsReducer(
-        state,
-        removeSimulation(TEST_TEMP_ID_1)
-      );
-      
+      const newState = simulationsReducer(state, removeSimulation(TEST_TEMP_ID_1));
+
       // Then
       expect(newState.activeId).toBeNull();
       expect(newState.ids).toHaveLength(0);
@@ -255,10 +239,10 @@ describe('simulationsReducer', () => {
     test('given clearSimulation then active simulation is reset', () => {
       // Given
       const state = singleSimulationState;
-      
+
       // When
       const newState = simulationsReducer(state, clearSimulation({}));
-      
+
       // Then
       const activeSimulation = newState.entities[newState.activeId!];
       expect(activeSimulation).toMatchObject(mockEmptySimulation);
@@ -267,13 +251,10 @@ describe('simulationsReducer', () => {
     test('given clearSimulation with simulationId then specific simulation is reset', () => {
       // Given
       const state = multipleSimulationsState;
-      
+
       // When
-      const newState = simulationsReducer(
-        state,
-        clearSimulation({ simulationId: TEST_TEMP_ID_2 })
-      );
-      
+      const newState = simulationsReducer(state, clearSimulation({ simulationId: TEST_TEMP_ID_2 }));
+
       // Then
       expect(newState.entities[TEST_TEMP_ID_2]).toMatchObject(mockEmptySimulation);
       expect(newState.entities[TEST_TEMP_ID_1]).toMatchObject(mockSimulation1); // Unchanged
@@ -282,10 +263,10 @@ describe('simulationsReducer', () => {
     test('given clearAllSimulations then all simulations are removed', () => {
       // Given
       const state = multipleSimulationsState;
-      
+
       // When
       const newState = simulationsReducer(state, clearAllSimulations());
-      
+
       // Then
       expect(newState.entities).toEqual({});
       expect(newState.ids).toEqual([]);
@@ -297,7 +278,7 @@ describe('simulationsReducer', () => {
     test('given replaceSimulationId then temp ID is replaced with permanent ID', () => {
       // Given
       const state = singleSimulationState;
-      
+
       // When
       const newState = simulationsReducer(
         state,
@@ -306,7 +287,7 @@ describe('simulationsReducer', () => {
           permanentId: TEST_PERMANENT_ID_1,
         })
       );
-      
+
       // Then
       expect(newState.entities[TEST_PERMANENT_ID_1]).toBeDefined();
       expect(newState.entities[TEST_TEMP_ID_1]).toBeUndefined();
@@ -317,7 +298,7 @@ describe('simulationsReducer', () => {
     test('given replaceSimulationId for active simulation then activeId is updated', () => {
       // Given
       const state = singleSimulationState;
-      
+
       // When
       const newState = simulationsReducer(
         state,
@@ -326,7 +307,7 @@ describe('simulationsReducer', () => {
           permanentId: TEST_PERMANENT_ID_1,
         })
       );
-      
+
       // Then
       expect(newState.activeId).toBe(TEST_PERMANENT_ID_1);
     });
@@ -334,7 +315,7 @@ describe('simulationsReducer', () => {
     test('given replaceSimulationId with non-existent tempId then state is unchanged', () => {
       // Given
       const state = singleSimulationState;
-      
+
       // When
       const newState = simulationsReducer(
         state,
@@ -343,7 +324,7 @@ describe('simulationsReducer', () => {
           permanentId: TEST_PERMANENT_ID_1,
         })
       );
-      
+
       // Then
       expect(newState).toEqual(state);
     });
@@ -353,10 +334,10 @@ describe('simulationsReducer', () => {
     test('given selectSimulationById then returns correct simulation', () => {
       // Given
       const state = { simulations: multipleSimulationsState };
-      
+
       // When
       const simulation = selectSimulationById(state, TEST_TEMP_ID_2);
-      
+
       // Then
       expect(simulation).toEqual(mockSimulation2);
     });
@@ -364,10 +345,10 @@ describe('simulationsReducer', () => {
     test('given selectSimulationById with invalid id then returns undefined', () => {
       // Given
       const state = { simulations: multipleSimulationsState };
-      
+
       // When
       const simulation = selectSimulationById(state, 'invalid-id');
-      
+
       // Then
       expect(simulation).toBeUndefined();
     });
@@ -375,10 +356,10 @@ describe('simulationsReducer', () => {
     test('given selectActiveSimulationId then returns active simulation ID', () => {
       // Given
       const state = { simulations: singleSimulationState };
-      
+
       // When
       const activeId = selectActiveSimulationId(state);
-      
+
       // Then
       expect(activeId).toBe(TEST_TEMP_ID_1);
     });
@@ -386,10 +367,10 @@ describe('simulationsReducer', () => {
     test('given selectActiveSimulationId with no active simulation then returns null', () => {
       // Given
       const state = { simulations: emptyInitialState };
-      
+
       // When
       const activeId = selectActiveSimulationId(state);
-      
+
       // Then
       expect(activeId).toBeNull();
     });
@@ -397,10 +378,10 @@ describe('simulationsReducer', () => {
     test('given selectActiveSimulationId with missing simulations state then returns null', () => {
       // Given - state without simulations (edge case during initialization)
       const state = {} as { simulations: any };
-      
+
       // When
       const activeId = selectActiveSimulationId(state);
-      
+
       // Then
       expect(activeId).toBeNull();
     });
@@ -408,10 +389,10 @@ describe('simulationsReducer', () => {
     test('given selectActiveSimulation then returns active simulation', () => {
       // Given
       const state = { simulations: singleSimulationState };
-      
+
       // When
       const simulation = selectActiveSimulation(state);
-      
+
       // Then
       expect(simulation).toEqual(mockSimulation1);
     });
@@ -419,10 +400,10 @@ describe('simulationsReducer', () => {
     test('given selectActiveSimulation with no active then returns undefined', () => {
       // Given
       const state = { simulations: emptyInitialState };
-      
+
       // When
       const simulation = selectActiveSimulation(state);
-      
+
       // Then
       expect(simulation).toBeUndefined();
     });
@@ -430,15 +411,14 @@ describe('simulationsReducer', () => {
     test('given selectAllSimulations then returns all simulations as array', () => {
       // Given
       const state = { simulations: multipleSimulationsState };
-      
+
       // When
       const simulations = selectAllSimulations(state);
-      
+
       // Then
       expect(simulations).toHaveLength(2);
       expect(simulations).toContain(mockSimulation1);
       expect(simulations).toContain(mockSimulation2);
     });
-
   });
 });

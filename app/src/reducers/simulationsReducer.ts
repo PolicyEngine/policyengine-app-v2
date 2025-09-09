@@ -33,7 +33,7 @@ export const simulationsSlice = createSlice({
         isCreated: false,
         ...action.payload,
       };
-      
+
       state.entities[id] = newSimulation;
       state.ids.push(id);
       state.activeId = id;
@@ -42,7 +42,7 @@ export const simulationsSlice = createSlice({
     // Update a specific simulation's field (mirrors original reducer actions)
     updateSimulationPopulationId: (
       state,
-      action: PayloadAction<{ 
+      action: PayloadAction<{
         simulationId?: string;
         populationId: string;
         populationType: 'household' | 'geography';
@@ -75,20 +75,14 @@ export const simulationsSlice = createSlice({
       }
     },
 
-    updateSimulationId: (
-      state,
-      action: PayloadAction<{ simulationId?: string; id: string }>
-    ) => {
+    updateSimulationId: (state, action: PayloadAction<{ simulationId?: string; id: string }>) => {
       const simId = action.payload.simulationId || state.activeId;
       if (simId && state.entities[simId]) {
         state.entities[simId].id = action.payload.id;
       }
     },
 
-    markSimulationAsCreated: (
-      state,
-      action: PayloadAction<{ simulationId?: string }>
-    ) => {
+    markSimulationAsCreated: (state, action: PayloadAction<{ simulationId?: string }>) => {
       const id = action.payload?.simulationId || state.activeId;
       if (id && state.entities[id]) {
         state.entities[id].isCreated = true;
@@ -120,8 +114,8 @@ export const simulationsSlice = createSlice({
     // Remove a simulation
     removeSimulation: (state, action: PayloadAction<string>) => {
       delete state.entities[action.payload];
-      state.ids = state.ids.filter(id => id !== action.payload);
-      
+      state.ids = state.ids.filter((id) => id !== action.payload);
+
       // If we removed the active simulation, set a new active one
       if (state.activeId === action.payload) {
         state.activeId = state.ids.length > 0 ? state.ids[0] : null;
@@ -161,13 +155,13 @@ export const simulationsSlice = createSlice({
         state.entities[permanentId] = state.entities[tempId];
         state.entities[permanentId].id = permanentId;
         delete state.entities[tempId];
-        
+
         // Update the ids array
         const index = state.ids.indexOf(tempId);
         if (index !== -1) {
           state.ids[index] = permanentId;
         }
-        
+
         // Update activeId if needed
         if (state.activeId === tempId) {
           state.activeId = permanentId;
@@ -193,13 +187,17 @@ export const {
 } = simulationsSlice.actions;
 
 // Selectors
-export const selectSimulationById = (state: { simulations: SimulationsState }, id: string): Simulation | undefined =>
-  state.simulations?.entities[id];
+export const selectSimulationById = (
+  state: { simulations: SimulationsState },
+  id: string
+): Simulation | undefined => state.simulations?.entities[id];
 
 export const selectActiveSimulationId = (state: { simulations: SimulationsState }): string | null =>
   state.simulations?.activeId || null;
 
-export const selectActiveSimulation = (state: { simulations: SimulationsState }): Simulation | undefined => {
+export const selectActiveSimulation = (state: {
+  simulations: SimulationsState;
+}): Simulation | undefined => {
   const activeId = selectActiveSimulationId(state);
   return activeId ? state.simulations.entities[activeId] : undefined;
 };

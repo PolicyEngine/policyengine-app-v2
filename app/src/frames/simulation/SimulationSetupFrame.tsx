@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
 import {
-  updateSimulationPolicyId,
-  updateSimulationPopulationId,
+  createSimulation,
   selectActiveSimulation,
   selectActiveSimulationId,
-  createSimulation,
+  updateSimulationPolicyId,
+  updateSimulationPopulationId,
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -17,22 +17,22 @@ interface SimulationSetupFrameProps extends FlowComponentProps {
   simulationId?: string; // Optional specific simulation ID to edit
 }
 
-export default function SimulationSetupFrame({ 
-  onNavigate, 
-  simulationId 
+export default function SimulationSetupFrame({
+  onNavigate,
+  simulationId,
 }: SimulationSetupFrameProps) {
   const dispatch = useDispatch();
-  
+
   // Get the active simulation from the new normalized state
   const activeSimulationId = useSelector((state: RootState) => selectActiveSimulationId(state));
   const simulation = useSelector((state: RootState) => selectActiveSimulation(state));
-  
+
   // Still use the old policy and population reducers for now (they haven't been migrated yet)
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
-  
+
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
-  
+
   // Ensure we have an active simulation in the new reducer
   useEffect(() => {
     if (!activeSimulationId) {
@@ -63,32 +63,44 @@ export default function SimulationSetupFrame({
   useEffect(() => {
     if (policy.isCreated && policy.id && !simulation?.policyId) {
       // Dispatch to new reducer with the specific simulation ID
-      dispatch(updateSimulationPolicyId({ 
-        simulationId: simulationId || activeSimulationId || undefined,
-        policyId: policy.id 
-      }));
+      dispatch(
+        updateSimulationPolicyId({
+          simulationId: simulationId || activeSimulationId || undefined,
+          policyId: policy.id,
+        })
+      );
     }
-  }, [policy.isCreated, policy.id, simulation?.policyId, simulationId, activeSimulationId, dispatch]);
+  }, [
+    policy.isCreated,
+    policy.id,
+    simulation?.policyId,
+    simulationId,
+    activeSimulationId,
+    dispatch,
+  ]);
 
   // Listen for population creation and update simulation with population ID
   useEffect(() => {
-
-    console.log("Population state in new effect hook:", population);
-    console.log("Simulation state in new effect hook:", simulation)
+    console.log('Population state in new effect hook:', population);
+    console.log('Simulation state in new effect hook:', simulation);
     if (population.isCreated && !simulation?.populationId) {
-      console.log("Responding to update to population in new effect hook");
+      console.log('Responding to update to population in new effect hook');
       if (population.household?.id) {
-        dispatch(updateSimulationPopulationId({ 
-          simulationId: simulationId || activeSimulationId || undefined,
-          populationId: population.household.id, 
-          populationType: 'household' 
-        }));
+        dispatch(
+          updateSimulationPopulationId({
+            simulationId: simulationId || activeSimulationId || undefined,
+            populationId: population.household.id,
+            populationType: 'household',
+          })
+        );
       } else if (population.geography?.id) {
-        dispatch(updateSimulationPopulationId({ 
-          simulationId: simulationId || activeSimulationId || undefined,
-          populationId: population.geography.id, 
-          populationType: 'geography' 
-        }));
+        dispatch(
+          updateSimulationPopulationId({
+            simulationId: simulationId || activeSimulationId || undefined,
+            populationId: population.geography.id,
+            populationType: 'geography',
+          })
+        );
       }
     }
   }, [
@@ -117,8 +129,7 @@ export default function SimulationSetupFrame({
     if (population.geography) {
       return `Population #${population.geography.id}`;
     }
-    return "";
-
+    return '';
   }
 
   function generatePopulationCardDescription() {
@@ -133,7 +144,6 @@ export default function SimulationSetupFrame({
       return `Population #${population.geography.id}`;
     }
     return '';
-
   }
 
   function generatePolicyCardTitle() {

@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { 
-  createSimulation, 
+import {
+  createSimulation,
+  selectActiveSimulationId,
   updateSimulationLabel,
-  selectActiveSimulationId 
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -13,7 +13,7 @@ import { FlowComponentProps } from '@/types/flow';
 export default function SimulationCreationFrame({ onNavigate }: FlowComponentProps) {
   const [localLabel, setLocalLabel] = useState('');
   const dispatch = useDispatch();
-  
+
   // Get the active simulation ID from the reducer
   const activeSimulationId = useSelector((state: RootState) => selectActiveSimulationId(state));
 
@@ -33,7 +33,7 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
     if (activeSimulationId) {
       dispatch(updateSimulationLabel({ label: localLabel }));
     }
-    
+
     onNavigate('next');
   }
 

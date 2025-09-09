@@ -1,17 +1,17 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
-import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
 import flowReducer from '@/reducers/flowReducer';
+import metadataReducer from '@/reducers/metadataReducer';
 import policyReducer from '@/reducers/policyReducer';
 import populationReducer from '@/reducers/populationReducer';
-import metadataReducer from '@/reducers/metadataReducer';
+import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
 import {
-  TEST_SIMULATION_LABEL,
-  SIMULATION_NAME_INPUT_LABEL,
   CREATE_SIMULATION_BUTTON_LABEL,
+  SIMULATION_NAME_INPUT_LABEL,
+  TEST_SIMULATION_LABEL,
 } from '@/tests/fixtures/frames/SimulationCreationFrame';
 
 describe('SimulationCreationFrame', () => {
@@ -19,10 +19,10 @@ describe('SimulationCreationFrame', () => {
   let mockOnNavigate: ReturnType<typeof vi.fn>;
   let mockOnReturn: ReturnType<typeof vi.fn>;
   let defaultFlowProps: any;
-  
+
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Create a fresh store for each test
     store = configureStore({
       reducer: {
@@ -34,10 +34,10 @@ describe('SimulationCreationFrame', () => {
         metadata: metadataReducer,
       },
     });
-    
+
     mockOnNavigate = vi.fn();
     mockOnReturn = vi.fn();
-    
+
     // Default flow props to satisfy FlowComponentProps interface
     defaultFlowProps = {
       onNavigate: mockOnNavigate,
@@ -51,7 +51,7 @@ describe('SimulationCreationFrame', () => {
       isInSubflow: false,
       flowDepth: 0,
     };
-    
+
     // Spy on the action creators
     vi.spyOn(simulationsActions, 'updateSimulationLabel');
     vi.spyOn(simulationsActions, 'createSimulation');
@@ -64,7 +64,7 @@ describe('SimulationCreationFrame', () => {
         <SimulationCreationFrame {...defaultFlowProps} />
       </Provider>
     );
-    
+
     // Then - should have created a simulation in the new reducer
     expect(simulationsActions.createSimulation).toHaveBeenCalled();
     const state = store.getState();
@@ -80,18 +80,19 @@ describe('SimulationCreationFrame', () => {
         <SimulationCreationFrame {...defaultFlowProps} />
       </Provider>
     );
-    
+
     const input = screen.getByLabelText(SIMULATION_NAME_INPUT_LABEL);
     const submitButton = screen.getByRole('button', { name: CREATE_SIMULATION_BUTTON_LABEL });
-    
+
     // When
     await user.type(input, TEST_SIMULATION_LABEL);
     await user.click(submitButton);
-    
+
     // Then - should dispatch to simulations reducer
-    expect(simulationsActions.updateSimulationLabel).toHaveBeenCalledWith({ label: TEST_SIMULATION_LABEL });
-    
-    
+    expect(simulationsActions.updateSimulationLabel).toHaveBeenCalledWith({
+      label: TEST_SIMULATION_LABEL,
+    });
+
     // And - should navigate to next
     expect(mockOnNavigate).toHaveBeenCalledWith('next');
   });
@@ -104,14 +105,14 @@ describe('SimulationCreationFrame', () => {
         <SimulationCreationFrame {...defaultFlowProps} />
       </Provider>
     );
-    
+
     const input = screen.getByLabelText(SIMULATION_NAME_INPUT_LABEL);
     const submitButton = screen.getByRole('button', { name: CREATE_SIMULATION_BUTTON_LABEL });
-    
+
     // When
     await user.type(input, TEST_SIMULATION_LABEL);
     await user.click(submitButton);
-    
+
     // Then - check reducer state
     const state = store.getState();
     const activeId = state.simulations.activeId;
@@ -122,17 +123,17 @@ describe('SimulationCreationFrame', () => {
     // Given - pre-populate the store with a simulation
     store.dispatch(simulationsActions.createSimulation());
     const initialActiveId = store.getState().simulations.activeId;
-    
+
     // Reset the spy after initial creation
     vi.clearAllMocks();
-    
+
     // When
     render(
       <Provider store={store}>
         <SimulationCreationFrame {...defaultFlowProps} />
       </Provider>
     );
-    
+
     // Then - should NOT create another simulation
     expect(simulationsActions.createSimulation).not.toHaveBeenCalled();
     const finalActiveId = store.getState().simulations.activeId;
@@ -147,12 +148,12 @@ describe('SimulationCreationFrame', () => {
         <SimulationCreationFrame {...defaultFlowProps} />
       </Provider>
     );
-    
+
     const submitButton = screen.getByRole('button', { name: CREATE_SIMULATION_BUTTON_LABEL });
-    
+
     // When - submit without entering a label
     await user.click(submitButton);
-    
+
     // Then - should dispatch empty string to reducer
     expect(simulationsActions.updateSimulationLabel).toHaveBeenCalledWith({
       label: '',
