@@ -22,6 +22,9 @@ export async function fetchHouseholdById(
 
   const json = await res.json();
 
+  // Forcibly convert numeric ID to string
+  json.result.id = String(json.result.id);
+
   return json.result;
 }
 

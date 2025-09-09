@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
-import { updateLabel } from '../reducers/policyReducer';
+import { updateLabel } from '../../reducers/policyReducer';
 
 export default function PolicyCreationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();

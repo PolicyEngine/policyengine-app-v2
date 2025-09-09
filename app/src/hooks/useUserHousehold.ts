@@ -131,12 +131,26 @@ export const useDeleteAssociation = () => {
 */
 
 // Type for the combined data structure
-interface UserHouseholdMetadataWithAssociation {
+export interface UserHouseholdMetadataWithAssociation {
   association: UserHouseholdPopulation;
   household: HouseholdMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
   isError?: boolean;
+}
+
+export function isHouseholdMetadataWithAssociation(
+  obj: any
+): obj is UserHouseholdMetadataWithAssociation {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    'association' in obj &&
+    'household' in obj &&
+    (obj.household === undefined || typeof obj.household === 'object') &&
+    typeof obj.isLoading === 'boolean' &&
+    ('error' in obj ? obj.error === null || obj.error instanceof Error : true)
+  );
 }
 
 export const useUserHouseholds = (userId: string) => {

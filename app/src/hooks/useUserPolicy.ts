@@ -119,11 +119,26 @@ export const useDeleteAssociation = () => {
 */
 
 // Type for the combined data structure
-interface UserPolicyMetadataWithAssociation {
+export interface UserPolicyMetadataWithAssociation {
   association: UserPolicy;
   policy: PolicyMetadata | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
+  isError?: boolean;
+}
+
+export function isPolicyMetadataWithAssociation(
+  obj: any
+): obj is UserPolicyMetadataWithAssociation {
+  return (
+    obj &&
+    typeof obj === 'object' &&
+    'association' in obj &&
+    'policy' in obj &&
+    (obj.policy === undefined || typeof obj.policy === 'object') &&
+    typeof obj.isLoading === 'boolean' &&
+    ('error' in obj ? obj.error === null || obj.error instanceof Error : true)
+  );
 }
 
 export const useUserPolicies = (userId: string) => {

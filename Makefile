@@ -24,8 +24,11 @@ build:
 typecheck:
 	cd app && npm run typecheck
 
-test:
+test-all:
 	cd app && npm run test-all
+
+test:
+	cd app && npm run test
 
 lint:
 	cd app && npm run lint
