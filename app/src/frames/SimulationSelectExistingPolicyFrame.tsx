@@ -36,13 +36,17 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   }
 
   function handlePolicySelect(association: UserPolicyMetadataWithAssociation) {
-    if (!association) return;
+    if (!association) {
+      return;
+    }
 
     setLocalPolicy(association);
   }
 
   function handleSubmit() {
-    if (!localPolicy) return;
+    if (!localPolicy) {
+      return;
+    }
 
     console.log("Submitting Policy in handleSubmit:", localPolicy);
 
@@ -55,7 +59,9 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   }
 
   function handleSubmitPolicy() {
-    if (!localPolicy || !isPolicyMetadataWithAssociation(localPolicy)) return;
+    if (!localPolicy || !isPolicyMetadataWithAssociation(localPolicy)) {
+      return;
+    }
 
     dispatch(clearPolicy());
 
@@ -123,8 +129,8 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       }
 
       return {
-        title: title,
-        subtitle: subtitle,
+        title,
+        subtitle,
         onClick: () => handlePolicySelect(association),
         isSelected: isPolicyMetadataWithAssociation(localPolicy) && localPolicy.policy?.id === association.policy!.id,
       }

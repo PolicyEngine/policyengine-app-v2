@@ -5,15 +5,11 @@ import { configureStore } from '@reduxjs/toolkit';
 import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
 import simulationsReducer from '@/reducers/simulationsReducer';
 import flowReducer from '@/reducers/flowReducer';
-import policyReducer from '@/reducers/policyReducer';
 import populationReducer from '@/reducers/populationReducer';
 import metadataReducer from '@/reducers/metadataReducer';
 import {
   TEST_SIMULATION_ID,
   TEST_SIMULATION_ID_MISSING,
-  TEST_HOUSEHOLD_ID,
-  TEST_POLICY_ID,
-  TEST_SIMULATION_LABEL,
   TEST_POPULATION_LABEL,
   TEST_POLICY_LABEL,
   SUBMIT_VIEW_TITLE,

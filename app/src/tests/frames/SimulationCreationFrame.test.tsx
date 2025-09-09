@@ -3,7 +3,7 @@ import { render, screen, userEvent } from '@test-utils';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import SimulationCreationFrame from '@/frames/SimulationCreationFrame';
-import simulationsReducer from '@/reducers/simulationsReducer';
+import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
 import flowReducer from '@/reducers/flowReducer';
 import policyReducer from '@/reducers/policyReducer';
 import populationReducer from '@/reducers/populationReducer';
@@ -13,9 +13,6 @@ import {
   SIMULATION_NAME_INPUT_LABEL,
   CREATE_SIMULATION_BUTTON_LABEL,
 } from '@/tests/fixtures/frames/SimulationCreationFrame';
-
-// Mock actions to spy on
-import * as simulationsActions from '@/reducers/simulationsReducer';
 
 describe('SimulationCreationFrame', () => {
   let store: any;

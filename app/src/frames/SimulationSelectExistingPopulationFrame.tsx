@@ -69,7 +69,9 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   function handleHouseholdPopulationSelect(association: UserHouseholdMetadataWithAssociation) {
-    if (!association) return;
+    if (!association) {
+      return;
+    }
 
     setLocalPopulation(association);
   }
@@ -78,7 +80,9 @@ export default function SimulationSelectExistingPopulationFrame({
   // TODO: Update this to work correctly with geographic populations
   function handleGeographicPopulationSelect(geography: UserGeographicAssociation) {
     console.log("Selected Geographic Population:", geography);
-    if (!geography || !('id' in geography)) return;
+    if (!geography || !('id' in geography)) {
+      return;
+    }
     // Blank out any existing population
     dispatch(clearPopulation());
 
@@ -94,7 +98,9 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   function handleSubmit() {
-    if (!localPopulation) return;
+    if (!localPopulation) {
+      return;
+    }
 
     console.log("Submitting Population in handleSubmit:", localPopulation);
 
@@ -109,7 +115,9 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   function handleSubmitHouseholdPopulation() {
-    if (!localPopulation || !isHouseholdMetadataWithAssociation(localPopulation)) return;
+    if (!localPopulation || !isHouseholdMetadataWithAssociation(localPopulation)) {
+      return;
+    }
 
     dispatch(clearPopulation());
 
@@ -179,8 +187,8 @@ export default function SimulationSelectExistingPopulationFrame({
       }
 
       return {
-        title: title,
-        subtitle: subtitle,
+        title,
+        subtitle,
         onClick: () => handleHouseholdPopulationSelect(association!),
         isSelected: isHouseholdMetadataWithAssociation(localPopulation) && localPopulation.household?.id === association.household!.id,
       }
