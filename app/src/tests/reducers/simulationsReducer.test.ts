@@ -1,6 +1,5 @@
 import { describe, test, expect, beforeEach } from 'vitest';
 import simulationsReducer, {
-  setSimulationsMode,
   createSimulation,
   updateSimulationPopulationId,
   updateSimulationPolicyId,
@@ -17,8 +16,6 @@ import simulationsReducer, {
   selectActiveSimulationId,
   selectActiveSimulation,
   selectAllSimulations,
-  selectSimulationsMode,
-  selectSimulationCompat,
 } from '@/reducers/simulationsReducer';
 import {
   TEST_TEMP_ID_1,
@@ -37,30 +34,9 @@ import {
   emptyInitialState,
   singleSimulationState,
   multipleSimulationsState,
-  compatibilityTestState,
 } from '@/tests/fixtures/reducers/simulationsReducer';
 
 describe('simulationsReducer', () => {
-  describe('Mode Management', () => {
-    test('given initial state then mode is single', () => {
-      // Given
-      const state = simulationsReducer(undefined, { type: 'init' });
-      
-      // Then
-      expect(state.mode).toBe('single');
-    });
-
-    test('given mode change to multi then mode updates', () => {
-      // Given
-      const state = emptyInitialState;
-      
-      // When
-      const newState = simulationsReducer(state, setSimulationsMode('multi'));
-      
-      // Then
-      expect(newState.mode).toBe('multi');
-    });
-  });
 
   describe('Creating Simulations', () => {
     test('given createSimulation action then new simulation is added and set as active', () => {
@@ -467,48 +443,5 @@ describe('simulationsReducer', () => {
       expect(simulations).toContain(mockSimulation2);
     });
 
-    test('given selectSimulationsMode then returns current mode', () => {
-      // Given
-      const state = { simulations: multipleSimulationsState };
-      
-      // When
-      const mode = selectSimulationsMode(state);
-      
-      // Then
-      expect(mode).toBe('multi');
-    });
-
-    test('given selectSimulationCompat with new state only then returns active simulation', () => {
-      // Given
-      const state = { simulations: singleSimulationState };
-      
-      // When
-      const simulation = selectSimulationCompat(state);
-      
-      // Then
-      expect(simulation).toEqual(mockSimulation1);
-    });
-
-    test('given selectSimulationCompat with old state only then returns old simulation', () => {
-      // Given
-      const state = { simulation: mockSimulation2 };
-      
-      // When
-      const simulation = selectSimulationCompat(state);
-      
-      // Then
-      expect(simulation).toEqual(mockSimulation2);
-    });
-
-    test('given selectSimulationCompat with both states then prefers new state in single mode', () => {
-      // Given - both old and new state present
-      const state = compatibilityTestState;
-      
-      // When
-      const simulation = selectSimulationCompat(state);
-      
-      // Then - should prefer new state
-      expect(simulation).toEqual(mockSimulation1);
-    });
   });
 });

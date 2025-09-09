@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { updateSimulationLabel } from '@/reducers/simulationReducer';
 import { 
   createSimulation, 
-  updateSimulationLabel as updateSimulationLabelNew,
+  updateSimulationLabel,
   selectActiveSimulationId 
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
@@ -15,13 +14,11 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
   const [localLabel, setLocalLabel] = useState('');
   const dispatch = useDispatch();
   
-  // Get the active simulation ID from the new reducer (if it exists)
+  // Get the active simulation ID from the reducer
   const activeSimulationId = useSelector((state: RootState) => selectActiveSimulationId(state));
 
-  // TODO: Make sure this effect hook is compatible with how we want to set up ingredients
   useEffect(() => {
-    // If there's no active simulation in the new reducer, create one
-    // This ensures we have a simulation to work with in the new structure
+    // If there's no active simulation, create one
     if (!activeSimulationId) {
       dispatch(createSimulation());
     }
@@ -32,12 +29,9 @@ export default function SimulationCreationFrame({ onNavigate }: FlowComponentPro
   }
 
   function submissionHandler() {
-    // Dispatch to old reducer (for backward compatibility)
-    dispatch(updateSimulationLabel(localLabel));
-    
-    // Dispatch to new reducer (for forward compatibility)
+    // Dispatch to the simulations reducer
     if (activeSimulationId) {
-      dispatch(updateSimulationLabelNew({ label: localLabel }));
+      dispatch(updateSimulationLabel({ label: localLabel }));
     }
     
     onNavigate('next');

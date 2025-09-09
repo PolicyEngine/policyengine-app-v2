@@ -5,14 +5,12 @@ interface SimulationsState {
   entities: Record<string, Simulation>;
   ids: string[];
   activeId: string | null;
-  mode: 'single' | 'multi';
 }
 
 const initialState: SimulationsState = {
   entities: {},
   ids: [],
   activeId: null,
-  mode: 'single', // Start in single mode for backward compatibility
 };
 
 // Helper to generate temporary IDs for unsaved simulations
@@ -23,12 +21,6 @@ export const simulationsSlice = createSlice({
   name: 'simulations',
   initialState,
   reducers: {
-    // @compat Mode control: "single" allows storage of only one simulation for backward compatibility reasons;
-    // will be removed when simulationReducer is replaced
-    setSimulationsMode: (state, action: PayloadAction<'single' | 'multi'>) => {
-      state.mode = action.payload;
-    },
-
     // Create a new simulation and set it as active
     createSimulation: (state, action: PayloadAction<Partial<Simulation> | undefined>) => {
       const id = generateTempId();
@@ -186,7 +178,6 @@ export const simulationsSlice = createSlice({
 });
 
 export const {
-  setSimulationsMode,
   createSimulation,
   updateSimulationPopulationId,
   updateSimulationPolicyId,
@@ -215,24 +206,5 @@ export const selectActiveSimulation = (state: { simulations: SimulationsState })
 
 export const selectAllSimulations = (state: { simulations: SimulationsState }): Simulation[] =>
   state.simulations?.ids.map((id: string) => state.simulations.entities[id]) || [];
-
-// @compat Selector for simulation mode
-export const selectSimulationsMode = (state: { simulations: SimulationsState }): 'single' | 'multi' =>
-  state.simulations?.mode || 'single';
-
-// @compat Compatibility selector - bridges between old and new state structure
-export const selectSimulationCompat = (state: { simulations?: SimulationsState; simulation?: Simulation }): Simulation | undefined => {
-  // If in single mode and we have an active simulation in the new structure, use it
-  console.log('Active simulation ID: ', state.simulations?.activeId);
-  console.log('Multi mode: ', state.simulations);
-  console.log('Old simulation state: ', state.simulation);
-  if (state.simulations?.mode === 'multi' && state.simulations?.activeId) {
-    return selectActiveSimulation(state as { simulations: SimulationsState });
-  }
-  
-  // Otherwise fall back to the old simulation state if it exists
-  // This allows gradual migration
-  return state.simulation || selectActiveSimulation(state as { simulations: SimulationsState });
-};
 
 export default simulationsSlice.reducer;

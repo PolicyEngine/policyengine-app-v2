@@ -4,22 +4,41 @@ import FlowView from '@/components/common/FlowView';
 import {
   updateSimulationPolicyId,
   updateSimulationPopulationId,
-} from '@/reducers/simulationReducer';
+  selectActiveSimulation,
+  selectActiveSimulationId,
+  createSimulation,
+} from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 type SetupCard = 'population' | 'policy';
 
-export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps) {
+interface SimulationSetupFrameProps extends FlowComponentProps {
+  simulationId?: string; // Optional specific simulation ID to edit
+}
+
+export default function SimulationSetupFrame({ 
+  onNavigate, 
+  simulationId 
+}: SimulationSetupFrameProps) {
   const dispatch = useDispatch();
-  const simulation = useSelector((state: RootState) => state.simulation);
+  
+  // Get the active simulation from the new normalized state
+  const activeSimulationId = useSelector((state: RootState) => selectActiveSimulationId(state));
+  const simulation = useSelector((state: RootState) => selectActiveSimulation(state));
+  
+  // Still use the old policy and population reducers for now (they haven't been migrated yet)
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
+  
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
-
+  
+  // Ensure we have an active simulation in the new reducer
   useEffect(() => {
-    console.log("Current Simulation State:", simulation);
-  }, [simulation]);
+    if (!activeSimulationId) {
+      dispatch(createSimulation());
+    }
+  }, [activeSimulationId, dispatch]);
 
   const handlePopulationSelect = () => {
     setSelectedCard('population');
@@ -34,7 +53,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
       onNavigate('setupPopulation');
     } else if (selectedCard === 'policy' && !policy.isCreated) {
       onNavigate('setupPolicy');
-    } else if (simulation.policyId && simulation.populationId) {
+    } else if (simulation?.policyId && simulation?.populationId) {
       // Both are fulfilled, proceed to next step
       onNavigate('next');
     }
@@ -42,33 +61,47 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   // Listen for policy creation and update simulation with policy ID
   useEffect(() => {
-    if (policy.isCreated && policy.id && !simulation.policyId) {
-      dispatch(updateSimulationPolicyId(policy.id));
+    if (policy.isCreated && policy.id && !simulation?.policyId) {
+      // Dispatch to new reducer with the specific simulation ID
+      dispatch(updateSimulationPolicyId({ 
+        simulationId: simulationId || activeSimulationId || undefined,
+        policyId: policy.id 
+      }));
     }
-  }, [policy.isCreated, policy.id, simulation.policyId, dispatch]);
+  }, [policy.isCreated, policy.id, simulation?.policyId, simulationId, activeSimulationId, dispatch]);
 
   // Listen for population creation and update simulation with population ID
   useEffect(() => {
-    console.log("Population state in effect hook:", population);
-    console.log("Simulation state in effect hook:", simulation)
-    if (population.isCreated && !simulation.populationId) {
+
+    console.log("Population state in new effect hook:", population);
+    console.log("Simulation state in new effect hook:", simulation)
+    if (population.isCreated && !simulation?.populationId) {
+      console.log("Responding to update to population in new effect hook");
       if (population.household?.id) {
-        dispatch(updateSimulationPopulationId({ id: population.household.id, type: 'household' }));
-        console.log("Dispatched updateSimulationPopulationId with household ID:", population.household.id);
+        dispatch(updateSimulationPopulationId({ 
+          simulationId: simulationId || activeSimulationId || undefined,
+          populationId: population.household.id, 
+          populationType: 'household' 
+        }));
       } else if (population.geography?.id) {
-        dispatch(updateSimulationPopulationId({ id: population.geography.id, type: 'geography' }));
-        console.log("Dispatched updateSimulationPopulationId with geography ID:", population.geography.id);
+        dispatch(updateSimulationPopulationId({ 
+          simulationId: simulationId || activeSimulationId || undefined,
+          populationId: population.geography.id, 
+          populationType: 'geography' 
+        }));
       }
     }
   }, [
     population.isCreated,
     population.household,
     population.geography,
-    simulation.populationId,
+    simulation?.populationId,
+    simulationId,
+    activeSimulationId,
     dispatch,
   ]);
 
-  const canProceed: boolean = !!(simulation.policyId && simulation.populationId);
+  const canProceed: boolean = !!(simulation?.policyId && simulation?.populationId);
 
   function generatePopulationCardTitle() {
     if (!population || !population.isCreated) {
@@ -103,6 +136,29 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   }
 
+  function generatePolicyCardTitle() {
+    if (!policy || !policy.isCreated) {
+      return 'Add Policy';
+    }
+    if (policy.label) {
+      return policy.label;
+    }
+    if (policy.id) {
+      return `Policy #${policy.id}`;
+    }
+    return '';
+  }
+
+  function generatePolicyCardDescription() {
+    if (!policy || !policy.isCreated) {
+      return 'Select a policy to apply to the simulation';
+    }
+    if (policy.label && policy.id) {
+      return `Policy #${policy.id}`;
+    }
+    return '';
+  }
+
   const setupConditionCards = [
     {
       title: generatePopulationCardTitle(),
@@ -113,11 +169,8 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
       isDisabled: false,
     },
     {
-      title: policy && policy.isCreated ? policy.label || `Policy #${policy.id}` : 'Add Policy',
-      description:
-        policy && policy.isCreated
-          ? policy.label || ''
-          : 'Select a policy to apply to the simulation',
+      title: generatePolicyCardTitle(),
+      description: generatePolicyCardDescription(),
       onClick: handlePolicySelect,
       isSelected: selectedCard === 'policy',
       isFulfilled: policy && policy.isCreated,

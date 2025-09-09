@@ -3,7 +3,6 @@ import { render, screen } from '@test-utils';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
-import simulationReducer from '@/reducers/simulationReducer';
 import simulationsReducer from '@/reducers/simulationsReducer';
 import flowReducer from '@/reducers/flowReducer';
 import policyReducer from '@/reducers/policyReducer';
@@ -187,7 +186,6 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       // Given
       const store = configureStore({
         reducer: {
-          simulation: simulationReducer,
           simulations: () => mockStateWithNewSimulation.simulations,
           flow: flowReducer,
           policy: () => mockStateWithNewSimulation.policy,

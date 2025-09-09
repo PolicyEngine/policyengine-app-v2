@@ -50,7 +50,6 @@ export const emptyInitialState = {
   entities: {},
   ids: [],
   activeId: null,
-  mode: 'single' as const,
 };
 
 export const singleSimulationState = {
@@ -59,7 +58,6 @@ export const singleSimulationState = {
   },
   ids: [TEST_TEMP_ID_1],
   activeId: TEST_TEMP_ID_1,
-  mode: 'single' as const,
 };
 
 export const multipleSimulationsState = {
@@ -69,13 +67,4 @@ export const multipleSimulationsState = {
   },
   ids: [TEST_TEMP_ID_1, TEST_TEMP_ID_2],
   activeId: TEST_TEMP_ID_1,
-  mode: 'multi' as const,
-};
-
-// State for compatibility testing
-export const compatibilityTestState = {
-  // New simulations state
-  simulations: singleSimulationState,
-  // Old simulation state
-  simulation: mockSimulation2,
 };

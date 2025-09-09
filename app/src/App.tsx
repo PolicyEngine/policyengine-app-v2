@@ -9,24 +9,20 @@ import { MantineProvider } from '@mantine/core';
 import { Router } from './Router';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
-import SimulationsModeInitializer from './components/SimulationsModeInitializer';
 
 const queryClient = new QueryClient();
 
 export default function App() {
   return (
     <Provider store={store}>
-      {/* @compat - Initialize simulations mode for backward compatibility */}
-      <SimulationsModeInitializer>
-        <MantineProvider theme={policyEngineTheme}>
-          <QueryNormalizerProvider queryClient={queryClient}>
-            <QueryClientProvider client={queryClient}>
-              <Router />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </QueryClientProvider>
-          </QueryNormalizerProvider>
-        </MantineProvider>
-      </SimulationsModeInitializer>
+      <MantineProvider theme={policyEngineTheme}>
+        <QueryNormalizerProvider queryClient={queryClient}>
+          <QueryClientProvider client={queryClient}>
+            <Router />
+            <ReactQueryDevtools initialIsOpen={false} />
+          </QueryClientProvider>
+        </QueryNormalizerProvider>
+      </MantineProvider>
     </Provider>
   );
 }

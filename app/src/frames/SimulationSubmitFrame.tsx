@@ -5,7 +5,7 @@ import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { 
   selectSimulationById, 
-  selectSimulationCompat 
+  selectActiveSimulation 
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -21,19 +21,15 @@ export default function SimulationSubmitFrame({
   isInSubflow,
   simulationId 
 }: SimulationSubmitFrameProps) {
-  // @compat - This selector
-  // Use compatibility selector to work with both old and new state
+  // Get simulation from the normalized state
   const simulation = useSelector((state: RootState) => {
     if (simulationId) {
       // If specific simulation ID provided, get that simulation
       return selectSimulationById(state, simulationId);
     }
-    // Otherwise use compatibility selector to get from either old or new state
-    return selectSimulationCompat(state);
+    // Otherwise get the active simulation
+    return selectActiveSimulation(state);
   });
-
-  console.log('Active simulation ID: ', simulationId);
-  console.log('Active simulation from state: ', simulation);
   
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);

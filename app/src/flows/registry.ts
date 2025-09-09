@@ -16,7 +16,6 @@ import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
 import PoliciesPage from '@/pages/Policies.page';
 import PopulationsPage from '@/pages/Populations.page';
 import SimulationsPage from '@/pages/Simulations.page';
-import SimulationSetupFrameWrapper from '@/frames/SimulationSetupFrameWrapper';
 import { PolicyCreationFlow } from './policyCreationFlow';
 import { PopulationCreationFlow } from './populationCreationFlow';
 import { SimulationCreationFlow } from './simulationCreationFlow';
@@ -34,7 +33,6 @@ export const componentRegistry = {
   PopulationReadView: PopulationsPage,
   SimulationCreationFrame,
   SimulationSetupFrame,
-  SimulationSetupFrameWrapper,
   SimulationSubmitFrame,
   SimulationSetupPolicyFrame,
   SimulationSelectExistingPolicyFrame,
