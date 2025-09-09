@@ -1,21 +1,20 @@
 // import React from "react";
-import { Card, Title, Text, Stack, Button } from "@mantine/core";
-import { colors, typography } from "../../../designTokens";
+import { Button, Card, Stack, Text, Title } from '@mantine/core';
+import { colors, typography } from '../../../designTokens';
 
 interface Section {
   heading: string;
   body: string | string[];
-  
 }
 
 interface TitleCardWithHeaderProps {
   title: string;
   sections?: Section[];
-  grayBackground?: boolean; 
-  buttonLabel : string;
-  onButtonClick : () => void;
-  titleAlign?: "left" | "center" | "right";
-  contentAlign?: "left" | "center" | "right";
+  grayBackground?: boolean;
+  buttonLabel: string;
+  onButtonClick: () => void;
+  titleAlign?: 'left' | 'center' | 'right';
+  contentAlign?: 'left' | 'center' | 'right';
 }
 
 export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
@@ -25,12 +24,11 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   buttonLabel,
   onButtonClick,
   titleAlign,
-  contentAlign, 
+  contentAlign,
 }) => {
   return (
-    
-      // direction="column"
-       <div>
+    // direction="column"
+    <div>
       {/* Main Title */}
       <Title
         order={1}
@@ -38,7 +36,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
           root: {
             color: colors.black,
             fontSize: typography.fontSize['4xl'],
-            textAlign: titleAlign || "center",
+            textAlign: titleAlign || 'center',
             lineHeight: typography.lineHeight.normal,
           },
         })}
@@ -47,25 +45,38 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       </Title>
 
       {/* Card with content */}
-      <Card radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : "white"}
-      style={{
-    // marginLeft: grayBackground ? '5rem' : 0,
-    // marginRight: grayBackground ? '5rem' : 0,
-  }}>
+      <Card
+        radius="lg"
+        p="xl"
+        bg={grayBackground ? colors.gray[100] : 'white'}
+        style={
+          {
+            // marginLeft: grayBackground ? '5rem' : 0,
+            // marginRight: grayBackground ? '5rem' : 0,
+          }
+        }
+      >
         <Stack gap="md">
           {sections.map((section, idx) => (
             <div key={idx}>
-              <Title order={3} c={colors.blue[700]} lh={1.3} ta={contentAlign || "center"}>
+              <Title order={3} c={colors.blue[700]} lh={1.3} ta={contentAlign || 'center'}>
                 {section.heading}
               </Title>
               {Array.isArray(section.body) ? (
                 section.body.map((para, pIdx) => (
-                  <Text key={pIdx} size="md" c={colors.text.primary} lh={1.5} ta={contentAlign || "center"} mb="xs">
+                  <Text
+                    key={pIdx}
+                    size="md"
+                    c={colors.text.primary}
+                    lh={1.5}
+                    ta={contentAlign || 'center'}
+                    mb="xs"
+                  >
                     {para}
                   </Text>
                 ))
               ) : (
-                <Text size="md" c={colors.text.primary} lh={1.5} ta={contentAlign || "center"}>
+                <Text size="md" c={colors.text.primary} lh={1.5} ta={contentAlign || 'center'}>
                   {section.body}
                 </Text>
               )}
@@ -78,7 +89,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
               variant="filled"
               color={colors.blue[700]}
               mt="md"
-              style={{ alignSelf: "center" }}
+              style={{ alignSelf: 'center' }}
             >
               {buttonLabel}
             </Button>
@@ -89,11 +100,14 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   );
 };
 
-    
-
-
 export default function TextCardWithHeaderComponent() {
-  return <TitleCardWithHeader title="" buttonLabel="" onButtonClick={function (): void {
-    throw new Error("Function not implemented.");
-  }} />;
+  return (
+    <TitleCardWithHeader
+      title=""
+      buttonLabel=""
+      onButtonClick={function (): void {
+        throw new Error('Function not implemented.');
+      }}
+    />
+  );
 }
