@@ -1,9 +1,12 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geographicAssociation';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
+import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { Geography } from '@/types/ingredients/Geography';
+import { getCountryLabel } from '@/utils/geographyUtils';
 
 const apiGeographicStore = new ApiGeographicStore();
 const sessionGeographicStore = new SessionStorageGeographicStore();
@@ -90,12 +93,43 @@ export function isGeographicMetadataWithAssociation(
 }
 
 export const useUserGeographics = (userId: string) => {
+  // Get metadata for label lookups
+  const metadata = useSelector((state: RootState) => state.metadata);
+  
   // First, get the populations
   const {
     data: populations,
     isLoading: populationsLoading,
     error: populationsError,
   } = useGeographicAssociationsByUser(userId);
+
+  // Helper function to get proper label from metadata or fallback
+  const getGeographyName = (population: UserGeographyPopulation): string => {
+    // If label exists, use it
+    if (population.label) {
+      return population.label;
+    }
+    
+    // For national scope, use country name
+    if (population.scope === 'national') {
+      return getCountryLabel(population.countryId);
+    }
+    
+    // For subnational, look up in metadata
+    if (metadata.economyOptions?.region) {
+      const region = metadata.economyOptions.region.find(
+        (r) => r.name === population.geographyId ||
+               r.name === `state/${population.geographyId}` ||
+               r.name === `constituency/${population.geographyId}`
+      );
+      if (region?.label) {
+        return region.label;
+      }
+    }
+    
+    // Fallback to geography ID
+    return population.geographyId;
+  };
 
   // For geographic populations, we construct Geography objects from the population data
   // since they don't require API fetching like households do
@@ -107,7 +141,7 @@ export const useUserGeographics = (userId: string) => {
         countryId: population.countryId,
         scope: population.scope,
         geographyId: population.geographyId,
-        name: population.label,
+        name: getGeographyName(population),
       };
 
       return {

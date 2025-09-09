@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters';
 import FlowView from '@/components/common/FlowView';
@@ -22,12 +22,15 @@ import {
   updatePopulationId,
   updatePopulationLabel,
 } from '@/reducers/populationReducer';
+import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+import { getCountryLabel } from '@/utils/geographyUtils';
 
 export default function SimulationSelectExistingPopulationFrame({
   onNavigate,
 }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const metadata = useSelector((state: RootState) => state.metadata);
 
   // Fetch household populations
   const {
@@ -210,6 +213,24 @@ export default function SimulationSelectExistingPopulationFrame({
       };
     });
 
+  // Helper function to get geographic label from metadata
+  const getGeographicLabel = (geography: any) => {
+    if (!geography) return 'Unknown Location';
+    
+    // If it's a national scope, return the country name
+    if (geography.scope === 'national') {
+      return getCountryLabel(geography.countryId);
+    }
+    
+    // For subnational, look up in metadata
+    const region = metadata.economyOptions.region.find(
+      (r) => r.name === geography.geographyId ||
+             r.name === `state/${geography.geographyId}` ||
+             r.name === `constituency/${geography.geographyId}`
+    );
+    return region?.label || geography.name || geography.geographyId;
+  };
+
   // Build card list items from geographic populations
   const geographicCardItems = geographicPopulations
     .filter((association) => isGeographicMetadataWithAssociation(association)) // Only include valid associations
@@ -217,11 +238,21 @@ export default function SimulationSelectExistingPopulationFrame({
     .map((association) => {
       let title = '';
       let subtitle = '';
+      
+      // Use the label if it exists, otherwise look it up from metadata
       if ('label' in association.association && association.association.label) {
         title = association.association.label;
-        subtitle = `Geographic #${association.geography!.id}`;
       } else {
-        title = `Geographic #${association.geography!.id}`;
+        title = getGeographicLabel(association.geography);
+      }
+      
+      // Build a more descriptive subtitle
+      if (association.geography?.scope === 'national') {
+        subtitle = 'National';
+      } else if ('label' in association.association && association.association.label) {
+        subtitle = getGeographicLabel(association.geography);
+      } else {
+        subtitle = "";
       }
 
       return {

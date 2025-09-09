@@ -1,5 +1,4 @@
-// src/frames/population/GeographicConfirmationFrame.tsx
-
+import { getCountryLabel } from '@/utils/geographyUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
@@ -41,15 +40,6 @@ export default function GeographicConfirmationFrame({
              r.name === `constituency/${regionCode}`
     );
     return region?.label || regionCode;
-  };
-
-  // Helper function to get country label
-  const getCountryLabel = (countryCode: string): string => {
-    const countryLabels: Record<string, string> = {
-      us: 'United States',
-      uk: 'United Kingdom',
-    };
-    return countryLabels[countryCode] || countryCode;
   };
 
   // Helper function to determine region type
