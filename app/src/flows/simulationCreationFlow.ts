@@ -1,16 +1,19 @@
 import { Flow } from '../types/flow';
 
+// @compat - TODO: after multi mode is stable, remove single mode and rename this back to SimulationSetupFrame
 export const SimulationCreationFlow: Flow = {
   initialFrame: 'SimulationCreationFrame',
   frames: {
     SimulationCreationFrame: {
       component: 'SimulationCreationFrame',
       on: {
-        next: 'SimulationSetupFrame',
+        // @compat - navigate to setup frame wrapper
+        next: 'SimulationSetupFrameWrapper',
       },
     },
-    SimulationSetupFrame: {
-      component: 'SimulationSetupFrame',
+    // @compat - use the wrapper to choose the right version
+    SimulationSetupFrameWrapper: {
+      component: 'SimulationSetupFrameWrapper',
       on: {
         setupPolicy: 'SimulationSetupPolicyFrame',
         setupPopulation: 'SimulationSetupPopulationFrame',
@@ -22,7 +25,7 @@ export const SimulationCreationFlow: Flow = {
       on: {
         createNew: {
           flow: 'PolicyCreationFlow',
-          returnTo: 'SimulationSetupFrame',
+          returnTo: 'SimulationSetupFrameWrapper',
         },
         loadExisting: 'SimulationSelectExistingPolicyFrame',
       },
@@ -30,7 +33,7 @@ export const SimulationCreationFlow: Flow = {
     SimulationSelectExistingPolicyFrame: {
       component: 'SimulationSelectExistingPolicyFrame',
       on: {
-        next: 'SimulationSetupFrame',
+        next: 'SimulationSetupFrameWrapper',
       },
     },
     SimulationSetupPopulationFrame: {
@@ -38,7 +41,7 @@ export const SimulationCreationFlow: Flow = {
       on: {
         createNew: {
           flow: 'PopulationCreationFlow',
-          returnTo: 'SimulationSetupFrame',
+          returnTo: 'SimulationSetupFrameWrapper',
         },
         loadExisting: 'SimulationSelectExistingPopulationFrame',
       },
@@ -46,7 +49,7 @@ export const SimulationCreationFlow: Flow = {
     SimulationSelectExistingPopulationFrame: {
       component: 'SimulationSelectExistingPopulationFrame',
       on: {
-        next: 'SimulationSetupFrame',
+        next: 'SimulationSetupFrameWrapper',
       },
     },
     SimulationSubmitFrame: {

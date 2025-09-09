@@ -19,10 +19,10 @@ export default function SimulationsModeInitializer({ children }: { children: Rea
     // - Feature flags service
     // - User preferences/settings
     // - URL parameters for testing
-    const defaultMode = 'single';
+    const defaultMode = 'multi';
     
     dispatch(setSimulationsMode(defaultMode));
-    
+
     console.log(`Simulations mode initialized to: ${defaultMode}`);
   }, [dispatch]);
 

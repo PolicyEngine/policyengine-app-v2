@@ -76,7 +76,11 @@ export default function SimulationSetupFrameMulti({
 
   // Listen for population creation and update simulation with population ID
   useEffect(() => {
+
+    console.log("Population state in new effect hook:", population);
+    console.log("Simulation state in new effect hook:", simulation)
     if (population.isCreated && !simulation?.populationId) {
+      console.log("Responding to update to population in new effect hook");
       if (population.household?.id) {
         dispatch(updateSimulationPopulationIdNew({ 
           simulationId: simulationId || activeSimulationId || undefined,
