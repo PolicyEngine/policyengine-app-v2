@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
@@ -7,10 +7,14 @@ import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { setFlow } from '@/reducers/flowReducer';
+import { RootState } from '@/store';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { getCountryLabel } from '@/utils/geographyUtils';
 
 export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
+  const metadata = useSelector((state: RootState) => state.metadata);
 
   // Fetch household associations
   const {
@@ -94,20 +98,35 @@ export default function PopulationsPage() {
   // };
 
   // Helper function to get geographic scope details
-  const getGeographicDetails = (geography: any) => {
+  const getGeographicDetails = (geography: UserGeographyPopulation) => {
     const details = [];
 
-    // Add geography type
-    const typeLabel = geography.geographyType === 'national' ? 'National' : 'Subnational';
+    // Add geography scope
+    const typeLabel = geography.scope === 'national' ? 'National' : 'Subnational';
     details.push({ text: typeLabel, badge: '' });
 
     // Add country
-    details.push({ text: geography.countryCode.toUpperCase(), badge: '' });
+    const countryLabel = getCountryLabel(geography.countryId);
+    details.push({ text: countryLabel, badge: '' });
 
     // Add region if subnational
-    if (geography.geographyType === 'subnational' && geography.regionCode) {
-      const regionTypeLabel = geography.regionType === 'state' ? 'State' : 'Constituency';
-      details.push({ text: `${regionTypeLabel}: ${geography.regionCode}`, badge: '' });
+    if (geography.scope === 'subnational' && geography.geographyId) {
+      // Look up the region label from metadata
+      let regionLabel = geography.geographyId;
+      if (metadata.economyOptions?.region) {
+        const region = metadata.economyOptions.region.find(
+          (r) => r.name === geography.geographyId ||
+                 r.name === `state/${geography.geographyId}` ||
+                 r.name === `constituency/${geography.geographyId}`
+        );
+        if (region?.label) {
+          regionLabel = region.label;
+        }
+      }
+      
+      // Determine region type based on country
+      const regionTypeLabel = geography.countryId === 'us' ? 'State' : 'Constituency';
+      details.push({ text: `${regionTypeLabel}: ${regionLabel}`, badge: '' });
     }
 
     return details;

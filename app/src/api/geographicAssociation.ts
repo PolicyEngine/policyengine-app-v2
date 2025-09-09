@@ -1,5 +1,3 @@
-// src/api/geographicAssociation.ts
-
 import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
@@ -92,12 +90,10 @@ export class ApiGeographicStore implements UserGeographicStore {
 export class SessionStorageGeographicStore implements UserGeographicStore {
   private readonly STORAGE_KEY = 'user-geographic-associations';
 
-  async create(
-    association: Omit<UserGeographyPopulation, 'createdAt'>
-  ): Promise<UserGeographyPopulation> {
+  async create(population: UserGeographyPopulation): Promise<UserGeographyPopulation> {
     const newPopulation: UserGeographyPopulation = {
       ...population,
-      createdAt: new Date().toISOString(),
+      createdAt: population.createdAt || new Date().toISOString(),
     };
 
     const populations = this.getStoredPopulations();
