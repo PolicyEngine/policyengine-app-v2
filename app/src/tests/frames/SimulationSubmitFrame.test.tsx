@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import SimulationSubmitFrame from '@/frames/SimulationSubmitFrame';
+import SimulationSubmitFrame from '@/frames/simulation/SimulationSubmitFrame';
 import simulationsReducer from '@/reducers/simulationsReducer';
 import flowReducer from '@/reducers/flowReducer';
 import populationReducer from '@/reducers/populationReducer';

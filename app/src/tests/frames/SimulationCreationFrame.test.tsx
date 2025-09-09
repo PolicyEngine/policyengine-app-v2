@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import SimulationCreationFrame from '@/frames/SimulationCreationFrame';
+import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
 import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
 import flowReducer from '@/reducers/flowReducer';
 import policyReducer from '@/reducers/policyReducer';
