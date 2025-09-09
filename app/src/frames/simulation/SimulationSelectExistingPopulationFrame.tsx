@@ -169,7 +169,7 @@ export default function SimulationSelectExistingPopulationFrame({
       <FlowView
         title="Select an Existing Population"
         content={
-          <Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
+          <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
         }
         buttonPreset="none"
       />

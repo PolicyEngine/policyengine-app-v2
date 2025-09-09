@@ -14,7 +14,7 @@ import {
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 export default function GeographicConfirmationFrame({
   onNavigate,
@@ -64,47 +64,42 @@ export default function GeographicConfirmationFrame({
     return countryCode === 'us' ? 'state' : 'constituency';
   };
 
-  // Build geographic association data
-  const buildGeographicAssociation = (): Omit<UserGeographicAssociation, 'createdAt'> => {
-    const baseAssociation = {
-      id: `${currentUserId}-${Date.now()}`, // Simple ID generation
+  // Build geographic population data
+  const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
+    const basePopulation = {
+      id: `${currentUserId}-${Date.now()}`, // TODO: May need to modify this after changes to API
       userId: currentUserId,
-      countryCode: currentCountry,
+      countryId: currentCountry,
+      geographyId: population.geography?.id || '',
+      scope: population.geography?.scope || 'national' as const,
     };
 
     if (population.geography?.scope === 'national') {
       return {
-        ...baseAssociation,
-        geographyType: 'national' as const,
-        geographyIdentifier: currentCountry,
+        ...basePopulation,
         label: getCountryLabel(currentCountry),
       };
     }
 
     // Subnational (state/constituency)
-    const regionType = getRegionType(currentCountry);
     const regionCode = population.geography?.geographyId || '';
     return {
-      ...baseAssociation,
-      geographyType: 'subnational' as const,
-      geographyIdentifier: population.geography?.id || `${currentCountry}-${regionCode}`,
-      regionCode,
-      regionType,
+      ...basePopulation,
       label: getRegionLabel(regionCode, currentCountry),
     };
   };
 
   const handleSubmit = async () => {
-    const associationData = buildGeographicAssociation();
-    console.log('Creating geographic association:', associationData);
+    const populationData = buildGeographicPopulation();
+    console.log('Creating geographic population:', populationData);
 
     try {
-      const result = await createGeographicAssociation(associationData);
-      console.log('Geographic association created successfully:', result);
+      const result = await createGeographicAssociation(populationData);
+      console.log('Geographic population created successfully:', result);
 
-      // Update population state with the created association ID and mark as created
-      dispatch(updatePopulationId(result.geographyIdentifier));
-      dispatch(updatePopulationLabel(result.label));
+      // Update population state with the created population ID and mark as created
+      dispatch(updatePopulationId(result.geographyId));
+      dispatch(updatePopulationLabel(result.label || ''));
       dispatch(markPopulationAsCreated());
 
       // If we've created this population as part of a standalone population creation flow,

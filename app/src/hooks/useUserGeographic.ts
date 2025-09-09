@@ -2,7 +2,7 @@ import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/rea
 import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geographicAssociation';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { Geography } from '@/types/ingredients/Geography';
 
 const apiGeographicStore = new ApiGeographicStore();
@@ -43,24 +43,24 @@ export const useCreateGeographicAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (association: Omit<UserGeographicAssociation, 'createdAt'>) =>
-      store.create(association),
-    onSuccess: (newAssociation) => {
+    mutationFn: (population: Omit<UserGeographyPopulation, 'createdAt' | 'type'>) =>
+      store.create({ ...population, type: 'geography' as const }),
+    onSuccess: (newPopulation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: geographicAssociationKeys.byUser(newAssociation.userId),
+        queryKey: geographicAssociationKeys.byUser(newPopulation.userId),
       });
       queryClient.invalidateQueries({
-        queryKey: geographicAssociationKeys.byGeography(newAssociation.geographyIdentifier),
+        queryKey: geographicAssociationKeys.byGeography(newPopulation.geographyId),
       });
 
       // Update specific query cache
       queryClient.setQueryData(
         geographicAssociationKeys.specific(
-          newAssociation.userId,
-          newAssociation.geographyIdentifier
+          newPopulation.userId,
+          newPopulation.geographyId
         ),
-        newAssociation
+        newPopulation
       );
     },
   });
@@ -68,7 +68,7 @@ export const useCreateGeographicAssociation = () => {
 
 // Type for the combined data structure
 export interface UserGeographicMetadataWithAssociation {
-  association: UserGeographicAssociation;
+  association: UserGeographyPopulation;
   geography: Geography | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
@@ -90,28 +90,28 @@ export function isGeographicMetadataWithAssociation(
 }
 
 export const useUserGeographics = (userId: string) => {
-  // First, get the associations
+  // First, get the populations
   const {
-    data: associations,
-    isLoading: associationsLoading,
-    error: associationsError,
+    data: populations,
+    isLoading: populationsLoading,
+    error: populationsError,
   } = useGeographicAssociationsByUser(userId);
 
-  // For geographic populations, we construct Geography objects from the associations
+  // For geographic populations, we construct Geography objects from the population data
   // since they don't require API fetching like households do
   const geographicsWithAssociations: UserGeographicMetadataWithAssociation[] | undefined =
-    associations?.map((association) => {
-      // Construct a Geography object from the association data
+    populations?.map((population) => {
+      // Construct a Geography object from the population data
       const geography: Geography = {
-        id: association.geographyIdentifier,
-        countryId: association.countryCode as any, // Type assertion needed for countryIds type
-        scope: association.geographyType,
-        geographyId: association.regionCode || association.countryCode,
-        name: association.label,
+        id: population.geographyId,
+        countryId: population.countryId as any, // Type assertion needed for countryIds type
+        scope: population.scope,
+        geographyId: population.geographyId,
+        name: population.label,
       };
 
       return {
-        association,
+        association: population,
         geography,
         isLoading: false,
         error: null,
@@ -121,9 +121,9 @@ export const useUserGeographics = (userId: string) => {
 
   return {
     data: geographicsWithAssociations,
-    isLoading: associationsLoading,
-    isError: !!associationsError,
-    error: associationsError,
-    associations, // Still available if needed separately
+    isLoading: populationsLoading,
+    isError: !!populationsError,
+    error: populationsError,
+    associations: populations, // Still available if needed separately
   };
 }

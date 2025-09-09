@@ -1,16 +1,14 @@
 // src/api/geographicAssociation.ts
 
 import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
-import { UserGeographicAssociation } from '../types/userIngredientAssociations';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserGeographicStore {
-  create: (
-    association: Omit<UserGeographicAssociation, 'createdAt'>
-  ) => Promise<UserGeographicAssociation>;
-  findByUser: (userId: string) => Promise<UserGeographicAssociation[]>;
-  findById: (userId: string, geographyId: string) => Promise<UserGeographicAssociation | null>;
+  create: (population: UserGeographyPopulation) => Promise<UserGeographyPopulation>;
+  findByUser: (userId: string) => Promise<UserGeographyPopulation[]>;
+  findById: (userId: string, geographyId: string) => Promise<UserGeographyPopulation | null>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, geographyId: string, updates: Partial<UserGeographicAssociation>): Promise<UserGeographicAssociation>;
+  // update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation>;
   // delete(userId: string, geographyId: string): Promise<void>;
 }
 
@@ -18,10 +16,8 @@ export class ApiGeographicStore implements UserGeographicStore {
   // TODO: Modify value to match to-be-created API endpoint structure
   private readonly BASE_URL = '/api/user-geographic-associations';
 
-  async create(
-    association: Omit<UserGeographicAssociation, 'createdAt'>
-  ): Promise<UserGeographicAssociation> {
-    const payload = UserGeographicAdapter.toCreationPayload(association);
+  async create(population: UserGeographyPopulation): Promise<UserGeographyPopulation> {
+    const payload = UserGeographicAdapter.toCreationPayload(population);
 
     const response = await fetch(`${this.BASE_URL}`, {
       method: 'POST',
@@ -37,7 +33,7 @@ export class ApiGeographicStore implements UserGeographicStore {
     return UserGeographicAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserGeographicAssociation[]> {
+  async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`);
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
@@ -47,7 +43,7 @@ export class ApiGeographicStore implements UserGeographicStore {
     return apiResponses.map((apiData: any) => UserGeographicAdapter.fromApiResponse(apiData));
   }
 
-  async findById(userId: string, geographyId: string): Promise<UserGeographicAssociation | null> {
+  async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
     const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`);
 
     if (response.status === 404) {
@@ -64,7 +60,7 @@ export class ApiGeographicStore implements UserGeographicStore {
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, geographyId: string, updates: Partial<UserGeographicAssociation>): Promise<UserGeographicAssociation> {
+  async update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation> {
     const response = await fetch(`/api/user-geographic-associations/${userId}/${geographyId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -97,76 +93,76 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
   private readonly STORAGE_KEY = 'user-geographic-associations';
 
   async create(
-    association: Omit<UserGeographicAssociation, 'createdAt'>
-  ): Promise<UserGeographicAssociation> {
-    const newAssociation: UserGeographicAssociation = {
-      ...association,
+    association: Omit<UserGeographyPopulation, 'createdAt'>
+  ): Promise<UserGeographyPopulation> {
+    const newPopulation: UserGeographyPopulation = {
+      ...population,
       createdAt: new Date().toISOString(),
     };
 
-    const associations = this.getStoredAssociations();
+    const populations = this.getStoredPopulations();
 
     // Check for duplicates
-    const exists = associations.some(
-      (a) =>
-        a.userId === association.userId && a.geographyIdentifier === association.geographyIdentifier
+    const exists = populations.some(
+      (p) =>
+        p.userId === population.userId && p.geographyId === population.geographyId
     );
 
     if (exists) {
-      throw new Error('Association already exists');
+      throw new Error('Geographic population already exists');
     }
 
-    const updatedAssociations = [...associations, newAssociation];
-    this.setStoredAssociations(updatedAssociations);
+    const updatedPopulations = [...populations, newPopulation];
+    this.setStoredPopulations(updatedPopulations);
 
-    return newAssociation;
+    return newPopulation;
   }
 
-  async findByUser(userId: string): Promise<UserGeographicAssociation[]> {
-    const associations = this.getStoredAssociations();
-    return associations.filter((a) => a.userId === userId);
+  async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
+    const populations = this.getStoredPopulations();
+    return populations.filter((p) => p.userId === userId);
   }
 
-  async findById(userId: string, geographyId: string): Promise<UserGeographicAssociation | null> {
-    const associations = this.getStoredAssociations();
+  async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
+    const populations = this.getStoredPopulations();
     return (
-      associations.find((a) => a.userId === userId && a.geographyIdentifier === geographyId) || null
+      populations.find((p) => p.userId === userId && p.geographyId === geographyId) || null
     );
   }
 
   // Not yet implemented, but keeping for future use
   /*
-  async update(userId: string, geographyId: string, updates: Partial<UserGeographicAssociation>): Promise<UserGeographicAssociation> {
-    const associations = this.getStoredAssociations();
-    const index = associations.findIndex(a => a.userId === userId && a.geographyIdentifier === geographyId);
+  async update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation> {
+    const populations = this.getStoredPopulations();
+    const index = populations.findIndex(p => p.userId === userId && p.geographyId === geographyId);
     
     if (index === -1) {
-      throw new Error('Association not found');
+      throw new Error('Geographic population not found');
     }
 
-    const updatedAssociation = { ...associations[index], ...updates };
-    associations[index] = updatedAssociation;
+    const updatedPopulation = { ...populations[index], ...updates };
+    populations[index] = updatedPopulation;
     
-    this.setStoredAssociations(associations);
-    return updatedAssociation;
+    this.setStoredPopulations(populations);
+    return updatedPopulation;
   }
   */
 
   // Not yet implemented, but keeping for future use
   /*
   async delete(userId: string, geographyId: string): Promise<void> {
-    const associations = this.getStoredAssociations();
-    const filtered = associations.filter(a => !(a.userId === userId && a.geographyIdentifier === geographyId));
+    const populations = this.getStoredPopulations();
+    const filtered = populations.filter(p => !(p.userId === userId && p.geographyId === geographyId));
     
-    if (filtered.length === associations.length) {
-      throw new Error('Association not found');
+    if (filtered.length === populations.length) {
+      throw new Error('Geographic population not found');
     }
 
-    this.setStoredAssociations(filtered);
+    this.setStoredPopulations(filtered);
   }
   */
 
-  private getStoredAssociations(): UserGeographicAssociation[] {
+  private getStoredPopulations(): UserGeographyPopulation[] {
     try {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
@@ -175,20 +171,20 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
     }
   }
 
-  private setStoredAssociations(associations: UserGeographicAssociation[]): void {
+  private setStoredPopulations(populations: UserGeographyPopulation[]): void {
     try {
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(associations));
+      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(populations));
     } catch (error) {
-      throw new Error('Failed to store associations in session storage');
+      throw new Error('Failed to store geographic populations in session storage');
     }
   }
 
   // Currently unused utility for syncing when user logs in
-  getAllAssociations(): UserGeographicAssociation[] {
-    return this.getStoredAssociations();
+  getAllPopulations(): UserGeographyPopulation[] {
+    return this.getStoredPopulations();
   }
 
-  clearAllAssociations(): void {
+  clearAllPopulations(): void {
     sessionStorage.removeItem(this.STORAGE_KEY);
   }
 }
