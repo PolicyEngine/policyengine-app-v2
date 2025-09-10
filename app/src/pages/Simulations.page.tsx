@@ -11,8 +11,8 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { setFlow } from '@/reducers/flowReducer';
 import { countryIds } from '@/libs/countries';
+import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function SimulationsPage() {
@@ -109,7 +109,12 @@ export default function SimulationsPage() {
       } as TextValue,
       dateCreated: {
         text: item.userSimulation.createdAt
-          ? formatDate(item.userSimulation.createdAt, 'short-month-day-year', (item.simulation?.countryId || 'us') as typeof countryIds[number], true)
+          ? formatDate(
+              item.userSimulation.createdAt,
+              'short-month-day-year',
+              (item.simulation?.countryId || 'us') as (typeof countryIds)[number],
+              true
+            )
           : '',
       } as TextValue,
       policy: {

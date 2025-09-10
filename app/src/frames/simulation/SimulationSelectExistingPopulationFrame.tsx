@@ -24,8 +24,8 @@ import {
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 import { Geography } from '@/types/ingredients/Geography';
+import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 
 export default function SimulationSelectExistingPopulationFrame({
   onNavigate,
@@ -172,9 +172,7 @@ export default function SimulationSelectExistingPopulationFrame({
     return (
       <FlowView
         title="Select an Existing Population"
-        content={
-          <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
-        }
+        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttonPreset="none"
       />
     );
@@ -219,14 +217,14 @@ export default function SimulationSelectExistingPopulationFrame({
     if (!geography) {
       return 'Unknown Location';
     }
-    
+
     // If it's a national scope, return the country name
     if (geography.scope === 'national') {
       return getCountryLabel(geography.countryId);
     }
-    
+
     // For subnational, look up in metadata
-    if (geography.scope === "subnational") {
+    if (geography.scope === 'subnational') {
       return getRegionLabel(geography.geographyId, metadata);
     }
     return geography.name || geography.geographyId;
@@ -239,20 +237,20 @@ export default function SimulationSelectExistingPopulationFrame({
     .map((association) => {
       let title = '';
       let subtitle = '';
-      
+
       // Use the label if it exists, otherwise look it up from metadata
       if ('label' in association.association && association.association.label) {
         title = association.association.label;
       } else {
         title = getGeographicLabel(association.geography!);
       }
-      
+
       // If user has defined a label, show the geography name as a subtitle (e.g., 'New York');
       // if user has not defined label, we already show geography name above; show nothing
       if ('label' in association.association && association.association.label) {
         subtitle = getGeographicLabel(association.geography!);
       } else {
-        subtitle = "";
+        subtitle = '';
       }
 
       return {

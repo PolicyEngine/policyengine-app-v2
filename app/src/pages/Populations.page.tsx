@@ -6,10 +6,10 @@ import { MOCK_USER_ID } from '@/constants';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-import { countryIds } from '@/libs/countries';
 import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
@@ -117,15 +117,16 @@ export default function PopulationsPage() {
       let regionLabel = geography.geographyId;
       if (metadata.economyOptions?.region) {
         const region = metadata.economyOptions.region.find(
-          (r) => r.name === geography.geographyId ||
-                 r.name === `state/${geography.geographyId}` ||
-                 r.name === `constituency/${geography.geographyId}`
+          (r) =>
+            r.name === geography.geographyId ||
+            r.name === `state/${geography.geographyId}` ||
+            r.name === `constituency/${geography.geographyId}`
         );
         if (region?.label) {
           regionLabel = region.label;
         }
       }
-      
+
       // Determine region type based on country
       const regionTypeLabel = geography.countryId === 'us' ? 'State' : 'Constituency';
       details.push({ text: `${regionTypeLabel}: ${regionLabel}`, badge: '' });
@@ -206,7 +207,12 @@ export default function PopulationsPage() {
         } as TextValue,
         dateCreated: {
           text: item.association.createdAt
-            ? formatDate(item.association.createdAt, 'short-month-day-year', (item.household?.country_id || 'us') as typeof countryIds[number], true)
+            ? formatDate(
+                item.association.createdAt,
+                'short-month-day-year',
+                (item.household?.country_id || 'us') as (typeof countryIds)[number],
+                true
+              )
             : '',
         } as TextValue,
         details: {
@@ -239,7 +245,12 @@ export default function PopulationsPage() {
         } as TextValue,
         dateCreated: {
           text: association.createdAt
-            ? formatDate(association.createdAt, 'short-month-day-year', (association?.countryId || 'us') as typeof countryIds[number], true)
+            ? formatDate(
+                association.createdAt,
+                'short-month-day-year',
+                (association?.countryId || 'us') as (typeof countryIds)[number],
+                true
+              )
             : '',
         } as TextValue,
         details: {

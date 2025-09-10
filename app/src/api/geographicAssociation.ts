@@ -100,8 +100,7 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
 
     // Check for duplicates
     const exists = populations.some(
-      (p) =>
-        p.userId === population.userId && p.geographyId === population.geographyId
+      (p) => p.userId === population.userId && p.geographyId === population.geographyId
     );
 
     if (exists) {
@@ -121,9 +120,7 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
     const populations = this.getStoredPopulations();
-    return (
-      populations.find((p) => p.userId === userId && p.geographyId === geographyId) || null
-    );
+    return populations.find((p) => p.userId === userId && p.geographyId === geographyId) || null;
   }
 
   // Not yet implemented, but keeping for future use

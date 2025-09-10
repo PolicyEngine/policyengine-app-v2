@@ -30,7 +30,6 @@ export default function GeographicConfirmationFrame({
   const metadata = useSelector((state: RootState) => state.metadata);
   const userDefinedLabel = useSelector((state: RootState) => state.population.label);
 
-
   // Build geographic population data from existing geography in reducer
   const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
     if (!population.geography) {
@@ -43,7 +42,7 @@ export default function GeographicConfirmationFrame({
       countryId: population.geography.countryId,
       geographyId: population.geography.geographyId,
       scope: population.geography.scope,
-      label: userDefinedLabel || population.geography.name || undefined
+      label: userDefinedLabel || population.geography.name || undefined,
     };
 
     return basePopulation;
@@ -91,7 +90,7 @@ export default function GeographicConfirmationFrame({
     }
 
     const geographyCountryId = population.geography.countryId;
-    
+
     if (population.geography.scope === 'national') {
       return (
         <Stack gap="md">

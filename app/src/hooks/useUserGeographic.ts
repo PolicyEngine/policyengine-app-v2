@@ -4,8 +4,8 @@ import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geograp
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { Geography } from '@/types/ingredients/Geography';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
 const apiGeographicStore = new ApiGeographicStore();
@@ -59,10 +59,7 @@ export const useCreateGeographicAssociation = () => {
 
       // Update specific query cache
       queryClient.setQueryData(
-        geographicAssociationKeys.specific(
-          newPopulation.userId,
-          newPopulation.geographyId
-        ),
+        geographicAssociationKeys.specific(newPopulation.userId, newPopulation.geographyId),
         newPopulation
       );
     },
@@ -95,7 +92,7 @@ export function isGeographicMetadataWithAssociation(
 export const useUserGeographics = (userId: string) => {
   // Get metadata for label lookups
   const metadata = useSelector((state: RootState) => state.metadata);
-  
+
   // First, get the populations
   const {
     data: populations,
@@ -109,24 +106,25 @@ export const useUserGeographics = (userId: string) => {
     if (population.label) {
       return population.label;
     }
-    
+
     // For national scope, use country name
     if (population.scope === 'national') {
       return getCountryLabel(population.countryId);
     }
-    
+
     // For subnational, look up in metadata
     if (metadata.economyOptions?.region) {
       const region = metadata.economyOptions.region.find(
-        (r) => r.name === population.geographyId ||
-               r.name === `state/${population.geographyId}` ||
-               r.name === `constituency/${population.geographyId}`
+        (r) =>
+          r.name === population.geographyId ||
+          r.name === `state/${population.geographyId}` ||
+          r.name === `constituency/${population.geographyId}`
       );
       if (region?.label) {
         return region.label;
       }
     }
-    
+
     // Fallback to geography ID
     return population.geographyId;
   };
@@ -160,4 +158,4 @@ export const useUserGeographics = (userId: string) => {
     error: populationsError,
     associations: populations, // Still available if needed separately
   };
-}
+};
