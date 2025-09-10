@@ -61,7 +61,7 @@ export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMe
  * Serializer for ReportOutput to JSON string
  * TODO: Placeholder for custom serialization logic when report structure is finalized
  */
-function reportOutputSerializer(key: string, value: any): any {
+function reportOutputSerializer(_key: string, value: any): any {
   // Placeholder: currently performs default serialization
   return value;
 }
@@ -70,7 +70,7 @@ function reportOutputSerializer(key: string, value: any): any {
  * Deserializer for JSON string to ReportOutput
  * TODO: Placeholder for custom deserialization logic when report structure is finalized
  */
-function reportOutputDeserializer(key: string, value: any): any {
+function reportOutputDeserializer(_key: string, value: any): any {
   // Placeholder: currently performs default deserialization
   return value;
 }
