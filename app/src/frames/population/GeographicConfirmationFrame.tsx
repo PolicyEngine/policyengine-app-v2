@@ -1,11 +1,9 @@
-import { getCountryLabel } from '@/utils/geographyUtils';
 import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { countryIds } from '@/libs/countries';
 import {
   markPopulationAsCreated,
   updatePopulationId,
@@ -14,7 +12,7 @@ import {
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-import { getRegionLabel, getRegionType } from '@/utils/geographyUtils';
+import { getCountryLabel, getRegionLabel, getRegionType } from '@/utils/geographyUtils';
 
 export default function GeographicConfirmationFrame({
   onNavigate,
@@ -28,21 +26,24 @@ export default function GeographicConfirmationFrame({
 
   // Hardcoded for now - TODO: Replace with actual user from auth context
   const currentUserId = MOCK_USER_ID;
-  // Get current country and metadata from state
-  const currentCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  // Get metadata from state
   const metadata = useSelector((state: RootState) => state.metadata);
   const userDefinedLabel = useSelector((state: RootState) => state.population.label);
 
 
-  // Build geographic population data
+  // Build geographic population data from existing geography in reducer
   const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
+    if (!population.geography) {
+      throw new Error('No geography found in population state');
+    }
+
     const basePopulation = {
       id: `${currentUserId}-${Date.now()}`, // TODO: May need to modify this after changes to API
       userId: currentUserId,
-      countryId: currentCountry as (typeof countryIds)[number],
-      geographyId: population.geography?.id || '',
-      scope: population.geography?.scope || 'national' as const,
-      label: userDefinedLabel || undefined
+      countryId: population.geography.countryId,
+      geographyId: population.geography.geographyId,
+      scope: population.geography.scope,
+      label: userDefinedLabel || population.geography.name || undefined
     };
 
     return basePopulation;
@@ -81,7 +82,17 @@ export default function GeographicConfirmationFrame({
 
   // Build display content based on geographic scope
   const buildDisplayContent = () => {
-    if (population.geography?.scope === 'national') {
+    if (!population.geography) {
+      return (
+        <Stack gap="md">
+          <Text c="red">No geography selected</Text>
+        </Stack>
+      );
+    }
+
+    const geographyCountryId = population.geography.countryId;
+    
+    if (population.geography.scope === 'national') {
       return (
         <Stack gap="md">
           <Text fw={600} fz="lg">
@@ -91,16 +102,16 @@ export default function GeographicConfirmationFrame({
             <strong>Scope:</strong> National
           </Text>
           <Text>
-            <strong>Country:</strong> {getCountryLabel(currentCountry)}
+            <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
           </Text>
         </Stack>
       );
     }
 
     // Subnational
-    const regionCode = population.geography?.geographyId || '';
+    const regionCode = population.geography.geographyId;
     const regionLabel = getRegionLabel(regionCode, metadata);
-    const regionTypeName = getRegionType(currentCountry) === 'state' ? 'State' : 'Constituency';
+    const regionTypeName = getRegionType(geographyCountryId) === 'state' ? 'State' : 'Constituency';
 
     return (
       <Stack gap="md">
@@ -111,7 +122,7 @@ export default function GeographicConfirmationFrame({
           <strong>Scope:</strong> {regionTypeName}
         </Text>
         <Text>
-          <strong>Country:</strong> {getCountryLabel(currentCountry)}
+          <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
         </Text>
         <Text>
           <strong>{regionTypeName}:</strong> {regionLabel}
