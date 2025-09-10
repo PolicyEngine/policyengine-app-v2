@@ -51,6 +51,7 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
 
   // Helper function to extract value after last slash
   const extractRegionValue = (fullValue: string) => {
+    console.log('Extracting region value from:', fullValue);
     return fullValue.split('/').pop() || fullValue;
   };
 
@@ -73,6 +74,7 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
         scope: scope === 'national' ? 'national' : 'subnational',
         geographyId: scope === 'national' ? currentCountry : extractRegionValue(selectedRegion),
       };
+      console.log('Dispatching geography:', geography);
       dispatch(setGeography(geography));
     }
     onNavigate(scope);

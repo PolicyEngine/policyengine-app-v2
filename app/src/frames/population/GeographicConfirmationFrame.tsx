@@ -14,6 +14,7 @@ import {
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { getRegionLabel, getRegionType } from '@/utils/geographyUtils';
 
 export default function GeographicConfirmationFrame({
   onNavigate,
@@ -30,22 +31,8 @@ export default function GeographicConfirmationFrame({
   // Get current country and metadata from state
   const currentCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
   const metadata = useSelector((state: RootState) => state.metadata);
+  const userDefinedLabel = useSelector((state: RootState) => state.population.label);
 
-  // Helper function to get region label from metadata
-  const getRegionLabel = (regionCode: string): string => {
-    // Use actual metadata to find the region
-    const region = metadata.economyOptions.region.find(
-      (r) => r.name === regionCode ||
-             r.name === `state/${regionCode}` ||
-             r.name === `constituency/${regionCode}`
-    );
-    return region?.label || regionCode;
-  };
-
-  // Helper function to determine region type
-  const getRegionType = (countryCode: string): 'state' | 'constituency' => {
-    return countryCode === 'us' ? 'state' : 'constituency';
-  };
 
   // Build geographic population data
   const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
@@ -55,21 +42,10 @@ export default function GeographicConfirmationFrame({
       countryId: currentCountry as (typeof countryIds)[number],
       geographyId: population.geography?.id || '',
       scope: population.geography?.scope || 'national' as const,
+      label: userDefinedLabel || undefined
     };
 
-    if (population.geography?.scope === 'national') {
-      return {
-        ...basePopulation,
-        label: getCountryLabel(currentCountry),
-      };
-    }
-
-    // Subnational (state/constituency)
-    const regionCode = population.geography?.geographyId || '';
-    return {
-      ...basePopulation,
-      label: getRegionLabel(regionCode),
-    };
+    return basePopulation;
   };
 
   const handleSubmit = async () => {
@@ -123,7 +99,7 @@ export default function GeographicConfirmationFrame({
 
     // Subnational
     const regionCode = population.geography?.geographyId || '';
-    const regionLabel = getRegionLabel(regionCode);
+    const regionLabel = getRegionLabel(regionCode, metadata);
     const regionTypeName = getRegionType(currentCountry) === 'state' ? 'State' : 'Constituency';
 
     return (
