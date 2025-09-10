@@ -1,4 +1,4 @@
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geographicAssociation';
 import { queryConfig } from '@/libs/queryConfig';

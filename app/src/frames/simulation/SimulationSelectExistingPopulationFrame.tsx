@@ -216,7 +216,9 @@ export default function SimulationSelectExistingPopulationFrame({
 
   // Helper function to get geographic label from metadata
   const getGeographicLabel = (geography: Geography) => {
-    if (!geography) return 'Unknown Location';
+    if (!geography) {
+      return 'Unknown Location';
+    }
     
     // If it's a national scope, return the country name
     if (geography.scope === 'national') {
