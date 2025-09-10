@@ -1,12 +1,9 @@
-// src/frames/population/GeographicConfirmationFrame.tsx
-
 import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { uk_regions, us_regions } from '@/mocks/regions';
 import {
   markPopulationAsCreated,
   updatePopulationId,
@@ -14,7 +11,8 @@ import {
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { getCountryLabel, getRegionLabel, getRegionType } from '@/utils/geographyUtils';
 
 export default function GeographicConfirmationFrame({
   onNavigate,
@@ -28,83 +26,39 @@ export default function GeographicConfirmationFrame({
 
   // Hardcoded for now - TODO: Replace with actual user from auth context
   const currentUserId = MOCK_USER_ID;
-  // Get current country from metadata state, fallback to 'us' if not available
-  const currentCountry = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  // Get metadata from state
+  const metadata = useSelector((state: RootState) => state.metadata);
+  const userDefinedLabel = useSelector((state: RootState) => state.population.label);
 
-  // Helper function to get region label
-  const getRegionLabel = (regionCode: string, countryCode: string): string => {
-    if (countryCode === 'us') {
-      const region = us_regions.result.economy_options.region.find(
-        (r) => r.name === regionCode || r.name === `state/${regionCode}`
-      );
-      return region?.label || regionCode;
+  // Build geographic population data from existing geography in reducer
+  const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
+    if (!population.geography) {
+      throw new Error('No geography found in population state');
     }
 
-    if (countryCode === 'uk') {
-      const region = uk_regions.result.economy_options.region.find(
-        (r) => r.name === regionCode || r.name === `constituency/${regionCode}`
-      );
-      return region?.label || regionCode;
-    }
-
-    return regionCode;
-  };
-
-  // Helper function to get country label
-  const getCountryLabel = (countryCode: string): string => {
-    const countryLabels: Record<string, string> = {
-      us: 'United States',
-      uk: 'United Kingdom',
-    };
-    return countryLabels[countryCode] || countryCode;
-  };
-
-  // Helper function to determine region type
-  const getRegionType = (countryCode: string): 'state' | 'constituency' => {
-    return countryCode === 'us' ? 'state' : 'constituency';
-  };
-
-  // Build geographic association data
-  const buildGeographicAssociation = (): Omit<UserGeographicAssociation, 'createdAt'> => {
-    const baseAssociation = {
-      id: `${currentUserId}-${Date.now()}`, // Simple ID generation
+    const basePopulation = {
+      id: `${currentUserId}-${Date.now()}`, // TODO: May need to modify this after changes to API
       userId: currentUserId,
-      countryCode: currentCountry,
+      countryId: population.geography.countryId,
+      geographyId: population.geography.geographyId,
+      scope: population.geography.scope,
+      label: userDefinedLabel || population.geography.name || undefined,
     };
 
-    if (population.geography?.scope === 'national') {
-      return {
-        ...baseAssociation,
-        geographyType: 'national' as const,
-        geographyIdentifier: currentCountry,
-        label: getCountryLabel(currentCountry),
-      };
-    }
-
-    // Subnational (state/constituency)
-    const regionType = getRegionType(currentCountry);
-    const regionCode = population.geography?.geographyId || '';
-    return {
-      ...baseAssociation,
-      geographyType: 'subnational' as const,
-      geographyIdentifier: population.geography?.id || `${currentCountry}-${regionCode}`,
-      regionCode,
-      regionType,
-      label: getRegionLabel(regionCode, currentCountry),
-    };
+    return basePopulation;
   };
 
   const handleSubmit = async () => {
-    const associationData = buildGeographicAssociation();
-    console.log('Creating geographic association:', associationData);
+    const populationData = buildGeographicPopulation();
+    console.log('Creating geographic population:', populationData);
 
     try {
-      const result = await createGeographicAssociation(associationData);
-      console.log('Geographic association created successfully:', result);
+      const result = await createGeographicAssociation(populationData);
+      console.log('Geographic population created successfully:', result);
 
-      // Update population state with the created association ID and mark as created
-      dispatch(updatePopulationId(result.geographyIdentifier));
-      dispatch(updatePopulationLabel(result.label));
+      // Update population state with the created population ID and mark as created
+      dispatch(updatePopulationId(result.geographyId));
+      dispatch(updatePopulationLabel(result.label || ''));
       dispatch(markPopulationAsCreated());
 
       // If we've created this population as part of a standalone population creation flow,
@@ -127,7 +81,17 @@ export default function GeographicConfirmationFrame({
 
   // Build display content based on geographic scope
   const buildDisplayContent = () => {
-    if (population.geography?.scope === 'national') {
+    if (!population.geography) {
+      return (
+        <Stack gap="md">
+          <Text c="red">No geography selected</Text>
+        </Stack>
+      );
+    }
+
+    const geographyCountryId = population.geography.countryId;
+
+    if (population.geography.scope === 'national') {
       return (
         <Stack gap="md">
           <Text fw={600} fz="lg">
@@ -137,16 +101,16 @@ export default function GeographicConfirmationFrame({
             <strong>Scope:</strong> National
           </Text>
           <Text>
-            <strong>Country:</strong> {getCountryLabel(currentCountry)}
+            <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
           </Text>
         </Stack>
       );
     }
 
     // Subnational
-    const regionCode = population.geography?.geographyId || '';
-    const regionLabel = getRegionLabel(regionCode, currentCountry);
-    const regionTypeName = getRegionType(currentCountry) === 'state' ? 'State' : 'Constituency';
+    const regionCode = population.geography.geographyId;
+    const regionLabel = getRegionLabel(regionCode, metadata);
+    const regionTypeName = getRegionType(geographyCountryId) === 'state' ? 'State' : 'Constituency';
 
     return (
       <Stack gap="md">
@@ -157,7 +121,7 @@ export default function GeographicConfirmationFrame({
           <strong>Scope:</strong> {regionTypeName}
         </Text>
         <Text>
-          <strong>Country:</strong> {getCountryLabel(currentCountry)}
+          <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
         </Text>
         <Text>
           <strong>{regionTypeName}:</strong> {regionLabel}

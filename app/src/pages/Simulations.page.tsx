@@ -11,7 +11,9 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
+import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function SimulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -107,8 +109,13 @@ export default function SimulationsPage() {
       } as TextValue,
       dateCreated: {
         text: item.userSimulation.createdAt
-          ? new Date(item.userSimulation.createdAt).toLocaleDateString()
-          : 'Just now',
+          ? formatDate(
+              item.userSimulation.createdAt,
+              'short-month-day-year',
+              (item.simulation?.countryId || 'us') as (typeof countryIds)[number],
+              true
+            )
+          : '',
       } as TextValue,
       policy: {
         text: item.userPolicy?.label || (item.policy ? `Policy #${item.policy.id}` : 'No policy'),
