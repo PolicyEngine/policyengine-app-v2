@@ -9,6 +9,8 @@ import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { setFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { countryIds } from '@/libs/countries';
+import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
 export default function PopulationsPage() {
@@ -204,8 +206,8 @@ export default function PopulationsPage() {
         } as TextValue,
         dateCreated: {
           text: item.association.createdAt
-            ? new Date(item.association.createdAt).toLocaleDateString()
-            : 'Just now',
+            ? formatDate(item.association.createdAt, 'short-month-day-year', (item.household?.country_id || 'us') as typeof countryIds[number], true)
+            : '',
         } as TextValue,
         details: {
           items: detailsItems,
@@ -231,12 +233,14 @@ export default function PopulationsPage() {
       const detailsItems = getGeographicDetails(association);
 
       return {
-        id: `geographic-${association.id}`,
+        id: association.id || '',
         populationName: {
           text: association.label,
         } as TextValue,
         dateCreated: {
-          text: new Date(association.createdAt).toLocaleDateString(),
+          text: association.createdAt
+            ? formatDate(association.createdAt, 'short-month-day-year', (association?.countryId || 'us') as typeof countryIds[number], true)
+            : '',
         } as TextValue,
         details: {
           items: detailsItems,

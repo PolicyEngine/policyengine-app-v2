@@ -6,6 +6,8 @@ import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { setFlow } from '@/reducers/flowReducer';
+import { countryIds } from '@/libs/countries';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -113,8 +115,8 @@ export default function PoliciesPage() {
       } as TextValue,
       dateCreated: {
         text: item.association.createdAt
-          ? new Date(item.association.createdAt).toLocaleDateString()
-          : 'Just now',
+          ? formatDate(item.association.createdAt, 'short-month-day-year', (item.policy?.country_id || 'us') as typeof countryIds[number], true)
+          : '',
       } as TextValue,
       provisions: {
         text: '7 provisions', // TODO: Get actual provisions count

@@ -12,7 +12,7 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
-import { formatDate } from '@/utils/dateFormatter';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
   const params = useSelector((state: RootState) => state.policy.parameters || []);

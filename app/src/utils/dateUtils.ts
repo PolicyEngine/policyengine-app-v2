@@ -1,3 +1,5 @@
+import { countryIds } from "@/libs/countries";
+
 /**
  * Date formatting types available for use across the application
  */
@@ -14,13 +16,21 @@ export type DateFormatType =
  * @param formatType - The desired format type
  * @returns Formatted date string
  */
-export function formatDate(dateStr: string, formatType: DateFormatType): string {
+export function formatDate(dateStr: string, formatType: DateFormatType, countryId: typeof countryIds[number] = "us", stripTime: boolean = false): string {
+
+  console.log('Formatting date:', dateStr, 'with format type:', formatType);
   // Ensure UTC interpretation by appending timezone
-  const date = new Date(`${dateStr}T00:00:00.000Z`);
+  // const date = new Date(`${dateStr}T00:00:00.000Z`);
+
+  const date = new Date(dateStr);
+
+  if (stripTime) {
+    date.setUTCHours(0, 0, 0, 0);
+  }
 
   const formatOptions = getFormatOptions(formatType);
 
-  return new Intl.DateTimeFormat('en-US', {
+  return new Intl.DateTimeFormat(`en-${countryId.toUpperCase()}`, {
     ...formatOptions,
     timeZone: 'UTC',
   }).format(date);
