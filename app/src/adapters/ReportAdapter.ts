@@ -14,7 +14,7 @@ export class ReportAdapter {
    */
   static fromMetadata(metadata: ReportMetadata): Report {
     // Convert simulation IDs from individual fields to array
-    const simulationIds = metadata.simulation_2_id 
+    const simulationIds = metadata.simulation_2_id
       ? [metadata.simulation_1_id, metadata.simulation_2_id]
       : [metadata.simulation_1_id];
 
@@ -49,7 +49,11 @@ export class ReportAdapter {
   /**
    * Creates payload for marking a report as completed with output
    */
-  static toCompletedReportPayload(reportId: string, output: ReportOutput, updatedAt: string): ReportSetOutputPayload {
+  static toCompletedReportPayload(
+    reportId: string,
+    output: ReportOutput,
+    updatedAt: string
+  ): ReportSetOutputPayload {
     return {
       report_id: reportId,
       status: 'complete',

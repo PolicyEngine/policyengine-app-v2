@@ -1,5 +1,5 @@
-import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
 import { ReportOutput } from '@/types/ingredients/Report';
+import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 

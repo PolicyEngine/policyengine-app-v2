@@ -1,15 +1,15 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { ReportAdapter } from '@/adapters/ReportAdapter';
 import {
-  mockReport,
-  mockPendingReport,
+  mockCompletedReportPayload,
   mockErrorReport,
-  mockReportOutput,
+  mockErrorReportPayload,
+  mockPendingReport,
+  mockReport,
+  mockReportCreationPayload,
   mockReportMetadata,
   mockReportMetadataSingleSimulation,
-  mockReportCreationPayload,
-  mockCompletedReportPayload,
-  mockErrorReportPayload,
+  mockReportOutput,
 } from '@/tests/fixtures/adapters/reportMocks';
 
 describe('ReportAdapter', () => {
