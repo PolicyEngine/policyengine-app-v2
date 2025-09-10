@@ -8,6 +8,8 @@ import { PopulationViewFlow } from '@/flows/populationViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
+import Embed from "../components/Embed/Embed";
+
 
 export default function HomePage() {
   const dispatch = useDispatch();
@@ -15,6 +17,31 @@ export default function HomePage() {
   return (
     <>
       <h1>TODO: Home Page</h1>
+      
+      <Embed
+        header="testing YouTube"
+        embedType="youtube"
+        src="https://www.youtube.com/watch?v=veyZNyurlwU"
+      />
+
+      <Embed
+        header="testing Vimeo"
+        embedType="vimeo"
+        src="https://vimeo.com/524933864"
+      />
+
+      <Embed
+        header="testing iFrame"
+        embedType="iframe"
+        src="https://maps.google.com/maps?q=Times%20Square%2C%20New%20York&output=embed"
+      />
+
+      <Embed
+        header="testing image"
+        embedType="image"
+        src="https://i.natgeofe.com/k/9acd2bad-fb0e-43a8-935d-ec0aefc60c2f/monarch-butterfly-grass_square.jpg?wp=1&w=357&h=357"
+        alt="Cute kitten"
+      />
       <Button variant="default" onClick={() => dispatch(clearFlow())}>
         Clear all flows
       </Button>

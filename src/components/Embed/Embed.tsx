@@ -1,58 +1,65 @@
 import React from "react";
 import { Card, Stack, Title, Text } from "@mantine/core";
 
-type Kind = "youtube" | "vimeo" | "iframe" | "image";
 
-type Props = {
+type EmbedType = "youtube" | "vimeo" | "iframe" | "image";
+
+const YOUTUBE_REGEX = /(?:v=|youtu\.be\/|\/embed\/)([A-Za-z0-9_-]{6,})/;
+const VIMEO_REGEX = /vimeo\.com\/(?:video\/)?(\d+)/;
+
+interface EmbedProps {
   header: string;
-  kind: Kind;
-  src: string;                 // iframe src or image src
-  description?: string;        // optional text under header
-  aspectRatio?: `${number} / ${number}` | number; // default 16/9
-  alt?: string;                // required if kind="image"
-};
+  embedType: EmbedType;
+  src: string;
+  description?: string; 
+  aspectRatio?: `${number} / ${number}` | number; 
+  alt?: string; 
+}
 
-const fixSrc = (kind: Kind, src: string) => {
-  if (kind === "youtube") {
-    const id =
-      src.match(/(?:v=|youtu\.be\/|\/embed\/)([A-Za-z0-9_-]{6,})/)?.[1] ?? null;
-    return id ? `https://www.youtube.com/embed/${id}` : src;
+
+const fixSrc = (embedType: EmbedType, src: string) => {
+  if (embedType === "youtube") {
+    const link = src.match(YOUTUBE_REGEX)?.[1] ?? null;
+    return link ? `https://www.youtube.com/embed/${link}` : src;
   }
-  if (kind === "vimeo") {
-    const id = src.match(/vimeo\.com\/(?:video\/)?(\d+)/)?.[1] ?? null;
-    return id ? `https://player.vimeo.com/video/${id}` : src;
+
+  if (embedType === "vimeo") {
+    const link = src.match(VIMEO_REGEX)?.[1] ?? null;
+    return link ? `https://player.vimeo.com/video/${link}` : src;
   }
+
   return src;
 };
 
-export function Embed({
+
+export default function Embed({
   header,
-  kind,
+  embedType,
   src,
   description,
   aspectRatio = "16 / 9",
   alt,
-}: Props) {
-  const normalized = fixSrc(kind, src);
+}: EmbedProps) {
+  const embedSrc = fixSrc(embedType, src);
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto" }}>
-      <h2 style={{ margin: "0 0 6px 0" }}>{header}</h2>
-      {description ? (
-        <p style={{ margin: "0 0 10px 0", color: "#6b7280" }}>{description}</p>
-      ) : null}
+  <Card maw={960} mx="auto" padding="md" shadow="sm">
+    <Stack>
+      <Title order={2}>{header}</Title>
+      {description && (
+        <Text c="dimmed">{description}</Text>
+      )}
 
       <div
         style={{
           position: "relative",
-          width: "100%",
           aspectRatio: typeof aspectRatio === "number" ? `${aspectRatio}` : aspectRatio,
           overflow: "hidden",
           borderRadius: 12,
           background: "#00000010",
         }}
       >
-        {kind === "image" ? (
+        {embedType === "image" ? (
           <img
             src={src}
             alt={alt ?? header}
@@ -68,8 +75,8 @@ export function Embed({
         ) : (
           <iframe
             title={header}
-            src={normalized}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            src={embedSrc}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
             style={{
               position: "absolute",
@@ -81,8 +88,9 @@ export function Embed({
           />
         )}
       </div>
-    </div>
-  );
+    </Stack>
+  </Card>
+);
+
 }
 
-export default Embed;
