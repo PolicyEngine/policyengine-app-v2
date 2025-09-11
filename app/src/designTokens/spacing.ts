@@ -46,6 +46,32 @@ export const spacing = {
     sideGutter: '200px', // TODO: Make this responsive/attempt to use 'container'
   },
 
+  // AppShell design tokens
+  appShell: {
+    header: {
+      height: '40px',
+      padding: '8px 16px',
+    },
+    navbar: {
+      width: '300px',
+      padding: '0px',
+      breakpoint: 'sm',
+    },
+    aside: {
+      width: '300px',
+      padding: '16px',
+      breakpoint: 'md',
+    },
+    footer: {
+      height: '60px',
+      padding: '12px 24px',
+    },
+    main: {
+      padding: '24px',
+      minHeight: '100vh',
+    },
+  },
+
   // Container padding
   container: {
     xs: '16px',
