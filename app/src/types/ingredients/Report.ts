@@ -1,18 +1,19 @@
-import { countryIds } from '@/libs/countries';
-
 /**
- * Base Report type containing only immutable values sent to the API
- * NOTE: This is a template and open to modification in the future
+ * Placeholder for report output structure
+ * TODO: Update this when we have a clearer sense of the report output structure
  */
-export interface Report {
-  id: string;
-  countryId: (typeof countryIds)[number];
-  apiVersion: string;
-  simulationId: string;
-  reportData: ReportData;
-  reportHash: string;
+export interface ReportOutput {
+  [key: string]: any;
 }
 
-export interface ReportData {
-  [key: string]: any; // TODO: Define specific report data structure when available
+/**
+ * Base Report type
+ */
+export interface Report {
+  reportId: string;
+  simulationIds: string[];
+  status: 'pending' | 'complete' | 'error';
+  output: ReportOutput | null; // Parsed API response or null
+  createdAt: string;
+  updatedAt: string;
 }

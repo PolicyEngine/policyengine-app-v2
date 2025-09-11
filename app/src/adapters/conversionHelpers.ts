@@ -1,3 +1,4 @@
+import { ReportOutput } from '@/types/ingredients/Report';
 import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -54,4 +55,42 @@ export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMe
   });
 
   return data;
+}
+
+/**
+ * Serializer for ReportOutput to JSON string
+ * TODO: Placeholder for custom serialization logic when report structure is finalized
+ */
+function reportOutputSerializer(_key: string, value: any): any {
+  // Placeholder: currently performs default serialization
+  return value;
+}
+
+/**
+ * Deserializer for JSON string to ReportOutput
+ * TODO: Placeholder for custom deserialization logic when report structure is finalized
+ */
+function reportOutputDeserializer(_key: string, value: any): any {
+  // Placeholder: currently performs default deserialization
+  return value;
+}
+
+/**
+ * Converts ReportOutput to JSON string format for ReportMetadata
+ */
+export function convertReportOutputToJson(output: ReportOutput | null): string | null {
+  if (output === null) {
+    return null;
+  }
+  return JSON.stringify(output, reportOutputSerializer);
+}
+
+/**
+ * Converts JSON string from ReportMetadata to ReportOutput format
+ */
+export function convertJsonToReportOutput(jsonString: string | null): ReportOutput | null {
+  if (jsonString === null) {
+    return null;
+  }
+  return JSON.parse(jsonString, reportOutputDeserializer);
 }

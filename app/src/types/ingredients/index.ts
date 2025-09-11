@@ -57,7 +57,7 @@ export function isGeography(obj: BaseIngredient): obj is Geography {
  * Type guard to check if an object is a Report
  */
 export function isReport(obj: BaseIngredient): obj is Report {
-  return 'reportData' in obj && 'simulationId' in obj;
+  return 'reportId' in obj && 'simulationIds' in obj && 'status' in obj;
 }
 
 /**
