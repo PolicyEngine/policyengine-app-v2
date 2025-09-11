@@ -63,7 +63,7 @@ export const spacing = {
       breakpoint: 'md',
     },
     footer: {
-      height: '48px',
+      height: '60px',
       padding: '12px 24px',
     },
     main: {
