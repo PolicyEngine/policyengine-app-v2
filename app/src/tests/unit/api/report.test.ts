@@ -1,11 +1,11 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
-import { fetchReportById, createReport, updateReport } from '@/api/report';
-import {
-  mockReportMetadata,
-  mockReportCreationPayload,
-  mockCompletedReportPayload,
-} from '@/tests/fixtures/adapters/reportMocks';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { createReport, fetchReportById, updateReport } from '@/api/report';
 import { BASE_URL } from '@/constants';
+import {
+  mockCompletedReportPayload,
+  mockReportCreationPayload,
+  mockReportMetadata,
+} from '@/tests/fixtures/adapters/reportMocks';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -79,14 +79,11 @@ describe('report API', () => {
       const result = await createReport(countryId, payload);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/report-output`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
-        }
-      );
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report-output`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
       expect(result).toEqual({ result: { id: '123' } });
     });
 
@@ -101,9 +98,7 @@ describe('report API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When & Then
-      await expect(createReport(countryId, payload)).rejects.toThrow(
-        'Failed to create report'
-      );
+      await expect(createReport(countryId, payload)).rejects.toThrow('Failed to create report');
     });
   });
 
