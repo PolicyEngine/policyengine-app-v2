@@ -27,7 +27,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   contentAlign,
 }) => {
   return (
-    // direction="column"
+    
     <div>
       {/* Main Title */}
       <Title
@@ -49,12 +49,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         radius="lg"
         p="xl"
         bg={grayBackground ? colors.gray[100] : 'white'}
-        style={
-          {
-            // marginLeft: grayBackground ? '5rem' : 0,
-            // marginRight: grayBackground ? '5rem' : 0,
-          }
-        }
+        
       >
         <Stack gap="md">
           {sections.map((section, idx) => (
