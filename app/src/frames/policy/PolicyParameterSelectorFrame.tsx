@@ -7,6 +7,7 @@ import Footer from '@/components/policyParameterSelectorFrame/Footer';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
+import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -51,6 +52,12 @@ export default function PolicyParameterSelectorFrame({
   return (
     <AppShell
       padding="md"
+      header={{ height: parseInt(spacing.appShell.header.height, 10) }}
+      navbar={{ 
+        width: parseInt(spacing.appShell.navbar.width, 10), 
+        breakpoint: spacing.appShell.navbar.breakpoint 
+      }}
+      footer={{ height: parseInt(spacing.appShell.footer.height, 10) }}
     >
       <AppShell.Header p="md">
         <Header />
