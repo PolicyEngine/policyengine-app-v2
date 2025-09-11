@@ -49,7 +49,6 @@ export interface FlowComponentProps {
   isInSubflow: boolean;
   flowDepth: number;
   parentFlowContext?: {
-    flowName: string;
     parentFrame: ComponentKey;
   };
 }
