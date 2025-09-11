@@ -1,5 +1,5 @@
 export interface ReportMetadata {
-  report_id: string;
+  id: string;
   simulation_1_id: string;
   simulation_2_id: string | null;
   status: 'pending' | 'complete' | 'error';
