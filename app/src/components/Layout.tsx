@@ -1,9 +1,19 @@
 import { Outlet } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { AppShell, Box } from '@mantine/core';
 import { spacing } from '../designTokens';
 import Sidebar from './Sidebar';
+import { RootState } from '@/store';
 
 export default function Layout() {
+  const { currentFrame } = useSelector((state: RootState) => state.flow);
+  
+  // If PolicyParameterSelectorFrame is active, let it manage its own layout completely
+  if (currentFrame === 'PolicyParameterSelectorFrame') {
+    return <Outlet />;
+  }
+
+  // Otherwise, render the normal layout with AppShell
   return (
     <AppShell
       padding={0}
