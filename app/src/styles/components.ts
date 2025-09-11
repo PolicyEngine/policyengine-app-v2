@@ -1,5 +1,5 @@
 // Components submodule for Mantine theme
-import { Card, Container, Title, AppShell } from '@mantine/core';
+import { AppShell, Card, Container, Title } from '@mantine/core';
 import { colors, spacing, typography } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -217,7 +217,7 @@ export const themeComponents = {
       return {};
     },
   }),
-  
+
   AppShell: AppShell.extend({
     defaultProps: {
       padding: spacing.appShell.main.padding,

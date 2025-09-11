@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { AppShell, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import HeaderBar from '@/components/shared/HeaderBar';
 import Footer from '@/components/policyParameterSelectorFrame/Footer';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
+import HeaderBar from '@/components/shared/HeaderBar';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -54,9 +54,9 @@ export default function PolicyParameterSelectorFrame({
       layout="default"
       padding="md"
       header={{ height: parseInt(spacing.appShell.header.height, 10) }}
-      navbar={{ 
-        width: parseInt(spacing.appShell.navbar.width, 10), 
-        breakpoint: spacing.appShell.navbar.breakpoint 
+      navbar={{
+        width: parseInt(spacing.appShell.navbar.width, 10),
+        breakpoint: spacing.appShell.navbar.breakpoint,
       }}
       footer={{ height: parseInt(spacing.appShell.footer.height, 10) }}
     >
