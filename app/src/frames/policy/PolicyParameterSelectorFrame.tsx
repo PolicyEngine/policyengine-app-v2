@@ -49,13 +49,6 @@ export default function PolicyParameterSelectorFrame({
 
   return (
     <AppShell
-      header={{ height: 60 }}
-      navbar={{
-        width: 300,
-        breakpoint: 'sm',
-        collapsed: { mobile: !mobileOpened },
-      }}
-      footer={{ height: 60 }}
       padding="md"
     >
       <AppShell.Header p="md">

@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { AppShell, Box } from '@mantine/core';
-import { spacing } from '../designTokens';
+import { AppShell } from '@mantine/core';
 import Sidebar from './Sidebar';
 import { RootState } from '@/store';
 
@@ -15,27 +14,13 @@ export default function Layout() {
 
   // Otherwise, render the normal layout with AppShell
   return (
-    <AppShell
-      padding={0}
-      navbar={{
-        width: parseInt(spacing.layout.sidebarWidth, 10),
-        breakpoint: 'sm',
-      }}
-    >
-      <AppShell.Navbar p={0} withBorder={false}>
+    <AppShell>
+      <AppShell.Navbar>
         <Sidebar />
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Box
-          style={{
-            minHeight: '100vh',
-            backgroundColor: '#f9fafb',
-            padding: '24px',
-          }}
-        >
-          <Outlet />
-        </Box>
+        <Outlet />
       </AppShell.Main>
     </AppShell>
   );
