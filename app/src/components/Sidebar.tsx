@@ -55,7 +55,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       bg="white"
       style={{
         borderRight: `1px solid ${colors.border.light}`,
-        width: parseInt(spacing.layout.sidebarWidth, 10),
+        width: parseInt(spacing.appShell.navbar.width, 10),
         position: 'fixed',
         left: 0,
         top: 0,

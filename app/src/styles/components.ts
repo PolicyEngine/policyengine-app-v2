@@ -1,5 +1,5 @@
 // Components submodule for Mantine theme
-import { Card, Container, Title } from '@mantine/core';
+import { Card, Container, Title, AppShell } from '@mantine/core';
 import { colors, spacing, typography } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -215,6 +215,26 @@ export const themeComponents = {
         };
       }
       return {};
+    },
+  }),
+  
+  AppShell: AppShell.extend({
+    defaultProps: {
+      navbar: {
+        width: parseInt(spacing.appShell.navbar.width, 10),
+        breakpoint: spacing.appShell.navbar.breakpoint,
+      },
+      padding: spacing.appShell.main.padding,
+      withBorder: true,
+    },
+    styles: {
+      main: {
+        minHeight: spacing.appShell.main.minHeight,
+        backgroundColor: spacing.appShell.main.backgroundColor,
+      },
+      navbar: {
+        padding: spacing.appShell.navbar.padding,
+      },
     },
   }),
 };
