@@ -19,7 +19,7 @@ export class ReportAdapter {
       : [metadata.simulation_1_id];
 
     return {
-      reportId: metadata.report_id,
+      reportId: metadata.id,
       simulationIds,
       status: metadata.status,
       output: convertJsonToReportOutput(metadata.output),
@@ -30,19 +30,15 @@ export class ReportAdapter {
 
   /**
    * Converts Report to format for API POST request
-   * API expects snake_case format
+   * API expects snake_case format - only simulation IDs needed for creation
    */
   static toCreationPayload(report: Report): ReportCreationPayload {
     // Extract simulation IDs from array
     const [simulation1Id, simulation2Id] = report.simulationIds;
 
     return {
-      report_id: report.reportId,
       simulation_1_id: simulation1Id,
       simulation_2_id: simulation2Id || null,
-      status: report.status,
-      created_at: report.createdAt,
-      updated_at: report.updatedAt,
     };
   }
 
@@ -50,27 +46,21 @@ export class ReportAdapter {
    * Creates payload for marking a report as completed with output
    */
   static toCompletedReportPayload(
-    reportId: string,
-    output: ReportOutput,
-    updatedAt: string
+    output: ReportOutput
   ): ReportSetOutputPayload {
     return {
-      report_id: reportId,
       status: 'complete',
       output: convertReportOutputToJson(output),
-      updated_at: updatedAt,
     };
   }
 
   /**
    * Creates payload for marking a report as errored
    */
-  static toErrorReportPayload(reportId: string, updatedAt: string): ReportSetOutputPayload {
+  static toErrorReportPayload(): ReportSetOutputPayload {
     return {
-      report_id: reportId,
       status: 'error',
       output: null,
-      updated_at: updatedAt,
     };
   }
 }
