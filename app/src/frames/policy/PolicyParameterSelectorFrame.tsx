@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import { AppShell, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import Header from '@/components/policyParameterSelectorFrame/Header';
+import Footer from '@/components/policyParameterSelectorFrame/Footer';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
@@ -52,13 +53,7 @@ export default function PolicyParameterSelectorFrame({
       padding="md"
     >
       <AppShell.Header p="md">
-        <Header
-          onNavigate={onNavigate}
-          onReturn={onReturn}
-          flowConfig={flowConfig}
-          isInSubflow={isInSubflow}
-          flowDepth={flowDepth}
-        />
+        <Header />
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
@@ -80,7 +75,13 @@ export default function PolicyParameterSelectorFrame({
       </AppShell.Main>
 
       <AppShell.Footer p="md">
-        <Text fw={700}>TODO: Footer</Text>
+        <Footer
+          onNavigate={onNavigate}
+          onReturn={onReturn}
+          flowConfig={flowConfig}
+          isInSubflow={isInSubflow}
+          flowDepth={flowDepth}
+        />
       </AppShell.Footer>
     </AppShell>
   );
