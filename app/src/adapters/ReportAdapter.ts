@@ -45,9 +45,7 @@ export class ReportAdapter {
   /**
    * Creates payload for marking a report as completed with output
    */
-  static toCompletedReportPayload(
-    output: ReportOutput
-  ): ReportSetOutputPayload {
+  static toCompletedReportPayload(output: ReportOutput): ReportSetOutputPayload {
     return {
       status: 'complete',
       output: convertReportOutputToJson(output),
