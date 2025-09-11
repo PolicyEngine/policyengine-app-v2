@@ -7,7 +7,7 @@ export async function fetchReportById(
   countryId: (typeof countryIds)[number],
   reportId: string
 ): Promise<ReportMetadata> {
-  const url = `${BASE_URL}/${countryId}/report-output/${reportId}`;
+  const url = `${BASE_URL}/${countryId}/report/${reportId}`;
 
   const res = await fetch(url, {
     method: 'GET',
@@ -33,7 +33,7 @@ export async function createReport(
   countryId: (typeof countryIds)[number],
   data: ReportCreationPayload
 ): Promise<{ result: { id: string } }> {
-  const url = `${BASE_URL}/${countryId}/report-output`;
+  const url = `${BASE_URL}/${countryId}/report`;
 
   const res = await fetch(url, {
     method: 'POST',
@@ -58,7 +58,7 @@ export async function updateReport(
   reportId: string,
   data: ReportSetOutputPayload
 ): Promise<{ result: ReportMetadata }> {
-  const url = `${BASE_URL}/${countryId}/report-output/${reportId}`;
+  const url = `${BASE_URL}/${countryId}/report/${reportId}`;
 
   const res = await fetch(url, {
     method: 'PATCH',

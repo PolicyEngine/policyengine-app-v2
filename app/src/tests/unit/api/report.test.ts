@@ -31,7 +31,7 @@ describe('report API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/report-output/${reportId}`,
+        `${BASE_URL}/${countryId}/report/${reportId}`,
         {
           method: 'GET',
           headers: {
@@ -79,7 +79,7 @@ describe('report API', () => {
       const result = await createReport(countryId, payload);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report-output`, {
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -120,7 +120,7 @@ describe('report API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/report-output/${reportId}`,
+        `${BASE_URL}/${countryId}/report/${reportId}`,
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
