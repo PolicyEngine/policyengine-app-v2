@@ -27,7 +27,6 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   contentAlign,
 }) => {
   return (
-    
     <div>
       {/* Main Title */}
       <Title
@@ -45,12 +44,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       </Title>
 
       {/* Card with content */}
-      <Card
-        radius="lg"
-        p="xl"
-        bg={grayBackground ? colors.gray[100] : 'white'}
-        
-      >
+      <Card radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : 'white'}>
         <Stack gap="md">
           {sections.map((section, idx) => (
             <div key={idx}>
