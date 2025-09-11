@@ -136,9 +136,7 @@ describe('ReportAdapter', () => {
   describe('toCompletedReportPayload', () => {
     test('given report ID and output then creates completed payload correctly', () => {
       // Given
-      const reportId = 'report-123';
       const output = mockReportOutput;
-      const updatedAt = '2024-01-15T10:35:00Z';
 
       // When
       const result = ReportAdapter.toCompletedReportPayload(output);
@@ -149,7 +147,6 @@ describe('ReportAdapter', () => {
 
     test('given complex output object then serializes to JSON string correctly', () => {
       // Given
-      const reportId = 'report-complex';
       const complexOutput = {
         nested: {
           deeply: {
@@ -160,7 +157,6 @@ describe('ReportAdapter', () => {
         boolean: true,
         null_value: null,
       };
-      const updatedAt = '2024-01-15T15:00:00Z';
       const expectedStatus = 'complete' as const;
 
       // When
@@ -175,9 +171,7 @@ describe('ReportAdapter', () => {
 
     test('given empty output object then creates payload with stringified empty object', () => {
       // Given
-      const reportId = 'report-empty';
       const emptyOutput = {};
-      const updatedAt = '2024-01-15T16:00:00Z';
       const expectedStatus = 'complete' as const;
       const expectedOutputString = '{}';
 
