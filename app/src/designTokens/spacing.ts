@@ -69,7 +69,6 @@ export const spacing = {
     main: {
       padding: '24px',
       minHeight: '100vh',
-      backgroundColor: '#f9fafb',
     },
   },
 

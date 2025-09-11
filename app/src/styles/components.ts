@@ -230,7 +230,7 @@ export const themeComponents = {
     styles: {
       main: {
         minHeight: spacing.appShell.main.minHeight,
-        backgroundColor: spacing.appShell.main.backgroundColor,
+        backgroundColor: colors.gray[50],
       },
       navbar: {
         padding: spacing.appShell.navbar.padding,
