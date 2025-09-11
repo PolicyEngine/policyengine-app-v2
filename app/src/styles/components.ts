@@ -220,10 +220,6 @@ export const themeComponents = {
   
   AppShell: AppShell.extend({
     defaultProps: {
-      navbar: {
-        width: parseInt(spacing.appShell.navbar.width, 10),
-        breakpoint: spacing.appShell.navbar.breakpoint,
-      },
       padding: spacing.appShell.main.padding,
       withBorder: true,
     },

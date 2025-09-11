@@ -12,7 +12,6 @@ import { useLocation } from 'react-router-dom';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
-import SidebarLogo from './sidebar/SidebarLogo';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
 import SidebarUser from './sidebar/SidebarUser';
@@ -56,7 +55,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       style={{
         borderRight: `1px solid ${colors.border.light}`,
         width: parseInt(spacing.appShell.navbar.width, 10),
-        position: 'fixed',
         left: 0,
         top: 0,
         overflowY: 'auto',
@@ -64,9 +62,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       gap={0}
     >
       <Stack gap={0}>
-        <Box bg={colors.primary[600]} px={16} py={20}>
-          <SidebarLogo />
-        </Box>
         <Box px={16} py={16}>
           <Button
             leftSection={<IconPlus size={16} stroke={2} />}

@@ -49,8 +49,8 @@ export const spacing = {
   // AppShell design tokens
   appShell: {
     header: {
-      height: '60px',
-      padding: '12px 24px',
+      height: '40px',
+      padding: '8px 16px',
     },
     navbar: {
       width: '300px',

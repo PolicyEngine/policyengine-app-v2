@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { AppShell, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import Header from '@/components/policyParameterSelectorFrame/Header';
+import HeaderBar from '@/components/shared/HeaderBar';
 import Footer from '@/components/policyParameterSelectorFrame/Footer';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
@@ -51,6 +51,7 @@ export default function PolicyParameterSelectorFrame({
 
   return (
     <AppShell
+      layout="default"
       padding="md"
       header={{ height: parseInt(spacing.appShell.header.height, 10) }}
       navbar={{ 
@@ -59,8 +60,8 @@ export default function PolicyParameterSelectorFrame({
       }}
       footer={{ height: parseInt(spacing.appShell.footer.height, 10) }}
     >
-      <AppShell.Header p="md">
-        <Header />
+      <AppShell.Header p={0}>
+        <HeaderBar showLogo />
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
