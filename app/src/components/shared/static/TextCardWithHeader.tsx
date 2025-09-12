@@ -1,5 +1,4 @@
-// import React from "react";
-import { Button, Card, Stack, Text, Title } from '@mantine/core';
+import { Button, Card, Stack, Text, Title, Box,Group } from '@mantine/core';
 import { colors, typography } from '../../../designTokens';
 
 interface Section {
@@ -10,32 +9,43 @@ interface Section {
 interface TitleCardWithHeaderProps {
   title: string;
   sections?: Section[];
-  grayBackground?: boolean;
-  buttonLabel: string;
-  onButtonClick: () => void;
-  titleAlign?: 'left' | 'center' | 'right';
-  contentAlign?: 'left' | 'center' | 'right';
+  backgroundColor?: 'white' | 'green' | 'gray';
+  buttonLabel: string | string[];
+  onButtonClick: (label: string) => void;
 }
 
 export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   title,
   sections = [],
-  grayBackground = false,
+  backgroundColor = 'white',
   buttonLabel,
   onButtonClick,
-  titleAlign,
-  contentAlign,
 }) => {
+
+  let resolvedBackgroundColor: string;
+  switch (backgroundColor) {
+    case 'green':
+      resolvedBackgroundColor = colors.primary[500];
+      break;
+    case 'gray':
+      resolvedBackgroundColor = colors.gray[200];
+      break;
+    case 'white':
+    default:
+      resolvedBackgroundColor = colors.white;
+      break;
+  }
+
   return (
-    <div>
-      {/* Main Title */}
+    <Box>
+      {/* Title */}
       <Title
         order={1}
         styles={() => ({
           root: {
             color: colors.black,
             fontSize: typography.fontSize['4xl'],
-            textAlign: titleAlign || 'center',
+            textAlign: 'left',
             lineHeight: typography.lineHeight.normal,
           },
         })}
@@ -44,48 +54,63 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       </Title>
 
       {/* Card with content */}
-      <Card radius="lg" p="xl" bg={grayBackground ? colors.gray[100] : 'white'}>
-        <Stack gap="md">
-          {sections.map((section, idx) => (
-            <div key={idx}>
-              <Title order={3} c={colors.blue[700]} lh={1.3} ta={contentAlign || 'center'}>
-                {section.heading}
-              </Title>
-              {Array.isArray(section.body) ? (
-                section.body.map((para, pIdx) => (
-                  <Text
-                    key={pIdx}
-                    size="md"
-                    c={colors.text.primary}
-                    lh={1.5}
-                    ta={contentAlign || 'center'}
-                    mb="xs"
-                  >
-                    {para}
-                  </Text>
-                ))
-              ) : (
-                <Text size="md" c={colors.text.primary} lh={1.5} ta={contentAlign || 'center'}>
-                  {section.body}
-                </Text>
-              )}
-            </div>
-          ))}
-
-          {buttonLabel && (
-            <Button
-              onClick={onButtonClick}
-              variant="filled"
-              color={colors.blue[700]}
-              mt="md"
-              style={{ alignSelf: 'center' }}
-            >
-              {buttonLabel}
-            </Button>
+      <Card radius="lg" p="xl" bg={resolvedBackgroundColor}>
+    <Stack gap="md">
+      {sections.map((section, idx) => (
+        <>
+          <Title key={`title-${idx}`} order={3} c={colors.blue[700]} lh={1.3} ta="left">
+            {section.heading}
+          </Title>
+          {Array.isArray(section.body) ? (
+            section.body.map((para, pIdx) => (
+              <Text
+                key={`body-${idx}-${pIdx}`}
+                size="md"
+                c={colors.text.primary}
+                lh={1.5}
+                ta="left"
+                mb="xs"
+              >
+                {para}
+              </Text>
+            ))
+          ) : (
+            <Text key={`body-${idx}`} size="md" c={colors.text.primary} lh={1.5} ta="left">
+              {section.body}
+            </Text>
           )}
-        </Stack>
-      </Card>
-    </div>
+        </>
+      ))}
+
+      {/* Buttons */}
+          {buttonLabel &&
+            (Array.isArray(buttonLabel) ? (
+              <Group mt="md" >
+                {buttonLabel.map((label, idx) => (
+                  <Button
+                    key={idx}
+                    onClick={() => onButtonClick?.(label)}
+                    variant="filled"
+                    color={colors.blue[700]}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </Group>
+            ) : (
+              <Button
+                onClick={() => onButtonClick?.(buttonLabel)}
+                variant="filled"
+                color={colors.blue[700]}
+                mt="md"
+              >
+                {buttonLabel}
+              </Button>
+            ))}
+    </Stack>
+  </Card>
+
+    </Box>
   );
 };
 
@@ -93,10 +118,10 @@ export default function TextCardWithHeaderComponent() {
   return (
     <TitleCardWithHeader
       title=""
-      buttonLabel=""
-      onButtonClick={function (): void {
-        throw new Error('Function not implemented.');
-      }}
+      sections={[]} 
+      backgroundColor="white" 
+      buttonLabel={[]}
+      onButtonClick={() => {}}
     />
   );
 }
