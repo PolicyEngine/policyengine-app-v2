@@ -10,10 +10,10 @@ export interface ReportOutput {
  * Base Report type
  */
 export interface Report {
-  reportId: string;
+  reportId?: string; // Optional - populated after creation like Policy
   simulationIds: string[];
   status: 'pending' | 'complete' | 'error';
   output: ReportOutput | null; // Parsed API response or null
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string; // Optional - populated by backend
+  updatedAt?: string; // Optional - populated by backend
 }
