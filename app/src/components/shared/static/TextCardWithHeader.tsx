@@ -1,4 +1,4 @@
-import { Button, Card, Stack, Text, Title, Box,Group } from '@mantine/core';
+import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, typography } from '../../../designTokens';
 
 interface Section {
@@ -21,7 +21,6 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   buttonLabel,
   onButtonClick,
 }) => {
-
   let resolvedBackgroundColor: string;
   switch (backgroundColor) {
     case 'green':
@@ -55,37 +54,37 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
 
       {/* Card with content */}
       <Card radius="lg" p="xl" bg={resolvedBackgroundColor}>
-    <Stack gap="md">
-      {sections.map((section, idx) => (
-        <>
-          <Title key={`title-${idx}`} order={3} c={colors.blue[700]} lh={1.3} ta="left">
-            {section.heading}
-          </Title>
-          {Array.isArray(section.body) ? (
-            section.body.map((para, pIdx) => (
-              <Text
-                key={`body-${idx}-${pIdx}`}
-                size="md"
-                c={colors.text.primary}
-                lh={1.5}
-                ta="left"
-                mb="xs"
-              >
-                {para}
-              </Text>
-            ))
-          ) : (
-            <Text key={`body-${idx}`} size="md" c={colors.text.primary} lh={1.5} ta="left">
-              {section.body}
-            </Text>
-          )}
-        </>
-      ))}
+        <Stack gap="md">
+          {sections.map((section, idx) => (
+            <>
+              <Title key={`title-${idx}`} order={3} c={colors.blue[700]} lh={1.3} ta="left">
+                {section.heading}
+              </Title>
+              {Array.isArray(section.body) ? (
+                section.body.map((para, pIdx) => (
+                  <Text
+                    key={`body-${idx}-${pIdx}`}
+                    size="md"
+                    c={colors.text.primary}
+                    lh={1.5}
+                    ta="left"
+                    mb="xs"
+                  >
+                    {para}
+                  </Text>
+                ))
+              ) : (
+                <Text key={`body-${idx}`} size="md" c={colors.text.primary} lh={1.5} ta="left">
+                  {section.body}
+                </Text>
+              )}
+            </>
+          ))}
 
-      {/* Buttons */}
+          {/* Buttons */}
           {buttonLabel &&
             (Array.isArray(buttonLabel) ? (
-              <Group mt="md" >
+              <Group mt="md">
                 {buttonLabel.map((label, idx) => (
                   <Button
                     key={idx}
@@ -107,9 +106,8 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
                 {buttonLabel}
               </Button>
             ))}
-    </Stack>
-  </Card>
-
+        </Stack>
+      </Card>
     </Box>
   );
 };
@@ -118,8 +116,8 @@ export default function TextCardWithHeaderComponent() {
   return (
     <TitleCardWithHeader
       title=""
-      sections={[]} 
-      backgroundColor="white" 
+      sections={[]}
+      backgroundColor="white"
       buttonLabel={[]}
       onButtonClick={() => {}}
     />
