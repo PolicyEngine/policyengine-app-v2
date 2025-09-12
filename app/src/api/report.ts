@@ -2,6 +2,8 @@ import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload, ReportSetOutputPayload } from '@/types/payloads';
+import { ReportAdapter } from '@/adapters/ReportAdapter';
+import { ReportOutput } from '@/types/ingredients/Report';
 
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],
@@ -13,7 +15,7 @@ export async function fetchReportById(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Accept: 'application/json',
+      'Accept': 'application/json',
     },
   });
 
@@ -23,10 +25,7 @@ export async function fetchReportById(
 
   const json = await res.json();
 
-  // Forcibly convert numeric ID to string to match our types
-  json.result.id = String(json.result.id);
-
-  return json.result;
+  return ReportAdapter.convertIdToString(json).result;
 }
 
 export async function createReport(
@@ -47,13 +46,10 @@ export async function createReport(
 
   const json = await res.json();
 
-  // Forcibly convert numeric ID to string to match our types
-  json.result.id = String(json.result.id);
-
-  return json;
+  return ReportAdapter.convertIdToString(json);
 }
 
-export async function updateReport(
+async function updateReport(
   countryId: (typeof countryIds)[number],
   reportId: string,
   data: ReportSetOutputPayload
@@ -72,8 +68,22 @@ export async function updateReport(
 
   const json = await res.json();
 
-  // Forcibly convert numeric ID to string to match our types
-  json.result.id = String(json.result.id);
+  return ReportAdapter.convertIdToString(json);
+}
 
-  return json;
+export async function markReportCompleted(
+  countryId: (typeof countryIds)[number],
+  reportId: string,
+  output: ReportOutput
+): Promise<{ result: ReportMetadata }> {
+  const data = ReportAdapter.toCompletedReportPayload(output);
+  return updateReport(countryId, reportId, data);
+}
+
+export async function markReportError(
+  countryId: (typeof countryIds)[number],
+  reportId: string
+): Promise<{ result: ReportMetadata }> {
+  const data = ReportAdapter.toErrorReportPayload();
+  return updateReport(countryId, reportId, data);
 }

@@ -9,6 +9,18 @@ import { convertJsonToReportOutput, convertReportOutputToJson } from './conversi
  */
 export class ReportAdapter {
   /**
+   * Converts numeric ID from API response to string format
+   */
+  static convertIdToString(apiResponse: any): any {
+    return {
+      ...apiResponse,
+      result: {
+        ...apiResponse.result,
+        id: String(apiResponse.result.id),
+      },
+    };
+  }
+  /**
    * Converts ReportMetadata from API GET response to Report type
    * Handles snake_case to camelCase conversion
    */

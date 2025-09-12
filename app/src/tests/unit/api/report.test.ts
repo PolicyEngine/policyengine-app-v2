@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { createReport, fetchReportById, updateReport } from '@/api/report';
+import { createReport, fetchReportById, markReportCompleted, markReportError } from '@/api/report';
 import { BASE_URL } from '@/constants';
 import {
   mockCompletedReportPayload,
   mockReportCreationPayload,
   mockReportMetadata,
+  mockReportOutput,
+  mockErrorReportPayload,
 } from '@/tests/fixtures/adapters/reportMocks';
 
 // Mock fetch globally
@@ -36,7 +38,7 @@ describe('report API', () => {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-            Accept: 'application/json',
+            'Accept': 'application/json',
           },
         }
       );
@@ -102,12 +104,12 @@ describe('report API', () => {
     });
   });
 
-  describe('updateReport', () => {
-    test('given valid payload then updates report successfully', async () => {
+  describe('markReportCompleted', () => {
+    test('given valid output then marks report as completed successfully', async () => {
       // Given
       const countryId = 'us';
       const reportId = 'report-123';
-      const payload = mockCompletedReportPayload;
+      const output = mockReportOutput;
       const mockApiResponse = { result: mockReportMetadata };
       const mockResponse = {
         ok: true,
@@ -116,7 +118,7 @@ describe('report API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await updateReport(countryId, reportId, payload);
+      const result = await markReportCompleted(countryId, reportId, output);
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
@@ -124,7 +126,7 @@ describe('report API', () => {
         {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(mockCompletedReportPayload),
         }
       );
       expect(result).toEqual({
@@ -139,7 +141,7 @@ describe('report API', () => {
       // Given
       const countryId = 'us';
       const reportId = 'report-123';
-      const payload = mockCompletedReportPayload;
+      const output = mockReportOutput;
       const mockResponse = {
         ok: false,
         status: 500,
@@ -147,7 +149,56 @@ describe('report API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When & Then
-      await expect(updateReport(countryId, reportId, payload)).rejects.toThrow(
+      await expect(markReportCompleted(countryId, reportId, output)).rejects.toThrow(
+        'Failed to update report report-123'
+      );
+    });
+  });
+
+  describe('markReportError', () => {
+    test('given valid report ID then marks report as error successfully', async () => {
+      // Given
+      const countryId = 'us';
+      const reportId = 'report-123';
+      const mockApiResponse = { result: mockReportMetadata };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockApiResponse),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await markReportError(countryId, reportId);
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${BASE_URL}/${countryId}/report/${reportId}`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mockErrorReportPayload),
+        }
+      );
+      expect(result).toEqual({
+        result: {
+          ...mockReportMetadata,
+          id: String(mockReportMetadata.id),
+        },
+      });
+    });
+
+    test('given API error then throws error', async () => {
+      // Given
+      const countryId = 'us';
+      const reportId = 'report-123';
+      const mockResponse = {
+        ok: false,
+        status: 500,
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When & Then
+      await expect(markReportError(countryId, reportId)).rejects.toThrow(
         'Failed to update report report-123'
       );
     });
