@@ -15,7 +15,7 @@ export const mockReportOutput: ReportOutput = {
 };
 
 export const mockReport: Report = {
-  reportId: 'report-123',
+  reportId: '123',
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: ['sim-456', 'sim-789'],
@@ -26,7 +26,7 @@ export const mockReport: Report = {
 };
 
 export const mockPendingReport: Report = {
-  reportId: 'report-pending-001',
+  reportId: '1',
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: ['sim-111'],
@@ -37,7 +37,7 @@ export const mockPendingReport: Report = {
 };
 
 export const mockErrorReport: Report = {
-  reportId: 'report-error-002',
+  reportId: '2',
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: ['sim-222', 'sim-333'],

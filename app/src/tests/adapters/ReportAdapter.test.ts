@@ -24,7 +24,9 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: mockReportMetadata.id,
+        reportId: String(mockReportMetadata.id),
+        countryId: mockReportMetadata.country_id,
+        apiVersion: mockReportMetadata.api_version,
         simulationIds: [mockReportMetadata.simulation_1_id, mockReportMetadata.simulation_2_id],
         status: mockReportMetadata.status,
         output: mockReportOutput,
@@ -42,10 +44,12 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: mockReportMetadataSingleSimulation.id,
+        reportId: String(mockReportMetadataSingleSimulation.id),
+        countryId: mockReportMetadataSingleSimulation.country_id,
+        apiVersion: mockReportMetadataSingleSimulation.api_version,
         simulationIds: [mockReportMetadataSingleSimulation.simulation_1_id],
         status: mockReportMetadataSingleSimulation.status,
-        output: mockReportMetadataSingleSimulation.output,
+        output: null,
         createdAt: mockReportMetadataSingleSimulation.created_at,
         updatedAt: mockReportMetadataSingleSimulation.updated_at,
       });
@@ -213,6 +217,7 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
+        id: 2,
         status: expectedErrorStatus,
         output: expectedNullOutput,
       });
