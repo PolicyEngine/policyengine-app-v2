@@ -3,6 +3,7 @@
  * Note: The report ID is passed in the URL path, not in the payload
  */
 export interface ReportSetOutputPayload {
+  id: number;
   status: 'pending' | 'complete' | 'error';
   output: string | null; // JSON-stringified object or null
 }

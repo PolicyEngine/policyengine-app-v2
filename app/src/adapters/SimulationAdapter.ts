@@ -25,7 +25,7 @@ export class SimulationAdapter {
     }
 
     return {
-      id: metadata.simulation_id,
+      id: String(metadata.id),
       countryId: metadata.country_id,
       apiVersion: metadata.api_version,
       policyId: metadata.policy_id,

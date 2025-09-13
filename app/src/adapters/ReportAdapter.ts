@@ -9,18 +9,6 @@ import { convertJsonToReportOutput, convertReportOutputToJson } from './conversi
  */
 export class ReportAdapter {
   /**
-   * Converts numeric ID from API response to string format
-   */
-  static convertIdToString(apiResponse: any): any {
-    return {
-      ...apiResponse,
-      result: {
-        ...apiResponse.result,
-        id: String(apiResponse.result.id),
-      },
-    };
-  }
-  /**
    * Converts ReportMetadata from API GET response to Report type
    * Handles snake_case to camelCase conversion
    */
@@ -31,7 +19,9 @@ export class ReportAdapter {
       : [metadata.simulation_1_id];
 
     return {
-      reportId: metadata.id,
+      reportId: String(metadata.id),
+      countryId: metadata.country_id,
+      apiVersion: metadata.api_version,
       simulationIds,
       status: metadata.status,
       output: convertJsonToReportOutput(metadata.output),
@@ -57,18 +47,26 @@ export class ReportAdapter {
   /**
    * Creates payload for marking a report as completed with output
    */
-  static toCompletedReportPayload(output: ReportOutput): ReportSetOutputPayload {
+  static toCompletedReportPayload(report: Report): ReportSetOutputPayload {
+    if (!report.reportId) {
+      throw new Error('Report ID is required to create completed report payload');
+    }
     return {
+      id: parseInt(report.reportId, 10),
       status: 'complete',
-      output: convertReportOutputToJson(output),
+      output: convertReportOutputToJson(report.output),
     };
   }
 
   /**
    * Creates payload for marking a report as errored
    */
-  static toErrorReportPayload(): ReportSetOutputPayload {
+  static toErrorReportPayload(report: Report): ReportSetOutputPayload {
+    if (!report.reportId) {
+      throw new Error('Report ID is required to create error report payload');
+    }
     return {
+      id: parseInt(report.reportId, 10),
       status: 'error',
       output: null,
     };
