@@ -59,8 +59,7 @@ export const mockUserSimulationReadOnly: UserSimulation = {
 export const mockUserSimulationCreationPayload: UserSimulationCreationPayload = {
   userId: TEST_USER_ID,
   simulationId: NEW_SIMULATION_ID,
-  is_owner: true,
-  permissions: ['read', 'write', 'delete'],
+  label: 'New Simulation',
 };
 
 // Non-owner creation payload

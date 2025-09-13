@@ -295,7 +295,7 @@ describe('SimulationAdapter', () => {
       // Given
       const metadata: SimulationMetadata = {
         id: 999,  // Changed to number
-        country_id: 'test-country',
+        country_id: 'us',  // Use valid country ID
         api_version: 'test-version',
         policy_id: 888,  // Changed to number
         population_id: 'test-population',
@@ -318,7 +318,7 @@ describe('SimulationAdapter', () => {
       // Given
       const simulation = {
         id: 'test-sim-123', // Should not be included in creation payload
-        countryId: 'test-country', // Should not be included in creation payload
+        countryId: 'us', // Should not be included in creation payload
         apiVersion: 'test-version', // Should not be included in creation payload
         populationId: 'test-population',
         populationType: 'geography' as const,
