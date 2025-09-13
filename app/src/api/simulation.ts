@@ -73,7 +73,7 @@ export async function fetchSimulationById(
         // Fallback for simulations not in our store (legacy or external)
         // TODO: Remove this once we have the necessary API endpoints
         resolve({
-          simulation_id: simulationId,
+          id: parseInt(simulationId, 10),
           country_id: countryId,
           api_version: mockApiVersion,
           population_id: mockPopulationId,
@@ -85,17 +85,18 @@ export async function fetchSimulationById(
   });
 }
 
+// TODO: This needs to be replaced by the API simulation endpoint.
 export async function createSimulation(
   data: SimulationCreationPayload
 ): Promise<{ result: { simulation_id: string } }> {
   return new Promise((resolve) => {
     setTimeout(() => {
       // Generate a unique simulation ID
-      const simulationId = `mock-simulation-id-${Date.now()}`;
+      const simulationId = `${Date.now()}`;
 
       // Store the simulation data for later retrieval
       const simulationMetadata: SimulationMetadata = {
-        simulation_id: simulationId,
+        id: parseInt(simulationId, 10),
         country_id: 'us', // Default to US for now
         api_version: mockApiVersion,
         population_id: data.population_id || mockPopulationId,

@@ -16,6 +16,8 @@ export const mockReportOutput: ReportOutput = {
 
 export const mockReport: Report = {
   reportId: 'report-123',
+  countryId: 'us',
+  apiVersion: 'v1',
   simulationIds: ['sim-456', 'sim-789'],
   status: 'complete',
   output: mockReportOutput,
@@ -25,6 +27,8 @@ export const mockReport: Report = {
 
 export const mockPendingReport: Report = {
   reportId: 'report-pending-001',
+  countryId: 'us',
+  apiVersion: 'v1',
   simulationIds: ['sim-111'],
   status: 'pending',
   output: null,
@@ -34,6 +38,8 @@ export const mockPendingReport: Report = {
 
 export const mockErrorReport: Report = {
   reportId: 'report-error-002',
+  countryId: 'us',
+  apiVersion: 'v1',
   simulationIds: ['sim-222', 'sim-333'],
   status: 'error',
   output: null,
@@ -42,7 +48,9 @@ export const mockErrorReport: Report = {
 };
 
 export const mockReportMetadata: ReportMetadata = {
-  id: 'report-123',
+  id: 123,
+  country_id: 'us',
+  api_version: 'v1',
   simulation_1_id: 'sim-456',
   simulation_2_id: 'sim-789',
   status: 'complete',
@@ -52,7 +60,9 @@ export const mockReportMetadata: ReportMetadata = {
 };
 
 export const mockReportMetadataSingleSimulation: ReportMetadata = {
-  id: 'report-single-001',
+  id: 1,
+  country_id: 'us',
+  api_version: 'v1',
   simulation_1_id: 'sim-999',
   simulation_2_id: null,
   status: 'pending',
@@ -67,11 +77,13 @@ export const mockReportCreationPayload: ReportCreationPayload = {
 };
 
 export const mockCompletedReportPayload: ReportSetOutputPayload = {
+  id: 123,
   status: 'complete',
   output: JSON.stringify(mockReportOutput),
 };
 
 export const mockErrorReportPayload: ReportSetOutputPayload = {
+  id: 2,
   status: 'error',
   output: null,
 };

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { ReportAdapter } from '@/adapters/ReportAdapter';
+import { Report } from '@/types/ingredients/Report';
 import {
   mockCompletedReportPayload,
   mockErrorReport,
@@ -139,7 +140,7 @@ describe('ReportAdapter', () => {
       const output = mockReportOutput;
 
       // When
-      const result = ReportAdapter.toCompletedReportPayload(output);
+      const result = ReportAdapter.toCompletedReportPayload(mockReport);
 
       // Then
       expect(result).toEqual(mockCompletedReportPayload);
@@ -158,12 +159,17 @@ describe('ReportAdapter', () => {
         null_value: null,
       };
       const expectedStatus = 'complete' as const;
+      const reportWithComplexOutput: Report = {
+        ...mockReport,
+        output: complexOutput,
+      };
 
       // When
-      const result = ReportAdapter.toCompletedReportPayload(complexOutput);
+      const result = ReportAdapter.toCompletedReportPayload(reportWithComplexOutput);
 
       // Then
       expect(result).toEqual({
+        id: 123,
         status: expectedStatus,
         output: JSON.stringify(complexOutput),
       });
@@ -174,12 +180,17 @@ describe('ReportAdapter', () => {
       const emptyOutput = {};
       const expectedStatus = 'complete' as const;
       const expectedOutputString = '{}';
+      const reportWithEmptyOutput: Report = {
+        ...mockReport,
+        output: emptyOutput,
+      };
 
       // When
-      const result = ReportAdapter.toCompletedReportPayload(emptyOutput);
+      const result = ReportAdapter.toCompletedReportPayload(reportWithEmptyOutput);
 
       // Then
       expect(result).toEqual({
+        id: 123,
         status: expectedStatus,
         output: expectedOutputString,
       });
@@ -189,7 +200,7 @@ describe('ReportAdapter', () => {
   describe('toErrorReportPayload', () => {
     test('given report ID then creates error payload correctly', () => {
       // When
-      const result = ReportAdapter.toErrorReportPayload();
+      const result = ReportAdapter.toErrorReportPayload(mockErrorReport);
 
       // Then
       expect(result).toEqual(mockErrorReportPayload);
@@ -201,7 +212,7 @@ describe('ReportAdapter', () => {
       const expectedNullOutput = null;
 
       // When
-      const result = ReportAdapter.toErrorReportPayload();
+      const result = ReportAdapter.toErrorReportPayload(mockErrorReport);
 
       // Then
       expect(result).toEqual({

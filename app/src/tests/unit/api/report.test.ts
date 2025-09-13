@@ -7,6 +7,8 @@ import {
   mockReportMetadata,
   mockReportOutput,
   mockErrorReportPayload,
+  mockReport,
+  mockErrorReport,
 } from '@/tests/fixtures/adapters/reportMocks';
 
 // Mock fetch globally
@@ -109,7 +111,6 @@ describe('report API', () => {
       // Given
       const countryId = 'us';
       const reportId = 'report-123';
-      const output = mockReportOutput;
       const mockApiResponse = { result: mockReportMetadata };
       const mockResponse = {
         ok: true,
@@ -118,7 +119,7 @@ describe('report API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await markReportCompleted(countryId, reportId, output);
+      const result = await markReportCompleted(countryId, reportId, mockReport);
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
@@ -141,7 +142,6 @@ describe('report API', () => {
       // Given
       const countryId = 'us';
       const reportId = 'report-123';
-      const output = mockReportOutput;
       const mockResponse = {
         ok: false,
         status: 500,
@@ -149,7 +149,7 @@ describe('report API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When & Then
-      await expect(markReportCompleted(countryId, reportId, output)).rejects.toThrow(
+      await expect(markReportCompleted(countryId, reportId, mockReport)).rejects.toThrow(
         'Failed to update report report-123'
       );
     });
@@ -168,7 +168,7 @@ describe('report API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await markReportError(countryId, reportId);
+      const result = await markReportError(countryId, reportId, mockErrorReport);
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
@@ -198,7 +198,7 @@ describe('report API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When & Then
-      await expect(markReportError(countryId, reportId)).rejects.toThrow(
+      await expect(markReportError(countryId, reportId, mockErrorReport)).rejects.toThrow(
         'Failed to update report report-123'
       );
     });
