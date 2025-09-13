@@ -3,7 +3,7 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 // Test IDs and labels
 export const TEST_USER_ID = 'test-user-123';
@@ -220,12 +220,13 @@ export const mockRootState: Partial<RootState> = {
 };
 
 // Mock geographic association
-export const mockGeographicAssociation: UserGeographicAssociation = {
+export const mockGeographicAssociation: UserGeographyPopulation = {
+  type: 'geography',
   id: `${TEST_USER_ID}-${Date.now()}`,
   userId: TEST_USER_ID,
-  countryCode: TEST_COUNTRIES.US,
-  geographyType: 'national',
-  geographyIdentifier: TEST_COUNTRIES.US,
+  countryId: TEST_COUNTRIES.US,
+  scope: 'national',
+  geographyId: TEST_COUNTRIES.US,
   label: 'United States',
   createdAt: new Date().toISOString(),
 };

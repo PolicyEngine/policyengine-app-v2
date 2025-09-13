@@ -84,7 +84,17 @@ describe('GeographicConfirmationFrame', () => {
       parameters: {},
       entities: {},
       variableModules: {},
-      economyOptions: { region: [], time_period: [], datasets: [] },
+      economyOptions: {
+        region: [
+          { name: 'us', label: 'United States' },
+          { name: 'state/ca', label: 'California' },
+          { name: 'state/ny', label: 'New York' },
+          { name: 'uk', label: 'United Kingdom' },
+          { name: 'constituency/london', label: 'London' },
+        ],
+        time_period: [],
+        datasets: [],
+      },
       currentLawId: 0,
       basicInputs: [],
       modelledPolicies: { core: {}, filtered: {} },
@@ -203,10 +213,10 @@ describe('GeographicConfirmationFrame', () => {
         expect(mockCreateGeographicAssociation).toHaveBeenCalledWith(
           expect.objectContaining({
             userId: TEST_USER_ID,
-            countryCode: TEST_COUNTRIES.US,
-            geographyType: 'national',
-            geographyIdentifier: TEST_COUNTRIES.US,
-            label: 'United States',
+            countryId: TEST_COUNTRIES.US,
+            scope: 'national',
+            geographyId: TEST_COUNTRIES.US,
+            label: 'Test National',
           })
         );
       });
@@ -233,11 +243,10 @@ describe('GeographicConfirmationFrame', () => {
         expect(mockCreateGeographicAssociation).toHaveBeenCalledWith(
           expect.objectContaining({
             userId: TEST_USER_ID,
-            geographyType: 'subnational',
-            geographyIdentifier: `${TEST_COUNTRIES.US}-ca`,
-            regionCode: 'ca',
-            regionType: 'state',
-            label: 'California',
+            countryId: TEST_COUNTRIES.US,
+            scope: 'subnational',
+            geographyId: 'ca',
+            label: 'Test State',
           })
         );
       });

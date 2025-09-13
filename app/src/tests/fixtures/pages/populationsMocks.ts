@@ -1,7 +1,9 @@
 import { vi } from 'vitest';
-import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import {
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
 
 // ============= TEST CONSTANTS =============
 
@@ -209,24 +211,24 @@ export const mockHouseholdAssociation2: UserHouseholdPopulation = {
 };
 
 // Mock geographic associations
-export const mockGeographicAssociation1: UserGeographicAssociation = {
+export const mockGeographicAssociation1: UserGeographyPopulation = {
+  type: 'geography',
   id: POPULATION_TEST_IDS.GEOGRAPHIC_ID_1,
   userId: POPULATION_TEST_IDS.USER_ID,
-  countryCode: POPULATION_GEO.COUNTRY_US,
-  geographyType: POPULATION_GEO.TYPE_SUBNATIONAL,
-  geographyIdentifier: `${POPULATION_GEO.COUNTRY_US}-${POPULATION_GEO.STATE_CA}`,
-  regionCode: POPULATION_GEO.STATE_CA,
-  regionType: POPULATION_GEO.REGION_TYPE_STATE,
+  countryId: POPULATION_GEO.COUNTRY_US,
+  scope: POPULATION_GEO.TYPE_SUBNATIONAL,
+  geographyId: POPULATION_GEO.STATE_CA,
   label: POPULATION_LABELS.GEOGRAPHIC_1,
   createdAt: POPULATION_TEST_IDS.TIMESTAMP_1,
 };
 
-export const mockGeographicAssociation2: UserGeographicAssociation = {
+export const mockGeographicAssociation2: UserGeographyPopulation = {
+  type: 'geography',
   id: POPULATION_TEST_IDS.GEOGRAPHIC_ID_2,
   userId: POPULATION_TEST_IDS.USER_ID,
-  countryCode: POPULATION_GEO.COUNTRY_UK,
-  geographyType: POPULATION_GEO.TYPE_NATIONAL,
-  geographyIdentifier: POPULATION_GEO.COUNTRY_UK,
+  countryId: POPULATION_GEO.COUNTRY_UK,
+  scope: POPULATION_GEO.TYPE_NATIONAL,
+  geographyId: POPULATION_GEO.COUNTRY_UK,
   label: POPULATION_LABELS.GEOGRAPHIC_2,
   createdAt: POPULATION_TEST_IDS.TIMESTAMP_2,
 };

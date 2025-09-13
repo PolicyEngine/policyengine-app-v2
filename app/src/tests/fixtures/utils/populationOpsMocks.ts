@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { countryIds } from '@/libs/countries';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
@@ -150,14 +151,6 @@ export const mockUserGeographyPopInvalid: UserGeographyPopulation = {
   userId: POPULATION_IDS.USER_1,
 };
 
-export const mockUserGeographyPopNoCountry: UserGeographyPopulation = {
-  type: 'geography',
-  geographyId: POPULATION_IDS.GEOGRAPHY_1,
-  countryId: '',
-  scope: POPULATION_SCOPES.NATIONAL as any,
-  userId: POPULATION_IDS.USER_1,
-};
-
 // ============= EXPECTED RESULTS =============
 
 // Expected API payloads
@@ -217,7 +210,7 @@ export const createUserHouseholdPop = (
 // Helper to create a user geography population
 export const createUserGeographyPop = (
   geographyId: string,
-  countryId: string,
+  countryId: (typeof countryIds)[number],
   scope: 'national' | 'subnational',
   userId: string,
   label?: string

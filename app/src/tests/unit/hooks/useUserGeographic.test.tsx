@@ -69,7 +69,7 @@ describe('useUserGeographic hooks', () => {
       (SessionStorageGeographicStore as any)();
 
     // Set default mock implementations
-    mockStore.create.mockResolvedValue(mockUserGeographicAssociation);
+    mockStore.create.mockImplementation((input: any) => Promise.resolve(input));
     mockStore.findByUser.mockResolvedValue(mockUserGeographicAssociationList);
     mockStore.findById.mockResolvedValue(mockUserGeographicAssociation);
   });
@@ -230,9 +230,9 @@ describe('useUserGeographic hooks', () => {
       const newAssociation = {
         id: TEST_IDS.GEOGRAPHY_ID,
         userId: TEST_IDS.USER_ID,
-        countryCode: GEO_CONSTANTS.COUNTRY_US,
-        geographyType: GEO_CONSTANTS.TYPE_NATIONAL,
-        geographyIdentifier: GEO_CONSTANTS.COUNTRY_US,
+        countryId: GEO_CONSTANTS.COUNTRY_US,
+        scope: GEO_CONSTANTS.TYPE_NATIONAL,
+        geographyId: GEO_CONSTANTS.COUNTRY_US,
         label: TEST_LABELS.GEOGRAPHY,
       } as const;
 
@@ -248,25 +248,20 @@ describe('useUserGeographic hooks', () => {
 
       // Verify store was called
       const mockStore = (SessionStorageGeographicStore as any)();
-      expect(mockStore.create).toHaveBeenCalledWith(newAssociation);
+      expect(mockStore.create).toHaveBeenCalledWith({ ...newAssociation, type: 'geography' });
 
       // Verify cache invalidation
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(TEST_IDS.USER_ID),
       });
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
-        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_GEOGRAPHY(
-          `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`
-        ),
+        queryKey: QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_GEOGRAPHY(GEO_CONSTANTS.COUNTRY_US),
       });
 
       // Verify cache update
       expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(
-          TEST_IDS.USER_ID,
-          `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`
-        ),
-        mockUserGeographicAssociation
+        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(TEST_IDS.USER_ID, GEO_CONSTANTS.COUNTRY_US),
+        { ...newAssociation, type: 'geography' }
       );
     });
 
@@ -274,10 +269,9 @@ describe('useUserGeographic hooks', () => {
       // Given
       const subnationalAssociation = {
         ...mockUserGeographicAssociation,
-        geographyType: GEO_CONSTANTS.TYPE_SUBNATIONAL,
-        geographyIdentifier: `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`,
-        regionCode: GEO_CONSTANTS.REGION_CA,
-        regionType: GEO_CONSTANTS.REGION_TYPE_STATE,
+        scope: GEO_CONSTANTS.TYPE_SUBNATIONAL,
+        geographyId: GEO_CONSTANTS.REGION_CA,
+        countryId: GEO_CONSTANTS.COUNTRY_US,
       } as const;
 
       const mockStore = (SessionStorageGeographicStore as any)();
@@ -289,10 +283,7 @@ describe('useUserGeographic hooks', () => {
 
       // Then
       expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(
-          TEST_IDS.USER_ID,
-          `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`
-        ),
+        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(TEST_IDS.USER_ID, GEO_CONSTANTS.REGION_CA),
         subnationalAssociation
       );
     });
@@ -309,9 +300,9 @@ describe('useUserGeographic hooks', () => {
         result.current.mutateAsync({
           id: TEST_IDS.GEOGRAPHY_ID,
           userId: TEST_IDS.USER_ID,
-          countryCode: GEO_CONSTANTS.COUNTRY_US,
-          geographyType: GEO_CONSTANTS.TYPE_NATIONAL,
-          geographyIdentifier: GEO_CONSTANTS.COUNTRY_US,
+          countryId: GEO_CONSTANTS.COUNTRY_US,
+          scope: GEO_CONSTANTS.TYPE_NATIONAL,
+          geographyId: GEO_CONSTANTS.COUNTRY_US,
           label: TEST_LABELS.GEOGRAPHY,
         })
       ).rejects.toThrow('Creation failed');
@@ -327,18 +318,18 @@ describe('useUserGeographic hooks', () => {
       const association1 = {
         id: TEST_IDS.GEOGRAPHY_ID,
         userId: TEST_IDS.USER_ID,
-        countryCode: GEO_CONSTANTS.COUNTRY_US,
-        geographyType: GEO_CONSTANTS.TYPE_NATIONAL,
-        geographyIdentifier: GEO_CONSTANTS.COUNTRY_US,
+        countryId: GEO_CONSTANTS.COUNTRY_US,
+        scope: GEO_CONSTANTS.TYPE_NATIONAL,
+        geographyId: GEO_CONSTANTS.COUNTRY_US,
         label: TEST_LABELS.GEOGRAPHY,
       } as const;
 
       const association2 = {
         id: TEST_IDS.GEOGRAPHY_ID_2,
         userId: TEST_IDS.USER_ID,
-        countryCode: GEO_CONSTANTS.COUNTRY_UK,
-        geographyType: GEO_CONSTANTS.TYPE_NATIONAL,
-        geographyIdentifier: GEO_CONSTANTS.COUNTRY_UK,
+        countryId: GEO_CONSTANTS.COUNTRY_UK,
+        scope: GEO_CONSTANTS.TYPE_NATIONAL,
+        geographyId: GEO_CONSTANTS.COUNTRY_UK,
         label: TEST_LABELS.GEOGRAPHY_2,
       } as const;
 
