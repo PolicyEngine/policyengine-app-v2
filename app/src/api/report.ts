@@ -3,7 +3,7 @@ import { countryIds } from '@/libs/countries';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload, ReportSetOutputPayload } from '@/types/payloads';
 import { ReportAdapter } from '@/adapters/ReportAdapter';
-import { ReportOutput } from '@/types/ingredients/Report';
+import { Report } from '@/types/ingredients/Report';
 
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],
@@ -24,14 +24,13 @@ export async function fetchReportById(
   }
 
   const json = await res.json();
-
-  return ReportAdapter.convertIdToString(json).result;
+  return json.result;
 }
 
 export async function createReport(
   countryId: (typeof countryIds)[number],
   data: ReportCreationPayload
-): Promise<{ result: { id: string } }> {
+): Promise<ReportMetadata> {
   const url = `${BASE_URL}/${countryId}/report`;
 
   const res = await fetch(url, {
@@ -45,16 +44,16 @@ export async function createReport(
   }
 
   const json = await res.json();
+  return json.result;
 
-  return ReportAdapter.convertIdToString(json);
 }
 
 async function updateReport(
   countryId: (typeof countryIds)[number],
   reportId: string,
   data: ReportSetOutputPayload
-): Promise<{ result: ReportMetadata }> {
-  const url = `${BASE_URL}/${countryId}/report/${reportId}`;
+): Promise<ReportMetadata> {
+  const url = `${BASE_URL}/${countryId}/report`;
 
   const res = await fetch(url, {
     method: 'PATCH',
@@ -67,23 +66,23 @@ async function updateReport(
   }
 
   const json = await res.json();
-
-  return ReportAdapter.convertIdToString(json);
+  return json.result;
 }
 
 export async function markReportCompleted(
   countryId: (typeof countryIds)[number],
   reportId: string,
-  output: ReportOutput
-): Promise<{ result: ReportMetadata }> {
-  const data = ReportAdapter.toCompletedReportPayload(output);
+  report: Report
+): Promise<ReportMetadata> {
+  const data = ReportAdapter.toCompletedReportPayload(report);
   return updateReport(countryId, reportId, data);
 }
 
 export async function markReportError(
   countryId: (typeof countryIds)[number],
-  reportId: string
-): Promise<{ result: ReportMetadata }> {
-  const data = ReportAdapter.toErrorReportPayload();
+  reportId: string,
+  report: Report
+): Promise<ReportMetadata> {
+  const data = ReportAdapter.toErrorReportPayload(report);
   return updateReport(countryId, reportId, data);
 }
