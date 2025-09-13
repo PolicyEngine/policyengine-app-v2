@@ -41,7 +41,7 @@ export const mockSimulationMetadataMissingPopulation: Partial<SimulationMetadata
   id: 999,  // Changed from simulation_id string to id number
   country_id: TEST_COUNTRIES.US,
   api_version: '1.0.0',
-  policy_id: TEST_POLICY_ID,
+  policy_id: Number(TEST_POLICY_ID),
   // population_id and population_type missing
 };
 
