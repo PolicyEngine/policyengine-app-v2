@@ -53,7 +53,7 @@ describe('PopulationsPage', () => {
           }
           return state;
         },
-        metadata: (state = { economyOptions: { region: [] } }, action: any) => state,
+        metadata: (state = { economyOptions: { region: [] } }, _action: any) => state,
       },
     });
 

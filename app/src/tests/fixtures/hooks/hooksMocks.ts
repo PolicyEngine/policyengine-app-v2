@@ -1,9 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import { UserHouseholdPopulation, UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
-import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 // ============= TEST CONSTANTS =============
 
