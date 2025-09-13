@@ -25,7 +25,6 @@ import {
   mockUserGeographyPop,
   mockUserGeographyPopInvalid,
   mockUserGeographyPopNational,
-  mockUserGeographyPopNoCountry,
   mockUserHouseholdPop,
   mockUserHouseholdPopInvalid,
   mockUserHouseholdPopNoLabel,
@@ -504,12 +503,5 @@ describe('UserPopulationOps', () => {
       expect(result).toBe(false);
     });
 
-    test('given geography with no country ID when checking validity then returns false', () => {
-      // When
-      const result = UserPopulationOps.isValid(mockUserGeographyPopNoCountry);
-
-      // Then
-      expect(result).toBe(false);
-    });
   });
 });

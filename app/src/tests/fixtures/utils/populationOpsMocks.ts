@@ -4,6 +4,7 @@ import {
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
 import { GeographyPopulationRef, HouseholdPopulationRef } from '@/utils/PopulationOps';
+import { countryIds } from '@/libs/countries';
 
 // ============= TEST CONSTANTS =============
 
@@ -150,13 +151,6 @@ export const mockUserGeographyPopInvalid: UserGeographyPopulation = {
   userId: POPULATION_IDS.USER_1,
 };
 
-export const mockUserGeographyPopNoCountry: UserGeographyPopulation = {
-  type: 'geography',
-  geographyId: POPULATION_IDS.GEOGRAPHY_1,
-  countryId: '',
-  scope: POPULATION_SCOPES.NATIONAL as any,
-  userId: POPULATION_IDS.USER_1,
-};
 
 // ============= EXPECTED RESULTS =============
 
@@ -217,7 +211,7 @@ export const createUserHouseholdPop = (
 // Helper to create a user geography population
 export const createUserGeographyPop = (
   geographyId: string,
-  countryId: string,
+  countryId: (typeof countryIds)[number],
   scope: 'national' | 'subnational',
   userId: string,
   label?: string

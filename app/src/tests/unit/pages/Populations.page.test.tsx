@@ -408,7 +408,7 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then - Check that the household data is displayed (but without checking for specific date text)
-      expect(screen.getByText(mockUserHouseholdsData[0].association.label)).toBeInTheDocument();
+      expect(screen.getByText(mockUserHouseholdsData[0].association.label || 'Household')).toBeInTheDocument();
     });
 
     test('given household with no people then displays zero count', () => {
