@@ -21,7 +21,7 @@ describe('report API', () => {
     test('given valid country and report ID then fetches report successfully', async () => {
       // Given
       const countryId = 'us';
-      const reportId = 'report-123';
+      const reportId = 123;
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue({ result: mockReportMetadata }),
@@ -42,16 +42,13 @@ describe('report API', () => {
           },
         }
       );
-      expect(result).toEqual({
-        ...mockReportMetadata,
-        id: String(mockReportMetadata.id),
-      });
+      expect(result).toEqual(mockReportMetadata);
     });
 
     test('given API error then throws error', async () => {
       // Given
       const countryId = 'us';
-      const reportId = 'report-123';
+      const reportId = 123;
       const mockResponse = {
         ok: false,
         status: 404,
@@ -60,7 +57,7 @@ describe('report API', () => {
 
       // When & Then
       await expect(fetchReportById(countryId, reportId)).rejects.toThrow(
-        'Failed to fetch report report-123'
+        'Failed to fetch report 123'
       );
     });
   });
@@ -86,7 +83,7 @@ describe('report API', () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      expect(result).toEqual({ result: { id: '123' } });
+      expect(result).toEqual({ result: { id: 123 } });
     });
 
     test('given API error then throws error', async () => {
@@ -130,10 +127,7 @@ describe('report API', () => {
         }
       );
       expect(result).toEqual({
-        result: {
-          ...mockReportMetadata,
-          id: String(mockReportMetadata.id),
-        },
+        result: mockReportMetadata,
       });
     });
 
@@ -180,10 +174,7 @@ describe('report API', () => {
         }
       );
       expect(result).toEqual({
-        result: {
-          ...mockReportMetadata,
-          id: String(mockReportMetadata.id),
-        },
+        result: mockReportMetadata,
       });
     });
 

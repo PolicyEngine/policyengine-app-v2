@@ -23,8 +23,8 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: mockReportMetadata.id,
-        simulationIds: [mockReportMetadata.simulation_1_id, mockReportMetadata.simulation_2_id],
+        reportId: String(mockReportMetadata.id),
+        simulationIds: [String(mockReportMetadata.simulation_1_id), String(mockReportMetadata.simulation_2_id)],
         status: mockReportMetadata.status,
         output: mockReportOutput,
         createdAt: mockReportMetadata.created_at,
@@ -41,8 +41,8 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: mockReportMetadataSingleSimulation.id,
-        simulationIds: [mockReportMetadataSingleSimulation.simulation_1_id],
+        reportId: String(mockReportMetadataSingleSimulation.id),
+        simulationIds: [String(mockReportMetadataSingleSimulation.simulation_1_id)],
         status: mockReportMetadataSingleSimulation.status,
         output: mockReportMetadataSingleSimulation.output,
         createdAt: mockReportMetadataSingleSimulation.created_at,
@@ -101,7 +101,7 @@ describe('ReportAdapter', () => {
 
     test('given Report with single simulation then converts to creation payload with null second simulation', () => {
       // Given
-      const singleSimulationId = 'sim-111';
+      const singleSimulationId = '111';  // String that will convert to number
       const report = {
         ...mockPendingReport,
         simulationIds: [singleSimulationId],
@@ -112,7 +112,7 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        simulation_1_id: singleSimulationId,
+        simulation_1_id: 111,  // Converted to number
         simulation_2_id: null,
       });
     });
@@ -125,10 +125,9 @@ describe('ReportAdapter', () => {
       const result = ReportAdapter.toCreationPayload(report);
 
       // Then
-      const [firstSimId, secondSimId] = mockErrorReport.simulationIds;
       expect(result).toEqual({
-        simulation_1_id: firstSimId,
-        simulation_2_id: secondSimId,
+        simulation_1_id: 222,  // Converted to number
+        simulation_2_id: 333,  // Converted to number
       });
     });
   });

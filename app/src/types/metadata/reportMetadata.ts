@@ -1,7 +1,7 @@
 export interface ReportMetadata {
-  id: string;
-  simulation_1_id: string;
-  simulation_2_id: string | null;
+  id: number;
+  simulation_1_id: number;
+  simulation_2_id: number | null;
   status: 'pending' | 'complete' | 'error';
   output: string | null; // JSON-stringified object or null
   created_at: string;

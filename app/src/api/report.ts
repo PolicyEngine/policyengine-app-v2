@@ -7,7 +7,7 @@ import { ReportOutput } from '@/types/ingredients/Report';
 
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],
-  reportId: string
+  reportId: number
 ): Promise<ReportMetadata> {
   const url = `${BASE_URL}/${countryId}/report/${reportId}`;
 
@@ -25,13 +25,13 @@ export async function fetchReportById(
 
   const json = await res.json();
 
-  return ReportAdapter.convertIdToString(json).result;
+  return json.result;
 }
 
 export async function createReport(
   countryId: (typeof countryIds)[number],
   data: ReportCreationPayload
-): Promise<{ result: { id: string } }> {
+): Promise<{ result: { id: number } }> {
   const url = `${BASE_URL}/${countryId}/report`;
 
   const res = await fetch(url, {
@@ -46,7 +46,7 @@ export async function createReport(
 
   const json = await res.json();
 
-  return ReportAdapter.convertIdToString(json);
+  return json;
 }
 
 async function updateReport(
@@ -68,7 +68,7 @@ async function updateReport(
 
   const json = await res.json();
 
-  return ReportAdapter.convertIdToString(json);
+  return json;
 }
 
 export async function markReportCompleted(
