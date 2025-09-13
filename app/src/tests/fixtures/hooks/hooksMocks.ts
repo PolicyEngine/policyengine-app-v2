@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
-import { UserGeographicAssociation } from '@/types/userIngredientAssociations';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 // ============= TEST CONSTANTS =============
 
@@ -140,25 +140,23 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
   },
 ];
 
-export const mockUserGeographicAssociation: UserGeographicAssociation = {
+export const mockUserGeographicAssociation: UserGeographyPopulation = {
+  type: 'geography',
   id: TEST_IDS.GEOGRAPHY_ID,
   userId: TEST_IDS.USER_ID,
-  countryCode: GEO_CONSTANTS.COUNTRY_US,
-  geographyType: GEO_CONSTANTS.TYPE_SUBNATIONAL,
-  geographyIdentifier: `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_CA}`,
-  regionCode: GEO_CONSTANTS.REGION_CA,
-  regionType: GEO_CONSTANTS.REGION_TYPE_STATE,
+  countryId: GEO_CONSTANTS.COUNTRY_US,
+  scope: GEO_CONSTANTS.TYPE_SUBNATIONAL,
+  geographyId: GEO_CONSTANTS.REGION_CA,
   label: TEST_LABELS.GEOGRAPHY,
   createdAt: TEST_IDS.TIMESTAMP,
 };
 
-export const mockUserGeographicAssociationList: UserGeographicAssociation[] = [
+export const mockUserGeographicAssociationList: UserGeographyPopulation[] = [
   mockUserGeographicAssociation,
   {
     ...mockUserGeographicAssociation,
     id: TEST_IDS.GEOGRAPHY_ID_2,
-    geographyIdentifier: `${GEO_CONSTANTS.COUNTRY_US}-${GEO_CONSTANTS.REGION_NY}`,
-    regionCode: GEO_CONSTANTS.REGION_NY,
+    geographyId: GEO_CONSTANTS.REGION_NY,
     label: TEST_LABELS.GEOGRAPHY_2,
   },
 ];
