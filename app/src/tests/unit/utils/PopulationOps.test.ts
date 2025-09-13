@@ -502,6 +502,5 @@ describe('UserPopulationOps', () => {
       // Then
       expect(result).toBe(false);
     });
-
   });
 });

@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
+import { countryIds } from '@/libs/countries';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
 } from '@/types/ingredients/UserPopulation';
 import { GeographyPopulationRef, HouseholdPopulationRef } from '@/utils/PopulationOps';
-import { countryIds } from '@/libs/countries';
 
 // ============= TEST CONSTANTS =============
 
@@ -150,7 +150,6 @@ export const mockUserGeographyPopInvalid: UserGeographyPopulation = {
   scope: POPULATION_SCOPES.NATIONAL as any,
   userId: POPULATION_IDS.USER_1,
 };
-
 
 // ============= EXPECTED RESULTS =============
 

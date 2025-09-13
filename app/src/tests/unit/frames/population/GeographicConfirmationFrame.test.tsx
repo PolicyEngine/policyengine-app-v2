@@ -93,7 +93,7 @@ describe('GeographicConfirmationFrame', () => {
           { name: 'constituency/london', label: 'London' },
         ],
         time_period: [],
-        datasets: []
+        datasets: [],
       },
       currentLawId: 0,
       basicInputs: [],

@@ -176,12 +176,12 @@ describe('PopulationsPage', () => {
       const date1 = new Date(POPULATION_TEST_IDS.TIMESTAMP_1).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       });
       const date2 = new Date(POPULATION_TEST_IDS.TIMESTAMP_2).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
       });
 
       // Use getAllByText since dates might appear multiple times
@@ -408,7 +408,9 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then - Check that the household data is displayed (but without checking for specific date text)
-      expect(screen.getByText(mockUserHouseholdsData[0].association.label || 'Household')).toBeInTheDocument();
+      expect(
+        screen.getByText(mockUserHouseholdsData[0].association.label || 'Household')
+      ).toBeInTheDocument();
     });
 
     test('given household with no people then displays zero count', () => {

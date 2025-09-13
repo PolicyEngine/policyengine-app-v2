@@ -1,6 +1,9 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import { UserHouseholdPopulation, UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import {
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
 

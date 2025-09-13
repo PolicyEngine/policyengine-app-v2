@@ -1,5 +1,8 @@
 import { vi } from 'vitest';
-import { UserHouseholdPopulation, UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import {
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 // ============= TEST CONSTANTS =============

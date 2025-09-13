@@ -283,10 +283,7 @@ describe('useUserGeographic hooks', () => {
 
       // Then
       expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(
-          TEST_IDS.USER_ID,
-          GEO_CONSTANTS.REGION_CA
-        ),
+        QUERY_KEY_PATTERNS.GEO_ASSOCIATION_SPECIFIC(TEST_IDS.USER_ID, GEO_CONSTANTS.REGION_CA),
         subnationalAssociation
       );
     });
