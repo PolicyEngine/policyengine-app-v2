@@ -16,7 +16,7 @@ export const mockReportOutput: ReportOutput = {
 
 export const mockReport: Report = {
   reportId: 'report-123',
-  simulationIds: ['sim-456', 'sim-789'],
+  simulationIds: ['456', '789'],  // String IDs that will convert to numbers 456, 789
   status: 'complete',
   output: mockReportOutput,
   createdAt: '2024-01-15T10:30:00Z',
@@ -34,7 +34,7 @@ export const mockPendingReport: Report = {
 
 export const mockErrorReport: Report = {
   reportId: 'report-error-002',
-  simulationIds: ['sim-222', 'sim-333'],
+  simulationIds: ['222', '333'],  // String IDs that will convert to numbers
   status: 'error',
   output: null,
   createdAt: '2024-01-15T11:30:00Z',
@@ -42,9 +42,9 @@ export const mockErrorReport: Report = {
 };
 
 export const mockReportMetadata: ReportMetadata = {
-  report_id: 'report-123',
-  simulation_1_id: 'sim-456',
-  simulation_2_id: 'sim-789',
+  id: 123,
+  simulation_1_id: 456,  // Changed to number
+  simulation_2_id: 789,  // Changed to number
   status: 'complete',
   output: JSON.stringify(mockReportOutput),
   created_at: '2024-01-15T10:30:00Z',
@@ -52,8 +52,8 @@ export const mockReportMetadata: ReportMetadata = {
 };
 
 export const mockReportMetadataSingleSimulation: ReportMetadata = {
-  report_id: 'report-single-001',
-  simulation_1_id: 'sim-999',
+  id: 124,
+  simulation_1_id: 999,  // Changed to number
   simulation_2_id: null,
   status: 'pending',
   output: null,
@@ -62,24 +62,16 @@ export const mockReportMetadataSingleSimulation: ReportMetadata = {
 };
 
 export const mockReportCreationPayload: ReportCreationPayload = {
-  report_id: 'report-123',
-  simulation_1_id: 'sim-456',
-  simulation_2_id: 'sim-789',
-  status: 'complete',
-  created_at: '2024-01-15T10:30:00Z',
-  updated_at: '2024-01-15T10:35:00Z',
+  simulation_1_id: 456,  // Changed to number
+  simulation_2_id: 789,  // Changed to number
 };
 
 export const mockCompletedReportPayload: ReportSetOutputPayload = {
-  report_id: 'report-123',
   status: 'complete',
   output: JSON.stringify(mockReportOutput),
-  updated_at: '2024-01-15T10:35:00Z',
 };
 
 export const mockErrorReportPayload: ReportSetOutputPayload = {
-  report_id: 'report-error-002',
   status: 'error',
   output: null,
-  updated_at: '2024-01-15T11:31:00Z',
 };
