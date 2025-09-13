@@ -1,4 +1,4 @@
-import { countryIds } from "@/libs/countries";
+import { countryIds } from '@/libs/countries';
 
 export interface ReportMetadata {
   id: number;

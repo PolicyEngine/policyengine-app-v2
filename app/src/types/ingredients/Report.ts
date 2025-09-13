@@ -1,4 +1,4 @@
-import { countryIds } from "@/libs/countries";
+import { countryIds } from '@/libs/countries';
 
 /**
  * Placeholder for report output structure

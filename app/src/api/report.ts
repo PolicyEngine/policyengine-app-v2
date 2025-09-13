@@ -1,9 +1,9 @@
+import { ReportAdapter } from '@/adapters/ReportAdapter';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
+import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload, ReportSetOutputPayload } from '@/types/payloads';
-import { ReportAdapter } from '@/adapters/ReportAdapter';
-import { Report } from '@/types/ingredients/Report';
 
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],
@@ -15,7 +15,7 @@ export async function fetchReportById(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
+      Accept: 'application/json',
     },
   });
 
@@ -45,7 +45,6 @@ export async function createReport(
 
   const json = await res.json();
   return json.result;
-
 }
 
 async function updateReport(

@@ -3,11 +3,11 @@ import { createReport, fetchReportById, markReportCompleted, markReportError } f
 import { BASE_URL } from '@/constants';
 import {
   mockCompletedReportPayload,
-  mockReportCreationPayload,
-  mockReportMetadata,
+  mockErrorReport,
   mockErrorReportPayload,
   mockReport,
-  mockErrorReport,
+  mockReportCreationPayload,
+  mockReportMetadata,
 } from '@/tests/fixtures/adapters/reportMocks';
 
 // Mock fetch globally
@@ -33,16 +33,13 @@ describe('report API', () => {
       const result = await fetchReportById(countryId, reportId);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/report/${reportId}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-          },
-        }
-      );
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report/${reportId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      });
       expect(result).toEqual({
         ...mockReportMetadata,
         id: String(mockReportMetadata.id),
@@ -121,14 +118,11 @@ describe('report API', () => {
       const result = await markReportCompleted(countryId, reportId, mockReport);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/report/${reportId}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockCompletedReportPayload),
-        }
-      );
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report/${reportId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mockCompletedReportPayload),
+      });
       expect(result).toEqual({
         result: {
           ...mockReportMetadata,
@@ -170,14 +164,11 @@ describe('report API', () => {
       const result = await markReportError(countryId, reportId, mockErrorReport);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/report/${reportId}`,
-        {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockErrorReportPayload),
-        }
-      );
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report/${reportId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(mockErrorReportPayload),
+      });
       expect(result).toEqual({
         result: {
           ...mockReportMetadata,

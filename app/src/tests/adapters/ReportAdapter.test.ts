@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest';
 import { ReportAdapter } from '@/adapters/ReportAdapter';
-import { Report } from '@/types/ingredients/Report';
 import {
   mockCompletedReportPayload,
   mockErrorReport,
@@ -12,6 +11,7 @@ import {
   mockReportMetadataSingleSimulation,
   mockReportOutput,
 } from '@/tests/fixtures/adapters/reportMocks';
+import { Report } from '@/types/ingredients/Report';
 
 describe('ReportAdapter', () => {
   describe('fromMetadata', () => {
