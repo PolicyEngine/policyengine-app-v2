@@ -5,7 +5,6 @@ import {
   mockCompletedReportPayload,
   mockReportCreationPayload,
   mockReportMetadata,
-  mockReportOutput,
   mockErrorReportPayload,
   mockReport,
   mockErrorReport,

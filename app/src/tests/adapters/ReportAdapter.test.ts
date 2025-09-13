@@ -136,9 +136,6 @@ describe('ReportAdapter', () => {
 
   describe('toCompletedReportPayload', () => {
     test('given report ID and output then creates completed payload correctly', () => {
-      // Given
-      const output = mockReportOutput;
-
       // When
       const result = ReportAdapter.toCompletedReportPayload(mockReport);
 
