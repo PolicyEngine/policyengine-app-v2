@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { RootState } from '@/store';
 import { selectAllSimulations } from '@/reducers/simulationsReducer';
+import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
 
@@ -14,9 +14,7 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   const simulations = useSelector((state: RootState) => selectAllSimulations(state));
 
   // Filter to only show fully configured simulations
-  const configuredSimulations = simulations.filter(
-    sim => sim.policyId && sim.populationId
-  );
+  const configuredSimulations = simulations.filter((sim) => sim.policyId && sim.populationId);
 
   function canProceed() {
     return selectedSimulation !== null;

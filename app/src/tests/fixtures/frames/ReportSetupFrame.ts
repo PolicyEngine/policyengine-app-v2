@@ -19,7 +19,8 @@ export const ADDING_SIMULATION_1_MESSAGE = 'Adding simulation 1';
 export const ADDING_SIMULATION_2_MESSAGE = 'Adding simulation 2';
 export const SETTING_UP_SIMULATION_1_MESSAGE = 'Setting up simulation 1';
 export const SETTING_UP_SIMULATION_2_MESSAGE = 'Setting up simulation 2';
-export const BOTH_SIMULATIONS_CONFIGURED_MESSAGE = 'Both simulations configured, proceeding to next step';
+export const BOTH_SIMULATIONS_CONFIGURED_MESSAGE =
+  'Both simulations configured, proceeding to next step';
 
 // Mock simulation data
 export const MOCK_SIMULATION_1 = {

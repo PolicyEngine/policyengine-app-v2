@@ -47,7 +47,9 @@ describe('ReportSelectSimulationFrame', () => {
     render(<ReportSelectSimulationFrame {...defaultFlowProps} />);
 
     // Then
-    expect(screen.getByRole('heading', { name: SELECT_SIMULATION_FRAME_TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: SELECT_SIMULATION_FRAME_TITLE })
+    ).toBeInTheDocument();
     expect(screen.getByText(LOAD_EXISTING_SIMULATION_TITLE)).toBeInTheDocument();
     expect(screen.getByText(LOAD_EXISTING_SIMULATION_DESCRIPTION)).toBeInTheDocument();
     expect(screen.getByText(CREATE_NEW_SIMULATION_TITLE)).toBeInTheDocument();

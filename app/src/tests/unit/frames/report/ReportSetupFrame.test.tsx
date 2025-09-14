@@ -238,8 +238,12 @@ describe('ReportSetupFrame', () => {
     // Then - cards should show configured state
     expect(screen.getByText(new RegExp(MOCK_SIMULATION_1.label!))).toBeInTheDocument();
     expect(screen.getByText(new RegExp(MOCK_SIMULATION_2.label!))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`Policy #${MOCK_SIMULATION_1.policyId}`))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(`Policy #${MOCK_SIMULATION_2.policyId}`))).toBeInTheDocument();
+    expect(
+      screen.getByText(new RegExp(`Policy #${MOCK_SIMULATION_1.policyId}`))
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(new RegExp(`Policy #${MOCK_SIMULATION_2.policyId}`))
+    ).toBeInTheDocument();
   });
 
   test('given both simulations configured then Next button is enabled', () => {

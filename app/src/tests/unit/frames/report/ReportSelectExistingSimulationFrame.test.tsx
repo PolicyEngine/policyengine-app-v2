@@ -78,7 +78,9 @@ describe('ReportSelectExistingSimulationFrame', () => {
     );
 
     // Then
-    expect(screen.getByRole('heading', { name: SELECT_EXISTING_SIMULATION_FRAME_TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: SELECT_EXISTING_SIMULATION_FRAME_TITLE })
+    ).toBeInTheDocument();
     expect(screen.getByText(NO_SIMULATIONS_MESSAGE)).toBeInTheDocument();
   });
 
@@ -110,11 +112,15 @@ describe('ReportSelectExistingSimulationFrame', () => {
     );
 
     // Then
-    expect(screen.getByRole('heading', { name: SELECT_EXISTING_SIMULATION_FRAME_TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: SELECT_EXISTING_SIMULATION_FRAME_TITLE })
+    ).toBeInTheDocument();
     expect(screen.getByText(SEARCH_LABEL)).toBeInTheDocument();
     expect(screen.getByText(SEARCH_TODO)).toBeInTheDocument();
     expect(screen.getByText(YOUR_SIMULATIONS_LABEL)).toBeInTheDocument();
-    expect(screen.getByText(`${SHOWING_SIMULATIONS_PREFIX} 2 ${SIMULATIONS_SUFFIX}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`${SHOWING_SIMULATIONS_PREFIX} 2 ${SIMULATIONS_SUFFIX}`)
+    ).toBeInTheDocument();
   });
 
   test('given simulations with labels then displays titles correctly', () => {
@@ -132,8 +138,16 @@ describe('ReportSelectExistingSimulationFrame', () => {
     // Then
     expect(screen.getByText(MOCK_CONFIGURED_SIMULATION_1.label!)).toBeInTheDocument();
     expect(screen.getByText(MOCK_CONFIGURED_SIMULATION_2.label!)).toBeInTheDocument();
-    expect(screen.getByText(`Policy #${MOCK_CONFIGURED_SIMULATION_1.policyId} • Population #${MOCK_CONFIGURED_SIMULATION_1.populationId}`)).toBeInTheDocument();
-    expect(screen.getByText(`Policy #${MOCK_CONFIGURED_SIMULATION_2.policyId} • Population #${MOCK_CONFIGURED_SIMULATION_2.populationId}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `Policy #${MOCK_CONFIGURED_SIMULATION_1.policyId} • Population #${MOCK_CONFIGURED_SIMULATION_1.populationId}`
+      )
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        `Policy #${MOCK_CONFIGURED_SIMULATION_2.policyId} • Population #${MOCK_CONFIGURED_SIMULATION_2.populationId}`
+      )
+    ).toBeInTheDocument();
   });
 
   test('given simulation without label then displays ID as title', () => {
@@ -148,7 +162,9 @@ describe('ReportSelectExistingSimulationFrame', () => {
     );
 
     // Then
-    expect(screen.getByText(`Simulation #${MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL.id}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`Simulation #${MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL.id}`)
+    ).toBeInTheDocument();
   });
 
   test('given no selection then Next button is disabled', () => {
@@ -255,14 +271,16 @@ describe('ReportSelectExistingSimulationFrame', () => {
   test('given more than 10 simulations then displays only first 10', () => {
     // Given - add 12 configured simulations
     for (let i = 1; i <= 12; i++) {
-      store.dispatch(simulationsActions.createSimulation({
-        id: `sim-${i}`,
-        label: `Simulation ${i}`,
-        policyId: `policy-${i}`,
-        populationId: `pop-${i}`,
-        populationType: 'household' as const,
-        isCreated: true,
-      }));
+      store.dispatch(
+        simulationsActions.createSimulation({
+          id: `sim-${i}`,
+          label: `Simulation ${i}`,
+          policyId: `policy-${i}`,
+          populationId: `pop-${i}`,
+          populationType: 'household' as const,
+          isCreated: true,
+        })
+      );
     }
 
     // When
@@ -273,7 +291,9 @@ describe('ReportSelectExistingSimulationFrame', () => {
     );
 
     // Then - should show only 10 simulations
-    expect(screen.getByText(`${SHOWING_SIMULATIONS_PREFIX} 10 ${SIMULATIONS_SUFFIX}`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`${SHOWING_SIMULATIONS_PREFIX} 10 ${SIMULATIONS_SUFFIX}`)
+    ).toBeInTheDocument();
 
     // First 10 should be visible
     for (let i = 1; i <= 10; i++) {
