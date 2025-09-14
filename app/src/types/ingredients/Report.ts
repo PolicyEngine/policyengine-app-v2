@@ -1,12 +1,9 @@
 import { countryIds } from '@/libs/countries';
 
-/**
- * Placeholder for report output structure
- * TODO: Update this when we have a clearer sense of the report output structure
- */
-export interface ReportOutput {
-  [key: string]: any;
-}
+import { ReportOutputSocietyWideUS } from '@/types/metadata/reportOutputMetadata/ReportOutputSocietyWideUS';
+import { ReportOutputSocietyWideUK } from '@/types/metadata/reportOutputMetadata/ReportOutputSocietyWideUK';
+
+export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
 /**
  * Base Report type

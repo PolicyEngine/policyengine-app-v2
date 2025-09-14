@@ -3,6 +3,7 @@ import flowReducer from './reducers/flowReducer';
 import metadataReducer from './reducers/metadataReducer';
 import policyReducer from './reducers/policyReducer';
 import populationReducer from './reducers/populationReducer';
+import reportReducer from './reducers/reportReducer';
 import simulationsReducer from './reducers/simulationsReducer';
 
 export const store = configureStore({
@@ -13,6 +14,7 @@ export const store = configureStore({
     simulations: simulationsReducer,
     population: populationReducer,
     metadata: metadataReducer,
+    report: reportReducer,
   },
 });
 
