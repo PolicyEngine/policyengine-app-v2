@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { FlowComponentProps } from '@/types/flow';
 import { clearReport, updateLabel } from '@/reducers/reportReducer';
+import { FlowComponentProps } from '@/types/flow';
 
 export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
