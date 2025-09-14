@@ -3,7 +3,9 @@ import { Report, ReportOutput } from '@/types/ingredients/Report';
 
 const initialState: Report = {
   reportId: '',
+  countryId: 'us', // Default countryId, to be updated as needed
   simulationIds: [],
+  apiVersion: null,
   status: 'pending',
   output: null,
   createdAt: new Date().toISOString(),
@@ -26,6 +28,16 @@ export const reportSlice = createSlice({
     removeSimulationId: (state, action: PayloadAction<string>) => {
       state.simulationIds = state.simulationIds.filter((id) => id !== action.payload);
       state.updatedAt = new Date().toISOString();
+    },
+
+    // Update API version
+    updateApiVersion: (state, action: PayloadAction<string | null>) => {
+      state.apiVersion = action.payload;
+    },
+
+    // Update country ID
+    updateCountryId: (state, action: PayloadAction<(typeof initialState.countryId)>) => {
+      state.countryId = action.payload;
     },
 
     // Clear the report
