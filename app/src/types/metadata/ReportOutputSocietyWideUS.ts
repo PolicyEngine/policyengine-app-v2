@@ -31,18 +31,18 @@ export interface ReportOutputSocietyWideUS {
   };
   intra_decile: {
     all: {
-      "Gain less than 5%": number;
-      "Gain more than 5%": number;
-      "Lose less than 5%": number;
-      "Lose more than 5%": number;
-      "No change": number;
+      'Gain less than 5%': number;
+      'Gain more than 5%': number;
+      'Lose less than 5%': number;
+      'Lose more than 5%': number;
+      'No change': number;
     };
     deciles: {
-      "Gain less than 5%": number[];
-      "Gain more than 5%": number[];
-      "Lose less than 5%": number[];
-      "Lose more than 5%": number[];
-      "No change": number[];
+      'Gain less than 5%': number[];
+      'Gain more than 5%': number[];
+      'Lose less than 5%': number[];
+      'Lose more than 5%': number[];
+      'No change': number[];
     };
   };
   intra_wealth_decile: null;

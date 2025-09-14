@@ -36,7 +36,7 @@ export const reportSlice = createSlice({
     },
 
     // Update country ID
-    updateCountryId: (state, action: PayloadAction<(typeof initialState.countryId)>) => {
+    updateCountryId: (state, action: PayloadAction<typeof initialState.countryId>) => {
       state.countryId = action.payload;
     },
 
@@ -48,6 +48,7 @@ export const reportSlice = createSlice({
       state.output = null;
       state.createdAt = new Date().toISOString();
       state.updatedAt = new Date().toISOString();
+      // Preserve countryId and apiVersion
     },
 
     // Update report ID
@@ -98,6 +99,8 @@ export const reportSlice = createSlice({
 export const {
   addSimulationId,
   removeSimulationId,
+  updateApiVersion,
+  updateCountryId,
   clearReport,
   updateReportId,
   updateReportStatus,

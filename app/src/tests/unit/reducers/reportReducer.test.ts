@@ -1,10 +1,12 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import reportReducer, {
   addSimulationId,
   clearReport,
   markReportAsComplete,
   markReportAsError,
   removeSimulationId,
+  updateApiVersion,
+  updateCountryId,
   updateReportId,
   updateReportOutput,
   updateReportStatus,
@@ -152,7 +154,7 @@ describe('reportReducer', () => {
   });
 
   describe('clearReport action', () => {
-    test('given populated report then resets to initial state', () => {
+    test('given populated report then resets to initial state but preserves country and api version', () => {
       // Given
       const initialState = MOCK_COMPLETE_REPORT;
       const action = clearReport();
@@ -165,11 +167,13 @@ describe('reportReducer', () => {
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');
       expectOutput(state, null);
+      expect(state.countryId).toBe('us'); // Preserved
+      expect(state.apiVersion).toBe('v1'); // Preserved
       expect(state.createdAt).toBe('2024-01-15T10:00:00.000Z');
       expect(state.updatedAt).toBe('2024-01-15T10:00:00.000Z');
     });
 
-    test('given error report then resets all fields', () => {
+    test('given error report then resets all fields but preserves country and api version', () => {
       // Given
       const initialState = MOCK_ERROR_REPORT;
       const action = clearReport();
@@ -182,6 +186,8 @@ describe('reportReducer', () => {
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');
       expectOutput(state, null);
+      expect(state.countryId).toBe('uk'); // Preserved
+      expect(state.apiVersion).toBe('v2'); // Preserved
     });
   });
 
@@ -388,6 +394,58 @@ describe('reportReducer', () => {
       // Then
       expectStatus(state, 'error');
       expectTimestampsUpdated(state, initialState);
+    });
+  });
+
+  describe('updateApiVersion action', () => {
+    test('given new api version then updates version', () => {
+      // Given
+      const initialState = createMockReportState();
+      const action = updateApiVersion('v2');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.apiVersion).toBe('v2');
+    });
+
+    test('given null api version then sets to null', () => {
+      // Given
+      const initialState = createMockReportState({ apiVersion: 'v1' });
+      const action = updateApiVersion(null);
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.apiVersion).toBeNull();
+    });
+  });
+
+  describe('updateCountryId action', () => {
+    test('given new country id then updates country', () => {
+      // Given
+      const initialState = createMockReportState({ countryId: 'us' });
+      const action = updateCountryId('uk');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.countryId).toBe('uk');
+    });
+
+    test('given different country id then updates country', () => {
+      // Given
+      const initialState = createMockReportState({ countryId: 'uk' });
+      const action = updateCountryId('ca');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.countryId).toBe('ca');
     });
   });
 
