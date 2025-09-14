@@ -14,39 +14,39 @@ export interface ReportOutputSocietyWideUK {
     by_constituency: ReportOutputSocietyWideByConstituency;
     outcomes_by_region: {
       england: {
-        "Gain less than 5%": number;
-        "Gain more than 5%": number;
-        "Lose less than 5%": number;
-        "Lose more than 5%": number;
-        "No change": number;
+        'Gain less than 5%': number;
+        'Gain more than 5%': number;
+        'Lose less than 5%': number;
+        'Lose more than 5%': number;
+        'No change': number;
       };
       northern_ireland: {
-        "Gain less than 5%": number;
-        "Gain more than 5%": number;
-        "Lose less than 5%": number;
-        "Lose more than 5%": number;
-        "No change": number;
+        'Gain less than 5%': number;
+        'Gain more than 5%': number;
+        'Lose less than 5%': number;
+        'Lose more than 5%': number;
+        'No change': number;
       };
       scotland: {
-        "Gain less than 5%": number;
-        "Gain more than 5%": number;
-        "Lose less than 5%": number;
-        "Lose more than 5%": number;
-        "No change": number;
+        'Gain less than 5%': number;
+        'Gain more than 5%': number;
+        'Lose less than 5%': number;
+        'Lose more than 5%': number;
+        'No change': number;
       };
       uk: {
-        "Gain less than 5%": number;
-        "Gain more than 5%": number;
-        "Lose less than 5%": number;
-        "Lose more than 5%": number;
-        "No change": number;
+        'Gain less than 5%': number;
+        'Gain more than 5%': number;
+        'Lose less than 5%': number;
+        'Lose more than 5%': number;
+        'No change': number;
       };
       wales: {
-        "Gain less than 5%": number;
-        "Gain more than 5%": number;
-        "Lose less than 5%": number;
-        "Lose more than 5%": number;
-        "No change": number;
+        'Gain less than 5%': number;
+        'Gain more than 5%': number;
+        'Lose less than 5%': number;
+        'Lose more than 5%': number;
+        'No change': number;
       };
     };
   };
@@ -128,34 +128,34 @@ export interface ReportOutputSocietyWideUK {
   };
   intra_decile: {
     all: {
-      "Gain less than 5%": number;
-      "Gain more than 5%": number;
-      "Lose less than 5%": number;
-      "Lose more than 5%": number;
-      "No change": number;
+      'Gain less than 5%': number;
+      'Gain more than 5%': number;
+      'Lose less than 5%': number;
+      'Lose more than 5%': number;
+      'No change': number;
     };
     deciles: {
-      "Gain less than 5%": number[];
-      "Gain more than 5%": number[];
-      "Lose less than 5%": number[];
-      "Lose more than 5%": number[];
-      "No change": number[];
+      'Gain less than 5%': number[];
+      'Gain more than 5%': number[];
+      'Lose less than 5%': number[];
+      'Lose more than 5%': number[];
+      'No change': number[];
     };
   };
   intra_wealth_decile: {
     all: {
-      "Gain less than 5%": number;
-      "Gain more than 5%": number;
-      "Lose less than 5%": number;
-      "Lose more than 5%": number;
-      "No change": number;
+      'Gain less than 5%': number;
+      'Gain more than 5%': number;
+      'Lose less than 5%': number;
+      'Lose more than 5%': number;
+      'No change': number;
     };
     deciles: {
-      "Gain less than 5%": number[];
-      "Gain more than 5%": number[];
-      "Lose less than 5%": number[];
-      "Lose more than 5%": number[];
-      "No change": number[];
+      'Gain less than 5%': number[];
+      'Gain more than 5%': number[];
+      'Lose less than 5%': number[];
+      'Lose more than 5%': number[];
+      'No change': number[];
     };
   };
   labor_supply_response: {
