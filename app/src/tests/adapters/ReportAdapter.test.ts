@@ -23,8 +23,8 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: mockReportMetadata.report_id,
-        simulationIds: [mockReportMetadata.simulation_1_id, mockReportMetadata.simulation_2_id],
+        reportId: String(mockReportMetadata.id),
+        simulationIds: [String(mockReportMetadata.simulation_1_id), String(mockReportMetadata.simulation_2_id)],
         status: mockReportMetadata.status,
         output: mockReportOutput,
         createdAt: mockReportMetadata.created_at,
@@ -41,8 +41,8 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: mockReportMetadataSingleSimulation.report_id,
-        simulationIds: [mockReportMetadataSingleSimulation.simulation_1_id],
+        reportId: String(mockReportMetadataSingleSimulation.id),
+        simulationIds: [String(mockReportMetadataSingleSimulation.simulation_1_id)],
         status: mockReportMetadataSingleSimulation.status,
         output: mockReportMetadataSingleSimulation.output,
         createdAt: mockReportMetadataSingleSimulation.created_at,
@@ -101,7 +101,7 @@ describe('ReportAdapter', () => {
 
     test('given Report with single simulation then converts to creation payload with null second simulation', () => {
       // Given
-      const singleSimulationId = 'sim-111';
+      const singleSimulationId = '111';  // String that will convert to number
       const report = {
         ...mockPendingReport,
         simulationIds: [singleSimulationId],
@@ -112,12 +112,8 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        report_id: mockPendingReport.reportId,
-        simulation_1_id: singleSimulationId,
+        simulation_1_id: 111,  // Converted to number
         simulation_2_id: null,
-        status: mockPendingReport.status,
-        created_at: mockPendingReport.createdAt,
-        updated_at: mockPendingReport.updatedAt,
       });
     });
 
@@ -129,14 +125,9 @@ describe('ReportAdapter', () => {
       const result = ReportAdapter.toCreationPayload(report);
 
       // Then
-      const [firstSimId, secondSimId] = mockErrorReport.simulationIds;
       expect(result).toEqual({
-        report_id: mockErrorReport.reportId,
-        simulation_1_id: firstSimId,
-        simulation_2_id: secondSimId,
-        status: mockErrorReport.status,
-        created_at: mockErrorReport.createdAt,
-        updated_at: mockErrorReport.updatedAt,
+        simulation_1_id: 222,  // Converted to number
+        simulation_2_id: 333,  // Converted to number
       });
     });
   });
@@ -144,12 +135,10 @@ describe('ReportAdapter', () => {
   describe('toCompletedReportPayload', () => {
     test('given report ID and output then creates completed payload correctly', () => {
       // Given
-      const reportId = 'report-123';
       const output = mockReportOutput;
-      const updatedAt = '2024-01-15T10:35:00Z';
 
       // When
-      const result = ReportAdapter.toCompletedReportPayload(reportId, output, updatedAt);
+      const result = ReportAdapter.toCompletedReportPayload(output);
 
       // Then
       expect(result).toEqual(mockCompletedReportPayload);
@@ -157,7 +146,6 @@ describe('ReportAdapter', () => {
 
     test('given complex output object then serializes to JSON string correctly', () => {
       // Given
-      const reportId = 'report-complex';
       const complexOutput = {
         nested: {
           deeply: {
@@ -168,50 +156,39 @@ describe('ReportAdapter', () => {
         boolean: true,
         null_value: null,
       };
-      const updatedAt = '2024-01-15T15:00:00Z';
       const expectedStatus = 'complete' as const;
 
       // When
-      const result = ReportAdapter.toCompletedReportPayload(reportId, complexOutput, updatedAt);
+      const result = ReportAdapter.toCompletedReportPayload(complexOutput);
 
       // Then
       expect(result).toEqual({
-        report_id: reportId,
         status: expectedStatus,
         output: JSON.stringify(complexOutput),
-        updated_at: updatedAt,
       });
     });
 
     test('given empty output object then creates payload with stringified empty object', () => {
       // Given
-      const reportId = 'report-empty';
       const emptyOutput = {};
-      const updatedAt = '2024-01-15T16:00:00Z';
       const expectedStatus = 'complete' as const;
       const expectedOutputString = '{}';
 
       // When
-      const result = ReportAdapter.toCompletedReportPayload(reportId, emptyOutput, updatedAt);
+      const result = ReportAdapter.toCompletedReportPayload(emptyOutput);
 
       // Then
       expect(result).toEqual({
-        report_id: reportId,
         status: expectedStatus,
         output: expectedOutputString,
-        updated_at: updatedAt,
       });
     });
   });
 
   describe('toErrorReportPayload', () => {
     test('given report ID then creates error payload correctly', () => {
-      // Given
-      const reportId = mockErrorReportPayload.report_id;
-      const updatedAt = mockErrorReportPayload.updated_at;
-
       // When
-      const result = ReportAdapter.toErrorReportPayload(reportId, updatedAt);
+      const result = ReportAdapter.toErrorReportPayload();
 
       // Then
       expect(result).toEqual(mockErrorReportPayload);
@@ -219,20 +196,16 @@ describe('ReportAdapter', () => {
 
     test('given any report ID then always sets status to error and output to null', () => {
       // Given
-      const reportId = 'report-test-error';
-      const updatedAt = '2024-01-15T20:00:00Z';
       const expectedErrorStatus = 'error' as const;
       const expectedNullOutput = null;
 
       // When
-      const result = ReportAdapter.toErrorReportPayload(reportId, updatedAt);
+      const result = ReportAdapter.toErrorReportPayload();
 
       // Then
       expect(result).toEqual({
-        report_id: reportId,
         status: expectedErrorStatus,
         output: expectedNullOutput,
-        updated_at: updatedAt,
       });
     });
   });

@@ -73,12 +73,12 @@ export async function fetchSimulationById(
         // Fallback for simulations not in our store (legacy or external)
         // TODO: Remove this once we have the necessary API endpoints
         resolve({
-          simulation_id: simulationId,
+          id: Number(simulationId.replace('mock-sim-', '')),
           country_id: countryId,
           api_version: mockApiVersion,
           population_id: mockPopulationId,
           population_type: 'household' as const,
-          policy_id: mockPolicyId,
+          policy_id: Number(mockPolicyId),
         });
       }
     }, 1000); // Simulate network delay
@@ -95,12 +95,12 @@ export async function createSimulation(
 
       // Store the simulation data for later retrieval
       const simulationMetadata: SimulationMetadata = {
-        simulation_id: simulationId,
+        id: Number(simulationId.replace('mock-simulation-id-', '')),
         country_id: 'us', // Default to US for now
         api_version: mockApiVersion,
         population_id: data.population_id || mockPopulationId,
         population_type: data.population_type || 'household', // Use provided type or default to household
-        policy_id: data.policy_id || mockPolicyId,
+        policy_id: data.policy_id || Number(mockPolicyId),
       };
 
       mockSimulationStore.set(simulationId, simulationMetadata);
