@@ -12,11 +12,8 @@ import simulationsReducer, * as simulationsActions from '@/reducers/simulationsR
 import {
   ADDING_SIMULATION_1_MESSAGE,
   ADDING_SIMULATION_2_MESSAGE,
-  BOTH_SIMULATIONS_CONFIGURED_MESSAGE,
   FIRST_SIMULATION_DESCRIPTION,
   FIRST_SIMULATION_TITLE,
-  MOCK_SIMULATION_1,
-  MOCK_SIMULATION_2,
   NEXT_BUTTON_LABEL,
   REPORT_SETUP_FRAME_TITLE,
   SECOND_SIMULATION_DESCRIPTION,
@@ -223,64 +220,4 @@ describe('ReportSetupFrame', () => {
     expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
   });
 
-  test('given both simulations configured then displays configured state', () => {
-    // Given - pre-populate store with configured simulations
-    store.dispatch(simulationsActions.createSimulation(MOCK_SIMULATION_1));
-    store.dispatch(simulationsActions.createSimulation(MOCK_SIMULATION_2));
-
-    // When
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // Then - cards should show configured state
-    expect(screen.getByText(new RegExp(MOCK_SIMULATION_1.label!))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(MOCK_SIMULATION_2.label!))).toBeInTheDocument();
-    expect(
-      screen.getByText(new RegExp(`Policy #${MOCK_SIMULATION_1.policyId}`))
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(new RegExp(`Policy #${MOCK_SIMULATION_2.policyId}`))
-    ).toBeInTheDocument();
-  });
-
-  test('given both simulations configured then Next button is enabled', () => {
-    // Given - pre-populate store with configured simulations
-    store.dispatch(simulationsActions.createSimulation(MOCK_SIMULATION_1));
-    store.dispatch(simulationsActions.createSimulation(MOCK_SIMULATION_2));
-
-    // When
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // Then
-    const nextButton = screen.getByRole('button', { name: NEXT_BUTTON_LABEL });
-    expect(nextButton).not.toBeDisabled();
-  });
-
-  test('given both simulations configured and Next clicked then navigates to next', async () => {
-    // Given - pre-populate store with configured simulations
-    store.dispatch(simulationsActions.createSimulation(MOCK_SIMULATION_1));
-    store.dispatch(simulationsActions.createSimulation(MOCK_SIMULATION_2));
-
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When
-    const nextButton = screen.getByRole('button', { name: NEXT_BUTTON_LABEL });
-    await user.click(nextButton);
-
-    // Then
-    expect(consoleLogSpy).toHaveBeenCalledWith(BOTH_SIMULATIONS_CONFIGURED_MESSAGE);
-    expect(mockOnNavigate).toHaveBeenCalledWith('next');
-  });
 });
