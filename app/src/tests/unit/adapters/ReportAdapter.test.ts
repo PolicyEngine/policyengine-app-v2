@@ -162,7 +162,7 @@ describe('ReportAdapter', () => {
       const expectedStatus = 'complete' as const;
       const reportWithComplexOutput: Report = {
         ...mockReport,
-        output: complexOutput,
+        output: complexOutput as any, // Testing conversion logic, not type structure
       };
 
       // When
@@ -183,7 +183,7 @@ describe('ReportAdapter', () => {
       const expectedOutputString = '{}';
       const reportWithEmptyOutput: Report = {
         ...mockReport,
-        output: emptyOutput,
+        output: emptyOutput as any, // Testing conversion logic, not type structure
       };
 
       // When
