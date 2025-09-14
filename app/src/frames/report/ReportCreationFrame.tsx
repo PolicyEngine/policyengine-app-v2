@@ -1,26 +1,25 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { FlowComponentProps } from '@/types/flow';
-import { clearReport } from '@/reducers/reportReducer';
+import { clearReport, updateLabel } from '@/reducers/reportReducer';
 
 export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
   const [localLabel, setLocalLabel] = useState('');
 
   // Clear any existing report data when mounting
-  useState(() => {
+  useEffect(() => {
     dispatch(clearReport());
-  });
+  }, [dispatch]);
 
   function handleLocalLabelChange(value: string) {
     setLocalLabel(value);
   }
 
   function submissionHandler() {
-    // For now, just navigate to next
-    // Will add label storage to report reducer in future iteration
+    dispatch(updateLabel(localLabel));
     onNavigate('next');
   }
 
