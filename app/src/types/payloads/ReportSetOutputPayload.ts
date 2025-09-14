@@ -2,8 +2,8 @@
  * Payload format for updating a report's output via the API
  */
 export interface ReportSetOutputPayload {
-  report_id: string;
+  id: number;
   status: 'pending' | 'complete' | 'error';
   output: string | null; // JSON-stringified object or null
-  updated_at: string;
+  error_message?: string | null; // Optional error message
 }
