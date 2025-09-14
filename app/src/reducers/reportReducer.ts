@@ -43,12 +43,19 @@ export const reportSlice = createSlice({
     // Clear the report
     clearReport: (state) => {
       state.reportId = '';
+      state.label = undefined;
       state.simulationIds = [];
       state.status = 'pending';
       state.output = null;
       state.createdAt = new Date().toISOString();
       state.updatedAt = new Date().toISOString();
       // Preserve countryId and apiVersion
+    },
+
+    // Update report label
+    updateLabel: (state, action: PayloadAction<string>) => {
+      state.label = action.payload;
+      state.updatedAt = new Date().toISOString();
     },
 
     // Update report ID
@@ -102,6 +109,7 @@ export const {
   updateApiVersion,
   updateCountryId,
   clearReport,
+  updateLabel,
   updateReportId,
   updateReportStatus,
   updateReportOutput,

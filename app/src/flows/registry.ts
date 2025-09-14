@@ -6,6 +6,7 @@ import GeographicConfirmationFrame from '@/frames/population/GeographicConfirmat
 import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
+import ReportCreationFrame from '@/frames/report/ReportCreationFrame';
 import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
 import SimulationSelectExistingPolicyFrame from '@/frames/simulation/SimulationSelectExistingPolicyFrame';
 import SimulationSelectExistingPopulationFrame from '@/frames/simulation/SimulationSelectExistingPopulationFrame';
@@ -18,6 +19,7 @@ import PopulationsPage from '@/pages/Populations.page';
 import SimulationsPage from '@/pages/Simulations.page';
 import { PolicyCreationFlow } from './policyCreationFlow';
 import { PopulationCreationFlow } from './populationCreationFlow';
+import { ReportCreationFlow } from './reportCreationFlow';
 import { SimulationCreationFlow } from './simulationCreationFlow';
 import { SimulationViewFlow } from './simulationViewFlow';
 
@@ -31,6 +33,7 @@ export const componentRegistry = {
   GeographicConfirmationFrame,
   HouseholdBuilderFrame,
   PopulationReadView: PopulationsPage,
+  ReportCreationFrame,
   SimulationCreationFrame,
   SimulationSetupFrame,
   SimulationSubmitFrame,
@@ -45,6 +48,7 @@ export const flowRegistry = {
   PolicyCreationFlow,
   PolicyViewFlow,
   PopulationCreationFlow,
+  ReportCreationFlow,
   SimulationCreationFlow,
   SimulationViewFlow,
 } as const;
