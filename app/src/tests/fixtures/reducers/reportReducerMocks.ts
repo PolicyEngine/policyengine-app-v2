@@ -95,7 +95,7 @@ export const MOCK_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
   },
   poverty_by_race: {
     poverty: {
-      black: { baseline: 0.22, reform: 0.20 },
+      black: { baseline: 0.22, reform: 0.2 },
       hispanic: { baseline: 0.18, reform: 0.16 },
       other: { baseline: 0.15, reform: 0.14 },
       white: { baseline: 0.09, reform: 0.085 },
@@ -132,14 +132,14 @@ export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
       'Gain more than 5%': 0.25,
       'Lose less than 5%': 0.15,
       'Lose more than 5%': 0.05,
-      'No change': 0.30,
+      'No change': 0.3,
     },
     deciles: {
       'Gain less than 5%': [0.15],
       'Gain more than 5%': [0.25],
       'Lose less than 5%': [0.15],
       'Lose more than 5%': [0.05],
-      'No change': [0.40],
+      'No change': [0.4],
     },
   },
   intra_wealth_decile: null,

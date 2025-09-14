@@ -30,7 +30,8 @@ export const HTTP_STATUS = {
 
 export const ERROR_MESSAGES = {
   CALCULATION_FAILED: (statusText: string) => `Economy calculation failed: ${statusText}`,
-  TIMEOUT: 'Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow',
+  TIMEOUT:
+    'Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow',
   NETWORK_ERROR: 'Network error',
   FAILED_TO_FETCH: 'Failed to fetch',
 } as const;
@@ -62,8 +63,30 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
   constituency_impact: null,
   data_version: '2.1.0',
   decile: {
-    average: { '1': 100, '2': 200, '3': 300, '4': 400, '5': 500, '6': 600, '7': 700, '8': 800, '9': 900, '10': 1000 },
-    relative: { '1': 0.01, '2': 0.02, '3': 0.03, '4': 0.04, '5': 0.05, '6': 0.06, '7': 0.07, '8': 0.08, '9': 0.09, '10': 0.1 },
+    average: {
+      '1': 100,
+      '2': 200,
+      '3': 300,
+      '4': 400,
+      '5': 500,
+      '6': 600,
+      '7': 700,
+      '8': 800,
+      '9': 900,
+      '10': 1000,
+    },
+    relative: {
+      '1': 0.01,
+      '2': 0.02,
+      '3': 0.03,
+      '4': 0.04,
+      '5': 0.05,
+      '6': 0.06,
+      '7': 0.07,
+      '8': 0.08,
+      '9': 0.09,
+      '10': 0.1,
+    },
   },
   detailed_budget: {},
   inequality: {
@@ -100,12 +123,56 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
   labor_supply_response: {
     decile: {
       average: {
-        income: { '1': 10, '2': 20, '3': 30, '4': 40, '5': 50, '6': 60, '7': 70, '8': 80, '9': 90, '10': 100 },
-        substitution: { '1': 5, '2': 10, '3': 15, '4': 20, '5': 25, '6': 30, '7': 35, '8': 40, '9': 45, '10': 50 },
+        income: {
+          '1': 10,
+          '2': 20,
+          '3': 30,
+          '4': 40,
+          '5': 50,
+          '6': 60,
+          '7': 70,
+          '8': 80,
+          '9': 90,
+          '10': 100,
+        },
+        substitution: {
+          '1': 5,
+          '2': 10,
+          '3': 15,
+          '4': 20,
+          '5': 25,
+          '6': 30,
+          '7': 35,
+          '8': 40,
+          '9': 45,
+          '10': 50,
+        },
       },
       relative: {
-        income: { '1': 0.01, '2': 0.02, '3': 0.03, '4': 0.04, '5': 0.05, '6': 0.06, '7': 0.07, '8': 0.08, '9': 0.09, '10': 0.1 },
-        substitution: { '1': 0.005, '2': 0.01, '3': 0.015, '4': 0.02, '5': 0.025, '6': 0.03, '7': 0.035, '8': 0.04, '9': 0.045, '10': 0.05 },
+        income: {
+          '1': 0.01,
+          '2': 0.02,
+          '3': 0.03,
+          '4': 0.04,
+          '5': 0.05,
+          '6': 0.06,
+          '7': 0.07,
+          '8': 0.08,
+          '9': 0.09,
+          '10': 0.1,
+        },
+        substitution: {
+          '1': 0.005,
+          '2': 0.01,
+          '3': 0.015,
+          '4': 0.02,
+          '5': 0.025,
+          '6': 0.03,
+          '7': 0.035,
+          '8': 0.04,
+          '9': 0.045,
+          '10': 0.05,
+        },
       },
     },
     hours: {
@@ -151,7 +218,7 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
   },
   poverty_by_race: {
     poverty: {
-      black: { baseline: 0.22, reform: 0.20 },
+      black: { baseline: 0.22, reform: 0.2 },
       hispanic: { baseline: 0.18, reform: 0.16 },
       other: { baseline: 0.15, reform: 0.14 },
       white: { baseline: 0.09, reform: 0.085 },

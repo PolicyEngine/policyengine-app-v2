@@ -1,5 +1,5 @@
-import { useQueryClient } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { EconomyCalculationResponse } from '@/api/economy';
 
 interface CalculationSummary {
@@ -78,14 +78,11 @@ export function useUserEconomyCalculations() {
   }, [queryClient]);
 
   // Helper functions
-  const getPendingCalculations = () =>
-    calculations.filter(calc => calc.status === 'pending');
+  const getPendingCalculations = () => calculations.filter((calc) => calc.status === 'pending');
 
-  const getCompletedCalculations = () =>
-    calculations.filter(calc => calc.status === 'completed');
+  const getCompletedCalculations = () => calculations.filter((calc) => calc.status === 'completed');
 
-  const getErroredCalculations = () =>
-    calculations.filter(calc => calc.status === 'error');
+  const getErroredCalculations = () => calculations.filter((calc) => calc.status === 'error');
 
   const getCalculationByIds = (
     countryId: string,
@@ -94,7 +91,7 @@ export function useUserEconomyCalculations() {
     params?: any
   ) => {
     return calculations.find(
-      calc =>
+      (calc) =>
         calc.countryId === countryId &&
         calc.reformPolicyId === reformPolicyId &&
         calc.baselinePolicyId === baselinePolicyId &&
@@ -183,13 +180,8 @@ export function usePrefetchEconomyCalculations() {
     }>
   ) => {
     await Promise.all(
-      calculations.map(calc =>
-        prefetchCalculation(
-          calc.countryId,
-          calc.reformPolicyId,
-          calc.baselinePolicyId,
-          calc.params
-        )
+      calculations.map((calc) =>
+        prefetchCalculation(calc.countryId, calc.reformPolicyId, calc.baselinePolicyId, calc.params)
       )
     );
   };

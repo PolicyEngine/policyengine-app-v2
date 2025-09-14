@@ -2,6 +2,8 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+// Import after mocking
+import { fetchEconomyCalculation } from '@/api/economy';
 import { useEconomyCalculation } from '@/hooks/useEconomyCalculation';
 import {
   mockCompletedResponse,
@@ -22,9 +24,6 @@ import {
 vi.mock('@/api/economy', () => ({
   fetchEconomyCalculation: vi.fn(),
 }));
-
-// Import after mocking
-import { fetchEconomyCalculation } from '@/api/economy';
 
 // Helper to create test wrapper with React Query
 const createTestWrapper = () => {
@@ -173,17 +172,23 @@ describe('useEconomyCalculation', () => {
     expect(mockOnQueueUpdate).toHaveBeenCalledWith(5, 120);
 
     // Wait for refetch interval and second poll
-    await waitFor(() => {
-      expect(callCount).toBeGreaterThanOrEqual(2);
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(callCount).toBeGreaterThanOrEqual(2);
+      },
+      { timeout: 2000 }
+    );
 
     // Check queue update was called with new position
     expect(mockOnQueueUpdate).toHaveBeenCalledWith(3, 120);
 
     // Wait for final poll to complete
-    await waitFor(() => {
-      expect(result.current.isCompleted).toBe(true);
-    }, { timeout: 2000 });
+    await waitFor(
+      () => {
+        expect(result.current.isCompleted).toBe(true);
+      },
+      { timeout: 2000 }
+    );
 
     expect(mockOnSuccess).toHaveBeenCalledWith(mockUSReportOutput);
   });
@@ -198,7 +203,9 @@ describe('useEconomyCalculation', () => {
       fetchCount++;
       // After a couple of fetches, simulate that we've exceeded the timeout
       if (fetchCount > 2) {
-        const timeoutError = new Error('Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow');
+        const timeoutError = new Error(
+          'Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow'
+        );
         throw timeoutError;
       }
       return mockPendingResponse;
@@ -223,15 +230,18 @@ describe('useEconomyCalculation', () => {
     });
 
     // Wait for the timeout to be triggered
-    await waitFor(() => {
-      expect(fetchCount).toBeGreaterThan(2);
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(fetchCount).toBeGreaterThan(2);
+      },
+      { timeout: 3000 }
+    );
 
     // Then - onError should have been called with timeout error
     await waitFor(() => {
       expect(mockOnError).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: expect.stringContaining('timed out after 25 minutes')
+          message: expect.stringContaining('timed out after 25 minutes'),
         })
       );
     });
@@ -255,7 +265,7 @@ describe('useEconomyCalculation', () => {
 
     // Then
     // Wait a bit to ensure no fetch happens
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     expect(fetchEconomyCalculation).not.toHaveBeenCalled();
   });
 

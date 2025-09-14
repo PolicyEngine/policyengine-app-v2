@@ -1,7 +1,6 @@
 import { countryIds } from '@/libs/countries';
-
-import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
+import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 

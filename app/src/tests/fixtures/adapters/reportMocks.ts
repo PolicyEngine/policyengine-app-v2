@@ -1,8 +1,8 @@
 import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
+import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { ReportCreationPayload } from '@/types/payloads/ReportCreationPayload';
 import { ReportSetOutputPayload } from '@/types/payloads/ReportSetOutputPayload';
-import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 export const mockReportOutput: ReportOutputSocietyWideUS = {
   budget: {
@@ -97,7 +97,7 @@ export const mockReportOutput: ReportOutputSocietyWideUS = {
   },
   poverty_by_race: {
     poverty: {
-      black: { baseline: 0.22, reform: 0.20 },
+      black: { baseline: 0.22, reform: 0.2 },
       hispanic: { baseline: 0.18, reform: 0.16 },
       other: { baseline: 0.15, reform: 0.14 },
       white: { baseline: 0.09, reform: 0.085 },

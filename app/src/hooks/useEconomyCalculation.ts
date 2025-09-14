@@ -1,10 +1,10 @@
+import { useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useRef, useCallback } from 'react';
 import {
-  fetchEconomyCalculation,
-  EconomyReportOutput,
   EconomyCalculationParams,
-  EconomyCalculationResponse
+  EconomyCalculationResponse,
+  EconomyReportOutput,
+  fetchEconomyCalculation,
 } from '@/api/economy';
 
 // Google Cloud Workflow timeout (25 minutes in milliseconds)
@@ -65,12 +65,19 @@ export function useEconomyCalculation({
   const queryFnWithStatusHandling = useCallback(async () => {
     // Check for timeout before fetching
     if (startTimeRef.current && Date.now() - startTimeRef.current > GC_WORKFLOW_TIMEOUT) {
-      const timeoutError = new Error('Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow');
+      const timeoutError = new Error(
+        'Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow'
+      );
       onError?.(timeoutError);
       throw timeoutError;
     }
 
-    const response = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+    const response = await fetchEconomyCalculation(
+      countryId,
+      reformPolicyId,
+      baselinePolicyId,
+      params
+    );
 
     // Handle the response based on status
     if (response.status === 'completed' && response.result) {
@@ -89,7 +96,10 @@ export function useEconomyCalculation({
       }
     } else if (response.status === 'pending') {
       // Handle queue updates
-      if (response.queue_position !== undefined && response.queue_position !== lastQueuePositionRef.current) {
+      if (
+        response.queue_position !== undefined &&
+        response.queue_position !== lastQueuePositionRef.current
+      ) {
         lastQueuePositionRef.current = response.queue_position;
         onQueueUpdate?.(response.queue_position, response.average_time);
       }

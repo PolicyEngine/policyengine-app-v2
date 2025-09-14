@@ -37,7 +37,12 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+      const result = await fetchEconomyCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
