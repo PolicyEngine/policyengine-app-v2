@@ -68,7 +68,10 @@ export const reportSlice = createSlice({
     },
 
     // Update timestamps
-    updateTimestamps: (state, action: PayloadAction<{ createdAt?: string; updatedAt?: string }>) => {
+    updateTimestamps: (
+      state,
+      action: PayloadAction<{ createdAt?: string; updatedAt?: string }>
+    ) => {
       if (action.payload.createdAt) {
         state.createdAt = action.payload.createdAt;
       }
