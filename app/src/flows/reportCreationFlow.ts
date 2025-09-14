@@ -6,7 +6,13 @@ export const ReportCreationFlow: Flow = {
     ReportCreationFrame: {
       component: 'ReportCreationFrame',
       on: {
-        next: '__return__', // Temporary - will expand to more frames later
+        next: 'ReportSetupFrame',
+      },
+    },
+    ReportSetupFrame: {
+      component: 'ReportSetupFrame',
+      on: {
+        next: '__return__', // Placeholder - will be updated later
       },
     },
   },

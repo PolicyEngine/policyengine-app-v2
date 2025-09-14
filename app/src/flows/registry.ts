@@ -7,6 +7,7 @@ import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
 import ReportCreationFrame from '@/frames/report/ReportCreationFrame';
+import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
 import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
 import SimulationSelectExistingPolicyFrame from '@/frames/simulation/SimulationSelectExistingPolicyFrame';
 import SimulationSelectExistingPopulationFrame from '@/frames/simulation/SimulationSelectExistingPopulationFrame';
@@ -34,6 +35,7 @@ export const componentRegistry = {
   HouseholdBuilderFrame,
   PopulationReadView: PopulationsPage,
   ReportCreationFrame,
+  ReportSetupFrame,
   SimulationCreationFrame,
   SimulationSetupFrame,
   SimulationSubmitFrame,
