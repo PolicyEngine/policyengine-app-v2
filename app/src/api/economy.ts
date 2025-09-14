@@ -1,6 +1,6 @@
 import { BASE_URL } from '@/constants';
-import { ReportOutputSocietyWideUS } from '@/types/metadata/reportOutputMetadata/ReportOutputSocietyWideUS';
-import { ReportOutputSocietyWideUK } from '@/types/metadata/reportOutputMetadata/ReportOutputSocietyWideUK';
+import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
+import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 
 export type EconomyReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 

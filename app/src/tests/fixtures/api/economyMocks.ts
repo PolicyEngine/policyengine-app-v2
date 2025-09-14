@@ -1,7 +1,6 @@
 import { vi } from 'vitest';
-import { EconomyCalculationResponse, EconomyReportOutput } from '@/api/economy';
-import { ReportOutputSocietyWideUS } from '@/types/metadata/reportOutputMetadata/ReportOutputSocietyWideUS';
-import { ReportOutputSocietyWideUK } from '@/types/metadata/reportOutputMetadata/ReportOutputSocietyWideUK';
+import { EconomyCalculationResponse } from '@/api/economy';
+import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test IDs and constants
 export const TEST_COUNTRIES = {

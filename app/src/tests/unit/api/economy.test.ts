@@ -7,7 +7,6 @@ import {
   mockCompletedResponse,
   mockErrorCalculationResponse,
   mockErrorResponse,
-  mockFetchError,
   mockNetworkError,
   mockPendingResponse,
   mockSuccessResponse,
