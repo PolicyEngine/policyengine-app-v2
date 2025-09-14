@@ -219,5 +219,4 @@ describe('ReportSetupFrame', () => {
     expect(simulationsActions.createSimulation).toHaveBeenCalled();
     expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
   });
-
 });

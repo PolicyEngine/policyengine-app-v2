@@ -214,10 +214,7 @@ describe('ReportSelectExistingSimulationFrame', () => {
     await user.click(nextButton);
 
     // Then - check that console.log was called with the prefix and an object
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      SELECTED_SIMULATION_LOG_PREFIX,
-      expect.any(Object)
-    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(SELECTED_SIMULATION_LOG_PREFIX, expect.any(Object));
     expect(mockOnNavigate).toHaveBeenCalledWith('next');
   });
 
@@ -246,10 +243,7 @@ describe('ReportSelectExistingSimulationFrame', () => {
     await user.click(nextButton);
 
     // Then - should log the last selected simulation
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      SELECTED_SIMULATION_LOG_PREFIX,
-      expect.any(Object)
-    );
+    expect(consoleLogSpy).toHaveBeenCalledWith(SELECTED_SIMULATION_LOG_PREFIX, expect.any(Object));
   });
 
   test('given more than 10 simulations then displays only first 10', () => {
