@@ -1,31 +1,39 @@
+import { useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
-import { AppShell, Box } from '@mantine/core';
-import { spacing } from '../designTokens';
+import { AppShell } from '@mantine/core';
+import { spacing } from '@/designTokens';
+import { RootState } from '@/store';
+import HeaderBar from './shared/HeaderBar';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
+  const { currentFrame } = useSelector((state: RootState) => state.flow);
+
+  // If PolicyParameterSelectorFrame is active, let it manage its own layout completely
+  if (currentFrame === 'PolicyParameterSelectorFrame') {
+    return <Outlet />;
+  }
+
+  // Otherwise, render the normal layout with AppShell
   return (
     <AppShell
-      padding={0}
+      layout="default"
+      header={{ height: parseInt(spacing.appShell.header.height, 10) }}
       navbar={{
-        width: parseInt(spacing.layout.sidebarWidth, 10),
-        breakpoint: 'sm',
+        width: parseInt(spacing.appShell.navbar.width, 10),
+        breakpoint: spacing.appShell.navbar.breakpoint,
       }}
     >
-      <AppShell.Navbar p={0} withBorder={false}>
+      <AppShell.Header p={0}>
+        <HeaderBar showLogo />
+      </AppShell.Header>
+
+      <AppShell.Navbar>
         <Sidebar />
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Box
-          style={{
-            minHeight: '100vh',
-            backgroundColor: '#f9fafb',
-            padding: '24px',
-          }}
-        >
-          <Outlet />
-        </Box>
+        <Outlet />
       </AppShell.Main>
     </AppShell>
   );

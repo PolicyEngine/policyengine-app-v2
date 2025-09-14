@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { AppShell, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import Header from '@/components/policyParameterSelectorFrame/Header';
+import Footer from '@/components/policyParameterSelectorFrame/Footer';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
+import HeaderBar from '@/components/shared/HeaderBar';
+import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -49,23 +51,17 @@ export default function PolicyParameterSelectorFrame({
 
   return (
     <AppShell
-      header={{ height: 60 }}
-      navbar={{
-        width: 300,
-        breakpoint: 'sm',
-        collapsed: { mobile: !mobileOpened },
-      }}
-      footer={{ height: 60 }}
+      layout="default"
       padding="md"
+      header={{ height: parseInt(spacing.appShell.header.height, 10) }}
+      navbar={{
+        width: parseInt(spacing.appShell.navbar.width, 10),
+        breakpoint: spacing.appShell.navbar.breakpoint,
+      }}
+      footer={{ height: parseInt(spacing.appShell.footer.height, 10) }}
     >
-      <AppShell.Header p="md">
-        <Header
-          onNavigate={onNavigate}
-          onReturn={onReturn}
-          flowConfig={flowConfig}
-          isInSubflow={isInSubflow}
-          flowDepth={flowDepth}
-        />
+      <AppShell.Header p={0}>
+        <HeaderBar showLogo />
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
@@ -87,7 +83,13 @@ export default function PolicyParameterSelectorFrame({
       </AppShell.Main>
 
       <AppShell.Footer p="md">
-        <Text fw={700}>TODO: Footer</Text>
+        <Footer
+          onNavigate={onNavigate}
+          onReturn={onReturn}
+          flowConfig={flowConfig}
+          isInSubflow={isInSubflow}
+          flowDepth={flowDepth}
+        />
       </AppShell.Footer>
     </AppShell>
   );

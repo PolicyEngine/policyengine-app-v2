@@ -12,7 +12,6 @@ import { useLocation } from 'react-router-dom';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
-import SidebarLogo from './sidebar/SidebarLogo';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
 import SidebarUser from './sidebar/SidebarUser';
@@ -55,8 +54,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       bg="white"
       style={{
         borderRight: `1px solid ${colors.border.light}`,
-        width: parseInt(spacing.layout.sidebarWidth, 10),
-        position: 'fixed',
+        width: parseInt(spacing.appShell.navbar.width, 10),
         left: 0,
         top: 0,
         overflowY: 'auto',
@@ -64,9 +62,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       gap={0}
     >
       <Stack gap={0}>
-        <Box bg={colors.primary[500]} px={16} py={20}>
-          <SidebarLogo />
-        </Box>
         <Box px={16} py={16}>
           <Button
             leftSection={<IconPlus size={16} stroke={2} />}
@@ -76,12 +71,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             h={36}
             styles={{
               root: {
-                backgroundColor: colors.primary[500],
+                backgroundColor: colors.primary[600],
                 fontSize: typography.fontSize.sm,
                 fontWeight: typography.fontWeight.medium,
-                '&:hover': {
-                  backgroundColor: colors.primary[600],
-                },
               },
             }}
           >
@@ -127,7 +119,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       </Stack>
 
       <Box p={16}>
-        <Divider mb={16} color="#E2E8F0" />
+        <Divider mb={16} color={colors.border.light} />
         <Stack gap={8}>
           <Text size="xs" c={colors.text.secondary} style={{ fontSize: 10 }}>
             Running 2 items
@@ -165,7 +157,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             View Report
           </Button>
         </Stack>
-        <Divider my={16} color="#E2E8F0" />
+        <Divider my={16} color={colors.border.light} />
         <SidebarUser name="Olivia Rhye" initials="OR" />
       </Box>
     </Stack>
