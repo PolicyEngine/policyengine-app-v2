@@ -82,9 +82,9 @@ describe('household_calculation API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      await expect(
-        fetchHouseholdCalculation(countryId, householdId, policyId)
-      ).rejects.toThrow(ERROR_MESSAGES.INVALID_PARAMETERS);
+      await expect(fetchHouseholdCalculation(countryId, householdId, policyId)).rejects.toThrow(
+        ERROR_MESSAGES.INVALID_PARAMETERS
+      );
     });
 
     test('given API returns error status with no error message then throws generic error', async () => {
@@ -99,9 +99,9 @@ describe('household_calculation API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      await expect(
-        fetchHouseholdCalculation(countryId, householdId, policyId)
-      ).rejects.toThrow(ERROR_MESSAGES.API_ERROR);
+      await expect(fetchHouseholdCalculation(countryId, householdId, policyId)).rejects.toThrow(
+        ERROR_MESSAGES.API_ERROR
+      );
     });
 
     test('given API returns HTTP error then throws error with status text', async () => {
@@ -113,9 +113,9 @@ describe('household_calculation API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      await expect(
-        fetchHouseholdCalculation(countryId, householdId, policyId)
-      ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Not Found'));
+      await expect(fetchHouseholdCalculation(countryId, householdId, policyId)).rejects.toThrow(
+        ERROR_MESSAGES.CALCULATION_FAILED('Not Found')
+      );
     });
 
     test('given server error then throws error with generic message', async () => {
@@ -127,9 +127,9 @@ describe('household_calculation API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      await expect(
-        fetchHouseholdCalculation(countryId, householdId, policyId)
-      ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Error'));
+      await expect(fetchHouseholdCalculation(countryId, householdId, policyId)).rejects.toThrow(
+        ERROR_MESSAGES.CALCULATION_FAILED('Error')
+      );
     });
 
     test('given network error then propagates error', async () => {
@@ -140,9 +140,9 @@ describe('household_calculation API', () => {
       (global.fetch as any).mockRejectedValue(mockNetworkError);
 
       // When/Then
-      await expect(
-        fetchHouseholdCalculation(countryId, householdId, policyId)
-      ).rejects.toThrow(ERROR_MESSAGES.NETWORK_ERROR);
+      await expect(fetchHouseholdCalculation(countryId, householdId, policyId)).rejects.toThrow(
+        ERROR_MESSAGES.NETWORK_ERROR
+      );
     });
 
     test('given request times out after 50 seconds then throws timeout error', async () => {
@@ -153,7 +153,7 @@ describe('household_calculation API', () => {
 
       // Mock fetch to hang indefinitely, allowing the timeout to trigger
       (global.fetch as any).mockImplementation(
-        (url: string, options: any) =>
+        (_url: string, options: any) =>
           new Promise((_, reject) => {
             // Listen for abort signal
             options.signal.addEventListener('abort', () => {
@@ -241,9 +241,9 @@ describe('household_calculation API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      await expect(
-        fetchHouseholdCalculation(countryId, householdId, policyId)
-      ).rejects.toThrow(ERROR_MESSAGES.API_ERROR);
+      await expect(fetchHouseholdCalculation(countryId, householdId, policyId)).rejects.toThrow(
+        ERROR_MESSAGES.API_ERROR
+      );
     });
   });
 });

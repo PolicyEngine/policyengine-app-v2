@@ -295,6 +295,8 @@ describe('useHouseholdCalculation', () => {
     (fetchHouseholdCalculation as any).mockResolvedValue(mockHouseholdResult);
 
     // When - initial render
+    // Need to disable unused var linting, given this is for a test util
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { result, rerender } = renderHook(
       ({ policyId }: { policyId: string }) =>
         useHouseholdCalculation({

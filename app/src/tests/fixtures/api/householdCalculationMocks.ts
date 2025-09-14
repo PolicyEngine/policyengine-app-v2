@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
-import { Household } from '@/types/ingredients/Household';
 import { HouseholdCalculationResponse } from '@/api/household_calculation';
+import { Household } from '@/types/ingredients/Household';
 
 // Test IDs and constants
 export const TEST_COUNTRIES = {

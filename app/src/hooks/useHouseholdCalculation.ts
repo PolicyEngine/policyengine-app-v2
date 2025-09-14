@@ -1,7 +1,7 @@
 import { useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Household } from '@/types/ingredients/Household';
 import { fetchHouseholdCalculation } from '@/api/household_calculation';
+import { Household } from '@/types/ingredients/Household';
 
 interface UseHouseholdCalculationOptions {
   countryId: string;
