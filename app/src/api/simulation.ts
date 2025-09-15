@@ -13,12 +13,14 @@ export async function fetchSimulationById(
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    }
+      Accept: 'application/json',
+    },
   });
 
   if (!response.ok) {
-    throw new Error(`Failed to fetch simulation ${simulationId}: ${response.status} ${response.statusText}`);
+    throw new Error(
+      `Failed to fetch simulation ${simulationId}: ${response.status} ${response.statusText}`
+    );
   }
 
   let json;
@@ -41,15 +43,15 @@ export async function createSimulation(
 ): Promise<{ result: { simulation_id: string } }> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
-  console.log("Creating simulation with data:", data); // Debug log
+  console.log('Creating simulation with data:', data); // Debug log
 
   const response = await fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      Accept: 'application/json',
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(data),
   });
 
   if (!response.ok) {
@@ -70,7 +72,7 @@ export async function createSimulation(
   // Transform response to match existing interface
   return {
     result: {
-      simulation_id: String(json.result.id)
-    }
+      simulation_id: String(json.result.id),
+    },
   };
 }

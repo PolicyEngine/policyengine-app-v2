@@ -112,6 +112,7 @@ const metadataSlice = createSlice({
 export const { setCurrentCountry, clearMetadata } = metadataSlice.actions;
 
 // Selectors
-export const selectCurrentCountry = (state: { metadata: MetadataState }) => state.metadata.currentCountry;
+export const selectCurrentCountry = (state: { metadata: MetadataState }) =>
+  state.metadata.currentCountry;
 
 export default metadataSlice.reducer;

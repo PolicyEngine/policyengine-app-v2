@@ -1,22 +1,22 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSimulation, fetchSimulationById } from '@/api/simulation';
 import { BASE_URL } from '@/constants';
 import {
-  TEST_COUNTRIES,
+  ERROR_MESSAGES,
   HTTP_STATUS,
-  SIMULATION_IDS,
+  mockCreateSimulationErrorResponse,
+  mockCreateSimulationSuccessResponse,
+  mockErrorResponse,
+  mockFetchSimulationNotFoundResponse,
+  mockFetchSimulationSuccessResponse,
+  mockNonJsonResponse,
+  mockSimulationMetadata,
   mockSimulationPayload,
   mockSimulationPayloadGeography,
   mockSimulationPayloadMinimal,
-  mockSimulationMetadata,
-  mockCreateSimulationSuccessResponse,
-  mockCreateSimulationErrorResponse,
-  mockFetchSimulationSuccessResponse,
-  mockFetchSimulationNotFoundResponse,
   mockSuccessResponse,
-  mockErrorResponse,
-  mockNonJsonResponse,
-  ERROR_MESSAGES,
+  SIMULATION_IDS,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/api/simulationMocks';
 
 // Mock fetch globally
@@ -38,17 +38,14 @@ describe('createSimulation', () => {
     const result = await createSimulation(TEST_COUNTRIES.US, mockSimulationPayload);
 
     // Then
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(mockSimulationPayload),
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(mockSimulationPayload),
+    });
     expect(result).toEqual({
       result: {
         simulation_id: String(mockCreateSimulationSuccessResponse.result.id),
@@ -73,17 +70,14 @@ describe('createSimulation', () => {
     const result = await createSimulation(TEST_COUNTRIES.US, mockSimulationPayloadGeography);
 
     // Then
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(mockSimulationPayloadGeography),
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(mockSimulationPayloadGeography),
+    });
     expect(result).toEqual({
       result: {
         simulation_id: String(geographyResponse.result.id),
@@ -108,17 +102,14 @@ describe('createSimulation', () => {
     const result = await createSimulation(TEST_COUNTRIES.US, mockSimulationPayloadMinimal);
 
     // Then
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify(mockSimulationPayloadMinimal),
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify(mockSimulationPayloadMinimal),
+    });
     expect(result).toEqual({
       result: {
         simulation_id: String(minimalResponse.result.id),
@@ -186,9 +177,7 @@ describe('createSimulation', () => {
   test('given API returns error status then throws error with message', async () => {
     // Given
     const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce(
-      mockSuccessResponse(mockCreateSimulationErrorResponse) as any
-    );
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(mockCreateSimulationErrorResponse) as any);
 
     // When/Then
     await expect(createSimulation(TEST_COUNTRIES.US, mockSimulationPayload)).rejects.toThrow(
@@ -233,9 +222,7 @@ describe('fetchSimulationById', () => {
   test('given valid simulation ID then fetches simulation successfully', async () => {
     // Given
     const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce(
-      mockSuccessResponse(mockFetchSimulationSuccessResponse) as any
-    );
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(mockFetchSimulationSuccessResponse) as any);
 
     // When
     const result = await fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.VALID);
@@ -257,9 +244,7 @@ describe('fetchSimulationById', () => {
   test('given different country ID then uses correct endpoint', async () => {
     // Given
     const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce(
-      mockSuccessResponse(mockFetchSimulationSuccessResponse) as any
-    );
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(mockFetchSimulationSuccessResponse) as any);
 
     // When
     await fetchSimulationById(TEST_COUNTRIES.UK, SIMULATION_IDS.VALID);
@@ -274,9 +259,7 @@ describe('fetchSimulationById', () => {
   test('given non-existent simulation ID then throws not found error', async () => {
     // Given
     const mockFetch = vi.mocked(global.fetch);
-    mockFetch.mockResolvedValueOnce(
-      mockErrorResponse(HTTP_STATUS.NOT_FOUND, 'Not Found') as any
-    );
+    mockFetch.mockResolvedValueOnce(mockErrorResponse(HTTP_STATUS.NOT_FOUND, 'Not Found') as any);
 
     // When/Then
     await expect(

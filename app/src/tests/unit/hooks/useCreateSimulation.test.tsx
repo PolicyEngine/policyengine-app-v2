@@ -8,10 +8,10 @@ import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCreateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
 import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import {
-  SIMULATION_IDS,
-  TEST_COUNTRIES,
   mockSimulationPayload,
   mockSimulationPayloadGeography,
+  SIMULATION_IDS,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/api/simulationMocks';
 import {
   CONSOLE_MESSAGES,
@@ -36,7 +36,7 @@ vi.mock('@/hooks/useUserSimulationAssociations', () => ({
 }));
 
 vi.mock('@/reducers/metadataReducer', async (importOriginal) => {
-  const actual = await importOriginal() as any;
+  const actual = (await importOriginal()) as any;
   return {
     ...actual,
     selectCurrentCountry: vi.fn(),
@@ -129,7 +129,10 @@ describe('useCreateSimulation', () => {
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: QUERY_KEY_PATTERNS.SIMULATION_ALL,
       });
-      expect(consoleSpies.logSpy).toHaveBeenCalledWith(CONSOLE_MESSAGES.LABEL_LOG, TEST_LABELS.SIMULATION);
+      expect(consoleSpies.logSpy).toHaveBeenCalledWith(
+        CONSOLE_MESSAGES.LABEL_LOG,
+        TEST_LABELS.SIMULATION
+      );
     });
 
     test('given geography payload when createSimulation called then creates geography simulation', async () => {
@@ -140,7 +143,10 @@ describe('useCreateSimulation', () => {
       await result.current.createSimulation(mockSimulationPayloadGeography);
 
       // Then
-      expect(createSimulation).toHaveBeenCalledWith(TEST_COUNTRIES.US, mockSimulationPayloadGeography);
+      expect(createSimulation).toHaveBeenCalledWith(
+        TEST_COUNTRIES.US,
+        mockSimulationPayloadGeography
+      );
       expect(mockCreateSimulationAssociationMutateAsync).toHaveBeenCalled();
     });
 
@@ -190,7 +196,7 @@ describe('useCreateSimulation', () => {
       );
 
       const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), {
-        wrapper: ukWrapper
+        wrapper: ukWrapper,
       });
 
       // When
@@ -211,7 +217,7 @@ describe('useCreateSimulation', () => {
       );
 
       const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), {
-        wrapper: emptyWrapper
+        wrapper: emptyWrapper,
       });
 
       // When

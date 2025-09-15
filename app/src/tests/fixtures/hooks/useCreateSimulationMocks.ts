@@ -66,7 +66,7 @@ export const mockCreateAssociationResponse = {
 
 // Response without simulation ID
 export const mockResponseWithoutId = {
-  result: {}
+  result: {},
 };
 
 // ============= STORE HELPERS =============
