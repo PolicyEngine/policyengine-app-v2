@@ -3,63 +3,6 @@ import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
 
-// The required API endpoint to fetch a simulation by ID
-// doesn't exist yet. The code below will be used once the endpoint is created.
-/*
-export async function fetchSimulationById(
-  country: string,
-  simulationId: string
-): Promise<SimulationMetadata> {
-  const url = `${BASE_URL}/${country}/simulation/${simulationId}`;
-
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch simulation ${simulationId}`);
-  }
-
-  const json = await res.json();
-
-  return json.result;
-}
-*/
-
-// The required API endpoint to create a simulation doesn't
-// exist yet. The code below will be used once the endpoint is created.
-/*
-export async function createSimulation(
-  data: SimulationCreationPayload
-): Promise<{ result: { simulation_id: string } }> {
-  const url = `${BASE_URL}/us/simulation`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to create simulation');
-  }
-
-  return res.json();
-}
-*/
-
-// TODO: This needs fixing once we have a simulation endpoint on API.
-const mockApiVersion = 'mock-api-version';
-const mockPopulationId = '55453';
-const mockPolicyId = '14';
-
-// Store created simulations to return proper data when fetched
-const mockSimulationStore = new Map<string, SimulationMetadata>();
-
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
   simulationId: string
