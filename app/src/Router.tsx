@@ -6,6 +6,7 @@ import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import SimulationsPage from './pages/Simulations.page';
+import LearnAiMlPage from './pages/Learn-ai-ml.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -120,6 +121,10 @@ const router = createBrowserRouter(
         {
           path: 'support',
           element: <div>Support page</div>,
+        },
+        {
+          path: 'learn-ai-ml',
+          element: <LearnAiMlPage />,
         },
       ],
     },
