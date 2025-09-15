@@ -4,4 +4,5 @@ export type { HouseholdCreationPayload } from './HouseholdCreationPayload';
 export type { ReportCreationPayload } from './ReportCreationPayload';
 export type { ReportSetOutputPayload } from './ReportSetOutputPayload';
 export type { UserPolicyCreationPayload } from './UserPolicyCreationPayload';
+export type { UserReportCreationPayload } from './UserReportCreationPayload';
 export type { UserSimulationCreationPayload } from './UserSimulationCreationPayload';
