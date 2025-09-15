@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
+import { vi } from 'vitest';
 import { UserReport } from '@/types/ingredients/UserReport';
 
 // Test constants

@@ -18,12 +18,8 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
   const sim1Id = reportState.simulationIds[0];
   const sim2Id = reportState.simulationIds[1];
 
-  const simulation1 = sim1Id
-    ? simulations.find((s) => s.id === sim1Id)
-    : null;
-  const simulation2 = sim2Id
-    ? simulations.find((s) => s.id === sim2Id)
-    : null;
+  const simulation1 = sim1Id ? simulations.find((s) => s.id === sim1Id) : null;
+  const simulation2 = sim2Id ? simulations.find((s) => s.id === sim2Id) : null;
 
   console.log('Report label: ', reportState.label);
   const { createReport, isPending } = useCreateReport(reportState.label || undefined);
@@ -37,8 +33,9 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
       apiVersion: reportState.apiVersion,
     };
 
-    const serializedReportCreationPayload: ReportCreationPayload =
-      ReportAdapter.toCreationPayload(reportData as Report);
+    const serializedReportCreationPayload: ReportCreationPayload = ReportAdapter.toCreationPayload(
+      reportData as Report
+    );
 
     console.log('Submitting report:', serializedReportCreationPayload);
 
@@ -65,13 +62,17 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
       title: 'First Simulation',
       description: simulation1?.label || `Simulation #${sim1Id}`,
       isFulfilled: !!simulation1,
-      badge: simulation1 ? `Policy #${simulation1.policyId} • Population #${simulation1.populationId}` : undefined,
+      badge: simulation1
+        ? `Policy #${simulation1.policyId} • Population #${simulation1.populationId}`
+        : undefined,
     },
     {
       title: 'Second Simulation',
       description: simulation2?.label || `Simulation #${sim2Id}`,
       isFulfilled: !!simulation2,
-      badge: simulation2 ? `Policy #${simulation2.policyId} • Population #${simulation2.populationId}` : undefined,
+      badge: simulation2
+        ? `Policy #${simulation2.policyId} • Population #${simulation2.populationId}`
+        : undefined,
     },
   ];
 

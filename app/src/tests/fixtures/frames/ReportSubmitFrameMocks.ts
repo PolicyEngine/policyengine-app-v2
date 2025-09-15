@@ -1,7 +1,7 @@
 import { vi } from 'vitest';
+import { FlowFrame } from '@/types/flow';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { FlowFrame } from '@/types/flow';
 
 // Mock simulations
 export const mockSimulation1: Simulation = {
@@ -80,7 +80,6 @@ export const mockCreateReport = vi.fn();
 export const mockResetIngredient = vi.fn();
 export const mockOnNavigate = vi.fn();
 export const mockOnReturn = vi.fn();
-
 
 // Mock flow config
 export const mockFlowConfig: FlowFrame = {

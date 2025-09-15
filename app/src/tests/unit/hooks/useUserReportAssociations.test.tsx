@@ -120,7 +120,6 @@ describe('useUserReportAssociations hooks', () => {
 
       expect(result.current.error).toEqual(error);
     });
-
   });
 
   describe('useReportAssociation', () => {
