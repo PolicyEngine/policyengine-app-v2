@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { createSimulation } from '@/api/simulation';
+import { createSimulation, fetchSimulationById } from '@/api/simulation';
 import { BASE_URL } from '@/constants';
 import {
   TEST_COUNTRIES,
@@ -8,8 +8,11 @@ import {
   mockSimulationPayload,
   mockSimulationPayloadGeography,
   mockSimulationPayloadMinimal,
+  mockSimulationMetadata,
   mockCreateSimulationSuccessResponse,
   mockCreateSimulationErrorResponse,
+  mockFetchSimulationSuccessResponse,
+  mockFetchSimulationNotFoundResponse,
   mockSuccessResponse,
   mockErrorResponse,
   mockNonJsonResponse,
@@ -219,5 +222,154 @@ describe('createSimulation', () => {
     await expect(createSimulation(TEST_COUNTRIES.US, mockSimulationPayload)).rejects.toThrow(
       networkError
     );
+  });
+});
+
+describe('fetchSimulationById', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('given valid simulation ID then fetches simulation successfully', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockSuccessResponse(mockFetchSimulationSuccessResponse) as any
+    );
+
+    // When
+    const result = await fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.VALID);
+
+    // Then
+    expect(mockFetch).toHaveBeenCalledWith(
+      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation/${SIMULATION_IDS.VALID}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+        },
+      }
+    );
+    expect(result).toEqual(mockSimulationMetadata);
+  });
+
+  test('given different country ID then uses correct endpoint', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockSuccessResponse(mockFetchSimulationSuccessResponse) as any
+    );
+
+    // When
+    await fetchSimulationById(TEST_COUNTRIES.UK, SIMULATION_IDS.VALID);
+
+    // Then
+    expect(mockFetch).toHaveBeenCalledWith(
+      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation/${SIMULATION_IDS.VALID}`,
+      expect.any(Object)
+    );
+  });
+
+  test('given non-existent simulation ID then throws not found error', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockErrorResponse(HTTP_STATUS.NOT_FOUND, 'Not Found') as any
+    );
+
+    // When/Then
+    await expect(
+      fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.NON_EXISTENT)
+    ).rejects.toThrow(
+      `Failed to fetch simulation ${SIMULATION_IDS.NON_EXISTENT}: ${HTTP_STATUS.NOT_FOUND} Not Found`
+    );
+  });
+
+  test('given HTTP error response then throws error with status', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockErrorResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error') as any
+    );
+
+    // When/Then
+    await expect(fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
+      `Failed to fetch simulation ${SIMULATION_IDS.VALID}: ${HTTP_STATUS.INTERNAL_SERVER_ERROR} Internal Server Error`
+    );
+  });
+
+  test('given non-JSON response then throws parse error', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(mockNonJsonResponse() as any);
+
+    // When/Then
+    await expect(fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
+      /Failed to parse simulation response/
+    );
+  });
+
+  test('given API returns error status then throws error with message', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockSuccessResponse(mockFetchSimulationNotFoundResponse) as any
+    );
+
+    // When/Then
+    await expect(
+      fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.NON_EXISTENT)
+    ).rejects.toThrow(mockFetchSimulationNotFoundResponse.message);
+  });
+
+  test('given API returns error status without message then throws generic error', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    const responseWithoutMessage = {
+      status: 'error',
+      message: null,
+      result: null,
+    };
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(responseWithoutMessage) as any);
+
+    // When/Then
+    await expect(fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
+      `Failed to fetch simulation ${SIMULATION_IDS.VALID}`
+    );
+  });
+
+  test('given network failure then throws error', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    const networkError = new Error('Network error');
+    mockFetch.mockRejectedValueOnce(networkError);
+
+    // When/Then
+    await expect(fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
+      networkError
+    );
+  });
+
+  test('given geography type simulation then returns correct metadata', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    const geographyMetadata = {
+      ...mockSimulationMetadata,
+      population_type: 'geography' as const,
+      population_id: 'california',
+    };
+    const geographyResponse = {
+      ...mockFetchSimulationSuccessResponse,
+      result: geographyMetadata,
+    };
+    mockFetch.mockResolvedValueOnce(mockSuccessResponse(geographyResponse) as any);
+
+    // When
+    const result = await fetchSimulationById(TEST_COUNTRIES.US, SIMULATION_IDS.VALID);
+
+    // Then
+    expect(result).toEqual(geographyMetadata);
+    expect(result.population_type).toBe('geography');
   });
 });

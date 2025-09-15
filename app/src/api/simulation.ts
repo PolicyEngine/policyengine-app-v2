@@ -64,26 +64,32 @@ export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
   simulationId: string
 ): Promise<SimulationMetadata> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Check if we have stored data for this simulation
-      const storedSimulation = mockSimulationStore.get(simulationId);
-      if (storedSimulation) {
-        resolve(storedSimulation);
-      } else {
-        // Fallback for simulations not in our store (legacy or external)
-        // TODO: Remove this once we have the necessary API endpoints
-        resolve({
-          id: parseInt(simulationId, 10),
-          country_id: countryId,
-          api_version: mockApiVersion,
-          population_id: mockPopulationId,
-          population_type: 'household' as const,
-          policy_id: mockPolicyId,
-        });
-      }
-    }, 1000); // Simulate network delay
+  const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    }
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch simulation ${simulationId}: ${response.status} ${response.statusText}`);
+  }
+
+  let json;
+  try {
+    json = await response.json();
+  } catch (error) {
+    throw new Error(`Failed to parse simulation response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to fetch simulation ${simulationId}`);
+  }
+
+  return json.result;
 }
 
 export async function createSimulation(
