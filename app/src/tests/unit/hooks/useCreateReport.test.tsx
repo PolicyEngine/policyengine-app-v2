@@ -15,7 +15,6 @@ import {
   setupConsoleMocks,
   TEST_COUNTRY_ID,
   TEST_LABEL,
-  TEST_REPORT_ID,
   TEST_REPORT_ID_STRING,
   TEST_USER_ID,
 } from '@/tests/fixtures/hooks/reportHooksMocks';
