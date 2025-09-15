@@ -32,6 +32,7 @@ export default function SimulationSubmitFrame({
   const population = useSelector((state: RootState) => state.population);
 
   console.log('Simulation label: ', simulation?.label);
+  console.log('Simulation in SimulationSubmitFrame: ', simulation);
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
   const { resetIngredient } = useIngredientReset();
 
@@ -40,6 +41,7 @@ export default function SimulationSubmitFrame({
     const simulationData: Partial<Simulation> = {
       populationId: simulation?.populationId || undefined,
       policyId: simulation?.policyId || undefined,
+      populationType: simulation?.populationType || undefined,
     };
 
     const serializedSimulationCreationPayload: SimulationCreationPayload =

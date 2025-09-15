@@ -3,6 +3,6 @@
  */
 export interface SimulationCreationPayload {
   population_id: string;
-  population_type?: 'household' | 'geography';
-  policy_id?: string;
+  population_type: 'household' | 'geography';
+  policy_id: number;
 }
