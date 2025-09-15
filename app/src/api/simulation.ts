@@ -1,3 +1,4 @@
+import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
@@ -85,28 +86,40 @@ export async function fetchSimulationById(
   });
 }
 
-// TODO: This needs to be replaced by the API simulation endpoint.
 export async function createSimulation(
+  countryId: (typeof countryIds)[number],
   data: SimulationCreationPayload
 ): Promise<{ result: { simulation_id: string } }> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      // Generate a unique simulation ID
-      const simulationId = `${Date.now()}`;
+  const url = `${BASE_URL}/${countryId}/simulation`;
 
-      // Store the simulation data for later retrieval
-      const simulationMetadata: SimulationMetadata = {
-        id: parseInt(simulationId, 10),
-        country_id: 'us', // Default to US for now
-        api_version: mockApiVersion,
-        population_id: data.population_id || mockPopulationId,
-        population_type: data.population_type || 'household', // Use provided type or default to household
-        policy_id: data.policy_id || mockPolicyId,
-      };
-
-      mockSimulationStore.set(simulationId, simulationMetadata);
-
-      resolve({ result: { simulation_id: simulationId } });
-    }, 1000); // Simulate network delay
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify(data)
   });
+
+  if (!response.ok) {
+    throw new Error(`Failed to create simulation: ${response.status} ${response.statusText}`);
+  }
+
+  let json;
+  try {
+    json = await response.json();
+  } catch (error) {
+    throw new Error(`Failed to parse simulation response: ${error}`);
+  }
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || 'Failed to create simulation');
+  }
+
+  // Transform response to match existing interface
+  return {
+    result: {
+      simulation_id: String(json.result.id)
+    }
+  };
 }
