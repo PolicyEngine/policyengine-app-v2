@@ -24,6 +24,14 @@ export const simulationAssociationKeys = {
     [...simulationAssociationKeys.all, 'specific', userId, simulationId] as const,
 };
 
+export const reportAssociationKeys = {
+  all: ['report-associations'] as const,
+  byUser: (userId: string) => [...reportAssociationKeys.all, 'user_id', userId] as const,
+  byReport: (reportId: string) => [...reportAssociationKeys.all, 'report_id', reportId] as const,
+  specific: (userId: string, reportId: string) =>
+    [...reportAssociationKeys.all, 'specific', userId, reportId] as const,
+};
+
 // Keep your existing keys unchanged
 export const policyKeys = {
   all: ['policies'] as const,
@@ -50,4 +58,10 @@ export const simulationKeys = {
   all: ['simulations'] as const,
   byId: (simulationId: string) => [...simulationKeys.all, 'simulation_id', simulationId] as const,
   byUser: (userId: string) => [...simulationKeys.all, 'user_id', userId] as const,
+};
+
+export const reportKeys = {
+  all: ['reports'] as const,
+  byId: (reportId: string) => [...reportKeys.all, 'report_id', reportId] as const,
+  byUser: (userId: string) => [...reportKeys.all, 'user_id', userId] as const,
 };
