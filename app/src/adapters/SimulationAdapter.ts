@@ -42,10 +42,18 @@ export class SimulationAdapter {
       throw new Error('Simulation must have a populationId');
     }
 
+    if (!simulation.policyId) {
+      throw new Error('Simulation must have a policyId');
+    }
+
+    if (!simulation.populationType) {
+      throw new Error('Simulation must have a populationType');
+    }
+
     return {
       population_id: simulation.populationId,
       population_type: simulation.populationType,
-      policy_id: simulation.policyId,
+      policy_id: parseInt(simulation.policyId, 10),
     };
   }
 }

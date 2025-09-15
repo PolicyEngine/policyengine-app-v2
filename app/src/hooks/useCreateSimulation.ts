@@ -1,16 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { createSimulation } from '@/api/simulation';
 import { MOCK_USER_ID } from '@/constants';
+import { countryIds } from '@/libs/countries';
 import { simulationKeys } from '@/libs/queryKeys';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
+import { SimulationCreationPayload } from '@/types/payloads';
 import { useCreateSimulationAssociation } from './useUserSimulationAssociations';
 
 export function useCreateSimulation(simulationLabel?: string) {
   const queryClient = useQueryClient();
+  const country = (useSelector(selectCurrentCountry) || 'us') as (typeof countryIds)[number];
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateSimulationAssociation();
 
   const mutation = useMutation({
-    mutationFn: createSimulation,
+    mutationFn: (data: SimulationCreationPayload) => createSimulation(country, data),
     onSuccess: async (data) => {
       try {
         queryClient.invalidateQueries({ queryKey: simulationKeys.all });

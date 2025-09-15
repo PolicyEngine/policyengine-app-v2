@@ -2,7 +2,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { fetchHouseholdById } from '@/api/household';
-import { RootState } from '@/store';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
@@ -155,7 +155,7 @@ export function isHouseholdMetadataWithAssociation(
 
 export const useUserHouseholds = (userId: string) => {
   // Get country from metadata state, fallback to 'us' if not available
-  const country = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  const country = useSelector(selectCurrentCountry) || 'us';
 
   // First, get the associations
   const {

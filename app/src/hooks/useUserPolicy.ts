@@ -2,7 +2,7 @@
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { fetchPolicyById } from '@/api/policy';
-import { RootState } from '@/store';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -143,7 +143,7 @@ export function isPolicyMetadataWithAssociation(
 
 export const useUserPolicies = (userId: string) => {
   // Get country from metadata state, fallback to 'us' if not available
-  const country = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  const country = useSelector(selectCurrentCountry) || 'us';
 
   // First, get the associations
   const {
