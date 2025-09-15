@@ -11,10 +11,9 @@ export function CardsWithHeader({ containerTitle, cards }: CardsContainerProps) 
   return (
     <Box
       style={{
-        paddingLeft: spacing.container.xl,
-        paddingRight: spacing.container.xl,
         paddingTop: spacing['2xl'],
         paddingBottom: spacing['2xl'],
+        borderBottom: `1px solid ${colors.border.dark}`,
       }}
     >
       <Title
