@@ -1,6 +1,7 @@
 import { vi } from 'vitest';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
+import { FlowFrame } from '@/types/flow';
 
 // Mock simulations
 export const mockSimulation1: Simulation = {
@@ -31,8 +32,8 @@ export const mockSimulation2NoLabel: Simulation = {
   label: null,
 };
 
-// Mock report state
-export const mockReportWithLabel: Partial<Report> = {
+// Mock report state - must be complete Report, not Partial
+export const mockReportWithLabel: Report = {
   reportId: '',
   label: 'My Test Report',
   countryId: 'us' as const,
@@ -44,13 +45,13 @@ export const mockReportWithLabel: Partial<Report> = {
   updatedAt: new Date().toISOString(),
 };
 
-export const mockReportNoLabel: Partial<Report> = {
+export const mockReportNoLabel: Report = {
   ...mockReportWithLabel,
   label: null,
 };
 
 // Mock Redux state
-export const createMockReportState = (report: Partial<Report> = mockReportWithLabel) => ({
+export const createMockReportState = (report: Report = mockReportWithLabel) => ({
   report,
   simulations: {
     ids: ['sim-1', 'sim-2'],
@@ -81,11 +82,19 @@ export const mockOnNavigate = vi.fn();
 export const mockOnReturn = vi.fn();
 
 
+// Mock flow config
+export const mockFlowConfig: FlowFrame = {
+  component: 'ReportSubmitFrame',
+  on: {
+    submit: '__return__',
+  },
+};
+
 // Default flow props
 export const defaultFlowProps = {
   onNavigate: mockOnNavigate,
   onReturn: mockOnReturn,
-  flowConfig: {},
+  flowConfig: mockFlowConfig,
   isInSubflow: false,
   flowDepth: 0,
 };
