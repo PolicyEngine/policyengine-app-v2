@@ -213,7 +213,7 @@ describe('ReportCreationFrame', () => {
     // Then - report should be cleared
     expect(reportActions.clearReport).toHaveBeenCalled();
     state = store.getState();
-    expect(state.report.label).toBeUndefined();
+    expect(state.report.label).toBeNull();
     expect(state.report.simulationIds).toHaveLength(0);
   });
 });

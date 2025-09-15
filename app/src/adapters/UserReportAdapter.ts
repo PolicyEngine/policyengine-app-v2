@@ -1,36 +1,36 @@
 import { UserReport } from '@/types/ingredients/UserReport';
+import { UserReportCreationPayload } from '@/types/payloads';
 
 /**
  * Adapter for converting between UserReport and API formats
- * NOTE: This is a template implementation - modify as the UserReport structure evolves
  */
 export class UserReportAdapter {
   /**
-   * Converts UserReport association from API/storage to UserReport type
-   * NOTE: This is a placeholder - actual implementation will depend on API structure
+   * Convert UserReport to API creation payload
    */
-  static fromAssociation(association: any): UserReport {
+  static toCreationPayload(
+    userReport: Omit<UserReport, 'id' | 'createdAt'>
+  ): UserReportCreationPayload {
     return {
-      id: association.id || association.reportId,
-      userId: association.userId,
-      reportId: association.reportId,
-      label: association.label,
-      createdAt: association.createdAt,
-      updatedAt: association.updatedAt,
-      isCreated: true,
+      userId: String(userReport.userId),
+      reportId: String(userReport.reportId),
+      label: userReport.label,
+      updatedAt: userReport.updatedAt || new Date().toISOString(),
     };
   }
 
   /**
-   * Converts UserReport to format for creating/updating association
-   * NOTE: This is a placeholder - actual implementation will depend on API structure
+   * Convert API response to UserReport
    */
-  static toAssociation(userReport: UserReport): any {
+  static fromApiResponse(apiData: any): UserReport {
     return {
-      userId: userReport.userId.toString(),
-      reportId: userReport.reportId.toString(),
-      label: userReport.label,
-      updatedAt: new Date().toISOString(),
+      id: apiData.reportId,
+      userId: apiData.userId,
+      reportId: apiData.reportId,
+      label: apiData.label,
+      createdAt: apiData.createdAt,
+      updatedAt: apiData.updatedAt,
+      isCreated: true,
     };
   }
 }

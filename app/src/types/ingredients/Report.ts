@@ -9,7 +9,7 @@ export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK
  */
 export interface Report {
   reportId?: string; // Optional - populated after creation like Policy
-  label?: string; // Optional - user-defined name for the report
+  label?: string | null; // Optional - user-defined name for the report
   countryId: (typeof countryIds)[number];
   apiVersion: string | null;
   simulationIds: string[];

@@ -14,7 +14,7 @@ export const ReportCreationFlow: Flow = {
       on: {
         setupSimulation1: 'ReportSelectSimulationFrame',
         setupSimulation2: 'ReportSelectSimulationFrame',
-        next: '__return__', // Placeholder - will be updated later
+        next: 'ReportSubmitFrame',
       },
     },
     ReportSelectSimulationFrame: {
@@ -31,6 +31,12 @@ export const ReportCreationFlow: Flow = {
       component: 'ReportSelectExistingSimulationFrame',
       on: {
         next: 'ReportSetupFrame',
+      },
+    },
+    ReportSubmitFrame: {
+      component: 'ReportSubmitFrame',
+      on: {
+        submit: '__return__', // Returns to parent flow after successful submission
       },
     },
   },
