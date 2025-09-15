@@ -27,18 +27,19 @@ export const SIMULATION_IDS = {
 export const mockSimulationPayload: SimulationCreationPayload = {
   population_id: 'household-123',
   population_type: 'household',
-  policy_id: 'policy-456',
+  policy_id: 456,
 };
 
 export const mockSimulationPayloadGeography: SimulationCreationPayload = {
   population_id: 'california',
   population_type: 'geography',
-  policy_id: 'policy-789',
+  policy_id: 789,
 };
 
 export const mockSimulationPayloadMinimal: SimulationCreationPayload = {
   population_id: 'household-minimal',
   population_type: 'household',
+  policy_id: 1,
 };
 
 // API response structures
@@ -48,7 +49,7 @@ export const mockSimulationMetadata: SimulationMetadata = {
   api_version: '1.0.0',
   population_id: mockSimulationPayload.population_id,
   population_type: mockSimulationPayload.population_type!,
-  policy_id: mockSimulationPayload.policy_id!,
+  policy_id: mockSimulationPayload.policy_id.toString(),
 };
 
 export const mockCreateSimulationSuccessResponse = {
