@@ -16,10 +16,8 @@ import {
 import {
   CONSOLE_MESSAGES,
   createMockStoreWithCountry,
-  createTestStore,
   ERROR_MESSAGES,
   mockCreateSimulation,
-  mockCreateSimulationApiResponse,
   mockCreateSimulationAssociationMutateAsync,
   mockResponseWithoutId,
   QUERY_KEY_PATTERNS,

@@ -44,7 +44,7 @@ export const mockSimulationPayloadMinimal: SimulationCreationPayload = {
 
 // API response structures
 export const mockSimulationMetadata: SimulationMetadata = {
-  id: parseInt(SIMULATION_IDS.VALID),
+  id: parseInt(SIMULATION_IDS.VALID, 10),
   country_id: TEST_COUNTRIES.US,
   api_version: '1.0.0',
   population_id: mockSimulationPayload.population_id,
@@ -56,7 +56,7 @@ export const mockCreateSimulationSuccessResponse = {
   status: 'ok',
   message: 'Simulation created successfully',
   result: {
-    id: parseInt(SIMULATION_IDS.NEW),
+    id: parseInt(SIMULATION_IDS.NEW, 10),
     country_id: TEST_COUNTRIES.US,
     population_id: mockSimulationPayload.population_id,
     population_type: mockSimulationPayload.population_type,
