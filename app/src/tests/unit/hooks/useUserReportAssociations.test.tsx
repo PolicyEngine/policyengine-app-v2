@@ -1,5 +1,5 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { SessionStorageReportStore } from '@/api/reportAssociation';
@@ -10,10 +10,12 @@ import {
   useUserReportStore,
 } from '@/hooks/useUserReportAssociations';
 import {
+  createMockQueryClient,
+  ERROR_MESSAGES,
   mockUserReport,
   mockUserReportList,
-  TEST_USER_ID,
   TEST_REPORT_ID,
+  TEST_USER_ID,
 } from '@/tests/fixtures/api/reportAssociationMocks';
 
 // Mock the stores first
@@ -52,17 +54,12 @@ vi.mock('@/libs/queryKeys', () => ({
 }));
 
 describe('useUserReportAssociations hooks', () => {
-  let queryClient: QueryClient;
+  let queryClient: ReturnType<typeof createMockQueryClient>;
   let mockStore: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
+    queryClient = createMockQueryClient();
 
     // Get the mock store instance
     mockStore = (SessionStorageReportStore as any)();
@@ -110,7 +107,7 @@ describe('useUserReportAssociations hooks', () => {
     test('given fetch error then returns error state', async () => {
       // Given
       const userId = TEST_USER_ID;
-      const error = new Error('Failed to fetch reports');
+      const error = new Error(ERROR_MESSAGES.FETCH_REPORTS_FAILED);
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
@@ -165,7 +162,7 @@ describe('useUserReportAssociations hooks', () => {
       // Given
       const userId = TEST_USER_ID;
       const reportId = TEST_REPORT_ID;
-      const error = new Error('Failed to fetch report');
+      const error = new Error(ERROR_MESSAGES.FETCH_REPORT_FAILED);
       mockStore.findById.mockRejectedValue(error);
 
       // When
@@ -213,7 +210,7 @@ describe('useUserReportAssociations hooks', () => {
         label: 'New Report',
         isCreated: true,
       };
-      const error = new Error('Failed to create association');
+      const error = new Error(ERROR_MESSAGES.CREATE_ASSOCIATION_FAILED);
       mockStore.create.mockRejectedValue(error);
 
       // When
@@ -221,7 +218,7 @@ describe('useUserReportAssociations hooks', () => {
 
       // Then
       await expect(result.current.mutateAsync(reportData)).rejects.toThrow(
-        'Failed to create association'
+        ERROR_MESSAGES.CREATE_ASSOCIATION_FAILED
       );
     });
 

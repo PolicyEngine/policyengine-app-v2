@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+import { QueryClient } from '@tanstack/react-query';
 import { UserReport } from '@/types/ingredients/UserReport';
 
 // Test constants
@@ -69,3 +71,29 @@ export const mockCreationPayload = {
   label: TEST_LABEL,
   updatedAt: TEST_TIMESTAMP,
 };
+
+// Helper function to create mock store
+export const createMockReportStore = () => ({
+  create: vi.fn(),
+  findByUser: vi.fn(),
+  findById: vi.fn(),
+});
+
+// Query client factory
+export const createMockQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+// Error messages
+export const ERROR_MESSAGES = {
+  CREATE_ASSOCIATION_FAILED: 'Failed to create report association',
+  FETCH_ASSOCIATIONS_FAILED: 'Failed to fetch user associations',
+  FETCH_ASSOCIATION_FAILED: 'Failed to fetch association',
+  FETCH_REPORTS_FAILED: 'Failed to fetch reports',
+  FETCH_REPORT_FAILED: 'Failed to fetch report',
+  NETWORK_FAILURE: 'Network failure',
+} as const;
