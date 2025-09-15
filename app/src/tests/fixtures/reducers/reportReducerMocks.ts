@@ -200,6 +200,7 @@ export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
 // Initial state
 export const EXPECTED_INITIAL_STATE: Report = {
   reportId: '',
+  label: null,
   countryId: 'us',
   apiVersion: null,
   simulationIds: [],
@@ -212,6 +213,7 @@ export const EXPECTED_INITIAL_STATE: Report = {
 // Mock states for different scenarios
 export const MOCK_EMPTY_REPORT: Report = {
   reportId: '',
+  label: null,
   countryId: 'us',
   apiVersion: null,
   simulationIds: [],
@@ -223,6 +225,7 @@ export const MOCK_EMPTY_REPORT: Report = {
 
 export const MOCK_PENDING_REPORT: Report = {
   reportId: TEST_REPORT_ID_1,
+  label: null,
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: [TEST_SIMULATION_ID_1],
@@ -234,6 +237,7 @@ export const MOCK_PENDING_REPORT: Report = {
 
 export const MOCK_COMPLETE_REPORT: Report = {
   reportId: TEST_REPORT_ID_1,
+  label: 'Test Report',
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
@@ -245,6 +249,7 @@ export const MOCK_COMPLETE_REPORT: Report = {
 
 export const MOCK_ERROR_REPORT: Report = {
   reportId: TEST_REPORT_ID_2,
+  label: null,
   countryId: 'uk',
   apiVersion: 'v2',
   simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2, TEST_SIMULATION_ID_3],
@@ -257,6 +262,7 @@ export const MOCK_ERROR_REPORT: Report = {
 // Helper functions for creating test states
 export const createMockReportState = (overrides?: Partial<Report>): Report => ({
   reportId: TEST_REPORT_ID_1,
+  label: null,
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: [TEST_SIMULATION_ID_1],

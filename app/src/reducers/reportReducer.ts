@@ -3,6 +3,7 @@ import { Report, ReportOutput } from '@/types/ingredients/Report';
 
 const initialState: Report = {
   reportId: '',
+  label: null,
   countryId: 'us', // Default countryId, to be updated as needed
   simulationIds: [],
   apiVersion: null,
@@ -43,7 +44,7 @@ export const reportSlice = createSlice({
     // Clear the report
     clearReport: (state) => {
       state.reportId = '';
-      state.label = undefined;
+      state.label = null;
       state.simulationIds = [];
       state.status = 'pending';
       state.output = null;
@@ -53,7 +54,7 @@ export const reportSlice = createSlice({
     },
 
     // Update report label
-    updateLabel: (state, action: PayloadAction<string>) => {
+    updateLabel: (state, action: PayloadAction<string | null>) => {
       state.label = action.payload;
       state.updatedAt = new Date().toISOString();
     },

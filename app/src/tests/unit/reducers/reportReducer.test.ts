@@ -7,6 +7,7 @@ import reportReducer, {
   removeSimulationId,
   updateApiVersion,
   updateCountryId,
+  updateLabel,
   updateReportId,
   updateReportOutput,
   updateReportStatus,
@@ -153,6 +154,50 @@ describe('reportReducer', () => {
     });
   });
 
+  describe('updateLabel action', () => {
+    test('given new label then updates label', () => {
+      // Given
+      const initialState = createMockReportState({ label: null });
+      vi.advanceTimersByTime(1000);
+      const action = updateLabel('My Custom Report');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.label).toBe('My Custom Report');
+      expectTimestampsUpdated(state, initialState);
+    });
+
+    test('given null label then sets to null', () => {
+      // Given
+      const initialState = createMockReportState({ label: 'Old Label' });
+      vi.advanceTimersByTime(1000);
+      const action = updateLabel(null);
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.label).toBe(null);
+      expectTimestampsUpdated(state, initialState);
+    });
+
+    test('given empty string then updates to empty string', () => {
+      // Given
+      const initialState = createMockReportState({ label: 'Old Label' });
+      vi.advanceTimersByTime(1000);
+      const action = updateLabel('');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.label).toBe('');
+      expectTimestampsUpdated(state, initialState);
+    });
+  });
+
   describe('clearReport action', () => {
     test('given populated report then resets to initial state but preserves country and api version', () => {
       // Given
@@ -164,6 +209,7 @@ describe('reportReducer', () => {
 
       // Then
       expectReportId(state, '');
+      expect(state.label).toBe(null);
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');
       expectOutput(state, null);
