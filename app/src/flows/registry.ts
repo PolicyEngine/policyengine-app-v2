@@ -10,6 +10,7 @@ import ReportCreationFrame from '@/frames/report/ReportCreationFrame';
 import ReportSelectExistingSimulationFrame from '@/frames/report/ReportSelectExistingSimulationFrame';
 import ReportSelectSimulationFrame from '@/frames/report/ReportSelectSimulationFrame';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
+import ReportSubmitFrame from '@/frames/report/ReportSubmitFrame';
 import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
 import SimulationSelectExistingPolicyFrame from '@/frames/simulation/SimulationSelectExistingPolicyFrame';
 import SimulationSelectExistingPopulationFrame from '@/frames/simulation/SimulationSelectExistingPopulationFrame';
@@ -40,6 +41,7 @@ export const componentRegistry = {
   ReportSetupFrame,
   ReportSelectSimulationFrame,
   ReportSelectExistingSimulationFrame,
+  ReportSubmitFrame,
   SimulationCreationFrame,
   SimulationSetupFrame,
   SimulationSubmitFrame,
