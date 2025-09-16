@@ -6,6 +6,7 @@ import { PolicyViewFlow } from '@/flows/policyViewFlow';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { PopulationViewFlow } from '@/flows/populationViewFlow';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
+import { ReportViewFlow } from '@/flows/reportViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
 import { useFetchMetadata } from '@/hooks/useMetadata';
@@ -50,6 +51,9 @@ export default function HomePage() {
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(ReportCreationFlow))}>
         Execute Report Creation Flow (TEST)
+      </Button>
+      <Button variant="default" onClick={() => dispatch(setFlow(ReportViewFlow))}>
+        Show Report View
       </Button>
       <FlowContainer />
     </>

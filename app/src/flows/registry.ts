@@ -20,10 +20,12 @@ import SimulationSetupPopulationFrame from '@/frames/simulation/SimulationSetupP
 import SimulationSubmitFrame from '@/frames/simulation/SimulationSubmitFrame';
 import PoliciesPage from '@/pages/Policies.page';
 import PopulationsPage from '@/pages/Populations.page';
+import ReportsPage from '@/pages/Reports.page';
 import SimulationsPage from '@/pages/Simulations.page';
 import { PolicyCreationFlow } from './policyCreationFlow';
 import { PopulationCreationFlow } from './populationCreationFlow';
 import { ReportCreationFlow } from './reportCreationFlow';
+import { ReportViewFlow } from './reportViewFlow';
 import { SimulationCreationFlow } from './simulationCreationFlow';
 import { SimulationViewFlow } from './simulationViewFlow';
 
@@ -42,6 +44,7 @@ export const componentRegistry = {
   ReportSelectSimulationFrame,
   ReportSelectExistingSimulationFrame,
   ReportSubmitFrame,
+  ReportReadView: ReportsPage,
   SimulationCreationFrame,
   SimulationSetupFrame,
   SimulationSubmitFrame,
@@ -57,6 +60,7 @@ export const flowRegistry = {
   PolicyViewFlow,
   PopulationCreationFlow,
   ReportCreationFlow,
+  ReportViewFlow,
   SimulationCreationFlow,
   SimulationViewFlow,
 } as const;
