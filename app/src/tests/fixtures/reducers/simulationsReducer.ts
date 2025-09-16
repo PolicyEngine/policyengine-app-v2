@@ -1,9 +1,6 @@
 import { Simulation } from '@/types/ingredients/Simulation';
-import { FixedLengthSet } from '@/types/FixedLengthSet';
 
-// Test IDs
-export const TEST_TEMP_ID_1 = 'temp-1';
-export const TEST_TEMP_ID_2 = 'temp-2';
+// Test IDs (only for simulations that have been created via API)
 export const TEST_PERMANENT_ID_1 = 'sim-123';
 export const TEST_PERMANENT_ID_2 = 'sim-456';
 
@@ -46,26 +43,42 @@ export const mockEmptySimulation: Simulation = {
   isCreated: false,
 };
 
-// Initial state configurations
+// Mock simulations without IDs (not yet created via API)
+export const mockSimulationWithoutId1: Simulation = {
+  id: undefined,
+  populationId: TEST_HOUSEHOLD_ID,
+  populationType: 'household',
+  policyId: TEST_POLICY_ID_1,
+  label: TEST_LABEL_1,
+  isCreated: false,
+};
+
+export const mockSimulationWithoutId2: Simulation = {
+  id: undefined,
+  populationId: TEST_GEOGRAPHY_ID,
+  populationType: 'geography',
+  policyId: TEST_POLICY_ID_2,
+  label: TEST_LABEL_2,
+  isCreated: false,
+};
+
+// Initial state configurations - position-based storage
 export const emptyInitialState = {
-  entities: {},
-  ids: [null, null] as FixedLengthSet<string>,
-  activeId: null,
+  simulations: [null, null] as [Simulation | null, Simulation | null],
+  activePosition: null as 0 | 1 | null,
 };
 
 export const singleSimulationState = {
-  entities: {
-    [TEST_TEMP_ID_1]: mockSimulation1,
-  },
-  ids: [TEST_TEMP_ID_1, null] as FixedLengthSet<string>,
-  activeId: TEST_TEMP_ID_1,
+  simulations: [mockSimulationWithoutId1, null] as [Simulation | null, Simulation | null],
+  activePosition: 0 as 0 | 1 | null,
 };
 
 export const multipleSimulationsState = {
-  entities: {
-    [TEST_TEMP_ID_1]: mockSimulation1,
-    [TEST_TEMP_ID_2]: mockSimulation2,
-  },
-  ids: [TEST_TEMP_ID_1, TEST_TEMP_ID_2] as FixedLengthSet<string>,
-  activeId: TEST_TEMP_ID_1,
+  simulations: [mockSimulation1, mockSimulation2] as [Simulation | null, Simulation | null],
+  activePosition: 0 as 0 | 1 | null,
+};
+
+export const bothSimulationsWithoutIdState = {
+  simulations: [mockSimulationWithoutId1, mockSimulationWithoutId2] as [Simulation | null, Simulation | null],
+  activePosition: 0 as 0 | 1 | null,
 };
