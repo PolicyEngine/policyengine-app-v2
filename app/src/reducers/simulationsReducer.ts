@@ -147,4 +147,14 @@ export const selectSimulationById = (
   return null;
 };
 
+export const selectAllSimulations = (
+  state: { simulations: SimulationsState }
+): Simulation[] => {
+  const [sim1, sim2] = selectBothSimulations(state);
+  const simulations: Simulation[] = [];
+  if (sim1) simulations.push(sim1);
+  if (sim2) simulations.push(sim2);
+  return simulations;
+};
+
 export default simulationsSlice.reducer;

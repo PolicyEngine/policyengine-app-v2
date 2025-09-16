@@ -247,7 +247,7 @@ describe('ReportSelectExistingSimulationFrame', () => {
   });
 
   test('given 2 simulations (max capacity) then displays both', () => {
-    // Given - add 2 configured simulations (max capacity with FixedLengthSet)
+    // Given - add 2 configured simulations (max capacity)
     store.dispatch(
       simulationsActions.createSimulationAtPosition({
         position: 0,
