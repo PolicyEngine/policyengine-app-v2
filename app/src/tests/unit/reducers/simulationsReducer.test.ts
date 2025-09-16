@@ -44,9 +44,11 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(Object.keys(newState.entities)).toHaveLength(1);
-      expect(newState.ids).toHaveLength(1);
+      expect(newState.ids).toHaveLength(2); // Fixed size
+      expect(newState.ids[0]).not.toBeNull();
+      expect(newState.ids[1]).toBeNull();
       expect(newState.activeId).toBe(newState.ids[0]);
-      expect(newState.entities[newState.ids[0]]).toMatchObject(mockEmptySimulation);
+      expect(newState.entities[newState.ids[0]!]).toMatchObject(mockEmptySimulation);
     });
 
     test('given createSimulation with initial data then simulation contains that data', () => {
@@ -61,9 +63,19 @@ describe('simulationsReducer', () => {
       const newState = simulationsReducer(state, createSimulation(initialData));
 
       // Then
-      const createdSimulation = newState.entities[newState.ids[0]];
+      const createdSimulation = newState.entities[newState.ids[0]!];
       expect(createdSimulation.label).toBe(TEST_LABEL_1);
       expect(createdSimulation.policyId).toBe(TEST_POLICY_ID_1);
+    });
+
+    test('given createSimulation when both slots are full then throws error', () => {
+      // Given
+      const state = multipleSimulationsState;
+
+      // When/Then
+      expect(() => simulationsReducer(state, createSimulation())).toThrow(
+        'Both simulation slots are occupied. Clear one before creating a new simulation.'
+      );
     });
   });
 
@@ -205,7 +217,8 @@ describe('simulationsReducer', () => {
       // Then
       expect(newState.entities[TEST_TEMP_ID_2]).toBeUndefined();
       expect(newState.ids).not.toContain(TEST_TEMP_ID_2);
-      expect(newState.ids).toHaveLength(1);
+      expect(newState.ids).toHaveLength(2); // Fixed size
+      expect(newState.ids[1]).toBeNull(); // Position is nulled out
     });
 
     test('given removeSimulation of active simulation then new active is set', () => {
@@ -220,6 +233,8 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(newState.activeId).toBe(TEST_TEMP_ID_2); // Should switch to remaining
+      expect(newState.ids[0]).toBeNull(); // First position cleared
+      expect(newState.ids[1]).toBe(TEST_TEMP_ID_2); // Second position still has sim
     });
 
     test('given removeSimulation of last simulation then activeId is null', () => {
@@ -231,7 +246,9 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(newState.activeId).toBeNull();
-      expect(newState.ids).toHaveLength(0);
+      expect(newState.ids).toHaveLength(2); // Fixed size
+      expect(newState.ids[0]).toBeNull();
+      expect(newState.ids[1]).toBeNull();
     });
   });
 
@@ -269,7 +286,7 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(newState.entities).toEqual({});
-      expect(newState.ids).toEqual([]);
+      expect(newState.ids).toEqual([null, null]); // Reset to initial state
       expect(newState.activeId).toBeNull();
     });
   });
@@ -291,7 +308,7 @@ describe('simulationsReducer', () => {
       // Then
       expect(newState.entities[TEST_PERMANENT_ID_1]).toBeDefined();
       expect(newState.entities[TEST_TEMP_ID_1]).toBeUndefined();
-      expect(newState.ids).toContain(TEST_PERMANENT_ID_1);
+      expect(newState.ids[0]).toBe(TEST_PERMANENT_ID_1); // Position preserved
       expect(newState.ids).not.toContain(TEST_TEMP_ID_1);
     });
 
@@ -417,8 +434,8 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(simulations).toHaveLength(2);
-      expect(simulations).toContain(mockSimulation1);
-      expect(simulations).toContain(mockSimulation2);
+      expect(simulations).toContainEqual(mockSimulation1);
+      expect(simulations).toContainEqual(mockSimulation2);
     });
   });
 });
