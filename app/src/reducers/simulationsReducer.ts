@@ -16,310 +16,135 @@ export const simulationsSlice = createSlice({
   name: 'simulations',
   initialState,
   reducers: {
-    // Create simulation at first available position
-    createSimulation: (state, action: PayloadAction<Partial<Simulation> | undefined>) => {
-      const emptyIndex = findFirstEmpty(state.ids);
 
-      if (emptyIndex === -1) {
-        throw new Error('Both simulation slots are occupied. Clear one before creating a new simulation.');
-      }
-
-      const id = generateTempId();
-      const newSimulation: Simulation = {
-        populationId: undefined,
-        policyId: undefined,
-        populationType: undefined,
-        label: null,
-        id: undefined,
-        isCreated: false,
-        ...action.payload,
-      };
-
-      state.entities[id] = newSimulation;
-      state.ids = setAt(state.ids, emptyIndex, id);
-      state.activeId = id;
-    },
-
-    // Create/replace simulation at specific position (0 or 1)
+    // Create/replace at position
     createSimulationAtPosition: (
-      state,
-      action: PayloadAction<{ position: 0 | 1; simulation?: Partial<Simulation> }>
-    ) => {
-      const { position, simulation } = action.payload;
-
-      // Enforce that position must be 0 or 1
-      if (position !== 0 && position !== 1) {
-        throw new Error('Position must be 0 or 1 for report simulations');
-      }
-
-      // Clear existing simulation at this position if present
-      const existingId = get(state.ids, position);
-      if (existingId) {
-        delete state.entities[existingId];
-      }
-
-      const id = generateTempId();
-      const newSimulation: Simulation = {
-        populationId: undefined,
-        policyId: undefined,
-        populationType: undefined,
-        label: null,
-        id: undefined,
-        isCreated: false,
-        ...simulation,
-      };
-
-      state.entities[id] = newSimulation;
-      state.ids = setAt(state.ids, position, id);
-      state.activeId = id;
-    },
-
-    // Update a specific simulation's field (mirrors original reducer actions)
-    updateSimulationPopulationId: (
-      state,
-      action: PayloadAction<{
-        simulationId?: string;
-        populationId: string;
-        populationType: 'household' | 'geography';
-      }>
-    ) => {
-      const id = action.payload.simulationId || state.activeId;
-      if (id && state.entities[id]) {
-        state.entities[id].populationId = action.payload.populationId;
-        state.entities[id].populationType = action.payload.populationType;
-      }
-    },
-
-    updateSimulationPolicyId: (
-      state,
-      action: PayloadAction<{ simulationId?: string; policyId: string }>
-    ) => {
-      const id = action.payload.simulationId || state.activeId;
-      if (id && state.entities[id]) {
-        state.entities[id].policyId = action.payload.policyId;
-      }
-    },
-
-    updateSimulationLabel: (
-      state,
-      action: PayloadAction<{ simulationId?: string; label: string }>
-    ) => {
-      const id = action.payload.simulationId || state.activeId;
-      if (id && state.entities[id]) {
-        state.entities[id].label = action.payload.label;
-      }
-    },
-
-    updateSimulationId: (state, action: PayloadAction<{ simulationId?: string; id: string }>) => {
-      const simId = action.payload.simulationId || state.activeId;
-      if (simId && state.entities[simId]) {
-        state.entities[simId].id = action.payload.id;
-      }
-    },
-
-    markSimulationAsCreated: (state, action: PayloadAction<{ simulationId?: string }>) => {
-      const id = action.payload?.simulationId || state.activeId;
-      if (id && state.entities[id]) {
-        state.entities[id].isCreated = true;
-      }
-    },
-
-    // Generic field updater for flexibility
-    updateSimulationField: (
-      state,
-      action: PayloadAction<{
-        simulationId?: string;
-        field: keyof Simulation;
-        value: any;
-      }>
-    ) => {
-      const id = action.payload.simulationId || state.activeId;
-      if (id && state.entities[id]) {
-        (state.entities[id] as any)[action.payload.field] = action.payload.value;
-      }
-    },
-
-    // Set which simulation is currently being edited
-    setActiveSimulation: (state, action: PayloadAction<string>) => {
-      if (state.ids.includes(action.payload)) {
-        state.activeId = action.payload;
-      }
-    },
-
-    // Remove simulation but preserve position (sets to null)
-    removeSimulation: (state, action: PayloadAction<string>) => {
-      const index = findIndex(state.ids, id => id === action.payload);
-
-      if (index !== -1) {
-        state.ids = removeAt(state.ids, index);
-        delete state.entities[action.payload];
-
-        if (state.activeId === action.payload) {
-          // Find next non-null simulation
-          const nextId = getCompactArray(state.ids).find(id => id !== action.payload) || null;
-          state.activeId = nextId;
-        }
-      }
-    },
-
-    // Clear specific position (0 or 1)
-    clearSimulationAtPosition: (state, action: PayloadAction<0 | 1>) => {
-      const id = get(state.ids, action.payload);
-
-      if (id) {
-        delete state.entities[id];
-        state.ids = removeAt(state.ids, action.payload);
-
-        if (state.activeId === id) {
-          const nextId = getCompactArray(state.ids).find(otherId => otherId !== id) || null;
-          state.activeId = nextId;
-        }
-      }
-    },
-
-    // Swap the two positions
-    swapSimulations: (state) => {
-      state.ids = swap(state.ids, 0, 1);
-    },
-
-    // Set active by position (0 or 1)
-    setActiveSimulationByPosition: (state, action: PayloadAction<0 | 1>) => {
-      const id = get(state.ids, action.payload);
-      if (id) {
-        state.activeId = id;
-      }
-    },
-
-    // Clear a specific simulation (reset to initial values)
-    clearSimulation: (state, action: PayloadAction<{ simulationId?: string }>) => {
-      const id = action.payload?.simulationId || state.activeId;
-      if (id && state.entities[id]) {
-        state.entities[id] = {
-          populationId: undefined,
-          policyId: undefined,
-          populationType: undefined,
-          label: null,
-          id: undefined,
-          isCreated: false,
-        };
-      }
-    },
-
-    // Clear all simulations
-    clearAllSimulations: (state) => {
-      state.entities = {};
-      state.ids = FixedLengthSet(2);  // Reset to size 2
-      state.activeId = null;
-    },
-
-    // Update fields by position
-    updateSimulationFieldByPosition: (
       state,
       action: PayloadAction<{
         position: 0 | 1;
-        field: keyof Simulation;
-        value: any;
+        simulation?: Partial<Simulation>;
       }>
     ) => {
-      const id = get(state.ids, action.payload.position);
-      if (id && state.entities[id]) {
-        (state.entities[id] as any)[action.payload.field] = action.payload.value;
+      const newSimulation: Simulation = {
+        id: undefined, // No ID until API creates it
+        populationId: undefined,
+        policyId: undefined,
+        populationType: undefined,
+        label: null,
+        isCreated: false,
+        ...action.payload.simulation,
+      };
+      state.simulations[action.payload.position] = newSimulation;
+      state.activePosition = action.payload.position;
+    },
+
+    // Update fields at position
+    updateSimulationAtPosition: (
+      state,
+      action: PayloadAction<{
+        position: 0 | 1;
+        updates: Partial<Simulation>;
+      }>
+    ) => {
+      const sim = state.simulations[action.payload.position];
+      if (!sim) {
+        throw new Error(`Cannot update simulation at position ${action.payload.position}: no simulation exists at that position`);
+      }
+      state.simulations[action.payload.position] = {
+        ...sim,
+        ...action.payload.updates
+      };
+    },
+
+
+    // Clear position
+    clearSimulationAtPosition: (state, action: PayloadAction<0 | 1>) => {
+      state.simulations[action.payload] = null;
+      if (state.activePosition === action.payload) {
+        state.activePosition = null;
       }
     },
 
-    // Replace temp ID with permanent ID after API creation
-    replaceSimulationId: (
-      state,
-      action: PayloadAction<{ tempId: string; permanentId: string }>
-    ) => {
-      const { tempId, permanentId } = action.payload;
-      const index = findIndex(state.ids, id => id === tempId);
+    // Set active position
+    setActivePosition: (state, action: PayloadAction<0 | 1 | null>) => {
+      state.activePosition = action.payload;
+    },
 
-      if (index !== -1 && state.entities[tempId]) {
-        // Update the entity
-        state.entities[permanentId] = state.entities[tempId];
-        state.entities[permanentId].id = permanentId;
-        delete state.entities[tempId];
+    // Swap positions
+    swapSimulations: (state) => {
+      [state.simulations[0], state.simulations[1]] =
+      [state.simulations[1], state.simulations[0]];
 
-        // Update the ids array
-        state.ids = setAt(state.ids, index, permanentId);
-
-        // Update activeId if needed
-        if (state.activeId === tempId) {
-          state.activeId = permanentId;
-        }
+      if (state.activePosition !== null) {
+        state.activePosition = state.activePosition === 0 ? 1 : 0;
       }
+    },
+
+    // Clear all
+    clearAllSimulations: (state) => {
+      state.simulations = [null, null];
+      state.activePosition = null;
     },
   },
 });
 
 export const {
-  createSimulation,
   createSimulationAtPosition,
-  updateSimulationPopulationId,
-  updateSimulationPolicyId,
-  updateSimulationLabel,
-  updateSimulationId,
-  markSimulationAsCreated,
-  updateSimulationField,
-  updateSimulationFieldByPosition,
-  setActiveSimulation,
-  setActiveSimulationByPosition,
-  removeSimulation,
-  clearSimulation,
+  updateSimulationAtPosition,
   clearSimulationAtPosition,
-  clearAllSimulations,
+  setActivePosition,
   swapSimulations,
-  replaceSimulationId,
+  clearAllSimulations,
 } = simulationsSlice.actions;
 
 // Selectors
-export const selectSimulationById = (
-  state: { simulations: SimulationsState },
-  id: string
-): Simulation | undefined => state.simulations?.entities[id];
-
-export const selectActiveSimulationId = (state: { simulations: SimulationsState }): string | null =>
-  state.simulations?.activeId || null;
-
-export const selectActiveSimulation = (state: {
-  simulations: SimulationsState;
-}): Simulation | undefined => {
-  const activeId = selectActiveSimulationId(state);
-  return activeId ? state.simulations.entities[activeId] : undefined;
-};
-
-export const selectAllSimulations = (state: { simulations: SimulationsState }): Simulation[] =>
-  getCompactArray(state.simulations?.ids || [])
-    .map(id => state.simulations.entities[id])
-    .filter(Boolean);
-
 export const selectSimulationAtPosition = (
   state: { simulations: SimulationsState },
   position: 0 | 1
 ): Simulation | null => {
-  const id = get(state.simulations.ids, position);
-  return id ? state.simulations.entities[id] : null;
+  return state.simulations?.simulations[position] || null;
 };
 
 export const selectBothSimulations = (
   state: { simulations: SimulationsState }
 ): [Simulation | null, Simulation | null] => {
-  return [
-    selectSimulationAtPosition(state, 0),
-    selectSimulationAtPosition(state, 1)
-  ];
+  return state.simulations?.simulations || [null, null];
+};
+
+export const selectActivePosition = (
+  state: { simulations: SimulationsState }
+): 0 | 1 | null => {
+  return state.simulations?.activePosition || null;
+};
+
+export const selectActiveSimulation = (
+  state: { simulations: SimulationsState }
+): Simulation | null => {
+  const position = selectActivePosition(state);
+  return position !== null ? selectSimulationAtPosition(state, position) : null;
 };
 
 export const selectHasEmptySlot = (state: { simulations: SimulationsState }): boolean => {
-  return state.simulations.ids.includes(null);
+  const [sim1, sim2] = selectBothSimulations(state);
+  return sim1 === null || sim2 === null;
 };
 
 export const selectIsSlotEmpty = (
   state: { simulations: SimulationsState },
   position: 0 | 1
 ): boolean => {
-  return get(state.simulations.ids, position) === null;
+  return selectSimulationAtPosition(state, position) === null;
+};
+
+export const selectSimulationById = (
+  state: { simulations: SimulationsState },
+  id: string | undefined
+): Simulation | null => {
+  if (!id) return null;
+  const [sim1, sim2] = selectBothSimulations(state);
+  if (sim1?.id === id) return sim1;
+  if (sim2?.id === id) return sim2;
+  return null;
 };
 
 export default simulationsSlice.reducer;
