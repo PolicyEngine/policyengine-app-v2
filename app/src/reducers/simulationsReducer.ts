@@ -1,15 +1,29 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Simulation } from '@/types/ingredients/Simulation';
+import {
+  FixedLengthSet,
+  setAt,
+  removeAt,
+  get,
+  findFirstEmpty,
+  findIndex,
+  getCompactArray,
+  swap,
+} from '@/types/FixedLengthSet';
+
+// We can currently only support up to 2 simulations per report
+// After migrating to API v2, we may choose to support more
+const MAX_SIMS = 2;
 
 interface SimulationsState {
   entities: Record<string, Simulation>;
-  ids: string[];
+  ids: FixedLengthSet<string>;  // Fixed at size 2
   activeId: string | null;
 }
 
 const initialState: SimulationsState = {
   entities: {},
-  ids: [],
+  ids: FixedLengthSet(MAX_SIMS),  // FIXED SIZE: 2 slots for report simulations
   activeId: null,
 };
 
@@ -21,8 +35,14 @@ export const simulationsSlice = createSlice({
   name: 'simulations',
   initialState,
   reducers: {
-    // Create a new simulation and set it as active
+    // Create simulation at first available position
     createSimulation: (state, action: PayloadAction<Partial<Simulation> | undefined>) => {
+      const emptyIndex = findFirstEmpty(state.ids);
+
+      if (emptyIndex === -1) {
+        throw new Error('Both simulation slots are occupied. Clear one before creating a new simulation.');
+      }
+
       const id = generateTempId();
       const newSimulation: Simulation = {
         populationId: undefined,
@@ -35,7 +55,41 @@ export const simulationsSlice = createSlice({
       };
 
       state.entities[id] = newSimulation;
-      state.ids.push(id);
+      state.ids = setAt(state.ids, emptyIndex, id);
+      state.activeId = id;
+    },
+
+    // Create/replace simulation at specific position (0 or 1)
+    createSimulationAtPosition: (
+      state,
+      action: PayloadAction<{ position: 0 | 1; simulation?: Partial<Simulation> }>
+    ) => {
+      const { position, simulation } = action.payload;
+
+      // Enforce that position must be 0 or 1
+      if (position !== 0 && position !== 1) {
+        throw new Error('Position must be 0 or 1 for report simulations');
+      }
+
+      // Clear existing simulation at this position if present
+      const existingId = get(state.ids, position);
+      if (existingId) {
+        delete state.entities[existingId];
+      }
+
+      const id = generateTempId();
+      const newSimulation: Simulation = {
+        populationId: undefined,
+        policyId: undefined,
+        populationType: undefined,
+        label: null,
+        id: undefined,
+        isCreated: false,
+        ...simulation,
+      };
+
+      state.entities[id] = newSimulation;
+      state.ids = setAt(state.ids, position, id);
       state.activeId = id;
     },
 
@@ -111,14 +165,47 @@ export const simulationsSlice = createSlice({
       }
     },
 
-    // Remove a simulation
+    // Remove simulation but preserve position (sets to null)
     removeSimulation: (state, action: PayloadAction<string>) => {
-      delete state.entities[action.payload];
-      state.ids = state.ids.filter((id) => id !== action.payload);
+      const index = findIndex(state.ids, id => id === action.payload);
 
-      // If we removed the active simulation, set a new active one
-      if (state.activeId === action.payload) {
-        state.activeId = state.ids.length > 0 ? state.ids[0] : null;
+      if (index !== -1) {
+        state.ids = removeAt(state.ids, index);
+        delete state.entities[action.payload];
+
+        if (state.activeId === action.payload) {
+          // Find next non-null simulation
+          const nextId = getCompactArray(state.ids).find(id => id !== action.payload) || null;
+          state.activeId = nextId;
+        }
+      }
+    },
+
+    // Clear specific position (0 or 1)
+    clearSimulationAtPosition: (state, action: PayloadAction<0 | 1>) => {
+      const id = get(state.ids, action.payload);
+
+      if (id) {
+        delete state.entities[id];
+        state.ids = removeAt(state.ids, action.payload);
+
+        if (state.activeId === id) {
+          const nextId = getCompactArray(state.ids).find(otherId => otherId !== id) || null;
+          state.activeId = nextId;
+        }
+      }
+    },
+
+    // Swap the two positions
+    swapSimulations: (state) => {
+      state.ids = swap(state.ids, 0, 1);
+    },
+
+    // Set active by position (0 or 1)
+    setActiveSimulationByPosition: (state, action: PayloadAction<0 | 1>) => {
+      const id = get(state.ids, action.payload);
+      if (id) {
+        state.activeId = id;
       }
     },
 
@@ -140,8 +227,23 @@ export const simulationsSlice = createSlice({
     // Clear all simulations
     clearAllSimulations: (state) => {
       state.entities = {};
-      state.ids = [];
+      state.ids = FixedLengthSet(2);  // Reset to size 2
       state.activeId = null;
+    },
+
+    // Update fields by position
+    updateSimulationFieldByPosition: (
+      state,
+      action: PayloadAction<{
+        position: 0 | 1;
+        field: keyof Simulation;
+        value: any;
+      }>
+    ) => {
+      const id = get(state.ids, action.payload.position);
+      if (id && state.entities[id]) {
+        (state.entities[id] as any)[action.payload.field] = action.payload.value;
+      }
     },
 
     // Replace temp ID with permanent ID after API creation
@@ -150,17 +252,16 @@ export const simulationsSlice = createSlice({
       action: PayloadAction<{ tempId: string; permanentId: string }>
     ) => {
       const { tempId, permanentId } = action.payload;
-      if (state.entities[tempId]) {
+      const index = findIndex(state.ids, id => id === tempId);
+
+      if (index !== -1 && state.entities[tempId]) {
         // Update the entity
         state.entities[permanentId] = state.entities[tempId];
         state.entities[permanentId].id = permanentId;
         delete state.entities[tempId];
 
         // Update the ids array
-        const index = state.ids.indexOf(tempId);
-        if (index !== -1) {
-          state.ids[index] = permanentId;
-        }
+        state.ids = setAt(state.ids, index, permanentId);
 
         // Update activeId if needed
         if (state.activeId === tempId) {
@@ -173,16 +274,21 @@ export const simulationsSlice = createSlice({
 
 export const {
   createSimulation,
+  createSimulationAtPosition,
   updateSimulationPopulationId,
   updateSimulationPolicyId,
   updateSimulationLabel,
   updateSimulationId,
   markSimulationAsCreated,
   updateSimulationField,
+  updateSimulationFieldByPosition,
   setActiveSimulation,
+  setActiveSimulationByPosition,
   removeSimulation,
   clearSimulation,
+  clearSimulationAtPosition,
   clearAllSimulations,
+  swapSimulations,
   replaceSimulationId,
 } = simulationsSlice.actions;
 
@@ -203,6 +309,36 @@ export const selectActiveSimulation = (state: {
 };
 
 export const selectAllSimulations = (state: { simulations: SimulationsState }): Simulation[] =>
-  state.simulations?.ids.map((id: string) => state.simulations.entities[id]) || [];
+  getCompactArray(state.simulations?.ids || [])
+    .map(id => state.simulations.entities[id])
+    .filter(Boolean);
+
+export const selectSimulationAtPosition = (
+  state: { simulations: SimulationsState },
+  position: 0 | 1
+): Simulation | null => {
+  const id = get(state.simulations.ids, position);
+  return id ? state.simulations.entities[id] : null;
+};
+
+export const selectBothSimulations = (
+  state: { simulations: SimulationsState }
+): [Simulation | null, Simulation | null] => {
+  return [
+    selectSimulationAtPosition(state, 0),
+    selectSimulationAtPosition(state, 1)
+  ];
+};
+
+export const selectHasEmptySlot = (state: { simulations: SimulationsState }): boolean => {
+  return state.simulations.ids.includes(null);
+};
+
+export const selectIsSlotEmpty = (
+  state: { simulations: SimulationsState },
+  position: 0 | 1
+): boolean => {
+  return get(state.simulations.ids, position) === null;
+};
 
 export default simulationsSlice.reducer;

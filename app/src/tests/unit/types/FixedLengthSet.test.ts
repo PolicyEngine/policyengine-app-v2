@@ -213,7 +213,7 @@ describe('FixedLengthSet', () => {
     });
 
     test('given predicate using index then works correctly', () => {
-      const result = findIndex(MIXED_SET_WITH_NULLS, (val, idx) => idx === 2);
+      const result = findIndex(MIXED_SET_WITH_NULLS, (_val, idx) => idx === 2);
       expect(result).toBe(2);
     });
   });
