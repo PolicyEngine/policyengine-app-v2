@@ -1,35 +1,16 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { Simulation } from '@/types/ingredients/Simulation';
-import {
-  FixedLengthSet,
-  setAt,
-  removeAt,
-  get,
-  findFirstEmpty,
-  findIndex,
-  getCompactArray,
-  swap,
-} from '@/types/FixedLengthSet';
 
-// We can currently only support up to 2 simulations per report
-// After migrating to API v2, we may choose to support more
-const MAX_SIMS = 2;
-
+// Position-based storage for exactly 2 simulations
 interface SimulationsState {
-  entities: Record<string, Simulation>;
-  ids: FixedLengthSet<string>;  // Fixed at size 2
-  activeId: string | null;
+  simulations: [Simulation | null, Simulation | null];  // Store directly by position
+  activePosition: 0 | 1 | null;                        // Which position is active
 }
 
 const initialState: SimulationsState = {
-  entities: {},
-  ids: FixedLengthSet(MAX_SIMS),  // FIXED SIZE: 2 slots for report simulations
-  activeId: null,
+  simulations: [null, null],
+  activePosition: null,
 };
-
-// Helper to generate temporary IDs for unsaved simulations
-let tempIdCounter = 1;
-const generateTempId = () => `temp-${tempIdCounter++}`;
 
 export const simulationsSlice = createSlice({
   name: 'simulations',
