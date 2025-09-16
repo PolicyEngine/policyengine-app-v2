@@ -50,28 +50,20 @@ export const mockReportNoLabel: Report = {
   label: null,
 };
 
-// Mock Redux state
+// Mock Redux state - using position-based storage
 export const createMockReportState = (report: Report = mockReportWithLabel) => ({
   report,
   simulations: {
-    ids: ['sim-1', 'sim-2'],
-    entities: {
-      'sim-1': mockSimulation1,
-      'sim-2': mockSimulation2,
-    },
-    activeId: null,
+    simulations: [mockSimulation1, mockSimulation2] as [Simulation | null, Simulation | null],
+    activePosition: null as 0 | 1 | null,
   },
 });
 
 export const createMockReportStateNoLabels = () => ({
   report: mockReportNoLabel,
   simulations: {
-    ids: ['sim-1', 'sim-2'],
-    entities: {
-      'sim-1': mockSimulation1NoLabel,
-      'sim-2': mockSimulation2NoLabel,
-    },
-    activeId: null,
+    simulations: [mockSimulation1NoLabel, mockSimulation2NoLabel] as [Simulation | null, Simulation | null],
+    activePosition: null as 0 | 1 | null,
   },
 });
 
