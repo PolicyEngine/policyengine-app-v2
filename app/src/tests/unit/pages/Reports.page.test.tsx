@@ -3,9 +3,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
 import ReportsPage from '@/pages/Reports.page';
 import { useUserReports } from '@/hooks/useUserReports';
-import { setFlow } from '@/reducers/flowReducer';
+import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import { configureStore } from '@reduxjs/toolkit';
-import flowReducer from '@/reducers/flowReducer';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { MOCK_USER_ID } from '@/constants';
 import {

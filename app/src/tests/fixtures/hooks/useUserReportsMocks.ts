@@ -2,14 +2,13 @@ import { vi } from 'vitest';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { Policy } from '@/types/ingredients/Policy';
 import { Household } from '@/types/ingredients/Household';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { mockReport, mockReportMetadata } from '../adapters/reportMocks';
+import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
 
 // Test ID constants
@@ -202,12 +201,24 @@ export const mockMetadataInitialState = {
 export const createNormalizedCacheMock = () => ({
   getObjectById: vi.fn((id: string) => {
     // Return mocked normalized data based on ID
-    if (id === mockReport.reportId) return mockReport;
-    if (id === TEST_SIMULATION_ID_1) return mockSimulation1;
-    if (id === TEST_SIMULATION_ID_2) return mockSimulation2;
-    if (id === TEST_POLICY_ID_1) return mockPolicy1;
-    if (id === TEST_POLICY_ID_2) return mockPolicy2;
-    if (id === TEST_HOUSEHOLD_ID) return mockHousehold1;
+    if (id === mockReport.reportId) {
+      return mockReport;
+    }
+    if (id === TEST_SIMULATION_ID_1) {
+      return mockSimulation1;
+    }
+    if (id === TEST_SIMULATION_ID_2) {
+      return mockSimulation2;
+    }
+    if (id === TEST_POLICY_ID_1) {
+      return mockPolicy1;
+    }
+    if (id === TEST_POLICY_ID_2) {
+      return mockPolicy2;
+    }
+    if (id === TEST_HOUSEHOLD_ID) {
+      return mockHousehold1;
+    }
     return undefined;
   }),
 });

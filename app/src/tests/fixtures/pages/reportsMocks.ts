@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
 import {
   mockReport,

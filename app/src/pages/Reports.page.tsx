@@ -4,7 +4,6 @@ import {
   BulletsValue,
   ColumnConfig,
   IngredientRecord,
-  LinkValue,
   TextValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
