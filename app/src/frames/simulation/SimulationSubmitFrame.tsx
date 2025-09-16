@@ -1,9 +1,14 @@
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { selectActiveSimulation, selectSimulationById } from '@/reducers/simulationsReducer';
+import {
+  clearSimulation,
+  markSimulationAsCreated,
+  selectActiveSimulation,
+  selectSimulationById,
+  updateSimulationId,
+} from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -18,6 +23,8 @@ export default function SimulationSubmitFrame({
   isInSubflow,
   simulationId,
 }: SimulationSubmitFrameProps) {
+  const dispatch = useDispatch();
+
   // Get simulation from the normalized state
   const simulation = useSelector((state: RootState) => {
     if (simulationId) {
@@ -34,7 +41,6 @@ export default function SimulationSubmitFrame({
   console.log('Simulation label: ', simulation?.label);
   console.log('Simulation in SimulationSubmitFrame: ', simulation);
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
-  const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
     // Convert state to partial Simulation for adapter
@@ -49,10 +55,30 @@ export default function SimulationSubmitFrame({
 
     console.log('Submitting simulation:', serializedSimulationCreationPayload);
     createSimulation(serializedSimulationCreationPayload, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('Simulation created successfully:', data);
+
+        // Update the simulation ID with the one returned from the API
+        const newSimulationId = data.result.simulation_id;
+        dispatch(updateSimulationId({
+          simulationId: simulationId || undefined,
+          id: newSimulationId
+        }));
+
+        // Mark the simulation as created
+        dispatch(markSimulationAsCreated({
+          simulationId: simulationId || undefined
+        }));
+
+        // Navigate to the next step
         onNavigate('submit');
+
+        // If we're not in a subflow, clear just this specific simulation
+        // (not the full ingredient like resetIngredient would do)
         if (!isInSubflow) {
-          resetIngredient('simulation');
+          dispatch(clearSimulation({
+            simulationId: simulationId || undefined
+          }));
         }
       },
     });
