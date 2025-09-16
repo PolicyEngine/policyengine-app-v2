@@ -1,11 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  BulletsValue,
-  ColumnConfig,
-  IngredientRecord,
-  TextValue,
-} from '@/components/columns';
+import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';

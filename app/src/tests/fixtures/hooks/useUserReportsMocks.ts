@@ -1,13 +1,14 @@
 import { vi } from 'vitest';
-import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { Policy } from '@/types/ingredients/Policy';
 import { Household } from '@/types/ingredients/Household';
-import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { Policy } from '@/types/ingredients/Policy';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { MetadataState } from '@/types/metadata';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
+import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
 
@@ -168,8 +169,6 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   household_hash: 'hash-household-123',
   label: 'Test Household',
 };
-
-import { MetadataState } from '@/types/metadata';
 
 // Mock Redux store initial state
 export const mockMetadataInitialState = {

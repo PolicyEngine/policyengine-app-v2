@@ -1,14 +1,10 @@
 import { MOCK_USER_ID } from '@/constants';
-import {
-  mockReport,
-  mockPendingReport,
-  mockErrorReport
-} from '../adapters/reportMocks';
+import { mockErrorReport, mockPendingReport, mockReport } from '../adapters/reportMocks';
 import {
   mockSimulation1,
   mockSimulation2,
-  mockUserSimulations,
   mockUserPolicies,
+  mockUserSimulations,
 } from '../hooks/useUserReportsMocks';
 
 // Mock report data for tests
@@ -119,7 +115,6 @@ export const mockMixedStatusHookReturn = {
   isError: false,
   error: null,
 };
-
 
 // Error messages
 export const ERROR_MESSAGES = {

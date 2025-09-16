@@ -1,41 +1,46 @@
 import React from 'react';
+import { configureStore } from '@reduxjs/toolkit';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import * as householdApi from '@/api/household';
+import * as policyApi from '@/api/policy';
 import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
-import * as policyApi from '@/api/policy';
-import * as householdApi from '@/api/household';
-import { useUserReports, useUserReportById } from '@/hooks/useUserReports';
-import { useReportAssociationsByUser } from '@/hooks/useUserReportAssociations';
-import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssociations';
-import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
 import { useHouseholdAssociationsByUser } from '@/hooks/useUserHousehold';
-import { createMockQueryClient, mockUserReportList, TEST_USER_ID, TEST_REPORT_ID } from '@/tests/fixtures/api/reportAssociationMocks';
-import { mockReport, mockReportMetadata } from '@/tests/fixtures/adapters/reportMocks';
-import { configureStore } from '@reduxjs/toolkit';
+import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
+import { useReportAssociationsByUser } from '@/hooks/useUserReportAssociations';
+import { useUserReportById, useUserReports } from '@/hooks/useUserReports';
+import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssociations';
 import metadataReducer from '@/reducers/metadataReducer';
+import { mockReport, mockReportMetadata } from '@/tests/fixtures/adapters/reportMocks';
 import {
-  TEST_SIMULATION_ID_1,
-  TEST_SIMULATION_ID_2,
-  TEST_POLICY_ID_1,
-  TEST_POLICY_ID_2,
-  TEST_HOUSEHOLD_ID,
-  mockSimulation1,
-  mockPolicy1,
-  mockHousehold1,
-  mockUserSimulations,
-  mockUserPolicies,
-  mockUserHouseholds,
-  mockSimulationMetadata1,
-  mockSimulationMetadata2,
-  mockPolicyMetadata1,
-  mockPolicyMetadata2,
-  mockHouseholdMetadata,
-  mockMetadataInitialState,
+  createMockQueryClient,
+  mockUserReportList,
+  TEST_REPORT_ID,
+  TEST_USER_ID,
+} from '@/tests/fixtures/api/reportAssociationMocks';
+import {
   createNormalizedCacheMock,
   ERROR_MESSAGES,
+  mockHousehold1,
+  mockHouseholdMetadata,
+  mockMetadataInitialState,
+  mockPolicy1,
+  mockPolicyMetadata1,
+  mockPolicyMetadata2,
+  mockSimulation1,
+  mockSimulationMetadata1,
+  mockSimulationMetadata2,
+  mockUserHouseholds,
+  mockUserPolicies,
+  mockUserSimulations,
+  TEST_HOUSEHOLD_ID,
+  TEST_POLICY_ID_1,
+  TEST_POLICY_ID_2,
+  TEST_SIMULATION_ID_1,
+  TEST_SIMULATION_ID_2,
 } from '@/tests/fixtures/hooks/useUserReportsMocks';
 
 // Mock Plotly
@@ -62,7 +67,6 @@ vi.mock('@/hooks/useUserPolicy', () => ({
 vi.mock('@/hooks/useUserHousehold', () => ({
   useHouseholdAssociationsByUser: vi.fn(),
 }));
-
 
 // Helper to create mock store
 const createMockStore = () => {
@@ -206,8 +210,8 @@ describe('useUserReports', () => {
       });
 
       const reports = result.current.data;
-      const reportWithHousehold = reports.find(r =>
-        r.simulations?.some(s => s.populationType === 'household')
+      const reportWithHousehold = reports.find((r) =>
+        r.simulations?.some((s) => s.populationType === 'household')
       );
 
       expect(reportWithHousehold).toBeDefined();
@@ -228,8 +232,8 @@ describe('useUserReports', () => {
       });
 
       const reports = result.current.data;
-      const reportWithGeography = reports.find(r =>
-        r.simulations?.some(s => s.populationType === 'geography')
+      const reportWithGeography = reports.find((r) =>
+        r.simulations?.some((s) => s.populationType === 'geography')
       );
 
       expect(reportWithGeography).toBeDefined();

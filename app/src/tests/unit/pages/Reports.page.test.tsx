@@ -1,19 +1,19 @@
+import { configureStore } from '@reduxjs/toolkit';
+import { render, screen, userEvent } from '@test-utils';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { render, screen, userEvent } from '@test-utils';
-import ReportsPage from '@/pages/Reports.page';
-import { useUserReports } from '@/hooks/useUserReports';
-import flowReducer, { setFlow } from '@/reducers/flowReducer';
-import { configureStore } from '@reduxjs/toolkit';
-import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { MOCK_USER_ID } from '@/constants';
+import { ReportCreationFlow } from '@/flows/reportCreationFlow';
+import { useUserReports } from '@/hooks/useUserReports';
+import ReportsPage from '@/pages/Reports.page';
+import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import {
-  mockDefaultHookReturn,
-  mockLoadingHookReturn,
-  mockErrorHookReturn,
-  mockEmptyHookReturn,
-  mockMixedStatusHookReturn,
   ERROR_MESSAGES,
+  mockDefaultHookReturn,
+  mockEmptyHookReturn,
+  mockErrorHookReturn,
+  mockLoadingHookReturn,
+  mockMixedStatusHookReturn,
 } from '@/tests/fixtures/pages/reportsMocks';
 
 // Mock Plotly
@@ -36,31 +36,35 @@ vi.mock('react-redux', async () => {
 
 // Mock IngredientReadView component
 vi.mock('@/components/IngredientReadView', () => ({
-  default: vi.fn(({
-    title,
-    subtitle,
-    onBuild,
-    isLoading,
-    isError,
-    error,
-    data,
-    searchValue,
-    onSearchChange,
-  }) => (
-    <div data-testid="ingredient-read-view">
-      <h1>{title}</h1>
-      <p>{subtitle}</p>
-      {isLoading && <div>Loading...</div>}
-      {isError && <div>Error: {error?.message}</div>}
-      {data && <div>Data count: {data.length}</div>}
-      <button type="button" onClick={onBuild}>Build Report</button>
-      <input
-        value={searchValue}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder="Search"
-      />
-    </div>
-  )),
+  default: vi.fn(
+    ({
+      title,
+      subtitle,
+      onBuild,
+      isLoading,
+      isError,
+      error,
+      data,
+      searchValue,
+      onSearchChange,
+    }) => (
+      <div data-testid="ingredient-read-view">
+        <h1>{title}</h1>
+        <p>{subtitle}</p>
+        {isLoading && <div>Loading...</div>}
+        {isError && <div>Error: {error?.message}</div>}
+        {data && <div>Data count: {data.length}</div>}
+        <button type="button" onClick={onBuild}>
+          Build Report
+        </button>
+        <input
+          value={searchValue}
+          onChange={(e) => onSearchChange(e.target.value)}
+          placeholder="Search"
+        />
+      </div>
+    )
+  ),
 }));
 
 describe('ReportsPage', () => {

@@ -32,10 +32,14 @@ describe('ReportViewFlow', () => {
     expect(SimulationViewFlow.initialFrame).toBeDefined();
 
     if (ReportViewFlow.initialFrame && SimulationViewFlow.initialFrame) {
-      expect(ReportViewFlow.initialFrame.replace('Report', 'Simulation')).toBe(SimulationViewFlow.initialFrame);
+      expect(ReportViewFlow.initialFrame.replace('Report', 'Simulation')).toBe(
+        SimulationViewFlow.initialFrame
+      );
     }
 
-    expect(Object.keys(ReportViewFlow.frames).length).toBe(Object.keys(SimulationViewFlow.frames).length);
+    expect(Object.keys(ReportViewFlow.frames).length).toBe(
+      Object.keys(SimulationViewFlow.frames).length
+    );
 
     // Both should have single frame with __return__ action
     const reportFrame = ReportViewFlow.frames.ReportReadView;

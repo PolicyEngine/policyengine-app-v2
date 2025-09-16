@@ -120,9 +120,7 @@ export const useUserReports = (userId: string) => {
   console.log('reportResults', reportResults);
 
   // Step 4: Extract simulation IDs from fetched reports
-  const reports = reportResults.queries
-    .map((q) => q.data)
-    .filter((r): r is Report => !!r);
+  const reports = reportResults.queries.map((q) => q.data).filter((r): r is Report => !!r);
 
   console.log('reports', reports);
 
@@ -216,12 +214,14 @@ export const useUserReports = (userId: string) => {
           reports.find((r) => r.reportId === userRep.reportId);
 
         // Get related simulations
-        const reportSimulations = report?.simulationIds
-          ?.map((simId) =>
-            (queryNormalizer.getObjectById(simId) as Simulation | undefined) ||
-            simulations.find((s) => s.id === simId)
-          )
-          .filter((s): s is Simulation => !!s) ?? [];
+        const reportSimulations =
+          report?.simulationIds
+            ?.map(
+              (simId) =>
+                (queryNormalizer.getObjectById(simId) as Simulation | undefined) ||
+                simulations.find((s) => s.id === simId)
+            )
+            .filter((s): s is Simulation => !!s) ?? [];
 
         // Get policies from simulations
         const reportPolicies = reportSimulations
@@ -231,7 +231,9 @@ export const useUserReports = (userId: string) => {
           .filter((p): p is Policy => !!p);
 
         // Get unique policy IDs for finding user associations
-        const uniquePolicyIds = [...new Set(reportSimulations.map((s) => s.policyId).filter(Boolean))];
+        const uniquePolicyIds = [
+          ...new Set(reportSimulations.map((s) => s.policyId).filter(Boolean)),
+        ];
 
         // Get households and geographies from simulations
         const reportHouseholds: Household[] = [];
@@ -240,7 +242,9 @@ export const useUserReports = (userId: string) => {
         reportSimulations.forEach((sim) => {
           if (sim.populationId && sim.populationType) {
             if (sim.populationType === 'household') {
-              const household = queryNormalizer.getObjectById(sim.populationId) as Household | undefined;
+              const household = queryNormalizer.getObjectById(sim.populationId) as
+                | Household
+                | undefined;
               if (household) {
                 reportHouseholds.push(household);
               }
@@ -261,17 +265,18 @@ export const useUserReports = (userId: string) => {
         });
 
         // Find user associations for related entities
-        const reportUserSimulations = simulationAssociations?.filter((sa) =>
-          report?.simulationIds?.includes(sa.simulationId)
-        ) ?? [];
+        const reportUserSimulations =
+          simulationAssociations?.filter((sa) =>
+            report?.simulationIds?.includes(sa.simulationId)
+          ) ?? [];
 
-        const reportUserPolicies = policyAssociations?.filter((pa) =>
-          uniquePolicyIds.includes(pa.policyId)
-        ) ?? [];
+        const reportUserPolicies =
+          policyAssociations?.filter((pa) => uniquePolicyIds.includes(pa.policyId)) ?? [];
 
-        const reportUserHouseholds = householdAssociations?.filter((ha) =>
-          reportHouseholds.some((h) => h.id === ha.householdId)
-        ) ?? [];
+        const reportUserHouseholds =
+          householdAssociations?.filter((ha) =>
+            reportHouseholds.some((h) => h.id === ha.householdId)
+          ) ?? [];
 
         return {
           userReport: userRep,
@@ -294,21 +299,17 @@ export const useUserReports = (userId: string) => {
   };
 
   const getReportsBySimulation = (simulationId: string) => {
-    return enhancedReports.filter((er) =>
-      er.report?.simulationIds?.includes(simulationId)
-    );
+    return enhancedReports.filter((er) => er.report?.simulationIds?.includes(simulationId));
   };
 
   const getReportsByPolicy = (policyId: string) => {
-    return enhancedReports.filter((er) =>
-      er.simulations?.some((s) => s.policyId === policyId)
-    );
+    return enhancedReports.filter((er) => er.simulations?.some((s) => s.policyId === policyId));
   };
 
   const getReportsByHousehold = (householdId: string) => {
     return enhancedReports.filter((er) =>
-      er.simulations?.some((s) =>
-        s.populationType === 'household' && s.populationId === householdId
+      er.simulations?.some(
+        (s) => s.populationType === 'household' && s.populationId === householdId
       )
     );
   };
@@ -335,12 +336,10 @@ export const useUserReports = (userId: string) => {
     getReportsByHousehold,
 
     // Direct access to normalized cache
-    getNormalizedReport: (id: string) =>
-      queryNormalizer.getObjectById(id) as Report | undefined,
+    getNormalizedReport: (id: string) => queryNormalizer.getObjectById(id) as Report | undefined,
     getNormalizedSimulation: (id: string) =>
       queryNormalizer.getObjectById(id) as Simulation | undefined,
-    getNormalizedPolicy: (id: string) =>
-      queryNormalizer.getObjectById(id) as Policy | undefined,
+    getNormalizedPolicy: (id: string) => queryNormalizer.getObjectById(id) as Policy | undefined,
     getNormalizedHousehold: (id: string) =>
       queryNormalizer.getObjectById(id) as Household | undefined,
   };
@@ -405,9 +404,7 @@ export const useUserReportById = (userId: string, reportId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const policies = policyResults.queries
-    .map((q) => q.data)
-    .filter((p): p is Policy => !!p);
+  const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
 
   // Get user associations
   const { data: simulationAssociations } = useSimulationAssociationsByUser(userId);
@@ -437,9 +434,7 @@ export const useUserReportById = (userId: string, reportId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries
-    .map((q) => q.data)
-    .filter((h): h is Household => !!h);
+  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)
@@ -453,7 +448,11 @@ export const useUserReportById = (userId: string, reportId: string) => {
     userSimulations,
     userPolicies,
     userHouseholds,
-    isLoading: repLoading || simulationResults.isLoading || policyResults.isLoading || householdResults.isLoading,
+    isLoading:
+      repLoading ||
+      simulationResults.isLoading ||
+      policyResults.isLoading ||
+      householdResults.isLoading,
     error: repError || simulationResults.error || policyResults.error || householdResults.error,
   };
 };
