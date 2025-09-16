@@ -3,11 +3,11 @@ import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import {
-  clearSimulation,
-  markSimulationAsCreated,
+  clearSimulationAtPosition,
   selectActiveSimulation,
-  selectSimulationById,
-  updateSimulationId,
+  selectActivePosition,
+  selectSimulationAtPosition,
+  updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -15,25 +15,25 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationCreationPayload } from '@/types/payloads';
 
 interface SimulationSubmitFrameProps extends FlowComponentProps {
-  simulationId?: string; // Optional specific simulation ID to submit
+  position?: 0 | 1; // Optional specific position to submit
 }
 
 export default function SimulationSubmitFrame({
   onNavigate,
   isInSubflow,
-  simulationId,
+  position,
 }: SimulationSubmitFrameProps) {
   const dispatch = useDispatch();
 
-  // Get simulation from the normalized state
-  const simulation = useSelector((state: RootState) => {
-    if (simulationId) {
-      // If specific simulation ID provided, get that simulation
-      return selectSimulationById(state, simulationId);
-    }
-    // Otherwise get the active simulation
-    return selectActiveSimulation(state);
-  });
+  // Get simulation from position-based state
+  const simulation = useSelector((state: RootState) =>
+    position !== undefined
+      ? selectSimulationAtPosition(state, position)
+      : selectActiveSimulation(state)
+  );
+
+  const activePosition = useSelector(selectActivePosition);
+  const targetPosition = position ?? activePosition;
 
   const policy = useSelector((state: RootState) => state.policy);
   const population = useSelector((state: RootState) => state.population);
@@ -43,6 +43,12 @@ export default function SimulationSubmitFrame({
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
 
   function handleSubmit() {
+    // Ensure we have a valid position to update
+    if (targetPosition === null) {
+      console.error('No target position available for simulation submission');
+      return;
+    }
+
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
       populationId: simulation?.populationId || undefined,
@@ -58,27 +64,21 @@ export default function SimulationSubmitFrame({
       onSuccess: (data) => {
         console.log('Simulation created successfully:', data);
 
-        // Update the simulation ID with the one returned from the API
-        const newSimulationId = data.result.simulation_id;
-        dispatch(updateSimulationId({
-          simulationId: simulationId || undefined,
-          id: newSimulationId
-        }));
-
-        // Mark the simulation as created
-        dispatch(markSimulationAsCreated({
-          simulationId: simulationId || undefined
+        // Update the simulation at position with the API response
+        dispatch(updateSimulationAtPosition({
+          position: targetPosition,
+          updates: {
+            id: data.result.simulation_id,
+            isCreated: true
+          }
         }));
 
         // Navigate to the next step
         onNavigate('submit');
 
         // If we're not in a subflow, clear just this specific simulation
-        // (not the full ingredient like resetIngredient would do)
         if (!isInSubflow) {
-          dispatch(clearSimulation({
-            simulationId: simulationId || undefined
-          }));
+          dispatch(clearSimulationAtPosition(targetPosition));
         }
       },
     });

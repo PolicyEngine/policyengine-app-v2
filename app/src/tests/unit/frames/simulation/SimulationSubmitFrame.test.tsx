@@ -1,12 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSubmitFrame from '@/frames/simulation/SimulationSubmitFrame';
 import flowReducer from '@/reducers/flowReducer';
 import metadataReducer from '@/reducers/metadataReducer';
 import populationReducer from '@/reducers/populationReducer';
-import simulationsReducer from '@/reducers/simulationsReducer';
+import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
 import {
   mockSimulationComplete,
   mockSimulationPartial,
@@ -18,8 +18,6 @@ import {
   SUBMIT_VIEW_TITLE,
   TEST_POLICY_LABEL,
   TEST_POPULATION_LABEL,
-  TEST_SIMULATION_ID,
-  TEST_SIMULATION_ID_MISSING,
 } from '@/tests/fixtures/frames/SimulationSubmitFrame';
 
 // Mock the hooks - must be defined inline due to hoisting
@@ -27,6 +25,7 @@ vi.mock('@/hooks/useCreateSimulation', () => ({
   useCreateSimulation: vi.fn(() => ({
     createSimulation: vi.fn(),
     isPending: false,
+    error: null,
   })),
 }));
 
@@ -148,13 +147,16 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
     });
   });
 
-  describe('Specific Simulation ID', () => {
-    test('given specific simulationId prop then uses that simulation', () => {
+  describe('Specific Position', () => {
+    test('given specific position prop then uses simulation at that position', () => {
       // Given
       const store = configureStore({
         reducer: {
           simulation: () => mockSimulationPartial,
-          simulations: () => mockStateWithNewSimulation.simulations,
+          simulations: () => ({
+            simulations: [mockSimulationComplete, null],
+            activePosition: 0,
+          }),
           flow: flowReducer,
           policy: () => mockStateWithNewSimulation.policy,
           population: () => mockStateWithNewSimulation.population,
@@ -166,7 +168,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       // When - pass specific simulation ID
       render(
         <Provider store={store}>
-          <SimulationSubmitFrame {...defaultFlowProps} simulationId={TEST_SIMULATION_ID} />
+          <SimulationSubmitFrame {...defaultFlowProps} position={0} />
         </Provider>
       );
 
@@ -176,11 +178,14 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       expect(screen.getByText(POLICY_REFORM_ADDED_TITLE)).toBeInTheDocument();
     });
 
-    test('given non-existent simulationId then handles gracefully', () => {
+    test('given position with no simulation then handles gracefully', () => {
       // Given
       const store = configureStore({
         reducer: {
-          simulations: () => mockStateWithNewSimulation.simulations,
+          simulations: () => ({
+            simulations: [mockSimulationComplete, null],
+            activePosition: 0,
+          }),
           flow: flowReducer,
           policy: () => mockStateWithNewSimulation.policy,
           population: () => mockStateWithNewSimulation.population,
@@ -189,10 +194,10 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
         },
       });
 
-      // When - pass non-existent simulation ID
+      // When - pass position with no simulation
       render(
         <Provider store={store}>
-          <SimulationSubmitFrame {...defaultFlowProps} simulationId={TEST_SIMULATION_ID_MISSING} />
+          <SimulationSubmitFrame {...defaultFlowProps} position={1} />
         </Provider>
       );
 
@@ -289,6 +294,161 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       expect(screen.getByText(SUBMIT_VIEW_TITLE)).toBeInTheDocument();
       expect(screen.getByText(POPULATION_ADDED_TITLE)).toBeInTheDocument();
       expect(screen.getByText(POLICY_REFORM_ADDED_TITLE)).toBeInTheDocument();
+    });
+  });
+
+  describe('Position-Based Updates', () => {
+    test('given successful submission then updates simulation at position', async () => {
+      // Given
+      const mockCreateSimulation = vi.fn();
+      vi.mocked(await import('@/hooks/useCreateSimulation')).useCreateSimulation.mockReturnValue({
+        createSimulation: mockCreateSimulation,
+        isPending: false,
+        error: null,
+      });
+
+      // Set up store with simulation at position 0
+      const store = configureStore({
+        reducer: {
+          simulations: () => ({
+            simulations: [mockSimulationComplete, null],
+            activePosition: 0,
+          }),
+          flow: flowReducer,
+          policy: () => mockStateWithOldSimulation.policy,
+          population: () => mockStateWithOldSimulation.population,
+          household: populationReducer,
+          metadata: metadataReducer,
+        },
+      });
+
+      const user = userEvent.setup();
+      vi.spyOn(simulationsActions, 'updateSimulationAtPosition');
+      vi.spyOn(simulationsActions, 'clearSimulationAtPosition');
+
+      // When
+      render(
+        <Provider store={store}>
+          <SimulationSubmitFrame {...defaultFlowProps} position={0} />
+        </Provider>
+      );
+
+      const submitButton = screen.getByRole('button', { name: /Save Simulation/i });
+      await user.click(submitButton);
+
+      // Simulate successful API response
+      const onSuccessCallback = mockCreateSimulation.mock.calls[0][1].onSuccess;
+      onSuccessCallback({
+        result: {
+          simulation_id: 'new-sim-123',
+        },
+      });
+
+      // Then
+      expect(simulationsActions.updateSimulationAtPosition).toHaveBeenCalledWith({
+        position: 0,
+        updates: {
+          id: 'new-sim-123',
+          isCreated: true,
+        },
+      });
+      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
+    });
+
+    test('given submission not in subflow then clears simulation at position', async () => {
+      // Given
+      const mockCreateSimulation = vi.fn();
+      vi.mocked(await import('@/hooks/useCreateSimulation')).useCreateSimulation.mockReturnValue({
+        createSimulation: mockCreateSimulation,
+        isPending: false,
+        error: null,
+      });
+
+      const store = configureStore({
+        reducer: {
+          simulations: () => ({
+            simulations: [null, mockSimulationComplete],
+            activePosition: 1,
+          }),
+          flow: flowReducer,
+          policy: () => mockStateWithOldSimulation.policy,
+          population: () => mockStateWithOldSimulation.population,
+          household: populationReducer,
+          metadata: metadataReducer,
+        },
+      });
+
+      const user = userEvent.setup();
+      vi.spyOn(simulationsActions, 'clearSimulationAtPosition');
+
+      // When - not in subflow
+      render(
+        <Provider store={store}>
+          <SimulationSubmitFrame {...defaultFlowProps} position={1} isInSubflow={false} />
+        </Provider>
+      );
+
+      const submitButton = screen.getByRole('button', { name: /Save Simulation/i });
+      await user.click(submitButton);
+
+      // Simulate successful API response
+      const onSuccessCallback = mockCreateSimulation.mock.calls[0][1].onSuccess;
+      onSuccessCallback({
+        result: {
+          simulation_id: 'new-sim-456',
+        },
+      });
+
+      // Then
+      expect(simulationsActions.clearSimulationAtPosition).toHaveBeenCalledWith(1);
+    });
+
+    test('given submission in subflow then does not clear simulation', async () => {
+      // Given
+      const mockCreateSimulation = vi.fn();
+      vi.mocked(await import('@/hooks/useCreateSimulation')).useCreateSimulation.mockReturnValue({
+        createSimulation: mockCreateSimulation,
+        isPending: false,
+        error: null,
+      });
+
+      const store = configureStore({
+        reducer: {
+          simulations: () => ({
+            simulations: [mockSimulationComplete, null],
+            activePosition: 0,
+          }),
+          flow: flowReducer,
+          policy: () => mockStateWithOldSimulation.policy,
+          population: () => mockStateWithOldSimulation.population,
+          household: populationReducer,
+          metadata: metadataReducer,
+        },
+      });
+
+      const user = userEvent.setup();
+      vi.spyOn(simulationsActions, 'clearSimulationAtPosition');
+
+      // When - in subflow
+      render(
+        <Provider store={store}>
+          <SimulationSubmitFrame {...defaultFlowProps} position={0} isInSubflow={true} />
+        </Provider>
+      );
+
+      const submitButton = screen.getByRole('button', { name: /Save Simulation/i });
+      await user.click(submitButton);
+
+      // Simulate successful API response
+      const onSuccessCallback = mockCreateSimulation.mock.calls[0][1].onSuccess;
+      onSuccessCallback({
+        result: {
+          simulation_id: 'new-sim-789',
+        },
+      });
+
+      // Then
+      expect(simulationsActions.clearSimulationAtPosition).not.toHaveBeenCalled();
     });
   });
 });
