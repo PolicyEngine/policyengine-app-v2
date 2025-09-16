@@ -70,8 +70,8 @@ describe('ReportSetupFrame', () => {
     consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     // Spy on simulation actions
-    vi.spyOn(simulationsActions, 'createSimulation');
-    vi.spyOn(simulationsActions, 'setActiveSimulation');
+    vi.spyOn(simulationsActions, 'createSimulationAtPosition');
+    vi.spyOn(simulationsActions, 'setActiveSimulationByPosition');
   });
 
   test('given component renders then displays two simulation setup cards', () => {
@@ -194,7 +194,7 @@ describe('ReportSetupFrame', () => {
 
     // Then
     expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_1_MESSAGE);
-    expect(simulationsActions.createSimulation).toHaveBeenCalled();
+    expect(simulationsActions.createSimulationAtPosition).toHaveBeenCalledWith({ position: 0 });
     expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
   });
 
@@ -216,7 +216,7 @@ describe('ReportSetupFrame', () => {
 
     // Then
     expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_2_MESSAGE);
-    expect(simulationsActions.createSimulation).toHaveBeenCalled();
+    expect(simulationsActions.createSimulationAtPosition).toHaveBeenCalledWith({ position: 1 });
     expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
   });
 });
