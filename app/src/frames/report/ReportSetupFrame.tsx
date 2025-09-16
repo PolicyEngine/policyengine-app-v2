@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
 import {
@@ -19,8 +19,14 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
   const [simulation1Id, setSimulation1Id] = useState<string | null>(null);
   const [simulation2Id, setSimulation2Id] = useState<string | null>(null);
 
+  useEffect(() => {
+    console.log("ReportSetupFrame sim1ID: ", simulation1Id, " sim2ID: ", simulation2Id);
+  }, [simulation1Id, simulation2Id]);
+
   // Get all simulations from the store to check their configuration status
   const simulations = useSelector((state: RootState) => selectAllSimulations(state));
+
+  console.log("All simulations in store: ", simulations);
 
   // Find simulations by their stored IDs
   const simulation1 = simulation1Id
