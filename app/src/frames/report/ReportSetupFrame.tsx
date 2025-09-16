@@ -4,7 +4,7 @@ import FlowView from '@/components/common/FlowView';
 import {
   createSimulationAtPosition,
   selectSimulationAtPosition,
-  setActiveSimulationByPosition,
+  setActivePosition,
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -38,22 +38,22 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
   const handleNext = () => {
     if (selectedCard === 'simulation1') {
       console.log('Setting up simulation 1');
-      // Create or set active simulation for position 0
+      // Create simulation at position 0 if needed
       if (!simulation1) {
         dispatch(createSimulationAtPosition({ position: 0 }));
-      } else {
-        dispatch(setActiveSimulationByPosition(0));
       }
+      // Set position 0 as active
+      dispatch(setActivePosition(0));
       // Navigate to simulation selection frame
       onNavigate('setupSimulation1');
     } else if (selectedCard === 'simulation2') {
       console.log('Setting up simulation 2');
-      // Create or set active simulation for position 1
+      // Create simulation at position 1 if needed
       if (!simulation2) {
         dispatch(createSimulationAtPosition({ position: 1 }));
-      } else {
-        dispatch(setActiveSimulationByPosition(1));
       }
+      // Set position 1 as active
+      dispatch(setActivePosition(1));
       // Navigate to simulation selection frame
       onNavigate('setupSimulation2');
     } else if (canProceed) {

@@ -71,7 +71,7 @@ describe('ReportSetupFrame', () => {
 
     // Spy on simulation actions
     vi.spyOn(simulationsActions, 'createSimulationAtPosition');
-    vi.spyOn(simulationsActions, 'setActiveSimulationByPosition');
+    vi.spyOn(simulationsActions, 'setActivePosition');
   });
 
   test('given component renders then displays two simulation setup cards', () => {
@@ -195,6 +195,7 @@ describe('ReportSetupFrame', () => {
     // Then
     expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_1_MESSAGE);
     expect(simulationsActions.createSimulationAtPosition).toHaveBeenCalledWith({ position: 0 });
+    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(0);
     expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
   });
 
@@ -217,6 +218,67 @@ describe('ReportSetupFrame', () => {
     // Then
     expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_2_MESSAGE);
     expect(simulationsActions.createSimulationAtPosition).toHaveBeenCalledWith({ position: 1 });
+    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(1);
+    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
+  });
+
+  test('given simulation already exists at position 0 then only sets active position', async () => {
+    // Given - Create a simulation at position 0
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: { label: 'Existing Sim 1' },
+      })
+    );
+
+    const user = userEvent.setup();
+    render(
+      <Provider store={store}>
+        <ReportSetupFrame {...defaultFlowProps} />
+      </Provider>
+    );
+
+    // When - select first simulation and click setup
+    const firstSimCard = screen.getByText(FIRST_SIMULATION_TITLE).closest('button');
+    await user.click(firstSimCard!);
+
+    const setupButton = screen.getByRole('button', { name: SETUP_FIRST_SIMULATION_LABEL });
+    await user.click(setupButton);
+
+    // Then - should not create new simulation, only set active
+    expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_1_MESSAGE);
+    expect(simulationsActions.createSimulationAtPosition).not.toHaveBeenCalledWith({ position: 0 });
+    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(0);
+    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
+  });
+
+  test('given simulation already exists at position 1 then only sets active position', async () => {
+    // Given - Create a simulation at position 1
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: { label: 'Existing Sim 2' },
+      })
+    );
+
+    const user = userEvent.setup();
+    render(
+      <Provider store={store}>
+        <ReportSetupFrame {...defaultFlowProps} />
+      </Provider>
+    );
+
+    // When - select second simulation and click setup
+    const secondSimCard = screen.getByText(SECOND_SIMULATION_TITLE).closest('button');
+    await user.click(secondSimCard!);
+
+    const setupButton = screen.getByRole('button', { name: SETUP_SECOND_SIMULATION_LABEL });
+    await user.click(setupButton);
+
+    // Then - should not create new simulation, only set active
+    expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_2_MESSAGE);
+    expect(simulationsActions.createSimulationAtPosition).not.toHaveBeenCalledWith({ position: 1 });
+    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(1);
     expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
   });
 });
