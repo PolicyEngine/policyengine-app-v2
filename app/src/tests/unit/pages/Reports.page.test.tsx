@@ -53,7 +53,7 @@ vi.mock('@/components/IngredientReadView', () => ({
       {isLoading && <div>Loading...</div>}
       {isError && <div>Error: {error?.message}</div>}
       {data && <div>Data count: {data.length}</div>}
-      <button onClick={onBuild}>Build Report</button>
+      <button type="button" onClick={onBuild}>Build Report</button>
       <input
         value={searchValue}
         onChange={(e) => onSearchChange(e.target.value)}
