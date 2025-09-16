@@ -203,6 +203,20 @@ export const createNormalizedCacheMock = () => ({
     if (id === mockReport.reportId) {
       return mockReport;
     }
+    if (id === 'report-1') {
+      return {
+        ...mockReport,
+        reportId: 'report-1',
+        simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
+      };
+    }
+    if (id === 'report-2') {
+      return {
+        ...mockReport,
+        reportId: 'report-2',
+        simulationIds: [TEST_SIMULATION_ID_1],
+      };
+    }
     if (id === TEST_SIMULATION_ID_1) {
       return mockSimulation1;
     }
