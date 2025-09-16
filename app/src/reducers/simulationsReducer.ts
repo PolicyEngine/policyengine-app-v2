@@ -114,7 +114,7 @@ export const selectBothSimulations = (
 export const selectActivePosition = (
   state: { simulations: SimulationsState }
 ): 0 | 1 | null => {
-  return state.simulations?.activePosition || null;
+  return state.simulations?.activePosition ?? null;
 };
 
 export const selectActiveSimulation = (

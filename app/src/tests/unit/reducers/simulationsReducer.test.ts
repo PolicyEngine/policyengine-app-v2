@@ -6,6 +6,13 @@ import simulationsReducer, {
   setActivePosition,
   swapSimulations,
   clearAllSimulations,
+  selectSimulationAtPosition,
+  selectBothSimulations,
+  selectActivePosition,
+  selectActiveSimulation,
+  selectHasEmptySlot,
+  selectIsSlotEmpty,
+  selectSimulationById,
 } from '@/reducers/simulationsReducer';
 import {
   emptyInitialState,
@@ -388,6 +395,292 @@ describe('simulationsReducer', () => {
       // Then
       expect(newState.simulations).toEqual([null, null]);
       expect(newState.activePosition).toBeNull();
+    });
+  });
+
+  describe('Selectors', () => {
+    describe('selectSimulationAtPosition', () => {
+      test('given simulation at position 0 then returns simulation', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result = selectSimulationAtPosition(state, 0);
+
+        // Then
+        expect(result).toEqual(mockSimulation1);
+      });
+
+      test('given simulation at position 1 then returns simulation', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result = selectSimulationAtPosition(state, 1);
+
+        // Then
+        expect(result).toEqual(mockSimulation2);
+      });
+
+      test('given empty position then returns null', () => {
+        // Given
+        const state = { simulations: singleSimulationState };
+
+        // When
+        const result = selectSimulationAtPosition(state, 1);
+
+        // Then
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('selectBothSimulations', () => {
+      test('given both simulations then returns tuple', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectBothSimulations(state);
+
+        // Then
+        expect(result).toEqual([mockSimulation1, mockSimulation2]);
+      });
+
+      test('given one simulation then returns tuple with null', () => {
+        // Given
+        const state = { simulations: singleSimulationState };
+
+        // When
+        const result =selectBothSimulations(state);
+
+        // Then
+        expect(result).toEqual([mockSimulationWithoutId1, null]);
+      });
+
+      test('given no simulations then returns tuple of nulls', () => {
+        // Given
+        const state = { simulations: emptyInitialState };
+
+        // When
+        const result =selectBothSimulations(state);
+
+        // Then
+        expect(result).toEqual([null, null]);
+      });
+    });
+
+    describe('selectActivePosition', () => {
+      test('given active position 0 then returns 0', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectActivePosition(state);
+
+        // Then
+        expect(result).toBe(0);
+      });
+
+      test('given active position 1 then returns 1', () => {
+        // Given
+        const state = {
+          simulations: {
+            ...multipleSimulationsState,
+            activePosition: 1 as const
+          }
+        };
+
+        // When
+        const result =selectActivePosition(state);
+
+        // Then
+        expect(result).toBe(1);
+      });
+
+      test('given no active position then returns null', () => {
+        // Given
+        const state = { simulations: emptyInitialState };
+
+        // When
+        const result =selectActivePosition(state);
+
+        // Then
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('selectActiveSimulation', () => {
+      test('given active position 0 then returns simulation at 0', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectActiveSimulation(state);
+
+        // Then
+        expect(result).toEqual(mockSimulation1);
+      });
+
+      test('given active position 1 then returns simulation at 1', () => {
+        // Given
+        const state = {
+          simulations: {
+            ...multipleSimulationsState,
+            activePosition: 1 as const
+          }
+        };
+
+        // When
+        const result =selectActiveSimulation(state);
+
+        // Then
+        expect(result).toEqual(mockSimulation2);
+      });
+
+      test('given no active position then returns null', () => {
+        // Given
+        const state = {
+          simulations: {
+            ...multipleSimulationsState,
+            activePosition: null
+          }
+        };
+
+        // When
+        const result =selectActiveSimulation(state);
+
+        // Then
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('selectHasEmptySlot', () => {
+      test('given both slots filled then returns false', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectHasEmptySlot(state);
+
+        // Then
+        expect(result).toBe(false);
+      });
+
+      test('given one slot empty then returns true', () => {
+        // Given
+        const state = { simulations: singleSimulationState };
+
+        // When
+        const result =selectHasEmptySlot(state);
+
+        // Then
+        expect(result).toBe(true);
+      });
+
+      test('given both slots empty then returns true', () => {
+        // Given
+        const state = { simulations: emptyInitialState };
+
+        // When
+        const result =selectHasEmptySlot(state);
+
+        // Then
+        expect(result).toBe(true);
+      });
+    });
+
+    describe('selectIsSlotEmpty', () => {
+      test('given filled position 0 then returns false', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectIsSlotEmpty(state, 0);
+
+        // Then
+        expect(result).toBe(false);
+      });
+
+      test('given empty position 1 then returns true', () => {
+        // Given
+        const state = { simulations: singleSimulationState };
+
+        // When
+        const result =selectIsSlotEmpty(state, 1);
+
+        // Then
+        expect(result).toBe(true);
+      });
+
+      test('given both empty then returns true for both', () => {
+        // Given
+        const state = { simulations: emptyInitialState };
+
+        // When
+        const result0 =selectIsSlotEmpty(state, 0);
+        const result1 =selectIsSlotEmpty(state, 1);
+
+        // Then
+        expect(result0).toBe(true);
+        expect(result1).toBe(true);
+      });
+    });
+
+    describe('selectSimulationById', () => {
+      test('given ID matching first simulation then returns first', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectSimulationById(state, TEST_PERMANENT_ID_1);
+
+        // Then
+        expect(result).toEqual(mockSimulation1);
+      });
+
+      test('given ID matching second simulation then returns second', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectSimulationById(state, TEST_PERMANENT_ID_2);
+
+        // Then
+        expect(result).toEqual(mockSimulation2);
+      });
+
+      test('given non-existent ID then returns null', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectSimulationById(state, 'non-existent');
+
+        // Then
+        expect(result).toBeNull();
+      });
+
+      test('given undefined ID then returns null', () => {
+        // Given
+        const state = { simulations: multipleSimulationsState };
+
+        // When
+        const result =selectSimulationById(state, undefined);
+
+        // Then
+        expect(result).toBeNull();
+      });
+
+      test('given simulations without IDs then returns null', () => {
+        // Given
+        const state = { simulations: bothSimulationsWithoutIdState };
+
+        // When
+        const result =selectSimulationById(state, TEST_PERMANENT_ID_1);
+
+        // Then
+        expect(result).toBeNull();
+      });
     });
   });
 
