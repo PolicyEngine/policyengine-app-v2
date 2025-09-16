@@ -53,8 +53,8 @@ describe('SimulationCreationFrame', () => {
     };
 
     // Spy on the action creators
-    vi.spyOn(simulationsActions, 'updateSimulationLabel');
-    vi.spyOn(simulationsActions, 'createSimulation');
+    vi.spyOn(simulationsActions, 'createSimulationAtPosition');
+    vi.spyOn(simulationsActions, 'updateSimulationAtPosition');
   });
 
   test('given component mounts then creates simulation in new reducer', () => {
@@ -66,10 +66,11 @@ describe('SimulationCreationFrame', () => {
     );
 
     // Then - should have created a simulation in the new reducer
-    expect(simulationsActions.createSimulation).toHaveBeenCalled();
+    expect(simulationsActions.createSimulationAtPosition).toHaveBeenCalled();
     const state = store.getState();
-    expect(state.simulations.activeId).toBeTruthy();
-    expect(Object.keys(state.simulations.entities)).toHaveLength(1);
+    expect(state.simulations.activePosition).not.toBeNull();
+    const activePosition = state.simulations.activePosition as 0 | 1;
+    expect(state.simulations.simulations[activePosition]).toBeTruthy();
   });
 
   test('given user submits label then dispatches to simulations reducer', async () => {
@@ -89,8 +90,11 @@ describe('SimulationCreationFrame', () => {
     await user.click(submitButton);
 
     // Then - should dispatch to simulations reducer
-    expect(simulationsActions.updateSimulationLabel).toHaveBeenCalledWith({
-      label: TEST_SIMULATION_LABEL,
+    const state = store.getState();
+    const activePosition = state.simulations.activePosition as 0 | 1;
+    expect(simulationsActions.updateSimulationAtPosition).toHaveBeenCalledWith({
+      position: activePosition,
+      updates: { label: TEST_SIMULATION_LABEL },
     });
 
     // And - should navigate to next
@@ -115,14 +119,14 @@ describe('SimulationCreationFrame', () => {
 
     // Then - check reducer state
     const state = store.getState();
-    const activeId = state.simulations.activeId;
-    expect(state.simulations.entities[activeId].label).toBe(TEST_SIMULATION_LABEL);
+    const activePosition = state.simulations.activePosition as 0 | 1;
+    expect(state.simulations.simulations[activePosition]?.label).toBe(TEST_SIMULATION_LABEL);
   });
 
   test('given component already has active simulation then does not create new one', () => {
     // Given - pre-populate the store with a simulation
-    store.dispatch(simulationsActions.createSimulation());
-    const initialActiveId = store.getState().simulations.activeId;
+    store.dispatch(simulationsActions.createSimulationAtPosition({ position: 0 }));
+    const initialActivePosition = store.getState().simulations.activePosition;
 
     // Reset the spy after initial creation
     vi.clearAllMocks();
@@ -135,9 +139,9 @@ describe('SimulationCreationFrame', () => {
     );
 
     // Then - should NOT create another simulation
-    expect(simulationsActions.createSimulation).not.toHaveBeenCalled();
-    const finalActiveId = store.getState().simulations.activeId;
-    expect(finalActiveId).toBe(initialActiveId);
+    expect(simulationsActions.createSimulationAtPosition).not.toHaveBeenCalled();
+    const finalActivePosition = store.getState().simulations.activePosition;
+    expect(finalActivePosition).toBe(initialActivePosition);
   });
 
   test('given empty label then still dispatches to reducer', async () => {
@@ -155,8 +159,11 @@ describe('SimulationCreationFrame', () => {
     await user.click(submitButton);
 
     // Then - should dispatch empty string to reducer
-    expect(simulationsActions.updateSimulationLabel).toHaveBeenCalledWith({
-      label: '',
+    const state = store.getState();
+    const activePosition = state.simulations.activePosition as 0 | 1;
+    expect(simulationsActions.updateSimulationAtPosition).toHaveBeenCalledWith({
+      position: activePosition,
+      updates: { label: '' },
     });
   });
 });
