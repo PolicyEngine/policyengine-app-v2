@@ -1,4 +1,5 @@
 import { Simulation } from '@/types/ingredients/Simulation';
+import { FixedLengthSet } from '@/types/FixedLengthSet';
 
 // Test IDs
 export const TEST_TEMP_ID_1 = 'temp-1';
@@ -48,7 +49,7 @@ export const mockEmptySimulation: Simulation = {
 // Initial state configurations
 export const emptyInitialState = {
   entities: {},
-  ids: [],
+  ids: [null, null] as FixedLengthSet<string>,
   activeId: null,
 };
 
@@ -56,7 +57,7 @@ export const singleSimulationState = {
   entities: {
     [TEST_TEMP_ID_1]: mockSimulation1,
   },
-  ids: [TEST_TEMP_ID_1],
+  ids: [TEST_TEMP_ID_1, null] as FixedLengthSet<string>,
   activeId: TEST_TEMP_ID_1,
 };
 
@@ -65,6 +66,6 @@ export const multipleSimulationsState = {
     [TEST_TEMP_ID_1]: mockSimulation1,
     [TEST_TEMP_ID_2]: mockSimulation2,
   },
-  ids: [TEST_TEMP_ID_1, TEST_TEMP_ID_2],
+  ids: [TEST_TEMP_ID_1, TEST_TEMP_ID_2] as FixedLengthSet<string>,
   activeId: TEST_TEMP_ID_1,
 };

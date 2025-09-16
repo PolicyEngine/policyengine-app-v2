@@ -246,20 +246,34 @@ describe('ReportSelectExistingSimulationFrame', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith(SELECTED_SIMULATION_LOG_PREFIX, expect.any(Object));
   });
 
-  test('given more than 10 simulations then displays only first 10', () => {
-    // Given - add 12 configured simulations
-    for (let i = 1; i <= 12; i++) {
-      store.dispatch(
-        simulationsActions.createSimulation({
-          id: `sim-${i}`,
-          label: `Simulation ${i}`,
-          policyId: `policy-${i}`,
-          populationId: `pop-${i}`,
+  test('given 2 simulations (max capacity) then displays both', () => {
+    // Given - add 2 configured simulations (max capacity with FixedLengthSet)
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: {
+          id: `sim-1`,
+          label: `Simulation 1`,
+          policyId: `policy-1`,
+          populationId: `pop-1`,
           populationType: 'household' as const,
           isCreated: true,
-        })
-      );
-    }
+        }
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: {
+          id: `sim-2`,
+          label: `Simulation 2`,
+          policyId: `policy-2`,
+          populationId: `pop-2`,
+          populationType: 'household' as const,
+          isCreated: true,
+        }
+      })
+    );
 
     // When
     render(
@@ -268,13 +282,8 @@ describe('ReportSelectExistingSimulationFrame', () => {
       </Provider>
     );
 
-    // Then - First 10 should be visible
-    for (let i = 1; i <= 10; i++) {
-      expect(screen.getByText(`Simulation ${i}`)).toBeInTheDocument();
-    }
-
-    // 11th and 12th should not be visible
-    expect(screen.queryByText('Simulation 11')).not.toBeInTheDocument();
-    expect(screen.queryByText('Simulation 12')).not.toBeInTheDocument();
+    // Then - Both should be visible
+    expect(screen.getByText('Simulation 1')).toBeInTheDocument();
+    expect(screen.getByText('Simulation 2')).toBeInTheDocument();
   });
 });
