@@ -2,7 +2,7 @@ import { useDispatch } from 'react-redux';
 import { clearPolicy } from '@/reducers/policyReducer';
 import { clearPopulation } from '@/reducers/populationReducer';
 import { clearReport } from '@/reducers/reportReducer';
-import { clearSimulation } from '@/reducers/simulationsReducer';
+import { clearAllSimulations } from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
 
 export const ingredients = ['policy', 'simulation', 'population', 'report'];
@@ -16,7 +16,7 @@ export const useIngredientReset = () => {
         dispatch(clearPolicy());
         break;
       case 'simulation':
-        dispatch(clearSimulation({}));
+        dispatch(clearAllSimulations());
         dispatch(clearPolicy());
         dispatch(clearPopulation());
         break;
@@ -25,7 +25,7 @@ export const useIngredientReset = () => {
         break;
       case 'report':
         dispatch(clearReport());
-        dispatch(clearSimulation({}));
+        dispatch(clearAllSimulations());
         dispatch(clearPolicy());
         dispatch(clearPopulation());
         break;
