@@ -81,7 +81,7 @@ describe('SelectGeographicScopeFrame', () => {
       },
       preloadedState: {
         population: {
-          populations: [null, null],
+          populations: [null, null] as [any, any],
         },
         metadata: fullMetadataState,
       },

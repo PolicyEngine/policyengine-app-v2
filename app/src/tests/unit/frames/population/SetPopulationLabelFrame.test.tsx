@@ -29,7 +29,7 @@ describe('SetPopulationLabelFrame', () => {
 
   const renderComponent = (populationState = {}, props = mockFlowProps) => {
     const basePopulationState = {
-      populations: [null, null],
+      populations: [null, null] as [any, any],
       ...populationState,
     };
     store = configureStore({
