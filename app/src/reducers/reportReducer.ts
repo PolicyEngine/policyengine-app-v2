@@ -58,6 +58,7 @@ export const reportSlice = createSlice({
       state.output = null;
       state.createdAt = new Date().toISOString();
       state.updatedAt = new Date().toISOString();
+      // Reset to initial position and mode
       state.activeSimulationPosition = 0;
       state.mode = 'standalone';
       // Preserve countryId and apiVersion

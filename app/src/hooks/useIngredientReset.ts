@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { clearAllPolicies } from '@/reducers/policyReducer';
 import { clearAllPopulations } from '@/reducers/populationReducer';
-import { clearReport } from '@/reducers/reportReducer';
+import { clearReport, setMode, setActiveSimulationPosition } from '@/reducers/reportReducer';
 import { clearAllSimulations } from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
 
@@ -14,20 +14,33 @@ export const useIngredientReset = () => {
     switch (ingredientName) {
       case 'policy':
         dispatch(clearAllPolicies());
+        // Reset to standalone mode when clearing any ingredient
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       case 'simulation':
         dispatch(clearAllSimulations());
         dispatch(clearAllPolicies());
         dispatch(clearAllPopulations());
+        // Reset to standalone mode when clearing simulations
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       case 'population':
         dispatch(clearAllPopulations());
+        // Reset to standalone mode when clearing any ingredient
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       case 'report':
         dispatch(clearReport());
         dispatch(clearAllSimulations());
         dispatch(clearAllPolicies());
         dispatch(clearAllPopulations());
+        // clearReport already resets mode and position, but let's be explicit
+        // This ensures consistency even if clearReport changes in the future
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       default:
         console.error(`Unknown ingredient: ${ingredientName}`);
