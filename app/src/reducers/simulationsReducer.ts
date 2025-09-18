@@ -4,12 +4,10 @@ import { Simulation } from '@/types/ingredients/Simulation';
 // Position-based storage for exactly 2 simulations
 interface SimulationsState {
   simulations: [Simulation | null, Simulation | null];  // Store directly by position
-  activePosition: 0 | 1 | null;                        // Which position is active
 }
 
 const initialState: SimulationsState = {
   simulations: [null, null],
-  activePosition: null,
 };
 
 export const simulationsSlice = createSlice({
@@ -35,7 +33,6 @@ export const simulationsSlice = createSlice({
         ...action.payload.simulation,
       };
       state.simulations[action.payload.position] = newSimulation;
-      state.activePosition = action.payload.position;
     },
 
     // Update fields at position
@@ -60,30 +57,17 @@ export const simulationsSlice = createSlice({
     // Clear position
     clearSimulationAtPosition: (state, action: PayloadAction<0 | 1>) => {
       state.simulations[action.payload] = null;
-      if (state.activePosition === action.payload) {
-        state.activePosition = null;
-      }
-    },
-
-    // Set active position
-    setActivePosition: (state, action: PayloadAction<0 | 1 | null>) => {
-      state.activePosition = action.payload;
     },
 
     // Swap positions
     swapSimulations: (state) => {
       [state.simulations[0], state.simulations[1]] =
       [state.simulations[1], state.simulations[0]];
-
-      if (state.activePosition !== null) {
-        state.activePosition = state.activePosition === 0 ? 1 : 0;
-      }
     },
 
     // Clear all
     clearAllSimulations: (state) => {
       state.simulations = [null, null];
-      state.activePosition = null;
     },
   },
 });
@@ -92,7 +76,6 @@ export const {
   createSimulationAtPosition,
   updateSimulationAtPosition,
   clearSimulationAtPosition,
-  setActivePosition,
   swapSimulations,
   clearAllSimulations,
 } = simulationsSlice.actions;
@@ -109,19 +92,6 @@ export const selectBothSimulations = (
   state: { simulations: SimulationsState }
 ): [Simulation | null, Simulation | null] => {
   return state.simulations?.simulations || [null, null];
-};
-
-export const selectActivePosition = (
-  state: { simulations: SimulationsState }
-): 0 | 1 | null => {
-  return state.simulations?.activePosition ?? null;
-};
-
-export const selectActiveSimulation = (
-  state: { simulations: SimulationsState }
-): Simulation | null => {
-  const position = selectActivePosition(state);
-  return position !== null ? selectSimulationAtPosition(state, position) : null;
 };
 
 export const selectHasEmptySlot = (state: { simulations: SimulationsState }): boolean => {

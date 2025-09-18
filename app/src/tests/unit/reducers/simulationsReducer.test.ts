@@ -3,13 +3,10 @@ import simulationsReducer, {
   createSimulationAtPosition,
   updateSimulationAtPosition,
   clearSimulationAtPosition,
-  setActivePosition,
   swapSimulations,
   clearAllSimulations,
   selectSimulationAtPosition,
   selectBothSimulations,
-  selectActivePosition,
-  selectActiveSimulation,
   selectHasEmptySlot,
   selectIsSlotEmpty,
   selectSimulationById,
@@ -54,7 +51,7 @@ describe('simulationsReducer', () => {
         isCreated: false,
       });
       expect(newState.simulations[1]).toBeNull();
-      expect(newState.activePosition).toBe(0);
+      // activePosition removed - now in report reducer.toBe(0);
     });
 
     test('given createSimulationAtPosition with position 1 on empty state then only second slot filled', () => {
@@ -77,7 +74,7 @@ describe('simulationsReducer', () => {
         label: TEST_LABEL_2,
         isCreated: false,
       });
-      expect(newState.activePosition).toBe(1);
+      // activePosition removed - now in report reducer.toBe(1);
     });
 
     test('given createSimulationAtPosition with initial data then simulation contains that data', () => {
@@ -105,7 +102,7 @@ describe('simulationsReducer', () => {
         label: TEST_LABEL_1,
         isCreated: false,
       });
-      expect(newState.activePosition).toBe(1);
+      // activePosition removed - now in report reducer.toBe(1);
     });
 
     test('given createSimulationAtPosition when slot occupied then replaces existing', () => {
@@ -150,7 +147,7 @@ describe('simulationsReducer', () => {
       // Then
       expect(state.simulations[0]?.label).toBe(TEST_LABEL_1);
       expect(state.simulations[1]?.label).toBe(TEST_LABEL_2);
-      expect(state.activePosition).toBe(1);
+      // activePosition removed - now in report reducer.toBe(1);
     });
   });
 
@@ -242,7 +239,6 @@ describe('simulationsReducer', () => {
       // Given
       const state = {
         ...multipleSimulationsState,
-        activePosition: 1 as const,
       };
 
       // When
@@ -250,14 +246,13 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(newState.simulations[1]).toBeNull();
-      expect(newState.activePosition).toBeNull();
+      // activePosition removed - now in report reducer.toBeNull();
     });
 
     test('given clearSimulationAtPosition of non-active then active unchanged', () => {
       // Given
       const state = {
         ...multipleSimulationsState,
-        activePosition: 0 as const,
       };
 
       // When
@@ -265,45 +260,11 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(newState.simulations[1]).toBeNull();
-      expect(newState.activePosition).toBe(0);
+      // activePosition removed - now in report reducer.toBe(0);
     });
   });
 
-  describe('Setting Active Position', () => {
-    test('given setActivePosition then active position changes', () => {
-      // Given
-      const state = multipleSimulationsState;
-
-      // When
-      const newState = simulationsReducer(state, setActivePosition(1));
-
-      // Then
-      expect(newState.activePosition).toBe(1);
-    });
-
-    test('given setActivePosition to null then clears active position', () => {
-      // Given
-      const state = multipleSimulationsState;
-
-      // When
-      const newState = simulationsReducer(state, setActivePosition(null));
-
-      // Then
-      expect(newState.activePosition).toBeNull();
-    });
-
-    test('given setActivePosition to empty slot then still sets position', () => {
-      // Given
-      const state = singleSimulationState;
-
-      // When
-      const newState = simulationsReducer(state, setActivePosition(1));
-
-      // Then
-      expect(newState.activePosition).toBe(1);
-      expect(newState.simulations[1]).toBeNull();
-    });
-  });
+  // setActivePosition tests removed - activePosition now managed by report reducer
 
   describe('Swapping Simulations', () => {
     test('given swapSimulations then positions are swapped', () => {
@@ -322,14 +283,13 @@ describe('simulationsReducer', () => {
       // Given
       const state = {
         ...multipleSimulationsState,
-        activePosition: 0 as const,
       };
 
       // When
       const newState = simulationsReducer(state, swapSimulations());
 
       // Then
-      expect(newState.activePosition).toBe(1);
+      // activePosition removed - now in report reducer.toBe(1);
       expect(newState.simulations[1]).toEqual(mockSimulation1);
     });
 
@@ -344,7 +304,7 @@ describe('simulationsReducer', () => {
       const newState = simulationsReducer(state, swapSimulations());
 
       // Then
-      expect(newState.activePosition).toBeNull();
+      // activePosition removed - now in report reducer.toBeNull();
     });
 
     test('given swapSimulations with one empty slot then swaps with null', () => {
@@ -357,7 +317,7 @@ describe('simulationsReducer', () => {
       // Then
       expect(newState.simulations[0]).toBeNull();
       expect(newState.simulations[1]).toEqual(mockSimulationWithoutId1);
-      expect(newState.activePosition).toBe(1);
+      // activePosition removed - now in report reducer.toBe(1);
     });
 
     test('given swapSimulations with both empty then no change', () => {
@@ -369,7 +329,7 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(newState.simulations).toEqual([null, null]);
-      expect(newState.activePosition).toBeNull();
+      // activePosition removed - now in report reducer.toBeNull();
     });
   });
 
@@ -394,7 +354,7 @@ describe('simulationsReducer', () => {
 
       // Then
       expect(newState.simulations).toEqual([null, null]);
-      expect(newState.activePosition).toBeNull();
+      // activePosition removed - now in report reducer.toBeNull();
     });
   });
 
@@ -469,90 +429,7 @@ describe('simulationsReducer', () => {
       });
     });
 
-    describe('selectActivePosition', () => {
-      test('given active position 0 then returns 0', () => {
-        // Given
-        const state = { simulations: multipleSimulationsState };
-
-        // When
-        const result =selectActivePosition(state);
-
-        // Then
-        expect(result).toBe(0);
-      });
-
-      test('given active position 1 then returns 1', () => {
-        // Given
-        const state = {
-          simulations: {
-            ...multipleSimulationsState,
-            activePosition: 1 as const
-          }
-        };
-
-        // When
-        const result =selectActivePosition(state);
-
-        // Then
-        expect(result).toBe(1);
-      });
-
-      test('given no active position then returns null', () => {
-        // Given
-        const state = { simulations: emptyInitialState };
-
-        // When
-        const result =selectActivePosition(state);
-
-        // Then
-        expect(result).toBeNull();
-      });
-    });
-
-    describe('selectActiveSimulation', () => {
-      test('given active position 0 then returns simulation at 0', () => {
-        // Given
-        const state = { simulations: multipleSimulationsState };
-
-        // When
-        const result =selectActiveSimulation(state);
-
-        // Then
-        expect(result).toEqual(mockSimulation1);
-      });
-
-      test('given active position 1 then returns simulation at 1', () => {
-        // Given
-        const state = {
-          simulations: {
-            ...multipleSimulationsState,
-            activePosition: 1 as const
-          }
-        };
-
-        // When
-        const result =selectActiveSimulation(state);
-
-        // Then
-        expect(result).toEqual(mockSimulation2);
-      });
-
-      test('given no active position then returns null', () => {
-        // Given
-        const state = {
-          simulations: {
-            ...multipleSimulationsState,
-            activePosition: null
-          }
-        };
-
-        // When
-        const result =selectActiveSimulation(state);
-
-        // Then
-        expect(result).toBeNull();
-      });
-    });
+    // selectActivePosition and selectActiveSimulation tests removed - activePosition now managed by report reducer
 
     describe('selectHasEmptySlot', () => {
       test('given both slots filled then returns false', () => {
@@ -717,7 +594,7 @@ describe('simulationsReducer', () => {
         label: 'Second',
       });
       expect(state.simulations[1]).toBeNull();
-      expect(state.activePosition).toBe(0); // Active is still at position 0
+      // activePosition removed - now in report reducer.toBe(0); // Active is still at position 0
     });
 
     test('given API workflow then properly updates simulation', () => {

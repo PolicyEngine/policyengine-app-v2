@@ -65,20 +65,16 @@ export const mockSimulationWithoutId2: Simulation = {
 // Initial state configurations - position-based storage
 export const emptyInitialState = {
   simulations: [null, null] as [Simulation | null, Simulation | null],
-  activePosition: null as 0 | 1 | null,
 };
 
 export const singleSimulationState = {
   simulations: [mockSimulationWithoutId1, null] as [Simulation | null, Simulation | null],
-  activePosition: 0 as 0 | 1 | null,
 };
 
 export const multipleSimulationsState = {
   simulations: [mockSimulation1, mockSimulation2] as [Simulation | null, Simulation | null],
-  activePosition: 0 as 0 | 1 | null,
 };
 
 export const bothSimulationsWithoutIdState = {
   simulations: [mockSimulationWithoutId1, mockSimulationWithoutId2] as [Simulation | null, Simulation | null],
-  activePosition: 0 as 0 | 1 | null,
 };
