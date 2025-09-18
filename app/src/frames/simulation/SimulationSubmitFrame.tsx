@@ -4,50 +4,38 @@ import IngredientSubmissionView, { SummaryBoxItem } from '@/components/Ingredien
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import {
   clearSimulationAtPosition,
-  selectActiveSimulation,
-  selectActivePosition,
-  selectSimulationAtPosition,
   updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
+import {
+  selectCurrentPosition,
+  selectActiveSimulation,
+  selectActivePolicy,
+  selectActivePopulation,
+} from '@/reducers/activeSelectors';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationCreationPayload } from '@/types/payloads';
 
-interface SimulationSubmitFrameProps extends FlowComponentProps {
-  position?: 0 | 1; // Optional specific position to submit
-}
-
 export default function SimulationSubmitFrame({
   onNavigate,
   isInSubflow,
-  position,
-}: SimulationSubmitFrameProps) {
+}: FlowComponentProps) {
   const dispatch = useDispatch();
 
-  // Get simulation from position-based state
-  const simulation = useSelector((state: RootState) =>
-    position !== undefined
-      ? selectSimulationAtPosition(state, position)
-      : selectActiveSimulation(state)
-  );
+  // Get the current position and active simulation from cross-cutting selectors
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const simulation = useSelector((state: RootState) => selectActiveSimulation(state));
 
-  const activePosition = useSelector(selectActivePosition);
-  const targetPosition = position ?? activePosition;
-
-  const policy = useSelector((state: RootState) => state.policy);
-  const population = useSelector((state: RootState) => state.population);
+  // Get policy and population at the current position
+  const policy = useSelector((state: RootState) => selectActivePolicy(state));
+  const population = useSelector((state: RootState) => selectActivePopulation(state));
 
   console.log('Simulation label: ', simulation?.label);
   console.log('Simulation in SimulationSubmitFrame: ', simulation);
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
 
   function handleSubmit() {
-    // Ensure we have a valid position to update
-    if (targetPosition === null) {
-      console.error('No target position available for simulation submission');
-      return;
-    }
 
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
@@ -64,9 +52,9 @@ export default function SimulationSubmitFrame({
       onSuccess: (data) => {
         console.log('Simulation created successfully:', data);
 
-        // Update the simulation at position with the API response
+        // Update the simulation at current position with the API response
         dispatch(updateSimulationAtPosition({
-          position: targetPosition,
+          position: currentPosition,
           updates: {
             id: data.result.simulation_id,
             isCreated: true
@@ -78,7 +66,7 @@ export default function SimulationSubmitFrame({
 
         // If we're not in a subflow, clear just this specific simulation
         if (!isInSubflow) {
-          dispatch(clearSimulationAtPosition(targetPosition));
+          dispatch(clearSimulationAtPosition(currentPosition));
         }
       },
     });
@@ -88,15 +76,15 @@ export default function SimulationSubmitFrame({
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'Population Added',
-      description: population.label || `Household #${simulation?.populationId}`,
+      description: population?.label || `Household #${simulation?.populationId}`,
       isFulfilled: !!simulation?.populationId,
-      badge: population.label || `Household #${simulation?.populationId}`,
+      badge: population?.label || `Household #${simulation?.populationId}`,
     },
     {
       title: 'Policy Reform Added',
-      description: policy.label || `Policy #${simulation?.policyId}`,
+      description: policy?.label || `Policy #${simulation?.policyId}`,
       isFulfilled: !!simulation?.policyId,
-      badge: policy.label || `Policy #${simulation?.policyId}`,
+      badge: policy?.label || `Policy #${simulation?.policyId}`,
     },
   ];
 
