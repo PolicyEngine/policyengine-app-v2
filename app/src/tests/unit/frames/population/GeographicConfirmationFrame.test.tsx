@@ -7,6 +7,7 @@ import { MantineProvider } from '@mantine/core';
 import GeographicConfirmationFrame from '@/frames/population/GeographicConfirmationFrame';
 import metadataReducer from '@/reducers/metadataReducer';
 import populationReducer from '@/reducers/populationReducer';
+import reportReducer from '@/reducers/reportReducer';
 import {
   mockFlowProps,
   mockGeographicAssociation,
@@ -76,6 +77,10 @@ describe('GeographicConfirmationFrame', () => {
     metadataState: Partial<any> = { currentCountry: TEST_COUNTRIES.US },
     props = mockFlowProps
   ) => {
+    const basePopulationState = {
+      populations: [null, null],
+      ...populationState,
+    };
     const fullMetadataState = {
       loading: false,
       error: null,
@@ -106,10 +111,11 @@ describe('GeographicConfirmationFrame', () => {
     store = configureStore({
       reducer: {
         population: populationReducer,
+        report: reportReducer,
         metadata: metadataReducer,
       },
       preloadedState: {
-        population: populationState,
+        population: basePopulationState,
         metadata: fullMetadataState,
       },
     });

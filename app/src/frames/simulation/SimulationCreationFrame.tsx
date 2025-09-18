@@ -8,16 +8,24 @@ import {
   updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
 import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { setMode } from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
-export default function SimulationCreationFrame({ onNavigate }: FlowComponentProps) {
+export default function SimulationCreationFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const [localLabel, setLocalLabel] = useState('');
   const dispatch = useDispatch();
 
   // Get the current position from the cross-cutting selector
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
   const simulation = useSelector((state: RootState) => selectSimulationAtPosition(state, currentPosition));
+
+  // Set mode to standalone if not in a subflow
+  useEffect(() => {
+    if (!isInSubflow) {
+      dispatch(setMode('standalone'));
+    }
+  }, [dispatch, isInSubflow]);
 
   useEffect(() => {
     // If there's no simulation at current position, create one

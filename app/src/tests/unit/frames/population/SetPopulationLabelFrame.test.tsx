@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
 import populationReducer from '@/reducers/populationReducer';
+import reportReducer from '@/reducers/reportReducer';
 import {
   getMockHousehold,
   LONG_LABEL,
@@ -27,13 +28,18 @@ describe('SetPopulationLabelFrame', () => {
   });
 
   const renderComponent = (populationState = {}, props = mockFlowProps) => {
+    const basePopulationState = {
+      populations: [null, null],
+      ...populationState,
+    };
     store = configureStore({
       reducer: {
         population: populationReducer,
+        report: reportReducer,
         metadata: () => ({}),
       },
       preloadedState: {
-        population: populationState,
+        population: basePopulationState,
         metadata: {},
       },
     });

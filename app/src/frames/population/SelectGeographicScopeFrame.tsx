@@ -5,11 +5,12 @@ import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
 import { createPopulationAtPosition, setGeographyAtPosition } from '@/reducers/populationReducer';
 import { selectCurrentPosition, selectActivePopulation } from '@/reducers/activeSelectors';
+import { setMode } from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
 
-export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponentProps) {
+export default function SelectGeographicScopeFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const dispatch = useDispatch();
   const [scope, setScope] = useState<'national' | 'state' | 'household'>('national');
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -22,6 +23,13 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
   // Get current country from metadata state, fallback to 'us' if not available
   const currentCountry: string =
     useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+
+  // Set mode to standalone if not in a subflow (this is the first frame of population flow)
+  useEffect(() => {
+    if (!isInSubflow) {
+      dispatch(setMode('standalone'));
+    }
+  }, [dispatch, isInSubflow]);
 
   // Create population at current position if it doesn't exist
   useEffect(() => {
