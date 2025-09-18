@@ -14,13 +14,11 @@ import {
   UserHouseholdMetadataWithAssociation,
   useUserHouseholds,
 } from '@/hooks/useUserHousehold';
+import { selectCurrentPosition } from '@/reducers/activeSelectors';
 import {
-  clearPopulation,
-  markPopulationAsCreated,
-  setGeography,
-  setHousehold,
-  updatePopulationId,
-  updatePopulationLabel,
+  createPopulationAtPosition,
+  setHouseholdAtPosition,
+  setGeographyAtPosition,
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -31,6 +29,10 @@ export default function SimulationSelectExistingPopulationFrame({
   onNavigate,
 }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const dispatch = useDispatch();
+
+  // Read position from report reducer via cross-cutting selector
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // Fetch household populations
@@ -62,7 +64,6 @@ export default function SimulationSelectExistingPopulationFrame({
   const [localPopulation, setLocalPopulation] = useState<
     UserHouseholdMetadataWithAssociation | UserGeographicMetadataWithAssociation | null
   >(null);
-  const dispatch = useDispatch();
 
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
@@ -121,17 +122,27 @@ export default function SimulationSelectExistingPopulationFrame({
       return;
     }
 
-    dispatch(clearPopulation());
-
     console.log('Local Population on Submit:', localPopulation);
-    dispatch(updatePopulationId(localPopulation.household?.id || ''));
-    dispatch(updatePopulationLabel(localPopulation.association?.label || ''));
 
     const householdToSet = HouseholdAdapter.fromAPI(localPopulation.household!);
     console.log('Setting household in population:', householdToSet);
-    dispatch(setHousehold(householdToSet));
 
-    dispatch(markPopulationAsCreated());
+    // Create a new population at the current position
+    dispatch(createPopulationAtPosition({
+      position: currentPosition,
+      population: {
+        label: localPopulation.association?.label || '',
+        isCreated: true,
+        household: null,
+        geography: null,
+      },
+    }));
+
+    // Update with household data
+    dispatch(setHouseholdAtPosition({
+      position: currentPosition,
+      household: householdToSet,
+    }));
   }
 
   function handleSubmitGeographicPopulation() {
@@ -139,16 +150,25 @@ export default function SimulationSelectExistingPopulationFrame({
       return;
     }
 
-    dispatch(clearPopulation());
-
     console.log('Local Geographic Population on Submit:', localPopulation);
-    dispatch(updatePopulationId(localPopulation.geography?.id || ''));
-    dispatch(updatePopulationLabel(localPopulation.association?.label || ''));
-
     console.log('Setting geography in population:', localPopulation.geography);
-    dispatch(setGeography(localPopulation.geography!));
 
-    dispatch(markPopulationAsCreated());
+    // Create a new population at the current position
+    dispatch(createPopulationAtPosition({
+      position: currentPosition,
+      population: {
+        label: localPopulation.association?.label || '',
+        isCreated: true,
+        household: null,
+        geography: null,
+      },
+    }));
+
+    // Update with geography data
+    dispatch(setGeographyAtPosition({
+      position: currentPosition,
+      geography: localPopulation.geography!,
+    }));
   }
 
   const householdPopulations = householdData || [];
