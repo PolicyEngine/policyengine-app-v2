@@ -18,7 +18,13 @@ export const populationSlice = createSlice({
   name: 'population',
   initialState,
   reducers: {
-    // Create/replace population at position
+    /**
+     * Creates a population at the specified position if one doesn't already exist.
+     * If a population already exists at that position, this action does nothing,
+     * preserving the existing population data.
+     * @param position - The position (0 or 1) where the population should be created
+     * @param population - Optional partial population data to initialize with
+     */
     createPopulationAtPosition: (
       state,
       action: PayloadAction<{
@@ -26,14 +32,20 @@ export const populationSlice = createSlice({
         population?: Partial<Population>;
       }>
     ) => {
-      const newPopulation: Population = {
-        label: null,
-        isCreated: false,
-        household: null,
-        geography: null,
-        ...action.payload.population,
-      };
-      state.populations[action.payload.position] = newPopulation;
+      const { position, population } = action.payload;
+
+      // Only create if no population exists at this position
+      if (!state.populations[position]) {
+        const newPopulation: Population = {
+          label: null,
+          isCreated: false,
+          household: null,
+          geography: null,
+          ...population,
+        };
+        state.populations[position] = newPopulation;
+      }
+      // If a population already exists, do nothing - preserve existing data
     },
 
     // Update population at position

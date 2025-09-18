@@ -81,7 +81,7 @@ describe('populationReducer', () => {
       });
     });
 
-    test('given createPopulationAtPosition replaces existing population', () => {
+    test('given createPopulationAtPosition with existing population then preserves existing population', () => {
       // Given
       const state = {
         populations: [mockPopulation1, null] as [Population | null, Population | null],
@@ -93,13 +93,32 @@ describe('populationReducer', () => {
         population: { label: 'New Population' }
       }));
 
-      // Then
+      // Then - existing population should be preserved, not replaced
+      expect(newState.populations[0]).toEqual(mockPopulation1);
+      expect(newState.populations[0]?.label).toBe(TEST_LABEL); // Original label preserved
+      expect(newState.populations[0]?.household).toEqual(mockHousehold1); // Original household preserved
+    });
+
+    test('given createPopulationAtPosition with null value then creates new population', () => {
+      // Given
+      const state = {
+        populations: [null, mockPopulation1] as [Population | null, Population | null],
+      };
+
+      // When
+      const newState = populationReducer(state, createPopulationAtPosition({
+        position: 0,
+        population: { label: 'New Population' }
+      }));
+
+      // Then - new population should be created since position was null
       expect(newState.populations[0]).toEqual({
         label: 'New Population',
         isCreated: false,
         household: null,
         geography: null,
       });
+      expect(newState.populations[1]).toEqual(mockPopulation1); // Other position unchanged
     });
   });
 

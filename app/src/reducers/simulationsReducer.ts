@@ -15,7 +15,13 @@ export const simulationsSlice = createSlice({
   initialState,
   reducers: {
 
-    // Create/replace at position
+    /**
+     * Creates a simulation at the specified position if one doesn't already exist.
+     * If a simulation already exists at that position, this action does nothing,
+     * preserving the existing simulation data.
+     * @param position - The position (0 or 1) where the simulation should be created
+     * @param simulation - Optional partial simulation data to initialize with
+     */
     createSimulationAtPosition: (
       state,
       action: PayloadAction<{
@@ -23,16 +29,22 @@ export const simulationsSlice = createSlice({
         simulation?: Partial<Simulation>;
       }>
     ) => {
-      const newSimulation: Simulation = {
-        id: undefined, // No ID until API creates it
-        populationId: undefined,
-        policyId: undefined,
-        populationType: undefined,
-        label: null,
-        isCreated: false,
-        ...action.payload.simulation,
-      };
-      state.simulations[action.payload.position] = newSimulation;
+      const { position, simulation } = action.payload;
+
+      // Only create if no simulation exists at this position
+      if (!state.simulations[position]) {
+        const newSimulation: Simulation = {
+          id: undefined, // No ID until API creates it
+          populationId: undefined,
+          policyId: undefined,
+          populationType: undefined,
+          label: null,
+          isCreated: false,
+          ...simulation,
+        };
+        state.simulations[position] = newSimulation;
+      }
+      // If a simulation already exists, do nothing - preserve existing data
     },
 
     // Update fields at position

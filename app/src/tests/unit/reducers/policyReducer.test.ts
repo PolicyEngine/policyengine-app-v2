@@ -75,7 +75,7 @@ describe('policyReducer', () => {
       });
     });
 
-    test('given createPolicyAtPosition replaces existing policy', () => {
+    test('given createPolicyAtPosition with existing policy then preserves existing policy', () => {
       // Given
       const state = {
         policies: [mockPolicy1, null] as [Policy | null, Policy | null],
@@ -87,13 +87,32 @@ describe('policyReducer', () => {
         policy: { label: 'New Policy' }
       }));
 
-      // Then
+      // Then - existing policy should be preserved, not replaced
+      expect(newState.policies[0]).toEqual(mockPolicy1);
+      expect(newState.policies[0]?.label).toBe(TEST_LABEL); // Original label preserved
+      expect(newState.policies[0]?.id).toBe(TEST_POLICY_ID); // Original ID preserved
+    });
+
+    test('given createPolicyAtPosition with null value then creates new policy', () => {
+      // Given
+      const state = {
+        policies: [null, mockPolicy1] as [Policy | null, Policy | null],
+      };
+
+      // When
+      const newState = policyReducer(state, createPolicyAtPosition({
+        position: 0,
+        policy: { label: 'New Policy' }
+      }));
+
+      // Then - new policy should be created since position was null
       expect(newState.policies[0]).toEqual({
         id: undefined,
         label: 'New Policy',
         parameters: [],
         isCreated: false,
       });
+      expect(newState.policies[1]).toEqual(mockPolicy1); // Other position unchanged
     });
   });
 

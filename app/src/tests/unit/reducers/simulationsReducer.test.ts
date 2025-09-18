@@ -29,6 +29,7 @@ import {
   TEST_POLICY_ID_1,
   TEST_POLICY_ID_2,
 } from '@/tests/fixtures/reducers/simulationsReducer';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 describe('simulationsReducer', () => {
   describe('Creating Simulations at Position', () => {
@@ -105,7 +106,7 @@ describe('simulationsReducer', () => {
       // activePosition removed - now in report reducer.toBe(1);
     });
 
-    test('given createSimulationAtPosition when slot occupied then replaces existing', () => {
+    test('given createSimulationAtPosition when slot occupied then preserves existing simulation', () => {
       // Given
       const state = multipleSimulationsState;
       const newSimulation = {
@@ -118,7 +119,26 @@ describe('simulationsReducer', () => {
         simulation: newSimulation,
       }));
 
-      // Then
+      // Then - existing simulation should be preserved, not replaced
+      expect(newState.simulations[0]).toEqual(mockSimulation1);
+      expect(newState.simulations[0]?.label).toBe(TEST_LABEL_1); // Original label preserved
+      expect(newState.simulations[0]?.policyId).toBe(TEST_POLICY_ID_1); // Original policy preserved
+      expect(newState.simulations[1]).toEqual(mockSimulation2);
+    });
+
+    test('given createSimulationAtPosition with null value then creates new simulation', () => {
+      // Given
+      const state = {
+        simulations: [null, mockSimulation2] as [Simulation | null, Simulation | null],
+      };
+
+      // When
+      const newState = simulationsReducer(state, createSimulationAtPosition({
+        position: 0,
+        simulation: { label: TEST_LABEL_UPDATED },
+      }));
+
+      // Then - new simulation should be created since position was null
       expect(newState.simulations[0]).toEqual({
         id: undefined,
         populationId: undefined,
@@ -127,7 +147,7 @@ describe('simulationsReducer', () => {
         label: TEST_LABEL_UPDATED,
         isCreated: false,
       });
-      expect(newState.simulations[1]).toEqual(mockSimulation2);
+      expect(newState.simulations[1]).toEqual(mockSimulation2); // Other position unchanged
     });
 
     test('given createSimulationAtPosition at both positions then both slots filled', () => {

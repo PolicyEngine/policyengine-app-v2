@@ -22,7 +22,13 @@ export const policySlice = createSlice({
   name: 'policy',
   initialState,
   reducers: {
-    // Create/replace policy at position
+    /**
+     * Creates a policy at the specified position if one doesn't already exist.
+     * If a policy already exists at that position, this action does nothing,
+     * preserving the existing policy data.
+     * @param position - The position (0 or 1) where the policy should be created
+     * @param policy - Optional partial policy data to initialize with
+     */
     createPolicyAtPosition: (
       state,
       action: PayloadAction<{
@@ -30,14 +36,20 @@ export const policySlice = createSlice({
         policy?: Partial<Policy>;
       }>
     ) => {
-      const newPolicy: Policy = {
-        id: undefined,
-        label: null,
-        parameters: [],
-        isCreated: false,
-        ...action.payload.policy,
-      };
-      state.policies[action.payload.position] = newPolicy;
+      const { position, policy } = action.payload;
+
+      // Only create if no policy exists at this position
+      if (!state.policies[position]) {
+        const newPolicy: Policy = {
+          id: undefined,
+          label: null,
+          parameters: [],
+          isCreated: false,
+          ...policy,
+        };
+        state.policies[position] = newPolicy;
+      }
+      // If a policy already exists, do nothing - preserve existing data
     },
 
     // Update policy at position
