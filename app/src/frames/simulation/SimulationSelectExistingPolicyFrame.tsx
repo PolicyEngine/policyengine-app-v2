@@ -15,6 +15,7 @@ import {
 } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+import { countryIds } from '@/libs/countries';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -78,7 +79,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
         id: localPolicy.policy?.id?.toString(),
         label: localPolicy.association?.label || '',
         isCreated: true,
-        countryId: localPolicy.policy?.country_id as any, // Will be 'us', 'uk', etc.
+        countryId: localPolicy.policy?.country_id as typeof countryIds[number],
         parameters: [],
       },
     }));
