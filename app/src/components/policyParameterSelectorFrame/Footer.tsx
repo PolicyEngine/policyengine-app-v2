@@ -1,6 +1,8 @@
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Button, Group } from '@mantine/core';
-import { clearPolicy } from '@/reducers/policyReducer';
+import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { clearPolicyAtPosition } from '@/reducers/policyReducer';
+import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function PolicyParameterSelectorFooter({
@@ -9,14 +11,17 @@ export default function PolicyParameterSelectorFooter({
 }: FlowComponentProps) {
   const dispatch = useDispatch();
 
+  // Get the current position from the cross-cutting selector
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+
   function handleNext() {
     // Dispatch an action to move to the next step
     onNavigate('next');
   }
 
   function handleCancel() {
-    // Clear policy state and return to the previous step
-    dispatch(clearPolicy());
+    // Clear policy at current position and return to the previous step
+    dispatch(clearPolicyAtPosition(currentPosition));
     onReturn();
   }
 

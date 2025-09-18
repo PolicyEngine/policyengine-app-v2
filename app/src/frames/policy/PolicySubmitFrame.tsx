@@ -6,8 +6,8 @@ import IngredientSubmissionView, {
   TextListSubItem,
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { markPolicyAsCreated, updatePolicyId } from '@/reducers/policyReducer';
+import { selectCurrentPosition, selectActivePolicy } from '@/reducers/activeSelectors';
+import { updatePolicyAtPosition, clearPolicyAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/ingredients/Policy';
@@ -15,18 +15,28 @@ import { PolicyCreationPayload } from '@/types/payloads';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
-  const params = useSelector((state: RootState) => state.policy.parameters || []);
   const dispatch = useDispatch();
-  const { resetIngredient } = useIngredientReset();
-  const policyState = useSelector((state: RootState) => state.policy);
-  const { createPolicy, isPending } = useCreatePolicy(policyState.label || undefined);
+
+  // Read position from report reducer via cross-cutting selector
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+
+  // Get the active policy at the current position
+  const policyState = useSelector((state: RootState) => selectActivePolicy(state));
+  const params = policyState?.parameters || [];
+
+  const { createPolicy, isPending } = useCreatePolicy(policyState?.label || undefined);
 
   // Convert Redux state to Policy type structure
   const policy: Partial<Policy> = {
-    parameters: policyState.parameters,
+    parameters: policyState?.parameters,
   };
 
   function handleSubmit() {
+    if (!policyState) {
+      console.error('No policy found at current position');
+      return;
+    }
+
     const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
       policy as Policy
     );
@@ -34,12 +44,18 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
         console.log('Policy created successfully:', data);
-        dispatch(updatePolicyId(data.result.policy_id));
-        dispatch(markPolicyAsCreated());
+        // Update the policy at the current position with the ID and mark as created
+        dispatch(updatePolicyAtPosition({
+          position: currentPosition,
+          updates: {
+            id: data.result.policy_id,
+            isCreated: true
+          }
+        }));
         // If we've created this policy as part of a standalone policy creation flow,
-        // we're done; clear the policy reducer
+        // we're done; clear the policy at current position
         if (!isInSubflow) {
-          resetIngredient('policy');
+          dispatch(clearPolicyAtPosition(currentPosition));
         }
         onReturn();
       },
