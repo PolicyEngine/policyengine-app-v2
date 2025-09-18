@@ -115,5 +115,3 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
     </Box>
   );
 };
-
-
