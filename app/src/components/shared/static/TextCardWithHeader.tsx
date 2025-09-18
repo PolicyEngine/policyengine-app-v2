@@ -22,16 +22,20 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   onButtonClick,
 }) => {
   let resolvedBackgroundColor: string;
+  let textColor: string;
   switch (backgroundColor) {
     case 'green':
       resolvedBackgroundColor = colors.primary[500];
+      textColor = colors.text.inverse;
       break;
     case 'gray':
       resolvedBackgroundColor = colors.gray[200];
+      textColor = colors.text.primary;
       break;
     case 'white':
     default:
       resolvedBackgroundColor = colors.white;
+      textColor = colors.text.primary;
       break;
   }
 
@@ -57,7 +61,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         <Stack gap="md">
           {sections.map((section, idx) => (
             <>
-              <Title key={`title-${idx}`} order={3} c={colors.primary[50]} lh={1.3} ta="left">
+              <Title key={`title-${idx}`} order={3} c={textColor} lh={1.3} ta="left">
                 {section.heading}
               </Title>
               {Array.isArray(section.body) ? (
@@ -65,7 +69,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
                   <Text
                     key={`body-${idx}-${pIdx}`}
                     size="md"
-                    c={colors.text.primary}
+                    c={textColor}
                     lh={1.5}
                     ta="left"
                     mb="xs"
@@ -74,7 +78,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
                   </Text>
                 ))
               ) : (
-                <Text key={`body-${idx}`} size="md" c={colors.text.primary} lh={1.5} ta="left">
+                <Text key={`body-${idx}`} size="md" c={textColor} lh={1.5} ta="left">
                   {section.body}
                 </Text>
               )}
@@ -89,8 +93,8 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
                   <Button
                     key={idx}
                     onClick={() => onButtonClick?.(label)}
-                    variant="filled"
-                    color={colors.primary[50]}
+                    variant="default"
+                    color={colors.primary[500]}
                   >
                     {label}
                   </Button>
@@ -99,8 +103,8 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
             ) : (
               <Button
                 onClick={() => onButtonClick?.(buttonLabel)}
-                variant="filled"
-                color={colors.primary[50]}
+                variant="default"
+                color={colors.primary[500]}
                 mt="md"
               >
                 {buttonLabel}
@@ -112,14 +116,4 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   );
 };
 
-export default function TextCardWithHeaderComponent() {
-  return (
-    <TitleCardWithHeader
-      title=""
-      sections={[]}
-      backgroundColor="white"
-      buttonLabel={[]}
-      onButtonClick={() => {}}
-    />
-  );
-}
+
