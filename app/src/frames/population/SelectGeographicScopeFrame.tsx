@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
-import { setGeography } from '@/reducers/populationReducer';
+import { createPopulationAtPosition, setGeographyAtPosition } from '@/reducers/populationReducer';
+import { selectCurrentPosition, selectActivePopulation } from '@/reducers/activeSelectors';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
@@ -14,9 +15,20 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
 
+  // Get current position and population
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const populationState = useSelector((state: RootState) => selectActivePopulation(state));
+
   // Get current country from metadata state, fallback to 'us' if not available
   const currentCountry: string =
     useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+
+  // Create population at current position if it doesn't exist
+  useEffect(() => {
+    if (!populationState) {
+      dispatch(createPopulationAtPosition({ position: currentPosition }));
+    }
+  }, [dispatch, currentPosition, populationState]);
 
   const usStates = us_regions.result.economy_options.region
     .filter((r) => r.name !== 'us')
@@ -75,7 +87,10 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
         geographyId: scope === 'national' ? currentCountry : extractRegionValue(selectedRegion),
       };
       console.log('Dispatching geography:', geography);
-      dispatch(setGeography(geography));
+      dispatch(setGeographyAtPosition({
+        position: currentPosition,
+        geography
+      }));
     }
     onNavigate(scope);
   }

@@ -1,6 +1,6 @@
 import { useDispatch } from 'react-redux';
-import { clearPolicy } from '@/reducers/policyReducer';
-import { clearPopulation } from '@/reducers/populationReducer';
+import { clearAllPolicies } from '@/reducers/policyReducer';
+import { clearAllPopulations } from '@/reducers/populationReducer';
 import { clearReport } from '@/reducers/reportReducer';
 import { clearAllSimulations } from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
@@ -13,21 +13,21 @@ export const useIngredientReset = () => {
   const resetIngredient = (ingredientName: (typeof ingredients)[number]) => {
     switch (ingredientName) {
       case 'policy':
-        dispatch(clearPolicy());
+        dispatch(clearAllPolicies());
         break;
       case 'simulation':
         dispatch(clearAllSimulations());
-        dispatch(clearPolicy());
-        dispatch(clearPopulation());
+        dispatch(clearAllPolicies());
+        dispatch(clearAllPopulations());
         break;
       case 'population':
-        dispatch(clearPopulation());
+        dispatch(clearAllPopulations());
         break;
       case 'report':
         dispatch(clearReport());
         dispatch(clearAllSimulations());
-        dispatch(clearPolicy());
-        dispatch(clearPopulation());
+        dispatch(clearAllPolicies());
+        dispatch(clearAllPopulations());
         break;
       default:
         console.error(`Unknown ingredient: ${ingredientName}`);

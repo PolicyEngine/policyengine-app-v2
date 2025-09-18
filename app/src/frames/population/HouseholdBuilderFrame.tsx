@@ -22,12 +22,12 @@ import {
   isDropdownField,
 } from '@/libs/metadataUtils';
 import {
-  initializeHousehold,
-  markPopulationAsCreated,
-  setHousehold,
-  updatePopulationId,
-  updatePopulationLabel,
+  initializeHouseholdAtPosition,
+  updatePopulationAtPosition,
+  setHouseholdAtPosition,
+  updatePopulationIdAtPosition,
 } from '@/reducers/populationReducer';
+import { selectCurrentPosition, selectActivePopulation } from '@/reducers/activeSelectors';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Household } from '@/types/ingredients/Household';
@@ -41,14 +41,15 @@ export default function HouseholdBuilderFrame({
   isInSubflow,
 }: FlowComponentProps) {
   const dispatch = useDispatch();
-  const populationState = useSelector((state: RootState) => state.population);
-  const { createHousehold, isPending } = useCreateHousehold(populationState.label || '');
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const populationState = useSelector((state: RootState) => selectActivePopulation(state));
+  const { createHousehold, isPending } = useCreateHousehold(populationState?.label || '');
   const { resetIngredient } = useIngredientReset();
   const countryId = 'us'; // TODO: Get from application state when available
 
   // Initialize with empty household if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {
-    if (populationState.household) {
+    if (populationState?.household) {
       return populationState.household;
     }
     const builder = new HouseholdBuilder(countryId as any, '2024');
@@ -76,10 +77,14 @@ export default function HouseholdBuilderFrame({
 
   // Initialize household on mount if not exists
   useEffect(() => {
-    if (!populationState.household) {
-      dispatch(initializeHousehold({ countryId }));
+    if (!populationState?.household) {
+      dispatch(initializeHouseholdAtPosition({
+        position: currentPosition,
+        countryId,
+        year: taxYear
+      }));
     }
-  }, [populationState.household, countryId, dispatch]);
+  }, [populationState?.household, countryId, dispatch, currentPosition, taxYear]);
 
   // Build household based on form values
   useEffect(() => {
@@ -297,7 +302,10 @@ export default function HouseholdBuilderFrame({
 
   const handleSubmit = async () => {
     // Sync final household to Redux before submit
-    dispatch(setHousehold(household));
+    dispatch(setHouseholdAtPosition({
+      position: currentPosition,
+      household
+    }));
 
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(household);
@@ -316,12 +324,20 @@ export default function HouseholdBuilderFrame({
       console.log('Household created successfully:', result);
 
       const householdId = result.result.household_id;
-      const label = populationState.label || '';
+      const label = populationState?.label || '';
 
       // Update population state with the created household ID
-      dispatch(updatePopulationId(householdId));
-      dispatch(updatePopulationLabel(label));
-      dispatch(markPopulationAsCreated());
+      dispatch(updatePopulationIdAtPosition({
+        position: currentPosition,
+        id: householdId
+      }));
+      dispatch(updatePopulationAtPosition({
+        position: currentPosition,
+        updates: {
+          label,
+          isCreated: true
+        }
+      }));
 
       // If standalone flow, reset
       if (!isInSubflow) {

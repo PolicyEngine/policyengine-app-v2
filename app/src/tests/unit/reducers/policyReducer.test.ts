@@ -195,7 +195,7 @@ describe('policyReducer', () => {
 
       // Then
       expect(newState.policies[0]?.parameters).toHaveLength(1);
-      expect(newState.policies[0]?.parameters[0]).toEqual({
+      expect(newState.policies[0]?.parameters?.[0]).toEqual({
         name: 'tax_rate',
         values: expect.arrayContaining([
           expect.objectContaining({
