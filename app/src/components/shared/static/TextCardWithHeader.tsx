@@ -57,7 +57,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         <Stack gap="md">
           {sections.map((section, idx) => (
             <>
-              <Title key={`title-${idx}`} order={3} c={colors.blue[700]} lh={1.3} ta="left">
+              <Title key={`title-${idx}`} order={3} c={colors.primary[50]} lh={1.3} ta="left">
                 {section.heading}
               </Title>
               {Array.isArray(section.body) ? (
@@ -90,7 +90,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
                     key={idx}
                     onClick={() => onButtonClick?.(label)}
                     variant="filled"
-                    color={colors.blue[700]}
+                    color={colors.primary[50]}
                   >
                     {label}
                   </Button>
@@ -100,7 +100,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
               <Button
                 onClick={() => onButtonClick?.(buttonLabel)}
                 variant="filled"
-                color={colors.blue[700]}
+                color={colors.primary[50]}
                 mt="md"
               >
                 {buttonLabel}
