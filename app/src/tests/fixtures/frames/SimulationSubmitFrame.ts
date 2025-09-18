@@ -49,39 +49,46 @@ export const mockSimulationEmpty: Simulation = {
 export const mockStateWithOldSimulation = {
   simulation: mockSimulationComplete,
   policy: {
-    id: TEST_POLICY_ID,
-    label: TEST_POLICY_LABEL,
-    isCreated: true,
+    policies: [{
+      id: TEST_POLICY_ID,
+      label: TEST_POLICY_LABEL,
+      parameters: [],
+      isCreated: true,
+    }, null] as any,
   },
   population: {
-    household: {
-      id: TEST_HOUSEHOLD_ID,
-    },
-    label: TEST_POPULATION_LABEL,
-    isCreated: true,
+    populations: [{
+      household: {
+        id: TEST_HOUSEHOLD_ID,
+      },
+      label: TEST_POPULATION_LABEL,
+      isCreated: true,
+      geography: null,
+    }, null] as any,
   },
 };
 
 export const mockStateWithNewSimulation = {
   simulations: {
-    entities: {
-      [TEST_SIMULATION_ID]: mockSimulationComplete,
-    },
-    ids: [TEST_SIMULATION_ID],
-    activeId: TEST_SIMULATION_ID,
-    mode: 'single' as const,
+    simulations: [mockSimulationComplete, null] as [Simulation | null, Simulation | null],
   },
   policy: {
-    id: TEST_POLICY_ID,
-    label: TEST_POLICY_LABEL,
-    isCreated: true,
+    policies: [{
+      id: TEST_POLICY_ID,
+      label: TEST_POLICY_LABEL,
+      parameters: [],
+      isCreated: true,
+    }, null] as any,
   },
   population: {
-    household: {
-      id: TEST_HOUSEHOLD_ID,
-    },
-    label: TEST_POPULATION_LABEL,
-    isCreated: true,
+    populations: [{
+      household: {
+        id: TEST_HOUSEHOLD_ID,
+      },
+      label: TEST_POPULATION_LABEL,
+      isCreated: true,
+      geography: null,
+    }, null] as any,
   },
 };
 
@@ -90,23 +97,24 @@ export const mockStateWithBothSimulations = {
   simulation: mockSimulationPartial,
   // New state
   simulations: {
-    entities: {
-      [TEST_SIMULATION_ID]: mockSimulationComplete,
-    },
-    ids: [TEST_SIMULATION_ID],
-    activeId: TEST_SIMULATION_ID,
-    mode: 'single' as const,
+    simulations: [mockSimulationComplete, null] as [Simulation | null, Simulation | null],
   },
   policy: {
-    id: TEST_POLICY_ID,
-    label: TEST_POLICY_LABEL,
-    isCreated: true,
+    policies: [{
+      id: TEST_POLICY_ID,
+      label: TEST_POLICY_LABEL,
+      parameters: [],
+      isCreated: true,
+    }, null] as any,
   },
   population: {
-    household: {
-      id: TEST_HOUSEHOLD_ID,
-    },
-    label: TEST_POPULATION_LABEL,
-    isCreated: true,
+    populations: [{
+      household: {
+        id: TEST_HOUSEHOLD_ID,
+      },
+      label: TEST_POPULATION_LABEL,
+      isCreated: true,
+      geography: null,
+    }, null] as any,
   },
 };
