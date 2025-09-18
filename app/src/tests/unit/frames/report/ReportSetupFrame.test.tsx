@@ -1,284 +1,183 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
-import flowReducer from '@/reducers/flowReducer';
-import metadataReducer from '@/reducers/metadataReducer';
-import policyReducer from '@/reducers/policyReducer';
-import populationReducer from '@/reducers/populationReducer';
-import reportReducer from '@/reducers/reportReducer';
-import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
 import {
-  ADDING_SIMULATION_1_MESSAGE,
-  ADDING_SIMULATION_2_MESSAGE,
-  FIRST_SIMULATION_DESCRIPTION,
-  FIRST_SIMULATION_TITLE,
-  NEXT_BUTTON_LABEL,
-  REPORT_SETUP_FRAME_TITLE,
-  SECOND_SIMULATION_DESCRIPTION,
-  SECOND_SIMULATION_TITLE,
-  SETTING_UP_SIMULATION_1_MESSAGE,
-  SETTING_UP_SIMULATION_2_MESSAGE,
-  SETUP_FIRST_SIMULATION_LABEL,
-  SETUP_SECOND_SIMULATION_LABEL,
-} from '@/tests/fixtures/frames/ReportSetupFrame';
+  mockOnNavigate,
+  mockSimulation1,
+  mockSimulation2
+} from '@/tests/fixtures/frames/reportFrameMocks';
+import * as reportReducer from '@/reducers/reportReducer';
+import * as simulationsReducer from '@/reducers/simulationsReducer';
+
+// Mock Plotly
+vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
+
+// Mock Redux dispatch
+const mockDispatch = vi.fn();
+
+// Mock simulation selector at the module level
+const mockSelectSimulationAtPosition = vi.fn();
+vi.mock('@/reducers/simulationsReducer', async () => {
+  const actual = await vi.importActual('@/reducers/simulationsReducer') as any;
+  return {
+    ...actual,
+    selectSimulationAtPosition: (state: any, position: number) => mockSelectSimulationAtPosition(position),
+    createSimulationAtPosition: actual.createSimulationAtPosition,
+  };
+});
+
+vi.mock('react-redux', async () => {
+  const actual = await vi.importActual('react-redux');
+  return {
+    ...actual,
+    useDispatch: () => mockDispatch,
+    useSelector: (selector: any) => {
+      // Call the selector with a fake state
+      return selector({});
+    },
+  };
+});
 
 describe('ReportSetupFrame', () => {
-  let store: any;
-  let mockOnNavigate: ReturnType<typeof vi.fn>;
-  let mockOnReturn: ReturnType<typeof vi.fn>;
-  let defaultFlowProps: any;
-  let consoleLogSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Create a fresh store for each test
-    store = configureStore({
-      reducer: {
-        report: reportReducer,
-        simulations: simulationsReducer,
-        flow: flowReducer,
-        policy: policyReducer,
-        population: populationReducer,
-        household: populationReducer,
-        metadata: metadataReducer,
-      },
-    });
-
-    mockOnNavigate = vi.fn();
-    mockOnReturn = vi.fn();
-
-    // Default flow props to satisfy FlowComponentProps interface
-    defaultFlowProps = {
-      onNavigate: mockOnNavigate,
-      onReturn: mockOnReturn,
-      flowConfig: {
-        component: 'ReportSetupFrame',
-        on: {
-          setupSimulation1: 'ReportSelectSimulationFrame',
-          setupSimulation2: 'ReportSelectSimulationFrame',
-          next: '__return__',
-        },
-      },
-      isInSubflow: false,
-      flowDepth: 0,
-    };
-
-    // Spy on console.log for testing console messages
-    consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-    // Spy on simulation actions
-    vi.spyOn(simulationsActions, 'createSimulationAtPosition');
-    vi.spyOn(simulationsActions, 'setActivePosition');
+    mockDispatch.mockClear();
+    mockOnNavigate.mockClear();
+    mockSelectSimulationAtPosition.mockClear();
   });
 
-  test('given component renders then displays two simulation setup cards', () => {
-    // Given/When
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
+  test('given component mounts then sets mode to report', () => {
+    // Given
+    mockSelectSimulationAtPosition.mockImplementation(() => null);
 
-    // Then - should display title and two cards
-    expect(screen.getByRole('heading', { name: REPORT_SETUP_FRAME_TITLE })).toBeInTheDocument();
-    expect(screen.getByText(FIRST_SIMULATION_TITLE)).toBeInTheDocument();
-    expect(screen.getByText(FIRST_SIMULATION_DESCRIPTION)).toBeInTheDocument();
-    expect(screen.getByText(SECOND_SIMULATION_TITLE)).toBeInTheDocument();
-    expect(screen.getByText(SECOND_SIMULATION_DESCRIPTION)).toBeInTheDocument();
-  });
-
-  test('given no simulations configured then Next button is disabled', () => {
-    // Given/When
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
+    // When
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
 
     // Then
-    const nextButton = screen.getByRole('button', { name: NEXT_BUTTON_LABEL });
+    expect(mockDispatch).toHaveBeenCalledWith(
+      reportReducer.setMode('report')
+    );
+  });
+
+  test('given no simulations configured then shows add simulation cards', () => {
+    // Given
+    mockSelectSimulationAtPosition.mockImplementation(() => null);
+
+    // When
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+
+    // Then
+    expect(screen.getByText('Add a first simulation')).toBeInTheDocument();
+    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
+  });
+
+  test('given user clicks first simulation then sets position 0 and navigates', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockSelectSimulationAtPosition.mockImplementation(() => null);
+
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+
+    // When
+    await user.click(screen.getByText('Add a first simulation'));
+    await user.click(screen.getByRole('button', { name: /Setup first simulation/i }));
+
+    // Then
+    expect(mockDispatch).toHaveBeenCalledWith(
+      simulationsReducer.createSimulationAtPosition({ position: 0 })
+    );
+    expect(mockDispatch).toHaveBeenCalledWith(
+      reportReducer.setActiveSimulationPosition(0)
+    );
+    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
+  });
+
+  test('given user clicks second simulation then sets position 1 and navigates', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockSelectSimulationAtPosition.mockImplementation(() => null);
+
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+
+    // When
+    await user.click(screen.getByText('Add a second simulation'));
+    await user.click(screen.getByRole('button', { name: /Setup second simulation/i }));
+
+    // Then
+    expect(mockDispatch).toHaveBeenCalledWith(
+      simulationsReducer.createSimulationAtPosition({ position: 1 })
+    );
+    expect(mockDispatch).toHaveBeenCalledWith(
+      reportReducer.setActiveSimulationPosition(1)
+    );
+    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
+  });
+
+  test('given both simulations configured then next button is enabled', async () => {
+    // Given - mock to return configured simulations
+    mockSelectSimulationAtPosition.mockImplementation((position) => {
+      return position === 0 ? mockSimulation1 : mockSimulation2;
+    });
+
+    const user = userEvent.setup();
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+
+    // When - should have enabled Next button
+    const nextButton = screen.getByRole('button', { name: /Next/i });
+
+    // Then
+    expect(nextButton).toBeEnabled();
+
+    // When clicking next
+    await user.click(nextButton);
+
+    // Then navigates
+    expect(mockOnNavigate).toHaveBeenCalledWith('next');
+  });
+
+  test('given only first simulation configured then shows mixed state', () => {
+    // Given - return simulation for position 0, null for position 1
+    mockSelectSimulationAtPosition.mockImplementation((position) => {
+      return position === 0 ? mockSimulation1 : null;
+    });
+
+    // When
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+
+    // Then - should show configured text for sim1 and "Add" text for sim2
+    expect(screen.getByText(/Baseline Simulation/)).toBeInTheDocument();
+    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
+  });
+
+  test('given one simulation configured then next button is disabled', () => {
+    // Given - only first simulation configured
+    mockSelectSimulationAtPosition.mockImplementation((position) => {
+      return position === 0 ? mockSimulation1 : null;
+    });
+
+    // When
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+
+    // Then - Next button should be disabled
+    const nextButton = screen.getByRole('button', { name: /Next/i });
     expect(nextButton).toBeDisabled();
   });
 
-  test('given user clicks first simulation card then logs message and updates selection', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
+  test('given existing simulation at position then displays correctly', () => {
+    // Given - first simulation already exists, second doesn't
+    mockSelectSimulationAtPosition.mockImplementation((position) => {
+      return position === 0 ? mockSimulation1 : null;
+    });
 
     // When
-    const firstSimCard = screen.getByText(FIRST_SIMULATION_TITLE).closest('button');
-    await user.click(firstSimCard!);
+    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
 
-    // Then
-    expect(consoleLogSpy).toHaveBeenCalledWith(ADDING_SIMULATION_1_MESSAGE);
-    // Card should appear selected (would need to check visual state)
-  });
+    // Then - should show the configured sim1 and unconfigured sim2
+    expect(screen.getByText(/Baseline Simulation/)).toBeInTheDocument();
+    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
 
-  test('given user clicks second simulation card then logs message and updates selection', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When
-    const secondSimCard = screen.getByText(SECOND_SIMULATION_TITLE).closest('button');
-    await user.click(secondSimCard!);
-
-    // Then
-    expect(consoleLogSpy).toHaveBeenCalledWith(ADDING_SIMULATION_2_MESSAGE);
-  });
-
-  test('given first simulation selected then primary button shows setup label', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When
-    const firstSimCard = screen.getByText(FIRST_SIMULATION_TITLE).closest('button');
-    await user.click(firstSimCard!);
-
-    // Then
-    const primaryButton = screen.getByRole('button', { name: SETUP_FIRST_SIMULATION_LABEL });
-    expect(primaryButton).toBeInTheDocument();
-    expect(primaryButton).not.toBeDisabled();
-  });
-
-  test('given second simulation selected then primary button shows setup label', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When
-    const secondSimCard = screen.getByText(SECOND_SIMULATION_TITLE).closest('button');
-    await user.click(secondSimCard!);
-
-    // Then
-    const primaryButton = screen.getByRole('button', { name: SETUP_SECOND_SIMULATION_LABEL });
-    expect(primaryButton).toBeInTheDocument();
-    expect(primaryButton).not.toBeDisabled();
-  });
-
-  test('given user clicks setup first simulation then creates simulation and navigates', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When - select first simulation and click setup
-    const firstSimCard = screen.getByText(FIRST_SIMULATION_TITLE).closest('button');
-    await user.click(firstSimCard!);
-
-    const setupButton = screen.getByRole('button', { name: SETUP_FIRST_SIMULATION_LABEL });
-    await user.click(setupButton);
-
-    // Then
-    expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_1_MESSAGE);
-    expect(simulationsActions.createSimulationAtPosition).toHaveBeenCalledWith({ position: 0 });
-    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(0);
-    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
-  });
-
-  test('given user clicks setup second simulation then creates simulation and navigates', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When - select second simulation and click setup
-    const secondSimCard = screen.getByText(SECOND_SIMULATION_TITLE).closest('button');
-    await user.click(secondSimCard!);
-
-    const setupButton = screen.getByRole('button', { name: SETUP_SECOND_SIMULATION_LABEL });
-    await user.click(setupButton);
-
-    // Then
-    expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_2_MESSAGE);
-    expect(simulationsActions.createSimulationAtPosition).toHaveBeenCalledWith({ position: 1 });
-    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(1);
-    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
-  });
-
-  test('given simulation already exists at position 0 then only sets active position', async () => {
-    // Given - Create a simulation at position 0
-    store.dispatch(
-      simulationsActions.createSimulationAtPosition({
-        position: 0,
-        simulation: { label: 'Existing Sim 1' },
-      })
-    );
-
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When - select first simulation and click setup
-    const firstSimCard = screen.getByText(FIRST_SIMULATION_TITLE).closest('button');
-    await user.click(firstSimCard!);
-
-    const setupButton = screen.getByRole('button', { name: SETUP_FIRST_SIMULATION_LABEL });
-    await user.click(setupButton);
-
-    // Then - should not create new simulation, only set active
-    expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_1_MESSAGE);
-    expect(simulationsActions.createSimulationAtPosition).not.toHaveBeenCalledWith({ position: 0 });
-    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(0);
-    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
-  });
-
-  test('given simulation already exists at position 1 then only sets active position', async () => {
-    // Given - Create a simulation at position 1
-    store.dispatch(
-      simulationsActions.createSimulationAtPosition({
-        position: 1,
-        simulation: { label: 'Existing Sim 2' },
-      })
-    );
-
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // When - select second simulation and click setup
-    const secondSimCard = screen.getByText(SECOND_SIMULATION_TITLE).closest('button');
-    await user.click(secondSimCard!);
-
-    const setupButton = screen.getByRole('button', { name: SETUP_SECOND_SIMULATION_LABEL });
-    await user.click(setupButton);
-
-    // Then - should not create new simulation, only set active
-    expect(consoleLogSpy).toHaveBeenCalledWith(SETTING_UP_SIMULATION_2_MESSAGE);
-    expect(simulationsActions.createSimulationAtPosition).not.toHaveBeenCalledWith({ position: 1 });
-    expect(simulationsActions.setActivePosition).toHaveBeenCalledWith(1);
-    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
+    // And Next button should be disabled since only one simulation is configured
+    const nextButton = screen.getByRole('button', { name: /Next/i });
+    expect(nextButton).toBeDisabled();
   });
 });

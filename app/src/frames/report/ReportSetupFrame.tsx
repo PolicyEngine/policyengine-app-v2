@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
 import {
   createSimulationAtPosition,
   selectSimulationAtPosition,
-  setActivePosition,
 } from '@/reducers/simulationsReducer';
+import {
+  setActiveSimulationPosition,
+  setMode,
+} from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
@@ -16,6 +19,11 @@ interface ReportSetupFrameProps extends FlowComponentProps {}
 export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) {
   const dispatch = useDispatch();
   const [selectedCard, setSelectedCard] = useState<SimulationCard | null>(null);
+
+  // Set mode to 'report' on mount
+  useEffect(() => {
+    dispatch(setMode('report'));
+  }, [dispatch]);
 
   // Use position-based selectors - position IS the stable reference
   const simulation1 = useSelector((state: RootState) => selectSimulationAtPosition(state, 0));
@@ -42,8 +50,8 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
       if (!simulation1) {
         dispatch(createSimulationAtPosition({ position: 0 }));
       }
-      // Set position 0 as active
-      dispatch(setActivePosition(0));
+      // Set position 0 as active in report reducer
+      dispatch(setActiveSimulationPosition(0));
       // Navigate to simulation selection frame
       onNavigate('setupSimulation1');
     } else if (selectedCard === 'simulation2') {
@@ -52,8 +60,8 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
       if (!simulation2) {
         dispatch(createSimulationAtPosition({ position: 1 }));
       }
-      // Set position 1 as active
-      dispatch(setActivePosition(1));
+      // Set position 1 as active in report reducer
+      dispatch(setActiveSimulationPosition(1));
       // Navigate to simulation selection frame
       onNavigate('setupSimulation2');
     } else if (canProceed) {
