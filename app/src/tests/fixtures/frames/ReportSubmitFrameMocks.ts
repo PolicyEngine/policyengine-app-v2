@@ -41,8 +41,6 @@ export const mockReportWithLabel: Report = {
   apiVersion: 'v1',
   status: 'pending' as const,
   output: null,
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
 };
 
 export const mockReportNoLabel: Report = {

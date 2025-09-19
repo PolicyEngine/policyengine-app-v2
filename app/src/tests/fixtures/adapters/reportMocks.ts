@@ -113,8 +113,6 @@ export const mockReport: Report = {
   simulationIds: ['456', '789'],
   status: 'complete',
   output: mockReportOutput,
-  createdAt: '2024-01-15T10:30:00Z',
-  updatedAt: '2024-01-15T10:35:00Z',
 };
 
 export const mockPendingReport: Report = {
@@ -124,8 +122,6 @@ export const mockPendingReport: Report = {
   simulationIds: ['111'],
   status: 'pending',
   output: null,
-  createdAt: '2024-01-15T11:00:00Z',
-  updatedAt: '2024-01-15T11:00:00Z',
 };
 
 export const mockErrorReport: Report = {
@@ -135,8 +131,6 @@ export const mockErrorReport: Report = {
   simulationIds: ['222', '333'],
   status: 'error',
   output: null,
-  createdAt: '2024-01-15T11:30:00Z',
-  updatedAt: '2024-01-15T11:31:00Z',
 };
 
 export const mockReportMetadata: ReportMetadata = {
@@ -147,8 +141,6 @@ export const mockReportMetadata: ReportMetadata = {
   simulation_2_id: '789',
   status: 'complete',
   output: JSON.stringify(mockReportOutput),
-  created_at: '2024-01-15T10:30:00Z',
-  updated_at: '2024-01-15T10:35:00Z',
 };
 
 export const mockReportMetadataSingleSimulation: ReportMetadata = {
@@ -159,8 +151,6 @@ export const mockReportMetadataSingleSimulation: ReportMetadata = {
   simulation_2_id: null,
   status: 'pending',
   output: null,
-  created_at: '2024-01-15T12:00:00Z',
-  updated_at: '2024-01-15T12:00:00Z',
 };
 
 export const mockReportCreationPayload: ReportCreationPayload = {

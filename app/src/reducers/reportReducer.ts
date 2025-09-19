@@ -5,6 +5,8 @@ import { Report, ReportOutput } from '@/types/ingredients/Report';
 interface ReportState extends Report {
   activeSimulationPosition: 0 | 1;
   mode: 'standalone' | 'report';
+  createdAt: string; // Local state tracking
+  updatedAt: string; // Local state tracking
 }
 
 const initialState: ReportState = {

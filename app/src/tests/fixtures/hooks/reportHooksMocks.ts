@@ -22,8 +22,6 @@ export const mockReportMetadata: ReportMetadata = {
   api_version: 'v1',
   status: 'pending',
   output: null,
-  created_at: TEST_TIMESTAMP,
-  updated_at: TEST_TIMESTAMP,
 };
 
 // Mock Report Creation Payload

@@ -15,6 +15,4 @@ export interface Report {
   simulationIds: string[];
   status: 'pending' | 'complete' | 'error';
   output: ReportOutput | null; // Parsed API response or null
-  createdAt?: string; // Optional - populated by backend
-  updatedAt?: string; // Optional - populated by backend
 }

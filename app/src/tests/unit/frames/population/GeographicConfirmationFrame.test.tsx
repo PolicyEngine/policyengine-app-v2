@@ -358,7 +358,7 @@ describe('GeographicConfirmationFrame', () => {
         {
           ...mockFlowProps,
           onNavigate: mockOnNavigate,
-          onReturn: () => undefined,
+          onReturn: undefined,
         }
       );
 

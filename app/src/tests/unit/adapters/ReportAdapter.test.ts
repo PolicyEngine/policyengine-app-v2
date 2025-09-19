@@ -30,8 +30,6 @@ describe('ReportAdapter', () => {
         simulationIds: ['456', '789'],
         status: mockReportMetadata.status,
         output: mockReportOutput,
-        createdAt: mockReportMetadata.created_at,
-        updatedAt: mockReportMetadata.updated_at,
       });
     });
 
@@ -50,8 +48,6 @@ describe('ReportAdapter', () => {
         simulationIds: ['999'],
         status: mockReportMetadataSingleSimulation.status,
         output: null,
-        createdAt: mockReportMetadataSingleSimulation.created_at,
-        updatedAt: mockReportMetadataSingleSimulation.updated_at,
       });
     });
 

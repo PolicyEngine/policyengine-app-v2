@@ -25,8 +25,6 @@ export class ReportAdapter {
       simulationIds,
       status: metadata.status,
       output: convertJsonToReportOutput(metadata.output),
-      createdAt: metadata.created_at,
-      updatedAt: metadata.updated_at,
     };
   }
 
