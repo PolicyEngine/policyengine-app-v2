@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, userEvent, waitFor } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import PolicyCreationFrame from '@/frames/policy/PolicyCreationFrame';
 import {
   mockSelectCurrentPosition,

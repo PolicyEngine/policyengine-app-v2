@@ -21,7 +21,7 @@ vi.mock('@/reducers/simulationsReducer', async () => {
   const actual = await vi.importActual('@/reducers/simulationsReducer') as any;
   return {
     ...actual,
-    selectSimulationAtPosition: (state: any, position: number) => mockSelectSimulationAtPosition(position),
+    selectSimulationAtPosition: (_state: any, position: number) => mockSelectSimulationAtPosition(position),
     createSimulationAtPosition: actual.createSimulationAtPosition,
   };
 });

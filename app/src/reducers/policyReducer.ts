@@ -128,8 +128,12 @@ export const selectAllPolicies = (
 ): Policy[] => {
   const policies: Policy[] = [];
   const [policy1, policy2] = state.policy?.policies || [null, null];
-  if (policy1) policies.push(policy1);
-  if (policy2) policies.push(policy2);
+  if (policy1) {
+    policies.push(policy1);
+  }
+  if (policy2) {
+    policies.push(policy2);
+  }
   return policies;
 };
 

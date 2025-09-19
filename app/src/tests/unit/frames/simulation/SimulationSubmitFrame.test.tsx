@@ -384,7 +384,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       // When - in subflow
       render(
         <Provider store={store}>
-          <SimulationSubmitFrame {...defaultFlowProps} isInSubflow={true} />
+          <SimulationSubmitFrame {...defaultFlowProps} isInSubflow />
         </Provider>
       );
 

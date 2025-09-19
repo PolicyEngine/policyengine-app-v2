@@ -1,4 +1,4 @@
-import { Report, ReportOutput } from '@/types/ingredients/Report';
+import { ReportOutput } from '@/types/ingredients/Report';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test constants

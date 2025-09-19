@@ -122,10 +122,16 @@ export const selectSimulationById = (
   state: { simulations: SimulationsState },
   id: string | undefined
 ): Simulation | null => {
-  if (!id) return null;
+  if (!id) {
+    return null;
+  }
   const [sim1, sim2] = selectBothSimulations(state);
-  if (sim1?.id === id) return sim1;
-  if (sim2?.id === id) return sim2;
+  if (sim1?.id === id) {
+    return sim1;
+  }
+  if (sim2?.id === id) {
+    return sim2;
+  }
   return null;
 };
 
@@ -134,8 +140,12 @@ export const selectAllSimulations = (
 ): Simulation[] => {
   const [sim1, sim2] = selectBothSimulations(state);
   const simulations: Simulation[] = [];
-  if (sim1) simulations.push(sim1);
-  if (sim2) simulations.push(sim2);
+  if (sim1) {
+    simulations.push(sim1);
+  }
+  if (sim2) {
+    simulations.push(sim2);
+  }
   return simulations;
 };
 

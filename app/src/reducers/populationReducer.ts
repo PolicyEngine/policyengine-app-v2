@@ -180,8 +180,12 @@ export const selectAllPopulations = (
 ): Population[] => {
   const populations: Population[] = [];
   const [pop1, pop2] = state.population?.populations || [null, null];
-  if (pop1) populations.push(pop1);
-  if (pop2) populations.push(pop2);
+  if (pop1) {
+    populations.push(pop1);
+  }
+  if (pop2) {
+    populations.push(pop2);
+  }
   return populations;
 };
 

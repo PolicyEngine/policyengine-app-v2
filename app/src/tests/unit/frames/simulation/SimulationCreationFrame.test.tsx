@@ -5,10 +5,8 @@ import {
   mockOnNavigate,
   mockDispatch,
   mockSimulationEmpty,
-  createMockSimulationState,
 } from '@/tests/fixtures/frames/simulationFrameMocks';
 import * as simulationsReducer from '@/reducers/simulationsReducer';
-import * as activeSelectors from '@/reducers/activeSelectors';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -18,14 +16,14 @@ const mockSelectCurrentPosition = vi.fn();
 const mockSelectSimulationAtPosition = vi.fn();
 
 vi.mock('@/reducers/activeSelectors', () => ({
-  selectCurrentPosition: (state: any) => mockSelectCurrentPosition(),
+  selectCurrentPosition: (_state: any) => mockSelectCurrentPosition(),
 }));
 
 vi.mock('@/reducers/simulationsReducer', async () => {
   const actual = await vi.importActual('@/reducers/simulationsReducer') as any;
   return {
     ...actual,
-    selectSimulationAtPosition: (state: any, position: number) => mockSelectSimulationAtPosition(position),
+    selectSimulationAtPosition: (_state: any, position: number) => mockSelectSimulationAtPosition(position),
     createSimulationAtPosition: actual.createSimulationAtPosition,
     updateSimulationAtPosition: actual.updateSimulationAtPosition,
   };

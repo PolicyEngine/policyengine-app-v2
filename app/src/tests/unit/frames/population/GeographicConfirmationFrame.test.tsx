@@ -15,7 +15,6 @@ import {
   mockNationalGeography,
   mockStateGeography,
   TEST_COUNTRIES,
-  TEST_USER_ID,
 } from '@/tests/fixtures/frames/populationMocks';
 
 // Mock the regions data

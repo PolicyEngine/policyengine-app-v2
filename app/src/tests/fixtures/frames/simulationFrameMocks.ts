@@ -1,7 +1,5 @@
 import { vi } from 'vitest';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { Policy } from '@/types/ingredients/Policy';
-import { Population } from '@/types/ingredients/Population';
 
 // Mock simulations
 export const mockSimulation: Simulation = {

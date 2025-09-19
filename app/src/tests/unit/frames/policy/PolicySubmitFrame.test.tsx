@@ -81,7 +81,7 @@ describe('PolicySubmitFrame', () => {
     mockSelectActivePolicy.mockReturnValue(MOCK_POLICY_WITH_PARAMS);
 
     // Mock successful API call
-    mockUseCreatePolicy.createPolicy.mockImplementation((payload, options) => {
+    mockUseCreatePolicy.createPolicy.mockImplementation((_payload, options) => {
       options.onSuccess(mockCreatePolicySuccessResponse);
     });
 
@@ -112,7 +112,7 @@ describe('PolicySubmitFrame', () => {
     mockSelectActivePolicy.mockReturnValue(MOCK_POLICY_WITH_PARAMS);
 
     // Mock successful API call
-    mockUseCreatePolicy.createPolicy.mockImplementation((payload, options) => {
+    mockUseCreatePolicy.createPolicy.mockImplementation((_payload, options) => {
       options.onSuccess(mockCreatePolicySuccessResponse);
     });
 
@@ -135,7 +135,7 @@ describe('PolicySubmitFrame', () => {
     mockSelectActivePolicy.mockReturnValue(MOCK_POLICY_WITH_PARAMS);
 
     // Mock successful API call
-    mockUseCreatePolicy.createPolicy.mockImplementation((payload, options) => {
+    mockUseCreatePolicy.createPolicy.mockImplementation((_payload, options) => {
       options.onSuccess(mockCreatePolicySuccessResponse);
     });
 

@@ -313,20 +313,6 @@ describe('simulationsReducer', () => {
       expect(newState.simulations[1]).toEqual(mockSimulation1);
     });
 
-    test('given swapSimulations with null active then active stays null', () => {
-      // Given
-      const state = {
-        ...multipleSimulationsState,
-        activePosition: null,
-      };
-
-      // When
-      const newState = simulationsReducer(state, swapSimulations());
-
-      // Then
-      // activePosition removed - now in report reducer.toBeNull();
-    });
-
     test('given swapSimulations with one empty slot then swaps with null', () => {
       // Given
       const state = singleSimulationState;
