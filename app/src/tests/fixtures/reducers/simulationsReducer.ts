@@ -76,5 +76,8 @@ export const multipleSimulationsState = {
 };
 
 export const bothSimulationsWithoutIdState = {
-  simulations: [mockSimulationWithoutId1, mockSimulationWithoutId2] as [Simulation | null, Simulation | null],
+  simulations: [mockSimulationWithoutId1, mockSimulationWithoutId2] as [
+    Simulation | null,
+    Simulation | null,
+  ],
 };

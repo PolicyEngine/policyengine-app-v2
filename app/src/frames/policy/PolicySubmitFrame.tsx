@@ -6,8 +6,8 @@ import IngredientSubmissionView, {
   TextListSubItem,
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { selectCurrentPosition, selectActivePolicy } from '@/reducers/activeSelectors';
-import { updatePolicyAtPosition, clearPolicyAtPosition } from '@/reducers/policyReducer';
+import { selectActivePolicy, selectCurrentPosition } from '@/reducers/activeSelectors';
+import { clearPolicyAtPosition, updatePolicyAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/ingredients/Policy';
@@ -45,13 +45,15 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
       onSuccess: (data) => {
         console.log('Policy created successfully:', data);
         // Update the policy at the current position with the ID and mark as created
-        dispatch(updatePolicyAtPosition({
-          position: currentPosition,
-          updates: {
-            id: data.result.policy_id,
-            isCreated: true
-          }
-        }));
+        dispatch(
+          updatePolicyAtPosition({
+            position: currentPosition,
+            updates: {
+              id: data.result.policy_id,
+              isCreated: true,
+            },
+          })
+        );
         // If we've created this policy as part of a standalone policy creation flow,
         // we're done; clear the policy at current position
         if (!isInSubflow) {

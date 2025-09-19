@@ -1,5 +1,5 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSetupPopulationFrame from '@/frames/simulation/SimulationSetupPopulationFrame';
 import { mockOnNavigate } from '@/tests/fixtures/frames/simulationFrameMocks';
 

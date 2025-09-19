@@ -1,14 +1,13 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSelectExistingPolicyFrame from '@/frames/simulation/SimulationSelectExistingPolicyFrame';
-import { mockOnNavigate, mockDispatch } from '@/tests/fixtures/frames/simulationFrameMocks';
 import * as policyReducer from '@/reducers/policyReducer';
-
+import { mockDispatch, mockOnNavigate } from '@/tests/fixtures/frames/simulationFrameMocks';
 // Import mock data separately after mocks are set up
 import {
-  mockPolicyData,
-  mockLoadingResponse,
   mockErrorResponse,
+  mockLoadingResponse,
+  mockPolicyData,
   mockSuccessResponse,
 } from '@/tests/fixtures/frames/simulationSelectExistingMocks';
 
@@ -36,8 +35,7 @@ vi.mock('react-redux', async () => {
 const mockUserPolicies = vi.fn();
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: () => mockUserPolicies(),
-  isPolicyMetadataWithAssociation: (policy: any) =>
-    policy && policy.policy && policy.association,
+  isPolicyMetadataWithAssociation: (policy: any) => policy && policy.policy && policy.association,
 }));
 
 describe('SimulationSelectExistingPolicyFrame', () => {
@@ -51,7 +49,6 @@ describe('SimulationSelectExistingPolicyFrame', () => {
     isInSubflow: false,
     flowDepth: 0,
   };
-
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -94,7 +91,9 @@ describe('SimulationSelectExistingPolicyFrame', () => {
     render(<SimulationSelectExistingPolicyFrame {...mockFlowProps} />);
 
     // Then
-    expect(screen.getByText('No policies available. Please create a new policy.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No policies available. Please create a new policy.')
+    ).toBeInTheDocument();
   });
 
   test('given user selects policy with parameters and submits then creates policy at position and adds parameters', async () => {

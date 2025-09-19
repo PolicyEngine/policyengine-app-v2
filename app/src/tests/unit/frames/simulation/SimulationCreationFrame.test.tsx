@@ -1,12 +1,12 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
+import * as simulationsReducer from '@/reducers/simulationsReducer';
 import {
-  mockOnNavigate,
   mockDispatch,
+  mockOnNavigate,
   mockSimulationEmpty,
 } from '@/tests/fixtures/frames/simulationFrameMocks';
-import * as simulationsReducer from '@/reducers/simulationsReducer';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -20,10 +20,11 @@ vi.mock('@/reducers/activeSelectors', () => ({
 }));
 
 vi.mock('@/reducers/simulationsReducer', async () => {
-  const actual = await vi.importActual('@/reducers/simulationsReducer') as any;
+  const actual = (await vi.importActual('@/reducers/simulationsReducer')) as any;
   return {
     ...actual,
-    selectSimulationAtPosition: (_state: any, position: number) => mockSelectSimulationAtPosition(position),
+    selectSimulationAtPosition: (_state: any, position: number) =>
+      mockSelectSimulationAtPosition(position),
     createSimulationAtPosition: actual.createSimulationAtPosition,
     updateSimulationAtPosition: actual.updateSimulationAtPosition,
   };
@@ -107,7 +108,7 @@ describe('SimulationCreationFrame', () => {
     expect(mockDispatch).toHaveBeenCalledWith(
       simulationsReducer.updateSimulationAtPosition({
         position: 1,
-        updates: { label: 'My Custom Simulation' }
+        updates: { label: 'My Custom Simulation' },
       })
     );
     expect(mockOnNavigate).toHaveBeenCalledWith('next');

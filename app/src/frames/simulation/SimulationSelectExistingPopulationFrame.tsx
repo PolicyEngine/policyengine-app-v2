@@ -17,8 +17,8 @@ import {
 import { selectCurrentPosition } from '@/reducers/activeSelectors';
 import {
   createPopulationAtPosition,
-  setHouseholdAtPosition,
   setGeographyAtPosition,
+  setHouseholdAtPosition,
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -128,21 +128,25 @@ export default function SimulationSelectExistingPopulationFrame({
     console.log('Setting household in population:', householdToSet);
 
     // Create a new population at the current position
-    dispatch(createPopulationAtPosition({
-      position: currentPosition,
-      population: {
-        label: localPopulation.association?.label || '',
-        isCreated: true,
-        household: null,
-        geography: null,
-      },
-    }));
+    dispatch(
+      createPopulationAtPosition({
+        position: currentPosition,
+        population: {
+          label: localPopulation.association?.label || '',
+          isCreated: true,
+          household: null,
+          geography: null,
+        },
+      })
+    );
 
     // Update with household data
-    dispatch(setHouseholdAtPosition({
-      position: currentPosition,
-      household: householdToSet,
-    }));
+    dispatch(
+      setHouseholdAtPosition({
+        position: currentPosition,
+        household: householdToSet,
+      })
+    );
   }
 
   function handleSubmitGeographicPopulation() {
@@ -154,21 +158,25 @@ export default function SimulationSelectExistingPopulationFrame({
     console.log('Setting geography in population:', localPopulation.geography);
 
     // Create a new population at the current position
-    dispatch(createPopulationAtPosition({
-      position: currentPosition,
-      population: {
-        label: localPopulation.association?.label || '',
-        isCreated: true,
-        household: null,
-        geography: null,
-      },
-    }));
+    dispatch(
+      createPopulationAtPosition({
+        position: currentPosition,
+        population: {
+          label: localPopulation.association?.label || '',
+          isCreated: true,
+          household: null,
+          geography: null,
+        },
+      })
+    );
 
     // Update with geography data
-    dispatch(setGeographyAtPosition({
-      position: currentPosition,
-      geography: localPopulation.geography!,
-    }));
+    dispatch(
+      setGeographyAtPosition({
+        position: currentPosition,
+        geography: localPopulation.geography!,
+      })
+    );
   }
 
   const householdPopulations = householdData || [];

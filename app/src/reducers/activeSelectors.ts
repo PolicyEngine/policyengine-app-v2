@@ -11,9 +11,7 @@ import { RootState } from '@/store';
  * In standalone mode: defaults to position 0
  */
 export const selectActiveSimulation = (state: RootState) => {
-  const position = state.report.mode === 'report'
-    ? state.report.activeSimulationPosition
-    : 0;
+  const position = state.report.mode === 'report' ? state.report.activeSimulationPosition : 0;
   return state.simulations.simulations[position];
 };
 
@@ -23,9 +21,7 @@ export const selectActiveSimulation = (state: RootState) => {
  * In standalone mode: defaults to position 0
  */
 export const selectActivePolicy = (state: RootState) => {
-  const position = state.report.mode === 'report'
-    ? state.report.activeSimulationPosition
-    : 0;
+  const position = state.report.mode === 'report' ? state.report.activeSimulationPosition : 0;
   return state.policy.policies[position];
 };
 
@@ -35,9 +31,7 @@ export const selectActivePolicy = (state: RootState) => {
  * In standalone mode: defaults to position 0
  */
 export const selectActivePopulation = (state: RootState) => {
-  const position = state.report.mode === 'report'
-    ? state.report.activeSimulationPosition
-    : 0;
+  const position = state.report.mode === 'report' ? state.report.activeSimulationPosition : 0;
   return state.population.populations[position];
 };
 
@@ -47,7 +41,5 @@ export const selectActivePopulation = (state: RootState) => {
  * In standalone mode: returns 0
  */
 export const selectCurrentPosition = (state: RootState): 0 | 1 => {
-  return state.report.mode === 'report'
-    ? state.report.activeSimulationPosition
-    : 0;
+  return state.report.mode === 'report' ? state.report.activeSimulationPosition : 0;
 };

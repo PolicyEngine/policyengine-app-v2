@@ -1,22 +1,22 @@
 import { describe, expect, test } from 'vitest';
 import {
-  selectActiveSimulation,
   selectActivePolicy,
   selectActivePopulation,
+  selectActiveSimulation,
   selectCurrentPosition,
 } from '@/reducers/activeSelectors';
 import {
-  mockSimulation1,
-  mockSimulation2,
   mockPolicy1,
   mockPolicy2,
   mockPopulation1,
   mockPopulation2,
-  STANDALONE_MODE_STATE,
+  mockSimulation1,
+  mockSimulation2,
   REPORT_MODE_POSITION_0_STATE,
   REPORT_MODE_POSITION_1_STATE,
-  STATE_WITH_NULL_AT_POSITION,
+  STANDALONE_MODE_STATE,
   STATE_WITH_ALL_NULL,
+  STATE_WITH_NULL_AT_POSITION,
 } from '@/tests/fixtures/reducers/activeSelectorsMocks';
 
 describe('activeSelectors', () => {

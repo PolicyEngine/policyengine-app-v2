@@ -86,7 +86,10 @@ export const createMockReportStateNoLabels = () => ({
     mode: 'report' as const,
   },
   simulations: {
-    simulations: [mockSimulation1NoLabel, mockSimulation2NoLabel] as [Simulation | null, Simulation | null],
+    simulations: [mockSimulation1NoLabel, mockSimulation2NoLabel] as [
+      Simulation | null,
+      Simulation | null,
+    ],
     activePosition: null as 0 | 1 | null,
   },
 });

@@ -1,13 +1,13 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
+import * as reportReducer from '@/reducers/reportReducer';
+import * as simulationsReducer from '@/reducers/simulationsReducer';
 import {
   mockReportFlowProps,
   mockSimulation1,
-  mockSimulation2
+  mockSimulation2,
 } from '@/tests/fixtures/frames/reportFrameMocks';
-import * as reportReducer from '@/reducers/reportReducer';
-import * as simulationsReducer from '@/reducers/simulationsReducer';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -18,10 +18,11 @@ const mockDispatch = vi.fn();
 // Mock simulation selector at the module level
 const mockSelectSimulationAtPosition = vi.fn();
 vi.mock('@/reducers/simulationsReducer', async () => {
-  const actual = await vi.importActual('@/reducers/simulationsReducer') as any;
+  const actual = (await vi.importActual('@/reducers/simulationsReducer')) as any;
   return {
     ...actual,
-    selectSimulationAtPosition: (_state: any, position: number) => mockSelectSimulationAtPosition(position),
+    selectSimulationAtPosition: (_state: any, position: number) =>
+      mockSelectSimulationAtPosition(position),
     createSimulationAtPosition: actual.createSimulationAtPosition,
   };
 });
@@ -54,9 +55,7 @@ describe('ReportSetupFrame', () => {
     render(<ReportSetupFrame {...mockReportFlowProps} />);
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(
-      reportReducer.setMode('report')
-    );
+    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setMode('report'));
   });
 
   test('given both simulations configured then shows comparison view', () => {
@@ -114,9 +113,7 @@ describe('ReportSetupFrame', () => {
     await user.click(swapButton);
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(
-      simulationsReducer.swapSimulations()
-    );
+    expect(mockDispatch).toHaveBeenCalledWith(simulationsReducer.swapSimulations());
   });
 
   test.skip('given user clicks edit first simulation then sets position and navigates', async () => {
@@ -132,9 +129,7 @@ describe('ReportSetupFrame', () => {
     await user.click(editButtons[0]);
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(
-      reportReducer.setActiveSimulationPosition(0)
-    );
+    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(0));
     expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('editSimulation');
   });
 
@@ -151,9 +146,7 @@ describe('ReportSetupFrame', () => {
     await user.click(editButtons[1]);
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(
-      reportReducer.setActiveSimulationPosition(1)
-    );
+    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(1));
     expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('editSimulation');
   });
 

@@ -1,14 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
+import { setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
 import {
   createSimulationAtPosition,
   selectSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
-import {
-  setActiveSimulationPosition,
-  setMode,
-} from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 

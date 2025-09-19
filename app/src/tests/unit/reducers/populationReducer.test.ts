@@ -1,31 +1,31 @@
 import { describe, expect, test, vi } from 'vitest';
 import populationReducer, {
-  createPopulationAtPosition,
-  updatePopulationAtPosition,
-  updatePopulationIdAtPosition,
-  setHouseholdAtPosition,
-  initializeHouseholdAtPosition,
-  setGeographyAtPosition,
-  clearPopulationAtPosition,
   clearAllPopulations,
-  selectPopulationAtPosition,
+  clearPopulationAtPosition,
+  createPopulationAtPosition,
+  initializeHouseholdAtPosition,
   selectAllPopulations,
+  selectGeographyAtPosition,
   selectHasPopulationAtPosition,
   selectHouseholdAtPosition,
-  selectGeographyAtPosition,
+  selectPopulationAtPosition,
+  setGeographyAtPosition,
+  setHouseholdAtPosition,
+  updatePopulationAtPosition,
+  updatePopulationIdAtPosition,
 } from '@/reducers/populationReducer';
-import { Population } from '@/types/ingredients/Population';
 import {
-  TEST_LABEL,
-  TEST_LABEL_UPDATED,
-  mockHousehold1,
-  mockHousehold2,
+  emptyInitialState,
   mockGeography1,
   mockGeography2,
+  mockHousehold1,
+  mockHousehold2,
   mockPopulation1,
   mockPopulation2,
-  emptyInitialState,
+  TEST_LABEL,
+  TEST_LABEL_UPDATED,
 } from '@/tests/fixtures/reducers/populationMocks';
+import { Population } from '@/types/ingredients/Population';
 
 // Mock HouseholdBuilder
 vi.mock('@/utils/HouseholdBuilder', () => ({
@@ -36,8 +36,8 @@ vi.mock('@/utils/HouseholdBuilder', () => ({
       householdData: {
         people: {},
       },
-    })
-  }))
+    }),
+  })),
 }));
 
 describe('populationReducer', () => {
@@ -47,9 +47,12 @@ describe('populationReducer', () => {
       const state = emptyInitialState;
 
       // When
-      const newState = populationReducer(state, createPopulationAtPosition({
-        position: 0
-      }));
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 0,
+        })
+      );
 
       // Then
       expect(newState.populations[0]).toEqual({
@@ -66,10 +69,13 @@ describe('populationReducer', () => {
       const state = emptyInitialState;
 
       // When
-      const newState = populationReducer(state, createPopulationAtPosition({
-        position: 1,
-        population: { label: TEST_LABEL }
-      }));
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 1,
+          population: { label: TEST_LABEL },
+        })
+      );
 
       // Then
       expect(newState.populations[0]).toBeNull();
@@ -88,10 +94,13 @@ describe('populationReducer', () => {
       };
 
       // When
-      const newState = populationReducer(state, createPopulationAtPosition({
-        position: 0,
-        population: { label: 'New Population' }
-      }));
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 0,
+          population: { label: 'New Population' },
+        })
+      );
 
       // Then - existing population should be preserved, not replaced
       expect(newState.populations[0]).toEqual(mockPopulation1);
@@ -106,10 +115,13 @@ describe('populationReducer', () => {
       };
 
       // When
-      const newState = populationReducer(state, createPopulationAtPosition({
-        position: 0,
-        population: { label: 'New Population' }
-      }));
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 0,
+          population: { label: 'New Population' },
+        })
+      );
 
       // Then - new population should be created since position was null
       expect(newState.populations[0]).toEqual({
@@ -130,10 +142,13 @@ describe('populationReducer', () => {
       };
 
       // When
-      const newState = populationReducer(state, updatePopulationAtPosition({
-        position: 0,
-        updates: { label: TEST_LABEL_UPDATED, isCreated: false }
-      }));
+      const newState = populationReducer(
+        state,
+        updatePopulationAtPosition({
+          position: 0,
+          updates: { label: TEST_LABEL_UPDATED, isCreated: false },
+        })
+      );
 
       // Then
       expect(newState.populations[0]).toEqual({
@@ -149,10 +164,13 @@ describe('populationReducer', () => {
 
       // When/Then
       expect(() => {
-        populationReducer(state, updatePopulationAtPosition({
-          position: 0,
-          updates: { label: TEST_LABEL }
-        }));
+        populationReducer(
+          state,
+          updatePopulationAtPosition({
+            position: 0,
+            updates: { label: TEST_LABEL },
+          })
+        );
       }).toThrow('Cannot update population at position 0: no population exists at that position');
     });
 
@@ -163,10 +181,13 @@ describe('populationReducer', () => {
       };
 
       // When
-      const newState = populationReducer(state, updatePopulationIdAtPosition({
-        position: 0,
-        id: 'new-household-id'
-      }));
+      const newState = populationReducer(
+        state,
+        updatePopulationIdAtPosition({
+          position: 0,
+          id: 'new-household-id',
+        })
+      );
 
       // Then
       expect(newState.populations[0]?.household?.id).toBe('new-household-id');
@@ -179,10 +200,13 @@ describe('populationReducer', () => {
       };
 
       // When
-      const newState = populationReducer(state, updatePopulationIdAtPosition({
-        position: 0,
-        id: 'new-geo-id'
-      }));
+      const newState = populationReducer(
+        state,
+        updatePopulationIdAtPosition({
+          position: 0,
+          id: 'new-geo-id',
+        })
+      );
 
       // Then
       expect(newState.populations[0]?.geography?.id).toBe('new-geo-id');
@@ -194,11 +218,16 @@ describe('populationReducer', () => {
 
       // When/Then
       expect(() => {
-        populationReducer(state, updatePopulationIdAtPosition({
-          position: 0,
-          id: 'some-id'
-        }));
-      }).toThrow('Cannot update population ID at position 0: no population exists at that position');
+        populationReducer(
+          state,
+          updatePopulationIdAtPosition({
+            position: 0,
+            id: 'some-id',
+          })
+        );
+      }).toThrow(
+        'Cannot update population ID at position 0: no population exists at that position'
+      );
     });
   });
 
@@ -210,10 +239,13 @@ describe('populationReducer', () => {
       };
 
       // When
-      const newState = populationReducer(state, setHouseholdAtPosition({
-        position: 0,
-        household: mockHousehold2
-      }));
+      const newState = populationReducer(
+        state,
+        setHouseholdAtPosition({
+          position: 0,
+          household: mockHousehold2,
+        })
+      );
 
       // Then
       expect(newState.populations[0]?.household).toEqual(mockHousehold2);
@@ -226,25 +258,34 @@ describe('populationReducer', () => {
 
       // When/Then
       expect(() => {
-        populationReducer(state, setHouseholdAtPosition({
-          position: 0,
-          household: mockHousehold1
-        }));
+        populationReducer(
+          state,
+          setHouseholdAtPosition({
+            position: 0,
+            household: mockHousehold1,
+          })
+        );
       }).toThrow('Cannot set household at position 0: no population exists at that position');
     });
 
     test('given initializeHouseholdAtPosition creates household', () => {
       // Given
       const state = {
-        populations: [{ label: TEST_LABEL, isCreated: false, household: null, geography: null }, null] as [Population | null, Population | null],
+        populations: [
+          { label: TEST_LABEL, isCreated: false, household: null, geography: null },
+          null,
+        ] as [Population | null, Population | null],
       };
 
       // When
-      const newState = populationReducer(state, initializeHouseholdAtPosition({
-        position: 0,
-        countryId: 'us',
-        year: '2024'
-      }));
+      const newState = populationReducer(
+        state,
+        initializeHouseholdAtPosition({
+          position: 0,
+          countryId: 'us',
+          year: '2024',
+        })
+      );
 
       // Then
       expect(newState.populations[0]?.household).toEqual({
@@ -262,11 +303,14 @@ describe('populationReducer', () => {
       const state = emptyInitialState;
 
       // When
-      const newState = populationReducer(state, initializeHouseholdAtPosition({
-        position: 0,
-        countryId: 'uk',
-        year: '2023'
-      }));
+      const newState = populationReducer(
+        state,
+        initializeHouseholdAtPosition({
+          position: 0,
+          countryId: 'uk',
+          year: '2023',
+        })
+      );
 
       // Then
       expect(newState.populations[0]).toBeTruthy();
@@ -288,10 +332,13 @@ describe('populationReducer', () => {
       };
 
       // When
-      const newState = populationReducer(state, setGeographyAtPosition({
-        position: 0,
-        geography: mockGeography2
-      }));
+      const newState = populationReducer(
+        state,
+        setGeographyAtPosition({
+          position: 0,
+          geography: mockGeography2,
+        })
+      );
 
       // Then
       expect(newState.populations[0]?.geography).toEqual(mockGeography2);
@@ -304,10 +351,13 @@ describe('populationReducer', () => {
 
       // When/Then
       expect(() => {
-        populationReducer(state, setGeographyAtPosition({
-          position: 0,
-          geography: mockGeography1
-        }));
+        populationReducer(
+          state,
+          setGeographyAtPosition({
+            position: 0,
+            geography: mockGeography1,
+          })
+        );
       }).toThrow('Cannot set geography at position 0: no population exists at that position');
     });
   });
@@ -348,8 +398,11 @@ describe('populationReducer', () => {
         // Given
         const state = {
           population: {
-            populations: [mockPopulation1, mockPopulation2] as [Population | null, Population | null],
-          }
+            populations: [mockPopulation1, mockPopulation2] as [
+              Population | null,
+              Population | null,
+            ],
+          },
         };
 
         // When
@@ -364,7 +417,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [null, mockPopulation2] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When
@@ -380,8 +433,11 @@ describe('populationReducer', () => {
         // Given
         const state = {
           population: {
-            populations: [mockPopulation1, mockPopulation2] as [Population | null, Population | null],
-          }
+            populations: [mockPopulation1, mockPopulation2] as [
+              Population | null,
+              Population | null,
+            ],
+          },
         };
 
         // When
@@ -396,7 +452,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [mockPopulation1, null] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When
@@ -409,7 +465,7 @@ describe('populationReducer', () => {
       test('given no populations then returns empty array', () => {
         // Given
         const state = {
-          population: emptyInitialState
+          population: emptyInitialState,
         };
 
         // When
@@ -426,7 +482,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [mockPopulation1, null] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When
@@ -441,7 +497,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [mockPopulation1, null] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When
@@ -458,7 +514,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [mockPopulation1, null] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When
@@ -473,7 +529,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [mockPopulation2, null] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When
@@ -490,7 +546,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [mockPopulation2, null] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When
@@ -505,7 +561,7 @@ describe('populationReducer', () => {
         const state = {
           population: {
             populations: [mockPopulation1, null] as [Population | null, Population | null],
-          }
+          },
         };
 
         // When

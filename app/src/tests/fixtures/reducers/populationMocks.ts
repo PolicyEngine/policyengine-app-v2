@@ -1,5 +1,5 @@
-import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
 import { Population } from '@/types/ingredients/Population';
 
 // Test labels

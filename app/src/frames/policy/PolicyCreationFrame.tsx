@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
@@ -33,10 +33,12 @@ export default function PolicyCreationFrame({ onNavigate, isInSubflow }: FlowCom
 
   function submissionHandler() {
     // Update the policy at the current position with the label
-    dispatch(updatePolicyAtPosition({
-      position: currentPosition,
-      updates: { label: localLabel }
-    }));
+    dispatch(
+      updatePolicyAtPosition({
+        position: currentPosition,
+        updates: { label: localLabel },
+      })
+    );
     onNavigate('next');
   }
 

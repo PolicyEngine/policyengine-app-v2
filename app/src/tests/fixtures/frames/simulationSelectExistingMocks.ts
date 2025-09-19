@@ -17,10 +17,8 @@ export const MOCK_POLICY_WITH_PARAMS = {
     id: 123,
     country_id: 'us',
     policy_json: {
-      'income_tax_rate': [
-        { startDate: '2024-01-01', endDate: '2024-12-31', value: 0.25 }
-      ]
-    }
+      income_tax_rate: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 0.25 }],
+    },
   },
   association: { label: 'My Tax Reform' },
 };
@@ -29,7 +27,7 @@ export const MOCK_EMPTY_POLICY = {
   policy: {
     id: 456,
     country_id: 'us',
-    policy_json: {}
+    policy_json: {},
   },
   association: { label: 'Empty Policy' },
 };

@@ -2,13 +2,13 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { setMode } from '@/reducers/reportReducer';
 import {
   createSimulationAtPosition,
   selectSimulationAtPosition,
   updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
-import { selectCurrentPosition } from '@/reducers/activeSelectors';
-import { setMode } from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
@@ -18,7 +18,9 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
 
   // Get the current position from the cross-cutting selector
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
-  const simulation = useSelector((state: RootState) => selectSimulationAtPosition(state, currentPosition));
+  const simulation = useSelector((state: RootState) =>
+    selectSimulationAtPosition(state, currentPosition)
+  );
 
   // Set mode to standalone if not in a subflow
   useEffect(() => {
@@ -40,10 +42,12 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
 
   function submissionHandler() {
     // Update the simulation at the current position
-    dispatch(updateSimulationAtPosition({
-      position: currentPosition,
-      updates: { label: localLabel }
-    }));
+    dispatch(
+      updateSimulationAtPosition({
+        position: currentPosition,
+        updates: { label: localLabel },
+      })
+    );
 
     onNavigate('next');
   }

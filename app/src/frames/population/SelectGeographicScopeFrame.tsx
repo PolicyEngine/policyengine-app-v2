@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
+import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
 import { createPopulationAtPosition, setGeographyAtPosition } from '@/reducers/populationReducer';
-import { selectCurrentPosition, selectActivePopulation } from '@/reducers/activeSelectors';
 import { setMode } from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
 
-export default function SelectGeographicScopeFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
+export default function SelectGeographicScopeFrame({
+  onNavigate,
+  isInSubflow,
+}: FlowComponentProps) {
   const dispatch = useDispatch();
   const [scope, setScope] = useState<'national' | 'state' | 'household'>('national');
   const [selectedCountry, setSelectedCountry] = useState('');
@@ -95,10 +98,12 @@ export default function SelectGeographicScopeFrame({ onNavigate, isInSubflow }: 
         geographyId: scope === 'national' ? currentCountry : extractRegionValue(selectedRegion),
       };
       console.log('Dispatching geography:', geography);
-      dispatch(setGeographyAtPosition({
-        position: currentPosition,
-        geography
-      }));
+      dispatch(
+        setGeographyAtPosition({
+          position: currentPosition,
+          geography,
+        })
+      );
     }
     onNavigate(scope);
   }

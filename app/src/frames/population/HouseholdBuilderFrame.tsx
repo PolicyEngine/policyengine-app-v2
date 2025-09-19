@@ -21,13 +21,13 @@ import {
   getTaxYears,
   isDropdownField,
 } from '@/libs/metadataUtils';
+import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
 import {
   initializeHouseholdAtPosition,
-  updatePopulationAtPosition,
   setHouseholdAtPosition,
+  updatePopulationAtPosition,
   updatePopulationIdAtPosition,
 } from '@/reducers/populationReducer';
-import { selectCurrentPosition, selectActivePopulation } from '@/reducers/activeSelectors';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Household } from '@/types/ingredients/Household';
@@ -78,11 +78,13 @@ export default function HouseholdBuilderFrame({
   // Initialize household on mount if not exists
   useEffect(() => {
     if (!populationState?.household) {
-      dispatch(initializeHouseholdAtPosition({
-        position: currentPosition,
-        countryId,
-        year: taxYear
-      }));
+      dispatch(
+        initializeHouseholdAtPosition({
+          position: currentPosition,
+          countryId,
+          year: taxYear,
+        })
+      );
     }
   }, [populationState?.household, countryId, dispatch, currentPosition, taxYear]);
 
@@ -302,10 +304,12 @@ export default function HouseholdBuilderFrame({
 
   const handleSubmit = async () => {
     // Sync final household to Redux before submit
-    dispatch(setHouseholdAtPosition({
-      position: currentPosition,
-      household
-    }));
+    dispatch(
+      setHouseholdAtPosition({
+        position: currentPosition,
+        household,
+      })
+    );
 
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(household);
@@ -327,17 +331,21 @@ export default function HouseholdBuilderFrame({
       const label = populationState?.label || '';
 
       // Update population state with the created household ID
-      dispatch(updatePopulationIdAtPosition({
-        position: currentPosition,
-        id: householdId
-      }));
-      dispatch(updatePopulationAtPosition({
-        position: currentPosition,
-        updates: {
-          label,
-          isCreated: true
-        }
-      }));
+      dispatch(
+        updatePopulationIdAtPosition({
+          position: currentPosition,
+          id: householdId,
+        })
+      );
+      dispatch(
+        updatePopulationAtPosition({
+          position: currentPosition,
+          updates: {
+            label,
+            isCreated: true,
+          },
+        })
+      );
 
       // If standalone flow, reset
       if (!isInSubflow) {

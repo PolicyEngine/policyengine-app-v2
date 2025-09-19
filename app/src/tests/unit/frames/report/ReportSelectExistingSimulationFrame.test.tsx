@@ -81,10 +81,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given unconfigured simulations exist then filters them out', () => {
     // Given - add an unconfigured simulation at position 0
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_UNCONFIGURED_SIMULATION,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_UNCONFIGURED_SIMULATION,
+      })
+    );
 
     // When
     render(
@@ -99,14 +101,18 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given configured simulations exist then displays simulation list', () => {
     // Given - add configured simulations at positions 0 and 1
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_CONFIGURED_SIMULATION_1,
-    }));
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 1,
-      simulation: MOCK_CONFIGURED_SIMULATION_2,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: MOCK_CONFIGURED_SIMULATION_2,
+      })
+    );
 
     // When
     render(
@@ -126,14 +132,18 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given simulations with labels then displays titles correctly', () => {
     // Given
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_CONFIGURED_SIMULATION_1,
-    }));
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 1,
-      simulation: MOCK_CONFIGURED_SIMULATION_2,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: MOCK_CONFIGURED_SIMULATION_2,
+      })
+    );
 
     // When
     render(
@@ -159,10 +169,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given simulation without label then displays ID as title', () => {
     // Given
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL,
+      })
+    );
 
     // When
     render(
@@ -179,10 +191,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given no selection then Next button is disabled', () => {
     // Given
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_CONFIGURED_SIMULATION_1,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
 
     // When
     render(
@@ -199,10 +213,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
   test('given user selects simulation then Next button is enabled', async () => {
     // Given
     const user = userEvent.setup();
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_CONFIGURED_SIMULATION_1,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
 
     render(
       <Provider store={store}>
@@ -222,10 +238,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
   test('given user selects simulation and clicks Next then logs selection and navigates', async () => {
     // Given
     const user = userEvent.setup();
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_CONFIGURED_SIMULATION_1,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
 
     render(
       <Provider store={store}>
@@ -248,14 +266,18 @@ describe('ReportSelectExistingSimulationFrame', () => {
   test('given user switches selection then updates selected simulation', async () => {
     // Given
     const user = userEvent.setup();
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 0,
-      simulation: MOCK_CONFIGURED_SIMULATION_1,
-    }));
-    store.dispatch(simulationsActions.createSimulationAtPosition({
-      position: 1,
-      simulation: MOCK_CONFIGURED_SIMULATION_2,
-    }));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: MOCK_CONFIGURED_SIMULATION_2,
+      })
+    );
 
     render(
       <Provider store={store}>
@@ -291,7 +313,7 @@ describe('ReportSelectExistingSimulationFrame', () => {
           populationId: `1`,
           populationType: 'household' as const,
           isCreated: true,
-        }
+        },
       })
     );
     store.dispatch(
@@ -304,7 +326,7 @@ describe('ReportSelectExistingSimulationFrame', () => {
           populationId: `2`,
           populationType: 'household' as const,
           isCreated: true,
-        }
+        },
       })
     );
 

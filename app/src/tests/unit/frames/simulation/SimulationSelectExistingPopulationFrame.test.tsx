@@ -1,15 +1,14 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSelectExistingPopulationFrame from '@/frames/simulation/SimulationSelectExistingPopulationFrame';
-import { mockOnNavigate, mockDispatch } from '@/tests/fixtures/frames/simulationFrameMocks';
 import * as populationReducer from '@/reducers/populationReducer';
-
+import { mockDispatch, mockOnNavigate } from '@/tests/fixtures/frames/simulationFrameMocks';
 // Import mock data separately after mocks are set up
 import {
-  mockHouseholdData,
-  mockGeographicData,
-  mockLoadingResponse,
   mockErrorResponse,
+  mockGeographicData,
+  mockHouseholdData,
+  mockLoadingResponse,
   mockSuccessResponse,
 } from '@/tests/fixtures/frames/simulationSelectExistingMocks';
 
@@ -42,16 +41,14 @@ vi.mock('react-redux', async () => {
 const mockUserHouseholds = vi.fn();
 vi.mock('@/hooks/useUserHousehold', () => ({
   useUserHouseholds: () => mockUserHouseholds(),
-  isHouseholdMetadataWithAssociation: (pop: any) =>
-    pop && pop.household && pop.association,
+  isHouseholdMetadataWithAssociation: (pop: any) => pop && pop.household && pop.association,
 }));
 
 // Mock the useUserGeographics hook
 const mockUserGeographics = vi.fn();
 vi.mock('@/hooks/useUserGeographic', () => ({
   useUserGeographics: () => mockUserGeographics(),
-  isGeographicMetadataWithAssociation: (pop: any) =>
-    pop && pop.geography && pop.association,
+  isGeographicMetadataWithAssociation: (pop: any) => pop && pop.geography && pop.association,
 }));
 
 // Mock HouseholdAdapter
@@ -76,7 +73,6 @@ describe('SimulationSelectExistingPopulationFrame', () => {
     isInSubflow: false,
     flowDepth: 0,
   };
-
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -123,7 +119,9 @@ describe('SimulationSelectExistingPopulationFrame', () => {
     render(<SimulationSelectExistingPopulationFrame {...mockFlowProps} />);
 
     // Then
-    expect(screen.getByText('No populations available. Please create a new population.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No populations available. Please create a new population.')
+    ).toBeInTheDocument();
   });
 
   test('given user selects household and submits then creates population at position with household data', async () => {

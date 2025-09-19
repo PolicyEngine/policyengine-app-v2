@@ -3,24 +3,21 @@ import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import {
+  selectActivePolicy,
+  selectActivePopulation,
+  selectActiveSimulation,
+  selectCurrentPosition,
+} from '@/reducers/activeSelectors';
+import {
   clearSimulationAtPosition,
   updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
-import {
-  selectCurrentPosition,
-  selectActiveSimulation,
-  selectActivePolicy,
-  selectActivePopulation,
-} from '@/reducers/activeSelectors';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationCreationPayload } from '@/types/payloads';
 
-export default function SimulationSubmitFrame({
-  onNavigate,
-  isInSubflow,
-}: FlowComponentProps) {
+export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const dispatch = useDispatch();
 
   // Get the current position and active simulation from cross-cutting selectors
@@ -36,7 +33,6 @@ export default function SimulationSubmitFrame({
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
 
   function handleSubmit() {
-
     // Convert state to partial Simulation for adapter
     const simulationData: Partial<Simulation> = {
       populationId: simulation?.populationId || undefined,
@@ -53,13 +49,15 @@ export default function SimulationSubmitFrame({
         console.log('Simulation created successfully:', data);
 
         // Update the simulation at current position with the API response
-        dispatch(updateSimulationAtPosition({
-          position: currentPosition,
-          updates: {
-            id: data.result.simulation_id,
-            isCreated: true
-          }
-        }));
+        dispatch(
+          updateSimulationAtPosition({
+            position: currentPosition,
+            updates: {
+              id: data.result.simulation_id,
+              isCreated: true,
+            },
+          })
+        );
 
         // Navigate to the next step
         onNavigate('submit');

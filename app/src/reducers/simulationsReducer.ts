@@ -3,7 +3,7 @@ import { Simulation } from '@/types/ingredients/Simulation';
 
 // Position-based storage for exactly 2 simulations
 interface SimulationsState {
-  simulations: [Simulation | null, Simulation | null];  // Store directly by position
+  simulations: [Simulation | null, Simulation | null]; // Store directly by position
 }
 
 const initialState: SimulationsState = {
@@ -14,7 +14,6 @@ export const simulationsSlice = createSlice({
   name: 'simulations',
   initialState,
   reducers: {
-
     /**
      * Creates a simulation at the specified position if one doesn't already exist.
      * If a simulation already exists at that position, this action does nothing,
@@ -57,14 +56,15 @@ export const simulationsSlice = createSlice({
     ) => {
       const sim = state.simulations[action.payload.position];
       if (!sim) {
-        throw new Error(`Cannot update simulation at position ${action.payload.position}: no simulation exists at that position`);
+        throw new Error(
+          `Cannot update simulation at position ${action.payload.position}: no simulation exists at that position`
+        );
       }
       state.simulations[action.payload.position] = {
         ...sim,
-        ...action.payload.updates
+        ...action.payload.updates,
       };
     },
-
 
     // Clear position
     clearSimulationAtPosition: (state, action: PayloadAction<0 | 1>) => {
@@ -73,8 +73,7 @@ export const simulationsSlice = createSlice({
 
     // Swap positions
     swapSimulations: (state) => {
-      [state.simulations[0], state.simulations[1]] =
-      [state.simulations[1], state.simulations[0]];
+      [state.simulations[0], state.simulations[1]] = [state.simulations[1], state.simulations[0]];
     },
 
     // Clear all
@@ -100,9 +99,9 @@ export const selectSimulationAtPosition = (
   return state.simulations?.simulations[position] || null;
 };
 
-export const selectBothSimulations = (
-  state: { simulations: SimulationsState }
-): [Simulation | null, Simulation | null] => {
+export const selectBothSimulations = (state: {
+  simulations: SimulationsState;
+}): [Simulation | null, Simulation | null] => {
   return state.simulations?.simulations || [null, null];
 };
 
@@ -135,9 +134,7 @@ export const selectSimulationById = (
   return null;
 };
 
-export const selectAllSimulations = (
-  state: { simulations: SimulationsState }
-): Simulation[] => {
+export const selectAllSimulations = (state: { simulations: SimulationsState }): Simulation[] => {
   const [sim1, sim2] = selectBothSimulations(state);
   const simulations: Simulation[] = [];
   if (sim1) {

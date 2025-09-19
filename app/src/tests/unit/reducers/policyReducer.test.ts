@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest';
 import policyReducer, {
-  createPolicyAtPosition,
-  updatePolicyAtPosition,
   addPolicyParamAtPosition,
-  clearPolicyAtPosition,
   clearAllPolicies,
-  selectPolicyAtPosition,
+  clearPolicyAtPosition,
+  createPolicyAtPosition,
   selectAllPolicies,
   selectHasPolicyAtPosition,
+  selectPolicyAtPosition,
+  updatePolicyAtPosition,
 } from '@/reducers/policyReducer';
 import { Policy } from '@/types/ingredients/Policy';
 
@@ -41,9 +41,12 @@ describe('policyReducer', () => {
       const state = emptyInitialState;
 
       // When
-      const newState = policyReducer(state, createPolicyAtPosition({
-        position: 0
-      }));
+      const newState = policyReducer(
+        state,
+        createPolicyAtPosition({
+          position: 0,
+        })
+      );
 
       // Then
       expect(newState.policies[0]).toEqual({
@@ -60,10 +63,13 @@ describe('policyReducer', () => {
       const state = emptyInitialState;
 
       // When
-      const newState = policyReducer(state, createPolicyAtPosition({
-        position: 1,
-        policy: { label: TEST_LABEL }
-      }));
+      const newState = policyReducer(
+        state,
+        createPolicyAtPosition({
+          position: 1,
+          policy: { label: TEST_LABEL },
+        })
+      );
 
       // Then
       expect(newState.policies[0]).toBeNull();
@@ -82,10 +88,13 @@ describe('policyReducer', () => {
       };
 
       // When
-      const newState = policyReducer(state, createPolicyAtPosition({
-        position: 0,
-        policy: { label: 'New Policy' }
-      }));
+      const newState = policyReducer(
+        state,
+        createPolicyAtPosition({
+          position: 0,
+          policy: { label: 'New Policy' },
+        })
+      );
 
       // Then - existing policy should be preserved, not replaced
       expect(newState.policies[0]).toEqual(mockPolicy1);
@@ -100,10 +109,13 @@ describe('policyReducer', () => {
       };
 
       // When
-      const newState = policyReducer(state, createPolicyAtPosition({
-        position: 0,
-        policy: { label: 'New Policy' }
-      }));
+      const newState = policyReducer(
+        state,
+        createPolicyAtPosition({
+          position: 0,
+          policy: { label: 'New Policy' },
+        })
+      );
 
       // Then - new policy should be created since position was null
       expect(newState.policies[0]).toEqual({
@@ -124,10 +136,13 @@ describe('policyReducer', () => {
       };
 
       // When
-      const newState = policyReducer(state, updatePolicyAtPosition({
-        position: 0,
-        updates: { label: TEST_LABEL_UPDATED }
-      }));
+      const newState = policyReducer(
+        state,
+        updatePolicyAtPosition({
+          position: 0,
+          updates: { label: TEST_LABEL_UPDATED },
+        })
+      );
 
       // Then
       expect(newState.policies[0]).toEqual({
@@ -142,10 +157,13 @@ describe('policyReducer', () => {
 
       // When/Then
       expect(() => {
-        policyReducer(state, updatePolicyAtPosition({
-          position: 0,
-          updates: { label: TEST_LABEL }
-        }));
+        policyReducer(
+          state,
+          updatePolicyAtPosition({
+            position: 0,
+            updates: { label: TEST_LABEL },
+          })
+        );
       }).toThrow('Cannot update policy at position 0: no policy exists at that position');
     });
 
@@ -156,14 +174,17 @@ describe('policyReducer', () => {
       };
 
       // When
-      const newState = policyReducer(state, updatePolicyAtPosition({
-        position: 0,
-        updates: {
-          label: TEST_LABEL_UPDATED,
-          isCreated: false,
-          id: 'new-id',
-        }
-      }));
+      const newState = policyReducer(
+        state,
+        updatePolicyAtPosition({
+          position: 0,
+          updates: {
+            label: TEST_LABEL_UPDATED,
+            isCreated: false,
+            id: 'new-id',
+          },
+        })
+      );
 
       // Then
       expect(newState.policies[0]).toEqual({
@@ -183,15 +204,18 @@ describe('policyReducer', () => {
       };
 
       // When
-      const newState = policyReducer(state, addPolicyParamAtPosition({
-        position: 0,
-        name: 'tax_rate',
-        valueInterval: {
-          startDate: '2024-01-01',
-          endDate: '2024-12-31',
-          value: 0.25
-        }
-      }));
+      const newState = policyReducer(
+        state,
+        addPolicyParamAtPosition({
+          position: 0,
+          name: 'tax_rate',
+          valueInterval: {
+            startDate: '2024-01-01',
+            endDate: '2024-12-31',
+            value: 0.25,
+          },
+        })
+      );
 
       // Then
       expect(newState.policies[0]?.parameters).toHaveLength(1);
@@ -202,8 +226,8 @@ describe('policyReducer', () => {
             startDate: '2024-01-01',
             endDate: '2024-12-31',
             value: 0.25,
-          })
-        ])
+          }),
+        ]),
       });
     });
 
@@ -213,15 +237,18 @@ describe('policyReducer', () => {
 
       // When/Then
       expect(() => {
-        policyReducer(state, addPolicyParamAtPosition({
-          position: 0,
-          name: 'tax_rate',
-          valueInterval: {
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
-            value: 0.25
-          }
-        }));
+        policyReducer(
+          state,
+          addPolicyParamAtPosition({
+            position: 0,
+            name: 'tax_rate',
+            valueInterval: {
+              startDate: '2024-01-01',
+              endDate: '2024-12-31',
+              value: 0.25,
+            },
+          })
+        );
       }).toThrow('Cannot add parameter to policy at position 0: no policy exists at that position');
     });
   });
@@ -263,7 +290,7 @@ describe('policyReducer', () => {
         const state = {
           policy: {
             policies: [mockPolicy1, mockPolicy2] as [Policy | null, Policy | null],
-          }
+          },
         };
 
         // When
@@ -278,7 +305,7 @@ describe('policyReducer', () => {
         const state = {
           policy: {
             policies: [null, mockPolicy2] as [Policy | null, Policy | null],
-          }
+          },
         };
 
         // When
@@ -295,7 +322,7 @@ describe('policyReducer', () => {
         const state = {
           policy: {
             policies: [mockPolicy1, mockPolicy2] as [Policy | null, Policy | null],
-          }
+          },
         };
 
         // When
@@ -310,7 +337,7 @@ describe('policyReducer', () => {
         const state = {
           policy: {
             policies: [mockPolicy1, null] as [Policy | null, Policy | null],
-          }
+          },
         };
 
         // When
@@ -323,7 +350,7 @@ describe('policyReducer', () => {
       test('given no policies then returns empty array', () => {
         // Given
         const state = {
-          policy: emptyInitialState
+          policy: emptyInitialState,
         };
 
         // When
@@ -340,7 +367,7 @@ describe('policyReducer', () => {
         const state = {
           policy: {
             policies: [mockPolicy1, null] as [Policy | null, Policy | null],
-          }
+          },
         };
 
         // When
@@ -355,7 +382,7 @@ describe('policyReducer', () => {
         const state = {
           policy: {
             policies: [mockPolicy1, null] as [Policy | null, Policy | null],
-          }
+          },
         };
 
         // When

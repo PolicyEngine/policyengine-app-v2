@@ -1,7 +1,7 @@
 import { RootState } from '@/store';
-import { Simulation } from '@/types/ingredients/Simulation';
 import { Policy } from '@/types/ingredients/Policy';
 import { Population } from '@/types/ingredients/Population';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 // Mock simulations
 export const mockSimulation1: Simulation = {

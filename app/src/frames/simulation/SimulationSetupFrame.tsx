@@ -2,15 +2,15 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
 import {
+  selectActivePolicy,
+  selectActivePopulation,
+  selectCurrentPosition,
+} from '@/reducers/activeSelectors';
+import {
   createSimulationAtPosition,
   selectSimulationAtPosition,
   updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
-import {
-  selectCurrentPosition,
-  selectActivePolicy,
-  selectActivePopulation,
-} from '@/reducers/activeSelectors';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
@@ -68,13 +68,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
         })
       );
     }
-  }, [
-    policy?.isCreated,
-    policy?.id,
-    simulation?.policyId,
-    currentPosition,
-    dispatch,
-  ]);
+  }, [policy?.isCreated, policy?.id, simulation?.policyId, currentPosition, dispatch]);
 
   // Listen for population creation and update simulation with population ID
   useEffect(() => {

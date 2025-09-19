@@ -1,15 +1,15 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import React from 'react';
 import { renderHook } from '@testing-library/react';
 import { Provider } from 'react-redux';
-import React from 'react';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import {
+  ACTION_TYPES,
   createMockDispatch,
   createMockStore,
+  TEST_INGREDIENTS,
   TEST_MODES,
   TEST_POSITIONS,
-  TEST_INGREDIENTS,
-  ACTION_TYPES,
 } from '@/tests/fixtures/hooks/useIngredientResetMocks';
 
 // Mock the reducers - mocks must be defined inline due to hoisting
@@ -26,7 +26,7 @@ vi.mock('@/reducers/reportReducer', () => ({
   setMode: vi.fn((mode: string) => ({ type: 'report/setMode', payload: mode })),
   setActiveSimulationPosition: vi.fn((position: number) => ({
     type: 'report/setActiveSimulationPosition',
-    payload: position
+    payload: position,
   })),
 }));
 
@@ -59,11 +59,11 @@ describe('useIngredientReset', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_ALL_POLICIES });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setMode',
-      payload: TEST_MODES.STANDALONE
+      payload: TEST_MODES.STANDALONE,
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 
@@ -78,11 +78,11 @@ describe('useIngredientReset', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_ALL_POPULATIONS });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setMode',
-      payload: TEST_MODES.STANDALONE
+      payload: TEST_MODES.STANDALONE,
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 
@@ -99,11 +99,11 @@ describe('useIngredientReset', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_ALL_POPULATIONS });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setMode',
-      payload: TEST_MODES.STANDALONE
+      payload: TEST_MODES.STANDALONE,
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 
@@ -121,11 +121,11 @@ describe('useIngredientReset', () => {
     expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_ALL_POPULATIONS });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setMode',
-      payload: TEST_MODES.STANDALONE
+      payload: TEST_MODES.STANDALONE,
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 

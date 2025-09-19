@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text, TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { selectCurrentPosition, selectActivePopulation } from '@/reducers/activeSelectors';
-import { createPopulationAtPosition, updatePopulationAtPosition } from '@/reducers/populationReducer';
+import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
+import {
+  createPopulationAtPosition,
+  updatePopulationAtPosition,
+} from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
@@ -58,10 +61,12 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
     }
 
     // Update the population label at the current position
-    dispatch(updatePopulationAtPosition({
-      position: currentPosition,
-      updates: { label: label.trim() }
-    }));
+    dispatch(
+      updatePopulationAtPosition({
+        position: currentPosition,
+        updates: { label: label.trim() },
+      })
+    );
 
     // Navigate based on population type
     if (populationState?.geography) {

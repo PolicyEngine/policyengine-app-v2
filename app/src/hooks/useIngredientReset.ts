@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux';
 import { clearAllPolicies } from '@/reducers/policyReducer';
 import { clearAllPopulations } from '@/reducers/populationReducer';
-import { clearReport, setMode, setActiveSimulationPosition } from '@/reducers/reportReducer';
+import { clearReport, setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
 import { clearAllSimulations } from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
 

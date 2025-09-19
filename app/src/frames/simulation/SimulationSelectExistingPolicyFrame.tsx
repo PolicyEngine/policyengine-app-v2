@@ -8,14 +8,11 @@ import {
   UserPolicyMetadataWithAssociation,
   useUserPolicies,
 } from '@/hooks/useUserPolicy';
+import { countryIds } from '@/libs/countries';
 import { selectCurrentPosition } from '@/reducers/activeSelectors';
-import {
-  createPolicyAtPosition,
-  addPolicyParamAtPosition,
-} from '@/reducers/policyReducer';
+import { addPolicyParamAtPosition, createPolicyAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { countryIds } from '@/libs/countries';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -73,16 +70,18 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     console.log('Local Policy on Submit:', localPolicy);
 
     // Create a new policy at the current position
-    dispatch(createPolicyAtPosition({
-      position: currentPosition,
-      policy: {
-        id: localPolicy.policy?.id?.toString(),
-        label: localPolicy.association?.label || '',
-        isCreated: true,
-        countryId: localPolicy.policy?.country_id as typeof countryIds[number],
-        parameters: [],
-      },
-    }));
+    dispatch(
+      createPolicyAtPosition({
+        position: currentPosition,
+        policy: {
+          id: localPolicy.policy?.id?.toString(),
+          label: localPolicy.association?.label || '',
+          isCreated: true,
+          countryId: localPolicy.policy?.country_id as (typeof countryIds)[number],
+          parameters: [],
+        },
+      })
+    );
 
     // Load all policy parameters using position-based action
     // Parameters must be added one at a time with individual value intervals
@@ -92,15 +91,17 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
         if (Array.isArray(valueIntervals) && valueIntervals.length > 0) {
           // Add each value interval separately as required by PolicyParamAdditionPayload
           valueIntervals.forEach((vi: any) => {
-            dispatch(addPolicyParamAtPosition({
-              position: currentPosition,
-              name: paramName,
-              valueInterval: {
-                startDate: vi.start || vi.startDate,
-                endDate: vi.end || vi.endDate,
-                value: vi.value,
-              },
-            }));
+            dispatch(
+              addPolicyParamAtPosition({
+                position: currentPosition,
+                name: paramName,
+                valueInterval: {
+                  startDate: vi.start || vi.startDate,
+                  endDate: vi.end || vi.endDate,
+                  value: vi.value,
+                },
+              })
+            );
           });
         }
       });
@@ -126,9 +127,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     return (
       <FlowView
         title="Select an Existing Policy"
-        content={
-          <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
-        }
+        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttonPreset="none"
       />
     );

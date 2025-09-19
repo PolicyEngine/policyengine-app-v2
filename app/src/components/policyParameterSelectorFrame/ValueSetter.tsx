@@ -85,11 +85,13 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   function handleSubmit() {
     intervals.forEach((interval) => {
-      dispatch(addPolicyParamAtPosition({
-        position: currentPosition,
-        name: param.parameter,
-        valueInterval: interval
-      }));
+      dispatch(
+        addPolicyParamAtPosition({
+          position: currentPosition,
+          name: param.parameter,
+          valueInterval: interval,
+        })
+      );
     });
   }
 

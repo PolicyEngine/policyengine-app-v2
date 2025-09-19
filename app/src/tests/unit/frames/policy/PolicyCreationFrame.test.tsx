@@ -1,14 +1,14 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import PolicyCreationFrame from '@/frames/policy/PolicyCreationFrame';
-import {
-  mockSelectCurrentPosition,
-  mockDispatch,
-  mockOnNavigate,
-  createMockFlowProps,
-} from '@/tests/fixtures/frames/policyFrameMocks';
 import * as policyReducer from '@/reducers/policyReducer';
 import * as reportReducer from '@/reducers/reportReducer';
+import {
+  createMockFlowProps,
+  mockDispatch,
+  mockOnNavigate,
+  mockSelectCurrentPosition,
+} from '@/tests/fixtures/frames/policyFrameMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -44,9 +44,7 @@ describe('PolicyCreationFrame', () => {
     render(<PolicyCreationFrame {...flowProps} />);
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(
-      reportReducer.setMode('standalone')
-    );
+    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setMode('standalone'));
     expect(mockDispatch).toHaveBeenCalledWith(
       policyReducer.createPolicyAtPosition({ position: 0 })
     );
@@ -61,9 +59,7 @@ describe('PolicyCreationFrame', () => {
     render(<PolicyCreationFrame {...flowProps} />);
 
     // Then
-    expect(mockDispatch).not.toHaveBeenCalledWith(
-      reportReducer.setMode('standalone')
-    );
+    expect(mockDispatch).not.toHaveBeenCalledWith(reportReducer.setMode('standalone'));
     expect(mockDispatch).toHaveBeenCalledWith(
       policyReducer.createPolicyAtPosition({ position: 1 })
     );
@@ -85,7 +81,7 @@ describe('PolicyCreationFrame', () => {
     expect(mockDispatch).toHaveBeenCalledWith(
       policyReducer.updatePolicyAtPosition({
         position: 0,
-        updates: { label: 'My New Tax Policy' }
+        updates: { label: 'My New Tax Policy' },
       })
     );
     expect(mockOnNavigate).toHaveBeenCalledWith('next');
@@ -104,7 +100,7 @@ describe('PolicyCreationFrame', () => {
     expect(mockDispatch).toHaveBeenCalledWith(
       policyReducer.updatePolicyAtPosition({
         position: 0,
-        updates: { label: '' }
+        updates: { label: '' },
       })
     );
     expect(mockOnNavigate).toHaveBeenCalledWith('next');

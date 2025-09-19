@@ -4,11 +4,11 @@ import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
+import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
 import {
   updatePopulationAtPosition,
   updatePopulationIdAtPosition,
 } from '@/reducers/populationReducer';
-import { selectCurrentPosition, selectActivePopulation } from '@/reducers/activeSelectors';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
@@ -58,17 +58,21 @@ export default function GeographicConfirmationFrame({
       console.log('Geographic population created successfully:', result);
 
       // Update population state with the created population ID and mark as created
-      dispatch(updatePopulationIdAtPosition({
-        position: currentPosition,
-        id: result.geographyId
-      }));
-      dispatch(updatePopulationAtPosition({
-        position: currentPosition,
-        updates: {
-          label: result.label || '',
-          isCreated: true
-        }
-      }));
+      dispatch(
+        updatePopulationIdAtPosition({
+          position: currentPosition,
+          id: result.geographyId,
+        })
+      );
+      dispatch(
+        updatePopulationAtPosition({
+          position: currentPosition,
+          updates: {
+            label: result.label || '',
+            isCreated: true,
+          },
+        })
+      );
 
       // If we've created this population as part of a standalone population creation flow,
       // we're done; clear the population reducer

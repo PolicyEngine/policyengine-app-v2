@@ -13,15 +13,17 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
   // Get report state from Redux
   const reportState = useSelector((state: RootState) => state.report);
   // Use selectBothSimulations to get simulations at positions 0 and 1
-  const [simulation1, simulation2] = useSelector((state: RootState) => selectBothSimulations(state));
+  const [simulation1, simulation2] = useSelector((state: RootState) =>
+    selectBothSimulations(state)
+  );
 
   console.log('Report label: ', reportState.label);
   const { createReport, isPending } = useCreateReport(reportState.label || undefined);
   const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
-    // TODO: This code isn't really correct. Simulations should be created in 
-    // the SimulationSubmitFrame, then their IDs should be passed over to the 
+    // TODO: This code isn't really correct. Simulations should be created in
+    // the SimulationSubmitFrame, then their IDs should be passed over to the
     // simulation reducer, then used here. This will be dealt with in separate commit.
     // Get the simulation IDs from the simulations
     const sim1Id = simulation1?.id;
@@ -64,7 +66,8 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'First Simulation',
-      description: simulation1?.label || (simulation1?.id ? `Simulation #${simulation1.id}` : 'No simulation'),
+      description:
+        simulation1?.label || (simulation1?.id ? `Simulation #${simulation1.id}` : 'No simulation'),
       isFulfilled: !!simulation1,
       badge: simulation1
         ? `Policy #${simulation1.policyId} • Population #${simulation1.populationId}`
@@ -72,7 +75,8 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
     },
     {
       title: 'Second Simulation',
-      description: simulation2?.label || (simulation2?.id ? `Simulation #${simulation2.id}` : 'No simulation'),
+      description:
+        simulation2?.label || (simulation2?.id ? `Simulation #${simulation2.id}` : 'No simulation'),
       isFulfilled: !!simulation2,
       badge: simulation2
         ? `Policy #${simulation2.policyId} • Population #${simulation2.populationId}`

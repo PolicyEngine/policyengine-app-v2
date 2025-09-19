@@ -352,11 +352,15 @@ describe('GeographicConfirmationFrame', () => {
       const populationState = {
         geography: mockNationalGeography,
       };
-      renderComponent(populationState, {}, {
-        ...mockFlowProps,
-        onNavigate: mockOnNavigate,
-        onReturn: () => undefined
-      });
+      renderComponent(
+        populationState,
+        {},
+        {
+          ...mockFlowProps,
+          onNavigate: mockOnNavigate,
+          onReturn: () => undefined,
+        }
+      );
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });

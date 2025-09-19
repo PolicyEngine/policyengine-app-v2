@@ -58,7 +58,9 @@ export const populationSlice = createSlice({
     ) => {
       const population = state.populations[action.payload.position];
       if (!population) {
-        throw new Error(`Cannot update population at position ${action.payload.position}: no population exists at that position`);
+        throw new Error(
+          `Cannot update population at position ${action.payload.position}: no population exists at that position`
+        );
       }
       state.populations[action.payload.position] = {
         ...population,
@@ -76,7 +78,9 @@ export const populationSlice = createSlice({
     ) => {
       const population = state.populations[action.payload.position];
       if (!population) {
-        throw new Error(`Cannot update population ID at position ${action.payload.position}: no population exists at that position`);
+        throw new Error(
+          `Cannot update population ID at position ${action.payload.position}: no population exists at that position`
+        );
       }
       // Update ID in the appropriate population type
       if (population.household) {
@@ -96,7 +100,9 @@ export const populationSlice = createSlice({
     ) => {
       const population = state.populations[action.payload.position];
       if (!population) {
-        throw new Error(`Cannot set household at position ${action.payload.position}: no population exists at that position`);
+        throw new Error(
+          `Cannot set household at position ${action.payload.position}: no population exists at that position`
+        );
       }
       population.household = action.payload.household;
       population.geography = null; // Clear geography when setting household
@@ -137,7 +143,9 @@ export const populationSlice = createSlice({
     ) => {
       const population = state.populations[action.payload.position];
       if (!population) {
-        throw new Error(`Cannot set geography at position ${action.payload.position}: no population exists at that position`);
+        throw new Error(
+          `Cannot set geography at position ${action.payload.position}: no population exists at that position`
+        );
       }
       population.geography = action.payload.geography;
       population.household = null; // Clear household when setting geography
@@ -175,9 +183,7 @@ export const selectPopulationAtPosition = (
   return state.population?.populations[position] || null;
 };
 
-export const selectAllPopulations = (
-  state: { population: PopulationState }
-): Population[] => {
+export const selectAllPopulations = (state: { population: PopulationState }): Population[] => {
   const populations: Population[] = [];
   const [pop1, pop2] = state.population?.populations || [null, null];
   if (pop1) {

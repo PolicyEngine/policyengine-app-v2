@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { Report, ReportOutput } from '@/types/ingredients/Report';
 import { RootState } from '@/store';
+import { Report, ReportOutput } from '@/types/ingredients/Report';
 
 interface ReportState extends Report {
   activeSimulationPosition: 0 | 1;
@@ -173,7 +173,6 @@ export const {
 export const selectActiveSimulationPosition = (state: RootState): 0 | 1 =>
   state.report.activeSimulationPosition;
 
-export const selectMode = (state: RootState): 'standalone' | 'report' =>
-  state.report.mode;
+export const selectMode = (state: RootState): 'standalone' | 'report' => state.report.mode;
 
 export default reportSlice.reducer;

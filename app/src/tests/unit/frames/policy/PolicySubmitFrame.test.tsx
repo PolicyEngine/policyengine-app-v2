@@ -1,18 +1,18 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import PolicySubmitFrame from '@/frames/policy/PolicySubmitFrame';
+import * as policyReducer from '@/reducers/policyReducer';
 import {
-  mockSelectCurrentPosition,
-  mockSelectActivePolicy,
+  createMockFlowProps,
+  MOCK_EMPTY_POLICY,
+  MOCK_POLICY_WITH_PARAMS,
+  mockCreatePolicySuccessResponse,
   mockDispatch,
   mockOnReturn,
-  createMockFlowProps,
-  MOCK_POLICY_WITH_PARAMS,
-  MOCK_EMPTY_POLICY,
-  mockCreatePolicySuccessResponse,
+  mockSelectActivePolicy,
+  mockSelectCurrentPosition,
   mockUseCreatePolicy,
 } from '@/tests/fixtures/frames/policyFrameMocks';
-import * as policyReducer from '@/reducers/policyReducer';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -123,9 +123,7 @@ describe('PolicySubmitFrame', () => {
     await user.click(submitButton);
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(
-      policyReducer.clearPolicyAtPosition(0)
-    );
+    expect(mockDispatch).toHaveBeenCalledWith(policyReducer.clearPolicyAtPosition(0));
   });
 
   test('given subflow mode when policy submitted then does not clear policy', async () => {
@@ -146,9 +144,7 @@ describe('PolicySubmitFrame', () => {
     await user.click(submitButton);
 
     // Then
-    expect(mockDispatch).not.toHaveBeenCalledWith(
-      policyReducer.clearPolicyAtPosition(0)
-    );
+    expect(mockDispatch).not.toHaveBeenCalledWith(policyReducer.clearPolicyAtPosition(0));
   });
 
   test('given no policy at current position then does not submit', async () => {

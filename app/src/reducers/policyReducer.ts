@@ -62,7 +62,9 @@ export const policySlice = createSlice({
     ) => {
       const policy = state.policies[action.payload.position];
       if (!policy) {
-        throw new Error(`Cannot update policy at position ${action.payload.position}: no policy exists at that position`);
+        throw new Error(
+          `Cannot update policy at position ${action.payload.position}: no policy exists at that position`
+        );
       }
       state.policies[action.payload.position] = {
         ...policy,
@@ -76,7 +78,9 @@ export const policySlice = createSlice({
       const policy = state.policies[position];
 
       if (!policy) {
-        throw new Error(`Cannot add parameter to policy at position ${position}: no policy exists at that position`);
+        throw new Error(
+          `Cannot add parameter to policy at position ${position}: no policy exists at that position`
+        );
       }
 
       if (!policy.parameters) {
@@ -123,9 +127,7 @@ export const selectPolicyAtPosition = (
   return state.policy?.policies[position] || null;
 };
 
-export const selectAllPolicies = (
-  state: { policy: PolicyState }
-): Policy[] => {
+export const selectAllPolicies = (state: { policy: PolicyState }): Policy[] => {
   const policies: Policy[] = [];
   const [policy1, policy2] = state.policy?.policies || [null, null];
   if (policy1) {
