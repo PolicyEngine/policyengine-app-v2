@@ -1,5 +1,6 @@
 import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, typography } from '../../../designTokens';
+import { themeComponents } from '../../../styles/components';
 
 interface Section {
   heading: string;
@@ -93,8 +94,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
                   <Button
                     key={idx}
                     onClick={() => onButtonClick?.(label)}
-                    variant="default"
-                    color={colors.primary[500]}
+                    variant={themeComponents.Button.defaultProps?.variant}
                   >
                     {label}
                   </Button>
@@ -103,8 +103,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
             ) : (
               <Button
                 onClick={() => onButtonClick?.(buttonLabel)}
-                variant="default"
-                color={colors.primary[500]}
+                variant={themeComponents.Button.defaultProps?.variant}
                 mt="md"
               >
                 {buttonLabel}

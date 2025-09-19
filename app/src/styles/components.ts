@@ -1,5 +1,9 @@
 // Components submodule for Mantine theme
+<<<<<<< HEAD
 import { AppShell, Card, Container, Title } from '@mantine/core';
+=======
+import { Button, Card, Container, Title } from '@mantine/core';
+>>>>>>> b7f612c (Updated variant for button)
 import { colors, spacing, typography } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -217,6 +221,7 @@ export const themeComponents = {
       return {};
     },
   }),
+<<<<<<< HEAD
 
   AppShell: AppShell.extend({
     defaultProps: {
@@ -231,6 +236,24 @@ export const themeComponents = {
       navbar: {
         padding: spacing.appShell.navbar.padding,
       },
+=======
+  Button: Button.extend({
+    styles: (_theme, params) => {
+      if (params.variant === 'primary') {
+        return {
+          root: {
+            backgroundColor: colors.teal[500],
+            fontFamily: typography.fontFamily.primary,
+            padding: spacing.md,
+            borderRadius: spacing.radius.md,
+            '&:hover': {
+              backgroundColor: colors.gray[600],
+            },
+          },
+        };
+      }
+      return {};
+>>>>>>> b7f612c (Updated variant for button)
     },
   }),
 };
