@@ -2,7 +2,6 @@ import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
 import * as reportReducer from '@/reducers/reportReducer';
-import * as simulationsReducer from '@/reducers/simulationsReducer';
 import {
   mockReportFlowProps,
   mockSimulation1,
