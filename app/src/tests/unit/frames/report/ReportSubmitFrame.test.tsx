@@ -14,9 +14,12 @@ import {
   defaultFlowProps,
   mockCreateReport,
   mockOnNavigate,
+  mockReportWithLabel,
   mockResetIngredient,
+  mockSimulation1,
 } from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
 import { Report } from '@/types/ingredients/Report';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 // Mock the hooks
 vi.mock('@/hooks/useCreateReport', () => ({
@@ -79,8 +82,31 @@ describe('ReportSubmitFrame', () => {
       expect(screen.getByText('Review Report Configuration')).toBeInTheDocument();
       expect(screen.getByText('Test Simulation 1')).toBeInTheDocument();
       expect(screen.getByText('Test Simulation 2')).toBeInTheDocument();
-      expect(screen.getByText('Policy #policy-1 • Population #pop-1')).toBeInTheDocument();
-      expect(screen.getByText('Policy #policy-2 • Population #pop-2')).toBeInTheDocument();
+      expect(screen.getByText('Policy #1 • Population #1')).toBeInTheDocument();
+      expect(screen.getByText('Policy #2 • Population #2')).toBeInTheDocument();
+    });
+
+    test('given position-based storage then accesses simulations by position', () => {
+      // Given - verify the state structure is position-based
+      const state = store.getState();
+
+      // Then - verify simulations are stored in position-based array
+      expect(state.simulations.simulations).toHaveLength(2);
+      expect(state.simulations.simulations[0]).toMatchObject({
+        id: '1',
+        label: 'Test Simulation 1',
+      });
+      expect(state.simulations.simulations[1]).toMatchObject({
+        id: '2',
+        label: 'Test Simulation 2',
+      });
+
+      // When
+      renderComponent();
+
+      // Then - verify the component correctly displays both simulations
+      expect(screen.getByText('Test Simulation 1')).toBeInTheDocument();
+      expect(screen.getByText('Test Simulation 2')).toBeInTheDocument();
     });
 
     test('given simulations without labels then shows IDs', () => {
@@ -97,8 +123,8 @@ describe('ReportSubmitFrame', () => {
       renderComponent();
 
       // Then
-      expect(screen.getByText('Simulation #sim-1')).toBeInTheDocument();
-      expect(screen.getByText('Simulation #sim-2')).toBeInTheDocument();
+      expect(screen.getByText('Simulation #1')).toBeInTheDocument();
+      expect(screen.getByText('Simulation #2')).toBeInTheDocument();
     });
 
     test('given report label then passes to useCreateReport hook', () => {
@@ -107,6 +133,34 @@ describe('ReportSubmitFrame', () => {
 
       // Then
       expect(useCreateReport).toHaveBeenCalledWith('My Test Report');
+    });
+
+    test('given missing simulation at position then handles gracefully', () => {
+      // Given - only one simulation at position 0
+      store = configureStore({
+        reducer: {
+          report: reportReducer,
+          simulations: simulationsReducer,
+        },
+        preloadedState: {
+          report: {
+            ...mockReportWithLabel,
+            activeSimulationPosition: 0 as 0 | 1,
+            mode: 'report' as const,
+          } as any,
+          simulations: {
+            simulations: [mockSimulation1, null] as [Simulation | null, Simulation | null],
+            activePosition: null as 0 | 1 | null,
+          },
+        },
+      });
+
+      // When
+      renderComponent();
+
+      // Then
+      expect(screen.getByText('Test Simulation 1')).toBeInTheDocument();
+      expect(screen.getByText('No simulation')).toBeInTheDocument();
     });
   });
 
@@ -124,8 +178,8 @@ describe('ReportSubmitFrame', () => {
         {
           countryId: 'us',
           payload: {
-            simulation_1_id: 'sim-1',
-            simulation_2_id: 'sim-2',
+            simulation_1_id: '1',
+            simulation_2_id: '2',
           },
         },
         {

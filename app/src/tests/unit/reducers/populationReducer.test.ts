@@ -1,630 +1,575 @@
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test, vi } from 'vitest';
 import populationReducer, {
-  clearPopulation,
-  initializeHousehold,
-  markPopulationAsCreated,
-  setGeography,
-  setHousehold,
-  updatePopulationId,
-  updatePopulationLabel,
+  clearAllPopulations,
+  clearPopulationAtPosition,
+  createPopulationAtPosition,
+  initializeHouseholdAtPosition,
+  selectAllPopulations,
+  selectGeographyAtPosition,
+  selectHasPopulationAtPosition,
+  selectHouseholdAtPosition,
+  selectPopulationAtPosition,
+  setGeographyAtPosition,
+  setHouseholdAtPosition,
+  updatePopulationAtPosition,
+  updatePopulationIdAtPosition,
 } from '@/reducers/populationReducer';
 import {
-  createMockGeography,
-  createMockHouseholdForCountry,
-  expectStateToMatch,
-  mockGeography,
-  mockGeographyNational,
-  mockHousehold,
-  mockHouseholdUK,
-  mockInitialState,
-  mockStateCreated,
-  mockStateWithGeography,
-  mockStateWithHousehold,
-  POPULATION_COUNTRIES,
-  POPULATION_IDS,
-  POPULATION_LABELS,
-  POPULATION_REGIONS,
-  POPULATION_YEARS,
-  resetAllMocks,
-} from '@/tests/fixtures/reducers/populationReducerMocks';
-import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
+  emptyInitialState,
+  mockGeography1,
+  mockGeography2,
+  mockHousehold1,
+  mockHousehold2,
+  mockPopulation1,
+  mockPopulation2,
+  TEST_LABEL,
+  TEST_LABEL_UPDATED,
+} from '@/tests/fixtures/reducers/populationMocks';
+import { Population } from '@/types/ingredients/Population';
 
-// Mock HouseholdBuilder before any imports that use it
-vi.mock('@/utils/HouseholdBuilder', () => {
-  return {
-    HouseholdBuilder: vi.fn(),
-  };
-});
-
-// Set up the mock implementation
-const mockBuildMethod = vi.fn();
-(HouseholdBuilder as any).mockImplementation((countryId: string) => {
-  mockBuildMethod.mockReturnValue(createMockHouseholdForCountry(countryId));
-  return {
-    build: mockBuildMethod,
-  };
-});
+// Mock HouseholdBuilder
+vi.mock('@/utils/HouseholdBuilder', () => ({
+  HouseholdBuilder: vi.fn().mockImplementation((countryId: string) => ({
+    build: () => ({
+      id: undefined,
+      countryId,
+      householdData: {
+        people: {},
+      },
+    }),
+  })),
+}));
 
 describe('populationReducer', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    resetAllMocks();
-  });
-
-  describe('initial state', () => {
-    test('given no state when reducer initialized then returns default state', () => {
-      // When
-      const state = populationReducer(undefined, { type: 'unknown' });
-
-      // Then
-      expectStateToMatch(state, mockInitialState);
-    });
-
-    test('given initial state then has correct default values', () => {
-      // When
-      const state = populationReducer(undefined, { type: 'unknown' });
-
-      // Then
-      expect(state.label).toBeNull();
-      expect(state.isCreated).toBe(false);
-      expect(state.household).toBeNull();
-      expect(state.geography).toBeNull();
-    });
-  });
-
-  describe('clearPopulation action', () => {
-    test('given state with household when clearPopulation then resets to initial state', () => {
+  describe('Creating Populations at Position', () => {
+    test('given createPopulationAtPosition with position 0 then population created at first slot', () => {
       // Given
-      const initialState = { ...mockStateWithHousehold };
+      const state = emptyInitialState;
 
       // When
-      const state = populationReducer(initialState, clearPopulation());
-
-      // Then
-      expectStateToMatch(state, mockInitialState);
-    });
-
-    test('given state with geography when clearPopulation then resets to initial state', () => {
-      // Given
-      const initialState = { ...mockStateWithGeography };
-
-      // When
-      const state = populationReducer(initialState, clearPopulation());
-
-      // Then
-      expectStateToMatch(state, mockInitialState);
-    });
-
-    test('given created state when clearPopulation then resets isCreated flag', () => {
-      // Given
-      const initialState = { ...mockStateCreated };
-
-      // When
-      const state = populationReducer(initialState, clearPopulation());
-
-      // Then
-      expect(state.isCreated).toBe(false);
-    });
-
-    test('given state with label when clearPopulation then clears label', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        label: POPULATION_LABELS.DEFAULT,
-      };
-
-      // When
-      const state = populationReducer(initialState, clearPopulation());
-
-      // Then
-      expect(state.label).toBeNull();
-    });
-  });
-
-  describe('updatePopulationId action', () => {
-    test('given state with household when updatePopulationId then updates household id', () => {
-      // Given
-      const initialState = { ...mockStateWithHousehold };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        updatePopulationId(POPULATION_IDS.HOUSEHOLD_ID_NEW)
-      );
-
-      // Then
-      expect(state.household?.id).toBe(POPULATION_IDS.HOUSEHOLD_ID_NEW);
-      expect(state.geography).toBeNull();
-    });
-
-    test('given state with geography when updatePopulationId then updates geography id', () => {
-      // Given
-      const initialState = { ...mockStateWithGeography };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        updatePopulationId(POPULATION_IDS.GEOGRAPHY_ID_NEW)
-      );
-
-      // Then
-      expect(state.geography?.id).toBe(POPULATION_IDS.GEOGRAPHY_ID_NEW);
-      expect(state.household).toBeNull();
-    });
-
-    test('given empty state when updatePopulationId then does nothing', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        updatePopulationId(POPULATION_IDS.HOUSEHOLD_ID_NEW)
-      );
-
-      // Then
-      expect(state.household).toBeNull();
-      expect(state.geography).toBeNull();
-    });
-
-    test('given state with both null when updatePopulationId then state unchanged', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        household: null,
-        geography: null,
-      };
-
-      // When
-      const state = populationReducer(initialState, updatePopulationId('any-id'));
-
-      // Then
-      expectStateToMatch(state, initialState);
-    });
-  });
-
-  describe('updatePopulationLabel action', () => {
-    test('given any state when updatePopulationLabel then updates label', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        updatePopulationLabel(POPULATION_LABELS.UPDATED)
-      );
-
-      // Then
-      expect(state.label).toBe(POPULATION_LABELS.UPDATED);
-    });
-
-    test('given existing label when updatePopulationLabel then replaces label', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        label: POPULATION_LABELS.DEFAULT,
-      };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        updatePopulationLabel(POPULATION_LABELS.UPDATED)
-      );
-
-      // Then
-      expect(state.label).toBe(POPULATION_LABELS.UPDATED);
-    });
-
-    test('given state with household when updatePopulationLabel then preserves household', () => {
-      // Given
-      const initialState = { ...mockStateWithHousehold };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        updatePopulationLabel(POPULATION_LABELS.UPDATED)
-      );
-
-      // Then
-      expect(state.label).toBe(POPULATION_LABELS.UPDATED);
-      expect(state.household).toEqual(mockHousehold);
-    });
-
-    test('given empty string when updatePopulationLabel then sets empty string', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(initialState, updatePopulationLabel(''));
-
-      // Then
-      expect(state.label).toBe('');
-    });
-  });
-
-  describe('markPopulationAsCreated action', () => {
-    test('given not created state when markPopulationAsCreated then sets isCreated true', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        isCreated: false,
-      };
-
-      // When
-      const state = populationReducer(initialState, markPopulationAsCreated());
-
-      // Then
-      expect(state.isCreated).toBe(true);
-    });
-
-    test('given already created state when markPopulationAsCreated then remains true', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        isCreated: true,
-      };
-
-      // When
-      const state = populationReducer(initialState, markPopulationAsCreated());
-
-      // Then
-      expect(state.isCreated).toBe(true);
-    });
-
-    test('given state with data when markPopulationAsCreated then preserves all data', () => {
-      // Given
-      const initialState = { ...mockStateWithHousehold };
-
-      // When
-      const state = populationReducer(initialState, markPopulationAsCreated());
-
-      // Then
-      expect(state.isCreated).toBe(true);
-      expect(state.household).toEqual(mockHousehold);
-      expect(state.label).toBe(POPULATION_LABELS.HOUSEHOLD);
-    });
-  });
-
-  describe('setHousehold action', () => {
-    test('given empty state when setHousehold then sets household and clears geography', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(initialState, setHousehold(mockHousehold));
-
-      // Then
-      expect(state.household).toEqual(mockHousehold);
-      expect(state.geography).toBeNull();
-    });
-
-    test('given state with geography when setHousehold then replaces geography with household', () => {
-      // Given
-      const initialState = { ...mockStateWithGeography };
-
-      // When
-      const state = populationReducer(initialState, setHousehold(mockHousehold));
-
-      // Then
-      expect(state.household).toEqual(mockHousehold);
-      expect(state.geography).toBeNull();
-    });
-
-    test('given state with existing household when setHousehold then replaces household', () => {
-      // Given
-      const initialState = { ...mockStateWithHousehold };
-
-      // When
-      const state = populationReducer(initialState, setHousehold(mockHouseholdUK));
-
-      // Then
-      expect(state.household).toEqual(mockHouseholdUK);
-      expect(state.household?.countryId).toBe(POPULATION_COUNTRIES.UK);
-    });
-
-    test('given state with label when setHousehold then preserves label', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        label: POPULATION_LABELS.DEFAULT,
-      };
-
-      // When
-      const state = populationReducer(initialState, setHousehold(mockHousehold));
-
-      // Then
-      expect(state.label).toBe(POPULATION_LABELS.DEFAULT);
-      expect(state.household).toEqual(mockHousehold);
-    });
-
-    test('given created state when setHousehold then preserves isCreated flag', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        isCreated: true,
-      };
-
-      // When
-      const state = populationReducer(initialState, setHousehold(mockHousehold));
-
-      // Then
-      expect(state.isCreated).toBe(true);
-      expect(state.household).toEqual(mockHousehold);
-    });
-  });
-
-  describe('initializeHousehold action', () => {
-    test('given US country when initializeHousehold then creates US household', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        initializeHousehold({ countryId: POPULATION_COUNTRIES.US })
-      );
-
-      // Then
-      expect(state.household).toBeDefined();
-      expect(state.household?.countryId).toBe(POPULATION_COUNTRIES.US);
-    });
-
-    test('given UK country when initializeHousehold then creates UK household', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        initializeHousehold({ countryId: POPULATION_COUNTRIES.UK })
-      );
-
-      // Then
-      expect(state.household).toBeDefined();
-      expect(state.household?.countryId).toBe(POPULATION_COUNTRIES.UK);
-    });
-
-    test('given custom year when initializeHousehold then uses provided year', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        initializeHousehold({
-          countryId: POPULATION_COUNTRIES.US,
-          year: POPULATION_YEARS.FUTURE,
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 0,
         })
       );
 
       // Then
-      expect(state.household).toBeDefined();
-      expect(state.household?.countryId).toBe(POPULATION_COUNTRIES.US);
+      expect(newState.populations[0]).toEqual({
+        label: null,
+        isCreated: false,
+        household: null,
+        geography: null,
+      });
+      expect(newState.populations[1]).toBeNull();
     });
 
-    test('given no year when initializeHousehold then uses default year', () => {
-      const DEFAULT_YEAR = '2024';
+    test('given createPopulationAtPosition with position 1 then population created at second slot', () => {
       // Given
-      const initialState = { ...mockInitialState };
-      (HouseholdBuilder as any).mockClear();
+      const state = emptyInitialState;
 
       // When
-      const state = populationReducer(
-        initialState,
-        initializeHousehold({ countryId: POPULATION_COUNTRIES.US })
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 1,
+          population: { label: TEST_LABEL },
+        })
       );
 
       // Then
-      expect(state.household).toBeDefined();
-      // Verify HouseholdBuilder was called with default year '2024'
-      expect(HouseholdBuilder).toHaveBeenCalledWith(POPULATION_COUNTRIES.US, DEFAULT_YEAR);
+      expect(newState.populations[0]).toBeNull();
+      expect(newState.populations[1]).toEqual({
+        label: TEST_LABEL,
+        isCreated: false,
+        household: null,
+        geography: null,
+      });
     });
 
-    test('given existing household when initializeHousehold then replaces household', () => {
+    test('given createPopulationAtPosition with existing population then preserves existing population', () => {
       // Given
-      const initialState = { ...mockStateWithHousehold };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        initializeHousehold({ countryId: POPULATION_COUNTRIES.CA })
-      );
-
-      // Then
-      expect(state.household).toBeDefined();
-      expect(state.household?.countryId).toBe(POPULATION_COUNTRIES.CA);
-    });
-
-    test('given state with geography when initializeHousehold then preserves geography', () => {
-      // Given
-      const initialState = { ...mockStateWithGeography };
-
-      // When
-      const state = populationReducer(
-        initialState,
-        initializeHousehold({ countryId: POPULATION_COUNTRIES.US })
-      );
-
-      // Then
-      expect(state.household).toBeDefined();
-      expect(state.geography).toEqual(mockGeography);
-    });
-  });
-
-  describe('setGeography action', () => {
-    test('given empty state when setGeography then sets geography and clears household', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-
-      // When
-      const state = populationReducer(initialState, setGeography(mockGeography));
-
-      // Then
-      expect(state.geography).toEqual(mockGeography);
-      expect(state.household).toBeNull();
-    });
-
-    test('given state with household when setGeography then replaces household with geography', () => {
-      // Given
-      const initialState = { ...mockStateWithHousehold };
-
-      // When
-      const state = populationReducer(initialState, setGeography(mockGeography));
-
-      // Then
-      expect(state.geography).toEqual(mockGeography);
-      expect(state.household).toBeNull();
-    });
-
-    test('given state with existing geography when setGeography then replaces geography', () => {
-      // Given
-      const initialState = { ...mockStateWithGeography };
-
-      // When
-      const state = populationReducer(initialState, setGeography(mockGeographyNational));
-
-      // Then
-      expect(state.geography).toEqual(mockGeographyNational);
-      expect(state.geography?.scope).toBe('national');
-    });
-
-    test('given state with label when setGeography then preserves label', () => {
-      // Given
-      const initialState = {
-        ...mockInitialState,
-        label: POPULATION_LABELS.DEFAULT,
+      const state = {
+        populations: [mockPopulation1, null] as [Population | null, Population | null],
       };
 
       // When
-      const state = populationReducer(initialState, setGeography(mockGeography));
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 0,
+          population: { label: 'New Population' },
+        })
+      );
 
-      // Then
-      expect(state.label).toBe(POPULATION_LABELS.DEFAULT);
-      expect(state.geography).toEqual(mockGeography);
+      // Then - existing population should be preserved, not replaced
+      expect(newState.populations[0]).toEqual(mockPopulation1);
+      expect(newState.populations[0]?.label).toBe(TEST_LABEL); // Original label preserved
+      expect(newState.populations[0]?.household).toEqual(mockHousehold1); // Original household preserved
     });
 
-    test('given created state when setGeography then preserves isCreated flag', () => {
+    test('given createPopulationAtPosition with null value then creates new population', () => {
       // Given
-      const initialState = {
-        ...mockInitialState,
-        isCreated: true,
+      const state = {
+        populations: [null, mockPopulation1] as [Population | null, Population | null],
       };
 
       // When
-      const state = populationReducer(initialState, setGeography(mockGeography));
-
-      // Then
-      expect(state.isCreated).toBe(true);
-      expect(state.geography).toEqual(mockGeography);
-    });
-
-    test('given subnational geography when setGeography then stores with region details', () => {
-      // Given
-      const initialState = { ...mockInitialState };
-      const subnationalGeo = createMockGeography(
-        POPULATION_COUNTRIES.US,
-        'subnational',
-        POPULATION_REGIONS.CALIFORNIA
+      const newState = populationReducer(
+        state,
+        createPopulationAtPosition({
+          position: 0,
+          population: { label: 'New Population' },
+        })
       );
 
-      // When
-      const state = populationReducer(initialState, setGeography(subnationalGeo));
-
-      // Then
-      expect(state.geography).toEqual(subnationalGeo);
-      expect(state.geography?.geographyId).toBe(
-        `${POPULATION_COUNTRIES.US}-${POPULATION_REGIONS.CALIFORNIA}`
-      );
-      expect(state.geography?.scope).toBe('subnational');
+      // Then - new population should be created since position was null
+      expect(newState.populations[0]).toEqual({
+        label: 'New Population',
+        isCreated: false,
+        household: null,
+        geography: null,
+      });
+      expect(newState.populations[1]).toEqual(mockPopulation1); // Other position unchanged
     });
   });
 
-  describe('combined actions', () => {
-    test('given multiple actions when applied sequentially then state updates correctly', () => {
+  describe('Updating Populations at Position', () => {
+    test('given updatePopulationAtPosition updates existing population', () => {
       // Given
-      let state = { ...mockInitialState };
-
-      // When - Apply multiple actions
-      state = populationReducer(state, setHousehold(mockHousehold));
-      state = populationReducer(state, updatePopulationLabel(POPULATION_LABELS.DEFAULT));
-      state = populationReducer(state, updatePopulationId(POPULATION_IDS.HOUSEHOLD_ID_NEW));
-      state = populationReducer(state, markPopulationAsCreated());
-
-      // Then
-      expect(state.household?.id).toBe(POPULATION_IDS.HOUSEHOLD_ID_NEW);
-      expect(state.label).toBe(POPULATION_LABELS.DEFAULT);
-      expect(state.isCreated).toBe(true);
-      expect(state.geography).toBeNull();
-    });
-
-    test('given household then geography when setting both then only geography remains', () => {
-      // Given
-      let state = { ...mockInitialState };
+      const state = {
+        populations: [mockPopulation1, null] as [Population | null, Population | null],
+      };
 
       // When
-      state = populationReducer(state, setHousehold(mockHousehold));
-      expect(state.household).toEqual(mockHousehold);
-
-      state = populationReducer(state, setGeography(mockGeography));
+      const newState = populationReducer(
+        state,
+        updatePopulationAtPosition({
+          position: 0,
+          updates: { label: TEST_LABEL_UPDATED, isCreated: false },
+        })
+      );
 
       // Then
-      expect(state.geography).toEqual(mockGeography);
-      expect(state.household).toBeNull();
+      expect(newState.populations[0]).toEqual({
+        ...mockPopulation1,
+        label: TEST_LABEL_UPDATED,
+        isCreated: false,
+      });
     });
 
-    test('given geography then household when setting both then only household remains', () => {
+    test('given updatePopulationAtPosition on empty slot then throws error', () => {
       // Given
-      let state = { ...mockInitialState };
+      const state = emptyInitialState;
 
-      // When
-      state = populationReducer(state, setGeography(mockGeography));
-      expect(state.geography).toEqual(mockGeography);
-
-      state = populationReducer(state, setHousehold(mockHousehold));
-
-      // Then
-      expect(state.household).toEqual(mockHousehold);
-      expect(state.geography).toBeNull();
+      // When/Then
+      expect(() => {
+        populationReducer(
+          state,
+          updatePopulationAtPosition({
+            position: 0,
+            updates: { label: TEST_LABEL },
+          })
+        );
+      }).toThrow('Cannot update population at position 0: no population exists at that position');
     });
 
-    test('given complete state when clearPopulation then resets everything', () => {
+    test('given updatePopulationIdAtPosition updates ID in household', () => {
       // Given
-      let state = { ...mockInitialState };
-
-      // Build up a complete state
-      state = populationReducer(state, setHousehold(mockHousehold));
-      state = populationReducer(state, updatePopulationLabel(POPULATION_LABELS.DEFAULT));
-      state = populationReducer(state, markPopulationAsCreated());
+      const state = {
+        populations: [mockPopulation1, null] as [Population | null, Population | null],
+      };
 
       // When
-      state = populationReducer(state, clearPopulation());
+      const newState = populationReducer(
+        state,
+        updatePopulationIdAtPosition({
+          position: 0,
+          id: 'new-household-id',
+        })
+      );
 
       // Then
-      expectStateToMatch(state, mockInitialState);
+      expect(newState.populations[0]?.household?.id).toBe('new-household-id');
+    });
+
+    test('given updatePopulationIdAtPosition updates ID in geography', () => {
+      // Given
+      const state = {
+        populations: [mockPopulation2, null] as [Population | null, Population | null],
+      };
+
+      // When
+      const newState = populationReducer(
+        state,
+        updatePopulationIdAtPosition({
+          position: 0,
+          id: 'new-geo-id',
+        })
+      );
+
+      // Then
+      expect(newState.populations[0]?.geography?.id).toBe('new-geo-id');
+    });
+
+    test('given updatePopulationIdAtPosition on empty slot then throws error', () => {
+      // Given
+      const state = emptyInitialState;
+
+      // When/Then
+      expect(() => {
+        populationReducer(
+          state,
+          updatePopulationIdAtPosition({
+            position: 0,
+            id: 'some-id',
+          })
+        );
+      }).toThrow(
+        'Cannot update population ID at position 0: no population exists at that position'
+      );
     });
   });
 
-  describe('edge cases', () => {
-    test('given undefined payload when actions require payload then handles gracefully', () => {
+  describe('Setting Household at Position', () => {
+    test('given setHouseholdAtPosition sets household and clears geography', () => {
       // Given
-      const initialState = { ...mockStateWithHousehold };
-
-      // When - Pass undefined to updatePopulationId
-      const state = populationReducer(initialState, updatePopulationId(undefined as any));
-
-      // Then - Should update with undefined
-      expect(state.household?.id).toBeUndefined();
-    });
-
-    test('given unknown action type when processed then returns unchanged state', () => {
-      // Given
-      const initialState = { ...mockStateWithHousehold };
+      const state = {
+        populations: [mockPopulation2, null] as [Population | null, Population | null],
+      };
 
       // When
-      const state = populationReducer(initialState, { type: 'unknown/action' } as any);
+      const newState = populationReducer(
+        state,
+        setHouseholdAtPosition({
+          position: 0,
+          household: mockHousehold2,
+        })
+      );
 
       // Then
-      expectStateToMatch(state, initialState);
+      expect(newState.populations[0]?.household).toEqual(mockHousehold2);
+      expect(newState.populations[0]?.geography).toBeNull();
+    });
+
+    test('given setHouseholdAtPosition on empty slot then throws error', () => {
+      // Given
+      const state = emptyInitialState;
+
+      // When/Then
+      expect(() => {
+        populationReducer(
+          state,
+          setHouseholdAtPosition({
+            position: 0,
+            household: mockHousehold1,
+          })
+        );
+      }).toThrow('Cannot set household at position 0: no population exists at that position');
+    });
+
+    test('given initializeHouseholdAtPosition creates household', () => {
+      // Given
+      const state = {
+        populations: [
+          { label: TEST_LABEL, isCreated: false, household: null, geography: null },
+          null,
+        ] as [Population | null, Population | null],
+      };
+
+      // When
+      const newState = populationReducer(
+        state,
+        initializeHouseholdAtPosition({
+          position: 0,
+          countryId: 'us',
+          year: '2024',
+        })
+      );
+
+      // Then
+      expect(newState.populations[0]?.household).toEqual({
+        id: undefined,
+        countryId: 'us',
+        householdData: {
+          people: {},
+        },
+      });
+      expect(newState.populations[0]?.geography).toBeNull();
+    });
+
+    test('given initializeHouseholdAtPosition on empty slot creates population and household', () => {
+      // Given
+      const state = emptyInitialState;
+
+      // When
+      const newState = populationReducer(
+        state,
+        initializeHouseholdAtPosition({
+          position: 0,
+          countryId: 'uk',
+          year: '2023',
+        })
+      );
+
+      // Then
+      expect(newState.populations[0]).toBeTruthy();
+      expect(newState.populations[0]?.household).toEqual({
+        id: undefined,
+        countryId: 'uk',
+        householdData: {
+          people: {},
+        },
+      });
+    });
+  });
+
+  describe('Setting Geography at Position', () => {
+    test('given setGeographyAtPosition sets geography and clears household', () => {
+      // Given
+      const state = {
+        populations: [mockPopulation1, null] as [Population | null, Population | null],
+      };
+
+      // When
+      const newState = populationReducer(
+        state,
+        setGeographyAtPosition({
+          position: 0,
+          geography: mockGeography2,
+        })
+      );
+
+      // Then
+      expect(newState.populations[0]?.geography).toEqual(mockGeography2);
+      expect(newState.populations[0]?.household).toBeNull();
+    });
+
+    test('given setGeographyAtPosition on empty slot then throws error', () => {
+      // Given
+      const state = emptyInitialState;
+
+      // When/Then
+      expect(() => {
+        populationReducer(
+          state,
+          setGeographyAtPosition({
+            position: 0,
+            geography: mockGeography1,
+          })
+        );
+      }).toThrow('Cannot set geography at position 0: no population exists at that position');
+    });
+  });
+
+  describe('Clearing Populations', () => {
+    test('given clearPopulationAtPosition then clears specific position', () => {
+      // Given
+      const state = {
+        populations: [mockPopulation1, mockPopulation2] as [Population | null, Population | null],
+      };
+
+      // When
+      const newState = populationReducer(state, clearPopulationAtPosition(0));
+
+      // Then
+      expect(newState.populations[0]).toBeNull();
+      expect(newState.populations[1]).toEqual(mockPopulation2);
+    });
+
+    test('given clearAllPopulations then clears all positions', () => {
+      // Given
+      const state = {
+        populations: [mockPopulation1, mockPopulation2] as [Population | null, Population | null],
+      };
+
+      // When
+      const newState = populationReducer(state, clearAllPopulations());
+
+      // Then
+      expect(newState.populations[0]).toBeNull();
+      expect(newState.populations[1]).toBeNull();
+    });
+  });
+
+  describe('Selectors', () => {
+    describe('selectPopulationAtPosition', () => {
+      test('given population exists at position then returns population', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation1, mockPopulation2] as [
+              Population | null,
+              Population | null,
+            ],
+          },
+        };
+
+        // When
+        const result = selectPopulationAtPosition(state, 0);
+
+        // Then
+        expect(result).toEqual(mockPopulation1);
+      });
+
+      test('given no population at position then returns null', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [null, mockPopulation2] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectPopulationAtPosition(state, 0);
+
+        // Then
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('selectAllPopulations', () => {
+      test('given two populations then returns array with both', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation1, mockPopulation2] as [
+              Population | null,
+              Population | null,
+            ],
+          },
+        };
+
+        // When
+        const result = selectAllPopulations(state);
+
+        // Then
+        expect(result).toEqual([mockPopulation1, mockPopulation2]);
+      });
+
+      test('given one population then returns array with one', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation1, null] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectAllPopulations(state);
+
+        // Then
+        expect(result).toEqual([mockPopulation1]);
+      });
+
+      test('given no populations then returns empty array', () => {
+        // Given
+        const state = {
+          population: emptyInitialState,
+        };
+
+        // When
+        const result = selectAllPopulations(state);
+
+        // Then
+        expect(result).toEqual([]);
+      });
+    });
+
+    describe('selectHasPopulationAtPosition', () => {
+      test('given population exists at position then returns true', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation1, null] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectHasPopulationAtPosition(state, 0);
+
+        // Then
+        expect(result).toBe(true);
+      });
+
+      test('given no population at position then returns false', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation1, null] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectHasPopulationAtPosition(state, 1);
+
+        // Then
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('selectHouseholdAtPosition', () => {
+      test('given household exists at position then returns household', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation1, null] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectHouseholdAtPosition(state, 0);
+
+        // Then
+        expect(result).toEqual(mockHousehold1);
+      });
+
+      test('given no household at position then returns null', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation2, null] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectHouseholdAtPosition(state, 0);
+
+        // Then
+        expect(result).toBeNull();
+      });
+    });
+
+    describe('selectGeographyAtPosition', () => {
+      test('given geography exists at position then returns geography', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation2, null] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectGeographyAtPosition(state, 0);
+
+        // Then
+        expect(result).toEqual(mockGeography1);
+      });
+
+      test('given no geography at position then returns null', () => {
+        // Given
+        const state = {
+          population: {
+            populations: [mockPopulation1, null] as [Population | null, Population | null],
+          },
+        };
+
+        // When
+        const result = selectGeographyAtPosition(state, 0);
+
+        // Then
+        expect(result).toBeNull();
+      });
     });
   });
 });

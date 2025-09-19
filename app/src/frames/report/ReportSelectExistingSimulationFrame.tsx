@@ -10,7 +10,18 @@ import { Simulation } from '@/types/ingredients/Simulation';
 export default function ReportSelectExistingSimulationFrame({ onNavigate }: FlowComponentProps) {
   const [selectedSimulation, setSelectedSimulation] = useState<Simulation | null>(null);
 
-  // Get all simulations from the store
+  // TODO: This component should fetch the user's saved simulations from an API or session storage,
+  // not from the active simulations in the Redux store. The current implementation is a placeholder
+  // that incorrectly uses the 2 working simulations from the store.
+  //
+  // Proper implementation should:
+  // 1. Fetch list of user's saved simulations from API/storage on mount
+  // 2. Display those saved simulations in the list
+  // 3. When selected, copy the saved simulation's configuration to the active position
+  // 4. Use selectActiveSimulationPosition from reportReducer to know which position to update
+  // 5. Use updateSimulationAtPosition or createSimulationAtPosition to set the selected simulation
+
+  // TEMPORARY: Get all simulations from the store (should be from API)
   const simulations = useSelector((state: RootState) => selectAllSimulations(state));
 
   // Filter to only show fully configured simulations
@@ -30,6 +41,7 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     }
 
     // TODO: Store the selected simulation for the report
+    // This should update the simulation at the active position from reportReducer
     console.log('Selected simulation:', selectedSimulation);
 
     onNavigate('next');

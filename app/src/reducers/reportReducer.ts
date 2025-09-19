@@ -1,7 +1,15 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '@/store';
 import { Report, ReportOutput } from '@/types/ingredients/Report';
 
-const initialState: Report = {
+interface ReportState extends Report {
+  activeSimulationPosition: 0 | 1;
+  mode: 'standalone' | 'report';
+  createdAt: string; // Local state tracking
+  updatedAt: string; // Local state tracking
+}
+
+const initialState: ReportState = {
   reportId: '',
   label: null,
   countryId: 'us', // Default countryId, to be updated as needed
@@ -11,6 +19,8 @@ const initialState: Report = {
   output: null,
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
+  activeSimulationPosition: 0,
+  mode: 'standalone',
 };
 
 export const reportSlice = createSlice({
@@ -50,6 +60,9 @@ export const reportSlice = createSlice({
       state.output = null;
       state.createdAt = new Date().toISOString();
       state.updatedAt = new Date().toISOString();
+      // Reset to initial position and mode
+      state.activeSimulationPosition = 0;
+      state.mode = 'standalone';
       // Preserve countryId and apiVersion
     },
 
@@ -100,6 +113,42 @@ export const reportSlice = createSlice({
         state.updatedAt = action.payload.updatedAt;
       }
     },
+
+    // Set the active simulation position (0 or 1)
+    setActiveSimulationPosition: (state, action: PayloadAction<0 | 1>) => {
+      state.activeSimulationPosition = action.payload;
+      state.updatedAt = new Date().toISOString();
+    },
+
+    // Set the mode (standalone or report)
+    setMode: (state, action: PayloadAction<'standalone' | 'report'>) => {
+      state.mode = action.payload;
+      if (action.payload === 'standalone') {
+        state.activeSimulationPosition = 0;
+      }
+      state.updatedAt = new Date().toISOString();
+    },
+
+    // Initialize report for creation - sets up initial state for report creation flow
+    initializeReport: (state) => {
+      // Clear any existing report data
+      state.reportId = '';
+      state.label = null;
+      state.simulationIds = [];
+      state.status = 'pending';
+      state.output = null;
+
+      // Set up for report mode
+      state.mode = 'report';
+      state.activeSimulationPosition = 0;
+
+      // Update timestamps
+      const now = new Date().toISOString();
+      state.createdAt = now;
+      state.updatedAt = now;
+
+      // Preserve countryId and apiVersion
+    },
   },
 });
 
@@ -117,6 +166,15 @@ export const {
   markReportAsComplete,
   markReportAsError,
   updateTimestamps,
+  setActiveSimulationPosition,
+  setMode,
+  initializeReport,
 } = reportSlice.actions;
+
+// Selectors
+export const selectActiveSimulationPosition = (state: RootState): 0 | 1 =>
+  state.report.activeSimulationPosition;
+
+export const selectMode = (state: RootState): 'standalone' | 'report' => state.report.mode;
 
 export default reportSlice.reducer;

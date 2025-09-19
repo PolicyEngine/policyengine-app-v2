@@ -7,10 +7,10 @@ import { Population } from '@/types/ingredients/Population';
 
 // IDs and identifiers
 export const POPULATION_IDS = {
-  HOUSEHOLD_ID: 'household-123',
-  HOUSEHOLD_ID_NEW: 'household-456',
-  GEOGRAPHY_ID: 'geo-789',
-  GEOGRAPHY_ID_NEW: 'geo-012',
+  HOUSEHOLD_ID: '123',
+  HOUSEHOLD_ID_NEW: '456',
+  GEOGRAPHY_ID: 'test-geography',
+  GEOGRAPHY_ID_NEW: 'test-geography-2',
   PERSON_ID_1: 'person-001',
   PERSON_ID_2: 'person-002',
   FAMILY_ID: 'family-001',

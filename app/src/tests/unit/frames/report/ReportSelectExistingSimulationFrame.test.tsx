@@ -80,8 +80,13 @@ describe('ReportSelectExistingSimulationFrame', () => {
   });
 
   test('given unconfigured simulations exist then filters them out', () => {
-    // Given - add an unconfigured simulation
-    store.dispatch(simulationsActions.createSimulation(MOCK_UNCONFIGURED_SIMULATION));
+    // Given - add an unconfigured simulation at position 0
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_UNCONFIGURED_SIMULATION,
+      })
+    );
 
     // When
     render(
@@ -95,9 +100,19 @@ describe('ReportSelectExistingSimulationFrame', () => {
   });
 
   test('given configured simulations exist then displays simulation list', () => {
-    // Given - add configured simulations
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_1));
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_2));
+    // Given - add configured simulations at positions 0 and 1
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: MOCK_CONFIGURED_SIMULATION_2,
+      })
+    );
 
     // When
     render(
@@ -117,8 +132,18 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given simulations with labels then displays titles correctly', () => {
     // Given
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_1));
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_2));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: MOCK_CONFIGURED_SIMULATION_2,
+      })
+    );
 
     // When
     render(
@@ -144,7 +169,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given simulation without label then displays ID as title', () => {
     // Given
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL,
+      })
+    );
 
     // When
     render(
@@ -161,7 +191,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
 
   test('given no selection then Next button is disabled', () => {
     // Given
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_1));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
 
     // When
     render(
@@ -178,7 +213,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
   test('given user selects simulation then Next button is enabled', async () => {
     // Given
     const user = userEvent.setup();
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_1));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
 
     render(
       <Provider store={store}>
@@ -198,7 +238,12 @@ describe('ReportSelectExistingSimulationFrame', () => {
   test('given user selects simulation and clicks Next then logs selection and navigates', async () => {
     // Given
     const user = userEvent.setup();
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_1));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
 
     render(
       <Provider store={store}>
@@ -221,8 +266,18 @@ describe('ReportSelectExistingSimulationFrame', () => {
   test('given user switches selection then updates selected simulation', async () => {
     // Given
     const user = userEvent.setup();
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_1));
-    store.dispatch(simulationsActions.createSimulation(MOCK_CONFIGURED_SIMULATION_2));
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: MOCK_CONFIGURED_SIMULATION_1,
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: MOCK_CONFIGURED_SIMULATION_2,
+      })
+    );
 
     render(
       <Provider store={store}>
@@ -246,20 +301,34 @@ describe('ReportSelectExistingSimulationFrame', () => {
     expect(consoleLogSpy).toHaveBeenCalledWith(SELECTED_SIMULATION_LOG_PREFIX, expect.any(Object));
   });
 
-  test('given more than 10 simulations then displays only first 10', () => {
-    // Given - add 12 configured simulations
-    for (let i = 1; i <= 12; i++) {
-      store.dispatch(
-        simulationsActions.createSimulation({
-          id: `sim-${i}`,
-          label: `Simulation ${i}`,
-          policyId: `policy-${i}`,
-          populationId: `pop-${i}`,
+  test('given 2 simulations (max capacity) then displays both', () => {
+    // Given - add 2 configured simulations (max capacity)
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 0,
+        simulation: {
+          id: `1`,
+          label: `Simulation 1`,
+          policyId: `1`,
+          populationId: `1`,
           populationType: 'household' as const,
           isCreated: true,
-        })
-      );
-    }
+        },
+      })
+    );
+    store.dispatch(
+      simulationsActions.createSimulationAtPosition({
+        position: 1,
+        simulation: {
+          id: `2`,
+          label: `Simulation 2`,
+          policyId: `2`,
+          populationId: `2`,
+          populationType: 'household' as const,
+          isCreated: true,
+        },
+      })
+    );
 
     // When
     render(
@@ -268,13 +337,8 @@ describe('ReportSelectExistingSimulationFrame', () => {
       </Provider>
     );
 
-    // Then - First 10 should be visible
-    for (let i = 1; i <= 10; i++) {
-      expect(screen.getByText(`Simulation ${i}`)).toBeInTheDocument();
-    }
-
-    // 11th and 12th should not be visible
-    expect(screen.queryByText('Simulation 11')).not.toBeInTheDocument();
-    expect(screen.queryByText('Simulation 12')).not.toBeInTheDocument();
+    // Then - Both should be visible
+    expect(screen.getByText('Simulation 1')).toBeInTheDocument();
+    expect(screen.getByText('Simulation 2')).toBeInTheDocument();
   });
 });

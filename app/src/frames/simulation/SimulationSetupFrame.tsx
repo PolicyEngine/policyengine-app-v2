@@ -2,43 +2,41 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
 import {
-  createSimulation,
-  selectActiveSimulation,
-  selectActiveSimulationId,
-  updateSimulationPolicyId,
-  updateSimulationPopulationId,
+  selectActivePolicy,
+  selectActivePopulation,
+  selectCurrentPosition,
+} from '@/reducers/activeSelectors';
+import {
+  createSimulationAtPosition,
+  selectSimulationAtPosition,
+  updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 type SetupCard = 'population' | 'policy';
 
-interface SimulationSetupFrameProps extends FlowComponentProps {
-  simulationId?: string; // Optional specific simulation ID to edit
-}
-
-export default function SimulationSetupFrame({
-  onNavigate,
-  simulationId,
-}: SimulationSetupFrameProps) {
+export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
 
-  // Get the active simulation from the new normalized state
-  const activeSimulationId = useSelector((state: RootState) => selectActiveSimulationId(state));
-  const simulation = useSelector((state: RootState) => selectActiveSimulation(state));
+  // Get the current position from the cross-cutting selector
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const simulation = useSelector((state: RootState) =>
+    selectSimulationAtPosition(state, currentPosition)
+  );
 
-  // Still use the old policy and population reducers for now (they haven't been migrated yet)
-  const policy = useSelector((state: RootState) => state.policy);
-  const population = useSelector((state: RootState) => state.population);
+  // Get policy and population at the current position
+  const policy = useSelector((state: RootState) => selectActivePolicy(state));
+  const population = useSelector((state: RootState) => selectActivePopulation(state));
 
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
 
-  // Ensure we have an active simulation in the new reducer
+  // Ensure we have a simulation at the current position
   useEffect(() => {
-    if (!activeSimulationId) {
-      dispatch(createSimulation());
+    if (!simulation) {
+      dispatch(createSimulationAtPosition({ position: currentPosition }));
     }
-  }, [activeSimulationId, dispatch]);
+  }, [simulation, currentPosition, dispatch]);
 
   const handlePopulationSelect = () => {
     setSelectedCard('population');
@@ -49,9 +47,9 @@ export default function SimulationSetupFrame({
   };
 
   const handleNext = () => {
-    if (selectedCard === 'population' && !population.isCreated) {
+    if (selectedCard === 'population' && !population?.isCreated) {
       onNavigate('setupPopulation');
-    } else if (selectedCard === 'policy' && !policy.isCreated) {
+    } else if (selectedCard === 'policy' && !policy?.isCreated) {
       onNavigate('setupPolicy');
     } else if (simulation?.policyId && simulation?.populationId) {
       // Both are fulfilled, proceed to next step
@@ -61,55 +59,51 @@ export default function SimulationSetupFrame({
 
   // Listen for policy creation and update simulation with policy ID
   useEffect(() => {
-    if (policy.isCreated && policy.id && !simulation?.policyId) {
-      // Dispatch to new reducer with the specific simulation ID
+    if (policy?.isCreated && policy?.id && !simulation?.policyId) {
+      // Update the simulation at the current position
       dispatch(
-        updateSimulationPolicyId({
-          simulationId: simulationId || activeSimulationId || undefined,
-          policyId: policy.id,
+        updateSimulationAtPosition({
+          position: currentPosition,
+          updates: { policyId: policy.id },
         })
       );
     }
-  }, [
-    policy.isCreated,
-    policy.id,
-    simulation?.policyId,
-    simulationId,
-    activeSimulationId,
-    dispatch,
-  ]);
+  }, [policy?.isCreated, policy?.id, simulation?.policyId, currentPosition, dispatch]);
 
   // Listen for population creation and update simulation with population ID
   useEffect(() => {
     console.log('Population state in new effect hook:', population);
     console.log('Simulation state in new effect hook:', simulation);
-    if (population.isCreated && !simulation?.populationId) {
+    if (population?.isCreated && !simulation?.populationId) {
       console.log('Responding to update to population in new effect hook');
-      if (population.household?.id) {
+      if (population?.household?.id) {
         dispatch(
-          updateSimulationPopulationId({
-            simulationId: simulationId || activeSimulationId || undefined,
-            populationId: population.household.id,
-            populationType: 'household',
+          updateSimulationAtPosition({
+            position: currentPosition,
+            updates: {
+              populationId: population.household.id,
+              populationType: 'household',
+            },
           })
         );
-      } else if (population.geography?.id) {
+      } else if (population?.geography?.id) {
         dispatch(
-          updateSimulationPopulationId({
-            simulationId: simulationId || activeSimulationId || undefined,
-            populationId: population.geography.id,
-            populationType: 'geography',
+          updateSimulationAtPosition({
+            position: currentPosition,
+            updates: {
+              populationId: population.geography.id,
+              populationType: 'geography',
+            },
           })
         );
       }
     }
   }, [
-    population.isCreated,
-    population.household,
-    population.geography,
+    population?.isCreated,
+    population?.household,
+    population?.geography,
     simulation?.populationId,
-    simulationId,
-    activeSimulationId,
+    currentPosition,
     dispatch,
   ]);
 
@@ -175,7 +169,7 @@ export default function SimulationSetupFrame({
       description: generatePopulationCardDescription(),
       onClick: handlePopulationSelect,
       isSelected: selectedCard === 'population',
-      isFulfilled: population && population.isCreated,
+      isFulfilled: population?.isCreated || false,
       isDisabled: false,
     },
     {
@@ -183,20 +177,20 @@ export default function SimulationSetupFrame({
       description: generatePolicyCardDescription(),
       onClick: handlePolicySelect,
       isSelected: selectedCard === 'policy',
-      isFulfilled: policy && policy.isCreated,
+      isFulfilled: policy?.isCreated || false,
       isDisabled: false,
     },
   ];
 
   // Determine the primary action label and state
   const getPrimaryAction = () => {
-    if (selectedCard === 'population' && !population.isCreated) {
+    if (selectedCard === 'population' && !population?.isCreated) {
       return {
         label: 'Setup Population',
         onClick: handleNext,
         isDisabled: false,
       };
-    } else if (selectedCard === 'policy' && !policy.isCreated) {
+    } else if (selectedCard === 'policy' && !policy?.isCreated) {
       return {
         label: 'Setup Policy',
         onClick: handleNext,

@@ -18,7 +18,9 @@ import {
 import { DatePickerInput, YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
-import { addPolicyParam } from '@/reducers/policyReducer';
+import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { addPolicyParamAtPosition } from '@/reducers/policyReducer';
+import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
@@ -64,6 +66,9 @@ export default function PolicyParameterSelectorValueSetterContainer(
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
   const dispatch = useDispatch();
 
+  // Get the current position from the cross-cutting selector
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+
   // Get date ranges from metadata using utility selector
   const { minDate, maxDate } = useSelector(getDateRange);
 
@@ -80,7 +85,13 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   function handleSubmit() {
     intervals.forEach((interval) => {
-      dispatch(addPolicyParam({ name: param.parameter, valueInterval: interval }));
+      dispatch(
+        addPolicyParamAtPosition({
+          position: currentPosition,
+          name: param.parameter,
+          valueInterval: interval,
+        })
+      );
     });
   }
 

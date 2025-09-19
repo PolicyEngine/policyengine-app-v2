@@ -8,6 +8,7 @@ import { MantineProvider } from '@mantine/core';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import metadataReducer from '@/reducers/metadataReducer';
 import populationReducer from '@/reducers/populationReducer';
+import reportReducer from '@/reducers/reportReducer';
 import {
   GEOGRAPHIC_SCOPES,
   mockFlowProps,
@@ -76,9 +77,12 @@ describe('SelectGeographicScopeFrame', () => {
       reducer: {
         population: populationReducer,
         metadata: metadataReducer,
+        report: reportReducer,
       },
       preloadedState: {
-        population: {},
+        population: {
+          populations: [null, null] as [any, any],
+        },
         metadata: fullMetadataState,
       },
     });
@@ -214,7 +218,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Verify Redux action was dispatched
       const state = store.getState();
-      expect(state.population.geography).toEqual(
+      expect(state.population.populations[0]?.geography).toEqual(
         expect.objectContaining({
           id: TEST_COUNTRIES.US,
           countryId: TEST_COUNTRIES.US,
@@ -246,7 +250,7 @@ describe('SelectGeographicScopeFrame', () => {
       expect(props.onNavigate).toHaveBeenCalledWith(GEOGRAPHIC_SCOPES.STATE);
 
       const state = store.getState();
-      expect(state.population.geography).toEqual(
+      expect(state.population.populations[0]?.geography).toEqual(
         expect.objectContaining({
           id: `${TEST_COUNTRIES.US}-ca`,
           countryId: TEST_COUNTRIES.US,
@@ -293,7 +297,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Geography should not be set for household scope
       const state = store.getState();
-      expect(state.population.geography).toBeUndefined();
+      expect(state.population.populations[0]?.geography).toBeNull();
     });
   });
 
@@ -319,7 +323,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then
       const state = store.getState();
-      expect(state.population.geography.geographyId).toBe('ca'); // Not 'state/ca'
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('ca'); // Not 'state/ca'
     });
 
     test('given UK constituency when submitted then extracts constituency name', async () => {
@@ -348,7 +352,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then
       const state = store.getState();
-      expect(state.population.geography.geographyId).toBe('london'); // Not 'constituency/london'
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('london'); // Not 'constituency/london'
     });
   });
 

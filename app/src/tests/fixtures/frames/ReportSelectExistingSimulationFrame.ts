@@ -12,34 +12,34 @@ export const SIMULATIONS_SUFFIX = 'simulations';
 
 // Mock simulation data
 export const MOCK_CONFIGURED_SIMULATION_1 = {
-  id: 'sim-1',
+  id: '1',
   label: 'Test Simulation 1',
-  policyId: 'policy-1',
-  populationId: 'pop-1',
+  policyId: '1',
+  populationId: '1',
   populationType: 'household' as const,
   isCreated: true,
 };
 
 export const MOCK_CONFIGURED_SIMULATION_2 = {
-  id: 'sim-2',
+  id: '2',
   label: 'Test Simulation 2',
-  policyId: 'policy-2',
+  policyId: '2',
   populationId: 'pop-2',
   populationType: 'geography' as const,
   isCreated: true,
 };
 
 export const MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL = {
-  id: 'sim-3',
+  id: '3',
   label: null,
-  policyId: 'policy-3',
-  populationId: 'pop-3',
+  policyId: '3',
+  populationId: '3',
   populationType: 'household' as const,
   isCreated: true,
 };
 
 export const MOCK_UNCONFIGURED_SIMULATION = {
-  id: 'sim-4',
+  id: '4',
   label: 'Incomplete Simulation',
   policyId: undefined,
   populationId: undefined,

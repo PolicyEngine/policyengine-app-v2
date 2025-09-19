@@ -1,40 +1,36 @@
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { selectActiveSimulation, selectSimulationById } from '@/reducers/simulationsReducer';
+import {
+  selectActivePolicy,
+  selectActivePopulation,
+  selectActiveSimulation,
+  selectCurrentPosition,
+} from '@/reducers/activeSelectors';
+import {
+  clearSimulationAtPosition,
+  updateSimulationAtPosition,
+} from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationCreationPayload } from '@/types/payloads';
 
-interface SimulationSubmitFrameProps extends FlowComponentProps {
-  simulationId?: string; // Optional specific simulation ID to submit
-}
+export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
+  const dispatch = useDispatch();
 
-export default function SimulationSubmitFrame({
-  onNavigate,
-  isInSubflow,
-  simulationId,
-}: SimulationSubmitFrameProps) {
-  // Get simulation from the normalized state
-  const simulation = useSelector((state: RootState) => {
-    if (simulationId) {
-      // If specific simulation ID provided, get that simulation
-      return selectSimulationById(state, simulationId);
-    }
-    // Otherwise get the active simulation
-    return selectActiveSimulation(state);
-  });
+  // Get the current position and active simulation from cross-cutting selectors
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const simulation = useSelector((state: RootState) => selectActiveSimulation(state));
 
-  const policy = useSelector((state: RootState) => state.policy);
-  const population = useSelector((state: RootState) => state.population);
+  // Get policy and population at the current position
+  const policy = useSelector((state: RootState) => selectActivePolicy(state));
+  const population = useSelector((state: RootState) => selectActivePopulation(state));
 
   console.log('Simulation label: ', simulation?.label);
   console.log('Simulation in SimulationSubmitFrame: ', simulation);
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
-  const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
     // Convert state to partial Simulation for adapter
@@ -49,10 +45,26 @@ export default function SimulationSubmitFrame({
 
     console.log('Submitting simulation:', serializedSimulationCreationPayload);
     createSimulation(serializedSimulationCreationPayload, {
-      onSuccess: () => {
+      onSuccess: (data) => {
+        console.log('Simulation created successfully:', data);
+
+        // Update the simulation at current position with the API response
+        dispatch(
+          updateSimulationAtPosition({
+            position: currentPosition,
+            updates: {
+              id: data.result.simulation_id,
+              isCreated: true,
+            },
+          })
+        );
+
+        // Navigate to the next step
         onNavigate('submit');
+
+        // If we're not in a subflow, clear just this specific simulation
         if (!isInSubflow) {
-          resetIngredient('simulation');
+          dispatch(clearSimulationAtPosition(currentPosition));
         }
       },
     });
@@ -62,15 +74,15 @@ export default function SimulationSubmitFrame({
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'Population Added',
-      description: population.label || `Household #${simulation?.populationId}`,
+      description: population?.label || `Household #${simulation?.populationId}`,
       isFulfilled: !!simulation?.populationId,
-      badge: population.label || `Household #${simulation?.populationId}`,
+      badge: population?.label || `Household #${simulation?.populationId}`,
     },
     {
       title: 'Policy Reform Added',
-      description: policy.label || `Policy #${simulation?.policyId}`,
+      description: policy?.label || `Policy #${simulation?.policyId}`,
       isFulfilled: !!simulation?.policyId,
-      badge: policy.label || `Policy #${simulation?.policyId}`,
+      badge: policy?.label || `Policy #${simulation?.policyId}`,
     },
   ];
 

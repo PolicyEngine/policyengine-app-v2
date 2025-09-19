@@ -8,6 +8,7 @@ import { MantineProvider } from '@mantine/core';
 import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import metadataReducer from '@/reducers/metadataReducer';
 import populationReducer from '@/reducers/populationReducer';
+import reportReducer from '@/reducers/reportReducer';
 import {
   getMockHousehold,
   mockCreateHouseholdResponse,
@@ -134,6 +135,10 @@ describe('HouseholdBuilderFrame', () => {
     },
     props = mockFlowProps
   ) => {
+    const basePopulationState = {
+      populations: [null, null],
+      ...populationState,
+    };
     const fullMetadataState = {
       loading: false,
       error: null,
@@ -161,10 +166,11 @@ describe('HouseholdBuilderFrame', () => {
     store = configureStore({
       reducer: {
         population: populationReducer,
+        report: reportReducer,
         metadata: metadataReducer,
       },
       preloadedState: {
-        population: populationState,
+        population: basePopulationState,
         metadata: fullMetadataState,
       },
     });

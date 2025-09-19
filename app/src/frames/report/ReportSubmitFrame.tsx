@@ -3,7 +3,7 @@ import { ReportAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { selectAllSimulations } from '@/reducers/simulationsReducer';
+import { selectBothSimulations } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Report } from '@/types/ingredients/Report';
@@ -12,20 +12,26 @@ import { ReportCreationPayload } from '@/types/payloads';
 export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   // Get report state from Redux
   const reportState = useSelector((state: RootState) => state.report);
-  const simulations = useSelector((state: RootState) => selectAllSimulations(state));
-
-  // Get the two simulations from report state
-  const sim1Id = reportState.simulationIds[0];
-  const sim2Id = reportState.simulationIds[1];
-
-  const simulation1 = sim1Id ? simulations.find((s) => s.id === sim1Id) : null;
-  const simulation2 = sim2Id ? simulations.find((s) => s.id === sim2Id) : null;
+  // Use selectBothSimulations to get simulations at positions 0 and 1
+  const [simulation1, simulation2] = useSelector((state: RootState) =>
+    selectBothSimulations(state)
+  );
 
   console.log('Report label: ', reportState.label);
   const { createReport, isPending } = useCreateReport(reportState.label || undefined);
   const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
+    // TODO: This code isn't really correct. Simulations should be created in
+    // the SimulationSubmitFrame, then their IDs should be passed over to the
+    // simulation reducer, then used here. This will be dealt with in separate commit.
+    // Get the simulation IDs from the simulations
+    const sim1Id = simulation1?.id;
+    const sim2Id = simulation2?.id;
+
+    // Submit both simulations if they exist and aren't created yet
+    // TODO: Add logic to create simulations if !isCreated before submitting report
+
     // Prepare the report data for creation
     const reportData: Partial<Report> = {
       countryId: reportState.countryId,
@@ -60,7 +66,8 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
   const summaryBoxes: SummaryBoxItem[] = [
     {
       title: 'First Simulation',
-      description: simulation1?.label || `Simulation #${sim1Id}`,
+      description:
+        simulation1?.label || (simulation1?.id ? `Simulation #${simulation1.id}` : 'No simulation'),
       isFulfilled: !!simulation1,
       badge: simulation1
         ? `Policy #${simulation1.policyId} • Population #${simulation1.populationId}`
@@ -68,7 +75,8 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
     },
     {
       title: 'Second Simulation',
-      description: simulation2?.label || `Simulation #${sim2Id}`,
+      description:
+        simulation2?.label || (simulation2?.id ? `Simulation #${simulation2.id}` : 'No simulation'),
       isFulfilled: !!simulation2,
       badge: simulation2
         ? `Policy #${simulation2.policyId} • Population #${simulation2.populationId}`

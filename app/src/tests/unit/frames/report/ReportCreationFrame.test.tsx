@@ -196,12 +196,12 @@ describe('ReportCreationFrame', () => {
   test('given pre-existing report data then clears on mount', async () => {
     // Given - populate report with existing data
     store.dispatch(reportActions.updateLabel('Existing Report'));
-    store.dispatch(reportActions.addSimulationId('sim-123'));
+    store.dispatch(reportActions.addSimulationId('123'));
 
     // Verify pre-existing data
     let state = store.getState();
     expect(state.report.label).toBe('Existing Report');
-    expect(state.report.simulationIds).toContain('sim-123');
+    expect(state.report.simulationIds).toContain('123');
 
     // When
     render(

@@ -4,10 +4,10 @@ import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
+import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
 import {
-  markPopulationAsCreated,
-  updatePopulationId,
-  updatePopulationLabel,
+  updatePopulationAtPosition,
+  updatePopulationIdAtPosition,
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -20,7 +20,8 @@ export default function GeographicConfirmationFrame({
   isInSubflow,
 }: FlowComponentProps) {
   const dispatch = useDispatch();
-  const population = useSelector((state: RootState) => state.population);
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const populationState = useSelector((state: RootState) => selectActivePopulation(state));
   const { mutateAsync: createGeographicAssociation, isPending } = useCreateGeographicAssociation();
   const { resetIngredient } = useIngredientReset();
 
@@ -28,21 +29,21 @@ export default function GeographicConfirmationFrame({
   const currentUserId = MOCK_USER_ID;
   // Get metadata from state
   const metadata = useSelector((state: RootState) => state.metadata);
-  const userDefinedLabel = useSelector((state: RootState) => state.population.label);
+  const userDefinedLabel = populationState?.label || null;
 
   // Build geographic population data from existing geography in reducer
   const buildGeographicPopulation = (): Omit<UserGeographyPopulation, 'createdAt' | 'type'> => {
-    if (!population.geography) {
+    if (!populationState?.geography) {
       throw new Error('No geography found in population state');
     }
 
     const basePopulation = {
       id: `${currentUserId}-${Date.now()}`, // TODO: May need to modify this after changes to API
       userId: currentUserId,
-      countryId: population.geography.countryId,
-      geographyId: population.geography.geographyId,
-      scope: population.geography.scope,
-      label: userDefinedLabel || population.geography.name || undefined,
+      countryId: populationState.geography.countryId,
+      geographyId: populationState.geography.geographyId,
+      scope: populationState.geography.scope,
+      label: userDefinedLabel || populationState.geography.name || undefined,
     };
 
     return basePopulation;
@@ -57,9 +58,21 @@ export default function GeographicConfirmationFrame({
       console.log('Geographic population created successfully:', result);
 
       // Update population state with the created population ID and mark as created
-      dispatch(updatePopulationId(result.geographyId));
-      dispatch(updatePopulationLabel(result.label || ''));
-      dispatch(markPopulationAsCreated());
+      dispatch(
+        updatePopulationIdAtPosition({
+          position: currentPosition,
+          id: result.geographyId,
+        })
+      );
+      dispatch(
+        updatePopulationAtPosition({
+          position: currentPosition,
+          updates: {
+            label: result.label || '',
+            isCreated: true,
+          },
+        })
+      );
 
       // If we've created this population as part of a standalone population creation flow,
       // we're done; clear the population reducer
@@ -81,7 +94,7 @@ export default function GeographicConfirmationFrame({
 
   // Build display content based on geographic scope
   const buildDisplayContent = () => {
-    if (!population.geography) {
+    if (!populationState?.geography) {
       return (
         <Stack gap="md">
           <Text c="red">No geography selected</Text>
@@ -89,9 +102,9 @@ export default function GeographicConfirmationFrame({
       );
     }
 
-    const geographyCountryId = population.geography.countryId;
+    const geographyCountryId = populationState.geography.countryId;
 
-    if (population.geography.scope === 'national') {
+    if (populationState.geography.scope === 'national') {
       return (
         <Stack gap="md">
           <Text fw={600} fz="lg">
@@ -108,7 +121,7 @@ export default function GeographicConfirmationFrame({
     }
 
     // Subnational
-    const regionCode = population.geography.geographyId;
+    const regionCode = populationState.geography.geographyId;
     const regionLabel = getRegionLabel(regionCode, metadata);
     const regionTypeName = getRegionType(geographyCountryId) === 'state' ? 'State' : 'Constituency';
 

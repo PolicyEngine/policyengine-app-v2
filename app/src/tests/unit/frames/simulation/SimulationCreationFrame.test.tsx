@@ -1,162 +1,144 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
-import flowReducer from '@/reducers/flowReducer';
-import metadataReducer from '@/reducers/metadataReducer';
-import policyReducer from '@/reducers/policyReducer';
-import populationReducer from '@/reducers/populationReducer';
-import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
+import * as simulationsReducer from '@/reducers/simulationsReducer';
 import {
-  CREATE_SIMULATION_BUTTON_LABEL,
-  SIMULATION_NAME_INPUT_LABEL,
-  TEST_SIMULATION_LABEL,
-} from '@/tests/fixtures/frames/SimulationCreationFrame';
+  mockDispatch,
+  mockOnNavigate,
+  mockSimulationEmpty,
+} from '@/tests/fixtures/frames/simulationFrameMocks';
+
+// Mock Plotly
+vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
+
+// Mock selectors
+const mockSelectCurrentPosition = vi.fn();
+const mockSelectSimulationAtPosition = vi.fn();
+
+vi.mock('@/reducers/activeSelectors', () => ({
+  selectCurrentPosition: (_state: any) => mockSelectCurrentPosition(),
+}));
+
+vi.mock('@/reducers/simulationsReducer', async () => {
+  const actual = (await vi.importActual('@/reducers/simulationsReducer')) as any;
+  return {
+    ...actual,
+    selectSimulationAtPosition: (_state: any, position: number) =>
+      mockSelectSimulationAtPosition(position),
+    createSimulationAtPosition: actual.createSimulationAtPosition,
+    updateSimulationAtPosition: actual.updateSimulationAtPosition,
+  };
+});
+
+vi.mock('react-redux', async () => {
+  const actual = await vi.importActual('react-redux');
+  return {
+    ...actual,
+    useDispatch: () => mockDispatch,
+    useSelector: (selector: any) => {
+      return selector({});
+    },
+  };
+});
 
 describe('SimulationCreationFrame', () => {
-  let store: any;
-  let mockOnNavigate: ReturnType<typeof vi.fn>;
-  let mockOnReturn: ReturnType<typeof vi.fn>;
-  let defaultFlowProps: any;
+  const mockFlowProps = {
+    onNavigate: mockOnNavigate,
+    onReturn: vi.fn(),
+    flowConfig: {
+      component: 'SimulationCreationFrame' as any,
+      on: {},
+    },
+    isInSubflow: false,
+    flowDepth: 0,
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Create a fresh store for each test
-    store = configureStore({
-      reducer: {
-        simulations: simulationsReducer,
-        flow: flowReducer,
-        policy: policyReducer,
-        population: populationReducer,
-        household: populationReducer,
-        metadata: metadataReducer,
-      },
-    });
-
-    mockOnNavigate = vi.fn();
-    mockOnReturn = vi.fn();
-
-    // Default flow props to satisfy FlowComponentProps interface
-    defaultFlowProps = {
-      onNavigate: mockOnNavigate,
-      onReturn: mockOnReturn,
-      flowConfig: {
-        component: 'SimulationCreationFrame',
-        on: {
-          next: 'SimulationSetupFrame',
-        },
-      },
-      isInSubflow: false,
-      flowDepth: 0,
-    };
-
-    // Spy on the action creators
-    vi.spyOn(simulationsActions, 'updateSimulationLabel');
-    vi.spyOn(simulationsActions, 'createSimulation');
+    mockDispatch.mockClear();
+    mockOnNavigate.mockClear();
+    mockSelectCurrentPosition.mockClear();
+    mockSelectSimulationAtPosition.mockClear();
   });
 
-  test('given component mounts then creates simulation in new reducer', () => {
-    // Given/When
-    render(
-      <Provider store={store}>
-        <SimulationCreationFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    // Then - should have created a simulation in the new reducer
-    expect(simulationsActions.createSimulation).toHaveBeenCalled();
-    const state = store.getState();
-    expect(state.simulations.activeId).toBeTruthy();
-    expect(Object.keys(state.simulations.entities)).toHaveLength(1);
-  });
-
-  test('given user submits label then dispatches to simulations reducer', async () => {
+  test('given no simulation exists then creates one at current position', () => {
     // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <SimulationCreationFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    const input = screen.getByLabelText(SIMULATION_NAME_INPUT_LABEL);
-    const submitButton = screen.getByRole('button', { name: CREATE_SIMULATION_BUTTON_LABEL });
+    mockSelectCurrentPosition.mockReturnValue(0);
+    mockSelectSimulationAtPosition.mockReturnValue(null);
 
     // When
-    await user.type(input, TEST_SIMULATION_LABEL);
+    render(<SimulationCreationFrame {...mockFlowProps} />);
+
+    // Then - should create simulation at position 0
+    expect(mockDispatch).toHaveBeenCalledWith(
+      simulationsReducer.createSimulationAtPosition({ position: 0 })
+    );
+  });
+
+  test('given simulation exists then does not create new one', () => {
+    // Given
+    mockSelectCurrentPosition.mockReturnValue(0);
+    mockSelectSimulationAtPosition.mockReturnValue(mockSimulationEmpty);
+
+    // When
+    render(<SimulationCreationFrame {...mockFlowProps} />);
+
+    // Then - should NOT create simulation
+    expect(mockDispatch).not.toHaveBeenCalledWith(
+      simulationsReducer.createSimulationAtPosition({ position: 0 })
+    );
+  });
+
+  test('given user enters label and submits then updates simulation', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockSelectCurrentPosition.mockReturnValue(1);
+    mockSelectSimulationAtPosition.mockReturnValue(mockSimulationEmpty);
+
+    render(<SimulationCreationFrame {...mockFlowProps} />);
+
+    // When
+    const input = screen.getByLabelText('Simulation name');
+    await user.type(input, 'My Custom Simulation');
+
+    const submitButton = screen.getByRole('button', { name: /Create simulation/i });
     await user.click(submitButton);
 
-    // Then - should dispatch to simulations reducer
-    expect(simulationsActions.updateSimulationLabel).toHaveBeenCalledWith({
-      label: TEST_SIMULATION_LABEL,
-    });
-
-    // And - should navigate to next
+    // Then
+    expect(mockDispatch).toHaveBeenCalledWith(
+      simulationsReducer.updateSimulationAtPosition({
+        position: 1,
+        updates: { label: 'My Custom Simulation' },
+      })
+    );
     expect(mockOnNavigate).toHaveBeenCalledWith('next');
   });
 
-  test('given user submits label then reducer state is updated', async () => {
+  test('given report mode then uses activeSimulationPosition', () => {
     // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <SimulationCreationFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    const input = screen.getByLabelText(SIMULATION_NAME_INPUT_LABEL);
-    const submitButton = screen.getByRole('button', { name: CREATE_SIMULATION_BUTTON_LABEL });
+    mockSelectCurrentPosition.mockReturnValue(1); // Report mode, position 1
+    mockSelectSimulationAtPosition.mockReturnValue(null);
 
     // When
-    await user.type(input, TEST_SIMULATION_LABEL);
-    await user.click(submitButton);
+    render(<SimulationCreationFrame {...mockFlowProps} />);
 
-    // Then - check reducer state
-    const state = store.getState();
-    const activeId = state.simulations.activeId;
-    expect(state.simulations.entities[activeId].label).toBe(TEST_SIMULATION_LABEL);
+    // Then - should create simulation at position 1
+    expect(mockDispatch).toHaveBeenCalledWith(
+      simulationsReducer.createSimulationAtPosition({ position: 1 })
+    );
   });
 
-  test('given component already has active simulation then does not create new one', () => {
-    // Given - pre-populate the store with a simulation
-    store.dispatch(simulationsActions.createSimulation());
-    const initialActiveId = store.getState().simulations.activeId;
-
-    // Reset the spy after initial creation
-    vi.clearAllMocks();
+  test('given standalone mode then uses position 0', () => {
+    // Given
+    mockSelectCurrentPosition.mockReturnValue(0); // Standalone mode always returns 0
+    mockSelectSimulationAtPosition.mockReturnValue(null);
 
     // When
-    render(
-      <Provider store={store}>
-        <SimulationCreationFrame {...defaultFlowProps} />
-      </Provider>
+    render(<SimulationCreationFrame {...mockFlowProps} />);
+
+    // Then - should create simulation at position 0
+    expect(mockDispatch).toHaveBeenCalledWith(
+      simulationsReducer.createSimulationAtPosition({ position: 0 })
     );
-
-    // Then - should NOT create another simulation
-    expect(simulationsActions.createSimulation).not.toHaveBeenCalled();
-    const finalActiveId = store.getState().simulations.activeId;
-    expect(finalActiveId).toBe(initialActiveId);
-  });
-
-  test('given empty label then still dispatches to reducer', async () => {
-    // Given
-    const user = userEvent.setup();
-    render(
-      <Provider store={store}>
-        <SimulationCreationFrame {...defaultFlowProps} />
-      </Provider>
-    );
-
-    const submitButton = screen.getByRole('button', { name: CREATE_SIMULATION_BUTTON_LABEL });
-
-    // When - submit without entering a label
-    await user.click(submitButton);
-
-    // Then - should dispatch empty string to reducer
-    expect(simulationsActions.updateSimulationLabel).toHaveBeenCalledWith({
-      label: '',
-    });
   });
 });

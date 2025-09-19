@@ -33,6 +33,8 @@ export const mockSimulation1: Simulation = {
   populationId: TEST_HOUSEHOLD_ID,
   populationType: 'household',
   apiVersion: 'v1',
+  label: 'Test Simulation 1',
+  isCreated: true,
 };
 
 export const mockSimulation2: Simulation = {
@@ -42,6 +44,8 @@ export const mockSimulation2: Simulation = {
   populationId: TEST_GEOGRAPHY_ID,
   populationType: 'geography',
   apiVersion: 'v1',
+  label: 'Test Simulation 2',
+  isCreated: true,
 };
 
 // Mock Policy entities

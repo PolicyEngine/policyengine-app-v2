@@ -25,8 +25,6 @@ export class ReportAdapter {
       simulationIds,
       status: metadata.status,
       output: convertJsonToReportOutput(metadata.output),
-      createdAt: metadata.created_at,
-      updatedAt: metadata.updated_at,
     };
   }
 
@@ -39,8 +37,8 @@ export class ReportAdapter {
     const [simulation1Id, simulation2Id] = report.simulationIds;
 
     return {
-      simulation_1_id: simulation1Id,
-      simulation_2_id: simulation2Id || null,
+      simulation_1_id: parseInt(simulation1Id, 10),
+      simulation_2_id: simulation2Id ? parseInt(simulation2Id, 10) : null,
     };
   }
 

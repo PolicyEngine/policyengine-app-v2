@@ -2,9 +2,14 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import reportReducer, {
   addSimulationId,
   clearReport,
+  initializeReport,
   markReportAsComplete,
   markReportAsError,
   removeSimulationId,
+  selectActiveSimulationPosition,
+  selectMode,
+  setActiveSimulationPosition,
+  setMode,
   updateApiVersion,
   updateCountryId,
   updateLabel,
@@ -201,7 +206,11 @@ describe('reportReducer', () => {
   describe('clearReport action', () => {
     test('given populated report then resets to initial state but preserves country and api version', () => {
       // Given
-      const initialState = MOCK_COMPLETE_REPORT;
+      const initialState = {
+        ...MOCK_COMPLETE_REPORT,
+        activeSimulationPosition: 1 as 0 | 1,
+        mode: 'report' as 'standalone' | 'report',
+      };
       const action = clearReport();
 
       // When
@@ -217,11 +226,17 @@ describe('reportReducer', () => {
       expect(state.apiVersion).toBe('v1'); // Preserved
       expect(state.createdAt).toBe('2024-01-15T10:00:00.000Z');
       expect(state.updatedAt).toBe('2024-01-15T10:00:00.000Z');
+      expect(state.activeSimulationPosition).toBe(0);
+      expect(state.mode).toBe('standalone');
     });
 
     test('given error report then resets all fields but preserves country and api version', () => {
       // Given
-      const initialState = MOCK_ERROR_REPORT;
+      const initialState = {
+        ...MOCK_ERROR_REPORT,
+        activeSimulationPosition: 1 as 0 | 1,
+        mode: 'report' as 'standalone' | 'report',
+      };
       const action = clearReport();
 
       // When
@@ -234,6 +249,8 @@ describe('reportReducer', () => {
       expectOutput(state, null);
       expect(state.countryId).toBe('uk'); // Preserved
       expect(state.apiVersion).toBe('v2'); // Preserved
+      expect(state.activeSimulationPosition).toBe(0);
+      expect(state.mode).toBe('standalone');
     });
   });
 
@@ -559,35 +576,35 @@ describe('reportReducer', () => {
   describe('state transitions', () => {
     test('given sequence of actions then maintains correct state', () => {
       // Given
-      let state = EXPECTED_INITIAL_STATE;
+      let state: any = EXPECTED_INITIAL_STATE;
 
       // When & Then - Update report ID
-      state = reportReducer(state, updateReportId(TEST_REPORT_ID_1));
+      state = reportReducer(state as any, updateReportId(TEST_REPORT_ID_1));
       expectReportId(state, TEST_REPORT_ID_1);
 
       // When & Then - Add simulation IDs
-      state = reportReducer(state, addSimulationId(TEST_SIMULATION_ID_1));
-      state = reportReducer(state, addSimulationId(TEST_SIMULATION_ID_2));
+      state = reportReducer(state as any, addSimulationId(TEST_SIMULATION_ID_1));
+      state = reportReducer(state as any, addSimulationId(TEST_SIMULATION_ID_2));
       expectSimulationIds(state, [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2]);
 
       // When & Then - Update output
-      state = reportReducer(state, updateReportOutput(MOCK_REPORT_OUTPUT));
+      state = reportReducer(state as any, updateReportOutput(MOCK_REPORT_OUTPUT));
       expectOutput(state, MOCK_REPORT_OUTPUT);
 
       // When & Then - Mark as complete
-      state = reportReducer(state, markReportAsComplete());
+      state = reportReducer(state as any, markReportAsComplete());
       expectStatus(state, 'complete');
 
       // When & Then - Remove a simulation
-      state = reportReducer(state, removeSimulationId(TEST_SIMULATION_ID_1));
+      state = reportReducer(state as any, removeSimulationId(TEST_SIMULATION_ID_1));
       expectSimulationIds(state, [TEST_SIMULATION_ID_2]);
 
       // When & Then - Mark as error
-      state = reportReducer(state, markReportAsError());
+      state = reportReducer(state as any, markReportAsError());
       expectStatus(state, 'error');
 
       // When & Then - Clear report
-      state = reportReducer(state, clearReport());
+      state = reportReducer(state as any, clearReport());
       expectReportId(state, '');
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');
@@ -638,6 +655,222 @@ describe('reportReducer', () => {
         TEST_SIMULATION_ID_2,
         TEST_SIMULATION_ID_3,
       ]);
+    });
+  });
+
+  describe('setActiveSimulationPosition action', () => {
+    test('given position 0 then sets to position 0', () => {
+      // Given
+      const initialState = createMockReportState();
+      vi.advanceTimersByTime(1000);
+      const action = setActiveSimulationPosition(0);
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.activeSimulationPosition).toBe(0);
+      expectTimestampsUpdated(state, initialState);
+    });
+
+    test('given position 1 then sets to position 1', () => {
+      // Given
+      const initialState = createMockReportState();
+      vi.advanceTimersByTime(1000);
+      const action = setActiveSimulationPosition(1);
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.activeSimulationPosition).toBe(1);
+      expectTimestampsUpdated(state, initialState);
+    });
+
+    test('given position 1 when already at 1 then remains at 1', () => {
+      // Given
+      const initialState = {
+        ...createMockReportState(),
+        activeSimulationPosition: 1 as 0 | 1,
+      };
+      vi.advanceTimersByTime(1000);
+      const action = setActiveSimulationPosition(1);
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.activeSimulationPosition).toBe(1);
+      expectTimestampsUpdated(state, initialState);
+    });
+  });
+
+  describe('initializeReport action', () => {
+    test('given any state then initializes for report creation', () => {
+      // Given - a populated state with existing data
+      const initialState = {
+        ...MOCK_COMPLETE_REPORT,
+        activeSimulationPosition: 1 as 0 | 1,
+        mode: 'standalone' as 'standalone' | 'report',
+      };
+      const action = initializeReport();
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then - clears report data
+      expectReportId(state, '');
+      expect(state.label).toBe(null);
+      expectSimulationIds(state, []);
+      expectStatus(state, 'pending');
+      expectOutput(state, null);
+
+      // Then - sets up for report mode
+      expect(state.mode).toBe('report');
+      expect(state.activeSimulationPosition).toBe(0);
+
+      // Then - preserves country and API version
+      expect(state.countryId).toBe('us');
+      expect(state.apiVersion).toBe('v1');
+
+      // Then - updates timestamps
+      expect(state.createdAt).toBe('2024-01-15T10:00:00.000Z');
+      expect(state.updatedAt).toBe('2024-01-15T10:00:00.000Z');
+    });
+
+    test('given standalone mode then switches to report mode', () => {
+      // Given
+      const initialState = createMockReportState({
+        mode: 'standalone' as 'standalone' | 'report',
+        activeSimulationPosition: 0 as 0 | 1,
+      });
+      const action = initializeReport();
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.mode).toBe('report');
+      expect(state.activeSimulationPosition).toBe(0);
+    });
+
+    test('given position 1 then resets to position 0', () => {
+      // Given
+      const initialState = createMockReportState({
+        mode: 'report' as 'standalone' | 'report',
+        activeSimulationPosition: 1 as 0 | 1,
+      });
+      const action = initializeReport();
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.activeSimulationPosition).toBe(0);
+    });
+
+    test('given different country and api version then preserves them', () => {
+      // Given
+      const initialState = createMockReportState({
+        countryId: 'uk' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
+        apiVersion: 'v2',
+      });
+      const action = initializeReport();
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.countryId).toBe('uk');
+      expect(state.apiVersion).toBe('v2');
+    });
+  });
+
+  describe('setMode action', () => {
+    test('given report mode then sets to report mode', () => {
+      // Given
+      const initialState = createMockReportState();
+      vi.advanceTimersByTime(1000);
+      const action = setMode('report');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.mode).toBe('report');
+      expectTimestampsUpdated(state, initialState);
+    });
+
+    test('given standalone mode then sets to standalone and resets position to 0', () => {
+      // Given
+      const initialState = {
+        ...createMockReportState(),
+        activeSimulationPosition: 1 as 0 | 1,
+        mode: 'report' as 'standalone' | 'report',
+      };
+      vi.advanceTimersByTime(1000);
+      const action = setMode('standalone');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.mode).toBe('standalone');
+      expect(state.activeSimulationPosition).toBe(0);
+      expectTimestampsUpdated(state, initialState);
+    });
+
+    test('given report mode when position is 1 then preserves position', () => {
+      // Given
+      const initialState = {
+        ...createMockReportState(),
+        activeSimulationPosition: 1 as 0 | 1,
+        mode: 'standalone' as 'standalone' | 'report',
+      };
+      vi.advanceTimersByTime(1000);
+      const action = setMode('report');
+
+      // When
+      const state = reportReducer(initialState, action);
+
+      // Then
+      expect(state.mode).toBe('report');
+      expect(state.activeSimulationPosition).toBe(1);
+      expectTimestampsUpdated(state, initialState);
+    });
+  });
+
+  describe('selectors', () => {
+    test('selectActiveSimulationPosition returns current position', () => {
+      // Given
+      const state = {
+        report: {
+          ...createMockReportState(),
+          activeSimulationPosition: 1 as 0 | 1,
+        },
+      };
+
+      // When
+      const position = selectActiveSimulationPosition(state as any);
+
+      // Then
+      expect(position).toBe(1);
+    });
+
+    test('selectMode returns current mode', () => {
+      // Given
+      const state = {
+        report: {
+          ...createMockReportState(),
+          mode: 'report' as 'standalone' | 'report',
+        },
+      };
+
+      // When
+      const mode = selectMode(state as any);
+
+      // Then
+      expect(mode).toBe('report');
     });
   });
 

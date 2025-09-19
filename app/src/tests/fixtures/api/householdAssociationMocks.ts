@@ -2,8 +2,8 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
   type: 'household',
-  id: 'household-123',
-  householdId: 'household-123',
+  id: '123',
+  householdId: '123',
   userId: 'user-456',
   label: 'My Test Household',
   createdAt: '2024-01-15T10:00:00Z',
@@ -14,8 +14,8 @@ export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
 export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
   {
     type: 'household',
-    id: 'household-1',
-    householdId: 'household-1',
+    id: '1',
+    householdId: '1',
     userId: 'user-456',
     label: 'First Household',
     createdAt: '2024-01-10T10:00:00Z',
@@ -24,8 +24,8 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
   } as any,
   {
     type: 'household',
-    id: 'household-2',
-    householdId: 'household-2',
+    id: '2',
+    householdId: '2',
     userId: 'user-456',
     label: 'Second Household',
     createdAt: '2024-01-12T10:00:00Z',
@@ -35,8 +35,8 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
 ];
 
 export const mockApiResponse = {
-  id: 'household-123',
-  household_id: 'household-123',
+  id: '123',
+  household_id: '123',
   user_id: 'user-456',
   user_label: 'My Test Household',
   country_id: 'us',
@@ -47,8 +47,8 @@ export const mockApiResponse = {
 
 export const mockApiResponseList = [
   {
-    id: 'household-1',
-    household_id: 'household-1',
+    id: '1',
+    household_id: '1',
     user_id: 'user-456',
     user_label: 'First Household',
     country_id: 'us',
@@ -57,8 +57,8 @@ export const mockApiResponseList = [
     is_default: true,
   },
   {
-    id: 'household-2',
-    household_id: 'household-2',
+    id: '2',
+    household_id: '2',
     user_id: 'user-456',
     user_label: 'Second Household',
     country_id: 'uk',
@@ -69,7 +69,7 @@ export const mockApiResponseList = [
 ];
 
 export const mockCreationPayload = {
-  household_id: 'household-123',
+  household_id: '123',
   user_id: 'user-456',
   user_label: 'My Test Household',
   country_id: 'us',

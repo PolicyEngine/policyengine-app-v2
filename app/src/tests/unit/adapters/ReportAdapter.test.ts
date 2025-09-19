@@ -27,11 +27,9 @@ describe('ReportAdapter', () => {
         reportId: String(mockReportMetadata.id),
         countryId: mockReportMetadata.country_id,
         apiVersion: mockReportMetadata.api_version,
-        simulationIds: [mockReportMetadata.simulation_1_id, mockReportMetadata.simulation_2_id],
+        simulationIds: ['456', '789'],
         status: mockReportMetadata.status,
         output: mockReportOutput,
-        createdAt: mockReportMetadata.created_at,
-        updatedAt: mockReportMetadata.updated_at,
       });
     });
 
@@ -47,11 +45,9 @@ describe('ReportAdapter', () => {
         reportId: String(mockReportMetadataSingleSimulation.id),
         countryId: mockReportMetadataSingleSimulation.country_id,
         apiVersion: mockReportMetadataSingleSimulation.api_version,
-        simulationIds: [mockReportMetadataSingleSimulation.simulation_1_id],
+        simulationIds: ['999'],
         status: mockReportMetadataSingleSimulation.status,
         output: null,
-        createdAt: mockReportMetadataSingleSimulation.created_at,
-        updatedAt: mockReportMetadataSingleSimulation.updated_at,
       });
     });
 
@@ -106,7 +102,7 @@ describe('ReportAdapter', () => {
 
     test('given Report with single simulation then converts to creation payload with null second simulation', () => {
       // Given
-      const singleSimulationId = 'sim-111';
+      const singleSimulationId = '111';
       const report = {
         ...mockPendingReport,
         simulationIds: [singleSimulationId],
@@ -117,7 +113,7 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        simulation_1_id: singleSimulationId,
+        simulation_1_id: 111,
         simulation_2_id: null,
       });
     });
@@ -130,10 +126,9 @@ describe('ReportAdapter', () => {
       const result = ReportAdapter.toCreationPayload(report);
 
       // Then
-      const [firstSimId, secondSimId] = mockErrorReport.simulationIds;
       expect(result).toEqual({
-        simulation_1_id: firstSimId,
-        simulation_2_id: secondSimId,
+        simulation_1_id: 222,
+        simulation_2_id: 333,
       });
     });
   });

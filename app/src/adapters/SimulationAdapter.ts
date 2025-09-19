@@ -31,6 +31,8 @@ export class SimulationAdapter {
       policyId: metadata.policy_id,
       populationId: metadata.population_id,
       populationType,
+      label: null,
+      isCreated: true,
     };
   }
 

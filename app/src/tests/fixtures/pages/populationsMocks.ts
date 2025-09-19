@@ -10,10 +10,10 @@ import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 // IDs and identifiers
 export const POPULATION_TEST_IDS = {
   USER_ID: 'test-user-123',
-  HOUSEHOLD_ID_1: 'household-001',
-  HOUSEHOLD_ID_2: 'household-002',
-  GEOGRAPHIC_ID_1: 'geo-001',
-  GEOGRAPHIC_ID_2: 'geo-002',
+  HOUSEHOLD_ID_1: '1',
+  HOUSEHOLD_ID_2: '2',
+  GEOGRAPHIC_ID_1: '1',
+  GEOGRAPHIC_ID_2: '2',
   TIMESTAMP_1: '2024-01-15T10:00:00Z',
   TIMESTAMP_2: '2024-01-20T14:30:00Z',
 } as const;

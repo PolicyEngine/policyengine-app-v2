@@ -24,19 +24,19 @@ export const BOTH_SIMULATIONS_CONFIGURED_MESSAGE =
 
 // Mock simulation data
 export const MOCK_SIMULATION_1 = {
-  id: 'sim-1',
+  id: '1',
   label: 'Test Simulation 1',
-  policyId: 'policy-1',
-  populationId: 'pop-1',
+  policyId: '1',
+  populationId: '1',
   populationType: 'household' as const,
   isCreated: true,
 };
 
 export const MOCK_SIMULATION_2 = {
-  id: 'sim-2',
+  id: '2',
   label: 'Test Simulation 2',
-  policyId: 'policy-2',
-  populationId: 'pop-2',
+  policyId: '2',
+  populationId: '2',
   populationType: 'household' as const,
   isCreated: true,
 };

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
@@ -8,21 +8,21 @@ import {
   UserPolicyMetadataWithAssociation,
   useUserPolicies,
 } from '@/hooks/useUserPolicy';
-import { loadPolicyParametersToStore } from '@/libs/policyParameterTransform';
-import {
-  clearPolicy,
-  markPolicyAsCreated,
-  updateLabel,
-  updatePolicyId,
-} from '@/reducers/policyReducer';
+import { countryIds } from '@/libs/countries';
+import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { addPolicyParamAtPosition, createPolicyAtPosition } from '@/reducers/policyReducer';
+import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const dispatch = useDispatch();
+
+  // Read position from report reducer via cross-cutting selector
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicy, setLocalPolicy] = useState<UserPolicyMetadataWithAssociation | null>(null);
-  const dispatch = useDispatch();
 
   console.log('Policy Data:', data);
   console.log('Policy Loading:', isLoading);
@@ -67,18 +67,45 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       return;
     }
 
-    dispatch(clearPolicy());
-
     console.log('Local Policy on Submit:', localPolicy);
-    dispatch(updatePolicyId(localPolicy.policy?.id?.toString() || ''));
-    dispatch(updateLabel(localPolicy.association?.label || ''));
 
-    // Load all policy parameters using the utility function
+    // Create a new policy at the current position
+    dispatch(
+      createPolicyAtPosition({
+        position: currentPosition,
+        policy: {
+          id: localPolicy.policy?.id?.toString(),
+          label: localPolicy.association?.label || '',
+          isCreated: true,
+          countryId: localPolicy.policy?.country_id as (typeof countryIds)[number],
+          parameters: [],
+        },
+      })
+    );
+
+    // Load all policy parameters using position-based action
+    // Parameters must be added one at a time with individual value intervals
     if (localPolicy.policy?.policy_json) {
-      loadPolicyParametersToStore(localPolicy.policy.policy_json, dispatch);
+      const policyJson = localPolicy.policy.policy_json;
+      Object.entries(policyJson).forEach(([paramName, valueIntervals]) => {
+        if (Array.isArray(valueIntervals) && valueIntervals.length > 0) {
+          // Add each value interval separately as required by PolicyParamAdditionPayload
+          valueIntervals.forEach((vi: any) => {
+            dispatch(
+              addPolicyParamAtPosition({
+                position: currentPosition,
+                name: paramName,
+                valueInterval: {
+                  startDate: vi.start || vi.startDate,
+                  endDate: vi.end || vi.endDate,
+                  value: vi.value,
+                },
+              })
+            );
+          });
+        }
+      });
     }
-
-    dispatch(markPolicyAsCreated());
   }
 
   const userPolicies = data || [];
@@ -100,9 +127,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     return (
       <FlowView
         title="Select an Existing Policy"
-        content={
-          <Text color="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
-        }
+        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttonPreset="none"
       />
     );

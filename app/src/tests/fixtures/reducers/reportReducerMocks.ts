@@ -1,12 +1,12 @@
-import { Report, ReportOutput } from '@/types/ingredients/Report';
+import { ReportOutput } from '@/types/ingredients/Report';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test constants
-export const TEST_REPORT_ID_1 = 'report-test-123';
-export const TEST_REPORT_ID_2 = 'report-test-456';
-export const TEST_SIMULATION_ID_1 = 'sim-test-001';
-export const TEST_SIMULATION_ID_2 = 'sim-test-002';
-export const TEST_SIMULATION_ID_3 = 'sim-test-003';
+export const TEST_REPORT_ID_1 = '123';
+export const TEST_REPORT_ID_2 = '456';
+export const TEST_SIMULATION_ID_1 = '1';
+export const TEST_SIMULATION_ID_2 = '2';
+export const TEST_SIMULATION_ID_3 = '3';
 export const TEST_TIMESTAMP_CREATED = '2024-01-15T10:00:00.000Z';
 export const TEST_TIMESTAMP_UPDATED = '2024-01-15T10:30:00.000Z';
 
@@ -198,103 +198,115 @@ export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
 };
 
 // Initial state
-export const EXPECTED_INITIAL_STATE: Report = {
+export const EXPECTED_INITIAL_STATE = {
   reportId: '',
   label: null,
-  countryId: 'us',
+  countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: null,
   simulationIds: [],
-  status: 'pending',
+  status: 'pending' as const,
   output: null,
   createdAt: expect.any(String),
   updatedAt: expect.any(String),
+  activeSimulationPosition: 0 as 0 | 1,
+  mode: 'standalone' as 'standalone' | 'report',
 };
 
 // Mock states for different scenarios
-export const MOCK_EMPTY_REPORT: Report = {
+export const MOCK_EMPTY_REPORT = {
   reportId: '',
   label: null,
-  countryId: 'us',
+  countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: null,
   simulationIds: [],
-  status: 'pending',
+  status: 'pending' as const,
   output: null,
   createdAt: TEST_TIMESTAMP_CREATED,
   updatedAt: TEST_TIMESTAMP_CREATED,
+  activeSimulationPosition: 0 as 0 | 1,
+  mode: 'standalone' as 'standalone' | 'report',
 };
 
-export const MOCK_PENDING_REPORT: Report = {
+export const MOCK_PENDING_REPORT = {
   reportId: TEST_REPORT_ID_1,
   label: null,
-  countryId: 'us',
+  countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
   simulationIds: [TEST_SIMULATION_ID_1],
-  status: 'pending',
+  status: 'pending' as const,
   output: null,
   createdAt: TEST_TIMESTAMP_CREATED,
   updatedAt: TEST_TIMESTAMP_CREATED,
+  activeSimulationPosition: 0 as 0 | 1,
+  mode: 'standalone' as 'standalone' | 'report',
 };
 
-export const MOCK_COMPLETE_REPORT: Report = {
+export const MOCK_COMPLETE_REPORT = {
   reportId: TEST_REPORT_ID_1,
   label: 'Test Report',
-  countryId: 'us',
+  countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
   simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
-  status: 'complete',
+  status: 'complete' as const,
   output: MOCK_REPORT_OUTPUT,
   createdAt: TEST_TIMESTAMP_CREATED,
   updatedAt: TEST_TIMESTAMP_UPDATED,
+  activeSimulationPosition: 0 as 0 | 1,
+  mode: 'standalone' as 'standalone' | 'report',
 };
 
-export const MOCK_ERROR_REPORT: Report = {
+export const MOCK_ERROR_REPORT = {
   reportId: TEST_REPORT_ID_2,
   label: null,
-  countryId: 'uk',
+  countryId: 'uk' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v2',
   simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2, TEST_SIMULATION_ID_3],
-  status: 'error',
+  status: 'error' as const,
   output: null,
   createdAt: TEST_TIMESTAMP_CREATED,
   updatedAt: TEST_TIMESTAMP_UPDATED,
+  activeSimulationPosition: 0 as 0 | 1,
+  mode: 'standalone' as 'standalone' | 'report',
 };
 
 // Helper functions for creating test states
-export const createMockReportState = (overrides?: Partial<Report>): Report => ({
+export const createMockReportState = (overrides?: Partial<any>) => ({
   reportId: TEST_REPORT_ID_1,
   label: null,
-  countryId: 'us',
+  countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
   simulationIds: [TEST_SIMULATION_ID_1],
-  status: 'pending',
+  status: 'pending' as const,
   output: null,
   createdAt: TEST_TIMESTAMP_CREATED,
   updatedAt: TEST_TIMESTAMP_CREATED,
+  activeSimulationPosition: 0 as 0 | 1,
+  mode: 'standalone' as 'standalone' | 'report',
   ...overrides,
 });
 
 // Assertion helpers
-export const expectReportId = (state: Report, expectedId: string) => {
+export const expectReportId = (state: any, expectedId: string) => {
   expect(state.reportId).toBe(expectedId);
 };
 
-export const expectSimulationIds = (state: Report, expectedIds: string[]) => {
+export const expectSimulationIds = (state: any, expectedIds: string[]) => {
   expect(state.simulationIds).toEqual(expectedIds);
 };
 
-export const expectStatus = (state: Report, expectedStatus: 'pending' | 'complete' | 'error') => {
+export const expectStatus = (state: any, expectedStatus: 'pending' | 'complete' | 'error') => {
   expect(state.status).toBe(expectedStatus);
 };
 
-export const expectOutput = (state: Report, expectedOutput: ReportOutput | null) => {
+export const expectOutput = (state: any, expectedOutput: ReportOutput | null) => {
   expect(state.output).toEqual(expectedOutput);
 };
 
-export const expectTimestampsUpdated = (state: Report, previousState: Report) => {
+export const expectTimestampsUpdated = (state: any, previousState: any) => {
   expect(state.createdAt).toBe(previousState.createdAt);
   expect(state.updatedAt).not.toBe(previousState.updatedAt);
 };
 
-export const expectStateToEqual = (state: Report, expectedState: Report) => {
+export const expectStateToEqual = (state: any, expectedState: any) => {
   expect(state).toEqual(expectedState);
 };

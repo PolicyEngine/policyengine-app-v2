@@ -1,22 +1,45 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { uk_regions, us_regions } from '@/mocks/regions';
-import { setGeography } from '@/reducers/populationReducer';
+import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
+import { createPopulationAtPosition, setGeographyAtPosition } from '@/reducers/populationReducer';
+import { setMode } from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
 
-export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponentProps) {
+export default function SelectGeographicScopeFrame({
+  onNavigate,
+  isInSubflow,
+}: FlowComponentProps) {
   const dispatch = useDispatch();
   const [scope, setScope] = useState<'national' | 'state' | 'household'>('national');
   const [selectedCountry, setSelectedCountry] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('');
 
+  // Get current position and population
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const populationState = useSelector((state: RootState) => selectActivePopulation(state));
+
   // Get current country from metadata state, fallback to 'us' if not available
   const currentCountry: string =
     useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+
+  // Set mode to standalone if not in a subflow (this is the first frame of population flow)
+  useEffect(() => {
+    if (!isInSubflow) {
+      dispatch(setMode('standalone'));
+    }
+  }, [dispatch, isInSubflow]);
+
+  // Create population at current position if it doesn't exist
+  useEffect(() => {
+    if (!populationState) {
+      dispatch(createPopulationAtPosition({ position: currentPosition }));
+    }
+  }, [dispatch, currentPosition, populationState]);
 
   const usStates = us_regions.result.economy_options.region
     .filter((r) => r.name !== 'us')
@@ -75,7 +98,12 @@ export default function SelectGeographicScopeFrame({ onNavigate }: FlowComponent
         geographyId: scope === 'national' ? currentCountry : extractRegionValue(selectedRegion),
       };
       console.log('Dispatching geography:', geography);
-      dispatch(setGeography(geography));
+      dispatch(
+        setGeographyAtPosition({
+          position: currentPosition,
+          geography,
+        })
+      );
     }
     onNavigate(scope);
   }

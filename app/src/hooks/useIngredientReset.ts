@@ -1,8 +1,8 @@
 import { useDispatch } from 'react-redux';
-import { clearPolicy } from '@/reducers/policyReducer';
-import { clearPopulation } from '@/reducers/populationReducer';
-import { clearReport } from '@/reducers/reportReducer';
-import { clearSimulation } from '@/reducers/simulationsReducer';
+import { clearAllPolicies } from '@/reducers/policyReducer';
+import { clearAllPopulations } from '@/reducers/populationReducer';
+import { clearReport, setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
+import { clearAllSimulations } from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
 
 export const ingredients = ['policy', 'simulation', 'population', 'report'];
@@ -13,21 +13,34 @@ export const useIngredientReset = () => {
   const resetIngredient = (ingredientName: (typeof ingredients)[number]) => {
     switch (ingredientName) {
       case 'policy':
-        dispatch(clearPolicy());
+        dispatch(clearAllPolicies());
+        // Reset to standalone mode when clearing any ingredient
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       case 'simulation':
-        dispatch(clearSimulation({}));
-        dispatch(clearPolicy());
-        dispatch(clearPopulation());
+        dispatch(clearAllSimulations());
+        dispatch(clearAllPolicies());
+        dispatch(clearAllPopulations());
+        // Reset to standalone mode when clearing simulations
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       case 'population':
-        dispatch(clearPopulation());
+        dispatch(clearAllPopulations());
+        // Reset to standalone mode when clearing any ingredient
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       case 'report':
         dispatch(clearReport());
-        dispatch(clearSimulation({}));
-        dispatch(clearPolicy());
-        dispatch(clearPopulation());
+        dispatch(clearAllSimulations());
+        dispatch(clearAllPolicies());
+        dispatch(clearAllPopulations());
+        // clearReport already resets mode and position, but let's be explicit
+        // This ensures consistency even if clearReport changes in the future
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
         break;
       default:
         console.error(`Unknown ingredient: ${ingredientName}`);

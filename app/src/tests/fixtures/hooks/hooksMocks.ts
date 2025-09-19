@@ -12,8 +12,8 @@ import { HouseholdCreationPayload } from '@/types/payloads';
 // User and ID constants
 export const TEST_IDS = {
   USER_ID: 'test-user-123',
-  HOUSEHOLD_ID: 'household-456',
-  HOUSEHOLD_ID_2: 'household-789',
+  HOUSEHOLD_ID: '456',
+  HOUSEHOLD_ID_2: '789',
   GEOGRAPHY_ID: 'geography-123',
   GEOGRAPHY_ID_2: 'geography-456',
   TIMESTAMP: '2024-01-15T10:00:00Z',

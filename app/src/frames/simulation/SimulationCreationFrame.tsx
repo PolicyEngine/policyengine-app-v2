@@ -2,37 +2,52 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { setMode } from '@/reducers/reportReducer';
 import {
-  createSimulation,
-  selectActiveSimulationId,
-  updateSimulationLabel,
+  createSimulationAtPosition,
+  selectSimulationAtPosition,
+  updateSimulationAtPosition,
 } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
-export default function SimulationCreationFrame({ onNavigate }: FlowComponentProps) {
+export default function SimulationCreationFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
   const [localLabel, setLocalLabel] = useState('');
   const dispatch = useDispatch();
 
-  // Get the active simulation ID from the reducer
-  const activeSimulationId = useSelector((state: RootState) => selectActiveSimulationId(state));
+  // Get the current position from the cross-cutting selector
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const simulation = useSelector((state: RootState) =>
+    selectSimulationAtPosition(state, currentPosition)
+  );
+
+  // Set mode to standalone if not in a subflow
+  useEffect(() => {
+    if (!isInSubflow) {
+      dispatch(setMode('standalone'));
+    }
+  }, [dispatch, isInSubflow]);
 
   useEffect(() => {
-    // If there's no active simulation, create one
-    if (!activeSimulationId) {
-      dispatch(createSimulation());
+    // If there's no simulation at current position, create one
+    if (!simulation) {
+      dispatch(createSimulationAtPosition({ position: currentPosition }));
     }
-  }, [activeSimulationId, dispatch]);
+  }, [currentPosition, simulation, dispatch]);
 
   function handleLocalLabelChange(value: string) {
     setLocalLabel(value);
   }
 
   function submissionHandler() {
-    // Dispatch to the simulations reducer
-    if (activeSimulationId) {
-      dispatch(updateSimulationLabel({ label: localLabel }));
-    }
+    // Update the simulation at the current position
+    dispatch(
+      updateSimulationAtPosition({
+        position: currentPosition,
+        updates: { label: localLabel },
+      })
+    );
 
     onNavigate('next');
   }

@@ -8,6 +8,4 @@ export interface ReportMetadata {
   api_version: string;
   status: 'pending' | 'complete' | 'error';
   output: string | null; // JSON-stringified object or null
-  created_at: string;
-  updated_at: string;
 }

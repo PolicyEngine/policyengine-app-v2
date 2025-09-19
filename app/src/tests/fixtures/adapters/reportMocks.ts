@@ -110,62 +110,52 @@ export const mockReport: Report = {
   reportId: '123',
   countryId: 'us',
   apiVersion: 'v1',
-  simulationIds: ['sim-456', 'sim-789'],
+  simulationIds: ['456', '789'],
   status: 'complete',
   output: mockReportOutput,
-  createdAt: '2024-01-15T10:30:00Z',
-  updatedAt: '2024-01-15T10:35:00Z',
 };
 
 export const mockPendingReport: Report = {
   reportId: '1',
   countryId: 'us',
   apiVersion: 'v1',
-  simulationIds: ['sim-111'],
+  simulationIds: ['111'],
   status: 'pending',
   output: null,
-  createdAt: '2024-01-15T11:00:00Z',
-  updatedAt: '2024-01-15T11:00:00Z',
 };
 
 export const mockErrorReport: Report = {
   reportId: '2',
   countryId: 'us',
   apiVersion: 'v1',
-  simulationIds: ['sim-222', 'sim-333'],
+  simulationIds: ['222', '333'],
   status: 'error',
   output: null,
-  createdAt: '2024-01-15T11:30:00Z',
-  updatedAt: '2024-01-15T11:31:00Z',
 };
 
 export const mockReportMetadata: ReportMetadata = {
   id: 123,
   country_id: 'us',
   api_version: 'v1',
-  simulation_1_id: 'sim-456',
-  simulation_2_id: 'sim-789',
+  simulation_1_id: '456',
+  simulation_2_id: '789',
   status: 'complete',
   output: JSON.stringify(mockReportOutput),
-  created_at: '2024-01-15T10:30:00Z',
-  updated_at: '2024-01-15T10:35:00Z',
 };
 
 export const mockReportMetadataSingleSimulation: ReportMetadata = {
   id: 1,
   country_id: 'us',
   api_version: 'v1',
-  simulation_1_id: 'sim-999',
+  simulation_1_id: '999',
   simulation_2_id: null,
   status: 'pending',
   output: null,
-  created_at: '2024-01-15T12:00:00Z',
-  updated_at: '2024-01-15T12:00:00Z',
 };
 
 export const mockReportCreationPayload: ReportCreationPayload = {
-  simulation_1_id: 'sim-456',
-  simulation_2_id: 'sim-789',
+  simulation_1_id: 456,
+  simulation_2_id: 789,
 };
 
 export const mockCompletedReportPayload: ReportSetOutputPayload = {
