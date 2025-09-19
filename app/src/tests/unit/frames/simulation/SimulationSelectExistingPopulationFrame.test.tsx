@@ -195,7 +195,7 @@ describe('SimulationSelectExistingPopulationFrame', () => {
       populationReducer.setGeographyAtPosition({
         position: 0,
         geography: expect.objectContaining({
-          id: '456',
+          id: 'mock-geography',
           countryId: 'us',
         }),
       })
