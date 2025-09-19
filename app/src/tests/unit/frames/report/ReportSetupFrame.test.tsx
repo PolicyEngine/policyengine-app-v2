@@ -100,57 +100,45 @@ describe('ReportSetupFrame', () => {
     expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
   });
 
-  test.skip('given user clicks swap positions then dispatches swap action', async () => {
+  test('given user clicks first simulation card when not configured then navigates to setup', async () => {
     // Given
     const user = userEvent.setup();
     mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => mockSimulation2);
+      .mockImplementationOnce(() => null)
+      .mockImplementationOnce(() => null);
     render(<ReportSetupFrame {...mockReportFlowProps} />);
 
     // When
-    const swapButton = screen.getByRole('button', { name: /swap/i });
-    await user.click(swapButton);
-
-    // Then
-    expect(mockDispatch).toHaveBeenCalledWith(simulationsReducer.swapSimulations());
-  });
-
-  test.skip('given user clicks edit first simulation then sets position and navigates', async () => {
-    // Given
-    const user = userEvent.setup();
-    mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => mockSimulation2);
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
-
-    // When
-    const editButtons = screen.getAllByRole('button', { name: /edit/i });
-    await user.click(editButtons[0]);
+    const firstCard = screen.getByText('Add a first simulation');
+    await user.click(firstCard);
+    const setupButton = screen.getByRole('button', { name: /Setup first simulation/i });
+    await user.click(setupButton);
 
     // Then
     expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(0));
-    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('editSimulation');
+    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('setupSimulation1');
   });
 
-  test.skip('given user clicks edit second simulation then sets position and navigates', async () => {
+  test('given user clicks second simulation card when not configured then navigates to setup', async () => {
     // Given
     const user = userEvent.setup();
     mockSelectSimulationAtPosition
       .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => mockSimulation2);
+      .mockImplementationOnce(() => null);
     render(<ReportSetupFrame {...mockReportFlowProps} />);
 
     // When
-    const editButtons = screen.getAllByRole('button', { name: /edit/i });
-    await user.click(editButtons[1]);
+    const secondCard = screen.getByText('Add a second simulation');
+    await user.click(secondCard);
+    const setupButton = screen.getByRole('button', { name: /Setup second simulation/i });
+    await user.click(setupButton);
 
     // Then
     expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(1));
-    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('editSimulation');
+    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('setupSimulation2');
   });
 
-  test.skip('given user clicks generate report then navigates to submit', async () => {
+  test('given user clicks first simulation card when already configured then can re-setup', async () => {
     // Given
     const user = userEvent.setup();
     mockSelectSimulationAtPosition
@@ -159,10 +147,29 @@ describe('ReportSetupFrame', () => {
     render(<ReportSetupFrame {...mockReportFlowProps} />);
 
     // When
-    const generateButton = screen.getByRole('button', { name: /generate report/i });
-    await user.click(generateButton);
+    const firstCard = screen.getByText(/Simulation 1:/i);
+    await user.click(firstCard);
+    const setupButton = screen.getByRole('button', { name: /Setup first simulation/i });
+    await user.click(setupButton);
 
     // Then
-    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('submit');
+    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(0));
+    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('setupSimulation1');
+  });
+
+  test('given both simulations configured when user clicks next then navigates forward', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockSelectSimulationAtPosition
+      .mockImplementationOnce(() => mockSimulation1)
+      .mockImplementationOnce(() => mockSimulation2);
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
+
+    // When
+    const nextButton = screen.getByRole('button', { name: /Next/i });
+    await user.click(nextButton);
+
+    // Then
+    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('next');
   });
 });

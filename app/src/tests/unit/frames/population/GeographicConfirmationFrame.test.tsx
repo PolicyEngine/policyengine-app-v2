@@ -345,10 +345,11 @@ describe('GeographicConfirmationFrame', () => {
       expect(screen.getByText('unknown-region')).toBeInTheDocument();
     });
 
-    test('given no onReturn prop when submitted then navigates to __return__', async () => {
+    test('given onReturn prop when submitted then calls onReturn', async () => {
       // Given
       const user = userEvent.setup();
       const mockOnNavigate = vi.fn();
+      const mockOnReturn = vi.fn();
       const populationState = {
         geography: mockNationalGeography,
       };
@@ -358,7 +359,7 @@ describe('GeographicConfirmationFrame', () => {
         {
           ...mockFlowProps,
           onNavigate: mockOnNavigate,
-          onReturn: () => undefined,
+          onReturn: mockOnReturn,
         }
       );
 
@@ -368,7 +369,8 @@ describe('GeographicConfirmationFrame', () => {
 
       // Then
       await waitFor(() => {
-        expect(mockOnNavigate).toHaveBeenCalledWith('__return__');
+        expect(mockOnReturn).toHaveBeenCalled();
+        expect(mockOnNavigate).not.toHaveBeenCalledWith('__return__');
       });
     });
 
