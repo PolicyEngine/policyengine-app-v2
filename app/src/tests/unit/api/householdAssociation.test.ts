@@ -355,7 +355,7 @@ describe('SessionStorageHouseholdStore', () => {
       );
 
       // When
-      const result = await store.findById('user-456', 'household-1');
+      const result = await store.findById('user-456', '1');
 
       // Then
       expect(result).toEqual(mockUserHouseholdPopulationList[0]);

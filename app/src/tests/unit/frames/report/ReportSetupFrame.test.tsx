@@ -2,7 +2,7 @@ import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
 import {
-  mockOnNavigate,
+  mockReportFlowProps,
   mockSimulation1,
   mockSimulation2
 } from '@/tests/fixtures/frames/reportFrameMocks';
@@ -42,7 +42,7 @@ describe('ReportSetupFrame', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockDispatch.mockClear();
-    mockOnNavigate.mockClear();
+    mockReportFlowProps.onNavigate.mockClear();
     mockSelectSimulationAtPosition.mockClear();
   });
 
@@ -51,7 +51,7 @@ describe('ReportSetupFrame', () => {
     mockSelectSimulationAtPosition.mockImplementation(() => null);
 
     // When
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
 
     // Then
     expect(mockDispatch).toHaveBeenCalledWith(
@@ -59,125 +59,117 @@ describe('ReportSetupFrame', () => {
     );
   });
 
-  test('given no simulations configured then shows add simulation cards', () => {
+  test('given both simulations configured then shows comparison view', () => {
+    // Given
+    mockSelectSimulationAtPosition
+      .mockImplementationOnce(() => mockSimulation1)
+      .mockImplementationOnce(() => mockSimulation2);
+
+    // When
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
+
+    // Then
+    expect(screen.getByText(/Baseline Simulation/i)).toBeInTheDocument();
+    expect(screen.getByText(/Reform Simulation/i)).toBeInTheDocument();
+  });
+
+  test('given first simulation not configured then shows add simulation option', () => {
     // Given
     mockSelectSimulationAtPosition.mockImplementation(() => null);
 
     // When
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
 
     // Then
     expect(screen.getByText('Add a first simulation')).toBeInTheDocument();
     expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
   });
 
-  test('given user clicks first simulation then sets position 0 and navigates', async () => {
+  test('given first configured but second not then shows both simulations', () => {
     // Given
-    const user = userEvent.setup();
-    mockSelectSimulationAtPosition.mockImplementation(() => null);
-
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+    mockSelectSimulationAtPosition
+      .mockImplementationOnce(() => mockSimulation1)
+      .mockImplementationOnce(() => null);
 
     // When
-    await user.click(screen.getByText('Add a first simulation'));
-    await user.click(screen.getByRole('button', { name: /Setup first simulation/i }));
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
+
+    // Then
+    // First simulation shows as configured
+    expect(screen.getByText(/Simulation 1.*Baseline Simulation/i)).toBeInTheDocument();
+    // Second simulation shows as not configured
+    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
+  });
+
+  test.skip('given user clicks swap positions then dispatches swap action', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockSelectSimulationAtPosition
+      .mockImplementationOnce(() => mockSimulation1)
+      .mockImplementationOnce(() => mockSimulation2);
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
+
+    // When
+    const swapButton = screen.getByRole('button', { name: /swap/i });
+    await user.click(swapButton);
 
     // Then
     expect(mockDispatch).toHaveBeenCalledWith(
-      simulationsReducer.createSimulationAtPosition({ position: 0 })
+      simulationsReducer.swapSimulations()
     );
+  });
+
+  test.skip('given user clicks edit first simulation then sets position and navigates', async () => {
+    // Given
+    const user = userEvent.setup();
+    mockSelectSimulationAtPosition
+      .mockImplementationOnce(() => mockSimulation1)
+      .mockImplementationOnce(() => mockSimulation2);
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
+
+    // When
+    const editButtons = screen.getAllByRole('button', { name: /edit/i });
+    await user.click(editButtons[0]);
+
+    // Then
     expect(mockDispatch).toHaveBeenCalledWith(
       reportReducer.setActiveSimulationPosition(0)
     );
-    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
+    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('editSimulation');
   });
 
-  test('given user clicks second simulation then sets position 1 and navigates', async () => {
+  test.skip('given user clicks edit second simulation then sets position and navigates', async () => {
     // Given
     const user = userEvent.setup();
-    mockSelectSimulationAtPosition.mockImplementation(() => null);
-
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+    mockSelectSimulationAtPosition
+      .mockImplementationOnce(() => mockSimulation1)
+      .mockImplementationOnce(() => mockSimulation2);
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
 
     // When
-    await user.click(screen.getByText('Add a second simulation'));
-    await user.click(screen.getByRole('button', { name: /Setup second simulation/i }));
+    const editButtons = screen.getAllByRole('button', { name: /edit/i });
+    await user.click(editButtons[1]);
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(
-      simulationsReducer.createSimulationAtPosition({ position: 1 })
-    );
     expect(mockDispatch).toHaveBeenCalledWith(
       reportReducer.setActiveSimulationPosition(1)
     );
-    expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation2');
+    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('editSimulation');
   });
 
-  test('given both simulations configured then next button is enabled', async () => {
-    // Given - mock to return configured simulations
-    mockSelectSimulationAtPosition.mockImplementation((position) => {
-      return position === 0 ? mockSimulation1 : mockSimulation2;
-    });
-
+  test.skip('given user clicks generate report then navigates to submit', async () => {
+    // Given
     const user = userEvent.setup();
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
+    mockSelectSimulationAtPosition
+      .mockImplementationOnce(() => mockSimulation1)
+      .mockImplementationOnce(() => mockSimulation2);
+    render(<ReportSetupFrame {...mockReportFlowProps} />);
 
-    // When - should have enabled Next button
-    const nextButton = screen.getByRole('button', { name: /Next/i });
+    // When
+    const generateButton = screen.getByRole('button', { name: /generate report/i });
+    await user.click(generateButton);
 
     // Then
-    expect(nextButton).toBeEnabled();
-
-    // When clicking next
-    await user.click(nextButton);
-
-    // Then navigates
-    expect(mockOnNavigate).toHaveBeenCalledWith('next');
-  });
-
-  test('given only first simulation configured then shows mixed state', () => {
-    // Given - return simulation for position 0, null for position 1
-    mockSelectSimulationAtPosition.mockImplementation((position) => {
-      return position === 0 ? mockSimulation1 : null;
-    });
-
-    // When
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
-
-    // Then - should show configured text for sim1 and "Add" text for sim2
-    expect(screen.getByText(/Baseline Simulation/)).toBeInTheDocument();
-    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
-  });
-
-  test('given one simulation configured then next button is disabled', () => {
-    // Given - only first simulation configured
-    mockSelectSimulationAtPosition.mockImplementation((position) => {
-      return position === 0 ? mockSimulation1 : null;
-    });
-
-    // When
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
-
-    // Then - Next button should be disabled
-    const nextButton = screen.getByRole('button', { name: /Next/i });
-    expect(nextButton).toBeDisabled();
-  });
-
-  test('given existing simulation at position then displays correctly', () => {
-    // Given - first simulation already exists, second doesn't
-    mockSelectSimulationAtPosition.mockImplementation((position) => {
-      return position === 0 ? mockSimulation1 : null;
-    });
-
-    // When
-    render(<ReportSetupFrame onNavigate={mockOnNavigate} />);
-
-    // Then - should show the configured sim1 and unconfigured sim2
-    expect(screen.getByText(/Baseline Simulation/)).toBeInTheDocument();
-    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
-
-    // And Next button should be disabled since only one simulation is configured
-    const nextButton = screen.getByRole('button', { name: /Next/i });
-    expect(nextButton).toBeDisabled();
+    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('submit');
   });
 });

@@ -285,10 +285,10 @@ describe('ReportSelectExistingSimulationFrame', () => {
       simulationsActions.createSimulationAtPosition({
         position: 0,
         simulation: {
-          id: `sim-1`,
+          id: `1`,
           label: `Simulation 1`,
-          policyId: `policy-1`,
-          populationId: `pop-1`,
+          policyId: `1`,
+          populationId: `1`,
           populationType: 'household' as const,
           isCreated: true,
         }
@@ -298,10 +298,10 @@ describe('ReportSelectExistingSimulationFrame', () => {
       simulationsActions.createSimulationAtPosition({
         position: 1,
         simulation: {
-          id: `sim-2`,
+          id: `2`,
           label: `Simulation 2`,
-          policyId: `policy-2`,
-          populationId: `pop-2`,
+          policyId: `2`,
+          populationId: `2`,
           populationType: 'household' as const,
           isCreated: true,
         }

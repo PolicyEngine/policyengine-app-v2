@@ -97,7 +97,7 @@ describe('PolicySubmitFrame', () => {
       policyReducer.updatePolicyAtPosition({
         position: 1,
         updates: {
-          id: 'policy-123',
+          id: '123',
           isCreated: true,
         },
       })

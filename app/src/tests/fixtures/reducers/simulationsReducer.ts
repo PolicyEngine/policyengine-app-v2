@@ -1,14 +1,14 @@
 import { Simulation } from '@/types/ingredients/Simulation';
 
 // Test IDs (only for simulations that have been created via API)
-export const TEST_PERMANENT_ID_1 = 'sim-123';
-export const TEST_PERMANENT_ID_2 = 'sim-456';
+export const TEST_PERMANENT_ID_1 = '123';
+export const TEST_PERMANENT_ID_2 = '456';
 
 // Test population and policy IDs
-export const TEST_HOUSEHOLD_ID = 'household-789';
-export const TEST_GEOGRAPHY_ID = 'geo-101';
-export const TEST_POLICY_ID_1 = 'policy-111';
-export const TEST_POLICY_ID_2 = 'policy-222';
+export const TEST_HOUSEHOLD_ID = '789';
+export const TEST_GEOGRAPHY_ID = 'test-geography';
+export const TEST_POLICY_ID_1 = '111';
+export const TEST_POLICY_ID_2 = '222';
 
 // Test labels
 export const TEST_LABEL_1 = 'Test Simulation 1';

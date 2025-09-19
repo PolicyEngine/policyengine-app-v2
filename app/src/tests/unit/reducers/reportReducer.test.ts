@@ -576,35 +576,35 @@ describe('reportReducer', () => {
   describe('state transitions', () => {
     test('given sequence of actions then maintains correct state', () => {
       // Given
-      let state = EXPECTED_INITIAL_STATE;
+      let state: any = EXPECTED_INITIAL_STATE;
 
       // When & Then - Update report ID
-      state = reportReducer(state, updateReportId(TEST_REPORT_ID_1));
+      state = reportReducer(state as any, updateReportId(TEST_REPORT_ID_1));
       expectReportId(state, TEST_REPORT_ID_1);
 
       // When & Then - Add simulation IDs
-      state = reportReducer(state, addSimulationId(TEST_SIMULATION_ID_1));
-      state = reportReducer(state, addSimulationId(TEST_SIMULATION_ID_2));
+      state = reportReducer(state as any, addSimulationId(TEST_SIMULATION_ID_1));
+      state = reportReducer(state as any, addSimulationId(TEST_SIMULATION_ID_2));
       expectSimulationIds(state, [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2]);
 
       // When & Then - Update output
-      state = reportReducer(state, updateReportOutput(MOCK_REPORT_OUTPUT));
+      state = reportReducer(state as any, updateReportOutput(MOCK_REPORT_OUTPUT));
       expectOutput(state, MOCK_REPORT_OUTPUT);
 
       // When & Then - Mark as complete
-      state = reportReducer(state, markReportAsComplete());
+      state = reportReducer(state as any, markReportAsComplete());
       expectStatus(state, 'complete');
 
       // When & Then - Remove a simulation
-      state = reportReducer(state, removeSimulationId(TEST_SIMULATION_ID_1));
+      state = reportReducer(state as any, removeSimulationId(TEST_SIMULATION_ID_1));
       expectSimulationIds(state, [TEST_SIMULATION_ID_2]);
 
       // When & Then - Mark as error
-      state = reportReducer(state, markReportAsError());
+      state = reportReducer(state as any, markReportAsError());
       expectStatus(state, 'error');
 
       // When & Then - Clear report
-      state = reportReducer(state, clearReport());
+      state = reportReducer(state as any, clearReport());
       expectReportId(state, '');
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');

@@ -111,8 +111,13 @@ describe('GeographicConfirmationFrame', () => {
 
     // Report reducer for position management
     const reportState = {
-      mode: 'standalone',
-      activeSimulationPosition: 0,
+      mode: 'standalone' as const,
+      activeSimulationPosition: 0 as 0 | 1,
+      countryId: 'us',
+      apiVersion: 'v1',
+      simulationIds: [],
+      status: 'idle' as const,
+      output: null,
     };
 
     store = configureStore({
@@ -122,9 +127,9 @@ describe('GeographicConfirmationFrame', () => {
         metadata: metadataReducer,
       },
       preloadedState: {
-        population: basePopulationState,
+        population: basePopulationState as any,
         metadata: fullMetadataState,
-        report: reportState,
+        report: reportState as any,
       },
     });
 
@@ -348,7 +353,11 @@ describe('GeographicConfirmationFrame', () => {
       const populationState = {
         geography: mockNationalGeography,
       };
-      renderComponent(populationState, {}, { ...mockFlowProps, onReturn: undefined, onNavigate: mockOnNavigate });
+      renderComponent(populationState, {}, {
+        ...mockFlowProps,
+        onNavigate: mockOnNavigate,
+        onReturn: () => undefined
+      });
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });

@@ -5,19 +5,19 @@ import { Simulation } from '@/types/ingredients/Simulation';
 
 // Mock simulations
 export const mockSimulation1: Simulation = {
-  id: 'sim-1',
+  id: '1',
   label: 'Test Simulation 1',
-  policyId: 'policy-1',
-  populationId: 'pop-1',
+  policyId: '1',
+  populationId: '1',
   populationType: 'household',
   isCreated: true,
 };
 
 export const mockSimulation2: Simulation = {
-  id: 'sim-2',
+  id: '2',
   label: 'Test Simulation 2',
-  policyId: 'policy-2',
-  populationId: 'pop-2',
+  policyId: '2',
+  populationId: '2',
   populationType: 'household',
   isCreated: true,
 };
@@ -37,7 +37,7 @@ export const mockReportWithLabel: Report = {
   reportId: '',
   label: 'My Test Report',
   countryId: 'us' as const,
-  simulationIds: ['sim-1', 'sim-2'],
+  simulationIds: ['1', '2'],
   apiVersion: 'v1',
   status: 'pending' as const,
   output: null,
@@ -51,8 +51,20 @@ export const mockReportNoLabel: Report = {
 };
 
 // Mock Redux state - using position-based storage
-export const createMockReportState = (report: Report = mockReportWithLabel) => ({
-  report,
+export const createMockReportState = () => ({
+  report: {
+    reportId: undefined,
+    label: 'My Test Report',
+    countryId: 'us' as const,
+    simulationIds: ['1', '2'],
+    apiVersion: 'v1',
+    status: 'pending' as const,
+    output: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    activeSimulationPosition: 0 as 0 | 1,
+    mode: 'report' as const,
+  },
   simulations: {
     simulations: [mockSimulation1, mockSimulation2] as [Simulation | null, Simulation | null],
     activePosition: null as 0 | 1 | null,
@@ -60,7 +72,19 @@ export const createMockReportState = (report: Report = mockReportWithLabel) => (
 });
 
 export const createMockReportStateNoLabels = () => ({
-  report: mockReportNoLabel,
+  report: {
+    reportId: undefined,
+    label: null,
+    countryId: 'us' as const,
+    simulationIds: ['1', '2'],
+    apiVersion: 'v1',
+    status: 'pending' as const,
+    output: null,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    activeSimulationPosition: 0 as 0 | 1,
+    mode: 'report' as const,
+  },
   simulations: {
     simulations: [mockSimulation1NoLabel, mockSimulation2NoLabel] as [Simulation | null, Simulation | null],
     activePosition: null as 0 | 1 | null,

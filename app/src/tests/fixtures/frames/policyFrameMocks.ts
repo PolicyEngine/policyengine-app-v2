@@ -40,7 +40,7 @@ export const MOCK_PARAMETER: Parameter = {
 };
 
 export const MOCK_POLICY_WITH_PARAMS: Policy = {
-  id: 'policy-123',
+  id: '123',
   countryId: 'us',
   label: 'Test Tax Policy',
   isCreated: false,
@@ -57,7 +57,7 @@ export const MOCK_EMPTY_POLICY: Policy = {
 // Mock API responses
 export const mockCreatePolicySuccessResponse = {
   result: {
-    policy_id: 'policy-123',
+    policy_id: '123',
     status: 'ok',
   },
 };

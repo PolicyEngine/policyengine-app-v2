@@ -7,7 +7,7 @@ import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 // Test IDs and labels
 export const TEST_USER_ID = 'test-user-123';
-export const TEST_HOUSEHOLD_ID = 'household-456';
+export const TEST_HOUSEHOLD_ID = '456';
 export const TEST_POPULATION_LABEL = 'Test Population 2024';
 export const EMPTY_LABEL = '';
 export const LONG_LABEL = 'A'.repeat(101); // Over 100 char limit
@@ -169,6 +169,7 @@ export const mockHousehold: Household = getMockHousehold();
 
 // Mock Redux state
 export const mockPopulationState = {
+  populations: [null, null] as [any, any],
   type: 'geographic' as const,
   id: null,
   label: TEST_POPULATION_LABEL,

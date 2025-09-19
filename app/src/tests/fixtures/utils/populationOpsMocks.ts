@@ -10,8 +10,8 @@ import { GeographyPopulationRef, HouseholdPopulationRef } from '@/utils/Populati
 
 // IDs
 export const POPULATION_IDS = {
-  HOUSEHOLD_1: 'household-123',
-  HOUSEHOLD_2: 'household-456',
+  HOUSEHOLD_1: '123',
+  HOUSEHOLD_2: '456',
   HOUSEHOLD_EMPTY: '',
   GEOGRAPHY_1: 'us-ca',
   GEOGRAPHY_2: 'uk-england',

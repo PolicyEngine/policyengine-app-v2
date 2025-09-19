@@ -1,10 +1,10 @@
 import { Simulation } from '@/types/ingredients/Simulation';
 
 // Test IDs
-export const TEST_SIMULATION_ID = 'sim-test-123';
-export const TEST_SIMULATION_ID_MISSING = 'sim-missing-999';
-export const TEST_HOUSEHOLD_ID = 'household-456';
-export const TEST_POLICY_ID = 'policy-789';
+export const TEST_SIMULATION_ID = '123';
+export const TEST_SIMULATION_ID_MISSING = '999';
+export const TEST_HOUSEHOLD_ID = '456';
+export const TEST_POLICY_ID = '789';
 
 // Test labels
 export const TEST_SIMULATION_LABEL = 'Test Simulation Submit';

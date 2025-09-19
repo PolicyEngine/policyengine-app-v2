@@ -5,11 +5,11 @@ import { Population } from '@/types/ingredients/Population';
 
 // Mock simulations
 export const mockSimulation: Simulation = {
-  id: 'sim-123',
+  id: '123',
   countryId: 'us',
   apiVersion: '1.0.0',
-  policyId: 'policy-123',
-  populationId: 'household-123',
+  policyId: '123',
+  populationId: '123',
   populationType: 'household',
   label: 'Test Simulation',
   isCreated: true,
@@ -17,7 +17,7 @@ export const mockSimulation: Simulation = {
 
 export const mockSimulationWithoutPolicy: Simulation = {
   countryId: 'us',
-  populationId: 'household-123',
+  populationId: '123',
   populationType: 'household',
   label: 'Partial Simulation',
   isCreated: false,
@@ -31,7 +31,7 @@ export const mockSimulationEmpty: Simulation = {
 
 // Mock policy (old structure - to be migrated)
 export const mockPolicyOld = {
-  id: 'policy-123',
+  id: '123',
   label: 'Test Policy',
   isCreated: true,
   parameters: [],
@@ -42,7 +42,7 @@ export const mockPopulationOld = {
   label: 'Test Population',
   isCreated: true,
   household: {
-    id: 'household-123',
+    id: '123',
     countryId: 'us',
     householdData: {
       people: {},

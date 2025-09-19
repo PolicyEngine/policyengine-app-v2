@@ -157,7 +157,7 @@ describe('SimulationSelectExistingPopulationFrame', () => {
       populationReducer.setHouseholdAtPosition({
         position: 1,
         household: expect.objectContaining({
-          id: 'household-123',
+          id: '123',
           countryId: 'us',
         }),
       })
@@ -197,7 +197,7 @@ describe('SimulationSelectExistingPopulationFrame', () => {
       populationReducer.setGeographyAtPosition({
         position: 0,
         geography: expect.objectContaining({
-          id: 'geo-456',
+          id: '456',
           countryId: 'us',
         }),
       })

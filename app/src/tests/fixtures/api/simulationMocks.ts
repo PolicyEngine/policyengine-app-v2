@@ -25,7 +25,7 @@ export const SIMULATION_IDS = {
 
 // Test payloads
 export const mockSimulationPayload: SimulationCreationPayload = {
-  population_id: 'household-123',
+  population_id: '123',
   population_type: 'household',
   policy_id: 456,
 };

@@ -35,12 +35,12 @@ describe('SetPopulationLabelFrame', () => {
 
     // Report reducer for position management
     const reportState = {
-      mode: 'standalone',
-      activeSimulationPosition: 0,
+      mode: 'standalone' as const,
+      activeSimulationPosition: 0 as 0 | 1,
       countryId: 'us',
       apiVersion: 'v1',
       simulationIds: [],
-      status: 'idle',
+      status: 'idle' as const,
       output: null,
     };
 
@@ -52,7 +52,7 @@ describe('SetPopulationLabelFrame', () => {
       },
       preloadedState: {
         population: basePopulationState,
-        report: reportState,
+        report: reportState as any,
         metadata: {},
       },
     });

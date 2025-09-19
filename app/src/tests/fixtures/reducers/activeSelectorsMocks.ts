@@ -5,22 +5,22 @@ import { Population } from '@/types/ingredients/Population';
 
 // Mock simulations
 export const mockSimulation1: Simulation = {
-  id: 'sim-123',
+  id: '123',
   countryId: 'us',
   apiVersion: '1.0.0',
-  policyId: 'policy-123',
-  populationId: 'household-123',
+  policyId: '123',
+  populationId: '123',
   populationType: 'household',
   label: 'Baseline Simulation',
   isCreated: true,
 };
 
 export const mockSimulation2: Simulation = {
-  id: 'sim-456',
+  id: '456',
   countryId: 'uk',
   apiVersion: '1.0.0',
-  policyId: 'policy-456',
-  populationId: 'geo-456',
+  policyId: 'test-geography',
+  populationId: '456',
   populationType: 'geography',
   label: 'Reform Simulation',
   isCreated: false,
@@ -28,14 +28,14 @@ export const mockSimulation2: Simulation = {
 
 // Mock policies
 export const mockPolicy1: Policy = {
-  id: 'policy-123',
+  id: '123',
   label: 'Baseline Policy',
   parameters: [],
   isCreated: true,
 };
 
 export const mockPolicy2: Policy = {
-  id: 'policy-456',
+  id: '456',
   label: 'Reform Policy',
   parameters: [],
   isCreated: false,
@@ -46,7 +46,7 @@ export const mockPopulation1: Population = {
   label: 'Baseline Population',
   isCreated: true,
   household: {
-    id: 'household-123',
+    id: '123',
     countryId: 'us',
     householdData: {
       people: {},
@@ -60,7 +60,7 @@ export const mockPopulation2: Population = {
   isCreated: false,
   household: null,
   geography: {
-    id: 'geo-456',
+    id: 'test-geography',
     countryId: 'uk',
     scope: 'national',
     geographyId: 'uk',

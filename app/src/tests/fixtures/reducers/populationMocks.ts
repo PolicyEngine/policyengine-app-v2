@@ -8,7 +8,7 @@ export const TEST_LABEL_UPDATED = 'Updated Population';
 
 // Mock Households
 export const mockHousehold1: Household = {
-  id: 'household-123',
+  id: '123',
   countryId: 'us',
   householdData: {
     people: {},
@@ -16,7 +16,7 @@ export const mockHousehold1: Household = {
 };
 
 export const mockHousehold2: Household = {
-  id: 'household-456',
+  id: '456',
   countryId: 'uk',
   householdData: {
     people: {},
@@ -25,14 +25,14 @@ export const mockHousehold2: Household = {
 
 // Mock Geographies
 export const mockGeography1: Geography = {
-  id: 'geo-123',
+  id: 'test-geography',
   countryId: 'us',
   scope: 'national',
   geographyId: 'us',
 };
 
 export const mockGeography2: Geography = {
-  id: 'geo-456',
+  id: 'test-geography-2',
   countryId: 'uk',
   scope: 'subnational',
   geographyId: 'scotland',

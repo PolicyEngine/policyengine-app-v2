@@ -5,7 +5,7 @@ import { HouseholdCreationPayload } from '@/types/payloads';
 // Test household IDs - descriptive names for clarity
 export const EXISTING_HOUSEHOLD_ID = '12345';
 export const NON_EXISTENT_HOUSEHOLD_ID = '99999';
-export const NEW_HOUSEHOLD_ID = 'household-123';
+export const NEW_HOUSEHOLD_ID = '123';
 
 // Country codes used in tests
 export const TEST_COUNTRIES = {

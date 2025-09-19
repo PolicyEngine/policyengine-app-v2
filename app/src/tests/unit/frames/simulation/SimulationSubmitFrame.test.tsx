@@ -287,7 +287,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       const onSuccessCallback = mockCreateSimulation.mock.calls[0][1].onSuccess;
       onSuccessCallback({
         result: {
-          simulation_id: 'new-sim-123',
+          simulation_id: '123',
         },
       });
 
@@ -295,7 +295,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       expect(simulationsActions.updateSimulationAtPosition).toHaveBeenCalledWith({
         position: 0,
         updates: {
-          id: 'new-sim-123',
+          id: '123',
           isCreated: true,
         },
       });
@@ -346,7 +346,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       const onSuccessCallback = mockCreateSimulation.mock.calls[0][1].onSuccess;
       onSuccessCallback({
         result: {
-          simulation_id: 'new-sim-456',
+          simulation_id: '456',
         },
       });
 
@@ -395,7 +395,7 @@ describe('SimulationSubmitFrame - Compatibility Features', () => {
       const onSuccessCallback = mockCreateSimulation.mock.calls[0][1].onSuccess;
       onSuccessCallback({
         result: {
-          simulation_id: 'new-sim-789',
+          simulation_id: '789',
         },
       });
 

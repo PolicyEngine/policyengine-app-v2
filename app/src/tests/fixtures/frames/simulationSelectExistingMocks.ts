@@ -39,7 +39,7 @@ export const mockPolicyData = [MOCK_POLICY_WITH_PARAMS, MOCK_EMPTY_POLICY];
 // Mock household data for tests
 export const MOCK_HOUSEHOLD_FAMILY = {
   household: {
-    id: 'household-123',
+    id: '123',
     country_id: 'us',
     household_json: { people: {} },
   },
@@ -51,7 +51,7 @@ export const mockHouseholdData = [MOCK_HOUSEHOLD_FAMILY];
 // Mock geographic data for tests
 export const MOCK_GEOGRAPHIC_US = {
   geography: {
-    id: 'geo-456',
+    id: 'mock-geography',
     countryId: 'us',
     scope: 'national',
     geographyId: 'us',

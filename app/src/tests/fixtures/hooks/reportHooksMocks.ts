@@ -17,8 +17,8 @@ export const TEST_TIMESTAMP = '2024-01-15T10:00:00Z';
 export const mockReportMetadata: ReportMetadata = {
   id: TEST_REPORT_ID,
   country_id: TEST_COUNTRY_ID,
-  simulation_1_id: 'sim-1',
-  simulation_2_id: 'sim-2',
+  simulation_1_id: '1',
+  simulation_2_id: '2',
   api_version: 'v1',
   status: 'pending',
   output: null,

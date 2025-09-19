@@ -2,11 +2,11 @@ import { Report, ReportOutput } from '@/types/ingredients/Report';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test constants
-export const TEST_REPORT_ID_1 = 'report-test-123';
-export const TEST_REPORT_ID_2 = 'report-test-456';
-export const TEST_SIMULATION_ID_1 = 'sim-test-001';
-export const TEST_SIMULATION_ID_2 = 'sim-test-002';
-export const TEST_SIMULATION_ID_3 = 'sim-test-003';
+export const TEST_REPORT_ID_1 = '123';
+export const TEST_REPORT_ID_2 = '456';
+export const TEST_SIMULATION_ID_1 = '1';
+export const TEST_SIMULATION_ID_2 = '2';
+export const TEST_SIMULATION_ID_3 = '3';
 export const TEST_TIMESTAMP_CREATED = '2024-01-15T10:00:00.000Z';
 export const TEST_TIMESTAMP_UPDATED = '2024-01-15T10:30:00.000Z';
 
@@ -204,7 +204,7 @@ export const EXPECTED_INITIAL_STATE = {
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: null,
   simulationIds: [],
-  status: 'pending',
+  status: 'pending' as const,
   output: null,
   createdAt: expect.any(String),
   updatedAt: expect.any(String),
