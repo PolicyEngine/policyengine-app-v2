@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
@@ -9,6 +9,10 @@ const router = createBrowserRouter(
   [
     {
       path: '/',
+      element: <Navigate to="/us" replace />,
+    },
+    {
+      path: '/:countryId',
       element: <Layout />,
       children: [
         {

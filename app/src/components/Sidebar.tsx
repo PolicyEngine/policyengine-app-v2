@@ -10,6 +10,7 @@ import {
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, spacing, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
@@ -22,26 +23,30 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useLocation();
+  const countryId = useCurrentCountry();
 
+  // All internal navigation paths include the country prefix for consistency with v1 app
   const navItems = [
-    { label: 'Home', icon: IconHome, path: '/' },
-    { label: 'Reports', icon: IconFileDescription, path: '/reports' },
-    { label: 'Simulations', icon: IconGitBranch, path: '/simulations' },
-    { label: 'Configurations', icon: IconSettings2, path: '/configurations' },
+    { label: 'Home', icon: IconHome, path: `/${countryId}` },
+    { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
+    { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
+    { label: 'Configurations', icon: IconSettings2, path: `/${countryId}/configurations` },
   ];
 
-  const policyItems = [{ label: 'Populations', icon: IconUsers, path: '/populations' }];
+  const policyItems = [
+    { label: 'Populations', icon: IconUsers, path: `/${countryId}/populations` },
+  ];
 
   const resourceItems = [
     { label: 'GitHub', icon: IconGitBranch, path: 'https://github.com', external: true },
     { label: 'Join Slack', icon: IconExternalLink, path: 'https://slack.com', external: true },
     { label: 'Visit Blog', icon: IconBook, path: 'https://blog.example.com', external: true },
-    { label: 'Methodology', icon: IconFileDescription, path: '/methodology' },
+    { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
   ];
 
   const accountItems = [
-    { label: 'Account Settings', icon: IconSettings2, path: '/account' },
-    { label: 'Contact Support', icon: IconExternalLink, path: '/support' },
+    { label: 'Account Settings', icon: IconSettings2, path: `/${countryId}/account` },
+    { label: 'Contact Support', icon: IconExternalLink, path: `/${countryId}/support` },
   ];
 
   if (!isOpen) {
