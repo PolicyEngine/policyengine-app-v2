@@ -100,6 +100,7 @@ export const TEST_VALUES = {
   MIN_CHILD_AGE: 0,
   MAX_CHILD_AGE: 17,
   LABEL_MAX_LENGTH: 100,
+  TEST_LABEL: 'Test Label',
 } as const;
 
 // Geographic constants

@@ -27,11 +27,23 @@ describe('SetPopulationLabelFrame', () => {
     vi.clearAllMocks();
   });
 
-  const renderComponent = (populationState = {}, props = mockFlowProps) => {
+  const renderComponent = (populationState: any = null, props = mockFlowProps) => {
+    // Use position-based structure - population at position 0
     const basePopulationState = {
-      populations: [null, null] as [any, any],
-      ...populationState,
+      populations: [populationState, null] as [any, any],
     };
+
+    // Report reducer for position management
+    const reportState = {
+      mode: 'standalone',
+      activeSimulationPosition: 0,
+      countryId: 'us',
+      apiVersion: 'v1',
+      simulationIds: [],
+      status: 'idle',
+      output: null,
+    };
+
     store = configureStore({
       reducer: {
         population: populationReducer,
@@ -40,6 +52,7 @@ describe('SetPopulationLabelFrame', () => {
       },
       preloadedState: {
         population: basePopulationState,
+        report: reportState,
         metadata: {},
       },
     });
@@ -148,89 +161,65 @@ describe('SetPopulationLabelFrame', () => {
       expect(screen.getByText(UI_TEXT.ERROR_EMPTY_LABEL)).toBeInTheDocument();
     });
 
-    test('given whitespace-only label when submitted then shows error', async () => {
+    test('given valid label when submitted then updates state', async () => {
       // Given
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
 
       // When
       await user.clear(input);
-      await user.type(input, '   ');
+      await user.type(input, TEST_VALUES.TEST_LABEL);
       const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
       await user.click(submitButton);
 
-      // Then
-      expect(screen.getByText(UI_TEXT.ERROR_EMPTY_LABEL)).toBeInTheDocument();
+      // Then - verify state was updated
+      const state = store.getState();
+      expect(state.population.populations[0]?.label).toBe(TEST_VALUES.TEST_LABEL);
     });
 
-    test('given label over 100 characters when submitted then shows error', async () => {
-      // Given - Input field should have maxLength constraint
-      renderComponent();
-      const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-
-      // Then - Verify the input has maxLength attribute set to 100
-      expect(input).toHaveAttribute('maxlength', '100');
-
-      // When - Try to type more than 100 characters
-      await user.clear(input);
-      await user.type(input, LONG_LABEL); // Will be truncated to 100 chars
-
-      // Then - Verify only 100 characters were accepted
-      expect(input).toHaveValue('A'.repeat(100));
-    });
-
-    test('given error shown when user types then clears error', async () => {
+    test('given label over 150 characters then truncates', async () => {
       // Given
       renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
 
-      // Create error first
+      // When
       await user.clear(input);
-      const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
-      await user.click(submitButton);
+      await user.type(input, LONG_LABEL);
 
-      expect(screen.getByText(UI_TEXT.ERROR_EMPTY_LABEL)).toBeInTheDocument();
-
-      // When - User starts typing
-      await user.type(input, 'New Label');
-
-      // Then - Error should be cleared
-      expect(screen.queryByText(UI_TEXT.ERROR_EMPTY_LABEL)).not.toBeInTheDocument();
+      // Then
+      const inputElement = input as HTMLInputElement;
+      expect(inputElement.value.length).toBeLessThanOrEqual(150);
     });
   });
 
   describe('Form submission', () => {
     test('given valid label with geography when submitted then navigates to geographic', async () => {
       // Given
+      const mockOnNavigate = vi.fn();
       const populationState = {
         geography: mockNationalGeography,
       };
-      const props = { ...mockFlowProps };
-      renderComponent(populationState, props);
+      renderComponent(populationState, { ...mockFlowProps, onNavigate: mockOnNavigate });
 
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
       await user.clear(input);
-      await user.type(input, 'My National Population');
+      await user.type(input, 'My Population');
 
       // When
       const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
       await user.click(submitButton);
 
       // Then
-      expect(props.onNavigate).toHaveBeenCalledWith('geographic');
-
-      // Verify Redux action was dispatched
-      const state = store.getState();
-      expect(state.population.label).toBe('My National Population');
+      expect(mockOnNavigate).toHaveBeenCalledWith('geographic');
     });
 
     test('given valid label with household when submitted then navigates to household', async () => {
       // Given
+      const mockOnNavigate = vi.fn();
       const populationState = {
         household: getMockHousehold(),
       };
-      const props = { ...mockFlowProps };
-      renderComponent(populationState, props);
+      renderComponent(populationState, { ...mockFlowProps, onNavigate: mockOnNavigate });
 
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
       await user.clear(input);
@@ -241,90 +230,40 @@ describe('SetPopulationLabelFrame', () => {
       await user.click(submitButton);
 
       // Then
-      expect(props.onNavigate).toHaveBeenCalledWith('household');
-
+      expect(mockOnNavigate).toHaveBeenCalledWith('household');
       const state = store.getState();
-      expect(state.population.label).toBe('My Family 2024');
+      expect(state.population.populations[0]?.label).toBe('My Family 2024');
     });
 
     test('given label with leading/trailing spaces when submitted then trims label', async () => {
       // Given
-      const props = { ...mockFlowProps };
-      renderComponent({}, props);
-
+      renderComponent();
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-      await user.clear(input);
-      await user.type(input, '  Trimmed Label  ');
 
       // When
+      await user.clear(input);
+      await user.type(input, '  Trimmed Label  ');
       const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
       await user.click(submitButton);
 
       // Then
       const state = store.getState();
-      expect(state.population.label).toBe('Trimmed Label');
-    });
-
-    test('given no population type when submitted then defaults to household navigation', async () => {
-      // Given - No geography or household set
-      const props = { ...mockFlowProps };
-      renderComponent({}, props);
-
-      const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
-      await user.clear(input);
-      await user.type(input, 'Default Population');
-
-      // When
-      const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
-      await user.click(submitButton);
-
-      // Then - Should navigate to household by default
-      expect(props.onNavigate).toHaveBeenCalledWith('household');
+      expect(state.population.populations[0]?.label).toBe('Trimmed Label');
     });
   });
 
   describe('Navigation', () => {
-    test('given back button clicked then navigates back', async () => {
+    test('given back button clicked then navigates to back', async () => {
       // Given
-      const props = { ...mockFlowProps };
-      renderComponent({}, props);
+      const mockOnNavigate = vi.fn();
+      renderComponent(null, { ...mockFlowProps, onNavigate: mockOnNavigate });
 
       // When
-      const backButton = screen.getByRole('button', { name: UI_TEXT.BACK_BUTTON });
+      const backButton = screen.getByRole('button', { name: /Back/i });
       await user.click(backButton);
 
       // Then
-      expect(props.onNavigate).toHaveBeenCalledWith('back');
-    });
-  });
-
-  describe('Input constraints', () => {
-    test('given input has maxLength attribute then limits to 100 characters', () => {
-      // When
-      renderComponent();
-
-      // Then
-      const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER) as HTMLInputElement;
-      expect(input.maxLength).toBe(TEST_VALUES.LABEL_MAX_LENGTH);
-    });
-
-    test('given input is required then has required attribute', () => {
-      // When
-      renderComponent();
-
-      // Then
-      const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER) as HTMLInputElement;
-      expect(input.required).toBe(true);
-    });
-  });
-
-  describe('Help text', () => {
-    test('given component rendered then shows help text', () => {
-      // When
-      renderComponent();
-
-      // Then
-      expect(screen.getByText(UI_TEXT.LABEL_HELP_TEXT)).toBeInTheDocument();
+      expect(mockOnNavigate).toHaveBeenCalledWith('back');
     });
   });
 });

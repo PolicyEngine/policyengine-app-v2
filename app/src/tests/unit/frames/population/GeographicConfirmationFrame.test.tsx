@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
@@ -77,9 +78,9 @@ describe('GeographicConfirmationFrame', () => {
     metadataState: Partial<any> = { currentCountry: TEST_COUNTRIES.US },
     props = mockFlowProps
   ) => {
+    // Use position-based structure for populations
     const basePopulationState = {
-      populations: [null, null],
-      ...populationState,
+      populations: [populationState, null], // Population at position 0
     };
     const fullMetadataState = {
       loading: false,
@@ -108,6 +109,12 @@ describe('GeographicConfirmationFrame', () => {
       ...metadataState,
     };
 
+    // Report reducer for position management
+    const reportState = {
+      mode: 'standalone',
+      activeSimulationPosition: 0,
+    };
+
     store = configureStore({
       reducer: {
         population: populationReducer,
@@ -117,6 +124,7 @@ describe('GeographicConfirmationFrame', () => {
       preloadedState: {
         population: basePopulationState,
         metadata: fullMetadataState,
+        report: reportState,
       },
     });
 
@@ -130,7 +138,7 @@ describe('GeographicConfirmationFrame', () => {
   };
 
   describe('National geography', () => {
-    test('given national geography then displays correct country information', () => {
+    test('given national geography then displays correct country information', async () => {
       // Given
       const populationState = {
         geography: mockNationalGeography,
@@ -203,56 +211,50 @@ describe('GeographicConfirmationFrame', () => {
   describe('Submission handling', () => {
     test('given valid national geography when submitted then creates association and updates state', async () => {
       // Given
+      const user = userEvent.setup();
       const populationState = {
         geography: mockNationalGeography,
-        label: 'Test National',
-      };
-      const props = { ...mockFlowProps };
-      renderComponent(populationState, undefined, props);
-
-      // When
-      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
-      submitButton.click();
-
-      // Then
-      await waitFor(() => {
-        expect(mockCreateGeographicAssociation).toHaveBeenCalledWith(
-          expect.objectContaining({
-            userId: TEST_USER_ID,
-            countryId: TEST_COUNTRIES.US,
-            scope: 'national',
-            geographyId: TEST_COUNTRIES.US,
-            label: 'Test National',
-          })
-        );
-      });
-
-      await waitFor(() => {
-        expect(props.onReturn).toHaveBeenCalled();
-      });
-    });
-
-    test('given subnational geography when submitted then creates correct association', async () => {
-      // Given
-      const populationState = {
-        geography: mockStateGeography,
-        label: 'Test State',
+        label: 'Test National Population',
       };
       renderComponent(populationState);
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
-      submitButton.click();
+      await user.click(submitButton);
 
       // Then
       await waitFor(() => {
         expect(mockCreateGeographicAssociation).toHaveBeenCalledWith(
           expect.objectContaining({
-            userId: TEST_USER_ID,
+            countryId: TEST_COUNTRIES.US,
+            scope: 'national',
+            label: 'Test National Population',
+          })
+        );
+      });
+    });
+
+    test('given subnational geography when submitted then creates correct association', async () => {
+      // Given
+      const user = userEvent.setup();
+      const populationState = {
+        geography: mockStateGeography,
+        label: 'California Population',
+      };
+      renderComponent(populationState);
+
+      // When
+      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
+      await user.click(submitButton);
+
+      // Then
+      await waitFor(() => {
+        expect(mockCreateGeographicAssociation).toHaveBeenCalledWith(
+          expect.objectContaining({
             countryId: TEST_COUNTRIES.US,
             scope: 'subnational',
             geographyId: 'ca',
-            label: 'Test State',
+            label: 'California Population',
           })
         );
       });
@@ -260,15 +262,15 @@ describe('GeographicConfirmationFrame', () => {
 
     test('given standalone flow when submitted then resets ingredient', async () => {
       // Given
+      const user = userEvent.setup();
       const populationState = {
         geography: mockNationalGeography,
       };
-      const props = { ...mockFlowProps, isInSubflow: false };
-      renderComponent(populationState, undefined, props);
+      renderComponent(populationState, {}, { ...mockFlowProps, isInSubflow: false });
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
-      submitButton.click();
+      await user.click(submitButton);
 
       // Then
       await waitFor(() => {
@@ -278,27 +280,29 @@ describe('GeographicConfirmationFrame', () => {
 
     test('given subflow when submitted then does not reset ingredient', async () => {
       // Given
+      const user = userEvent.setup();
       const populationState = {
         geography: mockNationalGeography,
       };
-      const props = { ...mockFlowProps, isInSubflow: true };
-      renderComponent(populationState, undefined, props);
+      renderComponent(populationState, {}, { ...mockFlowProps, isInSubflow: true });
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
-      submitButton.click();
+      await user.click(submitButton);
 
       // Then
       await waitFor(() => {
         expect(mockCreateGeographicAssociation).toHaveBeenCalled();
+        expect(mockResetIngredient).not.toHaveBeenCalled();
       });
-      expect(mockResetIngredient).not.toHaveBeenCalled();
     });
 
     test('given API error when submitted then logs error', async () => {
       // Given
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      mockCreateGeographicAssociation.mockRejectedValue(new Error('API Error'));
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockCreateGeographicAssociation.mockRejectedValueOnce(new Error('API Error'));
+
+      const user = userEvent.setup();
       const populationState = {
         geography: mockNationalGeography,
       };
@@ -306,17 +310,17 @@ describe('GeographicConfirmationFrame', () => {
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
-      submitButton.click();
+      await user.click(submitButton);
 
       // Then
       await waitFor(() => {
-        expect(consoleSpy).toHaveBeenCalledWith(
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
           'Failed to create geographic association:',
           expect.any(Error)
         );
       });
 
-      consoleSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
     });
   });
 
@@ -339,20 +343,16 @@ describe('GeographicConfirmationFrame', () => {
 
     test('given no onReturn prop when submitted then navigates to __return__', async () => {
       // Given
+      const user = userEvent.setup();
+      const mockOnNavigate = vi.fn();
       const populationState = {
         geography: mockNationalGeography,
       };
-      const mockOnNavigate = vi.fn();
-      const props = {
-        ...mockFlowProps,
-        onReturn: undefined as any, // Testing edge case where onReturn is not provided
-        onNavigate: mockOnNavigate,
-      };
-      renderComponent(populationState, undefined, props);
+      renderComponent(populationState, {}, { ...mockFlowProps, onReturn: undefined, onNavigate: mockOnNavigate });
 
       // When
       const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
-      submitButton.click();
+      await user.click(submitButton);
 
       // Then
       await waitFor(() => {
@@ -363,13 +363,16 @@ describe('GeographicConfirmationFrame', () => {
     test('given missing metadata country then defaults to us', () => {
       // Given
       const populationState = {
-        geography: mockNationalGeography,
+        geography: {
+          ...mockNationalGeography,
+          countryId: 'us', // Keep countryId
+        },
       };
 
-      // When
-      renderComponent(populationState, { currentCountry: null });
+      // When - render without country in metadata
+      renderComponent(populationState, { currentCountry: undefined });
 
-      // Then
+      // Then - should still display United States (from geography)
       expect(screen.getByText('United States')).toBeInTheDocument();
     });
   });

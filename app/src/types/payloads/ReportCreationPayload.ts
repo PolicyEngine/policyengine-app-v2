@@ -3,6 +3,6 @@
  * Backend expects only simulation IDs, generates ID and timestamps
  */
 export interface ReportCreationPayload {
-  simulation_1_id: string;
-  simulation_2_id: string | null;
+  simulation_1_id: number;
+  simulation_2_id: number | null;
 }

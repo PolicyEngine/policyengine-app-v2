@@ -28,8 +28,8 @@ export const mockReportMetadata: ReportMetadata = {
 
 // Mock Report Creation Payload
 export const mockReportCreationPayload: ReportCreationPayload = {
-  simulation_1_id: 'sim-1',
-  simulation_2_id: 'sim-2',
+  simulation_1_id: 1,
+  simulation_2_id: 2,
 };
 
 // Mock User Report Association
