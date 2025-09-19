@@ -4,7 +4,7 @@ import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { AppDispatch, RootState } from '@/store';
 import { useCurrentCountry } from './useCurrentCountry';
 
-// TODO: This hook has been added with intention to replace the useFetchMetadata hook for 
+// TODO: This hook has been added with intention to replace the useFetchMetadata hook for
 // better sync between metadata and country Id retrieved from URL path param.
 // To be revisited in separate issue.
 /**
