@@ -9,19 +9,17 @@ import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { ReportViewFlow } from '@/flows/reportViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFetchMetadata } from '@/hooks/useMetadata';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 export default function HomePage() {
   const dispatch = useDispatch();
 
-  // TODO: Replace with dynamic country from URL route parameter
-  // When routing is implemented, this will become:
-  // const { countryId } = useParams();
-  // This approach ensures metadata is fetched when:
-  // 1. Component mounts (initial load)
-  // 2. countryId changes (when user navigates between countries)
-  const countryId = 'us';
+  // Get current country from URL for UI formatting
+  const countryId = useCurrentCountry();
+
+  // Ensure metadata is fetched for current country
   useFetchMetadata(countryId);
 
   // Note: Below is for testing purposes only
