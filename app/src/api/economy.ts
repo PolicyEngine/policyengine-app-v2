@@ -37,8 +37,8 @@ async function mockFetchEconomyCalculation(
 
     // Return mock data based on country
     const mockResult: EconomyReportOutput = countryId === 'us'
-      ? {
-          // Mock US data structure
+      ? ({
+          // Mock US data structure - minimal fields for testing
           budget: {
             budgetary_impact: -5000000000,
             benefit_spending_impact: 2000000000,
@@ -61,9 +61,9 @@ async function mockFetchEconomyCalculation(
             top_1_percent_share_change: -0.005,
             top_10_percent_share_change: -0.008,
           }
-        } as ReportOutputSocietyWideUS
-      : {
-          // Mock UK data structure
+        } as unknown as ReportOutputSocietyWideUS)
+      : ({
+          // Mock UK data structure - minimal fields for testing
           budget: {
             budgetary_impact: -3000000000,
             benefit_spending_impact: 1500000000,
@@ -84,7 +84,7 @@ async function mockFetchEconomyCalculation(
           inequality: {
             gini_coefficient_change: -0.012,
           }
-        } as ReportOutputSocietyWideUK;
+        } as unknown as ReportOutputSocietyWideUK);
 
     return {
       status: 'completed',
