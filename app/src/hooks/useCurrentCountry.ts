@@ -10,8 +10,7 @@ export function useCurrentCountry(): (typeof countryIds)[number] {
 
   // Validate and provide fallback
   if (!countryId || !countryIds.includes(countryId as any)) {
-    // In production, you might want to redirect or handle this differently
-    console.warn(`Invalid or missing country ID in URL: ${countryId}`);
+    // TODO: Replace with dynamic default country based on user location/preferences
     return 'us';
   }
 

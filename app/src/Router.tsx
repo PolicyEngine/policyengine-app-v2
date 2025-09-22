@@ -9,6 +9,7 @@ const router = createBrowserRouter(
   [
     {
       path: '/',
+      // TODO: Replace with dynamic default country based on user location/preferences
       element: <Navigate to="/us" replace />,
     },
     {
