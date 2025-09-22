@@ -4,7 +4,6 @@ import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { AppDispatch, RootState } from '@/store';
 
 /**
- * TODO: Deprecate? See alternative: ./useCountryMetadata.ts
  * Hook that ensures metadata is fetched for the specified country.
  *
  * This hook triggers a metadata fetch when:
