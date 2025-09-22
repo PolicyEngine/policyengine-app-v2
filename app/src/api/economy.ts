@@ -12,7 +12,7 @@ async function mockFetchEconomyCalculation(
   countryId: string,
   reformPolicyId: string,
   baselinePolicyId: string,
-  params?: EconomyCalculationParams
+  _params?: EconomyCalculationParams
 ): Promise<EconomyCalculationResponse> {
   // Simulate network delay
   await new Promise(resolve => setTimeout(resolve, 1000));

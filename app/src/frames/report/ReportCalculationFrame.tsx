@@ -1,248 +1,79 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useSelector } from 'react-redux';
 import { Container, Title, Text, Card, Stack, Group, Loader, Progress, Badge, Button, Alert, Box } from '@mantine/core';
 import { IconAlertCircle, IconClock, IconUsers, IconHome } from '@tabler/icons-react';
-import { useEconomyCalculation } from '@/hooks/useEconomyCalculation';
+import { useReportCalculation } from '@/hooks/useReportCalculation';
 import { EconomyReportOutput } from '@/api/economy';
-import { useHouseholdCalculation } from '@/hooks/useHouseholdCalculation';
-import { markReportCompleted, markReportError } from '@/api/report';
 import { selectBothSimulations } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Report } from '@/types/ingredients/Report';
 import { Household } from '@/types/ingredients/Household';
 import { spacing } from '@/designTokens';
-
-interface CalculationProgress {
-  status: 'pending' | 'running' | 'completed' | 'error';
-  queuePosition?: number;
-  estimatedTime?: number;
-  progress?: number;
-  error?: string;
-}
+import { countryIds } from '@/libs/countries';
 
 export default function ReportCalculationFrame({ onNavigate }: FlowComponentProps) {
   const reportState = useSelector((state: RootState) => state.report);
   const [simulation1, simulation2] = useSelector((state: RootState) => selectBothSimulations(state));
 
-  const [calculationProgress, setCalculationProgress] = useState<CalculationProgress>({
-    status: 'pending'
-  });
-  const [hasCompletedCalculation, setHasCompletedCalculation] = useState(false);
-
   // Determine calculation type based on population type
   const isHouseholdCalculation = simulation1?.populationType === 'household';
-  const countryId = reportState.countryId || simulation1?.countryId || 'us';
+  const countryId = (reportState.countryId || simulation1?.countryId || 'us') as (typeof countryIds)[number];
 
   // Extract policy IDs from simulations
   const baselinePolicyId = simulation1?.policyId || '';
   const reformPolicyId = simulation2?.policyId || baselinePolicyId;
 
   // For household calculations, we need the household ID
-  const householdId = isHouseholdCalculation ? simulation1?.populationId : '';
+  const householdId = isHouseholdCalculation ? (simulation1?.populationId || '') : '';
 
   // For economy calculations, we might have region parameters
   const economyParams = !isHouseholdCalculation && simulation1?.populationId
     ? { region: simulation1.populationId }
     : undefined;
 
-  // Society-wide calculation hook
-  const economyCalculation = useEconomyCalculation({
-    countryId,
-    reformPolicyId,
-    baselinePolicyId,
-    params: economyParams,
-    enabled: !isHouseholdCalculation && !!baselinePolicyId && !hasCompletedCalculation,
-    onSuccess: useCallback(async (data: EconomyReportOutput) => {
-      console.log('Economy calculation completed:', data);
-      setCalculationProgress({
-        status: 'completed',
-        progress: 100
-      });
+  // Handle navigation after completion
+  const handleSuccess = useCallback((data: EconomyReportOutput | Household) => {
+    console.log('Calculation completed:', data);
+    setTimeout(() => onNavigate('complete'), 1500);
+  }, [onNavigate]);
 
-      // Update report status in backend
-      if (reportState.reportId) {
-        try {
-          const report: Report = {
-            ...reportState,
-            status: 'complete',
-            output: data
-          };
-          await markReportCompleted(countryId, reportState.reportId, report);
-        } catch (error) {
-          console.error('Failed to update report status:', error);
+  const handleError = useCallback((error: Error) => {
+    console.error('Calculation failed:', error);
+  }, []);
+
+  // Use the unified report calculation hook
+  const calculation = useReportCalculation(
+    isHouseholdCalculation
+      ? {
+          reportType: 'household',
+          countryId,
+          householdId,
+          baselinePolicyId,
+          reformPolicyId: reformPolicyId !== baselinePolicyId ? reformPolicyId : undefined,
+          reportId: reportState.reportId,
+          enabled: !!householdId && !!baselinePolicyId,
+          onSuccess: handleSuccess,
+          onError: handleError,
         }
-      }
-
-      setHasCompletedCalculation(true);
-      setTimeout(() => onNavigate('complete'), 1500);
-    }, [countryId, reportState, onNavigate]),
-    onError: useCallback(async (error: Error) => {
-      console.error('Economy calculation failed:', error);
-      setCalculationProgress({
-        status: 'error',
-        error: error.message
-      });
-
-      // Update report status to error
-      if (reportState.reportId) {
-        try {
-          const report: Report = {
-            ...reportState,
-            status: 'error',
-            output: null
-          };
-          await markReportError(countryId, reportState.reportId, report);
-        } catch (err) {
-          console.error('Failed to update report error status:', err);
+      : {
+          reportType: 'society',
+          countryId,
+          reformPolicyId,
+          baselinePolicyId,
+          economyParams,
+          reportId: reportState.reportId,
+          enabled: !!baselinePolicyId,
+          onSuccess: handleSuccess,
+          onError: handleError,
         }
-      }
-    }, [countryId, reportState]),
-    onQueueUpdate: useCallback((position: number, averageTime?: number) => {
-      // Progress calculation:
-      // - Queue position 0: User is being processed (20-90% based on estimated runtime)
-      // - Queue position 1-3: 15-20% (close to processing)
-      // - Queue position 4+: 5-15% (waiting in queue)
-      // Average runtime is 4-8 minutes, so we estimate progress during processing
-      let calculatedProgress: number;
+  );
 
-      if (position === 0) {
-        // User is being processed - estimate based on time elapsed
-        // Start at 20% when processing begins, gradually increase
-        // This is a rough estimate since we don't have exact timing
-        const baseProgress = 20;
-        const processingProgress = 70; // Can go up to 90% (20 + 70)
-
-        // If we have average time, use it to estimate progress
-        // Otherwise, assume we're 40% through processing
-        calculatedProgress = averageTime && averageTime > 0
-          ? baseProgress + Math.min(processingProgress, (processingProgress / 2))
-          : 40;
-      } else if (position <= 3) {
-        // Close to being processed
-        calculatedProgress = 20 - (position * 2); // 18%, 16%, 14%
-      } else {
-        // Further back in queue
-        calculatedProgress = Math.max(5, 14 - position); // Minimum 5%
-      }
-
-      setCalculationProgress(prev => ({
-        ...prev,
-        status: 'running',
-        queuePosition: position,
-        estimatedTime: averageTime,
-        progress: calculatedProgress
-      }));
-    }, [])
-  });
-
-  // Household calculation hooks (baseline and reform)
-  const baselineHouseholdCalc = useHouseholdCalculation({
-    countryId,
-    householdId: householdId || '',
-    policyId: baselinePolicyId,
-    enabled: isHouseholdCalculation && !!householdId && !!baselinePolicyId && !hasCompletedCalculation,
-    onSuccess: useCallback(() => {
-      console.log('Baseline household calculation completed');
-    }, []),
-    onError: useCallback((error: Error) => {
-      console.error('Baseline household calculation failed:', error);
-      setCalculationProgress({
-        status: 'error',
-        error: error.message
-      });
-    }, [])
-  });
-
-  // Handle baseline-only case
-  const isBaselineOnly = !simulation2 || simulation2.policyId === simulation1?.policyId;
-
-  const reformHouseholdCalc = useHouseholdCalculation({
-    countryId,
-    householdId: householdId || '',
-    policyId: reformPolicyId,
-    enabled: isHouseholdCalculation && !!householdId && !!reformPolicyId && !isBaselineOnly && !hasCompletedCalculation,
-    onSuccess: useCallback(() => {
-      console.log('Reform household calculation completed');
-    }, []),
-    onError: useCallback((error: Error) => {
-      console.error('Reform household calculation failed:', error);
-      setCalculationProgress({
-        status: 'error',
-        error: error.message
-      });
-    }, [])
-  });
-
-  // Handle household calculation completion
-  useEffect(() => {
-    if (isHouseholdCalculation && !hasCompletedCalculation) {
-      const baselineComplete = baselineHouseholdCalc.data && !baselineHouseholdCalc.isLoading;
-      const reformComplete = isBaselineOnly ||
-        (reformHouseholdCalc.data && !reformHouseholdCalc.isLoading);
-
-      if (baselineComplete && reformComplete) {
-        setCalculationProgress({
-          status: 'completed',
-          progress: 100
-        });
-
-        // For household calculations, return the household data directly
-        // In baseline-only mode, just return the baseline household
-        const householdOutput: Household = isBaselineOnly
-          ? baselineHouseholdCalc.data
-          : (reformHouseholdCalc.data || baselineHouseholdCalc.data);
-
-        // Update report status
-        if (reportState.reportId) {
-          const report: Report = {
-            ...reportState,
-            status: 'complete',
-            output: householdOutput as any // This will be a Household type for household calculations
-          };
-          markReportCompleted(countryId, reportState.reportId, report)
-            .catch((error: Error) => console.error('Failed to update report status:', error));
-        }
-
-        setHasCompletedCalculation(true);
-        setTimeout(() => onNavigate('complete'), 1500);
-      } else if (baselineComplete) {
-        // Update progress for partial completion
-        setCalculationProgress({
-          status: 'running',
-          progress: isBaselineOnly ? 100 : 50
-        });
-      }
-    }
-  }, [
-    isHouseholdCalculation,
-    baselineHouseholdCalc.data,
-    baselineHouseholdCalc.isLoading,
-    reformHouseholdCalc.data,
-    reformHouseholdCalc.isLoading,
-    reformPolicyId,
-    baselinePolicyId,
-    hasCompletedCalculation,
-    isBaselineOnly,
-    reportState,
-    countryId,
-    onNavigate
-  ]);
+  const { calculationProgress, isBaselineOnly, retry } = calculation;
 
   // Handle retry
-  const handleRetry = () => {
-    setCalculationProgress({ status: 'pending' });
-    setHasCompletedCalculation(false);
-
-    if (isHouseholdCalculation) {
-      baselineHouseholdCalc.retry();
-      if (!isBaselineOnly) {
-        reformHouseholdCalc.retry();
-      }
-    } else {
-      economyCalculation.retry();
-    }
-  };
+  const handleRetry = useCallback(() => {
+    retry();
+  }, [retry]);
 
   return (
     <Container variant="guttered">
