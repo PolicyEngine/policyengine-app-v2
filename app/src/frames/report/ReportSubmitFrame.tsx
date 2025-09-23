@@ -4,6 +4,7 @@ import IngredientSubmissionView, { SummaryBoxItem } from '@/components/Ingredien
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { selectBothSimulations } from '@/reducers/simulationsReducer';
+import { selectGeographyAtPosition, selectHouseholdAtPosition } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Report } from '@/types/ingredients/Report';
@@ -16,6 +17,12 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
   const [simulation1, simulation2] = useSelector((state: RootState) =>
     selectBothSimulations(state)
   );
+
+  // Get population data (household or geography) for each simulation
+  const household1 = useSelector((state: RootState) => selectHouseholdAtPosition(state, 0));
+  const household2 = useSelector((state: RootState) => selectHouseholdAtPosition(state, 1));
+  const geography1 = useSelector((state: RootState) => selectGeographyAtPosition(state, 0));
+  const geography2 = useSelector((state: RootState) => selectGeographyAtPosition(state, 1));
 
   const { createReport, isPending } = useCreateReport(reportState.label || undefined);
   const { resetIngredient } = useIngredientReset();
@@ -42,11 +49,21 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
       reportData as Report
     );
 
-    // The createReport hook expects countryId and payload
+    // The createReport hook expects countryId, payload, and simulation metadata
     createReport(
       {
         countryId: reportState.countryId,
         payload: serializedReportCreationPayload,
+        simulations: {
+          simulation1,
+          simulation2,
+        },
+        populations: {
+          household1,
+          household2,
+          geography1,
+          geography2,
+        },
       },
       {
         onSuccess: (data) => {

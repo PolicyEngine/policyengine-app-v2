@@ -4,6 +4,9 @@ import { MOCK_USER_ID } from '@/constants';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload } from '@/types/payloads';
+import { Simulation } from '@/types/ingredients/Simulation';
+import { Household } from '@/types/ingredients/Household';
+import { Geography } from '@/types/ingredients/Geography';
 
 // Test constants
 export const TEST_REPORT_ID = 123;
@@ -82,3 +85,45 @@ export const ERROR_MESSAGES = {
 export const CONSOLE_MESSAGES = {
   LABEL_LOG: 'Report label in useCreateReport:',
 } as const;
+
+// Mock simulations for testing
+export const mockHouseholdSimulation: Simulation = {
+  id: 'sim-1',
+  policyId: 'policy-1',
+  populationType: 'household',
+  label: 'Test Household Sim',
+  isCreated: true,
+};
+
+export const mockEconomySimulation: Simulation = {
+  id: 'sim-2',
+  policyId: 'policy-2',
+  populationType: 'geography',
+  label: 'Test Economy Sim',
+  isCreated: true,
+};
+
+// Mock populations for testing
+export const mockHousehold: Household = {
+  id: 'household-123',
+  countryId: 'us',
+  householdData: {
+    people: {},
+  },
+};
+
+export const mockNationalGeography: Geography = {
+  id: 'us',
+  countryId: 'us',
+  scope: 'national',
+  geographyId: 'us',
+  name: 'United States',
+};
+
+export const mockSubnationalGeography: Geography = {
+  id: 'us-california',
+  countryId: 'us',
+  scope: 'subnational',
+  geographyId: 'california',
+  name: 'California',
+};

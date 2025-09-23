@@ -40,6 +40,13 @@ vi.mock('@/adapters', () => ({
   },
 }));
 
+// Mock population reducer selectors
+vi.mock('@/reducers/populationReducer', () => ({
+  default: vi.fn((state = {}) => state), // Mock the reducer itself
+  selectHouseholdAtPosition: vi.fn(() => null),
+  selectGeographyAtPosition: vi.fn(() => null),
+}));
+
 describe('ReportSubmitFrame', () => {
   let store: any;
 
@@ -165,7 +172,7 @@ describe('ReportSubmitFrame', () => {
   });
 
   describe('submission', () => {
-    test('given valid data when submit clicked then creates report', async () => {
+    test('given valid data when submit clicked then creates report with populations', async () => {
       // Given
       const user = userEvent.setup();
       renderComponent();
@@ -180,6 +187,22 @@ describe('ReportSubmitFrame', () => {
           payload: {
             simulation_1_id: '1',
             simulation_2_id: '2',
+          },
+          simulations: {
+            simulation1: expect.objectContaining({
+              id: '1',
+              label: 'Test Simulation 1',
+            }),
+            simulation2: expect.objectContaining({
+              id: '2',
+              label: 'Test Simulation 2',
+            }),
+          },
+          populations: {
+            household1: null,
+            household2: null,
+            geography1: null,
+            geography2: null,
           },
         },
         {
@@ -271,6 +294,50 @@ describe('ReportSubmitFrame', () => {
       // Then - verify the callback received the report data
       expect(capturedData).toEqual(mockReportData);
       expect(mockOnNavigate).toHaveBeenCalledWith('submit');
+    });
+
+    test('given household and geography data available then passes populations to createReport', async () => {
+      // Given
+      const mockHousehold = {
+        id: 'household-123',
+        countryId: 'us',
+        householdData: { people: {} },
+      };
+      const mockGeography = {
+        id: 'us-california',
+        countryId: 'us',
+        scope: 'subnational' as const,
+        geographyId: 'california',
+        name: 'California',
+      };
+
+      // Mock the selectors to return population data
+      const { selectHouseholdAtPosition, selectGeographyAtPosition } = await import('@/reducers/populationReducer');
+      (selectHouseholdAtPosition as any).mockImplementation((_state: any, position: number) => {
+        return position === 0 ? mockHousehold : null;
+      });
+      (selectGeographyAtPosition as any).mockImplementation((_state: any, position: number) => {
+        return position === 0 ? mockGeography : null;
+      });
+
+      const user = userEvent.setup();
+      renderComponent();
+
+      // When
+      await user.click(screen.getByRole('button', { name: /Generate Report/i }));
+
+      // Then
+      expect(mockCreateReport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          populations: {
+            household1: mockHousehold,
+            household2: null,
+            geography1: mockGeography,
+            geography2: null,
+          },
+        }),
+        expect.any(Object)
+      );
     });
   });
 });
