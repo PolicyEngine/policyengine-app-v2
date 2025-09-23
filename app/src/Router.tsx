@@ -4,6 +4,7 @@ import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
+import { validateCountryLoader } from './routing/loaders/countryLoader';
 
 const router = createBrowserRouter(
   [
@@ -14,6 +15,7 @@ const router = createBrowserRouter(
     },
     {
       path: '/:countryId',
+      loader: validateCountryLoader,
       element: <Layout />,
       children: [
         {

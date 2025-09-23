@@ -41,17 +41,6 @@ describe('useCurrentCountry', () => {
     expect(result.current).toBe(TEST_COUNTRIES.CA);
   });
 
-  test('given invalid country in URL then returns us as fallback', () => {
-    // Given
-    const wrapper = createRouterWrapper(TEST_PATHS.INVALID_COUNTRY_POLICIES);
-
-    // When
-    const { result } = renderHook(() => useCurrentCountry(), { wrapper });
-
-    // Then
-    expect(result.current).toBe(TEST_COUNTRIES.US);
-  });
-
   test('given no country in URL then returns us as fallback', () => {
     // Given
     const wrapper = createRouterWrapper(TEST_PATHS.ROOT);

@@ -3,13 +3,17 @@ import { countryIds } from '@/libs/countries';
 
 /**
  * Returns the current country ID from the URL path parameter.
- * @returns The validated country ID from URL, or 'us' as fallback
+ *
+ * For routes with :countryId param: Returns the country from URL (already validated by loader)
+ * For routes without :countryId param: Returns 'us' as fallback with a warning
+ *
+ * @returns The country ID from URL or default fallback
  */
 export function useCurrentCountry(): (typeof countryIds)[number] {
   const { countryId } = useParams<{ countryId: string }>();
 
-  // Validate and provide fallback
-  if (!countryId || !countryIds.includes(countryId as any)) {
+  if (!countryId) {
+    console.warn('useCurrentCountry used in non-country route, returning default country');
     // TODO: Replace with dynamic default country based on user location/preferences
     return 'us';
   }
