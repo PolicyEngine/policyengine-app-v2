@@ -17,7 +17,6 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
     selectBothSimulations(state)
   );
 
-  console.log('Report label: ', reportState.label);
   const { createReport, isPending } = useCreateReport(reportState.label || undefined);
   const { resetIngredient } = useIngredientReset();
 
@@ -43,8 +42,6 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
       reportData as Report
     );
 
-    console.log('Submitting report:', serializedReportCreationPayload);
-
     // The createReport hook expects countryId and payload
     createReport(
       {
@@ -52,7 +49,8 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
         payload: serializedReportCreationPayload,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
+          console.log('Report created successfully:', data);
           onNavigate('submit');
           if (!isInSubflow) {
             resetIngredient('report');
