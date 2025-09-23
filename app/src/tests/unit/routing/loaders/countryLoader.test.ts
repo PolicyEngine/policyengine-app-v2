@@ -15,7 +15,7 @@ vi.mock('react-router-dom', () => ({
 
 // Mock window.location
 const mockLocation = {
-  pathname: TEST_PATHS.CONFIGURATIONS,
+  pathname: TEST_PATHS.CONFIGURATIONS as string,
 };
 
 Object.defineProperty(window, 'location', {
