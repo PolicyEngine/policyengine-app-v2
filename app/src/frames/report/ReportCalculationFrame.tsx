@@ -1,40 +1,65 @@
-import { useCallback } from 'react';
-import { useSelector } from 'react-redux';
-import { Container, Title, Text, Card, Stack, Group, Loader, Progress, Badge, Button, Alert, Box } from '@mantine/core';
-import { IconAlertCircle, IconClock, IconUsers, IconHome } from '@tabler/icons-react';
+import { useCallback, useState } from 'react';
+import { Container, Title, Text, Card, Stack, Group, Loader, Progress, Badge, Button, Alert, Box, ScrollArea, SimpleGrid, Modal } from '@mantine/core';
+import { IconAlertCircle, IconClock, IconUsers, IconHome, IconArrowRight } from '@tabler/icons-react';
 import { useReportCalculation } from '@/hooks/useReportCalculation';
+import { useUserEconomyCalculations } from '@/hooks/useUserEconomyCalculations';
+import { useUserHouseholdCalculations } from '@/hooks/useUserHouseholdCalculations';
 import { EconomyReportOutput } from '@/api/economy';
-import { selectBothSimulations } from '@/reducers/simulationsReducer';
-import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Household } from '@/types/ingredients/Household';
 import { spacing } from '@/designTokens';
 import { countryIds } from '@/libs/countries';
 
-export default function ReportCalculationFrame({ onNavigate }: FlowComponentProps) {
-  const reportState = useSelector((state: RootState) => state.report);
-  const [simulation1, simulation2] = useSelector((state: RootState) => selectBothSimulations(state));
+interface NavigationParams {
+  countryId?: string;
+  baselinePolicyId?: string;
+  reformPolicyId?: string;
+  householdId?: string;
+  region?: string;
+  reportId?: string;
+}
 
-  // Determine calculation type based on population type
-  const isHouseholdCalculation = simulation1?.populationType === 'household';
-  const countryId = (reportState.countryId || simulation1?.countryId || 'us') as (typeof countryIds)[number];
+interface ExtendedFlowComponentProps extends FlowComponentProps {
+  route?: {
+    params?: NavigationParams;
+  };
+}
 
-  // Extract policy IDs from simulations
-  const baselinePolicyId = simulation1?.policyId || '';
-  const reformPolicyId = simulation2?.policyId || baselinePolicyId;
+export default function ReportCalculationFrame({ onNavigate, route }: ExtendedFlowComponentProps) {
+  const navigationParams = route?.params;
 
-  // For household calculations, we need the household ID
-  const householdId = isHouseholdCalculation ? (simulation1?.populationId || '') : '';
+  // Check if we have specific calculation parameters
+  if (navigationParams?.baselinePolicyId) {
+    return <SpecificCalculationView
+      navigationParams={navigationParams}
+      onNavigate={onNavigate}
+    />;
+  } else {
+    return <CalculationsDashboard onNavigate={onNavigate} />;
+  }
+}
 
-  // For economy calculations, we might have region parameters
-  const economyParams = !isHouseholdCalculation && simulation1?.populationId
-    ? { region: simulation1.populationId }
-    : undefined;
+function SpecificCalculationView({
+  navigationParams,
+  onNavigate
+}: {
+  navigationParams: NavigationParams;
+  onNavigate: FlowComponentProps['onNavigate'];
+}) {
+  const { countryId, baselinePolicyId, reformPolicyId, householdId, region, reportId } = navigationParams;
+
+  // Determine calculation type based on presence of householdId
+  const isHouseholdCalculation = !!householdId;
+  const effectiveCountryId = (countryId || 'us') as (typeof countryIds)[number];
+  const effectiveReformPolicyId = reformPolicyId || baselinePolicyId || '';
+  const economyParams = region ? { region } : undefined;
 
   // Handle navigation after completion
   const handleSuccess = useCallback((data: EconomyReportOutput | Household) => {
     console.log('Calculation completed:', data);
-    setTimeout(() => onNavigate('complete'), 1500);
+    // Delay navigation to allow user to see the results
+    // In production, this would navigate to a proper results view
+    setTimeout(() => onNavigate('complete'), 5000); // Increased to 5 seconds for debug view
   }, [onNavigate]);
 
   const handleError = useCallback((error: Error) => {
@@ -46,22 +71,22 @@ export default function ReportCalculationFrame({ onNavigate }: FlowComponentProp
     isHouseholdCalculation
       ? {
           reportType: 'household',
-          countryId,
+          countryId: effectiveCountryId,
           householdId,
-          baselinePolicyId,
-          reformPolicyId: reformPolicyId !== baselinePolicyId ? reformPolicyId : undefined,
-          reportId: reportState.reportId,
+          baselinePolicyId: baselinePolicyId || '',
+          reformPolicyId: effectiveReformPolicyId !== baselinePolicyId ? effectiveReformPolicyId : undefined,
+          reportId,
           enabled: !!householdId && !!baselinePolicyId,
           onSuccess: handleSuccess,
           onError: handleError,
         }
       : {
           reportType: 'society',
-          countryId,
-          reformPolicyId,
-          baselinePolicyId,
+          countryId: effectiveCountryId,
+          reformPolicyId: effectiveReformPolicyId,
+          baselinePolicyId: baselinePolicyId || '',
           economyParams,
-          reportId: reportState.reportId,
+          reportId,
           enabled: !!baselinePolicyId,
           onSuccess: handleSuccess,
           onError: handleError,
@@ -130,16 +155,24 @@ export default function ReportCalculationFrame({ onNavigate }: FlowComponentProp
                 onCancel={() => onNavigate('cancel')}
               />
             ) : calculationProgress.status === 'completed' ? (
-              <CompletedDisplay />
+              <>
+                <CompletedDisplay />
+                {/* Temporary: Show the result JSON for debugging */}
+                {calculation.result && (
+                  <Box mt={spacing.md}>
+                    <TemporaryResultDisplay result={calculation.result} />
+                  </Box>
+                )}
+              </>
             ) : (
               <LoadingDisplay
                 isHouseholdCalculation={isHouseholdCalculation}
                 progress={calculationProgress.progress}
                 queuePosition={calculationProgress.queuePosition}
                 estimatedTime={calculationProgress.estimatedTime}
-                countryId={countryId}
-                simulation1={simulation1}
-                simulation2={simulation2}
+                countryId={effectiveCountryId}
+                baselinePolicyId={baselinePolicyId}
+                reformPolicyId={effectiveReformPolicyId}
               />
             )}
           </Stack>
@@ -156,16 +189,16 @@ function LoadingDisplay({
   queuePosition,
   estimatedTime,
   countryId,
-  simulation1,
-  simulation2
+  baselinePolicyId,
+  reformPolicyId
 }: {
   isHouseholdCalculation: boolean;
   progress?: number;
   queuePosition?: number;
   estimatedTime?: number;
   countryId: string;
-  simulation1?: any;
-  simulation2?: any;
+  baselinePolicyId?: string;
+  reformPolicyId?: string;
 }) {
   const formatTime = (seconds?: number) => {
     if (!seconds) return 'calculating...';
@@ -231,14 +264,14 @@ function LoadingDisplay({
           <Text size="xs" c="dimmed">
             Type: {isHouseholdCalculation ? 'Household Impact' : 'Society-Wide Impact'}
           </Text>
-          {simulation1?.label && (
+          {baselinePolicyId && (
             <Text size="xs" c="dimmed">
-              Baseline: {simulation1.label}
+              Baseline Policy: #{baselinePolicyId}
             </Text>
           )}
-          {simulation2?.label && simulation2.policyId !== simulation1?.policyId && (
+          {reformPolicyId && reformPolicyId !== baselinePolicyId && (
             <Text size="xs" c="dimmed">
-              Reform: {simulation2.label}
+              Reform Policy: #{reformPolicyId}
             </Text>
           )}
         </Stack>
@@ -275,7 +308,207 @@ function CompletedDisplay() {
   return (
     <Stack gap={spacing.md} align="center">
       <Progress value={100} size="xl" radius="md" color="green" />
-      <Text size="sm" c="dimmed">Calculation complete! Redirecting...</Text>
+      <Text size="sm" c="dimmed">Calculation complete! Results will be shown below...</Text>
     </Stack>
+  );
+}
+
+// Temporary component to display raw JSON result
+function TemporaryResultDisplay({
+  result
+}: {
+  result: EconomyReportOutput | Household | any
+}) {
+  return (
+    <Card shadow="sm" padding="lg" radius="md" withBorder>
+      <Stack gap={spacing.sm}>
+        <Text fw={600}>Result JSON (Temporary Debug View)</Text>
+        <ScrollArea h={400} type="auto" offsetScrollbars>
+          <Box
+            component="pre"
+            p={spacing.md}
+            style={{
+              backgroundColor: 'var(--mantine-color-gray-0)',
+              borderRadius: 'var(--mantine-radius-sm)',
+              border: '1px solid var(--mantine-color-gray-3)',
+              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, monospace',
+              fontSize: '12px',
+              lineHeight: '1.5',
+              margin: 0,
+              overflow: 'auto'
+            }}
+          >
+            {JSON.stringify(result, null, 2)}
+          </Box>
+        </ScrollArea>
+      </Stack>
+    </Card>
+  );
+}
+
+// Dashboard view showing all calculations as buttons
+function CalculationsDashboard({ onNavigate }: { onNavigate: FlowComponentProps['onNavigate'] }) {
+  const [selectedResult, setSelectedResult] = useState<any>(null);
+  const [modalOpened, setModalOpened] = useState(false);
+
+  const {
+    calculations: economyCalculations,
+    pendingCount: economyPendingCount,
+    completedCount: economyCompletedCount,
+    erroredCount: economyErroredCount
+  } = useUserEconomyCalculations();
+
+  const {
+    calculations: householdCalculations,
+    pendingCount: householdPendingCount,
+    completedCount: householdCompletedCount,
+    erroredCount: householdErroredCount
+  } = useUserHouseholdCalculations();
+
+  const handleShowResult = (calculation: any) => {
+    // For economy calculations, use the result field
+    // For household calculations, use the data field
+    const result = calculation.result || calculation.data;
+    if (result) {
+      setSelectedResult(result);
+      setModalOpened(true);
+    }
+  };
+
+  return (
+    <>
+      <Container variant="guttered">
+        <Stack gap={spacing.lg}>
+          <Box>
+            <Title order={2} variant="colored">
+              Cached Calculations Dashboard
+            </Title>
+            <Text c="dimmed" mt={spacing.xs}>
+              Click any completed calculation to view its JSON result
+            </Text>
+          </Box>
+
+          {/* Summary Stats */}
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing={spacing.md}>
+            <Card shadow="sm" padding="md" radius="md" withBorder>
+              <Text fw={600} size="sm">Economy Calculations</Text>
+              <Text size="xs" c="dimmed">Pending: {economyPendingCount}</Text>
+              <Text size="xs" c="dimmed">Completed: {economyCompletedCount}</Text>
+              <Text size="xs" c="dimmed">Errored: {economyErroredCount}</Text>
+            </Card>
+
+            <Card shadow="sm" padding="md" radius="md" withBorder>
+              <Text fw={600} size="sm">Household Calculations</Text>
+              <Text size="xs" c="dimmed">Pending: {householdPendingCount}</Text>
+              <Text size="xs" c="dimmed">Completed: {householdCompletedCount}</Text>
+              <Text size="xs" c="dimmed">Errored: {householdErroredCount}</Text>
+            </Card>
+
+            <Card shadow="sm" padding="md" radius="md" withBorder>
+              <Text fw={600} size="sm">Total in Cache</Text>
+              <Text size="lg" fw={700}>{economyCalculations.length + householdCalculations.length}</Text>
+            </Card>
+          </SimpleGrid>
+
+          {/* Economy Calculations List */}
+          {economyCalculations.length > 0 && (
+            <Box>
+              <Title order={4} mb={spacing.sm}>Economy Calculations</Title>
+              <Stack gap={spacing.xs}>
+                {economyCalculations.map((calc, index) => (
+                  <Button
+                    key={index}
+                    variant="default"
+                    fullWidth
+                    justify="space-between"
+                    rightSection={
+                      <Badge
+                        color={
+                          calc.status === 'pending' ? 'blue' :
+                          calc.status === 'completed' ? 'green' :
+                          'red'
+                        }
+                      >
+                        {calc.status}
+                      </Badge>
+                    }
+                    onClick={() => handleShowResult(calc)}
+                    disabled={calc.status !== 'completed'}
+                  >
+                    <Box>
+                      <Text size="sm" fw={500}>
+                        {calc.countryId.toUpperCase()} | Policy {calc.baselinePolicyId} → {calc.reformPolicyId}
+                      </Text>
+                      {calc.params?.region && (
+                        <Text size="xs" c="dimmed">Region: {calc.params.region}</Text>
+                      )}
+                    </Box>
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Household Calculations List */}
+          {householdCalculations.length > 0 && (
+            <Box>
+              <Title order={4} mb={spacing.sm}>Household Calculations</Title>
+              <Stack gap={spacing.xs}>
+                {householdCalculations.map((calc, index) => (
+                  <Button
+                    key={index}
+                    variant="default"
+                    fullWidth
+                    justify="space-between"
+                    rightSection={
+                      <Badge
+                        color={
+                          calc.status === 'pending' ? 'blue' :
+                          calc.status === 'completed' ? 'green' :
+                          'red'
+                        }
+                      >
+                        {calc.status}
+                      </Badge>
+                    }
+                    onClick={() => handleShowResult(calc)}
+                    disabled={calc.status !== 'completed'}
+                  >
+                    <Text size="sm" fw={500}>
+                      {calc.countryId.toUpperCase()} | Household {calc.householdId} | Policy {calc.policyId}
+                    </Text>
+                  </Button>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {/* Empty state */}
+          {economyCalculations.length === 0 && householdCalculations.length === 0 && (
+            <Card shadow="sm" padding="xl" radius="md" withBorder>
+              <Stack align="center" gap={spacing.md}>
+                <Text size="lg" fw={500}>No Calculations in Cache</Text>
+                <Text size="sm" c="dimmed" ta="center">
+                  Run some calculations and they will appear here
+                </Text>
+              </Stack>
+            </Card>
+          )}
+        </Stack>
+      </Container>
+
+      {/* Modal to show JSON result */}
+      <Modal
+        opened={modalOpened}
+        onClose={() => {
+          setModalOpened(false);
+          setSelectedResult(null);
+        }}
+        title="Calculation Result JSON"
+        size="xl"
+      >
+        {selectedResult && <TemporaryResultDisplay result={selectedResult} />}
+      </Modal>
+    </>
   );
 }

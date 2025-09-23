@@ -237,6 +237,29 @@ export const ERROR_MESSAGES = {
 } as const;
 
 // Create a helper to create store with initial state
+export function createMockHouseholdCalculations() {
+  return [
+    {
+      countryId: 'us',
+      householdId: 'household-123',
+      policyId: '1',
+      status: 'pending' as const,
+      data: undefined,
+      error: undefined,
+      lastUpdated: Date.now(),
+    },
+    {
+      countryId: 'uk',
+      householdId: 'household-456',
+      policyId: '2',
+      status: 'completed' as const,
+      data: mockHouseholdResult,
+      error: undefined,
+      lastUpdated: Date.now() - 60000,
+    },
+  ];
+}
+
 export const createMockStore = (
   reportState: Report = mockReportState,
   simulations: (Simulation | null)[] = [mockBaselineSimulation, mockReformSimulation]

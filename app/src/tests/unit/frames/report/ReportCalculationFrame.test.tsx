@@ -1,483 +1,502 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@test-utils';
-import { Provider } from 'react-redux';
+import { render, screen, waitFor, userEvent } from '@test-utils';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import ReportCalculationFrame from '@/frames/report/ReportCalculationFrame';
+import { useReportCalculation } from '@/hooks/useReportCalculation';
+import { useUserEconomyCalculations } from '@/hooks/useUserEconomyCalculations';
+import { useUserHouseholdCalculations } from '@/hooks/useUserHouseholdCalculations';
 import {
-  mockReportState,
-  mockBaselineSimulation,
-  mockReformSimulation,
-  mockHouseholdSimulation,
-  mockHouseholdReformSimulation,
-  mockHouseholdResult,
-  mockReformHouseholdResult,
-  mockEconomyCompletedResponse,
-  mockEconomyPendingResponse,
-  mockEconomyProcessingResponse,
-  mockEconomyErrorResponse,
+  createMockCalculationProgress,
+  createMockEconomyCalculations,
+  createMockHouseholdCalculations,
   createMockFlowProps,
-  createMockStore,
   TEST_COUNTRIES,
   ERROR_MESSAGES,
 } from '@/tests/fixtures/frames/reportCalculationFrameMocks';
 
 // Mock the hooks
-vi.mock('@/hooks/useEconomyCalculation');
-vi.mock('@/hooks/useHouseholdCalculation');
-vi.mock('@/api/report');
+vi.mock('@/hooks/useReportCalculation');
+vi.mock('@/hooks/useUserEconomyCalculations');
+vi.mock('@/hooks/useUserHouseholdCalculations');
 
-// Import mocked modules
-import { useEconomyCalculation } from '@/hooks/useEconomyCalculation';
-import { useHouseholdCalculation } from '@/hooks/useHouseholdCalculation';
-import { markReportCompleted, markReportError } from '@/api/report';
+const mockUseReportCalculation = vi.mocked(useReportCalculation);
+const mockUseUserEconomyCalculations = vi.mocked(useUserEconomyCalculations);
+const mockUseUserHouseholdCalculations = vi.mocked(useUserHouseholdCalculations);
 
 describe('ReportCalculationFrame', () => {
+  let queryClient: QueryClient;
+  const mockOnNavigate = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
-    // Set default mock implementations
-    vi.mocked(markReportCompleted).mockResolvedValue({} as any);
-    vi.mocked(markReportError).mockResolvedValue({} as any);
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
   });
 
-  describe('Economy Calculations', () => {
-    test('given economy calculation in queue then displays queue position and progress', () => {
-      // Given
-      const mockEconomyHook = {
-        data: mockEconomyPendingResponse,
-        isLoading: true,
-        isPending: true,
-        isCompleted: false,
-        isErrored: false,
-        result: null,
-        queuePosition: 3,
-        calculationError: undefined,
-        retry: vi.fn(),
-      };
-      vi.mocked(useEconomyCalculation).mockReturnValue(mockEconomyHook as any);
-      vi.mocked(useHouseholdCalculation).mockReturnValue({ data: null, isLoading: false } as any);
+  const renderWithProviders = (ui: React.ReactElement) => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        {ui}
+      </QueryClientProvider>
+    );
+  };
 
-      const store = createMockStore();
+  describe('Dashboard Mode (no navigation params)', () => {
+    beforeEach(() => {
+      mockUseUserEconomyCalculations.mockReturnValue({
+        calculations: [],
+        pendingCount: 0,
+        completedCount: 0,
+        erroredCount: 0,
+        pendingCalculations: [],
+        completedCalculations: [],
+        erroredCalculations: [],
+        totalCount: 0,
+        getCalculationByIds: vi.fn(),
+        invalidateCalculation: vi.fn(),
+        removeCalculation: vi.fn(),
+      });
+
+      mockUseUserHouseholdCalculations.mockReturnValue({
+        calculations: [],
+        pendingCount: 0,
+        completedCount: 0,
+        erroredCount: 0,
+        pendingCalculations: [],
+        completedCalculations: [],
+        erroredCalculations: [],
+        totalCount: 0,
+        getCalculationByIds: vi.fn(),
+        invalidateCalculation: vi.fn(),
+        removeCalculation: vi.fn(),
+      });
+    });
+
+    test('given no navigation params then displays dashboard view', () => {
+      // Given
       const flowProps = createMockFlowProps();
 
       // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
+      renderWithProviders(<ReportCalculationFrame {...flowProps} />);
 
       // Then
-      expect(screen.getByText('Calculating Society-Wide Impact')).toBeInTheDocument();
-      expect(screen.getByText('Queue Position: 3')).toBeInTheDocument();
-      expect(screen.getByText('Economy-Wide Calculation')).toBeInTheDocument();
-      expect(screen.getByRole('progressbar')).toBeInTheDocument();
+      expect(screen.getByText('All Calculations')).toBeInTheDocument();
+      expect(screen.getByText('View and manage all your ongoing and completed calculations')).toBeInTheDocument();
     });
 
-    test('given economy calculation processing then displays processing message', () => {
+    test('given dashboard view then displays summary cards', () => {
       // Given
-      const mockEconomyHook = {
-        data: mockEconomyProcessingResponse,
-        isLoading: true,
-        isPending: true,
-        isCompleted: false,
-        isErrored: false,
-        result: null,
-        queuePosition: 0,
-        calculationError: undefined,
-        retry: vi.fn(),
-      };
-      vi.mocked(useEconomyCalculation).mockReturnValue(mockEconomyHook as any);
-      vi.mocked(useHouseholdCalculation).mockReturnValue({ data: null, isLoading: false } as any);
-
-      const store = createMockStore();
       const flowProps = createMockFlowProps();
 
       // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
+      renderWithProviders(<ReportCalculationFrame {...flowProps} />);
 
       // Then
-      expect(screen.getByText('Processing your calculation...')).toBeInTheDocument();
-      expect(screen.queryByText(/Queue Position:/)).not.toBeInTheDocument();
+      expect(screen.getByText('Economy Calculations')).toBeInTheDocument();
+      expect(screen.getByText('Household Calculations')).toBeInTheDocument();
+      expect(screen.getByText('Total')).toBeInTheDocument();
     });
 
-    test('given economy calculation completes then updates report and navigates', async () => {
+    test('given no calculations exist then shows empty state', () => {
       // Given
-      const mockNavigate = vi.fn();
-      const mockOnSuccess = vi.fn();
+      const flowProps = createMockFlowProps();
 
-      vi.mocked(useEconomyCalculation).mockImplementation((options: any) => {
-        // Call onSuccess callback immediately
-        if (options.onSuccess && !mockOnSuccess.mock.calls.length) {
-          mockOnSuccess.mockImplementation(options.onSuccess);
-          setTimeout(() => options.onSuccess(mockEconomyCompletedResponse.result), 0);
-        }
-        return {
-          data: mockEconomyCompletedResponse,
-          isLoading: false,
-          isPending: false,
-          isCompleted: true,
+      // When
+      renderWithProviders(<ReportCalculationFrame {...flowProps} />);
+
+      // Then
+      expect(screen.getByText('No Calculations Found')).toBeInTheDocument();
+      expect(screen.getByText(/You don't have any calculations in your cache/)).toBeInTheDocument();
+    });
+
+    test('given economy calculations available then displays them', () => {
+      // Given
+      const mockCalculations = createMockEconomyCalculations();
+      mockUseUserEconomyCalculations.mockReturnValue({
+        calculations: mockCalculations,
+        pendingCount: 1,
+        completedCount: 1,
+        erroredCount: 0,
+        pendingCalculations: mockCalculations.filter(c => c.status === 'pending'),
+        completedCalculations: mockCalculations.filter(c => c.status === 'completed'),
+        erroredCalculations: [],
+        totalCount: 2,
+        getCalculationByIds: vi.fn(),
+        invalidateCalculation: vi.fn(),
+        removeCalculation: vi.fn(),
+      });
+
+      const flowProps = createMockFlowProps();
+
+      // When
+      renderWithProviders(<ReportCalculationFrame {...flowProps} />);
+
+      // Then
+      expect(screen.getByText('Society-Wide Calculations')).toBeInTheDocument();
+      expect(screen.getByText('US Economy Calculation')).toBeInTheDocument();
+      expect(screen.getByText('UK Economy Calculation')).toBeInTheDocument();
+    });
+
+    test('given user clicks view button then navigates to specific calculation', async () => {
+      // Given
+      const user = userEvent.setup();
+      const mockCalculations = createMockEconomyCalculations();
+      mockUseUserEconomyCalculations.mockReturnValue({
+        calculations: mockCalculations,
+        pendingCount: 1,
+        completedCount: 1,
+        erroredCount: 0,
+        pendingCalculations: mockCalculations.filter(c => c.status === 'pending'),
+        completedCalculations: mockCalculations.filter(c => c.status === 'completed'),
+        erroredCalculations: [],
+        totalCount: 2,
+        getCalculationByIds: vi.fn(),
+        invalidateCalculation: vi.fn(),
+        removeCalculation: vi.fn(),
+      });
+
+      const flowProps = createMockFlowProps({ onNavigate: mockOnNavigate });
+
+      // When
+      renderWithProviders(<ReportCalculationFrame {...flowProps} />);
+
+      const viewButtons = screen.getAllByText('View');
+      await user.click(viewButtons[0]);
+
+      // Then
+      expect(mockOnNavigate).toHaveBeenCalledWith('calculation', {
+        countryId: 'us',
+        baselinePolicyId: '1',
+        reformPolicyId: '2',
+        region: undefined
+      });
+    });
+  });
+
+  describe('Specific Calculation Mode (with navigation params)', () => {
+    describe('Society-wide calculation', () => {
+      const societyParams = {
+        countryId: 'us',
+        baselinePolicyId: '1',
+        reformPolicyId: '2',
+      };
+
+      test('given society-wide params then displays society-wide UI', () => {
+        // Given
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('pending'),
+          isLoading: true,
+          isCompleted: false,
           isErrored: false,
-          result: mockEconomyCompletedResponse.result,
-          queuePosition: undefined,
-          calculationError: undefined,
+          result: null,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
           retry: vi.fn(),
-        } as any;
-      });
-      vi.mocked(useHouseholdCalculation).mockReturnValue({ data: null, isLoading: false } as any);
+          reportType: 'society',
+          isBaselineOnly: false,
+        } as any);
 
-      const store = createMockStore();
-      const flowProps = createMockFlowProps({ onNavigate: mockNavigate });
+        const flowProps = createMockFlowProps();
+        const route = { params: societyParams };
 
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
 
-      // Then
-      await waitFor(() => {
-        expect(mockOnSuccess).toHaveBeenCalledWith(mockEconomyCompletedResponse.result);
+        // Then
+        expect(screen.getByText('Calculating Society-Wide Impact')).toBeInTheDocument();
+        expect(screen.getByText('Economy-Wide Calculation')).toBeInTheDocument();
       });
 
-      await waitFor(() => {
-        expect(markReportCompleted).toHaveBeenCalledWith(
-          TEST_COUNTRIES.US,
-          mockReportState.reportId,
-          expect.objectContaining({
-            status: 'complete',
-            output: mockEconomyCompletedResponse.result,
-          })
-        );
-      });
+      test('given pending economy calculation then shows queue position', () => {
+        // Given
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('running', { queuePosition: 3 }),
+          isLoading: true,
+          isCompleted: false,
+          isErrored: false,
+          result: null,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
+          retry: vi.fn(),
+          reportType: 'society',
+          isBaselineOnly: false,
+        } as any);
 
-      // Wait for navigation after 1.5s delay
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('complete');
-      }, { timeout: 2000 });
+        const flowProps = createMockFlowProps();
+        const route = { params: societyParams };
+
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
+
+        // Then
+        expect(screen.getByText('Queue Position: 3')).toBeInTheDocument();
+      });
     });
 
-    test('given economy calculation fails then displays error and retry button', () => {
-      // Given
-      const mockRetry = vi.fn();
-      const mockOnError = vi.fn();
+    describe('Household calculation', () => {
+      const householdParams = {
+        countryId: 'us',
+        baselinePolicyId: '1',
+        reformPolicyId: '2',
+        householdId: 'household-123',
+      };
 
-      vi.mocked(useEconomyCalculation).mockImplementation((options: any) => {
-        // Call onError callback immediately
-        if (options.onError && !mockOnError.mock.calls.length) {
-          mockOnError.mockImplementation(options.onError);
-          setTimeout(() => options.onError(new Error(ERROR_MESSAGES.ECONOMY_FAILED)), 0);
-        }
-        return {
-          data: mockEconomyErrorResponse,
+      test('given household params then displays household UI', () => {
+        // Given
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('pending'),
+          isLoading: true,
+          isCompleted: false,
+          isErrored: false,
+          result: null,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
+          retry: vi.fn(),
+          reportType: 'household',
+          isBaselineOnly: false,
+        } as any);
+
+        const flowProps = createMockFlowProps();
+        const route = { params: householdParams };
+
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
+
+        // Then
+        expect(screen.getByText('Calculating Household Impact')).toBeInTheDocument();
+        expect(screen.getByText('Household Calculation')).toBeInTheDocument();
+      });
+
+      test('given household calculation then does not show queue position', () => {
+        // Given
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('running', { progress: 50 }),
+          isLoading: true,
+          isCompleted: false,
+          isErrored: false,
+          result: null,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
+          retry: vi.fn(),
+          reportType: 'household',
+          isBaselineOnly: false,
+        } as any);
+
+        const flowProps = createMockFlowProps();
+        const route = { params: householdParams };
+
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
+
+        // Then
+        expect(screen.queryByText(/Queue Position/)).not.toBeInTheDocument();
+        expect(screen.getByText('50% complete')).toBeInTheDocument();
+      });
+    });
+
+    describe('Progress states', () => {
+      const params = {
+        countryId: 'us',
+        baselinePolicyId: '1',
+        reformPolicyId: '2',
+      };
+
+      test('given pending status then shows initializing state', () => {
+        // Given
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('pending'),
+          isLoading: true,
+          isCompleted: false,
+          isErrored: false,
+          result: null,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
+          retry: vi.fn(),
+          reportType: 'society',
+          isBaselineOnly: false,
+        } as any);
+
+        const flowProps = createMockFlowProps();
+        const route = { params };
+
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
+
+        // Then
+        expect(screen.getByText('Initializing')).toBeInTheDocument();
+        expect(screen.getByText('Please wait while we process your report...')).toBeInTheDocument();
+      });
+
+      test('given running status then shows progress', () => {
+        // Given
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('running', { progress: 75 }),
+          isLoading: true,
+          isCompleted: false,
+          isErrored: false,
+          result: null,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
+          retry: vi.fn(),
+          reportType: 'society',
+          isBaselineOnly: false,
+        } as any);
+
+        const flowProps = createMockFlowProps();
+        const route = { params };
+
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
+
+        // Then
+        expect(screen.getByText('Processing')).toBeInTheDocument();
+        expect(screen.getByText('75% complete')).toBeInTheDocument();
+      });
+
+      test('given error status then shows error with retry button', async () => {
+        // Given
+        const user = userEvent.setup();
+        const mockRetry = vi.fn();
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('error', { error: ERROR_MESSAGES.ECONOMY_FAILED }),
           isLoading: false,
-          isPending: false,
           isCompleted: false,
           isErrored: true,
           result: null,
-          queuePosition: undefined,
-          calculationError: ERROR_MESSAGES.ECONOMY_FAILED,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
           retry: mockRetry,
-        } as any;
-      });
-      vi.mocked(useHouseholdCalculation).mockReturnValue({ data: null, isLoading: false } as any);
+          reportType: 'society',
+          isBaselineOnly: false,
+        } as any);
 
-      const store = createMockStore();
-      const flowProps = createMockFlowProps();
+        const flowProps = createMockFlowProps();
+        const route = { params };
 
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
 
-      // Then
-      expect(screen.getByText('Calculation Failed')).toBeInTheDocument();
-      expect(screen.getByText(ERROR_MESSAGES.ECONOMY_FAILED)).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /retry calculation/i })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: /cancel/i })).toBeInTheDocument();
-    });
-  });
+        // Then
+        expect(screen.getByText('Error')).toBeInTheDocument();
+        expect(screen.getByText('Calculation Failed')).toBeInTheDocument();
+        expect(screen.getByText(ERROR_MESSAGES.ECONOMY_FAILED)).toBeInTheDocument();
 
-  describe('Household Calculations', () => {
-    test('given household calculation running then displays household-specific UI', () => {
-      // Given
-      vi.mocked(useEconomyCalculation).mockReturnValue({ data: null, isLoading: false } as any);
-      vi.mocked(useHouseholdCalculation).mockReturnValue({
-        data: null,
-        isLoading: true,
-        household: null,
-        retry: vi.fn(),
-      } as any);
-
-      const store = createMockStore(mockReportState, [mockHouseholdSimulation]);
-      const flowProps = createMockFlowProps();
-
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
-
-      // Then
-      expect(screen.getByText('Calculating Household Impact')).toBeInTheDocument();
-      expect(screen.getByText('Household Calculation')).toBeInTheDocument();
-      expect(screen.queryByText(/Queue Position/)).not.toBeInTheDocument(); // No queue for household
-    });
-
-    test('given baseline-only household calculation then shows baseline only indicator', () => {
-      // Given
-      vi.mocked(useEconomyCalculation).mockReturnValue({ data: null, isLoading: false } as any);
-      vi.mocked(useHouseholdCalculation).mockReturnValue({
-        data: mockHouseholdResult,
-        isLoading: false,
-        household: mockHouseholdResult,
-        retry: vi.fn(),
-      } as any);
-
-      // Only baseline simulation, no reform
-      const store = createMockStore(mockReportState, [mockHouseholdSimulation]);
-      const flowProps = createMockFlowProps();
-
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
-
-      // Then
-      expect(screen.getByText(/Baseline Only/)).toBeInTheDocument();
-    });
-
-    test('given household comparison calculation completes then updates report with both results', async () => {
-      // Given
-      const mockNavigate = vi.fn();
-
-      // Mock baseline calculation
-      const baselineHook = {
-        data: mockHouseholdResult,
-        isLoading: false,
-        household: mockHouseholdResult,
-        retry: vi.fn(),
-      };
-
-      // Mock reform calculation
-      const reformHook = {
-        data: mockReformHouseholdResult,
-        isLoading: false,
-        household: mockReformHouseholdResult,
-        retry: vi.fn(),
-      };
-
-      // Return different values based on policyId
-      vi.mocked(useHouseholdCalculation).mockImplementation((options: any) => {
-        if (options.policyId === mockHouseholdSimulation.policyId) {
-          return baselineHook as any;
-        }
-        return reformHook as any;
+        const retryButton = screen.getByRole('button', { name: /Retry Calculation/i });
+        await user.click(retryButton);
+        expect(mockRetry).toHaveBeenCalled();
       });
 
-      vi.mocked(useEconomyCalculation).mockReturnValue({ data: null, isLoading: false } as any);
+      test('given completed status then shows completion and navigates', async () => {
+        // Given
+        const mockResult = { totalBudgetImpact: 1000000 };
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('completed'),
+          isLoading: false,
+          isCompleted: true,
+          isErrored: false,
+          result: mockResult,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
+          retry: vi.fn(),
+          reportType: 'society',
+          isBaselineOnly: false,
+        } as any);
 
-      const store = createMockStore(mockReportState, [mockHouseholdSimulation, mockHouseholdReformSimulation]);
-      const flowProps = createMockFlowProps({ onNavigate: mockNavigate });
+        const flowProps = createMockFlowProps({ onNavigate: mockOnNavigate });
+        const route = { params };
 
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
 
-      // Then
-      await waitFor(() => {
-        expect(markReportCompleted).toHaveBeenCalledWith(
-          TEST_COUNTRIES.US,
-          mockReportState.reportId,
-          expect.objectContaining({
-            status: 'complete',
-            output: mockReformHouseholdResult, // Should use reform result when available
-          })
+        // Then
+        expect(screen.getByText('Complete')).toBeInTheDocument();
+        expect(screen.getByText('Calculation complete!')).toBeInTheDocument();
+        expect(screen.getByText('Calculation complete! Redirecting...')).toBeInTheDocument();
+
+        // Wait for navigation after 1.5 seconds
+        await waitFor(
+          () => {
+            expect(mockOnNavigate).toHaveBeenCalledWith('complete');
+          },
+          { timeout: 2000 }
         );
       });
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('complete');
-      }, { timeout: 2000 });
     });
 
-    test('given household calculation fails then allows retry', async () => {
-      // Given
-      const mockRetry = vi.fn();
-      const error = new Error(ERROR_MESSAGES.HOUSEHOLD_FAILED);
+    describe('Baseline-only calculations', () => {
+      const params = {
+        countryId: 'us',
+        baselinePolicyId: '1',
+        householdId: 'household-123',
+      };
 
-      vi.mocked(useHouseholdCalculation).mockImplementation((options: any) => {
-        if (options.onError) {
-          setTimeout(() => options.onError(error), 0);
-        }
-        return {
-          data: null,
-          isLoading: false,
-          error,
-          household: null,
-          retry: mockRetry,
-        } as any;
-      });
-      vi.mocked(useEconomyCalculation).mockReturnValue({ data: null, isLoading: false } as any);
-
-      const store = createMockStore(mockReportState, [mockHouseholdSimulation]);
-      const flowProps = createMockFlowProps();
-
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
-
-      // Then
-      await waitFor(() => {
-        expect(screen.getByText(ERROR_MESSAGES.HOUSEHOLD_FAILED)).toBeInTheDocument();
-      });
-
-      // When - click retry
-      const retryButton = screen.getByRole('button', { name: /retry calculation/i });
-      retryButton.click();
-
-      // Then
-      expect(mockRetry).toHaveBeenCalled();
-    });
-  });
-
-  describe('Progress Calculations', () => {
-    test('given queue position updates then progress bar updates accordingly', async () => {
-      // Given
-      const mockOnQueueUpdate = vi.fn();
-
-      vi.mocked(useEconomyCalculation).mockImplementation((options: any) => {
-        if (options.onQueueUpdate && !mockOnQueueUpdate.mock.calls.length) {
-          mockOnQueueUpdate.mockImplementation(options.onQueueUpdate);
-          // Simulate queue progression
-          setTimeout(() => options.onQueueUpdate(5, 300), 0); // Far back in queue
-          setTimeout(() => options.onQueueUpdate(2, 120), 100); // Getting closer
-          setTimeout(() => options.onQueueUpdate(0, 240), 200); // Processing
-        }
-        return {
-          data: mockEconomyPendingResponse,
+      test('given baseline-only calculation then shows indicator', () => {
+        // Given
+        mockUseReportCalculation.mockReturnValue({
+          calculationProgress: createMockCalculationProgress('running'),
           isLoading: true,
-          isPending: true,
           isCompleted: false,
           isErrored: false,
           result: null,
-          queuePosition: 5,
-          calculationError: undefined,
+          economyCalculation: null,
+          baselineHouseholdCalc: null,
+          reformHouseholdCalc: null,
           retry: vi.fn(),
-        } as any;
-      });
-      vi.mocked(useHouseholdCalculation).mockReturnValue({ data: null, isLoading: false } as any);
+          reportType: 'household',
+          isBaselineOnly: true,
+        } as any);
 
-      const store = createMockStore();
-      const flowProps = createMockFlowProps();
+        const flowProps = createMockFlowProps();
+        const route = { params };
 
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
+        // When
+        renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
 
-      // Then - verify queue updates are processed correctly
-      await waitFor(() => {
-        expect(mockOnQueueUpdate).toHaveBeenCalledWith(5, 300);
-      });
-
-      await waitFor(() => {
-        expect(mockOnQueueUpdate).toHaveBeenCalledWith(2, 120);
-      });
-
-      await waitFor(() => {
-        expect(mockOnQueueUpdate).toHaveBeenCalledWith(0, 240);
+        // Then
+        expect(screen.getByText(/Baseline Only/)).toBeInTheDocument();
       });
     });
-  });
 
-  describe('Navigation', () => {
-    test('given user clicks cancel on error then navigates to cancel', () => {
+    test('given user clicks cancel then navigates to cancel', async () => {
       // Given
-      const mockNavigate = vi.fn();
-      vi.mocked(useEconomyCalculation).mockReturnValue({
-        data: mockEconomyErrorResponse,
+      const user = userEvent.setup();
+      mockUseReportCalculation.mockReturnValue({
+        calculationProgress: createMockCalculationProgress('error', { error: ERROR_MESSAGES.ECONOMY_FAILED }),
         isLoading: false,
-        isPending: false,
         isCompleted: false,
         isErrored: true,
         result: null,
-        queuePosition: undefined,
-        calculationError: ERROR_MESSAGES.ECONOMY_FAILED,
+        economyCalculation: null,
+        baselineHouseholdCalc: null,
+        reformHouseholdCalc: null,
         retry: vi.fn(),
+        reportType: 'society',
+        isBaselineOnly: false,
       } as any);
-      vi.mocked(useHouseholdCalculation).mockReturnValue({ data: null, isLoading: false } as any);
 
-      const store = createMockStore();
-      const flowProps = createMockFlowProps({ onNavigate: mockNavigate });
-
-      // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
-
-      const cancelButton = screen.getByRole('button', { name: /cancel/i });
-      cancelButton.click();
-
-      // Then
-      expect(mockNavigate).toHaveBeenCalledWith('cancel');
-    });
-
-    test('given calculation completes successfully then auto-navigates after delay', async () => {
-      // Given
-      const mockNavigate = vi.fn();
-      vi.mocked(useEconomyCalculation).mockImplementation((options: any) => {
-        if (options.onSuccess) {
-          setTimeout(() => options.onSuccess(mockEconomyCompletedResponse.result), 0);
-        }
-        return {
-          data: mockEconomyCompletedResponse,
-          isLoading: false,
-          isPending: false,
-          isCompleted: true,
-          isErrored: false,
-          result: mockEconomyCompletedResponse.result,
-          queuePosition: undefined,
-          calculationError: undefined,
-          retry: vi.fn(),
-        } as any;
-      });
-      vi.mocked(useHouseholdCalculation).mockReturnValue({ data: null, isLoading: false } as any);
-
-      const store = createMockStore();
-      const flowProps = createMockFlowProps({ onNavigate: mockNavigate });
+      const flowProps = createMockFlowProps({ onNavigate: mockOnNavigate });
+      const route = { params: { countryId: 'us', baselinePolicyId: '1' } };
 
       // When
-      render(
-        <Provider store={store}>
-          <ReportCalculationFrame {...flowProps} />
-        </Provider>
-      );
+      renderWithProviders(<ReportCalculationFrame {...flowProps} route={route} />);
+
+      const cancelButton = screen.getByRole('button', { name: /Cancel/i });
+      await user.click(cancelButton);
 
       // Then
-      expect(screen.getByText('Calculation complete! Redirecting...')).toBeInTheDocument();
-
-      await waitFor(() => {
-        expect(mockNavigate).toHaveBeenCalledWith('complete');
-      }, { timeout: 2000 });
+      expect(mockOnNavigate).toHaveBeenCalledWith('cancel');
     });
   });
 });
