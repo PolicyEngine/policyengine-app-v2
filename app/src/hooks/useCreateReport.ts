@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReport } from '@/api/report';
-import { fetchEconomyCalculation, EconomyCalculationParams } from '@/api/economy';
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
 import { MOCK_USER_ID } from '@/constants';
 import { reportKeys } from '@/libs/queryKeys';
+import { calculationQueries } from '@/libs/queryOptions/calculations';
+import { CalculationMeta } from '@/api/reportCalculations';
 import { ReportCreationPayload } from '@/types/payloads';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { Household } from '@/types/ingredients/Household';
@@ -24,25 +24,6 @@ interface CreateReportAndBeginCalculationParams {
     geography1?: Geography | null;
     geography2?: Geography | null;
   };
-}
-
-/**
- * Helper function to format economy calculation parameters
- * Removes undefined values to prevent them from being serialized as "undefined" strings
- */
-function formatEconomyParams(geography: Geography | null | undefined): EconomyCalculationParams {
-  if (!geography) {
-    return {};
-  }
-
-  const params: EconomyCalculationParams = {};
-
-  // Only add region if it's subnational and has a valid geographyId
-  if (geography.scope === 'subnational' && geography.geographyId) {
-    params.region = geography.geographyId;
-  }
-
-  return params;
 }
 
 export function useCreateReport(reportLabel?: string) {
@@ -78,50 +59,44 @@ export function useCreateReport(reportLabel?: string) {
 
         // Determine calculation type from simulation data
         const isHouseholdCalc = simulation1?.populationType === 'household';
+        const reportIdStr = String(data.id);
+
+        // Build calculation metadata
+        const calculationMeta: CalculationMeta = {
+          type: isHouseholdCalc ? 'household' : 'economy',
+          countryId,
+          policyIds: {
+            baseline: simulation1?.policyId || '',
+            reform: simulation2?.policyId,
+          },
+          populationId: '',
+        };
 
         if (isHouseholdCalc && household1?.id && simulation1?.policyId) {
-          // For household calculations, use the household IDs
-          const householdId = household1.id;
-          await queryClient.prefetchQuery({
-            queryKey: ['household_calculation', countryId, householdId, simulation1.policyId],
-            queryFn: () => fetchHouseholdCalculation(
-              countryId,
-              householdId,
-              simulation1.policyId!
-            ),
-          });
+          // For household calculations
+          calculationMeta.populationId = household1.id;
 
-          // If there's a second simulation (reform), trigger that calculation too
-          // Note: For household, we typically use the same household with different policies
-          if (simulation2?.policyId) {
-            await queryClient.prefetchQuery({
-              queryKey: ['household_calculation', countryId, householdId, simulation2.policyId],
-              queryFn: () => fetchHouseholdCalculation(
-                countryId,
-                householdId,
-                simulation2.policyId!
-              ),
-            });
-          }
+          // Store metadata and trigger calculation
+          queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
+
+          await queryClient.prefetchQuery(
+            calculationQueries.forReport(reportIdStr, calculationMeta, queryClient)
+          );
         } else if (simulation1?.policyId && geography1) {
-          // For economy calculations, use geography data
-          const baselinePolicyId = simulation1.policyId;
-          const reformPolicyId = simulation2?.policyId || baselinePolicyId;
+          // For economy calculations
+          calculationMeta.populationId = geography1.id || geography1.geographyId || countryId;
 
-          // Format economy parameters, filtering out undefined values
-          const economyParams = formatEconomyParams(geography1);
+          // Add region if subnational
+          if (geography1.scope === 'subnational' && geography1.geographyId) {
+            calculationMeta.region = geography1.geographyId;
+          }
 
-          // Trigger economy calculation - initial fetch
-          // Note: Polling will be handled by the component that uses this data
-          await queryClient.prefetchQuery({
-            queryKey: ['economy', countryId, reformPolicyId, baselinePolicyId, economyParams],
-            queryFn: () => fetchEconomyCalculation(
-              countryId,
-              reformPolicyId,
-              baselinePolicyId,
-              economyParams
-            ),
-          });
+          // Store metadata and trigger calculation
+          queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
+
+          await queryClient.prefetchQuery(
+            calculationQueries.forReport(reportIdStr, calculationMeta, queryClient)
+          );
         }
       } catch (error) {
         console.error('Report created but post-creation tasks failed:', error);

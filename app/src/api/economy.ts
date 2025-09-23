@@ -87,7 +87,7 @@ async function mockFetchEconomyCalculation(
         } as unknown as ReportOutputSocietyWideUK);
 
     return {
-      status: 'completed',
+      status: 'complete',
       result: mockResult
     };
   }
@@ -108,7 +108,7 @@ export interface EconomyCalculationParams {
 }
 
 export interface EconomyCalculationResponse {
-  status: 'pending' | 'completed' | 'error';
+  status: 'pending' | 'complete' | 'error';
   queue_position?: number;
   average_time?: number;
   result: EconomyReportOutput | null;

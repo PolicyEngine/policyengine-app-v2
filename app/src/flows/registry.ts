@@ -6,7 +6,7 @@ import GeographicConfirmationFrame from '@/frames/population/GeographicConfirmat
 import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
-import ReportCalculationFrame from '@/frames/report/ReportCalculationFrame';
+import ReportOutputFrame from '@/frames/report/ReportOutputFrame';
 import ReportCreationFrame from '@/frames/report/ReportCreationFrame';
 import ReportSelectExistingSimulationFrame from '@/frames/report/ReportSelectExistingSimulationFrame';
 import ReportSelectSimulationFrame from '@/frames/report/ReportSelectSimulationFrame';
@@ -40,7 +40,7 @@ export const componentRegistry = {
   GeographicConfirmationFrame,
   HouseholdBuilderFrame,
   PopulationReadView: PopulationsPage,
-  ReportCalculationFrame,
+  ReportOutputFrame,
   ReportCreationFrame,
   ReportSetupFrame,
   ReportSelectSimulationFrame,

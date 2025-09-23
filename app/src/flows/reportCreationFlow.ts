@@ -36,15 +36,14 @@ export const ReportCreationFlow: Flow = {
     ReportSubmitFrame: {
       component: 'ReportSubmitFrame',
       on: {
-        submit: 'ReportCalculationFrame', // Navigate to calculation frame
+        submit: 'ReportOutputFrame', // Navigate to output frame
       },
     },
-    ReportCalculationFrame: {
-      component: 'ReportCalculationFrame',
+    ReportOutputFrame: {
+      component: 'ReportOutputFrame',
       on: {
-        complete: '__return__', // Returns to parent flow after successful calculation
-        cancel: 'ReportSetupFrame', // Allow user to go back to setup
-        error: 'ReportSetupFrame', // On error, allow user to modify setup
+        next: '__return__', // Returns to parent flow after viewing results
+        back: 'ReportSubmitFrame', // Allow user to go back to submit
       },
     },
   },

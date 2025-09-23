@@ -216,16 +216,29 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should trigger household calculations for both baseline and reform
-        expect(prefetchSpy).toHaveBeenCalledWith({
-          queryKey: ['household_calculation', TEST_COUNTRY_ID, 'household-123', 'policy-1'],
-          queryFn: expect.any(Function),
-        });
-        expect(prefetchSpy).toHaveBeenCalledWith({
-          queryKey: ['household_calculation', TEST_COUNTRY_ID, 'household-123', 'policy-2'],
-          queryFn: expect.any(Function),
-        });
+        // Should trigger calculation with new cache key structure
+        expect(prefetchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['calculation', '123'],
+            queryFn: expect.any(Function),
+            refetchInterval: expect.any(Function),
+            staleTime: Infinity,
+          })
+        );
       });
+
+      // Verify metadata was stored
+      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
+        expect.objectContaining({
+          type: 'household',
+          countryId: TEST_COUNTRY_ID,
+          policyIds: {
+            baseline: 'policy-1',
+            reform: 'policy-2',
+          },
+          populationId: 'household-123',
+        })
+      );
     });
 
     test('given economy simulation with national scope then triggers calculation without region', async () => {
@@ -249,21 +262,27 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        expect(prefetchSpy).toHaveBeenCalledWith({
-          queryKey: ['economy', TEST_COUNTRY_ID, 'policy-3', 'policy-2', {}],
-          queryFn: expect.any(Function),
-        });
+        expect(prefetchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['calculation', '123'],
+            queryFn: expect.any(Function),
+            refetchInterval: expect.any(Function),
+            staleTime: Infinity,
+          })
+        );
       });
 
-      // Verify the queryFn calls fetchEconomyCalculation with empty params
-      const call = prefetchSpy.mock.calls.find(c => c[0].queryKey[0] === 'economy');
-      const queryFn = call?.[0].queryFn as any;
-      await queryFn();
-      expect(fetchEconomyCalculation).toHaveBeenCalledWith(
-        TEST_COUNTRY_ID,
-        'policy-3',
-        'policy-2',
-        {}
+      // Verify metadata was stored without region
+      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
+        expect.objectContaining({
+          type: 'economy',
+          countryId: TEST_COUNTRY_ID,
+          policyIds: {
+            baseline: 'policy-2',
+            reform: 'policy-3',
+          },
+          populationId: TEST_COUNTRY_ID,
+        })
       );
     });
 
@@ -288,21 +307,28 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        expect(prefetchSpy).toHaveBeenCalledWith({
-          queryKey: ['economy', TEST_COUNTRY_ID, 'policy-3', 'policy-2', { region: 'california' }],
-          queryFn: expect.any(Function),
-        });
+        expect(prefetchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['calculation', '123'],
+            queryFn: expect.any(Function),
+            refetchInterval: expect.any(Function),
+            staleTime: Infinity,
+          })
+        );
       });
 
-      // Verify the queryFn calls fetchEconomyCalculation with region param
-      const call = prefetchSpy.mock.calls.find(c => c[0].queryKey[0] === 'economy');
-      const queryFn = call?.[0].queryFn as any;
-      await queryFn();
-      expect(fetchEconomyCalculation).toHaveBeenCalledWith(
-        TEST_COUNTRY_ID,
-        'policy-3',
-        'policy-2',
-        { region: 'california' }
+      // Verify metadata was stored with region
+      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
+        expect.objectContaining({
+          type: 'economy',
+          countryId: TEST_COUNTRY_ID,
+          policyIds: {
+            baseline: 'policy-2',
+            reform: 'policy-3',
+          },
+          populationId: 'us-california', // Uses geography.id which includes prefix
+          region: 'california',
+        })
       );
     });
 
@@ -386,10 +412,10 @@ describe('useCreateReport', () => {
         },
       });
 
-      // Then - should not trigger any economy calculations
+      // Then - should not trigger any calculations
       await waitFor(() => {
-        const economyCalls = prefetchSpy.mock.calls.filter(c => c[0].queryKey[0] === 'economy');
-        expect(economyCalls).toHaveLength(0);
+        const calculationCalls = prefetchSpy.mock.calls.filter(c => c[0].queryKey[0] === 'calculation');
+        expect(calculationCalls).toHaveLength(0);
       });
     });
 
@@ -418,11 +444,31 @@ describe('useCreateReport', () => {
 
       // Then - should use empty params despite subnational scope
       await waitFor(() => {
-        expect(prefetchSpy).toHaveBeenCalledWith({
-          queryKey: ['economy', TEST_COUNTRY_ID, 'policy-3', 'policy-2', {}],
-          queryFn: expect.any(Function),
-        });
+        expect(prefetchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['calculation', '123'],
+            queryFn: expect.any(Function),
+            refetchInterval: expect.any(Function),
+            staleTime: Infinity,
+          })
+        );
       });
+
+      // Verify metadata doesn't have region despite subnational scope
+      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
+        expect.objectContaining({
+          type: 'economy',
+          countryId: TEST_COUNTRY_ID,
+          policyIds: {
+            baseline: 'policy-2',
+            reform: 'policy-3',
+          },
+          populationId: 'us-california', // Still uses geography.id even with empty geographyId
+        })
+      );
+      // Should NOT have region property
+      const meta = queryClient.getQueryData(['calculation-meta', '123']) as any;
+      expect(meta.region).toBeUndefined();
     });
   });
 
