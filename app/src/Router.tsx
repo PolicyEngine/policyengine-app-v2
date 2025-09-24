@@ -1,15 +1,28 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
+import { CountryGuard } from './routing/guards/CountryGuard';
 
 const router = createBrowserRouter(
   [
     {
       path: '/',
-      element: <Layout />,
+      // TODO: Replace with dynamic default country based on user location/preferences
+      element: <Navigate to="/us" replace />,
+    },
+    {
+      path: '/:countryId',
+      // CountryGuard wraps Layout directly instead of using Outlet pattern.
+      // This keeps the structure simple - guard is just a validation wrapper,
+      // not a route layer. Avoids extra nesting in route config.
+      element: (
+        <CountryGuard>
+          <Layout />
+        </CountryGuard>
+      ),
       children: [
         {
           index: true,

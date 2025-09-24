@@ -64,12 +64,12 @@ describe('useFetchMetadata', () => {
     dispatchedThunks = [];
   });
 
-  test('given no metadata exists then fetches metadata with default country', () => {
+  test('given no metadata exists then fetches metadata for specified country', () => {
     // Given
     const { wrapper } = createTestSetup(mockInitialMetadataState);
 
     // When
-    renderHook(() => useFetchMetadata(), { wrapper });
+    renderHook(() => useFetchMetadata(TEST_COUNTRY_US), { wrapper });
 
     // Then
     expect(dispatchedThunks).toContain(TEST_COUNTRY_US);
@@ -108,12 +108,12 @@ describe('useFetchMetadata', () => {
     expect(dispatchedThunks).toContain(TEST_COUNTRY_UK);
   });
 
-  test('given no country provided and metadata has current country then uses current country', () => {
-    // Given
+  test('given metadata has different country then fetches for new country', () => {
+    // Given - metadata has US, but we request CA
     const { wrapper } = createTestSetup(mockStateWithCurrentCountry);
 
     // When
-    renderHook(() => useFetchMetadata(), { wrapper });
+    renderHook(() => useFetchMetadata(TEST_COUNTRY_CA), { wrapper });
 
     // Then
     expect(dispatchedThunks).toContain(TEST_COUNTRY_CA);
@@ -130,26 +130,26 @@ describe('useFetchMetadata', () => {
     expect(dispatchedThunks).toContain(TEST_COUNTRY_US);
   });
 
-  test('given undefined country and no current country then defaults to us', () => {
+  test('given request for US when no metadata exists then fetches US metadata', () => {
     // Given
     const { wrapper } = createTestSetup(mockInitialMetadataState);
 
     // When
-    renderHook(() => useFetchMetadata(undefined), { wrapper });
+    renderHook(() => useFetchMetadata(TEST_COUNTRY_US), { wrapper });
 
     // Then
     expect(dispatchedThunks).toContain(TEST_COUNTRY_US);
   });
 
-  test('given empty string country then uses default fallback', () => {
+  test('given request for UK when no metadata exists then fetches UK metadata', () => {
     // Given
     const { wrapper } = createTestSetup(mockInitialMetadataState);
 
     // When
-    renderHook(() => useFetchMetadata(''), { wrapper });
+    renderHook(() => useFetchMetadata(TEST_COUNTRY_UK), { wrapper });
 
     // Then
-    expect(dispatchedThunks).toContain(TEST_COUNTRY_US);
+    expect(dispatchedThunks).toContain(TEST_COUNTRY_UK);
   });
 
   test('given metadata fetch in progress then still fetches when version is null', () => {
