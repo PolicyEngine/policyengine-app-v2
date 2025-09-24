@@ -5,7 +5,7 @@ import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
-
+import TestGeolocationPage from './pages/TestGeolocation.page';
 const router = createBrowserRouter(
   [
     {
@@ -59,6 +59,10 @@ const router = createBrowserRouter(
         {
           path: 'support',
           element: <div>Support page</div>,
+        },
+        {
+          path: 'test-geo',
+          element: <TestGeolocationPage/>,
         },
       ],
     },
