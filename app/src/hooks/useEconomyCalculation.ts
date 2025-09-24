@@ -80,10 +80,10 @@ export function useEconomyCalculation({
     );
 
     // Handle the response based on status
-    if (response.status === 'completed' && response.result) {
+    if (response.status === 'complete' && response.result) {
       // Only call onSuccess once per completion
-      if (lastHandledStatusRef.current !== 'completed') {
-        lastHandledStatusRef.current = 'completed';
+      if (lastHandledStatusRef.current !== 'complete') {
+        lastHandledStatusRef.current = 'complete';
         startTimeRef.current = null;
         onSuccess?.(response.result);
       }
@@ -151,8 +151,8 @@ export function useEconomyCalculation({
     retry,
     // Computed properties for convenience
     isPending: query.data?.status === 'pending',
-    isCompleted: query.data?.status === 'completed',
-    isErrored: query.data?.status === 'error',
+    isComplete: query.data?.status === 'complete',
+    isError: query.data?.status === 'error',
     result: query.data?.result,
     queuePosition: query.data?.queue_position,
     calculationError: query.data?.error,

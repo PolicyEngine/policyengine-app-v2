@@ -185,7 +185,7 @@ describe('useEconomyCalculation', () => {
     // Wait for final poll to complete
     await waitFor(
       () => {
-        expect(result.current.isCompleted).toBe(true);
+        expect(result.current.isComplete).toBe(true);
       },
       { timeout: 2000 }
     );

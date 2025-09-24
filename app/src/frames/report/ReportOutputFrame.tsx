@@ -99,7 +99,7 @@ function ReportOutputView({
                   mt={spacing.md}
                   fullWidth
                   onClick={() => onNavigate('next')}
-                  rightIcon={<IconCheck size={18} />}
+                  rightSection={<IconCheck size={18} />}
                 >
                   Continue to Report View
                 </Button>
@@ -119,7 +119,7 @@ function LoadingDisplay({ isPending }: { isPending: boolean }) {
     <Stack gap={spacing.md}>
       <Box>
         <Progress
-          value={isPending ? undefined : 100}
+          value={50}
           size="xl"
           radius="md"
           animated

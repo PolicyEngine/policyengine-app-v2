@@ -110,10 +110,8 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
     return errorResult('Invalid report: missing status');
   }
 
-  // Parse output if it exists
-  const outputData = report.output
-    ? (typeof report.output === 'string' ? JSON.parse(report.output) : report.output)
-    : null;
+  // Output is already parsed in the Report type
+  const outputData = report.output;
 
   switch (report.status) {
     case 'complete':

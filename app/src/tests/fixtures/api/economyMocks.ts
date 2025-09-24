@@ -237,7 +237,7 @@ export const mockPendingResponse: EconomyCalculationResponse = {
 
 // Completed response
 export const mockCompletedResponse: EconomyCalculationResponse = {
-  status: 'completed',
+  status: 'complete',
   result: mockUSReportOutput,
 };
 

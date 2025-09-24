@@ -99,7 +99,7 @@ describe('economy API', () => {
       const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId);
 
       // Then
-      expect(result.status).toBe('completed');
+      expect(result.status).toBe('complete');
       expect(result.result).toBeDefined();
       expect(result.result?.budget.budgetary_impact).toBe(75000);
     });
