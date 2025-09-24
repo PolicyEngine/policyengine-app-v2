@@ -40,7 +40,13 @@ function ReportOutputView({
   reportId: string;
   navigate: ReturnType<typeof useNavigate>;
 }) {
+  console.log('[ReportOutputView] Rendering with reportId:', reportId);
   const { status, data, isPending, error } = useReportOutput({ reportId });
+  console.log('[ReportOutputView] useReportOutput returned:');
+  console.log('  - status:', status);
+  console.log('  - data:', data);
+  console.log('  - isPending:', isPending);
+  console.log('  - error:', error);
 
   return (
     <Container variant="guttered">

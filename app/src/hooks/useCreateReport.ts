@@ -78,9 +78,18 @@ export function useCreateReport(reportLabel?: string) {
           // Store metadata and trigger calculation
           queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
 
-          await queryClient.prefetchQuery(
-            calculationQueries.forReport(reportIdStr, calculationMeta, queryClient)
-          );
+          console.log('[useCreateReport] About to prefetch household calculation');
+          const queryOptions = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient);
+          console.log('[useCreateReport] Query options for prefetch:', queryOptions);
+
+          try {
+            const prefetchResult = await queryClient.prefetchQuery(queryOptions);
+            console.log('[useCreateReport] Prefetch completed successfully');
+            console.log('[useCreateReport] Prefetch result:', prefetchResult);
+          } catch (prefetchError) {
+            console.error('[useCreateReport] Prefetch failed:', prefetchError);
+            throw prefetchError;
+          }
         } else if (simulation1?.policyId && geography1) {
           // For economy calculations
           calculationMeta.populationId = geography1.id || geography1.geographyId || countryId;
@@ -93,9 +102,18 @@ export function useCreateReport(reportLabel?: string) {
           // Store metadata and trigger calculation
           queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
 
-          await queryClient.prefetchQuery(
-            calculationQueries.forReport(reportIdStr, calculationMeta, queryClient)
-          );
+          console.log('[useCreateReport] About to prefetch ECONOMY calculation');
+          const queryOptionsEcon = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient);
+          console.log('[useCreateReport] ECONOMY Query options for prefetch:', queryOptionsEcon);
+
+          try {
+            const prefetchResult = await queryClient.prefetchQuery(queryOptionsEcon);
+            console.log('[useCreateReport] ECONOMY Prefetch completed successfully');
+            console.log('[useCreateReport] ECONOMY Prefetch result:', prefetchResult);
+          } catch (prefetchError) {
+            console.error('[useCreateReport] ECONOMY Prefetch failed:', prefetchError);
+            throw prefetchError;
+          }
         }
       } catch (error) {
         console.error('Report created but post-creation tasks failed:', error);

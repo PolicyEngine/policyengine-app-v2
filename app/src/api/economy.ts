@@ -24,6 +24,12 @@ export async function fetchEconomyCalculation(
   baselinePolicyId: string,
   params: EconomyCalculationParams
 ): Promise<EconomyCalculationResponse> {
+  console.log('[fetchEconomyCalculation] Called with:');
+  console.log('  - countryId:', countryId);
+  console.log('  - reformPolicyId:', reformPolicyId);
+  console.log('  - baselinePolicyId:', baselinePolicyId);
+  console.log('  - params:', JSON.stringify(params, null, 2));
+
   const queryParams = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
@@ -34,11 +40,24 @@ export async function fetchEconomyCalculation(
 
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
+  console.log('[fetchEconomyCalculation] Fetching URL:', url);
 
   const response = await fetch(url);
+  console.log('[fetchEconomyCalculation] Response status:', response.status, response.statusText);
+
   if (!response.ok) {
+    console.error('[fetchEconomyCalculation] Failed with status:', response.status, response.statusText);
     throw new Error(`Economy calculation failed: ${response.statusText}`);
   }
 
-  return response.json();
+  const data = await response.json();
+  console.log('[fetchEconomyCalculation] Response data:');
+  console.log('  - status:', data.status);
+  console.log('  - has result?', !!data.result);
+  console.log('  - queue_position:', data.queue_position);
+  console.log('  - average_time:', data.average_time);
+  console.log('  - error:', data.error);
+  console.log('  - full response:', JSON.stringify(data, null, 2));
+
+  return data;
 }

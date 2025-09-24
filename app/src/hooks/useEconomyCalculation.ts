@@ -52,6 +52,13 @@ export function useEconomyCalculation({
   onError,
   onQueueUpdate,
 }: UseEconomyCalculationOptions) {
+  console.log('[useEconomyCalculation] Called with:');
+  console.log('  - countryId:', countryId);
+  console.log('  - reformPolicyId:', reformPolicyId);
+  console.log('  - baselinePolicyId:', baselinePolicyId);
+  console.log('  - params:', JSON.stringify(params, null, 2));
+  console.log('  - enabled:', enabled);
+
   const startTimeRef = useRef<number | null>(null);
   const lastHandledStatusRef = useRef<string | null>(null);
   const lastQueuePositionRef = useRef<number | undefined>(undefined);
@@ -59,57 +66,81 @@ export function useEconomyCalculation({
   // Initialize start time when enabled
   if (enabled && !startTimeRef.current) {
     startTimeRef.current = Date.now();
+    console.log('[useEconomyCalculation] Initialized start time:', startTimeRef.current);
   }
 
   // Create a wrapped query function that handles status evaluation
   const queryFnWithStatusHandling = useCallback(async () => {
+    console.log('[useEconomyCalculation.queryFn] Starting fetch');
     // Check for timeout before fetching
     if (startTimeRef.current && Date.now() - startTimeRef.current > GC_WORKFLOW_TIMEOUT) {
       const timeoutError = new Error(
         'Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow'
       );
+      console.error('[useEconomyCalculation.queryFn] Timeout reached:', timeoutError);
       onError?.(timeoutError);
       throw timeoutError;
     }
 
+    console.log('[useEconomyCalculation.queryFn] Calling fetchEconomyCalculation');
     const response = await fetchEconomyCalculation(
       countryId,
       reformPolicyId,
       baselinePolicyId,
       params
     );
+    console.log('[useEconomyCalculation.queryFn] fetchEconomyCalculation response:');
+    console.log('  - status:', response.status);
+    console.log('  - has result?', !!response.result);
+    console.log('  - queue_position:', response.queue_position);
+    console.log('  - error:', response.error);
 
     // Handle the response based on status
     if (response.status === 'complete' && response.result) {
+      console.log('[useEconomyCalculation.queryFn] Status is complete');
       // Only call onSuccess once per completion
       if (lastHandledStatusRef.current !== 'complete') {
+        console.log('[useEconomyCalculation.queryFn] First time seeing complete, calling onSuccess');
         lastHandledStatusRef.current = 'complete';
         startTimeRef.current = null;
         onSuccess?.(response.result);
+      } else {
+        console.log('[useEconomyCalculation.queryFn] Already handled complete status');
       }
     } else if (response.status === 'error') {
+      console.log('[useEconomyCalculation.queryFn] Status is error:', response.error);
       // Only call onError once per error
       if (lastHandledStatusRef.current !== 'error') {
+        console.log('[useEconomyCalculation.queryFn] First time seeing error, calling onError');
         lastHandledStatusRef.current = 'error';
         startTimeRef.current = null;
         onError?.(new Error(response.error || 'Calculation failed'));
+      } else {
+        console.log('[useEconomyCalculation.queryFn] Already handled error status');
       }
     } else if (response.status === 'pending') {
+      console.log('[useEconomyCalculation.queryFn] Status is pending');
       // Handle queue updates
       if (
         response.queue_position !== undefined &&
         response.queue_position !== lastQueuePositionRef.current
       ) {
+        console.log('[useEconomyCalculation.queryFn] Queue position changed:', lastQueuePositionRef.current, '->', response.queue_position);
         lastQueuePositionRef.current = response.queue_position;
         onQueueUpdate?.(response.queue_position, response.average_time);
+      } else {
+        console.log('[useEconomyCalculation.queryFn] Queue position unchanged:', response.queue_position);
       }
     }
 
     return response;
   }, [countryId, reformPolicyId, baselinePolicyId, params, onSuccess, onError, onQueueUpdate]);
 
+  const queryKey = ['economy', countryId, reformPolicyId, baselinePolicyId, params];
+  console.log('[useEconomyCalculation] Query key:', JSON.stringify(queryKey));
+
   const query = useQuery<EconomyCalculationResponse>({
-    queryKey: ['economy', countryId, reformPolicyId, baselinePolicyId, params],
+    queryKey,
     queryFn: queryFnWithStatusHandling,
     enabled,
     // Set cache time based on the typical use case
@@ -118,6 +149,7 @@ export function useEconomyCalculation({
     gcTime: COMPLETED_CACHE_TIME,
     // Handle network errors
     throwOnError: (error) => {
+      console.error('[useEconomyCalculation] Network error:', error);
       // Call onError for network failures
       onError?.(error as Error);
       // Don't throw to React Error Boundary
@@ -125,18 +157,29 @@ export function useEconomyCalculation({
     },
     refetchInterval: (query) => {
       const data = query.state.data;
+      console.log('[useEconomyCalculation.refetchInterval] Checking refetch interval');
+      console.log('  - current data:', data);
+      console.log('  - data status:', data?.status);
 
       // Check for timeout during polling
       if (startTimeRef.current && Date.now() - startTimeRef.current > GC_WORKFLOW_TIMEOUT) {
+        console.log('[useEconomyCalculation.refetchInterval] Timeout reached, stopping polling');
         // Stop polling on timeout - the next fetch will handle the error
         startTimeRef.current = null;
         return false;
       }
 
       // Continue polling only if status is pending
-      return data?.status === 'pending' ? 1000 : false;
+      const shouldRefetch = data?.status === 'pending' ? 1000 : false;
+      console.log('[useEconomyCalculation.refetchInterval] Should refetch?', shouldRefetch);
+      return shouldRefetch;
     },
   });
+
+  console.log('[useEconomyCalculation] Query state:');
+  console.log('  - isLoading:', query.isLoading);
+  console.log('  - isError:', query.isError);
+  console.log('  - data:', query.data);
 
   // Provide a manual retry function that resets the state
   const retry = useCallback(() => {
