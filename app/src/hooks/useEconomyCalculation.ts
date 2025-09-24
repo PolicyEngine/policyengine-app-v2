@@ -118,8 +118,8 @@ export function useEconomyCalculation({
       } else {
         console.log('[useEconomyCalculation.queryFn] Already handled error status');
       }
-    } else if (response.status === 'pending') {
-      console.log('[useEconomyCalculation.queryFn] Status is pending');
+    } else if (response.status === 'computing') {
+      console.log('[useEconomyCalculation.queryFn] Status is computing');
       // Handle queue updates
       if (
         response.queue_position !== undefined &&
@@ -169,8 +169,8 @@ export function useEconomyCalculation({
         return false;
       }
 
-      // Continue polling only if status is pending
-      const shouldRefetch = data?.status === 'pending' ? 1000 : false;
+      // Continue polling only if status is computing
+      const shouldRefetch = data?.status === 'computing' ? 1000 : false;
       console.log('[useEconomyCalculation.refetchInterval] Should refetch?', shouldRefetch);
       return shouldRefetch;
     },
@@ -193,7 +193,7 @@ export function useEconomyCalculation({
     ...query,
     retry,
     // Computed properties for convenience
-    isPending: query.data?.status === 'pending',
+    isPending: query.data?.status === 'computing',
     isComplete: query.data?.status === 'complete',
     isError: query.data?.status === 'error',
     result: query.data?.result,

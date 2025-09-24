@@ -92,8 +92,8 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
       if (economyCalc.status === 'complete') {
         console.log('[useReportOutput] Economy calculation complete, returning result');
         return completeResult(economyCalc.result);
-      } else if (economyCalc.status === 'pending') {
-        console.log('[useReportOutput] Economy calculation pending, returning pending result');
+      } else if (economyCalc.status === 'computing') {
+        console.log('[useReportOutput] Economy calculation computing, returning pending result');
         return pendingResult;
       } else if (economyCalc.status === 'error') {
         console.log('[useReportOutput] Economy calculation error:', economyCalc.error);

@@ -1,8 +1,10 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, Query } from '@tanstack/react-query';
 import {
   CalculationMeta,
   fetchCalculationWithMeta
 } from '@/api/reportCalculations';
+import { Household } from '@/types/ingredients/Household';
+import { EconomyCalculationResponse } from '@/api/economy';
 
 /**
  * Query options factory for report calculations
@@ -72,17 +74,20 @@ export const calculationQueries = {
       console.error('[calculationQueries.queryFn] No metadata found, throwing error');
       throw new Error(`No calculation metadata found for report ${reportId}`);
     },
-    refetchInterval: (data: any) => {
+    refetchInterval: (query: Query<Household | EconomyCalculationResponse, Error>) => {
       console.log('[calculationQueries.refetchInterval] Checking if should refetch');
+      console.log('[calculationQueries.refetchInterval] Query state:', query.state);
+      const data = query.state.data;
       console.log('[calculationQueries.refetchInterval] Current data:', data);
-      // Only poll if it's an economy calculation with pending status
+
+      // Only poll if it's an economy calculation with computing status
       if (data && typeof data === 'object' && 'status' in data) {
         console.log('[calculationQueries.refetchInterval] Data has status field:', data.status);
-        if (data.status === 'pending') {
-          console.log('[calculationQueries.refetchInterval] Status is pending, will refetch in 1000ms');
+        if (data.status === 'computing') {
+          console.log('[calculationQueries.refetchInterval] Status is computing, will refetch in 1000ms');
           return 1000; // Poll every second
         }
-        console.log('[calculationQueries.refetchInterval] Status is not pending, no refetch');
+        console.log('[calculationQueries.refetchInterval] Status is not computing, no refetch');
       } else {
         console.log('[calculationQueries.refetchInterval] Data does not have status field or is not an object, no refetch');
       }
