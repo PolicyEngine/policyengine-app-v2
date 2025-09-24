@@ -4,6 +4,7 @@ import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
+import ReportOutputFrame from './frames/report/ReportOutputFrame';
 
 const router = createBrowserRouter(
   [
@@ -18,6 +19,10 @@ const router = createBrowserRouter(
         {
           path: 'reports',
           element: <div>Reports page</div>,
+        },
+        {
+          path: 'reportOutput/:reportId',
+          element: <ReportOutputFrame />,
         },
         {
           path: 'simulations',

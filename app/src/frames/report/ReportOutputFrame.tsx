@@ -1,19 +1,16 @@
 import { Container, Title, Text, Card, Stack, Group, Loader, Progress, Badge, Button, Alert, Box, ScrollArea } from '@mantine/core';
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useReportOutput } from '@/hooks/useReportOutput';
-import { FlowComponentProps } from '@/types/flow';
 import { spacing } from '@/designTokens';
 
-interface ReportOutputFrameProps extends FlowComponentProps {
-  route?: {
-    params?: {
-      reportId?: string;
-    };
-  };
+interface ReportOutputFrameProps {
+  // No longer extends FlowComponentProps since it's a standalone routed component
 }
 
-export default function ReportOutputFrame({ onNavigate, route }: ReportOutputFrameProps) {
-  const reportId = route?.params?.reportId;
+export default function ReportOutputFrame() {
+  const { reportId } = useParams<{ reportId: string }>();
+  const navigate = useNavigate();
 
   if (!reportId) {
     return (
@@ -26,22 +23,22 @@ export default function ReportOutputFrame({ onNavigate, route }: ReportOutputFra
         >
           No report ID was provided. Please go back and create a report first.
         </Alert>
-        <Button mt={spacing.md} onClick={() => onNavigate('back')}>
+        <Button mt={spacing.md} onClick={() => navigate(-1)}>
           Go Back
         </Button>
       </Container>
     );
   }
 
-  return <ReportOutputView reportId={reportId} onNavigate={onNavigate} />;
+  return <ReportOutputView reportId={reportId} navigate={navigate} />;
 }
 
 function ReportOutputView({
   reportId,
-  onNavigate
+  navigate
 }: {
   reportId: string;
-  onNavigate: FlowComponentProps['onNavigate'];
+  navigate: ReturnType<typeof useNavigate>;
 }) {
   const { status, data, isPending, error } = useReportOutput({ reportId });
 
@@ -85,7 +82,7 @@ function ReportOutputView({
             {status === 'error' ? (
               <ErrorDisplay
                 error={error}
-                onBack={() => onNavigate('back')}
+                onBack={() => navigate(-1)}
               />
             ) : status === 'complete' ? (
               <>
@@ -98,7 +95,7 @@ function ReportOutputView({
                 <Button
                   mt={spacing.md}
                   fullWidth
-                  onClick={() => onNavigate('next')}
+                  onClick={() => navigate(`/reports/${reportId}`)}
                   rightSection={<IconCheck size={18} />}
                 >
                   Continue to Report View

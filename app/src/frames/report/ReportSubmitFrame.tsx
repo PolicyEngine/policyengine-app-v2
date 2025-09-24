@@ -1,4 +1,5 @@
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateReport } from '@/hooks/useCreateReport';
@@ -11,6 +12,9 @@ import { Report } from '@/types/ingredients/Report';
 import { ReportCreationPayload } from '@/types/payloads';
 
 export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
+  // Get navigation hook
+  const navigate = useNavigate();
+
   // Get report state from Redux
   const reportState = useSelector((state: RootState) => state.report);
   // Use selectBothSimulations to get simulations at positions 0 and 1
@@ -68,7 +72,8 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
       {
         onSuccess: (data) => {
           console.log('Report created successfully:', data);
-          onNavigate('submit');
+          // Navigate to the ReportOutputFrame with the report ID
+          navigate(`/reportOutput/${data.id}`);
           if (!isInSubflow) {
             resetIngredient('report');
           }
