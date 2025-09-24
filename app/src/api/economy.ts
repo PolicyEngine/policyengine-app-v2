@@ -11,7 +11,7 @@ export interface EconomyCalculationParams {
 }
 
 export interface EconomyCalculationResponse {
-  status: 'computing' | 'complete' | 'error';
+  status: 'computing' | 'ok' | 'error';
   queue_position?: number;
   average_time?: number;
   result: EconomyReportOutput | null;

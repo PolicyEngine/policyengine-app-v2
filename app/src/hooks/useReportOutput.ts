@@ -44,6 +44,12 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
   console.log('  - queryError:', queryError);
   console.log('  - isLoading:', isLoading);
 
+  // Call useUserReportById unconditionally to maintain hooks order
+  const { report, error: reportError } = useUserReportById(userId, reportIdStr);
+  console.log('[useReportOutput] Report lookup result:');
+  console.log('  - report:', report);
+  console.log('  - reportError:', reportError);
+
   // Define standard return values
   const pendingResult: UseReportOutputResult = {
     status: 'pending',
@@ -89,8 +95,8 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
       // Economy calculations have status field
       const economyCalc = cachedData as any;
       console.log('[useReportOutput] Processing economy calculation with status:', economyCalc.status);
-      if (economyCalc.status === 'complete') {
-        console.log('[useReportOutput] Economy calculation complete, returning result');
+      if (economyCalc.status === 'ok') {
+        console.log('[useReportOutput] Economy calculation ok, returning result');
         return completeResult(economyCalc.result);
       } else if (economyCalc.status === 'computing') {
         console.log('[useReportOutput] Economy calculation computing, returning pending result');
@@ -116,10 +122,6 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
 
   // Step 2: If no calculation data and not loading, check the report
   console.log('[useReportOutput] Step 2: No cached data, checking report');
-  const { report, error: reportError } = useUserReportById(userId, reportIdStr);
-  console.log('[useReportOutput] Report lookup result:');
-  console.log('  - report:', report);
-  console.log('  - reportError:', reportError);
 
   if (!report) {
     // Step 3: Report not found, return error

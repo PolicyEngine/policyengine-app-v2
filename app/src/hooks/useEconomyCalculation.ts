@@ -96,16 +96,16 @@ export function useEconomyCalculation({
     console.log('  - error:', response.error);
 
     // Handle the response based on status
-    if (response.status === 'complete' && response.result) {
-      console.log('[useEconomyCalculation.queryFn] Status is complete');
+    if (response.status === 'ok' && response.result) {
+      console.log('[useEconomyCalculation.queryFn] Status is ok');
       // Only call onSuccess once per completion
-      if (lastHandledStatusRef.current !== 'complete') {
-        console.log('[useEconomyCalculation.queryFn] First time seeing complete, calling onSuccess');
-        lastHandledStatusRef.current = 'complete';
+      if (lastHandledStatusRef.current !== 'ok') {
+        console.log('[useEconomyCalculation.queryFn] First time seeing ok, calling onSuccess');
+        lastHandledStatusRef.current = 'ok';
         startTimeRef.current = null;
         onSuccess?.(response.result);
       } else {
-        console.log('[useEconomyCalculation.queryFn] Already handled complete status');
+        console.log('[useEconomyCalculation.queryFn] Already handled ok status');
       }
     } else if (response.status === 'error') {
       console.log('[useEconomyCalculation.queryFn] Status is error:', response.error);
@@ -194,7 +194,7 @@ export function useEconomyCalculation({
     retry,
     // Computed properties for convenience
     isPending: query.data?.status === 'computing',
-    isComplete: query.data?.status === 'complete',
+    isComplete: query.data?.status === 'ok',
     isError: query.data?.status === 'error',
     result: query.data?.result,
     queuePosition: query.data?.queue_position,
