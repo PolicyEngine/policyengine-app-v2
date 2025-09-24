@@ -28,7 +28,6 @@ interface CreateReportAndBeginCalculationParams {
 
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
-  // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateReportAssociation();
 
   const mutation = useMutation({

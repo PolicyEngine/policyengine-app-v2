@@ -37,6 +37,28 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
     enabled: true, // Always enabled to allow polling
   });
 
+  // Define standard return values
+  const pendingResult: UseReportOutputResult = {
+    status: 'pending',
+    data: null,
+    isPending: true,
+    error: null,
+  };
+
+  const errorResult = (error: any): UseReportOutputResult => ({
+    status: 'error',
+    data: null,
+    isPending: false,
+    error,
+  });
+
+  const completeResult = (data: any): UseReportOutputResult => ({
+    status: 'complete',
+    data,
+    isPending: false,
+    error: null,
+  });
+
   // Step 1: Check if we have calculation data
   if (cachedData) {
     // We have calculation data
@@ -47,66 +69,31 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
       // Household calculations return data directly without status
       // Check for error structure
       if (cachedData && typeof cachedData === 'object' && 'error' in (cachedData as any)) {
-        return {
-          status: 'error',
-          data: null,
-          isPending: false,
-          error: (cachedData as any).error || 'Household calculation failed',
-        };
+        return errorResult((cachedData as any).error || 'Household calculation failed');
       }
       // If we have data, it's complete
-      return {
-        status: 'complete',
-        data: cachedData,
-        isPending: false,
-        error: null,
-      };
+      return completeResult(cachedData);
     } else {
       // Economy calculations have status field
       const economyCalc = cachedData as any;
       if (economyCalc.status === 'complete') {
-        return {
-          status: 'complete',
-          data: economyCalc.result,
-          isPending: false,
-          error: null,
-        };
+        return completeResult(economyCalc.result);
       } else if (economyCalc.status === 'pending') {
-        return {
-          status: 'pending',
-          data: null,
-          isPending: true,
-          error: null,
-        };
+        return pendingResult;
       } else if (economyCalc.status === 'error') {
-        return {
-          status: 'error',
-          data: null,
-          isPending: false,
-          error: economyCalc.error || 'Calculation failed',
-        };
+        return errorResult(economyCalc.error || 'Calculation failed');
       }
     }
   }
 
   // If there's an error from the query
   if (queryError) {
-    return {
-      status: 'error',
-      data: null,
-      isPending: false,
-      error: queryError,
-    };
+    return errorResult(queryError);
   }
 
   // If we're still loading
   if (isLoading) {
-    return {
-      status: 'pending',
-      data: null,
-      isPending: true,
-      error: null,
-    };
+    return pendingResult;
   }
 
   // Step 2: If no calculation data and not loading, check the report
@@ -114,23 +101,13 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
 
   if (!report) {
     // Step 3: Report not found, return error
-    return {
-      status: 'error',
-      data: null,
-      isPending: false,
-      error: reportError || 'Report not found',
-    };
+    return errorResult(reportError || 'Report not found');
   }
 
   // Return based on the report's status
   if (!report.status) {
     console.error(`Report ${reportIdStr} has no status field`);
-    return {
-      status: 'error',
-      data: null,
-      isPending: false,
-      error: 'Invalid report: missing status',
-    };
+    return errorResult('Invalid report: missing status');
   }
 
   // Parse output if it exists
@@ -140,33 +117,13 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
 
   switch (report.status) {
     case 'complete':
-      return {
-        status: 'complete',
-        data: outputData,
-        isPending: false,
-        error: null,
-      };
+      return completeResult(outputData);
     case 'pending':
-      return {
-        status: 'pending',
-        data: null,
-        isPending: true,
-        error: null,
-      };
+      return pendingResult;
     case 'error':
-      return {
-        status: 'error',
-        data: null,
-        isPending: false,
-        error: 'Report calculation failed',
-      };
+      return errorResult('Report calculation failed');
     default:
       console.error(`Unknown report status: ${report.status}`);
-      return {
-        status: 'error',
-        data: null,
-        isPending: false,
-        error: `Unknown status: ${report.status}`,
-      };
+      return errorResult(`Unknown status: ${report.status}`);
   }
 }
