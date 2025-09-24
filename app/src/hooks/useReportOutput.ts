@@ -1,7 +1,9 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { MOCK_USER_ID } from '@/constants';
 import { calculationQueries } from '@/libs/queryOptions/calculations';
 import { useUserReportById } from './useUserReports';
+import { RootState } from '@/store';
 
 interface UseReportOutputParams {
   reportId: string;
@@ -29,15 +31,23 @@ export function useReportOutput({ reportId }: UseReportOutputParams): UseReportO
   const queryClient = useQueryClient();
   const userId = MOCK_USER_ID; // TODO: Get from auth context
 
+  // Get country from Redux metadata state
+  const countryId = useSelector((state: RootState) =>
+    state.metadata.currentCountry || 'us'
+  );
+  console.log('[useReportOutput] Using countryId:', countryId);
+
   // Always store reportId as string
   const reportIdStr = String(reportId);
   console.log('[useReportOutput] Converted reportIdStr:', reportIdStr);
 
-  // Use the canonical query configuration
-  console.log('[useReportOutput] Calling useQuery with canonical configuration');
+  // Use the canonical query configuration with country ID
+  console.log('[useReportOutput] Calling useQuery with canonical configuration and countryId:', countryId);
   const { data: cachedData, error: queryError, isLoading } = useQuery({
-    ...calculationQueries.forReport(reportIdStr, undefined, queryClient),
+    ...calculationQueries.forReport(reportIdStr, undefined, queryClient, countryId),
     enabled: true, // Always enabled to allow polling
+    retry: 3, // Allow retries for waterfall reconstruction
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
   console.log('[useReportOutput] Query results:');
   console.log('  - cachedData:', cachedData);

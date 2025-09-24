@@ -26,6 +26,9 @@ interface CreateReportAndBeginCalculationParams {
   };
 }
 
+// Note: Much of this code's complexity is due to mapping v2 concepts (simulations, populations)
+// to the v1 API, which cannot run reports as subsets of simulations. This should be simplified
+// with the creation of API v2, where we can merely pass simulation IDs to create a report.
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
   const createAssociation = useCreateReportAssociation();
@@ -79,8 +82,8 @@ export function useCreateReport(reportLabel?: string) {
           queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
 
           console.log('[useCreateReport] About to prefetch household calculation');
-          const queryOptions = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient);
-          console.log('[useCreateReport] Query options for prefetch:', queryOptions);
+          const queryOptions = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient, countryId);
+          console.log('[useCreateReport] Query options for prefetch with countryId:', countryId, queryOptions);
 
           try {
             const prefetchResult = await queryClient.prefetchQuery(queryOptions);
@@ -103,8 +106,8 @@ export function useCreateReport(reportLabel?: string) {
           queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
 
           console.log('[useCreateReport] About to prefetch ECONOMY calculation');
-          const queryOptionsEcon = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient);
-          console.log('[useCreateReport] ECONOMY Query options for prefetch:', queryOptionsEcon);
+          const queryOptionsEcon = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient, countryId);
+          console.log('[useCreateReport] ECONOMY Query options for prefetch with countryId:', countryId, queryOptionsEcon);
 
           try {
             const prefetchResult = await queryClient.prefetchQuery(queryOptionsEcon);
