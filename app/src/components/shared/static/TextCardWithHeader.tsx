@@ -1,5 +1,5 @@
 import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { colors, typography } from '../../../designTokens';
+import { colors } from '../../../designTokens';
 import { themeComponents } from '../../../styles/components';
 
 interface Section {
@@ -43,17 +43,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   return (
     <Box>
       {/* Title */}
-      <Title
-        order={1}
-        styles={() => ({
-          root: {
-            color: colors.black,
-            fontSize: typography.fontSize['4xl'],
-            textAlign: 'left',
-            lineHeight: typography.lineHeight.normal,
-          },
-        })}
-      >
+      <Title order={1} variant={themeComponents.Title.defaultProps?.variant}>
         {title}
       </Title>
 
@@ -62,7 +52,12 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         <Stack gap="md">
           {sections.map((section, idx) => (
             <>
-              <Title key={`title-${idx}`} order={3} c={textColor} lh={1.3} ta="left">
+              <Title
+                key={`title-${idx}`}
+                order={3}
+                variant={themeComponents.Title.defaultProps?.variant}
+                ta="left"
+              >
                 {section.heading}
               </Title>
               {Array.isArray(section.body) ? (
