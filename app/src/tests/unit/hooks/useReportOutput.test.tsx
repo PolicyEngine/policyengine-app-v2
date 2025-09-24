@@ -291,7 +291,7 @@ describe('useReportOutput', () => {
       // Then
       expect(result.current.status).toBe('error');
       expect(result.current.error).toBe('Invalid report: missing status');
-      expect(consoleSpy).toHaveBeenCalledWith(`Report ${mockReportId} has no status field`);
+      expect(consoleSpy).toHaveBeenCalledWith(`[useReportOutput] Report ${mockReportId} has no status field`);
 
       consoleSpy.mockRestore();
     });
@@ -316,7 +316,7 @@ describe('useReportOutput', () => {
       // Then
       expect(result.current.status).toBe('error');
       expect(result.current.error).toBe('Unknown status: unknown');
-      expect(consoleSpy).toHaveBeenCalledWith('Unknown report status: unknown');
+      expect(consoleSpy).toHaveBeenCalledWith('[useReportOutput] Unknown report status: unknown');
 
       consoleSpy.mockRestore();
     });
@@ -348,7 +348,7 @@ describe('useReportOutput', () => {
       const numericReportId = 456;
 
       (useQuery as any).mockReturnValue(
-        mockUseQueryReturn.success({ status: 'complete', result: {} })
+        mockUseQueryReturn.success({ status: 'ok', result: {} })
       );
 
       // When
@@ -409,7 +409,7 @@ describe('useReportOutput', () => {
       // Test complete
       const mockData = { test: 'data' };
       (useQuery as any).mockReturnValue(
-        mockUseQueryReturn.success({ status: 'complete', result: mockData })
+        mockUseQueryReturn.success({ status: 'ok', result: mockData })
       );
 
       const { result: completeResult } = renderHook(

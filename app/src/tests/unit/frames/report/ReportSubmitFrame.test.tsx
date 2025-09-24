@@ -13,13 +13,18 @@ import {
   createMockReportStateNoLabels,
   defaultFlowProps,
   mockCreateReport,
-  mockOnNavigate,
   mockReportWithLabel,
   mockResetIngredient,
   mockSimulation1,
 } from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
+
+// Mock React Router
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}));
 
 // Mock the hooks
 vi.mock('@/hooks/useCreateReport', () => ({
@@ -227,7 +232,7 @@ describe('ReportSubmitFrame', () => {
 
       // Then
       expect(consoleLogSpy).toHaveBeenCalledWith('Report created successfully:', mockReportData);
-      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
+      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
       expect(mockResetIngredient).toHaveBeenCalledWith('report');
 
       consoleLogSpy.mockRestore();
@@ -249,7 +254,7 @@ describe('ReportSubmitFrame', () => {
 
       // Then
       expect(consoleLogSpy).toHaveBeenCalledWith('Report created successfully:', mockReportData);
-      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
+      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
       expect(mockResetIngredient).not.toHaveBeenCalled();
 
       consoleLogSpy.mockRestore();
@@ -293,7 +298,7 @@ describe('ReportSubmitFrame', () => {
 
       // Then - verify the callback received the report data
       expect(capturedData).toEqual(mockReportData);
-      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
+      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
     });
 
     test('given household and geography data available then passes populations to createReport', async () => {

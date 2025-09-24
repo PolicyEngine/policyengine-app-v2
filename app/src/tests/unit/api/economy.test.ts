@@ -83,7 +83,7 @@ describe('economy API', () => {
       const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
-      expect(result.status).toBe('pending');
+      expect(result.status).toBe('computing');
       expect(result.queue_position).toBe(5);
       expect(result.average_time).toBe(120);
       expect(result.result).toBeNull();
@@ -102,7 +102,7 @@ describe('economy API', () => {
       const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
-      expect(result.status).toBe('complete');
+      expect(result.status).toBe('ok');
       expect(result.result).toBeDefined();
       expect(result.result?.budget.budgetary_impact).toBe(75000);
     });

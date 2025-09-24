@@ -2,18 +2,21 @@ import type { Report } from '@/types/ingredients/Report';
 import type { QueryClient } from '@tanstack/react-query';
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
+import metadataReducer from '@/reducers/metadataReducer';
 
 // Mock report ID
 export const MOCK_REPORT_ID = '123';
 
 // Mock economy calculation data
 export const mockEconomyCalculationComplete = {
-  status: 'complete',
+  status: 'ok',
   result: { budget: { budgetary_impact: 1000 } },
 };
 
 export const mockEconomyCalculationPending = {
-  status: 'pending',
+  status: 'computing',
   result: null,
 };
 
@@ -62,8 +65,8 @@ export const createMockUserReportByIdReturn = (report?: Report, error?: Error | 
   error: error || null,
 });
 
-// Helper to create QueryClient wrapper for tests
-export const createQueryClientWrapper = () => {
+// Helper to create QueryClient wrapper with Redux for tests
+export const createQueryClientWrapper = (countryId: string = 'us') => {
   let queryClient: QueryClient;
 
   const createWrapper = () => {
@@ -73,8 +76,35 @@ export const createQueryClientWrapper = () => {
         queries: { retry: false },
       },
     });
+
+    // Create a test store with metadata reducer
+    const store = configureStore({
+      reducer: {
+        metadata: metadataReducer,
+      },
+      preloadedState: {
+        metadata: {
+          loading: false,
+          error: null,
+          currentCountry: countryId,
+          variables: {},
+          parameters: {},
+          entities: {},
+          variableModules: {},
+          economyOptions: { region: [], time_period: [], datasets: [] },
+          currentLawId: 0,
+          basicInputs: [],
+          modelledPolicies: { core: {}, filtered: {} },
+          version: null,
+          parameterTree: null,
+        } as any,
+      },
+    });
+
     return ({ children }: { children: React.ReactNode }) => (
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <Provider store={store}>
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      </Provider>
     );
   };
 

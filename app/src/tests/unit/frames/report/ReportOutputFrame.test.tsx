@@ -1,5 +1,5 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@test-utils';
+import { render, screen, userEvent } from '@test-utils';
 import ReportOutputFrame from '@/frames/report/ReportOutputFrame';
 import * as useReportOutputModule from '@/hooks/useReportOutput';
 import {
@@ -11,38 +11,35 @@ import {
   mockCompleteHouseholdReportOutput,
   mockErrorReportOutput,
   mockErrorObjectReportOutput,
-  createDefaultFrameProps,
 } from '@/tests/fixtures/frames/reportOutputFrameMocks';
+
+// Mock React Router
+const mockNavigate = vi.fn();
+const mockUseParams = vi.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+  useParams: () => mockUseParams(),
+}));
 
 // Mock the useReportOutput hook
 vi.mock('@/hooks/useReportOutput');
 
 describe('ReportOutputFrame', () => {
-  const mockOnNavigate = vi.fn();
-  const mockOnReturn = vi.fn();
   const mockReportId = MOCK_REPORT_ID;
-
-  // Helper to create props with custom route
-  const createProps = (route?: any) => {
-    const props = createDefaultFrameProps(route);
-    props.onNavigate = mockOnNavigate;
-    props.onReturn = mockOnReturn;
-    return props;
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // Default to having a reportId
+    mockUseParams.mockReturnValue({ reportId: mockReportId });
   });
 
   describe('Component rendering', () => {
     test('given no reportId then displays error message', () => {
       // Given
-      const props = createProps({
-        params: {},
-      });
+      mockUseParams.mockReturnValue({});
 
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       expect(screen.getByText('Missing Report ID')).toBeInTheDocument();
@@ -50,19 +47,17 @@ describe('ReportOutputFrame', () => {
       expect(screen.getByRole('button', { name: /go back/i })).toBeInTheDocument();
     });
 
-    test('given no reportId when clicking go back then navigates back', () => {
+    test('given no reportId when clicking go back then navigates back', async () => {
       // Given
-      const props = createProps({
-        params: {},
-      });
-      render(<ReportOutputFrame {...props} />);
+      mockUseParams.mockReturnValue({});
+      const user = userEvent.setup();
+      render(<ReportOutputFrame />);
 
       // When
-      const backButton = screen.getByRole('button', { name: /go back/i });
-      backButton.click();
+      await user.click(screen.getByRole('button', { name: /go back/i }));
 
       // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('back');
+      expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
 
     test('given reportId then renders ReportOutputView', () => {
@@ -71,14 +66,8 @@ describe('ReportOutputFrame', () => {
         mockPendingReportOutput
       );
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       expect(screen.getByText('Report Results')).toBeInTheDocument();
@@ -93,14 +82,8 @@ describe('ReportOutputFrame', () => {
         mockPendingReportOutput
       );
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       expect(screen.getByText('Please wait while we process your report...')).toBeInTheDocument();
@@ -115,14 +98,8 @@ describe('ReportOutputFrame', () => {
         mockCompleteEconomyReportOutput
       );
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       // Check the badge shows Complete
@@ -136,8 +113,9 @@ describe('ReportOutputFrame', () => {
       expect(screen.getByRole('button', { name: /continue to report view/i })).toBeInTheDocument();
     });
 
-    test('given complete status when clicking continue then navigates next', () => {
+    test('given complete status when clicking continue then navigates to report', async () => {
       // Given
+      const user = userEvent.setup();
       vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue({
         status: 'complete',
         data: { budget: { budgetary_impact: 0 } },
@@ -145,20 +123,13 @@ describe('ReportOutputFrame', () => {
         error: null,
       });
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // When
-      const continueButton = screen.getByRole('button', { name: /continue to report view/i });
-      continueButton.click();
+      await user.click(screen.getByRole('button', { name: /continue to report view/i }));
 
       // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('next');
+      expect(mockNavigate).toHaveBeenCalledWith(`/reports/${mockReportId}`);
     });
 
     test('given error status then shows error display', () => {
@@ -168,14 +139,8 @@ describe('ReportOutputFrame', () => {
         mockErrorReportOutput(errorMessage)
       );
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       expect(screen.getByText('Calculation encountered an error')).toBeInTheDocument();
@@ -185,8 +150,9 @@ describe('ReportOutputFrame', () => {
       expect(screen.getByRole('button', { name: /go back/i })).toBeInTheDocument();
     });
 
-    test('given error status when clicking go back then navigates back', () => {
+    test('given error status when clicking go back then navigates back', async () => {
       // Given
+      const user = userEvent.setup();
       vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue({
         status: 'error',
         data: null,
@@ -194,20 +160,13 @@ describe('ReportOutputFrame', () => {
         error: 'Some error',
       });
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // When
-      const backButton = screen.getByRole('button', { name: /go back/i });
-      backButton.click();
+      await user.click(screen.getByRole('button', { name: /go back/i }));
 
       // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('back');
+      expect(mockNavigate).toHaveBeenCalledWith(-1);
     });
 
     test('given error object then displays error message', () => {
@@ -217,14 +176,8 @@ describe('ReportOutputFrame', () => {
         mockErrorObjectReportOutput(errorObject)
       );
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       expect(screen.getByText('Network timeout error')).toBeInTheDocument();
@@ -236,14 +189,8 @@ describe('ReportOutputFrame', () => {
         mockCompleteHouseholdReportOutput
       );
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       expect(screen.getByText('Household Impact Results')).toBeInTheDocument();
@@ -261,14 +208,8 @@ describe('ReportOutputFrame', () => {
         error: null,
       });
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       const badge = screen.getByText('Processing');
@@ -284,14 +225,8 @@ describe('ReportOutputFrame', () => {
         error: null,
       });
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       const badge = screen.getByText('Complete');
@@ -307,14 +242,8 @@ describe('ReportOutputFrame', () => {
         error: 'Error',
       });
 
-      const props = createProps({
-        params: {
-          reportId: mockReportId,
-        },
-      });
-
       // When
-      render(<ReportOutputFrame {...props} />);
+      render(<ReportOutputFrame />);
 
       // Then
       const badge = screen.getByText('Error', { selector: '.mantine-Badge-label' });
