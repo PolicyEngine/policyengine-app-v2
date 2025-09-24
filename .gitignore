@@ -54,6 +54,9 @@ storybook-static/
 .temp
 .tmp
 
+# Archived approaches (kept for reference)
+app/src/_archived/
+
 # Python
 __pycache__/
 *.py[cod]

@@ -4,7 +4,7 @@ import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
-import { validateCountryLoader } from './routing/loaders/countryLoader';
+import { CountryGuard } from './routing/guards/CountryGuard';
 
 const router = createBrowserRouter(
   [
@@ -15,8 +15,14 @@ const router = createBrowserRouter(
     },
     {
       path: '/:countryId',
-      loader: validateCountryLoader,
-      element: <Layout />,
+      // CountryGuard wraps Layout directly instead of using Outlet pattern.
+      // This keeps the structure simple - guard is just a validation wrapper,
+      // not a route layer. Avoids extra nesting in route config.
+      element: (
+        <CountryGuard>
+          <Layout />
+        </CountryGuard>
+      ),
       children: [
         {
           index: true,
