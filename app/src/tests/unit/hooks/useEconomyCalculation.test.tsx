@@ -68,7 +68,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: TEST_REGIONS.ENHANCED_US },
+          params: { region: TEST_REGIONS.ENHANCED_US, time_period: '2024' },
         }),
       { wrapper }
     );
@@ -79,7 +79,7 @@ describe('useEconomyCalculation', () => {
         TEST_COUNTRIES.US,
         TEST_POLICY_IDS.REFORM,
         TEST_POLICY_IDS.BASELINE,
-        { region: TEST_REGIONS.ENHANCED_US }
+        { region: TEST_REGIONS.ENHANCED_US, time_period: '2024' }
       );
     });
   });
@@ -96,6 +96,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+          params: { region: 'us', time_period: '2024' },
           onSuccess: mockOnSuccess,
         }),
       { wrapper }
@@ -121,6 +122,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+          params: { region: 'us', time_period: '2024' },
           onError: mockOnError,
         }),
       { wrapper }
@@ -158,6 +160,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+          params: { region: 'us', time_period: '2024' },
           onQueueUpdate: mockOnQueueUpdate,
           onSuccess: mockOnSuccess,
         }),
@@ -218,6 +221,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+          params: { region: 'us', time_period: '2024' },
           onError: mockOnError,
         }),
       { wrapper }
@@ -258,6 +262,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+          params: { region: 'us', time_period: '2024' },
           enabled: false,
         }),
       { wrapper }
@@ -282,6 +287,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+          params: { region: 'us', time_period: '2024' },
           onError: mockOnError,
         }),
       { wrapper }
@@ -298,7 +304,7 @@ describe('useEconomyCalculation', () => {
     expect(result.current.error).toEqual(networkError);
   });
 
-  test('given no params then fetches without query parameters', async () => {
+  test('given UK params then fetches with UK region', async () => {
     // Given
     const { wrapper } = createTestWrapper();
     (fetchEconomyCalculation as any).mockResolvedValue(mockCompletedResponse);
@@ -310,6 +316,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.UK,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
+          params: { region: 'uk', time_period: '2024' },
         }),
       { wrapper }
     );
@@ -323,7 +330,7 @@ describe('useEconomyCalculation', () => {
       TEST_COUNTRIES.UK,
       TEST_POLICY_IDS.REFORM,
       TEST_POLICY_IDS.BASELINE,
-      undefined
+      { region: 'uk', time_period: '2024' }
     );
   });
 });

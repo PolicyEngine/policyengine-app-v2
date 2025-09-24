@@ -29,10 +29,12 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
       policyId
     );
   } else {
-    const params: EconomyCalculationParams = {};
-    if (meta.region) {
-      params.region = meta.region;
-    }
+    // TODO: Update to use dynamic time_period when available in UI
+    console.log("Temporarily using 2024 as time_period for economy calculation");
+    const params: EconomyCalculationParams = {
+      region: meta.region || meta.countryId,
+      time_period: '2024'
+    };
 
     return fetchEconomyCalculation(
       meta.countryId,

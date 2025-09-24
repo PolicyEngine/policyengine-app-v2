@@ -32,7 +32,7 @@ describe('economy API', () => {
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: TEST_REGIONS.ENHANCED_US };
+      const params = { region: TEST_REGIONS.ENHANCED_US, time_period: '2024' };
       const mockResponse = mockSuccessResponse(mockCompletedResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -46,25 +46,26 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}`
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=2024`
       );
       expect(result).toEqual(mockCompletedResponse);
     });
 
-    test('given no params then constructs URL without query string', async () => {
+    test('given minimal params then constructs URL with required params', async () => {
       // Given
       const countryId = TEST_COUNTRIES.UK;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
+      const params = { region: 'uk', time_period: '2024' };
       const mockResponse = mockSuccessResponse(mockPendingResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId);
+      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}`
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=uk&time_period=2024`
       );
       expect(result).toEqual(mockPendingResponse);
     });
@@ -78,7 +79,8 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId);
+      const params = { region: 'us', time_period: '2024' };
+      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
       expect(result.status).toBe('pending');
@@ -96,7 +98,8 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId);
+      const params = { region: 'us', time_period: '2024' };
+      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
       expect(result.status).toBe('complete');
@@ -113,7 +116,8 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId);
+      const params = { region: 'us', time_period: '2024' };
+      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
       expect(result.status).toBe('error');
@@ -130,8 +134,9 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
+      const params = { region: 'us', time_period: '2024' };
       await expect(
-        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId)
+        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Not Found'));
     });
 
@@ -144,8 +149,9 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
+      const params = { region: 'us', time_period: '2024' };
       await expect(
-        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId)
+        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Error'));
     });
 
@@ -157,17 +163,18 @@ describe('economy API', () => {
       (global.fetch as any).mockRejectedValue(mockNetworkError);
 
       // When/Then
+      const params = { region: 'us', time_period: '2024' };
       await expect(
-        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId)
+        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.NETWORK_ERROR);
     });
 
-    test('given params with undefined region then excludes from query string', async () => {
+    test('given params with undefined values then excludes them from query string', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: undefined };
+      const params = { region: undefined, time_period: '2024' } as any;
       const mockResponse = mockSuccessResponse(mockPendingResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -176,7 +183,7 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}`
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?time_period=2024`
       );
     });
 
@@ -189,22 +196,23 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
+      const params = { region: 'us', time_period: '2024' };
       for (const country of countries) {
-        await fetchEconomyCalculation(country, reformPolicyId, baselinePolicyId);
+        await fetchEconomyCalculation(country, reformPolicyId, baselinePolicyId, params);
       }
 
       // Then
       expect(global.fetch).toHaveBeenNthCalledWith(
         1,
-        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}`
+        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`
       );
       expect(global.fetch).toHaveBeenNthCalledWith(
         2,
-        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${reformPolicyId}/over/${baselinePolicyId}`
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`
       );
       expect(global.fetch).toHaveBeenNthCalledWith(
         3,
-        `${BASE_URL}/${TEST_COUNTRIES.CA}/economy/${reformPolicyId}/over/${baselinePolicyId}`
+        `${BASE_URL}/${TEST_COUNTRIES.CA}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`
       );
     });
   });

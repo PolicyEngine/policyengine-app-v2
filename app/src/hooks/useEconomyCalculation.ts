@@ -24,7 +24,7 @@ interface UseEconomyCalculationOptions {
   countryId: string;
   reformPolicyId: string;
   baselinePolicyId: string;
-  params?: EconomyCalculationParams;
+  params: EconomyCalculationParams;
   enabled?: boolean;
   onSuccess?: (data: EconomyReportOutput) => void;
   onError?: (error: Error) => void;
