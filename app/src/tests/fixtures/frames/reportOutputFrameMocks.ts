@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import type { UseReportOutputResult } from '@/hooks/useReportOutput';
 
 // Mock report IDs
 export const MOCK_REPORT_ID = '123';
@@ -19,13 +20,6 @@ export const mockHouseholdReportData = {
   reform_net_income: 52000,
 };
 
-// Define the return type
-interface UseReportOutputResult {
-  status: 'pending' | 'complete' | 'error';
-  data: any;
-  isPending: boolean;
-  error: any;
-}
 
 // Mock useReportOutput return values
 export const mockPendingReportOutput: UseReportOutputResult = {
@@ -49,14 +43,15 @@ export const mockCompleteHouseholdReportOutput: UseReportOutputResult = {
   error: null,
 };
 
-export const mockErrorReportOutput = (errorMessage: string): UseReportOutputResult => ({
+// Helper functions for creating error mocks
+export const mockErrorReportOutput = (errorMessage: string = 'Failed to fetch calculation'): UseReportOutputResult => ({
   status: 'error',
   data: null,
   isPending: false,
   error: errorMessage,
 });
 
-export const mockErrorObjectReportOutput = (error: { message: string }): UseReportOutputResult => ({
+export const mockErrorObjectReportOutput = (error: { message: string } = { message: 'API Error' }): UseReportOutputResult => ({
   status: 'error',
   data: null,
   isPending: false,

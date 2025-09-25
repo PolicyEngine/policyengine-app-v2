@@ -1,167 +1,112 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { MOCK_USER_ID } from '@/constants';
 import { calculationQueries } from '@/libs/queryOptions/calculations';
-import { useUserReportById } from './useUserReports';
 import { RootState } from '@/store';
 
-interface UseReportOutputParams {
+export interface UseReportOutputParams {
   reportId: string;
 }
 
-interface UseReportOutputResult {
-  status: 'pending' | 'complete' | 'error';
+export interface PendingResult {
+  status: 'pending';
+  data: null;
+  isPending: true;
+  error: null;
+  progress?: number;
+  message?: string;
+  queuePosition?: number;
+  estimatedTimeRemaining?: number;
+}
+
+export interface CompleteResult {
+  status: 'complete';
   data: any;
-  isPending: boolean;
+  isPending: false;
+  error: null;
+}
+
+export interface ErrorResult {
+  status: 'error';
+  data: null;
+  isPending: false;
   error: any;
 }
 
+export type UseReportOutputResult = PendingResult | CompleteResult | ErrorResult;
+
 /**
  * Hook to get report calculation results.
- *
- * This hook follows a three-tier approach:
- * 1. Check TanStack Query cache for calculation results
- * 2. If not in cache, use the normalized report hook to get report data
- * 3. If report not found, return error
- *
- * Uses the canonical query options factory for consistent query configuration.
+ * Uses the unified calculation system that works for both household and economy calculations.
  */
 export function useReportOutput({ reportId }: UseReportOutputParams): UseReportOutputResult {
-  console.log('[useReportOutput] Called with reportId:', reportId);
   const queryClient = useQueryClient();
-  const userId = MOCK_USER_ID; // TODO: Get from auth context
-
-  // Get country from Redux metadata state
   const countryId = useSelector((state: RootState) =>
     state.metadata.currentCountry || 'us'
   );
-  console.log('[useReportOutput] Using countryId:', countryId);
 
-  // Always store reportId as string
-  const reportIdStr = String(reportId);
-  console.log('[useReportOutput] Converted reportIdStr:', reportIdStr);
-
-  // Use the canonical query configuration with country ID
-  console.log('[useReportOutput] Calling useQuery with canonical configuration and countryId:', countryId);
-  const { data: cachedData, error: queryError, isLoading } = useQuery({
-    ...calculationQueries.forReport(reportIdStr, undefined, queryClient, countryId),
-    enabled: true, // Always enabled to allow polling
-    retry: 3, // Allow retries for waterfall reconstruction
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
-  });
-  console.log('[useReportOutput] Query results:');
-  console.log('  - cachedData:', cachedData);
-  console.log('  - queryError:', queryError);
-  console.log('  - isLoading:', isLoading);
-
-  // Call useUserReportById unconditionally to maintain hooks order
-  const { report, error: reportError } = useUserReportById(userId, reportIdStr);
-  console.log('[useReportOutput] Report lookup result:');
-  console.log('  - report:', report);
-  console.log('  - reportError:', reportError);
-
-  // Define standard return values
-  const pendingResult: UseReportOutputResult = {
-    status: 'pending',
-    data: null,
-    isPending: true,
-    error: null,
-  };
-
-  const errorResult = (error: any): UseReportOutputResult => ({
-    status: 'error',
-    data: null,
-    isPending: false,
-    error,
+  // Use unified query that works for both calculation types
+  const { data, error, isLoading } = useQuery({
+    ...calculationQueries.forReport(reportId, undefined, queryClient, countryId),
+    enabled: true,
   });
 
-  const completeResult = (data: any): UseReportOutputResult => ({
-    status: 'complete',
-    data,
-    isPending: false,
-    error: null,
-  });
+  // Simplified status handling - both types return same format
+  if (data) {
+    if (data.status === 'computing') {
+      return {
+        status: 'pending',
+        data: null,
+        isPending: true,
+        error: null,
+        progress: data.progress,
+        message: data.message,
+        queuePosition: data.queuePosition,
+        estimatedTimeRemaining: data.estimatedTimeRemaining,
+      };
+    }
 
-  // Step 1: Check if we have calculation data
-  if (cachedData) {
-    console.log('[useReportOutput] Step 1: Have cached calculation data');
-    // We have calculation data
-    // Determine if it's household or economy based on data structure
-    const isHouseholdCalc = !('status' in (cachedData as any));
-    console.log('[useReportOutput] Is household calculation?', isHouseholdCalc);
+    if (data.status === 'ok') {
+      return {
+        status: 'complete',
+        data: data.result,
+        isPending: false,
+        error: null,
+      };
+    }
 
-    if (isHouseholdCalc) {
-      console.log('[useReportOutput] Processing household calculation result');
-      // Household calculations return data directly without status
-      // Check for error structure
-      if (cachedData && typeof cachedData === 'object' && 'error' in (cachedData as any)) {
-        console.log('[useReportOutput] Household calculation has error:', (cachedData as any).error);
-        return errorResult((cachedData as any).error || 'Household calculation failed');
-      }
-      // If we have data, it's complete
-      console.log('[useReportOutput] Household calculation complete, returning data');
-      return completeResult(cachedData);
-    } else {
-      // Economy calculations have status field
-      const economyCalc = cachedData as any;
-      console.log('[useReportOutput] Processing economy calculation with status:', economyCalc.status);
-      if (economyCalc.status === 'ok') {
-        console.log('[useReportOutput] Economy calculation ok, returning result');
-        return completeResult(economyCalc.result);
-      } else if (economyCalc.status === 'computing') {
-        console.log('[useReportOutput] Economy calculation computing, returning pending result');
-        return pendingResult;
-      } else if (economyCalc.status === 'error') {
-        console.log('[useReportOutput] Economy calculation error:', economyCalc.error);
-        return errorResult(economyCalc.error || 'Calculation failed');
-      }
+    if (data.status === 'error') {
+      return {
+        status: 'error',
+        data: null,
+        isPending: false,
+        error: data.error,
+      };
     }
   }
 
-  // If there's an error from the query
-  if (queryError) {
-    console.log('[useReportOutput] Query error:', queryError);
-    return errorResult(queryError);
+  if (error) {
+    return {
+      status: 'error',
+      data: null,
+      isPending: false,
+      error,
+    };
   }
 
-  // If we're still loading
   if (isLoading) {
-    console.log('[useReportOutput] Still loading initial data');
-    return pendingResult;
+    return {
+      status: 'pending',
+      data: null,
+      isPending: true,
+      error: null,
+    };
   }
 
-  // Step 2: If no calculation data and not loading, check the report
-  console.log('[useReportOutput] Step 2: No cached data, checking report');
-
-  if (!report) {
-    // Step 3: Report not found, return error
-    console.log('[useReportOutput] Step 3: Report not found, returning error');
-    return errorResult(reportError || 'Report not found');
-  }
-
-  // Return based on the report's status
-  if (!report.status) {
-    console.error(`[useReportOutput] Report ${reportIdStr} has no status field`);
-    return errorResult('Invalid report: missing status');
-  }
-
-  console.log('[useReportOutput] Report has status:', report.status);
-  // Output is already parsed in the Report type
-  const outputData = report.output;
-  console.log('[useReportOutput] Report output data:', outputData);
-
-  switch (report.status) {
-    case 'complete':
-      console.log('[useReportOutput] Report status is complete, returning output data');
-      return completeResult(outputData);
-    case 'pending':
-      console.log('[useReportOutput] Report status is pending');
-      return pendingResult;
-    case 'error':
-      console.log('[useReportOutput] Report status is error');
-      return errorResult('Report calculation failed');
-    default:
-      console.error(`[useReportOutput] Unknown report status: ${report.status}`);
-      return errorResult(`Unknown status: ${report.status}`);
-  }
+  // Fallback
+  return {
+    status: 'error',
+    data: null,
+    isPending: false,
+    error: 'Unable to fetch calculation',
+  };
 }

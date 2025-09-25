@@ -10,6 +10,7 @@ import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
 import { useCreateReportAssociation } from './useUserReportAssociations';
 import { countryIds } from '@/libs/countries';
+import { getCalculationManager, determineCalculationType, extractPopulationId, extractRegion } from '@/libs/calculations';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: typeof countryIds[number];
@@ -32,6 +33,8 @@ interface CreateReportAndBeginCalculationParams {
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
   const createAssociation = useCreateReportAssociation();
+
+  const manager = getCalculationManager(queryClient);
 
   const mutation = useMutation({
     mutationFn: ({ countryId, payload }: CreateReportAndBeginCalculationParams) =>
@@ -57,67 +60,36 @@ export function useCreateReport(reportLabel?: string) {
 
         const { simulation1, simulation2 } = variables.simulations || {};
         const { household1, geography1 } = variables.populations || {};
-        const countryId = data.country_id;
 
-        // Determine calculation type from simulation data
-        const isHouseholdCalc = simulation1?.populationType === 'household';
-        const reportIdStr = String(data.id);
+        // Clean and explicit type determination and data extraction
+        const calcType = determineCalculationType(simulation1 || null);
+        const populationId = extractPopulationId(calcType, household1, geography1);
+        const region = calcType === 'economy' ? extractRegion(geography1) : undefined;
 
-        // Build calculation metadata
+        // Build metadata
         const calculationMeta: CalculationMeta = {
-          type: isHouseholdCalc ? 'household' : 'economy',
-          countryId,
+          type: calcType,
+          countryId: data.country_id,
           policyIds: {
             baseline: simulation1?.policyId || '',
             reform: simulation2?.policyId,
           },
-          populationId: '',
+          populationId,
+          region,
         };
 
-        if (isHouseholdCalc && household1?.id && simulation1?.policyId) {
-          // For household calculations
-          calculationMeta.populationId = household1.id;
+        const reportIdStr = String(data.id);
 
-          // Store metadata and trigger calculation
-          queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
+        // Store metadata
+        queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
 
-          console.log('[useCreateReport] About to prefetch household calculation');
-          const queryOptions = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient, countryId);
-          console.log('[useCreateReport] Query options for prefetch with countryId:', countryId, queryOptions);
+        // Start calculation (for household, this initiates the long-running request)
+        await manager.startCalculation(reportIdStr, calculationMeta);
 
-          try {
-            const prefetchResult = await queryClient.prefetchQuery(queryOptions);
-            console.log('[useCreateReport] Prefetch completed successfully');
-            console.log('[useCreateReport] Prefetch result:', prefetchResult);
-          } catch (prefetchError) {
-            console.error('[useCreateReport] Prefetch failed:', prefetchError);
-            throw prefetchError;
-          }
-        } else if (simulation1?.policyId && geography1) {
-          // For economy calculations
-          calculationMeta.populationId = geography1.id || geography1.geographyId || countryId;
-
-          // Add region if subnational
-          if (geography1.scope === 'subnational' && geography1.geographyId) {
-            calculationMeta.region = geography1.geographyId;
-          }
-
-          // Store metadata and trigger calculation
-          queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
-
-          console.log('[useCreateReport] About to prefetch ECONOMY calculation');
-          const queryOptionsEcon = calculationQueries.forReport(reportIdStr, calculationMeta, queryClient, countryId);
-          console.log('[useCreateReport] ECONOMY Query options for prefetch with countryId:', countryId, queryOptionsEcon);
-
-          try {
-            const prefetchResult = await queryClient.prefetchQuery(queryOptionsEcon);
-            console.log('[useCreateReport] ECONOMY Prefetch completed successfully');
-            console.log('[useCreateReport] ECONOMY Prefetch result:', prefetchResult);
-          } catch (prefetchError) {
-            console.error('[useCreateReport] ECONOMY Prefetch failed:', prefetchError);
-            throw prefetchError;
-          }
-        }
+        // Prefetch to populate cache
+        await queryClient.prefetchQuery(
+          calculationQueries.forReport(reportIdStr, calculationMeta, queryClient, data.country_id)
+        );
       } catch (error) {
         console.error('Report created but post-creation tasks failed:', error);
       }
