@@ -1,17 +1,18 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
-import TestGeolocationPage from './pages/TestGeolocation.page';
+import { RedirectToCountry } from './routing/RedirectToCountry';
+
 const router = createBrowserRouter(
   [
     {
       path: '/',
-      // TODO: Replace with dynamic default country based on user location/preferences
-      element: <Navigate to="/us" replace />,
+      // Dynamically detect and redirect to user's country
+      element: <RedirectToCountry />,
     },
     {
       path: '/:countryId',
@@ -59,10 +60,6 @@ const router = createBrowserRouter(
         {
           path: 'support',
           element: <div>Support page</div>,
-        },
-        {
-          path: 'test-geo',
-          element: <TestGeolocationPage/>,
         },
       ],
     },
