@@ -1,12 +1,89 @@
 import { QueryClient, Query } from '@tanstack/react-query';
-import {
-  CalculationMeta,
-  fetchCalculationWithMeta
-} from '@/api/reportCalculations';
-import { Household } from '@/types/ingredients/Household';
-import { EconomyCalculationResponse } from '@/api/economy';
+import { CalculationMeta } from '@/api/reportCalculations';
+import { CalculationStatusResponse, getCalculationManager } from '@/libs/calculations';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+
+/**
+ * Get or reconstruct metadata for a calculation
+ * @param reportId - The report ID
+ * @param meta - Optional provided metadata
+ * @param queryClient - Query client to check cache
+ * @param countryId - Country ID for waterfall reconstruction
+ */
+async function getOrReconstructMetadata(
+  reportId: string,
+  meta?: CalculationMeta,
+  queryClient?: QueryClient,
+  countryId?: string
+): Promise<CalculationMeta> {
+  // Use provided metadata
+  if (meta) {
+    console.log('[getOrReconstructMetadata] Using provided metadata:', JSON.stringify(meta, null, 2));
+    return meta;
+  }
+
+  // Check cache
+  if (queryClient) {
+    const metaKey = ['calculation-meta', reportId];
+    const cached = queryClient.getQueryData<CalculationMeta>(metaKey);
+
+    if (cached) {
+      console.log('[getOrReconstructMetadata] Using cached metadata:', JSON.stringify(cached, null, 2));
+      return cached;
+    }
+  }
+
+  // Waterfall reconstruction
+  if (!countryId) {
+    throw new Error(`Country ID required for metadata reconstruction of report ${reportId}`);
+  }
+
+  console.log('[getOrReconstructMetadata] Starting waterfall reconstruction for reportId:', reportId);
+
+  try {
+    // Step 1: Fetch report
+    const report = await fetchReportById(countryId as any, reportId);
+    console.log('[getOrReconstructMetadata] Report fetched:', report);
+
+    // Step 2: Fetch simulations in parallel
+    const [sim1, sim2] = await Promise.all([
+      fetchSimulationById(report.country_id, report.simulation_1_id),
+      report.simulation_2_id
+        ? fetchSimulationById(report.country_id, report.simulation_2_id)
+        : Promise.resolve(null)
+    ]);
+    console.log('[getOrReconstructMetadata] Simulations fetched:', { sim1, sim2 });
+
+    // Step 3: Reconstruct metadata based on simulation type
+    const reconstructedMeta: CalculationMeta = {
+      type: sim1.population_type === 'household' ? 'household' : 'economy',
+      countryId: report.country_id,
+      policyIds: {
+        baseline: String(sim1.policy_id),
+        reform: sim2 ? String(sim2.policy_id) : undefined
+      },
+      populationId: String(sim1.population_id),
+      // For geography/economy, use population_id as region if subnational
+      region: sim1.population_type === 'geography' && sim1.population_id !== report.country_id
+        ? String(sim1.population_id)
+        : undefined
+    };
+
+    console.log('[getOrReconstructMetadata] Reconstructed metadata:', JSON.stringify(reconstructedMeta, null, 2));
+
+    // Step 4: Cache reconstructed metadata for future use
+    if (queryClient) {
+      console.log('[getOrReconstructMetadata] Caching reconstructed metadata');
+      queryClient.setQueryData(['calculation-meta', reportId], reconstructedMeta);
+    }
+
+    return reconstructedMeta;
+  } catch (error) {
+    console.error('[getOrReconstructMetadata] Waterfall reconstruction failed:', error);
+    throw new Error(`Failed to reconstruct metadata for report ${reportId}: ${error}`);
+  }
+}
 
 /**
  * Query options factory for report calculations
@@ -36,105 +113,37 @@ export const calculationQueries = {
     queryKey: ['calculation', reportId] as const,
     queryFn: async () => {
       console.log('[calculationQueries.queryFn] Starting fetch for reportId:', reportId);
-      // If metadata is provided, use it directly
-      if (meta) {
-        console.log('[calculationQueries.queryFn] Using provided metadata:', JSON.stringify(meta, null, 2));
-        try {
-          const result = await fetchCalculationWithMeta(meta);
-          console.log('[calculationQueries.queryFn] fetchCalculationWithMeta returned:', result);
-          return result;
-        } catch (error) {
-          console.error('[calculationQueries.queryFn] fetchCalculationWithMeta failed:', error);
-          throw error;
-        }
+
+      // Require queryClient for manager
+      if (!queryClient) {
+        console.error('[calculationQueries.queryFn] No QueryClient provided');
+        throw new Error('QueryClient is required for calculation queries');
       }
 
-      // Try to get metadata from cache
-      if (queryClient) {
-        const metaKey = ['calculation-meta', reportId];
-        console.log('[calculationQueries.queryFn] Looking for cached metadata with key:', metaKey);
-
-        const cachedMeta = queryClient.getQueryData<CalculationMeta>(metaKey);
-        console.log('[calculationQueries.queryFn] Found cached metadata?', !!cachedMeta);
-        console.log('[calculationQueries.queryFn] Cached metadata:', cachedMeta ? JSON.stringify(cachedMeta, null, 2) : 'none');
-
-        if (cachedMeta) {
-          console.log('[calculationQueries.queryFn] Using cached metadata');
-          try {
-            const result = await fetchCalculationWithMeta(cachedMeta);
-            console.log('[calculationQueries.queryFn] fetchCalculationWithMeta with cached meta returned:', result);
-            return result;
-          } catch (error) {
-            console.error('[calculationQueries.queryFn] fetchCalculationWithMeta with cached meta failed:', error);
-            throw error;
-          }
-        }
-      } else {
-        console.warn('[calculationQueries.queryFn] No queryClient provided, cannot look up cached metadata');
-      }
-
-      // If no metadata available, attempt waterfall reconstruction
-      console.log('[calculationQueries.queryFn] No metadata found, starting waterfall reconstruction');
-
-      // Require countryId for waterfall
-      if (!countryId) {
-        console.error('[calculationQueries.queryFn] No country ID provided for waterfall reconstruction');
-        throw new Error(`Country ID required for metadata reconstruction of report ${reportId}`);
-      }
-
-      console.log('[calculationQueries.queryFn] Fetching report with countryId:', countryId, 'reportId:', reportId);
+      // Get the calculation manager
+      const manager = getCalculationManager(queryClient);
+      console.log('[calculationQueries.queryFn] Got calculation manager');
 
       try {
-        // Step 1: Fetch report
-        const report = await fetchReportById(countryId as any, reportId);
-        console.log('[calculationQueries.queryFn] Report fetched:', report);
+        // Get or reconstruct metadata
+        const calculationMeta = await getOrReconstructMetadata(reportId, meta, queryClient, countryId);
+        console.log('[calculationQueries.queryFn] Got metadata:', JSON.stringify(calculationMeta, null, 2));
 
-        // Step 2: Fetch simulations in parallel
-        console.log('[calculationQueries.queryFn] Fetching simulations:', report.simulation_1_id, report.simulation_2_id);
-        const [sim1, sim2] = await Promise.all([
-          fetchSimulationById(report.country_id, report.simulation_1_id),
-          report.simulation_2_id
-            ? fetchSimulationById(report.country_id, report.simulation_2_id)
-            : Promise.resolve(null)
-        ]);
-        console.log('[calculationQueries.queryFn] Simulations fetched:');
-        console.log('  - sim1:', sim1);
-        console.log('  - sim2:', sim2);
+        // Start the calculation if needed and fetch the result
+        console.log('[calculationQueries.queryFn] Starting calculation via manager');
+        await manager.startCalculation(reportId, calculationMeta);
 
-        // Step 3: Reconstruct metadata based on simulation type
-        const reconstructedMeta: CalculationMeta = {
-          type: sim1.population_type === 'household' ? 'household' : 'economy',
-          countryId: report.country_id,
-          policyIds: {
-            baseline: String(sim1.policy_id),
-            reform: sim2 ? String(sim2.policy_id) : undefined
-          },
-          populationId: String(sim1.population_id),
-          // For geography/economy, use population_id as region if subnational
-          region: sim1.population_type === 'geography' && sim1.population_id !== report.country_id
-            ? String(sim1.population_id)
-            : undefined
-        };
+        console.log('[calculationQueries.queryFn] Fetching calculation via manager');
+        const result = await manager.fetchCalculation(calculationMeta);
+        console.log('[calculationQueries.queryFn] Manager returned result:', result);
 
-        console.log('[calculationQueries.queryFn] Reconstructed metadata:', JSON.stringify(reconstructedMeta, null, 2));
-
-        // Step 4: Cache reconstructed metadata for future use
-        if (queryClient) {
-          console.log('[calculationQueries.queryFn] Caching reconstructed metadata');
-          queryClient.setQueryData(['calculation-meta', reportId], reconstructedMeta);
-        }
-
-        // Step 5: Fetch calculation with reconstructed metadata
-        console.log('[calculationQueries.queryFn] Fetching calculation with reconstructed metadata');
-        const result = await fetchCalculationWithMeta(reconstructedMeta);
-        console.log('[calculationQueries.queryFn] Waterfall reconstruction complete, result:', result);
         return result;
       } catch (error) {
-        console.error('[calculationQueries.queryFn] Waterfall reconstruction failed:', error);
-        throw new Error(`Failed to reconstruct metadata for report ${reportId}: ${error}`);
+        console.error('[calculationQueries.queryFn] Calculation failed:', error);
+        throw error;
       }
     },
-    refetchInterval: (query: Query<Household | EconomyCalculationResponse, Error>) => {
+    refetchInterval: (query: Query<CalculationStatusResponse, Error>) => {
       console.log('[calculationQueries.refetchInterval] Checking if should refetch');
       console.log('[calculationQueries.refetchInterval] Query state:', query.state);
       const data = query.state.data;
