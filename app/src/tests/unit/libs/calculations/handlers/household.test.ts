@@ -28,18 +28,21 @@ describe('HouseholdCalculationHandler', () => {
   });
 
   describe('fetch - before calculation starts', () => {
-    test('given no pending calculation then triggers new fetch', async () => {
+    test('given no pending calculation then returns initial computing status', async () => {
       // Given
       const queryClient = createMockQueryClient();
       const handler = new HouseholdCalculationHandler(queryClient);
       mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
 
-      // When
+      // When - fetch without starting calculation first
       const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
 
-      // Then - should return ok status with result (no progress tracking)
-      expect(result.status).toBe('ok');
-      expect(result.result).toEqual(MOCK_HOUSEHOLD_RESULT);
+      // Then - should return initial computing status
+      // (startCalculation should be called to actually trigger the fetch)
+      expect(result.status).toBe('computing');
+      expect(result.progress).toBe(0);
+      expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.INITIALIZING);
+      expect(result.estimatedTimeRemaining).toBe(HOUSEHOLD_ESTIMATED_DURATION);
     });
   });
 
@@ -76,15 +79,15 @@ describe('HouseholdCalculationHandler', () => {
       // Start calculation
       await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
-      // When - advance to 25% (6.25 seconds)
-      await advanceTimeAndFlush(6250);
+      // When - advance to 25% (15 seconds)
+      await advanceTimeAndFlush(15000);
       const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
 
       // Then
       expect(result.status).toBe('computing');
       expect(result.progress).toBe(25);
       expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.LOADING);
-      expect(result.estimatedTimeRemaining).toBe(18750);
+      expect(result.estimatedTimeRemaining).toBe(45000);
     });
 
     test('given calculation at 50% then returns running message', async () => {
@@ -98,15 +101,15 @@ describe('HouseholdCalculationHandler', () => {
       // Start calculation
       await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
-      // When - advance to 50% (12.5 seconds)
-      await advanceTimeAndFlush(12500);
+      // When - advance to 50% (30 seconds)
+      await advanceTimeAndFlush(30000);
       const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
 
       // Then
       expect(result.status).toBe('computing');
       expect(result.progress).toBe(50);
       expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.RUNNING);
-      expect(result.estimatedTimeRemaining).toBe(12500);
+      expect(result.estimatedTimeRemaining).toBe(30000);
     });
 
     test('given calculation at 75% then returns calculating message', async () => {
@@ -120,15 +123,15 @@ describe('HouseholdCalculationHandler', () => {
       // Start calculation
       await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
-      // When - advance to 75% (18.75 seconds)
-      await advanceTimeAndFlush(18750);
+      // When - advance to 75% (45 seconds)
+      await advanceTimeAndFlush(45000);
       const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
 
       // Then
       expect(result.status).toBe('computing');
       expect(result.progress).toBe(75);
       expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.CALCULATING);
-      expect(result.estimatedTimeRemaining).toBe(6250);
+      expect(result.estimatedTimeRemaining).toBe(15000);
     });
 
     test('given calculation near completion then caps at 95% progress', async () => {
@@ -142,8 +145,8 @@ describe('HouseholdCalculationHandler', () => {
       // Start calculation
       await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
-      // When - advance past estimated time (30 seconds)
-      await advanceTimeAndFlush(30000);
+      // When - advance past estimated time (70 seconds)
+      await advanceTimeAndFlush(70000);
       const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
 
       // Then
@@ -216,7 +219,7 @@ describe('HouseholdCalculationHandler', () => {
 
       // Start calculation
       await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(10000); // 10 seconds
+      await advanceTimeAndFlush(24000); // 24 seconds (40% of 60 seconds)
 
       // When
       const result = handler.getStatus(TEST_REPORT_ID);

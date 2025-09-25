@@ -63,7 +63,7 @@ export class HouseholdCalculationHandler extends CalculationHandler {
       status: 'computing',
       progress: 0,
       message: 'Initializing calculation...',
-      estimatedTimeRemaining: 25000
+      estimatedTimeRemaining: 60000 // Equivalent to one minute
     };
   }
 

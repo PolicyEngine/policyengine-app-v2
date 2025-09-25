@@ -297,8 +297,14 @@ describe('Calculation Waterfall Reconstruction', () => {
   });
 
   describe('refetchInterval behavior', () => {
-    test('given computing status then returns 1000ms interval', () => {
+    test('given economy calculation with computing status then returns 1000ms interval', () => {
       // Given
+      // Set up economy calculation metadata in cache
+      queryClient.setQueryData(
+        ['calculation-meta', CALCULATION_QUERY_TEST_REPORT_ID],
+        ECONOMY_META_SUBNATIONAL
+      );
+
       const queryOptions = calculationQueries.forReport(
         CALCULATION_QUERY_TEST_REPORT_ID,
         undefined,
@@ -306,6 +312,7 @@ describe('Calculation Waterfall Reconstruction', () => {
         CALCULATION_QUERY_TEST_COUNTRY_ID
       );
       const mockQuery = {
+        queryKey: ['calculation', CALCULATION_QUERY_TEST_REPORT_ID],
         state: {
           data: COMPUTING_STATUS,
         },
@@ -318,6 +325,34 @@ describe('Calculation Waterfall Reconstruction', () => {
       expect(interval).toBe(1000);
     });
 
+    test('given household calculation with computing status then returns false', () => {
+      // Given
+      // Set up household calculation metadata in cache
+      queryClient.setQueryData(
+        ['calculation-meta', CALCULATION_QUERY_TEST_REPORT_ID],
+        HOUSEHOLD_META_WITH_REFORM
+      );
+
+      const queryOptions = calculationQueries.forReport(
+        CALCULATION_QUERY_TEST_REPORT_ID,
+        undefined,
+        queryClient,
+        CALCULATION_QUERY_TEST_COUNTRY_ID
+      );
+      const mockQuery = {
+        queryKey: ['calculation', CALCULATION_QUERY_TEST_REPORT_ID],
+        state: {
+          data: COMPUTING_STATUS,
+        },
+      } as any;
+
+      // When
+      const interval = queryOptions.refetchInterval(mockQuery);
+
+      // Then
+      expect(interval).toBe(false); // No polling for household calculations
+    });
+
     test('given ok status then returns false', () => {
       // Given
       const queryOptions = calculationQueries.forReport(
@@ -327,6 +362,7 @@ describe('Calculation Waterfall Reconstruction', () => {
         CALCULATION_QUERY_TEST_COUNTRY_ID
       );
       const mockQuery = {
+        queryKey: ['calculation', CALCULATION_QUERY_TEST_REPORT_ID],
         state: {
           data: ECONOMY_CALCULATION_RESULT,
         },
@@ -339,7 +375,7 @@ describe('Calculation Waterfall Reconstruction', () => {
       expect(interval).toBe(false);
     });
 
-    test('given household data without status then returns false', () => {
+    test('given data without status field then returns false', () => {
       // Given
       const queryOptions = calculationQueries.forReport(
         CALCULATION_QUERY_TEST_REPORT_ID,
@@ -348,6 +384,7 @@ describe('Calculation Waterfall Reconstruction', () => {
         CALCULATION_QUERY_TEST_COUNTRY_ID
       );
       const mockQuery = {
+        queryKey: ['calculation', CALCULATION_QUERY_TEST_REPORT_ID],
         state: {
           data: {
             household_id: 'household123',

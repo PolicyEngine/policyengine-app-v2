@@ -89,7 +89,7 @@ export const HOUSEHOLD_PROGRESS_MESSAGES = {
 } as const;
 
 // Timing constants
-export const HOUSEHOLD_ESTIMATED_DURATION = 25000; // 25 seconds
+export const HOUSEHOLD_ESTIMATED_DURATION = 60000; // 60 seconds
 export const CLEANUP_DELAY = 5000; // 5 seconds
 
 // Helper to create a mock QueryClient
