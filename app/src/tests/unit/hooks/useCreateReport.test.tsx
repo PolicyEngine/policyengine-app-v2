@@ -1,17 +1,28 @@
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createReport } from '@/api/report';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useCreateReportAssociation } from '@/hooks/useUserReportAssociations';
+import {
+  createMockCalculationManager,
+  MOCK_ECONOMY_META_NATIONAL,
+  MOCK_ECONOMY_META_SUBNATIONAL,
+  MOCK_HOUSEHOLD_META,
+} from '@/tests/fixtures/hooks/calculationManagerMocks';
 import {
   CONSOLE_MESSAGES,
   createMockCreateAssociation,
   createMockQueryClient,
   ERROR_MESSAGES,
+  mockEconomySimulation,
+  mockHousehold,
+  mockHouseholdSimulation,
+  mockNationalGeography,
   mockReportCreationPayload,
   mockReportMetadata,
+  mockSubnationalGeography,
   setupConsoleMocks,
   TEST_COUNTRY_ID,
   TEST_LABEL,
@@ -36,6 +47,30 @@ vi.mock('@/libs/queryKeys', () => ({
   },
 }));
 
+// Mock the calculation manager
+const mockManager = createMockCalculationManager();
+vi.mock('@/libs/calculations', () => ({
+  getCalculationManager: vi.fn(() => mockManager),
+  determineCalculationType: vi.fn((sim) => {
+    if (!sim) {
+      return 'economy';
+    }
+    return sim.populationType === 'household' ? 'household' : 'economy';
+  }),
+  extractPopulationId: vi.fn((type, household, geography) => {
+    if (type === 'household') {
+      return household?.id || '';
+    }
+    return geography?.id || geography?.geographyId || 'us';
+  }),
+  extractRegion: vi.fn((geography) => {
+    if (geography?.scope === 'subnational' && geography?.geographyId) {
+      return geography.geographyId;
+    }
+    return undefined;
+  }),
+}));
+
 describe('useCreateReport', () => {
   let queryClient: ReturnType<typeof createMockQueryClient>;
   let mockCreateAssociation: ReturnType<typeof createMockCreateAssociation>;
@@ -52,6 +87,10 @@ describe('useCreateReport', () => {
 
     // Set default mock for createReport
     (createReport as any).mockResolvedValue(mockReportMetadata);
+
+    // Reset manager mocks
+    mockManager.startCalculation.mockReset().mockResolvedValue(undefined);
+    mockManager.fetchCalculation.mockReset();
   });
 
   afterEach(() => {
@@ -161,12 +200,202 @@ describe('useCreateReport', () => {
       // Then
       await waitFor(() => {
         expect(consoleMocks.errorSpy).toHaveBeenCalledWith(
-          ERROR_MESSAGES.ASSOCIATION_LOG,
+          'Report created but post-creation tasks failed:',
           associationError
         );
       });
 
       // Report creation should still return the metadata
+      expect(response).toEqual(mockReportMetadata);
+    });
+  });
+
+  describe('calculation triggering with manager', () => {
+    test('given household simulation when creating report then starts calculation via manager', async () => {
+      // Given
+      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
+
+      // When
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: mockReportCreationPayload,
+        simulations: {
+          simulation1: mockHouseholdSimulation,
+          simulation2: { ...mockHouseholdSimulation, policyId: 'policy-2' },
+        },
+        populations: {
+          household1: mockHousehold,
+        },
+      });
+
+      // Then
+      await waitFor(() => {
+        // Should call manager.startCalculation
+        expect(mockManager.startCalculation).toHaveBeenCalledWith(
+          TEST_REPORT_ID_STRING,
+          MOCK_HOUSEHOLD_META
+        );
+
+        // Should trigger prefetch with calculation query
+        expect(prefetchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['calculation', TEST_REPORT_ID_STRING],
+            queryFn: expect.any(Function),
+            refetchInterval: expect.any(Function),
+            staleTime: Infinity,
+          })
+        );
+      });
+
+      // Verify metadata was stored
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_HOUSEHOLD_META
+      );
+    });
+
+    test('given economy simulation with national scope then starts calculation without region', async () => {
+      // Given
+      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
+
+      // When
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: mockReportCreationPayload,
+        simulations: {
+          simulation1: mockEconomySimulation,
+          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
+        },
+        populations: {
+          geography1: mockNationalGeography,
+        },
+      });
+
+      // Then
+      await waitFor(() => {
+        // Should call manager.startCalculation
+        expect(mockManager.startCalculation).toHaveBeenCalledWith(
+          TEST_REPORT_ID_STRING,
+          MOCK_ECONOMY_META_NATIONAL
+        );
+
+        expect(prefetchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['calculation', TEST_REPORT_ID_STRING],
+            queryFn: expect.any(Function),
+            refetchInterval: expect.any(Function),
+            staleTime: Infinity,
+          })
+        );
+      });
+
+      // Verify metadata was stored without region
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_ECONOMY_META_NATIONAL
+      );
+    });
+
+    test('given economy simulation with subnational scope then starts calculation with region', async () => {
+      // Given
+      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
+
+      // When
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: mockReportCreationPayload,
+        simulations: {
+          simulation1: mockEconomySimulation,
+          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
+        },
+        populations: {
+          geography1: mockSubnationalGeography,
+        },
+      });
+
+      // Then
+      await waitFor(() => {
+        // Should call manager.startCalculation
+        expect(mockManager.startCalculation).toHaveBeenCalledWith(
+          TEST_REPORT_ID_STRING,
+          MOCK_ECONOMY_META_SUBNATIONAL
+        );
+
+        expect(prefetchSpy).toHaveBeenCalledWith(
+          expect.objectContaining({
+            queryKey: ['calculation', TEST_REPORT_ID_STRING],
+            queryFn: expect.any(Function),
+            refetchInterval: expect.any(Function),
+            staleTime: Infinity,
+          })
+        );
+      });
+
+      // Verify metadata was stored with region
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_ECONOMY_META_SUBNATIONAL
+      );
+    });
+
+    test('given no populations data then still creates report but does not start calculations', async () => {
+      // Given
+      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
+
+      // When
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: mockReportCreationPayload,
+        simulations: {
+          simulation1: mockEconomySimulation,
+        },
+        // No populations provided
+      });
+
+      // Then
+      await waitFor(() => {
+        // Should still create report and association
+        expect(createReport).toHaveBeenCalled();
+        expect(mockCreateAssociation.mutateAsync).toHaveBeenCalled();
+
+        // Should still call manager and prefetch (with empty population)
+        expect(mockManager.startCalculation).toHaveBeenCalled();
+        expect(prefetchSpy).toHaveBeenCalled();
+      });
+    });
+
+    test('given calculation start fails then still creates report successfully', async () => {
+      // Given
+      mockManager.startCalculation.mockRejectedValueOnce(new Error('Start failed'));
+
+      // When
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      const response = await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: mockReportCreationPayload,
+        simulations: {
+          simulation1: mockEconomySimulation,
+          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
+        },
+        populations: {
+          geography1: mockNationalGeography,
+        },
+      });
+
+      // Then
+      await waitFor(() => {
+        // Should log error but still return report metadata
+        expect(consoleMocks.errorSpy).toHaveBeenCalledWith(
+          'Report created but post-creation tasks failed:',
+          expect.any(Error)
+        );
+      });
       expect(response).toEqual(mockReportMetadata);
     });
   });

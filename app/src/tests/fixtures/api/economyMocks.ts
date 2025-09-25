@@ -227,9 +227,9 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
   wealth_decile: null,
 };
 
-// Pending response
+// Computing response (pending)
 export const mockPendingResponse: EconomyCalculationResponse = {
-  status: 'pending',
+  status: 'computing',
   queue_position: 5,
   average_time: 120,
   result: null,
@@ -237,7 +237,7 @@ export const mockPendingResponse: EconomyCalculationResponse = {
 
 // Completed response
 export const mockCompletedResponse: EconomyCalculationResponse = {
-  status: 'completed',
+  status: 'ok',
   result: mockUSReportOutput,
 };
 

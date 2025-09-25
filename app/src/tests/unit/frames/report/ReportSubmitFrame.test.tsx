@@ -13,13 +13,18 @@ import {
   createMockReportStateNoLabels,
   defaultFlowProps,
   mockCreateReport,
-  mockOnNavigate,
   mockReportWithLabel,
   mockResetIngredient,
   mockSimulation1,
 } from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
+
+// Mock React Router
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+}));
 
 // Mock the hooks
 vi.mock('@/hooks/useCreateReport', () => ({
@@ -38,6 +43,13 @@ vi.mock('@/adapters', () => ({
       simulation_2_id: report.simulationIds[1] || null,
     })),
   },
+}));
+
+// Mock population reducer selectors
+vi.mock('@/reducers/populationReducer', () => ({
+  default: vi.fn((state = {}) => state), // Mock the reducer itself
+  selectHouseholdAtPosition: vi.fn(() => null),
+  selectGeographyAtPosition: vi.fn(() => null),
 }));
 
 describe('ReportSubmitFrame', () => {
@@ -165,7 +177,7 @@ describe('ReportSubmitFrame', () => {
   });
 
   describe('submission', () => {
-    test('given valid data when submit clicked then creates report', async () => {
+    test('given valid data when submit clicked then creates report with populations', async () => {
       // Given
       const user = userEvent.setup();
       renderComponent();
@@ -181,6 +193,22 @@ describe('ReportSubmitFrame', () => {
             simulation_1_id: '1',
             simulation_2_id: '2',
           },
+          simulations: {
+            simulation1: expect.objectContaining({
+              id: '1',
+              label: 'Test Simulation 1',
+            }),
+            simulation2: expect.objectContaining({
+              id: '2',
+              label: 'Test Simulation 2',
+            }),
+          },
+          populations: {
+            household1: null,
+            household2: null,
+            geography1: null,
+            geography2: null,
+          },
         },
         {
           onSuccess: expect.any(Function),
@@ -191,8 +219,9 @@ describe('ReportSubmitFrame', () => {
     test('given successful creation then navigates and resets', async () => {
       // Given
       const user = userEvent.setup();
+      const mockReportData = { id: 'report-123', status: 'pending' };
       mockCreateReport.mockImplementation((_data: any, options: any) => {
-        options.onSuccess();
+        options.onSuccess(mockReportData);
         return Promise.resolve();
       });
       renderComponent();
@@ -201,15 +230,16 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
+      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
       expect(mockResetIngredient).toHaveBeenCalledWith('report');
     });
 
     test('given in subflow when successful then does not reset', async () => {
       // Given
       const user = userEvent.setup();
+      const mockReportData = { id: 'report-456', status: 'pending' };
       mockCreateReport.mockImplementation((_data: any, options: any) => {
-        options.onSuccess();
+        options.onSuccess(mockReportData);
         return Promise.resolve();
       });
       renderComponent({ isInSubflow: true });
@@ -218,7 +248,7 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
+      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
       expect(mockResetIngredient).not.toHaveBeenCalled();
     });
 
@@ -235,6 +265,78 @@ describe('ReportSubmitFrame', () => {
       // Then
       const button = screen.getByRole('button', { name: /Generate Report/i });
       expect(button).toHaveAttribute('data-loading', 'true');
+    });
+
+    test('given successful creation then passes data to onSuccess callback', async () => {
+      // Given
+      const user = userEvent.setup();
+      const mockReportData = {
+        id: 'report-789',
+        status: 'pending',
+        countryId: 'us',
+        simulationIds: ['1', '2'],
+      };
+      let capturedData: any = null;
+      mockCreateReport.mockImplementation((_data: any, options: any) => {
+        // Capture what's passed to onSuccess
+        capturedData = mockReportData;
+        options.onSuccess(mockReportData);
+        return Promise.resolve();
+      });
+      renderComponent();
+
+      // When
+      await user.click(screen.getByRole('button', { name: /Generate Report/i }));
+
+      // Then - verify the callback received the report data
+      expect(capturedData).toEqual(mockReportData);
+      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
+    });
+
+    test('given household and geography data available then passes populations to createReport', async () => {
+      // Given
+      const mockHousehold = {
+        id: 'household-123',
+        countryId: 'us',
+        householdData: { people: {} },
+      };
+      const mockGeography = {
+        id: 'us-california',
+        countryId: 'us',
+        scope: 'subnational' as const,
+        geographyId: 'california',
+        name: 'California',
+      };
+
+      // Mock the selectors to return population data
+      const { selectHouseholdAtPosition, selectGeographyAtPosition } = await import(
+        '@/reducers/populationReducer'
+      );
+      (selectHouseholdAtPosition as any).mockImplementation((_state: any, position: number) => {
+        return position === 0 ? mockHousehold : null;
+      });
+      (selectGeographyAtPosition as any).mockImplementation((_state: any, position: number) => {
+        return position === 0 ? mockGeography : null;
+      });
+
+      const user = userEvent.setup();
+      renderComponent();
+
+      // When
+      await user.click(screen.getByRole('button', { name: /Generate Report/i }));
+
+      // Then
+      expect(mockCreateReport).toHaveBeenCalledWith(
+        expect.objectContaining({
+          populations: {
+            household1: mockHousehold,
+            household2: null,
+            geography1: mockGeography,
+            geography2: null,
+          },
+        }),
+        expect.any(Object)
+      );
     });
   });
 });

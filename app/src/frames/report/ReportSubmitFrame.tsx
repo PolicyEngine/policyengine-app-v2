@@ -1,15 +1,20 @@
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
+import { selectGeographyAtPosition, selectHouseholdAtPosition } from '@/reducers/populationReducer';
 import { selectBothSimulations } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Report } from '@/types/ingredients/Report';
 import { ReportCreationPayload } from '@/types/payloads';
 
-export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
+export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
+  // Get navigation hook
+  const navigate = useNavigate();
+
   // Get report state from Redux
   const reportState = useSelector((state: RootState) => state.report);
   // Use selectBothSimulations to get simulations at positions 0 and 1
@@ -17,7 +22,12 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
     selectBothSimulations(state)
   );
 
-  console.log('Report label: ', reportState.label);
+  // Get population data (household or geography) for each simulation
+  const household1 = useSelector((state: RootState) => selectHouseholdAtPosition(state, 0));
+  const household2 = useSelector((state: RootState) => selectHouseholdAtPosition(state, 1));
+  const geography1 = useSelector((state: RootState) => selectGeographyAtPosition(state, 0));
+  const geography2 = useSelector((state: RootState) => selectGeographyAtPosition(state, 1));
+
   const { createReport, isPending } = useCreateReport(reportState.label || undefined);
   const { resetIngredient } = useIngredientReset();
 
@@ -43,17 +53,26 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
       reportData as Report
     );
 
-    console.log('Submitting report:', serializedReportCreationPayload);
-
-    // The createReport hook expects countryId and payload
+    // The createReport hook expects countryId, payload, and simulation metadata
     createReport(
       {
         countryId: reportState.countryId,
         payload: serializedReportCreationPayload,
+        simulations: {
+          simulation1,
+          simulation2,
+        },
+        populations: {
+          household1,
+          household2,
+          geography1,
+          geography2,
+        },
       },
       {
-        onSuccess: () => {
-          onNavigate('submit');
+        onSuccess: (data) => {
+          // Navigate to the ReportOutputFrame with the report ID
+          navigate(`/reportOutput/${data.id}`);
           if (!isInSubflow) {
             resetIngredient('report');
           }

@@ -10,7 +10,17 @@ import { Router } from './Router';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient(
+  // Temporarily set default staletime to Infinity for all queries;
+  // determine how to address later
+  {
+    defaultOptions: {
+      queries: {
+        staleTime: Infinity,
+      },
+    },
+  }
+);
 
 export default function App() {
   return (

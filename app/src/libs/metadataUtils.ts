@@ -70,7 +70,15 @@ export const makeGetFieldOptions = () =>
     }),
     ({ regions, variables, fieldName }) => {
       // For region-based fields, use regions from economy options
-      if (fieldName === 'state_name' || fieldName === 'region') {
+      // Frustratingly, "state_name" must be uppercased manually
+      if (fieldName === 'state_name') {
+        return (
+          regions?.map((region) => ({
+            value: region.name.toUpperCase(),
+            label: region.label,
+          })) || []
+        );
+      } else if (fieldName === 'region') {
         return (
           regions?.map((region) => ({
             value: region.name,

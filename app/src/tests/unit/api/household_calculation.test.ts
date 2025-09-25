@@ -145,7 +145,7 @@ describe('household_calculation API', () => {
       );
     });
 
-    test('given request times out after 50 seconds then throws timeout error', async () => {
+    test('given request times out after 4 minutes then throws timeout error', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const householdId = TEST_HOUSEHOLD_IDS.EXISTING;
@@ -165,8 +165,8 @@ describe('household_calculation API', () => {
       // When
       const fetchPromise = fetchHouseholdCalculation(countryId, householdId, policyId);
 
-      // Fast-forward timers to trigger timeout
-      vi.advanceTimersByTime(50000);
+      // Fast-forward timers to trigger timeout (4 minutes = 240 seconds)
+      vi.advanceTimersByTime(240000);
 
       // Then
       await expect(fetchPromise).rejects.toThrow(ERROR_MESSAGES.TIMEOUT);

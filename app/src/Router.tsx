@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
+import ReportOutputFrame from './frames/report/ReportOutputFrame';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -31,6 +32,10 @@ const router = createBrowserRouter(
         {
           path: 'reports',
           element: <div>Reports page</div>,
+        },
+        {
+          path: 'reportOutput/:reportId',
+          element: <ReportOutputFrame />,
         },
         {
           path: 'simulations',
