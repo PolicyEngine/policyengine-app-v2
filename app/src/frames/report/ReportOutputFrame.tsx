@@ -4,10 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useReportOutput } from '@/hooks/useReportOutput';
 import { spacing } from '@/designTokens';
 
-interface ReportOutputFrameProps {
-  // No longer extends FlowComponentProps since it's a standalone routed component
-}
-
 export default function ReportOutputFrame() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
@@ -40,13 +36,14 @@ function ReportOutputView({
   reportId: string;
   navigate: ReturnType<typeof useNavigate>;
 }) {
-  console.log('[ReportOutputView] Rendering with reportId:', reportId);
-  const { status, data, isPending, error } = useReportOutput({ reportId });
-  console.log('[ReportOutputView] useReportOutput returned:');
-  console.log('  - status:', status);
-  console.log('  - data:', data);
-  console.log('  - isPending:', isPending);
-  console.log('  - error:', error);
+  const result = useReportOutput({ reportId });
+  const { status, data, isPending, error } = result;
+
+  // Extract progress information if status is pending
+  const progress = status === 'pending' ? (result as any).progress : undefined;
+  const message = status === 'pending' ? (result as any).message : undefined;
+  const queuePosition = status === 'pending' ? (result as any).queuePosition : undefined;
+  const estimatedTimeRemaining = status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
 
   return (
     <Container variant="guttered">
@@ -108,7 +105,13 @@ function ReportOutputView({
                 </Button>
               </>
             ) : (
-              <LoadingDisplay isPending={isPending} />
+              <LoadingDisplay
+                isPending={isPending}
+                progress={progress}
+                message={message}
+                queuePosition={queuePosition}
+                estimatedTimeRemaining={estimatedTimeRemaining}
+              />
             )}
           </Stack>
         </Card>
@@ -117,20 +120,56 @@ function ReportOutputView({
   );
 }
 
-function LoadingDisplay({ isPending }: { isPending: boolean }) {
+function LoadingDisplay({
+  isPending,
+  progress,
+  message,
+  queuePosition,
+  estimatedTimeRemaining
+}: {
+  isPending: boolean;
+  progress?: number;
+  message?: string;
+  queuePosition?: number;
+  estimatedTimeRemaining?: number;
+}) {
+  // Calculate progress value
+  const progressValue = progress ? progress * 100 : (queuePosition ? 100 - queuePosition : 50);
+
+  // Format estimated time
+  const formatTime = (ms?: number) => {
+    if (!ms) return null;
+    const seconds = Math.ceil(ms / 1000);
+    if (seconds < 60) return `${seconds} seconds`;
+    const minutes = Math.ceil(seconds / 60);
+    return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+  };
+
+  const estimatedTime = formatTime(estimatedTimeRemaining);
+
   return (
     <Stack gap={spacing.md}>
       <Box>
         <Progress
-          value={50}
+          value={progressValue}
           size="xl"
           radius="md"
           animated
           color="blue"
         />
         <Text size="sm" c="dimmed" mt={spacing.xs} ta="center">
-          {isPending ? 'Processing calculation...' : 'Fetching results...'}
+          {message || (queuePosition
+            ? `Queue position: ${queuePosition}`
+            : isPending
+            ? 'Processing calculation...'
+            : 'Fetching results...'
+          )}
         </Text>
+        {estimatedTime && (
+          <Text size="xs" c="dimmed" ta="center" mt={4}>
+            Estimated time remaining: {estimatedTime}
+          </Text>
+        )}
       </Box>
 
       <Group justify="center" mt={spacing.sm}>
@@ -139,8 +178,11 @@ function LoadingDisplay({ isPending }: { isPending: boolean }) {
 
       <Card withBorder p={spacing.sm} radius="sm" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
         <Text size="sm" c="dimmed">
-          Your calculation is being processed. This may take a few moments for complex analyses.
-          The page will automatically update when the results are ready.
+          {queuePosition
+            ? `Your calculation is queued. You are currently at position ${queuePosition} in the queue.`
+            : 'Your calculation is being processed. This may take a few moments for complex analyses.'
+          }
+          {' '}The page will automatically update when the results are ready.
         </Text>
       </Card>
     </Stack>

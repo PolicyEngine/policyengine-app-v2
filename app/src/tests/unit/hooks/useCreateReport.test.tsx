@@ -5,7 +5,6 @@ import { beforeEach, describe, expect, test, vi, afterEach } from 'vitest';
 import { createReport } from '@/api/report';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useCreateReportAssociation } from '@/hooks/useUserReportAssociations';
-import { getCalculationManager } from '@/libs/calculations';
 import {
   CONSOLE_MESSAGES,
   createMockCreateAssociation,

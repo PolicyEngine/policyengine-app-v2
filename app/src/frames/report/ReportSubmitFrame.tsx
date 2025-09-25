@@ -11,7 +11,7 @@ import { FlowComponentProps } from '@/types/flow';
 import { Report } from '@/types/ingredients/Report';
 import { ReportCreationPayload } from '@/types/payloads';
 
-export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
+export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
   // Get navigation hook
   const navigate = useNavigate();
 
@@ -71,7 +71,6 @@ export default function ReportSubmitFrame({ onNavigate, isInSubflow }: FlowCompo
       },
       {
         onSuccess: (data) => {
-          console.log('Report created successfully:', data);
           // Navigate to the ReportOutputFrame with the report ID
           navigate(`/reportOutput/${data.id}`);
           if (!isInSubflow) {
