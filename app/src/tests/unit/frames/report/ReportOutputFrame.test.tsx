@@ -4,8 +4,6 @@ import ReportOutputFrame from '@/frames/report/ReportOutputFrame';
 import * as useReportOutputModule from '@/hooks/useReportOutput';
 import {
   MOCK_REPORT_ID,
-  mockEconomyReportData,
-  mockHouseholdReportData,
   mockPendingReportOutput,
   mockPendingWithQueuePosition,
   mockPendingWithProgress,

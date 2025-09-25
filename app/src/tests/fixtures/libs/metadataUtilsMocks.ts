@@ -37,15 +37,15 @@ export const MOCK_TIME_PERIODS = [
 
 // Region constants
 export const REGION_CA = {
-  name: 'ca',
+  name: 'CA',
   label: 'California',
 };
 export const REGION_NY = {
-  name: 'ny',
+  name: 'NY',
   label: 'New York',
 };
 export const REGION_TX = {
-  name: 'tx',
+  name: 'TX',
   label: 'Texas',
 };
 
