@@ -7,6 +7,9 @@ import {
   mockEconomyReportData,
   mockHouseholdReportData,
   mockPendingReportOutput,
+  mockPendingWithQueuePosition,
+  mockPendingWithProgress,
+  mockPendingPartialProgress,
   mockCompleteEconomyReportOutput,
   mockCompleteHouseholdReportOutput,
   mockErrorReportOutput,
@@ -195,6 +198,113 @@ describe('ReportOutputFrame', () => {
       // Then
       expect(screen.getByText('Household Impact Results')).toBeInTheDocument();
       expect(screen.queryByText('Society-Wide Impact Results')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Enhanced loading display', () => {
+    test('given pending with queue position then shows queue information', () => {
+      // Given
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(
+        mockPendingWithQueuePosition
+      );
+
+      // When
+      render(<ReportOutputFrame />);
+
+      // Then
+      // The message "Waiting in queue..." is displayed instead of "Queue position: 3"
+      // because the message field takes precedence in the component
+      expect(screen.getByText('Waiting in queue...')).toBeInTheDocument();
+      expect(screen.getByText(/Your calculation is queued/)).toBeInTheDocument();
+      expect(screen.getByText(/position 3 in the queue/)).toBeInTheDocument();
+      expect(screen.getByText('Estimated time remaining: 45 seconds')).toBeInTheDocument();
+    });
+
+    test('given pending with progress then shows progress information', () => {
+      // Given
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(
+        mockPendingWithProgress
+      );
+
+      // When
+      render(<ReportOutputFrame />);
+
+      // Then
+      expect(screen.getByText('Processing household calculation...')).toBeInTheDocument();
+      expect(screen.getByText('Estimated time remaining: 5 seconds')).toBeInTheDocument();
+      // Check that queue position is NOT shown
+      expect(screen.queryByText(/Queue position/)).not.toBeInTheDocument();
+    });
+
+    test('given pending with partial progress then handles gracefully', () => {
+      // Given
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(
+        mockPendingPartialProgress
+      );
+
+      // When
+      render(<ReportOutputFrame />);
+
+      // Then
+      // Should show default message when no custom message
+      expect(screen.getByText('Processing calculation...')).toBeInTheDocument();
+      // Should not show estimated time if not provided
+      expect(screen.queryByText(/Estimated time remaining/)).not.toBeInTheDocument();
+    });
+
+    test('given long estimated time then formats as minutes', () => {
+      // Given
+      const mockLongWait = {
+        status: 'pending',
+        data: null,
+        isPending: true,
+        error: null,
+        estimatedTimeRemaining: 180000, // 3 minutes
+      } as any;
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(mockLongWait);
+
+      // When
+      render(<ReportOutputFrame />);
+
+      // Then
+      expect(screen.getByText('Estimated time remaining: 3 minutes')).toBeInTheDocument();
+    });
+
+    test('given one minute wait then shows singular minute', () => {
+      // Given
+      const mockOneMinute = {
+        status: 'pending',
+        data: null,
+        isPending: true,
+        error: null,
+        estimatedTimeRemaining: 60000, // 1 minute
+      } as any;
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(mockOneMinute);
+
+      // When
+      render(<ReportOutputFrame />);
+
+      // Then
+      expect(screen.getByText('Estimated time remaining: 1 minute')).toBeInTheDocument();
+    });
+
+    test('given queue position without message then shows queue position text', () => {
+      // Given
+      const mockQueueNoMessage = {
+        status: 'pending',
+        data: null,
+        isPending: true,
+        error: null,
+        queuePosition: 5,
+      } as any;
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(mockQueueNoMessage);
+
+      // When
+      render(<ReportOutputFrame />);
+
+      // Then
+      expect(screen.getByText('Queue position: 5')).toBeInTheDocument();
+      expect(screen.getByText(/position 5 in the queue/)).toBeInTheDocument();
     });
   });
 

@@ -216,10 +216,9 @@ describe('ReportSubmitFrame', () => {
       );
     });
 
-    test('given successful creation then logs data navigates and resets', async () => {
+    test('given successful creation then navigates and resets', async () => {
       // Given
       const user = userEvent.setup();
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const mockReportData = { id: 'report-123', status: 'pending' };
       mockCreateReport.mockImplementation((_data: any, options: any) => {
         options.onSuccess(mockReportData);
@@ -231,17 +230,13 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(consoleLogSpy).toHaveBeenCalledWith('Report created successfully:', mockReportData);
       expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
       expect(mockResetIngredient).toHaveBeenCalledWith('report');
-
-      consoleLogSpy.mockRestore();
     });
 
     test('given in subflow when successful then does not reset', async () => {
       // Given
       const user = userEvent.setup();
-      const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
       const mockReportData = { id: 'report-456', status: 'pending' };
       mockCreateReport.mockImplementation((_data: any, options: any) => {
         options.onSuccess(mockReportData);
@@ -253,11 +248,8 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(consoleLogSpy).toHaveBeenCalledWith('Report created successfully:', mockReportData);
       expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
       expect(mockResetIngredient).not.toHaveBeenCalled();
-
-      consoleLogSpy.mockRestore();
     });
 
     test('given pending state then shows loading button', () => {

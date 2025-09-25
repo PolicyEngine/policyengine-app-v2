@@ -29,6 +29,38 @@ export const mockPendingReportOutput: UseReportOutputResult = {
   error: null,
 };
 
+// Mock pending with progress information (economy calculation)
+export const mockPendingWithQueuePosition: UseReportOutputResult = {
+  status: 'pending',
+  data: null,
+  isPending: true,
+  error: null,
+  progress: 0.25,
+  message: 'Waiting in queue...',
+  queuePosition: 3,
+  estimatedTimeRemaining: 45000,
+} as any;
+
+// Mock pending with progress (household calculation)
+export const mockPendingWithProgress: UseReportOutputResult = {
+  status: 'pending',
+  data: null,
+  isPending: true,
+  error: null,
+  progress: 0.75,
+  message: 'Processing household calculation...',
+  estimatedTimeRemaining: 5000,
+} as any;
+
+// Mock pending with only partial progress data
+export const mockPendingPartialProgress: UseReportOutputResult = {
+  status: 'pending',
+  data: null,
+  isPending: true,
+  error: null,
+  progress: 0.5,
+} as any;
+
 export const mockCompleteEconomyReportOutput: UseReportOutputResult = {
   status: 'complete',
   data: mockEconomyReportData,
