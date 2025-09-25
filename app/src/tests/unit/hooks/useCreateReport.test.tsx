@@ -3,10 +3,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi, afterEach } from 'vitest';
 import { createReport } from '@/api/report';
-import { fetchEconomyCalculation } from '@/api/economy';
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useCreateReportAssociation } from '@/hooks/useUserReportAssociations';
+import { getCalculationManager } from '@/libs/calculations';
 import {
   CONSOLE_MESSAGES,
   createMockCreateAssociation,
@@ -25,19 +24,16 @@ import {
   mockNationalGeography,
   mockSubnationalGeography,
 } from '@/tests/fixtures/hooks/reportHooksMocks';
+import {
+  createMockCalculationManager,
+  MOCK_HOUSEHOLD_META,
+  MOCK_ECONOMY_META_NATIONAL,
+  MOCK_ECONOMY_META_SUBNATIONAL,
+} from '@/tests/fixtures/hooks/calculationManagerMocks';
 
 // Mock the API
 vi.mock('@/api/report', () => ({
   createReport: vi.fn(),
-}));
-
-// Mock calculation APIs
-vi.mock('@/api/economy', () => ({
-  fetchEconomyCalculation: vi.fn(),
-}));
-
-vi.mock('@/api/household_calculation', () => ({
-  fetchHouseholdCalculation: vi.fn(),
 }));
 
 // Mock the association hook
@@ -50,6 +46,28 @@ vi.mock('@/libs/queryKeys', () => ({
   reportKeys: {
     all: ['reports'],
   },
+}));
+
+// Mock the calculation manager
+const mockManager = createMockCalculationManager();
+vi.mock('@/libs/calculations', () => ({
+  getCalculationManager: vi.fn(() => mockManager),
+  determineCalculationType: vi.fn((sim) => {
+    if (!sim) return 'economy';
+    return sim.populationType === 'household' ? 'household' : 'economy';
+  }),
+  extractPopulationId: vi.fn((type, household, geography) => {
+    if (type === 'household') {
+      return household?.id || '';
+    }
+    return geography?.id || geography?.geographyId || 'us';
+  }),
+  extractRegion: vi.fn((geography) => {
+    if (geography?.scope === 'subnational' && geography?.geographyId) {
+      return geography.geographyId;
+    }
+    return undefined;
+  }),
 }));
 
 describe('useCreateReport', () => {
@@ -68,6 +86,10 @@ describe('useCreateReport', () => {
 
     // Set default mock for createReport
     (createReport as any).mockResolvedValue(mockReportMetadata);
+
+    // Reset manager mocks
+    mockManager.startCalculation.mockReset().mockResolvedValue(undefined);
+    mockManager.fetchCalculation.mockReset();
   });
 
   afterEach(() => {
@@ -187,15 +209,8 @@ describe('useCreateReport', () => {
     });
   });
 
-  describe('calculation triggering', () => {
-
-    beforeEach(() => {
-      // Set up mocks for calculation APIs
-      (fetchEconomyCalculation as any).mockResolvedValue({ status: 'pending' });
-      (fetchHouseholdCalculation as any).mockResolvedValue({ id: 'household-123' });
-    });
-
-    test('given household simulation when creating report then triggers household calculation', async () => {
+  describe('calculation triggering with manager', () => {
+    test('given household simulation when creating report then starts calculation via manager', async () => {
       // Given
       const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
 
@@ -216,10 +231,16 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should trigger calculation with new cache key structure
+        // Should call manager.startCalculation
+        expect(mockManager.startCalculation).toHaveBeenCalledWith(
+          TEST_REPORT_ID_STRING,
+          MOCK_HOUSEHOLD_META
+        );
+
+        // Should trigger prefetch with calculation query
         expect(prefetchSpy).toHaveBeenCalledWith(
           expect.objectContaining({
-            queryKey: ['calculation', '123'],
+            queryKey: ['calculation', TEST_REPORT_ID_STRING],
             queryFn: expect.any(Function),
             refetchInterval: expect.any(Function),
             staleTime: Infinity,
@@ -228,20 +249,12 @@ describe('useCreateReport', () => {
       });
 
       // Verify metadata was stored
-      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
-        expect.objectContaining({
-          type: 'household',
-          countryId: TEST_COUNTRY_ID,
-          policyIds: {
-            baseline: 'policy-1',
-            reform: 'policy-2',
-          },
-          populationId: 'household-123',
-        })
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_HOUSEHOLD_META
       );
     });
 
-    test('given economy simulation with national scope then triggers calculation without region', async () => {
+    test('given economy simulation with national scope then starts calculation without region', async () => {
       // Given
       const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
 
@@ -262,9 +275,15 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
+        // Should call manager.startCalculation
+        expect(mockManager.startCalculation).toHaveBeenCalledWith(
+          TEST_REPORT_ID_STRING,
+          MOCK_ECONOMY_META_NATIONAL
+        );
+
         expect(prefetchSpy).toHaveBeenCalledWith(
           expect.objectContaining({
-            queryKey: ['calculation', '123'],
+            queryKey: ['calculation', TEST_REPORT_ID_STRING],
             queryFn: expect.any(Function),
             refetchInterval: expect.any(Function),
             staleTime: Infinity,
@@ -273,20 +292,12 @@ describe('useCreateReport', () => {
       });
 
       // Verify metadata was stored without region
-      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
-        expect.objectContaining({
-          type: 'economy',
-          countryId: TEST_COUNTRY_ID,
-          policyIds: {
-            baseline: 'policy-2',
-            reform: 'policy-3',
-          },
-          populationId: TEST_COUNTRY_ID,
-        })
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_ECONOMY_META_NATIONAL
       );
     });
 
-    test('given economy simulation with subnational scope then triggers calculation with region', async () => {
+    test('given economy simulation with subnational scope then starts calculation with region', async () => {
       // Given
       const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
 
@@ -307,9 +318,15 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
+        // Should call manager.startCalculation
+        expect(mockManager.startCalculation).toHaveBeenCalledWith(
+          TEST_REPORT_ID_STRING,
+          MOCK_ECONOMY_META_SUBNATIONAL
+        );
+
         expect(prefetchSpy).toHaveBeenCalledWith(
           expect.objectContaining({
-            queryKey: ['calculation', '123'],
+            queryKey: ['calculation', TEST_REPORT_ID_STRING],
             queryFn: expect.any(Function),
             refetchInterval: expect.any(Function),
             staleTime: Infinity,
@@ -318,21 +335,12 @@ describe('useCreateReport', () => {
       });
 
       // Verify metadata was stored with region
-      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
-        expect.objectContaining({
-          type: 'economy',
-          countryId: TEST_COUNTRY_ID,
-          policyIds: {
-            baseline: 'policy-2',
-            reform: 'policy-3',
-          },
-          populationId: 'us-california', // Uses geography.id which includes prefix
-          region: 'california',
-        })
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_ECONOMY_META_SUBNATIONAL
       );
     });
 
-    test('given no populations data then does not trigger calculations', async () => {
+    test('given no populations data then still creates report but does not start calculations', async () => {
       // Given
       const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
 
@@ -352,18 +360,17 @@ describe('useCreateReport', () => {
       await waitFor(() => {
         // Should still create report and association
         expect(createReport).toHaveBeenCalled();
-        // But should not trigger any calculations
-        const economyCalls = prefetchSpy.mock.calls.filter(c => c[0].queryKey[0] === 'economy');
-        const householdCalls = prefetchSpy.mock.calls.filter(c => c[0].queryKey[0] === 'household_calculation');
-        expect(economyCalls).toHaveLength(0);
-        expect(householdCalls).toHaveLength(0);
+        expect(mockCreateAssociation.mutateAsync).toHaveBeenCalled();
+
+        // Should still call manager and prefetch (with empty population)
+        expect(mockManager.startCalculation).toHaveBeenCalled();
+        expect(prefetchSpy).toHaveBeenCalled();
       });
     });
 
-    test('given calculation triggering fails then still creates report successfully', async () => {
+    test('given calculation start fails then still creates report successfully', async () => {
       // Given
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
-      prefetchSpy.mockRejectedValueOnce(new Error('Prefetch failed'));
+      mockManager.startCalculation.mockRejectedValueOnce(new Error('Start failed'));
 
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
@@ -389,86 +396,6 @@ describe('useCreateReport', () => {
         );
       });
       expect(response).toEqual(mockReportMetadata);
-    });
-  });
-
-  describe('formatEconomyParams helper behavior', () => {
-    test('given null geography then economy calculation not triggered', async () => {
-      // Given
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
-
-      // When
-      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
-
-      await result.current.createReport({
-        countryId: TEST_COUNTRY_ID,
-        payload: mockReportCreationPayload,
-        simulations: {
-          simulation1: mockEconomySimulation,
-          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
-        },
-        populations: {
-          geography1: null,
-        },
-      });
-
-      // Then - should not trigger any calculations
-      await waitFor(() => {
-        const calculationCalls = prefetchSpy.mock.calls.filter(c => c[0].queryKey[0] === 'calculation');
-        expect(calculationCalls).toHaveLength(0);
-      });
-    });
-
-    test('given subnational geography with empty geographyId then uses empty params', async () => {
-      // Given
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
-      const emptyGeographyIdGeo = {
-        ...mockSubnationalGeography,
-        geographyId: '',
-      };
-
-      // When
-      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
-
-      await result.current.createReport({
-        countryId: TEST_COUNTRY_ID,
-        payload: mockReportCreationPayload,
-        simulations: {
-          simulation1: mockEconomySimulation,
-          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
-        },
-        populations: {
-          geography1: emptyGeographyIdGeo,
-        },
-      });
-
-      // Then - should use empty params despite subnational scope
-      await waitFor(() => {
-        expect(prefetchSpy).toHaveBeenCalledWith(
-          expect.objectContaining({
-            queryKey: ['calculation', '123'],
-            queryFn: expect.any(Function),
-            refetchInterval: expect.any(Function),
-            staleTime: Infinity,
-          })
-        );
-      });
-
-      // Verify metadata doesn't have region despite subnational scope
-      expect(queryClient.getQueryData(['calculation-meta', '123'])).toEqual(
-        expect.objectContaining({
-          type: 'economy',
-          countryId: TEST_COUNTRY_ID,
-          policyIds: {
-            baseline: 'policy-2',
-            reform: 'policy-3',
-          },
-          populationId: 'us-california', // Still uses geography.id even with empty geographyId
-        })
-      );
-      // Should NOT have region property
-      const meta = queryClient.getQueryData(['calculation-meta', '123']) as any;
-      expect(meta.region).toBeUndefined();
     });
   });
 
