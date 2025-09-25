@@ -28,12 +28,12 @@ export class EconomyCalculationHandler extends CalculationHandler {
     };
   }
 
-  getStatus(reportId: string): CalculationStatusResponse | null {
+  getStatus(_reportId: string): CalculationStatusResponse | null {
     // Economy calculations are server-driven, no client-side status
     return null;
   }
 
-  async startCalculation(reportId: string, meta: CalculationMeta): Promise<void> {
+  async startCalculation(_reportId: string, _meta: CalculationMeta): Promise<void> {
     // Economy calculations start automatically on fetch
     // No special initialization needed
   }

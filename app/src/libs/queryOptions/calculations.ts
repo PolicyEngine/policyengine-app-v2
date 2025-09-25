@@ -145,17 +145,34 @@ export const calculationQueries = {
     },
     refetchInterval: (query: Query<CalculationStatusResponse, Error>) => {
       console.log('[calculationQueries.refetchInterval] Checking if should refetch');
-      console.log('[calculationQueries.refetchInterval] Query state:', query.state);
       const data = query.state.data;
       console.log('[calculationQueries.refetchInterval] Current data:', data);
 
-      // Only poll if it's an economy calculation with computing status
+      // Check if we have metadata to determine calculation type
+      const queryKey = query.queryKey as readonly ['calculation', string];
+      const reportId = queryKey[1];
+      const metadataKey = ['calculation-meta', reportId] as const;
+      const metadata = queryClient?.getQueryData<CalculationMeta>(metadataKey);
+
+      console.log('[calculationQueries.refetchInterval] Metadata:', metadata);
+
+      // Only poll for economy calculations with computing status
+      // Household calculations use synthetic progress via cache updates, no polling needed
       if (data && typeof data === 'object' && 'status' in data) {
         console.log('[calculationQueries.refetchInterval] Data has status field:', data.status);
+
         if (data.status === 'computing') {
-          console.log('[calculationQueries.refetchInterval] Status is computing, will refetch in 1000ms');
-          return 1000; // Poll every second
+          // Check if this is a household calculation
+          if (metadata?.type === 'household') {
+            console.log('[calculationQueries.refetchInterval] Household calculation - no polling needed (synthetic progress via cache)');
+            return false; // No polling for household calculations
+          }
+
+          // Economy calculation - poll the API
+          console.log('[calculationQueries.refetchInterval] Economy calculation - will refetch in 1000ms');
+          return 1000; // Poll every second for economy calculations
         }
+
         console.log('[calculationQueries.refetchInterval] Status is not computing, no refetch');
       } else {
         console.log('[calculationQueries.refetchInterval] Data does not have status field or is not an object, no refetch');

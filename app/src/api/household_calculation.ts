@@ -21,7 +21,7 @@ export async function fetchHouseholdCalculation(
   console.log('[fetchHouseholdCalculation] Fetching URL:', url);
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 50000); // 50 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 240000); // 4-minute timeout
 
   try {
     const response = await fetch(url, {
