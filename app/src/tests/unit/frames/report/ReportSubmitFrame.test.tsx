@@ -274,7 +274,7 @@ describe('ReportSubmitFrame', () => {
         id: 'report-789',
         status: 'pending',
         countryId: 'us',
-        simulationIds: ['1', '2']
+        simulationIds: ['1', '2'],
       };
       let capturedData: any = null;
       mockCreateReport.mockImplementation((_data: any, options: any) => {
@@ -309,7 +309,9 @@ describe('ReportSubmitFrame', () => {
       };
 
       // Mock the selectors to return population data
-      const { selectHouseholdAtPosition, selectGeographyAtPosition } = await import('@/reducers/populationReducer');
+      const { selectHouseholdAtPosition, selectGeographyAtPosition } = await import(
+        '@/reducers/populationReducer'
+      );
       (selectHouseholdAtPosition as any).mockImplementation((_state: any, position: number) => {
         return position === 0 ? mockHousehold : null;
       });

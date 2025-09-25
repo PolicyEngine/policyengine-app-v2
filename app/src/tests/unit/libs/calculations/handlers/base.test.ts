@@ -1,24 +1,24 @@
-import { describe, test, expect } from 'vitest';
-import { CalculationHandler } from '@/libs/calculations/handlers/base';
+import { describe, expect, test } from 'vitest';
 import { CalculationMeta } from '@/api/reportCalculations';
+import { CalculationHandler } from '@/libs/calculations/handlers/base';
 import { CalculationStatusResponse } from '@/libs/calculations/status';
 import {
   createMockQueryClient,
-  TEST_REPORT_ID,
   HOUSEHOLD_CALCULATION_META,
+  TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
 // Create a concrete implementation for testing
 class TestCalculationHandler extends CalculationHandler {
-  async fetch(meta: CalculationMeta): Promise<CalculationStatusResponse> {
+  async fetch(_meta: CalculationMeta): Promise<CalculationStatusResponse> {
     return { status: 'ok', result: { test: true } };
   }
 
-  getStatus(reportId: string): CalculationStatusResponse | null {
+  getStatus(_reportId: string): CalculationStatusResponse | null {
     return null;
   }
 
-  async startCalculation(reportId: string, meta: CalculationMeta): Promise<void> {
+  async startCalculation(_reportId: string, _meta: CalculationMeta): Promise<void> {
     // No-op for testing
   }
 }

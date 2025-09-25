@@ -1,15 +1,13 @@
-import { Simulation } from '@/types/ingredients/Simulation';
-import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 export type CalculationType = 'household' | 'economy';
 
 /**
  * Pure type determination
  */
-export function determineCalculationType(
-  simulation: Simulation | null
-): CalculationType {
+export function determineCalculationType(simulation: Simulation | null): CalculationType {
   if (simulation?.populationType === 'household') {
     return 'household';
   }
@@ -43,9 +41,7 @@ export function extractPopulationId(
 /**
  * Determine if region parameter is needed
  */
-export function extractRegion(
-  geography?: Geography | null
-): string | undefined {
+export function extractRegion(geography?: Geography | null): string | undefined {
   if (geography?.scope === 'subnational' && geography.geographyId) {
     return geography.geographyId;
   }

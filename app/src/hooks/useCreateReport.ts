@@ -1,19 +1,24 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReport } from '@/api/report';
+import { CalculationMeta } from '@/api/reportCalculations';
 import { MOCK_USER_ID } from '@/constants';
+import {
+  determineCalculationType,
+  extractPopulationId,
+  extractRegion,
+  getCalculationManager,
+} from '@/libs/calculations';
+import { countryIds } from '@/libs/countries';
 import { reportKeys } from '@/libs/queryKeys';
 import { calculationQueries } from '@/libs/queryOptions/calculations';
-import { CalculationMeta } from '@/api/reportCalculations';
-import { ReportCreationPayload } from '@/types/payloads';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
+import { ReportCreationPayload } from '@/types/payloads';
 import { useCreateReportAssociation } from './useUserReportAssociations';
-import { countryIds } from '@/libs/countries';
-import { getCalculationManager, determineCalculationType, extractPopulationId, extractRegion } from '@/libs/calculations';
 
 interface CreateReportAndBeginCalculationParams {
-  countryId: typeof countryIds[number];
+  countryId: (typeof countryIds)[number];
   payload: ReportCreationPayload;
   simulations?: {
     simulation1?: Simulation | null;

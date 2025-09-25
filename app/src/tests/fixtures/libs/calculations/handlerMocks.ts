@@ -1,7 +1,7 @@
-import { vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import { CalculationMeta } from '@/api/reportCalculations';
+import { vi } from 'vitest';
 import { EconomyCalculationResponse } from '@/api/economy';
+import { CalculationMeta } from '@/api/reportCalculations';
 import { Household } from '@/types/ingredients/Household';
 
 // Report IDs
@@ -130,7 +130,7 @@ export function createDelayedPromise<T>(value: T, delay?: number): Promise<T> {
   if (delay === undefined) {
     return Promise.resolve(value);
   }
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => resolve(value), delay);
   });
 }

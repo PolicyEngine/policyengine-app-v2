@@ -20,7 +20,6 @@ export const mockHouseholdReportData = {
   reform_net_income: 52000,
 };
 
-
 // Mock useReportOutput return values
 export const mockPendingReportOutput: UseReportOutputResult = {
   status: 'pending',
@@ -76,14 +75,18 @@ export const mockCompleteHouseholdReportOutput: UseReportOutputResult = {
 };
 
 // Helper functions for creating error mocks
-export const mockErrorReportOutput = (errorMessage: string = 'Failed to fetch calculation'): UseReportOutputResult => ({
+export const mockErrorReportOutput = (
+  errorMessage: string = 'Failed to fetch calculation'
+): UseReportOutputResult => ({
   status: 'error',
   data: null,
   isPending: false,
   error: errorMessage,
 });
 
-export const mockErrorObjectReportOutput = (error: { message: string } = { message: 'API Error' }): UseReportOutputResult => ({
+export const mockErrorObjectReportOutput = (
+  error: { message: string } = { message: 'API Error' }
+): UseReportOutputResult => ({
   status: 'error',
   data: null,
   isPending: false,

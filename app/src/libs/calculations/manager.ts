@@ -1,8 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
-import { CalculationType } from './types';
-import { CalculationStatusResponse } from './status';
 import { CalculationMeta } from '@/api/reportCalculations';
-import { CalculationHandler, EconomyCalculationHandler, HouseholdCalculationHandler } from './handlers';
+import {
+  CalculationHandler,
+  EconomyCalculationHandler,
+  HouseholdCalculationHandler,
+} from './handlers';
+import { CalculationStatusResponse } from './status';
+import { CalculationType } from './types';
 
 export class CalculationManager {
   private handlers: Map<CalculationType, CalculationHandler>;
@@ -10,7 +14,7 @@ export class CalculationManager {
   constructor(queryClient: QueryClient) {
     this.handlers = new Map([
       ['household', new HouseholdCalculationHandler(queryClient)],
-      ['economy', new EconomyCalculationHandler(queryClient)]
+      ['economy', new EconomyCalculationHandler(queryClient)],
     ]);
   }
 

@@ -125,11 +125,19 @@ export function useEconomyCalculation({
         response.queue_position !== undefined &&
         response.queue_position !== lastQueuePositionRef.current
       ) {
-        console.log('[useEconomyCalculation.queryFn] Queue position changed:', lastQueuePositionRef.current, '->', response.queue_position);
+        console.log(
+          '[useEconomyCalculation.queryFn] Queue position changed:',
+          lastQueuePositionRef.current,
+          '->',
+          response.queue_position
+        );
         lastQueuePositionRef.current = response.queue_position;
         onQueueUpdate?.(response.queue_position, response.average_time);
       } else {
-        console.log('[useEconomyCalculation.queryFn] Queue position unchanged:', response.queue_position);
+        console.log(
+          '[useEconomyCalculation.queryFn] Queue position unchanged:',
+          response.queue_position
+        );
       }
     }
 

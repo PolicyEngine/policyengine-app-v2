@@ -1,13 +1,13 @@
-import { CalculationHandler } from './base';
+import { EconomyCalculationParams, fetchEconomyCalculation } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { CalculationStatusResponse } from '../status';
-import { fetchEconomyCalculation, EconomyCalculationParams } from '@/api/economy';
+import { CalculationHandler } from './base';
 
 export class EconomyCalculationHandler extends CalculationHandler {
   async fetch(meta: CalculationMeta): Promise<CalculationStatusResponse> {
     const params: EconomyCalculationParams = {
       region: meta.region || meta.countryId,
-      time_period: '2024' // TODO: Make dynamic
+      time_period: '2024', // TODO: Make dynamic
     };
 
     const response = await fetchEconomyCalculation(
@@ -19,12 +19,12 @@ export class EconomyCalculationHandler extends CalculationHandler {
 
     // Map API response to unified format
     return {
-      status: response.status === 'computing' ? 'computing' :
-              response.status === 'ok' ? 'ok' : 'error',
+      status:
+        response.status === 'computing' ? 'computing' : response.status === 'ok' ? 'ok' : 'error',
       queuePosition: response.queue_position,
       averageTime: response.average_time,
       result: response.result,
-      error: response.error
+      error: response.error,
     };
   }
 

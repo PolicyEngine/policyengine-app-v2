@@ -1,21 +1,24 @@
-import { CalculationHandler } from './base';
-import { CalculationMeta } from '@/api/reportCalculations';
-import { CalculationStatusResponse } from '../status';
 import { fetchHouseholdCalculation } from '@/api/household_calculation';
+import { CalculationMeta } from '@/api/reportCalculations';
 import { Household } from '@/types/ingredients/Household';
+import { CalculationStatusResponse } from '../status';
+import { CalculationHandler } from './base';
 
 export class HouseholdCalculationHandler extends CalculationHandler {
   // Store by reportId, just like economy calculations are cached
-  private pendingCalculations = new Map<string, {
-    promise: Promise<Household>;
-    meta: CalculationMeta; // Store metadata for the calculation
-    startTime: number;
-    estimatedDuration: number;
-    completed: boolean;
-    result?: Household;
-    error?: Error;
-    progressInterval?: NodeJS.Timeout; // Track the interval for cleanup
-  }>();
+  private pendingCalculations = new Map<
+    string,
+    {
+      promise: Promise<Household>;
+      meta: CalculationMeta; // Store metadata for the calculation
+      startTime: number;
+      estimatedDuration: number;
+      completed: boolean;
+      result?: Household;
+      error?: Error;
+      progressInterval?: NodeJS.Timeout; // Track the interval for cleanup
+    }
+  >();
 
   async fetch(meta: CalculationMeta): Promise<CalculationStatusResponse> {
     // Since we're using cache updates for progress, fetch should only be called once
@@ -26,19 +29,21 @@ export class HouseholdCalculationHandler extends CalculationHandler {
     for (const [, pending] of this.pendingCalculations) {
       // Check if this pending calculation matches the requested metadata
       if (this.metadataMatches(pending.meta, meta)) {
-        console.log('[HouseholdCalculationHandler.fetch] Found matching pending calculation for metadata');
+        console.log(
+          '[HouseholdCalculationHandler.fetch] Found matching pending calculation for metadata'
+        );
 
         // Found a matching calculation, return its current status
         if (pending.completed) {
           if (pending.error) {
             return {
               status: 'error',
-              error: pending.error.message
+              error: pending.error.message,
             };
           }
           return {
             status: 'ok',
-            result: pending.result
+            result: pending.result,
           };
         }
 
@@ -50,7 +55,7 @@ export class HouseholdCalculationHandler extends CalculationHandler {
           status: 'computing',
           progress,
           message: this.getProgressMessage(progress),
-          estimatedTimeRemaining: Math.max(0, pending.estimatedDuration - elapsed)
+          estimatedTimeRemaining: Math.max(0, pending.estimatedDuration - elapsed),
         };
       }
     }
@@ -63,7 +68,7 @@ export class HouseholdCalculationHandler extends CalculationHandler {
       status: 'computing',
       progress: 0,
       message: 'Initializing calculation...',
-      estimatedTimeRemaining: 60000 // Equivalent to one minute
+      estimatedTimeRemaining: 60000, // Equivalent to one minute
     };
   }
 
@@ -71,9 +76,11 @@ export class HouseholdCalculationHandler extends CalculationHandler {
     const policy1 = meta1.policyIds.reform || meta1.policyIds.baseline;
     const policy2 = meta2.policyIds.reform || meta2.policyIds.baseline;
 
-    return meta1.countryId === meta2.countryId &&
-           meta1.populationId === meta2.populationId &&
-           policy1 === policy2;
+    return (
+      meta1.countryId === meta2.countryId &&
+      meta1.populationId === meta2.populationId &&
+      policy1 === policy2
+    );
   }
 
   getStatus(reportId: string): CalculationStatusResponse | null {
@@ -88,12 +95,12 @@ export class HouseholdCalculationHandler extends CalculationHandler {
       if (pending.error) {
         return {
           status: 'error',
-          error: pending.error.message
+          error: pending.error.message,
         };
       }
       return {
         status: 'ok',
-        result: pending.result
+        result: pending.result,
       };
     }
 
@@ -105,18 +112,24 @@ export class HouseholdCalculationHandler extends CalculationHandler {
       status: 'computing',
       progress,
       message: this.getProgressMessage(progress),
-      estimatedTimeRemaining: Math.max(0, pending.estimatedDuration - elapsed)
+      estimatedTimeRemaining: Math.max(0, pending.estimatedDuration - elapsed),
     };
   }
 
   async startCalculation(reportId: string, meta: CalculationMeta): Promise<void> {
     // Check if calculation is already in progress for this reportId
     if (this.pendingCalculations.has(reportId)) {
-      console.log('[HouseholdCalculationHandler.startCalculation] Calculation already in progress for:', reportId);
+      console.log(
+        '[HouseholdCalculationHandler.startCalculation] Calculation already in progress for:',
+        reportId
+      );
       return; // Don't start a duplicate calculation
     }
 
-    console.log('[HouseholdCalculationHandler.startCalculation] Starting new calculation for:', reportId);
+    console.log(
+      '[HouseholdCalculationHandler.startCalculation] Starting new calculation for:',
+      reportId
+    );
 
     // Use CalculationMeta to configure the fetch, just like economy calculations
     const promise = fetchHouseholdCalculation(
@@ -133,7 +146,7 @@ export class HouseholdCalculationHandler extends CalculationHandler {
       completed: false,
       result: undefined as Household | undefined,
       error: undefined as Error | undefined,
-      progressInterval: undefined as NodeJS.Timeout | undefined
+      progressInterval: undefined as NodeJS.Timeout | undefined,
     };
 
     // Store by reportId, matching the cache key pattern
@@ -153,15 +166,12 @@ export class HouseholdCalculationHandler extends CalculationHandler {
       const progress = Math.min((elapsed / currentPending.estimatedDuration) * 100, 95);
 
       // Update the cache directly with synthetic progress
-      this.queryClient.setQueryData(
-        this.getCacheKey(reportId),
-        {
-          status: 'computing',
-          progress,
-          message: this.getProgressMessage(progress),
-          estimatedTimeRemaining: Math.max(0, currentPending.estimatedDuration - elapsed)
-        } as CalculationStatusResponse
-      );
+      this.queryClient.setQueryData(this.getCacheKey(reportId), {
+        status: 'computing',
+        progress,
+        message: this.getProgressMessage(progress),
+        estimatedTimeRemaining: Math.max(0, currentPending.estimatedDuration - elapsed),
+      } as CalculationStatusResponse);
     }, 500); // Update every 500ms
 
     // Store the interval reference for cleanup
@@ -169,8 +179,11 @@ export class HouseholdCalculationHandler extends CalculationHandler {
 
     // Handle completion
     promise
-      .then(result => {
-        console.log('[HouseholdCalculationHandler.startCalculation] Calculation completed successfully for:', reportId);
+      .then((result) => {
+        console.log(
+          '[HouseholdCalculationHandler.startCalculation] Calculation completed successfully for:',
+          reportId
+        );
         pending.completed = true;
         pending.result = result;
 
@@ -180,13 +193,17 @@ export class HouseholdCalculationHandler extends CalculationHandler {
         }
 
         // Update cache with final result
-        this.queryClient.setQueryData(
-          this.getCacheKey(reportId),
-          { status: 'ok', result } as CalculationStatusResponse
-        );
+        this.queryClient.setQueryData(this.getCacheKey(reportId), {
+          status: 'ok',
+          result,
+        } as CalculationStatusResponse);
       })
-      .catch(error => {
-        console.log('[HouseholdCalculationHandler.startCalculation] Calculation failed for:', reportId, error);
+      .catch((error) => {
+        console.log(
+          '[HouseholdCalculationHandler.startCalculation] Calculation failed for:',
+          reportId,
+          error
+        );
         pending.completed = true;
         pending.error = error;
 
@@ -195,10 +212,10 @@ export class HouseholdCalculationHandler extends CalculationHandler {
           clearInterval(pending.progressInterval);
         }
 
-        this.queryClient.setQueryData(
-          this.getCacheKey(reportId),
-          { status: 'error', error: error.message } as CalculationStatusResponse
-        );
+        this.queryClient.setQueryData(this.getCacheKey(reportId), {
+          status: 'error',
+          error: error.message,
+        } as CalculationStatusResponse);
       })
       .finally(() => {
         // Clean up after a delay
@@ -213,10 +230,18 @@ export class HouseholdCalculationHandler extends CalculationHandler {
   }
 
   private getProgressMessage(progress: number): string {
-    if (progress < 10) return 'Initializing calculation...';
-    if (progress < 30) return 'Loading household data...';
-    if (progress < 60) return 'Running policy simulation...';
-    if (progress < 80) return 'Calculating impacts...';
+    if (progress < 10) {
+      return 'Initializing calculation...';
+    }
+    if (progress < 30) {
+      return 'Loading household data...';
+    }
+    if (progress < 60) {
+      return 'Running policy simulation...';
+    }
+    if (progress < 80) {
+      return 'Calculating impacts...';
+    }
     return 'Finalizing results...';
   }
 }

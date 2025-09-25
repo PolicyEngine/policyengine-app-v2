@@ -1,7 +1,7 @@
-import { Simulation } from '@/types/ingredients/Simulation';
-import { Household } from '@/types/ingredients/Household';
-import { Geography } from '@/types/ingredients/Geography';
 import { CalculationStatusResponse } from '@/libs/calculations/status';
+import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 // Simulation mocks
 export const HOUSEHOLD_SIMULATION: Partial<Simulation> = {
@@ -97,8 +97,7 @@ export const ERROR_STATUS_RESPONSE: CalculationStatusResponse = {
 
 // Error messages
 export const ERROR_MESSAGES = {
-  UNKNOWN_POPULATION_TYPE: (type: string | undefined) =>
-    `Unknown population type: ${type}`,
+  UNKNOWN_POPULATION_TYPE: (type: string | undefined) => `Unknown population type: ${type}`,
   HOUSEHOLD_ID_REQUIRED: 'Household ID required for household calculation',
   GEOGRAPHY_REQUIRED: 'Geography required for economy calculation',
 } as const;

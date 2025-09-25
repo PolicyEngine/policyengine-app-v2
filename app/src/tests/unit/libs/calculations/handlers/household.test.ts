@@ -1,15 +1,15 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
 import {
-  createMockQueryClient,
-  TEST_REPORT_ID,
-  ANOTHER_REPORT_ID,
-  HOUSEHOLD_CALCULATION_META,
-  MOCK_HOUSEHOLD_RESULT,
-  HOUSEHOLD_PROGRESS_MESSAGES,
-  HOUSEHOLD_ESTIMATED_DURATION,
-  mockFetchHouseholdCalculation,
   advanceTimeAndFlush,
+  ANOTHER_REPORT_ID,
+  createMockQueryClient,
+  HOUSEHOLD_CALCULATION_META,
+  HOUSEHOLD_ESTIMATED_DURATION,
+  HOUSEHOLD_PROGRESS_MESSAGES,
+  MOCK_HOUSEHOLD_RESULT,
+  mockFetchHouseholdCalculation,
+  TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
 // Mock the household calculation API
@@ -284,10 +284,10 @@ describe('HouseholdCalculationHandler', () => {
 
       // Then
       expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith();
-      expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        ['calculation', TEST_REPORT_ID],
-        { status: 'ok', result: MOCK_HOUSEHOLD_RESULT }
-      );
+      expect(queryClient.setQueryData).toHaveBeenCalledWith(['calculation', TEST_REPORT_ID], {
+        status: 'ok',
+        result: MOCK_HOUSEHOLD_RESULT,
+      });
     });
 
     test('given calculation fails then updates cache with error', async () => {
@@ -302,10 +302,10 @@ describe('HouseholdCalculationHandler', () => {
       await advanceTimeAndFlush(0); // Let promise reject
 
       // Then
-      expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        ['calculation', TEST_REPORT_ID],
-        { status: 'error', error: 'Policy error' }
-      );
+      expect(queryClient.setQueryData).toHaveBeenCalledWith(['calculation', TEST_REPORT_ID], {
+        status: 'error',
+        error: 'Policy error',
+      });
     });
 
     test('given reform policy then uses reform policy', async () => {
@@ -402,7 +402,6 @@ describe('HouseholdCalculationHandler', () => {
     test('given different progress levels then returns appropriate messages', async () => {
       // Given
       const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
 
       // Test the private method indirectly through the public interface
       const testCases = [

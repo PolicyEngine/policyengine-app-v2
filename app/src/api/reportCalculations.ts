@@ -1,6 +1,6 @@
-import { fetchEconomyCalculation, EconomyCalculationParams } from './economy';
-import { fetchHouseholdCalculation } from './household_calculation';
 import { countryIds } from '@/libs/countries';
+import { EconomyCalculationParams, fetchEconomyCalculation } from './economy';
+import { fetchHouseholdCalculation } from './household_calculation';
 
 /**
  * Metadata needed to fetch a calculation
@@ -8,7 +8,7 @@ import { countryIds } from '@/libs/countries';
  */
 export interface CalculationMeta {
   type: 'household' | 'economy';
-  countryId: typeof countryIds[number];
+  countryId: (typeof countryIds)[number];
   policyIds: {
     baseline: string;
     reform?: string;
@@ -32,11 +32,7 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
     console.log('  - policyId:', policyId);
 
     try {
-      const result = await fetchHouseholdCalculation(
-        meta.countryId,
-        meta.populationId,
-        policyId
-      );
+      const result = await fetchHouseholdCalculation(meta.countryId, meta.populationId, policyId);
       console.log('[fetchCalculationWithMeta] Household calculation result:', result);
       return result;
     } catch (error) {
@@ -46,10 +42,12 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
   } else {
     console.log('[fetchCalculationWithMeta] Type is economy');
     // TODO: Update to use dynamic time_period when available in UI
-    console.log("[fetchCalculationWithMeta] Temporarily using 2024 as time_period for economy calculation");
+    console.log(
+      '[fetchCalculationWithMeta] Temporarily using 2024 as time_period for economy calculation'
+    );
     const params: EconomyCalculationParams = {
       region: meta.region || meta.countryId,
-      time_period: '2024'
+      time_period: '2024',
     };
 
     console.log('[fetchCalculationWithMeta] Economy calculation params:');

@@ -1,34 +1,34 @@
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, test, vi, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createReport } from '@/api/report';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useCreateReportAssociation } from '@/hooks/useUserReportAssociations';
+import {
+  createMockCalculationManager,
+  MOCK_ECONOMY_META_NATIONAL,
+  MOCK_ECONOMY_META_SUBNATIONAL,
+  MOCK_HOUSEHOLD_META,
+} from '@/tests/fixtures/hooks/calculationManagerMocks';
 import {
   CONSOLE_MESSAGES,
   createMockCreateAssociation,
   createMockQueryClient,
   ERROR_MESSAGES,
+  mockEconomySimulation,
+  mockHousehold,
+  mockHouseholdSimulation,
+  mockNationalGeography,
   mockReportCreationPayload,
   mockReportMetadata,
+  mockSubnationalGeography,
   setupConsoleMocks,
   TEST_COUNTRY_ID,
   TEST_LABEL,
   TEST_REPORT_ID_STRING,
   TEST_USER_ID,
-  mockHouseholdSimulation,
-  mockEconomySimulation,
-  mockHousehold,
-  mockNationalGeography,
-  mockSubnationalGeography,
 } from '@/tests/fixtures/hooks/reportHooksMocks';
-import {
-  createMockCalculationManager,
-  MOCK_HOUSEHOLD_META,
-  MOCK_ECONOMY_META_NATIONAL,
-  MOCK_ECONOMY_META_SUBNATIONAL,
-} from '@/tests/fixtures/hooks/calculationManagerMocks';
 
 // Mock the API
 vi.mock('@/api/report', () => ({
@@ -52,7 +52,9 @@ const mockManager = createMockCalculationManager();
 vi.mock('@/libs/calculations', () => ({
   getCalculationManager: vi.fn(() => mockManager),
   determineCalculationType: vi.fn((sim) => {
-    if (!sim) return 'economy';
+    if (!sim) {
+      return 'economy';
+    }
     return sim.populationType === 'household' ? 'household' : 'economy';
   }),
   extractPopulationId: vi.fn((type, household, geography) => {

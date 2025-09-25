@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
   CalculationType,
   determineCalculationType,
@@ -6,20 +6,20 @@ import {
   extractRegion,
 } from '@/libs/calculations/types';
 import {
-  HOUSEHOLD_SIMULATION,
+  ERROR_MESSAGES,
   GEOGRAPHY_SIMULATION,
-  UNKNOWN_SIMULATION,
-  VALID_HOUSEHOLD,
+  GEOGRAPHY_WITH_ONLY_ID,
+  GEOGRAPHY_WITHOUT_IDS,
+  HOUSEHOLD_SIMULATION,
   HOUSEHOLD_WITHOUT_ID,
   NATIONAL_GEOGRAPHY,
   SUBNATIONAL_GEOGRAPHY,
-  GEOGRAPHY_WITH_ONLY_ID,
-  GEOGRAPHY_WITHOUT_IDS,
-  ERROR_MESSAGES,
+  UNKNOWN_SIMULATION,
+  VALID_HOUSEHOLD,
 } from '@/tests/fixtures/libs/calculations/calculationMocks';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 describe('determineCalculationType', () => {
   test('given household simulation then returns household type', () => {

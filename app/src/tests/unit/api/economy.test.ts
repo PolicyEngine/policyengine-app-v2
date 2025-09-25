@@ -61,7 +61,12 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+      const result = await fetchEconomyCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
@@ -80,7 +85,12 @@ describe('economy API', () => {
 
       // When
       const params = { region: 'us', time_period: '2024' };
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+      const result = await fetchEconomyCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
 
       // Then
       expect(result.status).toBe('computing');
@@ -99,7 +109,12 @@ describe('economy API', () => {
 
       // When
       const params = { region: 'us', time_period: '2024' };
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+      const result = await fetchEconomyCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
 
       // Then
       expect(result.status).toBe('ok');
@@ -117,7 +132,12 @@ describe('economy API', () => {
 
       // When
       const params = { region: 'us', time_period: '2024' };
-      const result = await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+      const result = await fetchEconomyCalculation(
+        countryId,
+        reformPolicyId,
+        baselinePolicyId,
+        params
+      );
 
       // Then
       expect(result.status).toBe('error');

@@ -1,26 +1,26 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import { calculationQueries } from '@/libs/queryOptions/calculations';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { calculationQueries } from '@/libs/queryOptions/calculations';
 import {
-  CALCULATION_QUERY_TEST_REPORT_ID,
+  CALCULATION_QUERY_ERRORS,
   CALCULATION_QUERY_TEST_COUNTRY_ID,
-  HOUSEHOLD_REPORT,
+  CALCULATION_QUERY_TEST_REPORT_ID,
+  COMPUTING_STATUS,
+  createMockCalculationManager,
+  ECONOMY_CALCULATION_RESULT,
+  ECONOMY_META_NATIONAL,
+  ECONOMY_META_SUBNATIONAL,
   ECONOMY_REPORT,
+  ECONOMY_SIM_NATIONAL,
+  ECONOMY_SIM_SUBNATIONAL,
+  HOUSEHOLD_CALCULATION_RESULT,
+  HOUSEHOLD_META_WITH_REFORM,
+  HOUSEHOLD_REPORT,
   HOUSEHOLD_SIM_BASELINE,
   HOUSEHOLD_SIM_REFORM,
-  ECONOMY_SIM_SUBNATIONAL,
-  ECONOMY_SIM_NATIONAL,
-  HOUSEHOLD_META_WITH_REFORM,
-  ECONOMY_META_SUBNATIONAL,
-  ECONOMY_META_NATIONAL,
-  HOUSEHOLD_CALCULATION_RESULT,
-  ECONOMY_CALCULATION_RESULT,
-  COMPUTING_STATUS,
   OK_STATUS,
-  createMockCalculationManager,
-  CALCULATION_QUERY_ERRORS,
 } from '@/tests/fixtures/libs/queryOptions/calculationMocks';
 
 // Mock API functions
@@ -111,7 +111,10 @@ describe('Calculation Waterfall Reconstruction', () => {
       expect(result).toEqual(HOUSEHOLD_CALCULATION_RESULT);
 
       // Verify metadata was cached
-      const cachedMeta = queryClient.getQueryData(['calculation-meta', CALCULATION_QUERY_TEST_REPORT_ID]);
+      const cachedMeta = queryClient.getQueryData([
+        'calculation-meta',
+        CALCULATION_QUERY_TEST_REPORT_ID,
+      ]);
       expect(cachedMeta).toEqual(HOUSEHOLD_META_WITH_REFORM);
     });
 
@@ -212,11 +215,11 @@ describe('Calculation Waterfall Reconstruction', () => {
       // Given
       (fetchReportById as any).mockResolvedValueOnce(HOUSEHOLD_REPORT);
       (fetchSimulationById as any)
-        .mockImplementationOnce(() =>
-          new Promise(resolve => setTimeout(() => resolve(HOUSEHOLD_SIM_BASELINE), 10))
+        .mockImplementationOnce(
+          () => new Promise((resolve) => setTimeout(() => resolve(HOUSEHOLD_SIM_BASELINE), 10))
         )
-        .mockImplementationOnce(() =>
-          new Promise(resolve => setTimeout(() => resolve(HOUSEHOLD_SIM_REFORM), 5))
+        .mockImplementationOnce(
+          () => new Promise((resolve) => setTimeout(() => resolve(HOUSEHOLD_SIM_REFORM), 5))
         );
       mockManager.fetchCalculation.mockResolvedValueOnce(OK_STATUS);
 

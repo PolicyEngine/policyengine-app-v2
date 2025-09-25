@@ -46,7 +46,11 @@ export async function fetchEconomyCalculation(
   console.log('[fetchEconomyCalculation] Response status:', response.status, response.statusText);
 
   if (!response.ok) {
-    console.error('[fetchEconomyCalculation] Failed with status:', response.status, response.statusText);
+    console.error(
+      '[fetchEconomyCalculation] Failed with status:',
+      response.status,
+      response.statusText
+    );
     throw new Error(`Economy calculation failed: ${response.statusText}`);
   }
 

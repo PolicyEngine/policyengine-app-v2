@@ -1,8 +1,8 @@
-import { QueryClient, Query } from '@tanstack/react-query';
-import { CalculationMeta } from '@/api/reportCalculations';
-import { CalculationStatusResponse, getCalculationManager } from '@/libs/calculations';
+import { Query, QueryClient } from '@tanstack/react-query';
 import { fetchReportById } from '@/api/report';
+import { CalculationMeta } from '@/api/reportCalculations';
 import { fetchSimulationById } from '@/api/simulation';
+import { CalculationStatusResponse, getCalculationManager } from '@/libs/calculations';
 
 /**
  * Get or reconstruct metadata for a calculation
@@ -19,7 +19,10 @@ async function getOrReconstructMetadata(
 ): Promise<CalculationMeta> {
   // Use provided metadata
   if (meta) {
-    console.log('[getOrReconstructMetadata] Using provided metadata:', JSON.stringify(meta, null, 2));
+    console.log(
+      '[getOrReconstructMetadata] Using provided metadata:',
+      JSON.stringify(meta, null, 2)
+    );
     return meta;
   }
 
@@ -29,7 +32,10 @@ async function getOrReconstructMetadata(
     const cached = queryClient.getQueryData<CalculationMeta>(metaKey);
 
     if (cached) {
-      console.log('[getOrReconstructMetadata] Using cached metadata:', JSON.stringify(cached, null, 2));
+      console.log(
+        '[getOrReconstructMetadata] Using cached metadata:',
+        JSON.stringify(cached, null, 2)
+      );
       return cached;
     }
   }
@@ -39,7 +45,10 @@ async function getOrReconstructMetadata(
     throw new Error(`Country ID required for metadata reconstruction of report ${reportId}`);
   }
 
-  console.log('[getOrReconstructMetadata] Starting waterfall reconstruction for reportId:', reportId);
+  console.log(
+    '[getOrReconstructMetadata] Starting waterfall reconstruction for reportId:',
+    reportId
+  );
 
   try {
     // Step 1: Fetch report
@@ -51,7 +60,7 @@ async function getOrReconstructMetadata(
       fetchSimulationById(report.country_id, report.simulation_1_id),
       report.simulation_2_id
         ? fetchSimulationById(report.country_id, report.simulation_2_id)
-        : Promise.resolve(null)
+        : Promise.resolve(null),
     ]);
     console.log('[getOrReconstructMetadata] Simulations fetched:', { sim1, sim2 });
 
@@ -61,16 +70,20 @@ async function getOrReconstructMetadata(
       countryId: report.country_id,
       policyIds: {
         baseline: String(sim1.policy_id),
-        reform: sim2 ? String(sim2.policy_id) : undefined
+        reform: sim2 ? String(sim2.policy_id) : undefined,
       },
       populationId: String(sim1.population_id),
       // For geography/economy, use population_id as region if subnational
-      region: sim1.population_type === 'geography' && sim1.population_id !== report.country_id
-        ? String(sim1.population_id)
-        : undefined
+      region:
+        sim1.population_type === 'geography' && sim1.population_id !== report.country_id
+          ? String(sim1.population_id)
+          : undefined,
     };
 
-    console.log('[getOrReconstructMetadata] Reconstructed metadata:', JSON.stringify(reconstructedMeta, null, 2));
+    console.log(
+      '[getOrReconstructMetadata] Reconstructed metadata:',
+      JSON.stringify(reconstructedMeta, null, 2)
+    );
 
     // Step 4: Cache reconstructed metadata for future use
     if (queryClient) {
@@ -110,77 +123,91 @@ export const calculationQueries = {
     console.log('  - queryClient provided?', !!queryClient);
 
     return {
-    queryKey: ['calculation', reportId] as const,
-    queryFn: async () => {
-      console.log('[calculationQueries.queryFn] Starting fetch for reportId:', reportId);
+      queryKey: ['calculation', reportId] as const,
+      queryFn: async () => {
+        console.log('[calculationQueries.queryFn] Starting fetch for reportId:', reportId);
 
-      // Require queryClient for manager
-      if (!queryClient) {
-        console.error('[calculationQueries.queryFn] No QueryClient provided');
-        throw new Error('QueryClient is required for calculation queries');
-      }
-
-      // Get the calculation manager
-      const manager = getCalculationManager(queryClient);
-      console.log('[calculationQueries.queryFn] Got calculation manager');
-
-      try {
-        // Get or reconstruct metadata
-        const calculationMeta = await getOrReconstructMetadata(reportId, meta, queryClient, countryId);
-        console.log('[calculationQueries.queryFn] Got metadata:', JSON.stringify(calculationMeta, null, 2));
-
-        // Start the calculation if needed and fetch the result
-        console.log('[calculationQueries.queryFn] Starting calculation via manager');
-        await manager.startCalculation(reportId, calculationMeta);
-
-        console.log('[calculationQueries.queryFn] Fetching calculation via manager');
-        const result = await manager.fetchCalculation(calculationMeta);
-        console.log('[calculationQueries.queryFn] Manager returned result:', result);
-
-        return result;
-      } catch (error) {
-        console.error('[calculationQueries.queryFn] Calculation failed:', error);
-        throw error;
-      }
-    },
-    refetchInterval: (query: Query<CalculationStatusResponse, Error>) => {
-      console.log('[calculationQueries.refetchInterval] Checking if should refetch');
-      const data = query.state.data;
-      console.log('[calculationQueries.refetchInterval] Current data:', data);
-
-      // Check if we have metadata to determine calculation type
-      const queryKey = query.queryKey as readonly ['calculation', string];
-      const reportId = queryKey[1];
-      const metadataKey = ['calculation-meta', reportId] as const;
-      const metadata = queryClient?.getQueryData<CalculationMeta>(metadataKey);
-
-      console.log('[calculationQueries.refetchInterval] Metadata:', metadata);
-
-      // Only poll for economy calculations with computing status
-      // Household calculations use synthetic progress via cache updates, no polling needed
-      if (data && typeof data === 'object' && 'status' in data) {
-        console.log('[calculationQueries.refetchInterval] Data has status field:', data.status);
-
-        if (data.status === 'computing') {
-          // Check if this is a household calculation
-          if (metadata?.type === 'household') {
-            console.log('[calculationQueries.refetchInterval] Household calculation - no polling needed (synthetic progress via cache)');
-            return false; // No polling for household calculations
-          }
-
-          // Economy calculation - poll the API
-          console.log('[calculationQueries.refetchInterval] Economy calculation - will refetch in 1000ms');
-          return 1000; // Poll every second for economy calculations
+        // Require queryClient for manager
+        if (!queryClient) {
+          console.error('[calculationQueries.queryFn] No QueryClient provided');
+          throw new Error('QueryClient is required for calculation queries');
         }
 
-        console.log('[calculationQueries.refetchInterval] Status is not computing, no refetch');
-      } else {
-        console.log('[calculationQueries.refetchInterval] Data does not have status field or is not an object, no refetch');
-      }
-      return false;
-    },
-    staleTime: Infinity, // Calculation results don't go stale
-  };
+        // Get the calculation manager
+        const manager = getCalculationManager(queryClient);
+        console.log('[calculationQueries.queryFn] Got calculation manager');
+
+        try {
+          // Get or reconstruct metadata
+          const calculationMeta = await getOrReconstructMetadata(
+            reportId,
+            meta,
+            queryClient,
+            countryId
+          );
+          console.log(
+            '[calculationQueries.queryFn] Got metadata:',
+            JSON.stringify(calculationMeta, null, 2)
+          );
+
+          // Start the calculation if needed and fetch the result
+          console.log('[calculationQueries.queryFn] Starting calculation via manager');
+          await manager.startCalculation(reportId, calculationMeta);
+
+          console.log('[calculationQueries.queryFn] Fetching calculation via manager');
+          const result = await manager.fetchCalculation(calculationMeta);
+          console.log('[calculationQueries.queryFn] Manager returned result:', result);
+
+          return result;
+        } catch (error) {
+          console.error('[calculationQueries.queryFn] Calculation failed:', error);
+          throw error;
+        }
+      },
+      refetchInterval: (query: Query<CalculationStatusResponse, Error>) => {
+        console.log('[calculationQueries.refetchInterval] Checking if should refetch');
+        const data = query.state.data;
+        console.log('[calculationQueries.refetchInterval] Current data:', data);
+
+        // Check if we have metadata to determine calculation type
+        const queryKey = query.queryKey as readonly ['calculation', string];
+        const reportId = queryKey[1];
+        const metadataKey = ['calculation-meta', reportId] as const;
+        const metadata = queryClient?.getQueryData<CalculationMeta>(metadataKey);
+
+        console.log('[calculationQueries.refetchInterval] Metadata:', metadata);
+
+        // Only poll for economy calculations with computing status
+        // Household calculations use synthetic progress via cache updates, no polling needed
+        if (data && typeof data === 'object' && 'status' in data) {
+          console.log('[calculationQueries.refetchInterval] Data has status field:', data.status);
+
+          if (data.status === 'computing') {
+            // Check if this is a household calculation
+            if (metadata?.type === 'household') {
+              console.log(
+                '[calculationQueries.refetchInterval] Household calculation - no polling needed (synthetic progress via cache)'
+              );
+              return false; // No polling for household calculations
+            }
+
+            // Economy calculation - poll the API
+            console.log(
+              '[calculationQueries.refetchInterval] Economy calculation - will refetch in 1000ms'
+            );
+            return 1000; // Poll every second for economy calculations
+          }
+
+          console.log('[calculationQueries.refetchInterval] Status is not computing, no refetch');
+        } else {
+          console.log(
+            '[calculationQueries.refetchInterval] Data does not have status field or is not an object, no refetch'
+          );
+        }
+        return false;
+      },
+      staleTime: Infinity, // Calculation results don't go stale
+    };
   },
 
   /**

@@ -1,8 +1,22 @@
-import { Container, Title, Text, Card, Stack, Group, Loader, Progress, Badge, Button, Alert, Box, ScrollArea } from '@mantine/core';
 import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useReportOutput } from '@/hooks/useReportOutput';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Card,
+  Container,
+  Group,
+  Loader,
+  Progress,
+  ScrollArea,
+  Stack,
+  Text,
+  Title,
+} from '@mantine/core';
 import { spacing } from '@/designTokens';
+import { useReportOutput } from '@/hooks/useReportOutput';
 
 export default function ReportOutputFrame() {
   const { reportId } = useParams<{ reportId: string }>();
@@ -31,7 +45,7 @@ export default function ReportOutputFrame() {
 
 function ReportOutputView({
   reportId,
-  navigate
+  navigate,
 }: {
   reportId: string;
   navigate: ReturnType<typeof useNavigate>;
@@ -43,7 +57,8 @@ function ReportOutputView({
   const progress = status === 'pending' ? (result as any).progress : undefined;
   const message = status === 'pending' ? (result as any).message : undefined;
   const queuePosition = status === 'pending' ? (result as any).queuePosition : undefined;
-  const estimatedTimeRemaining = status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
+  const estimatedTimeRemaining =
+    status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
 
   return (
     <Container variant="guttered">
@@ -56,8 +71,8 @@ function ReportOutputView({
             {status === 'error'
               ? 'Calculation encountered an error'
               : status === 'complete'
-              ? 'Calculation complete!'
-              : 'Please wait while we process your report...'}
+                ? 'Calculation complete!'
+                : 'Please wait while we process your report...'}
           </Text>
         </Box>
 
@@ -65,28 +80,19 @@ function ReportOutputView({
           <Stack gap={spacing.md}>
             {/* Status Header */}
             <Group justify="space-between" align="center">
-              <Text fw={600}>
-                Report #{reportId}
-              </Text>
+              <Text fw={600}>Report #{reportId}</Text>
               <Badge
                 size="lg"
                 variant="light"
-                color={
-                  status === 'error' ? 'red' :
-                  status === 'complete' ? 'green' : 'blue'
-                }
+                color={status === 'error' ? 'red' : status === 'complete' ? 'green' : 'blue'}
               >
-                {status === 'pending' ? 'Processing' :
-                 status === 'complete' ? 'Complete' : 'Error'}
+                {status === 'pending' ? 'Processing' : status === 'complete' ? 'Complete' : 'Error'}
               </Badge>
             </Group>
 
             {/* Content based on status */}
             {status === 'error' ? (
-              <ErrorDisplay
-                error={error}
-                onBack={() => navigate(-1)}
-              />
+              <ErrorDisplay error={error} onBack={() => navigate(-1)} />
             ) : status === 'complete' ? (
               <>
                 <CompletedDisplay />
@@ -125,7 +131,7 @@ function LoadingDisplay({
   progress,
   message,
   queuePosition,
-  estimatedTimeRemaining
+  estimatedTimeRemaining,
 }: {
   isPending: boolean;
   progress?: number;
@@ -134,13 +140,17 @@ function LoadingDisplay({
   estimatedTimeRemaining?: number;
 }) {
   // Calculate progress value
-  const progressValue = progress ? progress * 100 : (queuePosition ? 100 - queuePosition : 50);
+  const progressValue = progress ? progress * 100 : queuePosition ? 100 - queuePosition : 50;
 
   // Format estimated time
   const formatTime = (ms?: number) => {
-    if (!ms) return null;
+    if (!ms) {
+      return null;
+    }
     const seconds = Math.ceil(ms / 1000);
-    if (seconds < 60) return `${seconds} seconds`;
+    if (seconds < 60) {
+      return `${seconds} seconds`;
+    }
     const minutes = Math.ceil(seconds / 60);
     return `${minutes} minute${minutes > 1 ? 's' : ''}`;
   };
@@ -150,20 +160,14 @@ function LoadingDisplay({
   return (
     <Stack gap={spacing.md}>
       <Box>
-        <Progress
-          value={progressValue}
-          size="xl"
-          radius="md"
-          animated
-          color="blue"
-        />
+        <Progress value={progressValue} size="xl" radius="md" animated color="blue" />
         <Text size="sm" c="dimmed" mt={spacing.xs} ta="center">
-          {message || (queuePosition
-            ? `Queue position: ${queuePosition}`
-            : isPending
-            ? 'Processing calculation...'
-            : 'Fetching results...'
-          )}
+          {message ||
+            (queuePosition
+              ? `Queue position: ${queuePosition}`
+              : isPending
+                ? 'Processing calculation...'
+                : 'Fetching results...')}
         </Text>
         {estimatedTime && (
           <Text size="xs" c="dimmed" ta="center" mt={4}>
@@ -176,13 +180,17 @@ function LoadingDisplay({
         <Loader size="lg" />
       </Group>
 
-      <Card withBorder p={spacing.sm} radius="sm" style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
+      <Card
+        withBorder
+        p={spacing.sm}
+        radius="sm"
+        style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}
+      >
         <Text size="sm" c="dimmed">
           {queuePosition
             ? `Your calculation is queued. You are currently at position ${queuePosition} in the queue.`
-            : 'Your calculation is being processed. This may take a few moments for complex analyses.'
-          }
-          {' '}The page will automatically update when the results are ready.
+            : 'Your calculation is being processed. This may take a few moments for complex analyses.'}{' '}
+          The page will automatically update when the results are ready.
         </Text>
       </Card>
     </Stack>
@@ -198,7 +206,9 @@ function ErrorDisplay({ error, onBack }: { error: any; onBack: () => void }) {
         color="red"
         variant="light"
       >
-        {typeof error === 'string' ? error : error?.message || 'An unexpected error occurred during calculation.'}
+        {typeof error === 'string'
+          ? error
+          : error?.message || 'An unexpected error occurred during calculation.'}
       </Alert>
 
       <Button variant="default" onClick={onBack} fullWidth>
@@ -214,7 +224,9 @@ function CompletedDisplay() {
       <Progress value={100} size="xl" radius="md" color="green" />
       <Group gap={spacing.xs}>
         <IconCheck size={20} color="var(--mantine-color-green-6)" />
-        <Text size="sm" c="green.6" fw={500}>Calculation complete!</Text>
+        <Text size="sm" c="green.6" fw={500}>
+          Calculation complete!
+        </Text>
       </Group>
     </Stack>
   );
@@ -235,7 +247,9 @@ function ResultDisplay({ result }: { result: any }) {
 
         {!isHouseholdResult && result.budget && (
           <Box>
-            <Text size="sm" c="dimmed" mb={spacing.xs}>Budget Impact</Text>
+            <Text size="sm" c="dimmed" mb={spacing.xs}>
+              Budget Impact
+            </Text>
             <Text size="lg" fw={600}>
               ${Math.abs(result.budget.budgetary_impact / 1000000000).toFixed(2)}B
             </Text>
@@ -247,7 +261,9 @@ function ResultDisplay({ result }: { result: any }) {
 
         {!isHouseholdResult && result.poverty && (
           <Box>
-            <Text size="sm" c="dimmed" mb={spacing.xs}>Poverty Impact</Text>
+            <Text size="sm" c="dimmed" mb={spacing.xs}>
+              Poverty Impact
+            </Text>
             <Text size="md" fw={500}>
               {(result.poverty.poverty_rate_change * 100).toFixed(2)}% change in poverty rate
             </Text>
@@ -267,7 +283,7 @@ function ResultDisplay({ result }: { result: any }) {
               fontSize: '12px',
               lineHeight: '1.5',
               margin: 0,
-              overflow: 'auto'
+              overflow: 'auto',
             }}
           >
             {JSON.stringify(result, null, 2)}

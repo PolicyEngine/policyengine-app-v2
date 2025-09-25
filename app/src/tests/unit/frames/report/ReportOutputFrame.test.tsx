@@ -1,17 +1,17 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportOutputFrame from '@/frames/report/ReportOutputFrame';
 import * as useReportOutputModule from '@/hooks/useReportOutput';
 import {
   MOCK_REPORT_ID,
-  mockPendingReportOutput,
-  mockPendingWithQueuePosition,
-  mockPendingWithProgress,
-  mockPendingPartialProgress,
   mockCompleteEconomyReportOutput,
   mockCompleteHouseholdReportOutput,
-  mockErrorReportOutput,
   mockErrorObjectReportOutput,
+  mockErrorReportOutput,
+  mockPendingPartialProgress,
+  mockPendingReportOutput,
+  mockPendingWithProgress,
+  mockPendingWithQueuePosition,
 } from '@/tests/fixtures/frames/reportOutputFrameMocks';
 
 // Mock React Router
@@ -44,7 +44,9 @@ describe('ReportOutputFrame', () => {
 
       // Then
       expect(screen.getByText('Missing Report ID')).toBeInTheDocument();
-      expect(screen.getByText('No report ID was provided. Please go back and create a report first.')).toBeInTheDocument();
+      expect(
+        screen.getByText('No report ID was provided. Please go back and create a report first.')
+      ).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /go back/i })).toBeInTheDocument();
     });
 
@@ -63,9 +65,7 @@ describe('ReportOutputFrame', () => {
 
     test('given reportId then renders ReportOutputView', () => {
       // Given
-      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(
-        mockPendingReportOutput
-      );
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(mockPendingReportOutput);
 
       // When
       render(<ReportOutputFrame />);
@@ -79,9 +79,7 @@ describe('ReportOutputFrame', () => {
   describe('Status states', () => {
     test('given pending status then shows loading display', () => {
       // Given
-      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(
-        mockPendingReportOutput
-      );
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(mockPendingReportOutput);
 
       // When
       render(<ReportOutputFrame />);
@@ -220,9 +218,7 @@ describe('ReportOutputFrame', () => {
 
     test('given pending with progress then shows progress information', () => {
       // Given
-      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(
-        mockPendingWithProgress
-      );
+      vi.spyOn(useReportOutputModule, 'useReportOutput').mockReturnValue(mockPendingWithProgress);
 
       // When
       render(<ReportOutputFrame />);

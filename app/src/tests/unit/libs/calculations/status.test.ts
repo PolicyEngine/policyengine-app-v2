@@ -1,10 +1,10 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { CalculationStatus, CalculationStatusResponse } from '@/libs/calculations/status';
 import {
   COMPUTING_STATUS_RESPONSE,
   COMPUTING_WITH_QUEUE_RESPONSE,
-  OK_STATUS_RESPONSE,
   ERROR_STATUS_RESPONSE,
+  OK_STATUS_RESPONSE,
 } from '@/tests/fixtures/libs/calculations/calculationMocks';
 
 describe('CalculationStatusResponse', () => {
@@ -88,7 +88,7 @@ describe('CalculationStatusResponse', () => {
     const validStatuses: CalculationStatus[] = ['computing', 'ok', 'error'];
 
     // Then
-    validStatuses.forEach(status => {
+    validStatuses.forEach((status) => {
       const response: CalculationStatusResponse = { status };
       expect(response.status).toBe(status);
     });

@@ -1,10 +1,9 @@
-import type { Report } from '@/types/ingredients/Report';
-import type { QueryClient } from '@tanstack/react-query';
 import React from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
 import metadataReducer from '@/reducers/metadataReducer';
+import type { Report } from '@/types/ingredients/Report';
 
 // Mock report ID
 export const MOCK_REPORT_ID = '123';
@@ -70,7 +69,6 @@ export const createQueryClientWrapper = (countryId: string = 'us') => {
   let queryClient: QueryClient;
 
   const createWrapper = () => {
-    const { QueryClient } = require('@tanstack/react-query');
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },

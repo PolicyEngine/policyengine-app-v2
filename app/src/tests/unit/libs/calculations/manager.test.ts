@@ -1,19 +1,19 @@
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   CalculationManager,
   getCalculationManager,
   resetCalculationManager,
 } from '@/libs/calculations/manager';
 import {
-  createMockManagerQueryClient,
   createMockHandlers,
-  MANAGER_TEST_REPORT_ID,
-  MANAGER_HOUSEHOLD_META,
-  MANAGER_ECONOMY_META,
+  createMockManagerQueryClient,
   INVALID_TYPE_META,
   MANAGER_COMPUTING_STATUS,
-  MANAGER_OK_STATUS,
+  MANAGER_ECONOMY_META,
   MANAGER_ERROR_MESSAGES,
+  MANAGER_HOUSEHOLD_META,
+  MANAGER_OK_STATUS,
+  MANAGER_TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/managerMocks';
 
 // Mock the handler modules
@@ -149,7 +149,9 @@ describe('CalculationManager', () => {
       (manager as any).handlers.set('household', mockHandlers.household);
 
       // When/Then
-      await expect(manager.fetchCalculation(MANAGER_HOUSEHOLD_META)).rejects.toThrow('Fetch failed');
+      await expect(manager.fetchCalculation(MANAGER_HOUSEHOLD_META)).rejects.toThrow(
+        'Fetch failed'
+      );
     });
   });
 

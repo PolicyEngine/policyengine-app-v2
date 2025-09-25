@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
-import { CalculationStatusResponse } from '@/libs/calculations/status';
 import { CalculationMeta } from '@/api/reportCalculations';
+import { CalculationStatusResponse } from '@/libs/calculations/status';
 
 // Test IDs
 export const CALCULATION_QUERY_TEST_REPORT_ID = '123';
@@ -138,6 +138,8 @@ export function createMockCalculationManager() {
 // Error messages
 export const CALCULATION_QUERY_ERRORS = {
   NO_QUERY_CLIENT: 'QueryClient is required for calculation queries',
-  NO_COUNTRY_ID: (reportId: string) => `Country ID required for metadata reconstruction of report ${reportId}`,
-  WATERFALL_FAILED: (reportId: string, error: string) => `Failed to reconstruct metadata for report ${reportId}: ${error}`,
+  NO_COUNTRY_ID: (reportId: string) =>
+    `Country ID required for metadata reconstruction of report ${reportId}`,
+  WATERFALL_FAILED: (reportId: string, error: string) =>
+    `Failed to reconstruct metadata for report ${reportId}: ${error}`,
 } as const;

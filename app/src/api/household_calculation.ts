@@ -29,10 +29,18 @@ export async function fetchHouseholdCalculation(
     });
 
     clearTimeout(timeoutId);
-    console.log('[fetchHouseholdCalculation] Response status:', response.status, response.statusText);
+    console.log(
+      '[fetchHouseholdCalculation] Response status:',
+      response.status,
+      response.statusText
+    );
 
     if (!response.ok) {
-      console.error('[fetchHouseholdCalculation] Failed with status:', response.status, response.statusText);
+      console.error(
+        '[fetchHouseholdCalculation] Failed with status:',
+        response.status,
+        response.statusText
+      );
       throw new Error(`Household calculation failed: ${response.statusText}`);
     }
 

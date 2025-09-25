@@ -40,9 +40,7 @@ export type UseReportOutputResult = PendingResult | CompleteResult | ErrorResult
  */
 export function useReportOutput({ reportId }: UseReportOutputParams): UseReportOutputResult {
   const queryClient = useQueryClient();
-  const countryId = useSelector((state: RootState) =>
-    state.metadata.currentCountry || 'us'
-  );
+  const countryId = useSelector((state: RootState) => state.metadata.currentCountry || 'us');
 
   // Use unified query that works for both calculation types
   const { data, error, isLoading } = useQuery({

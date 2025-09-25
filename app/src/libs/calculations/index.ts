@@ -3,25 +3,18 @@ export {
   type CalculationType,
   determineCalculationType,
   extractPopulationId,
-  extractRegion
+  extractRegion,
 } from './types';
 
 // Status types
-export {
-  type CalculationStatus,
-  type CalculationStatusResponse
-} from './status';
+export { type CalculationStatus, type CalculationStatusResponse } from './status';
 
 // Handlers
 export {
   CalculationHandler,
   EconomyCalculationHandler,
-  HouseholdCalculationHandler
+  HouseholdCalculationHandler,
 } from './handlers';
 
 // Manager
-export {
-  CalculationManager,
-  getCalculationManager,
-  resetCalculationManager
-} from './manager';
+export { CalculationManager, getCalculationManager, resetCalculationManager } from './manager';

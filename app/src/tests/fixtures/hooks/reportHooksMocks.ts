@@ -1,12 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
+import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload } from '@/types/payloads';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { Household } from '@/types/ingredients/Household';
-import { Geography } from '@/types/ingredients/Geography';
 
 // Test constants
 export const TEST_REPORT_ID = 123;

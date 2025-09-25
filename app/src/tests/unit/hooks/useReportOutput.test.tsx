@@ -1,16 +1,18 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+// Import after mocking to get the mocked version
+import { useQuery } from '@tanstack/react-query';
 import { renderHook } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useReportOutput } from '@/hooks/useReportOutput';
 import {
-  MOCK_REPORT_ID,
-  createQueryClientWrapper,
-} from '@/tests/fixtures/hooks/useReportOutputMocks';
-import {
-  MOCK_HOUSEHOLD_CALCULATION_RESPONSE,
-  MOCK_ECONOMY_CALCULATION_RESPONSE,
   MOCK_COMPUTING_RESPONSE,
+  MOCK_ECONOMY_CALCULATION_RESPONSE,
   MOCK_ERROR_RESPONSE,
+  MOCK_HOUSEHOLD_CALCULATION_RESPONSE,
 } from '@/tests/fixtures/hooks/calculationManagerMocks';
+import {
+  createQueryClientWrapper,
+  MOCK_REPORT_ID,
+} from '@/tests/fixtures/hooks/useReportOutputMocks';
 
 // Mock dependencies
 vi.mock('@tanstack/react-query', async () => {
@@ -22,13 +24,10 @@ vi.mock('@tanstack/react-query', async () => {
   };
 });
 
-// Import after mocking to get the mocked version
-import { useQuery } from '@tanstack/react-query';
-
 // Mock the calculation queries
 vi.mock('@/libs/queryOptions/calculations', () => ({
   calculationQueries: {
-    forReport: vi.fn((reportId, meta, queryClient, countryId) => ({
+    forReport: vi.fn((reportId, _meta, _queryClient, _countryId) => ({
       queryKey: ['calculation', reportId],
       queryFn: vi.fn(),
       refetchInterval: vi.fn(),
