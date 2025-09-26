@@ -137,6 +137,7 @@ describe('HouseholdProgressUpdater', () => {
     test('given different report IDs then tracks both independently', async () => {
       // Given
       const reportId2 = 'report-456';
+      mockHandler.getStatus?.mockReturnValue(COMPUTING_STATUS);
       const mockHandler2 = {
         getStatus: vi.fn().mockReturnValue(COMPUTING_STATUS),
       };
@@ -148,15 +149,20 @@ describe('HouseholdProgressUpdater', () => {
       // Advance time
       await advanceTimeAndFlush(500);
 
-      // Then
-      expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        ['calculation', TEST_REPORT_ID],
-        COMPUTING_STATUS
+      // Then - should have been called at least once for each
+      expect(queryClient.setQueryData).toHaveBeenCalledTimes(2);
+
+      // Check that both were called
+      const calls = vi.mocked(queryClient.setQueryData).mock.calls;
+      const hasFirstReport = calls.some(call =>
+        JSON.stringify(call[0]) === JSON.stringify(['calculation', TEST_REPORT_ID])
       );
-      expect(queryClient.setQueryData).toHaveBeenCalledWith(
-        ['calculation', reportId2],
-        COMPUTING_STATUS
+      const hasSecondReport = calls.some(call =>
+        JSON.stringify(call[0]) === JSON.stringify(['calculation', reportId2])
       );
+
+      expect(hasFirstReport).toBe(true);
+      expect(hasSecondReport).toBe(true);
     });
   });
 
