@@ -168,21 +168,22 @@ describe('CalculationManager', () => {
 
     test('given report update failure then retries once', async () => {
       // Given
+      vi.useFakeTimers();
       mockService.executeCalculation.mockResolvedValue(OK_STATUS_HOUSEHOLD);
       vi.mocked(reportApi.markReportCompleted)
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(undefined);
+        .mockResolvedValueOnce(undefined as any);
 
       // When
-      vi.useFakeTimers();
-      await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+      const promise = manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
-      // Advance time for retry
-      await vi.advanceTimersByTimeAsync(1000);
-      vi.useRealTimers();
+      // Wait for initial call to complete
+      await vi.runAllTimersAsync();
+      await promise;
 
       // Then
       expect(reportApi.markReportCompleted).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
     });
   });
 
@@ -296,13 +297,13 @@ describe('CalculationManager', () => {
 
     test('given failed update with retry success then still invalidates cache', async () => {
       // Given
+      vi.useFakeTimers();
       vi.mocked(reportApi.markReportCompleted)
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(undefined);
+        .mockResolvedValueOnce(undefined as any);
 
       // When
-      vi.useFakeTimers();
-      await manager.updateReportStatus(
+      const promise = manager.updateReportStatus(
         TEST_REPORT_ID,
         'complete',
         'us',
@@ -310,25 +311,26 @@ describe('CalculationManager', () => {
       );
 
       // Advance time for retry
-      await vi.advanceTimersByTimeAsync(1000);
-      vi.useRealTimers();
+      await vi.runAllTimersAsync();
+      await promise;
 
       // Then
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: ['reports', 'report_id', TEST_REPORT_ID],
       });
+      vi.useRealTimers();
     });
 
     test('given failed update with retry failure then logs error', async () => {
       // Given
+      vi.useFakeTimers();
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       vi.mocked(reportApi.markReportCompleted)
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Still failing'));
 
       // When
-      vi.useFakeTimers();
-      await manager.updateReportStatus(
+      const promise = manager.updateReportStatus(
         TEST_REPORT_ID,
         'complete',
         'us',
@@ -336,8 +338,8 @@ describe('CalculationManager', () => {
       );
 
       // Advance time for retry
-      await vi.advanceTimersByTimeAsync(1000);
-      vi.useRealTimers();
+      await vi.runAllTimersAsync();
+      await promise;
 
       // Then
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -345,6 +347,7 @@ describe('CalculationManager', () => {
         expect.any(Error)
       );
       consoleErrorSpy.mockRestore();
+      vi.useRealTimers();
     });
   });
 });
