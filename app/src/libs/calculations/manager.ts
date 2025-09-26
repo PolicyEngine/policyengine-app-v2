@@ -2,7 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { markReportCompleted, markReportError } from '@/api/report';
 import { countryIds } from '@/libs/countries';
-import { Report } from '@/types/ingredients/Report';
+import { Report, ReportOutput } from '@/types/ingredients/Report';
 import {
   CalculationHandler,
   EconomyCalculationHandler,
@@ -93,20 +93,21 @@ export class CalculationManager {
    * Update the report status in the database when a calculation completes or errors
    * @param reportId - The report ID to update
    * @param status - The new status ('complete' or 'error')
-   * @param result - The calculation result (for 'complete' status)
    * @param countryId - The country ID for the report
+   * @param result - The calculation result (for 'complete' status) - can be Household or society-wide results
    */
   async updateReportStatus(
     reportId: string,
     status: 'complete' | 'error',
     countryId: (typeof countryIds)[number],
-    result?: any
+    result?: ReportOutput
   ): Promise<void> {
     // Create a minimal Report object with just the necessary fields
+    // Both household and society-wide results are stored in the output field
     const report: Report = {
       reportId,
       status,
-      output: status === 'complete' ? result : null,
+      output: status === 'complete' ? result || null : null,
       countryId: countryId,
       apiVersion: '',
       simulationIds: [],
