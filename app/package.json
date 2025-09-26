@@ -5,8 +5,8 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build-with-types": "tsc --noEmit && vite build",
+    "build": "vite build && cp dist/index.html dist/404.html",
+    "build-with-types": "tsc --noEmit && vite build && cp dist/index.html dist/404.html",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "npm run eslint && npm run stylelint",
