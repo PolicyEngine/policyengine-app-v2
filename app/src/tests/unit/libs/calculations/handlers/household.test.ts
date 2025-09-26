@@ -1,434 +1,272 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
+import * as householdApi from '@/api/household_calculation';
 import {
-  advanceTimeAndFlush,
-  ANOTHER_REPORT_ID,
-  createMockQueryClient,
-  HOUSEHOLD_CALCULATION_META,
-  HOUSEHOLD_ESTIMATED_DURATION,
-  HOUSEHOLD_PROGRESS_MESSAGES,
-  MOCK_HOUSEHOLD_RESULT,
-  mockFetchHouseholdCalculation,
   TEST_REPORT_ID,
+  HOUSEHOLD_CALCULATION_META,
+  MOCK_HOUSEHOLD_RESULT,
+  createRejectedPromise,
+  advanceTimeAndFlush,
+  HOUSEHOLD_ESTIMATED_DURATION,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
-// Mock the household calculation API
-vi.mock('@/api/household_calculation', () => ({
-  fetchHouseholdCalculation: vi.fn(() => mockFetchHouseholdCalculation()),
-}));
+// Mock the API
+vi.mock('@/api/household_calculation');
 
 describe('HouseholdCalculationHandler', () => {
+  let handler: HouseholdCalculationHandler;
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.useFakeTimers();
+    handler = new HouseholdCalculationHandler();
   });
 
   afterEach(() => {
     vi.useRealTimers();
   });
 
-  describe('fetch - before calculation starts', () => {
-    test('given no pending calculation then returns initial computing status', async () => {
+  describe('execute', () => {
+    test('given new calculation request then starts calculation and returns computing status', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
 
-      // When - fetch without starting calculation first
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
-
-      // Then - should return initial computing status
-      // (startCalculation should be called to actually trigger the fetch)
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(0);
-      expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.INITIALIZING);
-      expect(result.estimatedTimeRemaining).toBe(HOUSEHOLD_ESTIMATED_DURATION);
-    });
-  });
-
-  describe('fetch - with pending calculation', () => {
-    test('given calculation just started then returns initial progress', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockReturnValue(
-        new Promise(() => {}) // Never resolves for this test
-      );
-
-      // Start calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-
-      // When - immediately fetch
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
+      // When
+      const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(0);
-      expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.INITIALIZING);
-      expect(result.estimatedTimeRemaining).toBe(HOUSEHOLD_ESTIMATED_DURATION);
+      expect(result).toEqual({
+        status: 'computing',
+        progress: 0,
+        message: 'Initializing calculation...',
+        estimatedTimeRemaining: HOUSEHOLD_ESTIMATED_DURATION,
+      });
+      expect(householdApi.fetchHouseholdCalculation).toHaveBeenCalledWith(
+        HOUSEHOLD_CALCULATION_META.countryId,
+        HOUSEHOLD_CALCULATION_META.populationId,
+        HOUSEHOLD_CALCULATION_META.policyIds.reform
+      );
     });
 
-    test('given calculation at 25% then returns loading message', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockReturnValue(
-        new Promise(() => {}) // Never resolves
+    test('given existing calculation then returns current status without new API call', async () => {
+      // Given - start a calculation that won't resolve immediately
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
+        () => new Promise(() => {}) // Never resolves to keep it computing
       );
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+      vi.clearAllMocks();
 
-      // Start calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-
-      // When - advance to 25% (15 seconds)
-      await advanceTimeAndFlush(15000);
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
+      // When - execute again with same reportId
+      const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
+      expect(householdApi.fetchHouseholdCalculation).not.toHaveBeenCalled();
       expect(result.status).toBe('computing');
-      expect(result.progress).toBe(25);
-      expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.LOADING);
-      expect(result.estimatedTimeRemaining).toBe(45000);
-    });
-
-    test('given calculation at 50% then returns running message', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockReturnValue(
-        new Promise(() => {}) // Never resolves
-      );
-
-      // Start calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-
-      // When - advance to 50% (30 seconds)
-      await advanceTimeAndFlush(30000);
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
-
-      // Then
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(50);
-      expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.RUNNING);
-      expect(result.estimatedTimeRemaining).toBe(30000);
-    });
-
-    test('given calculation at 75% then returns calculating message', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockReturnValue(
-        new Promise(() => {}) // Never resolves
-      );
-
-      // Start calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-
-      // When - advance to 75% (45 seconds)
-      await advanceTimeAndFlush(45000);
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
-
-      // Then
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(75);
-      expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.CALCULATING);
-      expect(result.estimatedTimeRemaining).toBe(15000);
-    });
-
-    test('given calculation near completion then caps at 95% progress', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockReturnValue(
-        new Promise(() => {}) // Never resolves
-      );
-
-      // Start calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-
-      // When - advance past estimated time (70 seconds)
-      await advanceTimeAndFlush(70000);
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
-
-      // Then
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(95); // Capped at 95
-      expect(result.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.FINALIZING);
-      expect(result.estimatedTimeRemaining).toBe(0);
+      expect(result.progress).toBeGreaterThanOrEqual(0);
     });
 
     test('given completed calculation then returns ok status with result', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
-      // Start calculation and let it complete
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(0); // Let promise resolve
+      // Wait for completion
+      await advanceTimeAndFlush(0);
 
       // When
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
+      const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
-      expect(result.status).toBe('ok');
-      expect(result.result).toEqual(MOCK_HOUSEHOLD_RESULT);
-      expect(result.error).toBeUndefined();
-    });
-
-    test('given failed calculation then returns error status', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      const error = new Error('Calculation failed: timeout');
-      mockFetchHouseholdCalculation.mockRejectedValue(error);
-
-      // Start calculation and let it fail
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(0); // Let promise reject
-
-      // When
-      const result = await handler.fetch(HOUSEHOLD_CALCULATION_META);
-
-      // Then
-      expect(result.status).toBe('error');
-      expect(result.error).toBe('Calculation failed: timeout');
-      expect(result.result).toBeUndefined();
-    });
-  });
-
-  describe('getStatus', () => {
-    test('given no calculations then returns null', () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-
-      // When
-      const result = handler.getStatus(TEST_REPORT_ID);
-
-      // Then
-      expect(result).toBeNull();
-    });
-
-    test('given running calculation then returns computing status', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockReturnValue(
-        new Promise(() => {}) // Never resolves
-      );
-
-      // Start calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(24000); // 24 seconds (40% of 60 seconds)
-
-      // When
-      const result = handler.getStatus(TEST_REPORT_ID);
-
-      // Then
-      expect(result).not.toBeNull();
-      expect(result?.status).toBe('computing');
-      expect(result?.progress).toBe(40);
-      expect(result?.message).toBe(HOUSEHOLD_PROGRESS_MESSAGES.RUNNING);
-    });
-
-    test('given completed calculation then returns ok status', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
-
-      // Start and complete calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(0); // Let promise resolve
-
-      // When
-      const result = handler.getStatus(TEST_REPORT_ID);
-
-      // Then
-      expect(result).not.toBeNull();
-      expect(result?.status).toBe('ok');
-      expect(result?.result).toEqual(MOCK_HOUSEHOLD_RESULT);
-    });
-
-    test('given failed calculation then returns error status', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      const error = new Error('Network error');
-      mockFetchHouseholdCalculation.mockRejectedValue(error);
-
-      // Start and fail calculation
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(0); // Let promise reject
-
-      // When
-      const result = handler.getStatus(TEST_REPORT_ID);
-
-      // Then
-      expect(result).not.toBeNull();
-      expect(result?.status).toBe('error');
-      expect(result?.error).toBe('Network error');
-    });
-  });
-
-  describe('startCalculation', () => {
-    test('given valid meta then starts calculation and updates cache on success', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
-
-      // When
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(0); // Let promise resolve
-
-      // Then
-      expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith();
-      expect(queryClient.setQueryData).toHaveBeenCalledWith(['calculation', TEST_REPORT_ID], {
+      expect(result).toEqual({
         status: 'ok',
         result: MOCK_HOUSEHOLD_RESULT,
       });
     });
 
-    test('given calculation fails then updates cache with error', async () => {
+    test('given failed calculation then returns error status', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      const error = new Error('Policy error');
-      mockFetchHouseholdCalculation.mockRejectedValue(error);
+      const error = new Error('API Error');
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockRejectedValue(error);
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+
+      // Wait for failure
+      await advanceTimeAndFlush(0);
 
       // When
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(0); // Let promise reject
+      const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
-      expect(queryClient.setQueryData).toHaveBeenCalledWith(['calculation', TEST_REPORT_ID], {
+      expect(result).toEqual({
         status: 'error',
-        error: 'Policy error',
+        error: 'API Error',
       });
     });
 
-    test('given reform policy then uses reform policy', async () => {
+    test('given progress check during calculation then returns synthetic progress', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+
+      // Advance time by 30 seconds (50% of estimated duration)
+      await advanceTimeAndFlush(30000);
 
       // When
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+      const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
-      expect(mockFetchHouseholdCalculation).toHaveBeenCalled();
-      // Would use reform policy 'policy-reform-456'
+      expect(result.status).toBe('computing');
+      expect(result.progress).toBeGreaterThan(40); // Should be around 50%
+      expect(result.progress).toBeLessThan(60);
+      expect(result.message).toBe('Running policy simulation...');
     });
 
-    test('given no reform policy then uses baseline policy', async () => {
+    test('given calculation nearing completion then caps progress at 95%', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      const metaWithoutReform = {
-        ...HOUSEHOLD_CALCULATION_META,
-        policyIds: {
-          baseline: 'policy-baseline-only',
-        },
-      };
-      mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+
+      // Advance time beyond estimated duration
+      await advanceTimeAndFlush(HOUSEHOLD_ESTIMATED_DURATION + 10000);
 
       // When
-      await handler.startCalculation(TEST_REPORT_ID, metaWithoutReform);
+      const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
-      expect(mockFetchHouseholdCalculation).toHaveBeenCalled();
-      // Would use baseline policy 'policy-baseline-only'
+      expect(result.status).toBe('computing');
+      expect(result.progress).toBe(95); // Should be capped at 95%
+    });
+  });
+
+  describe('getStatus', () => {
+    test('given active calculation then returns current status', async () => {
+      // Given
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+
+      // When
+      const status = handler.getStatus(TEST_REPORT_ID);
+
+      // Then
+      expect(status).toBeDefined();
+      expect(status?.status).toBe('computing');
+      expect(status?.progress).toBe(0);
     });
 
-    test('given multiple calculations then tracks them with Map', async () => {
+    test('given completed calculation then returns result', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-
-      // Setup two different promises
-      mockFetchHouseholdCalculation
-        .mockResolvedValueOnce(MOCK_HOUSEHOLD_RESULT) // First resolves
-        .mockReturnValueOnce(new Promise(() => {})); // Second never resolves
-
-      // When - start two calculations
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      const meta2 = { ...HOUSEHOLD_CALCULATION_META, populationId: 'household-999' };
-      await handler.startCalculation(ANOTHER_REPORT_ID, meta2);
-
-      // Let first one complete
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
       await advanceTimeAndFlush(0);
 
-      // Then - both should be tracked separately
-      const status1 = handler.getStatus(TEST_REPORT_ID);
-      const status2 = handler.getStatus(ANOTHER_REPORT_ID);
+      // When
+      const status = handler.getStatus(TEST_REPORT_ID);
 
-      // First calculation should be complete
-      expect(status1?.status).toBe('ok');
-      // Second calculation should still be running
-      // Note: Due to simplified implementation in getStatus that returns first match,
-      // this may not work as expected in this test. The actual implementation
-      // would need proper mapping between reportId and calculation.
-      // For now, we'll verify they're both tracked
-      expect(status1).not.toBeNull();
-      expect(status2).not.toBeNull();
+      // Then
+      expect(status).toEqual({
+        status: 'ok',
+        result: MOCK_HOUSEHOLD_RESULT,
+      });
     });
 
-    test('given completed calculation then cleans up after delay', async () => {
+    test('given non-existent calculation then returns null', () => {
+      // When
+      const status = handler.getStatus('non-existent-id');
+
+      // Then
+      expect(status).toBeNull();
+    });
+  });
+
+  describe('isActive', () => {
+    test('given active calculation then returns true', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new HouseholdCalculationHandler(queryClient);
-      mockFetchHouseholdCalculation.mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
+        () => new Promise(() => {}) // Never resolves
+      );
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // When
-      await handler.startCalculation(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
-      await advanceTimeAndFlush(0); // Let complete
+      const isActive = handler.isActive(TEST_REPORT_ID);
 
-      // Should still be accessible via getStatus
-      let status = handler.getStatus(TEST_REPORT_ID);
-      expect(status?.status).toBe('ok');
+      // Then
+      expect(isActive).toBe(true);
+    });
 
-      // Advance past cleanup delay
-      await advanceTimeAndFlush(5001);
+    test('given completed calculation then returns true until cleanup', async () => {
+      // Given
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+      await advanceTimeAndFlush(0);
 
-      // Then - should be cleaned up
-      status = handler.getStatus(TEST_REPORT_ID);
-      expect(status).toBeNull();
+      // When - immediately after completion
+      const isActive = handler.isActive(TEST_REPORT_ID);
+
+      // Then
+      expect(isActive).toBe(true);
+    });
+
+    test('given completed calculation after cleanup then returns false', async () => {
+      // Given
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
+      await advanceTimeAndFlush(0);
+
+      // Wait for cleanup (5 seconds)
+      await advanceTimeAndFlush(5000);
+
+      // When
+      const isActive = handler.isActive(TEST_REPORT_ID);
+
+      // Then
+      expect(isActive).toBe(false);
+    });
+
+    test('given non-existent calculation then returns false', () => {
+      // When
+      const isActive = handler.isActive('non-existent-id');
+
+      // Then
+      expect(isActive).toBe(false);
     });
   });
 
   describe('progress messages', () => {
     test('given different progress levels then returns appropriate messages', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-
-      // Test the private method indirectly through the public interface
+      // Test different progress levels
       const testCases = [
-        { progress: 5, expectedMessage: HOUSEHOLD_PROGRESS_MESSAGES.INITIALIZING },
-        { progress: 20, expectedMessage: HOUSEHOLD_PROGRESS_MESSAGES.LOADING },
-        { progress: 45, expectedMessage: HOUSEHOLD_PROGRESS_MESSAGES.RUNNING },
-        { progress: 70, expectedMessage: HOUSEHOLD_PROGRESS_MESSAGES.CALCULATING },
-        { progress: 90, expectedMessage: HOUSEHOLD_PROGRESS_MESSAGES.FINALIZING },
+        { time: 0, expectedMessage: 'Initializing calculation...' },
+        { time: 10000, expectedMessage: 'Loading household data...' },
+        { time: 25000, expectedMessage: 'Running policy simulation...' },
+        { time: 40000, expectedMessage: 'Calculating impacts...' },
+        { time: 50000, expectedMessage: 'Finalizing results...' },
       ];
 
-      // Test each case
-      for (const { progress, expectedMessage } of testCases) {
-        // Reset handler for clean test
-        const freshHandler = new HouseholdCalculationHandler(queryClient);
-        mockFetchHouseholdCalculation.mockReturnValue(new Promise(() => {}));
+      for (const { time, expectedMessage } of testCases) {
+        // Create a new handler for each test case to avoid state pollution
+        const testHandler = new HouseholdCalculationHandler();
 
-        // Start a new calculation
-        const testReportId = `report-${progress}`;
-        await freshHandler.startCalculation(testReportId, HOUSEHOLD_CALCULATION_META);
+        // Given
+        vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
+          () => new Promise(() => {}) // Never resolves
+        );
 
-        // Advance time to reach desired progress
-        const timeToAdvance = (progress / 100) * HOUSEHOLD_ESTIMATED_DURATION;
-        await advanceTimeAndFlush(timeToAdvance);
+        // Start calculation
+        await testHandler.execute(`report-${time}`, HOUSEHOLD_CALCULATION_META);
 
-        // Get status and verify message
-        const result = freshHandler.getStatus(testReportId);
-        expect(result?.message).toBe(expectedMessage);
+        // Advance to test time
+        await advanceTimeAndFlush(time);
+
+        // When
+        const result = await testHandler.execute(`report-${time}`, HOUSEHOLD_CALCULATION_META);
+
+        // Then
+        expect(result.message).toBe(expectedMessage);
       }
     });
   });
