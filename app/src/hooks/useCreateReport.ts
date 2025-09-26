@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReport } from '@/api/report';
 import { MOCK_USER_ID } from '@/constants';
 import { getCalculationManager } from '@/libs/calculations';
-import { HouseholdProgressUpdater } from '@/libs/calculations/progressUpdater';
 import { countryIds } from '@/libs/countries';
 import { reportKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';

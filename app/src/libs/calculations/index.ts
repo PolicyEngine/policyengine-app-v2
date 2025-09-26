@@ -14,10 +14,15 @@ export { EconomyCalculationHandler } from './handlers/economy';
 export { HouseholdCalculationHandler } from './handlers/household';
 
 // Service
-export { CalculationService, getCalculationService, resetCalculationService } from './service';
+export {
+  CalculationService,
+  getCalculationService,
+  resetCalculationService,
+  type BuildMetadataParams,
+} from './service';
 
 // Progress Updater
 export { HouseholdProgressUpdater } from './progressUpdater';
 
-// Manager (for backwards compatibility)
+// Manager
 export { CalculationManager, getCalculationManager, resetCalculationManager } from './manager';
