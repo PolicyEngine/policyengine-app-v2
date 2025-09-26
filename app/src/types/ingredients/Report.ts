@@ -1,8 +1,9 @@
 import { countryIds } from '@/libs/countries';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
+import { Household } from './Household';
 
-export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
+export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK | Household;
 
 /**
  * Base Report type
