@@ -97,7 +97,13 @@ describe('CalculationManager', () => {
   describe('fetchCalculation', () => {
     test('given successful household calculation then updates report status', async () => {
       // Given
-      mockService.executeCalculation.mockResolvedValue(OK_STATUS_HOUSEHOLD);
+      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
+        // Simulate the callback being invoked for household calculations
+        if (meta.type === 'household' && onComplete) {
+          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+        }
+        return OK_STATUS_HOUSEHOLD;
+      });
 
       // When
       const result = await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -120,7 +126,13 @@ describe('CalculationManager', () => {
 
     test('given failed calculation then marks report as error', async () => {
       // Given
-      mockService.executeCalculation.mockResolvedValue(ERROR_STATUS);
+      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
+        // Simulate the callback being invoked for household calculations
+        if (meta.type === 'household' && onComplete) {
+          await onComplete(reportId, 'error', undefined);
+        }
+        return ERROR_STATUS;
+      });
 
       // When
       const result = await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -153,7 +165,13 @@ describe('CalculationManager', () => {
 
     test('given already updated report then skips duplicate update', async () => {
       // Given
-      mockService.executeCalculation.mockResolvedValue(OK_STATUS_HOUSEHOLD);
+      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
+        // Simulate the callback being invoked for household calculations
+        if (meta.type === 'household' && onComplete) {
+          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+        }
+        return OK_STATUS_HOUSEHOLD;
+      });
 
       // First call
       await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -169,7 +187,13 @@ describe('CalculationManager', () => {
     test('given report update failure then retries once', async () => {
       // Given
       vi.useFakeTimers();
-      mockService.executeCalculation.mockResolvedValue(OK_STATUS_HOUSEHOLD);
+      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
+        // Simulate the callback being invoked for household calculations
+        if (meta.type === 'household' && onComplete) {
+          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+        }
+        return OK_STATUS_HOUSEHOLD;
+      });
       vi.mocked(reportApi.markReportCompleted)
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce(undefined as any);
@@ -198,7 +222,11 @@ describe('CalculationManager', () => {
       await manager.startCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Then
-      expect(mockService.executeCalculation).toHaveBeenCalledWith(TEST_REPORT_ID, HOUSEHOLD_META);
+      expect(mockService.executeCalculation).toHaveBeenCalledWith(
+        TEST_REPORT_ID,
+        HOUSEHOLD_META,
+        expect.any(Function) // The callback function
+      );
       expect(mockProgressUpdater.startProgressUpdates).toHaveBeenCalledWith(
         TEST_REPORT_ID,
         mockHandler
@@ -229,9 +257,16 @@ describe('CalculationManager', () => {
 
     test('given new calculation then resets report tracking', async () => {
       // Given
-      mockService.executeCalculation
-        .mockResolvedValueOnce(OK_STATUS_HOUSEHOLD)
-        .mockResolvedValueOnce(OK_STATUS_HOUSEHOLD);
+      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
+        // Simulate the callback being invoked for household calculations
+        if (meta.type === 'household' && onComplete) {
+          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+        }
+        return OK_STATUS_HOUSEHOLD;
+      });
+      const mockHandler = createMockHouseholdHandler();
+      mockHandler.isActive.mockReturnValue(false);
+      mockService.getHandler.mockReturnValue(mockHandler);
 
       // First calculation and update
       await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);

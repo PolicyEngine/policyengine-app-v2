@@ -29,10 +29,32 @@ export class CalculationManager {
    * This is the main entry point for running calculations through TanStack Query
    */
   async fetchCalculation(reportId: string, meta: CalculationMeta): Promise<CalculationStatusResponse> {
-    const result = await this.service.executeCalculation(reportId, meta);
+    // Create completion callback for household calculations
+    const onComplete = async (completedReportId: string, status: 'ok' | 'error', result?: any) => {
+      console.log('[CalculationManager] Household calculation completed:', completedReportId, status);
 
-    // Update report status when calculation completes (once per report)
-    if (!this.reportStatusTracking.get(reportId)) {
+      // Check if we haven't already updated this report
+      if (!this.reportStatusTracking.get(completedReportId)) {
+        this.reportStatusTracking.set(completedReportId, true);
+        await this.updateReportStatus(
+          completedReportId,
+          status === 'ok' ? 'complete' : 'error',
+          meta.countryId,
+          result
+        );
+      }
+    };
+
+    // Execute calculation with callback for household
+    const result = await this.service.executeCalculation(
+      reportId,
+      meta,
+      meta.type === 'household' ? onComplete : undefined
+    );
+
+    // For economy calculations, update immediately if complete
+    // (household updates happen via callback)
+    if (meta.type === 'economy' && !this.reportStatusTracking.get(reportId)) {
       if (result.status === 'ok' || result.status === 'error') {
         this.reportStatusTracking.set(reportId, true);
         await this.updateReportStatus(
@@ -59,8 +81,24 @@ export class CalculationManager {
       // For household, check if already running
       const handler = this.service.getHandler('household');
       if (!handler.isActive(reportId)) {
-        // Start the calculation via executeCalculation
-        await this.service.executeCalculation(reportId, meta);
+        // Create completion callback for household
+        const onComplete = async (completedReportId: string, status: 'ok' | 'error', result?: any) => {
+          console.log('[CalculationManager.startCalculation] Household completed:', completedReportId, status);
+
+          // Check if we haven't already updated this report
+          if (!this.reportStatusTracking.get(completedReportId)) {
+            this.reportStatusTracking.set(completedReportId, true);
+            await this.updateReportStatus(
+              completedReportId,
+              status === 'ok' ? 'complete' : 'error',
+              meta.countryId,
+              result
+            );
+          }
+        };
+
+        // Start the calculation with callback
+        await this.service.executeCalculation(reportId, meta, onComplete);
         // Start progress updates
         this.progressUpdater.startProgressUpdates(reportId, handler as any);
       }
