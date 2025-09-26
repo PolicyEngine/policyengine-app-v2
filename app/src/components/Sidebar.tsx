@@ -6,7 +6,11 @@ import {
   IconHome,
   IconPlus,
   IconSettings2,
-  IconUsers,
+  IconDatabase,
+  IconChartBar,
+  IconFileAnalytics,
+  IconAdjustments,
+  IconPlaystationSquare,
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';
@@ -25,16 +29,13 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useLocation();
   const countryId = useCurrentCountry();
 
-  // All internal navigation paths include the country prefix for consistency with v1 app
-  const navItems = [
-    { label: 'Home', icon: IconHome, path: `/${countryId}` },
-    { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
-    { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
-    { label: 'Configurations', icon: IconSettings2, path: `/${countryId}/configurations` },
-  ];
-
-  const policyItems = [
-    { label: 'Populations', icon: IconUsers, path: `/${countryId}/populations` },
+  // Core data model navigation - all the main entities
+  const dataItems = [
+    { label: 'Policies', icon: IconFileDescription, path: `/${countryId}/policies` },
+    { label: 'Dynamics', icon: IconAdjustments, path: `/${countryId}/dynamics` },
+    { label: 'Datasets', icon: IconDatabase, path: `/${countryId}/datasets` },
+    { label: 'Simulations', icon: IconPlaystationSquare, path: `/${countryId}/simulations` },
+    { label: 'Reports', icon: IconFileAnalytics, path: `/${countryId}/reports` },
   ];
 
   const resourceItems = [
@@ -89,15 +90,18 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
       <Stack gap={0} style={{ flex: 1 }}>
         <SidebarSection>
-          {navItems.map((item) => (
-            <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
-          ))}
+          <SidebarNavItem
+            label="Home"
+            icon={IconHome}
+            path={`/${countryId}`}
+            isActive={location.pathname === `/${countryId}`}
+          />
         </SidebarSection>
 
         <SidebarDivider />
 
-        <SidebarSection title="Policies">
-          {policyItems.map((item) => (
+        <SidebarSection title="Data models">
+          {dataItems.map((item) => (
             <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
           ))}
         </SidebarSection>

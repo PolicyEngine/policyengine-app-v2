@@ -1,41 +1,43 @@
-import { BASE_URL } from '@/constants';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { PolicyCreationPayload } from '@/types/payloads';
+import { policiesAPI } from './v2/policies';
 
 export async function fetchPolicyById(country: string, policyId: string): Promise<PolicyMetadata> {
-  const url = `${BASE_URL}/${country}/policy/${policyId}`;
-
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch policy ${policyId}`);
-  }
-
-  const json = await res.json();
-
-  return json.result;
+  const policy = await policiesAPI.getWithParameters(policyId);
+  // Transform to legacy format for compatibility
+  return {
+    id: policy.id,
+    name: policy.name,
+    description: policy.description,
+    country_id: policy.country || country,
+    parameters: policy.parameters.reduce((acc, pv) => {
+      acc[pv.parameter_id] = pv.value;
+      return acc;
+    }, {} as Record<string, any>),
+  } as PolicyMetadata;
 }
 
 export async function createPolicy(
   data: PolicyCreationPayload
 ): Promise<{ result: { policy_id: string } }> {
-  const url = `${BASE_URL}/us/policy`;
+  // Extract parameter values from the payload
+  const parameterValues = Object.entries(data.reform || {}).map(([parameterId, value]) => ({
+    parameter_id: parameterId,
+    value,
+  }));
 
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  const policy = await policiesAPI.createWithParameters(
+    {
+      name: data.label || 'New Policy',
+      description: data.baseline_id ? `Based on baseline ${data.baseline_id}` : undefined,
+      country: data.country_id || 'us',
+    },
+    parameterValues
+  );
 
-  if (!res.ok) {
-    throw new Error('Failed to create policy');
-  }
-
-  return res.json();
+  return {
+    result: {
+      policy_id: policy.id,
+    },
+  };
 }

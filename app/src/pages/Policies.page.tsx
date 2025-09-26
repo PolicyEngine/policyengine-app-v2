@@ -2,17 +2,16 @@ import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
-import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { usePolicies } from '@/hooks/usePolicies';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function PoliciesPage() {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
-  const { data, isLoading, isError, error } = useUserPolicies(userId);
+  const { data: policies, isLoading, error } = usePolicies();
   const dispatch = useDispatch();
+  const isError = !!error;
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -105,35 +104,29 @@ export default function PoliciesPage() {
   ];
 
   // Transform the data to match the new structure
-  console.log('Raw user policies data:', data);
+  console.log('Raw policies data:', policies);
 
   const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.association.policyId.toString(),
+    policies?.map((policy) => ({
+      id: policy.id,
       policyName: {
-        text: item.association.label || `Policy #${item.association.policyId}`,
+        text: policy.name || `Policy #${policy.id}`,
       } as TextValue,
       dateCreated: {
-        text: item.association.createdAt
-          ? formatDate(
-              item.association.createdAt,
-              'short-month-day-year',
-              (item.policy?.country_id || 'us') as (typeof countryIds)[number],
-              true
-            )
-          : '',
+        text: formatDate(
+          policy.created_at,
+          'short-month-day-year',
+          (policy.country || 'us') as (typeof countryIds)[number],
+          true
+        ),
       } as TextValue,
       provisions: {
-        text: '7 provisions', // TODO: Get actual provisions count
+        text: policy.description || 'No description',
       } as TextValue,
       connections: {
         items: [
           {
-            text: 'Sample simulation',
-            badge: '',
-          },
-          {
-            text: 'Sample report',
+            text: 'View simulations',
             badge: '',
           },
         ],

@@ -1,47 +1,46 @@
-import { BASE_URL } from '@/constants';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
+import { datasetsAPI } from './v2/datasets';
 
 export async function fetchHouseholdById(
   country: string,
   household: string
 ): Promise<HouseholdMetadata> {
-  const url = `${BASE_URL}/${country}/household/${household}`;
-
-  const res = await fetch(url, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-  });
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch household ${household}`);
-  }
-
-  const json = await res.json();
-
-  // Forcibly convert numeric ID to string
-  json.result.id = String(json.result.id);
-
-  return json.result;
+  const versionedDataset = await datasetsAPI.getVersionedDataset(household);
+  // Transform to expected format
+  return {
+    id: versionedDataset.id,
+    country_id: country,
+    data: versionedDataset.data,
+    label: versionedDataset.metadata?.label || `Household ${versionedDataset.id}`,
+  } as HouseholdMetadata;
 }
 
 export async function createHousehold(
   data: HouseholdCreationPayload
 ): Promise<{ result: { household_id: string } }> {
-  const url = `${BASE_URL}/${data.country_id}/household`;
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
+  // First create the dataset
+  const dataset = await datasetsAPI.createDataset({
+    name: data.label || 'Household',
+    description: 'Household configuration',
+    type: 'household',
+    country: data.country_id,
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to create household');
-  }
+  // Then create a versioned dataset with the household data
+  const versionedDataset = await datasetsAPI.createVersionedDataset({
+    dataset_id: dataset.id,
+    version: '1.0.0',
+    data: data.data,
+    metadata: {
+      label: data.label,
+      country_id: data.country_id,
+    },
+  });
 
-  return res.json();
+  return {
+    result: {
+      household_id: versionedDataset.id,
+    },
+  };
 }

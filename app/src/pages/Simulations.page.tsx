@@ -10,15 +10,15 @@ import {
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
-import { useUserSimulations } from '@/hooks/useUserSimulations';
+import { useSimulationsWithPolicies } from '@/hooks/useSimulations';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function SimulationsPage() {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
-  const { data, isLoading, isError, error } = useUserSimulations(userId);
+  const { data: simulations, isLoading, error } = useSimulationsWithPolicies();
   const dispatch = useDispatch();
+  const isError = !!error;
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -102,36 +102,31 @@ export default function SimulationsPage() {
 
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.userSimulation.simulationId.toString(),
+    simulations?.map((sim) => ({
+      id: sim.id,
       simulation: {
-        text: item.userSimulation.label || `Simulation #${item.userSimulation.simulationId}`,
+        text: sim.name || `Simulation #${sim.id}`,
       } as TextValue,
       dateCreated: {
-        text: item.userSimulation.createdAt
-          ? formatDate(
-              item.userSimulation.createdAt,
-              'short-month-day-year',
-              (item.simulation?.countryId || 'us') as (typeof countryIds)[number],
-              true
-            )
-          : '',
+        text: formatDate(
+          sim.created_at,
+          'short-month-day-year',
+          'us' as (typeof countryIds)[number],
+          true
+        ),
       } as TextValue,
       policy: {
-        text: item.userPolicy?.label || (item.policy ? `Policy #${item.policy.id}` : 'No policy'),
+        text: sim.policy?.name || `Policy ${sim.policy_id}`,
       } as TextValue,
       population: {
-        text:
-          item.userHousehold?.label ||
-          item.geography?.name ||
-          (item.household ? `Household #${item.household.id}` : 'No population'),
-        url: item.household?.id ? `#${item.household.id}` : '#',
+        text: sim.dataset_id ? `Dataset ${sim.dataset_id}` : 'Default population',
+        url: '#',
       } as LinkValue,
       connected: {
         items: [
           {
-            text: 'No reports yet', // TODO: Connect to actual reports
-            badge: 0,
+            text: sim.status === 'completed' ? 'Results available' : `Status: ${sim.status}`,
+            badge: sim.status === 'completed' ? '✓' : '',
           },
         ],
       } as BulletsValue,

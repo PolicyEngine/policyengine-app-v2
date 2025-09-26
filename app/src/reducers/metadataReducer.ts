@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 // Import the API function
 import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
+import { parametersAPI } from '@/api/parameters';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { MetadataState } from '@/types/metadata';
 
@@ -26,11 +27,37 @@ export const fetchMetadataThunk = createAsyncThunk(
   'metadata/fetch',
   async (country: string, { rejectWithValue }) => {
     try {
-      // Use the API layer function
-      const data = await fetchMetadataApi(country);
+      // Fetch parameters from new API
+      const parametersWithBaselines = await parametersAPI.getAllParametersWithBaselines();
 
-      // Return both API data and the country that was fetched
-      return { data, country };
+      // Transform new API data to match expected format
+      const parameters: Record<string, any> = {};
+      parametersWithBaselines.forEach(({ parameter, baseline }) => {
+        parameters[parameter.id] = {
+          ...parameter,
+          baseline_value: baseline?.value,
+          type: 'parameter',
+        };
+      });
+
+      // For now, return minimal metadata structure with just parameters
+      // Other metadata will need to come from new API endpoints when available
+      return {
+        data: {
+          result: {
+            parameters,
+            variables: {},
+            entities: {},
+            variableModules: {},
+            economy_options: { region: [], time_period: [], datasets: [] },
+            current_law_id: 0,
+            basicInputs: [],
+            modelled_policies: { core: {}, filtered: {} },
+            version: null,
+          },
+        },
+        country,
+      };
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
     }

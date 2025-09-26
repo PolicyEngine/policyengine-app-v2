@@ -1,172 +1,177 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
-import IngredientReadView from '@/components/IngredientReadView';
-import { MOCK_USER_ID } from '@/constants';
-import { ReportCreationFlow } from '@/flows/reportCreationFlow';
-import { useUserReports } from '@/hooks/useUserReports';
-import { countryIds } from '@/libs/countries';
-import { setFlow } from '@/reducers/flowReducer';
-import { formatDate } from '@/utils/dateUtils';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Container, Title, Text, Table, Button, Group, Badge, TextInput, Progress } from '@mantine/core';
+import { IconPlus, IconSearch, IconRefresh, IconFileAnalytics, IconCheck, IconX, IconClock } from '@tabler/icons-react';
+import { reportsAPI } from '@/api/v2/reports';
 
 export default function ReportsPage() {
-  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
-  const { data, isLoading, isError, error } = useUserReports(userId);
-  const dispatch = useDispatch();
-
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const queryClient = useQueryClient();
 
-  const handleBuildReport = () => {
-    dispatch(setFlow(ReportCreationFlow));
-  };
+  // Fetch reports from API (when endpoint becomes available)
+  const { data: reports, isLoading, error, refetch } = useQuery({
+    queryKey: ['reports'],
+    queryFn: () => reportsAPI.list({ limit: 1000 }),
+    refetchInterval: 30000,
+    retry: false, // Don't retry if endpoint doesn't exist yet
+  });
 
-  const handleMoreFilters = () => {
-    // TODO: Implement more filters modal/dropdown
-    console.log('More filters clicked');
-  };
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: reportsAPI.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
+    },
+  });
 
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-output':
-        // TODO: Implement view output functionality
-        console.log('View output:', recordId);
-        break;
-      case 'export':
-        // TODO: Implement export functionality
-        console.log('Export report:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share report:', recordId);
-        break;
-      case 'duplicate':
-        // TODO: Implement duplicate functionality
-        console.log('Duplicate report:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete report:', recordId);
-        break;
-      default:
-        console.log('Unknown action:', action);
+  // Filter reports based on search
+  const filteredReports = reports?.filter((report) =>
+    report.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+    report.id.toLowerCase().includes(searchValue.toLowerCase())
+  );
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'completed': return <IconCheck size={16} />;
+      case 'failed': return <IconX size={16} />;
+      case 'processing': return <IconClock size={16} />;
+      default: return null;
     }
   };
 
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'completed': return 'green';
+      case 'failed': return 'red';
+      case 'processing': return 'blue';
+      case 'pending': return 'gray';
+      default: return 'gray';
+    }
+  };
+
+  if (error) {
+    return (
+      <Container size="xl" py="xl">
+        <Title order={2} mb="lg">Reports</Title>
+        <Text c="dimmed">Reports endpoint not yet available in API.</Text>
+      </Container>
     );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
-
-  // Helper function to format status text
-  const formatStatus = (status: string): string => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  // Define column configurations for reports
-  const reportColumns: ColumnConfig[] = [
-    {
-      key: 'report',
-      header: 'Report',
-      type: 'text',
-    },
-    {
-      key: 'dateCreated',
-      header: 'Date Created',
-      type: 'text',
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      type: 'text',
-    },
-    {
-      key: 'simulations',
-      header: 'Simulations',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
-    },
-    {
-      key: 'outputType',
-      header: 'Output Type',
-      type: 'text',
-    },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View Output', action: 'view-output' },
-        { label: 'Export', action: 'export' },
-        { label: 'Share', action: 'share' },
-        { label: 'Duplicate', action: 'duplicate' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
-  ];
-
-  // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.userReport.reportId,
-      report: {
-        text: item.userReport.label || `Report #${item.userReport.reportId}`,
-      } as TextValue,
-      dateCreated: {
-        text: item.userReport.createdAt
-          ? formatDate(
-              item.userReport.createdAt,
-              'short-month-day-year',
-              (item.report?.countryId || 'us') as (typeof countryIds)[number],
-              true
-            )
-          : '',
-      } as TextValue,
-      status: {
-        text: formatStatus(item.report?.status || 'pending'),
-      } as TextValue,
-      simulations: {
-        items: item.simulations?.map((sim, index) => ({
-          text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-          badge: item.userPolicies?.find((p) => p.policyId === sim.policyId)?.label ? 1 : 0,
-        })) || [
-          {
-            text: 'No simulations',
-            badge: 0,
-          },
-        ],
-      } as BulletsValue,
-      outputType: {
-        text: item.report?.output ? 'Society-wide' : 'Not generated',
-      } as TextValue,
-    })) || [];
+  }
 
   return (
-    <IngredientReadView
-      ingredient="report"
-      title="Reports"
-      subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
-      onBuild={handleBuildReport}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={reportColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      onMoreFilters={handleMoreFilters}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <Container size="xl" py="xl">
+      <Group justify="space-between" mb="lg">
+        <Title order={2}>Reports</Title>
+        <Group>
+          <TextInput
+            placeholder="Search reports..."
+            leftSection={<IconSearch size={16} />}
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.currentTarget.value)}
+          />
+          <Button
+            leftSection={<IconRefresh size={16} />}
+            variant="light"
+            onClick={() => refetch()}
+          >
+            Refresh
+          </Button>
+          <Button leftSection={<IconPlus size={16} />}>
+            Generate Report
+          </Button>
+        </Group>
+      </Group>
+
+      <Text c="dimmed" mb="lg">
+        View and generate analysis reports from your simulation results.
+      </Text>
+
+      {isLoading ? (
+        <Text>Loading reports...</Text>
+      ) : filteredReports?.length === 0 ? (
+        <Container>
+          <Group justify="center" py="xl">
+            <IconFileAnalytics size={48} color="gray" />
+          </Group>
+          <Text ta="center" c="dimmed">
+            No reports available. The reports endpoint will be available soon.
+          </Text>
+        </Container>
+      ) : (
+        <Table striped highlightOnHover>
+          <Table.Thead>
+            <Table.Tr>
+              <Table.Th>Report ID</Table.Th>
+              <Table.Th>Name</Table.Th>
+              <Table.Th>Simulations</Table.Th>
+              <Table.Th>Status</Table.Th>
+              <Table.Th>Created</Table.Th>
+              <Table.Th>Actions</Table.Th>
+            </Table.Tr>
+          </Table.Thead>
+          <Table.Tbody>
+            {filteredReports?.map((report) => (
+              <Table.Tr key={report.id}>
+                <Table.Td>
+                  <Text size="sm" ff="monospace">
+                    {report.id.slice(0, 8)}...
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Text fw={500}>{report.name || 'Unnamed Report'}</Text>
+                </Table.Td>
+                <Table.Td>
+                  <Badge variant="outline">
+                    {report.simulation_ids.length} simulation(s)
+                  </Badge>
+                </Table.Td>
+                <Table.Td>
+                  <Badge
+                    variant="light"
+                    color={getStatusColor(report.status)}
+                    leftSection={getStatusIcon(report.status)}
+                  >
+                    {report.status}
+                  </Badge>
+                  {report.status === 'processing' && (
+                    <Progress size="xs" value={50} animated mt="xs" />
+                  )}
+                </Table.Td>
+                <Table.Td>
+                  <Text size="sm">
+                    {new Date(report.created_at).toLocaleDateString()}
+                  </Text>
+                </Table.Td>
+                <Table.Td>
+                  <Group gap="xs">
+                    <Button size="xs" variant="light" disabled={report.status !== 'completed'}>
+                      View
+                    </Button>
+                    <Button
+                      size="xs"
+                      variant="light"
+                      color="red"
+                      onClick={() => {
+                        if (confirm('Delete this report?')) {
+                          deleteMutation.mutate(report.id);
+                        }
+                      }}
+                    >
+                      Delete
+                    </Button>
+                  </Group>
+                </Table.Td>
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      )}
+
+      <Group justify="center" mt="xl">
+        <Text size="sm" c="dimmed">
+          {filteredReports?.length || 0} reports • Live data from database
+        </Text>
+      </Group>
+    </Container>
   );
 }
