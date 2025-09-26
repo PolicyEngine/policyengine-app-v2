@@ -71,12 +71,7 @@ const metadataSlice = createSlice({
       })
       .addCase(fetchMetadataThunk.fulfilled, (state, action) => {
         const { data, country } = action.payload;
-        console.log('SKLOGS Data:');
-        console.log(data);
-
         const body = data.result;
-        console.log('SKLOGS Body:');
-        console.log(body);
 
         state.loading = false;
         state.error = null;
