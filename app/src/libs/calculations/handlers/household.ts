@@ -24,8 +24,15 @@ export class HouseholdCalculationHandler {
   /**
    * Execute a household calculation or return existing status
    * Pure execution - no cache or database updates
+   * @param reportId - The report ID
+   * @param meta - The calculation metadata
+   * @param onComplete - Optional callback when calculation completes
    */
-  async execute(reportId: string, meta: CalculationMeta): Promise<CalculationStatusResponse> {
+  async execute(
+    reportId: string,
+    meta: CalculationMeta,
+    onComplete?: (reportId: string, status: 'ok' | 'error', result?: any) => Promise<void>
+  ): Promise<CalculationStatusResponse> {
     const active = this.activeCalculations.get(reportId);
 
     if (active) {
@@ -75,22 +82,40 @@ export class HouseholdCalculationHandler {
 
     this.activeCalculations.set(reportId, tracking);
 
-    // Handle completion (but don't update cache - that's TanStack's job)
+    // Handle completion and notify via callback
     promise
-      .then((result) => {
+      .then(async (result) => {
         console.log('[HouseholdCalculationHandler] Calculation completed successfully for:', reportId);
         tracking.completed = true;
         tracking.result = result;
+
+        // Notify completion via callback
+        if (onComplete) {
+          try {
+            await onComplete(reportId, 'ok', result);
+          } catch (error) {
+            console.error('[HouseholdCalculationHandler] Completion callback failed:', error);
+          }
+        }
 
         // Clean up after a delay
         setTimeout(() => {
           this.activeCalculations.delete(reportId);
         }, 5000);
       })
-      .catch((error) => {
+      .catch(async (error) => {
         console.log('[HouseholdCalculationHandler] Calculation failed for:', reportId, error);
         tracking.completed = true;
         tracking.error = error;
+
+        // Notify error via callback
+        if (onComplete) {
+          try {
+            await onComplete(reportId, 'error', undefined);
+          } catch (callbackError) {
+            console.error('[HouseholdCalculationHandler] Completion callback failed:', callbackError);
+          }
+        }
 
         // Clean up after a delay
         setTimeout(() => {

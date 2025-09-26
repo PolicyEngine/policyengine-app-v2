@@ -110,13 +110,17 @@ export class CalculationService {
 
   /**
    * Execute a calculation through the appropriate handler
+   * @param reportId - The report ID
+   * @param meta - The calculation metadata
+   * @param onComplete - Optional callback for household calculation completion
    */
   async executeCalculation(
     reportId: string,
-    meta: CalculationMeta
+    meta: CalculationMeta,
+    onComplete?: (reportId: string, status: 'ok' | 'error', result?: any) => Promise<void>
   ): Promise<CalculationStatusResponse> {
     if (meta.type === 'household') {
-      return this.householdHandler.execute(reportId, meta);
+      return this.householdHandler.execute(reportId, meta, onComplete);
     }
     return this.economyHandler.execute(reportId, meta);
   }
