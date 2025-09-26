@@ -134,3 +134,16 @@ export function createDelayedPromise<T>(value: T, delay?: number): Promise<T> {
     setTimeout(() => resolve(value), delay);
   });
 }
+
+// Mock handlers for new architecture
+export const createMockHouseholdHandler = () => ({
+  execute: vi.fn(),
+  getStatus: vi.fn(),
+  isActive: vi.fn(),
+});
+
+export const createMockEconomyHandler = () => ({
+  execute: vi.fn(),
+  getStatus: vi.fn(),
+  isActive: vi.fn(),
+});
