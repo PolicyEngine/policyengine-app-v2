@@ -28,18 +28,13 @@ export class GeolocationService {
   async detectCountry(): Promise<string> {
     // Try each provider in priority order
     for (const provider of this.providers) {
-      try {
-        const isoCode = await provider.detect();
+      const isoCode = await provider.detect();
 
-        if (isoCode) {
-          const routeCode = mapIsoToRoute(isoCode);
-
-          if (routeCode) {
-            return routeCode;
-          }
+      if (isoCode) {
+        const routeCode = mapIsoToRoute(isoCode);
+        if (routeCode) {
+          return routeCode;
         }
-      } catch (error) {
-        // Provider failed, try next one
       }
     }
 

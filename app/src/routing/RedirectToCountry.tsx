@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Box, Loader } from '@mantine/core';
 import { geolocationService } from './geolocation/GeolocationService';
 
 /**
@@ -78,23 +77,10 @@ export function RedirectToCountry() {
     initializeCountryDetection();
   }, []);
 
-  // Show loading state while detecting
+  // While detecting, redirect to default country immediately
+  // The detection will update and redirect again if needed
   if (isDetecting) {
-    return (
-      <Box
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          height: '100vh',
-          gap: '16px',
-        }}
-      >
-        <Loader size="lg" />
-        <div>Detecting your location...</div>
-      </Box>
-    );
+    return <Navigate to="/us" replace />;
   }
 
   // Redirect to detected country

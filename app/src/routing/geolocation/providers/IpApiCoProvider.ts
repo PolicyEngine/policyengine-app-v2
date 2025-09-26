@@ -27,9 +27,8 @@ export class IpApiCoProvider implements GeolocationProvider {
         method: 'GET',
         headers: {
           Accept: 'text/plain',
-          'User-Agent': 'PolicyEngine/2.0',
         },
-        signal: AbortSignal.timeout(5000), // 5 second timeout
+        signal: AbortSignal.timeout(1000), // 1 second timeout
       });
 
       if (!response.ok) {
