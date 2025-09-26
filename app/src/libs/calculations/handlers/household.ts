@@ -179,7 +179,7 @@ export class HouseholdCalculationHandler extends CalculationHandler {
 
     // Handle completion
     promise
-      .then((result) => {
+      .then(async (result) => {
         console.log(
           '[HouseholdCalculationHandler.startCalculation] Calculation completed successfully for:',
           reportId
@@ -197,8 +197,13 @@ export class HouseholdCalculationHandler extends CalculationHandler {
           status: 'ok',
           result,
         } as CalculationStatusResponse);
+
+        // Notify manager to update report status
+        if (this.manager) {
+          await this.manager.updateReportStatus(reportId, 'complete', meta.countryId, result);
+        }
       })
-      .catch((error) => {
+      .catch(async (error) => {
         console.log(
           '[HouseholdCalculationHandler.startCalculation] Calculation failed for:',
           reportId,
@@ -216,6 +221,11 @@ export class HouseholdCalculationHandler extends CalculationHandler {
           status: 'error',
           error: error.message,
         } as CalculationStatusResponse);
+
+        // Notify manager of error
+        if (this.manager) {
+          await this.manager.updateReportStatus(reportId, 'error', meta.countryId);
+        }
       })
       .finally(() => {
         // Clean up after a delay

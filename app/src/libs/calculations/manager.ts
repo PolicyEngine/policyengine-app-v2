@@ -11,15 +11,31 @@ import {
 import { CalculationStatusResponse } from './status';
 import { CalculationType } from './types';
 
+/**
+ * CalculationManager orchestrates different types of calculations (household and economy)
+ * and handles cross-cutting concerns like report status updates.
+ *
+ * Architecture Note: This class uses a bidirectional reference pattern with its handlers.
+ * The manager creates and owns the handlers, passing itself as a reference. This allows
+ * handlers to notify the manager when calculations complete, triggering automatic report
+ * status updates in the database. This pattern ensures:
+ * - Separation of concerns: Handlers focus on calculations, manager handles reporting
+ * - Automatic synchronization: Report status updates happen without external orchestration
+ * - Consistent behavior: All calculation types follow the same completion flow
+ *
+ * The circular reference is intentional and controlled through type-only imports in the
+ * handler base class to avoid runtime circular dependencies.
+ */
 export class CalculationManager {
   private handlers: Map<CalculationType, CalculationHandler>;
   private queryClient: QueryClient;
 
   constructor(queryClient: QueryClient) {
     this.queryClient = queryClient;
+    // Pass 'this' to handlers to enable completion callbacks
     this.handlers = new Map([
-      ['household', new HouseholdCalculationHandler(queryClient)],
-      ['economy', new EconomyCalculationHandler(queryClient)],
+      ['household', new HouseholdCalculationHandler(queryClient, this)],
+      ['economy', new EconomyCalculationHandler(queryClient, this)],
     ]);
   }
 
