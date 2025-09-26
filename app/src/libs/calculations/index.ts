@@ -10,11 +10,14 @@ export {
 export { type CalculationStatus, type CalculationStatusResponse } from './status';
 
 // Handlers
-export {
-  CalculationHandler,
-  EconomyCalculationHandler,
-  HouseholdCalculationHandler,
-} from './handlers';
+export { EconomyCalculationHandler } from './handlers/economy';
+export { HouseholdCalculationHandler } from './handlers/household';
 
-// Manager
+// Service
+export { CalculationService, getCalculationService, resetCalculationService } from './service';
+
+// Progress Updater
+export { HouseholdProgressUpdater } from './progressUpdater';
+
+// Manager (for backwards compatibility)
 export { CalculationManager, getCalculationManager, resetCalculationManager } from './manager';
