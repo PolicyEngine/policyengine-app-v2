@@ -3,8 +3,10 @@ import { apiClient, PaginationParams } from './apiClient';
 export interface Parameter {
   id: string;
   name: string;
+  model_id?: string;
   description?: string;
   type: string;
+  data_type?: string;
   category?: string;
   unit?: string;
   default_value?: number | string | boolean;
@@ -78,7 +80,9 @@ class ParametersAPI {
   }
 
   // Parameter Values
-  async listParameterValues(params?: PaginationParams & { policy_id?: string }): Promise<ParameterValue[]> {
+  async listParameterValues(
+    params?: PaginationParams & { policy_id?: string }
+  ): Promise<ParameterValue[]> {
     return apiClient.get<ParameterValue[]>('/parameter-values/', { params });
   }
 
@@ -105,7 +109,9 @@ class ParametersAPI {
   }
 
   // Baseline Parameter Values
-  async listBaselineParameterValues(params?: PaginationParams): Promise<BaselineParameterValue[]> {
+  async listBaselineParameterValues(
+    params?: PaginationParams & { parameter_id?: string }
+  ): Promise<BaselineParameterValue[]> {
     return apiClient.get<BaselineParameterValue[]>('/baseline-parameter-values/', { params });
   }
 

@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Container, Title, Text, Table, Button, Group, Badge, TextInput } from '@mantine/core';
-import { IconPlus, IconSearch, IconRefresh } from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/apiClient';
+import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import IngredientReadView from '@/components/IngredientReadView';
+import { useIngredientActions } from '@/hooks/useIngredientActions';
+import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 
 interface Dynamic {
   id: string;
@@ -17,9 +19,15 @@ interface Dynamic {
 export default function DynamicsPage() {
   const [searchValue, setSearchValue] = useState('');
   const queryClient = useQueryClient();
+  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
   // Fetch dynamics from API
-  const { data: dynamics, isLoading, error, refetch } = useQuery({
+  const {
+    data: dynamics,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['dynamics'],
     queryFn: () => apiClient.get<Dynamic[]>('/dynamics/', { params: { limit: 1000 } }),
     refetchInterval: 30000, // Refetch every 30 seconds for live data
@@ -33,116 +41,129 @@ export default function DynamicsPage() {
     },
   });
 
+  const { handleMenuAction, getDefaultActions } = useIngredientActions({
+    ingredient: 'dynamic',
+    onDelete: (id) => {
+      if (confirm('Delete this dynamic configuration?')) {
+        deleteMutation.mutate(id);
+      }
+    },
+  });
+
+  const handleBuildDynamic = () => {
+    // TODO: Implement dynamic creation flow
+    console.log('Build new dynamic');
+  };
+
+  const handleMoreFilters = () => {
+    // TODO: Implement more filters modal/dropdown
+    console.log('More filters clicked');
+  };
+
   // Filter dynamics based on search
-  const filteredDynamics = dynamics?.filter((dynamic) =>
-    dynamic.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-    dynamic.description?.toLowerCase().includes(searchValue.toLowerCase())
+  const filteredDynamics = dynamics?.filter(
+    (dynamic) =>
+      dynamic.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+      dynamic.description?.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  if (error) {
-    return (
-      <Container size="xl" py="xl">
-        <Title order={2} mb="lg">Dynamics</Title>
-        <Text c="red">Error loading dynamics: {error.message}</Text>
-      </Container>
-    );
-  }
+  // Define column configurations for dynamics
+  const dynamicColumns: ColumnConfig[] = [
+    {
+      key: 'dynamicName',
+      header: 'Dynamic name',
+      type: 'text',
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      type: 'text',
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      type: 'bullets',
+      items: [
+        {
+          textKey: 'text',
+          badgeKey: 'badge',
+        },
+      ],
+    },
+    {
+      key: 'dateCreated',
+      header: 'Date created',
+      type: 'text',
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      type: 'bullets',
+      items: [
+        {
+          textKey: 'text',
+          badgeKey: 'badge',
+        },
+      ],
+    },
+    {
+      key: 'actions',
+      header: '',
+      type: 'split-menu',
+      actions: getDefaultActions(),
+      onAction: handleMenuAction,
+    },
+  ];
+
+  // Transform the data to match the IngredientRecord structure
+  const transformedData: IngredientRecord[] =
+    filteredDynamics?.map((dynamic) => ({
+      id: dynamic.id,
+      dynamicName: {
+        text: dynamic.name,
+      } as TextValue,
+      description: {
+        text: dynamic.description || 'No description',
+      } as TextValue,
+      type: {
+        items: dynamic.type
+          ? [{ text: dynamic.type, badge: '' }]
+          : [{ text: 'Standard', badge: '' }],
+      } as BulletsValue,
+      dateCreated: {
+        text: new Date(dynamic.created_at).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        }),
+      } as TextValue,
+      status: {
+        items: [
+          {
+            text: 'Live data from database',
+            badge: '✓',
+          },
+        ],
+      } as BulletsValue,
+    })) || [];
 
   return (
-    <Container size="xl" py="xl">
-      <Group justify="space-between" mb="lg">
-        <Title order={2}>Dynamics</Title>
-        <Group>
-          <TextInput
-            placeholder="Search dynamics..."
-            leftSection={<IconSearch size={16} />}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.currentTarget.value)}
-          />
-          <Button
-            leftSection={<IconRefresh size={16} />}
-            variant="light"
-            onClick={() => refetch()}
-          >
-            Refresh
-          </Button>
-          <Button leftSection={<IconPlus size={16} />}>
-            New Dynamic
-          </Button>
-        </Group>
-      </Group>
-
-      <Text c="dimmed" mb="lg">
-        Manage time-varying behaviours and dynamic configurations for your models.
-      </Text>
-
-      {isLoading ? (
-        <Text>Loading dynamics...</Text>
-      ) : filteredDynamics?.length === 0 ? (
-        <Text c="dimmed">No dynamics found. Create your first dynamic configuration.</Text>
-      ) : (
-        <Table striped highlightOnHover>
-          <Table.Thead>
-            <Table.Tr>
-              <Table.Th>Name</Table.Th>
-              <Table.Th>Description</Table.Th>
-              <Table.Th>Type</Table.Th>
-              <Table.Th>Created</Table.Th>
-              <Table.Th>Actions</Table.Th>
-            </Table.Tr>
-          </Table.Thead>
-          <Table.Tbody>
-            {filteredDynamics?.map((dynamic) => (
-              <Table.Tr key={dynamic.id}>
-                <Table.Td>
-                  <Text fw={500}>{dynamic.name}</Text>
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm" c="dimmed">
-                    {dynamic.description || 'No description'}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  {dynamic.type && <Badge variant="light">{dynamic.type}</Badge>}
-                </Table.Td>
-                <Table.Td>
-                  <Text size="sm">
-                    {new Date(dynamic.created_at).toLocaleDateString()}
-                  </Text>
-                </Table.Td>
-                <Table.Td>
-                  <Group gap="xs">
-                    <Button size="xs" variant="light">
-                      View
-                    </Button>
-                    <Button size="xs" variant="light">
-                      Edit
-                    </Button>
-                    <Button
-                      size="xs"
-                      variant="light"
-                      color="red"
-                      onClick={() => {
-                        if (confirm('Delete this dynamic configuration?')) {
-                          deleteMutation.mutate(dynamic.id);
-                        }
-                      }}
-                    >
-                      Delete
-                    </Button>
-                  </Group>
-                </Table.Td>
-              </Table.Tr>
-            ))}
-          </Table.Tbody>
-        </Table>
-      )}
-
-      <Group justify="center" mt="xl">
-        <Text size="sm" c="dimmed">
-          {filteredDynamics?.length || 0} dynamic configurations • Live data from database
-        </Text>
-      </Group>
-    </Container>
+    <IngredientReadView
+      ingredient="dynamic"
+      title="Your dynamics"
+      subtitle="Manage time-varying behaviours and dynamic configurations for your models."
+      onBuild={handleBuildDynamic}
+      isLoading={isLoading}
+      isError={!!error}
+      error={error}
+      data={transformedData}
+      columns={dynamicColumns}
+      searchValue={searchValue}
+      onSearchChange={setSearchValue}
+      onMoreFilters={handleMoreFilters}
+      enableSelection
+      isSelected={isSelected}
+      onSelectionChange={handleSelectionChange}
+    />
   );
 }

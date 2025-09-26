@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Container, Title, Text, Code, Stack, Paper, Badge, Group, Button } from '@mantine/core';
-import { simulationsAPI } from '@/api/v2/simulations';
-import { policiesAPI } from '@/api/v2/policies';
+import { Badge, Button, Code, Container, Group, Paper, Stack, Text, Title } from '@mantine/core';
 import { parametersAPI } from '@/api/parameters';
 import { datasetsAPI } from '@/api/v2/datasets';
+import { policiesAPI } from '@/api/v2/policies';
+import { simulationsAPI } from '@/api/v2/simulations';
 
 export default function TestPage() {
   const [results, setResults] = useState<any>({});

@@ -1,6 +1,4 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-// Import the API function
-import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
 import { parametersAPI } from '@/api/parameters';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { MetadataState } from '@/types/metadata';
@@ -27,25 +25,60 @@ export const fetchMetadataThunk = createAsyncThunk(
   'metadata/fetch',
   async (country: string, { rejectWithValue }) => {
     try {
-      // Fetch parameters from new API
-      const parametersWithBaselines = await parametersAPI.getAllParametersWithBaselines();
+      // Map country codes to model IDs
+      const modelIdMap: Record<string, string> = {
+        'us': 'policyengine_us',
+        'uk': 'policyengine_uk',
+        'ca': 'policyengine_ca',
+        'ng': 'policyengine_ng',
+        'il': 'policyengine_il',
+      };
 
-      // Transform new API data to match expected format
-      const parameters: Record<string, any> = {};
-      parametersWithBaselines.forEach(({ parameter, baseline }) => {
-        parameters[parameter.id] = {
-          ...parameter,
-          baseline_value: baseline?.value,
+      const modelId = modelIdMap[country] || `policyengine_${country}`;
+      console.log('Fetching parameters for model:', modelId);
+
+      // Just fetch parameters, not baseline values (those will be fetched on demand)
+      const allParameters = await parametersAPI.listParameters({ limit: 1000 });
+
+      console.log('All parameters fetched:', allParameters.length);
+      console.log('Sample parameter:', allParameters[0]);
+
+      // For now, use all parameters if none match the model_id (for development)
+      // Filter parameters by model_id for the current country
+      const filteredParameters = allParameters.filter(
+        (param: any) => param.model_id === modelId
+      );
+      console.log('Filtered parameters for', modelId, ':', filteredParameters.length);
+
+      // If no parameters found for this model, use all parameters (for development)
+      const parameters = filteredParameters.length > 0 ? filteredParameters : allParameters;
+      console.log('Using parameters:', parameters.length);
+
+      // Transform to match expected metadata format (without baseline values for now)
+      const parametersData: Record<string, any> = {};
+
+      parameters.forEach((param: any) => {
+        const paramPath = param.id; // Use ID as the path
+
+        // Create hierarchical path from parameter name (e.g., "gov.irs.income_tax_rate")
+        parametersData[paramPath] = {
+          ...param,
+          parameter: paramPath,
+          label: param.id?.split('.').pop()?.replace(/_/g, ' ') || param.id,
           type: 'parameter',
+          economy: true,
+          household: true,
+          values: {}, // Empty values initially, will be fetched on demand
+          unit: param.unit,
+          description: param.description,
         };
       });
 
-      // For now, return minimal metadata structure with just parameters
-      // Other metadata will need to come from new API endpoints when available
+      // Return in expected format
       return {
         data: {
           result: {
-            parameters,
+            parameters: parametersData,
             variables: {},
             entities: {},
             variableModules: {},

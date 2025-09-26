@@ -104,16 +104,12 @@ class DatasetsAPI {
 
   async getHouseholdDatasets(country?: string): Promise<DatasetResponse[]> {
     const datasets = await this.listDatasets({ limit: 1000 });
-    return datasets.filter(
-      (d) => d.type === 'household' && (!country || d.country === country)
-    );
+    return datasets.filter((d) => d.type === 'household' && (!country || d.country === country));
   }
 
   async getPopulationDatasets(country?: string): Promise<DatasetResponse[]> {
     const datasets = await this.listDatasets({ limit: 1000 });
-    return datasets.filter(
-      (d) => d.type === 'population' && (!country || d.country === country)
-    );
+    return datasets.filter((d) => d.type === 'population' && (!country || d.country === country));
   }
 }
 

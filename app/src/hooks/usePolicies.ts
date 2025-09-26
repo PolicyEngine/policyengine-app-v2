@@ -1,18 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { policiesAPI } from '@/api/v2/policies';
+import { useCurrentCountry } from './useCurrentCountry';
 
 /**
- * Hook to fetch all policies from the API
+ * Hook to fetch all policies from the API for the current country
  */
 export const usePolicies = () => {
+  const country = useCurrentCountry();
+
   return useQuery({
-    queryKey: ['policies'],
+    queryKey: ['policies', country],
     queryFn: async () => {
-      console.log('[usePolicies] Fetching policies from API...');
+      console.log(`[usePolicies] Fetching policies for country: ${country}...`);
       try {
-        const policies = await policiesAPI.list({ limit: 1000 });
-        console.log('[usePolicies] Successfully fetched policies:', policies);
-        return policies;
+        const allPolicies = await policiesAPI.list({ limit: 1000 });
+        // Filter policies by country
+        const countryPolicies = allPolicies.filter(
+          policy => !policy.country || policy.country === country
+        );
+        console.log(`[usePolicies] Found ${countryPolicies.length} policies for ${country}`);
+        return countryPolicies;
       } catch (error) {
         console.error('[usePolicies] Error fetching policies:', error);
         throw error;

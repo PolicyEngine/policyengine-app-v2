@@ -1,16 +1,16 @@
 import {
+  IconAdjustments,
   IconBook,
+  IconChartBar,
+  IconDatabase,
   IconExternalLink,
+  IconFileAnalytics,
   IconFileDescription,
   IconGitBranch,
   IconHome,
+  IconPlaystationSquare,
   IconPlus,
   IconSettings2,
-  IconDatabase,
-  IconChartBar,
-  IconFileAnalytics,
-  IconAdjustments,
-  IconPlaystationSquare,
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';

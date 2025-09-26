@@ -52,7 +52,10 @@ class SimulationsAPI {
   }
 
   async update(simulationId: string, data: SimulationUpdate): Promise<SimulationResponse> {
-    return apiClient.patch<SimulationResponse, SimulationUpdate>(`/simulations/${simulationId}`, data);
+    return apiClient.patch<SimulationResponse, SimulationUpdate>(
+      `/simulations/${simulationId}`,
+      data
+    );
   }
 
   async delete(simulationId: string): Promise<void> {

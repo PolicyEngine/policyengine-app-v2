@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import ReportOutputFrame from './frames/report/ReportOutputFrame';
-import HomePage from './pages/Home.page';
-import PoliciesPage from './pages/Policies.page';
-import SimulationsPage from './pages/Simulations.page';
 import DatasetsPage from './pages/Datasets.page';
 import DynamicsPage from './pages/Dynamics.page';
+import HomePage from './pages/Home.page';
+import PoliciesPage from './pages/Policies.page';
 import ReportsPage from './pages/Reports.page';
+import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 
 const router = createBrowserRouter(

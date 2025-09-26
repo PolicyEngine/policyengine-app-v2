@@ -1,6 +1,5 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { policiesAPI } from '@/api/v2/policies';
-import { PolicyWithParameters } from '@/api/v2/policies';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { policiesAPI, PolicyWithParameters } from '@/api/v2/policies';
 
 // Fetch all policies directly from the database
 export const useAllPolicies = () => {

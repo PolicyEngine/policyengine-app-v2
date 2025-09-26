@@ -10,10 +10,13 @@ export async function fetchPolicyById(country: string, policyId: string): Promis
     name: policy.name,
     description: policy.description,
     country_id: policy.country || country,
-    parameters: policy.parameters.reduce((acc, pv) => {
-      acc[pv.parameter_id] = pv.value;
-      return acc;
-    }, {} as Record<string, any>),
+    parameters: policy.parameters.reduce(
+      (acc, pv) => {
+        acc[pv.parameter_id] = pv.value;
+        return acc;
+      },
+      {} as Record<string, any>
+    ),
   } as PolicyMetadata;
 }
 

@@ -1,5 +1,5 @@
 import { apiClient, PaginationParams } from '../apiClient';
-import { ParameterValue, ParameterValueCreate, parametersAPI } from '../parameters';
+import { parametersAPI, ParameterValue, ParameterValueCreate } from '../parameters';
 
 export interface PolicyResponse {
   id: string;

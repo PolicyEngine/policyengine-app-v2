@@ -39,7 +39,7 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
           borderTopRightRadius: 0,
           borderBottomRightRadius: 0,
           borderRight: 'none',
-          minWidth: rem(120),
+          minWidth: rem(140),
           justifyContent: 'flex-start',
           paddingLeft: spacing.md,
           paddingRight: spacing.md,
@@ -81,7 +81,7 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
           </Button>
         </Menu.Target>
 
-        <Menu.Dropdown style={{ minWidth: rem(152) }}>
+        <Menu.Dropdown style={{ minWidth: rem(180) }}>
           {/* Include primary action in dropdown as well */}
           <Menu.Item
             onClick={() => handleSecondaryAction(primaryAction.action)}

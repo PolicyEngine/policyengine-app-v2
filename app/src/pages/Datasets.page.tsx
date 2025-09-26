@@ -1,258 +1,162 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Container, Title, Text, Table, Button, Group, Badge, TextInput, Tabs } from '@mantine/core';
-import { IconPlus, IconSearch, IconRefresh, IconDatabase, IconVersions } from '@tabler/icons-react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { datasetsAPI } from '@/api/v2/datasets';
+import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import IngredientReadView from '@/components/IngredientReadView';
+import { useIngredientActions } from '@/hooks/useIngredientActions';
+import { useIngredientSelection } from '@/hooks/useIngredientSelection';
+import { formatIngredientDate } from '@/utils/ingredientUtils';
 
 export default function DatasetsPage() {
   const [searchValue, setSearchValue] = useState('');
-  const [activeTab, setActiveTab] = useState<string | null>('datasets');
   const queryClient = useQueryClient();
+  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
   // Fetch datasets
-  const { data: datasets, isLoading: datasetsLoading, error: datasetsError, refetch: refetchDatasets } = useQuery({
+  const {
+    data: datasets,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['datasets'],
     queryFn: () => datasetsAPI.listDatasets({ limit: 1000 }),
     refetchInterval: 30000,
   });
 
-  // Fetch versioned datasets
-  const { data: versionedDatasets, isLoading: versionsLoading, error: versionsError, refetch: refetchVersions } = useQuery({
-    queryKey: ['versioned-datasets'],
-    queryFn: () => datasetsAPI.listVersionedDatasets({ limit: 1000 }),
-    refetchInterval: 30000,
-  });
-
-  // Delete mutations
-  const deleteDatasetMutation = useMutation({
+  // Delete mutation
+  const deleteMutation = useMutation({
     mutationFn: datasetsAPI.deleteDataset,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['datasets'] });
     },
   });
 
-  const deleteVersionMutation = useMutation({
-    mutationFn: datasetsAPI.deleteVersionedDataset,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['versioned-datasets'] });
+  const { handleMenuAction, getDefaultActions } = useIngredientActions({
+    ingredient: 'dataset' as any,
+    onDelete: (id) => {
+      if (confirm('Delete this dataset?')) {
+        deleteMutation.mutate(id);
+      }
     },
   });
 
-  // Filter based on search
-  const filteredDatasets = datasets?.filter((dataset) =>
-    dataset.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-    dataset.description?.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const handleBuildDataset = () => {
+    // TODO: Implement dataset creation flow
+    console.log('Build new dataset');
+  };
 
-  const filteredVersions = versionedDatasets?.filter((version) =>
-    version.version.toLowerCase().includes(searchValue.toLowerCase()) ||
-    version.dataset_id.toLowerCase().includes(searchValue.toLowerCase())
+  const handleMoreFilters = () => {
+    // TODO: Implement more filters modal/dropdown
+    console.log('More filters clicked');
+  };
+
+  // Filter datasets based on search
+  const filteredDatasets = datasets?.filter(
+    (dataset) =>
+      dataset.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+      dataset.description?.toLowerCase().includes(searchValue.toLowerCase())
   );
 
   const getTypeColor = (type: string) => {
     switch (type) {
-      case 'household': return 'blue';
-      case 'population': return 'green';
-      case 'economic': return 'orange';
-      default: return 'gray';
+      case 'household':
+        return 'blue';
+      case 'population':
+        return 'green';
+      case 'economic':
+        return 'orange';
+      default:
+        return 'gray';
     }
   };
 
-  if (datasetsError || versionsError) {
-    return (
-      <Container size="xl" py="xl">
-        <Title order={2} mb="lg">Datasets</Title>
-        <Text c="red">Error loading datasets: {datasetsError?.message || versionsError?.message}</Text>
-      </Container>
-    );
-  }
+  // Define column configurations for datasets
+  const datasetColumns: ColumnConfig[] = [
+    {
+      key: 'datasetName',
+      header: 'Dataset name',
+      type: 'text',
+    },
+    {
+      key: 'description',
+      header: 'Description',
+      type: 'text',
+    },
+    {
+      key: 'type',
+      header: 'Type',
+      type: 'bullets',
+      items: [
+        {
+          textKey: 'text',
+          badgeKey: 'badge',
+        },
+      ],
+    },
+    {
+      key: 'country',
+      header: 'Country',
+      type: 'bullets',
+      items: [
+        {
+          textKey: 'text',
+          badgeKey: 'badge',
+        },
+      ],
+    },
+    {
+      key: 'dateCreated',
+      header: 'Date created',
+      type: 'text',
+    },
+    {
+      key: 'actions',
+      header: '',
+      type: 'split-menu',
+      actions: getDefaultActions(),
+      onAction: handleMenuAction,
+    },
+  ];
+
+  // Transform the data to match the IngredientRecord structure
+  const transformedData: IngredientRecord[] =
+    filteredDatasets?.map((dataset) => ({
+      id: dataset.id,
+      datasetName: {
+        text: dataset.name,
+      } as TextValue,
+      description: {
+        text: dataset.description || 'No description',
+      } as TextValue,
+      type: {
+        items: [{ text: dataset.type, badge: getTypeColor(dataset.type) }],
+      } as BulletsValue,
+      country: {
+        items: dataset.country ? [{ text: dataset.country.toUpperCase(), badge: '' }] : [],
+      } as BulletsValue,
+      dateCreated: {
+        text: formatIngredientDate(dataset.created_at, dataset.country as any),
+      } as TextValue,
+    })) || [];
 
   return (
-    <Container size="xl" py="xl">
-      <Group justify="space-between" mb="lg">
-        <Title order={2}>Datasets</Title>
-        <Group>
-          <TextInput
-            placeholder="Search datasets..."
-            leftSection={<IconSearch size={16} />}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.currentTarget.value)}
-          />
-          <Button
-            leftSection={<IconRefresh size={16} />}
-            variant="light"
-            onClick={() => {
-              refetchDatasets();
-              refetchVersions();
-            }}
-          >
-            Refresh
-          </Button>
-          <Button leftSection={<IconPlus size={16} />}>
-            New Dataset
-          </Button>
-        </Group>
-      </Group>
-
-      <Text c="dimmed" mb="lg">
-        Manage household, population, and economic datasets for your simulations.
-      </Text>
-
-      <Tabs value={activeTab} onChange={setActiveTab}>
-        <Tabs.List>
-          <Tabs.Tab value="datasets" leftSection={<IconDatabase size={16} />}>
-            Datasets ({filteredDatasets?.length || 0})
-          </Tabs.Tab>
-          <Tabs.Tab value="versions" leftSection={<IconVersions size={16} />}>
-            Versions ({filteredVersions?.length || 0})
-          </Tabs.Tab>
-        </Tabs.List>
-
-        <Tabs.Panel value="datasets" pt="md">
-          {datasetsLoading ? (
-            <Text>Loading datasets...</Text>
-          ) : filteredDatasets?.length === 0 ? (
-            <Text c="dimmed">No datasets found. Create your first dataset.</Text>
-          ) : (
-            <Table striped highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Name</Table.Th>
-                  <Table.Th>Description</Table.Th>
-                  <Table.Th>Type</Table.Th>
-                  <Table.Th>Country</Table.Th>
-                  <Table.Th>Created</Table.Th>
-                  <Table.Th>Actions</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {filteredDatasets?.map((dataset) => (
-                  <Table.Tr key={dataset.id}>
-                    <Table.Td>
-                      <Text fw={500}>{dataset.name}</Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm" c="dimmed">
-                        {dataset.description || 'No description'}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Badge variant="light" color={getTypeColor(dataset.type)}>
-                        {dataset.type}
-                      </Badge>
-                    </Table.Td>
-                    <Table.Td>
-                      {dataset.country && <Badge variant="outline">{dataset.country}</Badge>}
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">
-                        {new Date(dataset.created_at).toLocaleDateString()}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Button size="xs" variant="light">
-                          View
-                        </Button>
-                        <Button size="xs" variant="light">
-                          Edit
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="light"
-                          color="red"
-                          onClick={() => {
-                            if (confirm('Delete this dataset?')) {
-                              deleteDatasetMutation.mutate(dataset.id);
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
-        </Tabs.Panel>
-
-        <Tabs.Panel value="versions" pt="md">
-          {versionsLoading ? (
-            <Text>Loading versions...</Text>
-          ) : filteredVersions?.length === 0 ? (
-            <Text c="dimmed">No dataset versions found.</Text>
-          ) : (
-            <Table striped highlightOnHover>
-              <Table.Thead>
-                <Table.Tr>
-                  <Table.Th>Dataset ID</Table.Th>
-                  <Table.Th>Version</Table.Th>
-                  <Table.Th>Valid From</Table.Th>
-                  <Table.Th>Valid To</Table.Th>
-                  <Table.Th>Created</Table.Th>
-                  <Table.Th>Actions</Table.Th>
-                </Table.Tr>
-              </Table.Thead>
-              <Table.Tbody>
-                {filteredVersions?.map((version) => (
-                  <Table.Tr key={version.id}>
-                    <Table.Td>
-                      <Text size="sm" ff="monospace">
-                        {version.dataset_id.slice(0, 8)}...
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Badge variant="filled">{version.version}</Badge>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">
-                        {version.valid_from ? new Date(version.valid_from).toLocaleDateString() : '-'}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">
-                        {version.valid_to ? new Date(version.valid_to).toLocaleDateString() : '-'}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Text size="sm">
-                        {new Date(version.created_at).toLocaleDateString()}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td>
-                      <Group gap="xs">
-                        <Button size="xs" variant="light">
-                          View
-                        </Button>
-                        <Button
-                          size="xs"
-                          variant="light"
-                          color="red"
-                          onClick={() => {
-                            if (confirm('Delete this version?')) {
-                              deleteVersionMutation.mutate(version.id);
-                            }
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </Group>
-                    </Table.Td>
-                  </Table.Tr>
-                ))}
-              </Table.Tbody>
-            </Table>
-          )}
-        </Tabs.Panel>
-      </Tabs>
-
-      <Group justify="center" mt="xl">
-        <Text size="sm" c="dimmed">
-          {datasets?.length || 0} datasets • {versionedDatasets?.length || 0} versions • Live data from database
-        </Text>
-      </Group>
-    </Container>
+    <IngredientReadView
+      ingredient="dataset"
+      title="Your datasets"
+      subtitle="Manage household, population, and economic datasets for your simulations."
+      onBuild={handleBuildDataset}
+      isLoading={isLoading}
+      isError={!!error}
+      error={error}
+      data={transformedData}
+      columns={datasetColumns}
+      searchValue={searchValue}
+      onSearchChange={setSearchValue}
+      onMoreFilters={handleMoreFilters}
+      enableSelection
+      isSelected={isSelected}
+      onSelectionChange={handleSelectionChange}
+    />
   );
 }

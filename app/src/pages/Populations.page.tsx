@@ -4,6 +4,8 @@ import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/compo
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
+import { useIngredientActions } from '@/hooks/useIngredientActions';
+import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
@@ -37,7 +39,7 @@ export default function PopulationsPage() {
   const dispatch = useDispatch();
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
@@ -53,40 +55,10 @@ export default function PopulationsPage() {
     console.log('More filters clicked');
   };
 
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-population':
-        // TODO: Implement view population functionality
-        console.log('View details:', recordId);
-        break;
-      case 'bookmark':
-        // TODO: Implement bookmark functionality
-        console.log('Bookmark population:', recordId);
-        break;
-      case 'edit':
-        // TODO: Implement edit functionality
-        console.log('Edit population:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share population:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete population:', recordId);
-        break;
-      default:
-        console.error('Unknown action:', action);
-    }
-  };
-
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
+  const { handleMenuAction, getDefaultActions } = useIngredientActions({
+    ingredient: 'population',
+    // TODO: Implement actual action handlers
+  });
 
   // We have separate sources of data for household vs geographies. Can we remove this?
   // // Helper function to determine if an item is geographic or household
@@ -184,13 +156,7 @@ export default function PopulationsPage() {
       key: 'actions',
       header: '',
       type: 'split-menu',
-      actions: [
-        { label: 'View details', action: 'view-population' },
-        { label: 'Bookmark', action: 'bookmark' },
-        { label: 'Edit', action: 'edit' },
-        { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
+      actions: getDefaultActions(),
       onAction: handleMenuAction,
     },
   ];

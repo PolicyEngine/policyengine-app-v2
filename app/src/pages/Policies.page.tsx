@@ -1,23 +1,54 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import FlowContainer from '@/components/FlowContainer';
 import IngredientReadView from '@/components/IngredientReadView';
+import PolicyCreationModal from '@/components/policy/PolicyCreationModal';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
+import { useIngredientActions } from '@/hooks/useIngredientActions';
+import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { usePolicies } from '@/hooks/usePolicies';
 import { countryIds } from '@/libs/countries';
-import { setFlow } from '@/reducers/flowReducer';
+import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { navigateToFrame, setFlow } from '@/reducers/flowReducer';
+import { createPolicyAtPosition, updatePolicyAtPosition } from '@/reducers/policyReducer';
+import { RootState } from '@/store';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function PoliciesPage() {
   const { data: policies, isLoading, error } = usePolicies();
   const dispatch = useDispatch();
   const isError = !!error;
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const { currentFlow } = useSelector((state: RootState) => state.flow);
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
+  const [modalOpened, setModalOpened] = useState(false);
 
   const handleBuildPolicy = () => {
+    setModalOpened(true);
+  };
+
+  const handleModalSubmit = (policyName: string) => {
+    // Create policy at current position with the label
+    dispatch(createPolicyAtPosition({ position: currentPosition }));
+    dispatch(
+      updatePolicyAtPosition({
+        position: currentPosition,
+        updates: { label: policyName },
+      })
+    );
+
+    // Set the flow and navigate to parameter selection
     dispatch(setFlow(PolicyCreationFlow));
+    // Navigate directly to the parameter selector, skipping the creation frame
+    dispatch(navigateToFrame('PolicyParameterSelectorFrame'));
+    setModalOpened(false);
+  };
+
+  const handleModalClose = () => {
+    setModalOpened(false);
   };
 
   const handleMoreFilters = () => {
@@ -25,40 +56,10 @@ export default function PoliciesPage() {
     console.log('More filters clicked');
   };
 
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-policy':
-        // TODO: Implement view reform functionality
-        console.log('View details:', recordId);
-        break;
-      case 'bookmark':
-        // TODO: Implement bookmark functionality
-        console.log('Bookmark policy:', recordId);
-        break;
-      case 'edit':
-        // TODO: Implement edit functionality
-        console.log('Edit policy:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share policy:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete policy:', recordId);
-        break;
-      default:
-        console.error('Unknown action:', action);
-    }
-  };
-
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
+  const { handleMenuAction, getDefaultActions } = useIngredientActions({
+    ingredient: 'policy',
+    // TODO: Implement actual action handlers
+  });
 
   // Define column configurations for policies
   const policyColumns: ColumnConfig[] = [
@@ -92,19 +93,12 @@ export default function PoliciesPage() {
       key: 'actions',
       header: '',
       type: 'split-menu',
-      actions: [
-        { label: 'View details', action: 'view-policy' },
-        { label: 'Bookmark', action: 'bookmark' },
-        { label: 'Edit', action: 'edit' },
-        { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
+      actions: getDefaultActions(),
       onAction: handleMenuAction,
     },
   ];
 
   // Transform the data to match the new structure
-  console.log('Raw policies data:', policies);
 
   const transformedData: IngredientRecord[] =
     policies?.map((policy) => ({
@@ -133,23 +127,32 @@ export default function PoliciesPage() {
       } as BulletsValue,
     })) || [];
 
+  // Render the normal policies page with the modal and/or flow overlay
   return (
-    <IngredientReadView
-      ingredient="policy"
-      title="Your policies"
-      subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
-      onBuild={handleBuildPolicy}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={policyColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      onMoreFilters={handleMoreFilters}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <>
+      <PolicyCreationModal
+        opened={modalOpened}
+        onClose={handleModalClose}
+        onSubmit={handleModalSubmit}
+      />
+      {currentFlow && <FlowContainer />}
+      <IngredientReadView
+        ingredient="policy"
+        title="Your policies"
+        subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
+        onBuild={handleBuildPolicy}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={transformedData}
+        columns={policyColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        onMoreFilters={handleMoreFilters}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+      />
+    </>
   );
 }

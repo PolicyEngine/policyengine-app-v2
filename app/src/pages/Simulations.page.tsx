@@ -10,6 +10,8 @@ import {
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
+import { useIngredientActions } from '@/hooks/useIngredientActions';
+import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { useSimulationsWithPolicies } from '@/hooks/useSimulations';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
@@ -21,7 +23,7 @@ export default function SimulationsPage() {
   const isError = !!error;
 
   const [searchValue, setSearchValue] = useState('');
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
   const handleBuildSimulation = () => {
     dispatch(setFlow(SimulationCreationFlow));
@@ -32,28 +34,10 @@ export default function SimulationsPage() {
     console.log('More filters clicked');
   };
 
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'add-to-report':
-        // TODO: Implement add to report functionality
-        console.log('Add to report:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete simulation:', recordId);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
-  };
-
-  const handleSelectionChange = (recordId: string, selected: boolean) => {
-    setSelectedIds((prev) =>
-      selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
-    );
-  };
-
-  const isSelected = (recordId: string) => selectedIds.includes(recordId);
+  const { handleMenuAction, getDefaultActions } = useIngredientActions({
+    ingredient: 'simulation',
+    // TODO: Implement actual action handlers
+  });
 
   // Define column configurations for simulations
   const simulationColumns: ColumnConfig[] = [
@@ -92,10 +76,7 @@ export default function SimulationsPage() {
       key: 'actions',
       header: '',
       type: 'split-menu',
-      actions: [
-        { label: 'Add to Report', action: 'add-to-report' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
+      actions: getDefaultActions(),
       onAction: handleMenuAction,
     },
   ];

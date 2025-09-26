@@ -26,7 +26,9 @@ export async function createSimulation(
 ): Promise<{ result: { simulation_id: string } }> {
   const simulation = await simulationsAPI.createAndRun({
     name: data.label,
-    description: data.baseline_policy_id ? `Based on baseline ${data.baseline_policy_id}` : undefined,
+    description: data.baseline_policy_id
+      ? `Based on baseline ${data.baseline_policy_id}`
+      : undefined,
     policy_id: data.reform_policy_id || data.baseline_policy_id || '',
     dataset_id: data.dataset_id,
     model_id: data.model_id,

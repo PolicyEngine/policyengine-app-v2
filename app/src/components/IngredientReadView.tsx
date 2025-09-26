@@ -79,20 +79,10 @@ export default function IngredientReadView({
         </Flex>
       </Box>
 
-      {/* Title and Filters Section */}
+      {/* Filters Section */}
       <Box mb={spacing.xl}>
-        <Title
-          order={2}
-          size="lg"
-          fw={typography.fontWeight.semibold}
-          c={colors.text.title}
-          mb={spacing.lg}
-        >
-          Your Saved {title}
-        </Title>
-
         {/* Filters and Search */}
-        <Flex gap={spacing.md} align="center" mb={spacing.lg}>
+        <Flex gap={spacing.md} align="center">
           {/* TODO: Future filters */}
 
           <Button
