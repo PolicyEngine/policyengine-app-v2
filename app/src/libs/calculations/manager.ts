@@ -3,98 +3,104 @@ import { CalculationMeta } from '@/api/reportCalculations';
 import { markReportCompleted, markReportError } from '@/api/report';
 import { countryIds } from '@/libs/countries';
 import { Report, ReportOutput } from '@/types/ingredients/Report';
-import {
-  CalculationHandler,
-  EconomyCalculationHandler,
-  HouseholdCalculationHandler,
-} from './handlers';
+import { CalculationService, getCalculationService } from './service';
+import { HouseholdProgressUpdater } from './progressUpdater';
 import { CalculationStatusResponse } from './status';
-import { CalculationType } from './types';
 
 /**
- * CalculationManager orchestrates different types of calculations (household and economy)
- * and handles cross-cutting concerns like report status updates.
- *
- * Architecture Note: This class uses a bidirectional reference pattern with its handlers.
- * The manager creates and owns the handlers, passing itself as a reference. This allows
- * handlers to notify the manager when calculations complete, triggering automatic report
- * status updates in the database. This pattern ensures:
- * - Separation of concerns: Handlers focus on calculations, manager handles reporting
- * - Automatic synchronization: Report status updates happen without external orchestration
- * - Consistent behavior: All calculation types follow the same completion flow
- *
- * The circular reference is intentional and controlled through type-only imports in the
- * handler base class to avoid runtime circular dependencies.
+ * CalculationManager provides backwards compatibility and orchestrates
+ * the new service-based architecture with TanStack Query.
+ * It delegates to CalculationService for core logic while maintaining
+ * the existing API for minimal disruption to existing code.
  */
 export class CalculationManager {
-  private handlers: Map<CalculationType, CalculationHandler>;
+  private service: CalculationService;
   private queryClient: QueryClient;
+  private progressUpdater: HouseholdProgressUpdater;
+  private reportStatusTracking = new Map<string, boolean>();
 
   constructor(queryClient: QueryClient) {
     this.queryClient = queryClient;
-    // Pass 'this' to handlers to enable completion callbacks
-    this.handlers = new Map([
-      ['household', new HouseholdCalculationHandler(queryClient, this)],
-      ['economy', new EconomyCalculationHandler(queryClient, this)],
-    ]);
-  }
-
-  getHandler(type: CalculationType): CalculationHandler {
-    const handler = this.handlers.get(type);
-    if (!handler) {
-      throw new Error(`No handler for calculation type: ${type}`);
-    }
-    return handler;
+    this.service = getCalculationService();
+    this.progressUpdater = new HouseholdProgressUpdater(queryClient);
   }
 
   /**
    * Fetch a calculation using its metadata
-   * For economy calculations, this triggers a fresh API call
-   * For household calculations, this returns existing calculation status if one matches the metadata
+   * This method now needs a reportId to work properly with the new architecture
+   * For backwards compatibility, we'll try to find it from tracked calculations
    */
-  async fetchCalculation(meta: CalculationMeta): Promise<CalculationStatusResponse> {
-    const handler = this.getHandler(meta.type);
-    return handler.fetch(meta);
+  async fetchCalculation(reportId: string, meta: CalculationMeta): Promise<CalculationStatusResponse> {
+    const result = await this.service.executeCalculation(reportId, meta);
+
+    // Check if we should update report status
+    if (!this.reportStatusTracking.get(reportId)) {
+      if (result.status === 'ok' || result.status === 'error') {
+        this.reportStatusTracking.set(reportId, true);
+        await this.updateReportStatus(
+          reportId,
+          result.status === 'ok' ? 'complete' : 'error',
+          meta.countryId,
+          result.result
+        );
+      }
+    }
+
+    return result;
   }
 
   /**
    * Start a calculation for a specific report
-   * Both household and economy calculations are tracked by reportId
-   * @param reportId - The report ID to associate with this calculation
-   * @param meta - The metadata to configure the calculation
+   * For household calculations, this also starts progress updates
    */
   async startCalculation(reportId: string, meta: CalculationMeta): Promise<void> {
-    const handler = this.getHandler(meta.type);
-    await handler.startCalculation(reportId, meta);
+    // Reset tracking for this report
+    this.reportStatusTracking.delete(reportId);
+
+    if (meta.type === 'household') {
+      // For household, check if already running
+      const handler = this.service.getHandler('household');
+      if (!handler.isActive(reportId)) {
+        // Start the calculation via executeCalculation
+        await this.service.executeCalculation(reportId, meta);
+        // Start progress updates
+        this.progressUpdater.startProgressUpdates(reportId, handler as any);
+      }
+    }
+    // For economy, we don't need to do anything special
+    // The polling will handle it
   }
 
   /**
    * Get the status of a calculation by report ID
-   * @param reportId - The report ID to look up
-   * @param type - The type of calculation (needed to select the right handler)
    */
-  getStatus(reportId: string, type: CalculationType): CalculationStatusResponse | null {
-    const handler = this.getHandler(type);
-    return handler.getStatus(reportId);
+  getStatus(reportId: string, type: 'household' | 'economy'): CalculationStatusResponse | null {
+    return this.service.getStatus(reportId, type);
   }
 
   /**
    * Get the cache key for a calculation
-   * This returns ['calculation', reportId] for consistency across all calculation types
-   * @param reportId - The report ID
-   * @param type - The type of calculation
    */
-  getCacheKey(reportId: string, type: CalculationType): readonly string[] {
-    const handler = this.getHandler(type);
-    return handler.getCacheKey(reportId);
+  getCacheKey(reportId: string): readonly string[] {
+    return ['calculation', reportId] as const;
+  }
+
+  /**
+   * Get query options for a calculation
+   */
+  getQueryOptions(reportId: string, meta: CalculationMeta) {
+    return this.service.getQueryOptions(reportId, meta);
+  }
+
+  /**
+   * Build metadata from simulation and population data
+   */
+  buildMetadata(...args: Parameters<CalculationService['buildMetadata']>) {
+    return this.service.buildMetadata(...args);
   }
 
   /**
    * Update the report status in the database when a calculation completes or errors
-   * @param reportId - The report ID to update
-   * @param status - The new status ('complete' or 'error')
-   * @param countryId - The country ID for the report
-   * @param result - The calculation result (for 'complete' status) - can be Household or society-wide results
    */
   async updateReportStatus(
     reportId: string,
