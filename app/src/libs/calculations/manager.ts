@@ -8,10 +8,9 @@ import { HouseholdProgressUpdater } from './progressUpdater';
 import { CalculationStatusResponse } from './status';
 
 /**
- * CalculationManager provides backwards compatibility and orchestrates
- * the new service-based architecture with TanStack Query.
- * It delegates to CalculationService for core logic while maintaining
- * the existing API for minimal disruption to existing code.
+ * CalculationManager orchestrates the service-based architecture with TanStack Query.
+ * It delegates to CalculationService for core logic and handles cross-cutting concerns
+ * like report status updates and progress monitoring.
  */
 export class CalculationManager {
   private service: CalculationService;
@@ -26,14 +25,13 @@ export class CalculationManager {
   }
 
   /**
-   * Fetch a calculation using its metadata
-   * This method now needs a reportId to work properly with the new architecture
-   * For backwards compatibility, we'll try to find it from tracked calculations
+   * Execute a calculation and update report status when complete
+   * This is the main entry point for running calculations through TanStack Query
    */
   async fetchCalculation(reportId: string, meta: CalculationMeta): Promise<CalculationStatusResponse> {
     const result = await this.service.executeCalculation(reportId, meta);
 
-    // Check if we should update report status
+    // Update report status when calculation completes (once per report)
     if (!this.reportStatusTracking.get(reportId)) {
       if (result.status === 'ok' || result.status === 'error') {
         this.reportStatusTracking.set(reportId, true);

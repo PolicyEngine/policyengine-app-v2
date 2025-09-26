@@ -1,4 +1,3 @@
-import { QueryClient } from '@tanstack/react-query';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -6,6 +5,17 @@ import { Simulation } from '@/types/ingredients/Simulation';
 import { CalculationStatusResponse } from './status';
 import { EconomyCalculationHandler } from './handlers/economy';
 import { HouseholdCalculationHandler } from './handlers/household';
+
+/**
+ * Parameters for building calculation metadata
+ */
+export interface BuildMetadataParams {
+  simulation1: Simulation | null;
+  simulation2?: Simulation | null;
+  household?: Household | null;
+  geography?: Geography | null;
+  countryId: string;
+}
 
 /**
  * CalculationService is the single source of truth for calculation logic.
@@ -25,13 +35,7 @@ export class CalculationService {
    * Build metadata from simulation and population data
    * Centralizes all metadata construction logic
    */
-  buildMetadata(params: {
-    simulation1: Simulation | null;
-    simulation2?: Simulation | null;
-    household?: Household | null;
-    geography?: Geography | null;
-    countryId: string;
-  }): CalculationMeta {
+  buildMetadata(params: BuildMetadataParams): CalculationMeta {
     const { simulation1, simulation2, household, geography, countryId } = params;
 
     if (!simulation1) {

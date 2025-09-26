@@ -72,7 +72,7 @@ export class HouseholdProgressUpdater {
    * Stop all progress updates
    */
   stopAllUpdates(): void {
-    for (const [reportId, interval] of this.intervals) {
+    for (const interval of this.intervals.values()) {
       clearInterval(interval);
     }
     this.intervals.clear();
