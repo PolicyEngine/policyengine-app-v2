@@ -1,5 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 import { CalculationMeta } from '@/api/reportCalculations';
+import { markReportCompleted, markReportError } from '@/api/report';
+import { countryIds } from '@/libs/countries';
+import { Report } from '@/types/ingredients/Report';
 import {
   CalculationHandler,
   EconomyCalculationHandler,
@@ -10,8 +13,10 @@ import { CalculationType } from './types';
 
 export class CalculationManager {
   private handlers: Map<CalculationType, CalculationHandler>;
+  private queryClient: QueryClient;
 
   constructor(queryClient: QueryClient) {
+    this.queryClient = queryClient;
     this.handlers = new Map([
       ['household', new HouseholdCalculationHandler(queryClient)],
       ['economy', new EconomyCalculationHandler(queryClient)],
@@ -66,6 +71,63 @@ export class CalculationManager {
   getCacheKey(reportId: string, type: CalculationType): readonly string[] {
     const handler = this.getHandler(type);
     return handler.getCacheKey(reportId);
+  }
+
+  /**
+   * Update the report status in the database when a calculation completes or errors
+   * @param reportId - The report ID to update
+   * @param status - The new status ('complete' or 'error')
+   * @param result - The calculation result (for 'complete' status)
+   * @param countryId - The country ID for the report
+   */
+  async updateReportStatus(
+    reportId: string,
+    status: 'complete' | 'error',
+    countryId: (typeof countryIds)[number],
+    result?: any
+  ): Promise<void> {
+    // Create a minimal Report object with just the necessary fields
+    const report: Report = {
+      reportId,
+      status,
+      output: status === 'complete' ? result : null,
+      countryId: countryId,
+      apiVersion: '',
+      simulationIds: [],
+    };
+
+    try {
+      // Call the appropriate update function based on status
+      if (status === 'complete') {
+        await markReportCompleted(report.countryId, reportId, report);
+      } else {
+        await markReportError(report.countryId, reportId, report);
+      }
+
+      // Invalidate the report cache to trigger a refresh in the UI
+      this.queryClient.invalidateQueries({
+        queryKey: ['reports', 'report_id', reportId],
+      });
+    } catch (error) {
+      // One retry attempt with 1-second delay
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if (status === 'complete') {
+          await markReportCompleted(report.countryId, reportId, report);
+        } else {
+          await markReportError(report.countryId, reportId, report);
+        }
+
+        // Invalidate cache after successful retry
+        this.queryClient.invalidateQueries({
+          queryKey: ['reports', 'report_id', reportId],
+        });
+      } catch (retryError) {
+        // Log but don't throw - calculation succeeded even if report update failed
+        console.error(`Failed to update report ${reportId} status to ${status}:`, retryError);
+      }
+    }
   }
 }
 
