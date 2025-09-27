@@ -7,6 +7,7 @@ import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DonatePage from './pages/Donate.page';
+import LandingPage from './pages/Landing.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
@@ -45,6 +46,11 @@ const router = createBrowserRouter(
               ],
             },
           ],
+        },
+        {
+          path: 'home',
+          index: true,
+          element: <LandingPage />,
         },
         // Routes that benefit from metadata but don't require it (lazy loader)
         {
