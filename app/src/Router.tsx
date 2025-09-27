@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home.page';
+import LandingPage from './pages/Landing.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -41,6 +42,11 @@ const router = createBrowserRouter(
               ],
             },
           ],
+        },
+        {
+          path: 'home',
+          index: true,
+          element: <LandingPage />,
         },
         // Routes that benefit from metadata but don't require it (lazy loader)
         {
