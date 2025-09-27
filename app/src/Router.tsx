@@ -1,8 +1,8 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import ReportOutputFrame from './frames/report/ReportOutputFrame';
+import DashBoardPage from './pages/Dashboard.page';
 import HomePage from './pages/Home.page';
-import LandingPage from './pages/Landing.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
@@ -17,6 +17,14 @@ const router = createBrowserRouter(
     },
     {
       path: '/:countryId',
+      element: (
+        <CountryGuard>
+          <HomePage />
+        </CountryGuard>
+      ),
+    },
+    {
+      path: '/:countryId/app',
       // CountryGuard wraps Layout directly instead of using Outlet pattern.
       // This keeps the structure simple - guard is just a validation wrapper,
       // not a route layer. Avoids extra nesting in route config.
@@ -27,13 +35,8 @@ const router = createBrowserRouter(
       ),
       children: [
         {
-          path: 'home',
-          index: true,
-          element: <LandingPage />,
-        },
-        {
           path: 'dashboard',
-          element: <HomePage />,
+          element: <DashBoardPage />,
         },
         {
           path: 'reports',
