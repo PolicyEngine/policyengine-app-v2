@@ -43,7 +43,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   return (
     <Box>
       {/* Title */}
-      <Title order={1} variant={themeComponents.Title.defaultProps?.variant}>
+      <Title order={1} variant="colored">
         {title}
       </Title>
 
@@ -86,21 +86,13 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
             (Array.isArray(buttonLabel) ? (
               <Group mt="md">
                 {buttonLabel.map((label, idx) => (
-                  <Button
-                    key={idx}
-                    onClick={() => onButtonClick?.(label)}
-                    variant={themeComponents.Button.defaultProps?.variant}
-                  >
+                  <Button key={idx} onClick={() => onButtonClick?.(label)} variant="primary">
                     {label}
                   </Button>
                 ))}
               </Group>
             ) : (
-              <Button
-                onClick={() => onButtonClick?.(buttonLabel)}
-                variant={themeComponents.Button.defaultProps?.variant}
-                mt="md"
-              >
+              <Button onClick={() => onButtonClick?.(buttonLabel)} variant="primary" mt="md">
                 {buttonLabel}
               </Button>
             ))}
