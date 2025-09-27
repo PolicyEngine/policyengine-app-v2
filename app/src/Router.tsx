@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 import Layout from './components/Layout';
 import ReportOutputFrame from './frames/report/ReportOutputFrame';
 import HomePage from './pages/Home.page';
+import LandingPage from './pages/Landing.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import SimulationsPage from './pages/Simulations.page';
@@ -26,7 +27,12 @@ const router = createBrowserRouter(
       ),
       children: [
         {
+          path: 'home',
           index: true,
+          element: <LandingPage />,
+        },
+        {
+          path: 'dashboard',
           element: <HomePage />,
         },
         {
