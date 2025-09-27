@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
+import DashBoardPage from './pages/Dashboard.page';
 import HomePage from './pages/Home.page';
-import LandingPage from './pages/Landing.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -44,9 +44,8 @@ const router = createBrowserRouter(
           ],
         },
         {
-          path: 'home',
           index: true,
-          element: <LandingPage />,
+          element: <HomePage />,
         },
         // Routes that benefit from metadata but don't require it (lazy loader)
         {
@@ -59,7 +58,7 @@ const router = createBrowserRouter(
                   index: true,
                   // TODO: Move HomePage out of Layout once actual static homepage is merged
                   // Currently HomePage has calculator navigation buttons so needs Layout
-                  element: <HomePage />,
+                  element: <DashBoardPage />,
                 },
                 {
                   path: 'reports',
