@@ -1,13 +1,13 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
+import DashBoardPage from './pages/Dashboard.page';
 import StaticLayout from './components/StaticLayout';
 import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DonatePage from './pages/Donate.page';
-import LandingPage from './pages/Landing.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
@@ -48,9 +48,8 @@ const router = createBrowserRouter(
           ],
         },
         {
-          path: 'home',
           index: true,
-          element: <LandingPage />,
+          element: <HomePage />,
         },
         // Routes that benefit from metadata but don't require it (lazy loader)
         {
@@ -61,7 +60,9 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  element: <Navigate to="reports" replace />,
+                  // TODO: Move HomePage out of Layout once actual static homepage is merged
+                  // Currently HomePage has calculator navigation buttons so needs Layout
+                  element: <DashBoardPage />,
                 },
                 {
                   path: 'reports',
