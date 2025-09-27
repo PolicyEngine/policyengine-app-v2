@@ -223,7 +223,6 @@ export const themeComponents = {
         return {
           root: {
             backgroundColor: colors.teal[500],
-            fontFamily: typography.fontFamily.primary,
             padding: spacing.md,
             borderRadius: spacing.radius.md,
             '&:hover': {
