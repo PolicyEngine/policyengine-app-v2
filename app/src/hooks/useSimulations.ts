@@ -16,28 +16,34 @@ export const useSimulations = () => {
       // First get all simulations
       const allSimulations = await simulationsAPI.list({ limit: 1000 });
 
-      // Then get policies to filter by country
-      const policyIds = [...new Set(allSimulations.map(s => s.policy_id).filter(Boolean))];
-      if (policyIds.length === 0) {
-        return [];
+      // Separate simulations with and without policies
+      const simulationsWithPolicies = allSimulations.filter(s => s.policy_id);
+      const simulationsWithoutPolicies = allSimulations.filter(s => !s.policy_id);
+
+      // Get unique policy IDs (excluding null)
+      const policyIds = [...new Set(simulationsWithPolicies.map(s => s.policy_id))];
+
+      let countrySimulations = [...simulationsWithoutPolicies]; // Start with simulations that have no policy
+
+      if (policyIds.length > 0) {
+        // Fetch policies to check their countries
+        const policies = await Promise.all(
+          policyIds.map(id => policiesAPI.get(id).catch(() => null))
+        );
+
+        // Create a set of policy IDs that belong to the current country
+        const countryPolicyIds = new Set(
+          policies
+            .filter(p => p && (!p.country || p.country === country))
+            .map(p => p!.id)
+        );
+
+        // Add simulations with country-matching policies
+        const filteredSimsWithPolicies = simulationsWithPolicies.filter(
+          sim => countryPolicyIds.has(sim.policy_id)
+        );
+        countrySimulations = [...countrySimulations, ...filteredSimsWithPolicies];
       }
-
-      // Fetch policies to check their countries
-      const policies = await Promise.all(
-        policyIds.map(id => policiesAPI.get(id).catch(() => null))
-      );
-
-      // Create a set of policy IDs that belong to the current country
-      const countryPolicyIds = new Set(
-        policies
-          .filter(p => p && (!p.country || p.country === country))
-          .map(p => p!.id)
-      );
-
-      // Filter simulations by country policies
-      const countrySimulations = allSimulations.filter(
-        sim => countryPolicyIds.has(sim.policy_id)
-      );
 
       console.log(`[useSimulations] Found ${countrySimulations.length} simulations for ${country}`);
       return countrySimulations;

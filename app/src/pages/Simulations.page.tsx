@@ -97,7 +97,7 @@ export default function SimulationsPage() {
         ),
       } as TextValue,
       policy: {
-        text: sim.policy?.name || `Policy ${sim.policy_id}`,
+        text: sim.policy?.name || (sim.policy_id ? `Policy ${sim.policy_id}` : 'No policy'),
       } as TextValue,
       population: {
         text: sim.dataset_id ? `Dataset ${sim.dataset_id}` : 'Default population',
