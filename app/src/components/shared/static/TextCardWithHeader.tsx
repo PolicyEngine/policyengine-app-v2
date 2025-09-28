@@ -3,12 +3,12 @@ import { colors } from '../../../designTokens';
 import { themeComponents } from '../../../styles/components';
 
 interface Section {
-  heading: string;
+  heading?: string;
   body: string | string[];
 }
 
 interface TitleCardWithHeaderProps {
-  title?: string;
+  title: string;
   sections?: Section[];
   backgroundColor?: 'white' | 'green' | 'gray';
   buttonLabel?: string | string[];
