@@ -14,9 +14,6 @@ import {
   Paper,
   Flex,
   ScrollArea,
-  ActionIcon,
-  Checkbox,
-  Collapse,
   Button,
   Badge,
   CloseButton,
@@ -27,17 +24,16 @@ import {
   IconSearch,
   IconFilter,
   IconDots,
-  IconChevronRight,
-  IconChevronDown,
   IconInfoCircle,
-  IconFolder,
-  IconFolderOpen,
   IconSettings,
   IconCheck,
   IconX,
+  IconChevronRight,
 } from '@tabler/icons-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import MultiStepModal, { ModalStep } from '@/components/shared/MultiStepModal';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import BaseModal from '@/components/shared/BaseModal';
+import ParameterSelectionModal from '@/components/shared/ParameterSelectionModal';
+import YearRangeSelector from '@/components/shared/YearRangeSelector';
 import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { parametersAPI, ParameterValueCreate } from '@/api/parameters';
 import { policiesAPI, PolicyCreate } from '@/api/v2/policies';
@@ -64,6 +60,7 @@ export default function PolicyCreationFlow({
   onComplete,
 }: PolicyCreationFlowProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const [currentStep, setCurrentStep] = useState<'name' | 'parameters'>('name');
   const { countryId } = useParams<{ countryId: string }>();
 
   // Map country codes to model IDs (matching metadataReducer logic)
@@ -86,17 +83,17 @@ export default function PolicyCreationFlow({
   const [selectedParamId, setSelectedParamId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentValue, setCurrentValue] = useState<number>(0);
-  const [startDate, setStartDate] = useState('2025-01-01');
+  const [startDate, setStartDate] = useState('2025');
   const [endDate, setEndDate] = useState<string | undefined>(undefined);
   const [baselineValues, setBaselineValues] = useState<Record<string, any>>({});
-  const [loadingBaseline, setLoadingBaseline] = useState(false);
-  const [showAllParameters, setShowAllParameters] = useState(false);
+  const [, setLoadingBaseline] = useState(false);
+  const showAllParameters = true; // Always show all parameters like in Figma
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [provisions, setProvisions] = useState<Provision[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Get metadata from Redux state
-  const { parameters, loading, error, currentCountry } = useSelector(
+  const { parameters, loading, currentCountry } = useSelector(
     (state: RootState) => state.metadata
   );
 
@@ -113,9 +110,12 @@ export default function PolicyCreationFlow({
   const buildParameterTree = () => {
     const tree: any = {};
 
+    // Collect all parameters to process
+    const paramsToProcess: Array<[string, any]> = [];
+
     Object.entries(parameters || {}).forEach(([key, param]) => {
-      // Filter out parameters without descriptions unless showAllParameters is true
-      if (!showAllParameters && !param.description) {
+      // Filter out parameters without labels unless showAllParameters is true
+      if (!showAllParameters && !param.label) {
         return;
       }
 
@@ -128,21 +128,39 @@ export default function PolicyCreationFlow({
         if (!matches) return;
       }
 
-      const parts = key.split('.');
+      paramsToProcess.push([key, param]);
+    });
+
+    // Build tree from all parameters
+    paramsToProcess.forEach(([key, param]) => {
+      // Parse the key to handle brackets and dots
+      const parts = key.split(/(\[[^\]]+\])/).filter(p => p).reduce((acc: string[], part) => {
+        if (part.startsWith('[')) {
+          acc.push(part);
+        } else {
+          acc.push(...part.split('.').filter(p => p));
+        }
+        return acc;
+      }, []);
+
       let current = tree;
 
+      // Navigate/create the tree structure
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
+        const isLast = i === parts.length - 1;
 
-        if (i === parts.length - 1) {
-          // Leaf node (actual parameter)
-          if (!current._params) current._params = [];
-          current._params.push({ key, ...param });
+        if (!current[part]) {
+          current[part] = {};
+        }
+
+        if (isLast) {
+          // Mark as parameter and store data
+          current[part]._isParam = true;
+          // Keep the original parameter data as-is
+          current[part]._data = { ...param, key };
         } else {
-          // Folder node
-          if (!current[part]) {
-            current[part] = { _isFolder: true };
-          }
+          // Navigate deeper
           current = current[part];
         }
       }
@@ -162,7 +180,6 @@ export default function PolicyCreationFlow({
   };
 
   const parameterTree = buildParameterTree();
-  const selectedParam = selectedParamId ? parameters[selectedParamId] : null;
 
   // Fetch baseline values when a parameter is selected
   useEffect(() => {
@@ -193,19 +210,33 @@ export default function PolicyCreationFlow({
           [selectedParamId]: values
         }));
 
-        // Set current value from baseline
+        // Set current value from baseline at the start date or most recent
         if (Object.keys(values).length > 0) {
           const dates = Object.keys(values).sort();
-          const mostRecentDate = dates[dates.length - 1];
-          const value = values[mostRecentDate];
-          setCurrentValue(typeof value === 'number' ? value : parseFloat(String(value)) || 0);
-          // Ensure we have a proper date format (YYYY-MM-DD)
-          if (mostRecentDate.includes('-')) {
-            setStartDate(mostRecentDate);
+
+          // Find value at current start date or closest earlier date
+          let valueToSet = 0;
+
+          // Check if we have a value for the current start date
+          const startYear = startDate.includes('-') ? startDate.split('-')[0] : startDate;
+          const startKey = values[startDate] !== undefined ? startDate :
+                          values[startYear] !== undefined ? startYear : null;
+
+          if (startKey) {
+            valueToSet = values[startKey];
           } else {
-            // If it's just a year, append -01-01 to make it a valid date
-            setStartDate(`${mostRecentDate}-01-01`);
+            // Find the most recent value before start date
+            for (let i = dates.length - 1; i >= 0; i--) {
+              const date = dates[i];
+              const year = date.includes('-') ? date.split('-')[0] : date;
+              if (parseInt(year) <= parseInt(startYear)) {
+                valueToSet = values[date];
+                break;
+              }
+            }
           }
+
+          setCurrentValue(typeof valueToSet === 'number' ? valueToSet : parseFloat(String(valueToSet)) || 0);
         }
       } catch (error) {
         console.error('Failed to fetch baseline values:', error);
@@ -215,141 +246,371 @@ export default function PolicyCreationFlow({
     };
 
     fetchBaselineForParameter();
-  }, [selectedParamId]);
+  }, [selectedParamId, startDate]);
 
   // Get historical values for the chart
   const getChartData = () => {
-    if (!selectedParamId || !baselineValues[selectedParamId]) {
-      return [];
+    console.log('getChartData called with:', {
+      selectedParamId,
+      provisions: provisions,
+      provisionsLength: provisions.length
+    });
+
+    // Create data for 2010-2040 range
+    const chartData = [];
+    const startYear = 2010;
+    const endYear = 2040;
+
+    // Get baseline values if available
+    const baselineVals = selectedParamId && baselineValues[selectedParamId] ? baselineValues[selectedParamId] : {};
+
+    // Create entries for each year
+    for (let year = startYear; year <= endYear; year++) {
+      const yearStr = String(year);
+      let baselineValue = null;
+
+      // Check for baseline value at this year
+      if (baselineVals[yearStr]) {
+        baselineValue = baselineVals[yearStr];
+      } else if (baselineVals[`${yearStr}-01-01`]) {
+        baselineValue = baselineVals[`${yearStr}-01-01`];
+      } else {
+        // Find most recent baseline value before this year
+        const sortedDates = Object.keys(baselineVals).sort();
+        for (let i = sortedDates.length - 1; i >= 0; i--) {
+          const date = sortedDates[i];
+          const dateYear = parseInt(date.includes('-') ? date.split('-')[0] : date);
+          if (dateYear <= year) {
+            baselineValue = baselineVals[date];
+            break;
+          }
+        }
+      }
+
+      chartData.push({
+        year: yearStr,
+        baseline: baselineValue !== null ?
+          (typeof baselineValue === 'number' ? baselineValue : parseFloat(String(baselineValue)) || null) : null,
+        provision: null as number | null
+      });
     }
 
-    // Convert values object to chart data
-    return Object.entries(baselineValues[selectedParamId])
-      .map(([date, value]) => ({
-        // Extract year from date, handling both YYYY and YYYY-MM-DD formats
-        year: date.includes('-') ? date.split('-')[0] : date,
-        value: typeof value === 'number' ? value : parseFloat(String(value)) || 0
-      }))
-      .sort((a, b) => parseInt(a.year) - parseInt(b.year));
+    // Build complete alternate history from all provisions for this parameter
+    const paramProvisions = provisions
+      .filter(p => p.parameterId === selectedParamId)
+      .sort((a, b) => {
+        // Sort by start date chronologically
+        const dateA = a.startDate || '';
+        const dateB = b.startDate || '';
+        return dateA.localeCompare(dateB);
+      });
+
+    if (paramProvisions.length > 0) {
+      console.log('Building alternate history from provisions:', paramProvisions);
+
+      // Start with baseline as the default provision line
+      chartData.forEach(point => {
+        point.provision = point.baseline;
+      });
+
+      // Find the earliest provision to determine branch point
+      let earliestStartYear = 2040;
+      paramProvisions.forEach(provision => {
+        if (provision.startDate) {
+          const year = parseInt(provision.startDate.includes('-')
+            ? provision.startDate.split('-')[0]
+            : provision.startDate);
+          if (year < earliestStartYear) {
+            earliestStartYear = year;
+          }
+        }
+      });
+
+      // Apply each provision sequentially to build alternate timeline
+      paramProvisions.forEach(provision => {
+        if (!provision.startDate) return;
+
+        const startYear = parseInt(provision.startDate.includes('-')
+          ? provision.startDate.split('-')[0]
+          : provision.startDate);
+
+        const endYear = provision.endDate
+          ? parseInt(provision.endDate.includes('-') ? provision.endDate.split('-')[0] : provision.endDate)
+          : 2040;
+
+        const provisionValue = typeof provision.value === 'number'
+          ? provision.value
+          : parseFloat(String(provision.value)) || 0;
+
+        console.log('Applying provision:', {
+          startYear,
+          endYear,
+          value: provisionValue
+        });
+
+        // Apply this provision to the timeline
+        chartData.forEach(point => {
+          const year = parseInt(point.year);
+          if (year >= startYear && year <= endYear) {
+            point.provision = provisionValue;
+          }
+        });
+      });
+
+      // Ensure branch point connection (year before earliest provision)
+      const branchYear = earliestStartYear - 1;
+      const branchPoint = chartData.find(p => parseInt(p.year) === branchYear);
+      if (branchPoint && branchPoint.baseline !== null) {
+        branchPoint.provision = branchPoint.baseline;
+      }
+
+      const provisionPoints = chartData.filter(d => d.provision !== null);
+      console.log('Alternate history built:', provisionPoints.length, 'points');
+      console.log('Sample timeline:', provisionPoints.slice(earliestStartYear - 2011, earliestStartYear - 2011 + 5));
+    } else {
+      console.log('No provisions found for parameter:', selectedParamId);
+    }
+
+    return chartData;
   };
 
   const chartData = getChartData();
 
+  // Format values based on unit type (kept for potential future use)
+  // const formatValueWithUnit = (value: number, unit?: string | null): { prefix?: string; value: string; suffix?: string } => {
+  //   if (!unit) return { value: value.toString() };
+  //
+  //   // Handle percentage
+  //   if (unit === '/1') {
+  //     return { value: (value * 100).toFixed(2), suffix: '%' };
+  //   }
+  //
+  //   // Handle currency
+  //   const currencyMap: Record<string, string> = {
+  //     'currency-USD': '$',
+  //     'currency-GBP': '£',
+  //     'currency-EUR': '€',
+  //     'USD': '$',
+  //     'GBP': '£',
+  //     'EUR': '€',
+  //   };
+  //
+  //   if (currencyMap[unit]) {
+  //     return { prefix: currencyMap[unit], value: value.toFixed(2) };
+  //   }
+  //
+  //   // Handle year
+  //   if (unit === 'year') {
+  //     return { value: value.toString() };
+  //   }
+  //
+  //   // Default
+  //   return { value: value.toString(), suffix: unit };
+  // };
+
+  // Get the unit display components
+  const getUnitDisplay = (param: any) => {
+    const unit = param?.unit;
+    if (!unit) return { showPrefix: false, prefix: '', showSuffix: false, suffix: '' };
+
+    if (unit === '/1') {
+      return { showPrefix: false, prefix: '', showSuffix: true, suffix: '%' };
+    }
+
+    const currencyMap: Record<string, string> = {
+      'currency-USD': '$',
+      'currency-GBP': '£',
+      'currency-EUR': '€',
+      'USD': '$',
+      'GBP': '£',
+      'EUR': '€',
+    };
+
+    if (currencyMap[unit]) {
+      return { showPrefix: true, prefix: currencyMap[unit], showSuffix: false, suffix: '' };
+    }
+
+    return { showPrefix: false, prefix: '', showSuffix: true, suffix: unit };
+  };
+
+  // Format parameter/folder names to be more readable (sentence case)
+  const formatName = (name: string, isLabel: boolean = false) => {
+    // If it's already a label, preserve it as-is
+    if (isLabel && name) {
+      return name;
+    }
+
+    // Handle bracket indices
+    if (name.startsWith('[') && name.endsWith(']')) {
+      const index = parseInt(name.slice(1, -1));
+      const ordinals = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth'];
+      if (index >= 0 && index < ordinals.length) {
+        return `${ordinals[index]} bracket`;
+      }
+      return `Bracket ${index + 1}`;
+    }
+
+    // Replace underscores with spaces and use sentence case (only first letter capitalized)
+    const formatted = name.replace(/_/g, ' ');
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1).toLowerCase();
+  };
+
   // Component to render tree structure
   const renderTree = (node: any, path: string = '') => {
     return Object.entries(node).map(([key, value]: [string, any]) => {
-      if (key === '_params' || key === '_isFolder') return null;
+      if (key === '_isParam' || key === '_data') return null;
 
       const currentPath = path ? `${path}.${key}` : key;
-      const isExpanded = expandedFolders.has(currentPath);
-      const hasChildren = Object.keys(value).some(k => k !== '_isFolder' && k !== '_params');
-      const params = value._params || [];
+      const isParameter = value._isParam;
+      const paramData = value._data;
+      const hasChildren = Object.keys(value).some(k => k !== '_isParam' && k !== '_data');
 
-      // Format folder names to be more readable
-      const formatFolderName = (name: string) => {
-        return name
-          .replace(/_/g, ' ')
-          .replace(/\b\w/g, l => l.toUpperCase());
-      };
-
-      return (
-        <div key={currentPath} style={{ marginLeft: path ? 16 : 0 }}>
-          {hasChildren && (
-            <>
-              <Button
-                variant="subtle"
-                fullWidth
-                justify="flex-start"
-                leftSection={
-                  isExpanded ? <IconFolderOpen size={14} /> : <IconFolder size={14} />
+      // IMPORTANT: Check for children first - if it has children, it's always a folder
+      if (hasChildren) {
+        // It's a folder (regardless of whether it also has _isParam)
+        const isExpanded = expandedFolders.has(currentPath);
+        return (
+          <div key={currentPath}>
+            <Box
+              onClick={() => toggleFolder(currentPath)}
+              style={{
+                cursor: 'pointer',
+                padding: '10px 14px',
+                marginBottom: '4px',
+                borderRadius: '6px',
+                backgroundColor: isExpanded ? 'var(--mantine-color-gray-1)' : 'transparent',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => {
+                if (!isExpanded) {
+                  e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)';
                 }
-                rightSection={
-                  isExpanded ? <IconChevronDown size={12} /> : <IconChevronRight size={12} />
+              }}
+              onMouseLeave={(e) => {
+                if (!isExpanded) {
+                  e.currentTarget.style.backgroundColor = 'transparent';
                 }
-                onClick={() => toggleFolder(currentPath)}
-                styles={{
-                  root: {
-                    marginBottom: '4px',
-                    height: '28px',
-                    fontSize: '13px',
-                  },
-                  label: { fontWeight: 500 }
-                }}
-              >
-                {formatFolderName(key)}
-              </Button>
-              <Collapse in={isExpanded}>
-                {renderTree(value, currentPath)}
-              </Collapse>
-            </>
-          )}
-          {params.map((param: any) => (
-            <Button
-              key={param.key}
-              variant={selectedParamId === param.key ? 'filled' : 'subtle'}
-              color={selectedParamId === param.key ? 'teal' : 'gray'}
-              fullWidth
-              justify="flex-start"
-              onClick={() => setSelectedParamId(param.key)}
-              styles={{
-                root: {
-                  marginBottom: '2px',
-                  marginLeft: hasChildren ? 20 : 0,
-                  height: '26px',
-                  fontSize: '12px',
-                },
-                inner: { justifyContent: 'flex-start' },
-                label: { fontWeight: 400 }
               }}
             >
-              <Text size="xs" truncate>
-                {param.label || param.key.split('.').pop()}
-              </Text>
-            </Button>
-          ))}
-        </div>
-      );
+              <Group justify="space-between" wrap="nowrap">
+                <Text size="sm" fw={400} style={{ color: 'var(--mantine-color-gray-8)' }}>
+                  {formatName(key)}
+                </Text>
+                <IconChevronRight
+                  size={14}
+                  style={{
+                    transition: 'transform 0.2s',
+                    transform: isExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                    color: 'var(--mantine-color-gray-6)'
+                  }}
+                />
+              </Group>
+            </Box>
+            {isExpanded && (
+              <Box style={{ paddingLeft: '24px', marginTop: '4px' }}>
+                {renderTree(value, currentPath)}
+              </Box>
+            )}
+          </div>
+        );
+      }
+
+      // It's a leaf parameter (no children)
+      if (isParameter && paramData) {
+        const isSelected = selectedParamId === paramData.key;
+        return (
+          <Box
+            key={paramData.key}
+            onClick={() => setSelectedParamId(paramData.key)}
+            style={{
+              cursor: 'pointer',
+              padding: '10px 14px',
+              marginBottom: '4px',
+              borderRadius: '6px',
+              backgroundColor: isSelected ? 'var(--mantine-color-gray-1)' : 'transparent',
+              transition: 'background-color 0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+            onMouseEnter={(e) => {
+              if (!isSelected) {
+                e.currentTarget.style.backgroundColor = 'var(--mantine-color-gray-0)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isSelected) {
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }
+            }}
+          >
+            {isSelected && (
+              <Box
+                style={{
+                  width: '8px',
+                  height: '8px',
+                  borderRadius: '50%',
+                  backgroundColor: 'var(--mantine-color-teal-6)',
+                  flexShrink: 0,
+                }}
+              />
+            )}
+            <Text size="sm" fw={400} style={{ color: 'var(--mantine-color-gray-8)' }}>
+              {paramData.label || formatName(key)}
+            </Text>
+          </Box>
+        );
+      }
+
+      // Should never reach here since all nodes are either folders or parameters
+      return null;
     });
   };
 
   const handleAddProvision = () => {
     if (selectedParamId && currentValue !== undefined) {
-      const parameterName = selectedParamId.split('.').pop() || selectedParamId;
+      const selectedParam = parameters[selectedParamId];
+      const parameterName = formatName(selectedParam?.label || selectedParamId.split('.').pop() || selectedParamId, !!selectedParam?.label);
       // Try to find baseline value for the date or year
       const baselineValuesForParam = baselineValues[selectedParamId] || {};
       const baselineValue = baselineValuesForParam[startDate] ||
                            baselineValuesForParam[startDate.split('-')[0]] ||
                            0;
 
-      // Check if provision already exists for this parameter
-      const existingIndex = provisions.findIndex(p => p.parameterId === selectedParamId);
+      // Convert year to date format if needed
+      const formattedStartDate = startDate.length === 4 ? `${startDate}-01-01` : startDate;
+      const formattedEndDate = endDate ? (endDate.length === 4 ? `${endDate}-12-31` : endDate) : undefined;
+
+      // Check if provision already exists for this exact parameter and date range
+      const existingIndex = provisions.findIndex(p =>
+        p.parameterId === selectedParamId &&
+        p.startDate === formattedStartDate &&
+        p.endDate === formattedEndDate
+      );
 
       const newProvision: Provision = {
         parameterId: selectedParamId,
         parameterName,
         value: currentValue,
-        startDate: startDate,
-        endDate: endDate,
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
         baselineValue,
       };
+      console.log('Creating provision:', newProvision);
 
       if (existingIndex >= 0) {
-        // Update existing provision
+        // Update existing provision for same date range
         const updatedProvisions = [...provisions];
         updatedProvisions[existingIndex] = newProvision;
         setProvisions(updatedProvisions);
       } else {
-        // Add new provision
+        // Add new provision (allows multiple provisions per parameter at different dates)
         setProvisions([...provisions, newProvision]);
       }
 
       // Reset selection but keep parameter selected for convenience
       setCurrentValue(0);
     }
-  };
-
-  const handleRemoveProvision = (parameterId: string) => {
-    setProvisions(provisions.filter(p => p.parameterId !== parameterId));
   };
 
   const handleSubmitPolicy = async () => {
@@ -383,7 +644,7 @@ export default function PolicyCreationFlow({
       }));
 
       // Submit to API
-      const createdPolicy = await policiesAPI.createWithParameters(policyData, parameterValues);
+      await policiesAPI.createWithParameters(policyData, parameterValues);
 
       notifications.show({
         title: 'Policy created successfully',
@@ -417,14 +678,297 @@ export default function PolicyCreationFlow({
     }
   };
 
-  const steps: ModalStep[] = [
-    {
-      id: 'name',
-      title: 'Create a reform',
-      description: 'Reform your baseline policy to model impact.',
-      icon: <IconCode size={19} color="#666" />,
-      size: 'sm',
-      content: (
+  const handleProceedToParameters = () => {
+    setCurrentStep('parameters');
+  };
+
+  const handleBackToName = () => {
+    setCurrentStep('name');
+    // Reset provisions when going back
+    setProvisions([]);
+  };
+
+  const parameterSelectionContent = (
+        <Box style={{ position: 'relative', height: '100%' }}>
+          {/* Provisions badge and remove all button in top right */}
+          {provisions.length > 0 && (
+            <Group
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                zIndex: 10,
+              }}
+              gap="xs"
+            >
+              <Badge
+                variant="filled"
+                color="gray"
+                radius="md"
+                size="md"
+                style={{
+                  backgroundColor: 'var(--mantine-color-gray-2)',
+                  color: 'var(--mantine-color-gray-8)',
+                  textTransform: 'none',
+                }}
+              >
+                {provisions.length} provision{provisions.length === 1 ? '' : 's'}
+              </Badge>
+              <Button
+                variant="subtle"
+                color="gray"
+                size="xs"
+                onClick={() => setProvisions([])}
+                styles={{
+                  root: {
+                    padding: '4px 8px',
+                    height: 'auto',
+                  }
+                }}
+              >
+                Remove all
+              </Button>
+            </Group>
+          )}
+          <Flex h="100%" gap="0">
+            {/* Left Sidebar */}
+            <Box w={360} style={{ borderRight: '1px solid var(--mantine-color-gray-2)', display: 'flex', flexDirection: 'column', height: '100%', backgroundColor: '#fafafa' }}>
+              <Stack h="100%" style={{ padding: '24px', gap: '20px', overflow: 'hidden' }}>
+                <Box>
+                  <Text size="md" fw={600} mb="xs">Select parameters</Text>
+                  <Text size="xs" c="dimmed">Make changes and provisions to your policy.</Text>
+                </Box>
+
+                <TextInput
+                  placeholder="Search"
+                  leftSection={<IconSearch size={14} />}
+                  rightSection={
+                    <Button
+                      size="xs"
+                      variant="subtle"
+                      leftSection={<IconFilter size={12} />}
+                      styles={{
+                        root: { height: '20px', padding: '0 6px', fontSize: '11px' }
+                      }}
+                    >
+                      Filter
+                    </Button>
+                  }
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.currentTarget.value)}
+                  size="sm"
+                  styles={{
+                    input: { fontSize: '13px', height: '32px' }
+                  }}
+                />
+
+                <ScrollArea style={{ flex: 1, marginRight: '-8px', paddingRight: '8px' }}>
+                  <Box style={{ paddingBottom: '12px' }}>
+                    {loading ? (
+                      <Text size="sm" c="dimmed">Loading parameters...</Text>
+                    ) : Object.keys(parameterTree).length === 0 ? (
+                      <Text size="sm" c="dimmed">
+                        {searchQuery ? 'No parameters found' : 'No parameters with labels'}
+                      </Text>
+                    ) : (
+                      <Stack gap="xs">
+                        {renderTree(parameterTree)}
+                      </Stack>
+                    )}
+                  </Box>
+                </ScrollArea>
+              </Stack>
+            </Box>
+
+            {/* Right Content */}
+            <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+              <Box style={{ flex: 1, overflowY: 'auto', padding: '32px' }}>
+
+              {selectedParamId && parameters[selectedParamId] ? (
+                <Stack style={{ gap: '32px', paddingBottom: '32px' }}>
+                  <div>
+                    <Title order={2} fw={600} mb="xl">
+                      {parameters[selectedParamId]?.label ||
+                       formatName(selectedParamId.split('.').pop() || 'Parameter')}
+                    </Title>
+
+                    {/* Policy Summary */}
+                    {parameters[selectedParamId]?.summary && (
+                      <Card withBorder radius="md" p="lg" mb="xl" style={{ borderLeft: '4px solid #319795' }}>
+                        <Group gap="xs" mb="xs">
+                          <IconInfoCircle size={16} color="#319795" />
+                          <Text size="sm" fw={500}>Policy summary</Text>
+                        </Group>
+                        <Text size="sm" c="dimmed" lh={1.5}>
+                          {parameters[selectedParamId].summary}
+                        </Text>
+                      </Card>
+                    )}
+
+                    {/* Description */}
+                    {parameters[selectedParamId]?.description && (
+                      <div style={{ marginTop: '24px' }}>
+                        <Title order={5} mb="md">Description</Title>
+                        <Text size="sm" lh={1.6}>
+                          {parameters[selectedParamId].description}
+                        </Text>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Current Value */}
+                  <Box>
+                    <Title order={5} style={{ marginBottom: '16px' }}>Current value</Title>
+                    <Box style={{ padding: '20px', backgroundColor: '#fafafa', borderRadius: '8px' }}>
+                      <YearRangeSelector
+                        startValue={startDate}
+                        endValue={endDate}
+                        onStartChange={setStartDate}
+                        onEndChange={setEndDate}
+                      >
+                        <Group gap="xs" style={{ width: '100%' }}>
+                          {parameters[selectedParamId] && getUnitDisplay(parameters[selectedParamId]).showPrefix && (
+                            <Text size="lg" c="dimmed">{getUnitDisplay(parameters[selectedParamId]).prefix}</Text>
+                          )}
+                          <NumberInput
+                            value={parameters[selectedParamId]?.unit === '/1' ? currentValue * 100 : currentValue}
+                            onChange={(val) => {
+                              const numVal = val as number;
+                              setCurrentValue(parameters[selectedParamId]?.unit === '/1' ? numVal / 100 : numVal);
+                            }}
+                            decimalScale={parameters[selectedParamId]?.unit === '/1' ? 1 : 2}
+                            fixedDecimalScale
+                            style={{ flex: 1 }}
+                            placeholder={parameters[selectedParamId]?.unit === '/1' ? "50.0" : "7.25"}
+                            rightSection={parameters[selectedParamId] && getUnitDisplay(parameters[selectedParamId]).showSuffix ? (
+                              <Text size="sm" c="dimmed">{getUnitDisplay(parameters[selectedParamId]).suffix}</Text>
+                            ) : undefined}
+                          />
+                          <Button
+                            variant="light"
+                            color="teal"
+                            onClick={handleAddProvision}
+                          >
+                            Add
+                          </Button>
+                        </Group>
+                      </YearRangeSelector>
+                    </Box>
+                  </Box>
+
+                  {/* Historical Values */}
+                  {chartData.length > 0 && (
+                    <div>
+                      <Title order={5} mb="md">Historical values</Title>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <AreaChart key={selectedParamId} data={chartData} margin={{ top: 10, right: 0, left: 0, bottom: 0 }}>
+                            <defs>
+                              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#319795" stopOpacity={0.3}/>
+                                <stop offset="95%" stopColor="#319795" stopOpacity={0}/>
+                              </linearGradient>
+                              <linearGradient id="colorProvision" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#319795" stopOpacity={0.25}/>
+                                <stop offset="95%" stopColor="#319795" stopOpacity={0}/>
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="0" vertical={false} stroke="#f0f0f0" />
+                            <XAxis
+                              dataKey="year"
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fill: '#666', fontSize: 11 }}
+                              domain={['2010', '2040']}
+                              ticks={['2010', '2015', '2020', '2025', '2030', '2035', '2040']}
+                            />
+                            <YAxis
+                              axisLine={false}
+                              tickLine={false}
+                              tick={{ fill: '#666', fontSize: 11 }}
+                              tickFormatter={(value: number) => {
+                                const unit = parameters[selectedParamId]?.unit || '';
+                                if (unit === 'currency-USD' || unit.includes('currency')) {
+                                  return `$${value}`;
+                                }
+                                return value.toString();
+                              }}
+                            />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: 'white',
+                                border: '1px solid #e0e0e0',
+                                borderRadius: '4px',
+                                fontSize: '12px'
+                              }}
+                              formatter={(value: number) => {
+                                const unit = parameters[selectedParamId]?.unit || '';
+                                if (unit === 'currency-USD' || unit.includes('currency')) {
+                                  return `$${value.toFixed(2)}`;
+                                }
+                                return value.toFixed(2);
+                              }}
+                              labelFormatter={(label) => `${label}`}
+                            />
+                            <Area
+                              type="stepAfter"
+                              dataKey="baseline"
+                              stroke="#319795"
+                              strokeWidth={2}
+                              fillOpacity={1}
+                              fill="url(#colorValue)"
+                              dot={false}
+                              activeDot={{ r: 4, fill: '#319795' }}
+                              connectNulls={true}
+                            />
+                            {/* Always render provision areas if data exists */}
+                            {/* Provision line (dashed, connects to baseline) */}
+                            <Area
+                              type="stepAfter"
+                              dataKey="provision"
+                              stroke="#319795"
+                              strokeWidth={2}
+                              strokeDasharray="8 4"
+                              fillOpacity={0}
+                              fill="none"
+                              dot={false}
+                              activeDot={{ r: 4, fill: '#319795' }}
+                              connectNulls={true}
+                            />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                    </div>
+                  )}
+                </Stack>
+              ) : (
+                <Flex align="center" justify="center" h="100%">
+                  <Stack align="center">
+                    <Title order={3} c="dimmed">No parameter selected</Title>
+                    <Text c="dimmed">Select a parameter from the list to view and edit its details</Text>
+                  </Stack>
+                </Flex>
+              )}
+              </Box>
+            </Box>
+          </Flex>
+        </Box>
+  );
+
+  return (
+    <>
+      {/* Step 1: Name Policy Modal */}
+      <BaseModal
+        opened={opened && currentStep === 'name'}
+        onClose={onClose}
+        title="Create a reform"
+        description="Reform your baseline policy to model impact."
+        icon={<IconCode size={19} color="#666" />}
+        size="sm"
+        primaryButton={{
+          label: 'Next',
+          onClick: handleProceedToParameters,
+          disabled: !policyName.trim(),
+        }}
+      >
         <Stack gap="md">
           <TextInput
             label="Reform title"
@@ -466,255 +1010,20 @@ export default function PolicyCreationFlow({
             }}
           />
         </Stack>
-      ),
-      primaryButton: {
-        label: 'Next',
-        disabled: !policyName.trim(),
-      },
-      onNext: () => {
-        return true;
-      },
-    },
-    {
-      id: 'parameters',
-      title: 'Select parameters',
-      description: policyName ? `Editing: ${policyName}` : 'Add provisions to your policy',
-      icon: <IconSettings size={19} color="#666" />,
-      size: '90%',
-      content: (
-        <Box style={{ height: '60vh' }}>
-          <Flex h="100%" gap="md" style={{ margin: '-1.5rem' }}>
-            {/* Left Sidebar */}
-            <Box w={320} style={{ borderRight: '1px solid var(--mantine-color-gray-2)', display: 'flex', flexDirection: 'column', height: '100%' }}>
-              <Stack h="100%" p="md" gap="sm">
-                <TextInput
-                  placeholder="Search parameters"
-                  leftSection={<IconSearch size={14} />}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.currentTarget.value)}
-                  styles={{
-                    input: { fontSize: '13px' }
-                  }}
-                />
+      </BaseModal>
 
-                <Group gap="xs">
-                  <Checkbox
-                    label="Show all parameters"
-                    checked={showAllParameters}
-                    onChange={(e) => setShowAllParameters(e.currentTarget.checked)}
-                    size="xs"
-                    styles={{
-                      label: { fontSize: '12px' }
-                    }}
-                  />
-                </Group>
-
-                <ScrollArea style={{ flex: 1 }}>
-                  <Stack gap="xs">
-                    {loading ? (
-                      <Text size="sm" c="dimmed">Loading parameters...</Text>
-                    ) : Object.keys(parameterTree).length === 0 ? (
-                      <Text size="sm" c="dimmed">
-                        {searchQuery ? 'No parameters found' : 'No parameters with descriptions'}
-                      </Text>
-                    ) : (
-                      renderTree(parameterTree)
-                    )}
-                  </Stack>
-                </ScrollArea>
-              </Stack>
-            </Box>
-
-            {/* Right Content */}
-            <Box style={{ flex: 1, overflowY: 'auto' }} p="xl">
-              {/* Provisions List */}
-              {provisions.length > 0 && (
-                <Box mb="lg">
-                  <Group justify="space-between" mb="xs">
-                    <Text size="sm" fw={500}>Active provisions</Text>
-                    <Badge color="teal" variant="light" size="sm">
-                      {provisions.length}
-                    </Badge>
-                  </Group>
-                  <Stack gap={4}>
-                    {provisions.map((provision) => (
-                      <Card key={provision.parameterId} withBorder radius="sm" p="xs">
-                        <Group justify="space-between">
-                          <div>
-                            <Text size="xs" fw={500}>
-                              {provision.parameterName}
-                            </Text>
-                            <Group gap="xs">
-                              <Text size="xs" c="teal">
-                                {typeof provision.value === 'number'
-                                  ? provision.value.toLocaleString()
-                                  : String(provision.value)}
-                              </Text>
-                              {provision.baselineValue !== undefined && provision.baselineValue !== provision.value && (
-                                <Text size="xs" c="dimmed">
-                                  from {typeof provision.baselineValue === 'number'
-                                    ? provision.baselineValue.toLocaleString()
-                                    : String(provision.baselineValue)}
-                                </Text>
-                              )}
-                            </Group>
-                          </div>
-                          <CloseButton
-                            size="xs"
-                            onClick={() => handleRemoveProvision(provision.parameterId)}
-                          />
-                        </Group>
-                      </Card>
-                    ))}
-                  </Stack>
-                </Box>
-              )}
-
-              {selectedParam ? (
-                <Stack gap="lg">
-                  <div>
-                    <Title order={3} fw={600} mb="xs">
-                      {selectedParam.label || selectedParamId?.split('.').pop() || 'Parameter'}
-                    </Title>
-                    <Text size="xs" c="dimmed" mb="lg">
-                      {selectedParamId || ''}
-                    </Text>
-
-                    {/* Description */}
-                    {selectedParam?.description && (
-                      <Card withBorder radius="md" p="md" mb="md">
-                        <Text size="sm" lh={1.5}>
-                          {selectedParam.description}
-                        </Text>
-                      </Card>
-                    )}
-                  </div>
-
-                  {/* Current Value */}
-                  <Card withBorder radius="md" p="md">
-                    <Stack gap="md">
-                      <Text size="sm" fw={500}>Set value</Text>
-                      <Group align="end" gap="sm">
-                        {selectedParam?.unit?.includes('currency') && (
-                          <Text size="lg" c="dimmed">$</Text>
-                        )}
-                        <NumberInput
-                          value={currentValue}
-                          onChange={(val) => setCurrentValue(val as number)}
-                          decimalScale={2}
-                          fixedDecimalScale
-                          w={120}
-                          size="sm"
-                        />
-                        <TextInput
-                          label="Start date"
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.currentTarget.value)}
-                          placeholder="YYYY-MM-DD"
-                          w={140}
-                          size="sm"
-                        />
-                        <Button
-                          variant="filled"
-                          color="teal"
-                          onClick={handleAddProvision}
-                          size="sm"
-                        >
-                          Add provision
-                        </Button>
-                      </Group>
-                    </Stack>
-                  </Card>
-
-                  {/* Historical Values */}
-                  {chartData.length > 0 && (
-                    <Card withBorder radius="md" p="md">
-                      <Text size="sm" fw={500} mb="sm">Historical values</Text>
-                      <ResponsiveContainer width="100%" height={180}>
-                          <LineChart data={chartData}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                            <XAxis
-                              dataKey="year"
-                              stroke="#666"
-                              style={{ fontSize: '12px' }}
-                            />
-                            <YAxis
-                              stroke="#666"
-                              style={{ fontSize: '12px' }}
-                              tickFormatter={(value: number) => {
-                                const unit = selectedParam?.unit || '';
-                                if (unit === 'currency-USD' || unit.includes('currency')) {
-                                  return `$${value.toLocaleString()}`;
-                                }
-                                return value.toLocaleString();
-                              }}
-                            />
-                            <Tooltip
-                              formatter={(value: number) => {
-                                const unit = selectedParam?.unit || '';
-                                if (unit === 'currency-USD' || unit.includes('currency')) {
-                                  return `$${value.toLocaleString()}`;
-                                }
-                                return value.toLocaleString();
-                              }}
-                              labelFormatter={(label) => `Year: ${label}`}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="value"
-                              stroke="#319795"
-                              strokeWidth={2}
-                              dot={{ fill: '#319795', r: 4 }}
-                              activeDot={{ r: 6 }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                    </Card>
-                  )}
-                </Stack>
-              ) : (
-                <Flex align="center" justify="center" h="100%">
-                  <Stack align="center">
-                    <Title order={3} c="dimmed">No parameter selected</Title>
-                    <Text c="dimmed">Select a parameter from the list to view and edit its details</Text>
-                  </Stack>
-                </Flex>
-              )}
-            </Box>
-          </Flex>
-        </Box>
-      ),
-      footer: (
-        <Group justify="space-between" w="100%">
-          <Button variant="subtle" onClick={onClose}>
-            Cancel
-          </Button>
-          <Group>
-            <Text size="sm" c="dimmed">
-              {provisions.length === 0 ? 'No provisions' : `${provisions.length} provision${provisions.length !== 1 ? 's' : ''}`}
-            </Text>
-            <Button
-              onClick={handleSubmitPolicy}
-              loading={isSubmitting}
-              disabled={provisions.length === 0}
-            >
-              Create policy
-            </Button>
-          </Group>
-        </Group>
-      ),
-      hideFooter: false,
-      primaryButton: undefined,
-      secondaryButton: undefined,
-    }
-  ];
-
-  return (
-    <MultiStepModal
-      opened={opened}
-      onClose={onClose}
-      steps={steps}
-      onComplete={onComplete}
-    />
+      {/* Step 2: Parameter Selection Modal */}
+      <ParameterSelectionModal
+        opened={opened && currentStep === 'parameters'}
+        onClose={onClose}
+        onCancel={handleBackToName}
+        onNext={handleSubmitPolicy}
+        title={`Reform policy #${Date.now().toString().slice(-4)}`}
+        baseline="Baseline: Current law"
+        nextDisabled={provisions.length === 0}
+      >
+        {parameterSelectionContent}
+      </ParameterSelectionModal>
+    </>
   );
 }

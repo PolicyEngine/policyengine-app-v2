@@ -51,94 +51,108 @@ export default function BaseModal({
       onClose={onClose}
       centered
       size={size}
-      padding="xl"
-      radius="md"
+      padding={0}
+      radius="lg"
       withCloseButton={false}
       overlayProps={{
         backgroundOpacity: 0.36,
         blur: 2,
       }}
+      styles={{
+        body: { padding: 0 },
+        content: { overflow: 'hidden' }
+      }}
     >
-      <Stack gap="md">
-        {icon && (
-          <Box
-            style={{
-              width: 32,
-              height: 32,
-              backgroundColor: 'rgba(179, 179, 179, 0.3)',
-              borderRadius: 6,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            {icon}
+      <Stack gap={0}>
+        {/* Header bar */}
+        {(title || description || icon) && (
+          <Box p="24px" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
+            <Stack gap="xs">
+              {icon && (
+                <Box
+                  style={{
+                    width: 32,
+                    height: 32,
+                    backgroundColor: 'rgba(179, 179, 179, 0.3)',
+                    borderRadius: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  {icon}
+                </Box>
+              )}
+              {(title || description) && (
+                <Stack gap={4}>
+                  <Title order={3} fw={700} size="20px">
+                    {title}
+                  </Title>
+                  {description && (
+                    <Text size="sm" c="dimmed">
+                      {description}
+                    </Text>
+                  )}
+                </Stack>
+              )}
+            </Stack>
           </Box>
         )}
 
-        {(title || description) && (
-          <Stack gap={4}>
-            <Title order={3} fw={700} size="20px">
-              {title}
-            </Title>
-            {description && (
-              <Text size="sm" c="dimmed">
-                {description}
-              </Text>
-            )}
-          </Stack>
-        )}
+        {/* Content */}
+        <Box style={{ flex: 1, padding: '24px' }}>
+          {children}
+        </Box>
 
-        {(icon || title || description) && <Divider />}
-
-        {children}
-
+        {/* Footer bar */}
         {!hideFooter && (footer || primaryButton || secondaryButton) && (
-          <Group justify="flex-end" gap="xs" mt="md">
-            {footer || (
-              <>
-                <Button
-                  variant={defaultSecondaryButton.variant}
-                  color="teal"
-                  onClick={defaultSecondaryButton.onClick}
-                  styles={{
-                    root: {
-                      borderColor: '#319795',
-                      color: '#319795',
-                      '&:hover': {
-                        backgroundColor: 'rgba(49, 151, 149, 0.05)',
-                      },
-                    },
-                  }}
-                >
-                  {defaultSecondaryButton.label}
-                </Button>
-                {primaryButton && (
+          <Box p="20px 24px" style={{ borderTop: '1px solid var(--mantine-color-gray-2)' }}>
+            <Group justify="flex-end" gap="xs">
+              {footer || (
+                <>
                   <Button
-                    variant="filled"
+                    variant={defaultSecondaryButton.variant}
                     color="teal"
-                    onClick={primaryButton.onClick}
-                    disabled={primaryButton.disabled}
-                    loading={primaryButton.loading}
+                    onClick={defaultSecondaryButton.onClick}
                     styles={{
                       root: {
-                        backgroundColor: '#319795',
+                        borderColor: '#319795',
+                        color: '#319795',
                         '&:hover': {
-                          backgroundColor: '#2c8a88',
-                        },
-                        '&[data-disabled]': {
-                          backgroundColor: 'rgba(49, 151, 149, 0.3)',
-                          color: 'rgba(255, 255, 255, 0.6)',
+                          backgroundColor: 'rgba(49, 151, 149, 0.05)',
                         },
                       },
                     }}
                   >
-                    {primaryButton.label}
+                    {defaultSecondaryButton.label}
                   </Button>
-                )}
-              </>
-            )}
-          </Group>
+                  {primaryButton && (
+                    <Button
+                      variant="filled"
+                      color="teal"
+                      onClick={primaryButton.onClick}
+                      disabled={primaryButton.disabled}
+                      loading={primaryButton.loading}
+                      styles={{
+                        root: {
+                          backgroundColor: '#319795',
+                          '&:hover': {
+                            backgroundColor: '#2c8a88',
+                          },
+                          '&[data-disabled]': {
+                            backgroundColor: 'rgba(49, 151, 149, 0.3)',
+                            color: 'rgba(255, 255, 255, 0.6)',
+                          },
+                        },
+                      }}
+                    >
+                      {primaryButton.label}
+                    </Button>
+                  )}
+                </>
+              )}
+            </Group>
+          </Box>
         )}
       </Stack>
     </Modal>

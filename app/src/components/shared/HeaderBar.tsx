@@ -12,13 +12,13 @@ export default function HeaderBar({ title, children, showLogo = false }: HeaderB
   return (
     <Box
       bg={colors.primary[900]}
-      px={spacing.appShell.header.padding.split(' ')[1]}
-      py={spacing.appShell.header.padding.split(' ')[0]}
+      px={16}
+      py={16}
       style={{
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        minHeight: spacing.appShell.header.height,
+        height: 56,
       }}
     >
       <Box style={{ display: 'flex', alignItems: 'center' }}>
@@ -27,7 +27,7 @@ export default function HeaderBar({ title, children, showLogo = false }: HeaderB
             src={PolicyEngineLogo}
             alt="PolicyEngine"
             style={{
-              height: 20,
+              height: 24,
               width: 'auto',
               marginRight: title ? 12 : 0,
             }}

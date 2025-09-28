@@ -64,7 +64,6 @@ export const fetchMetadataThunk = createAsyncThunk(
         parametersData[paramPath] = {
           ...param,
           parameter: paramPath,
-          label: param.id?.split('.').pop()?.replace(/_/g, ' ') || param.id,
           type: 'parameter',
           economy: true,
           household: true,

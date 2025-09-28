@@ -56,11 +56,13 @@ export function buildParameterTree(parameters: Record<string, any>): ParameterTr
       !param.parameter.includes('taxsim') &&
       !param.parameter.includes('gov.abolitions')
   )) {
+    // Preserve the original label without modification
+    const displayLabel = parameter.label ||
+      capitalize(parameter.parameter.split(/\.|\[/).pop()?.replaceAll('_', ' ') || '');
+
     const nodeToInsert: ParameterTreeNode = {
       name: parameter.parameter,
-      label: capitalize(
-        (parameter.label || parameter.parameter.split(/\.|\[/).pop()).replaceAll('_', ' ')
-      ),
+      label: displayLabel,
       index: parameter.indexInModule || 0,
       type: parameter.type,
       parameter: parameter.parameter,
