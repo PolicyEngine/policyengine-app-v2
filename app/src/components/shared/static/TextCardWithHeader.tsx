@@ -9,7 +9,7 @@ interface Section {
 
 interface TitleCardWithHeaderProps {
   title: string;
-  sections?: Section[];
+  sections: Section[];
   backgroundColor?: 'white' | 'green' | 'gray';
   buttonLabel?: string | string[];
   onButtonClick?: (label: string) => void;
@@ -43,7 +43,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   return (
     <Box>
       {/* Title */}
-      <Title order={1} variant="colored">
+      <Title order={2} variant="colored">
         {title}
       </Title>
 
@@ -52,12 +52,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
         <Stack gap="md">
           {sections.map((section, idx) => (
             <>
-              <Title
-                key={`title-${idx}`}
-                order={3}
-                variant={themeComponents.Title.defaultProps?.variant}
-                ta="left"
-              >
+              <Title key={`title-${idx}`} order={3} variant="colored" ta="left">
                 {section.heading}
               </Title>
               {Array.isArray(section.body) ? (
