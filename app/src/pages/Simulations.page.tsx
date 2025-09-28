@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
+import moment from 'moment';
 import {
-  BulletsValue,
   ColumnConfig,
   IngredientRecord,
-  LinkValue,
   TextValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -13,9 +12,7 @@ import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { useSimulationsWithPolicies } from '@/hooks/useSimulations';
-import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
-import { formatDate } from '@/utils/dateUtils';
 
 export default function SimulationsPage() {
   const { data: simulations, isLoading, error } = useSimulationsWithPolicies();
@@ -42,35 +39,29 @@ export default function SimulationsPage() {
   // Define column configurations for simulations
   const simulationColumns: ColumnConfig[] = [
     {
-      key: 'simulation',
-      header: 'Simulation',
+      key: 'simulationId',
+      header: 'Simulation ID',
+      type: 'text',
+    },
+    {
+      key: 'description',
+      header: 'Description',
       type: 'text',
     },
     {
       key: 'dateCreated',
-      header: 'Date Created',
+      header: 'Date created',
       type: 'text',
     },
     {
-      key: 'policy',
-      header: 'Policy',
+      key: 'status',
+      header: 'Status',
       type: 'text',
     },
     {
-      key: 'population',
-      header: 'Population',
-      type: 'link',
-    },
-    {
-      key: 'connected',
-      header: 'Connected',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
+      key: 'dataset',
+      header: 'Dataset',
+      type: 'text',
     },
     {
       key: 'actions',
@@ -85,32 +76,21 @@ export default function SimulationsPage() {
   const transformedData: IngredientRecord[] =
     simulations?.map((sim) => ({
       id: sim.id,
-      simulation: {
-        text: sim.name || `Simulation #${sim.id}`,
+      simulationId: {
+        text: sim.id, // UUID display
+      } as TextValue,
+      description: {
+        text: sim.name || 'No description',
       } as TextValue,
       dateCreated: {
-        text: formatDate(
-          sim.created_at,
-          'short-month-day-year',
-          'us' as (typeof countryIds)[number],
-          true
-        ),
+        text: moment(sim.created_at).fromNow(),
       } as TextValue,
-      policy: {
-        text: sim.policy?.name || (sim.policy_id ? `Policy ${sim.policy_id}` : 'No policy'),
+      status: {
+        text: sim.has_result ? 'Ready' : 'Not ready',
       } as TextValue,
-      population: {
-        text: sim.dataset_id ? `Dataset ${sim.dataset_id}` : 'Default population',
-        url: '#',
-      } as LinkValue,
-      connected: {
-        items: [
-          {
-            text: sim.status === 'completed' ? 'Results available' : `Status: ${sim.status}`,
-            badge: sim.status === 'completed' ? '✓' : '',
-          },
-        ],
-      } as BulletsValue,
+      dataset: {
+        text: sim.dataset_id ? `Dataset ${sim.dataset_id}` : 'Default dataset',
+      } as TextValue,
     })) || [];
 
   return (

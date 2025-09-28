@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import moment from 'moment';
 import { apiClient } from '@/api/apiClient';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
@@ -19,14 +20,13 @@ interface Dynamic {
 export default function DynamicsPage() {
   const [searchValue, setSearchValue] = useState('');
   const queryClient = useQueryClient();
-  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
+  const { handleSelectionChange, isSelected } = useIngredientSelection();
 
   // Fetch dynamics from API
   const {
     data: dynamics,
     isLoading,
     error,
-    refetch,
   } = useQuery({
     queryKey: ['dynamics'],
     queryFn: () => apiClient.get<Dynamic[]>('/dynamics/', { params: { limit: 1000 } }),
@@ -82,29 +82,12 @@ export default function DynamicsPage() {
     {
       key: 'type',
       header: 'Type',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
+      type: 'text',
     },
     {
       key: 'dateCreated',
       header: 'Date created',
       type: 'text',
-    },
-    {
-      key: 'status',
-      header: 'Status',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
     },
     {
       key: 'actions',
@@ -126,25 +109,11 @@ export default function DynamicsPage() {
         text: dynamic.description || 'No description',
       } as TextValue,
       type: {
-        items: dynamic.type
-          ? [{ text: dynamic.type, badge: '' }]
-          : [{ text: 'Standard', badge: '' }],
-      } as BulletsValue,
-      dateCreated: {
-        text: new Date(dynamic.created_at).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        }),
+        text: dynamic.type || 'Standard',
       } as TextValue,
-      status: {
-        items: [
-          {
-            text: 'Live data from database',
-            badge: '✓',
-          },
-        ],
-      } as BulletsValue,
+      dateCreated: {
+        text: moment(dynamic.created_at).fromNow(),
+      } as TextValue,
     })) || [];
 
   return (

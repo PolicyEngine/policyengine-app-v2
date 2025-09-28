@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import moment from 'moment';
 import { datasetsAPI } from '@/api/v2/datasets';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
-import { formatIngredientDate } from '@/utils/ingredientUtils';
 
 export default function DatasetsPage() {
   const [searchValue, setSearchValue] = useState('');
@@ -58,19 +58,6 @@ export default function DatasetsPage() {
       dataset.description?.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'household':
-        return 'blue';
-      case 'population':
-        return 'green';
-      case 'economic':
-        return 'orange';
-      default:
-        return 'gray';
-    }
-  };
-
   // Define column configurations for datasets
   const datasetColumns: ColumnConfig[] = [
     {
@@ -84,30 +71,8 @@ export default function DatasetsPage() {
       type: 'text',
     },
     {
-      key: 'type',
-      header: 'Type',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
-    },
-    {
-      key: 'country',
-      header: 'Country',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
-    },
-    {
-      key: 'dateCreated',
-      header: 'Date created',
+      key: 'year',
+      header: 'Year',
       type: 'text',
     },
     {
@@ -129,14 +94,8 @@ export default function DatasetsPage() {
       description: {
         text: dataset.description || 'No description',
       } as TextValue,
-      type: {
-        items: [{ text: dataset.type, badge: getTypeColor(dataset.type) }],
-      } as BulletsValue,
-      country: {
-        items: dataset.country ? [{ text: dataset.country.toUpperCase(), badge: '' }] : [],
-      } as BulletsValue,
-      dateCreated: {
-        text: formatIngredientDate(dataset.created_at, dataset.country as any),
+      year: {
+        text: dataset.year?.toString() || 'N/A',
       } as TextValue,
     })) || [];
 

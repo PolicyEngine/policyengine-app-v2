@@ -1,25 +1,18 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import moment from 'moment';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import PolicyCreationFlow from '@/components/policy/PolicyCreationFlow';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { usePolicies } from '@/hooks/usePolicies';
-import { countryIds } from '@/libs/countries';
-import { selectCurrentPosition } from '@/reducers/activeSelectors';
-import { createPolicyAtPosition, updatePolicyAtPosition } from '@/reducers/policyReducer';
-import { RootState } from '@/store';
-import { formatDate } from '@/utils/dateUtils';
 
 export default function PoliciesPage() {
   const { data: policies, isLoading, error } = usePolicies();
-  const dispatch = useDispatch();
   const isError = !!error;
-  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
 
   const [searchValue, setSearchValue] = useState('');
-  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
+  const { handleSelectionChange, isSelected } = useIngredientSelection();
   const [modalOpened, setModalOpened] = useState(false);
 
   const handleBuildPolicy = () => {
@@ -58,17 +51,6 @@ export default function PoliciesPage() {
       type: 'text',
     },
     {
-      key: 'connections',
-      header: 'Connections',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
-    },
-    {
       key: 'actions',
       header: '',
       type: 'split-menu',
@@ -86,24 +68,11 @@ export default function PoliciesPage() {
         text: policy.name || `Policy #${policy.id}`,
       } as TextValue,
       dateCreated: {
-        text: formatDate(
-          policy.created_at,
-          'short-month-day-year',
-          (policy.country || 'us') as (typeof countryIds)[number],
-          true
-        ),
+        text: moment(policy.created_at).fromNow(),
       } as TextValue,
       provisions: {
         text: policy.description || 'No description',
       } as TextValue,
-      connections: {
-        items: [
-          {
-            text: 'View simulations',
-            badge: '',
-          },
-        ],
-      } as BulletsValue,
     })) || [];
 
   // Render the normal policies page with modals

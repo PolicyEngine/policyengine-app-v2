@@ -12,6 +12,11 @@ interface SplitMenuColumnProps {
 export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
   const [opened, setOpened] = useState(false);
 
+  // Return null if no actions are configured
+  if (!config.actions || config.actions.length === 0) {
+    return null;
+  }
+
   // Use the first action as the primary action
   const primaryAction = config.actions[0];
   const secondaryActions = config.actions.slice(1);

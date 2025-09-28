@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 
 export type IngredientType = 'policy' | 'population' | 'simulation' | 'dynamic';
 
-export type ActionType = 'view' | 'bookmark' | 'edit' | 'share' | 'delete' | 'add-to-report';
+export type ActionType = 'view' | 'bookmark' | 'edit' | 'share' | 'delete' | 'add-to-report' | null;
 
 export interface UseIngredientActionsProps {
   ingredient: IngredientType;
@@ -77,22 +77,8 @@ export function useIngredientActions({
   );
 
   const getDefaultActions = () => {
-    const baseActions = [
-      { label: 'View details', action: `view-${ingredient}` },
-      { label: 'Bookmark', action: 'bookmark' },
-      { label: 'Edit', action: 'edit' },
-      { label: 'Share', action: 'share' },
-      { label: 'Delete', action: 'delete', color: 'red' },
-    ];
-
-    if (ingredient === 'simulation') {
-      return [
-        { label: 'Add to Report', action: 'add-to-report' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ];
-    }
-
-    return baseActions;
+    // Return empty array - no action buttons needed
+    return [];
   };
 
   return {
