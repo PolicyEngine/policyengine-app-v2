@@ -1,6 +1,5 @@
 import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { colors } from '../../../designTokens';
-import { themeComponents } from '../../../styles/components';
 
 interface Section {
   heading?: string;
