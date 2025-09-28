@@ -17,6 +17,7 @@ export interface Parameter {
 export interface ParameterValue {
   id: string;
   parameter_id: string;
+  model_id?: string;
   policy_id: string;
   value: number | string | boolean;
   start_date?: string;
@@ -47,6 +48,7 @@ export interface ParameterCreate {
 export interface ParameterValueCreate {
   parameter_id: string;
   policy_id: string;
+  model_id: string;
   value: number | string | boolean;
   start_date?: string;
   end_date?: string;

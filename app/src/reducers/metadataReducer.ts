@@ -38,7 +38,7 @@ export const fetchMetadataThunk = createAsyncThunk(
       console.log('Fetching parameters for model:', modelId);
 
       // Just fetch parameters, not baseline values (those will be fetched on demand)
-      const allParameters = await parametersAPI.listParameters({ limit: 1000 });
+      const allParameters = await parametersAPI.listParameters({ limit: 10000 });
 
       console.log('All parameters fetched:', allParameters.length);
       console.log('Sample parameter:', allParameters[0]);

@@ -23,17 +23,29 @@ export async function fetchPolicyById(country: string, policyId: string): Promis
 export async function createPolicy(
   data: PolicyCreationPayload
 ): Promise<{ result: { policy_id: string } }> {
+  // Get model_id based on country
+  const countryId = (data as any).country_id || 'us';
+  const modelIdMap: Record<string, string> = {
+    'us': 'policyengine_us',
+    'uk': 'policyengine_uk',
+    'ca': 'policyengine_ca',
+    'ng': 'policyengine_ng',
+    'il': 'policyengine_il'
+  };
+  const modelId = modelIdMap[countryId] || `policyengine_${countryId}`;
+
   // Extract parameter values from the payload
-  const parameterValues = Object.entries(data.reform || {}).map(([parameterId, value]) => ({
+  const parameterValues = Object.entries((data as any).reform || {}).map(([parameterId, value]) => ({
     parameter_id: parameterId,
-    value,
+    model_id: modelId,
+    value: value as string | number | boolean,
   }));
 
   const policy = await policiesAPI.createWithParameters(
     {
       name: data.label || 'New Policy',
-      description: data.baseline_id ? `Based on baseline ${data.baseline_id}` : undefined,
-      country: data.country_id || 'us',
+      description: (data as any).baseline_id ? `Based on baseline ${(data as any).baseline_id}` : undefined,
+      country: countryId,
     },
     parameterValues
   );

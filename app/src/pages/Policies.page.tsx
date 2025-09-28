@@ -1,16 +1,13 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
-import FlowContainer from '@/components/FlowContainer';
 import IngredientReadView from '@/components/IngredientReadView';
-import PolicyCreationModal from '@/components/policy/PolicyCreationModal';
-import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
+import PolicyCreationFlow from '@/components/policy/PolicyCreationFlow';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { usePolicies } from '@/hooks/usePolicies';
 import { countryIds } from '@/libs/countries';
 import { selectCurrentPosition } from '@/reducers/activeSelectors';
-import { navigateToFrame, setFlow } from '@/reducers/flowReducer';
 import { createPolicyAtPosition, updatePolicyAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { formatDate } from '@/utils/dateUtils';
@@ -20,7 +17,6 @@ export default function PoliciesPage() {
   const dispatch = useDispatch();
   const isError = !!error;
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
-  const { currentFlow } = useSelector((state: RootState) => state.flow);
 
   const [searchValue, setSearchValue] = useState('');
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
@@ -28,23 +24,6 @@ export default function PoliciesPage() {
 
   const handleBuildPolicy = () => {
     setModalOpened(true);
-  };
-
-  const handleModalSubmit = (policyName: string) => {
-    // Create policy at current position with the label
-    dispatch(createPolicyAtPosition({ position: currentPosition }));
-    dispatch(
-      updatePolicyAtPosition({
-        position: currentPosition,
-        updates: { label: policyName },
-      })
-    );
-
-    // Set the flow and navigate to parameter selection
-    dispatch(setFlow(PolicyCreationFlow));
-    // Navigate directly to the parameter selector, skipping the creation frame
-    dispatch(navigateToFrame('PolicyParameterSelectorFrame'));
-    setModalOpened(false);
   };
 
   const handleModalClose = () => {
@@ -127,15 +106,17 @@ export default function PoliciesPage() {
       } as BulletsValue,
     })) || [];
 
-  // Render the normal policies page with the modal and/or flow overlay
+  // Render the normal policies page with modals
   return (
     <>
-      <PolicyCreationModal
+      <PolicyCreationFlow
         opened={modalOpened}
         onClose={handleModalClose}
-        onSubmit={handleModalSubmit}
+        onComplete={() => {
+          // TODO: Navigate to next step or complete
+          console.log('Policy creation complete');
+        }}
       />
-      {currentFlow && <FlowContainer />}
       <IngredientReadView
         ingredient="policy"
         title="Your policies"

@@ -26,6 +26,17 @@ export interface PolicyWithParameters extends PolicyResponse {
 }
 
 class PoliciesAPI {
+  private getModelId(country: string): string {
+    const modelIdMap: Record<string, string> = {
+      'us': 'policyengine_us',
+      'uk': 'policyengine_uk',
+      'ca': 'policyengine_ca',
+      'ng': 'policyengine_ng',
+      'il': 'policyengine_il'
+    };
+    return modelIdMap[country] || `policyengine_${country}`;
+  }
+
   async list(params?: PaginationParams): Promise<PolicyResponse[]> {
     return apiClient.get<PolicyResponse[]>('/policies/', { params });
   }
@@ -99,6 +110,7 @@ class PoliciesAPI {
         parametersAPI.createParameterValue({
           parameter_id: pv.parameter_id,
           policy_id: newPolicy.id,
+          model_id: pv.model_id || this.getModelId(source.country || 'us'),
           value: pv.value,
           start_date: pv.start_date,
           end_date: pv.end_date,

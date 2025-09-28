@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import {
-  Modal,
   Text,
   Title,
   Box,
@@ -19,7 +18,7 @@ import {
   ActionIcon,
 } from '@mantine/core';
 import { IconSearch, IconFilter, IconDots, IconChevronRight, IconInfoCircle } from '@tabler/icons-react';
-import { LineChart } from '@mantine/charts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { parametersAPI } from '@/api/parameters';
 import { AppDispatch, RootState } from '@/store';
@@ -47,8 +46,9 @@ export default function PolicyParameterSelectorFrame({
   );
 
   // Get current policy from Redux
-  const { policies, currentPosition } = useSelector((state: RootState) => state.policy);
-  const currentPolicy = policies[currentPosition];
+  const policyState = useSelector((state: RootState) => state.policy);
+  const currentPosition = useSelector((state: RootState) => state.active.position);
+  const currentPolicy = policyState.policies[currentPosition];
 
   // Fetch metadata when component mounts or country changes
   useEffect(() => {
@@ -146,222 +146,195 @@ export default function PolicyParameterSelectorFrame({
   const chartData = getChartData();
 
   return (
-    <Modal
-      opened={true}
-      onClose={onReturn}
-      size="90%"
-      padding={0}
-      withCloseButton={false}
-      centered
-      styles={{
-        content: { maxWidth: '1200px', height: '85vh', maxHeight: '800px' },
-        body: { padding: 0, height: '100%' }
-      }}
-    >
-      <Stack h="100%" gap={0}>
-        {/* Header */}
-        <Paper p="md" radius={0} style={{ borderBottom: '1px solid #e0e0e0' }}>
-          <Group justify="space-between">
-            <Button variant="subtle" onClick={onReturn}>
-              Cancel
-            </Button>
-            <Stack gap={0} align="center">
-              <Title order={4}>Reform Policy #{currentPolicy?.id || '0001'}</Title>
-              <Text size="sm" c="dimmed">Baseline: Current Law</Text>
-            </Stack>
-            <Button
-              variant="subtle"
-              onClick={() => onNavigate('next')}
-              rightSection={<IconChevronRight size={16} />}
-            >
-              Next
-            </Button>
-          </Group>
-        </Paper>
+    <Box style={{ padding: '2rem' }}>
+      <Flex h="100%" style={{ overflow: 'hidden' }}>
+        {/* Left Sidebar */}
+        <Paper w={300} p="md" style={{ borderRight: '1px solid var(--mantine-color-gray-3)', overflowY: 'hidden' }}>
+          <Stack h="100%">
+            <div>
+              <Title order={5}>Select parameters</Title>
+              <Text size="sm" c="dimmed">Make changes and provisions to your policy.</Text>
+            </div>
 
-        {/* Main Content */}
-        <Flex h="calc(100% - 120px)" style={{ overflow: 'hidden' }}>
-          {/* Left Sidebar */}
-          <Paper w={300} p="md" style={{ borderRight: '1px solid #e0e0e0', overflowY: 'hidden' }}>
-            <Stack h="100%">
-              <div>
-                <Title order={5}>Select Parameters</Title>
-                <Text size="sm" c="dimmed">Make changes and provisions to your policy.</Text>
-              </div>
+            <TextInput
+              placeholder="Search"
+              leftSection={<IconSearch size={16} />}
+              rightSection={
+                <Button size="xs" variant="subtle" leftSection={<IconFilter size={14} />}>
+                  Filter
+                </Button>
+              }
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            />
 
-              <TextInput
-                placeholder="Search"
-                leftSection={<IconSearch size={16} />}
-                rightSection={
-                  <Button size="xs" variant="subtle" leftSection={<IconFilter size={14} />}>
-                    Filter
-                  </Button>
-                }
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.currentTarget.value)}
-              />
-
-              <ScrollArea style={{ flex: 1 }}>
-                <Stack gap="xs">
-                  {loading ? (
-                    <Text size="sm" c="dimmed">Loading parameters...</Text>
-                  ) : Object.keys(filteredCategories).length === 0 ? (
-                    <Text size="sm" c="dimmed">No parameters found</Text>
-                  ) : (
-                    Object.entries(filteredCategories).map(([category, params]) => (
-                      <div key={category}>
-                        <Text size="sm" fw={600} c="dimmed" mb="xs">{category}</Text>
-                        {params.map((param: any) => (
-                          <Button
-                            key={param.key}
-                            variant={selectedParamId === param.key ? 'light' : 'subtle'}
-                            fullWidth
-                            justify="space-between"
-                            rightSection={<IconChevronRight size={16} />}
-                            onClick={() => setSelectedParamId(param.key)}
-                            styles={{
-                              root: { marginBottom: '4px' },
-                              inner: { justifyContent: 'flex-start' },
-                              label: { fontWeight: 400 }
-                            }}
-                          >
-                            {param.key}
-                          </Button>
-                        ))}
-                      </div>
-                    ))
-                  )}
-                </Stack>
-              </ScrollArea>
-            </Stack>
-          </Paper>
-
-          {/* Right Content */}
-          <Box style={{ flex: 1, overflowY: 'auto' }} p="xl">
-            {selectedParam ? (
-              <Stack gap="xl">
-                <div>
-                  <Title order={2} mb="md">
-                    {selectedParamId}
-                  </Title>
-
-                  {/* Policy Summary */}
-                  {selectedParam?.summary && (
-                    <Card withBorder radius="md" p="md" mb="lg">
-                      <Group gap="xs" mb="sm">
-                        <IconInfoCircle size={16} color="var(--mantine-color-blue-6)" />
-                        <Text size="sm" fw={600}>Policy Summary</Text>
-                      </Group>
-                      <Text size="sm" c="dimmed">
-                        {selectedParam.summary}
-                      </Text>
-                    </Card>
-                  )}
-
-                  {/* Description */}
-                  {selectedParam?.description && (
-                    <div>
-                      <Title order={5} mb="sm">Description</Title>
-                      <Text>{selectedParam.description}</Text>
+            <ScrollArea style={{ flex: 1 }}>
+              <Stack gap="xs">
+                {loading ? (
+                  <Text size="sm" c="dimmed">Loading parameters...</Text>
+                ) : Object.keys(filteredCategories).length === 0 ? (
+                  <Text size="sm" c="dimmed">No parameters found</Text>
+                ) : (
+                  Object.entries(filteredCategories).map(([category, params]) => (
+                    <div key={category}>
+                      <Text size="sm" fw={600} c="dimmed" mb="xs">{category}</Text>
+                      {params.map((param: any) => (
+                        <Button
+                          key={param.key}
+                          variant={selectedParamId === param.key ? 'light' : 'subtle'}
+                          fullWidth
+                          justify="space-between"
+                          rightSection={<IconChevronRight size={16} />}
+                          onClick={() => setSelectedParamId(param.key)}
+                          styles={{
+                            root: { marginBottom: '4px' },
+                            inner: { justifyContent: 'flex-start' },
+                            label: { fontWeight: 400 }
+                          }}
+                        >
+                          {param.key}
+                        </Button>
+                      ))}
                     </div>
-                  )}
-                </div>
-
-                {/* Current Value */}
-                <div>
-                  <Title order={5} mb="md">Current Value</Title>
-                  <Group align="end" gap="md">
-                    <Stack gap={4}>
-                      <Text size="xs" c="dimmed">From</Text>
-                      <TextInput
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.currentTarget.value)}
-                        rightSection={<IconDots size={16} />}
-                        w={120}
-                      />
-                    </Stack>
-                    <Stack gap={4}>
-                      <Text size="xs" c="dimmed">Onward</Text>
-                      <Group gap="xs">
-                        {selectedParam?.unit?.includes('currency') && <Text size="lg">$</Text>}
-                        <NumberInput
-                          value={currentValue}
-                          onChange={(val) => setCurrentValue(val as number)}
-                          decimalScale={2}
-                          fixedDecimalScale
-                          w={100}
-                        />
-                        {selectedParam?.unit && (
-                          <Select
-                            value={selectedParam.unit.split('-')[1] || 'USD'}
-                            data={['USD', 'EUR', 'GBP']}
-                            w={90}
-                          />
-                        )}
-                        <ActionIcon variant="subtle">
-                          <IconDots size={16} />
-                        </ActionIcon>
-                        <Button variant="light">Add</Button>
-                      </Group>
-                    </Stack>
-                  </Group>
-                </div>
-
-                {/* Historical Values */}
-                {chartData.length > 0 && (
-                  <div>
-                    <Title order={5} mb="md">Historical Values</Title>
-                    <Text size="sm" c="dimmed" mb="md">
-                      {selectedParamId} over time
-                    </Text>
-                    <Card withBorder p="md">
-                      <LineChart
-                        h={200}
-                        data={chartData}
-                        dataKey="year"
-                        series={[{ name: 'value', color: 'teal' }]}
-                        yAxisProps={{
-                          tickFormatter: (value: number) => {
-                            const unit = selectedParam?.unit || '';
-                            if (unit === 'currency-USD' || unit.includes('currency')) {
-                              return `$${value.toFixed(2)}`;
-                            }
-                            return value.toString();
-                          }
-                        }}
-                        gridAxis="y"
-                        withDots={false}
-                      />
-                    </Card>
-                  </div>
+                  ))
                 )}
               </Stack>
-            ) : (
-              <Flex align="center" justify="center" h="100%">
-                <Stack align="center">
-                  <Title order={3} c="dimmed">No parameter selected</Title>
-                  <Text c="dimmed">Select a parameter from the list to view and edit its details</Text>
-                </Stack>
-              </Flex>
-            )}
-          </Box>
-        </Flex>
-
-        {/* Footer */}
-        <Paper p="md" radius={0} style={{ borderTop: '1px solid #e0e0e0' }}>
-          <Group justify="space-between">
-            <Button variant="default" onClick={onReturn}>
-              Cancel
-            </Button>
-            <Group>
-              <Text size="sm" c="dimmed">No Provisions</Text>
-              <Button onClick={() => onNavigate('next')}>
-                Next
-              </Button>
-            </Group>
-          </Group>
+            </ScrollArea>
+          </Stack>
         </Paper>
-      </Stack>
-    </Modal>
+
+        {/* Right Content */}
+        <Box style={{ flex: 1, overflowY: 'auto' }} p="xl">
+          {selectedParam ? (
+            <Stack gap="xl">
+              <div>
+                <Title order={2} mb="md">
+                  {selectedParamId}
+                </Title>
+
+                {/* Policy Summary */}
+                {selectedParam?.summary && (
+                  <Card withBorder radius="md" p="md" mb="lg">
+                    <Group gap="xs" mb="sm">
+                      <IconInfoCircle size={16} color="var(--mantine-color-blue-6)" />
+                      <Text size="sm" fw={600}>Policy summary</Text>
+                    </Group>
+                    <Text size="sm" c="dimmed">
+                      {selectedParam.summary}
+                    </Text>
+                  </Card>
+                )}
+
+                {/* Description */}
+                {selectedParam?.description && (
+                  <div>
+                    <Title order={5} mb="sm">Description</Title>
+                    <Text>{selectedParam.description}</Text>
+                  </div>
+                )}
+              </div>
+
+              {/* Current Value */}
+              <div>
+                <Title order={5} mb="md">Current value</Title>
+                <Group align="end" gap="md">
+                  <Stack gap={4}>
+                    <Text size="xs" c="dimmed">From</Text>
+                    <TextInput
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.currentTarget.value)}
+                      rightSection={<IconDots size={16} />}
+                      w={120}
+                    />
+                  </Stack>
+                  <Stack gap={4}>
+                    <Text size="xs" c="dimmed">Onward</Text>
+                    <Group gap="xs">
+                      {selectedParam?.unit?.includes('currency') && <Text size="lg">$</Text>}
+                      <NumberInput
+                        value={currentValue}
+                        onChange={(val) => setCurrentValue(val as number)}
+                        decimalScale={2}
+                        fixedDecimalScale
+                        w={100}
+                      />
+                      {selectedParam?.unit && (
+                        <Select
+                          value={selectedParam.unit.split('-')[1] || 'USD'}
+                          data={['USD', 'EUR', 'GBP']}
+                          w={90}
+                        />
+                      )}
+                      <ActionIcon variant="subtle">
+                        <IconDots size={16} />
+                      </ActionIcon>
+                      <Button variant="light">Add</Button>
+                    </Group>
+                  </Stack>
+                </Group>
+              </div>
+
+              {/* Historical Values */}
+              {chartData.length > 0 && (
+                <div>
+                  <Title order={5} mb="md">Historical values</Title>
+                  <Text size="sm" c="dimmed" mb="md">
+                    {selectedParamId} over time
+                  </Text>
+                  <Card withBorder p="md">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <LineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                        <XAxis
+                          dataKey="year"
+                          stroke="#666"
+                          style={{ fontSize: '12px' }}
+                        />
+                        <YAxis
+                          stroke="#666"
+                          style={{ fontSize: '12px' }}
+                          tickFormatter={(value: number) => {
+                            const unit = selectedParam?.unit || '';
+                            if (unit === 'currency-USD' || unit.includes('currency')) {
+                              return `$${value.toLocaleString()}`;
+                            }
+                            return value.toLocaleString();
+                          }}
+                        />
+                        <Tooltip
+                          formatter={(value: number) => {
+                            const unit = selectedParam?.unit || '';
+                            if (unit === 'currency-USD' || unit.includes('currency')) {
+                              return `$${value.toLocaleString()}`;
+                            }
+                            return value.toLocaleString();
+                          }}
+                          labelFormatter={(label) => `Year: ${label}`}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="value"
+                          stroke="#319795"
+                          strokeWidth={2}
+                          dot={{ fill: '#319795', r: 4 }}
+                          activeDot={{ r: 6 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </Card>
+                </div>
+              )}
+            </Stack>
+          ) : (
+            <Flex align="center" justify="center" h="100%">
+              <Stack align="center">
+                <Title order={3} c="dimmed">No parameter selected</Title>
+                <Text c="dimmed">Select a parameter from the list to view and edit its details</Text>
+              </Stack>
+            </Flex>
+          )}
+        </Box>
+      </Flex>
+    </Box>
   );
 }

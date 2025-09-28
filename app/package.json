@@ -27,6 +27,7 @@
     "@mantine/core": "8.1.2",
     "@mantine/dates": "^8.1.2",
     "@mantine/hooks": "8.1.2",
+    "@mantine/notifications": "^8.1.2",
     "@normy/react-query": "^0.20.0",
     "@reduxjs/toolkit": "^2.8.2",
     "@tabler/icons-react": "^3.34.0",
