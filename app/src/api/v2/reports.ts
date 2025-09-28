@@ -21,6 +21,12 @@ export interface ReportCreate {
   simulation_ids?: string[];
 }
 
+export interface ReportUpdate {
+  label?: string;
+  description?: string;
+  simulation_ids?: string[];
+}
+
 class ReportsAPI {
   async list(params?: PaginationParams): Promise<ReportResponse[]> {
     // Will use this endpoint when available
@@ -33,6 +39,10 @@ class ReportsAPI {
 
   async create(data: ReportCreate): Promise<ReportResponse> {
     return apiClient.post<ReportResponse, ReportCreate>('/reports/', data);
+  }
+
+  async update(reportId: string, data: ReportUpdate): Promise<ReportResponse> {
+    return apiClient.patch<ReportResponse, ReportUpdate>(`/reports/${reportId}`, data);
   }
 
   async delete(reportId: string): Promise<void> {

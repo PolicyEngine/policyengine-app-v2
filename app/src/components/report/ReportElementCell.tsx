@@ -106,22 +106,16 @@ export default function ReportElementCell({
       return (
         <Box
           className="markdown-content"
-          onClick={handleStartEdit}
           style={{
-            cursor: 'pointer',
-            minHeight: rem(60),
-            padding: rem(8),
-            borderRadius: theme.radius.sm,
-            '&:hover': {
-              backgroundColor: theme.colors.gray[0],
-            },
+            minHeight: rem(40),
+            padding: isEditing ? 0 : rem(8),
           }}
         >
           {content ? (
             <ReactMarkdown>{content}</ReactMarkdown>
           ) : (
             <Text color="dimmed" style={{ fontStyle: 'italic' }}>
-              Click to edit...
+              Empty section
             </Text>
           )}
         </Box>
@@ -137,88 +131,121 @@ export default function ReportElementCell({
   };
 
   return (
-    <Paper withBorder p="md" style={{ position: 'relative' }}>
-      <Group justify="space-between" mb={isEditing ? 'sm' : 0}>
-        <Group gap="xs">
-          <IconGripVertical
-            size={18}
-            style={{ color: theme.colors.gray[5], cursor: 'grab' }}
-          />
-          <Text size="xs" color="dimmed">
-            {element.type.charAt(0).toUpperCase() + element.type.slice(1)}
-          </Text>
-        </Group>
+    <Paper
+      withBorder={isEditing}
+      p={isEditing ? "md" : 0}
+      style={{
+        position: 'relative',
+        border: isEditing ? undefined : 'none',
+        backgroundColor: isEditing ? undefined : 'transparent'
+      }}
+    >
+      {isEditing && (
+        <Group justify="space-between" mb="sm">
+          <Group gap="xs">
+            <IconGripVertical
+              size={18}
+              style={{ color: theme.colors.gray[5], cursor: 'grab' }}
+            />
+            <Text size="xs" color="dimmed">
+              {element.type.charAt(0).toUpperCase() + element.type.slice(1)}
+            </Text>
+          </Group>
 
-        <Group gap="xs">
-          {isEditing ? (
-            <>
-              <ActionIcon
-                size="sm"
-                variant="filled"
-                color="blue"
-                onClick={handleSave}
-                title="Save"
-              >
-                <IconCheck size={14} />
-              </ActionIcon>
+          <Group gap="xs">
+            <ActionIcon
+              size="sm"
+              variant="filled"
+              color="blue"
+              onClick={handleSave}
+              title="Save"
+            >
+              <IconCheck size={14} />
+            </ActionIcon>
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              onClick={handleCancel}
+              title="Cancel"
+            >
+              <IconX size={14} />
+            </ActionIcon>
+          </Group>
+        </Group>
+      )}
+
+      {!isEditing && (
+        <div style={{ position: 'relative' }}>
+          <ActionIcon
+            size="sm"
+            variant="subtle"
+            onClick={handleStartEdit}
+            title="Edit"
+            style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              opacity: 0,
+              transition: 'opacity 150ms ease',
+            }}
+            className="edit-button"
+          >
+            <IconEdit size={14} />
+          </ActionIcon>
+
+          <Menu shadow="md" width={150} position="bottom-end">
+            <Menu.Target>
               <ActionIcon
                 size="sm"
                 variant="subtle"
-                onClick={handleCancel}
-                title="Cancel"
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  right: 30,
+                  opacity: 0,
+                  transition: 'opacity 150ms ease',
+                }}
+                className="menu-button"
               >
-                <IconX size={14} />
+                <IconDotsVertical size={14} />
               </ActionIcon>
-            </>
-          ) : (
-            <>
-              {!isEditing && (
-                <ActionIcon
-                  size="sm"
-                  variant="subtle"
-                  onClick={handleStartEdit}
-                  title="Edit"
+            </Menu.Target>
+            <Menu.Dropdown>
+              {onMoveUp && (
+                <Menu.Item
+                  leftSection={<IconArrowUp size={14} />}
+                  onClick={onMoveUp}
                 >
-                  <IconEdit size={14} />
-                </ActionIcon>
+                  Move up
+                </Menu.Item>
               )}
-              <Menu shadow="md" width={150} position="bottom-end">
-                <Menu.Target>
-                  <ActionIcon size="sm" variant="subtle">
-                    <IconDotsVertical size={14} />
-                  </ActionIcon>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  {onMoveUp && (
-                    <Menu.Item
-                      leftSection={<IconArrowUp size={14} />}
-                      onClick={onMoveUp}
-                    >
-                      Move up
-                    </Menu.Item>
-                  )}
-                  {onMoveDown && (
-                    <Menu.Item
-                      leftSection={<IconArrowDown size={14} />}
-                      onClick={onMoveDown}
-                    >
-                      Move down
-                    </Menu.Item>
-                  )}
-                  {(onMoveUp || onMoveDown) && <Menu.Divider />}
-                  <Menu.Item
-                    color="red"
-                    leftSection={<IconTrash size={14} />}
-                    onClick={onDelete}
-                  >
-                    Delete
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </>
-          )}
-        </Group>
-      </Group>
+              {onMoveDown && (
+                <Menu.Item
+                  leftSection={<IconArrowDown size={14} />}
+                  onClick={onMoveDown}
+                >
+                  Move down
+                </Menu.Item>
+              )}
+              {(onMoveUp || onMoveDown) && <Menu.Divider />}
+              <Menu.Item
+                color="red"
+                leftSection={<IconTrash size={14} />}
+                onClick={onDelete}
+              >
+                Delete
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
+        </div>
+      )}
+
+      <style>{`
+        .mantine-Paper-root:hover .edit-button,
+        .mantine-Paper-root:hover .menu-button {
+          opacity: 1 !important;
+        }
+      `}</style>
 
       {renderContent()}
     </Paper>

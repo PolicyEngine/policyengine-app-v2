@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import ReportCreationModal from '@/components/report/ReportCreationModal';
+import ReportRenameModal from '@/components/report/ReportRenameModal';
 import { reportsAPI } from '@/api/v2/reports';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -12,6 +13,8 @@ import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 export default function ReportsPage() {
   const [searchValue, setSearchValue] = useState('');
   const [createModalOpened, setCreateModalOpened] = useState(false);
+  const [renameModalOpened, setRenameModalOpened] = useState(false);
+  const [reportToRename, setReportToRename] = useState<{ id: string; name: string } | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const { handleSelectionChange, isSelected } = useIngredientSelection();
@@ -37,6 +40,17 @@ export default function ReportsPage() {
     },
   });
 
+  // Rename mutation
+  const renameMutation = useMutation({
+    mutationFn: ({ id, name }: { id: string; name: string }) =>
+      reportsAPI.update(id, { label: name }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reports'] });
+      setRenameModalOpened(false);
+      setReportToRename(null);
+    },
+  });
+
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
     ingredient: 'report',
     onEdit: (id) => {
@@ -45,6 +59,13 @@ export default function ReportsPage() {
       const countryMatch = currentPath.match(/^\/([^\/]+)/);
       if (countryMatch) {
         navigate(`/${countryMatch[1]}/reports/${id}/edit`);
+      }
+    },
+    onRename: (id) => {
+      const report = reports?.find(r => r.id === id);
+      if (report) {
+        setReportToRename({ id, name: report.label || `Report #${id.slice(0, 8)}` });
+        setRenameModalOpened(true);
       }
     },
     onDelete: (id) => {
@@ -82,6 +103,12 @@ export default function ReportsPage() {
       simulation_ids: [], // Start with no simulations
     });
     setCreateModalOpened(false);
+  };
+
+  const handleRenameReport = (name: string) => {
+    if (reportToRename) {
+      renameMutation.mutate({ id: reportToRename.id, name });
+    }
   };
 
   const handleMoreFilters = () => {
@@ -178,6 +205,16 @@ export default function ReportsPage() {
         onClose={() => setCreateModalOpened(false)}
         onSubmit={handleCreateReport}
         isLoading={createReportMutation.isPending}
+      />
+      <ReportRenameModal
+        opened={renameModalOpened}
+        onClose={() => {
+          setRenameModalOpened(false);
+          setReportToRename(null);
+        }}
+        onSubmit={handleRenameReport}
+        currentName={reportToRename?.name || ''}
+        isLoading={renameMutation.isPending}
       />
       <IngredientReadView
       ingredient="report"

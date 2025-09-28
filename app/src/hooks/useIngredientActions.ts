@@ -2,13 +2,14 @@ import { useCallback } from 'react';
 
 export type IngredientType = 'policy' | 'population' | 'simulation' | 'dynamic' | 'report' | 'dataset';
 
-export type ActionType = 'view' | 'bookmark' | 'edit' | 'share' | 'delete' | 'add-to-report' | null;
+export type ActionType = 'view' | 'bookmark' | 'edit' | 'rename' | 'share' | 'delete' | 'add-to-report' | null;
 
 export interface UseIngredientActionsProps {
   ingredient: IngredientType;
   onView?: (id: string) => void;
   onBookmark?: (id: string) => void;
   onEdit?: (id: string) => void;
+  onRename?: (id: string) => void;
   onShare?: (id: string) => void;
   onDelete?: (id: string) => void;
   onAddToReport?: (id: string) => void;
@@ -19,6 +20,7 @@ export function useIngredientActions({
   onView,
   onBookmark,
   onEdit,
+  onRename,
   onShare,
   onDelete,
   onAddToReport,
@@ -48,6 +50,13 @@ export function useIngredientActions({
             console.log(`Edit ${ingredient}:`, recordId);
           }
           break;
+        case 'rename':
+          if (onRename) {
+            onRename(recordId);
+          } else {
+            console.log(`Rename ${ingredient}:`, recordId);
+          }
+          break;
         case 'share':
           if (onShare) {
             onShare(recordId);
@@ -73,14 +82,16 @@ export function useIngredientActions({
           console.error('Unknown action:', action);
       }
     },
-    [ingredient, onView, onBookmark, onEdit, onShare, onDelete, onAddToReport]
+    [ingredient, onView, onBookmark, onEdit, onRename, onShare, onDelete, onAddToReport]
   );
 
   const getDefaultActions = () => {
-    // Special case for reports - show Edit action
+    // Special case for reports - show Edit, Rename, and Delete actions
     if (ingredient === 'report') {
       return [
         { label: 'Edit report', action: 'edit' },
+        { label: 'Rename', action: 'rename' },
+        { label: 'Delete', action: 'delete', color: 'red' },
       ];
     }
 
