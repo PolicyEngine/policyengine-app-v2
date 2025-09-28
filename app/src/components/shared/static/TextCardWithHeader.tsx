@@ -8,11 +8,11 @@ interface Section {
 }
 
 interface TitleCardWithHeaderProps {
-  title: string;
+  title?: string;
   sections?: Section[];
   backgroundColor?: 'white' | 'green' | 'gray';
-  buttonLabel: string | string[];
-  onButtonClick: (label: string) => void;
+  buttonLabel?: string | string[];
+  onButtonClick?: (label: string) => void;
 }
 
 export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
@@ -86,13 +86,13 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
             (Array.isArray(buttonLabel) ? (
               <Group mt="md">
                 {buttonLabel.map((label, idx) => (
-                  <Button key={idx} onClick={() => onButtonClick?.(label)} variant="primary">
+                  <Button key={idx} onClick={() => onButtonClick?.(label)} variant="default">
                     {label}
                   </Button>
                 ))}
               </Group>
             ) : (
-              <Button onClick={() => onButtonClick?.(buttonLabel)} variant="primary" mt="md">
+              <Button onClick={() => onButtonClick?.(buttonLabel)} variant="default" mt="md">
                 {buttonLabel}
               </Button>
             ))}
