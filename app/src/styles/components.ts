@@ -217,21 +217,4 @@ export const themeComponents = {
       return {};
     },
   }),
-  Button: Button.extend({
-    styles: (_theme, params) => {
-      if (params.variant === 'primary') {
-        return {
-          root: {
-            backgroundColor: colors.teal[500],
-            padding: spacing.md,
-            borderRadius: spacing.radius.md,
-            '&:hover': {
-              backgroundColor: colors.gray[600],
-            },
-          },
-        };
-      }
-      return {};
-    },
-  }),
 };
