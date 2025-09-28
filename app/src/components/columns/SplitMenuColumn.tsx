@@ -37,7 +37,6 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
       {/* Primary Button */}
       <Button
         variant="outline"
-        disabled
         size="sm"
         onClick={handlePrimaryAction}
         style={{
@@ -65,7 +64,6 @@ export function SplitMenuColumn({ config, record }: SplitMenuColumnProps) {
         <Menu.Target>
           <Button
             variant="outline"
-            disabled
             size="sm"
             style={{
               borderTopLeftRadius: 0,

@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-export type IngredientType = 'policy' | 'population' | 'simulation' | 'dynamic';
+export type IngredientType = 'policy' | 'population' | 'simulation' | 'dynamic' | 'report' | 'dataset';
 
 export type ActionType = 'view' | 'bookmark' | 'edit' | 'share' | 'delete' | 'add-to-report' | null;
 
@@ -77,7 +77,14 @@ export function useIngredientActions({
   );
 
   const getDefaultActions = () => {
-    // Return empty array - no action buttons needed
+    // Special case for reports - show Edit action
+    if (ingredient === 'report') {
+      return [
+        { label: 'Edit report', action: 'edit' },
+      ];
+    }
+
+    // Return empty array for other ingredients
     return [];
   };
 

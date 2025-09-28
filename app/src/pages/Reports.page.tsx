@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
+import ReportCreationModal from '@/components/report/ReportCreationModal';
 import { reportsAPI } from '@/api/v2/reports';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
-import { formatIngredientDate } from '@/utils/ingredientUtils';
 
 export default function ReportsPage() {
   const [searchValue, setSearchValue] = useState('');
+  const [createModalOpened, setCreateModalOpened] = useState(false);
   const queryClient = useQueryClient();
-  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
+  const navigate = useNavigate();
+  const { handleSelectionChange, isSelected } = useIngredientSelection();
 
   // Fetch reports from API
   const {
@@ -33,8 +37,16 @@ export default function ReportsPage() {
     },
   });
 
-  const { handleMenuAction } = useIngredientActions({
-    ingredient: 'report' as any,
+  const { handleMenuAction, getDefaultActions } = useIngredientActions({
+    ingredient: 'report',
+    onEdit: (id) => {
+      // Navigate to report editor - use absolute path
+      const currentPath = window.location.pathname;
+      const countryMatch = currentPath.match(/^\/([^\/]+)/);
+      if (countryMatch) {
+        navigate(`/${countryMatch[1]}/reports/${id}/edit`);
+      }
+    },
     onDelete: (id) => {
       if (confirm('Delete this report?')) {
         deleteMutation.mutate(id);
@@ -42,9 +54,34 @@ export default function ReportsPage() {
     },
   });
 
+  // Create report mutation
+  const createReportMutation = useMutation({
+    mutationFn: reportsAPI.create,
+    onSuccess: (newReport) => {
+      // Navigate to the report editor - use absolute path
+      const currentPath = window.location.pathname;
+      const countryMatch = currentPath.match(/^\/([^\/]+)/);
+      if (countryMatch) {
+        navigate(`/${countryMatch[1]}/reports/${newReport.id}/edit`);
+      }
+    },
+    onError: (error) => {
+      console.error('Failed to create report:', error);
+      alert('Failed to create report. Please try again.');
+    },
+  });
+
   const handleBuildReport = () => {
-    // TODO: Implement report generation flow
-    console.log('Generate new report');
+    setCreateModalOpened(true);
+  };
+
+  const handleCreateReport = (data: { label: string; description?: string }) => {
+    createReportMutation.mutate({
+      label: data.label,
+      description: data.description,
+      simulation_ids: [], // Start with no simulations
+    });
+    setCreateModalOpened(false);
   };
 
   const handleMoreFilters = () => {
@@ -55,37 +92,10 @@ export default function ReportsPage() {
   // Filter reports based on search
   const filteredReports = reports?.filter(
     (report) =>
-      report.name?.toLowerCase().includes(searchValue.toLowerCase()) ||
+      report.label?.toLowerCase().includes(searchValue.toLowerCase()) ||
       report.id.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'green';
-      case 'failed':
-        return 'red';
-      case 'processing':
-        return 'blue';
-      case 'pending':
-        return 'gray';
-      default:
-        return 'gray';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return '✓';
-      case 'failed':
-        return '✗';
-      case 'processing':
-        return '⏱';
-      default:
-        return '';
-    }
-  };
 
   // Define column configurations for reports
   const reportColumns: ColumnConfig[] = [
@@ -97,24 +107,12 @@ export default function ReportsPage() {
     {
       key: 'simulations',
       header: 'Simulations',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
+      type: 'text',
     },
     {
       key: 'status',
       header: 'Status',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
+      type: 'text',
     },
     {
       key: 'dateCreated',
@@ -125,12 +123,7 @@ export default function ReportsPage() {
       key: 'actions',
       header: '',
       type: 'split-menu',
-      actions: [
-        { label: 'View report', action: 'view-report' },
-        { label: 'Download', action: 'download' },
-        { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
+      actions: getDefaultActions(),
       onAction: handleMenuAction,
     },
   ];
@@ -140,28 +133,18 @@ export default function ReportsPage() {
     filteredReports?.map((report) => ({
       id: report.id,
       reportName: {
-        text: report.name || `Report #${report.id.slice(0, 8)}`,
+        text: report.label || `Report #${report.id.slice(0, 8)}`,
       } as TextValue,
       simulations: {
-        items: [
-          {
-            text: `${report.simulation_ids.length} simulation${
-              report.simulation_ids.length !== 1 ? 's' : ''
-            }`,
-            badge: '',
-          },
-        ],
-      } as BulletsValue,
+        text: report.simulation_ids ? `${report.simulation_ids.length} simulation${
+          report.simulation_ids.length !== 1 ? 's' : ''
+        }` : '0 simulations',
+      } as TextValue,
       status: {
-        items: [
-          {
-            text: report.status.charAt(0).toUpperCase() + report.status.slice(1),
-            badge: getStatusIcon(report.status),
-          },
-        ],
-      } as BulletsValue,
+        text: report.status ? report.status.charAt(0).toUpperCase() + report.status.slice(1) : 'Draft',
+      } as TextValue,
       dateCreated: {
-        text: formatIngredientDate(report.created_at),
+        text: moment(report.created_at).fromNow(),
       } as TextValue,
     })) || [];
 
@@ -189,7 +172,14 @@ export default function ReportsPage() {
   }
 
   return (
-    <IngredientReadView
+    <>
+      <ReportCreationModal
+        opened={createModalOpened}
+        onClose={() => setCreateModalOpened(false)}
+        onSubmit={handleCreateReport}
+        isLoading={createReportMutation.isPending}
+      />
+      <IngredientReadView
       ingredient="report"
       title="Your reports"
       subtitle="View and generate analysis reports from your simulation results."
@@ -205,6 +195,7 @@ export default function ReportsPage() {
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
-    />
+      />
+    </>
   );
 }

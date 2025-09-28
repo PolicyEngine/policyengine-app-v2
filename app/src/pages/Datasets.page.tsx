@@ -33,7 +33,7 @@ export default function DatasetsPage() {
   });
 
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
-    ingredient: 'dataset' as any,
+    ingredient: 'dataset',
     onDelete: (id) => {
       if (confirm('Delete this dataset?')) {
         deleteMutation.mutate(id);

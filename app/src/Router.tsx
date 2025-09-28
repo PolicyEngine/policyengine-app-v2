@@ -6,6 +6,7 @@ import DynamicsPage from './pages/Dynamics.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import ReportsPage from './pages/Reports.page';
+import ReportEditorPage from './pages/ReportEditor.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 
@@ -50,6 +51,10 @@ const router = createBrowserRouter(
         {
           path: 'reports',
           element: <ReportsPage />,
+        },
+        {
+          path: 'reports/:reportId/edit',
+          element: <ReportEditorPage />,
         },
         {
           path: 'reportOutput/:reportId',

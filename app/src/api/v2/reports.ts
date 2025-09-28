@@ -5,18 +5,20 @@ import { apiClient, PaginationParams } from '../apiClient';
 
 export interface ReportResponse {
   id: string;
-  name?: string;
-  simulation_ids: string[];
-  status: 'pending' | 'processing' | 'completed' | 'failed';
+  label: string;
+  description?: string;
+  simulation_ids?: string[];
+  status?: 'pending' | 'processing' | 'completed' | 'failed';
   results?: any;
   error?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 export interface ReportCreate {
-  name?: string;
-  simulation_ids: string[];
+  label: string;
+  description?: string;
+  simulation_ids?: string[];
 }
 
 class ReportsAPI {
