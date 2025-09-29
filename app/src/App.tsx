@@ -26,7 +26,12 @@ export default function App() {
   return (
     <Provider store={store}>
       <MantineProvider theme={policyEngineTheme}>
-        <QueryNormalizerProvider queryClient={queryClient}>
+        <QueryNormalizerProvider
+          queryClient={queryClient}
+          normalizerConfig={{
+            devLogging: true
+          }}
+        >
           <QueryClientProvider client={queryClient}>
             <Router />
             <ReactQueryDevtools initialIsOpen={false} />

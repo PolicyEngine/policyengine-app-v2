@@ -209,9 +209,18 @@ export const useUserReports = (userId: string) => {
       ?.filter((userRep) => userRep.reportId) // Filter out associations without reportId
       .map((userRep) => {
         // Get report from normalized cache or query results
-        const report =
-          (queryNormalizer.getObjectById(userRep.reportId) as Report | undefined) ||
-          reports.find((r) => r.reportId === userRep.reportId);
+        const cachedReport = queryNormalizer.getObjectById(userRep.reportId) as Report | undefined;
+        const directReport = reports.find((r) => r.reportId === userRep.reportId);
+
+        console.log(`Report ${userRep.reportId}:`);
+        console.log('  From Normy cache:', cachedReport);
+        console.log('  From direct query:', directReport);
+        console.log('  Cache has status?', cachedReport?.status);
+        console.log('  Direct has status?', directReport?.status);
+        console.log('  All cache fields:', cachedReport ? Object.keys(cachedReport) : 'N/A');
+        console.log('  All direct fields:', directReport ? Object.keys(directReport) : 'N/A');
+
+        const report = cachedReport || directReport;
 
         // Get related simulations
         const reportSimulations =
