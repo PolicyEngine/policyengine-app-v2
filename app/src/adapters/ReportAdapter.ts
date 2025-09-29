@@ -32,7 +32,7 @@ export class ReportAdapter {
       : [metadata.simulation_1_id];
 
     return {
-      reportId: String(metadata.id),
+      id: String(metadata.id),
       countryId: metadata.country_id,
       apiVersion: metadata.api_version,
       simulationIds,
@@ -59,11 +59,11 @@ export class ReportAdapter {
    * Creates payload for marking a report as completed with output
    */
   static toCompletedReportPayload(report: Report): ReportSetOutputPayload {
-    if (!report.reportId) {
+    if (!report.id) {
       throw new Error('Report ID is required to create completed report payload');
     }
     return {
-      id: parseInt(report.reportId, 10),
+      id: parseInt(report.id, 10),
       status: 'complete',
       output: convertReportOutputToJson(report.output),
     };
@@ -73,11 +73,11 @@ export class ReportAdapter {
    * Creates payload for marking a report as errored
    */
   static toErrorReportPayload(report: Report): ReportSetOutputPayload {
-    if (!report.reportId) {
+    if (!report.id) {
       throw new Error('Report ID is required to create error report payload');
     }
     return {
-      id: parseInt(report.reportId, 10),
+      id: parseInt(report.id, 10),
       status: 'error',
       output: null,
     };

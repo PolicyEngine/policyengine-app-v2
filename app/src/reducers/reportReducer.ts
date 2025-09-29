@@ -10,7 +10,7 @@ interface ReportState extends Report {
 }
 
 const initialState: ReportState = {
-  reportId: '',
+  id: '',
   label: null,
   countryId: 'us', // Default countryId, to be updated as needed
   simulationIds: [],
@@ -53,7 +53,7 @@ export const reportSlice = createSlice({
 
     // Clear the report
     clearReport: (state) => {
-      state.reportId = '';
+      state.id = '';
       state.label = null;
       state.simulationIds = [];
       state.status = 'pending';
@@ -74,7 +74,7 @@ export const reportSlice = createSlice({
 
     // Update report ID
     updateReportId: (state, action: PayloadAction<string>) => {
-      state.reportId = action.payload;
+      state.id = action.payload;
       state.updatedAt = new Date().toISOString();
     },
 
@@ -132,7 +132,7 @@ export const reportSlice = createSlice({
     // Initialize report for creation - sets up initial state for report creation flow
     initializeReport: (state) => {
       // Clear any existing report data
-      state.reportId = '';
+      state.id = '';
       state.label = null;
       state.simulationIds = [];
       state.status = 'pending';

@@ -210,7 +210,7 @@ export const useUserReports = (userId: string) => {
       .map((userRep) => {
         // Get report from normalized cache or query results
         const cachedReport = queryNormalizer.getObjectById(userRep.reportId) as Report | undefined;
-        const directReport = reports.find((r) => r.reportId === userRep.reportId);
+        const directReport = reports.find((r) => r.id === userRep.reportId);
 
         console.log(`Report ${userRep.reportId}:`);
         console.log('  From Normy cache:', cachedReport);

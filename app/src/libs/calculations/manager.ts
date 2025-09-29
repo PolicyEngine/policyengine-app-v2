@@ -147,7 +147,7 @@ export class CalculationManager {
     // Create a minimal Report object with just the necessary fields
     // Both household and society-wide results are stored in the output field
     const report: Report = {
-      reportId,
+      id: reportId,
       status,
       output: status === 'complete' ? result || null : null,
       countryId: countryId,
