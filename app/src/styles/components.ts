@@ -214,10 +214,18 @@ export const themeComponents = {
           },
         };
       }
+
+      if (params.variant === 'white') {
+        return {
+          root: {
+            color: colors.text.inverse,
+          },
+        };
+      }
+
       return {};
     },
   }),
-
   AppShell: AppShell.extend({
     defaultProps: {
       padding: spacing.appShell.main.padding,
