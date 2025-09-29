@@ -24,7 +24,7 @@ export class UserReportAdapter {
    */
   static fromApiResponse(apiData: any): UserReport {
     return {
-      id: apiData.reportId,
+      id: apiData.id,
       userId: apiData.userId,
       reportId: apiData.reportId,
       label: apiData.label,
