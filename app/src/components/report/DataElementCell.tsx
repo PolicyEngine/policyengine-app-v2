@@ -34,6 +34,7 @@ import {
   IconSettings,
 } from '@tabler/icons-react';
 import { aggregatesAPI, AggregateTable } from '@/api/v2/aggregates';
+import { aggregateChangesAPI, AggregateChange } from '@/api/v2/aggregateChanges';
 import { simulationsAPI } from '@/api/v2/simulations';
 import { ReportElement } from '@/api/v2/reportElements';
 import { reportElementsAPI } from '@/api/v2/reportElements';
@@ -130,10 +131,18 @@ export default function DataElementCell({
     return 'UK'; // Default to UK
   };
 
-  // Fetch aggregate data for this element
+  // Fetch aggregate or aggregate change data for this element
+  const isAggregateChange = element.data_table === 'aggregate_changes';
+
   const { data: aggregates, isLoading: aggregatesLoading } = useQuery({
-    queryKey: ['elementAggregates', element.id],
-    queryFn: () => aggregatesAPI.getByReportElement(element.id),
+    queryKey: ['elementAggregates', element.id, element.data_table],
+    queryFn: async () => {
+      if (isAggregateChange) {
+        return aggregateChangesAPI.getByReportElement(element.id);
+      } else {
+        return aggregatesAPI.getByReportElement(element.id);
+      }
+    },
   });
 
   // Fetch model version details if we have a model_version_id
@@ -189,30 +198,55 @@ export default function DataElementCell({
   const dataframe = useMemo(() => {
     if (!aggregates || aggregates.length === 0) return { rows: [], columns: [] };
 
-    // Convert aggregates to rows with column names matching the table
-    const rows = aggregates.map(agg => ({
-      'Simulation': getSimLabel(agg.simulation_id),
-      'Entity': agg.entity,
-      'Variable': agg.variable_name,
-      'Function': agg.aggregate_function,
-      'Year': agg.year || null,
-      'Filter variable': agg.filter_variable_name || null,
-      'Filter ≥': agg.filter_variable_geq,
-      'Filter ≤': agg.filter_variable_leq,
-      'Value': agg.value || 0,
-      // Keep original IDs for reference
-      simulation_id: agg.simulation_id,
-    } as Record<string, any>));
+    let rows: Record<string, any>[];
+
+    if (isAggregateChange) {
+      // Handle AggregateChange data
+      const aggChanges = aggregates as AggregateChange[];
+      rows = aggChanges.map(agg => ({
+        'Baseline sim': getSimLabel(agg.baseline_simulation_id),
+        'Comparison sim': getSimLabel(agg.comparison_simulation_id),
+        'Entity': agg.entity,
+        'Variable': agg.variable_name,
+        'Function': agg.aggregate_function,
+        'Year': agg.year || null,
+        'Filter variable': agg.filter_variable_name || null,
+        'Filter ≥': agg.filter_variable_geq,
+        'Filter ≤': agg.filter_variable_leq,
+        'Baseline': agg.baseline_value || 0,
+        'Comparison': agg.comparison_value || 0,
+        'Change': agg.change || 0,
+        'Relative change': agg.relative_change !== null ? `${(agg.relative_change * 100).toFixed(1)}%` : 'N/A',
+        // Keep original IDs for reference
+        baseline_simulation_id: agg.baseline_simulation_id,
+        comparison_simulation_id: agg.comparison_simulation_id,
+      } as Record<string, any>));
+    } else {
+      // Handle regular Aggregate data
+      rows = aggregates.map(agg => ({
+        'Simulation': getSimLabel(agg.simulation_id),
+        'Entity': agg.entity,
+        'Variable': agg.variable_name,
+        'Function': agg.aggregate_function,
+        'Year': agg.year || null,
+        'Filter variable': agg.filter_variable_name || null,
+        'Filter ≥': agg.filter_variable_geq,
+        'Filter ≤': agg.filter_variable_leq,
+        'Value': agg.value || 0,
+        // Keep original IDs for reference
+        simulation_id: agg.simulation_id,
+      } as Record<string, any>));
+    }
 
     // Get unique columns
     const columns = Object.keys(rows[0] || {});
 
     return { rows, columns };
-  }, [aggregates, simulations]);
+  }, [aggregates, simulations, isAggregateChange]);
 
   // Get available columns for axis selection (exclude only internal IDs)
   const availableColumns = dataframe.columns.filter(
-    col => col !== 'simulation_id'
+    col => !['simulation_id', 'baseline_simulation_id', 'comparison_simulation_id'].includes(col)
   );
 
   // Handle step navigation
@@ -403,8 +437,12 @@ export default function DataElementCell({
         }
       }
     }
-    if (!yAxisColumn && availableColumns.includes('Value')) {
-      setYAxisColumn('Value');
+    if (!yAxisColumn) {
+      if (isAggregateChange && availableColumns.includes('Change')) {
+        setYAxisColumn('Change');
+      } else if (availableColumns.includes('Value')) {
+        setYAxisColumn('Value');
+      }
     }
   }, [chartType, availableColumns, dataframe.rows]);
 
@@ -453,7 +491,12 @@ export default function DataElementCell({
     }
 
     if (chartType === 'table') {
-      // Show clean table design
+      // Show clean table design with dynamic columns
+      const displayColumns = availableColumns.filter(col =>
+        !['Year', 'Filter variable', 'Filter ≥', 'Filter ≤'].includes(col) ||
+        dataframe.rows.some(row => row[col] !== null && row[col] !== '-')
+      );
+
       return (
         <ScrollArea>
           <Table
@@ -472,67 +515,41 @@ export default function DataElementCell({
               borderBottom: `2px solid ${theme.colors.gray[2]}`,
             }}>
               <Table.Tr>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Simulation
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Entity
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Variable
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Function
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Year
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Filter
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Min
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7] }}>
-                  Max
-                </Table.Th>
-                <Table.Th style={{ fontWeight: 600, fontSize: '0.75rem', color: theme.colors.gray[7], textAlign: 'right' }}>
-                  Value
-                </Table.Th>
+                {displayColumns.map((col) => (
+                  <Table.Th
+                    key={col}
+                    style={{
+                      fontWeight: 600,
+                      fontSize: '0.75rem',
+                      color: theme.colors.gray[7],
+                      textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change'].includes(col) ? 'right' : 'left'
+                    }}
+                  >
+                    {col}
+                  </Table.Th>
+                ))}
               </Table.Tr>
             </Table.Thead>
             <Table.Tbody>
-              {aggregates?.map((agg, idx) => (
+              {dataframe.rows.map((row, idx) => (
                 <Table.Tr key={idx}>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    <Text size="sm" lineClamp={1}>
-                      {getSimLabel(agg.simulation_id)}
-                    </Text>
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    {agg.entity}
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    {agg.variable_name}
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    {agg.aggregate_function}
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    {agg.year || '-'}
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    {agg.filter_variable_name || '-'}
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    {agg.filter_variable_geq !== null && agg.filter_variable_geq !== undefined ? agg.filter_variable_geq : '-'}
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem' }}>
-                    {agg.filter_variable_leq !== null && agg.filter_variable_leq !== undefined ? agg.filter_variable_leq : '-'}
-                  </Table.Td>
-                  <Table.Td style={{ fontSize: '0.875rem', textAlign: 'right', fontWeight: 500 }}>
-                    {formatNumber(agg.value || 0)}
-                  </Table.Td>
+                  {displayColumns.map((col) => (
+                    <Table.Td
+                      key={col}
+                      style={{
+                        fontSize: '0.875rem',
+                        textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change'].includes(col) ? 'right' : 'left',
+                        fontWeight: ['Value', 'Change', 'Baseline', 'Comparison'].includes(col) ? 500 : 400
+                      }}
+                    >
+                      {col === 'Relative change' || typeof row[col] === 'string'
+                        ? row[col] || '-'
+                        : typeof row[col] === 'number'
+                          ? formatNumber(row[col])
+                          : row[col] || '-'
+                      }
+                    </Table.Td>
+                  ))}
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -657,7 +674,6 @@ export default function DataElementCell({
     <Stack gap="xs"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      style={{ position: 'relative' }}
     >
       {/* Header with chart type selector and settings */}
       <Group justify="space-between"
@@ -692,12 +708,7 @@ export default function DataElementCell({
           )}
         </Group>
 
-        {/* Model version citation */}
-        {modelVersion && (
-          <Text size="xs" color="dimmed">
-            PolicyEngine {getCountry()} v{modelVersion.version}
-          </Text>
-        )}
+        <div /> {/* Empty div to maintain space-between layout */}
       </Group>
 
       {/* Settings Modal - Using BaseModal for consistency */}
@@ -948,6 +959,22 @@ export default function DataElementCell({
 
       {/* Visualization */}
       {renderVisualization()}
+
+      {/* Model version citation */}
+      {modelVersion && (
+        <Group justify="flex-end">
+          <Text
+            size="xs"
+            c="dimmed"
+            style={{
+              opacity: isHovered ? 0.7 : 0.3,
+              transition: 'opacity 0.2s ease-in-out'
+            }}
+          >
+            PolicyEngine {getCountry()} v{modelVersion.version}
+          </Text>
+        </Group>
+      )}
     </Stack>
   );
 }

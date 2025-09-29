@@ -199,6 +199,7 @@ export default function ReportElementCell({
                 right: 0,
                 opacity: 0,
                 transition: 'opacity 150ms ease',
+                zIndex: 10,
               }}
               className="edit-button"
             >
@@ -217,6 +218,7 @@ export default function ReportElementCell({
                   right: element.type === 'markdown' ? 30 : 0,
                   opacity: 0,
                   transition: 'opacity 150ms ease',
+                  zIndex: 10,
                 }}
                 className="menu-button"
               >

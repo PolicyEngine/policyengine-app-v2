@@ -1,105 +1,86 @@
-import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Container,
+  Stack,
   Title,
   Text,
   Button,
   Group,
-  Stack,
+  Skeleton,
   Paper,
   ActionIcon,
+  Tooltip,
   Menu,
-  rem,
-  Loader,
+  Badge,
+  LoadingOverlay,
   Center,
+  Loader,
 } from '@mantine/core';
 import {
-  IconPlus,
-  IconArrowLeft,
-  IconDotsVertical,
+  IconChevronLeft,
+  IconEdit,
   IconTrash,
-  IconArrowUp,
-  IconArrowDown,
-  IconDeviceFloppy,
   IconChartBar,
   IconMarkdown,
+  IconPlus,
+  IconShare,
+  IconChevronDown,
 } from '@tabler/icons-react';
 import { reportsAPI } from '@/api/v2/reports';
-import { reportElementsAPI, ReportElement, MarkdownContent } from '@/api/v2/reportElements';
-import { aggregatesAPI, AggregateTable } from '@/api/v2/aggregates';
+import { reportElementsAPI } from '@/api/v2/reportElements';
+import { aggregatesAPI } from '@/api/v2/aggregates';
+import { aggregateChangesAPI } from '@/api/v2/aggregateChanges';
+import { modelVersionsAPI } from '@/api/v2/modelVersions';
 import { simulationsAPI } from '@/api/v2/simulations';
 import ReportElementCell from '@/components/report/ReportElementCell';
-import DataElementCreationModal, { DataElementConfig } from '@/components/report/DataElementCreationModal';
-import DataElementCreationModalLLM from '@/components/report/DataElementCreationModalLLM';
+import DataAnalysisModal from '@/components/report/DataAnalysisModal';
 
 export default function ReportEditorPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [isSaving, setIsSaving] = useState(false);
+
   const [dataModalOpened, setDataModalOpened] = useState(false);
-  const [llmModalOpened, setLlmModalOpened] = useState(false);
+  const [isCreatingElement, setIsCreatingElement] = useState(false);
 
   // Fetch report details
-  const {
-    data: report,
-    isLoading: reportLoading,
-    error: reportError,
-  } = useQuery({
+  const { data: report, isLoading: reportLoading } = useQuery({
     queryKey: ['report', reportId],
     queryFn: () => reportsAPI.get(reportId!),
     enabled: !!reportId,
   });
 
   // Fetch report elements
-  const {
-    data: elements,
-    isLoading: elementsLoading,
-    error: elementsError,
-  } = useQuery({
+  const { data: reportElements, isLoading: elementsLoading } = useQuery({
     queryKey: ['reportElements', reportId],
-    queryFn: () => reportElementsAPI.list(reportId!),
+    queryFn: () => reportElementsAPI.getByReport(reportId!),
     enabled: !!reportId,
   });
 
-  // Sort elements by position (handle undefined positions)
-  const sortedElements = elements?.sort((a, b) => {
-    const posA = a.position ?? 0;
-    const posB = b.position ?? 0;
-    return posA - posB;
-  }) || [];
+  // Fetch all model versions
+  const { data: modelVersions } = useQuery({
+    queryKey: ['modelVersions'],
+    queryFn: () => modelVersionsAPI.list({ limit: 100 }),
+  });
 
-  // Create element mutation
-  const createElementMutation = useMutation({
-    mutationFn: reportElementsAPI.create,
+  // Sort elements by position
+  const sortedElements = useMemo(() => {
+    if (!reportElements) return [];
+    return [...reportElements].sort((a, b) => (a.position || 0) - (b.position || 0));
+  }, [reportElements]);
+
+  // Update report mutation
+  const updateReportMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      reportsAPI.update(id, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
-    },
-    onError: (error) => {
-      console.error('Failed to create report element:', error);
-      alert('Failed to create element. Please try again.');
+      queryClient.invalidateQueries({ queryKey: ['report', reportId] });
     },
   });
 
-  // Update element mutation
-  const updateElementMutation = useMutation({
-    mutationFn: ({ elementId, data }: { elementId: string; data: any }) =>
-      reportElementsAPI.update(elementId, data),
-    onMutate: async ({ elementId, data }) => {
-      setIsSaving(true);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
-      setIsSaving(false);
-    },
-    onError: () => {
-      setIsSaving(false);
-    },
-  });
-
-  // Delete element mutation
+  // Delete report element mutation
   const deleteElementMutation = useMutation({
     mutationFn: (elementId: string) => reportElementsAPI.delete(elementId),
     onSuccess: () => {
@@ -107,181 +88,92 @@ export default function ReportEditorPage() {
     },
   });
 
-  // Add new markdown element
-  const handleAddMarkdownElement = () => {
-    const position = sortedElements.length;
-    const defaultContent = '# New section\n\nStart typing...';
+  // Update report element mutation
+  const updateElementMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) =>
+      reportElementsAPI.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
+    },
+  });
 
-    createElementMutation.mutate({
-      report_id: reportId!,
-      label: 'Markdown section',
-      type: 'markdown',
-      markdown_content: defaultContent,
-      position,
+  // Handle element updates
+  const handleUpdateElement = async (elementId: string, content: string) => {
+    await updateElementMutation.mutateAsync({
+      id: elementId,
+      data: { markdown_content: content },
     });
   };
 
-  // Handle LLM data element creation with direct aggregates
-  const handleCreateLLMDataElement = async (
-    aggregates: any[],
-    explanation?: string
-  ) => {
-    try {
-      const position = sortedElements.length;
-
-      // Get model_version_id from the first simulation
-      let model_version_id: string | undefined;
-      const firstSimulationId = aggregates[0]?.simulation_id;
-      if (firstSimulationId) {
-        try {
-          const simulation = await simulationsAPI.get(firstSimulationId);
-          model_version_id = simulation.model_version_id;
-        } catch (error) {
-          console.warn('Could not fetch simulation for model_version_id:', error);
-        }
-      }
-
-      // Create label based on data
-      let label = explanation || 'Data analysis';
-
-      console.log('Creating report element with LLM aggregates:');
-      console.log('Number of aggregates:', aggregates.length);
-      console.log('Aggregates:', JSON.stringify(aggregates, null, 2));
-      console.log('Full payload:', {
-        label,
-        type: 'data',
-        data_type: 'Aggregate',
-        data: aggregates,
-        chart_type: 'table',
-        model_version_id,
-        report_id: reportId!,
-        position,
-      });
-
-      // Create the report element with aggregates - always as table initially
-      const response = await reportElementsAPI.create({
-        label,
-        type: 'data',
-        data_type: 'Aggregate',
-        data: aggregates,
-        chart_type: 'table',
-        x_axis_variable: null,
-        y_axis_variable: null,
-        model_version_id,
-        report_id: reportId!,
-        position,
-      });
-
-      console.log('Report element created with LLM aggregates:', response);
-
-      // Refresh the report elements
-      queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
-      setLlmModalOpened(false);
-    } catch (error: any) {
-      console.error('Failed to create LLM data element:', error);
-      console.error('Error response:', error.response?.data);
-      alert(`Failed to create data element: ${error.response?.data?.detail || error.message}`);
+  // Handle element deletion
+  const handleDeleteElement = async (elementId: string) => {
+    if (window.confirm('Are you sure you want to delete this element?')) {
+      await deleteElementMutation.mutateAsync(elementId);
     }
   };
 
-  // Handle data element creation
-  const handleCreateDataElement = async (config: DataElementConfig) => {
+  // Handle moving elements up/down
+  const handleMoveUp = async (index: number) => {
+    if (index === 0) return;
+    const element = sortedElements[index];
+    const prevElement = sortedElements[index - 1];
+
+    await Promise.all([
+      updateElementMutation.mutateAsync({
+        id: element.id,
+        data: { position: prevElement.position },
+      }),
+      updateElementMutation.mutateAsync({
+        id: prevElement.id,
+        data: { position: element.position },
+      }),
+    ]);
+  };
+
+  const handleMoveDown = async (index: number) => {
+    if (index === sortedElements.length - 1) return;
+    const element = sortedElements[index];
+    const nextElement = sortedElements[index + 1];
+
+    await Promise.all([
+      updateElementMutation.mutateAsync({
+        id: element.id,
+        data: { position: nextElement.position },
+      }),
+      updateElementMutation.mutateAsync({
+        id: nextElement.id,
+        data: { position: element.position },
+      }),
+    ]);
+  };
+
+  // Handle unified data element creation
+  const handleCreateDataElement = async (
+    aggregates: any[],
+    aggregateChanges: any[],
+    explanation?: string
+  ) => {
+    setDataModalOpened(false); // Close modal immediately
+    setIsCreatingElement(true); // Show loading state
+
     try {
       const position = sortedElements.length;
+      const label = explanation || 'Data analysis';
 
-      // Always create as table initially
-      let label = 'Data analysis';
-      let chart_type = 'table';
+      // Determine data type based on which array has content
+      const isComparison = aggregateChanges.length > 0;
+      const dataType = isComparison ? 'AggregateChange' : 'Aggregate';
+      const data = isComparison ? aggregateChanges : aggregates;
 
-      // Build aggregate inputs based on visualization type
-      const aggregateInputs: any[] = [];
-
-      if (config.visualizationType === 'metric_card') {
-        // Single aggregate for metric card
-        aggregateInputs.push({
-          simulation_id: config.metricSimulation!,
-          entity: config.entity,
-          variable_name: config.metricVariable!,
-          aggregate_function: config.metricAggregation!,
-          year: null,
-          filter_variable_name: config.filterVariableName || null,
-          filter_variable_value: config.filterVariableValue || null,
-          filter_variable_leq: config.filterVariableLeq || null,
-          filter_variable_geq: config.filterVariableGeq || null,
-        });
-      } else if (config.visualizationType === 'table') {
-        // Create aggregate for each cell (simulation x variable)
-        for (const simulationId of config.tableRows || []) {
-          for (const variable of config.tableColumns || []) {
-            aggregateInputs.push({
-              simulation_id: simulationId,
-              entity: config.entity,
-              variable_name: variable,
-              aggregate_function: config.tableAggregation!,
-              year: null,
-              filter_variable_name: config.filterVariableName || null,
-              filter_variable_value: config.filterVariableValue || null,
-              filter_variable_leq: config.filterVariableLeq || null,
-              filter_variable_geq: config.filterVariableGeq || null,
-            });
-          }
-        }
-      } else if (config.visualizationType === 'bar_chart') {
-        // Create aggregates for bar chart
-        for (const simulationId of config.barSimulations || []) {
-          for (const variable of config.barVariables || []) {
-            aggregateInputs.push({
-              simulation_id: simulationId,
-              entity: config.entity,
-              variable_name: variable,
-              aggregate_function: config.barAggregation!,
-              year: null,
-              filter_variable_name: config.filterVariableName || null,
-              filter_variable_value: config.filterVariableValue || null,
-              filter_variable_leq: config.filterVariableLeq || null,
-              filter_variable_geq: config.filterVariableGeq || null,
-            });
-          }
-        }
-      } else if (config.visualizationType === 'line_chart') {
-        if (config.lineXAxis === 'year') {
-          // Time series: create aggregate for each year
-          for (const simulationId of config.lineSimulations || []) {
-            for (const year of config.lineYears || [2024, 2025, 2026]) {
-              aggregateInputs.push({
-                simulation_id: simulationId,
-                entity: config.entity,
-                variable_name: config.lineVariable!,
-                aggregate_function: config.lineAggregation!,
-                year: year,
-                filter_variable_name: config.filterVariableName || null,
-                filter_variable_value: config.filterVariableValue || null,
-                filter_variable_leq: config.filterVariableLeq || null,
-                filter_variable_geq: config.filterVariableGeq || null,
-              });
-            }
-          }
-        } else {
-          // Simulations on X-axis
-          for (const simulationId of config.lineSimulations || []) {
-            aggregateInputs.push({
-              simulation_id: simulationId,
-              entity: config.entity,
-              variable_name: config.lineVariable!,
-              aggregate_function: config.lineAggregation!,
-              year: null,
-              filter_variable_name: config.filterVariableName || null,
-              filter_variable_value: config.filterVariableValue || null,
-              filter_variable_leq: config.filterVariableLeq || null,
-              filter_variable_geq: config.filterVariableGeq || null,
-            });
-          }
-        }
-      }
+      console.log('Creating data element with:');
+      console.log('Data type:', dataType);
+      console.log('Number of items:', data.length);
+      console.log('Data:', data);
+      console.log('Explanation:', explanation);
 
       // Get model_version_id from the first simulation
       let model_version_id: string | undefined;
-      const firstSimulationId = aggregateInputs[0]?.simulation_id;
+      const firstSimulationId = data[0]?.simulation_id || data[0]?.baseline_simulation_id;
       if (firstSimulationId) {
         try {
           const simulation = await simulationsAPI.get(firstSimulationId);
@@ -291,165 +183,109 @@ export default function ReportEditorPage() {
         }
       }
 
-      console.log('Creating report element with aggregates:', {
+      // First, create the report element
+      const elementPayload = {
         label,
         type: 'data',
-        data_type: 'Aggregate',
-        data: aggregateInputs,
-        chart_type,
+        data_type: dataType,
+        data: data,  // This should trigger aggregate creation in backend
+        data_table: isComparison ? 'aggregate_changes' : 'aggregates',
+        chart_type: 'table',
         x_axis_variable: null,
         y_axis_variable: null,
         model_version_id,
         report_id: reportId!,
         position,
-      });
+      };
 
-      // Create the report element with aggregates in the data field
-      // The API will process them automatically
-      const response = await reportElementsAPI.create({
-        label,
-        type: 'data',
-        data_type: 'Aggregate',
-        data: aggregateInputs,
-        chart_type,
-        x_axis_variable: null,
-        y_axis_variable: null,
-        model_version_id,
-        report_id: reportId!,
-        position,
-      });
-
-      console.log('Report element created with processed aggregates:', response);
+      console.log('Creating report element with payload:', elementPayload);
+      const response = await reportElementsAPI.create(elementPayload);
+      console.log('Report element created:', response);
 
       // Refresh the report elements
-      queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
-      setDataModalOpened(false);
+      await queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
+      console.log('Queries invalidated');
     } catch (error: any) {
       console.error('Failed to create data element:', error);
       console.error('Error response:', error.response?.data);
       alert(`Failed to create data element: ${error.response?.data?.detail || error.message}`);
+    } finally {
+      setIsCreatingElement(false); // Clear loading state
     }
   };
 
-  // Update element content
-  const handleUpdateElement = (elementId: string, content: any) => {
-    // For markdown, we update the markdown_content field
-    const markdown_content = typeof content === 'string' ? content : content.text;
-    console.log('handleUpdateElement called with:', {
-      elementId,
-      content,
-      contentType: typeof content,
-      markdown_content
-    });
+  // Handle adding a markdown element
+  const handleAddMarkdownElement = async () => {
+    try {
+      const position = sortedElements.length;
+      console.log('Creating markdown element at position:', position);
 
-    const updateData = { markdown_content };
-    console.log('Passing to mutation:', { elementId, data: updateData });
+      const response = await reportElementsAPI.create({
+        label: 'Text',
+        type: 'markdown',
+        markdown_content: '# New section\n\nClick to edit this text...',
+        report_id: reportId!,
+        position,
+      });
 
-    updateElementMutation.mutate({ elementId, data: updateData });
-  };
-
-  // Delete element
-  const handleDeleteElement = (elementId: string) => {
-    if (confirm('Are you sure you want to delete this element?')) {
-      deleteElementMutation.mutate(elementId);
+      console.log('Markdown element created:', response);
+      await queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
+      console.log('Queries invalidated');
+    } catch (error: any) {
+      console.error('Failed to create markdown element:', error);
+      console.error('Error details:', error.response?.data);
+      alert(`Failed to create text element: ${error.response?.data?.detail || error.message}`);
     }
   };
 
-  // Move element up
-  const handleMoveUp = (index: number) => {
-    if (index === 0) return;
+  const isLoading = reportLoading || elementsLoading;
 
-    const newElements = [...sortedElements];
-    [newElements[index - 1], newElements[index]] = [newElements[index], newElements[index - 1]];
-
-    // Update positions
-    newElements.forEach((element, idx) => {
-      const currentPos = element.position ?? 0;
-      if (currentPos !== idx) {
-        updateElementMutation.mutate({
-          elementId: element.id,
-          data: { position: idx },
-        });
-      }
-    });
-  };
-
-  // Move element down
-  const handleMoveDown = (index: number) => {
-    if (index === sortedElements.length - 1) return;
-
-    const newElements = [...sortedElements];
-    [newElements[index], newElements[index + 1]] = [newElements[index + 1], newElements[index]];
-
-    // Update positions
-    newElements.forEach((element, idx) => {
-      const currentPos = element.position ?? 0;
-      if (currentPos !== idx) {
-        updateElementMutation.mutate({
-          elementId: element.id,
-          data: { position: idx },
-        });
-      }
-    });
-  };
-
-  if (reportLoading || elementsLoading) {
+  if (!reportId) {
     return (
-      <Center style={{ height: '100vh' }}>
-        <Loader size="lg" />
-      </Center>
-    );
-  }
-
-  if (reportError || elementsError) {
-    return (
-      <Container size="lg" py="xl">
-        <Text color="red">Error loading report. Please try again.</Text>
-        <Button mt="md" onClick={() => navigate('/reports')}>
-          Back to reports
-        </Button>
+      <Container size="md" py="xl">
+        <Text>Invalid report ID</Text>
       </Container>
     );
   }
 
   return (
-    <Container size="lg" py="xl">
-      <Stack gap="lg">
+    <Container size="md" py="xl">
+      <LoadingOverlay
+        visible={isLoading}
+        zIndex={1000}
+        overlayProps={{ radius: "sm", blur: 2 }}
+        loaderProps={{ size: "lg" }}
+      />
+
+      <Stack gap="xl">
         {/* Header */}
         <Group justify="space-between">
           <Group>
             <ActionIcon variant="subtle" onClick={() => navigate('/reports')}>
-              <IconArrowLeft size={20} />
+              <IconChevronLeft size={20} />
             </ActionIcon>
-            <div>
-              <Title order={2}>{report?.label || `Report ${reportId?.slice(0, 8)}`}</Title>
-              <Text size="sm" color="dimmed">
-                {sortedElements.length} element{sortedElements.length !== 1 ? 's' : ''}
-              </Text>
-            </div>
+            <Stack gap={4}>
+              <Title order={2}>{report?.label || 'Untitled report'}</Title>
+              {report?.description && (
+                <Text size="sm" c="dimmed">
+                  {report.description}
+                </Text>
+              )}
+            </Stack>
           </Group>
           <Group>
-            {isSaving && (
-              <Group gap="xs">
-                <Loader size="xs" />
-                <Text size="sm" color="dimmed">
-                  Saving...
-                </Text>
-              </Group>
-            )}
             <Menu shadow="md" width={200}>
               <Menu.Target>
-                <Button leftSection={<IconPlus size={16} />}>Add element</Button>
+                <Button rightSection={<IconChevronDown size={14} />}>
+                  Add element
+                </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item onClick={() => setLlmModalOpened(true)} leftSection={<IconChartBar size={14} />}>
-                  Data analysis (AI)
+                <Menu.Item onClick={() => setDataModalOpened(true)} leftSection={<IconChartBar size={14} />}>
+                  Data analysis
                 </Menu.Item>
                 <Menu.Item onClick={handleAddMarkdownElement} leftSection={<IconMarkdown size={14} />}>
-                  Markdown text
-                </Menu.Item>
-                <Menu.Item onClick={() => setDataModalOpened(true)} leftSection={<IconChartBar size={14} />}>
-                  Data analysis (manual)
+                  Text block
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
@@ -466,11 +302,11 @@ export default function ReportEditorPage() {
               Add your first element to get started
             </Text>
             <Group>
-              <Button onClick={() => setLlmModalOpened(true)} leftSection={<IconChartBar size={14} />}>
+              <Button onClick={() => setDataModalOpened(true)} leftSection={<IconChartBar size={14} />}>
                 Add data analysis
               </Button>
               <Button onClick={handleAddMarkdownElement} leftSection={<IconMarkdown size={14} />}>
-                Add markdown element
+                Add text block
               </Button>
             </Group>
           </Paper>
@@ -488,6 +324,18 @@ export default function ReportEditorPage() {
                 }
               />
             ))}
+
+            {/* Loading indicator for new element */}
+            {isCreatingElement && (
+              <Paper p="xl" withBorder style={{ textAlign: 'center' }}>
+                <Stack align="center" gap="md">
+                  <Loader size="lg" />
+                  <Text size="sm" c="dimmed">
+                    Creating your data analysis...
+                  </Text>
+                </Stack>
+              </Paper>
+            )}
           </Stack>
         )}
 
@@ -497,7 +345,7 @@ export default function ReportEditorPage() {
             <Group>
               <Button
                 variant="subtle"
-                onClick={() => setLlmModalOpened(true)}
+                onClick={() => setDataModalOpened(true)}
                 leftSection={<IconChartBar size={14} />}
               >
                 Add data
@@ -507,26 +355,18 @@ export default function ReportEditorPage() {
                 onClick={handleAddMarkdownElement}
                 leftSection={<IconMarkdown size={14} />}
               >
-                Add markdown
+                Add text
               </Button>
             </Group>
           </Center>
         )}
       </Stack>
 
-      {/* Data Element Creation Modal */}
-      <DataElementCreationModal
+      {/* Data Analysis Modal */}
+      <DataAnalysisModal
         opened={dataModalOpened}
         onClose={() => setDataModalOpened(false)}
         onSubmit={handleCreateDataElement}
-        reportId={reportId!}
-      />
-
-      {/* LLM Data Element Creation Modal */}
-      <DataElementCreationModalLLM
-        opened={llmModalOpened}
-        onClose={() => setLlmModalOpened(false)}
-        onSubmit={handleCreateLLMDataElement}
         reportId={reportId!}
       />
     </Container>

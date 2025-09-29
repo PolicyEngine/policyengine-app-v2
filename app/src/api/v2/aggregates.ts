@@ -10,6 +10,9 @@ export interface AggregateTable {
   filter_variable_value?: string | null;
   filter_variable_leq?: number | null;
   filter_variable_geq?: number | null;
+  filter_variable_quantile_leq?: number | null;
+  filter_variable_quantile_geq?: number | null;
+  filter_variable_quantile_value?: string | null;
   aggregate_function: string;
   reportelement_id?: string | null;
   value?: number | null;
@@ -44,7 +47,7 @@ class AggregatesAPI {
   }
 
   async getByReportElement(reportElementId: string): Promise<AggregateTable[]> {
-    return apiClient.get<AggregateTable[]>(`/report-elements/${reportElementId}/aggregates`);
+    return apiClient.get<AggregateTable[]>(`/aggregates/by-report-element/${reportElementId}`);
   }
 
   async update(aggregateId: string, data: Partial<AggregateTable>): Promise<AggregateTable> {

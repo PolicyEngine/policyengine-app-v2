@@ -27,6 +27,7 @@ export interface ReportElementCreate {
   markdown_content?: string; // For markdown elements
   data_type?: string;
   data?: any; // For aggregate inputs
+  data_table?: string; // 'aggregates' or 'aggregate_changes'
   chart_type?: string;
   x_axis_variable?: string;
   y_axis_variable?: string;
@@ -72,6 +73,7 @@ class ReportElementsAPI {
       report_id: data.report_id,
       data_type: data.data_type,
       data: data.data,
+      data_table: data.data_table,
       position: data.position,
       chart_type: data.chart_type,
       x_axis_variable: data.x_axis_variable,
@@ -117,6 +119,15 @@ class ReportElementsAPI {
     );
 
     console.log('PATCH response:', response);
+    return response;
+  }
+
+  async getByReport(reportId: string): Promise<ReportElement[]> {
+    console.log('Fetching report elements for report:', reportId);
+    const response = await apiClient.get<ReportElement[]>(`/report-elements/`, {
+      params: { report_id: reportId }
+    });
+    console.log('Report elements response:', response);
     return response;
   }
 
