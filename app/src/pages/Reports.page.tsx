@@ -114,6 +114,8 @@ export default function ReportsPage() {
     },
   ];
 
+  console.log('User Reports Data:', data);
+
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
