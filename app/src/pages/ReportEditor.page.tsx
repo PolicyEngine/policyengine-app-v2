@@ -32,6 +32,7 @@ import { aggregatesAPI, AggregateTable } from '@/api/v2/aggregates';
 import { simulationsAPI } from '@/api/v2/simulations';
 import ReportElementCell from '@/components/report/ReportElementCell';
 import DataElementCreationModal, { DataElementConfig } from '@/components/report/DataElementCreationModal';
+import DataElementCreationModalLLM from '@/components/report/DataElementCreationModalLLM';
 
 export default function ReportEditorPage() {
   const { reportId } = useParams<{ reportId: string }>();
@@ -39,6 +40,7 @@ export default function ReportEditorPage() {
   const queryClient = useQueryClient();
   const [isSaving, setIsSaving] = useState(false);
   const [dataModalOpened, setDataModalOpened] = useState(false);
+  const [llmModalOpened, setLlmModalOpened] = useState(false);
 
   // Fetch report details
   const {
@@ -119,32 +121,77 @@ export default function ReportEditorPage() {
     });
   };
 
+  // Handle LLM data element creation with direct aggregates
+  const handleCreateLLMDataElement = async (
+    aggregates: any[],
+    explanation?: string
+  ) => {
+    try {
+      const position = sortedElements.length;
+
+      // Get model_version_id from the first simulation
+      let model_version_id: string | undefined;
+      const firstSimulationId = aggregates[0]?.simulation_id;
+      if (firstSimulationId) {
+        try {
+          const simulation = await simulationsAPI.get(firstSimulationId);
+          model_version_id = simulation.model_version_id;
+        } catch (error) {
+          console.warn('Could not fetch simulation for model_version_id:', error);
+        }
+      }
+
+      // Create label based on data
+      let label = explanation || 'Data analysis';
+
+      console.log('Creating report element with LLM aggregates:');
+      console.log('Number of aggregates:', aggregates.length);
+      console.log('Aggregates:', JSON.stringify(aggregates, null, 2));
+      console.log('Full payload:', {
+        label,
+        type: 'data',
+        data_type: 'Aggregate',
+        data: aggregates,
+        chart_type: 'table',
+        model_version_id,
+        report_id: reportId!,
+        position,
+      });
+
+      // Create the report element with aggregates - always as table initially
+      const response = await reportElementsAPI.create({
+        label,
+        type: 'data',
+        data_type: 'Aggregate',
+        data: aggregates,
+        chart_type: 'table',
+        x_axis_variable: null,
+        y_axis_variable: null,
+        model_version_id,
+        report_id: reportId!,
+        position,
+      });
+
+      console.log('Report element created with LLM aggregates:', response);
+
+      // Refresh the report elements
+      queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
+      setLlmModalOpened(false);
+    } catch (error: any) {
+      console.error('Failed to create LLM data element:', error);
+      console.error('Error response:', error.response?.data);
+      alert(`Failed to create data element: ${error.response?.data?.detail || error.message}`);
+    }
+  };
+
   // Handle data element creation
   const handleCreateDataElement = async (config: DataElementConfig) => {
     try {
       const position = sortedElements.length;
 
-      // Determine label based on visualization type
-      let label = 'Data visualization';
-      // Use the exact visualization type for chart_type
-      let chart_type = config.visualizationType; // 'bar_chart' or 'line_chart'
-      let x_axis_variable = '';
-      let y_axis_variable = '';
-
-      if (config.visualizationType === 'metric_card') {
-        label = `Metric: ${config.metricVariable}`;
-        y_axis_variable = config.metricVariable || '';
-      } else if (config.visualizationType === 'table') {
-        label = `Table: ${config.tableColumns?.length || 0} variables`;
-      } else if (config.visualizationType === 'bar_chart') {
-        label = `Bar chart: ${config.barVariables?.join(', ')}`;
-        x_axis_variable = config.barXAxis === 'simulations' ? 'simulation_id' : 'variable_name';
-        y_axis_variable = config.barVariables?.[0] || '';
-      } else if (config.visualizationType === 'line_chart') {
-        label = `Line chart: ${config.lineVariable}`;
-        x_axis_variable = config.lineXAxis === 'year' ? 'year' : 'simulation_id';
-        y_axis_variable = config.lineVariable || '';
-      }
+      // Always create as table initially
+      let label = 'Data analysis';
+      let chart_type = 'table';
 
       // Build aggregate inputs based on visualization type
       const aggregateInputs: any[] = [];
@@ -250,8 +297,8 @@ export default function ReportEditorPage() {
         data_type: 'Aggregate',
         data: aggregateInputs,
         chart_type,
-        x_axis_variable,
-        y_axis_variable,
+        x_axis_variable: null,
+        y_axis_variable: null,
         model_version_id,
         report_id: reportId!,
         position,
@@ -265,8 +312,8 @@ export default function ReportEditorPage() {
         data_type: 'Aggregate',
         data: aggregateInputs,
         chart_type,
-        x_axis_variable,
-        y_axis_variable,
+        x_axis_variable: null,
+        y_axis_variable: null,
         model_version_id,
         report_id: reportId!,
         position,
@@ -395,11 +442,14 @@ export default function ReportEditorPage() {
                 <Button leftSection={<IconPlus size={16} />}>Add element</Button>
               </Menu.Target>
               <Menu.Dropdown>
+                <Menu.Item onClick={() => setLlmModalOpened(true)} leftSection={<IconChartBar size={14} />}>
+                  Data analysis (AI)
+                </Menu.Item>
                 <Menu.Item onClick={handleAddMarkdownElement} leftSection={<IconMarkdown size={14} />}>
                   Markdown text
                 </Menu.Item>
                 <Menu.Item onClick={() => setDataModalOpened(true)} leftSection={<IconChartBar size={14} />}>
-                  Data analysis
+                  Data analysis (manual)
                 </Menu.Item>
               </Menu.Dropdown>
             </Menu>
@@ -416,11 +466,11 @@ export default function ReportEditorPage() {
               Add your first element to get started
             </Text>
             <Group>
+              <Button onClick={() => setLlmModalOpened(true)} leftSection={<IconChartBar size={14} />}>
+                Add data analysis
+              </Button>
               <Button onClick={handleAddMarkdownElement} leftSection={<IconMarkdown size={14} />}>
                 Add markdown element
-              </Button>
-              <Button onClick={() => setDataModalOpened(true)} leftSection={<IconChartBar size={14} />}>
-                Add data analysis
               </Button>
             </Group>
           </Paper>
@@ -447,17 +497,17 @@ export default function ReportEditorPage() {
             <Group>
               <Button
                 variant="subtle"
+                onClick={() => setLlmModalOpened(true)}
+                leftSection={<IconChartBar size={14} />}
+              >
+                Add data
+              </Button>
+              <Button
+                variant="subtle"
                 onClick={handleAddMarkdownElement}
                 leftSection={<IconMarkdown size={14} />}
               >
                 Add markdown
-              </Button>
-              <Button
-                variant="subtle"
-                onClick={() => setDataModalOpened(true)}
-                leftSection={<IconChartBar size={14} />}
-              >
-                Add data
               </Button>
             </Group>
           </Center>
@@ -469,6 +519,14 @@ export default function ReportEditorPage() {
         opened={dataModalOpened}
         onClose={() => setDataModalOpened(false)}
         onSubmit={handleCreateDataElement}
+        reportId={reportId!}
+      />
+
+      {/* LLM Data Element Creation Modal */}
+      <DataElementCreationModalLLM
+        opened={llmModalOpened}
+        onClose={() => setLlmModalOpened(false)}
+        onSubmit={handleCreateLLMDataElement}
         reportId={reportId!}
       />
     </Container>

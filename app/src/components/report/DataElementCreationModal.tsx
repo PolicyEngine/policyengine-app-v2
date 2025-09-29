@@ -11,49 +11,61 @@ import {
   SimpleGrid,
   Box,
   LoadingOverlay,
-  Tabs,
   NumberInput,
   Title,
-  Badge,
+  Radio,
+  Divider,
 } from '@mantine/core';
-import { IconChartBar, IconTable, IconHash, IconChartLine, IconDatabase } from '@tabler/icons-react';
+import { IconChartBar, IconTable, IconHash, IconChartLine } from '@tabler/icons-react';
 import BaseModal from '@/components/shared/BaseModal';
 import { simulationsAPI } from '@/api/v2/simulations';
 import { baselineVariablesAPI, BaselineVariableTable } from '@/api/v2/baselineVariables';
 
 export type VisualizationType = 'table' | 'bar_chart' | 'line_chart' | 'metric_card';
 export type AggregateFunction = 'mean' | 'sum' | 'median' | 'count' | 'min' | 'max';
+export type AxisType = 'simulations' | 'single_variable_filtered' | 'multiple_variables';
+export type ComparisonType = 'absolute' | 'change' | 'relative_change';
+
+interface AxisConfig {
+  type: AxisType;
+  simulations?: string[];
+  variable?: string;
+  variables?: string[];
+  filterMin?: number;
+  filterMax?: number;
+}
 
 export interface DataElementConfig {
   visualizationType: VisualizationType;
 
+  // Common fields
+  entity: string;
+  aggregation: AggregateFunction;
+  comparisonType?: ComparisonType;
+
   // For metric card
   metricSimulation?: string;
   metricVariable?: string;
+
+  // For charts and tables
+  xAxis?: AxisConfig;
+  yAxis?: AxisConfig;
+
+  // Legacy fields for backward compatibility
   metricAggregation?: AggregateFunction;
-
-  // For table
-  tableRows?: string[]; // simulation ids
-  tableColumns?: string[]; // variable names
+  tableRows?: string[];
+  tableColumns?: string[];
   tableAggregation?: AggregateFunction;
-
-  // For bar chart
   barXAxis?: 'simulations' | 'variables';
   barSimulations?: string[];
   barVariables?: string[];
   barAggregation?: AggregateFunction;
-
-  // For line chart
   lineXAxis?: 'year' | 'simulations';
   lineSimulations?: string[];
   lineVariable?: string;
   lineAggregation?: AggregateFunction;
   lineYears?: number[];
-
-  // Common fields
-  entity: string;
   filterVariableName?: string;
-  filterVariableValue?: string;
   filterVariableLeq?: number;
   filterVariableGeq?: number;
 }
@@ -71,18 +83,28 @@ export default function DataElementCreationModal({
   onSubmit,
   reportId,
 }: DataElementCreationModalProps) {
-  const [activeTab, setActiveTab] = useState<string | null>('visualization');
-  const [config, setConfig] = useState<Partial<DataElementConfig>>({
-    entity: 'person',
-  });
+  const [visualizationType, setVisualizationType] = useState<VisualizationType | null>(null);
+  const [xAxisConfig, setXAxisConfig] = useState<AxisConfig>({ type: 'simulations' });
+  const [yAxisConfig, setYAxisConfig] = useState<AxisConfig>({ type: 'single_variable_filtered' });
+  const [entity, setEntity] = useState<string>('person');
+  const [aggregation, setAggregation] = useState<AggregateFunction>('mean');
+  const [comparisonType, setComparisonType] = useState<ComparisonType>('absolute');
+
+  // For metric card
+  const [metricSimulation, setMetricSimulation] = useState<string>('');
+  const [metricVariable, setMetricVariable] = useState<string>('');
 
   // Reset form when modal opens/closes
   useEffect(() => {
     if (opened) {
-      setActiveTab('visualization');
-      setConfig({
-        entity: 'person',
-      });
+      setVisualizationType(null);
+      setXAxisConfig({ type: 'simulations' });
+      setYAxisConfig({ type: 'single_variable_filtered' });
+      setEntity('person');
+      setAggregation('mean');
+      setComparisonType('absolute');
+      setMetricSimulation('');
+      setMetricVariable('');
     }
   }, [opened]);
 
@@ -100,448 +122,432 @@ export default function DataElementCreationModal({
     enabled: opened,
   });
 
-  const handleComplete = () => {
-    if (isConfigComplete()) {
-      onSubmit(config as DataElementConfig);
-      onClose();
+  const isLoading = simulationsLoading || variablesLoading;
+
+  // Filter variables by entity - the 'id' field is the variable name
+  let filteredVariables = baselineVariables?.filter(v => {
+    return v.id && v.entity === entity;
+  }) || [];
+
+  // If no variables for this entity, show all variables
+  if (filteredVariables.length === 0 && baselineVariables && baselineVariables.length > 0) {
+    filteredVariables = baselineVariables.filter(v => v.id) || [];
+  }
+
+  const variableOptions = filteredVariables.map(v => ({
+    value: v.id,
+    label: v.label || v.id,
+  }));
+
+  // Simulation options
+  const simulationOptions = simulations?.filter(s => s.id).map(s => ({
+    value: s.id || '',
+    label: s.label || `Simulation ${s.id?.slice(0, 8) || ''}`,
+  })).filter(opt => opt.value) || [];
+
+  const aggregationOptions = [
+    { value: 'mean', label: 'Mean' },
+    { value: 'sum', label: 'Sum' },
+    { value: 'median', label: 'Median' },
+    { value: 'count', label: 'Count' },
+    { value: 'min', label: 'Minimum' },
+    { value: 'max', label: 'Maximum' },
+  ];
+
+  const handleVisualizationSelect = (type: VisualizationType) => {
+    setVisualizationType(type);
+
+    // Set default axis configurations based on visualization type
+    if (type === 'table') {
+      setXAxisConfig({ type: 'simulations' });
+      setYAxisConfig({ type: 'multiple_variables' });
+    } else if (type === 'bar_chart') {
+      setXAxisConfig({ type: 'simulations' });
+      setYAxisConfig({ type: 'single_variable_filtered' });
+    } else if (type === 'line_chart') {
+      setXAxisConfig({ type: 'simulations' });
+      setYAxisConfig({ type: 'single_variable_filtered' });
     }
   };
 
-  const isConfigComplete = () => {
-    switch (config.visualizationType) {
-      case 'metric_card':
-        return !!(config.metricSimulation && config.metricVariable && config.metricAggregation);
-      case 'table':
-        return !!(config.tableRows?.length && config.tableColumns?.length && config.tableAggregation);
-      case 'bar_chart':
-        return !!(config.barSimulations?.length && config.barVariables?.length && config.barAggregation);
-      case 'line_chart':
-        return !!(config.lineSimulations?.length && config.lineVariable && config.lineAggregation);
-      default:
-        return false;
+  const renderVisualizationSelection = () => (
+    <Stack>
+      <Title order={4}>Choose visualisation type</Title>
+      <SimpleGrid cols={2}>
+        <Card
+          padding="lg"
+          style={{
+            cursor: 'pointer',
+            border: visualizationType === 'metric_card' ? '2px solid var(--mantine-color-blue-6)' : undefined,
+          }}
+          onClick={() => handleVisualizationSelect('metric_card')}
+        >
+          <Stack align="center" gap="sm">
+            <IconHash size={32} />
+            <Text fw={500}>Single metric</Text>
+            <Text size="xs" c="dimmed" ta="center">
+              Display one key value
+            </Text>
+          </Stack>
+        </Card>
+
+        <Card
+          padding="lg"
+          style={{
+            cursor: 'pointer',
+            border: visualizationType === 'table' ? '2px solid var(--mantine-color-blue-6)' : undefined,
+          }}
+          onClick={() => handleVisualizationSelect('table')}
+        >
+          <Stack align="center" gap="sm">
+            <IconTable size={32} />
+            <Text fw={500}>Table</Text>
+            <Text size="xs" c="dimmed" ta="center">
+              Compare multiple values
+            </Text>
+          </Stack>
+        </Card>
+
+        <Card
+          padding="lg"
+          style={{
+            cursor: 'pointer',
+            border: visualizationType === 'bar_chart' ? '2px solid var(--mantine-color-blue-6)' : undefined,
+          }}
+          onClick={() => handleVisualizationSelect('bar_chart')}
+        >
+          <Stack align="center" gap="sm">
+            <IconChartBar size={32} />
+            <Text fw={500}>Bar chart</Text>
+            <Text size="xs" c="dimmed" ta="center">
+              Compare values visually
+            </Text>
+          </Stack>
+        </Card>
+
+        <Card
+          padding="lg"
+          style={{
+            cursor: 'pointer',
+            border: visualizationType === 'line_chart' ? '2px solid var(--mantine-color-blue-6)' : undefined,
+          }}
+          onClick={() => handleVisualizationSelect('line_chart')}
+        >
+          <Stack align="center" gap="sm">
+            <IconChartLine size={32} />
+            <Text fw={500}>Line chart</Text>
+            <Text size="xs" c="dimmed" ta="center">
+              Show trends
+            </Text>
+          </Stack>
+        </Card>
+      </SimpleGrid>
+    </Stack>
+  );
+
+  const renderAxisConfiguration = (
+    axis: 'x' | 'y',
+    config: AxisConfig,
+    setConfig: (config: AxisConfig) => void,
+    label: string
+  ) => (
+    <Stack>
+      <Divider label={label} labelPosition="left" />
+
+      <Radio.Group
+        label="Data type"
+        value={config.type}
+        onChange={(value) => setConfig({ ...config, type: value as AxisType })}
+      >
+        <Stack mt="xs">
+          <Radio value="simulations" label="Simulations" />
+          <Radio value="single_variable_filtered" label="Single variable (with value filters)" />
+          <Radio value="multiple_variables" label="Multiple variables" />
+        </Stack>
+      </Radio.Group>
+
+      {config.type === 'simulations' && (
+        <MultiSelect
+          label="Select simulations"
+          placeholder="Choose simulations"
+          data={simulationOptions}
+          value={config.simulations || []}
+          onChange={(value) => setConfig({ ...config, simulations: value })}
+          required
+        />
+      )}
+
+      {config.type === 'single_variable_filtered' && (
+        <>
+          <Select
+            label="Select variable"
+            placeholder="Choose variable"
+            data={variableOptions}
+            value={config.variable || ''}
+            onChange={(value) => setConfig({ ...config, variable: value || undefined })}
+            searchable
+            required
+          />
+          <Group grow>
+            <NumberInput
+              label="Min value (optional)"
+              placeholder="e.g., 0"
+              value={config.filterMin}
+              onChange={(value) => setConfig({ ...config, filterMin: typeof value === 'number' ? value : undefined })}
+            />
+            <NumberInput
+              label="Max value (optional)"
+              placeholder="e.g., 50000"
+              value={config.filterMax}
+              onChange={(value) => setConfig({ ...config, filterMax: typeof value === 'number' ? value : undefined })}
+            />
+          </Group>
+        </>
+      )}
+
+      {config.type === 'multiple_variables' && (
+        <MultiSelect
+          label="Select variables"
+          placeholder="Choose variables"
+          data={variableOptions}
+          value={config.variables || []}
+          onChange={(value) => setConfig({ ...config, variables: value })}
+          searchable
+          required
+        />
+      )}
+    </Stack>
+  );
+
+  const renderConfiguration = () => {
+    if (!visualizationType) return null;
+
+    if (visualizationType === 'metric_card') {
+      return (
+        <Stack>
+          <Title order={4}>Configure metric</Title>
+
+          <Select
+            label="Entity type"
+            data={[
+              { value: 'person', label: 'Person' },
+              { value: 'household', label: 'Household' },
+            ]}
+            value={entity}
+            onChange={(value) => setEntity(value || 'person')}
+          />
+
+          <Select
+            label="Simulation"
+            placeholder="Select simulation"
+            data={simulationOptions}
+            value={metricSimulation}
+            onChange={(value) => setMetricSimulation(value || '')}
+            required
+          />
+
+          <Select
+            label="Variable"
+            placeholder="Select variable"
+            data={variableOptions}
+            value={metricVariable}
+            onChange={(value) => setMetricVariable(value || '')}
+            searchable
+            required
+          />
+
+          <Select
+            label="Aggregation"
+            data={aggregationOptions}
+            value={aggregation}
+            onChange={(value) => setAggregation(value as AggregateFunction)}
+            required
+          />
+        </Stack>
+      );
     }
+
+    // For charts and tables
+    return (
+      <Stack>
+        <Title order={4}>Configure {visualizationType.replace('_', ' ')}</Title>
+
+        <Select
+          label="Entity type"
+          data={[
+            { value: 'person', label: 'Person' },
+            { value: 'household', label: 'Household' },
+          ]}
+          value={entity}
+          onChange={(value) => setEntity(value || 'person')}
+        />
+
+        <Select
+          label="Aggregation"
+          data={aggregationOptions}
+          value={aggregation}
+          onChange={(value) => setAggregation(value as AggregateFunction)}
+          required
+        />
+
+        {renderAxisConfiguration(
+          'x',
+          xAxisConfig,
+          setXAxisConfig,
+          visualizationType === 'table' ? 'Rows' : 'X-axis'
+        )}
+
+        {renderAxisConfiguration(
+          'y',
+          yAxisConfig,
+          setYAxisConfig,
+          visualizationType === 'table' ? 'Columns' : 'Y-axis / Values'
+        )}
+
+        {xAxisConfig.type === 'simulations' && xAxisConfig.simulations && xAxisConfig.simulations.length > 1 && (
+          <Select
+            label="Comparison type"
+            data={[
+              { value: 'absolute', label: 'Absolute values' },
+              { value: 'change', label: 'Change from baseline' },
+              { value: 'relative_change', label: 'Relative change (%)' },
+            ]}
+            value={comparisonType}
+            onChange={(value) => setComparisonType(value as ComparisonType)}
+          />
+        )}
+      </Stack>
+    );
   };
 
-  // Group baseline variables by entity
-  const variablesByEntity = baselineVariables?.reduce((acc, variable) => {
-    const entity = variable.entity;
-    if (!acc[entity]) acc[entity] = [];
-    acc[entity].push(variable);
-    return acc;
-  }, {} as Record<string, BaselineVariableTable[]>) || {};
+  const isConfigValid = () => {
+    if (!visualizationType) return false;
 
-  const getVariableOptions = () => {
-    const entity = config.entity || 'person';
-    return variablesByEntity[entity]?.map(v => ({
-      value: v.id,
-      label: v.label || v.id,
-    })) || [];
-  };
-
-  const getSimulationOptions = () => {
-    return simulations?.map(sim => ({
-      value: sim.id,
-      label: sim.label || `Simulation ${sim.id.slice(0, 8)}`,
-    })) || [];
-  };
-
-  const isDataLoading = simulationsLoading || variablesLoading;
-
-  const renderVisualizationConfig = () => {
-    switch (config.visualizationType) {
-      case 'metric_card':
-        return (
-          <Stack>
-            <Text size="sm" fw={500}>Configure metric display</Text>
-            <Select
-              label="Simulation"
-              placeholder="Select simulation"
-              data={getSimulationOptions()}
-              value={config.metricSimulation}
-              onChange={(value) => value && setConfig({ ...config, metricSimulation: value })}
-              searchable
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Entity type"
-              data={[
-                { value: 'person', label: 'Person' },
-                { value: 'household', label: 'Household' },
-                { value: 'tax_unit', label: 'Tax unit' },
-                { value: 'spm_unit', label: 'SPM unit' },
-              ]}
-              value={config.entity}
-              onChange={(value) => value && setConfig({ ...config, entity: value })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Variable"
-              placeholder="Select variable to display"
-              data={getVariableOptions()}
-              value={config.metricVariable}
-              onChange={(value) => value && setConfig({ ...config, metricVariable: value })}
-              searchable
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Aggregation"
-              data={[
-                { value: 'mean', label: 'Mean' },
-                { value: 'sum', label: 'Sum' },
-                { value: 'median', label: 'Median' },
-                { value: 'count', label: 'Count' },
-                { value: 'min', label: 'Minimum' },
-                { value: 'max', label: 'Maximum' },
-              ]}
-              value={config.metricAggregation}
-              onChange={(value) => value && setConfig({ ...config, metricAggregation: value as AggregateFunction })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-          </Stack>
-        );
-
-      case 'table':
-        return (
-          <Stack>
-            <Text size="sm" fw={500}>Configure table</Text>
-            <MultiSelect
-              label="Table rows (simulations)"
-              placeholder="Select simulations for rows"
-              data={getSimulationOptions()}
-              value={config.tableRows}
-              onChange={(value) => setConfig({ ...config, tableRows: value })}
-              searchable
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Entity type"
-              data={[
-                { value: 'person', label: 'Person' },
-                { value: 'household', label: 'Household' },
-                { value: 'tax_unit', label: 'Tax unit' },
-                { value: 'spm_unit', label: 'SPM unit' },
-              ]}
-              value={config.entity}
-              onChange={(value) => value && setConfig({ ...config, entity: value })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <MultiSelect
-              label="Table columns (variables)"
-              placeholder="Select variables for columns"
-              data={getVariableOptions()}
-              value={config.tableColumns}
-              onChange={(value) => setConfig({ ...config, tableColumns: value })}
-              searchable
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Aggregation for all cells"
-              data={[
-                { value: 'mean', label: 'Mean' },
-                { value: 'sum', label: 'Sum' },
-                { value: 'median', label: 'Median' },
-                { value: 'count', label: 'Count' },
-              ]}
-              value={config.tableAggregation}
-              onChange={(value) => value && setConfig({ ...config, tableAggregation: value as AggregateFunction })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-          </Stack>
-        );
-
-      case 'bar_chart':
-        return (
-          <Stack>
-            <Text size="sm" fw={500}>Configure bar chart</Text>
-            <Select
-              label="X-axis"
-              data={[
-                { value: 'simulations', label: 'Simulations' },
-                { value: 'variables', label: 'Variables' },
-              ]}
-              value={config.barXAxis}
-              onChange={(value) => value && setConfig({ ...config, barXAxis: value as 'simulations' | 'variables' })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <MultiSelect
-              label="Simulations"
-              placeholder="Select simulations to compare"
-              data={getSimulationOptions()}
-              value={config.barSimulations}
-              onChange={(value) => setConfig({ ...config, barSimulations: value })}
-              searchable
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Entity type"
-              data={[
-                { value: 'person', label: 'Person' },
-                { value: 'household', label: 'Household' },
-                { value: 'tax_unit', label: 'Tax unit' },
-                { value: 'spm_unit', label: 'SPM unit' },
-              ]}
-              value={config.entity}
-              onChange={(value) => value && setConfig({ ...config, entity: value })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <MultiSelect
-              label="Variables"
-              placeholder="Select variables to display"
-              data={getVariableOptions()}
-              value={config.barVariables}
-              onChange={(value) => setConfig({ ...config, barVariables: value })}
-              searchable
-              maxValues={config.barXAxis === 'simulations' ? 1 : undefined}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Aggregation"
-              data={[
-                { value: 'mean', label: 'Mean' },
-                { value: 'sum', label: 'Sum' },
-                { value: 'median', label: 'Median' },
-                { value: 'count', label: 'Count' },
-              ]}
-              value={config.barAggregation}
-              onChange={(value) => value && setConfig({ ...config, barAggregation: value as AggregateFunction })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-          </Stack>
-        );
-
-      case 'line_chart':
-        return (
-          <Stack>
-            <Text size="sm" fw={500}>Configure line chart</Text>
-            <Select
-              label="X-axis"
-              data={[
-                { value: 'year', label: 'Year (time series)' },
-                { value: 'simulations', label: 'Simulations' },
-              ]}
-              value={config.lineXAxis}
-              onChange={(value) => value && setConfig({ ...config, lineXAxis: value as 'year' | 'simulations' })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <MultiSelect
-              label="Simulations"
-              placeholder="Select simulations"
-              data={getSimulationOptions()}
-              value={config.lineSimulations}
-              onChange={(value) => setConfig({ ...config, lineSimulations: value })}
-              searchable
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Entity type"
-              data={[
-                { value: 'person', label: 'Person' },
-                { value: 'household', label: 'Household' },
-                { value: 'tax_unit', label: 'Tax unit' },
-                { value: 'spm_unit', label: 'SPM unit' },
-              ]}
-              value={config.entity}
-              onChange={(value) => value && setConfig({ ...config, entity: value })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            <Select
-              label="Variable"
-              placeholder="Select variable to plot"
-              data={getVariableOptions()}
-              value={config.lineVariable}
-              onChange={(value) => value && setConfig({ ...config, lineVariable: value })}
-              searchable
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-            {config.lineXAxis === 'year' && (
-              <MultiSelect
-                label="Years"
-                placeholder="Select years"
-                data={[
-                  { value: '2023', label: '2023' },
-                  { value: '2024', label: '2024' },
-                  { value: '2025', label: '2025' },
-                  { value: '2026', label: '2026' },
-                  { value: '2027', label: '2027' },
-                  { value: '2028', label: '2028' },
-                ]}
-                value={config.lineYears?.map(y => y.toString())}
-                onChange={(value) => setConfig({ ...config, lineYears: value.map(v => parseInt(v)) })}
-                styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-              />
-            )}
-            <Select
-              label="Aggregation"
-              data={[
-                { value: 'mean', label: 'Mean' },
-                { value: 'sum', label: 'Sum' },
-                { value: 'median', label: 'Median' },
-              ]}
-              value={config.lineAggregation}
-              onChange={(value) => value && setConfig({ ...config, lineAggregation: value as AggregateFunction })}
-              styles={{ label: { fontSize: 14, fontWeight: 500, color: '#344054' } }}
-            />
-          </Stack>
-        );
-
-      default:
-        return null;
+    if (visualizationType === 'metric_card') {
+      return !!(metricSimulation && metricVariable);
     }
+
+    // For charts and tables
+    const xValid =
+      (xAxisConfig.type === 'simulations' && xAxisConfig.simulations && xAxisConfig.simulations.length > 0) ||
+      (xAxisConfig.type === 'single_variable_filtered' && xAxisConfig.variable) ||
+      (xAxisConfig.type === 'multiple_variables' && xAxisConfig.variables && xAxisConfig.variables.length > 0);
+
+    const yValid =
+      (yAxisConfig.type === 'simulations' && yAxisConfig.simulations && yAxisConfig.simulations.length > 0) ||
+      (yAxisConfig.type === 'single_variable_filtered' && yAxisConfig.variable) ||
+      (yAxisConfig.type === 'multiple_variables' && yAxisConfig.variables && yAxisConfig.variables.length > 0);
+
+    return xValid && yValid;
+  };
+
+  const handleSubmit = () => {
+    if (!isConfigValid() || !visualizationType) return;
+
+    // Build config object with legacy fields for compatibility
+    const config: DataElementConfig = {
+      visualizationType,
+      entity,
+      aggregation,
+      comparisonType,
+    };
+
+    if (visualizationType === 'metric_card') {
+      config.metricSimulation = metricSimulation;
+      config.metricVariable = metricVariable;
+      config.metricAggregation = aggregation;
+    } else {
+      // Store new axis configs
+      config.xAxis = xAxisConfig;
+      config.yAxis = yAxisConfig;
+
+      // Map to legacy fields for backward compatibility
+      if (visualizationType === 'table') {
+        config.tableAggregation = aggregation;
+        if (xAxisConfig.type === 'simulations') {
+          config.tableRows = xAxisConfig.simulations;
+        }
+        if (yAxisConfig.type === 'multiple_variables') {
+          config.tableColumns = yAxisConfig.variables;
+        }
+      } else if (visualizationType === 'bar_chart') {
+        config.barAggregation = aggregation;
+        if (xAxisConfig.type === 'simulations') {
+          config.barXAxis = 'simulations';
+          config.barSimulations = xAxisConfig.simulations;
+        } else {
+          config.barXAxis = 'variables';
+        }
+
+        if (yAxisConfig.type === 'single_variable_filtered') {
+          config.barVariables = [yAxisConfig.variable!];
+          if (yAxisConfig.filterMin !== undefined || yAxisConfig.filterMax !== undefined) {
+            config.filterVariableName = yAxisConfig.variable;
+            config.filterVariableGeq = yAxisConfig.filterMin;
+            config.filterVariableLeq = yAxisConfig.filterMax;
+          }
+        } else if (yAxisConfig.type === 'multiple_variables') {
+          config.barVariables = yAxisConfig.variables;
+        }
+      } else if (visualizationType === 'line_chart') {
+        config.lineAggregation = aggregation;
+        config.lineXAxis = 'simulations';
+        if (xAxisConfig.type === 'simulations') {
+          config.lineSimulations = xAxisConfig.simulations;
+        }
+
+        if (yAxisConfig.type === 'single_variable_filtered') {
+          config.lineVariable = yAxisConfig.variable;
+          if (yAxisConfig.filterMin !== undefined || yAxisConfig.filterMax !== undefined) {
+            config.filterVariableName = yAxisConfig.variable;
+            config.filterVariableGeq = yAxisConfig.filterMin;
+            config.filterVariableLeq = yAxisConfig.filterMax;
+          }
+        }
+      }
+    }
+
+    onSubmit(config);
   };
 
   return (
     <BaseModal
       opened={opened}
       onClose={onClose}
-      title="Add data visualization"
-      description="Choose a visualization type and configure your data"
-      icon={<IconDatabase size={19} />}
-      size="md"
-      primaryButton={{
-        label: 'Add visualization',
-        onClick: handleComplete,
-        disabled: !isConfigComplete() || isDataLoading,
-      }}
+      title="Add data analysis"
+      size="lg"
     >
       <Box style={{ position: 'relative', minHeight: 400 }}>
-        <LoadingOverlay visible={isDataLoading} />
+        <LoadingOverlay visible={isLoading} />
 
-        <Tabs value={activeTab} onChange={setActiveTab}>
-          <Tabs.List>
-            <Tabs.Tab value="visualization">Visualization type</Tabs.Tab>
-            <Tabs.Tab value="configuration" disabled={!config.visualizationType}>
-              Configuration
-            </Tabs.Tab>
-          </Tabs.List>
+        <Stack>
+          {!visualizationType && renderVisualizationSelection()}
 
-          <Tabs.Panel value="visualization" pt="xl">
-            <Stack>
-              <Text size="sm" color="dimmed">
-                Choose how you want to display your data
-              </Text>
-              <SimpleGrid cols={2}>
-                <Card
-                  shadow="xs"
-                  padding="lg"
-                  style={{
-                    cursor: 'pointer',
-                    border: config.visualizationType === 'metric_card' ? '2px solid #319795' : '1px solid #e5e5e5',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onClick={() => {
-                    setConfig({
-                      ...config,
-                      visualizationType: 'metric_card',
-                      metricAggregation: 'mean'
-                    });
-                    setActiveTab('configuration');
-                  }}
+          {visualizationType && (
+            <>
+              <Group>
+                <Button
+                  variant="subtle"
+                  size="xs"
+                  onClick={() => setVisualizationType(null)}
                 >
-                  <Stack align="center" gap="xs">
-                    <IconHash size={32} color={config.visualizationType === 'metric_card' ? '#319795' : '#666'} />
-                    <Text size="sm" fw={config.visualizationType === 'metric_card' ? 600 : 400}>
-                      Metric card
-                    </Text>
-                    <Text size="xs" color="dimmed" ta="center">
-                      Single value display
-                    </Text>
-                  </Stack>
-                </Card>
+                  ← Back to visualisation types
+                </Button>
+              </Group>
 
-                <Card
-                  shadow="xs"
-                  padding="lg"
-                  style={{
-                    cursor: 'pointer',
-                    border: config.visualizationType === 'table' ? '2px solid #319795' : '1px solid #e5e5e5',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onClick={() => {
-                    setConfig({
-                      ...config,
-                      visualizationType: 'table',
-                      tableAggregation: 'mean'
-                    });
-                    setActiveTab('configuration');
-                  }}
-                >
-                  <Stack align="center" gap="xs">
-                    <IconTable size={32} color={config.visualizationType === 'table' ? '#319795' : '#666'} />
-                    <Text size="sm" fw={config.visualizationType === 'table' ? 600 : 400}>
-                      Table
-                    </Text>
-                    <Text size="xs" color="dimmed" ta="center">
-                      Rows and columns
-                    </Text>
-                  </Stack>
-                </Card>
+              {renderConfiguration()}
 
-                <Card
-                  shadow="xs"
-                  padding="lg"
-                  style={{
-                    cursor: 'pointer',
-                    border: config.visualizationType === 'bar_chart' ? '2px solid #319795' : '1px solid #e5e5e5',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onClick={() => {
-                    setConfig({
-                      ...config,
-                      visualizationType: 'bar_chart',
-                      barXAxis: 'simulations',
-                      barAggregation: 'mean'
-                    });
-                    setActiveTab('configuration');
-                  }}
-                >
-                  <Stack align="center" gap="xs">
-                    <IconChartBar size={32} color={config.visualizationType === 'bar_chart' ? '#319795' : '#666'} />
-                    <Text size="sm" fw={config.visualizationType === 'bar_chart' ? 600 : 400}>
-                      Bar chart
-                    </Text>
-                    <Text size="xs" color="dimmed" ta="center">
-                      Compare values
-                    </Text>
-                  </Stack>
-                </Card>
-
-                <Card
-                  shadow="xs"
-                  padding="lg"
-                  style={{
-                    cursor: 'pointer',
-                    border: config.visualizationType === 'line_chart' ? '2px solid #319795' : '1px solid #e5e5e5',
-                    transition: 'all 0.2s ease',
-                  }}
-                  onClick={() => {
-                    setConfig({
-                      ...config,
-                      visualizationType: 'line_chart',
-                      lineXAxis: 'year',
-                      lineAggregation: 'mean',
-                      lineYears: [2024, 2025, 2026]
-                    });
-                    setActiveTab('configuration');
-                  }}
-                >
-                  <Stack align="center" gap="xs">
-                    <IconChartLine size={32} color={config.visualizationType === 'line_chart' ? '#319795' : '#666'} />
-                    <Text size="sm" fw={config.visualizationType === 'line_chart' ? 600 : 400}>
-                      Line chart
-                    </Text>
-                    <Text size="xs" color="dimmed" ta="center">
-                      Trends over time
-                    </Text>
-                  </Stack>
-                </Card>
-              </SimpleGrid>
-            </Stack>
-          </Tabs.Panel>
-
-          <Tabs.Panel value="configuration" pt="xl">
-            {renderVisualizationConfig()}
-          </Tabs.Panel>
-        </Tabs>
+              <Group justify="flex-end" mt="md">
+                <Button variant="subtle" onClick={onClose}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmit} disabled={!isConfigValid()}>
+                  Create
+                </Button>
+              </Group>
+            </>
+          )}
+        </Stack>
       </Box>
     </BaseModal>
   );

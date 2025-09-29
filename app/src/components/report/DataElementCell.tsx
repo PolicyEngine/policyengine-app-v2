@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect, useMemo } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'react-router-dom';
 import {
   Box,
@@ -13,11 +13,24 @@ import {
   Paper,
   Group,
   useMantineTheme,
+  Select,
+  ActionIcon,
+  Menu,
+  Switch,
 } from '@mantine/core';
 import Plot from 'react-plotly.js';
+import {
+  IconChartBar,
+  IconChartLine,
+  IconTable,
+  IconCards,
+  IconSettings,
+  IconChevronDown
+} from '@tabler/icons-react';
 import { aggregatesAPI, AggregateTable } from '@/api/v2/aggregates';
 import { simulationsAPI } from '@/api/v2/simulations';
 import { ReportElement } from '@/api/v2/reportElements';
+import { reportElementsAPI } from '@/api/v2/reportElements';
 import { modelVersionsAPI } from '@/api/v2/modelVersions';
 
 interface DataElementCellProps {
@@ -25,12 +38,29 @@ interface DataElementCellProps {
   isEditing?: boolean;
 }
 
+type ChartType = 'table' | 'bar_chart' | 'line_chart' | 'metric_card';
+
 export default function DataElementCell({
   element,
   isEditing = false,
 }: DataElementCellProps) {
   const theme = useMantineTheme();
   const location = useLocation();
+  const queryClient = useQueryClient();
+
+  // Local state for visualization configuration
+  const [chartType, setChartType] = useState<ChartType>(
+    (element.chart_type as ChartType) || 'table'
+  );
+  const [xAxisColumn, setXAxisColumn] = useState<string>(
+    element.x_axis_variable || ''
+  );
+  const [yAxisColumn, setYAxisColumn] = useState<string>(
+    element.y_axis_variable || ''
+  );
+  const [colorColumn, setColorColumn] = useState<string>('');
+  const [barMode, setBarMode] = useState<'group' | 'stack'>('group');
+  const [showSettings, setShowSettings] = useState(false);
 
   // Get country from URL
   const getCountry = () => {
@@ -39,6 +69,7 @@ export default function DataElementCell({
     if (pathname.includes('/us/')) return 'US';
     return 'UK'; // Default to UK
   };
+
   // Fetch aggregate data for this element
   const { data: aggregates, isLoading: aggregatesLoading } = useQuery({
     queryKey: ['elementAggregates', element.id],
@@ -51,11 +82,6 @@ export default function DataElementCell({
     queryFn: () => modelVersionsAPI.get(element.model_version_id!),
     enabled: !!element.model_version_id,
   });
-
-  // Extract visualization info from element
-  const chartType = element.chart_type || element.data_type;
-  const xAxis = element.x_axis_variable;
-  const yAxis = element.y_axis_variable;
 
   // Fetch simulation details for labels
   const simulationIds = [...new Set(aggregates?.map(a => a.simulation_id) || [])];
@@ -71,21 +97,14 @@ export default function DataElementCell({
     enabled: simulationIds.length > 0,
   });
 
-  if (aggregatesLoading) {
-    return (
-      <Box style={{ position: 'relative', minHeight: 200 }}>
-        <LoadingOverlay visible />
-      </Box>
-    );
-  }
-
-  if (!aggregates || aggregates.length === 0) {
-    return (
-      <Center p="xl">
-        <Text color="dimmed">No data available</Text>
-      </Center>
-    );
-  }
+  // Update mutation
+  const updateElementMutation = useMutation({
+    mutationFn: ({ elementId, data }: { elementId: string; data: any }) =>
+      reportElementsAPI.update(elementId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['reportElements'] });
+    },
+  });
 
   // Helper to get simulation label
   const getSimLabel = (simId: string) => {
@@ -104,6 +123,49 @@ export default function DataElementCell({
     } else {
       return value.toFixed(2);
     }
+  };
+
+  // Build dataframe from aggregates with proper column names
+  const dataframe = useMemo(() => {
+    if (!aggregates || aggregates.length === 0) return { rows: [], columns: [] };
+
+    // Convert aggregates to rows with column names matching the table
+    const rows = aggregates.map(agg => ({
+      'Simulation': getSimLabel(agg.simulation_id),
+      'Entity': agg.entity,
+      'Variable': agg.variable_name,
+      'Function': agg.aggregate_function,
+      'Year': agg.year || null,
+      'Filter variable': agg.filter_variable_name || null,
+      'Filter ≥': agg.filter_variable_geq,
+      'Filter ≤': agg.filter_variable_leq,
+      'Value': agg.value || 0,
+      // Keep original IDs for reference
+      simulation_id: agg.simulation_id,
+    }));
+
+    // Get unique columns
+    const columns = Object.keys(rows[0] || {});
+
+    return { rows, columns };
+  }, [aggregates, simulations]);
+
+  // Get available columns for axis selection (exclude only internal IDs)
+  const availableColumns = dataframe.columns.filter(
+    col => col !== 'simulation_id'
+  );
+
+  // Save chart configuration
+  const handleSaveConfig = () => {
+    updateElementMutation.mutate({
+      elementId: element.id,
+      data: {
+        chart_type: chartType,
+        x_axis_variable: xAxisColumn,
+        y_axis_variable: yAxisColumn,
+      },
+    });
+    setShowSettings(false);
   };
 
   // Create consistent Plotly layout styling
@@ -138,53 +200,98 @@ export default function DataElementCell({
     responsive: true,
   };
 
-  // Render based on chart type
+  // Set default axes if not set - must be before any conditional returns
+  useEffect(() => {
+    if (!xAxisColumn && availableColumns.length > 0) {
+      // Default x-axis based on chart type
+      if (chartType === 'bar_chart') {
+        // For bar charts, prefer Filter ≥ if we have filters, otherwise Simulation
+        if (availableColumns.includes('Filter ≥') && dataframe.rows.some(r => r['Filter ≥'] !== null)) {
+          setXAxisColumn('Filter ≥');
+        } else {
+          setXAxisColumn(availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]);
+        }
+      } else if (chartType === 'line_chart') {
+        // For line charts, prefer Year, then Filter ≥, then Simulation
+        if (availableColumns.includes('Year') && dataframe.rows.some(r => r['Year'])) {
+          setXAxisColumn('Year');
+        } else if (availableColumns.includes('Filter ≥') && dataframe.rows.some(r => r['Filter ≥'] !== null)) {
+          setXAxisColumn('Filter ≥');
+        } else {
+          setXAxisColumn(availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]);
+        }
+      }
+    }
+    if (!yAxisColumn && availableColumns.includes('Value')) {
+      setYAxisColumn('Value');
+    }
+  }, [chartType, availableColumns, dataframe.rows]);
+
+  if (aggregatesLoading) {
+    return (
+      <Box style={{ position: 'relative', minHeight: 200 }}>
+        <LoadingOverlay visible />
+      </Box>
+    );
+  }
+
+  if (!aggregates || aggregates.length === 0) {
+    return (
+      <Center p="xl">
+        <Text color="dimmed">No data available</Text>
+      </Center>
+    );
+  }
+
+  // Render visualizations based on selected chart type
   const renderVisualization = () => {
-    if (chartType === 'metric_card' || aggregates.length === 1) {
+    if (chartType === 'metric_card' && dataframe.rows.length === 1) {
       // Single metric display
-      const aggregate = aggregates[0];
+      const row = dataframe.rows[0];
       return (
         <Card shadow="xs" padding="lg">
           <Stack align="center" gap="xs">
-            <Text size="sm" color="dimmed">{aggregate.variable_name}</Text>
-            <Title order={2}>{formatNumber(aggregate.value || 0)}</Title>
+            <Text size="sm" color="dimmed">{row['Variable']}</Text>
+            <Title order={2}>{formatNumber(row['Value'])}</Title>
             <Text size="xs" color="dimmed">
-              {aggregate.aggregate_function} • {getSimLabel(aggregate.simulation_id)}
+              {row['Function']} • {row['Simulation']}
             </Text>
           </Stack>
         </Card>
       );
     }
 
-    if (chartType === 'table' || (!chartType && aggregates.length > 1)) {
-      // Table display
-      // Group by simulation and variable
-      const tableData: Record<string, Record<string, number>> = {};
-      const variables = [...new Set(aggregates.map(a => a.variable_name))];
-
-      aggregates.forEach(agg => {
-        const simLabel = getSimLabel(agg.simulation_id);
-        if (!tableData[simLabel]) tableData[simLabel] = {};
-        tableData[simLabel][agg.variable_name] = agg.value || 0;
-      });
-
+    if (chartType === 'table') {
+      // Show raw aggregate data structure
       return (
         <Table striped highlightOnHover withTableBorder withColumnBorders>
           <Table.Thead>
             <Table.Tr>
               <Table.Th>Simulation</Table.Th>
-              {variables.map(v => (
-                <Table.Th key={v} style={{ textAlign: 'right' }}>{v}</Table.Th>
-              ))}
+              <Table.Th>Entity</Table.Th>
+              <Table.Th>Variable</Table.Th>
+              <Table.Th>Function</Table.Th>
+              <Table.Th>Year</Table.Th>
+              <Table.Th>Filter variable</Table.Th>
+              <Table.Th>Filter ≥</Table.Th>
+              <Table.Th>Filter ≤</Table.Th>
+              <Table.Th style={{ textAlign: 'right' }}>Value</Table.Th>
             </Table.Tr>
           </Table.Thead>
           <Table.Tbody>
-            {Object.entries(tableData).map(([sim, values]) => (
-              <Table.Tr key={sim}>
-                <Table.Td>{sim}</Table.Td>
-                {variables.map(v => (
-                  <Table.Td key={v} style={{ textAlign: 'right' }}>{formatNumber(values[v] || 0)}</Table.Td>
-                ))}
+            {aggregates?.map((agg, idx) => (
+              <Table.Tr key={idx}>
+                <Table.Td>{getSimLabel(agg.simulation_id).slice(0, 20)}</Table.Td>
+                <Table.Td>{agg.entity}</Table.Td>
+                <Table.Td>{agg.variable_name}</Table.Td>
+                <Table.Td>{agg.aggregate_function}</Table.Td>
+                <Table.Td>{agg.year || '-'}</Table.Td>
+                <Table.Td>{agg.filter_variable_name || '-'}</Table.Td>
+                <Table.Td>{agg.filter_variable_geq !== null && agg.filter_variable_geq !== undefined ? agg.filter_variable_geq : '-'}</Table.Td>
+                <Table.Td>{agg.filter_variable_leq !== null && agg.filter_variable_leq !== undefined ? agg.filter_variable_leq : '-'}</Table.Td>
+                <Table.Td style={{ textAlign: 'right' }}>
+                  {formatNumber(agg.value || 0)}
+                </Table.Td>
               </Table.Tr>
             ))}
           </Table.Tbody>
@@ -193,25 +300,41 @@ export default function DataElementCell({
     }
 
     if (chartType === 'bar_chart') {
-      // Bar chart
-      const data = aggregates.map(agg => ({
-        name: xAxis === 'simulation_id'
-          ? getSimLabel(agg.simulation_id)
-          : agg.variable_name,
-        value: agg.value || 0,
-        variable: agg.variable_name,
-      }));
+      // Group data by selected axes
+      const xValues = [...new Set(dataframe.rows.map(r => r[xAxisColumn]))].filter(v => v !== null);
+      const colorValues = colorColumn
+        ? [...new Set(dataframe.rows.map(r => r[colorColumn]))]
+        : [null];
 
-      const plotData = [{
-        x: data.map(d => d.name),
-        y: data.map(d => d.value),
-        type: 'bar' as const,
-        marker: {
-          color: theme.colors.blue[6],
-        },
-      }];
+      const plotData = colorValues.map((colorVal, idx) => {
+        const filteredRows = colorColumn
+          ? dataframe.rows.filter(r => r[colorColumn] === colorVal)
+          : dataframe.rows;
 
-      const layout = createPlotlyLayout();
+        const xData = xValues.map(xVal => {
+          const row = filteredRows.find(r => r[xAxisColumn] === xVal);
+          return row ? row[yAxisColumn] || row['Value'] : 0;
+        });
+
+        return {
+          x: xValues.map(v => String(v !== null ? v : '')),
+          y: xData.map(v => typeof v === 'number' ? v : 0),
+          type: 'bar' as const,
+          name: colorVal ? String(colorVal) : undefined,
+          marker: {
+            color: colorVal
+              ? theme.colors[['blue', 'red', 'green', 'orange', 'purple'][idx % 5]][6]
+              : theme.colors.blue[6],
+          },
+        };
+      });
+
+      const layout = createPlotlyLayout({
+        barmode: barMode,
+        showlegend: !!colorColumn,
+        xaxis: { title: xAxisColumn },
+        yaxis: { title: yAxisColumn || 'Value' },
+      });
 
       return (
         <Box style={{ height: 300, position: 'relative' }}>
@@ -226,52 +349,45 @@ export default function DataElementCell({
     }
 
     if (chartType === 'line_chart') {
-      // Line chart
-      let plotData: any[] = [];
+      // Group data by color column for multiple lines
+      const xValues = [...new Set(dataframe.rows.map(r => r[xAxisColumn]))].filter(v => v !== null);
+      const colorValues = colorColumn
+        ? [...new Set(dataframe.rows.map(r => r[colorColumn]))]
+        : [null];
 
-      if (xAxis === 'year') {
-        // Group by year
-        const yearData: Record<number, Record<string, number>> = {};
-        aggregates.forEach(agg => {
-          if (agg.year) {
-            if (!yearData[agg.year]) yearData[agg.year] = {};
-            yearData[agg.year][getSimLabel(agg.simulation_id)] = agg.value || 0;
-          }
+      const plotData = colorValues.map((colorVal, idx) => {
+        const filteredRows = colorColumn
+          ? dataframe.rows.filter(r => r[colorColumn] === colorVal)
+          : dataframe.rows;
+
+        const xData = xValues.filter(xVal =>
+          filteredRows.some(r => r[xAxisColumn] === xVal)
+        );
+
+        const yData = xData.map(xVal => {
+          const row = filteredRows.find(r => r[xAxisColumn] === xVal);
+          const value = row ? row[yAxisColumn] || row['Value'] : 0;
+          return typeof value === 'number' ? value : 0;
         });
 
-        const years = Object.keys(yearData).map(Number).sort();
-        const simulations = [...new Set(aggregates.map(agg => getSimLabel(agg.simulation_id)))];
-
-        plotData = simulations.map((sim, index) => ({
-          x: years,
-          y: years.map(year => yearData[year]?.[sim] || 0),
+        return {
+          x: xData.map(v => String(v !== null ? v : '')),
+          y: yData,
           type: 'scatter' as const,
           mode: 'lines+markers' as const,
-          name: sim,
+          name: colorVal ? String(colorVal) : undefined,
           line: {
-            color: theme.colors[['blue', 'red', 'green', 'orange', 'purple'][index % 5]][6],
+            color: colorVal
+              ? theme.colors[['blue', 'red', 'green', 'orange', 'purple'][idx % 5]][6]
+              : theme.colors.blue[6],
           },
-        }));
-      } else {
-        // Simulations on X-axis
-        const data = aggregates.map(agg => ({
-          name: getSimLabel(agg.simulation_id),
-          value: agg.value || 0,
-        }));
-
-        plotData = [{
-          x: data.map(d => d.name),
-          y: data.map(d => d.value),
-          type: 'scatter' as const,
-          mode: 'lines+markers' as const,
-          line: {
-            color: theme.colors.blue[6],
-          },
-        }];
-      }
+        };
+      });
 
       const layout = createPlotlyLayout({
-        showlegend: xAxis === 'year',
+        showlegend: !!colorColumn,
+        xaxis: { title: xAxisColumn },
+        yaxis: { title: yAxisColumn || 'Value' },
       });
 
       return (
@@ -286,88 +402,136 @@ export default function DataElementCell({
       );
     }
 
-    // Default: show as text
+    // Default: show raw data
     return (
       <Stack>
-        {aggregates.map((agg, idx) => (
-          <Text key={idx}>
-            {agg.variable_name}: {formatNumber(agg.value || 0)}
-            ({agg.aggregate_function} for {getSimLabel(agg.simulation_id)})
+        {dataframe.rows.slice(0, 10).map((row, idx) => (
+          <Text key={idx} size="sm">
+            {row.variable}: {formatNumber(row.value)} ({row.simulation})
           </Text>
         ))}
+        {dataframe.rows.length > 10 && (
+          <Text size="xs" color="dimmed">... and {dataframe.rows.length - 10} more rows</Text>
+        )}
       </Stack>
     );
   };
 
-  // Get citation info
-  const getCitationInfo = () => {
-    if (!aggregates || aggregates.length === 0) return null;
-
-    // Get the most recent updated date from aggregates or element
-    const dates = aggregates
-      .map(a => a.updated_at)
-      .filter(Boolean)
-      .map(d => new Date(d));
-
-    // Also consider the element's updated_at
-    if (element.updated_at) {
-      dates.push(new Date(element.updated_at));
-    }
-
-    const latestDate = dates.length > 0 ? new Date(Math.max(...dates.map(d => d.getTime()))) : new Date();
-
-    // Format date
-    const formatDate = (date: Date) => {
-      const now = new Date();
-      const diff = now.getTime() - date.getTime();
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor(diff / (1000 * 60 * 60));
-      const minutes = Math.floor(diff / (1000 * 60));
-
-      if (days > 0) return `${days} day${days === 1 ? '' : 's'} ago`;
-      if (hours > 0) return `${hours} hour${hours === 1 ? '' : 's'} ago`;
-      if (minutes > 0) return `${minutes} minute${minutes === 1 ? '' : 's'} ago`;
-      return 'Just now';
-    };
-
-    // Get model version from fetched data or fallback
-    const versionText = modelVersion?.version || aggregates[0]?.model_version || 'v2.1.0';
-    const isLatest = aggregates[0]?.is_latest_model_version !== false;
-
-    return {
-      date: formatDate(latestDate),
-      modelVersion: versionText,
-      isLatest
-    };
-  };
-
-  const citation = getCitationInfo();
-
   return (
     <Stack gap="xs">
-      {isEditing && (
-        <Paper p="xs" withBorder>
+      {/* Chart type selector and settings */}
+      <Group justify="space-between">
+        <Group gap="xs">
+          <Menu shadow="md" width={200}>
+            <Menu.Target>
+              <ActionIcon.Group>
+                <ActionIcon variant="default" size="lg">
+                  {chartType === 'table' && <IconTable size={18} />}
+                  {chartType === 'bar_chart' && <IconChartBar size={18} />}
+                  {chartType === 'line_chart' && <IconChartLine size={18} />}
+                  {chartType === 'metric_card' && <IconCards size={18} />}
+                </ActionIcon>
+                <ActionIcon variant="default" size="lg">
+                  <IconChevronDown size={14} />
+                </ActionIcon>
+              </ActionIcon.Group>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Item
+                leftSection={<IconTable size={14} />}
+                onClick={() => setChartType('table')}
+              >
+                Table
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconChartBar size={14} />}
+                onClick={() => setChartType('bar_chart')}
+              >
+                Bar chart
+              </Menu.Item>
+              <Menu.Item
+                leftSection={<IconChartLine size={14} />}
+                onClick={() => setChartType('line_chart')}
+              >
+                Line chart
+              </Menu.Item>
+              {dataframe.rows.length === 1 && (
+                <Menu.Item
+                  leftSection={<IconCards size={14} />}
+                  onClick={() => setChartType('metric_card')}
+                >
+                  Metric card
+                </Menu.Item>
+              )}
+            </Menu.Dropdown>
+          </Menu>
+
+          {(chartType === 'bar_chart' || chartType === 'line_chart') && (
+            <ActionIcon
+              variant={showSettings ? 'filled' : 'default'}
+              onClick={() => setShowSettings(!showSettings)}
+            >
+              <IconSettings size={18} />
+            </ActionIcon>
+          )}
+        </Group>
+
+        {/* Model version citation */}
+        {modelVersion && (
           <Text size="xs" color="dimmed">
-            Data visualization: {chartType || 'auto'} • {aggregates.length} values
+            PolicyEngine {getCountry()} v{modelVersion.version}
           </Text>
+        )}
+      </Group>
+
+      {/* Chart configuration panel */}
+      {showSettings && (chartType === 'bar_chart' || chartType === 'line_chart') && (
+        <Paper withBorder p="sm">
+          <Stack gap="xs">
+            <Select
+              label="X-axis"
+              value={xAxisColumn}
+              onChange={(val) => setXAxisColumn(val || '')}
+              data={availableColumns}
+              size="xs"
+            />
+            <Select
+              label="Y-axis"
+              value={yAxisColumn}
+              onChange={(val) => setYAxisColumn(val || '')}
+              data={availableColumns}
+              size="xs"
+            />
+            <Select
+              label="Color by"
+              value={colorColumn}
+              onChange={(val) => setColorColumn(val || '')}
+              data={[{ value: '', label: 'None' }, ...availableColumns]}
+              size="xs"
+              clearable
+            />
+            {chartType === 'bar_chart' && colorColumn && (
+              <Switch
+                label="Stack bars"
+                checked={barMode === 'stack'}
+                onChange={(e) => setBarMode(e.currentTarget.checked ? 'stack' : 'group')}
+                size="xs"
+              />
+            )}
+            <Group justify="flex-end" gap="xs">
+              <ActionIcon size="sm" onClick={() => setShowSettings(false)} variant="subtle">
+                Cancel
+              </ActionIcon>
+              <ActionIcon size="sm" onClick={handleSaveConfig} variant="filled">
+                Save
+              </ActionIcon>
+            </Group>
+          </Stack>
         </Paper>
       )}
+
+      {/* Visualization */}
       {renderVisualization()}
-      {citation && (
-        <Group justify="flex-end">
-          <Text
-            size="xs"
-            color="dimmed"
-            style={{
-              fontSize: '11px',
-              fontStyle: 'italic'
-            }}
-          >
-            Updated {citation.date} • PolicyEngine {getCountry()} {citation.modelVersion}
-            {!citation.isLatest && ' (outdated)'}
-          </Text>
-        </Group>
-      )}
     </Stack>
   );
 }

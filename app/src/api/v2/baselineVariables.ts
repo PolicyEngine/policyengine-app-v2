@@ -8,6 +8,8 @@ export interface BaselineVariableTable {
   label?: string | null;
   description?: string | null;
   data_type?: any | null;
+  variable_name?: string; // Alias for id
+  name?: string; // Another possible alias
 }
 
 export interface BaselineVariableFilters extends PaginationParams {
