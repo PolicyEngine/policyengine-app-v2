@@ -43,9 +43,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.UK_HOUSEHOLD]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>UK Content</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -60,9 +58,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.CA_REPORTS]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>CA Content</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -79,9 +75,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.INVALID_SIMPLE]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -111,9 +105,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.SQL_PATH]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -128,9 +120,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.XSS_PATH]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -145,9 +135,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.TRAVERSAL_PATH]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -162,9 +150,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.GARBAGE_PATH]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -179,9 +165,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[TEST_PATHS.UNICODE_PATH]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -200,9 +184,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={[longPath]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -219,9 +201,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={['/invalid/reports/123/edit']}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
@@ -235,9 +215,7 @@ describe('CountryGuard', () => {
         <MemoryRouter initialEntries={['/xyz/household/person/1/income/employment']}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-
               <Route path="*" element={<div>Should not render</div>} />
-
             </Route>
           </Routes>
         </MemoryRouter>
