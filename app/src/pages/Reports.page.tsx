@@ -132,11 +132,6 @@ export default function ReportsPage() {
       type: 'text',
     },
     {
-      key: 'simulations',
-      header: 'Simulations',
-      type: 'text',
-    },
-    {
       key: 'status',
       header: 'Status',
       type: 'text',
@@ -161,11 +156,6 @@ export default function ReportsPage() {
       id: report.id,
       reportName: {
         text: report.label || `Report #${report.id.slice(0, 8)}`,
-      } as TextValue,
-      simulations: {
-        text: report.simulation_ids ? `${report.simulation_ids.length} simulation${
-          report.simulation_ids.length !== 1 ? 's' : ''
-        }` : '0 simulations',
       } as TextValue,
       status: {
         text: report.status ? report.status.charAt(0).toUpperCase() + report.status.slice(1) : 'Draft',

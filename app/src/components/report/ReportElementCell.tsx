@@ -22,6 +22,7 @@ import {
 } from '@tabler/icons-react';
 import { ReportElement } from '@/api/v2/reportElements';
 import ReactMarkdown from 'react-markdown';
+import DataElementCell from './DataElementCell';
 
 interface ReportElementCellProps {
   element: ReportElement;
@@ -122,6 +123,16 @@ export default function ReportElementCell({
       );
     }
 
+    if (element.type === 'data') {
+      // For data elements, we display the visualization
+      return (
+        <DataElementCell
+          element={element}
+          isEditing={isEditing}
+        />
+      );
+    }
+
     // Placeholder for other element types
     return (
       <Text color="dimmed" style={{ fontStyle: 'italic' }}>
@@ -176,22 +187,24 @@ export default function ReportElementCell({
 
       {!isEditing && (
         <div style={{ position: 'relative' }}>
-          <ActionIcon
-            size="sm"
-            variant="subtle"
-            onClick={handleStartEdit}
-            title="Edit"
-            style={{
-              position: 'absolute',
-              top: 0,
-              right: 0,
-              opacity: 0,
-              transition: 'opacity 150ms ease',
-            }}
-            className="edit-button"
-          >
-            <IconEdit size={14} />
-          </ActionIcon>
+          {element.type === 'markdown' && (
+            <ActionIcon
+              size="sm"
+              variant="subtle"
+              onClick={handleStartEdit}
+              title="Edit"
+              style={{
+                position: 'absolute',
+                top: 0,
+                right: 0,
+                opacity: 0,
+                transition: 'opacity 150ms ease',
+              }}
+              className="edit-button"
+            >
+              <IconEdit size={14} />
+            </ActionIcon>
+          )}
 
           <Menu shadow="md" width={150} position="bottom-end">
             <Menu.Target>
@@ -201,7 +214,7 @@ export default function ReportElementCell({
                 style={{
                   position: 'absolute',
                   top: 0,
-                  right: 30,
+                  right: element.type === 'markdown' ? 30 : 0,
                   opacity: 0,
                   transition: 'opacity 150ms ease',
                 }}

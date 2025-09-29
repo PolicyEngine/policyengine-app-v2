@@ -6,23 +6,36 @@ export interface ReportElement {
   id: string;
   report_id?: string;
   label: string;
-  type: string; // 'markdown', 'chart', etc.
+  type: string; // 'markdown', 'data', etc.
   markdown_content?: string; // For markdown type elements
+  data?: any; // For data element configuration
   data_table?: string;
   data_type?: string;
+  chart_type?: string;
+  x_axis_variable?: string;
+  y_axis_variable?: string;
+  model_version_id?: string;
   created_at?: string;
   updated_at?: string;
   position?: number;
 }
 
 export interface ReportElementCreate {
-  report_id: string;
+  report_id?: string;
   label: string; // Required by API
   type: string; // Required by API
   markdown_content?: string; // For markdown elements
   data_type?: string;
-  data?: any;
+  data?: any; // For aggregate inputs
+  chart_type?: string;
+  x_axis_variable?: string;
+  y_axis_variable?: string;
+  model_version_id?: string;
+  group_by?: string;
+  color_by?: string;
+  size_by?: string;
   position?: number;
+  visible?: boolean;
 }
 
 export interface ReportElementUpdate {
@@ -59,7 +72,11 @@ class ReportElementsAPI {
       report_id: data.report_id,
       data_type: data.data_type,
       data: data.data,
-      position: data.position
+      position: data.position,
+      chart_type: data.chart_type,
+      x_axis_variable: data.x_axis_variable,
+      y_axis_variable: data.y_axis_variable,
+      model_version_id: data.model_version_id
     };
 
     // Add markdown_content if it's a markdown element
@@ -92,37 +109,11 @@ class ReportElementsAPI {
   ): Promise<ReportElement> {
     console.log('Sending PATCH request to:', `/report-elements/${elementId}`);
     console.log('PATCH data:', JSON.stringify(data, null, 2));
-    console.log('Data keys:', Object.keys(data));
-    console.log('markdown_content value:', data.markdown_content);
-    console.log('markdown_content type:', typeof data.markdown_content);
 
-    // Build query parameters from the data object
-    const params = new URLSearchParams();
-    if (data.markdown_content !== undefined) {
-      params.append('markdown_content', data.markdown_content);
-    }
-    if (data.label !== undefined) {
-      params.append('label', data.label);
-    }
-    if (data.position !== undefined) {
-      params.append('position', data.position.toString());
-    }
-    if (data.type !== undefined) {
-      params.append('type', data.type);
-    }
-    if (data.data_type !== undefined) {
-      params.append('data_type', data.data_type);
-    }
-
-    const queryString = params.toString();
-    const url = `/report-elements/${elementId}${queryString ? `?${queryString}` : ''}`;
-
-    console.log('PATCH URL with params:', url);
-
-    // FastAPI expects query parameters for PATCH, not body
-    const response = await apiClient.patch<ReportElement>(
-      url,
-      {} // Empty body since params are in URL
+    // API now accepts body parameters for PATCH
+    const response = await apiClient.patch<ReportElement, ReportElementUpdate>(
+      `/report-elements/${elementId}`,
+      data
     );
 
     console.log('PATCH response:', response);
