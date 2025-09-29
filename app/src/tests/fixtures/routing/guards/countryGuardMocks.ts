@@ -74,19 +74,21 @@ export const TEST_PATHS = {
 } as const;
 
 // Expected redirect paths
+// NOTE: After simplification, CountryGuard now redirects to '/' for all invalid countries,
+// letting the root route handler decide the country (instead of preserving paths)
 export const EXPECTED_REDIRECTS = {
   DEFAULT_COUNTRY: 'us',
 
-  // Preserve paths after redirect
-  POLICIES: '/us/policies',
-  HOUSEHOLD: '/us/household/123',
-  REPORTS: '/us/reports/annual/2024',
-  ROOT_REDIRECT: '/us/',
+  // All invalid countries now redirect to root
+  POLICIES: '/',
+  HOUSEHOLD: '/',
+  REPORTS: '/',
+  ROOT_REDIRECT: '/',
 
-  // Complex path preservation
-  NESTED_PATH: '/us/reports/123/edit',
-  WITH_QUERY: '/us/policies?filter=active&sort=date',
-  WITH_HASH: '/us/policies#section',
+  // Complex paths also redirect to root (no path preservation)
+  NESTED_PATH: '/',
+  WITH_QUERY: '/',
+  WITH_HASH: '/',
 } as const;
 
 // Helper function to create mock Navigate tracking
