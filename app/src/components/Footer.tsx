@@ -80,7 +80,7 @@ export default function Footer() {
                 underline="never"
                 ff={typography.fontFamily.primary}
               >
-                Terms and Conditions
+                Terms and conditions
               </Anchor>
               <Anchor
                 href={CONTACT_LINKS.developerTools}
