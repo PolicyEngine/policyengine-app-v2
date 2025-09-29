@@ -27,14 +27,9 @@ describe('CountryGuard', () => {
       const { getByText } = render(
         <MemoryRouter initialEntries={[TEST_PATHS.US_POLICIES]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Protected Content</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Protected Content</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
@@ -47,14 +42,9 @@ describe('CountryGuard', () => {
       const { getByText } = render(
         <MemoryRouter initialEntries={[TEST_PATHS.UK_HOUSEHOLD]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>UK Content</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>UK Content</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
@@ -67,14 +57,9 @@ describe('CountryGuard', () => {
       const { getByText } = render(
         <MemoryRouter initialEntries={[TEST_PATHS.CA_REPORTS]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>CA Content</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>CA Content</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
@@ -89,14 +74,9 @@ describe('CountryGuard', () => {
       render(
         <MemoryRouter initialEntries={[TEST_PATHS.INVALID_SIMPLE]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
@@ -108,14 +88,9 @@ describe('CountryGuard', () => {
       render(
         <MemoryRouter initialEntries={[TEST_PATHS.ROOT]}>
           <Routes>
-            <Route
-              path="/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
@@ -129,108 +104,75 @@ describe('CountryGuard', () => {
       render(
         <MemoryRouter initialEntries={[TEST_PATHS.SQL_PATH]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
       // Should safely redirect without executing SQL
-      expect(mockNavigate).toHaveBeenCalledWith('/us/household', true);
+      expect(mockNavigate).toHaveBeenCalledWith('/', true);
     });
 
     test('given XSS script injection then safely redirects', () => {
       render(
         <MemoryRouter initialEntries={[TEST_PATHS.XSS_PATH]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
-      // NOTE: Current implementation has path extraction issue with special chars
-      // This should ideally redirect to '/us/reports' but the substring logic
-      // doesn't handle malicious input properly. This is a known limitation.
-      expect(mockNavigate).toHaveBeenCalled();
-      const [[redirectPath]] = mockNavigate.mock.calls;
-      expect(redirectPath).toContain('/us');
+      // Should safely redirect to root
+      expect(mockNavigate).toHaveBeenCalledWith('/', true);
     });
 
     test('given path traversal attempt then safely redirects', () => {
       render(
         <MemoryRouter initialEntries={[TEST_PATHS.TRAVERSAL_PATH]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
-      // NOTE: Path traversal attempts show limitation in substring logic
-      expect(mockNavigate).toHaveBeenCalled();
-      const [[redirectPath]] = mockNavigate.mock.calls;
-      expect(redirectPath).toContain('/us');
+      // Should safely redirect to root
+      expect(mockNavigate).toHaveBeenCalledWith('/', true);
     });
 
     test('given special characters garbage then safely redirects', () => {
       render(
         <MemoryRouter initialEntries={[TEST_PATHS.GARBAGE_PATH]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
-      // NOTE: Special characters cause path extraction issues
-      expect(mockNavigate).toHaveBeenCalled();
-      const [[redirectPath]] = mockNavigate.mock.calls;
-      expect(redirectPath.startsWith('/us')).toBe(true);
+      // Should safely redirect to root
+      expect(mockNavigate).toHaveBeenCalledWith('/', true);
     });
 
     test('given unicode and emoji then safely redirects', () => {
       render(
         <MemoryRouter initialEntries={[TEST_PATHS.UNICODE_PATH]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
       // Should handle unicode safely
-      expect(mockNavigate).toHaveBeenCalledWith('/us/about', true);
+      expect(mockNavigate).toHaveBeenCalledWith('/', true);
     });
 
     test('given extremely long string (buffer overflow attempt) then safely redirects', () => {
@@ -241,20 +183,15 @@ describe('CountryGuard', () => {
       render(
         <MemoryRouter initialEntries={[longPath]}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
       // Should handle long strings without buffer overflow
-      expect(mockNavigate).toHaveBeenCalledWith('/us/test', true);
+      expect(mockNavigate).toHaveBeenCalledWith('/', true);
     });
   });
 
@@ -263,14 +200,9 @@ describe('CountryGuard', () => {
       render(
         <MemoryRouter initialEntries={['/invalid/reports/123/edit']}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
@@ -282,19 +214,14 @@ describe('CountryGuard', () => {
       render(
         <MemoryRouter initialEntries={['/xyz/household/person/1/income/employment']}>
           <Routes>
-            <Route
-              path="/:countryId/*"
-              element={
-                <CountryGuard>
-                  <div>Should not render</div>
-                </CountryGuard>
-              }
-            />
+            <Route path="/:countryId" element={<CountryGuard />}>
+              <Route path="*" element={<div>Should not render</div>} />
+            </Route>
           </Routes>
         </MemoryRouter>
       );
 
-      expect(mockNavigate).toHaveBeenCalledWith('/us/household/person/1/income/employment', true);
+      expect(mockNavigate).toHaveBeenCalledWith('/', true);
     });
   });
 });
