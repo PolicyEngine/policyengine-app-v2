@@ -239,6 +239,6 @@ export const themeComponents = {
       navbar: {
         padding: spacing.appShell.navbar.padding,
       },
-    }
+    },
   }),
 };
