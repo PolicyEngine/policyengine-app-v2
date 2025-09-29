@@ -125,11 +125,8 @@ export default function DataElementCell({
   const totalSteps = settingsSteps.length;
 
   // Get country from URL
-  const getCountry = () => {
-    const pathname = location.pathname;
-    if (pathname.includes('/uk/')) return 'UK';
-    if (pathname.includes('/us/')) return 'US';
-    return 'UK'; // Default to UK
+  const getCountryDisplay = (countryId: string) => {
+    return countryId.toUpperCase();
   };
 
   // Fetch aggregate or aggregate change data for this element
@@ -944,7 +941,7 @@ export default function DataElementCell({
               transition: 'opacity 0.2s ease-in-out'
             }}
           >
-            PolicyEngine {getCountry()} v{modelVersion.version}
+            PolicyEngine {modelVersion.country_id ? getCountryDisplay(modelVersion.country_id) : ''} v{modelVersion.version}
           </Text>
         </Group>
       )}

@@ -185,74 +185,72 @@ export default function ReportElementCell({
         </Group>
       )}
 
+      {!isEditing && element.type === 'markdown' && (
+        <ActionIcon
+          size="sm"
+          variant="subtle"
+          onClick={handleStartEdit}
+          title="Edit"
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 38,
+            opacity: 0,
+            transition: 'opacity 150ms ease',
+            zIndex: 10,
+          }}
+          className="edit-button"
+        >
+          <IconEdit size={14} />
+        </ActionIcon>
+      )}
+
       {!isEditing && (
-        <div style={{ position: 'relative' }}>
-          {element.type === 'markdown' && (
+        <Menu shadow="md" width={150} position="bottom-end">
+          <Menu.Target>
             <ActionIcon
               size="sm"
               variant="subtle"
-              onClick={handleStartEdit}
-              title="Edit"
               style={{
                 position: 'absolute',
-                top: 0,
-                right: 0,
+                top: 8,
+                right: 8,
                 opacity: 0,
                 transition: 'opacity 150ms ease',
                 zIndex: 10,
               }}
-              className="edit-button"
+              className="menu-button"
             >
-              <IconEdit size={14} />
+              <IconDotsVertical size={14} />
             </ActionIcon>
-          )}
-
-          <Menu shadow="md" width={150} position="bottom-end">
-            <Menu.Target>
-              <ActionIcon
-                size="sm"
-                variant="subtle"
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  right: element.type === 'markdown' ? 30 : 0,
-                  opacity: 0,
-                  transition: 'opacity 150ms ease',
-                  zIndex: 10,
-                }}
-                className="menu-button"
-              >
-                <IconDotsVertical size={14} />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              {onMoveUp && (
-                <Menu.Item
-                  leftSection={<IconArrowUp size={14} />}
-                  onClick={onMoveUp}
-                >
-                  Move up
-                </Menu.Item>
-              )}
-              {onMoveDown && (
-                <Menu.Item
-                  leftSection={<IconArrowDown size={14} />}
-                  onClick={onMoveDown}
-                >
-                  Move down
-                </Menu.Item>
-              )}
-              {(onMoveUp || onMoveDown) && <Menu.Divider />}
+          </Menu.Target>
+          <Menu.Dropdown>
+            {onMoveUp && (
               <Menu.Item
-                color="red"
-                leftSection={<IconTrash size={14} />}
-                onClick={onDelete}
+                leftSection={<IconArrowUp size={14} />}
+                onClick={onMoveUp}
               >
-                Delete
+                Move up
               </Menu.Item>
-            </Menu.Dropdown>
-          </Menu>
-        </div>
+            )}
+            {onMoveDown && (
+              <Menu.Item
+                leftSection={<IconArrowDown size={14} />}
+                onClick={onMoveDown}
+              >
+                Move down
+              </Menu.Item>
+            )}
+            {(onMoveUp || onMoveDown) && <Menu.Divider />}
+            <Menu.Item
+              color="red"
+              leftSection={<IconTrash size={14} />}
+              onClick={onDelete}
+            >
+              Delete
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
       )}
 
       <style>{`
