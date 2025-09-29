@@ -211,12 +211,16 @@ export default function DataElementCell({
         'Function': agg.aggregate_function,
         'Year': agg.year || null,
         'Filter variable': agg.filter_variable_name || null,
+        'Filter value': agg.filter_variable_value || null,
         'Filter ≥': agg.filter_variable_geq,
         'Filter ≤': agg.filter_variable_leq,
+        'Quantile ≥': agg.filter_variable_quantile_geq,
+        'Quantile ≤': agg.filter_variable_quantile_leq,
+        'Quantile value': agg.filter_variable_quantile_value || null,
         'Baseline': agg.baseline_value || 0,
         'Comparison': agg.comparison_value || 0,
         'Change': agg.change || 0,
-        'Relative change': agg.relative_change !== null ? `${(agg.relative_change * 100).toFixed(1)}%` : 'N/A',
+        'Relative change (%)': agg.relative_change !== null ? agg.relative_change * 100 : 0,
         // Keep original IDs for reference
         baseline_simulation_id: agg.baseline_simulation_id,
         comparison_simulation_id: agg.comparison_simulation_id,
@@ -230,8 +234,12 @@ export default function DataElementCell({
         'Function': agg.aggregate_function,
         'Year': agg.year || null,
         'Filter variable': agg.filter_variable_name || null,
+        'Filter value': agg.filter_variable_value || null,
         'Filter ≥': agg.filter_variable_geq,
         'Filter ≤': agg.filter_variable_leq,
+        'Quantile ≥': agg.filter_variable_quantile_geq,
+        'Quantile ≤': agg.filter_variable_quantile_leq,
+        'Quantile value': agg.filter_variable_quantile_value || null,
         'Value': agg.value || 0,
         // Keep original IDs for reference
         simulation_id: agg.simulation_id,
@@ -522,7 +530,7 @@ export default function DataElementCell({
                       fontWeight: 600,
                       fontSize: '0.75rem',
                       color: theme.colors.gray[7],
-                      textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change'].includes(col) ? 'right' : 'left'
+                      textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col) ? 'right' : 'left'
                     }}
                   >
                     {col}
@@ -538,15 +546,17 @@ export default function DataElementCell({
                       key={col}
                       style={{
                         fontSize: '0.875rem',
-                        textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change'].includes(col) ? 'right' : 'left',
+                        textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col) ? 'right' : 'left',
                         fontWeight: ['Value', 'Change', 'Baseline', 'Comparison'].includes(col) ? 500 : 400
                       }}
                     >
-                      {col === 'Relative change' || typeof row[col] === 'string'
-                        ? row[col] || '-'
-                        : typeof row[col] === 'number'
-                          ? formatNumber(row[col])
-                          : row[col] || '-'
+                      {col === 'Relative change (%)' && typeof row[col] === 'number'
+                        ? `${row[col].toFixed(1)}%`
+                        : typeof row[col] === 'string'
+                          ? row[col] || '-'
+                          : typeof row[col] === 'number'
+                            ? formatNumber(row[col])
+                            : row[col] || '-'
                       }
                     </Table.Td>
                   ))}
@@ -724,31 +734,13 @@ export default function DataElementCell({
           label: settingsStep === totalSteps - 1 ? 'Apply changes' : 'Next',
           onClick: handleNextStep,
         }}
-        secondaryButton={settingsStep > 0 ? {
+        secondaryButton={{
           label: 'Back',
           onClick: handlePreviousStep,
-        } : undefined}
+          disabled: settingsStep === 0,
+        }}
       >
         <Stack gap="md">
-          {/* Progress indicator */}
-          <Group justify="center" gap="xs">
-            {settingsSteps.map((_, index) => (
-              <Box
-                key={index}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor: index === settingsStep
-                    ? theme.colors.blue[6]
-                    : index < settingsStep
-                      ? theme.colors.green[6]
-                      : theme.colors.gray[3],
-                  transition: 'background-color 0.2s ease',
-                }}
-              />
-            ))}
-          </Group>
 
           {/* Step 1: Data configuration */}
           {settingsStep === 0 && (
@@ -828,21 +820,6 @@ export default function DataElementCell({
                   size="sm"
                 />
               </Group>
-              <Box>
-                <Text size="sm" mb="xs" fw={500}>Chart height</Text>
-                <Slider
-                  value={chartHeight}
-                  onChange={setChartHeight}
-                  min={200}
-                  max={600}
-                  step={50}
-                  marks={[
-                    { value: 200, label: 'Small' },
-                    { value: 400, label: 'Medium' },
-                    { value: 600, label: 'Large' },
-                  ]}
-                />
-              </Box>
               <Group>
                 <Switch
                   label="Show grid lines"
