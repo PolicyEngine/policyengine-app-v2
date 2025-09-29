@@ -14,6 +14,7 @@ import {
   Group,
   useMantineTheme,
   Select,
+  MultiSelect,
   ActionIcon,
   Menu,
   Switch,
@@ -50,8 +51,8 @@ type ChartType = 'table' | 'bar_chart' | 'line_chart' | 'metric_card';
 
 interface ChartConfig {
   chartType: ChartType;
-  xAxisColumn: string;
-  yAxisColumn: string;
+  xAxisColumns: string[];
+  yAxisColumns: string[];
   colorColumn: string;
   barMode: 'group' | 'stack';
   title?: string;
@@ -69,6 +70,9 @@ interface ChartConfig {
   yAxisTickFormat?: string;
   xAxisTickAngle?: number;
   customLayout?: string;
+  // Legacy support
+  xAxisColumn?: string;
+  yAxisColumn?: string;
 }
 
 export default function DataElementCell({
@@ -85,14 +89,11 @@ export default function DataElementCell({
   const [chartType, setChartType] = useState<ChartType>(
     savedConfig?.chartType || (element.chart_type as ChartType) || 'table'
   );
-  const [xAxisColumn, setXAxisColumn] = useState<string>(
-    savedConfig?.xAxisColumn || element.x_axis_variable || ''
+  const [xAxisColumns, setXAxisColumns] = useState<string[]>(
+    savedConfig?.xAxisColumns || (savedConfig?.xAxisColumn ? [savedConfig.xAxisColumn] : element.x_axis_variable ? [element.x_axis_variable] : [])
   );
-  const [yAxisColumn, setYAxisColumn] = useState<string>(
-    savedConfig?.yAxisColumn || element.y_axis_variable || ''
-  );
-  const [colorColumn, setColorColumn] = useState<string>(
-    savedConfig?.colorColumn || ''
+  const [yAxisColumns, setYAxisColumns] = useState<string[]>(
+    savedConfig?.yAxisColumns || (savedConfig?.yAxisColumn ? [savedConfig.yAxisColumn] : element.y_axis_variable ? [element.y_axis_variable] : [])
   );
   const [barMode, setBarMode] = useState<'group' | 'stack'>(
     savedConfig?.barMode || 'group'
@@ -113,7 +114,7 @@ export default function DataElementCell({
   const [xAxisType, setXAxisType] = useState(savedConfig?.xAxisType || '-');
   const [yAxisType, setYAxisType] = useState(savedConfig?.yAxisType || '-');
   const [hoverMode, setHoverMode] = useState(savedConfig?.hoverMode || 'closest');
-  const [yAxisTickFormat, setYAxisTickFormat] = useState(savedConfig?.yAxisTickFormat || '.2s');
+  const [yAxisTickFormat, setYAxisTickFormat] = useState(savedConfig?.yAxisTickFormat || '');
   const [xAxisTickAngle, setXAxisTickAngle] = useState(savedConfig?.xAxisTickAngle || 0);
   const [customLayout, setCustomLayout] = useState(savedConfig?.customLayout || '{}');
   const [settingsStep, setSettingsStep] = useState(0); // For multistep modal
@@ -276,9 +277,9 @@ export default function DataElementCell({
   const handleSaveConfig = () => {
     const config: ChartConfig = {
       chartType,
-      xAxisColumn,
-      yAxisColumn,
-      colorColumn,
+      xAxisColumns,
+      yAxisColumns,
+      colorColumn: '',
       barMode,
       title: chartTitle,
       xAxisTitle,
@@ -301,8 +302,8 @@ export default function DataElementCell({
       elementId: element.id,
       data: {
         chart_type: chartType,
-        x_axis_variable: xAxisColumn,
-        y_axis_variable: yAxisColumn,
+        x_axis_variable: xAxisColumns[0] || null,
+        y_axis_variable: yAxisColumns[0] || null,
         report_element_metadata: config as any,
       },
     });
@@ -370,7 +371,7 @@ export default function DataElementCell({
         size: 11,
       },
       xaxis: {
-        title: xAxisTitle || xAxisColumn || undefined,
+        title: xAxisTitle || xAxisColumns.join(', ') || undefined,
         type: xAxisType === '-' ? undefined : xAxisType,
         gridcolor: showGrid ? theme.colors.gray[2] : 'transparent',
         linecolor: theme.colors.gray[3],
@@ -381,17 +382,17 @@ export default function DataElementCell({
         tickangle: xAxisTickAngle,
       },
       yaxis: {
-        title: yAxisTitle || yAxisColumn || undefined,
+        title: yAxisTitle || yAxisColumns.join(', ') || undefined,
         type: yAxisType === '-' ? undefined : yAxisType,
         gridcolor: showGrid ? theme.colors.gray[2] : 'transparent',
         linecolor: theme.colors.gray[3],
-        tickformat: yAxisTickFormat,
+        tickformat: yAxisTickFormat || undefined,
         tickfont: {
           color: theme.colors.gray[6],
           size: 10,
         },
       },
-      showlegend: showLegend && !!colorColumn,
+      showlegend: showLegend,
       legend: legendConfig,
       hovermode: hoverMode,
       ...extraProps,
@@ -425,31 +426,31 @@ export default function DataElementCell({
 
   // Set default axes if not set - must be before any conditional returns
   useEffect(() => {
-    if (!xAxisColumn && availableColumns.length > 0) {
+    if (xAxisColumns.length === 0 && availableColumns.length > 0) {
       // Default x-axis based on chart type
       if (chartType === 'bar_chart') {
         // For bar charts, prefer Filter ≥ if we have filters, otherwise Simulation
         if (availableColumns.includes('Filter ≥') && dataframe.rows.some(r => r['Filter ≥'] !== null)) {
-          setXAxisColumn('Filter ≥');
+          setXAxisColumns(['Filter ≥']);
         } else {
-          setXAxisColumn(availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]);
+          setXAxisColumns([availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]]);
         }
       } else if (chartType === 'line_chart') {
         // For line charts, prefer Year, then Filter ≥, then Simulation
         if (availableColumns.includes('Year') && dataframe.rows.some(r => r['Year'])) {
-          setXAxisColumn('Year');
+          setXAxisColumns(['Year']);
         } else if (availableColumns.includes('Filter ≥') && dataframe.rows.some(r => r['Filter ≥'] !== null)) {
-          setXAxisColumn('Filter ≥');
+          setXAxisColumns(['Filter ≥']);
         } else {
-          setXAxisColumn(availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]);
+          setXAxisColumns([availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]]);
         }
       }
     }
-    if (!yAxisColumn) {
+    if (yAxisColumns.length === 0) {
       if (isAggregateChange && availableColumns.includes('Change')) {
-        setYAxisColumn('Change');
+        setYAxisColumns(['Change']);
       } else if (availableColumns.includes('Value')) {
-        setYAxisColumn('Value');
+        setYAxisColumns(['Value']);
       }
     }
   }, [chartType, availableColumns, dataframe.rows]);
@@ -569,35 +570,45 @@ export default function DataElementCell({
     }
 
     if (chartType === 'bar_chart') {
-      // Group data by selected axes
-      const xValues = [...new Set(dataframe.rows.map(r => r[xAxisColumn]))].filter(v => v !== null);
-      const colorValues = colorColumn
-        ? [...new Set(dataframe.rows.map(r => r[colorColumn]))]
-        : [null];
+      // Handle multi-axis bar charts
+      const xCol = xAxisColumns[0] || 'Value';
 
-      const plotData = colorValues.map((colorVal, idx) => {
-        const filteredRows = colorColumn
-          ? dataframe.rows.filter(r => r[colorColumn] === colorVal)
-          : dataframe.rows;
+      const plotData: any[] = [];
+      let colorIdx = 0;
 
-        const xData = xValues.map(xVal => {
-          const row = filteredRows.find(r => r[xAxisColumn] === xVal);
-          return row ? row[yAxisColumn] || row['Value'] : 0;
+      // Create a trace for each Y-axis column
+      yAxisColumns.forEach(yCol => {
+        // Build arrays directly from rows - don't deduplicate X values
+        // Each row should be a separate data point
+        const validRows = dataframe.rows.filter(r =>
+          r[xCol] !== null && r[xCol] !== undefined &&
+          typeof r[yCol] === 'number'
+        );
+
+        // Debug logging
+        console.log('Bar chart data:', {
+          yCol,
+          sampleRows: validRows.slice(0, 3),
+          yValues: validRows.slice(0, 3).map(r => r[yCol]),
         });
 
-        return {
-          x: xValues.map(v => String(v !== null ? v : '')),
-          y: xData.map(v => typeof v === 'number' ? v : 0),
+        const yData = validRows.map(r => r[yCol] as number);
+        console.log('Final Y data being sent to Plotly:', yData.slice(0, 5));
+
+        plotData.push({
+          x: validRows.map(r => String(r[xCol])),
+          y: yData,
           type: 'bar' as const,
-          name: colorVal ? String(colorVal) : undefined,
-          marker: {
-            color: colors[idx % colors.length],
-          },
-        };
+          name: yAxisColumns.length > 1 ? yCol : undefined,
+          marker: { color: colors[colorIdx++ % colors.length] },
+        });
       });
+
+      console.log('Full plotData:', plotData);
 
       const layout = createPlotlyLayout({
         barmode: barMode,
+        showlegend: yAxisColumns.length > 1,
       });
 
       return (
@@ -613,45 +624,35 @@ export default function DataElementCell({
     }
 
     if (chartType === 'line_chart') {
-      // Group data by color column for multiple lines
-      const xValues = [...new Set(dataframe.rows.map(r => r[xAxisColumn]))].filter(v => v !== null);
-      const colorValues = colorColumn
-        ? [...new Set(dataframe.rows.map(r => r[colorColumn]))]
-        : [null];
+      // Handle multi-axis line charts
+      const xCol = xAxisColumns[0] || 'Value';
 
-      const plotData = colorValues.map((colorVal, idx) => {
-        const filteredRows = colorColumn
-          ? dataframe.rows.filter(r => r[colorColumn] === colorVal)
-          : dataframe.rows;
+      const plotData: any[] = [];
+      let colorIdx = 0;
 
-        const xData = xValues.filter(xVal =>
-          filteredRows.some(r => r[xAxisColumn] === xVal)
+      // Create a trace for each Y-axis column
+      yAxisColumns.forEach(yCol => {
+        // Build arrays directly from rows - each row is a separate data point
+        const validRows = dataframe.rows.filter(r =>
+          r[xCol] !== null && r[xCol] !== undefined &&
+          typeof r[yCol] === 'number'
         );
 
-        const yData = xData.map(xVal => {
-          const row = filteredRows.find(r => r[xAxisColumn] === xVal);
-          const value = row ? row[yAxisColumn] || row['Value'] : 0;
-          return typeof value === 'number' ? value : 0;
-        });
-
-        return {
-          x: xData.map(v => String(v !== null ? v : '')),
-          y: yData,
+        plotData.push({
+          x: validRows.map(r => String(r[xCol])),
+          y: validRows.map(r => r[yCol] as number),
           type: 'scatter' as const,
           mode: 'lines+markers' as const,
-          name: colorVal ? String(colorVal) : undefined,
-          line: {
-            color: colors[idx % colors.length],
-            width: 2,
-          },
-          marker: {
-            size: 6,
-            color: colors[idx % colors.length],
-          },
-        };
+          name: yAxisColumns.length > 1 ? yCol : undefined,
+          line: { color: colors[colorIdx % colors.length], width: 2 },
+          marker: { size: 6, color: colors[colorIdx % colors.length] },
+        });
+        colorIdx++;
       });
 
-      const layout = createPlotlyLayout();
+      const layout = createPlotlyLayout({
+        showlegend: yAxisColumns.length > 1,
+      });
 
       return (
         <Box style={{ height: chartHeight, position: 'relative' }}>
@@ -748,32 +749,27 @@ export default function DataElementCell({
               <Text size="sm" color="dimmed" mb="xs">
                 Configure which data to display on each axis
               </Text>
-              <Select
+              <MultiSelect
                 label="X-axis"
-                value={xAxisColumn}
-                onChange={(val) => setXAxisColumn(val || '')}
+                value={xAxisColumns}
+                onChange={setXAxisColumns}
                 data={availableColumns}
                 size="sm"
-                required
+                placeholder="Select columns"
+                searchable
+                description="Select one or more columns for the X-axis"
               />
-              <Select
+              <MultiSelect
                 label="Y-axis"
-                value={yAxisColumn}
-                onChange={(val) => setYAxisColumn(val || '')}
+                value={yAxisColumns}
+                onChange={setYAxisColumns}
                 data={availableColumns}
                 size="sm"
-                required
+                placeholder="Select columns"
+                searchable
+                description="Select one or more columns for the Y-axis"
               />
-              <Select
-                label="Group by (optional)"
-                value={colorColumn}
-                onChange={(val) => setColorColumn(val || '')}
-                data={[{ value: '', label: 'None' }, ...availableColumns]}
-                size="sm"
-                clearable
-                description="Group data by this column for multiple series"
-              />
-              {chartType === 'bar_chart' && colorColumn && (
+              {chartType === 'bar_chart' && yAxisColumns.length > 1 && (
                 <Box>
                   <Text size="sm" mb="xs" fw={500}>Bar mode</Text>
                   <SegmentedControl
@@ -809,14 +805,14 @@ export default function DataElementCell({
                   label="X-axis label"
                   value={xAxisTitle}
                   onChange={(e) => setXAxisTitle(e.target.value)}
-                  placeholder={xAxisColumn || 'Auto'}
+                  placeholder={xAxisColumns.join(', ') || 'Auto'}
                   size="sm"
                 />
                 <TextInput
                   label="Y-axis label"
                   value={yAxisTitle}
                   onChange={(e) => setYAxisTitle(e.target.value)}
-                  placeholder={yAxisColumn || 'Auto'}
+                  placeholder={yAxisColumns.join(', ') || 'Auto'}
                   size="sm"
                 />
               </Group>
@@ -827,7 +823,7 @@ export default function DataElementCell({
                   onChange={(e) => setShowGrid(e.currentTarget.checked)}
                   size="md"
                 />
-                {colorColumn && (
+                {yAxisColumns.length > 1 && (
                   <Switch
                     label="Show legend"
                     checked={showLegend}
@@ -836,7 +832,7 @@ export default function DataElementCell({
                   />
                 )}
               </Group>
-              {colorColumn && showLegend && (
+              {yAxisColumns.length > 1 && showLegend && (
                 <Group grow>
                   <Select
                     label="Legend position"
@@ -902,9 +898,9 @@ export default function DataElementCell({
                   label="Number format"
                   value={yAxisTickFormat}
                   onChange={(e) => setYAxisTickFormat(e.target.value)}
-                  placeholder=".2s"
+                  placeholder="Auto"
                   size="sm"
-                  description="e.g. .2s for SI, .0% for percent"
+                  description="e.g. .2s for SI, .0% for percent, or leave blank for auto"
                 />
                 <NumberInput
                   label="X-axis label angle"

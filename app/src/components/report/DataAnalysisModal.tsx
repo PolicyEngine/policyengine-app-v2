@@ -304,24 +304,6 @@ export default function DataAnalysisModal({
         required
       />
 
-      {/* Simulations summary */}
-      <Paper p="xs" withBorder>
-        <Group gap="xs">
-          <Text size="xs" c="dimmed">Selected:</Text>
-          {selectedSimulations.map((simId, idx) => {
-            const sim = simulations?.find(s => s.id === simId);
-            const label = sim?.label || `Sim ${simId.slice(0, 6)}`;
-            return (
-              <Badge key={simId} variant="light" size="sm">
-                {dataType === 'comparison' && idx === 0 && 'Baseline: '}
-                {dataType === 'comparison' && idx === 1 && 'Reform: '}
-                {label}
-              </Badge>
-            );
-          })}
-        </Group>
-      </Paper>
-
       {error && (
         <Alert icon={<IconAlertCircle size={16} />} color="red">
           {error}
