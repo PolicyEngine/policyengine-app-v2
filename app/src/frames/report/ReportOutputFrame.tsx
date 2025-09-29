@@ -16,11 +16,13 @@ import {
   Title,
 } from '@mantine/core';
 import { spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportOutput } from '@/hooks/useReportOutput';
 
 export default function ReportOutputFrame() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
+  const countryId = useCurrentCountry();
 
   if (!reportId) {
     return (
@@ -40,15 +42,17 @@ export default function ReportOutputFrame() {
     );
   }
 
-  return <ReportOutputView reportId={reportId} navigate={navigate} />;
+  return <ReportOutputView reportId={reportId} navigate={navigate} countryId={countryId} />;
 }
 
 function ReportOutputView({
   reportId,
   navigate,
+  countryId,
 }: {
   reportId: string;
   navigate: ReturnType<typeof useNavigate>;
+  countryId: string;
 }) {
   const result = useReportOutput({ reportId });
   const { status, data, isPending, error } = result;
@@ -104,7 +108,7 @@ function ReportOutputView({
                 <Button
                   mt={spacing.md}
                   fullWidth
-                  onClick={() => navigate(`/reports/${reportId}`)}
+                  onClick={() => navigate(`/${countryId}/reports/${reportId}`)}
                   rightSection={<IconCheck size={18} />}
                 >
                   Continue to Report View

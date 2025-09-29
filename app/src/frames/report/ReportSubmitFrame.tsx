@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateReport } from '@/hooks/useCreateReport';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { selectGeographyAtPosition, selectHouseholdAtPosition } from '@/reducers/populationReducer';
 import { selectBothSimulations } from '@/reducers/simulationsReducer';
@@ -14,6 +15,7 @@ import { ReportCreationPayload } from '@/types/payloads';
 export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
   // Get navigation hook
   const navigate = useNavigate();
+  const countryId = useCurrentCountry();
 
   // Get report state from Redux
   const reportState = useSelector((state: RootState) => state.report);
@@ -72,7 +74,7 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
       {
         onSuccess: (data) => {
           // Navigate to the ReportOutputFrame with the report ID
-          navigate(`/reportOutput/${data.id}`);
+          navigate(`/${countryId}/reportOutput/${data.id}`);
           if (!isInSubflow) {
             resetIngredient('report');
           }
