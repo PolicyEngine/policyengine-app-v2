@@ -1,10 +1,25 @@
-import { vi } from 'vitest';
+import { vi, type Mocked } from 'vitest';
 import { BuildMetadataParams, CalculationService } from '@/libs/calculations/service';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { CalculationStatusResponse } from '@/libs/calculations/status';
-import { mockHouseholdMetadata, mockCreateHouseholdResponse } from '@/tests/fixtures/api/householdMocks';
-import { mockEconomyCalculationResult } from '@/tests/fixtures/api/economyMocks';
-import { mockSimulation } from '@/tests/fixtures/api/simulationMocks';
+import { mockHouseholdMetadata } from '@/tests/fixtures/api/householdMocks';
+
+// Create inline mocks for missing fixtures
+const mockSimulation = {
+  id: 'sim-1',
+  countryId: 'us' as const,
+  policyId: 'policy-1',
+  populationId: 'pop-1',
+  populationType: 'household' as const,
+  label: 'Test Simulation',
+  isCreated: true,
+  apiVersion: 'v1',
+};
+
+const mockEconomyCalculationResult = {
+  status: 'ok',
+  result: { impact: 1000 },
+};
 
 // Test constants for service
 export const TEST_REPORT_ID = 'report-123';
@@ -20,15 +35,27 @@ export const TEST_COUNTRIES = {
 export const mockGeography = {
   id: 'us',
   geographyId: 'us',
-  scope: 'national',
-  countryId: 'us',
+  scope: 'national' as const,
+  countryId: 'us' as const,
 };
 
 // Mock household for build params
-const mockHousehold = {
+import { Household } from '@/types/ingredients/Household';
+
+// Convert metadata HouseholdData to ingredients HouseholdData
+const convertedHouseholdData: Household['householdData'] = {
+  people: mockHouseholdMetadata.household_json.people,
+  families: mockHouseholdMetadata.household_json.families,
+  tax_units: mockHouseholdMetadata.household_json.tax_units,
+  spm_units: mockHouseholdMetadata.household_json.spm_units,
+  households: mockHouseholdMetadata.household_json.households,
+  marital_units: mockHouseholdMetadata.household_json.marital_units,
+};
+
+const mockHousehold: Household = {
   id: 'household-123',
   countryId: 'us',
-  householdData: mockHouseholdMetadata.household_json,
+  householdData: convertedHouseholdData,
 };
 
 // Build metadata params
@@ -45,7 +72,7 @@ export const HOUSEHOLD_BUILD_PARAMS: BuildMetadataParams = {
   },
   household: mockHousehold,
   geography: null,
-  countryId: TEST_COUNTRIES.US as string,
+  countryId: TEST_COUNTRIES.US,
 };
 
 export const ECONOMY_BUILD_PARAMS: BuildMetadataParams = {
@@ -61,13 +88,13 @@ export const ECONOMY_BUILD_PARAMS: BuildMetadataParams = {
   },
   household: null,
   geography: mockGeography,
-  countryId: TEST_COUNTRIES.US as string,
+  countryId: TEST_COUNTRIES.US,
 };
 
 // Metadata results
 export const HOUSEHOLD_META: CalculationMeta = {
   type: 'household',
-  countryId: TEST_COUNTRIES.US as any,
+  countryId: TEST_COUNTRIES.US as 'us',
   policyIds: {
     baseline: 'policy-baseline',
     reform: 'policy-reform',
@@ -78,7 +105,7 @@ export const HOUSEHOLD_META: CalculationMeta = {
 
 export const ECONOMY_META: CalculationMeta = {
   type: 'economy',
-  countryId: TEST_COUNTRIES.US as any,
+  countryId: TEST_COUNTRIES.US as 'us',
   policyIds: {
     baseline: 'policy-baseline',
     reform: 'policy-reform',
@@ -96,10 +123,10 @@ export const COMPUTING_STATUS: CalculationStatusResponse = {
 };
 
 // Mock household result
-export const mockHouseholdResult = {
+export const mockHouseholdResult: Household = {
   id: 'household-123',
   countryId: 'us',
-  householdData: mockHouseholdMetadata.household_json,
+  householdData: convertedHouseholdData,
 };
 
 export const OK_STATUS_HOUSEHOLD: CalculationStatusResponse = {
@@ -118,15 +145,19 @@ export const ERROR_STATUS: CalculationStatusResponse = {
 };
 
 // Mock service
-export const createMockCalculationService = (): jest.Mocked<CalculationService> => ({
-  buildMetadata: vi.fn().mockReturnValue(HOUSEHOLD_META),
-  getQueryOptions: vi.fn().mockReturnValue({
-    queryKey: ['calculation', TEST_REPORT_ID],
-    queryFn: vi.fn(),
-    refetchInterval: false,
-    staleTime: Infinity,
-  }),
-  executeCalculation: vi.fn().mockResolvedValue(OK_STATUS_HOUSEHOLD),
-  getHandler: vi.fn(),
-  getStatus: vi.fn().mockReturnValue(null),
-});
+export const createMockCalculationService = (): Mocked<CalculationService> => {
+  const mockService: Partial<Mocked<CalculationService>> = {
+    buildMetadata: vi.fn().mockReturnValue(HOUSEHOLD_META),
+    getQueryOptions: vi.fn().mockReturnValue({
+      queryKey: ['calculation', TEST_REPORT_ID],
+      queryFn: vi.fn(),
+      refetchInterval: false,
+      staleTime: Infinity,
+    }),
+    executeCalculation: vi.fn().mockResolvedValue(OK_STATUS_HOUSEHOLD),
+    getHandler: vi.fn(),
+    getStatus: vi.fn().mockReturnValue(null),
+  };
+
+  return mockService as Mocked<CalculationService>;
+};
