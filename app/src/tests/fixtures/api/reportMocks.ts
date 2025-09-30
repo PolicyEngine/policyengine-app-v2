@@ -205,7 +205,7 @@ export const MOCK_ECONOMY_RESULT: ReportOutputSocietyWideUS = {
 
 // Mock Report objects
 export const createMockReport = (overrides?: Partial<Report>): Report => ({
-  reportId: EXISTING_REPORT_ID,
+  id: EXISTING_REPORT_ID,
   countryId: TEST_COUNTRIES.US,
   apiVersion: '1.0.0',
   simulationIds: ['sim-1', 'sim-2'],
@@ -220,13 +220,13 @@ export const MOCK_COMPLETE_REPORT = createMockReport({
 });
 
 export const MOCK_ERROR_REPORT = createMockReport({
-  reportId: ERROR_REPORT_ID,
+  id: ERROR_REPORT_ID,
   status: 'error',
   output: null,
 });
 
 export const MOCK_PENDING_REPORT = createMockReport({
-  reportId: NEW_REPORT_ID,
+  id: NEW_REPORT_ID,
   status: 'pending',
 });
 
