@@ -204,13 +204,13 @@ export const mockMetadataInitialState = {
 export const createNormalizedCacheMock = () => ({
   getObjectById: vi.fn((id: string) => {
     // Return mocked normalized data based on ID
-    if (id === mockReport.reportId) {
+    if (id === mockReport.id) {
       return mockReport;
     }
     if (id === 'report-1') {
       return {
         ...mockReport,
-        reportId: 'report-1',
+        id: 'report-1',
         simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
       };
     }

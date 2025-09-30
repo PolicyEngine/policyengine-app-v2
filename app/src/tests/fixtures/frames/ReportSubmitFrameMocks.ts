@@ -34,7 +34,7 @@ export const mockSimulation2NoLabel: Simulation = {
 
 // Mock report state - must be complete Report, not Partial
 export const mockReportWithLabel: Report = {
-  reportId: '',
+  id: '',
   label: 'My Test Report',
   countryId: 'us' as const,
   simulationIds: ['1', '2'],
