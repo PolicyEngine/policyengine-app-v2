@@ -27,9 +27,12 @@ export interface ReportUpdate {
   simulation_ids?: string[];
 }
 
+interface ReportListParams extends PaginationParams {
+  user_id?: string;
+}
+
 class ReportsAPI {
-  async list(params?: PaginationParams): Promise<ReportResponse[]> {
-    // Will use this endpoint when available
+  async list(params?: ReportListParams): Promise<ReportResponse[]> {
     return apiClient.get<ReportResponse[]>('/reports/', { params });
   }
 

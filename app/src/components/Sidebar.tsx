@@ -129,44 +129,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
       <Box p={16}>
         <Divider mb={16} color={colors.border.light} />
-        <Stack gap={8}>
-          <Text size="xs" c={colors.text.secondary} style={{ fontSize: 10 }}>
-            Running 2 items
-          </Text>
-          <Box
-            p={8}
-            style={{
-              border: `1px solid ${colors.border.light}`,
-              borderRadius: 6,
-              cursor: 'pointer',
-            }}
-          >
-            <Stack gap={4}>
-              <Text size="xs" fw={600} c={colors.gray[900]} style={{ fontSize: 12 }}>
-                Report title
-              </Text>
-              <Text size="xs" c={colors.text.secondary} style={{ fontSize: 11 }}>
-                300 KB
-              </Text>
-            </Stack>
-          </Box>
-          <Button
-            variant="subtle"
-            size="xs"
-            c={colors.gray[700]}
-            styles={{
-              root: {
-                fontSize: 12,
-                fontWeight: 400,
-                height: 'auto',
-                padding: '4px 0',
-              },
-            }}
-          >
-            View Report
-          </Button>
-        </Stack>
-        <Divider my={16} color={colors.border.light} />
         <SidebarUser name="Olivia Rhye" initials="OR" />
       </Box>
     </Stack>
