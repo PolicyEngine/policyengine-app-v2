@@ -15,12 +15,12 @@ export class ReportAdapter {
   private static mapApiStatusToReportStatus(apiStatus: string): Report['status'] {
     const statusMap: Record<string, Report['status']> = {
       // Map deprecated API statuses to current Report statuses
-      'ok': 'complete',
-      'computing': 'pending',
-      'error': 'error',
+      ok: 'complete',
+      computing: 'pending',
+      error: 'error',
       // As well as current API report statuses
-      'pending': 'pending',
-      'complete': 'complete',
+      pending: 'pending',
+      complete: 'complete',
     };
     return statusMap[apiStatus] || 'pending';
   }

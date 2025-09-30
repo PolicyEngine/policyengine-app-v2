@@ -1,12 +1,12 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as householdApi from '@/api/household_calculation';
+import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
 import {
-  TEST_REPORT_ID,
-  HOUSEHOLD_CALCULATION_META,
-  MOCK_HOUSEHOLD_RESULT,
   advanceTimeAndFlush,
+  HOUSEHOLD_CALCULATION_META,
   HOUSEHOLD_ESTIMATED_DURATION,
+  MOCK_HOUSEHOLD_RESULT,
+  TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
 // Mock the API

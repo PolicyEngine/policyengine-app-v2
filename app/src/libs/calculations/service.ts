@@ -2,9 +2,9 @@ import { CalculationMeta } from '@/api/reportCalculations';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { CalculationStatusResponse } from './status';
 import { EconomyCalculationHandler } from './handlers/economy';
 import { HouseholdCalculationHandler } from './handlers/household';
+import { CalculationStatusResponse } from './status';
 
 /**
  * Parameters for building calculation metadata
@@ -60,9 +60,10 @@ export class CalculationService {
     }
 
     // Determine region for economy calculations
-    const region = type === 'economy' && geography?.scope === 'subnational' && geography.geographyId
-      ? geography.geographyId
-      : undefined;
+    const region =
+      type === 'economy' && geography?.scope === 'subnational' && geography.geographyId
+        ? geography.geographyId
+        : undefined;
 
     return {
       type,

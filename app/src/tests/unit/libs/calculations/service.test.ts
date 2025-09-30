@@ -1,20 +1,18 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { CalculationService } from '@/libs/calculations/service';
-import * as householdApi from '@/api/household_calculation';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as economyApi from '@/api/economy';
+import * as householdApi from '@/api/household_calculation';
+import { CalculationService } from '@/libs/calculations/service';
+import { ECONOMY_OK_RESPONSE } from '@/tests/fixtures/libs/calculations/handlerMocks';
 import {
-  HOUSEHOLD_BUILD_PARAMS,
-  ECONOMY_BUILD_PARAMS,
-  HOUSEHOLD_META,
-  ECONOMY_META,
-  TEST_REPORT_ID,
   COMPUTING_STATUS,
-  OK_STATUS_ECONOMY,
+  ECONOMY_BUILD_PARAMS,
+  ECONOMY_META,
+  HOUSEHOLD_BUILD_PARAMS,
+  HOUSEHOLD_META,
   mockHouseholdResult as MOCK_HOUSEHOLD_RESULT,
+  OK_STATUS_ECONOMY,
+  TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/serviceMocks';
-import {
-  ECONOMY_OK_RESPONSE,
-} from '@/tests/fixtures/libs/calculations/handlerMocks';
 
 // Mock the API modules
 vi.mock('@/api/household_calculation');

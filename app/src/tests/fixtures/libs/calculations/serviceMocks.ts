@@ -1,8 +1,10 @@
 import { vi, type Mocked } from 'vitest';
-import { BuildMetadataParams, CalculationService } from '@/libs/calculations/service';
 import { CalculationMeta } from '@/api/reportCalculations';
+import { BuildMetadataParams, CalculationService } from '@/libs/calculations/service';
 import { CalculationStatusResponse } from '@/libs/calculations/status';
 import { mockHouseholdMetadata } from '@/tests/fixtures/api/householdMocks';
+// Mock household for build params
+import { Household } from '@/types/ingredients/Household';
 
 // Create inline mocks for missing fixtures
 const mockSimulation = {
@@ -38,9 +40,6 @@ export const mockGeography = {
   scope: 'national' as const,
   countryId: 'us' as const,
 };
-
-// Mock household for build params
-import { Household } from '@/types/ingredients/Household';
 
 // Convert metadata HouseholdData to ingredients HouseholdData
 const convertedHouseholdData: Household['householdData'] = {

@@ -1,12 +1,12 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
-import { EconomyCalculationHandler } from '@/libs/calculations/handlers/economy';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as economyApi from '@/api/economy';
+import { EconomyCalculationHandler } from '@/libs/calculations/handlers/economy';
 import {
-  TEST_REPORT_ID,
   ECONOMY_CALCULATION_META,
   ECONOMY_COMPUTING_RESPONSE,
-  ECONOMY_OK_RESPONSE,
   ECONOMY_ERROR_RESPONSE,
+  ECONOMY_OK_RESPONSE,
+  TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
 // Mock the API

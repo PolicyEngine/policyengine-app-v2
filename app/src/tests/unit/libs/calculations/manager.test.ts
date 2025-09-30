@@ -1,20 +1,20 @@
-import { describe, test, expect, beforeEach, vi, type Mocked } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import { CalculationManager } from '@/libs/calculations/manager';
-import * as service from '@/libs/calculations/service';
-import * as progressUpdaterModule from '@/libs/calculations/progressUpdater';
+import { beforeEach, describe, expect, test, vi, type Mocked } from 'vitest';
 import * as reportApi from '@/api/report';
-import { ReportMetadata } from '@/types/metadata/reportMetadata';
+import { CalculationManager } from '@/libs/calculations/manager';
+import * as progressUpdaterModule from '@/libs/calculations/progressUpdater';
+import * as service from '@/libs/calculations/service';
+import { createMockHouseholdHandler } from '@/tests/fixtures/libs/calculations/handlerMocks';
 import {
-  TEST_REPORT_ID,
+  COMPUTING_STATUS,
+  ECONOMY_META,
+  ERROR_STATUS,
   HOUSEHOLD_BUILD_PARAMS,
   HOUSEHOLD_META,
-  ECONOMY_META,
   OK_STATUS_HOUSEHOLD,
-  ERROR_STATUS,
-  COMPUTING_STATUS,
+  TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/serviceMocks';
-import { createMockHouseholdHandler } from '@/tests/fixtures/libs/calculations/handlerMocks';
+import { ReportMetadata } from '@/types/metadata/reportMetadata';
 
 // Mock modules
 vi.mock('@/libs/calculations/service');
@@ -59,7 +59,8 @@ describe('CalculationManager', () => {
       stopProgressUpdates: vi.fn(),
       stopAllUpdates: vi.fn(),
     };
-    mockProgressUpdater = partialMockProgressUpdater as unknown as Mocked<progressUpdaterModule.HouseholdProgressUpdater>;
+    mockProgressUpdater =
+      partialMockProgressUpdater as unknown as Mocked<progressUpdaterModule.HouseholdProgressUpdater>;
     vi.mocked(progressUpdaterModule.HouseholdProgressUpdater).mockImplementation(
       () => mockProgressUpdater
     );
@@ -101,13 +102,15 @@ describe('CalculationManager', () => {
   describe('fetchCalculation', () => {
     test('given successful household calculation then updates report status', async () => {
       // Given
-      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
-        // Simulate the callback being invoked for household calculations
-        if (meta.type === 'household' && onComplete) {
-          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
         }
-        return OK_STATUS_HOUSEHOLD;
-      });
+      );
 
       // When
       const result = await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -130,13 +133,15 @@ describe('CalculationManager', () => {
 
     test('given failed calculation then marks report as error', async () => {
       // Given
-      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
-        // Simulate the callback being invoked for household calculations
-        if (meta.type === 'household' && onComplete) {
-          await onComplete(reportId, 'error', undefined);
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'error', undefined);
+          }
+          return ERROR_STATUS;
         }
-        return ERROR_STATUS;
-      });
+      );
 
       // When
       const result = await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -169,13 +174,15 @@ describe('CalculationManager', () => {
 
     test('given already updated report then skips duplicate update', async () => {
       // Given
-      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
-        // Simulate the callback being invoked for household calculations
-        if (meta.type === 'household' && onComplete) {
-          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
         }
-        return OK_STATUS_HOUSEHOLD;
-      });
+      );
 
       // First call
       await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -191,13 +198,15 @@ describe('CalculationManager', () => {
     test('given report update failure then retries once', async () => {
       // Given
       vi.useFakeTimers();
-      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
-        // Simulate the callback being invoked for household calculations
-        if (meta.type === 'household' && onComplete) {
-          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
         }
-        return OK_STATUS_HOUSEHOLD;
-      });
+      );
       vi.mocked(reportApi.markReportCompleted)
         .mockRejectedValueOnce(new Error('Network error'))
         .mockResolvedValueOnce({} as ReportMetadata);
@@ -261,13 +270,15 @@ describe('CalculationManager', () => {
 
     test('given new calculation then resets report tracking', async () => {
       // Given
-      mockService.executeCalculation.mockImplementation(async (reportId: any, meta: any, onComplete: any) => {
-        // Simulate the callback being invoked for household calculations
-        if (meta.type === 'household' && onComplete) {
-          await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
         }
-        return OK_STATUS_HOUSEHOLD;
-      });
+      );
       const mockHandler = createMockHouseholdHandler();
       mockHandler.isActive.mockReturnValue(false);
       mockService.getHandler.mockReturnValue(mockHandler);

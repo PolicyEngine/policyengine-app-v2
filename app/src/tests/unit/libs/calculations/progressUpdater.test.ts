@@ -1,15 +1,15 @@
-import { describe, test, expect, beforeEach, vi, type Mocked } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
-import { HouseholdProgressUpdater } from '@/libs/calculations/progressUpdater';
+import { beforeEach, describe, expect, test, vi, type Mocked } from 'vitest';
 import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
+import { HouseholdProgressUpdater } from '@/libs/calculations/progressUpdater';
 import {
-  TEST_REPORT_ID,
   advanceTimeAndFlush,
+  TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 import {
   COMPUTING_STATUS,
-  OK_STATUS_HOUSEHOLD,
   ERROR_STATUS,
+  OK_STATUS_HOUSEHOLD,
 } from '@/tests/fixtures/libs/calculations/serviceMocks';
 
 describe('HouseholdProgressUpdater', () => {
@@ -153,11 +153,11 @@ describe('HouseholdProgressUpdater', () => {
 
       // Check that both were called
       const calls = vi.mocked(queryClient.setQueryData).mock.calls;
-      const hasFirstReport = calls.some(call =>
-        JSON.stringify(call[0]) === JSON.stringify(['calculation', TEST_REPORT_ID])
+      const hasFirstReport = calls.some(
+        (call) => JSON.stringify(call[0]) === JSON.stringify(['calculation', TEST_REPORT_ID])
       );
-      const hasSecondReport = calls.some(call =>
-        JSON.stringify(call[0]) === JSON.stringify(['calculation', reportId2])
+      const hasSecondReport = calls.some(
+        (call) => JSON.stringify(call[0]) === JSON.stringify(['calculation', reportId2])
       );
 
       expect(hasFirstReport).toBe(true);

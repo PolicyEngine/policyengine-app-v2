@@ -39,10 +39,7 @@ export class HouseholdProgressUpdater {
 
       // Push update to TanStack Query cache
       // This triggers re-renders in components watching this query
-      this.queryClient.setQueryData(
-        ['calculation', reportId],
-        status as CalculationStatusResponse
-      );
+      this.queryClient.setQueryData(['calculation', reportId], status as CalculationStatusResponse);
 
       // Stop updates when calculation completes
       if (status.status !== 'computing') {

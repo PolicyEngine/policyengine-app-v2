@@ -29,7 +29,7 @@ export default function App() {
         <QueryNormalizerProvider
           queryClient={queryClient}
           normalizerConfig={{
-            devLogging: true
+            devLogging: true,
           }}
         >
           <QueryClientProvider client={queryClient}>

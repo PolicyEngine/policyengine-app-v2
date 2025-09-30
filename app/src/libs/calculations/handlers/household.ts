@@ -85,7 +85,10 @@ export class HouseholdCalculationHandler {
     // Handle completion and notify via callback
     promise
       .then(async (result) => {
-        console.log('[HouseholdCalculationHandler] Calculation completed successfully for:', reportId);
+        console.log(
+          '[HouseholdCalculationHandler] Calculation completed successfully for:',
+          reportId
+        );
         tracking.completed = true;
         tracking.result = result;
 
@@ -113,7 +116,10 @@ export class HouseholdCalculationHandler {
           try {
             await onComplete(reportId, 'error', undefined);
           } catch (callbackError) {
-            console.error('[HouseholdCalculationHandler] Completion callback failed:', callbackError);
+            console.error(
+              '[HouseholdCalculationHandler] Completion callback failed:',
+              callbackError
+            );
           }
         }
 
