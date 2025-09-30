@@ -92,7 +92,7 @@ describe('CalculationService', () => {
         ...ECONOMY_BUILD_PARAMS,
         geography: {
           ...ECONOMY_BUILD_PARAMS.geography!,
-          scope: 'subnational',
+          scope: 'subnational' as const,
           geographyId: 'ca',
         },
       };
@@ -142,7 +142,7 @@ describe('CalculationService', () => {
       };
 
       // When
-      const interval = options.refetchInterval(mockQuery);
+      const interval = (options.refetchInterval as any)(mockQuery);
 
       // Then
       expect(interval).toBe(1000);
@@ -158,7 +158,7 @@ describe('CalculationService', () => {
       };
 
       // When
-      const interval = options.refetchInterval(mockQuery);
+      const interval = (options.refetchInterval as any)(mockQuery);
 
       // Then
       expect(interval).toBe(false);

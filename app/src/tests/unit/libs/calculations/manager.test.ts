@@ -1,16 +1,16 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi, type Mocked } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
 import { CalculationManager } from '@/libs/calculations/manager';
 import * as service from '@/libs/calculations/service';
 import * as progressUpdaterModule from '@/libs/calculations/progressUpdater';
 import * as reportApi from '@/api/report';
+import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import {
   TEST_REPORT_ID,
   HOUSEHOLD_BUILD_PARAMS,
   HOUSEHOLD_META,
   ECONOMY_META,
   OK_STATUS_HOUSEHOLD,
-  OK_STATUS_ECONOMY,
   ERROR_STATUS,
   COMPUTING_STATUS,
 } from '@/tests/fixtures/libs/calculations/serviceMocks';
@@ -24,8 +24,8 @@ vi.mock('@/api/report');
 describe('CalculationManager', () => {
   let queryClient: QueryClient;
   let manager: CalculationManager;
-  let mockService: jest.Mocked<service.CalculationService>;
-  let mockProgressUpdater: jest.Mocked<progressUpdaterModule.HouseholdProgressUpdater>;
+  let mockService: Mocked<service.CalculationService>;
+  let mockProgressUpdater: Mocked<progressUpdaterModule.HouseholdProgressUpdater>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -39,8 +39,8 @@ describe('CalculationManager', () => {
     });
     queryClient.invalidateQueries = vi.fn();
 
-    // Create mock service
-    mockService = {
+    // Create mock service with required methods
+    const partialMockService = {
       buildMetadata: vi.fn().mockReturnValue(HOUSEHOLD_META),
       getQueryOptions: vi.fn().mockReturnValue({
         queryKey: ['calculation', TEST_REPORT_ID],
@@ -50,16 +50,18 @@ describe('CalculationManager', () => {
       getHandler: vi.fn().mockReturnValue(createMockHouseholdHandler()),
       getStatus: vi.fn().mockReturnValue(null),
     };
+    mockService = partialMockService as unknown as Mocked<service.CalculationService>;
     vi.mocked(service.getCalculationService).mockReturnValue(mockService);
 
-    // Create mock progress updater
-    mockProgressUpdater = {
+    // Create mock progress updater with required methods
+    const partialMockProgressUpdater = {
       startProgressUpdates: vi.fn(),
       stopProgressUpdates: vi.fn(),
       stopAllUpdates: vi.fn(),
     };
+    mockProgressUpdater = partialMockProgressUpdater as unknown as Mocked<progressUpdaterModule.HouseholdProgressUpdater>;
     vi.mocked(progressUpdaterModule.HouseholdProgressUpdater).mockImplementation(
-      () => mockProgressUpdater as any
+      () => mockProgressUpdater
     );
 
     manager = new CalculationManager(queryClient);
@@ -80,8 +82,10 @@ describe('CalculationManager', () => {
     test('given report and metadata then delegates to service', () => {
       // Given
       const expectedOptions = {
-        queryKey: ['calculation', TEST_REPORT_ID],
+        queryKey: ['calculation', TEST_REPORT_ID] as const,
         queryFn: vi.fn(),
+        refetchInterval: false as const,
+        staleTime: Infinity,
       };
       mockService.getQueryOptions.mockReturnValue(expectedOptions);
 
@@ -196,7 +200,7 @@ describe('CalculationManager', () => {
       });
       vi.mocked(reportApi.markReportCompleted)
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(undefined as any);
+        .mockResolvedValueOnce({} as ReportMetadata);
 
       // When
       const promise = manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -335,7 +339,7 @@ describe('CalculationManager', () => {
       vi.useFakeTimers();
       vi.mocked(reportApi.markReportCompleted)
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce(undefined as any);
+        .mockResolvedValueOnce({} as ReportMetadata);
 
       // When
       const promise = manager.updateReportStatus(

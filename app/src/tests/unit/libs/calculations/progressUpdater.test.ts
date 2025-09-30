@@ -1,4 +1,4 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, vi, type Mocked } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
 import { HouseholdProgressUpdater } from '@/libs/calculations/progressUpdater';
 import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
@@ -16,7 +16,7 @@ import {
 describe('HouseholdProgressUpdater', () => {
   let queryClient: QueryClient;
   let updater: HouseholdProgressUpdater;
-  let mockHandler: jest.Mocked<Partial<HouseholdCalculationHandler>>;
+  let mockHandler: Mocked<Partial<HouseholdCalculationHandler>>;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -47,7 +47,7 @@ describe('HouseholdProgressUpdater', () => {
   describe('startProgressUpdates', () => {
     test('given calculation in progress then updates cache every 500ms', async () => {
       // Given
-      mockHandler.getStatus?.mockReturnValue(COMPUTING_STATUS);
+      (mockHandler.getStatus as any).mockReturnValue(COMPUTING_STATUS);
 
       // When
       updater.startProgressUpdates(TEST_REPORT_ID, mockHandler as any);
@@ -65,7 +65,7 @@ describe('HouseholdProgressUpdater', () => {
 
     test('given completed calculation then stops updates', async () => {
       // Given
-      mockHandler.getStatus
+      (mockHandler.getStatus as any)
         ?.mockReturnValueOnce(COMPUTING_STATUS)
         .mockReturnValueOnce(COMPUTING_STATUS)
         .mockReturnValueOnce(OK_STATUS_HOUSEHOLD);
@@ -88,7 +88,7 @@ describe('HouseholdProgressUpdater', () => {
 
     test('given error status then stops updates', async () => {
       // Given
-      mockHandler.getStatus
+      (mockHandler.getStatus as any)
         ?.mockReturnValueOnce(COMPUTING_STATUS)
         .mockReturnValueOnce(ERROR_STATUS);
 
@@ -108,7 +108,7 @@ describe('HouseholdProgressUpdater', () => {
 
     test('given null status then stops updates', async () => {
       // Given
-      mockHandler.getStatus
+      (mockHandler.getStatus as any)
         ?.mockReturnValueOnce(COMPUTING_STATUS)
         .mockReturnValueOnce(null);
 
@@ -124,7 +124,7 @@ describe('HouseholdProgressUpdater', () => {
 
     test('given duplicate start request then ignores second request', () => {
       // Given
-      mockHandler.getStatus?.mockReturnValue(COMPUTING_STATUS);
+      (mockHandler.getStatus as any).mockReturnValue(COMPUTING_STATUS);
 
       // When
       updater.startProgressUpdates(TEST_REPORT_ID, mockHandler as any);
@@ -137,7 +137,7 @@ describe('HouseholdProgressUpdater', () => {
     test('given different report IDs then tracks both independently', async () => {
       // Given
       const reportId2 = 'report-456';
-      mockHandler.getStatus?.mockReturnValue(COMPUTING_STATUS);
+      (mockHandler.getStatus as any).mockReturnValue(COMPUTING_STATUS);
       const mockHandler2 = {
         getStatus: vi.fn().mockReturnValue(COMPUTING_STATUS),
       };
@@ -169,7 +169,7 @@ describe('HouseholdProgressUpdater', () => {
   describe('stopProgressUpdates', () => {
     test('given active updates then stops them', async () => {
       // Given
-      mockHandler.getStatus?.mockReturnValue(COMPUTING_STATUS);
+      (mockHandler.getStatus as any).mockReturnValue(COMPUTING_STATUS);
       updater.startProgressUpdates(TEST_REPORT_ID, mockHandler as any);
 
       // Verify updates are happening
@@ -199,7 +199,7 @@ describe('HouseholdProgressUpdater', () => {
       const mockHandler2 = {
         getStatus: vi.fn().mockReturnValue(COMPUTING_STATUS),
       };
-      mockHandler.getStatus?.mockReturnValue(COMPUTING_STATUS);
+      (mockHandler.getStatus as any).mockReturnValue(COMPUTING_STATUS);
 
       updater.startProgressUpdates(TEST_REPORT_ID, mockHandler as any);
       updater.startProgressUpdates(reportId2, mockHandler2 as any);

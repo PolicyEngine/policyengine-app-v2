@@ -114,7 +114,7 @@ describe('useUserReports', () => {
 
     // Mock API calls
     vi.spyOn(reportApi, 'fetchReportById').mockImplementation((_country, id) => {
-      if (id === mockReport.reportId) {
+      if (id === mockReport.id) {
         return Promise.resolve(mockReportMetadata);
       }
       if (id === 'report-1') {
@@ -431,7 +431,7 @@ describe('useUserReports', () => {
 
       // Then
       expect(cachedReport).toBeDefined();
-      expect(cachedReport?.reportId).toBe('report-1');
+      expect(cachedReport?.id).toBe('report-1');
     });
 
     test('given entity ID when using getNormalizedSimulation then returns cached simulation', async () => {
