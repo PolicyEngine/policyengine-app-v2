@@ -32,8 +32,9 @@ const router = createBrowserRouter(
               path: 'reports',
               element: <div>Reports page</div>,
             },
+            // Note: This is a temporary debug path for viewing report outputs
             {
-              path: 'reportOutput/:reportId',
+              path: 'report-output/:reportId',
               element: <ReportOutputFrame />,
             },
             {
