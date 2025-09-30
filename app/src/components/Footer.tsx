@@ -7,6 +7,7 @@ import {
   IconBrandYoutube,
 } from '@tabler/icons-react';
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import SidebarLogo from '@/components/sidebar/SidebarLogo';
 import { colors, spacing, typography } from '@/designTokens';
@@ -37,11 +38,17 @@ export default function Footer() {
       style={{ backgroundColor: colors.primary[900], padding: '3rem 4rem' }}
     >
       <Container size="2xl">
-        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={spacing['4xl']}>
+        <img
+          src={PolicyEngineLogo}
+          alt="PolicyEngine"
+          style={{
+            height: 52,
+            width: 'auto',
+          }}
+        />
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={spacing['4xl']} mt="2rem">
           {/* Left Section */}
           <Stack gap="2xl" align="flex-start">
-            <SidebarLogo />
-
             <Stack gap="xs">
               <Anchor href={CONTACT_LINKS.email} c={colors.white} fz="md" underline="never">
                 Email us
