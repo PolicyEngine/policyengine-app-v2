@@ -5,7 +5,6 @@ import {
   TEST_REPORT_ID,
   HOUSEHOLD_CALCULATION_META,
   MOCK_HOUSEHOLD_RESULT,
-  createRejectedPromise,
   advanceTimeAndFlush,
   HOUSEHOLD_ESTIMATED_DURATION,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';

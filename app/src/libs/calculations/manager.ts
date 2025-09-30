@@ -150,7 +150,7 @@ export class CalculationManager {
       id: reportId,
       status,
       output: status === 'complete' ? result || null : null,
-      countryId: countryId,
+      countryId,
       apiVersion: '',
       simulationIds: [],
     };

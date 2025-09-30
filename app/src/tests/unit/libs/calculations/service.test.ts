@@ -9,15 +9,11 @@ import {
   ECONOMY_META,
   TEST_REPORT_ID,
   COMPUTING_STATUS,
-  OK_STATUS_HOUSEHOLD,
   OK_STATUS_ECONOMY,
-  ERROR_STATUS,
   mockHouseholdResult as MOCK_HOUSEHOLD_RESULT,
 } from '@/tests/fixtures/libs/calculations/serviceMocks';
 import {
   ECONOMY_OK_RESPONSE,
-  ECONOMY_COMPUTING_RESPONSE,
-  ECONOMY_ERROR_RESPONSE,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
 // Mock the API modules

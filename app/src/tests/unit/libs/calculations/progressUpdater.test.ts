@@ -4,7 +4,6 @@ import { HouseholdProgressUpdater } from '@/libs/calculations/progressUpdater';
 import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
 import {
   TEST_REPORT_ID,
-  MOCK_HOUSEHOLD_RESULT,
   advanceTimeAndFlush,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 import {
