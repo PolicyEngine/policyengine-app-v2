@@ -9,7 +9,6 @@ import {
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import FooterSubscribe from '@/components/FooterSubscribe';
-import SidebarLogo from '@/components/sidebar/SidebarLogo';
 import { colors, spacing, typography } from '@/designTokens';
 
 const CONTACT_LINKS = {
