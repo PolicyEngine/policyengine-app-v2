@@ -121,7 +121,7 @@ describe('CalculationManager', () => {
         HOUSEHOLD_META.countryId,
         TEST_REPORT_ID,
         expect.objectContaining({
-          reportId: TEST_REPORT_ID,
+          id: TEST_REPORT_ID,
           status: 'complete',
           output: OK_STATUS_HOUSEHOLD.result,
         })
@@ -152,7 +152,7 @@ describe('CalculationManager', () => {
         HOUSEHOLD_META.countryId,
         TEST_REPORT_ID,
         expect.objectContaining({
-          reportId: TEST_REPORT_ID,
+          id: TEST_REPORT_ID,
           status: 'error',
           output: null,
         })

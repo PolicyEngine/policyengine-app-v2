@@ -231,11 +231,13 @@ describe('SessionStorageReportStore', () => {
       const result = await store.create(report);
 
       // Then
+      const { id, ...reportWithoutId } = report;
       expect(result).toMatchObject({
-        ...report,
-        id: report.reportId,
+        ...reportWithoutId,
         isCreated: true,
       });
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^sur-/); // Should have the sur- prefix
       expect(result.createdAt).toBeDefined();
       expect(sessionStorage.setItem).toHaveBeenCalledWith(
         'user-report-associations',
