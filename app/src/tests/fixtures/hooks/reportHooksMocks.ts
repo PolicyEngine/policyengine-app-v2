@@ -50,13 +50,22 @@ export const createMockCreateAssociation = () => ({
 });
 
 // Query Client factory
-export const createMockQueryClient = () =>
-  new QueryClient({
+export const createMockQueryClient = () => {
+  const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
       mutations: { retry: false },
     },
   });
+
+  // Add spies for methods we'll assert against
+  vi.spyOn(queryClient, 'prefetchQuery');
+  vi.spyOn(queryClient, 'invalidateQueries');
+  vi.spyOn(queryClient, 'setQueryData');
+  vi.spyOn(queryClient, 'getQueryData');
+
+  return queryClient;
+};
 
 // Console mocks
 export const setupConsoleMocks = () => {

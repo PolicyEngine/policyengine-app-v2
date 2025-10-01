@@ -2,14 +2,6 @@ import { vi } from 'vitest';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { CalculationStatusResponse } from '@/libs/calculations/status';
 
-// Mock calculation manager
-export const createMockCalculationManager = () => ({
-  startCalculation: vi.fn().mockResolvedValue(undefined),
-  fetchCalculation: vi.fn(),
-  getStatus: vi.fn(),
-  getCacheKey: vi.fn((reportId: string) => ['calculation', reportId] as const),
-});
-
 // Mock calculation responses
 export const MOCK_HOUSEHOLD_CALCULATION_RESPONSE: CalculationStatusResponse = {
   status: 'ok',
@@ -71,3 +63,28 @@ export const MOCK_ECONOMY_META_SUBNATIONAL: CalculationMeta = {
   populationId: 'us-california',
   region: 'california',
 };
+
+// Mock calculation manager
+export const createMockCalculationManager = () => ({
+  startCalculation: vi.fn().mockResolvedValue(undefined),
+  fetchCalculation: vi.fn(),
+  getStatus: vi.fn(),
+  getCacheKey: vi.fn((reportId: string) => ['calculation', reportId] as const),
+  buildMetadata: vi.fn((params: any) => {
+    // Determine type based on simulations
+    if (params.simulation1?.populationType === 'household') {
+      return MOCK_HOUSEHOLD_META;
+    }
+    // For economy simulations, check if geography has region
+    if (params.geography?.scope === 'subnational') {
+      return MOCK_ECONOMY_META_SUBNATIONAL;
+    }
+    return MOCK_ECONOMY_META_NATIONAL;
+  }),
+  getQueryOptions: vi.fn((reportId: string, meta: CalculationMeta) => ({
+    queryKey: ['calculation', reportId] as const,
+    queryFn: vi.fn().mockResolvedValue(MOCK_HOUSEHOLD_CALCULATION_RESPONSE),
+    refetchInterval: vi.fn(() => false),
+    staleTime: Infinity,
+  })),
+});
