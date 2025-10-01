@@ -362,11 +362,6 @@ describe('useCreateReport', () => {
     });
 
     test('given calculation start fails then still creates report successfully', async () => {
-      // Given - make prefetchQuery reject
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery').mockRejectedValueOnce(
-        new Error('Prefetch failed')
-      );
-
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 

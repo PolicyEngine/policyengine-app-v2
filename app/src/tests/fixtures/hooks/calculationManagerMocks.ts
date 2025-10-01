@@ -81,7 +81,7 @@ export const createMockCalculationManager = () => ({
     }
     return MOCK_ECONOMY_META_NATIONAL;
   }),
-  getQueryOptions: vi.fn((reportId: string, meta: CalculationMeta) => ({
+  getQueryOptions: vi.fn((reportId: string, _meta: CalculationMeta) => ({
     queryKey: ['calculation', reportId] as const,
     queryFn: vi.fn().mockResolvedValue(MOCK_HOUSEHOLD_CALCULATION_RESPONSE),
     refetchInterval: vi.fn(() => false),
