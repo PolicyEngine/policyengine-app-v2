@@ -230,7 +230,7 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${mockReportData.id}`);
       expect(mockResetIngredient).toHaveBeenCalledWith('report');
     });
 
@@ -248,7 +248,7 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${mockReportData.id}`);
       expect(mockResetIngredient).not.toHaveBeenCalled();
     });
 
@@ -290,7 +290,7 @@ describe('ReportSubmitFrame', () => {
 
       // Then - verify the callback received the report data
       expect(capturedData).toEqual(mockReportData);
-      expect(mockNavigate).toHaveBeenCalledWith(`/reportOutput/${mockReportData.id}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${mockReportData.id}`);
     });
 
     test('given household and geography data available then passes populations to createReport', async () => {
