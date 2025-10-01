@@ -199,7 +199,7 @@ export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
 
 // Initial state
 export const EXPECTED_INITIAL_STATE = {
-  reportId: '',
+  id: '',
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: null,
@@ -214,7 +214,7 @@ export const EXPECTED_INITIAL_STATE = {
 
 // Mock states for different scenarios
 export const MOCK_EMPTY_REPORT = {
-  reportId: '',
+  id: '',
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: null,
@@ -228,7 +228,7 @@ export const MOCK_EMPTY_REPORT = {
 };
 
 export const MOCK_PENDING_REPORT = {
-  reportId: TEST_REPORT_ID_1,
+  id: TEST_REPORT_ID_1,
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
@@ -242,7 +242,7 @@ export const MOCK_PENDING_REPORT = {
 };
 
 export const MOCK_COMPLETE_REPORT = {
-  reportId: TEST_REPORT_ID_1,
+  id: TEST_REPORT_ID_1,
   label: 'Test Report',
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
@@ -256,7 +256,7 @@ export const MOCK_COMPLETE_REPORT = {
 };
 
 export const MOCK_ERROR_REPORT = {
-  reportId: TEST_REPORT_ID_2,
+  id: TEST_REPORT_ID_2,
   label: null,
   countryId: 'uk' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v2',
@@ -271,7 +271,7 @@ export const MOCK_ERROR_REPORT = {
 
 // Helper functions for creating test states
 export const createMockReportState = (overrides?: Partial<any>) => ({
-  reportId: TEST_REPORT_ID_1,
+  id: TEST_REPORT_ID_1,
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
@@ -287,7 +287,7 @@ export const createMockReportState = (overrides?: Partial<any>) => ({
 
 // Assertion helpers
 export const expectReportId = (state: any, expectedId: string) => {
-  expect(state.reportId).toBe(expectedId);
+  expect(state.id).toBe(expectedId);
 };
 
 export const expectSimulationIds = (state: any, expectedIds: string[]) => {
