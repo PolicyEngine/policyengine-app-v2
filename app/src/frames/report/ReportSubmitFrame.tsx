@@ -72,7 +72,8 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
       {
         onSuccess: (data) => {
           // Navigate to the ReportOutputFrame with the report ID
-          navigate(`/reportOutput/${data.id}`);
+          // Navigate routes to absolute path with leading slash, otherwise relative
+          navigate(`report-output/${data.id}`);
           if (!isInSubflow) {
             resetIngredient('report');
           }

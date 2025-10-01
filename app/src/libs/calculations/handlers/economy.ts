@@ -1,10 +1,22 @@
 import { EconomyCalculationParams, fetchEconomyCalculation } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { CalculationStatusResponse } from '../status';
-import { CalculationHandler } from './base';
 
-export class EconomyCalculationHandler extends CalculationHandler {
-  async fetch(meta: CalculationMeta): Promise<CalculationStatusResponse> {
+/**
+ * EconomyCalculationHandler manages economy calculation execution
+ * without touching cache or database. Pure execution only.
+ */
+export class EconomyCalculationHandler {
+  // No client-side tracking needed for economy calculations
+  // The API handles all state management server-side
+
+  /**
+   * Execute an economy calculation - direct API call
+   * Pure execution - no cache or database updates
+   */
+  async execute(reportId: string, meta: CalculationMeta): Promise<CalculationStatusResponse> {
+    console.log('[EconomyCalculationHandler.execute] Fetching for report:', reportId);
+
     const params: EconomyCalculationParams = {
       region: meta.region || meta.countryId,
       time_period: '2024', // TODO: Make dynamic
@@ -28,13 +40,19 @@ export class EconomyCalculationHandler extends CalculationHandler {
     };
   }
 
+  /**
+   * Get current status - always null for economy
+   * Economy calculations are server-driven, no client-side tracking
+   */
   getStatus(_reportId: string): CalculationStatusResponse | null {
-    // Economy calculations are server-driven, no client-side status
     return null;
   }
 
-  async startCalculation(_reportId: string, _meta: CalculationMeta): Promise<void> {
-    // Economy calculations start automatically on fetch
-    // No special initialization needed
+  /**
+   * Check if a calculation is active - always false for economy
+   * Economy calculations don't track client-side
+   */
+  isActive(_reportId: string): boolean {
+    return false;
   }
 }

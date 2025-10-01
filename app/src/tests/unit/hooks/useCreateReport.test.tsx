@@ -232,13 +232,13 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should call manager.startCalculation
-        expect(mockManager.startCalculation).toHaveBeenCalledWith(
-          TEST_REPORT_ID_STRING,
-          MOCK_HOUSEHOLD_META
-        );
+        // Check if there were any errors logged
+        if (consoleMocks.errorSpy.mock.calls.length > 0) {
+          console.log('Errors logged:', consoleMocks.errorSpy.mock.calls);
+        }
 
         // Should trigger prefetch with calculation query
+        // startCalculation is called inside the queryFn, not directly
         expect(prefetchSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             queryKey: ['calculation', TEST_REPORT_ID_STRING],
@@ -276,12 +276,8 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should call manager.startCalculation
-        expect(mockManager.startCalculation).toHaveBeenCalledWith(
-          TEST_REPORT_ID_STRING,
-          MOCK_ECONOMY_META_NATIONAL
-        );
-
+        // Should trigger prefetch with calculation query
+        // Note: startCalculation is not called for economy calculations
         expect(prefetchSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             queryKey: ['calculation', TEST_REPORT_ID_STRING],
@@ -319,12 +315,8 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should call manager.startCalculation
-        expect(mockManager.startCalculation).toHaveBeenCalledWith(
-          TEST_REPORT_ID_STRING,
-          MOCK_ECONOMY_META_SUBNATIONAL
-        );
-
+        // Should trigger prefetch with calculation query
+        // Note: startCalculation is not called for economy calculations
         expect(prefetchSpy).toHaveBeenCalledWith(
           expect.objectContaining({
             queryKey: ['calculation', TEST_REPORT_ID_STRING],
@@ -363,15 +355,15 @@ describe('useCreateReport', () => {
         expect(createReport).toHaveBeenCalled();
         expect(mockCreateAssociation.mutateAsync).toHaveBeenCalled();
 
-        // Should still call manager and prefetch (with empty population)
-        expect(mockManager.startCalculation).toHaveBeenCalled();
+        // Should still prefetch the calculation query
+        // Note: startCalculation is called inside queryFn, not directly
         expect(prefetchSpy).toHaveBeenCalled();
       });
     });
 
     test('given calculation start fails then still creates report successfully', async () => {
-      // Given
-      mockManager.startCalculation.mockRejectedValueOnce(new Error('Start failed'));
+      // Given - make prefetchQuery reject to simulate failure
+      vi.spyOn(queryClient, 'prefetchQuery').mockRejectedValueOnce(new Error('Prefetch failed'));
 
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });

@@ -95,9 +95,16 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   private readonly STORAGE_KEY = 'user-simulation-associations';
 
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
+    // Generate a unique ID for session storage
+    // Format: "sus-[short-timestamp][random]"
+    // Use base36 encoding for compactness
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const uniqueId = `sus-${timestamp}${random}`;
+
     const newSimulation: UserSimulation = {
       ...simulation,
-      id: simulation.simulationId, // Use simulationId as the ID
+      id: uniqueId,
       createdAt: new Date().toISOString(),
       isCreated: true,
     };

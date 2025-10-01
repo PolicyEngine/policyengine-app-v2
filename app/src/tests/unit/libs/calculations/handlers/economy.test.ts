@@ -1,35 +1,32 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import * as economyApi from '@/api/economy';
 import { EconomyCalculationHandler } from '@/libs/calculations/handlers/economy';
 import {
-  createMockQueryClient,
   ECONOMY_CALCULATION_META,
   ECONOMY_COMPUTING_RESPONSE,
   ECONOMY_ERROR_RESPONSE,
-  ECONOMY_NATIONAL_META,
   ECONOMY_OK_RESPONSE,
-  mockFetchEconomyCalculation,
   TEST_REPORT_ID,
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
-// Mock the economy API module
-vi.mock('@/api/economy', () => ({
-  fetchEconomyCalculation: vi.fn(() => mockFetchEconomyCalculation()),
-}));
+// Mock the API
+vi.mock('@/api/economy');
 
 describe('EconomyCalculationHandler', () => {
+  let handler: EconomyCalculationHandler;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    handler = new EconomyCalculationHandler();
   });
 
-  describe('fetch', () => {
-    test('given computing response then returns computing status', async () => {
+  describe('execute', () => {
+    test('given economy calculation request then calls API and returns computing status', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      mockFetchEconomyCalculation.mockResolvedValueOnce(ECONOMY_COMPUTING_RESPONSE);
+      vi.mocked(economyApi.fetchEconomyCalculation).mockResolvedValue(ECONOMY_COMPUTING_RESPONSE);
 
       // When
-      const result = await handler.fetch(ECONOMY_CALCULATION_META);
+      const result = await handler.execute(TEST_REPORT_ID, ECONOMY_CALCULATION_META);
 
       // Then
       expect(result).toEqual({
@@ -39,17 +36,23 @@ describe('EconomyCalculationHandler', () => {
         result: null,
         error: undefined,
       });
-      expect(mockFetchEconomyCalculation).toHaveBeenCalledWith();
+      expect(economyApi.fetchEconomyCalculation).toHaveBeenCalledWith(
+        ECONOMY_CALCULATION_META.countryId,
+        ECONOMY_CALCULATION_META.policyIds.reform,
+        ECONOMY_CALCULATION_META.policyIds.baseline,
+        {
+          region: 'ca',
+          time_period: '2024',
+        }
+      );
     });
 
-    test('given ok response then returns ok status with result', async () => {
+    test('given completed economy calculation then returns ok status', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      mockFetchEconomyCalculation.mockResolvedValueOnce(ECONOMY_OK_RESPONSE);
+      vi.mocked(economyApi.fetchEconomyCalculation).mockResolvedValue(ECONOMY_OK_RESPONSE);
 
       // When
-      const result = await handler.fetch(ECONOMY_CALCULATION_META);
+      const result = await handler.execute(TEST_REPORT_ID, ECONOMY_CALCULATION_META);
 
       // Then
       expect(result).toEqual({
@@ -61,14 +64,12 @@ describe('EconomyCalculationHandler', () => {
       });
     });
 
-    test('given error response then returns error status', async () => {
+    test('given failed economy calculation then returns error status', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      mockFetchEconomyCalculation.mockResolvedValueOnce(ECONOMY_ERROR_RESPONSE);
+      vi.mocked(economyApi.fetchEconomyCalculation).mockResolvedValue(ECONOMY_ERROR_RESPONSE);
 
       // When
-      const result = await handler.fetch(ECONOMY_CALCULATION_META);
+      const result = await handler.execute(TEST_REPORT_ID, ECONOMY_CALCULATION_META);
 
       // Then
       expect(result).toEqual({
@@ -80,131 +81,115 @@ describe('EconomyCalculationHandler', () => {
       });
     });
 
-    test('given meta with region then uses region in params', async () => {
+    test('given multiple calls then makes fresh API calls each time', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      mockFetchEconomyCalculation.mockResolvedValueOnce(ECONOMY_OK_RESPONSE);
+      vi.mocked(economyApi.fetchEconomyCalculation)
+        .mockResolvedValueOnce(ECONOMY_COMPUTING_RESPONSE)
+        .mockResolvedValueOnce(ECONOMY_OK_RESPONSE);
 
-      // When
-      await handler.fetch(ECONOMY_CALCULATION_META);
+      // When - first call
+      const result1 = await handler.execute(TEST_REPORT_ID, ECONOMY_CALCULATION_META);
+      expect(result1.status).toBe('computing');
+
+      // When - second call
+      const result2 = await handler.execute(TEST_REPORT_ID, ECONOMY_CALCULATION_META);
+      expect(result2.status).toBe('ok');
 
       // Then
-      // Note: We're mocking at the module level, so we can't directly verify params
-      // In a real test, we'd verify the fetchEconomyCalculation was called with correct params
-      expect(mockFetchEconomyCalculation).toHaveBeenCalled();
+      expect(economyApi.fetchEconomyCalculation).toHaveBeenCalledTimes(2);
     });
 
-    test('given meta without region then uses country as region', async () => {
+    test('given national calculation then uses countryId as region', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      mockFetchEconomyCalculation.mockResolvedValueOnce(ECONOMY_OK_RESPONSE);
+      const nationalMeta = {
+        ...ECONOMY_CALCULATION_META,
+        region: undefined,
+      };
+      vi.mocked(economyApi.fetchEconomyCalculation).mockResolvedValue(ECONOMY_OK_RESPONSE);
 
       // When
-      await handler.fetch(ECONOMY_NATIONAL_META);
+      await handler.execute(TEST_REPORT_ID, nationalMeta);
 
       // Then
-      expect(mockFetchEconomyCalculation).toHaveBeenCalled();
+      expect(economyApi.fetchEconomyCalculation).toHaveBeenCalledWith(
+        nationalMeta.countryId,
+        nationalMeta.policyIds.reform,
+        nationalMeta.policyIds.baseline,
+        {
+          region: nationalMeta.countryId,
+          time_period: '2024',
+        }
+      );
     });
 
-    test('given meta with reform policy then uses reform policy', async () => {
+    test('given baseline-only calculation then uses baseline as reform', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      mockFetchEconomyCalculation.mockResolvedValueOnce(ECONOMY_OK_RESPONSE);
+      const baselineOnlyMeta = {
+        ...ECONOMY_CALCULATION_META,
+        policyIds: {
+          baseline: 'policy-baseline',
+          reform: undefined,
+        },
+      };
+      vi.mocked(economyApi.fetchEconomyCalculation).mockResolvedValue(ECONOMY_OK_RESPONSE);
 
       // When
-      await handler.fetch(ECONOMY_CALCULATION_META);
+      await handler.execute(TEST_REPORT_ID, baselineOnlyMeta);
 
       // Then
-      expect(mockFetchEconomyCalculation).toHaveBeenCalled();
-      // Reform policy should be used (policy-reform-012)
+      expect(economyApi.fetchEconomyCalculation).toHaveBeenCalledWith(
+        baselineOnlyMeta.countryId,
+        'policy-baseline', // Uses baseline when reform is undefined
+        'policy-baseline',
+        expect.any(Object)
+      );
     });
 
-    test('given meta without reform policy then uses baseline policy', async () => {
+    test('given API error then propagates the error', async () => {
       // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      mockFetchEconomyCalculation.mockResolvedValueOnce(ECONOMY_OK_RESPONSE);
-
-      // When
-      await handler.fetch(ECONOMY_NATIONAL_META);
-
-      // Then
-      expect(mockFetchEconomyCalculation).toHaveBeenCalled();
-      // Baseline policy should be used (policy-baseline-uk)
-    });
-
-    test('given fetch throws error then propagates error', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-      const error = new Error('Network error');
-      mockFetchEconomyCalculation.mockRejectedValueOnce(error);
+      const apiError = new Error('Network error');
+      vi.mocked(economyApi.fetchEconomyCalculation).mockRejectedValue(apiError);
 
       // When/Then
-      await expect(handler.fetch(ECONOMY_CALCULATION_META)).rejects.toThrow('Network error');
+      await expect(handler.execute(TEST_REPORT_ID, ECONOMY_CALCULATION_META)).rejects.toThrow(
+        'Network error'
+      );
     });
   });
 
   describe('getStatus', () => {
-    test('given any report id then always returns null', () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-
+    test('given any reportId then always returns null', () => {
       // When
-      const result = handler.getStatus(TEST_REPORT_ID);
+      const status = handler.getStatus(TEST_REPORT_ID);
 
       // Then
-      expect(result).toBeNull();
+      expect(status).toBeNull();
     });
 
-    test('given different report ids then always returns null', () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-
+    test('given non-existent calculation then returns null', () => {
       // When
-      const result1 = handler.getStatus('report-001');
-      const result2 = handler.getStatus('report-002');
-      const result3 = handler.getStatus('');
+      const status = handler.getStatus('non-existent-id');
 
       // Then
-      expect(result1).toBeNull();
-      expect(result2).toBeNull();
-      expect(result3).toBeNull();
+      expect(status).toBeNull();
     });
   });
 
-  describe('startCalculation', () => {
-    test('given calculation meta then completes without action', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-
+  describe('isActive', () => {
+    test('given any reportId then always returns false', () => {
       // When
-      await handler.startCalculation(TEST_REPORT_ID, ECONOMY_CALCULATION_META);
+      const isActive = handler.isActive(TEST_REPORT_ID);
 
-      // Then - should complete without error
-      expect(queryClient.setQueryData).not.toHaveBeenCalled();
-      expect(mockFetchEconomyCalculation).not.toHaveBeenCalled();
+      // Then
+      expect(isActive).toBe(false);
     });
 
-    test('given multiple calls then all complete without action', async () => {
-      // Given
-      const queryClient = createMockQueryClient();
-      const handler = new EconomyCalculationHandler(queryClient);
-
+    test('given non-existent calculation then returns false', () => {
       // When
-      await handler.startCalculation('report-1', ECONOMY_CALCULATION_META);
-      await handler.startCalculation('report-2', ECONOMY_NATIONAL_META);
-      await handler.startCalculation('report-3', ECONOMY_CALCULATION_META);
+      const isActive = handler.isActive('non-existent-id');
 
-      // Then - all should complete without error
-      expect(queryClient.setQueryData).not.toHaveBeenCalled();
-      expect(mockFetchEconomyCalculation).not.toHaveBeenCalled();
+      // Then
+      expect(isActive).toBe(false);
     });
   });
 });

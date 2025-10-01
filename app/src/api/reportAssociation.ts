@@ -94,9 +94,16 @@ export class SessionStorageReportStore implements UserReportStore {
   private readonly STORAGE_KEY = 'user-report-associations';
 
   async create(report: Omit<UserReport, 'id' | 'createdAt'>): Promise<UserReport> {
+    // Generate a unique ID for session storage
+    // Format: "sur-[short-timestamp][random]"
+    // Use base36 encoding for compactness
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const uniqueId = `sur-${timestamp}${random}`;
+
     const newReport: UserReport = {
       ...report,
-      id: report.reportId, // Use reportId as the ID
+      id: uniqueId,
       createdAt: new Date().toISOString(),
       isCreated: true,
     };

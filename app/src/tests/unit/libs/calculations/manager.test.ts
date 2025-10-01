@@ -1,380 +1,403 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { QueryClient } from '@tanstack/react-query';
+import { beforeEach, describe, expect, test, vi, type Mocked } from 'vitest';
+import * as reportApi from '@/api/report';
+import { CalculationManager } from '@/libs/calculations/manager';
+import * as progressUpdaterModule from '@/libs/calculations/progressUpdater';
+import * as service from '@/libs/calculations/service';
+import { createMockHouseholdHandler } from '@/tests/fixtures/libs/calculations/handlerMocks';
 import {
-  CalculationManager,
-  getCalculationManager,
-  resetCalculationManager,
-} from '@/libs/calculations/manager';
-import {
-  createMockHandlers,
-  createMockManagerQueryClient,
-  INVALID_TYPE_META,
-  MANAGER_COMPUTING_STATUS,
-  MANAGER_ECONOMY_META,
-  MANAGER_ERROR_MESSAGES,
-  MANAGER_HOUSEHOLD_META,
-  MANAGER_OK_STATUS,
-  MANAGER_TEST_REPORT_ID,
-} from '@/tests/fixtures/libs/calculations/managerMocks';
+  COMPUTING_STATUS,
+  ECONOMY_META,
+  ERROR_STATUS,
+  HOUSEHOLD_BUILD_PARAMS,
+  HOUSEHOLD_META,
+  OK_STATUS_HOUSEHOLD,
+  TEST_REPORT_ID,
+} from '@/tests/fixtures/libs/calculations/serviceMocks';
+import { ReportMetadata } from '@/types/metadata/reportMetadata';
 
-// Mock the handler modules
-vi.mock('@/libs/calculations/handlers', () => ({
-  CalculationHandler: vi.fn(),
-  HouseholdCalculationHandler: vi.fn().mockImplementation(() => ({
-    fetch: vi.fn(),
-    getStatus: vi.fn(),
-    startCalculation: vi.fn(),
-    getCacheKey: (reportId: string) => ['calculation', reportId] as const,
-  })),
-  EconomyCalculationHandler: vi.fn().mockImplementation(() => ({
-    fetch: vi.fn(),
-    getStatus: vi.fn(),
-    startCalculation: vi.fn(),
-    getCacheKey: (reportId: string) => ['calculation', reportId] as const,
-  })),
-}));
+// Mock modules
+vi.mock('@/libs/calculations/service');
+vi.mock('@/libs/calculations/progressUpdater');
+vi.mock('@/api/report');
 
 describe('CalculationManager', () => {
-  let queryClient: ReturnType<typeof createMockManagerQueryClient>;
+  let queryClient: QueryClient;
+  let manager: CalculationManager;
+  let mockService: Mocked<service.CalculationService>;
+  let mockProgressUpdater: Mocked<progressUpdaterModule.HouseholdProgressUpdater>;
 
   beforeEach(() => {
-    queryClient = createMockManagerQueryClient();
-    resetCalculationManager(); // Reset singleton before each test
-  });
-
-  afterEach(() => {
     vi.clearAllMocks();
+
+    // Create query client
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    queryClient.invalidateQueries = vi.fn();
+
+    // Create mock service with required methods
+    const partialMockService = {
+      buildMetadata: vi.fn().mockReturnValue(HOUSEHOLD_META),
+      getQueryOptions: vi.fn().mockReturnValue({
+        queryKey: ['calculation', TEST_REPORT_ID],
+        queryFn: vi.fn(),
+      }),
+      executeCalculation: vi.fn().mockResolvedValue(OK_STATUS_HOUSEHOLD),
+      getHandler: vi.fn().mockReturnValue(createMockHouseholdHandler()),
+      getStatus: vi.fn().mockReturnValue(null),
+    };
+    mockService = partialMockService as unknown as Mocked<service.CalculationService>;
+    vi.mocked(service.getCalculationService).mockReturnValue(mockService);
+
+    // Create mock progress updater with required methods
+    const partialMockProgressUpdater = {
+      startProgressUpdates: vi.fn(),
+      stopProgressUpdates: vi.fn(),
+      stopAllUpdates: vi.fn(),
+    };
+    mockProgressUpdater =
+      partialMockProgressUpdater as unknown as Mocked<progressUpdaterModule.HouseholdProgressUpdater>;
+    vi.mocked(progressUpdaterModule.HouseholdProgressUpdater).mockImplementation(
+      () => mockProgressUpdater
+    );
+
+    manager = new CalculationManager(queryClient);
   });
 
-  describe('constructor and getHandler', () => {
-    test('given valid query client then creates manager with handlers', () => {
-      // Given/When
-      const manager = new CalculationManager(queryClient);
+  describe('buildMetadata', () => {
+    test('given build params then delegates to service', () => {
+      // When
+      const result = manager.buildMetadata(HOUSEHOLD_BUILD_PARAMS);
 
       // Then
-      expect(manager).toBeDefined();
-      expect(manager.getHandler('household')).toBeDefined();
-      expect(manager.getHandler('economy')).toBeDefined();
+      expect(result).toBe(HOUSEHOLD_META);
+      expect(mockService.buildMetadata).toHaveBeenCalledWith(HOUSEHOLD_BUILD_PARAMS);
     });
+  });
 
-    test('given household type then returns household handler', () => {
+  describe('getQueryOptions', () => {
+    test('given report and metadata then delegates to service', () => {
       // Given
-      const manager = new CalculationManager(queryClient);
+      const expectedOptions = {
+        queryKey: ['calculation', TEST_REPORT_ID] as const,
+        queryFn: vi.fn(),
+        refetchInterval: false as const,
+        staleTime: Infinity,
+      };
+      mockService.getQueryOptions.mockReturnValue(expectedOptions);
 
       // When
-      const handler = manager.getHandler('household');
+      const result = manager.getQueryOptions(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Then
-      expect(handler).toBeDefined();
-      // Since we're mocking, just check it exists
-      expect(handler).toBeTruthy();
-    });
-
-    test('given economy type then returns economy handler', () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-
-      // When
-      const handler = manager.getHandler('economy');
-
-      // Then
-      expect(handler).toBeDefined();
-      // Since we're mocking, just check it exists
-      expect(handler).toBeTruthy();
-    });
-
-    test('given invalid type then throws error', () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-
-      // When/Then
-      expect(() => manager.getHandler('invalid' as any)).toThrow(
-        MANAGER_ERROR_MESSAGES.NO_HANDLER('invalid')
-      );
+      expect(result).toBe(expectedOptions);
+      expect(mockService.getQueryOptions).toHaveBeenCalledWith(TEST_REPORT_ID, HOUSEHOLD_META);
     });
   });
 
   describe('fetchCalculation', () => {
-    test('given household metadata then delegates to household handler', async () => {
+    test('given successful household calculation then updates report status', async () => {
       // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      mockHandlers.household.fetchMock.mockResolvedValue(MANAGER_OK_STATUS);
-
-      // Replace the real handler with mock
-      (manager as any).handlers.set('household', mockHandlers.household);
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
+        }
+      );
 
       // When
-      const result = await manager.fetchCalculation(MANAGER_HOUSEHOLD_META);
+      const result = await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Then
-      expect(mockHandlers.household.fetchMock).toHaveBeenCalledWith(MANAGER_HOUSEHOLD_META);
-      expect(result).toEqual(MANAGER_OK_STATUS);
+      expect(result).toBe(OK_STATUS_HOUSEHOLD);
+      expect(reportApi.markReportCompleted).toHaveBeenCalledWith(
+        HOUSEHOLD_META.countryId,
+        TEST_REPORT_ID,
+        expect.objectContaining({
+          id: TEST_REPORT_ID,
+          status: 'complete',
+          output: OK_STATUS_HOUSEHOLD.result,
+        })
+      );
+      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['reports', 'report_id', TEST_REPORT_ID],
+      });
     });
 
-    test('given economy metadata then delegates to economy handler', async () => {
+    test('given failed calculation then marks report as error', async () => {
       // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      mockHandlers.economy.fetchMock.mockResolvedValue(MANAGER_COMPUTING_STATUS);
-
-      // Replace the real handler with mock
-      (manager as any).handlers.set('economy', mockHandlers.economy);
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'error', undefined);
+          }
+          return ERROR_STATUS;
+        }
+      );
 
       // When
-      const result = await manager.fetchCalculation(MANAGER_ECONOMY_META);
+      const result = await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Then
-      expect(mockHandlers.economy.fetchMock).toHaveBeenCalledWith(MANAGER_ECONOMY_META);
-      expect(result).toEqual(MANAGER_COMPUTING_STATUS);
-    });
-
-    test('given invalid type metadata then throws error', async () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-
-      // When/Then
-      await expect(manager.fetchCalculation(INVALID_TYPE_META)).rejects.toThrow(
-        MANAGER_ERROR_MESSAGES.NO_HANDLER('invalid')
+      expect(result).toBe(ERROR_STATUS);
+      expect(reportApi.markReportError).toHaveBeenCalledWith(
+        HOUSEHOLD_META.countryId,
+        TEST_REPORT_ID,
+        expect.objectContaining({
+          id: TEST_REPORT_ID,
+          status: 'error',
+          output: null,
+        })
       );
     });
 
-    test('given handler throws error then propagates error', async () => {
+    test('given computing status then does not update report', async () => {
       // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      const error = new Error('Fetch failed');
-      mockHandlers.household.fetchMock.mockRejectedValue(error);
+      mockService.executeCalculation.mockResolvedValue(COMPUTING_STATUS);
 
-      // Replace the real handler with mock
-      (manager as any).handlers.set('household', mockHandlers.household);
+      // When
+      const result = await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
-      // When/Then
-      await expect(manager.fetchCalculation(MANAGER_HOUSEHOLD_META)).rejects.toThrow(
-        'Fetch failed'
+      // Then
+      expect(result).toBe(COMPUTING_STATUS);
+      expect(reportApi.markReportCompleted).not.toHaveBeenCalled();
+      expect(reportApi.markReportError).not.toHaveBeenCalled();
+    });
+
+    test('given already updated report then skips duplicate update', async () => {
+      // Given
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
+        }
       );
+
+      // First call
+      await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+      vi.clearAllMocks();
+
+      // When - second call
+      await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+
+      // Then - no second update
+      expect(reportApi.markReportCompleted).not.toHaveBeenCalled();
+    });
+
+    test('given report update failure then retries once', async () => {
+      // Given
+      vi.useFakeTimers();
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
+        }
+      );
+      vi.mocked(reportApi.markReportCompleted)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({} as ReportMetadata);
+
+      // When
+      const promise = manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+
+      // Wait for initial call to complete
+      await vi.runAllTimersAsync();
+      await promise;
+
+      // Then
+      expect(reportApi.markReportCompleted).toHaveBeenCalledTimes(2);
+      vi.useRealTimers();
     });
   });
 
   describe('startCalculation', () => {
-    test('given household calculation then delegates to household handler', async () => {
+    test('given household calculation then starts progress updates', async () => {
       // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      mockHandlers.household.startCalculationMock.mockResolvedValue(undefined);
-
-      // Replace the real handler with mock
-      (manager as any).handlers.set('household', mockHandlers.household);
+      const mockHandler = createMockHouseholdHandler();
+      mockHandler.isActive.mockReturnValue(false);
+      mockService.getHandler.mockReturnValue(mockHandler);
 
       // When
-      await manager.startCalculation(MANAGER_TEST_REPORT_ID, MANAGER_HOUSEHOLD_META);
+      await manager.startCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Then
-      expect(mockHandlers.household.startCalculationMock).toHaveBeenCalledWith(
-        MANAGER_TEST_REPORT_ID,
-        MANAGER_HOUSEHOLD_META
+      expect(mockService.executeCalculation).toHaveBeenCalledWith(
+        TEST_REPORT_ID,
+        HOUSEHOLD_META,
+        expect.any(Function) // The callback function
+      );
+      expect(mockProgressUpdater.startProgressUpdates).toHaveBeenCalledWith(
+        TEST_REPORT_ID,
+        mockHandler
       );
     });
 
-    test('given economy calculation then delegates to economy handler', async () => {
+    test('given already active household calculation then skips start', async () => {
       // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      mockHandlers.economy.startCalculationMock.mockResolvedValue(undefined);
-
-      // Replace the real handler with mock
-      (manager as any).handlers.set('economy', mockHandlers.economy);
+      const mockHandler = createMockHouseholdHandler();
+      mockHandler.isActive.mockReturnValue(true);
+      mockService.getHandler.mockReturnValue(mockHandler);
 
       // When
-      await manager.startCalculation(MANAGER_TEST_REPORT_ID, MANAGER_ECONOMY_META);
+      await manager.startCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Then
-      expect(mockHandlers.economy.startCalculationMock).toHaveBeenCalledWith(
-        MANAGER_TEST_REPORT_ID,
-        MANAGER_ECONOMY_META
-      );
+      expect(mockService.executeCalculation).not.toHaveBeenCalled();
+      expect(mockProgressUpdater.startProgressUpdates).not.toHaveBeenCalled();
     });
 
-    test('given invalid type then throws error', async () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
+    test('given economy calculation then does not start progress updates', async () => {
+      // When
+      await manager.startCalculation(TEST_REPORT_ID, ECONOMY_META);
 
-      // When/Then
-      await expect(
-        manager.startCalculation(MANAGER_TEST_REPORT_ID, INVALID_TYPE_META)
-      ).rejects.toThrow(MANAGER_ERROR_MESSAGES.NO_HANDLER('invalid'));
+      // Then
+      expect(mockProgressUpdater.startProgressUpdates).not.toHaveBeenCalled();
+    });
+
+    test('given new calculation then resets report tracking', async () => {
+      // Given
+      mockService.executeCalculation.mockImplementation(
+        async (reportId: any, meta: any, onComplete: any) => {
+          // Simulate the callback being invoked for household calculations
+          if (meta.type === 'household' && onComplete) {
+            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          }
+          return OK_STATUS_HOUSEHOLD;
+        }
+      );
+      const mockHandler = createMockHouseholdHandler();
+      mockHandler.isActive.mockReturnValue(false);
+      mockService.getHandler.mockReturnValue(mockHandler);
+
+      // First calculation and update
+      await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+      vi.clearAllMocks();
+
+      // When - start new calculation (resets tracking)
+      await manager.startCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+
+      // Then - fetchCalculation should update report again
+      await manager.fetchCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+      expect(reportApi.markReportCompleted).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('getStatus', () => {
-    test('given household report then delegates to household handler', () => {
+    test('given household type then delegates to service', () => {
       // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      mockHandlers.household.getStatusMock.mockReturnValue(MANAGER_OK_STATUS);
-
-      // Replace the real handler with mock
-      (manager as any).handlers.set('household', mockHandlers.household);
+      mockService.getStatus.mockReturnValue(COMPUTING_STATUS);
 
       // When
-      const result = manager.getStatus(MANAGER_TEST_REPORT_ID, 'household');
+      const result = manager.getStatus(TEST_REPORT_ID, 'household');
 
       // Then
-      expect(mockHandlers.household.getStatusMock).toHaveBeenCalledWith(MANAGER_TEST_REPORT_ID);
-      expect(result).toEqual(MANAGER_OK_STATUS);
+      expect(result).toBe(COMPUTING_STATUS);
+      expect(mockService.getStatus).toHaveBeenCalledWith(TEST_REPORT_ID, 'household');
     });
 
-    test('given economy report then delegates to economy handler', () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      mockHandlers.economy.getStatusMock.mockReturnValue(null);
-
-      // Replace the real handler with mock
-      (manager as any).handlers.set('economy', mockHandlers.economy);
-
+    test('given economy type then delegates to service', () => {
       // When
-      const result = manager.getStatus(MANAGER_TEST_REPORT_ID, 'economy');
-
-      // Then
-      expect(mockHandlers.economy.getStatusMock).toHaveBeenCalledWith(MANAGER_TEST_REPORT_ID);
-      expect(result).toBeNull();
-    });
-
-    test('given invalid type then throws error', () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-
-      // When/Then
-      expect(() => manager.getStatus(MANAGER_TEST_REPORT_ID, 'invalid' as any)).toThrow(
-        MANAGER_ERROR_MESSAGES.NO_HANDLER('invalid')
-      );
-    });
-
-    test('given no calculation found then returns null', () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-      const mockHandlers = createMockHandlers();
-      mockHandlers.household.getStatusMock.mockReturnValue(null);
-
-      // Replace the real handler with mock
-      (manager as any).handlers.set('household', mockHandlers.household);
-
-      // When
-      const result = manager.getStatus('non-existent-report', 'household');
+      const result = manager.getStatus(TEST_REPORT_ID, 'economy');
 
       // Then
       expect(result).toBeNull();
+      expect(mockService.getStatus).toHaveBeenCalledWith(TEST_REPORT_ID, 'economy');
     });
   });
 
   describe('getCacheKey', () => {
-    test('given household report then returns correct cache key', () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-
+    test('given report ID then returns standard cache key', () => {
       // When
-      const key = manager.getCacheKey(MANAGER_TEST_REPORT_ID, 'household');
+      const result = manager.getCacheKey(TEST_REPORT_ID);
 
       // Then
-      expect(key).toEqual(['calculation', MANAGER_TEST_REPORT_ID]);
+      expect(result).toEqual(['calculation', TEST_REPORT_ID]);
     });
+  });
 
-    test('given economy report then returns correct cache key', () => {
-      // Given
-      const manager = new CalculationManager(queryClient);
-
+  describe('updateReportStatus', () => {
+    test('given successful update then invalidates cache', async () => {
       // When
-      const key = manager.getCacheKey(MANAGER_TEST_REPORT_ID, 'economy');
+      await manager.updateReportStatus(
+        TEST_REPORT_ID,
+        'complete',
+        'us',
+        OK_STATUS_HOUSEHOLD.result
+      );
 
       // Then
-      expect(key).toEqual(['calculation', MANAGER_TEST_REPORT_ID]);
+      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['reports', 'report_id', TEST_REPORT_ID],
+      });
     });
 
-    test('given different report ids then returns different keys', () => {
+    test('given failed update with retry success then still invalidates cache', async () => {
       // Given
-      const manager = new CalculationManager(queryClient);
+      vi.useFakeTimers();
+      vi.mocked(reportApi.markReportCompleted)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce({} as ReportMetadata);
 
       // When
-      const key1 = manager.getCacheKey('report-1', 'household');
-      const key2 = manager.getCacheKey('report-2', 'household');
+      const promise = manager.updateReportStatus(
+        TEST_REPORT_ID,
+        'complete',
+        'us',
+        OK_STATUS_HOUSEHOLD.result
+      );
+
+      // Advance time for retry
+      await vi.runAllTimersAsync();
+      await promise;
 
       // Then
-      expect(key1).toEqual(['calculation', 'report-1']);
-      expect(key2).toEqual(['calculation', 'report-2']);
-      expect(key1).not.toBe(key2);
+      expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+        queryKey: ['reports', 'report_id', TEST_REPORT_ID],
+      });
+      vi.useRealTimers();
     });
 
-    test('given same report id different types then returns same key pattern', () => {
+    test('given failed update with retry failure then logs error', async () => {
       // Given
-      const manager = new CalculationManager(queryClient);
+      vi.useFakeTimers();
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      vi.mocked(reportApi.markReportCompleted)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockRejectedValueOnce(new Error('Still failing'));
 
       // When
-      const householdKey = manager.getCacheKey(MANAGER_TEST_REPORT_ID, 'household');
-      const economyKey = manager.getCacheKey(MANAGER_TEST_REPORT_ID, 'economy');
+      const promise = manager.updateReportStatus(
+        TEST_REPORT_ID,
+        'complete',
+        'us',
+        OK_STATUS_HOUSEHOLD.result
+      );
+
+      // Advance time for retry
+      await vi.runAllTimersAsync();
+      await promise;
 
       // Then
-      expect(householdKey).toEqual(['calculation', MANAGER_TEST_REPORT_ID]);
-      expect(economyKey).toEqual(['calculation', MANAGER_TEST_REPORT_ID]);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to update report'),
+        expect.any(Error)
+      );
+      consoleErrorSpy.mockRestore();
+      vi.useRealTimers();
     });
-  });
-});
-
-describe('getCalculationManager (singleton)', () => {
-  afterEach(() => {
-    resetCalculationManager();
-    vi.clearAllMocks();
-  });
-
-  test('given first call then creates new instance', () => {
-    // Given
-    const queryClient = createMockManagerQueryClient();
-
-    // When
-    const manager1 = getCalculationManager(queryClient);
-
-    // Then
-    expect(manager1).toBeDefined();
-    expect(manager1).toBeInstanceOf(CalculationManager);
-  });
-
-  test('given multiple calls then returns same instance', () => {
-    // Given
-    const queryClient = createMockManagerQueryClient();
-
-    // When
-    const manager1 = getCalculationManager(queryClient);
-    const manager2 = getCalculationManager(queryClient);
-    const manager3 = getCalculationManager(queryClient);
-
-    // Then
-    expect(manager1).toBe(manager2);
-    expect(manager2).toBe(manager3);
-  });
-
-  test('given reset called then creates new instance', () => {
-    // Given
-    const queryClient = createMockManagerQueryClient();
-    const manager1 = getCalculationManager(queryClient);
-
-    // When
-    resetCalculationManager();
-    const manager2 = getCalculationManager(queryClient);
-
-    // Then
-    expect(manager1).not.toBe(manager2);
-    expect(manager2).toBeInstanceOf(CalculationManager);
-  });
-
-  test('given different query clients then still returns same instance', () => {
-    // Given
-    const queryClient1 = createMockManagerQueryClient();
-    const queryClient2 = createMockManagerQueryClient();
-
-    // When
-    const manager1 = getCalculationManager(queryClient1);
-    const manager2 = getCalculationManager(queryClient2);
-
-    // Then - singleton ignores different clients
-    expect(manager1).toBe(manager2);
   });
 });
