@@ -91,7 +91,7 @@ describe('UserReportAdapter', () => {
     test('given API response with all fields then creates UserReport', () => {
       // Given
       const apiData = {
-        id: `ur-${TEST_REPORT_ID}`,  // UserReport has its own ID
+        id: `ur-${TEST_REPORT_ID}`, // UserReport has its own ID
         reportId: TEST_REPORT_ID,
         userId: TEST_USER_ID,
         label: TEST_LABEL,
@@ -118,7 +118,7 @@ describe('UserReportAdapter', () => {
     test('given API response without optional fields then creates UserReport with defaults', () => {
       // Given
       const apiData = {
-        id: `ur-${TEST_REPORT_ID}`,  // UserReport has its own ID
+        id: `ur-${TEST_REPORT_ID}`, // UserReport has its own ID
         reportId: TEST_REPORT_ID,
         userId: TEST_USER_ID,
       };
@@ -139,7 +139,7 @@ describe('UserReportAdapter', () => {
     test('given API response with null label then preserves null', () => {
       // Given
       const apiData = {
-        id: `ur-${TEST_REPORT_ID}`,  // UserReport has its own ID
+        id: `ur-${TEST_REPORT_ID}`, // UserReport has its own ID
         reportId: TEST_REPORT_ID,
         userId: TEST_USER_ID,
         label: null,
@@ -157,7 +157,7 @@ describe('UserReportAdapter', () => {
     test('given API response with numeric IDs then preserves as numbers', () => {
       // Given
       const apiData = {
-        id: 789,  // UserReport's own numeric ID
+        id: 789, // UserReport's own numeric ID
         reportId: 123,
         userId: 456,
         label: TEST_LABEL,
