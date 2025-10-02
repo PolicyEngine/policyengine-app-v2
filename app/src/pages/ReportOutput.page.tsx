@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   Container,
   Stack,
@@ -15,6 +15,8 @@ import { EconomyReportOutput } from '@/api/economy';
 import { colors, spacing, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
 import { useUserReportById } from '@/hooks/useUserReports';
+import OverviewSubPage from './report-output/subpages/OverviewSubPage';
+import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
 
 /**
  * Type discriminator for output types
@@ -53,13 +55,22 @@ export interface ReportOutputPageProps {
  *
  * Sub-page components will be implemented separately and integrated here.
  */
+// Valid sub-pages registry
+const VALID_SUBPAGES = ['overview'] as const;
+type ValidSubPage = (typeof VALID_SUBPAGES)[number];
+
+function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
+  return VALID_SUBPAGES.includes(subpage as ValidSubPage);
+}
+
 export default function ReportOutputPage({
   output,
   outputType,
   normalizedReport,
 }: ReportOutputPageProps) {
   const { report } = normalizedReport;
-  const [activeTab, setActiveTab] = useState<string>('');
+  const navigate = useNavigate();
+  const { subpage } = useParams<{ subpage?: string }>();
 
   // Determine which tabs to show based on output type
   const tabs = getTabsForOutputType(outputType, output);
@@ -67,12 +78,28 @@ export default function ReportOutputPage({
   // Format timestamp (placeholder for now)
   const timestamp = 'Ran today at 05:23:41';
 
-  // Initialize active tab
-  useEffect(() => {
-    if (!activeTab && tabs.length > 0) {
-      setActiveTab(tabs[0].value);
+  // Use URL param for active tab, default to 'overview'
+  const activeTab = subpage || 'overview';
+
+  // Handler for tab clicks - navigate to sibling route
+  const handleTabClick = (tabValue: string) => {
+    navigate(tabValue);
+  };
+
+  // Render the appropriate sub-page based on URL param
+  const renderSubPage = () => {
+    if (!isValidSubPage(activeTab)) {
+      return <NotFoundSubPage />;
     }
-  }, [tabs, activeTab]);
+
+    // Map valid sub-pages to their components
+    switch (activeTab) {
+      case 'overview':
+        return <OverviewSubPage output={output} outputType={outputType} />;
+      default:
+        return <NotFoundSubPage />;
+    }
+  };
 
   return (
     <Container size="xl" px={spacing.xl}>
@@ -155,7 +182,7 @@ export default function ReportOutputPage({
             {tabs.map((tab, index) => (
               <Box
                 key={tab.value}
-                onClick={() => setActiveTab(tab.value)}
+                onClick={() => handleTabClick(tab.value)}
                 style={{
                   paddingLeft: spacing.sm,
                   paddingRight: spacing.sm,
@@ -201,18 +228,7 @@ export default function ReportOutputPage({
           </Box>
 
           {/* Tab Panels */}
-          <Box pt={spacing.xl}>
-            {tabs.map((tab) =>
-              activeTab === tab.value ? (
-                <PlaceholderSubPage
-                  key={tab.value}
-                  tabName={tab.label}
-                  outputType={outputType}
-                  output={output}
-                />
-              ) : null
-            )}
-          </Box>
+          <Box pt={spacing.xl}>{renderSubPage()}</Box>
         </Box>
       </Stack>
     </Container>
@@ -222,28 +238,28 @@ export default function ReportOutputPage({
 /**
  * Type guard to check if output is an economy report
  */
-function isEconomyOutput(output: EconomyReportOutput | Household): output is EconomyReportOutput {
+export function isEconomyOutput(output: EconomyReportOutput | Household): output is EconomyReportOutput {
   return 'budget' in output && 'budgetary_impact' in (output as any).budget;
 }
 
 /**
  * Type guard to check if output is a household
  */
-function isHouseholdOutput(output: EconomyReportOutput | Household): output is Household {
+export function isHouseholdOutput(output: EconomyReportOutput | Household): output is Household {
   return 'householdData' in output;
 }
 
 /**
  * Type guard to check if economy output is US-specific
  */
-function isUSEconomyOutput(output: EconomyReportOutput): boolean {
+export function isUSEconomyOutput(output: EconomyReportOutput): boolean {
   return 'poverty_by_race' in output && output.poverty_by_race !== null;
 }
 
 /**
  * Type guard to check if economy output is UK-specific
  */
-function isUKEconomyOutput(output: EconomyReportOutput): boolean {
+export function isUKEconomyOutput(output: EconomyReportOutput): boolean {
   return 'constituency_impact' in output && output.constituency_impact !== null;
 }
 
@@ -284,41 +300,4 @@ function getTabsForOutputType(
   return [{ value: 'overview', label: 'Overview' }];
 }
 
-/**
- * Placeholder component for sub-pages (to be replaced with actual implementations)
- */
-function PlaceholderSubPage({
-  tabName,
-  outputType,
-  output,
-}: {
-  tabName: string;
-  outputType: ReportOutputType;
-  output: EconomyReportOutput | Household;
-}) {
-  return (
-    <Box
-      p={spacing.xl}
-      style={{
-        border: `1px dashed ${colors.border.light}`,
-        borderRadius: spacing.sm,
-        backgroundColor: colors.background.secondary,
-      }}
-    >
-      <Stack gap={spacing.md}>
-        <Title order={3} fw={typography.fontWeight.medium}>
-          {tabName} Sub-Page
-        </Title>
-        <Text c="dimmed">
-          This is a placeholder for the {tabName.toLowerCase()} sub-page component.
-        </Text>
-        <Text size="sm" c="dimmed">
-          Output type: <strong>{outputType}</strong>
-        </Text>
-        <Text size="xs" c="dimmed" ff="monospace">
-          Output data available: {Object.keys(output).slice(0, 5).join(', ')}...
-        </Text>
-      </Stack>
-    </Box>
-  );
-}
+

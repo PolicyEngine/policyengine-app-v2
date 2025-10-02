@@ -1,4 +1,4 @@
-import { IconAlertCircle, IconCheck } from '@tabler/icons-react';
+import { IconAlertCircle } from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -10,13 +10,15 @@ import {
   Group,
   Loader,
   Progress,
-  ScrollArea,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
+import { MOCK_USER_ID } from '@/constants';
 import { spacing } from '@/designTokens';
 import { useReportOutput } from '@/hooks/useReportOutput';
+import { useUserReportById } from '@/hooks/useUserReports';
+import ReportOutputPage, { isHouseholdOutput } from '@/pages/ReportOutput.page';
 
 export default function ReportOutputFrame() {
   const { reportId } = useParams<{ reportId: string }>();
@@ -52,6 +54,8 @@ function ReportOutputView({
 }) {
   const result = useReportOutput({ reportId });
   const { status, data, isPending, error } = result;
+  const userId = MOCK_USER_ID.toString();
+  const normalizedReport = useUserReportById(userId, reportId);
 
   // Extract progress information if status is pending
   const progress = status === 'pending' ? (result as any).progress : undefined;
@@ -60,6 +64,17 @@ function ReportOutputView({
   const estimatedTimeRemaining =
     status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
 
+  // If calculation is complete and we have data, use the new structural page
+  if (status === 'complete' && data) {
+    // Determine output type
+    const outputType = isHouseholdOutput(data) ? 'household' : 'economy';
+
+    return (
+      <ReportOutputPage output={data} outputType={outputType} normalizedReport={normalizedReport} />
+    );
+  }
+
+  // Otherwise, show the loading/error states
   return (
     <Container variant="guttered">
       <Stack gap={spacing.lg}>
@@ -93,23 +108,6 @@ function ReportOutputView({
             {/* Content based on status */}
             {status === 'error' ? (
               <ErrorDisplay error={error} onBack={() => navigate(-1)} />
-            ) : status === 'complete' ? (
-              <>
-                <CompletedDisplay />
-                {data && (
-                  <Box mt={spacing.md}>
-                    <ResultDisplay result={data} />
-                  </Box>
-                )}
-                <Button
-                  mt={spacing.md}
-                  fullWidth
-                  onClick={() => navigate(`/reports/${reportId}`)}
-                  rightSection={<IconCheck size={18} />}
-                >
-                  Continue to Report View
-                </Button>
-              </>
             ) : (
               <LoadingDisplay
                 isPending={isPending}
@@ -218,78 +216,3 @@ function ErrorDisplay({ error, onBack }: { error: any; onBack: () => void }) {
   );
 }
 
-function CompletedDisplay() {
-  return (
-    <Stack gap={spacing.md} align="center">
-      <Progress value={100} size="xl" radius="md" color="green" />
-      <Group gap={spacing.xs}>
-        <IconCheck size={20} color="var(--mantine-color-green-6)" />
-        <Text size="sm" c="green.6" fw={500}>
-          Calculation complete!
-        </Text>
-      </Group>
-    </Stack>
-  );
-}
-
-function ResultDisplay({ result }: { result: any }) {
-  // For now, show a summary view of the results
-  // This will be replaced with proper result visualization components later
-
-  const isHouseholdResult = !result.budget;
-
-  return (
-    <Card shadow="sm" padding="lg" radius="md" withBorder>
-      <Stack gap={spacing.sm}>
-        <Text fw={600}>
-          {isHouseholdResult ? 'Household Impact Results' : 'Society-Wide Impact Results'}
-        </Text>
-
-        {!isHouseholdResult && result.budget && (
-          <Box>
-            <Text size="sm" c="dimmed" mb={spacing.xs}>
-              Budget Impact
-            </Text>
-            <Text size="lg" fw={600}>
-              ${Math.abs(result.budget.budgetary_impact / 1000000000).toFixed(2)}B
-            </Text>
-            <Text size="xs" c={result.budget.budgetary_impact < 0 ? 'red' : 'green'}>
-              {result.budget.budgetary_impact < 0 ? 'Cost to government' : 'Revenue to government'}
-            </Text>
-          </Box>
-        )}
-
-        {!isHouseholdResult && result.poverty && (
-          <Box>
-            <Text size="sm" c="dimmed" mb={spacing.xs}>
-              Poverty Impact
-            </Text>
-            <Text size="md" fw={500}>
-              {(result.poverty.poverty_rate_change * 100).toFixed(2)}% change in poverty rate
-            </Text>
-          </Box>
-        )}
-
-        {/* Debug view - temporary */}
-        <ScrollArea h={200} type="auto" offsetScrollbars>
-          <Box
-            component="pre"
-            p={spacing.md}
-            style={{
-              backgroundColor: 'var(--mantine-color-gray-0)',
-              borderRadius: 'var(--mantine-radius-sm)',
-              border: '1px solid var(--mantine-color-gray-3)',
-              fontFamily: 'ui-monospace, SFMono-Regular, Consolas, monospace',
-              fontSize: '12px',
-              lineHeight: '1.5',
-              margin: 0,
-              overflow: 'auto',
-            }}
-          >
-            {JSON.stringify(result, null, 2)}
-          </Box>
-        </ScrollArea>
-      </Stack>
-    </Card>
-  );
-}

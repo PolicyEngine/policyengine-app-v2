@@ -37,11 +37,23 @@ const router = createBrowserRouter(
             {
               path: 'report-output/:reportId',
               element: <ReportOutputFrame />,
+              children: [
+                {
+                  path: ':subpage',
+                  element: <ReportOutputFrame />,
+                },
+              ],
             },
             // Demo path for new ReportOutputPage component
             {
               path: 'report-output-demo',
               element: <ReportOutputPageDemo />,
+              children: [
+                {
+                  path: ':subpage',
+                  element: <ReportOutputPageDemo />,
+                },
+              ],
             },
             {
               path: 'simulations',
