@@ -1,4 +1,5 @@
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
@@ -15,6 +16,7 @@ import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 export default function HomePage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // Get current country from URL for UI formatting
   const countryId = useCurrentCountry();
@@ -52,6 +54,9 @@ export default function HomePage() {
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(ReportViewFlow))}>
         Show Report View
+      </Button>
+      <Button variant="default" onClick={() => navigate('/us/report-output-demo')}>
+        View Report Output Page (Demo)
       </Button>
       <FlowContainer />
     </>

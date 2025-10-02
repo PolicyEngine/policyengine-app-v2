@@ -4,6 +4,7 @@ import ReportOutputFrame from './frames/report/ReportOutputFrame';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
+import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 
@@ -36,6 +37,11 @@ const router = createBrowserRouter(
             {
               path: 'report-output/:reportId',
               element: <ReportOutputFrame />,
+            },
+            // Demo path for new ReportOutputPage component
+            {
+              path: 'report-output-demo',
+              element: <ReportOutputPageDemo />,
             },
             {
               path: 'simulations',

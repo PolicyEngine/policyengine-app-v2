@@ -8,11 +8,23 @@ import { themeDefaults } from './defaults';
 export const themeComponents = {
   Text: {
     defaultProps: themeDefaults.Text,
-    styles: {
-      root: {
-        fontFamily: typography.fontFamily.primary,
-        color: colors.text.primary,
-      },
+    styles: (_theme, params) => {
+      if (params.variant === 'tab') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.gray[700],
+            fontWeight: typography.fontWeight.normal,
+          },
+        };
+      }
+
+      return {
+        root: {
+          fontFamily: typography.fontFamily.primary,
+          color: colors.text.primary,
+        },
+      };
     },
   },
 
