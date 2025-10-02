@@ -1,19 +1,19 @@
 import React, { useState } from 'react';
-import {
-  Table,
-  Checkbox,
-  Text,
-  Badge,
-  Group,
-  Button,
-  Menu,
-  ActionIcon,
-  Stack,
-  Box,
-  Anchor,
-  Flex,
-} from '@mantine/core';
 import { IconChevronDown, IconDotsVertical } from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Anchor,
+  Badge,
+  Box,
+  Button,
+  Checkbox,
+  Flex,
+  Group,
+  Menu,
+  Stack,
+  Table,
+  Text,
+} from '@mantine/core';
 import { colors } from '@/designTokens';
 
 export interface SimulationRecord {
@@ -70,12 +70,12 @@ export default function SimulationTable({
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      const currentPageIds = paginatedData.map(item => item.id);
+      const currentPageIds = paginatedData.map((item) => item.id);
       const newSelection = [...new Set([...selectedSimulations, ...currentPageIds])];
       onSelectionChange?.(newSelection);
     } else {
-      const currentPageIds = paginatedData.map(item => item.id);
-      const newSelection = selectedSimulations.filter(id => !currentPageIds.includes(id));
+      const currentPageIds = paginatedData.map((item) => item.id);
+      const newSelection = selectedSimulations.filter((id) => !currentPageIds.includes(id));
       onSelectionChange?.(newSelection);
     }
   };
@@ -84,15 +84,13 @@ export default function SimulationTable({
     if (checked) {
       onSelectionChange?.([...selectedSimulations, simulationId]);
     } else {
-      onSelectionChange?.(selectedSimulations.filter(id => id !== simulationId));
+      onSelectionChange?.(selectedSimulations.filter((id) => id !== simulationId));
     }
   };
 
   const formatRelativeTime = (date: Date): string => {
     const now = new Date();
-    const diffInHours = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
-    );
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
@@ -103,10 +101,13 @@ export default function SimulationTable({
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const currentPageIds = paginatedData.map(item => item.id);
-  const currentPageSelectedCount = currentPageIds.filter(id => selectedSimulations.includes(id)).length;
+  const currentPageIds = paginatedData.map((item) => item.id);
+  const currentPageSelectedCount = currentPageIds.filter((id) =>
+    selectedSimulations.includes(id)
+  ).length;
   const allSelected = paginatedData.length > 0 && currentPageSelectedCount === paginatedData.length;
-  const someSelected = currentPageSelectedCount > 0 && currentPageSelectedCount < paginatedData.length;
+  const someSelected =
+    currentPageSelectedCount > 0 && currentPageSelectedCount < paginatedData.length;
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -171,207 +172,180 @@ export default function SimulationTable({
           {paginatedData.map((simulation) => {
             const isHousehold = simulation.population.type === 'household';
             return (
-            <Table.Tr key={simulation.id}>
-              <Table.Td>
-                <Checkbox
-                  checked={selectedSimulations.includes(simulation.id)}
-                  onChange={(event) => handleSelectRow(simulation.id, event.currentTarget.checked)}
-                />
-              </Table.Td>
+              <Table.Tr key={simulation.id}>
+                <Table.Td>
+                  <Checkbox
+                    checked={selectedSimulations.includes(simulation.id)}
+                    onChange={(event) =>
+                      handleSelectRow(simulation.id, event.currentTarget.checked)
+                    }
+                  />
+                </Table.Td>
 
-              <Table.Td>
-                <Stack gap={4}>
-                  <Text fw={700} size="sm">
-                    {simulation.name}
-                  </Text>
-                  <Anchor
-                    size="sm"
-                    c={colors.primary[600]}
-                    onClick={() => onSimulationSelect?.(simulation.simulationId)}
-                    style={{ textDecoration: 'none' }}
-                  >
-                    #{simulation.simulationId}
-                  </Anchor>
-                </Stack>
-              </Table.Td>
-
-              <Table.Td>
-                <Text size="sm" c={colors.text.secondary}>
-                  {formatRelativeTime(simulation.dateCreated)}
-                </Text>
-              </Table.Td>
-
-              <Table.Td>
-                <Stack gap={4}>
-                  <Text fw={700} size="sm">
-                    {simulation.policy.name}
-                  </Text>
-                  <Group gap={4}>
-                    <Badge
+                <Table.Td>
+                  <Stack gap={4}>
+                    <Text fw={700} size="sm">
+                      {simulation.name}
+                    </Text>
+                    <Anchor
                       size="sm"
-                      variant="light"
-                      color="red"
-                      radius="xl"
+                      c={colors.primary[600]}
+                      onClick={() => onSimulationSelect?.(simulation.simulationId)}
+                      style={{ textDecoration: 'none' }}
                     >
-                      {simulation.policy.provisions} Provisions
-                    </Badge>
-                    {simulation.policy.additionalCount && (
-                      <Badge
-                        size="sm"
-                        variant="light"
-                        color="gray"
-                        radius="xl"
-                      >
-                        +{simulation.policy.additionalCount}
-                      </Badge>
-                    )}
-                  </Group>
-                </Stack>
-              </Table.Td>
+                      #{simulation.simulationId}
+                    </Anchor>
+                  </Stack>
+                </Table.Td>
 
-              <Table.Td>
-                <Badge
-                  variant="light"
-                  color={isHousehold ? "primary" : "gray"}
-                  radius="xl"
-                  style={{ 
-                    whiteSpace: 'normal', 
-                    height: 'auto', 
-                    padding: '4px 8px',
-                    maxWidth: '100%',
-                    wordWrap: 'break-word',
-                    overflowWrap: 'break-word',
-                  }}
-                >
-                  <Text 
-                    size="sm" 
-                    c={isHousehold ? colors.primary[600] : colors.gray[600]} 
-                    style={{ 
-                      lineHeight: 1.2,
+                <Table.Td>
+                  <Text size="sm" c={colors.text.secondary}>
+                    {formatRelativeTime(simulation.dateCreated)}
+                  </Text>
+                </Table.Td>
+
+                <Table.Td>
+                  <Stack gap={4}>
+                    <Text fw={700} size="sm">
+                      {simulation.policy.name}
+                    </Text>
+                    <Group gap={4}>
+                      <Badge size="sm" variant="light" color="red" radius="xl">
+                        {simulation.policy.provisions} Provisions
+                      </Badge>
+                      {simulation.policy.additionalCount && (
+                        <Badge size="sm" variant="light" color="gray" radius="xl">
+                          +{simulation.policy.additionalCount}
+                        </Badge>
+                      )}
+                    </Group>
+                  </Stack>
+                </Table.Td>
+
+                <Table.Td>
+                  <Badge
+                    variant="light"
+                    color={isHousehold ? 'primary' : 'gray'}
+                    radius="xl"
+                    style={{
+                      whiteSpace: 'normal',
+                      height: 'auto',
+                      padding: '4px 8px',
+                      maxWidth: '100%',
                       wordWrap: 'break-word',
                       overflowWrap: 'break-word',
-                      whiteSpace: 'normal',
-                      textAlign: 'left',
                     }}
                   >
-                    {isHousehold 
-                      ? `Household #${simulation.population.id || simulation.population.name}`
-                      : `${simulation.population.id || simulation.population.name}`
-                    }
-                  </Text>
-                </Badge>
-              </Table.Td>
-
-              <Table.Td>
-                <Group gap={4}>
-                  <Badge
-                    size="sm"
-                    variant="light"
-                    color="gray"
-                    radius="xl"
-                    leftSection={
-                      <Box
-                        w={6}
-                        h={6}
-                        bg={colors.gray[600]}
-                        style={{ borderRadius: '50%' }}
-                      />
-                    }
-                  >
-                    {simulation.connectedReports.title}
+                    <Text
+                      size="sm"
+                      c={isHousehold ? colors.primary[600] : colors.gray[600]}
+                      style={{
+                        lineHeight: 1.2,
+                        wordWrap: 'break-word',
+                        overflowWrap: 'break-word',
+                        whiteSpace: 'normal',
+                        textAlign: 'left',
+                      }}
+                    >
+                      {isHousehold
+                        ? `Household #${simulation.population.id || simulation.population.name}`
+                        : `${simulation.population.id || simulation.population.name}`}
+                    </Text>
                   </Badge>
-                  {simulation.connectedReports.additionalCount && (
+                </Table.Td>
+
+                <Table.Td>
+                  <Group gap={4}>
                     <Badge
                       size="sm"
                       variant="light"
                       color="gray"
                       radius="xl"
+                      leftSection={
+                        <Box w={6} h={6} bg={colors.gray[600]} style={{ borderRadius: '50%' }} />
+                      }
                     >
-                      +{simulation.connectedReports.additionalCount}
+                      {simulation.connectedReports.title}
                     </Badge>
-                  )}
-                </Group>
-              </Table.Td>
+                    {simulation.connectedReports.additionalCount && (
+                      <Badge size="sm" variant="light" color="gray" radius="xl">
+                        +{simulation.connectedReports.additionalCount}
+                      </Badge>
+                    )}
+                  </Group>
+                </Table.Td>
 
-              <Table.Td>
-                <Flex justify="flex-start" direction="row">
-                  <Menu shadow="md" width={150}>
-                    <Menu.Target>
-                      <Button
-                        variant="outline"
-                        color={colors.gray[300]}
-                        radius="lg"
-                        size="sm"
-                        c={colors.gray[600]}
-                        px="xs"
-                        onClick={() => onAddToReport?.(simulation.simulationId)}
-                        rightSection={
-                          <Group gap={8} align="center">
-                            <Box
-                              w={1}
-                              h={60}
-                              bg={colors.gray[300]}
-                            />
-                            <IconChevronDown size={14} color={colors.gray[600]} />
-                          </Group>
-                        }
-                      >
-                        Add to Report
-                      </Button>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
-                        <React.Fragment key={config.label}>
-                          {config.isDivider && <Menu.Divider />}
-                          <Menu.Item 
-                            onClick={config.onClick}
-                            color={config.label === 'Delete' ? 'red' : undefined}
-                          >
-                            {config.label}
-                          </Menu.Item>
-                        </React.Fragment>
-                      ))}
-                    </Menu.Dropdown>
-                  </Menu>
+                <Table.Td>
+                  <Flex justify="flex-start" direction="row">
+                    <Menu shadow="md" width={150}>
+                      <Menu.Target>
+                        <Button
+                          variant="outline"
+                          color={colors.gray[300]}
+                          radius="lg"
+                          size="sm"
+                          c={colors.gray[600]}
+                          px="xs"
+                          onClick={() => onAddToReport?.(simulation.simulationId)}
+                          rightSection={
+                            <Group gap={8} align="center">
+                              <Box w={1} h={60} bg={colors.gray[300]} />
+                              <IconChevronDown size={14} color={colors.gray[600]} />
+                            </Group>
+                          }
+                        >
+                          Add to Report
+                        </Button>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
+                          <React.Fragment key={config.label}>
+                            {config.isDivider && <Menu.Divider />}
+                            <Menu.Item
+                              onClick={config.onClick}
+                              color={config.label === 'Delete' ? 'red' : undefined}
+                            >
+                              {config.label}
+                            </Menu.Item>
+                          </React.Fragment>
+                        ))}
+                      </Menu.Dropdown>
+                    </Menu>
 
-                  <Menu
-                    shadow="md"
-                    width={80}
-                    opened={openedMenuId === simulation.id}
-                    onChange={(opened) => setOpenedMenuId(opened ? simulation.id : null)}
-                  >
-                    <Menu.Target>
-                      <ActionIcon variant="subtle" color="gray">
-                        <IconDotsVertical size={16} />
-                      </ActionIcon>
-                    </Menu.Target>
-                    <Menu.Dropdown>
-                      {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
-                        <React.Fragment key={config.label}>
-                          {config.isDivider && <Menu.Divider />}
-                          <Menu.Item 
-                            onClick={config.onClick}
-                            color={config.label === 'Delete' ? 'red' : undefined}
-                          >
-                            {config.label}
-                          </Menu.Item>
-                        </React.Fragment>
-                      ))}
-                    </Menu.Dropdown>
-                  </Menu>
-                </Flex>
-              </Table.Td>
-            </Table.Tr>
-          )})}
+                    <Menu
+                      shadow="md"
+                      width={80}
+                      opened={openedMenuId === simulation.id}
+                      onChange={(opened) => setOpenedMenuId(opened ? simulation.id : null)}
+                    >
+                      <Menu.Target>
+                        <ActionIcon variant="subtle" color="gray">
+                          <IconDotsVertical size={16} />
+                        </ActionIcon>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
+                          <React.Fragment key={config.label}>
+                            {config.isDivider && <Menu.Divider />}
+                            <Menu.Item
+                              onClick={config.onClick}
+                              color={config.label === 'Delete' ? 'red' : undefined}
+                            >
+                              {config.label}
+                            </Menu.Item>
+                          </React.Fragment>
+                        ))}
+                      </Menu.Dropdown>
+                    </Menu>
+                  </Flex>
+                </Table.Td>
+              </Table.Tr>
+            );
+          })}
         </Table.Tbody>
       </Table>
 
-      <Box
-        w="100%"
-        h={1}
-        bg={colors.gray[300]}
-        mt="md"
-      />
+      <Box w="100%" h={1} bg={colors.gray[300]} mt="md" />
 
       <Group justify="space-between" mt="xl">
         <Button
@@ -385,7 +359,7 @@ export default function SimulationTable({
         <Text size="sm" c={colors.text.primary}>
           Page {currentPage} of {totalPages}
         </Text>
-        
+
         <Button
           variant={currentPage >= totalPages ? 'disabled' : 'default'}
           onClick={handleNextPage}
