@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Container,
@@ -78,8 +79,17 @@ export default function ReportOutputPage({
   // Format timestamp (placeholder for now)
   const timestamp = 'Ran today at 05:23:41';
 
+  const DEFAULT_PAGE = 'overview';
+
   // Use URL param for active tab, default to 'overview'
-  const activeTab = subpage || 'overview';
+  const activeTab = subpage || DEFAULT_PAGE;
+
+  // Redirect to overview if no subpage is specified
+  useEffect(() => {
+    if (!subpage) {
+      navigate(DEFAULT_PAGE, { replace: true });
+    }
+  }, [subpage, navigate]);
 
   // Handler for tab clicks - navigate to sibling route
   const handleTabClick = (tabValue: string) => {
