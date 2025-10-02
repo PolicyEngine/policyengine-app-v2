@@ -8,18 +8,13 @@ interface TwoColumnViewProps {
   backgroundColor?: 'primary' | 'secondary';
 }
 
-const TwoColumnView = ({
-  title,
-  leftColumn,
-  rightColumn,
-  backgroundColor,
-}: TwoColumnViewProps) => {
+const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoColumnViewProps) => {
   const getBackgroundColor = () => {
-    if(backgroundColor === 'primary') {
-        return colors.primary[100];
+    if (backgroundColor === 'primary') {
+      return colors.primary[100];
     }
-    if(backgroundColor === 'secondary') {
-        return colors.secondary[100];
+    if (backgroundColor === 'secondary') {
+      return colors.secondary[100];
     }
     return colors.white;
   };
