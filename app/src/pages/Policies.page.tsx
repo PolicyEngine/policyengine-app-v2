@@ -10,6 +10,7 @@ import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { usePolicies } from '@/hooks/usePolicies';
 import { userPoliciesAPI } from '@/api/v2/userPolicies';
+import { usersAPI } from '@/api/v2/users';
 import { MOCK_USER_ID } from '@/constants';
 
 export default function PoliciesPage() {
@@ -31,6 +32,12 @@ export default function PoliciesPage() {
   const { data: userPolicies = [] } = useQuery({
     queryKey: ['userPolicies', userId],
     queryFn: () => userPoliciesAPI.list(userId),
+  });
+
+  // Fetch all users
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersAPI.listUsers({ limit: 1000 }),
   });
 
   // Rename mutation
@@ -103,6 +110,11 @@ export default function PoliciesPage() {
       type: 'text',
     },
     {
+      key: 'createdBy',
+      header: 'Created by',
+      type: 'text',
+    },
+    {
       key: 'dateCreated',
       header: 'Date created',
       type: 'text',
@@ -127,10 +139,16 @@ export default function PoliciesPage() {
       const userPolicy = userPolicies.find(up => up.policy_id === policy.id);
       const displayName = userPolicy?.custom_name || policy.name || `Policy #${policy.id}`;
 
+      const creator = userPolicy ? users.find(u => u.id === userPolicy.user_id) : null;
+      const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
+
       return {
         id: policy.id,
         policyName: {
           text: displayName,
+        } as TextValue,
+        createdBy: {
+          text: creatorName ? `by ${creatorName}` : '',
         } as TextValue,
         dateCreated: {
           text: moment(policy.created_at).fromNow(),

@@ -124,11 +124,6 @@ export default function DatasetDetailPage() {
               <Badge variant="light" color="blue">
                 {dataset.type}
               </Badge>
-              {dataset.country && (
-                <Badge variant="light" color="gray">
-                  {dataset.country}
-                </Badge>
-              )}
               <Text size="sm" c="dimmed">
                 Created {moment(dataset.created_at).fromNow()}
               </Text>
@@ -163,15 +158,6 @@ export default function DatasetDetailPage() {
               </Text>
               <Text size="sm">{dataset.type}</Text>
             </div>
-
-            {dataset.country && (
-              <div>
-                <Text size="sm" fw={600} mb="xs">
-                  Country
-                </Text>
-                <Text size="sm">{dataset.country}</Text>
-              </div>
-            )}
 
             {dataset.source && (
               <div>

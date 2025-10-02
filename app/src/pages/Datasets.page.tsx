@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import moment from 'moment';
 import { datasetsAPI } from '@/api/v2/datasets';
 import { userDatasetsAPI } from '@/api/v2/userDatasets';
+import { usersAPI } from '@/api/v2/users';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
@@ -32,6 +33,12 @@ export default function DatasetsPage() {
   const { data: userDatasets = [] } = useQuery({
     queryKey: ['userDatasets'],
     queryFn: () => userDatasetsAPI.listUserDatasets(),
+  });
+
+  // Fetch all users
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersAPI.listUsers({ limit: 1000 }),
   });
 
   // Delete mutation
@@ -76,6 +83,11 @@ export default function DatasetsPage() {
       type: 'text',
     },
     {
+      key: 'createdBy',
+      header: 'Created by',
+      type: 'text',
+    },
+    {
       key: 'description',
       header: 'Description',
       type: 'text',
@@ -100,10 +112,16 @@ export default function DatasetsPage() {
       const userDataset = userDatasets.find(ud => ud.dataset_id === dataset.id);
       const displayName = userDataset?.custom_name || dataset.name;
 
+      const creator = userDataset ? users.find(u => u.id === userDataset.user_id) : null;
+      const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
+
       return {
         id: dataset.id,
         datasetName: {
           text: displayName,
+        } as TextValue,
+        createdBy: {
+          text: creatorName ? `by ${creatorName}` : '',
         } as TextValue,
         description: {
           text: dataset.description || 'No description',

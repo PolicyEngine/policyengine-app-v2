@@ -9,6 +9,7 @@ import ReportRenameModal from '@/components/report/ReportRenameModal';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { userDynamicsAPI } from '@/api/v2/userDynamics';
+import { usersAPI } from '@/api/v2/users';
 import { MOCK_USER_ID } from '@/constants';
 
 interface Dynamic {
@@ -47,6 +48,12 @@ export default function DynamicsPage() {
   const { data: userDynamics = [] } = useQuery({
     queryKey: ['userDynamics', userId],
     queryFn: () => userDynamicsAPI.list(userId),
+  });
+
+  // Fetch all users
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersAPI.listUsers({ limit: 1000 }),
   });
 
   // Delete mutation
@@ -133,6 +140,11 @@ export default function DynamicsPage() {
       type: 'text',
     },
     {
+      key: 'createdBy',
+      header: 'Created by',
+      type: 'text',
+    },
+    {
       key: 'description',
       header: 'Description',
       type: 'text',
@@ -162,10 +174,16 @@ export default function DynamicsPage() {
       const userDyn = userDynamics.find(ud => ud.dynamic_id === dynamic.id);
       const displayName = userDyn?.custom_name || dynamic.name;
 
+      const creator = userDyn ? users.find(u => u.id === userDyn.user_id) : null;
+      const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
+
       return {
         id: dynamic.id,
         dynamicName: {
           text: displayName,
+        } as TextValue,
+        createdBy: {
+          text: creatorName ? `by ${creatorName}` : '',
         } as TextValue,
         description: {
           text: dynamic.description || 'No description',

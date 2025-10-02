@@ -14,12 +14,15 @@ import {
   Loader,
   Center,
   ActionIcon,
+  Table,
 } from '@mantine/core';
 import { IconChevronLeft, IconPencil } from '@tabler/icons-react';
 import { policiesAPI } from '@/api/v2/policies';
 import { userPoliciesAPI } from '@/api/v2/userPolicies';
+import { parametersAPI } from '@/api/parameters';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
+import { colors, spacing, typography } from '@/designTokens';
 import moment from 'moment';
 
 export default function PolicyDetailPage() {
@@ -38,6 +41,12 @@ export default function PolicyDetailPage() {
   const { data: userPolicies = [] } = useQuery({
     queryKey: ['userPolicies', userId],
     queryFn: () => userPoliciesAPI.list(userId),
+  });
+
+  const { data: parameterValues = [], isLoading: parametersLoading } = useQuery({
+    queryKey: ['parameterValues', policyId],
+    queryFn: () => parametersAPI.getParametersForPolicy(policyId!),
+    enabled: !!policyId,
   });
 
   const renameMutation = useMutation({
@@ -121,7 +130,6 @@ export default function PolicyDetailPage() {
               </ActionIcon>
             </Group>
             <Group gap="xs">
-              <Badge variant="light">{policy.country_id?.toUpperCase()}</Badge>
               <Text size="sm" c="dimmed">
                 Created {moment(policy.created_at).fromNow()}
               </Text>
@@ -157,25 +165,90 @@ export default function PolicyDetailPage() {
               </div>
             )}
 
+            <Divider />
+
             <div>
               <Text size="sm" fw={600} mb="xs">
-                Country
+                Parameter values ({parameterValues.length})
               </Text>
-              <Text size="sm">{policy.country_id?.toUpperCase() || 'N/A'}</Text>
-            </div>
-
-            {policy.data && (
-              <div>
-                <Text size="sm" fw={600} mb="xs">
-                  Policy data
-                </Text>
-                <Paper p="sm" withBorder style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
-                  <Text size="xs" style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
-                    {JSON.stringify(policy.data, null, 2)}
-                  </Text>
+              {parametersLoading ? (
+                <Center p="md">
+                  <Loader size="sm" />
+                </Center>
+              ) : parameterValues.length === 0 ? (
+                <Text size="sm" c="dimmed">No parameter values defined</Text>
+              ) : (
+                <Paper withBorder style={{ border: `1px solid ${colors.border.light}`, overflow: 'hidden' }}>
+                  <Table>
+                    <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
+                      <Table.Tr>
+                        <Table.Th
+                          style={{
+                            fontSize: typography.fontSize.xs,
+                            fontWeight: typography.fontWeight.medium,
+                            color: colors.text.secondary,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            padding: `${spacing.md} ${spacing.lg}`,
+                          }}
+                        >
+                          Parameter
+                        </Table.Th>
+                        <Table.Th
+                          style={{
+                            fontSize: typography.fontSize.xs,
+                            fontWeight: typography.fontWeight.medium,
+                            color: colors.text.secondary,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            padding: `${spacing.md} ${spacing.lg}`,
+                          }}
+                        >
+                          Value
+                        </Table.Th>
+                        <Table.Th
+                          style={{
+                            fontSize: typography.fontSize.xs,
+                            fontWeight: typography.fontWeight.medium,
+                            color: colors.text.secondary,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.05em',
+                            padding: `${spacing.md} ${spacing.lg}`,
+                          }}
+                        >
+                          Period
+                        </Table.Th>
+                      </Table.Tr>
+                    </Table.Thead>
+                    <Table.Tbody>
+                      {parameterValues.map((pv) => (
+                        <Table.Tr key={pv.id}>
+                          <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                            <Text size="sm" style={{ fontFamily: typography.fontFamily.mono, color: colors.text.primary }}>
+                              {pv.parameter_id}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                            <Text size="sm" fw={500} style={{ color: colors.text.primary }}>
+                              {JSON.stringify(pv.value)}
+                            </Text>
+                          </Table.Td>
+                          <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                            <Text size="sm" c="dimmed">
+                              {pv.start_date && pv.end_date
+                                ? `${pv.start_date} to ${pv.end_date}`
+                                : pv.start_date
+                                ? `From ${pv.start_date}`
+                                : 'All time'}
+                            </Text>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))}
+                    </Table.Tbody>
+                  </Table>
                 </Paper>
-              </div>
-            )}
+              )}
+            </div>
 
             <Divider />
 

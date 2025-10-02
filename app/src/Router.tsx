@@ -12,6 +12,7 @@ import ReportsPage from './pages/Reports.page';
 import ReportEditorPage from './pages/ReportEditor.page';
 import SimulationsPage from './pages/Simulations.page';
 import SimulationDetailPage from './pages/SimulationDetail.page';
+import UserDetailPage from './pages/UserDetail.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 
 const router = createBrowserRouter(
@@ -79,6 +80,10 @@ const router = createBrowserRouter(
         {
           path: 'reportOutput/:reportId',
           element: <ReportOutputFrame />,
+        },
+        {
+          path: 'user/:userId',
+          element: <UserDetailPage />,
         },
       ],
     },

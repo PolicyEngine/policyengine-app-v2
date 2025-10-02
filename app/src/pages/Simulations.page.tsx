@@ -16,6 +16,7 @@ import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { useSimulationsWithPolicies } from '@/hooks/useSimulations';
 import { userSimulationsAPI } from '@/api/v2/userSimulations';
+import { usersAPI } from '@/api/v2/users';
 import { setFlow } from '@/reducers/flowReducer';
 
 export default function SimulationsPage() {
@@ -37,6 +38,12 @@ export default function SimulationsPage() {
   const { data: userSimulations = [] } = useQuery({
     queryKey: ['userSimulations', userId],
     queryFn: () => userSimulationsAPI.list(userId),
+  });
+
+  // Fetch all users
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersAPI.listUsers({ limit: 1000 }),
   });
 
   // Rename mutation
@@ -107,6 +114,11 @@ export default function SimulationsPage() {
       type: 'text',
     },
     {
+      key: 'createdBy',
+      header: 'Created by',
+      type: 'text',
+    },
+    {
       key: 'dateCreated',
       header: 'Date created',
       type: 'text',
@@ -136,6 +148,9 @@ export default function SimulationsPage() {
       const userSim = userSimulations.find(us => us.simulation_id === sim.id);
       const displayName = userSim?.custom_name || sim.name || sim.id;
 
+      const creator = userSim ? users.find(u => u.id === userSim.user_id) : null;
+      const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
+
       return {
         id: sim.id,
         simulationId: {
@@ -143,6 +158,9 @@ export default function SimulationsPage() {
         } as TextValue,
         description: {
           text: displayName,
+        } as TextValue,
+        createdBy: {
+          text: creatorName ? `by ${creatorName}` : '',
         } as TextValue,
         dateCreated: {
           text: moment(sim.created_at).fromNow(),

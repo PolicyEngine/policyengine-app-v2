@@ -14,12 +14,15 @@ import {
   Loader,
   Center,
   ActionIcon,
+  Table,
 } from '@mantine/core';
 import { IconChevronLeft, IconPencil } from '@tabler/icons-react';
 import { apiClient } from '@/api/apiClient';
 import { userDynamicsAPI } from '@/api/v2/userDynamics';
+import { parametersAPI } from '@/api/parameters';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
+import { colors, spacing, typography } from '@/designTokens';
 import moment from 'moment';
 
 interface Dynamic {
@@ -27,6 +30,7 @@ interface Dynamic {
   name: string;
   description?: string;
   type?: string;
+  policy_id?: string;
   parameters?: any;
   created_at: string;
   updated_at: string;
@@ -48,6 +52,13 @@ export default function DynamicDetailPage() {
   const { data: userDynamics = [] } = useQuery({
     queryKey: ['userDynamics', userId],
     queryFn: () => userDynamicsAPI.list(userId),
+  });
+
+  // If dynamic has a policy_id, fetch its parameter values
+  const { data: parameterValues = [], isLoading: parametersLoading } = useQuery({
+    queryKey: ['parameterValues', dynamic?.policy_id],
+    queryFn: () => parametersAPI.getParametersForPolicy(dynamic!.policy_id!),
+    enabled: !!dynamic?.policy_id,
   });
 
   const renameMutation = useMutation({
@@ -176,16 +187,101 @@ export default function DynamicDetailPage() {
               </div>
             )}
 
-            {dynamic.parameters && (
+            {dynamic.policy_id && (
               <div>
                 <Text size="sm" fw={600} mb="xs">
-                  Parameters
+                  Associated policy
                 </Text>
-                <Paper p="sm" withBorder style={{ backgroundColor: 'var(--mantine-color-gray-0)' }}>
-                  <Text size="xs" style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}>
-                    {JSON.stringify(dynamic.parameters, null, 2)}
-                  </Text>
-                </Paper>
+                <Text size="sm" style={{ fontFamily: 'monospace' }}>
+                  {dynamic.policy_id}
+                </Text>
+              </div>
+            )}
+
+            <Divider />
+
+            {dynamic.policy_id && (
+              <div>
+                <Text size="sm" fw={600} mb="xs">
+                  Parameter values ({parameterValues.length})
+                </Text>
+                {parametersLoading ? (
+                  <Center p="md">
+                    <Loader size="sm" />
+                  </Center>
+                ) : parameterValues.length === 0 ? (
+                  <Text size="sm" c="dimmed">No parameter values defined</Text>
+                ) : (
+                  <Paper withBorder style={{ border: `1px solid ${colors.border.light}`, overflow: 'hidden' }}>
+                    <Table>
+                      <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
+                        <Table.Tr>
+                          <Table.Th
+                            style={{
+                              fontSize: typography.fontSize.xs,
+                              fontWeight: typography.fontWeight.medium,
+                              color: colors.text.secondary,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              padding: `${spacing.md} ${spacing.lg}`,
+                            }}
+                          >
+                            Parameter
+                          </Table.Th>
+                          <Table.Th
+                            style={{
+                              fontSize: typography.fontSize.xs,
+                              fontWeight: typography.fontWeight.medium,
+                              color: colors.text.secondary,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              padding: `${spacing.md} ${spacing.lg}`,
+                            }}
+                          >
+                            Value
+                          </Table.Th>
+                          <Table.Th
+                            style={{
+                              fontSize: typography.fontSize.xs,
+                              fontWeight: typography.fontWeight.medium,
+                              color: colors.text.secondary,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              padding: `${spacing.md} ${spacing.lg}`,
+                            }}
+                          >
+                            Period
+                          </Table.Th>
+                        </Table.Tr>
+                      </Table.Thead>
+                      <Table.Tbody>
+                        {parameterValues.map((pv) => (
+                          <Table.Tr key={pv.id}>
+                            <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                              <Text size="sm" style={{ fontFamily: typography.fontFamily.mono, color: colors.text.primary }}>
+                                {pv.parameter_id}
+                              </Text>
+                            </Table.Td>
+                            <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                              <Text size="sm" fw={500} style={{ color: colors.text.primary }}>
+                                {JSON.stringify(pv.value)}
+                              </Text>
+                            </Table.Td>
+                            <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                              <Text size="sm" c="dimmed">
+                                {pv.start_date && pv.end_date
+                                  ? `${pv.start_date} to ${pv.end_date}`
+                                  : pv.start_date
+                                  ? `From ${pv.start_date}`
+                                  : 'All time'}
+                              </Text>
+                            </Table.Td>
+                          </Table.Tr>
+                        ))}
+                      </Table.Tbody>
+                    </Table>
+                  </Paper>
+                )}
               </div>
             )}
 

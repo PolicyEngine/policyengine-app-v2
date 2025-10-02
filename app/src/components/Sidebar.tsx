@@ -45,11 +45,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
   ];
 
-  const accountItems = [
-    { label: 'Account Settings', icon: IconSettings2, path: `/${countryId}/account` },
-    { label: 'Contact Support', icon: IconExternalLink, path: `/${countryId}/support` },
-  ];
-
   if (!isOpen) {
     return null;
   }
@@ -63,7 +58,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
         width: parseInt(spacing.appShell.navbar.width, 10),
         left: 0,
         top: 0,
-        overflowY: 'auto',
+        overflow: 'hidden',
       }}
       gap={0}
     >
@@ -88,48 +83,43 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
         </Box>
       </Stack>
 
-      <Stack gap={0} style={{ flex: 1 }}>
-        <SidebarSection>
-          <SidebarNavItem
-            label="Home"
-            icon={IconHome}
-            path={`/${countryId}`}
-            isActive={location.pathname === `/${countryId}`}
-          />
-        </SidebarSection>
-
-        <SidebarDivider />
-
-        <SidebarSection title="Data models">
-          {dataItems.map((item) => (
-            <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
-          ))}
-        </SidebarSection>
-
-        <SidebarDivider />
-
-        <SidebarSection title="Resources">
-          {resourceItems.map((item) => (
+      <Stack gap={0} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <Box style={{ flex: 1, overflowY: 'auto' }}>
+          <SidebarSection>
             <SidebarNavItem
-              key={item.path}
-              {...item}
-              isActive={!item.external && location.pathname === item.path}
+              label="Home"
+              icon={IconHome}
+              path={`/${countryId}`}
+              isActive={location.pathname === `/${countryId}`}
             />
-          ))}
-        </SidebarSection>
+          </SidebarSection>
 
-        <SidebarDivider />
+          <SidebarDivider />
 
-        <SidebarSection title="My account">
-          {accountItems.map((item) => (
-            <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
-          ))}
-        </SidebarSection>
+          <SidebarSection title="Data models">
+            {dataItems.map((item) => (
+              <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
+            ))}
+          </SidebarSection>
+
+          <SidebarDivider />
+
+          <SidebarSection title="Resources">
+            {resourceItems.map((item) => (
+              <SidebarNavItem
+                key={item.path}
+                {...item}
+                isActive={!item.external && location.pathname === item.path}
+              />
+            ))}
+          </SidebarSection>
+
+        </Box>
       </Stack>
 
       <Box p={16}>
         <Divider mb={16} color={colors.border.light} />
-        <SidebarUser name="Olivia Rhye" initials="OR" />
+        <SidebarUser name="User" initials="U" />
       </Box>
     </Stack>
   );
