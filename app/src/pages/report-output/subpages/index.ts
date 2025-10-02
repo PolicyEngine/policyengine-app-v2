@@ -9,6 +9,8 @@ export { default as OverviewSubPage } from './OverviewSubPage';
 export { default as NotFoundSubPage } from './NotFoundSubPage';
 export { default as LoadingPage } from './LoadingPage';
 export { default as ErrorPage } from './ErrorPage';
+export { default as EconomyOverview } from './EconomyOverview';
+export { default as HouseholdOverview } from './HouseholdOverview';
 
 // Additional sub-pages to be implemented:
 // - BaselineResultsSubPage

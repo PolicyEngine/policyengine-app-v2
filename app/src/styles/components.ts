@@ -19,6 +19,34 @@ export const themeComponents = {
         };
       }
 
+      if (params.variant === 'metricLabel') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+          },
+        };
+      }
+
+      if (params.variant === 'metricValue') {
+        return {
+          root: {
+            fontSize: typography.fontSize.xl,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
+          },
+        };
+      }
+
+      if (params.variant === 'metricDescription') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+          },
+        };
+      }
+
       return {
         root: {
           fontFamily: typography.fontFamily.primary,

@@ -18,6 +18,10 @@ import { Household } from '@/types/ingredients/Household';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { useReportOutput } from '@/hooks/useReportOutput';
 import { MOCK_USER_ID } from '@/constants';
+import {
+  MOCK_ECONOMY_REPORT_OUTPUT,
+  MOCK_DEMO_REPORT_ID,
+} from '@/tests/fixtures/report/mockReportOutput';
 import OverviewSubPage from './report-output/subpages/OverviewSubPage';
 import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
 import LoadingPage from './report-output/subpages/LoadingPage';
@@ -51,8 +55,31 @@ function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
 
 /**
  * Hook to fetch and manage report output data
+ * If the report ID matches the demo report ID, returns mock data instead of fetching
  */
 function useReportData(reportId: string) {
+  // Check if this is the demo report
+  const isDemoReport = reportId === MOCK_DEMO_REPORT_ID;
+
+  // If demo report, return mock data immediately
+  if (isDemoReport) {
+    const userId = MOCK_USER_ID.toString();
+    const normalizedReport = useUserReportById(userId, reportId);
+
+    return {
+      status: 'complete' as const,
+      output: MOCK_ECONOMY_REPORT_OUTPUT,
+      outputType: 'economy' as ReportOutputType,
+      error: undefined,
+      normalizedReport,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
+    };
+  }
+
+  // Otherwise, fetch real data
   const result = useReportOutput({ reportId });
   const { status, data, error } = result;
   const userId = MOCK_USER_ID.toString();
@@ -87,14 +114,18 @@ function useReportData(reportId: string) {
 
 export default function ReportOutputPage() {
   const navigate = useNavigate();
-  const { reportId, subpage } = useParams<{ reportId: string; subpage?: string }>();
+  const { reportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
 
-  // Temporarily disable to enable ReportOutputPageDemo to work without reportId
-  /*
+  // If no reportId, show error
   if (!reportId) {
-    throw new Error('Report ID is required');
+    return (
+      <Container size="xl" px={spacing.xl}>
+        <Stack gap={spacing.xl}>
+          <Text c="red">Error: Report ID is required</Text>
+        </Stack>
+      </Container>
+    );
   }
-  */
 
   const {
     status,
