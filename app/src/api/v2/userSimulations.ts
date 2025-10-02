@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from '../apiClient';
 
 export interface UserSimulation {
   id: string;
@@ -21,25 +21,21 @@ export interface UserSimulationUpdate {
 
 export const userSimulationsAPI = {
   create: async (data: UserSimulationCreate): Promise<UserSimulation> => {
-    const response = await apiClient.post('/user-simulations', data);
-    return response.data;
+    return await apiClient.post<UserSimulation>('/user-simulations', data);
   },
 
   list: async (userId: string): Promise<UserSimulation[]> => {
-    const response = await apiClient.get('/user-simulations', {
+    return await apiClient.get<UserSimulation[]>('/user-simulations', {
       params: { user_id: userId },
     });
-    return response.data;
   },
 
   get: async (id: string): Promise<UserSimulation> => {
-    const response = await apiClient.get(`/user-simulations/${id}`);
-    return response.data;
+    return await apiClient.get<UserSimulation>(`/user-simulations/${id}`);
   },
 
   update: async (id: string, data: UserSimulationUpdate): Promise<UserSimulation> => {
-    const response = await apiClient.patch(`/user-simulations/${id}`, data);
-    return response.data;
+    return await apiClient.patch<UserSimulation>(`/user-simulations/${id}`, data);
   },
 
   delete: async (id: string): Promise<void> => {

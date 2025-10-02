@@ -1,4 +1,4 @@
-import { apiClient } from './client';
+import { apiClient } from '../apiClient';
 
 export interface UserPolicy {
   id: string;
@@ -21,20 +21,17 @@ export interface UserPolicyUpdate {
 
 export const userPoliciesAPI = {
   create: async (data: UserPolicyCreate): Promise<UserPolicy> => {
-    const response = await apiClient.post('/user-policies', data);
-    return response.data;
+    return await apiClient.post<UserPolicy>('/user-policies', data);
   },
 
   list: async (userId: string): Promise<UserPolicy[]> => {
-    const response = await apiClient.get('/user-policies', {
+    return await apiClient.get<UserPolicy[]>('/user-policies', {
       params: { user_id: userId },
     });
-    return response.data;
   },
 
   update: async (id: string, data: UserPolicyUpdate): Promise<UserPolicy> => {
-    const response = await apiClient.patch(`/user-policies/${id}`, data);
-    return response.data;
+    return await apiClient.patch<UserPolicy>(`/user-policies/${id}`, data);
   },
 
   delete: async (id: string): Promise<void> => {

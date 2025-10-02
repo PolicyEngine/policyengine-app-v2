@@ -28,6 +28,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFetchMetadata } from '@/hooks/useMetadata';
 import { reportsAPI } from '@/api/v2/reports';
 import { simulationsAPI } from '@/api/v2/simulations';
+import { MOCK_USER_ID } from '@/constants';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -38,7 +39,7 @@ export default function HomePage() {
   useFetchMetadata(countryId);
 
   // TODO: Get actual user ID from auth context
-  const userId = 'dev_test';
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   // Fetch reports for this user
   const { data: reports = [] } = useQuery({

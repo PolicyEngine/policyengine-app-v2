@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import moment from 'moment';
 import ReportCreationModal from '@/components/report/ReportCreationModal';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
@@ -17,6 +17,7 @@ export default function ReportsPage() {
   const [reportToRename, setReportToRename] = useState<{ id: string; name: string } | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { countryId } = useParams<{ countryId: string }>();
   const { handleSelectionChange, isSelected } = useIngredientSelection();
 
   // Fetch reports from API
@@ -54,12 +55,7 @@ export default function ReportsPage() {
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
     ingredient: 'report',
     onEdit: (id) => {
-      // Navigate to report editor - use absolute path
-      const currentPath = window.location.pathname;
-      const countryMatch = currentPath.match(/^\/([^\/]+)/);
-      if (countryMatch) {
-        navigate(`/${countryMatch[1]}/reports/${id}/edit`);
-      }
+      navigate(`/${countryId}/report/${id}`);
     },
     onRename: (id) => {
       const report = reports?.find(r => r.id === id);
@@ -79,12 +75,7 @@ export default function ReportsPage() {
   const createReportMutation = useMutation({
     mutationFn: reportsAPI.create,
     onSuccess: (newReport) => {
-      // Navigate to the report editor - use absolute path
-      const currentPath = window.location.pathname;
-      const countryMatch = currentPath.match(/^\/([^\/]+)/);
-      if (countryMatch) {
-        navigate(`/${countryMatch[1]}/reports/${newReport.id}/edit`);
-      }
+      navigate(`/${countryId}/report/${newReport.id}`);
     },
     onError: (error) => {
       console.error('Failed to create report:', error);
@@ -222,6 +213,7 @@ export default function ReportsPage() {
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
+      onRowClick={(id) => navigate(`/${countryId}/report/${id}`)}
       />
     </>
   );

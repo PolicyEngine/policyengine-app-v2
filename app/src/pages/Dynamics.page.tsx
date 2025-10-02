@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
 import moment from 'moment';
 import { apiClient } from '@/api/apiClient';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
+import ReportRenameModal from '@/components/report/ReportRenameModal';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
+import { userDynamicsAPI } from '@/api/v2/userDynamics';
+import { MOCK_USER_ID } from '@/constants';
 
 interface Dynamic {
   id: string;
@@ -18,9 +22,15 @@ interface Dynamic {
 }
 
 export default function DynamicsPage() {
+  const navigate = useNavigate();
+  const { countryId } = useParams<{ countryId: string }>();
   const [searchValue, setSearchValue] = useState('');
   const queryClient = useQueryClient();
   const { handleSelectionChange, isSelected } = useIngredientSelection();
+  const [renameModalOpened, setRenameModalOpened] = useState(false);
+  const [dynamicToRename, setDynamicToRename] = useState<{ id: string; name: string } | null>(null);
+
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   // Fetch dynamics from API
   const {
@@ -30,7 +40,13 @@ export default function DynamicsPage() {
   } = useQuery({
     queryKey: ['dynamics'],
     queryFn: () => apiClient.get<Dynamic[]>('/dynamics/', { params: { limit: 1000 } }),
-    refetchInterval: 30000, // Refetch every 30 seconds for live data
+    refetchInterval: 30000,
+  });
+
+  // Fetch user dynamics associations
+  const { data: userDynamics = [] } = useQuery({
+    queryKey: ['userDynamics', userId],
+    queryFn: () => userDynamicsAPI.list(userId),
   });
 
   // Delete mutation
@@ -41,12 +57,54 @@ export default function DynamicsPage() {
     },
   });
 
+  // Rename mutation
+  const renameMutation = useMutation({
+    mutationFn: async ({ dynamicId, name }: { dynamicId: string; name: string }) => {
+      const existing = userDynamics.find(ud => ud.dynamic_id === dynamicId);
+
+      if (existing) {
+        return userDynamicsAPI.update(existing.id, { custom_name: name });
+      } else {
+        return userDynamicsAPI.create({
+          user_id: userId,
+          dynamic_id: dynamicId,
+          custom_name: name,
+        });
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['userDynamics', userId] });
+      setRenameModalOpened(false);
+      setDynamicToRename(null);
+    },
+  });
+
+  const handleRenameDynamic = (name: string) => {
+    if (dynamicToRename) {
+      renameMutation.mutate({ dynamicId: dynamicToRename.id, name });
+    }
+  };
+
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
     ingredient: 'dynamic',
     onDelete: (id) => {
       if (confirm('Delete this dynamic configuration?')) {
         deleteMutation.mutate(id);
       }
+    },
+    onRename: (id: string) => {
+      const dynamic = dynamics?.find(d => d.id === id);
+      if (dynamic) {
+        const userDyn = userDynamics.find(ud => ud.dynamic_id === id);
+        setDynamicToRename({
+          id: dynamic.id,
+          name: userDyn?.custom_name || dynamic.name,
+        });
+        setRenameModalOpened(true);
+      }
+    },
+    onView: (id: string) => {
+      navigate(`/dynamic/${id}`);
     },
   });
 
@@ -100,39 +158,57 @@ export default function DynamicsPage() {
 
   // Transform the data to match the IngredientRecord structure
   const transformedData: IngredientRecord[] =
-    filteredDynamics?.map((dynamic) => ({
-      id: dynamic.id,
-      dynamicName: {
-        text: dynamic.name,
-      } as TextValue,
-      description: {
-        text: dynamic.description || 'No description',
-      } as TextValue,
-      type: {
-        text: dynamic.type || 'Standard',
-      } as TextValue,
-      dateCreated: {
-        text: moment(dynamic.created_at).fromNow(),
-      } as TextValue,
-    })) || [];
+    filteredDynamics?.map((dynamic) => {
+      const userDyn = userDynamics.find(ud => ud.dynamic_id === dynamic.id);
+      const displayName = userDyn?.custom_name || dynamic.name;
+
+      return {
+        id: dynamic.id,
+        dynamicName: {
+          text: displayName,
+        } as TextValue,
+        description: {
+          text: dynamic.description || 'No description',
+        } as TextValue,
+        type: {
+          text: dynamic.type || 'Standard',
+        } as TextValue,
+        dateCreated: {
+          text: moment(dynamic.created_at).fromNow(),
+        } as TextValue,
+      };
+    }) || [];
 
   return (
-    <IngredientReadView
-      ingredient="dynamic"
-      title="Your dynamics"
-      subtitle="Manage time-varying behaviours and dynamic configurations for your models."
-      onBuild={handleBuildDynamic}
-      isLoading={isLoading}
-      isError={!!error}
-      error={error}
-      data={transformedData}
-      columns={dynamicColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      onMoreFilters={handleMoreFilters}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <>
+      <ReportRenameModal
+        opened={renameModalOpened}
+        onClose={() => {
+          setRenameModalOpened(false);
+          setDynamicToRename(null);
+        }}
+        onSubmit={handleRenameDynamic}
+        currentName={dynamicToRename?.name || ''}
+        isLoading={renameMutation.isPending}
+      />
+      <IngredientReadView
+        ingredient="dynamic"
+        title="Your dynamics"
+        subtitle="Manage time-varying behaviours and dynamic configurations for your models."
+        onBuild={handleBuildDynamic}
+        isLoading={isLoading}
+        isError={!!error}
+        error={error}
+        data={transformedData}
+        columns={dynamicColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        onMoreFilters={handleMoreFilters}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+        onRowClick={(id) => navigate(`/${countryId}/dynamic/${id}`)}
+      />
+    </>
   );
 }

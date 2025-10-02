@@ -4,6 +4,7 @@ export { datasetsAPI } from './datasets';
 export { parametersAPI } from '../parameters';
 export { policiesAPI } from './policies';
 export { simulationsAPI } from './simulations';
+export { userDatasetsAPI } from './userDatasets';
 
 // Re-export types
 export type {
@@ -32,3 +33,9 @@ export type {
   SimulationUpdate,
   SimulationRunResult,
 } from './simulations';
+
+export type {
+  UserDatasetResponse,
+  UserDatasetCreate,
+  UserDatasetUpdate,
+} from './userDatasets';

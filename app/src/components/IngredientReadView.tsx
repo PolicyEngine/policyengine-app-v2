@@ -32,6 +32,7 @@ interface IngredientReadViewProps {
   enableSelection?: boolean;
   isSelected?: (recordId: string) => boolean;
   onSelectionChange?: (recordId: string, selected: boolean) => void;
+  onRowClick?: (recordId: string) => void;
 }
 
 export default function IngredientReadView({
@@ -50,6 +51,7 @@ export default function IngredientReadView({
   enableSelection = true,
   isSelected = () => false,
   onSelectionChange,
+  onRowClick,
 }: IngredientReadViewProps) {
   return (
     <Box>
@@ -179,11 +181,11 @@ export default function IngredientReadView({
                           borderLeft: selected
                             ? `3px solid ${colors.primary[500]}`
                             : '3px solid transparent',
-                          cursor: enableSelection ? 'pointer' : 'default',
+                          cursor: 'pointer',
                         }}
                         onClick={() => {
-                          if (enableSelection && onSelectionChange) {
-                            onSelectionChange(record.id, !selected);
+                          if (onRowClick) {
+                            onRowClick(record.id);
                           }
                         }}
                       >

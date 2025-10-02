@@ -1,7 +1,9 @@
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import moment from 'moment';
 import { datasetsAPI } from '@/api/v2/datasets';
+import { userDatasetsAPI } from '@/api/v2/userDatasets';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
@@ -9,6 +11,8 @@ import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 
 export default function DatasetsPage() {
   const [searchValue, setSearchValue] = useState('');
+  const navigate = useNavigate();
+  const { countryId } = useParams<{ countryId: string }>();
   const queryClient = useQueryClient();
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
@@ -22,6 +26,12 @@ export default function DatasetsPage() {
     queryKey: ['datasets'],
     queryFn: () => datasetsAPI.listDatasets({ limit: 1000 }),
     refetchInterval: 30000,
+  });
+
+  // Fetch user datasets for custom names
+  const { data: userDatasets = [] } = useQuery({
+    queryKey: ['userDatasets'],
+    queryFn: () => userDatasetsAPI.listUserDatasets(),
   });
 
   // Delete mutation
@@ -86,18 +96,23 @@ export default function DatasetsPage() {
 
   // Transform the data to match the IngredientRecord structure
   const transformedData: IngredientRecord[] =
-    filteredDatasets?.map((dataset) => ({
-      id: dataset.id,
-      datasetName: {
-        text: dataset.name,
-      } as TextValue,
-      description: {
-        text: dataset.description || 'No description',
-      } as TextValue,
-      year: {
-        text: dataset.year?.toString() || 'N/A',
-      } as TextValue,
-    })) || [];
+    filteredDatasets?.map((dataset) => {
+      const userDataset = userDatasets.find(ud => ud.dataset_id === dataset.id);
+      const displayName = userDataset?.custom_name || dataset.name;
+
+      return {
+        id: dataset.id,
+        datasetName: {
+          text: displayName,
+        } as TextValue,
+        description: {
+          text: dataset.description || 'No description',
+        } as TextValue,
+        year: {
+          text: dataset.year?.toString() || 'N/A',
+        } as TextValue,
+      };
+    }) || [];
 
   return (
     <IngredientReadView
@@ -116,6 +131,7 @@ export default function DatasetsPage() {
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
+      onRowClick={(datasetId) => navigate(`/${countryId}/dataset/${datasetId}`)}
     />
   );
 }
