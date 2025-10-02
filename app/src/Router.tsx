@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
-import ReportOutputFrame from './frames/report/ReportOutputFrame';
+import ReportOutputPage from './pages/ReportOutput.page';
+import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
-import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 
@@ -36,15 +36,15 @@ const router = createBrowserRouter(
             // Note: This is a temporary debug path for viewing report outputs
             {
               path: 'report-output/:reportId',
-              element: <ReportOutputFrame />,
+              element: <ReportOutputPage />,
               children: [
                 {
                   path: ':subpage',
-                  element: <ReportOutputFrame />,
+                  element: <ReportOutputPage />,
                 },
               ],
             },
-            // Demo path for new ReportOutputPage component
+            // Demo path for ReportOutputPage component
             {
               path: 'report-output-demo',
               element: <ReportOutputPageDemo />,

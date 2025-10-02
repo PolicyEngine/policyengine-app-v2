@@ -16,8 +16,12 @@ import { EconomyReportOutput } from '@/api/economy';
 import { colors, spacing, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
 import { useUserReportById } from '@/hooks/useUserReports';
+import { useReportOutput } from '@/hooks/useReportOutput';
+import { MOCK_USER_ID } from '@/constants';
 import OverviewSubPage from './report-output/subpages/OverviewSubPage';
 import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
+import LoadingPage from './report-output/subpages/LoadingPage';
+import ErrorPage from './report-output/subpages/ErrorPage';
 
 /**
  * Type discriminator for output types
@@ -25,79 +29,129 @@ import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
 export type ReportOutputType = 'household' | 'economy';
 
 /**
- * Props for the ReportOutputPage structural component
- */
-export interface ReportOutputPageProps {
-  /**
-   * The output artifact from the calculation
-   */
-  output: EconomyReportOutput | Household;
-
-  /**
-   * The type of output being displayed
-   */
-  outputType: ReportOutputType;
-
-  /**
-   * Normalized report data from useUserReportById
-   */
-  normalizedReport: ReturnType<typeof useUserReportById>;
-}
-
-/**
  * ReportOutputPage - Structural page component that provides layout chrome
  * for displaying report calculation outputs.
  *
  * This component serves as a container that:
- * - Accepts output artifacts (household or economy calculations)
+ * - Fetches output artifacts from report calculations
  * - Provides consistent layout and navigation structure
  * - Conditionally renders appropriate sub-pages based on output type
  * - Acts as the main structural wrapper for all report output views
  *
  * Sub-page components will be implemented separately and integrated here.
  */
+
 // Valid sub-pages registry
-const VALID_SUBPAGES = ['overview'] as const;
+const VALID_SUBPAGES = ['overview', 'loading', 'error'] as const;
 type ValidSubPage = (typeof VALID_SUBPAGES)[number];
 
 function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
   return VALID_SUBPAGES.includes(subpage as ValidSubPage);
 }
 
-export default function ReportOutputPage({
-  output,
-  outputType,
-  normalizedReport,
-}: ReportOutputPageProps) {
-  const { report } = normalizedReport;
+/**
+ * Hook to fetch and manage report output data
+ */
+function useReportData(reportId: string) {
+  const result = useReportOutput({ reportId });
+  const { status, data, error } = result;
+  const userId = MOCK_USER_ID.toString();
+  const normalizedReport = useUserReportById(userId, reportId);
+
+  // Extract progress information if status is pending
+  const progress = status === 'pending' ? (result as any).progress : undefined;
+  const message = status === 'pending' ? (result as any).message : undefined;
+  const queuePosition = status === 'pending' ? (result as any).queuePosition : undefined;
+  const estimatedTimeRemaining = status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
+
+  // Determine output type
+  const output = data;
+  const outputType: ReportOutputType | undefined = output
+    ? isHouseholdOutput(output)
+      ? 'household'
+      : 'economy'
+    : undefined;
+
+  return {
+    status,
+    output,
+    outputType,
+    error,
+    normalizedReport,
+    progress,
+    message,
+    queuePosition,
+    estimatedTimeRemaining,
+  };
+}
+
+export default function ReportOutputPage() {
   const navigate = useNavigate();
-  const { subpage } = useParams<{ subpage?: string }>();
+  const { reportId, subpage } = useParams<{ reportId: string; subpage?: string }>();
 
-  // Determine which tabs to show based on output type
-  const tabs = getTabsForOutputType(outputType, output);
+  // Temporarily disable to enable ReportOutputPageDemo to work without reportId
+  /*
+  if (!reportId) {
+    throw new Error('Report ID is required');
+  }
+  */
 
-  // Format timestamp (placeholder for now)
-  const timestamp = 'Ran today at 05:23:41';
+  const {
+    status,
+    output,
+    outputType,
+    error,
+    normalizedReport,
+    progress,
+    message,
+    queuePosition,
+    estimatedTimeRemaining,
+  } = useReportData(reportId);
 
+  const { report } = normalizedReport;
   const DEFAULT_PAGE = 'overview';
 
   // Use URL param for active tab, default to 'overview'
   const activeTab = subpage || DEFAULT_PAGE;
 
-  // Redirect to overview if no subpage is specified
+  // Redirect to overview if no subpage is specified and data is ready
   useEffect(() => {
-    if (!subpage) {
+    if (!subpage && status === 'complete' && output) {
       navigate(DEFAULT_PAGE, { replace: true });
     }
-  }, [subpage, navigate]);
+  }, [subpage, navigate, output, status]);
+
+  // Determine which tabs to show based on output type
+  const tabs = output && outputType ? getTabsForOutputType(outputType, output) : [];
+
+  // Format timestamp (placeholder for now)
+  const timestamp = 'Ran today at 05:23:41';
 
   // Handler for tab clicks - navigate to sibling route
   const handleTabClick = (tabValue: string) => {
     navigate(tabValue);
   };
 
-  // Render the appropriate sub-page based on URL param
+  // Render the appropriate sub-page based on status and URL param
   const renderSubPage = () => {
+    // Show loading page if still pending
+    if (status === 'pending') {
+      return (
+        <LoadingPage
+          progress={progress}
+          message={message}
+          queuePosition={queuePosition}
+          estimatedTimeRemaining={estimatedTimeRemaining}
+        />
+      );
+    }
+
+    // Show error page if there's an error
+    if (status === 'error') {
+      return <ErrorPage error={error} />;
+    }
+
+    // Show not found if invalid subpage
     if (!isValidSubPage(activeTab)) {
       return <NotFoundSubPage />;
     }
@@ -105,7 +159,22 @@ export default function ReportOutputPage({
     // Map valid sub-pages to their components
     switch (activeTab) {
       case 'overview':
-        return <OverviewSubPage output={output} outputType={outputType} />;
+        return output && outputType ? (
+          <OverviewSubPage output={output} outputType={outputType} />
+        ) : (
+          <NotFoundSubPage />
+        );
+      case 'loading':
+        return (
+          <LoadingPage
+            progress={progress}
+            message={message}
+            queuePosition={queuePosition}
+            estimatedTimeRemaining={estimatedTimeRemaining}
+          />
+        );
+      case 'error':
+        return <ErrorPage error={error} />;
       default:
         return <NotFoundSubPage />;
     }
@@ -284,7 +353,6 @@ function getTabsForOutputType(
     // Economy report tabs matching the design
     const baseTabs = [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'dynamics', label: 'Dynamics' },
@@ -298,7 +366,6 @@ function getTabsForOutputType(
   if (outputType === 'household' && isHouseholdOutput(output)) {
     return [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'parameters', label: 'Parameters' },
