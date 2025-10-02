@@ -20,7 +20,9 @@ import { useReportOutput } from '@/hooks/useReportOutput';
 import { MOCK_USER_ID } from '@/constants';
 import {
   MOCK_ECONOMY_REPORT_OUTPUT,
+  MOCK_HOUSEHOLD_OUTPUT,
   MOCK_DEMO_REPORT_ID,
+  MOCK_DEMO_HOUSEHOLD_ID,
 } from '@/tests/fixtures/report/mockReportOutput';
 import OverviewSubPage from './report-output/subpages/OverviewSubPage';
 import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
@@ -55,14 +57,15 @@ function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
 
 /**
  * Hook to fetch and manage report output data
- * If the report ID matches the demo report ID, returns mock data instead of fetching
+ * If the report ID matches a demo ID, returns mock data instead of fetching
  */
 function useReportData(reportId: string) {
-  // Check if this is the demo report
-  const isDemoReport = reportId === MOCK_DEMO_REPORT_ID;
+  // Check if this is a demo report
+  const isDemoEconomyReport = reportId === MOCK_DEMO_REPORT_ID;
+  const isDemoHouseholdReport = reportId === MOCK_DEMO_HOUSEHOLD_ID;
 
-  // If demo report, return mock data immediately
-  if (isDemoReport) {
+  // If demo economy report, return mock economy data
+  if (isDemoEconomyReport) {
     const userId = MOCK_USER_ID.toString();
     const normalizedReport = useUserReportById(userId, reportId);
 
@@ -70,6 +73,24 @@ function useReportData(reportId: string) {
       status: 'complete' as const,
       output: MOCK_ECONOMY_REPORT_OUTPUT,
       outputType: 'economy' as ReportOutputType,
+      error: undefined,
+      normalizedReport,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
+    };
+  }
+
+  // If demo household report, return mock household data
+  if (isDemoHouseholdReport) {
+    const userId = MOCK_USER_ID.toString();
+    const normalizedReport = useUserReportById(userId, reportId);
+
+    return {
+      status: 'complete' as const,
+      output: MOCK_HOUSEHOLD_OUTPUT,
+      outputType: 'household' as ReportOutputType,
       error: undefined,
       normalizedReport,
       progress: undefined,

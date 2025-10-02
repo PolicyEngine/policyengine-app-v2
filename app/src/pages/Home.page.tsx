@@ -56,7 +56,10 @@ export default function HomePage() {
         Show Report View
       </Button>
       <Button variant="default" onClick={() => navigate('/us/report-output-demo')}>
-        View Report Output Page (Demo)
+        View Economy Report Output (Demo)
+      </Button>
+      <Button variant="default" onClick={() => navigate('/us/household-output-demo')}>
+        View Household Report Output (Demo)
       </Button>
       <FlowContainer />
     </>

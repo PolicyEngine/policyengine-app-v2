@@ -1,3 +1,5 @@
+import { Household } from '@/types/ingredients/Household';
+
 /**
  * Mock economy report output for demo and testing purposes
  * Based on a US report with realistic data values
@@ -35,6 +37,33 @@ export const MOCK_ECONOMY_REPORT_OUTPUT = {
 } as any; // Use 'as any' to avoid type checking issues with partial mock
 
 /**
- * Mock report ID for demo purposes
+ * Mock household output for demo and testing purposes
+ * Based on the v1 NetIncomeBreakdown.jsx demo values
+ */
+export const MOCK_HOUSEHOLD_OUTPUT: Household = {
+  id: 'demo-household-001',
+  countryId: 'us',
+  householdData: {
+    people: {
+      you: {
+        age: { '2024': 40 },
+      },
+    },
+    households: {
+      'your household': {
+        members: ['you'],
+        household_net_income: { '2024': 126927 },
+        market_income: { '2024': 160275 },
+        household_benefits: { '2024': 0 },
+        household_refundable_tax_credits: { '2024': 180 },
+        household_tax_before_refundable_credits: { '2024': 33528 },
+      },
+    },
+  },
+};
+
+/**
+ * Mock report IDs for demo purposes
  */
 export const MOCK_DEMO_REPORT_ID = 'demo-report-001';
+export const MOCK_DEMO_HOUSEHOLD_ID = 'demo-household-001';

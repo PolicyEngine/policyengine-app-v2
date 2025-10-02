@@ -44,9 +44,20 @@ const router = createBrowserRouter(
                 },
               ],
             },
-            // Demo path for ReportOutputPage component
+            // Demo path for economy report output
             {
               path: 'report-output-demo',
+              element: <ReportOutputPageDemo />,
+              children: [
+                {
+                  path: ':subpage',
+                  element: <ReportOutputPageDemo />,
+                },
+              ],
+            },
+            // Demo path for household report output
+            {
+              path: 'household-output-demo',
               element: <ReportOutputPageDemo />,
               children: [
                 {
