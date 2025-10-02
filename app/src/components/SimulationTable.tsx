@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import {
   Table,
   Checkbox,
@@ -8,15 +8,14 @@ import {
   Button,
   Menu,
   ActionIcon,
-  Pagination,
   Stack,
   Box,
   Anchor,
+  Flex,
 } from '@mantine/core';
-import { IconChevronDown, IconDots } from '@tabler/icons-react';
+import { IconChevronDown, IconDotsVertical } from '@tabler/icons-react';
 import { colors } from '@/designTokens';
 
-// Types
 export interface SimulationRecord {
   id: string;
   name: string;
@@ -47,26 +46,37 @@ interface SimulationTableProps {
   onSelectionChange?: (selectedIds: string[]) => void;
   currentPage?: number;
   totalPages?: number;
+  rowsPerPage?: number;
   onPageChange?: (page: number) => void;
 }
 
 export default function SimulationTable({
   data,
   onSimulationSelect,
+  onAddToReport,
   onAction,
   selectedSimulations = [],
   onSelectionChange,
   currentPage = 1,
   totalPages = 1,
+  rowsPerPage = 10,
   onPageChange,
 }: SimulationTableProps) {
   const [openedMenuId, setOpenedMenuId] = useState<string | null>(null);
 
+  const startIndex = (currentPage - 1) * rowsPerPage;
+  const endIndex = startIndex + rowsPerPage;
+  const paginatedData = data.slice(startIndex, endIndex);
+
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      onSelectionChange?.(data.map(item => item.id));
+      const currentPageIds = paginatedData.map(item => item.id);
+      const newSelection = [...new Set([...selectedSimulations, ...currentPageIds])];
+      onSelectionChange?.(newSelection);
     } else {
-      onSelectionChange?.([]);
+      const currentPageIds = paginatedData.map(item => item.id);
+      const newSelection = selectedSimulations.filter(id => !currentPageIds.includes(id));
+      onSelectionChange?.(newSelection);
     }
   };
 
@@ -80,19 +90,23 @@ export default function SimulationTable({
 
   const formatRelativeTime = (date: Date): string => {
     const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-    
+    const diffInHours = Math.floor(
+      (now.getTime() - date.getTime()) / (1000 * 60 * 60),
+    );
+
     if (diffInHours < 1) return 'Just now';
     if (diffInHours < 24) return `${diffInHours}h ago`;
-    
+
     const diffInDays = Math.floor(diffInHours / 24);
     if (diffInDays < 7) return `${diffInDays}d ago`;
-    
+
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
-  const allSelected = data.length > 0 && selectedSimulations.length === data.length;
-  const someSelected = selectedSimulations.length > 0 && selectedSimulations.length < data.length;
+  const currentPageIds = paginatedData.map(item => item.id);
+  const currentPageSelectedCount = currentPageIds.filter(id => selectedSimulations.includes(id)).length;
+  const allSelected = paginatedData.length > 0 && currentPageSelectedCount === paginatedData.length;
+  const someSelected = currentPageSelectedCount > 0 && currentPageSelectedCount < paginatedData.length;
 
   const handlePreviousPage = () => {
     if (currentPage > 1) {
@@ -105,6 +119,33 @@ export default function SimulationTable({
       onPageChange?.(currentPage + 1);
     }
   };
+
+  const getDropdownMenuConfigs = (simulationId: string) => [
+    {
+      label: 'Bookmark',
+      variant: 'default',
+      onClick: () => onAction?.('bookmark', simulationId),
+      isDivider: false,
+    },
+    {
+      label: 'Edit',
+      variant: 'default',
+      onClick: () => onAction?.('edit', simulationId),
+      isDivider: false,
+    },
+    {
+      label: 'Share',
+      variant: 'default',
+      onClick: () => onAction?.('share', simulationId),
+      isDivider: false,
+    },
+    {
+      label: 'Delete',
+      variant: 'default',
+      onClick: () => onAction?.('delete', simulationId),
+      isDivider: true,
+    },
+  ];
 
   return (
     <Box>
@@ -123,10 +164,13 @@ export default function SimulationTable({
             <Table.Th>Policy</Table.Th>
             <Table.Th>Population</Table.Th>
             <Table.Th>Connected Reports</Table.Th>
+            <Table.Th w={200}>Actions</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>
-          {data.map((simulation) => (
+          {paginatedData.map((simulation) => {
+            const isHousehold = simulation.population.type === 'household';
+            return (
             <Table.Tr key={simulation.id}>
               <Table.Td>
                 <Checkbox
@@ -134,7 +178,7 @@ export default function SimulationTable({
                   onChange={(event) => handleSelectRow(simulation.id, event.currentTarget.checked)}
                 />
               </Table.Td>
-              
+
               <Table.Td>
                 <Stack gap={4}>
                   <Text fw={700} size="sm">
@@ -142,7 +186,7 @@ export default function SimulationTable({
                   </Text>
                   <Anchor
                     size="sm"
-                    c={colors.blue[600]}
+                    c={colors.primary[600]}
                     onClick={() => onSimulationSelect?.(simulation.simulationId)}
                     style={{ textDecoration: 'none' }}
                   >
@@ -186,9 +230,36 @@ export default function SimulationTable({
               </Table.Td>
 
               <Table.Td>
-                <Text size="sm" c={colors.blue[600]}>
-                  {simulation.population.type === 'household' ? 'Household' : ''} #{simulation.population.id || simulation.population.name}
-                </Text>
+                <Badge
+                  variant="light"
+                  color={isHousehold ? "primary" : "gray"}
+                  radius="xl"
+                  style={{ 
+                    whiteSpace: 'normal', 
+                    height: 'auto', 
+                    padding: '4px 8px',
+                    maxWidth: '100%',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
+                  }}
+                >
+                  <Text 
+                    size="sm" 
+                    c={isHousehold ? colors.primary[600] : colors.gray[600]} 
+                    style={{ 
+                      lineHeight: 1.2,
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                      whiteSpace: 'normal',
+                      textAlign: 'left',
+                    }}
+                  >
+                    {isHousehold 
+                      ? `Household #${simulation.population.id || simulation.population.name}`
+                      : `${simulation.population.id || simulation.population.name}`
+                    }
+                  </Text>
+                </Badge>
               </Table.Td>
 
               <Table.Td>
@@ -223,60 +294,78 @@ export default function SimulationTable({
               </Table.Td>
 
               <Table.Td>
-                <Group gap={8} justify="flex-end">
-                  <Menu shadow="md" width={200}>
+                <Flex justify="flex-start" direction="row">
+                  <Menu shadow="md" width={150}>
                     <Menu.Target>
                       <Button
                         variant="outline"
-                        color="gray"
+                        color={colors.gray[300]}
                         radius="lg"
                         size="sm"
-                        rightSection={<IconChevronDown size={14} />}
+                        c={colors.gray[600]}
+                        px="xs"
+                        onClick={() => onAddToReport?.(simulation.simulationId)}
+                        rightSection={
+                          <Group gap={8} align="center">
+                            <Box
+                              w={1}
+                              h={60}
+                              bg={colors.gray[300]}
+                            />
+                            <IconChevronDown size={14} color={colors.gray[600]} />
+                          </Group>
+                        }
                       >
                         Add to Report
                       </Button>
                     </Menu.Target>
                     <Menu.Dropdown>
-                      <Menu.Item onClick={() => onAction?.('bookmark', simulation.id)}>
-                        Bookmark
-                      </Menu.Item>
-                      <Menu.Item onClick={() => onAction?.('edit', simulation.id)}>
-                        Edit
-                      </Menu.Item>
-                      <Menu.Item onClick={() => onAction?.('share', simulation.id)}>
-                        Share
-                      </Menu.Item>
-                      <Menu.Divider />
-                      <Menu.Item
-                        color="red"
-                        onClick={() => onAction?.('delete', simulation.id)}
-                      >
-                        Delete
-                      </Menu.Item>
+                      {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
+                        <React.Fragment key={config.label}>
+                          {config.isDivider && <Menu.Divider />}
+                          <Menu.Item 
+                            onClick={config.onClick}
+                            color={config.label === 'Delete' ? 'red' : undefined}
+                          >
+                            {config.label}
+                          </Menu.Item>
+                        </React.Fragment>
+                      ))}
                     </Menu.Dropdown>
                   </Menu>
 
                   <Menu
                     shadow="md"
-                    width={200}
+                    width={80}
                     opened={openedMenuId === simulation.id}
                     onChange={(opened) => setOpenedMenuId(opened ? simulation.id : null)}
                   >
                     <Menu.Target>
                       <ActionIcon variant="subtle" color="gray">
-                        <IconDots size={16} />
+                        <IconDotsVertical size={16} />
                       </ActionIcon>
                     </Menu.Target>
-                  
+                    <Menu.Dropdown>
+                      {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
+                        <React.Fragment key={config.label}>
+                          {config.isDivider && <Menu.Divider />}
+                          <Menu.Item 
+                            onClick={config.onClick}
+                            color={config.label === 'Delete' ? 'red' : undefined}
+                          >
+                            {config.label}
+                          </Menu.Item>
+                        </React.Fragment>
+                      ))}
+                    </Menu.Dropdown>
                   </Menu>
-                </Group>
+                </Flex>
               </Table.Td>
             </Table.Tr>
-            
-          ))}
+          )})}
         </Table.Tbody>
       </Table>
-      
+
       <Box
         w="100%"
         h={1}
@@ -286,35 +375,21 @@ export default function SimulationTable({
 
       <Group justify="space-between" mt="xl">
         <Button
-          variant="outline"
-          color="gray"
-          radius="xl"
-          size="sm"
-          disabled={currentPage <= 1}
+          variant={currentPage <= 1 ? 'disabled' : 'default'}
           onClick={handlePreviousPage}
-          style={{
-            borderColor: currentPage <= 1 ? colors.gray[300] : colors.gray[400],
-            color: currentPage <= 1 ? colors.gray[400] : colors.gray[600],
-          }}
+          disabled={currentPage <= 1}
         >
           Previous
         </Button>
-        
+
         <Text size="sm" c={colors.text.primary}>
           Page {currentPage} of {totalPages}
         </Text>
         
         <Button
-          variant="outline"
-          color="gray"
-          radius="xl"
-          size="sm"
-          disabled={currentPage >= totalPages}
+          variant={currentPage >= totalPages ? 'disabled' : 'default'}
           onClick={handleNextPage}
-          style={{
-            borderColor: currentPage >= totalPages ? colors.gray[300] : colors.gray[400],
-            color: currentPage >= totalPages ? colors.gray[400] : colors.gray[600],
-          }}
+          disabled={currentPage >= totalPages}
         >
           Next
         </Button>
