@@ -181,20 +181,15 @@ export default function IngredientReadView({
                           borderLeft: selected
                             ? `3px solid ${colors.primary[500]}`
                             : '3px solid transparent',
-                          cursor: 'pointer',
-                        }}
-                        onClick={() => {
-                          if (onRowClick) {
-                            onRowClick(record.id);
-                          }
                         }}
                       >
                         {enableSelection && (
-                          <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                          <Table.Td
+                            style={{ padding: `${spacing.md} ${spacing.lg}` }}
+                          >
                             <Checkbox
                               checked={selected}
                               onChange={(event) => {
-                                event.stopPropagation();
                                 if (onSelectionChange) {
                                   onSelectionChange(record.id, event.currentTarget.checked);
                                 }
@@ -206,7 +201,12 @@ export default function IngredientReadView({
                         {columns.map((column) => (
                           <Table.Td
                             key={column.key}
-                            style={{ padding: `${spacing.md} ${spacing.lg}` }}
+                            style={{ padding: `${spacing.md} ${spacing.lg}`, cursor: 'pointer' }}
+                            onClick={() => {
+                              if (onRowClick) {
+                                onRowClick(record.id);
+                              }
+                            }}
                           >
                             <ColumnRenderer config={column} record={record} />
                           </Table.Td>

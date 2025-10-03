@@ -192,7 +192,10 @@ export default function DataElementCell({
   };
 
   // Format number for display
-  const formatNumber = (value: number) => {
+  const formatNumber = (value: number | undefined | null) => {
+    if (value === null || value === undefined || typeof value !== 'number') {
+      return '-';
+    }
     if (Math.abs(value) >= 1e9) {
       return `${(value / 1e9).toFixed(2)}B`;
     } else if (Math.abs(value) >= 1e6) {
