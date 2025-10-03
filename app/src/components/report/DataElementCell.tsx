@@ -41,6 +41,7 @@ import { ReportElement } from '@/api/v2/reportElements';
 import { reportElementsAPI } from '@/api/v2/reportElements';
 import { modelVersionsAPI } from '@/api/v2/modelVersions';
 import BaseModal from '@/components/shared/BaseModal';
+import { getSmartChartDefaults } from '@/utils/chartDefaults';
 
 interface DataElementCellProps {
   element: ReportElement;
@@ -421,36 +422,24 @@ export default function DataElementCell({
     theme.colors.teal[6],
   ];
 
-  // Set default axes if not set - must be before any conditional returns
+  // Set default axes using smart defaults
   useEffect(() => {
-    if (xAxisColumns.length === 0 && availableColumns.length > 0) {
-      // Default x-axis based on chart type
-      if (chartType === 'bar_chart') {
-        // For bar charts, prefer Filter ≥ if we have filters, otherwise Simulation
-        if (availableColumns.includes('Filter ≥') && dataframe.rows.some(r => r['Filter ≥'] !== null)) {
-          setXAxisColumns(['Filter ≥']);
-        } else {
-          setXAxisColumns([availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]]);
-        }
-      } else if (chartType === 'line_chart') {
-        // For line charts, prefer Year, then Filter ≥, then Simulation
-        if (availableColumns.includes('Year') && dataframe.rows.some(r => r['Year'])) {
-          setXAxisColumns(['Year']);
-        } else if (availableColumns.includes('Filter ≥') && dataframe.rows.some(r => r['Filter ≥'] !== null)) {
-          setXAxisColumns(['Filter ≥']);
-        } else {
-          setXAxisColumns([availableColumns.includes('Simulation') ? 'Simulation' : availableColumns[0]]);
-        }
+    if (xAxisColumns.length === 0 || yAxisColumns.length === 0) {
+      const smartDefaults = getSmartChartDefaults(
+        dataframe.rows,
+        availableColumns,
+        isAggregateChange
+      );
+
+      if (xAxisColumns.length === 0 && smartDefaults.xAxisColumns.length > 0) {
+        setXAxisColumns(smartDefaults.xAxisColumns);
+      }
+
+      if (yAxisColumns.length === 0 && smartDefaults.yAxisColumns.length > 0) {
+        setYAxisColumns(smartDefaults.yAxisColumns);
       }
     }
-    if (yAxisColumns.length === 0) {
-      if (isAggregateChange && availableColumns.includes('Change')) {
-        setYAxisColumns(['Change']);
-      } else if (availableColumns.includes('Value')) {
-        setYAxisColumns(['Value']);
-      }
-    }
-  }, [chartType, availableColumns, dataframe.rows]);
+  }, [availableColumns, dataframe.rows, isAggregateChange]);
 
   if (aggregatesLoading) {
     return (
@@ -497,10 +486,15 @@ export default function DataElementCell({
     }
 
     if (chartType === 'table') {
-      // Show clean table design with dynamic columns
-      const displayColumns = availableColumns.filter(col =>
-        !['Year', 'Filter variable', 'Filter ≥', 'Filter ≤'].includes(col) ||
-        dataframe.rows.some(row => row[col] !== null && row[col] !== '-')
+      // Use smart defaults for column ordering and visibility
+      const smartDefaults = getSmartChartDefaults(
+        dataframe.rows,
+        availableColumns,
+        isAggregateChange
+      );
+
+      const displayColumns = smartDefaults.columnOrder.filter(col =>
+        smartDefaults.visibleColumns.includes(col)
       );
 
       return (

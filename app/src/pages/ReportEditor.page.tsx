@@ -28,6 +28,7 @@ import {
   IconShare,
   IconChevronDown,
 } from '@tabler/icons-react';
+import { showErrorNotification } from '@/utils/errorHandling';
 import { reportsAPI } from '@/api/v2/reports';
 import { reportElementsAPI } from '@/api/v2/reportElements';
 import { aggregatesAPI } from '@/api/v2/aggregates';
@@ -213,8 +214,7 @@ export default function ReportEditorPage() {
       console.log('Queries invalidated');
     } catch (error: any) {
       console.error('Failed to create data element:', error);
-      console.error('Error response:', error.response?.data);
-      alert(`Failed to create data element: ${error.response?.data?.detail || error.message}`);
+      showErrorNotification(error, 'Failed to create data element');
     } finally {
       setIsCreatingElement(false); // Clear loading state
     }
@@ -239,8 +239,7 @@ export default function ReportEditorPage() {
       console.log('Queries invalidated');
     } catch (error: any) {
       console.error('Failed to create markdown element:', error);
-      console.error('Error details:', error.response?.data);
-      alert(`Failed to create text element: ${error.response?.data?.detail || error.message}`);
+      showErrorNotification(error, 'Failed to create text element');
     }
   };
 
@@ -311,8 +310,7 @@ export default function ReportEditorPage() {
       console.log('Queries invalidated');
     } catch (error: any) {
       console.error('Failed to create template element:', error);
-      console.error('Error response:', error.response?.data);
-      alert(`Failed to create element: ${error.response?.data?.detail || error.message}`);
+      showErrorNotification(error, 'Failed to create element');
     } finally {
       setIsCreatingElement(false);
       setSelectedTemplate(null);

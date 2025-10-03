@@ -9,6 +9,7 @@ import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns'
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
+import { showErrorNotification } from '@/utils/errorHandling';
 
 export default function ReportsPage() {
   const [searchValue, setSearchValue] = useState('');
@@ -77,9 +78,9 @@ export default function ReportsPage() {
     onSuccess: (newReport) => {
       navigate(`/${countryId}/report/${newReport.id}`);
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error('Failed to create report:', error);
-      alert('Failed to create report. Please try again.');
+      showErrorNotification(error, 'Failed to create report');
     },
   });
 

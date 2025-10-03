@@ -22,7 +22,10 @@ import {
 } from '@tabler/icons-react';
 import BaseModal from '@/components/shared/BaseModal';
 import { simulationsAPI } from '@/api/v2/simulations';
+import { userSimulationsAPI } from '@/api/v2/userSimulations';
 import type { ReportElementTemplate } from '@/api/v2/reportElementTemplates';
+import { getTemplateConfig } from '@/api/v2/templates';
+import { MOCK_USER_ID } from '@/constants';
 
 type DataType = 'single' | 'comparison';
 
@@ -48,6 +51,8 @@ export default function TemplateSelectionModal({
   const [selectedSimulations, setSelectedSimulations] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
+
   // Fetch simulations
   const { data: simulations, isLoading: simulationsLoading } = useQuery({
     queryKey: ['simulations'],
@@ -55,11 +60,21 @@ export default function TemplateSelectionModal({
     enabled: opened,
   });
 
-  // Simulation options with better labels
-  const simulationOptions = simulations?.filter(s => s.id).map(s => ({
-    value: s.id || '',
-    label: s.label || `Simulation ${s.id?.slice(0, 8) || ''}`,
-  })).filter(opt => opt.value) || [];
+  // Fetch user simulations for custom names
+  const { data: userSimulations = [] } = useQuery({
+    queryKey: ['userSimulations', userId],
+    queryFn: () => userSimulationsAPI.list(userId),
+    enabled: opened,
+  });
+
+  // Simulation options with user-specific custom names
+  const simulationOptions = simulations?.filter(s => s.id).map(s => {
+    const userSim = userSimulations.find(us => us.simulation_id === s.id);
+    return {
+      value: s.id || '',
+      label: userSim?.custom_name || s.name || `Simulation ${s.id?.slice(0, 8) || ''}`,
+    };
+  }).filter(opt => opt.value) || [];
 
   // Reset form when modal opens/closes or template changes
   useEffect(() => {
@@ -93,9 +108,9 @@ export default function TemplateSelectionModal({
     let country: string | null = null;
     try {
       const sim = await simulationsAPI.get(selectedSimulations[0]);
-      // Extract country from model (e.g., "policyengine_us" -> "us")
-      if (sim.model) {
-        const match = sim.model.match(/policyengine_(\w+)/);
+      // Extract country from model_id (e.g., "policyengine_us" -> "us")
+      if (sim.model_id) {
+        const match = sim.model_id.match(/policyengine_(\w+)/);
         if (match) {
           country = match[1];
         }
@@ -109,7 +124,7 @@ export default function TemplateSelectionModal({
     const aggregateChanges: any[] = [];
 
     // Get the template configuration
-    const config = getTemplateConfig(template, country);
+    const config = getTemplateConfig(template.id, country);
 
     if (dataType === 'comparison') {
       // For comparisons, create aggregate changes for each variable/filter combo
@@ -182,136 +197,6 @@ export default function TemplateSelectionModal({
     if (step === 'confirmation') {
       setStep('selection');
     }
-  };
-
-  // Template configuration: maps templates to the variables they need
-  interface TemplateVariableConfig {
-    variable: string;
-    aggregateFunction?: 'sum' | 'mean' | 'median' | 'count';
-    filterVariable?: string;
-    filterValue?: string;
-    filterQuantileLeq?: number;
-    filterQuantileGeq?: number;
-  }
-
-  interface TemplateConfig {
-    variables: TemplateVariableConfig[];
-  }
-
-  const getTemplateConfig = (template: ReportElementTemplate, country: string | null): TemplateConfig => {
-    // UK-specific configurations (only UK supported for now)
-    if (country === 'uk') {
-      const configs: Record<string, TemplateConfig> = {
-        // Budgetary impact top-level: gov_tax, gov_spending, gov_balance
-        'budgetary-impact': {
-          variables: [
-            { variable: 'gov_tax', aggregateFunction: 'sum' as const },
-            { variable: 'gov_spending', aggregateFunction: 'sum' as const },
-            { variable: 'gov_balance', aggregateFunction: 'sum' as const },
-          ],
-        },
-
-        // Budgetary impact detailed: all individual benefit/tax variables
-        'detailed-budgetary-impact': {
-          variables: [
-            // Benefits
-            { variable: 'child_benefit', aggregateFunction: 'sum' as const },
-            { variable: 'esa_income', aggregateFunction: 'sum' as const },
-            { variable: 'esa_contrib', aggregateFunction: 'sum' as const },
-            { variable: 'housing_benefit', aggregateFunction: 'sum' as const },
-            { variable: 'income_support', aggregateFunction: 'sum' as const },
-            { variable: 'jsa_income', aggregateFunction: 'sum' as const },
-            { variable: 'jsa_contrib', aggregateFunction: 'sum' as const },
-            { variable: 'pension_credit', aggregateFunction: 'sum' as const },
-            { variable: 'universal_credit', aggregateFunction: 'sum' as const },
-            { variable: 'working_tax_credit', aggregateFunction: 'sum' as const },
-            { variable: 'child_tax_credit', aggregateFunction: 'sum' as const },
-            { variable: 'attendance_allowance', aggregateFunction: 'sum' as const },
-            { variable: 'carers_allowance', aggregateFunction: 'sum' as const },
-            { variable: 'dla', aggregateFunction: 'sum' as const },
-            { variable: 'pip', aggregateFunction: 'sum' as const },
-            { variable: 'state_pension', aggregateFunction: 'sum' as const },
-            { variable: 'winter_fuel_allowance', aggregateFunction: 'sum' as const },
-            // Taxes
-            { variable: 'council_tax', aggregateFunction: 'sum' as const },
-            { variable: 'income_tax', aggregateFunction: 'sum' as const },
-            { variable: 'national_insurance', aggregateFunction: 'sum' as const },
-          ],
-        },
-
-        // Decile charts: hbai_household_net_income by equiv_hbai_household_net_income deciles
-        'average-impact-by-income-decile': {
-          variables: Array.from({ length: 10 }, (_, i) => ({
-            variable: 'hbai_household_net_income',
-            aggregateFunction: 'mean' as const,
-            filterVariable: 'equiv_hbai_household_net_income_decile',
-            filterValue: String(i + 1),
-          })),
-        },
-        'relative-impact-by-income-decile': {
-          variables: Array.from({ length: 10 }, (_, i) => ({
-            variable: 'hbai_household_net_income',
-            aggregateFunction: 'mean' as const,
-            filterVariable: 'equiv_hbai_household_net_income_decile',
-            filterValue: String(i + 1),
-          })),
-        },
-
-        // Poverty: in_poverty_bhc, in_poverty_ahc, in_relative_poverty_bhc, in_relative_poverty_ahc
-        'poverty-impact': {
-          variables: [
-            { variable: 'in_poverty_bhc', aggregateFunction: 'mean' as const },
-            { variable: 'in_poverty_bhc', aggregateFunction: 'sum' as const },
-            { variable: 'in_poverty_ahc', aggregateFunction: 'mean' as const },
-            { variable: 'in_poverty_ahc', aggregateFunction: 'sum' as const },
-            { variable: 'in_relative_poverty_bhc', aggregateFunction: 'mean' as const },
-            { variable: 'in_relative_poverty_bhc', aggregateFunction: 'sum' as const },
-            { variable: 'in_relative_poverty_ahc', aggregateFunction: 'mean' as const },
-            { variable: 'in_relative_poverty_ahc', aggregateFunction: 'sum' as const },
-          ],
-        },
-        'deep-poverty-impact': {
-          variables: [
-            { variable: 'in_deep_poverty_bhc', aggregateFunction: 'mean' as const },
-            { variable: 'in_deep_poverty_bhc', aggregateFunction: 'sum' as const },
-            { variable: 'in_deep_poverty_ahc', aggregateFunction: 'mean' as const },
-            { variable: 'in_deep_poverty_ahc', aggregateFunction: 'sum' as const },
-          ],
-        },
-      };
-
-      return configs[template.id] || {
-        variables: [{ variable: 'hbai_household_net_income', aggregateFunction: 'mean' }],
-      };
-    }
-
-    // US configurations (placeholder for now)
-    if (country === 'us') {
-      const configs: Record<string, TemplateConfig> = {
-        'average-impact-by-income-decile': {
-          variables: Array.from({ length: 10 }, (_, i) => ({
-            variable: 'household_net_income',
-            aggregateFunction: 'mean' as const,
-            filterVariable: 'household_income_decile',
-            filterValue: String(i + 1),
-          })),
-        },
-        'poverty-impact': {
-          variables: [
-            { variable: 'person_in_poverty', aggregateFunction: 'mean' as const },
-          ],
-        },
-      };
-
-      return configs[template.id] || {
-        variables: [{ variable: 'household_net_income', aggregateFunction: 'mean' }],
-      };
-    }
-
-    // Default fallback
-    return {
-      variables: [{ variable: 'household_net_income', aggregateFunction: 'mean' }],
-    };
   };
 
   const renderSelectionStep = () => (
@@ -388,6 +273,15 @@ export default function TemplateSelectionModal({
     const baselineSim = simulations?.find(s => s.id === selectedSimulations[0]);
     const reformSim = dataType === 'comparison' ? simulations?.find(s => s.id === selectedSimulations[1]) : null;
 
+    // Get user-specific custom names
+    const baselineUserSim = userSimulations.find(us => us.simulation_id === selectedSimulations[0]);
+    const reformUserSim = dataType === 'comparison'
+      ? userSimulations.find(us => us.simulation_id === selectedSimulations[1])
+      : null;
+
+    const baselineName = baselineUserSim?.custom_name || baselineSim?.name || selectedSimulations[0];
+    const reformName = reformUserSim?.custom_name || reformSim?.name || selectedSimulations[1];
+
     return (
       <Stack>
         <Text size="sm" c="dimmed">Review your selection</Text>
@@ -404,17 +298,17 @@ export default function TemplateSelectionModal({
             <>
               <Group gap="xs">
                 <Text size="sm" c="dimmed">Baseline:</Text>
-                <Text size="sm">{baselineSim?.label || selectedSimulations[0]}</Text>
+                <Text size="sm">{baselineName}</Text>
               </Group>
               <Group gap="xs">
                 <Text size="sm" c="dimmed">Reform:</Text>
-                <Text size="sm">{reformSim?.label || selectedSimulations[1]}</Text>
+                <Text size="sm">{reformName}</Text>
               </Group>
             </>
           ) : (
             <Group gap="xs">
               <Text size="sm" c="dimmed">Simulation:</Text>
-              <Text size="sm">{baselineSim?.label || selectedSimulations[0]}</Text>
+              <Text size="sm">{baselineName}</Text>
             </Group>
           )}
         </Stack>
