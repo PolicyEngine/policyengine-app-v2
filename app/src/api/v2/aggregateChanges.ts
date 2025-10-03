@@ -81,5 +81,31 @@ export const aggregateChangesAPI = {
 
   async getByReportElement(reportElementId: string): Promise<AggregateChange[]> {
     return apiClient.get<AggregateChange[]>(`/aggregate-changes/by-report-element/${reportElementId}`);
+  },
+
+  async waitForCompletion(
+    aggregateChangeIds: string[],
+    maxAttempts: number = 60,
+    delayMs: number = 1000
+  ): Promise<AggregateChange[]> {
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const aggregateChanges = await Promise.all(aggregateChangeIds.map(id => this.get(id)));
+
+      // Check if all aggregate changes have values (indicates completion)
+      const allCompleted = aggregateChanges.every(
+        ac => ac.change !== null && ac.change !== undefined
+      );
+
+      if (allCompleted) {
+        return aggregateChanges;
+      }
+
+      attempts++;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    throw new Error(`Aggregate changes did not complete within timeout`);
   }
 };

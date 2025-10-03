@@ -46,6 +46,30 @@ class AggregatesAPI {
     return apiClient.post<AggregateTable[], AggregateTable[]>('/aggregates/bulk', aggregates);
   }
 
+  async waitForCompletion(
+    aggregateIds: string[],
+    maxAttempts: number = 60,
+    delayMs: number = 1000
+  ): Promise<AggregateTable[]> {
+    let attempts = 0;
+
+    while (attempts < maxAttempts) {
+      const aggregates = await Promise.all(aggregateIds.map(id => this.get(id)));
+
+      // Check if all aggregates have values (indicates completion)
+      const allCompleted = aggregates.every(agg => agg.value !== null && agg.value !== undefined);
+
+      if (allCompleted) {
+        return aggregates;
+      }
+
+      attempts++;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+
+    throw new Error(`Aggregates did not complete within timeout`);
+  }
+
   async getByReportElement(reportElementId: string): Promise<AggregateTable[]> {
     return apiClient.get<AggregateTable[]>(`/aggregates/by-report-element/${reportElementId}`);
   }

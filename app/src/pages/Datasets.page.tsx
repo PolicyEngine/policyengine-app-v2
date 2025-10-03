@@ -9,6 +9,7 @@ import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns'
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
+import { notifications } from '@mantine/notifications';
 
 export default function DatasetsPage() {
   const [searchValue, setSearchValue] = useState('');
@@ -46,16 +47,27 @@ export default function DatasetsPage() {
     mutationFn: datasetsAPI.deleteDataset,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['datasets'] });
+      notifications.show({
+        title: 'Dataset deleted',
+        message: 'The dataset has been deleted successfully',
+        color: 'green',
+      });
+    },
+    onError: () => {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete dataset',
+        color: 'red',
+      });
     },
   });
 
+  const handleDeleteSelected = () => {
+    selectedIds.forEach(id => deleteMutation.mutate(id));
+  };
+
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
     ingredient: 'dataset',
-    onDelete: (id) => {
-      if (confirm('Delete this dataset?')) {
-        deleteMutation.mutate(id);
-      }
-    },
   });
 
   const handleBuildDataset = () => {
@@ -97,13 +109,6 @@ export default function DatasetsPage() {
       header: 'Year',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: getDefaultActions(),
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform the data to match the IngredientRecord structure
@@ -138,6 +143,7 @@ export default function DatasetsPage() {
       title="Your datasets"
       subtitle="Manage household, population, and economic datasets for your simulations."
       onBuild={handleBuildDataset}
+      onDelete={handleDeleteSelected}
       isLoading={isLoading}
       isError={!!error}
       error={error}
@@ -149,6 +155,7 @@ export default function DatasetsPage() {
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
+      selectedCount={selectedIds.length}
       onRowClick={(datasetId) => navigate(`/${countryId}/dataset/${datasetId}`)}
     />
   );

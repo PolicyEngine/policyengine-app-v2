@@ -11,6 +11,8 @@ import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { usePolicies } from '@/hooks/usePolicies';
 import { userPoliciesAPI } from '@/api/v2/userPolicies';
 import { usersAPI } from '@/api/v2/users';
+import { policiesAPI } from '@/api/v2/policies';
+import { notifications } from '@mantine/notifications';
 import { MOCK_USER_ID } from '@/constants';
 
 export default function PoliciesPage() {
@@ -21,7 +23,11 @@ export default function PoliciesPage() {
   const isError = !!error;
 
   const [searchValue, setSearchValue] = useState('');
-  const { handleSelectionChange, isSelected } = useIngredientSelection();
+  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
+
+  const handleDeleteSelected = () => {
+    selectedIds.forEach(id => deleteMutation.mutate(id));
+  };
   const [modalOpened, setModalOpened] = useState(false);
   const [renameModalOpened, setRenameModalOpened] = useState(false);
   const [policyToRename, setPolicyToRename] = useState<{ id: string; name: string } | null>(null);
@@ -62,6 +68,28 @@ export default function PoliciesPage() {
       queryClient.invalidateQueries({ queryKey: ['userPolicies', userId] });
       setRenameModalOpened(false);
       setPolicyToRename(null);
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (policyId: string) => {
+      return policiesAPI.delete(policyId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['policies'] });
+      notifications.show({
+        title: 'Policy deleted',
+        message: 'The policy has been deleted successfully',
+        color: 'green',
+      });
+    },
+    onError: () => {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete policy',
+        color: 'red',
+      });
     },
   });
 
@@ -124,13 +152,6 @@ export default function PoliciesPage() {
       header: 'Provisions',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: getDefaultActions(),
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform the data to match the new structure
@@ -185,6 +206,7 @@ export default function PoliciesPage() {
         title="Your policies"
         subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
         onBuild={handleBuildPolicy}
+        onDelete={handleDeleteSelected}
         isLoading={isLoading}
         isError={isError}
         error={error}
@@ -196,6 +218,7 @@ export default function PoliciesPage() {
         enableSelection
         isSelected={isSelected}
         onSelectionChange={handleSelectionChange}
+        selectedCount={selectedIds.length}
         onRowClick={(id) => navigate(`/${countryId}/policy/${id}`)}
       />
     </>

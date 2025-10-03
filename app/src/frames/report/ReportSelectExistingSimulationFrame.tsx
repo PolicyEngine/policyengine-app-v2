@@ -1,95 +1,137 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
+import { useSelector, useDispatch } from 'react-redux';
+import { Stack, Text, TextInput, LoadingOverlay } from '@mantine/core';
+import { useQuery } from '@tanstack/react-query';
 import FlowView from '@/components/common/FlowView';
-import { selectAllSimulations } from '@/reducers/simulationsReducer';
+import { selectActiveSimulationPosition } from '@/reducers/reportReducer';
+import { updateSimulationAtPosition, createSimulationAtPosition } from '@/reducers/simulationsReducer';
+import { simulationsAPI } from '@/api/v2/simulations';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Simulation } from '@/types/ingredients/Simulation';
 
 export default function ReportSelectExistingSimulationFrame({ onNavigate }: FlowComponentProps) {
-  const [selectedSimulation, setSelectedSimulation] = useState<Simulation | null>(null);
+  const [selectedSimulationId, setSelectedSimulationId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const dispatch = useDispatch();
 
-  // TODO: This component should fetch the user's saved simulations from an API or session storage,
-  // not from the active simulations in the Redux store. The current implementation is a placeholder
-  // that incorrectly uses the 2 working simulations from the store.
-  //
-  // Proper implementation should:
-  // 1. Fetch list of user's saved simulations from API/storage on mount
-  // 2. Display those saved simulations in the list
-  // 3. When selected, copy the saved simulation's configuration to the active position
-  // 4. Use selectActiveSimulationPosition from reportReducer to know which position to update
-  // 5. Use updateSimulationAtPosition or createSimulationAtPosition to set the selected simulation
+  // Get the active simulation position from the report reducer
+  const activePosition = useSelector((state: RootState) => selectActiveSimulationPosition(state));
 
-  // TEMPORARY: Get all simulations from the store (should be from API)
-  const simulations = useSelector((state: RootState) => selectAllSimulations(state));
+  // Fetch simulations from API
+  const { data: simulations, isLoading } = useQuery({
+    queryKey: ['simulations'],
+    queryFn: () => simulationsAPI.list({ limit: 100 }),
+  });
 
-  // Filter to only show fully configured simulations
-  const configuredSimulations = simulations.filter((sim) => sim.policyId && sim.populationId);
+  // Filter to only show simulations with results
+  const availableSimulations = (simulations || []).filter((sim) => sim.results);
+
+  // Filter by search query
+  const filteredSimulations = availableSimulations.filter((sim) => {
+    if (!searchQuery) return true;
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      sim.id.toLowerCase().includes(searchLower) ||
+      sim.name?.toLowerCase().includes(searchLower) ||
+      sim.description?.toLowerCase().includes(searchLower)
+    );
+  });
 
   function canProceed() {
-    return selectedSimulation !== null;
+    return selectedSimulationId !== null;
   }
 
-  function handleSimulationSelect(simulation: Simulation) {
-    setSelectedSimulation(simulation);
+  function handleSimulationSelect(simulationId: string) {
+    setSelectedSimulationId(simulationId);
   }
 
   function handleSubmit() {
-    if (!selectedSimulation) {
+    if (!selectedSimulationId) {
       return;
     }
 
-    // TODO: Store the selected simulation for the report
-    // This should update the simulation at the active position from reportReducer
-    console.log('Selected simulation:', selectedSimulation);
+    const selectedSim = simulations?.find(s => s.id === selectedSimulationId);
+    if (!selectedSim) return;
+
+    // Update or create simulation at the active position
+    if (activePosition) {
+      dispatch(
+        updateSimulationAtPosition({
+          position: activePosition,
+          updates: {
+            id: selectedSim.id,
+            policyId: selectedSim.policy_id,
+            populationId: selectedSim.dataset_id,
+            isCreated: true,
+          },
+        })
+      );
+    } else {
+      dispatch(
+        createSimulationAtPosition({
+          position: 'baseline', // Default to baseline if no active position
+          simulation: {
+            id: selectedSim.id,
+            policyId: selectedSim.policy_id,
+            populationId: selectedSim.dataset_id,
+            isCreated: true,
+          },
+        })
+      );
+    }
 
     onNavigate('next');
   }
 
-  if (configuredSimulations.length === 0) {
+  if (isLoading) {
     return (
       <FlowView
-        title="Select an Existing Simulation"
-        content={<Text>No simulations available. Please create a new simulation.</Text>}
+        title="Select simulation"
+        content={
+          <div style={{ position: 'relative', minHeight: 200 }}>
+            <LoadingOverlay visible={true} />
+          </div>
+        }
+        buttonPreset="cancel-only"
+      />
+    );
+  }
+
+  if (availableSimulations.length === 0) {
+    return (
+      <FlowView
+        title="Select simulation"
+        content={<Text>No completed simulations available. Create a new simulation first.</Text>}
         buttonPreset="cancel-only"
       />
     );
   }
 
   // Build card list items from simulations
-  const simulationCardItems = configuredSimulations
+  const simulationCardItems = filteredSimulations
     .slice(0, 10) // Display only the first 10 simulations
     .map((simulation) => {
-      let title = '';
-      let subtitle = '';
-
-      if (simulation.label) {
-        title = simulation.label;
-        subtitle = `Policy #${simulation.policyId} • Population #${simulation.populationId}`;
-      } else if (simulation.id) {
-        title = `Simulation #${simulation.id}`;
-        subtitle = `Policy #${simulation.policyId} • Population #${simulation.populationId}`;
-      } else {
-        title = 'Unnamed Simulation';
-        subtitle = `Policy #${simulation.policyId} • Population #${simulation.populationId}`;
-      }
+      const title = simulation.name || simulation.description || `Simulation ${simulation.id.slice(0, 8)}`;
+      const subtitle = `Policy: ${simulation.policy_id?.slice(0, 8) || 'None'} • Dataset: ${simulation.dataset_id?.slice(0, 8) || 'Default'}`;
 
       return {
         title,
         subtitle,
-        onClick: () => handleSimulationSelect(simulation),
-        isSelected: selectedSimulation?.id === simulation.id,
+        onClick: () => handleSimulationSelect(simulation.id),
+        isSelected: selectedSimulationId === simulation.id,
       };
     });
 
   const content = (
     <Stack>
-      <Text size="sm">Search</Text>
-      <Text fw={700}>TODO: Search</Text>
-      <Text fw={700}>Your Simulations</Text>
+      <TextInput
+        placeholder="Search simulations..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.currentTarget.value)}
+      />
+      <Text fw={700}>Your simulations</Text>
       <Text size="sm" c="dimmed">
-        Showing {simulationCardItems.length} simulations
+        Showing {simulationCardItems.length} of {availableSimulations.length} completed simulations
       </Text>
     </Stack>
   );
@@ -102,7 +144,7 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
 
   return (
     <FlowView
-      title="Select an Existing Simulation"
+      title="Select simulation"
       variant="cardList"
       content={content}
       cardListItems={simulationCardItems}

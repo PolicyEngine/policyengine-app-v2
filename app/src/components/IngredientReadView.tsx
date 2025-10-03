@@ -1,4 +1,4 @@
-import { IconCirclePlus, IconFilter, IconSearch } from '@tabler/icons-react';
+import { IconCirclePlus, IconFilter, IconSearch, IconTrash } from '@tabler/icons-react';
 import {
   Box,
   Button,
@@ -21,6 +21,7 @@ interface IngredientReadViewProps {
   title: string;
   subtitle?: string;
   onBuild?: () => void;
+  onDelete?: () => void;
   isLoading: boolean;
   isError: boolean;
   error?: unknown;
@@ -33,6 +34,7 @@ interface IngredientReadViewProps {
   isSelected?: (recordId: string) => boolean;
   onSelectionChange?: (recordId: string, selected: boolean) => void;
   onRowClick?: (recordId: string) => void;
+  selectedCount?: number;
 }
 
 export default function IngredientReadView({
@@ -40,6 +42,7 @@ export default function IngredientReadView({
   title,
   subtitle,
   onBuild,
+  onDelete,
   isLoading,
   isError,
   error,
@@ -52,6 +55,7 @@ export default function IngredientReadView({
   isSelected = () => false,
   onSelectionChange,
   onRowClick,
+  selectedCount = 0,
 }: IngredientReadViewProps) {
   return (
     <Box>
@@ -96,6 +100,18 @@ export default function IngredientReadView({
           >
             More filters
           </Button>
+
+          {onDelete && selectedCount > 0 && (
+            <Button
+              variant="outline"
+              color="red"
+              leftSection={<IconTrash size={14} />}
+              size="sm"
+              onClick={onDelete}
+            >
+              Delete ({selectedCount})
+            </Button>
+          )}
 
           {onSearchChange && (
             <Box style={{ marginLeft: 'auto', width: '300px' }}>

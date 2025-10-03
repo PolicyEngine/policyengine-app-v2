@@ -86,17 +86,18 @@ export function useIngredientActions({
   );
 
   const getDefaultActions = () => {
-    // Special case for reports - show Edit, Rename, and Delete actions
+    // Reports get Edit and Rename
     if (ingredient === 'report') {
       return [
         { label: 'Edit report', action: 'edit' },
         { label: 'Rename', action: 'rename' },
-        { label: 'Delete', action: 'delete', color: 'red' },
       ];
     }
 
-    // Return empty array for other ingredients
-    return [];
+    // All other ingredients get Rename only
+    return [
+      { label: 'Rename', action: 'rename' },
+    ];
   };
 
   return {

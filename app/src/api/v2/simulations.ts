@@ -83,8 +83,15 @@ class SimulationsAPI {
     while (attempts < maxAttempts) {
       const simulation = await this.get(simulationId);
 
-      if (simulation.status === 'completed' || simulation.status === 'failed') {
-        return simulation;
+      // Check if simulation has results (indicates completion)
+      // Backend stores results in the simulation.result field
+      if (simulation.results !== null && simulation.results !== undefined) {
+        return { ...simulation, status: 'completed' };
+      }
+
+      // Check if there's an error
+      if (simulation.error) {
+        return { ...simulation, status: 'failed' };
       }
 
       attempts++;

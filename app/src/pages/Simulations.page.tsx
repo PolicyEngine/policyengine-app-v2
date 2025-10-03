@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import moment from 'moment';
@@ -10,26 +9,31 @@ import {
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
+import CreateSimulationModal from '@/components/simulation/CreateSimulationModal';
 import { MOCK_USER_ID } from '@/constants';
-import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { useSimulationsWithPolicies } from '@/hooks/useSimulations';
 import { userSimulationsAPI } from '@/api/v2/userSimulations';
 import { usersAPI } from '@/api/v2/users';
-import { setFlow } from '@/reducers/flowReducer';
+import { simulationsAPI } from '@/api/v2/simulations';
+import { notifications } from '@mantine/notifications';
 
 export default function SimulationsPage() {
   const navigate = useNavigate();
   const { countryId } = useParams<{ countryId: string }>();
   const queryClient = useQueryClient();
   const { data: simulations, isLoading, error } = useSimulationsWithPolicies();
-  const dispatch = useDispatch();
   const isError = !!error;
 
   const [searchValue, setSearchValue] = useState('');
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
+
+  const handleDeleteSelected = () => {
+    selectedIds.forEach(id => deleteMutation.mutate(id));
+  };
   const [renameModalOpened, setRenameModalOpened] = useState(false);
+  const [createModalOpened, setCreateModalOpened] = useState(false);
   const [simulationToRename, setSimulationToRename] = useState<{ id: string; name: string } | null>(null);
 
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
@@ -68,8 +72,30 @@ export default function SimulationsPage() {
     },
   });
 
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (simulationId: string) => {
+      return simulationsAPI.delete(simulationId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['simulations'] });
+      notifications.show({
+        title: 'Simulation deleted',
+        message: 'The simulation has been deleted successfully',
+        color: 'green',
+      });
+    },
+    onError: () => {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete simulation',
+        color: 'red',
+      });
+    },
+  });
+
   const handleBuildSimulation = () => {
-    dispatch(setFlow(SimulationCreationFlow));
+    setCreateModalOpened(true);
   };
 
   const handleMoreFilters = () => {
@@ -129,16 +155,14 @@ export default function SimulationsPage() {
       type: 'text',
     },
     {
-      key: 'dataset',
-      header: 'Dataset',
+      key: 'error',
+      header: 'Error',
       type: 'text',
     },
     {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: getDefaultActions(),
-      onAction: handleMenuAction,
+      key: 'dataset',
+      header: 'Dataset',
+      type: 'text',
     },
   ];
 
@@ -166,7 +190,10 @@ export default function SimulationsPage() {
           text: moment(sim.created_at).fromNow(),
         } as TextValue,
         status: {
-          text: sim.has_result ? 'Ready' : 'Not ready',
+          text: sim.error ? 'Failed' : (sim.has_result ? 'Ready' : 'Pending'),
+        } as TextValue,
+        error: {
+          text: sim.error ? sim.error.slice(0, 100) + (sim.error.length > 100 ? '...' : '') : '',
         } as TextValue,
         dataset: {
           text: sim.dataset_id ? `Dataset ${sim.dataset_id}` : 'Default dataset',
@@ -176,6 +203,10 @@ export default function SimulationsPage() {
 
   return (
     <>
+      <CreateSimulationModal
+        opened={createModalOpened}
+        onClose={() => setCreateModalOpened(false)}
+      />
       <ReportRenameModal
         opened={renameModalOpened}
         onClose={() => {
@@ -191,6 +222,7 @@ export default function SimulationsPage() {
         title="Simulations"
         subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
         onBuild={handleBuildSimulation}
+        onDelete={handleDeleteSelected}
         isLoading={isLoading}
         isError={isError}
         error={error}
@@ -202,6 +234,7 @@ export default function SimulationsPage() {
         enableSelection
         isSelected={isSelected}
         onSelectionChange={handleSelectionChange}
+        selectedCount={selectedIds.length}
         onRowClick={(id) => navigate(`/${countryId}/simulation/${id}`)}
       />
     </>

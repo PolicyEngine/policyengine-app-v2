@@ -10,6 +10,7 @@ import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { userDynamicsAPI } from '@/api/v2/userDynamics';
 import { usersAPI } from '@/api/v2/users';
+import { notifications } from '@mantine/notifications';
 import { MOCK_USER_ID } from '@/constants';
 
 interface Dynamic {
@@ -27,7 +28,7 @@ export default function DynamicsPage() {
   const { countryId } = useParams<{ countryId: string }>();
   const [searchValue, setSearchValue] = useState('');
   const queryClient = useQueryClient();
-  const { handleSelectionChange, isSelected } = useIngredientSelection();
+  const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
   const [renameModalOpened, setRenameModalOpened] = useState(false);
   const [dynamicToRename, setDynamicToRename] = useState<{ id: string; name: string } | null>(null);
 
@@ -61,8 +62,24 @@ export default function DynamicsPage() {
     mutationFn: (id: string) => apiClient.delete(`/dynamics/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['dynamics'] });
+      notifications.show({
+        title: 'Dynamic deleted',
+        message: 'The dynamic has been deleted successfully',
+        color: 'green',
+      });
+    },
+    onError: () => {
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to delete dynamic',
+        color: 'red',
+      });
     },
   });
+
+  const handleDeleteSelected = () => {
+    selectedIds.forEach(id => deleteMutation.mutate(id));
+  };
 
   // Rename mutation
   const renameMutation = useMutation({
@@ -94,11 +111,6 @@ export default function DynamicsPage() {
 
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
     ingredient: 'dynamic',
-    onDelete: (id) => {
-      if (confirm('Delete this dynamic configuration?')) {
-        deleteMutation.mutate(id);
-      }
-    },
     onRename: (id: string) => {
       const dynamic = dynamics?.find(d => d.id === id);
       if (dynamic) {
@@ -159,13 +171,6 @@ export default function DynamicsPage() {
       header: 'Date created',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: getDefaultActions(),
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform the data to match the IngredientRecord structure
@@ -214,6 +219,7 @@ export default function DynamicsPage() {
         title="Your dynamics"
         subtitle="Manage time-varying behaviours and dynamic configurations for your models."
         onBuild={handleBuildDynamic}
+        onDelete={handleDeleteSelected}
         isLoading={isLoading}
         isError={!!error}
         error={error}
@@ -225,6 +231,7 @@ export default function DynamicsPage() {
         enableSelection
         isSelected={isSelected}
         onSelectionChange={handleSelectionChange}
+        selectedCount={selectedIds.length}
         onRowClick={(id) => navigate(`/${countryId}/dynamic/${id}`)}
       />
     </>
