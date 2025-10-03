@@ -33,6 +33,10 @@ import {
   IconTable,
   IconCards,
   IconSettings,
+  IconArrowUp,
+  IconArrowDown,
+  IconFilter,
+  IconFilterOff,
 } from '@tabler/icons-react';
 import { aggregatesAPI, AggregateTable } from '@/api/v2/aggregates';
 import { aggregateChangesAPI, AggregateChange } from '@/api/v2/aggregateChanges';
@@ -121,6 +125,12 @@ export default function DataElementCell({
   const [settingsStep, setSettingsStep] = useState(0); // For multistep modal
   const [isHovered, setIsHovered] = useState(false); // For hover effect
 
+  // Table state
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
+  const [showFilters, setShowFilters] = useState(false);
+
   // Steps for the settings modal
   const settingsSteps = ['Data', 'Appearance', 'Advanced'];
   const totalSteps = settingsSteps.length;
@@ -193,7 +203,7 @@ export default function DataElementCell({
     }
   };
 
-  // Build dataframe from aggregates with proper column names
+  // Build dataframe from aggregates with proper column names and apply filters/sorting
   const dataframe = useMemo(() => {
     if (!aggregates || aggregates.length === 0) return { rows: [], columns: [] };
 
@@ -248,8 +258,43 @@ export default function DataElementCell({
     // Get unique columns
     const columns = Object.keys(rows[0] || {});
 
-    return { rows, columns };
-  }, [aggregates, simulations, isAggregateChange]);
+    // Apply column filters
+    let filteredRows = rows;
+    Object.entries(columnFilters).forEach(([column, filterValue]) => {
+      if (filterValue) {
+        filteredRows = filteredRows.filter(row => {
+          const cellValue = row[column];
+          if (cellValue === null || cellValue === undefined) return false;
+          return String(cellValue).toLowerCase().includes(filterValue.toLowerCase());
+        });
+      }
+    });
+
+    // Apply sorting
+    if (sortColumn && filteredRows.length > 0) {
+      filteredRows = [...filteredRows].sort((a, b) => {
+        const aVal = a[sortColumn];
+        const bVal = b[sortColumn];
+
+        // Handle nulls
+        if (aVal === null || aVal === undefined) return 1;
+        if (bVal === null || bVal === undefined) return -1;
+
+        // Numeric comparison
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+        }
+
+        // String comparison
+        const aStr = String(aVal).toLowerCase();
+        const bStr = String(bVal).toLowerCase();
+        const comparison = aStr.localeCompare(bStr);
+        return sortDirection === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    return { rows: filteredRows, columns };
+  }, [aggregates, simulations, isAggregateChange, columnFilters, sortColumn, sortDirection]);
 
   // Get available columns for axis selection (exclude only internal IDs)
   const availableColumns = dataframe.columns.filter(
@@ -486,77 +531,188 @@ export default function DataElementCell({
     }
 
     if (chartType === 'table') {
-      // Use smart defaults for column ordering and visibility
+      // Use smart defaults for column ordering - show ALL columns
       const smartDefaults = getSmartChartDefaults(
         dataframe.rows,
         availableColumns,
         isAggregateChange
       );
 
-      const displayColumns = smartDefaults.columnOrder.filter(col =>
-        smartDefaults.visibleColumns.includes(col)
-      );
+      const displayColumns = smartDefaults.columnOrder;
+
+      const handleSort = (column: string) => {
+        if (sortColumn === column) {
+          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+        } else {
+          setSortColumn(column);
+          setSortDirection('asc');
+        }
+      };
+
+      const handleFilterChange = (column: string, value: string) => {
+        setColumnFilters(prev => ({
+          ...prev,
+          [column]: value
+        }));
+      };
+
+      const clearFilters = () => {
+        setColumnFilters({});
+      };
+
+      const hasActiveFilters = Object.values(columnFilters).some(v => v);
 
       return (
-        <ScrollArea>
-          <Table
-            horizontalSpacing="sm"
-            verticalSpacing="xs"
-            striped
-            highlightOnHover
-            withTableBorder={false}
-            style={{
-              borderRadius: theme.radius.md,
-              overflow: 'hidden',
-            }}
-          >
-            <Table.Thead style={{
-              backgroundColor: theme.colors.gray[0],
-              borderBottom: `2px solid ${theme.colors.gray[2]}`,
-            }}>
-              <Table.Tr>
-                {displayColumns.map((col) => (
-                  <Table.Th
-                    key={col}
-                    style={{
-                      fontWeight: 600,
-                      fontSize: '0.75rem',
-                      color: theme.colors.gray[7],
-                      textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col) ? 'right' : 'left'
-                    }}
-                  >
-                    {col}
-                  </Table.Th>
-                ))}
-              </Table.Tr>
-            </Table.Thead>
-            <Table.Tbody>
-              {dataframe.rows.map((row, idx) => (
-                <Table.Tr key={idx}>
-                  {displayColumns.map((col) => (
-                    <Table.Td
-                      key={col}
-                      style={{
-                        fontSize: '0.875rem',
-                        textAlign: ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col) ? 'right' : 'left',
-                        fontWeight: ['Value', 'Change', 'Baseline', 'Comparison'].includes(col) ? 500 : 400
-                      }}
-                    >
-                      {col === 'Relative change (%)' && typeof row[col] === 'number'
-                        ? `${row[col].toFixed(1)}%`
-                        : typeof row[col] === 'string'
-                          ? row[col] || '-'
-                          : typeof row[col] === 'number'
-                            ? formatNumber(row[col])
-                            : row[col] || '-'
-                      }
-                    </Table.Td>
-                  ))}
-                </Table.Tr>
-              ))}
-            </Table.Tbody>
-          </Table>
-        </ScrollArea>
+        <Stack gap="xs">
+          <Group justify="space-between">
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant={showFilters ? 'light' : 'subtle'}
+                leftSection={<IconFilter size={14} />}
+                onClick={() => setShowFilters(!showFilters)}
+              >
+                {showFilters ? 'Hide filters' : 'Show filters'}
+              </Button>
+              {hasActiveFilters && (
+                <Button
+                  size="xs"
+                  variant="subtle"
+                  color="red"
+                  leftSection={<IconFilterOff size={14} />}
+                  onClick={clearFilters}
+                >
+                  Clear
+                </Button>
+              )}
+            </Group>
+            <Text size="xs" c="dimmed">
+              {dataframe.rows.length} row{dataframe.rows.length !== 1 ? 's' : ''}
+            </Text>
+          </Group>
+          <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
+            <ScrollArea>
+              <Table
+                horizontalSpacing="md"
+                verticalSpacing="sm"
+                highlightOnHover
+                withTableBorder={false}
+              >
+                <Table.Thead style={{
+                  backgroundColor: theme.colors.gray[0],
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 1,
+                }}>
+                  <Table.Tr>
+                    {displayColumns.map((col) => {
+                      const isNumeric = ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col);
+                      return (
+                        <Table.Th
+                          key={col}
+                          style={{
+                            fontWeight: 600,
+                            fontSize: '0.75rem',
+                            color: theme.colors.gray[7],
+                            textAlign: isNumeric ? 'right' : 'left',
+                            cursor: 'pointer',
+                            userSelect: 'none',
+                            transition: 'background-color 0.15s ease',
+                            padding: '12px 16px',
+                            whiteSpace: 'nowrap',
+                          }}
+                          onClick={() => handleSort(col)}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = theme.colors.gray[1];
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <Group gap={6} justify={isNumeric ? 'flex-end' : 'flex-start'}>
+                            <Text size="xs" fw={600}>{col}</Text>
+                            {sortColumn === col ? (
+                              sortDirection === 'asc' ? <IconArrowUp size={14} /> : <IconArrowDown size={14} />
+                            ) : (
+                              <Box style={{ width: 14, height: 14, opacity: 0 }} />
+                            )}
+                          </Group>
+                        </Table.Th>
+                      );
+                    })}
+                  </Table.Tr>
+                  {showFilters && (
+                    <Table.Tr style={{
+                      backgroundColor: theme.colors.gray[0],
+                      borderTop: `1px solid ${theme.colors.gray[2]}`,
+                    }}>
+                      {displayColumns.map((col) => {
+                        const isNumeric = ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col);
+                        return (
+                          <Table.Th key={`filter-${col}`} style={{ padding: '8px' }}>
+                            <TextInput
+                              size="xs"
+                              placeholder={`Filter ${col.toLowerCase()}...`}
+                              value={columnFilters[col] || ''}
+                              onChange={(e) => handleFilterChange(col, e.target.value)}
+                              styles={{
+                                input: {
+                                  fontSize: '0.75rem',
+                                  backgroundColor: 'white',
+                                  border: `1px solid ${theme.colors.gray[3]}`,
+                                  textAlign: isNumeric ? 'right' : 'left',
+                                  '&:focus': {
+                                    borderColor: theme.colors.blue[5],
+                                  },
+                                }
+                              }}
+                            />
+                          </Table.Th>
+                        );
+                      })}
+                    </Table.Tr>
+                  )}
+                </Table.Thead>
+                <Table.Tbody>
+                  {dataframe.rows.map((row, idx) => {
+                    const isNumeric = (col: string) => ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col);
+                    return (
+                      <Table.Tr
+                        key={idx}
+                        style={{
+                          transition: 'background-color 0.15s ease',
+                        }}
+                      >
+                        {displayColumns.map((col) => (
+                          <Table.Td
+                            key={col}
+                            style={{
+                              fontSize: '0.875rem',
+                              textAlign: isNumeric(col) ? 'right' : 'left',
+                              fontWeight: ['Value', 'Change', 'Baseline', 'Comparison'].includes(col) ? 500 : 400,
+                              color: col === 'Change' && typeof row[col] === 'number'
+                                ? row[col] > 0 ? theme.colors.green[7] : row[col] < 0 ? theme.colors.red[7] : theme.colors.gray[7]
+                                : theme.colors.gray[8],
+                            }}
+                          >
+                            {col === 'Relative change (%)' && typeof row[col] === 'number'
+                              ? `${row[col].toFixed(1)}%`
+                              : typeof row[col] === 'string'
+                                ? row[col] || '-'
+                                : typeof row[col] === 'number'
+                                  ? formatNumber(row[col])
+                                  : row[col] || '-'
+                            }
+                          </Table.Td>
+                        ))}
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
+            </ScrollArea>
+          </Paper>
+        </Stack>
       );
     }
 

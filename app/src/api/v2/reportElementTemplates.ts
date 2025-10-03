@@ -48,6 +48,12 @@ export const reportElementTemplates: ReportElementTemplate[] = [
     description: 'Average household income impact by income decile',
     category: 'distributional',
   },
+  {
+    id: 'poverty-impact',
+    name: 'Poverty impact',
+    description: 'Main poverty rates (BHC/AHC, absolute/relative)',
+    category: 'poverty',
+  },
 ];
 
 /**
@@ -71,5 +77,6 @@ export function getTemplateCategories(): Array<{ id: ReportElementTemplate['cate
   return [
     { id: 'budget', name: 'Budgetary' },
     { id: 'distributional', name: 'Distributional' },
+    { id: 'poverty', name: 'Poverty' },
   ];
 }

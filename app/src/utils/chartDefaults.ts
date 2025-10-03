@@ -119,13 +119,11 @@ export function getSmartChartDefaults(
     };
   }
 
-  // Filter out columns that have all the same values or are mostly empty
-  const visibleColumns = columns.filter(col =>
-    !hasAllSameValues(rows, col) && !isMostlyEmpty(rows, col)
-  );
+  // For tables, show all columns. For charts, filter intelligently.
+  const visibleColumns = columns;
 
   // Get smart column ordering
-  const columnOrder = getColumnOrder(visibleColumns, isAggregateChange);
+  const columnOrder = getColumnOrder(columns, isAggregateChange);
 
   // Smart X-axis selection
   let xAxisColumns: string[] = [];
