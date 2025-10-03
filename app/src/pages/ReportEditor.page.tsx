@@ -340,7 +340,7 @@ export default function ReportEditorPage() {
         {/* Header */}
         <Group justify="space-between">
           <Group>
-            <ActionIcon variant="subtle" onClick={() => navigate('/reports')}>
+            <ActionIcon variant="subtle" onClick={() => navigate(-1)}>
               <IconChevronLeft size={20} />
             </ActionIcon>
             <Stack gap={4}>

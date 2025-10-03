@@ -5,6 +5,7 @@
 export interface TemplateVariableConfig {
   variable: string;
   aggregateFunction?: 'sum' | 'mean' | 'median' | 'count';
+  entity?: string;
   filterVariable?: string;
   filterValue?: string;
   filterQuantileLeq?: number;

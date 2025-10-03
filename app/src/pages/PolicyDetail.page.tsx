@@ -112,9 +112,9 @@ export default function PolicyDetailPage() {
             <Button
               variant="subtle"
               leftSection={<IconChevronLeft size={16} />}
-              onClick={() => navigate(`/${countryId}/policies`)}
+              onClick={() => navigate(-1)}
             >
-              Back to policies
+              Back
             </Button>
           </Group>
 

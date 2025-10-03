@@ -45,6 +45,7 @@ import { ReportElement } from '@/api/v2/reportElements';
 import { reportElementsAPI } from '@/api/v2/reportElements';
 import { modelVersionsAPI } from '@/api/v2/modelVersions';
 import BaseModal from '@/components/shared/BaseModal';
+import LinkableEntity from '@/components/shared/LinkableEntity';
 import { getSmartChartDefaults } from '@/utils/chartDefaults';
 
 interface DataElementCellProps {
@@ -469,7 +470,7 @@ export default function DataElementCell({
 
   // Set default axes using smart defaults
   useEffect(() => {
-    if (xAxisColumns.length === 0 || yAxisColumns.length === 0) {
+    if (xAxisColumns.length === 0 || yAxisColumns.length === 0 || (!xAxisTitle && !yAxisTitle)) {
       const smartDefaults = getSmartChartDefaults(
         dataframe.rows,
         availableColumns,
@@ -482,6 +483,15 @@ export default function DataElementCell({
 
       if (yAxisColumns.length === 0 && smartDefaults.yAxisColumns.length > 0) {
         setYAxisColumns(smartDefaults.yAxisColumns);
+      }
+
+      // Set axis titles if not already set from saved config
+      if (!xAxisTitle && smartDefaults.xAxisTitle) {
+        setXAxisTitle(smartDefaults.xAxisTitle);
+      }
+
+      if (!yAxisTitle && smartDefaults.yAxisTitle) {
+        setYAxisTitle(smartDefaults.yAxisTitle);
       }
     }
   }, [availableColumns, dataframe.rows, isAggregateChange]);
@@ -683,28 +693,83 @@ export default function DataElementCell({
                           transition: 'background-color 0.15s ease',
                         }}
                       >
-                        {displayColumns.map((col) => (
-                          <Table.Td
-                            key={col}
-                            style={{
-                              fontSize: '0.875rem',
-                              textAlign: isNumeric(col) ? 'right' : 'left',
-                              fontWeight: ['Value', 'Change', 'Baseline', 'Comparison'].includes(col) ? 500 : 400,
-                              color: col === 'Change' && typeof row[col] === 'number'
-                                ? row[col] > 0 ? theme.colors.green[7] : row[col] < 0 ? theme.colors.red[7] : theme.colors.gray[7]
-                                : theme.colors.gray[8],
-                            }}
-                          >
-                            {col === 'Relative change (%)' && typeof row[col] === 'number'
-                              ? `${row[col].toFixed(1)}%`
-                              : typeof row[col] === 'string'
-                                ? row[col] || '-'
-                                : typeof row[col] === 'number'
-                                  ? formatNumber(row[col])
-                                  : row[col] || '-'
-                            }
-                          </Table.Td>
-                        ))}
+                        {displayColumns.map((col) => {
+                          // Render linkable entities for simulation and variable columns
+                          if (col === 'Simulation' && row['simulation_id']) {
+                            return (
+                              <Table.Td key={col} style={{ fontSize: '0.875rem' }}>
+                                <LinkableEntity
+                                  type="simulation"
+                                  id={row['simulation_id']}
+                                  label={row[col]}
+                                  size="sm"
+                                />
+                              </Table.Td>
+                            );
+                          }
+
+                          if (col === 'Baseline sim' && row['baseline_simulation_id']) {
+                            return (
+                              <Table.Td key={col} style={{ fontSize: '0.875rem' }}>
+                                <LinkableEntity
+                                  type="simulation"
+                                  id={row['baseline_simulation_id']}
+                                  label={row[col]}
+                                  size="sm"
+                                />
+                              </Table.Td>
+                            );
+                          }
+
+                          if (col === 'Comparison sim' && row['comparison_simulation_id']) {
+                            return (
+                              <Table.Td key={col} style={{ fontSize: '0.875rem' }}>
+                                <LinkableEntity
+                                  type="simulation"
+                                  id={row['comparison_simulation_id']}
+                                  label={row[col]}
+                                  size="sm"
+                                />
+                              </Table.Td>
+                            );
+                          }
+
+                          if (col === 'Variable') {
+                            return (
+                              <Table.Td key={col} style={{ fontSize: '0.875rem', minWidth: '200px' }}>
+                                <LinkableEntity
+                                  type="variable"
+                                  id={row[col]}
+                                  size="sm"
+                                />
+                              </Table.Td>
+                            );
+                          }
+
+                          // Regular cell rendering
+                          return (
+                            <Table.Td
+                              key={col}
+                              style={{
+                                fontSize: '0.875rem',
+                                textAlign: isNumeric(col) ? 'right' : 'left',
+                                fontWeight: ['Value', 'Change', 'Baseline', 'Comparison'].includes(col) ? 500 : 400,
+                                color: col === 'Change' && typeof row[col] === 'number'
+                                  ? row[col] > 0 ? theme.colors.green[7] : row[col] < 0 ? theme.colors.red[7] : theme.colors.gray[7]
+                                  : theme.colors.gray[8],
+                              }}
+                            >
+                              {col === 'Relative change (%)' && typeof row[col] === 'number'
+                                ? `${row[col].toFixed(1)}%`
+                                : typeof row[col] === 'string'
+                                  ? row[col] || '-'
+                                  : typeof row[col] === 'number'
+                                    ? formatNumber(row[col])
+                                    : row[col] || '-'
+                              }
+                            </Table.Td>
+                          );
+                        })}
                       </Table.Tr>
                     );
                   })}

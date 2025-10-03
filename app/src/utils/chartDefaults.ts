@@ -11,6 +11,8 @@ export interface SmartChartDefaults {
   yAxisColumns: string[];
   columnOrder: string[];
   visibleColumns: string[];
+  xAxisTitle: string;
+  yAxisTitle: string;
 }
 
 /**
@@ -39,24 +41,34 @@ function isMostlyEmpty(rows: DataRow[], column: string): boolean {
 /**
  * Get smart column ordering for tables
  */
-function getColumnOrder(columns: string[], isAggregateChange: boolean): string[] {
+function getColumnOrder(columns: string[], isAggregateChange: boolean, rows: DataRow[]): string[] {
   const order: string[] = [];
 
   // Priority order for aggregate changes
   if (isAggregateChange) {
     const priorityOrder = [
+      // What: the metric being measured
       'Variable',
+
+      // Result: the main values of interest
+      'Change',
+      'Relative change (%)',
+
+      // Context: filters and conditions
       'Quantile ≤',
       'Quantile ≥',
       'Filter variable',
       'Filter value',
       'Filter ≥',
       'Filter ≤',
+      'Quantile value',
       'Year',
-      'Change',
-      'Relative change (%)',
+
+      // Comparison values
       'Baseline',
       'Comparison',
+
+      // Technical details: simulations and metadata
       'Baseline sim',
       'Comparison sim',
       'Function',
@@ -71,15 +83,23 @@ function getColumnOrder(columns: string[], isAggregateChange: boolean): string[]
   } else {
     // Priority order for regular aggregates
     const priorityOrder = [
+      // What: the metric being measured
       'Variable',
+
+      // Result: the main value
+      'Value',
+
+      // Context: filters and conditions
       'Quantile ≤',
       'Quantile ≥',
       'Filter variable',
       'Filter value',
       'Filter ≥',
       'Filter ≤',
+      'Quantile value',
       'Year',
-      'Value',
+
+      // Technical details: simulation and metadata
       'Simulation',
       'Function',
       'Entity',
@@ -92,14 +112,21 @@ function getColumnOrder(columns: string[], isAggregateChange: boolean): string[]
     });
   }
 
-  // Add any remaining columns
-  columns.forEach(col => {
-    if (!order.includes(col)) {
-      order.push(col);
+  // Separate remaining columns into those with values and those mostly null
+  const remainingColumns = columns.filter(col => !order.includes(col));
+  const columnsWithValues: string[] = [];
+  const columnsWithNulls: string[] = [];
+
+  remainingColumns.forEach(col => {
+    if (isMostlyEmpty(rows, col)) {
+      columnsWithNulls.push(col);
+    } else {
+      columnsWithValues.push(col);
     }
   });
 
-  return order;
+  // Add columns with values, then columns with nulls
+  return [...order, ...columnsWithValues, ...columnsWithNulls];
 }
 
 /**
@@ -123,7 +150,7 @@ export function getSmartChartDefaults(
   const visibleColumns = columns;
 
   // Get smart column ordering
-  const columnOrder = getColumnOrder(columns, isAggregateChange);
+  const columnOrder = getColumnOrder(columns, isAggregateChange, rows);
 
   // Smart X-axis selection
   let xAxisColumns: string[] = [];
@@ -176,10 +203,55 @@ export function getSmartChartDefaults(
     }
   }
 
+  // Generate smart axis labels
+  let xAxisTitle = '';
+  let yAxisTitle = '';
+
+  // X-axis title
+  if (xAxisColumns.length === 1) {
+    const col = xAxisColumns[0];
+    if (col === 'Quantile ≤') {
+      xAxisTitle = 'Income decile';
+    } else if (col === 'Filter ≥') {
+      xAxisTitle = 'Filter value';
+    } else if (col === 'Year') {
+      xAxisTitle = 'Year';
+    } else if (col === 'Variable') {
+      xAxisTitle = 'Metric';
+    } else {
+      xAxisTitle = col;
+    }
+  } else if (xAxisColumns.length > 1) {
+    xAxisTitle = xAxisColumns.join(', ');
+  }
+
+  // Y-axis title
+  if (yAxisColumns.length === 1) {
+    const col = yAxisColumns[0];
+    if (col === 'Change') {
+      xAxisTitle = isAggregateChange ? 'Income decile' : xAxisTitle;
+      yAxisTitle = 'Change (£/year)';
+    } else if (col === 'Relative change (%)') {
+      yAxisTitle = 'Change (%)';
+    } else if (col === 'Value') {
+      yAxisTitle = 'Value (£/year)';
+    } else if (col === 'Comparison') {
+      yAxisTitle = 'Reform (£/year)';
+    } else if (col === 'Baseline') {
+      yAxisTitle = 'Baseline (£/year)';
+    } else {
+      yAxisTitle = col;
+    }
+  } else if (yAxisColumns.length > 1) {
+    yAxisTitle = yAxisColumns.join(', ');
+  }
+
   return {
     xAxisColumns,
     yAxisColumns,
     columnOrder,
     visibleColumns,
+    xAxisTitle,
+    yAxisTitle,
   };
 }

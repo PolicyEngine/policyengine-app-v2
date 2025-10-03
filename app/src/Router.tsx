@@ -13,6 +13,7 @@ import ReportEditorPage from './pages/ReportEditor.page';
 import SimulationsPage from './pages/Simulations.page';
 import SimulationDetailPage from './pages/SimulationDetail.page';
 import UserDetailPage from './pages/UserDetail.page';
+import VariableDetailPage from './pages/VariableDetail.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 
 const router = createBrowserRouter(
@@ -84,6 +85,10 @@ const router = createBrowserRouter(
         {
           path: 'user/:userId',
           element: <UserDetailPage />,
+        },
+        {
+          path: 'variable/:variableName',
+          element: <VariableDetailPage />,
         },
       ],
     },

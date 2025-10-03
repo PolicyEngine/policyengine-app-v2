@@ -103,9 +103,9 @@ export default function DatasetDetailPage() {
             <Button
               variant="subtle"
               leftSection={<IconChevronLeft size={16} />}
-              onClick={() => navigate(`/${countryId}/datasets`)}
+              onClick={() => navigate(-1)}
             >
-              Back to datasets
+              Back
             </Button>
           </Group>
 

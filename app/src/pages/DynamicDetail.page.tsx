@@ -124,9 +124,9 @@ export default function DynamicDetailPage() {
             <Button
               variant="subtle"
               leftSection={<IconChevronLeft size={16} />}
-              onClick={() => navigate(`/${countryId}/dynamics`)}
+              onClick={() => navigate(-1)}
             >
-              Back to dynamics
+              Back
             </Button>
           </Group>
 

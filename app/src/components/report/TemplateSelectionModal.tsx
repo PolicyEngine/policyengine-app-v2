@@ -139,6 +139,11 @@ export default function TemplateSelectionModal({
           aggregate_function: varConfig.aggregateFunction || 'mean',
         };
 
+        // Add entity if specified
+        if (varConfig.entity) {
+          aggregateChange.entity = varConfig.entity;
+        }
+
         // Add filters if specified
         if (varConfig.filterVariable) {
           aggregateChange.filter_variable_name = varConfig.filterVariable;
@@ -165,6 +170,11 @@ export default function TemplateSelectionModal({
           variable_name: varConfig.variable,
           aggregate_function: varConfig.aggregateFunction || 'mean',
         };
+
+        // Add entity if specified
+        if (varConfig.entity) {
+          aggregate.entity = varConfig.entity;
+        }
 
         // Add filters if specified
         if (varConfig.filterVariable) {

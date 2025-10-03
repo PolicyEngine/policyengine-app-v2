@@ -8,10 +8,10 @@ export const povertyImpactConfig: TemplateConfigGetter = (country) => {
   if (country === 'uk') {
     return {
       variables: [
-        { variable: 'in_poverty_bhc', aggregateFunction: 'mean' },
-        { variable: 'in_poverty_ahc', aggregateFunction: 'mean' },
-        { variable: 'in_relative_poverty_bhc', aggregateFunction: 'mean' },
-        { variable: 'in_relative_poverty_ahc', aggregateFunction: 'mean' },
+        { variable: 'in_poverty_bhc', aggregateFunction: 'mean', entity: 'person' },
+        { variable: 'in_poverty_ahc', aggregateFunction: 'mean', entity: 'person' },
+        { variable: 'in_relative_poverty_bhc', aggregateFunction: 'mean', entity: 'person' },
+        { variable: 'in_relative_poverty_ahc', aggregateFunction: 'mean', entity: 'person' },
       ],
     };
   }
@@ -19,7 +19,7 @@ export const povertyImpactConfig: TemplateConfigGetter = (country) => {
   // Fallback for non-UK
   return {
     variables: [
-      { variable: 'in_poverty', aggregateFunction: 'mean' },
+      { variable: 'in_poverty', aggregateFunction: 'mean', entity: 'person' },
     ],
   };
 };

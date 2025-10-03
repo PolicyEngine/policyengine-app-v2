@@ -98,9 +98,9 @@ export default function UserDetailPage() {
           <Button
             variant="subtle"
             leftSection={<IconChevronLeft size={16} />}
-            onClick={() => navigate(`/${countryId}`)}
+            onClick={() => navigate(-1)}
           >
-            Back to home
+            Back
           </Button>
         </Group>
 

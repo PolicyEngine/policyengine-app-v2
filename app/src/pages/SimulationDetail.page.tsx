@@ -103,9 +103,9 @@ export default function SimulationDetailPage() {
             <Button
               variant="subtle"
               leftSection={<IconChevronLeft size={16} />}
-              onClick={() => navigate(`/${countryId}/simulations`)}
+              onClick={() => navigate(-1)}
             >
-              Back to simulations
+              Back
             </Button>
           </Group>
 
