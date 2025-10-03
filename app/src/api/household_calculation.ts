@@ -1,9 +1,9 @@
 import { BASE_URL } from '@/constants';
-import { Household } from '@/types/ingredients/Household';
+import { HouseholdData } from '@/types/ingredients/Household';
 
 export interface HouseholdCalculationResponse {
   status: 'ok' | 'error';
-  result: Household | null;
+  result: HouseholdData | null;
   error?: string;
 }
 
@@ -11,7 +11,7 @@ export async function fetchHouseholdCalculation(
   countryId: string,
   householdId: string,
   policyId: string
-): Promise<Household> {
+): Promise<HouseholdData> {
   console.log('[fetchHouseholdCalculation] Called with:');
   console.log('  - countryId:', countryId);
   console.log('  - householdId:', householdId);

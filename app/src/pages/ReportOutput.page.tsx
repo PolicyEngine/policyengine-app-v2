@@ -16,7 +16,7 @@ import { IconPencil, IconClock, IconShare, IconRefresh, IconChevronLeft, IconSta
 import { EconomyReportOutput } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { colors, spacing, typography } from '@/designTokens';
-import { Household } from '@/types/ingredients/Household';
+import { Household, HouseholdData } from '@/types/ingredients/Household';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { useReportOutput } from '@/hooks/useReportOutput';
 import { MOCK_USER_ID } from '@/constants';
@@ -121,7 +121,18 @@ function useReportData(reportId: string) {
   const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', reportId]);
   const outputType: ReportOutputType | undefined = metadata?.type;
 
-  const output = data;
+  // Wrap household data in Household structure
+  // The API returns raw HouseholdData, but components expect the Household wrapper
+  let output: EconomyReportOutput | Household | null | undefined = data;
+
+  if (outputType === 'household' && data) {
+    const wrappedOutput: Household = {
+      id: reportId,
+      countryId: metadata?.countryId || 'us',
+      householdData: data as HouseholdData,
+    };
+    output = wrappedOutput;
+  }
 
   return {
     status,

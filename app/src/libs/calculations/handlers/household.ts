@@ -1,6 +1,6 @@
 import { fetchHouseholdCalculation } from '@/api/household_calculation';
 import { CalculationMeta } from '@/api/reportCalculations';
-import { Household } from '@/types/ingredients/Household';
+import { HouseholdData } from '@/types/ingredients/Household';
 import { CalculationStatusResponse } from '../status';
 
 /**
@@ -12,11 +12,11 @@ export class HouseholdCalculationHandler {
   private activeCalculations = new Map<
     string,
     {
-      promise: Promise<Household>;
+      promise: Promise<HouseholdData>;
       startTime: number;
       estimatedDuration: number;
       completed: boolean;
-      result?: Household;
+      result?: HouseholdData;
       error?: Error;
     }
   >();
@@ -76,7 +76,7 @@ export class HouseholdCalculationHandler {
       startTime: Date.now(),
       estimatedDuration: 60000, // 60 seconds average
       completed: false,
-      result: undefined as Household | undefined,
+      result: undefined as HouseholdData | undefined,
       error: undefined as Error | undefined,
     };
 
