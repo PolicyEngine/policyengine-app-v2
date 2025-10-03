@@ -29,6 +29,8 @@ interface HouseholdOverviewProps {
 export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
   const metadata = useSelector((state: RootState) => state.metadata);
 
+  console.log(metadata);
+
   // Get the root variable (household_net_income)
   const rootVariable = metadata.variables['household_net_income'];
   if (!rootVariable) {

@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Container,
   Stack,
@@ -13,6 +14,7 @@ import {
 } from '@mantine/core';
 import { IconPencil, IconClock, IconShare, IconRefresh, IconChevronLeft, IconStack2 } from '@tabler/icons-react';
 import { EconomyReportOutput } from '@/api/economy';
+import { CalculationMeta } from '@/api/reportCalculations';
 import { colors, spacing, typography } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
 import { useUserReportById } from '@/hooks/useUserReports';
@@ -60,6 +62,8 @@ function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
  * If the report ID matches a demo ID, returns mock data instead of fetching
  */
 function useReportData(reportId: string) {
+  const queryClient = useQueryClient();
+
   // Check if this is a demo report
   const isDemoEconomyReport = reportId === MOCK_DEMO_REPORT_ID;
   const isDemoHouseholdReport = reportId === MOCK_DEMO_HOUSEHOLD_ID;
@@ -112,13 +116,12 @@ function useReportData(reportId: string) {
   const queuePosition = status === 'pending' ? (result as any).queuePosition : undefined;
   const estimatedTimeRemaining = status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
 
-  // Determine output type
+  // Determine output type from cached metadata instead of type guards
+  // The metadata is cached during the calculation query and contains the definitive type
+  const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', reportId]);
+  const outputType: ReportOutputType | undefined = metadata?.type;
+
   const output = data;
-  const outputType: ReportOutputType | undefined = output
-    ? isHouseholdOutput(output)
-      ? 'household'
-      : 'economy'
-    : undefined;
 
   return {
     status,
@@ -367,20 +370,6 @@ export default function ReportOutputPage() {
 }
 
 /**
- * Type guard to check if output is an economy report
- */
-export function isEconomyOutput(output: EconomyReportOutput | Household): output is EconomyReportOutput {
-  return 'budget' in output && 'budgetary_impact' in (output as any).budget;
-}
-
-/**
- * Type guard to check if output is a household
- */
-export function isHouseholdOutput(output: EconomyReportOutput | Household): output is Household {
-  return 'householdData' in output;
-}
-
-/**
  * Type guard to check if economy output is US-specific
  */
 export function isUSEconomyOutput(output: EconomyReportOutput): boolean {
@@ -396,12 +385,13 @@ export function isUKEconomyOutput(output: EconomyReportOutput): boolean {
 
 /**
  * Determine which tabs to display based on output type and content
+ * Note: The output type is determined from cached CalculationMeta, not from type guards
  */
 function getTabsForOutputType(
   outputType: ReportOutputType,
-  output: EconomyReportOutput | Household
+  output: EconomyReportOutput | any
 ): Array<{ value: string; label: string }> {
-  if (outputType === 'economy' && isEconomyOutput(output)) {
+  if (outputType === 'economy') {
     // Economy report tabs matching the design
     const baseTabs = [
       { value: 'overview', label: 'Overview' },
@@ -415,7 +405,7 @@ function getTabsForOutputType(
     return baseTabs;
   }
 
-  if (outputType === 'household' && isHouseholdOutput(output)) {
+  if (outputType === 'household') {
     return [
       { value: 'overview', label: 'Overview' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
