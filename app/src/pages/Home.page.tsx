@@ -10,19 +10,11 @@ import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { ReportViewFlow } from '@/flows/reportViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFetchMetadata } from '@/hooks/useMetadata';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 export default function HomePage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  // Get current country from URL for UI formatting
-  const countryId = useCurrentCountry();
-
-  // Ensure metadata is fetched for current country
-  useFetchMetadata(countryId);
 
   // Note: Below is for testing purposes only
   return (
