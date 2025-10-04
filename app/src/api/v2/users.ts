@@ -6,6 +6,7 @@ export interface UserResponse {
   first_name?: string;
   last_name?: string;
   email?: string;
+  current_model_id: string;
   created_at: string;
   updated_at: string;
 }
@@ -18,9 +19,11 @@ export interface UserCreate {
 }
 
 export interface UserUpdate {
+  username?: string;
   first_name?: string;
   last_name?: string;
   email?: string;
+  current_model_id?: string;
 }
 
 class UsersAPI {

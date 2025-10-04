@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Modal, Stack, TextInput, Select, Button, Group, Text } from '@mantine/core';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { simulationsAPI } from '@/api/v2/simulations';
@@ -6,6 +6,7 @@ import { datasetsAPI } from '@/api/v2/datasets';
 import { modelVersionsAPI } from '@/api/v2/modelVersions';
 import { userPoliciesAPI } from '@/api/v2/userPolicies';
 import { usePolicies } from '@/hooks/usePolicies';
+import { useCurrentModel } from '@/hooks/useCurrentModel';
 import { notifications } from '@mantine/notifications';
 import { MOCK_USER_ID } from '@/constants';
 
@@ -16,6 +17,7 @@ interface CreateSimulationModalProps {
 
 export default function CreateSimulationModal({ opened, onClose }: CreateSimulationModalProps) {
   const queryClient = useQueryClient();
+  const { modelId } = useCurrentModel();
   const [name, setName] = useState('');
   const [policyId, setPolicyId] = useState<string>('');
   const [datasetId, setDatasetId] = useState<string>('');
@@ -25,14 +27,27 @@ export default function CreateSimulationModal({ opened, onClose }: CreateSimulat
   const { data: policies, isLoading: policiesLoading } = usePolicies();
 
   const { data: datasets, isLoading: datasetsLoading } = useQuery({
-    queryKey: ['datasets'],
-    queryFn: () => datasetsAPI.listDatasets({ limit: 100 }),
+    queryKey: ['datasets', modelId],
+    queryFn: async () => {
+      const allDatasets = await datasetsAPI.listDatasets({ limit: 100 });
+      return allDatasets.filter(d => d.model_id === modelId);
+    },
   });
 
   const { data: modelVersions, isLoading: modelsLoading } = useQuery({
-    queryKey: ['modelVersions'],
-    queryFn: () => modelVersionsAPI.list(),
+    queryKey: ['modelVersions', modelId],
+    queryFn: async () => {
+      const allVersions = await modelVersionsAPI.list();
+      return allVersions.filter(mv => mv.model_id === modelId);
+    },
   });
+
+  // Auto-select the first (latest) model version for the current model
+  useEffect(() => {
+    if (modelVersions && modelVersions.length > 0 && !modelVersionId) {
+      setModelVersionId(modelVersions[0].id);
+    }
+  }, [modelVersions, modelVersionId]);
 
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
   const { data: userPolicies = [] } = useQuery({

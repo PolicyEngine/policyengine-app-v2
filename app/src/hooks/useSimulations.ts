@@ -1,62 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
 import { policiesAPI } from '@/api/v2/policies';
 import { simulationsAPI } from '@/api/v2/simulations';
-import { useCurrentCountry } from './useCurrentCountry';
+import { useCurrentModel } from './useCurrentModel';
 
 /**
- * Hook to fetch all simulations from the API for the current country
+ * Hook to fetch all simulations from the API for the current user's model
  */
 export const useSimulations = () => {
-  const country = useCurrentCountry();
+  const { modelId } = useCurrentModel();
 
   return useQuery({
-    queryKey: ['simulations', country],
+    queryKey: ['simulations', modelId],
     queryFn: async () => {
-      console.log(`[useSimulations] Fetching simulations for country: ${country}...`);
+      console.log(`[useSimulations] Fetching simulations for model: ${modelId}...`);
       // First get all simulations
       const allSimulations = await simulationsAPI.list({ limit: 1000 });
 
-      // Separate simulations with and without policies
-      const simulationsWithPolicies = allSimulations.filter(s => s.policy_id);
-      const simulationsWithoutPolicies = allSimulations.filter(s => !s.policy_id);
+      // Filter by model_id directly on simulation
+      const modelSimulations = allSimulations.filter(s => s.model_id === modelId);
 
-      // Get unique policy IDs (excluding null)
-      const policyIds = [...new Set(simulationsWithPolicies.map(s => s.policy_id))];
-
-      let countrySimulations = [...simulationsWithoutPolicies]; // Start with simulations that have no policy
-
-      if (policyIds.length > 0) {
-        // Fetch policies to check their countries
-        const policies = await Promise.all(
-          policyIds.map(id => policiesAPI.get(id).catch(() => null))
-        );
-
-        // Create a set of policy IDs that belong to the current country
-        const countryPolicyIds = new Set(
-          policies
-            .filter(p => p && (!p.country || p.country === country))
-            .map(p => p!.id)
-        );
-
-        // Add simulations with country-matching policies
-        const filteredSimsWithPolicies = simulationsWithPolicies.filter(
-          sim => countryPolicyIds.has(sim.policy_id)
-        );
-        countrySimulations = [...countrySimulations, ...filteredSimsWithPolicies];
-      }
-
-      console.log(`[useSimulations] Found ${countrySimulations.length} simulations for ${country}`);
-      return countrySimulations;
+      console.log(`[useSimulations] Found ${modelSimulations.length} simulations for ${modelId}`);
+      return modelSimulations;
     },
     staleTime: 30 * 1000, // 30 seconds
   });
 };
 
 /**
- * Hook to fetch all simulations with their related policies for the current country
+ * Hook to fetch all simulations with their related policies for the current user's model
  */
 export const useSimulationsWithPolicies = () => {
-  const country = useCurrentCountry();
+  const { modelId } = useCurrentModel();
 
   const {
     data: simulations,

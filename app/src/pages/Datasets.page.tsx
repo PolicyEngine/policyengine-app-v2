@@ -14,7 +14,7 @@ import { notifications } from '@mantine/notifications';
 export default function DatasetsPage() {
   const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
-  const { countryId } = useParams<{ countryId: string }>();
+  
   const queryClient = useQueryClient();
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
@@ -156,7 +156,7 @@ export default function DatasetsPage() {
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
       selectedCount={selectedIds.length}
-      onRowClick={(datasetId) => navigate(`/${countryId}/dataset/${datasetId}`)}
+      onRowClick={(datasetId) => navigate(`/dataset/${datasetId}`)}
     />
   );
 }

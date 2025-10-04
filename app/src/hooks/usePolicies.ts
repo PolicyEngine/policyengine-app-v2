@@ -1,25 +1,25 @@
 import { useQuery } from '@tanstack/react-query';
 import { policiesAPI } from '@/api/v2/policies';
-import { useCurrentCountry } from './useCurrentCountry';
+import { useCurrentModel } from './useCurrentModel';
 
 /**
- * Hook to fetch all policies from the API for the current country
+ * Hook to fetch all policies from the API for the current user's model
  */
 export const usePolicies = () => {
-  const country = useCurrentCountry();
+  const { modelId } = useCurrentModel();
 
   return useQuery({
-    queryKey: ['policies', country],
+    queryKey: ['policies', modelId],
     queryFn: async () => {
-      console.log(`[usePolicies] Fetching policies for country: ${country}...`);
+      console.log(`[usePolicies] Fetching policies for model: ${modelId}...`);
       try {
         const allPolicies = await policiesAPI.list({ limit: 1000 });
-        // Filter policies by country
-        const countryPolicies = allPolicies.filter(
-          policy => !policy.country || policy.country === country
+        // Filter policies by model
+        const modelPolicies = allPolicies.filter(
+          policy => policy.model_id === modelId
         );
-        console.log(`[usePolicies] Found ${countryPolicies.length} policies for ${country}`);
-        return countryPolicies;
+        console.log(`[usePolicies] Found ${modelPolicies.length} policies for ${modelId}`);
+        return modelPolicies;
       } catch (error) {
         console.error('[usePolicies] Error fetching policies:', error);
         throw error;

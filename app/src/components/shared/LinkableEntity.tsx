@@ -3,7 +3,7 @@
  */
 
 import { Anchor } from '@mantine/core';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { variablesAPI } from '@/api/v2/variables';
 
@@ -32,7 +32,6 @@ export default function LinkableEntity({
   underline = 'hover',
 }: LinkableEntityProps) {
   const navigate = useNavigate();
-  const { countryId } = useParams<{ countryId: string }>();
 
   // Fetch variable label if it's a variable and no label provided
   const { data: variable } = useQuery({
@@ -57,22 +56,22 @@ export default function LinkableEntity({
     let path = '';
     switch (type) {
       case 'policy':
-        path = `/${countryId}/policy/${id}`;
+        path = `/policy/${id}`;
         break;
       case 'simulation':
-        path = `/${countryId}/simulation/${id}`;
+        path = `/simulation/${id}`;
         break;
       case 'dynamic':
-        path = `/${countryId}/dynamic/${id}`;
+        path = `/dynamic/${id}`;
         break;
       case 'dataset':
-        path = `/${countryId}/dataset/${id}`;
+        path = `/dataset/${id}`;
         break;
       case 'user':
-        path = `/${countryId}/user/${id}`;
+        path = `/user/${id}`;
         break;
       case 'variable':
-        path = `/${countryId}/variable/${id}`;
+        path = `/variable/${id}`;
         break;
     }
 

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
 import {
   Text,
   Title,
@@ -23,6 +22,7 @@ import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { parametersAPI } from '@/api/parameters';
 import { AppDispatch, RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function PolicyParameterSelectorFrame({
   onNavigate,
@@ -32,7 +32,7 @@ export default function PolicyParameterSelectorFrame({
   flowDepth,
 }: FlowComponentProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const { countryId } = useParams<{ countryId: string }>();
+  const countryId = useCurrentCountry();
   const [selectedParamId, setSelectedParamId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentValue, setCurrentValue] = useState<number>(0);

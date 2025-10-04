@@ -111,27 +111,27 @@ export default function HomePage() {
 
   const getItemPath = (item: any) => {
     switch (item.type) {
-      case 'report': return `/${countryId}/report/${item.id}`;
-      case 'simulation': return `/${countryId}/simulation/${item.id}`;
-      case 'policy': return `/${countryId}/policy/${item.id}`;
-      case 'dynamic': return `/${countryId}/dynamic/${item.id}`;
-      case 'dataset': return `/${countryId}/dataset/${item.id}`;
+      case 'report': return `/report/${item.id}`;
+      case 'simulation': return `/simulation/${item.id}`;
+      case 'policy': return `/policy/${item.id}`;
+      case 'dynamic': return `/dynamic/${item.id}`;
+      case 'dataset': return `/dataset/${item.id}`;
       default: return '/';
     }
   };
 
   const quickActions = [
-    { label: 'New report', icon: IconFileText, color: 'blue', path: `/${countryId}/reports` },
-    { label: 'New simulation', icon: IconChartBar, color: 'green', path: `/${countryId}/simulations` },
-    { label: 'New policy', icon: IconSettings, color: 'violet', path: `/${countryId}/policies` },
-    { label: 'New dataset', icon: IconDatabase, color: 'cyan', path: `/${countryId}/datasets` },
+    { label: 'New report', icon: IconFileText, color: 'blue', path: '/reports' },
+    { label: 'New simulation', icon: IconChartBar, color: 'green', path: '/simulations' },
+    { label: 'New policy', icon: IconSettings, color: 'violet', path: '/policies' },
+    { label: 'New dataset', icon: IconDatabase, color: 'cyan', path: '/datasets' },
   ];
 
   const stats = [
-    { label: 'Reports', value: reports.length, icon: IconFileText, color: 'blue', path: `/${countryId}/reports` },
-    { label: 'Simulations', value: simulations.length, icon: IconChartBar, color: 'green', path: `/${countryId}/simulations` },
-    { label: 'Policies', value: policies.length, icon: IconSettings, color: 'violet', path: `/${countryId}/policies` },
-    { label: 'Datasets', value: datasets.length, icon: IconDatabase, color: 'cyan', path: `/${countryId}/datasets` },
+    { label: 'Reports', value: reports.length, icon: IconFileText, color: 'blue', path: '/reports' },
+    { label: 'Simulations', value: simulations.length, icon: IconChartBar, color: 'green', path: '/simulations' },
+    { label: 'Policies', value: policies.length, icon: IconSettings, color: 'violet', path: '/policies' },
+    { label: 'Datasets', value: datasets.length, icon: IconDatabase, color: 'cyan', path: '/datasets' },
   ];
 
   return (
@@ -210,7 +210,7 @@ export default function HomePage() {
                 variant="subtle"
                 size="sm"
                 rightSection={<IconArrowRight size={14} />}
-                onClick={() => navigate(`/${countryId}/reports`)}
+                onClick={() => navigate(`/reports`)}
               >
                 View all
               </Button>
@@ -232,14 +232,14 @@ export default function HomePage() {
                 <Group>
                   <Button
                     leftSection={<IconFileText size={16} />}
-                    onClick={() => navigate(`/${countryId}/reports`)}
+                    onClick={() => navigate(`/reports`)}
                   >
                     New report
                   </Button>
                   <Button
                     variant="light"
                     leftSection={<IconChartBar size={16} />}
-                    onClick={() => navigate(`/${countryId}/simulations`)}
+                    onClick={() => navigate(`/simulations`)}
                   >
                     New simulation
                   </Button>
@@ -334,7 +334,7 @@ export default function HomePage() {
                         variant="subtle"
                         size="xs"
                         rightSection={<IconArrowRight size={12} />}
-                        onClick={() => navigate(`/${countryId}/${category.type}s`)}
+                        onClick={() => navigate(`/${category.type}s`)}
                       >
                         View all
                       </Button>

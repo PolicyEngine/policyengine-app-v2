@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
 import {
   Text,
   Title,
@@ -38,6 +37,8 @@ import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { parametersAPI, ParameterValueCreate } from '@/api/parameters';
 import { policiesAPI, PolicyCreate } from '@/api/v2/policies';
 import { AppDispatch, RootState } from '@/store';
+import { useCurrentModel } from '@/hooks/useCurrentModel';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface PolicyCreationFlowProps {
   opened: boolean;
@@ -60,20 +61,9 @@ export default function PolicyCreationFlow({
   onComplete,
 }: PolicyCreationFlowProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const { modelId } = useCurrentModel();
+  const countryId = useCurrentCountry();
   const [currentStep, setCurrentStep] = useState<'name' | 'parameters'>('name');
-  const { countryId } = useParams<{ countryId: string }>();
-
-  // Map country codes to model IDs (matching metadataReducer logic)
-  const getModelId = (country: string) => {
-    const modelIdMap: Record<string, string> = {
-      'us': 'policyengine_us',
-      'uk': 'policyengine_uk',
-      'ca': 'policyengine_ca',
-      'ng': 'policyengine_ng',
-      'il': 'policyengine_il'
-    };
-    return modelIdMap[country] || `policyengine_${country}`;
-  };
 
   // Step 1: Name policy
   const [policyName, setPolicyName] = useState('');
@@ -631,10 +621,10 @@ export default function PolicyCreationFlow({
         name: policyName,
         description: policyDescription || undefined,
         country: countryId,
+        model_id: modelId,
       };
 
       // Create parameter values from provisions
-      const modelId = getModelId(countryId || 'us');
       const parameterValues: Omit<ParameterValueCreate, 'policy_id'>[] = provisions.map(provision => ({
         parameter_id: provision.parameterId,
         model_id: modelId,

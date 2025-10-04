@@ -24,6 +24,7 @@ export default function UserDetailPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editMode, setEditMode] = useState(false);
+  const [username, setUsername] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -37,6 +38,7 @@ export default function UserDetailPage() {
   const updateMutation = useMutation({
     mutationFn: async () => {
       return usersAPI.updateUser(userId!, {
+        username: username,
         first_name: firstName,
         last_name: lastName,
         email: email,
@@ -44,6 +46,7 @@ export default function UserDetailPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user', userId] });
+      queryClient.invalidateQueries({ queryKey: ['users', userId] });
       setEditMode(false);
     },
   });
@@ -75,6 +78,7 @@ export default function UserDetailPage() {
   }
 
   const handleEdit = () => {
+    setUsername(user.username || '');
     setFirstName(user.first_name || '');
     setLastName(user.last_name || '');
     setEmail(user.email || '');
@@ -135,15 +139,20 @@ export default function UserDetailPage() {
               </Text>
             </div>
 
-            <div>
-              <Text size="sm" fw={600} mb="xs">
-                Username
-              </Text>
-              <Text size="sm">{user.username}</Text>
-            </div>
-
             {editMode ? (
               <>
+                <div>
+                  <Text size="sm" fw={600} mb="xs">
+                    Username
+                  </Text>
+                  <TextInput
+                    value={username}
+                    onChange={(e) => setUsername(e.currentTarget.value)}
+                    placeholder="Username"
+                    required
+                  />
+                </div>
+
                 <div>
                   <Text size="sm" fw={600} mb="xs">
                     First name
@@ -197,6 +206,13 @@ export default function UserDetailPage() {
               </>
             ) : (
               <>
+                <div>
+                  <Text size="sm" fw={600} mb="xs">
+                    Username
+                  </Text>
+                  <Text size="sm">{user.username}</Text>
+                </div>
+
                 {user.first_name && (
                   <div>
                     <Text size="sm" fw={600} mb="xs">

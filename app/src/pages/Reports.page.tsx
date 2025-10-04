@@ -18,7 +18,7 @@ export default function ReportsPage() {
   const [reportToRename, setReportToRename] = useState<{ id: string; name: string } | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { countryId } = useParams<{ countryId: string }>();
+  
   const { handleSelectionChange, isSelected } = useIngredientSelection();
 
   // Fetch reports from API
@@ -56,7 +56,7 @@ export default function ReportsPage() {
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
     ingredient: 'report',
     onEdit: (id) => {
-      navigate(`/${countryId}/report/${id}`);
+      navigate(`/report/${id}`);
     },
     onRename: (id) => {
       const report = reports?.find(r => r.id === id);
@@ -76,7 +76,7 @@ export default function ReportsPage() {
   const createReportMutation = useMutation({
     mutationFn: reportsAPI.create,
     onSuccess: (newReport) => {
-      navigate(`/${countryId}/report/${newReport.id}`);
+      navigate(`/report/${newReport.id}`);
     },
     onError: (error: any) => {
       console.error('Failed to create report:', error);
@@ -214,7 +214,7 @@ export default function ReportsPage() {
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}
-      onRowClick={(id) => navigate(`/${countryId}/report/${id}`)}
+      onRowClick={(id) => navigate(`/report/${id}`)}
       />
     </>
   );

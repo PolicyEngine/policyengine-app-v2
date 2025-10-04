@@ -21,7 +21,7 @@ import { notifications } from '@mantine/notifications';
 
 export default function SimulationsPage() {
   const navigate = useNavigate();
-  const { countryId } = useParams<{ countryId: string }>();
+  
   const queryClient = useQueryClient();
   const { data: simulations, isLoading, error } = useSimulationsWithPolicies();
   const isError = !!error;
@@ -235,7 +235,7 @@ export default function SimulationsPage() {
         isSelected={isSelected}
         onSelectionChange={handleSelectionChange}
         selectedCount={selectedIds.length}
-        onRowClick={(id) => navigate(`/${countryId}/simulation/${id}`)}
+        onRowClick={(id) => navigate(`/simulation/${id}`)}
       />
     </>
   );

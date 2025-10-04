@@ -1,22 +1,21 @@
-import { useParams } from 'react-router-dom';
+import { useCurrentModel } from './useCurrentModel';
 import { countryIds } from '@/libs/countries';
 
 /**
- * Returns the current country ID from the URL path parameter.
+ * Returns the current country ID based on the user's selected model.
  *
- * For routes with :countryId param: Returns the country from URL (already validated by loader)
- * For routes without :countryId param: Returns 'us' as fallback with a warning
- *
- * @returns The country ID from URL or default fallback
+ * @returns The country ID based on user's current model
  */
 export function useCurrentCountry(): (typeof countryIds)[number] {
-  const { countryId } = useParams<{ countryId: string }>();
+  const { modelId } = useCurrentModel();
 
-  if (!countryId) {
-    console.warn('useCurrentCountry used in non-country route, returning default country');
-    // TODO: Replace with dynamic default country based on user location/preferences
+  // Map model ID to country ID
+  if (modelId === 'policyengine_us') {
     return 'us';
+  } else if (modelId === 'policyengine_uk') {
+    return 'uk';
   }
 
-  return countryId as (typeof countryIds)[number];
+  // Default fallback
+  return 'uk';
 }

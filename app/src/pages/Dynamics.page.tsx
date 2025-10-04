@@ -25,7 +25,7 @@ interface Dynamic {
 
 export default function DynamicsPage() {
   const navigate = useNavigate();
-  const { countryId } = useParams<{ countryId: string }>();
+  
   const [searchValue, setSearchValue] = useState('');
   const queryClient = useQueryClient();
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
@@ -232,7 +232,7 @@ export default function DynamicsPage() {
         isSelected={isSelected}
         onSelectionChange={handleSelectionChange}
         selectedCount={selectedIds.length}
-        onRowClick={(id) => navigate(`/${countryId}/dynamic/${id}`)}
+        onRowClick={(id) => navigate(`/dynamic/${id}`)}
       />
     </>
   );

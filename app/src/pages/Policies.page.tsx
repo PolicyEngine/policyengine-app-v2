@@ -17,7 +17,7 @@ import { MOCK_USER_ID } from '@/constants';
 
 export default function PoliciesPage() {
   const navigate = useNavigate();
-  const { countryId } = useParams<{ countryId: string }>();
+  
   const queryClient = useQueryClient();
   const { data: policies, isLoading, error } = usePolicies();
   const isError = !!error;
@@ -219,7 +219,7 @@ export default function PoliciesPage() {
         isSelected={isSelected}
         onSelectionChange={handleSelectionChange}
         selectedCount={selectedIds.length}
-        onRowClick={(id) => navigate(`/${countryId}/policy/${id}`)}
+        onRowClick={(id) => navigate(`/policy/${id}`)}
       />
     </>
   );

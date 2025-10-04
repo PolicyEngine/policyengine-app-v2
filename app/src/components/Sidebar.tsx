@@ -13,13 +13,15 @@ import {
   IconSettings2,
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Box, Button, Divider, Stack, Text } from '@mantine/core';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, spacing, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
 import SidebarUser from './sidebar/SidebarUser';
+import { usersAPI } from '@/api/v2/users';
+import { MOCK_USER_ID } from '@/constants';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -27,22 +29,32 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useLocation();
-  const countryId = useCurrentCountry();
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
+
+  const { data: user } = useQuery({
+    queryKey: ['users', userId],
+    queryFn: () => usersAPI.getUser(userId),
+  });
+
+  const displayName = usersAPI.getDisplayName(user || { username: 'User' });
+  const initials = user?.first_name && user?.last_name
+    ? `${user.first_name[0]}${user.last_name[0]}`.toUpperCase()
+    : user?.username?.[0]?.toUpperCase() || 'U';
 
   // Core data model navigation - all the main entities
   const dataItems = [
-    { label: 'Policies', icon: IconFileDescription, path: `/${countryId}/policies` },
-    { label: 'Dynamics', icon: IconAdjustments, path: `/${countryId}/dynamics` },
-    { label: 'Datasets', icon: IconDatabase, path: `/${countryId}/datasets` },
-    { label: 'Simulations', icon: IconPlaystationSquare, path: `/${countryId}/simulations` },
-    { label: 'Reports', icon: IconFileAnalytics, path: `/${countryId}/reports` },
+    { label: 'Policies', icon: IconFileDescription, path: '/policies' },
+    { label: 'Dynamics', icon: IconAdjustments, path: '/dynamics' },
+    { label: 'Datasets', icon: IconDatabase, path: '/datasets' },
+    { label: 'Simulations', icon: IconPlaystationSquare, path: '/simulations' },
+    { label: 'Reports', icon: IconFileAnalytics, path: '/reports' },
   ];
 
   const resourceItems = [
     { label: 'GitHub', icon: IconGitBranch, path: 'https://github.com', external: true },
     { label: 'Join Slack', icon: IconExternalLink, path: 'https://slack.com', external: true },
     { label: 'Visit Blog', icon: IconBook, path: 'https://blog.example.com', external: true },
-    { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
+    { label: 'Methodology', icon: IconFileDescription, path: '/methodology' },
   ];
 
   if (!isOpen) {
@@ -89,8 +101,8 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             <SidebarNavItem
               label="Home"
               icon={IconHome}
-              path={`/${countryId}`}
-              isActive={location.pathname === `/${countryId}`}
+              path="/"
+              isActive={location.pathname === '/'}
             />
           </SidebarSection>
 
@@ -119,7 +131,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
       <Box p={16}>
         <Divider mb={16} color={colors.border.light} />
-        <SidebarUser name="User" initials="U" />
+        <SidebarUser name={displayName} initials={initials} />
       </Box>
     </Stack>
   );
