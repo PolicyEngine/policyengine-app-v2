@@ -1,6 +1,6 @@
 import { useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
+import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { Household } from '@/types/ingredients/Household';
 
 interface UseHouseholdCalculationOptions {

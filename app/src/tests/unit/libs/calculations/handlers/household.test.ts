@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as householdApi from '@/api/household_calculation';
+import * as householdApi from '@/api/householdCalculation';
 import { HouseholdCalculationHandler } from '@/libs/calculations/handlers/household';
 import {
   advanceTimeAndFlush,

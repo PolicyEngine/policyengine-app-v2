@@ -34,7 +34,9 @@ export class ApiSimulationStore implements UserSimulationStore {
   }
 
   async findByUser(userId: string): Promise<UserSimulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -46,7 +48,9 @@ export class ApiSimulationStore implements UserSimulationStore {
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;

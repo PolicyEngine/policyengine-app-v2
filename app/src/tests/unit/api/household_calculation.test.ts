@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
+import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { BASE_URL } from '@/constants';
 import {
   ERROR_MESSAGES,

@@ -32,7 +32,9 @@ export class ApiGeographicStore implements UserGeographicStore {
   }
 
   async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -42,7 +44,9 @@ export class ApiGeographicStore implements UserGeographicStore {
   }
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;

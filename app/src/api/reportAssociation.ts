@@ -33,7 +33,9 @@ export class ApiReportStore implements UserReportStore {
   }
 
   async findByUser(userId: string): Promise<UserReport[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -45,7 +47,9 @@ export class ApiReportStore implements UserReportStore {
   }
 
   async findById(userId: string, reportId: string): Promise<UserReport | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${reportId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${reportId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;

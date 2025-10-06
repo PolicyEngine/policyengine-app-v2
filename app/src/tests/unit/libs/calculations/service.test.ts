@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as economyApi from '@/api/economy';
-import * as householdApi from '@/api/household_calculation';
+import * as householdApi from '@/api/householdCalculation';
 import { CalculationService } from '@/libs/calculations/service';
 import { ECONOMY_OK_RESPONSE } from '@/tests/fixtures/libs/calculations/handlerMocks';
 import {

@@ -32,7 +32,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   }
 
   async findByUser(userId: string): Promise<UserHouseholdPopulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user households');
     }
@@ -42,7 +44,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   }
 
   async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;

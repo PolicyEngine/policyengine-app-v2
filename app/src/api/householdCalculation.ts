@@ -26,6 +26,9 @@ export async function fetchHouseholdCalculation(
   try {
     const response = await fetch(url, {
       signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
 
     clearTimeout(timeoutId);

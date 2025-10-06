@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { HouseholdCalculationResponse } from '@/api/household_calculation';
+import { HouseholdCalculationResponse } from '@/api/householdCalculation';
 import { Household } from '@/types/ingredients/Household';
 
 // Test IDs and constants

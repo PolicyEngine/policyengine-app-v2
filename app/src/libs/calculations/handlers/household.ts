@@ -1,4 +1,4 @@
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
+import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { HouseholdData } from '@/types/ingredients/Household';
 import { CalculationStatusResponse } from '../status';
