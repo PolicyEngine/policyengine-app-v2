@@ -58,14 +58,22 @@ export const MOCK_METADATA: MetadataState = {
   },
   parameters: {},
   variableModules: {},
-  economy_options: {
+  economyOptions: {
     region: [],
     time_period: [],
-    dataset: [],
+    datasets: [],
   },
-  countryId: 'us',
   currentCountry: 'us',
+  currentLawId: 1,
+  basicInputs: [],
+  modelledPolicies: {
+    core: {},
+    filtered: {},
+  },
   version: '1.0.0',
+  loading: false,
+  error: null,
+  parameterTree: null,
 };
 
 export const MOCK_HOUSEHOLD_DATA: Household = {
