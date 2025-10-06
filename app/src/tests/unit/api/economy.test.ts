@@ -46,7 +46,12 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=2024`
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=2024`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
       expect(result).toEqual(mockCompletedResponse);
     });
@@ -70,7 +75,12 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=uk&time_period=2024`
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=uk&time_period=2024`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
       expect(result).toEqual(mockPendingResponse);
     });
@@ -203,7 +213,12 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?time_period=2024`
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?time_period=2024`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
       );
     });
 
@@ -224,16 +239,32 @@ describe('economy API', () => {
       // Then
       expect(global.fetch).toHaveBeenNthCalledWith(
         1,
-        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`
+        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`,
+        expect.objectContaining({
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
       );
       expect(global.fetch).toHaveBeenNthCalledWith(
         2,
-        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`,
+        expect.objectContaining({
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
       );
       expect(global.fetch).toHaveBeenNthCalledWith(
         3,
-        `${BASE_URL}/${TEST_COUNTRIES.CA}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`
+        `${BASE_URL}/${TEST_COUNTRIES.CA}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`,
+        expect.objectContaining({
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        })
       );
     });
+
   });
 });
