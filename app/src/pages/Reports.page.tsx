@@ -5,11 +5,13 @@ import moment from 'moment';
 import ReportCreationModal from '@/components/report/ReportCreationModal';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
 import { reportsAPI } from '@/api/v2/reports';
+import { userReportsAPI } from '@/api/v2/userReports';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { showErrorNotification } from '@/utils/errorHandling';
+import { MOCK_USER_ID } from '@/constants';
 
 export default function ReportsPage() {
   const [searchValue, setSearchValue] = useState('');
@@ -74,7 +76,18 @@ export default function ReportsPage() {
 
   // Create report mutation
   const createReportMutation = useMutation({
-    mutationFn: reportsAPI.create,
+    mutationFn: async (data: { label: string; description?: string; simulation_ids: string[] }) => {
+      const report = await reportsAPI.create(data);
+
+      // Create user association
+      await userReportsAPI.create({
+        user_id: MOCK_USER_ID,
+        report_id: report.id,
+        custom_name: null,
+      });
+
+      return report;
+    },
     onSuccess: (newReport) => {
       navigate(`/report/${newReport.id}`);
     },

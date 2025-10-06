@@ -5,6 +5,7 @@ import { simulationsAPI } from '@/api/v2/simulations';
 import { datasetsAPI } from '@/api/v2/datasets';
 import { modelVersionsAPI } from '@/api/v2/modelVersions';
 import { userPoliciesAPI } from '@/api/v2/userPolicies';
+import { userSimulationsAPI } from '@/api/v2/userSimulations';
 import { usePolicies } from '@/hooks/usePolicies';
 import { useCurrentModel } from '@/hooks/useCurrentModel';
 import { notifications } from '@mantine/notifications';
@@ -61,13 +62,22 @@ export default function CreateSimulationModal({ opened, onClose }: CreateSimulat
     mutationFn: async () => {
       // Get model_id from the selected model version
       const selectedModelVersion = modelVersions?.find(mv => mv.id === modelVersionId);
-      return simulationsAPI.create({
+      const simulation = await simulationsAPI.create({
         name,
         policy_id: policyId,
         dataset_id: datasetId,
         model_id: selectedModelVersion?.model_id,
         model_version_id: modelVersionId,
       });
+
+      // Create user association
+      await userSimulationsAPI.create({
+        user_id: MOCK_USER_ID,
+        simulation_id: simulation.id,
+        custom_name: null,
+      });
+
+      return simulation;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['simulations'] });

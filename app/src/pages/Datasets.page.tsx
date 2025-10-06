@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Tabs } from '@mantine/core';
 import moment from 'moment';
 import { datasetsAPI } from '@/api/v2/datasets';
 import { userDatasetsAPI } from '@/api/v2/userDatasets';
@@ -10,11 +11,13 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { notifications } from '@mantine/notifications';
+import { MOCK_USER_ID } from '@/constants';
 
 export default function DatasetsPage() {
+  const [activeTab, setActiveTab] = useState<string | null>('my-datasets');
   const [searchValue, setSearchValue] = useState('');
   const navigate = useNavigate();
-  
+
   const queryClient = useQueryClient();
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
@@ -80,8 +83,17 @@ export default function DatasetsPage() {
     console.log('More filters clicked');
   };
 
+  // Filter datasets based on active tab
+  // "My Datasets" = datasets where user has an association
+  // "Explore Datasets" = ALL datasets (user can explore and bookmark any dataset)
+  const userDatasetIds = new Set(userDatasets.map(ud => ud.dataset_id));
+  const myDatasets = datasets?.filter(d => userDatasetIds.has(d.id)) || [];
+  const exploreDatasets = datasets || []; // Show ALL datasets in explore tab
+
+  const currentDatasets = activeTab === 'my-datasets' ? myDatasets : exploreDatasets;
+
   // Filter datasets based on search
-  const filteredDatasets = datasets?.filter(
+  const filteredDatasets = currentDatasets?.filter(
     (dataset) =>
       dataset.name.toLowerCase().includes(searchValue.toLowerCase()) ||
       dataset.description?.toLowerCase().includes(searchValue.toLowerCase())
@@ -140,7 +152,7 @@ export default function DatasetsPage() {
   return (
     <IngredientReadView
       ingredient="dataset"
-      title="Your datasets"
+      title="Datasets"
       subtitle="Manage household, population, and economic datasets for your simulations."
       onBuild={handleBuildDataset}
       onDelete={handleDeleteSelected}
@@ -157,6 +169,14 @@ export default function DatasetsPage() {
       onSelectionChange={handleSelectionChange}
       selectedCount={selectedIds.length}
       onRowClick={(datasetId) => navigate(`/dataset/${datasetId}`)}
+      headerContent={
+        <Tabs value={activeTab} onChange={setActiveTab}>
+          <Tabs.List>
+            <Tabs.Tab value="my-datasets">My datasets</Tabs.Tab>
+            <Tabs.Tab value="explore-datasets">Explore datasets</Tabs.Tab>
+          </Tabs.List>
+        </Tabs>
+      }
     />
   );
 }

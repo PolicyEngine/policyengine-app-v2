@@ -70,6 +70,7 @@ export const fetchMetadataThunk = createAsyncThunk(
           values: {}, // Empty values initially, will be fetched on demand
           unit: param.unit,
           description: param.description,
+          data_type: param.data_type,
         };
       });
 

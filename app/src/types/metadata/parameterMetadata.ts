@@ -9,6 +9,7 @@ export interface ParameterMetadata {
   values?: Record<string, number>; // Historical values
   economy?: boolean;
   household?: boolean;
+  data_type?: string | null; // Python data type (int, float, bool, str, etc.)
 }
 
 export type ParameterMetadataCollection = Record<string, ParameterMetadata>;

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Tabs } from '@mantine/core';
 import moment from 'moment';
 import { apiClient } from '@/api/apiClient';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
@@ -25,7 +26,8 @@ interface Dynamic {
 
 export default function DynamicsPage() {
   const navigate = useNavigate();
-  
+
+  const [activeTab, setActiveTab] = useState<string | null>('my-dynamics');
   const [searchValue, setSearchValue] = useState('');
   const queryClient = useQueryClient();
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
@@ -137,8 +139,17 @@ export default function DynamicsPage() {
     console.log('More filters clicked');
   };
 
+  // Filter dynamics based on active tab
+  // "My Dynamics" = dynamics where user has an association
+  // "Explore Dynamics" = ALL dynamics (user can explore and bookmark any dynamic)
+  const userDynamicIds = new Set(userDynamics.map(ud => ud.dynamic_id));
+  const myDynamics = dynamics?.filter(d => userDynamicIds.has(d.id)) || [];
+  const exploreDynamics = dynamics || []; // Show ALL dynamics in explore tab
+
+  const currentDynamics = activeTab === 'my-dynamics' ? myDynamics : exploreDynamics;
+
   // Filter dynamics based on search
-  const filteredDynamics = dynamics?.filter(
+  const filteredDynamics = currentDynamics?.filter(
     (dynamic) =>
       dynamic.name.toLowerCase().includes(searchValue.toLowerCase()) ||
       dynamic.description?.toLowerCase().includes(searchValue.toLowerCase())
@@ -216,7 +227,7 @@ export default function DynamicsPage() {
       />
       <IngredientReadView
         ingredient="dynamic"
-        title="Your dynamics"
+        title="Dynamics"
         subtitle="Manage time-varying behaviours and dynamic configurations for your models."
         onBuild={handleBuildDynamic}
         onDelete={handleDeleteSelected}
@@ -233,6 +244,14 @@ export default function DynamicsPage() {
         onSelectionChange={handleSelectionChange}
         selectedCount={selectedIds.length}
         onRowClick={(id) => navigate(`/dynamic/${id}`)}
+        headerContent={
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List>
+              <Tabs.Tab value="my-dynamics">My dynamics</Tabs.Tab>
+              <Tabs.Tab value="explore-dynamics">Explore dynamics</Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+        }
       />
     </>
   );

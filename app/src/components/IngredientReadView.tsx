@@ -35,6 +35,7 @@ interface IngredientReadViewProps {
   onSelectionChange?: (recordId: string, selected: boolean) => void;
   onRowClick?: (recordId: string) => void;
   selectedCount?: number;
+  headerContent?: React.ReactNode;
 }
 
 export default function IngredientReadView({
@@ -56,6 +57,7 @@ export default function IngredientReadView({
   onSelectionChange,
   onRowClick,
   selectedCount = 0,
+  headerContent,
 }: IngredientReadViewProps) {
   return (
     <Box>
@@ -83,6 +85,7 @@ export default function IngredientReadView({
             </Button>
           )}
         </Flex>
+        {headerContent && <Box mt={spacing.lg}>{headerContent}</Box>}
       </Box>
 
       {/* Filters Section */}

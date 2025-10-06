@@ -110,13 +110,25 @@ export default function PolicyParameterSelectorFrame({
           [selectedParamId]: values
         }));
 
-        // Set current value from baseline
+        // Set current value from baseline, skipping infinity values
         if (Object.keys(values).length > 0) {
           const dates = Object.keys(values).sort();
-          const mostRecentDate = dates[dates.length - 1];
-          const value = values[mostRecentDate];
-          setCurrentValue(typeof value === 'number' ? value : parseFloat(String(value)) || 0);
-          setStartDate(mostRecentDate.split('-')[0] || '2025');
+          // Find the most recent non-infinity value
+          let mostRecentValue = 0;
+          let mostRecentValidDate = dates[dates.length - 1];
+
+          for (let i = dates.length - 1; i >= 0; i--) {
+            const value = values[dates[i]];
+            const numValue = typeof value === 'number' ? value : parseFloat(String(value)) || 0;
+            if (isFinite(numValue)) {
+              mostRecentValue = numValue;
+              mostRecentValidDate = dates[i];
+              break;
+            }
+          }
+
+          setCurrentValue(mostRecentValue);
+          setStartDate(mostRecentValidDate.split('-')[0] || '2025');
         }
       } catch (error) {
         console.error('Failed to fetch baseline values:', error);
@@ -134,12 +146,13 @@ export default function PolicyParameterSelectorFrame({
       return [];
     }
 
-    // Convert values object to chart data
+    // Convert values object to chart data, filtering out infinity values
     return Object.entries(baselineValues[selectedParamId])
       .map(([date, value]) => ({
         year: date.split('-')[0], // Extract year from date
         value: typeof value === 'number' ? value : parseFloat(String(value)) || 0
       }))
+      .filter(item => isFinite(item.value)) // Filter out Infinity and -Infinity
       .sort((a, b) => parseInt(a.year) - parseInt(b.year));
   };
 
@@ -237,7 +250,7 @@ export default function PolicyParameterSelectorFrame({
               {/* Current Value */}
               <div>
                 <Title order={5} mb="md">Current value</Title>
-                <Group align="end" gap="md">
+                <Group align="flex-start" gap="md">
                   <Stack gap={4}>
                     <Text size="xs" c="dimmed">From</Text>
                     <TextInput
@@ -248,23 +261,30 @@ export default function PolicyParameterSelectorFrame({
                     />
                   </Stack>
                   <Stack gap={4}>
-                    <Text size="xs" c="dimmed">Onward</Text>
-                    <Group gap="xs">
-                      {selectedParam?.unit?.includes('currency') && <Text size="lg">$</Text>}
-                      <NumberInput
-                        value={currentValue}
-                        onChange={(val) => setCurrentValue(val as number)}
-                        decimalScale={2}
-                        fixedDecimalScale
-                        w={100}
-                      />
-                      {selectedParam?.unit && (
-                        <Select
-                          value={selectedParam.unit.split('-')[1] || 'USD'}
-                          data={['USD', 'EUR', 'GBP']}
-                          w={90}
+                    <Text size="xs" c="dimmed">Value</Text>
+                    <Group gap="md" align="center" wrap="nowrap">
+                      <Group gap={4} align="center" wrap="nowrap">
+                        {selectedParam?.unit?.includes('currency') && (
+                          <Text size="md" c="dimmed">$</Text>
+                        )}
+                        <NumberInput
+                          value={currentValue}
+                          onChange={(val) => setCurrentValue(val as number)}
+                          allowDecimal={selectedParam?.unit !== '/1'}
+                          decimalScale={selectedParam?.unit === '/1' ? 0 : 2}
+                          w={100}
+                          styles={{
+                            input: {
+                              textAlign: 'right',
+                            }
+                          }}
                         />
-                      )}
+                        {selectedParam?.unit && !selectedParam.unit.includes('currency') && selectedParam.unit !== '/1' && (
+                          <Text size="sm" c="dimmed" style={{ whiteSpace: 'nowrap' }}>
+                            {selectedParam.unit}
+                          </Text>
+                        )}
+                      </Group>
                       <ActionIcon variant="subtle">
                         <IconDots size={16} />
                       </ActionIcon>
@@ -282,8 +302,8 @@ export default function PolicyParameterSelectorFrame({
                     {selectedParamId} over time
                   </Text>
                   <Card withBorder p="md">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <LineChart data={chartData}>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <LineChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
                         <XAxis
                           dataKey="year"
@@ -293,6 +313,7 @@ export default function PolicyParameterSelectorFrame({
                         <YAxis
                           stroke="#666"
                           style={{ fontSize: '12px' }}
+                          domain={['auto', 'auto']}
                           tickFormatter={(value: number) => {
                             const unit = selectedParam?.unit || '';
                             if (unit === 'currency-USD' || unit.includes('currency')) {
@@ -305,9 +326,9 @@ export default function PolicyParameterSelectorFrame({
                           formatter={(value: number) => {
                             const unit = selectedParam?.unit || '';
                             if (unit === 'currency-USD' || unit.includes('currency')) {
-                              return `$${value.toLocaleString()}`;
+                              return [`$${value.toLocaleString()}`, 'Value'];
                             }
-                            return value.toLocaleString();
+                            return [value.toLocaleString(), 'Value'];
                           }}
                           labelFormatter={(label) => `Year: ${label}`}
                         />
@@ -318,6 +339,9 @@ export default function PolicyParameterSelectorFrame({
                           strokeWidth={2}
                           dot={{ fill: '#319795', r: 4 }}
                           activeDot={{ r: 6 }}
+                          isAnimationActive={true}
+                          animationDuration={800}
+                          animationEasing="ease-in-out"
                         />
                       </LineChart>
                     </ResponsiveContainer>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Tabs } from '@mantine/core';
 import moment from 'moment';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -22,6 +23,9 @@ export default function PoliciesPage() {
   const { data: policies, isLoading, error } = usePolicies();
   const isError = !!error;
 
+  console.log('[Policies.page] Query results:', { policies, isLoading, error });
+
+  const [activeTab, setActiveTab] = useState<string | null>('my-policies');
   const [searchValue, setSearchValue] = useState('');
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
@@ -35,10 +39,12 @@ export default function PoliciesPage() {
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   // Fetch user policy associations
-  const { data: userPolicies = [] } = useQuery({
+  const { data: userPolicies = [], isLoading: userPoliciesLoading } = useQuery({
     queryKey: ['userPolicies', userId],
     queryFn: () => userPoliciesAPI.list(userId),
   });
+
+  console.log('[Policies.page] User policies:', { userPolicies, userPoliciesLoading });
 
   // Fetch all users
   const { data: users = [] } = useQuery({
@@ -154,9 +160,26 @@ export default function PoliciesPage() {
     },
   ];
 
+  // Filter policies based on active tab
+  // "My Policies" = policies where user has an association
+  // "Explore Policies" = ALL policies (user can explore and bookmark any policy)
+  const userPolicyIds = new Set(userPolicies.map(up => up.policy_id));
+
+  console.log('Policies debug:', {
+    totalPolicies: policies?.length,
+    userPolicies: userPolicies.length,
+    userPolicyIds: Array.from(userPolicyIds),
+    activeTab
+  });
+
+  const myPolicies = policies?.filter(p => userPolicyIds.has(p.id)) || [];
+  const explorePolicies = policies || []; // Show ALL policies in explore tab
+
+  console.log('Filtered:', { myPolicies: myPolicies.length, explorePolicies: explorePolicies.length });
+
   // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] =
-    policies?.map((policy) => {
+  const transformData = (policyList: typeof policies) =>
+    policyList?.map((policy) => {
       const userPolicy = userPolicies.find(up => up.policy_id === policy.id);
       const displayName = userPolicy?.custom_name || policy.name || `Policy #${policy.id}`;
 
@@ -179,6 +202,12 @@ export default function PoliciesPage() {
         } as TextValue,
       };
     }) || [];
+
+  const transformedData = activeTab === 'my-policies'
+    ? transformData(myPolicies)
+    : transformData(explorePolicies);
+
+  console.log('[Policies.page] Final transformed data:', { count: transformedData.length, data: transformedData });
 
   // Render the normal policies page with modals
   return (
@@ -203,7 +232,7 @@ export default function PoliciesPage() {
       />
       <IngredientReadView
         ingredient="policy"
-        title="Your policies"
+        title="Policies"
         subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
         onBuild={handleBuildPolicy}
         onDelete={handleDeleteSelected}
@@ -220,6 +249,14 @@ export default function PoliciesPage() {
         onSelectionChange={handleSelectionChange}
         selectedCount={selectedIds.length}
         onRowClick={(id) => navigate(`/policy/${id}`)}
+        headerContent={
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List>
+              <Tabs.Tab value="my-policies">My policies</Tabs.Tab>
+              <Tabs.Tab value="explore-policies">Explore policies</Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+        }
       />
     </>
   );

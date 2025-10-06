@@ -6,6 +6,7 @@ export interface PolicyResponse {
   name: string;
   description?: string;
   country?: string;
+  model_id?: string;
   created_at: string;
   updated_at: string;
 }
@@ -14,6 +15,7 @@ export interface PolicyCreate {
   name: string;
   description?: string;
   country?: string;
+  model_id?: string;
 }
 
 export interface PolicyUpdate {

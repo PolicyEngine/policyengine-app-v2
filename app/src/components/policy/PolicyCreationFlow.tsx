@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Text,
   Title,
@@ -36,9 +37,11 @@ import YearRangeSelector from '@/components/shared/YearRangeSelector';
 import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { parametersAPI, ParameterValueCreate } from '@/api/parameters';
 import { policiesAPI, PolicyCreate } from '@/api/v2/policies';
+import { userPoliciesAPI } from '@/api/v2/userPolicies';
 import { AppDispatch, RootState } from '@/store';
 import { useCurrentModel } from '@/hooks/useCurrentModel';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { MOCK_USER_ID } from '@/constants';
 
 interface PolicyCreationFlowProps {
   opened: boolean;
@@ -61,6 +64,7 @@ export default function PolicyCreationFlow({
   onComplete,
 }: PolicyCreationFlowProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const queryClient = useQueryClient();
   const { modelId } = useCurrentModel();
   const countryId = useCurrentCountry();
   const [currentStep, setCurrentStep] = useState<'name' | 'parameters'>('name');
@@ -200,7 +204,7 @@ export default function PolicyCreationFlow({
           [selectedParamId]: values
         }));
 
-        // Set current value from baseline at the start date or most recent
+        // Set current value from baseline at the start date or most recent, skipping infinity values
         if (Object.keys(values).length > 0) {
           const dates = Object.keys(values).sort();
 
@@ -213,20 +217,30 @@ export default function PolicyCreationFlow({
                           values[startYear] !== undefined ? startYear : null;
 
           if (startKey) {
-            valueToSet = values[startKey];
-          } else {
-            // Find the most recent value before start date
+            const candidateValue = values[startKey];
+            const numValue = typeof candidateValue === 'number' ? candidateValue : parseFloat(String(candidateValue)) || 0;
+            if (isFinite(numValue)) {
+              valueToSet = numValue;
+            }
+          }
+
+          // If we didn't find a finite value at start date, find the most recent finite value before start date
+          if (valueToSet === 0) {
             for (let i = dates.length - 1; i >= 0; i--) {
               const date = dates[i];
               const year = date.includes('-') ? date.split('-')[0] : date;
               if (parseInt(year) <= parseInt(startYear)) {
-                valueToSet = values[date];
-                break;
+                const candidateValue = values[date];
+                const numValue = typeof candidateValue === 'number' ? candidateValue : parseFloat(String(candidateValue)) || 0;
+                if (isFinite(numValue)) {
+                  valueToSet = numValue;
+                  break;
+                }
               }
             }
           }
 
-          setCurrentValue(typeof valueToSet === 'number' ? valueToSet : parseFloat(String(valueToSet)) || 0);
+          setCurrentValue(valueToSet);
         }
       } catch (error) {
         console.error('Failed to fetch baseline values:', error);
@@ -277,10 +291,13 @@ export default function PolicyCreationFlow({
         }
       }
 
+      // Convert baselineValue and filter out infinity
+      const numericBaseline = baselineValue !== null ?
+        (typeof baselineValue === 'number' ? baselineValue : parseFloat(String(baselineValue)) || null) : null;
+
       chartData.push({
         year: yearStr,
-        baseline: baselineValue !== null ?
-          (typeof baselineValue === 'number' ? baselineValue : parseFloat(String(baselineValue)) || null) : null,
+        baseline: numericBaseline !== null && isFinite(numericBaseline) ? numericBaseline : null,
         provision: null as number | null
       });
     }
@@ -634,7 +651,19 @@ export default function PolicyCreationFlow({
       }));
 
       // Submit to API
-      await policiesAPI.createWithParameters(policyData, parameterValues);
+      const createdPolicy = await policiesAPI.createWithParameters(policyData, parameterValues);
+
+      // Create user association
+      await userPoliciesAPI.create({
+        user_id: MOCK_USER_ID,
+        policy_id: createdPolicy.id,
+        custom_name: null,
+      });
+
+      // Invalidate queries to refresh the list
+      // Note: usePolicies uses ['policies', modelId] so we need to invalidate all policies queries
+      queryClient.invalidateQueries({ queryKey: ['policies'] }); // This will match ['policies', modelId]
+      queryClient.invalidateQueries({ queryKey: ['userPolicies'] }); // Match all userPolicies queries
 
       notifications.show({
         title: 'Policy created successfully',
@@ -816,9 +845,11 @@ export default function PolicyCreationFlow({
                         onStartChange={setStartDate}
                         onEndChange={setEndDate}
                       >
-                        <Group gap="xs" style={{ width: '100%' }}>
+                        <Group gap="xs" style={{ width: '100%' }} align="center">
                           {parameters[selectedParamId] && getUnitDisplay(parameters[selectedParamId]).showPrefix && (
-                            <Text size="lg" c="dimmed">{getUnitDisplay(parameters[selectedParamId]).prefix}</Text>
+                            <Text size="lg" c="dimmed" style={{ lineHeight: 1 }}>
+                              {getUnitDisplay(parameters[selectedParamId]).prefix}
+                            </Text>
                           )}
                           <NumberInput
                             value={parameters[selectedParamId]?.unit === '/1' ? currentValue * 100 : currentValue}
@@ -826,14 +857,17 @@ export default function PolicyCreationFlow({
                               const numVal = val as number;
                               setCurrentValue(parameters[selectedParamId]?.unit === '/1' ? numVal / 100 : numVal);
                             }}
-                            decimalScale={parameters[selectedParamId]?.unit === '/1' ? 1 : 2}
-                            fixedDecimalScale
+                            allowDecimal={parameters[selectedParamId]?.data_type !== 'int'}
+                            decimalScale={parameters[selectedParamId]?.data_type === 'int' ? 0 : (parameters[selectedParamId]?.unit === '/1' ? 1 : 2)}
+                            fixedDecimalScale={parameters[selectedParamId]?.data_type === 'int' ? false : true}
                             style={{ flex: 1 }}
                             placeholder={parameters[selectedParamId]?.unit === '/1' ? "50.0" : "7.25"}
-                            rightSection={parameters[selectedParamId] && getUnitDisplay(parameters[selectedParamId]).showSuffix ? (
-                              <Text size="sm" c="dimmed">{getUnitDisplay(parameters[selectedParamId]).suffix}</Text>
-                            ) : undefined}
                           />
+                          {parameters[selectedParamId] && getUnitDisplay(parameters[selectedParamId]).showSuffix && (
+                            <Text size="sm" c="dimmed" style={{ lineHeight: 1 }}>
+                              {getUnitDisplay(parameters[selectedParamId]).suffix}
+                            </Text>
+                          )}
                           <Button
                             variant="light"
                             color="teal"
