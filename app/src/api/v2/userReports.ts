@@ -21,27 +21,25 @@ export interface UserReportUpdate {
 }
 
 export const userReportsAPI = {
-  // List all reports for a user (new RESTful endpoint)
-  list: async (userId: string): Promise<any[]> => {
-    return await apiClient.get<any[]>(`/users/${userId}/reports`);
+  list: async (userId: string): Promise<UserReport[]> => {
+    return await apiClient.get<UserReport[]>(`/users/${userId}/reports`);
   },
 
-  // Backward compatibility - these are no longer needed with the new structure
-  // but keeping them for now in case anything still uses them
-  create: async (data: UserReportCreate): Promise<UserReport> => {
-    return await apiClient.post<UserReport>('/user-reports', data);
+  create: async (userId: string, data: { report_id: string; custom_name?: string | null }): Promise<UserReport> => {
+    return await apiClient.post<UserReport>(`/users/${userId}/reports`, data);
   },
 
-  update: async (id: string, data: UserReportUpdate): Promise<UserReport> => {
-    return await apiClient.patch<UserReport>(`/user-reports/${id}`, data);
+  update: async (userId: string, reportId: string, data: UserReportUpdate): Promise<UserReport> => {
+    return await apiClient.patch<UserReport>(`/users/${userId}/reports/${reportId}`, data);
   },
 
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/user-reports/${id}`);
+  delete: async (userId: string, reportId: string): Promise<void> => {
+    await apiClient.delete(`/users/${userId}/reports/${reportId}`);
   },
 
   getCustomName: async (userId: string, reportId: string): Promise<string | null> => {
-    // This will need to be updated when we have user report metadata
-    return null;
+    const userReports = await userReportsAPI.list(userId);
+    const match = userReports.find(ur => ur.report_id === reportId);
+    return match?.custom_name || null;
   },
 };

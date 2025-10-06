@@ -21,26 +21,20 @@ export interface UserDynamicUpdate {
 }
 
 export const userDynamicsAPI = {
-  create: async (data: UserDynamicCreate): Promise<UserDynamic> => {
-    return await apiClient.post<UserDynamic>('/user-dynamics', data);
-  },
-
   list: async (userId: string): Promise<UserDynamic[]> => {
-    return await apiClient.get<UserDynamic[]>('/user-dynamics', {
-      params: { user_id: userId },
-    });
+    return await apiClient.get<UserDynamic[]>(`/users/${userId}/dynamics`);
   },
 
-  get: async (id: string): Promise<UserDynamic> => {
-    return await apiClient.get<UserDynamic>(`/user-dynamics/${id}`);
+  create: async (userId: string, data: { dynamic_id: string; custom_name?: string | null }): Promise<UserDynamic> => {
+    return await apiClient.post<UserDynamic>(`/users/${userId}/dynamics`, data);
   },
 
-  update: async (id: string, data: UserDynamicUpdate): Promise<UserDynamic> => {
-    return await apiClient.patch<UserDynamic>(`/user-dynamics/${id}`, data);
+  update: async (userId: string, dynamicId: string, data: UserDynamicUpdate): Promise<UserDynamic> => {
+    return await apiClient.patch<UserDynamic>(`/users/${userId}/dynamics/${dynamicId}`, data);
   },
 
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/user-dynamics/${id}`);
+  delete: async (userId: string, dynamicId: string): Promise<void> => {
+    await apiClient.delete(`/users/${userId}/dynamics/${dynamicId}`);
   },
 
   getCustomName: async (userId: string, dynamicId: string): Promise<string | null> => {

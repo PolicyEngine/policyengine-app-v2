@@ -21,29 +21,22 @@ export interface UserSimulationUpdate {
 }
 
 export const userSimulationsAPI = {
-  create: async (data: UserSimulationCreate): Promise<UserSimulation> => {
-    return await apiClient.post<UserSimulation>('/user-simulations', data);
-  },
-
   list: async (userId: string): Promise<UserSimulation[]> => {
-    return await apiClient.get<UserSimulation[]>('/user-simulations', {
-      params: { user_id: userId },
-    });
+    return await apiClient.get<UserSimulation[]>(`/users/${userId}/simulations`);
   },
 
-  get: async (id: string): Promise<UserSimulation> => {
-    return await apiClient.get<UserSimulation>(`/user-simulations/${id}`);
+  create: async (userId: string, data: { simulation_id: string; custom_name?: string | null }): Promise<UserSimulation> => {
+    return await apiClient.post<UserSimulation>(`/users/${userId}/simulations`, data);
   },
 
-  update: async (id: string, data: UserSimulationUpdate): Promise<UserSimulation> => {
-    return await apiClient.patch<UserSimulation>(`/user-simulations/${id}`, data);
+  update: async (userId: string, simulationId: string, data: UserSimulationUpdate): Promise<UserSimulation> => {
+    return await apiClient.patch<UserSimulation>(`/users/${userId}/simulations/${simulationId}`, data);
   },
 
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/user-simulations/${id}`);
+  delete: async (userId: string, simulationId: string): Promise<void> => {
+    await apiClient.delete(`/users/${userId}/simulations/${simulationId}`);
   },
 
-  // Get custom name for a simulation, or return null if not found
   getCustomName: async (userId: string, simulationId: string): Promise<string | null> => {
     const userSims = await userSimulationsAPI.list(userId);
     const match = userSims.find(us => us.simulation_id === simulationId);

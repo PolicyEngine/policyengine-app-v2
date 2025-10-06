@@ -21,22 +21,20 @@ export interface UserPolicyUpdate {
 }
 
 export const userPoliciesAPI = {
-  create: async (data: UserPolicyCreate): Promise<UserPolicy> => {
-    return await apiClient.post<UserPolicy>('/user-policies', data);
-  },
-
   list: async (userId: string): Promise<UserPolicy[]> => {
-    return await apiClient.get<UserPolicy[]>('/user-policies', {
-      params: { user_id: userId },
-    });
+    return await apiClient.get<UserPolicy[]>(`/users/${userId}/policies`);
   },
 
-  update: async (id: string, data: UserPolicyUpdate): Promise<UserPolicy> => {
-    return await apiClient.patch<UserPolicy>(`/user-policies/${id}`, data);
+  create: async (userId: string, data: { policy_id: string; custom_name?: string | null }): Promise<UserPolicy> => {
+    return await apiClient.post<UserPolicy>(`/users/${userId}/policies`, data);
   },
 
-  delete: async (id: string): Promise<void> => {
-    await apiClient.delete(`/user-policies/${id}`);
+  update: async (userId: string, policyId: string, data: UserPolicyUpdate): Promise<UserPolicy> => {
+    return await apiClient.patch<UserPolicy>(`/users/${userId}/policies/${policyId}`, data);
+  },
+
+  delete: async (userId: string, policyId: string): Promise<void> => {
+    await apiClient.delete(`/users/${userId}/policies/${policyId}`);
   },
 
   getCustomName: async (userId: string, policyId: string): Promise<string | null> => {

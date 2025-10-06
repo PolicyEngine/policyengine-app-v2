@@ -33,10 +33,12 @@ export default function DatasetsPage() {
     refetchInterval: 30000,
   });
 
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
+
   // Fetch user datasets for custom names
   const { data: userDatasets = [] } = useQuery({
-    queryKey: ['userDatasets'],
-    queryFn: () => userDatasetsAPI.listUserDatasets(),
+    queryKey: ['userDatasets', userId],
+    queryFn: () => userDatasetsAPI.listUserDatasets(userId),
   });
 
   // Fetch all users

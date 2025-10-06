@@ -67,10 +67,9 @@ export default function DynamicDetailPage() {
     mutationFn: async (name: string) => {
       const existing = userDynamics.find(ud => ud.dynamic_id === dynamicId);
       if (existing) {
-        return userDynamicsAPI.update(existing.id, { custom_name: name });
+        return userDynamicsAPI.update(userId, dynamicId!, { custom_name: name });
       } else {
-        return userDynamicsAPI.create({
-          user_id: userId,
+        return userDynamicsAPI.create(userId, {
           dynamic_id: dynamicId!,
           custom_name: name,
         });

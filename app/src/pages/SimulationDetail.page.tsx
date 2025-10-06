@@ -46,10 +46,9 @@ export default function SimulationDetailPage() {
     mutationFn: async (name: string) => {
       const existing = userSimulations.find(us => us.simulation_id === simulationId);
       if (existing) {
-        return userSimulationsAPI.update(existing.id, { custom_name: name });
+        return userSimulationsAPI.update(userId, simulationId!, { custom_name: name });
       } else {
-        return userSimulationsAPI.create({
-          user_id: userId,
+        return userSimulationsAPI.create(userId, {
           simulation_id: simulationId!,
           custom_name: name,
         });

@@ -94,16 +94,8 @@ export default function ReportsPage() {
   // Create report mutation
   const createReportMutation = useMutation({
     mutationFn: async (data: { label: string; description?: string; simulation_ids: string[] }) => {
-      const report = await reportsAPI.create(data);
-
-      // Create user association
-      await userReportsAPI.create({
-        user_id: MOCK_USER_ID,
-        report_id: report.id,
-        custom_name: null,
-      });
-
-      return report;
+      // Backend will automatically create user association
+      return await reportsAPI.create(data);
     },
     onSuccess: (newReport) => {
       navigate(`/report/${newReport.id}`);
@@ -245,29 +237,31 @@ export default function ReportsPage() {
         currentName={reportToRename?.name || ''}
         isLoading={renameMutation.isPending}
       />
-      <Tabs value={activeTab} onChange={setActiveTab}>
-        <Tabs.List>
-          <Tabs.Tab value="my-reports">Yours</Tabs.Tab>
-          <Tabs.Tab value="explore-reports">Explore</Tabs.Tab>
-        </Tabs.List>
-      </Tabs>
       <IngredientReadView
-      ingredient="report"
-      title="Reports"
-      subtitle="View and generate analysis reports from your simulation results."
-      onBuild={handleBuildReport}
-      isLoading={isLoading}
-      isError={!!error}
-      error={error}
-      data={transformedData}
-      columns={reportColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      onMoreFilters={handleMoreFilters}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-      onRowClick={(id) => navigate(`/report/${id}`)}
+        ingredient="report"
+        title="Reports"
+        subtitle="View and generate analysis reports from your simulation results."
+        onBuild={handleBuildReport}
+        isLoading={isLoading}
+        isError={!!error}
+        error={error}
+        data={transformedData}
+        columns={reportColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        onMoreFilters={handleMoreFilters}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+        onRowClick={(id) => navigate(`/report/${id}`)}
+        headerContent={
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List>
+              <Tabs.Tab value="my-reports">My reports</Tabs.Tab>
+              <Tabs.Tab value="explore-reports">Explore reports</Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+        }
       />
     </>
   );

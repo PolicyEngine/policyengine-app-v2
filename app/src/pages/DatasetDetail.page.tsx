@@ -37,18 +37,17 @@ export default function DatasetDetailPage() {
   });
 
   const { data: userDatasets = [] } = useQuery({
-    queryKey: ['userDatasets'],
-    queryFn: () => userDatasetsAPI.listUserDatasets(),
+    queryKey: ['userDatasets', userId],
+    queryFn: () => userDatasetsAPI.listUserDatasets(userId),
   });
 
   const renameMutation = useMutation({
     mutationFn: async (name: string) => {
       const existing = userDatasets.find(ud => ud.dataset_id === datasetId);
       if (existing) {
-        return userDatasetsAPI.updateUserDataset(existing.id, { custom_name: name });
+        return userDatasetsAPI.updateUserDataset(userId, datasetId!, { custom_name: name });
       } else {
-        return userDatasetsAPI.createUserDataset({
-          user_id: userId,
+        return userDatasetsAPI.createUserDataset(userId, {
           dataset_id: datasetId!,
           custom_name: name,
         });

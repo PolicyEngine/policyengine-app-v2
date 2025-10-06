@@ -21,30 +21,27 @@ export interface UserDatasetUpdate {
 }
 
 class UserDatasetsAPI {
-  async listUserDatasets(params?: PaginationParams): Promise<UserDatasetResponse[]> {
-    return apiClient.get<UserDatasetResponse[]>('/user-datasets/', { params });
+  async listUserDatasets(userId: string): Promise<UserDatasetResponse[]> {
+    return apiClient.get<UserDatasetResponse[]>(`/users/${userId}/datasets`);
   }
 
-  async getUserDataset(userDatasetId: string): Promise<UserDatasetResponse> {
-    return apiClient.get<UserDatasetResponse>(`/user-datasets/${userDatasetId}`);
-  }
-
-  async createUserDataset(data: UserDatasetCreate): Promise<UserDatasetResponse> {
-    return apiClient.post<UserDatasetResponse, UserDatasetCreate>('/user-datasets/', data);
+  async createUserDataset(userId: string, data: { dataset_id: string; custom_name?: string }): Promise<UserDatasetResponse> {
+    return apiClient.post<UserDatasetResponse>(`/users/${userId}/datasets`, data);
   }
 
   async updateUserDataset(
-    userDatasetId: string,
+    userId: string,
+    datasetId: string,
     data: UserDatasetUpdate
   ): Promise<UserDatasetResponse> {
     return apiClient.patch<UserDatasetResponse, UserDatasetUpdate>(
-      `/user-datasets/${userDatasetId}`,
+      `/users/${userId}/datasets/${datasetId}`,
       data
     );
   }
 
-  async deleteUserDataset(userDatasetId: string): Promise<void> {
-    return apiClient.delete<void>(`/user-datasets/${userDatasetId}`);
+  async deleteUserDataset(userId: string, datasetId: string): Promise<void> {
+    return apiClient.delete<void>(`/users/${userId}/datasets/${datasetId}`);
   }
 }
 

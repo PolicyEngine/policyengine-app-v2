@@ -46,8 +46,13 @@ export default function AddToLibraryButton({
   const addMutation = useMutation({
     mutationFn: async () => {
       const api = await getAPI();
-      return api.create({
-        user_id: userId,
+      if (resourceType === 'dataset') {
+        // userDatasetsAPI has different signature
+        return (api as any).createUserDataset(userId, {
+          dataset_id: resourceId,
+        });
+      }
+      return api.create(userId, {
         [getResourceIdKey()]: resourceId,
       });
     },
@@ -72,7 +77,11 @@ export default function AddToLibraryButton({
     mutationFn: async () => {
       if (!userResourceId) throw new Error('No user resource ID');
       const api = await getAPI();
-      return api.delete(userResourceId);
+      if (resourceType === 'dataset') {
+        // userDatasetsAPI has different signature
+        return (api as any).deleteUserDataset(userId, resourceId);
+      }
+      return api.delete(userId, resourceId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`user${resourceType.charAt(0).toUpperCase()}${resourceType.slice(1)}s`, userId] });

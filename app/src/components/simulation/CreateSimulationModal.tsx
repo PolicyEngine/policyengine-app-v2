@@ -71,8 +71,7 @@ export default function CreateSimulationModal({ opened, onClose }: CreateSimulat
       });
 
       // Create user association
-      await userSimulationsAPI.create({
-        user_id: MOCK_USER_ID,
+      await userSimulationsAPI.create(MOCK_USER_ID, {
         simulation_id: simulation.id,
         custom_name: null,
       });

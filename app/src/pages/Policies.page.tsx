@@ -60,11 +60,10 @@ export default function PoliciesPage() {
 
       if (existing) {
         // Update existing
-        return userPoliciesAPI.update(existing.id, { custom_name: name });
+        return userPoliciesAPI.update(userId, policyId, { custom_name: name });
       } else {
         // Create new association
-        return userPoliciesAPI.create({
-          user_id: userId,
+        return userPoliciesAPI.create(userId, {
           policy_id: policyId,
           custom_name: name,
         });

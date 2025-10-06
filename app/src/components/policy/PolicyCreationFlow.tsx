@@ -654,8 +654,7 @@ export default function PolicyCreationFlow({
       const createdPolicy = await policiesAPI.createWithParameters(policyData, parameterValues);
 
       // Create user association
-      await userPoliciesAPI.create({
-        user_id: MOCK_USER_ID,
+      await userPoliciesAPI.create(MOCK_USER_ID, {
         policy_id: createdPolicy.id,
         custom_name: null,
       });

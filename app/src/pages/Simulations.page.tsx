@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Tabs } from '@mantine/core';
 import moment from 'moment';
 import {
   ColumnConfig,
@@ -21,11 +22,12 @@ import { notifications } from '@mantine/notifications';
 
 export default function SimulationsPage() {
   const navigate = useNavigate();
-  
+
   const queryClient = useQueryClient();
   const { data: simulations, isLoading, error } = useSimulationsWithPolicies();
   const isError = !!error;
 
+  const [activeTab, setActiveTab] = useState<string | null>('my-simulations');
   const [searchValue, setSearchValue] = useState('');
   const { selectedIds, handleSelectionChange, isSelected } = useIngredientSelection();
 
@@ -50,16 +52,22 @@ export default function SimulationsPage() {
     queryFn: () => usersAPI.listUsers({ limit: 1000 }),
   });
 
+  // Filter simulations based on active tab
+  const userSimulationIds = new Set(userSimulations.map(us => us.simulation_id));
+  const mySimulations = simulations?.filter(s => userSimulationIds.has(s.id)) || [];
+  const exploreSimulations = simulations || [];
+
+  const currentSimulations = activeTab === 'my-simulations' ? mySimulations : exploreSimulations;
+
   // Rename mutation
   const renameMutation = useMutation({
     mutationFn: async ({ simulationId, name }: { simulationId: string; name: string }) => {
       const existing = userSimulations.find(us => us.simulation_id === simulationId);
 
       if (existing) {
-        return userSimulationsAPI.update(existing.id, { custom_name: name });
+        return userSimulationsAPI.update(userId, simulationId, { custom_name: name });
       } else {
-        return userSimulationsAPI.create({
-          user_id: userId,
+        return userSimulationsAPI.create(userId, {
           simulation_id: simulationId,
           custom_name: name,
         });
@@ -168,7 +176,7 @@ export default function SimulationsPage() {
 
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
-    simulations?.map((sim) => {
+    currentSimulations?.map((sim) => {
       const userSim = userSimulations.find(us => us.simulation_id === sim.id);
       const displayName = userSim?.custom_name || sim.name || sim.id;
 
@@ -238,6 +246,14 @@ export default function SimulationsPage() {
         onSelectionChange={handleSelectionChange}
         selectedCount={selectedIds.length}
         onRowClick={(id) => navigate(`/simulation/${id}`)}
+        headerContent={
+          <Tabs value={activeTab} onChange={setActiveTab}>
+            <Tabs.List>
+              <Tabs.Tab value="my-simulations">My simulations</Tabs.Tab>
+              <Tabs.Tab value="explore-simulations">Explore simulations</Tabs.Tab>
+            </Tabs.List>
+          </Tabs>
+        }
       />
     </>
   );

@@ -54,10 +54,9 @@ export default function PolicyDetailPage() {
     mutationFn: async (name: string) => {
       const existing = userPolicies.find(up => up.policy_id === policyId);
       if (existing) {
-        return userPoliciesAPI.update(existing.id, { custom_name: name });
+        return userPoliciesAPI.update(userId, policyId!, { custom_name: name });
       } else {
-        return userPoliciesAPI.create({
-          user_id: userId,
+        return userPoliciesAPI.create(userId, {
           policy_id: policyId!,
           custom_name: name,
         });
