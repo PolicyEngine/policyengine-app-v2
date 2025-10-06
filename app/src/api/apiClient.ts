@@ -1,4 +1,5 @@
 import { BASE_URL } from '@/constants';
+import { supabase } from '@/lib/supabase';
 
 export interface ApiError {
   message: string;
@@ -46,6 +47,19 @@ class ApiClient {
     return url.toString();
   }
 
+  private async getAuthHeaders(): Promise<HeadersInit> {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (session?.access_token) {
+      return {
+        ...this.defaultHeaders,
+        'Authorization': `Bearer ${session.access_token}`,
+      };
+    }
+
+    return this.defaultHeaders;
+  }
+
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
       const errorBody = await response.text();
@@ -82,6 +96,7 @@ class ApiClient {
   async get<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
     const { params, ...fetchOptions } = options || {};
     const url = this.buildUrl(endpoint, params);
+    const authHeaders = await this.getAuthHeaders();
 
     console.log('[API Client] GET request to:', url);
 
@@ -89,7 +104,7 @@ class ApiClient {
       ...fetchOptions,
       method: 'GET',
       headers: {
-        ...this.defaultHeaders,
+        ...authHeaders,
         ...fetchOptions?.headers,
       },
     });
@@ -101,12 +116,13 @@ class ApiClient {
   async post<T, D = unknown>(endpoint: string, data?: D, options?: ApiRequestOptions): Promise<T> {
     const { params, ...fetchOptions } = options || {};
     const url = this.buildUrl(endpoint, params);
+    const authHeaders = await this.getAuthHeaders();
 
     const response = await fetch(url, {
       ...fetchOptions,
       method: 'POST',
       headers: {
-        ...this.defaultHeaders,
+        ...authHeaders,
         ...fetchOptions?.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -118,12 +134,13 @@ class ApiClient {
   async patch<T, D = unknown>(endpoint: string, data?: D, options?: ApiRequestOptions): Promise<T> {
     const { params, ...fetchOptions } = options || {};
     const url = this.buildUrl(endpoint, params);
+    const authHeaders = await this.getAuthHeaders();
 
     const response = await fetch(url, {
       ...fetchOptions,
       method: 'PATCH',
       headers: {
-        ...this.defaultHeaders,
+        ...authHeaders,
         ...fetchOptions?.headers,
       },
       body: data ? JSON.stringify(data) : undefined,
@@ -135,12 +152,13 @@ class ApiClient {
   async delete<T>(endpoint: string, options?: ApiRequestOptions): Promise<T> {
     const { params, ...fetchOptions } = options || {};
     const url = this.buildUrl(endpoint, params);
+    const authHeaders = await this.getAuthHeaders();
 
     const response = await fetch(url, {
       ...fetchOptions,
       method: 'DELETE',
       headers: {
-        ...this.defaultHeaders,
+        ...authHeaders,
         ...fetchOptions?.headers,
       },
     });

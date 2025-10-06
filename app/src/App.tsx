@@ -10,6 +10,7 @@ import { Notifications } from '@mantine/notifications';
 import { Router } from './Router';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
+import { AuthProvider } from './contexts/AuthContext';
 
 const queryClient = new QueryClient(
   // Temporarily set default staletime to Infinity for all queries;
@@ -30,7 +31,9 @@ export default function App() {
         <Notifications />
         <QueryNormalizerProvider queryClient={queryClient}>
           <QueryClientProvider client={queryClient}>
-            <Router />
+            <AuthProvider>
+              <Router />
+            </AuthProvider>
           </QueryClientProvider>
         </QueryNormalizerProvider>
       </MantineProvider>

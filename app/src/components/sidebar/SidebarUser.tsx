@@ -1,10 +1,12 @@
+import { useState } from 'react';
 import { Avatar, Group, Text, UnstyledButton, Menu, ActionIcon } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { IconChevronRight } from '@tabler/icons-react';
+import { IconChevronRight, IconLogout, IconUserPlus } from '@tabler/icons-react';
 import { colors } from '../../designTokens';
-import { MOCK_USER_ID } from '@/constants';
+import { useAuth } from '@/contexts/AuthContext';
 import { usersAPI } from '@/api/v2/users';
+import ConvertAnonymousModal from '@/components/auth/ConvertAnonymousModal';
 
 interface SidebarUserProps {
   name: string;
@@ -14,7 +16,9 @@ interface SidebarUserProps {
 export default function SidebarUser({ name, initials }: SidebarUserProps) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
+  const { user: authUser, signOut } = useAuth();
+  const [convertModalOpened, setConvertModalOpened] = useState(false);
+  const userId = authUser?.id || 'anonymous';
 
   const { data: user } = useQuery({
     queryKey: ['users', userId],
@@ -33,9 +37,15 @@ export default function SidebarUser({ name, initials }: SidebarUserProps) {
   };
 
   const currentModelName = user?.current_model_id === 'policyengine_us' ? 'United States' : 'United Kingdom';
+  const displayName = authUser?.is_anonymous ? 'Anonymous user' : authUser?.email || name;
 
   return (
-    <Menu position="top-start" offset={8}>
+    <>
+      <ConvertAnonymousModal
+        opened={convertModalOpened}
+        onClose={() => setConvertModalOpened(false)}
+      />
+      <Menu position="top-start" offset={8}>
       <Menu.Target>
         <UnstyledButton
           style={{
@@ -78,7 +88,7 @@ export default function SidebarUser({ name, initials }: SidebarUserProps) {
                     lineHeight: '20px',
                   }}
                 >
-                  {name}
+                  {displayName}
                 </Text>
                 <Text
                   size="xs"
@@ -119,7 +129,23 @@ export default function SidebarUser({ name, initials }: SidebarUserProps) {
         <Menu.Item onClick={handleClick}>
           View profile
         </Menu.Item>
+        {authUser?.is_anonymous && (
+          <Menu.Item
+            leftSection={<IconUserPlus size={16} />}
+            onClick={() => setConvertModalOpened(true)}
+          >
+            Create account
+          </Menu.Item>
+        )}
+        <Menu.Item
+          leftSection={<IconLogout size={16} />}
+          onClick={() => signOut()}
+          color="red"
+        >
+          Sign out
+        </Menu.Item>
       </Menu.Dropdown>
     </Menu>
+    </>
   );
 }
