@@ -183,7 +183,9 @@ export default function PoliciesPage() {
       const userPolicy = userPolicies.find(up => up.policy_id === policy.id);
       const displayName = userPolicy?.custom_name || policy.name || `Policy #${policy.id}`;
 
-      const creator = userPolicy ? users.find(u => u.id === userPolicy.user_id) : null;
+      // Only show creator info if the current user is NOT the creator
+      const isCreator = userPolicy?.is_creator || false;
+      const creator = userPolicy && !isCreator ? users.find(u => u.id === userPolicy.user_id) : null;
       const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
 
       return {

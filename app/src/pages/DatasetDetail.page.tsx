@@ -20,7 +20,8 @@ import { datasetsAPI } from '@/api/v2/datasets';
 import { userDatasetsAPI } from '@/api/v2/userDatasets';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
-import moment from 'moment';
+import AddToLibraryButton from '@/components/common/AddToLibraryButton';
+import { timeAgo, formatDateTime } from '@/utils/datetime';
 
 export default function DatasetDetailPage() {
   const { datasetId, countryId } = useParams<{ datasetId: string; countryId: string }>();
@@ -110,22 +111,31 @@ export default function DatasetDetailPage() {
           </Group>
 
           <Stack gap="md">
-            <Group gap="sm">
-              <Title order={2}>{displayName}</Title>
-              <ActionIcon
-                variant="subtle"
-                size="lg"
-                onClick={() => setRenameModalOpened(true)}
-              >
-                <IconPencil size={18} />
-              </ActionIcon>
+            <Group gap="sm" justify="space-between">
+              <Group gap="sm">
+                <Title order={2}>{displayName}</Title>
+                <ActionIcon
+                  variant="subtle"
+                  size="lg"
+                  onClick={() => setRenameModalOpened(true)}
+                >
+                  <IconPencil size={18} />
+                </ActionIcon>
+              </Group>
+              <AddToLibraryButton
+                resourceType="dataset"
+                resourceId={datasetId}
+                userId={userId}
+                isInLibrary={!!userDataset}
+                userResourceId={userDataset?.id}
+              />
             </Group>
             <Group gap="xs">
               <Badge variant="light" color="blue">
                 {dataset.type}
               </Badge>
               <Text size="sm" c="dimmed">
-                Created {moment(dataset.created_at).fromNow()}
+                Created {timeAgo(dataset.created_at)}
               </Text>
             </Group>
           </Stack>
@@ -172,13 +182,13 @@ export default function DatasetDetailPage() {
 
             <Group gap="xs">
               <Text size="xs" c="dimmed">
-                Created: {moment(dataset.created_at).format('MMMM D, YYYY h:mm A')}
+                Created: {formatDateTime(dataset.created_at)}
               </Text>
               <Text size="xs" c="dimmed">
                 •
               </Text>
               <Text size="xs" c="dimmed">
-                Updated: {moment(dataset.updated_at).format('MMMM D, YYYY h:mm A')}
+                Updated: {formatDateTime(dataset.updated_at)}
               </Text>
             </Group>
           </Stack>

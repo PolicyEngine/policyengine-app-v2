@@ -8,8 +8,8 @@ export interface SimulationResponse {
   dataset_id?: string;
   model_id?: string;
   model_version_id?: string;
+  has_result: boolean;
   status: 'pending' | 'running' | 'completed' | 'failed';
-  results?: any;
   error?: string;
   created_at: string;
   updated_at: string;

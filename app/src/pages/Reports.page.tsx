@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Tabs } from '@mantine/core';
 import moment from 'moment';
 import ReportCreationModal from '@/components/report/ReportCreationModal';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
 import { reportsAPI } from '@/api/v2/reports';
 import { userReportsAPI } from '@/api/v2/userReports';
+import { usersAPI } from '@/api/v2/users';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { useIngredientActions } from '@/hooks/useIngredientActions';
@@ -14,14 +16,17 @@ import { showErrorNotification } from '@/utils/errorHandling';
 import { MOCK_USER_ID } from '@/constants';
 
 export default function ReportsPage() {
+  const [activeTab, setActiveTab] = useState<string | null>('my-reports');
   const [searchValue, setSearchValue] = useState('');
   const [createModalOpened, setCreateModalOpened] = useState(false);
   const [renameModalOpened, setRenameModalOpened] = useState(false);
   const [reportToRename, setReportToRename] = useState<{ id: string; name: string } | null>(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  
+
   const { handleSelectionChange, isSelected } = useIngredientSelection();
+
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   // Fetch reports from API
   const {
@@ -34,6 +39,18 @@ export default function ReportsPage() {
     queryFn: () => reportsAPI.list({ limit: 1000 }),
     refetchInterval: 30000,
     retry: false, // Don't retry if endpoint doesn't exist yet
+  });
+
+  // Fetch user report associations
+  const { data: userReports = [] } = useQuery({
+    queryKey: ['userReports', userId],
+    queryFn: () => userReportsAPI.list(userId),
+  });
+
+  // Fetch all users
+  const { data: users = [] } = useQuery({
+    queryKey: ['users'],
+    queryFn: () => usersAPI.list(),
   });
 
   // Delete mutation
@@ -121,19 +138,30 @@ export default function ReportsPage() {
     console.log('More filters clicked');
   };
 
+  // Filter reports based on active tab
+  const userReportIds = new Set(userReports.map(ur => ur.report_id));
+  const myReports = reports?.filter(r => userReportIds.has(r.id)) || [];
+  const exploreReports = reports || [];
+
+  const currentReports = activeTab === 'my-reports' ? myReports : exploreReports;
+
   // Filter reports based on search
-  const filteredReports = reports?.filter(
+  const filteredReports = currentReports?.filter(
     (report) =>
       report.label?.toLowerCase().includes(searchValue.toLowerCase()) ||
       report.id.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-
-  // Define column configurations for reports
+  // Define column configurations for reports (removed actions column)
   const reportColumns: ColumnConfig[] = [
     {
       key: 'reportName',
       header: 'Report name',
+      type: 'text',
+    },
+    {
+      key: 'createdBy',
+      header: 'Created by',
       type: 'text',
     },
     {
@@ -146,29 +174,35 @@ export default function ReportsPage() {
       header: 'Date created',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: getDefaultActions(),
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform the data to match the IngredientRecord structure
   const transformedData: IngredientRecord[] =
-    filteredReports?.map((report) => ({
-      id: report.id,
-      reportName: {
-        text: report.label || `Report #${report.id.slice(0, 8)}`,
-      } as TextValue,
-      status: {
-        text: report.status ? report.status.charAt(0).toUpperCase() + report.status.slice(1) : 'Draft',
-      } as TextValue,
-      dateCreated: {
-        text: moment(report.created_at).fromNow(),
-      } as TextValue,
-    })) || [];
+    filteredReports?.map((report) => {
+      const userReport = userReports.find(ur => ur.report_id === report.id);
+      const displayName = userReport?.custom_name || report.label || `Report #${report.id.slice(0, 8)}`;
+
+      // Only show creator info if the current user is NOT the creator
+      const isCreator = userReport?.is_creator || false;
+      const creator = userReport && !isCreator ? users.find(u => u.id === userReport.user_id) : null;
+      const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
+
+      return {
+        id: report.id,
+        reportName: {
+          text: displayName,
+        } as TextValue,
+        createdBy: {
+          text: creatorName ? `by ${creatorName}` : '',
+        } as TextValue,
+        status: {
+          text: report.status ? report.status.charAt(0).toUpperCase() + report.status.slice(1) : 'Draft',
+        } as TextValue,
+        dateCreated: {
+          text: moment(report.created_at).fromNow(),
+        } as TextValue,
+      };
+    }) || [];
 
   // Custom error handling for API not ready
   if (error) {
@@ -211,9 +245,15 @@ export default function ReportsPage() {
         currentName={reportToRename?.name || ''}
         isLoading={renameMutation.isPending}
       />
+      <Tabs value={activeTab} onChange={setActiveTab}>
+        <Tabs.List>
+          <Tabs.Tab value="my-reports">Yours</Tabs.Tab>
+          <Tabs.Tab value="explore-reports">Explore</Tabs.Tab>
+        </Tabs.List>
+      </Tabs>
       <IngredientReadView
       ingredient="report"
-      title="Your reports"
+      title="Reports"
       subtitle="View and generate analysis reports from your simulation results."
       onBuild={handleBuildReport}
       isLoading={isLoading}

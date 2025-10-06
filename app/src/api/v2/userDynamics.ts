@@ -5,6 +5,7 @@ export interface UserDynamic {
   user_id: string;
   dynamic_id: string;
   custom_name: string | null;
+  is_creator: boolean;
   created_at: string;
   updated_at: string;
 }

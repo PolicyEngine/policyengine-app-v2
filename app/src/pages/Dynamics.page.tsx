@@ -190,7 +190,9 @@ export default function DynamicsPage() {
       const userDyn = userDynamics.find(ud => ud.dynamic_id === dynamic.id);
       const displayName = userDyn?.custom_name || dynamic.name;
 
-      const creator = userDyn ? users.find(u => u.id === userDyn.user_id) : null;
+      // Only show creator info if the current user is NOT the creator
+      const isCreator = userDyn?.is_creator || false;
+      const creator = userDyn && !isCreator ? users.find(u => u.id === userDyn.user_id) : null;
       const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
 
       return {

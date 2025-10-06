@@ -35,6 +35,8 @@ import {
 import BaseModal from '@/components/shared/BaseModal';
 import { dataRequestsAPI, DataRequestResponse } from '@/api/v2/dataRequests';
 import { simulationsAPI } from '@/api/v2/simulations';
+import { userSimulationsAPI } from '@/api/v2/userSimulations';
+import { MOCK_USER_ID } from '@/constants';
 
 type DataType = 'single' | 'comparison';
 
@@ -67,6 +69,7 @@ export default function DataAnalysisModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [parsedResponse, setParsedResponse] = useState<DataRequestResponse | null>(null);
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   // Fetch simulations
   const { data: simulations, isLoading: simulationsLoading } = useQuery({
@@ -75,11 +78,23 @@ export default function DataAnalysisModal({
     enabled: opened,
   });
 
-  // Simulation options with better labels
-  const simulationOptions = simulations?.filter(s => s.id).map(s => ({
-    value: s.id || '',
-    label: s.label || `Simulation ${s.id?.slice(0, 8) || ''}`,
-  })).filter(opt => opt.value) || [];
+  // Fetch user simulations for custom names
+  const { data: userSimulations = [] } = useQuery({
+    queryKey: ['userSimulations', userId],
+    queryFn: () => userSimulationsAPI.list(userId),
+    enabled: opened,
+  });
+
+  // Simulation options with better labels using user-provided names
+  const simulationOptions = simulations?.filter(s => s.id).map(s => {
+    const userSim = userSimulations.find(us => us.simulation_id === s.id);
+    const displayName = userSim?.custom_name || `Simulation ${s.id?.slice(0, 8) || ''}`;
+
+    return {
+      value: s.id || '',
+      label: displayName,
+    };
+  }).filter(opt => opt.value) || [];
 
 
   // Reset form when modal opens/closes

@@ -5,6 +5,7 @@ export interface UserReport {
   user_id: string;
   report_id: string;
   custom_name: string | null;
+  is_creator: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -20,14 +21,15 @@ export interface UserReportUpdate {
 }
 
 export const userReportsAPI = {
-  create: async (data: UserReportCreate): Promise<UserReport> => {
-    return await apiClient.post<UserReport>('/user-reports', data);
+  // List all reports for a user (new RESTful endpoint)
+  list: async (userId: string): Promise<any[]> => {
+    return await apiClient.get<any[]>(`/users/${userId}/reports`);
   },
 
-  list: async (userId: string): Promise<UserReport[]> => {
-    return await apiClient.get<UserReport[]>('/user-reports', {
-      params: { user_id: userId },
-    });
+  // Backward compatibility - these are no longer needed with the new structure
+  // but keeping them for now in case anything still uses them
+  create: async (data: UserReportCreate): Promise<UserReport> => {
+    return await apiClient.post<UserReport>('/user-reports', data);
   },
 
   update: async (id: string, data: UserReportUpdate): Promise<UserReport> => {
@@ -39,8 +41,7 @@ export const userReportsAPI = {
   },
 
   getCustomName: async (userId: string, reportId: string): Promise<string | null> => {
-    const userReports = await userReportsAPI.list(userId);
-    const match = userReports.find(ur => ur.report_id === reportId);
-    return match?.custom_name || null;
+    // This will need to be updated when we have user report metadata
+    return null;
   },
 };

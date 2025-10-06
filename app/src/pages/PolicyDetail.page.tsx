@@ -22,8 +22,9 @@ import { userPoliciesAPI } from '@/api/v2/userPolicies';
 import { parametersAPI } from '@/api/parameters';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
+import AddToLibraryButton from '@/components/common/AddToLibraryButton';
 import { colors, spacing, typography } from '@/designTokens';
-import moment from 'moment';
+import { timeAgo, formatDateTime } from '@/utils/datetime';
 
 export default function PolicyDetailPage() {
   const { policyId, countryId } = useParams<{ policyId: string; countryId: string }>();
@@ -119,19 +120,28 @@ export default function PolicyDetailPage() {
           </Group>
 
           <Stack gap="md">
-            <Group gap="sm">
-              <Title order={2}>{displayName}</Title>
-              <ActionIcon
-                variant="subtle"
-                size="lg"
-                onClick={() => setRenameModalOpened(true)}
-              >
-                <IconPencil size={18} />
-              </ActionIcon>
+            <Group gap="sm" justify="space-between">
+              <Group gap="sm">
+                <Title order={2}>{displayName}</Title>
+                <ActionIcon
+                  variant="subtle"
+                  size="lg"
+                  onClick={() => setRenameModalOpened(true)}
+                >
+                  <IconPencil size={18} />
+                </ActionIcon>
+              </Group>
+              <AddToLibraryButton
+                resourceType="policy"
+                resourceId={policyId}
+                userId={userId}
+                isInLibrary={!!userPolicy}
+                userResourceId={userPolicy?.id}
+              />
             </Group>
             <Group gap="xs">
               <Text size="sm" c="dimmed">
-                Created {moment(policy.created_at).fromNow()}
+                Created {timeAgo(policy.created_at)}
               </Text>
             </Group>
           </Stack>
@@ -254,13 +264,13 @@ export default function PolicyDetailPage() {
 
             <Group gap="xs">
               <Text size="xs" c="dimmed">
-                Created: {moment(policy.created_at).format('MMMM D, YYYY h:mm A')}
+                Created: {formatDateTime(policy.created_at)}
               </Text>
               <Text size="xs" c="dimmed">
                 •
               </Text>
               <Text size="xs" c="dimmed">
-                Updated: {moment(policy.updated_at).format('MMMM D, YYYY h:mm A')}
+                Updated: {formatDateTime(policy.updated_at)}
               </Text>
             </Group>
           </Stack>

@@ -5,6 +5,7 @@ export interface UserDatasetResponse {
   user_id: string;
   dataset_id: string;
   custom_name?: string;
+  is_creator: boolean;
   created_at: string;
   updated_at: string;
 }

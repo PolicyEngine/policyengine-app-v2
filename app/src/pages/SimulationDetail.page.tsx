@@ -20,7 +20,9 @@ import { simulationsAPI } from '@/api/v2/simulations';
 import { userSimulationsAPI } from '@/api/v2/userSimulations';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
-import moment from 'moment';
+import AddToLibraryButton from '@/components/common/AddToLibraryButton';
+import ResourceIdLink from '@/components/common/ResourceIdLink';
+import { timeAgo, formatDateTime } from '@/utils/datetime';
 
 export default function SimulationDetailPage() {
   const { simulationId, countryId } = useParams<{ simulationId: string; countryId: string }>();
@@ -110,22 +112,39 @@ export default function SimulationDetailPage() {
           </Group>
 
           <Stack gap="md">
-            <Group gap="sm">
-              <Title order={2}>{displayName}</Title>
-              <ActionIcon
-                variant="subtle"
-                size="lg"
-                onClick={() => setRenameModalOpened(true)}
-              >
-                <IconPencil size={18} />
-              </ActionIcon>
+            <Group gap="sm" justify="space-between">
+              <Group gap="sm">
+                <Title order={2}>{displayName}</Title>
+                <ActionIcon
+                  variant="subtle"
+                  size="lg"
+                  onClick={() => setRenameModalOpened(true)}
+                >
+                  <IconPencil size={18} />
+                </ActionIcon>
+              </Group>
+              <AddToLibraryButton
+                resourceType="simulation"
+                resourceId={simulationId}
+                userId={userId}
+                isInLibrary={!!userSim}
+                userResourceId={userSim?.id}
+              />
             </Group>
             <Group gap="xs">
-              <Badge variant="light" color={simulation.has_result ? 'green' : 'gray'}>
-                {simulation.has_result ? 'Ready' : 'Not ready'}
+              <Badge
+                variant="light"
+                color={
+                  simulation.status === 'completed' ? 'green' :
+                  simulation.status === 'running' ? 'blue' :
+                  simulation.status === 'failed' ? 'red' :
+                  'gray'
+                }
+              >
+                {simulation.status.charAt(0).toUpperCase() + simulation.status.slice(1)}
               </Badge>
               <Text size="sm" c="dimmed">
-                Created {moment(simulation.created_at).fromNow()}
+                Created {timeAgo(simulation.created_at)}
               </Text>
             </Group>
           </Stack>
@@ -154,6 +173,17 @@ export default function SimulationDetailPage() {
 
             <div>
               <Text size="sm" fw={600} mb="xs">
+                Policy
+              </Text>
+              <ResourceIdLink
+                resourceType="policy"
+                resourceId={simulation.policy_id}
+                countryId={countryId}
+              />
+            </div>
+
+            <div>
+              <Text size="sm" fw={600} mb="xs">
                 Model
               </Text>
               <Text size="sm">{simulation.model || 'N/A'}</Text>
@@ -164,9 +194,11 @@ export default function SimulationDetailPage() {
                 <Text size="sm" fw={600} mb="xs">
                   Model version
                 </Text>
-                <Text size="sm" style={{ fontFamily: 'monospace' }}>
-                  {simulation.model_version_id}
-                </Text>
+                <ResourceIdLink
+                  resourceType="model-version"
+                  resourceId={simulation.model_version_id}
+                  countryId={countryId}
+                />
               </div>
             )}
 
@@ -175,7 +207,11 @@ export default function SimulationDetailPage() {
                 <Text size="sm" fw={600} mb="xs">
                   Dataset
                 </Text>
-                <Text size="sm">{simulation.dataset_id}</Text>
+                <ResourceIdLink
+                  resourceType="dataset"
+                  resourceId={simulation.dataset_id}
+                  countryId={countryId}
+                />
               </div>
             )}
 
@@ -183,22 +219,34 @@ export default function SimulationDetailPage() {
               <Text size="sm" fw={600} mb="xs">
                 Status
               </Text>
-              <Badge color={simulation.has_result ? 'green' : 'gray'}>
-                {simulation.has_result ? 'Has results' : 'No results'}
+              <Badge
+                color={
+                  simulation.status === 'completed' ? 'green' :
+                  simulation.status === 'running' ? 'blue' :
+                  simulation.status === 'failed' ? 'red' :
+                  'gray'
+                }
+              >
+                {simulation.status.charAt(0).toUpperCase() + simulation.status.slice(1)}
               </Badge>
+              {simulation.error && (
+                <Text size="sm" c="red" mt="xs">
+                  Error: {simulation.error}
+                </Text>
+              )}
             </div>
 
             <Divider />
 
             <Group gap="xs">
               <Text size="xs" c="dimmed">
-                Created: {moment(simulation.created_at).format('MMMM D, YYYY h:mm A')}
+                Created: {formatDateTime(simulation.created_at)}
               </Text>
               <Text size="xs" c="dimmed">
                 •
               </Text>
               <Text size="xs" c="dimmed">
-                Updated: {moment(simulation.updated_at).format('MMMM D, YYYY h:mm A')}
+                Updated: {formatDateTime(simulation.updated_at)}
               </Text>
             </Group>
           </Stack>

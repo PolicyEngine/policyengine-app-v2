@@ -172,7 +172,9 @@ export default function SimulationsPage() {
       const userSim = userSimulations.find(us => us.simulation_id === sim.id);
       const displayName = userSim?.custom_name || sim.name || sim.id;
 
-      const creator = userSim ? users.find(u => u.id === userSim.user_id) : null;
+      // Only show creator info if the current user is NOT the creator
+      const isCreator = userSim?.is_creator || false;
+      const creator = userSim && !isCreator ? users.find(u => u.id === userSim.user_id) : null;
       const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
 
       return {

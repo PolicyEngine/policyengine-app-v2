@@ -22,8 +22,10 @@ import { userDynamicsAPI } from '@/api/v2/userDynamics';
 import { parametersAPI } from '@/api/parameters';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
+import AddToLibraryButton from '@/components/common/AddToLibraryButton';
+import ResourceIdLink from '@/components/common/ResourceIdLink';
 import { colors, spacing, typography } from '@/designTokens';
-import moment from 'moment';
+import { timeAgo, formatDateTime } from '@/utils/datetime';
 
 interface Dynamic {
   id: string;
@@ -131,20 +133,29 @@ export default function DynamicDetailPage() {
           </Group>
 
           <Stack gap="md">
-            <Group gap="sm">
-              <Title order={2}>{displayName}</Title>
-              <ActionIcon
-                variant="subtle"
-                size="lg"
-                onClick={() => setRenameModalOpened(true)}
-              >
-                <IconPencil size={18} />
-              </ActionIcon>
+            <Group gap="sm" justify="space-between">
+              <Group gap="sm">
+                <Title order={2}>{displayName}</Title>
+                <ActionIcon
+                  variant="subtle"
+                  size="lg"
+                  onClick={() => setRenameModalOpened(true)}
+                >
+                  <IconPencil size={18} />
+                </ActionIcon>
+              </Group>
+              <AddToLibraryButton
+                resourceType="dynamic"
+                resourceId={dynamicId}
+                userId={userId}
+                isInLibrary={!!userDyn}
+                userResourceId={userDyn?.id}
+              />
             </Group>
             <Group gap="xs">
               {dynamic.type && <Badge variant="light">{dynamic.type}</Badge>}
               <Text size="sm" c="dimmed">
-                Created {moment(dynamic.created_at).fromNow()}
+                Created {timeAgo(dynamic.created_at)}
               </Text>
             </Group>
           </Stack>
@@ -192,9 +203,11 @@ export default function DynamicDetailPage() {
                 <Text size="sm" fw={600} mb="xs">
                   Associated policy
                 </Text>
-                <Text size="sm" style={{ fontFamily: 'monospace' }}>
-                  {dynamic.policy_id}
-                </Text>
+                <ResourceIdLink
+                  resourceType="policy"
+                  resourceId={dynamic.policy_id}
+                  countryId={countryId}
+                />
               </div>
             )}
 
@@ -289,13 +302,13 @@ export default function DynamicDetailPage() {
 
             <Group gap="xs">
               <Text size="xs" c="dimmed">
-                Created: {moment(dynamic.created_at).format('MMMM D, YYYY h:mm A')}
+                Created: {formatDateTime(dynamic.created_at)}
               </Text>
               <Text size="xs" c="dimmed">
                 •
               </Text>
               <Text size="xs" c="dimmed">
-                Updated: {moment(dynamic.updated_at).format('MMMM D, YYYY h:mm A')}
+                Updated: {formatDateTime(dynamic.updated_at)}
               </Text>
             </Group>
           </Stack>

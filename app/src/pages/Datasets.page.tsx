@@ -129,7 +129,9 @@ export default function DatasetsPage() {
       const userDataset = userDatasets.find(ud => ud.dataset_id === dataset.id);
       const displayName = userDataset?.custom_name || dataset.name;
 
-      const creator = userDataset ? users.find(u => u.id === userDataset.user_id) : null;
+      // Only show creator info if the current user is NOT the creator
+      const isCreator = userDataset?.is_creator || false;
+      const creator = userDataset && !isCreator ? users.find(u => u.id === userDataset.user_id) : null;
       const creatorName = creator ? usersAPI.getDisplayName(creator) : '';
 
       return {

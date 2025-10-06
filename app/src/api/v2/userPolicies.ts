@@ -5,6 +5,7 @@ export interface UserPolicy {
   user_id: string;
   policy_id: string;
   custom_name: string | null;
+  is_creator: boolean;
   created_at: string;
   updated_at: string;
 }

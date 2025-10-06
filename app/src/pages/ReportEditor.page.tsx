@@ -35,16 +35,20 @@ import { aggregatesAPI } from '@/api/v2/aggregates';
 import { aggregateChangesAPI } from '@/api/v2/aggregateChanges';
 import { modelVersionsAPI } from '@/api/v2/modelVersions';
 import { simulationsAPI } from '@/api/v2/simulations';
+import { userReportsAPI } from '@/api/v2/userReports';
+import { MOCK_USER_ID } from '@/constants';
 import ReportElementCell from '@/components/report/ReportElementCell';
 import DataAnalysisModal from '@/components/report/DataAnalysisModal';
 import ReportTemplatePickerModal from '@/components/report/ReportTemplatePickerModal';
 import TemplateSelectionModal from '@/components/report/TemplateSelectionModal';
+import AddToLibraryButton from '@/components/common/AddToLibraryButton';
 import type { ReportElementTemplate } from '@/api/v2/reportElementTemplates';
 
 export default function ReportEditorPage() {
   const { reportId } = useParams<{ reportId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   const [dataModalOpened, setDataModalOpened] = useState(false);
   const [templatePickerOpened, setTemplatePickerOpened] = useState(false);
@@ -57,6 +61,12 @@ export default function ReportEditorPage() {
     queryKey: ['report', reportId],
     queryFn: () => reportsAPI.get(reportId!),
     enabled: !!reportId,
+  });
+
+  // Fetch user reports to check if this report is in the library
+  const { data: userReports = [] } = useQuery({
+    queryKey: ['userReports', userId],
+    queryFn: () => userReportsAPI.list(userId),
   });
 
   // Fetch report elements
@@ -353,6 +363,15 @@ export default function ReportEditorPage() {
             </Stack>
           </Group>
           <Group>
+            {report && (
+              <AddToLibraryButton
+                resourceType="report"
+                resourceId={reportId!}
+                userId={userId}
+                isInLibrary={userReports.some(ur => ur.report_id === reportId)}
+                userResourceId={userReports.find(ur => ur.report_id === reportId)?.id}
+              />
+            )}
             <Menu shadow="md" width={200}>
               <Menu.Target>
                 <Button rightSection={<IconChevronDown size={14} />}>
