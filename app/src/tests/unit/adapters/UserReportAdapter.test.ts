@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
+import { CURRENT_YEAR } from '@/constants';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserReportCreationPayload } from '@/types/payloads';
 
@@ -8,7 +9,7 @@ describe('UserReportAdapter', () => {
   const TEST_USER_ID = 'user-123';
   const TEST_REPORT_ID = 'report-456';
   const TEST_LABEL = 'My Test Report';
-  const TEST_TIMESTAMP = '2024-01-15T10:00:00Z';
+  const TEST_TIMESTAMP = `${CURRENT_YEAR}-01-15T10:00:00Z`;
 
   describe('toCreationPayload', () => {
     test('given UserReport with all fields then creates proper payload', () => {

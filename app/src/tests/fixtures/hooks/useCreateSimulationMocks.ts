@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { configureStore } from '@reduxjs/toolkit';
 import { vi } from 'vitest';
 import flowReducer from '@/reducers/flowReducer';
@@ -12,7 +13,7 @@ import { SIMULATION_IDS, TEST_COUNTRIES } from '../api/simulationMocks';
 
 // Labels and descriptions
 export const TEST_LABELS = {
-  SIMULATION: 'Test Simulation 2024',
+  SIMULATION: `Test Simulation ${CURRENT_YEAR}`,
   CUSTOM: 'Custom Simulation Label',
 } as const;
 

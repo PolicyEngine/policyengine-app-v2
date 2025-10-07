@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { MetadataApiPayload } from '@/types/metadata';
 
 export const mockMetadataResponse: MetadataApiPayload = {
@@ -11,7 +12,7 @@ export const mockMetadataResponse: MetadataApiPayload = {
         unit: 'currency-GBP',
         values: {
           '2023-01-01': 1000,
-          '2024-01-01': 1200,
+          [`${CURRENT_YEAR}-01-01`]: 1200,
         },
       },
       national_insurance: {
@@ -20,7 +21,7 @@ export const mockMetadataResponse: MetadataApiPayload = {
         unit: 'currency-GBP',
         values: {
           '2023-01-01': 500,
-          '2024-01-01': 550,
+          [`${CURRENT_YEAR}-01-01`]: 550,
         },
       },
     },
@@ -70,8 +71,8 @@ export const mockMetadataResponse: MetadataApiPayload = {
       ],
       time_period: [
         { name: 2023, label: '2023' },
-        { name: 2024, label: '2024' },
-        { name: 2025, label: '2025' },
+        { name: parseInt(CURRENT_YEAR), label: CURRENT_YEAR },
+        { name: parseInt(CURRENT_YEAR), label: CURRENT_YEAR },
       ],
       datasets: [
         {

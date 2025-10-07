@@ -1,4 +1,4 @@
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { mockErrorReport, mockPendingReport, mockReport } from '../adapters/reportMocks';
 import {
   mockSimulation1,
@@ -15,7 +15,7 @@ export const mockReportData = [
       userId: MOCK_USER_ID,
       reportId: '123',
       label: 'Test Report 1',
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: `${CURRENT_YEAR}-01-15T10:30:00Z`,
     },
     report: mockReport,
     simulations: [mockSimulation1, mockSimulation2],
@@ -34,7 +34,7 @@ export const mockReportData = [
       userId: MOCK_USER_ID,
       reportId: '1',
       label: 'Test Report 2',
-      createdAt: '2024-01-15T11:00:00Z',
+      createdAt: `${CURRENT_YEAR}-01-15T11:00:00Z`,
     },
     report: mockPendingReport,
     simulations: [],
@@ -65,7 +65,7 @@ export const mockMixedStatusReportData = [
       userId: MOCK_USER_ID,
       reportId: '2',
       label: 'Test Report 3',
-      createdAt: '2024-01-15T11:30:00Z',
+      createdAt: `${CURRENT_YEAR}-01-15T11:30:00Z`,
     },
     report: { ...mockErrorReport, status: 'error' as const },
     simulations: [],

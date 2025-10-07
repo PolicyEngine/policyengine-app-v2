@@ -54,7 +54,7 @@ export const TEST_PATHS = {
   // Valid paths
   US_POLICIES: '/us/policies',
   UK_HOUSEHOLD: '/uk/household/123',
-  CA_REPORTS: '/ca/reports/annual/2024',
+  CA_REPORTS: '/ca/reports/annual/2025',
 
   // Invalid country paths
   INVALID_SIMPLE: '/invalid/policies',

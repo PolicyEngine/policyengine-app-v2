@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { ReportOutput } from '@/types/ingredients/Report';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
@@ -7,8 +8,8 @@ export const TEST_REPORT_ID_2 = '456';
 export const TEST_SIMULATION_ID_1 = '1';
 export const TEST_SIMULATION_ID_2 = '2';
 export const TEST_SIMULATION_ID_3 = '3';
-export const TEST_TIMESTAMP_CREATED = '2024-01-15T10:00:00.000Z';
-export const TEST_TIMESTAMP_UPDATED = '2024-01-15T10:30:00.000Z';
+export const TEST_TIMESTAMP_CREATED = `${CURRENT_YEAR}-01-15T10:00:00.000Z`;
+export const TEST_TIMESTAMP_UPDATED = `${CURRENT_YEAR}-01-15T10:30:00.000Z`;
 
 // Create a minimal valid US report output
 export const MOCK_REPORT_OUTPUT: ReportOutputSocietyWideUS = {

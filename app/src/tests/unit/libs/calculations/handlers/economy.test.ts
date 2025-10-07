@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as economyApi from '@/api/economy';
+import { CURRENT_YEAR } from '@/constants';
 import { EconomyCalculationHandler } from '@/libs/calculations/handlers/economy';
 import {
   ECONOMY_CALCULATION_META,
@@ -42,7 +43,7 @@ describe('EconomyCalculationHandler', () => {
         ECONOMY_CALCULATION_META.policyIds.baseline,
         {
           region: 'ca',
-          time_period: '2024',
+          time_period: CURRENT_YEAR,
         }
       );
     });
@@ -117,7 +118,7 @@ describe('EconomyCalculationHandler', () => {
         nationalMeta.policyIds.baseline,
         {
           region: nationalMeta.countryId,
-          time_period: '2024',
+          time_period: CURRENT_YEAR,
         }
       );
     });

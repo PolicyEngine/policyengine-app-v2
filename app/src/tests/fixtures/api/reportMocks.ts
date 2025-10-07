@@ -37,7 +37,7 @@ export const MOCK_ECONOMY_RESULT: ReportOutputSocietyWideUS = {
   },
   cliff_impact: null,
   constituency_impact: null,
-  data_version: '2024.1.0',
+  data_version: `2025.1.0`,
   decile: {
     average: {
       '1': 10000,

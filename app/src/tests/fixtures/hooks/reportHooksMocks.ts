@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -14,7 +14,7 @@ export const TEST_REPORT_ID_STRING = '123';
 export const TEST_USER_ID = MOCK_USER_ID;
 export const TEST_COUNTRY_ID = 'us';
 export const TEST_LABEL = 'My Test Report';
-export const TEST_TIMESTAMP = '2024-01-15T10:00:00Z';
+export const TEST_TIMESTAMP = `${CURRENT_YEAR}-01-15T10:00:00Z`;
 
 // Mock Report Metadata (API response)
 export const mockReportMetadata: ReportMetadata = {

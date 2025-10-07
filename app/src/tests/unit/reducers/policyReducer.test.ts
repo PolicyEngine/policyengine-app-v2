@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import policyReducer, {
   addPolicyParamAtPosition,
   clearAllPolicies,
@@ -210,8 +211,8 @@ describe('policyReducer', () => {
           position: 0,
           name: 'tax_rate',
           valueInterval: {
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
+            startDate: `${CURRENT_YEAR}-01-01`,
+            endDate: `${CURRENT_YEAR}-12-31`,
             value: 0.25,
           },
         })
@@ -223,8 +224,8 @@ describe('policyReducer', () => {
         name: 'tax_rate',
         values: expect.arrayContaining([
           expect.objectContaining({
-            startDate: '2024-01-01',
-            endDate: '2024-12-31',
+            startDate: `${CURRENT_YEAR}-01-01`,
+            endDate: `${CURRENT_YEAR}-12-31`,
             value: 0.25,
           }),
         ]),
@@ -243,8 +244,8 @@ describe('policyReducer', () => {
             position: 0,
             name: 'tax_rate',
             valueInterval: {
-              startDate: '2024-01-01',
-              endDate: '2024-12-31',
+              startDate: `${CURRENT_YEAR}-01-01`,
+              endDate: `${CURRENT_YEAR}-12-31`,
               value: 0.25,
             },
           })

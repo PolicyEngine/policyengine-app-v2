@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { vi } from 'vitest';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -46,9 +47,9 @@ export const POPULATION_REGIONS = {
 
 // Years
 export const POPULATION_YEARS = {
-  DEFAULT: '2024',
+  DEFAULT: CURRENT_YEAR,
   PAST: '2023',
-  FUTURE: '2025',
+  FUTURE: CURRENT_YEAR,
 } as const;
 
 // Action types (for testing action creators)

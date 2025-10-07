@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { MetadataApiPayload, MetadataState } from '@/types/metadata';
 
@@ -5,7 +6,7 @@ import { MetadataApiPayload, MetadataState } from '@/types/metadata';
 export const EXPECTED_MIN_DATE_DEFAULT = '2022-01-01';
 export const EXPECTED_MAX_DATE_DEFAULT = '2035-12-31';
 export const EXPECTED_MIN_DATE = '2022-01-01';
-export const EXPECTED_MAX_DATE = '2025-12-31';
+export const EXPECTED_MAX_DATE = `${CURRENT_YEAR}-12-31`;
 export const EXPECTED_COUNTRY = 'us';
 export const EXPECTED_VERSION = '1.0.0';
 export const EXPECTED_CURRENT_LAW_ID = 1;
@@ -20,18 +21,18 @@ export const TIME_PERIOD_2023 = {
   label: '2023',
 };
 export const TIME_PERIOD_2024 = {
-  name: 2024,
-  label: '2024',
+  name: parseInt(CURRENT_YEAR),
+  label: CURRENT_YEAR,
 };
 export const TIME_PERIOD_2025 = {
-  name: 2025,
-  label: '2025',
+  name: parseInt(CURRENT_YEAR),
+  label: CURRENT_YEAR,
 };
 
 export const MOCK_TIME_PERIODS = [
   TIME_PERIOD_2022,
   TIME_PERIOD_2023,
-  TIME_PERIOD_2024,
+  TIME_PERIOD_2025,
   TIME_PERIOD_2025,
 ];
 
@@ -126,8 +127,8 @@ export const EXPECTED_REGION_OPTIONS = [
 export const EXPECTED_TAX_YEAR_OPTIONS = [
   { value: '2022', label: '2022' },
   { value: '2023', label: '2023' },
-  { value: '2024', label: '2024' },
-  { value: '2025', label: '2025' },
+  { value: CURRENT_YEAR, label: CURRENT_YEAR },
+  { value: CURRENT_YEAR, label: CURRENT_YEAR },
 ];
 
 export const EXPECTED_EMPTY_OPTIONS: never[] = [];

@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { vi } from 'vitest';
 
 // Mock selector functions
@@ -17,7 +18,7 @@ export const MOCK_POLICY_WITH_PARAMS = {
     id: 123,
     country_id: 'us',
     policy_json: {
-      income_tax_rate: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 0.25 }],
+      income_tax_rate: [{ startDate: `${CURRENT_YEAR}-01-01`, endDate: `${CURRENT_YEAR}-12-31`, value: 0.25 }],
     },
   },
   association: { label: 'My Tax Reform' },
