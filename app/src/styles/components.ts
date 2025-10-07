@@ -8,7 +8,7 @@ import { themeDefaults } from './defaults';
 export const themeComponents = {
   Text: {
     defaultProps: themeDefaults.Text,
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       if (params.variant === 'tab') {
         return {
           root: {
@@ -68,7 +68,7 @@ export const themeComponents = {
     },
   },
   Container: Container.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       if (params.variant === 'guttered') {
         return {
           root: {
@@ -83,7 +83,7 @@ export const themeComponents = {
     },
   }),
   Card: Card.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       // Card List variants - compact styling for variable-length lists
       if (params.variant === 'cardList--active') {
         return {
@@ -246,7 +246,7 @@ export const themeComponents = {
     defaultProps: themeDefaults.ActionIcon,
   },
   Title: Title.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       if (params.variant === 'colored') {
         return {
           root: {

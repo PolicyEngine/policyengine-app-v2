@@ -162,7 +162,7 @@ describe('CalculationService', () => {
   describe('executeCalculation', () => {
     test('given household calculation request then starts calculation and returns computing', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT.householdData);
 
       // When
       const result = await service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
@@ -188,7 +188,7 @@ describe('CalculationService', () => {
     test('given existing household calculation then returns current status without new API call', async () => {
       // Given - use a promise that doesn't resolve immediately
       vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
-        () => new Promise((resolve) => setTimeout(() => resolve(MOCK_HOUSEHOLD_RESULT), 1000))
+        () => new Promise((resolve) => setTimeout(() => resolve(MOCK_HOUSEHOLD_RESULT.householdData), 1000))
       );
 
       // Start first calculation

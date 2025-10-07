@@ -28,7 +28,7 @@ describe('HouseholdCalculationHandler', () => {
   describe('execute', () => {
     test('given new calculation request then starts calculation and returns computing status', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT.householdData);
 
       // When
       const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
@@ -66,7 +66,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation then returns ok status with result', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT.householdData);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Wait for completion
@@ -159,7 +159,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation then returns result', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT.householdData);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
       await advanceTimeAndFlush(0);
 
@@ -199,7 +199,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation then returns true until cleanup', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT.householdData);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
       await advanceTimeAndFlush(0);
 
@@ -212,7 +212,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation after cleanup then returns false', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT.householdData);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
       await advanceTimeAndFlush(0);
 

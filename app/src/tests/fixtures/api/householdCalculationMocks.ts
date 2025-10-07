@@ -151,7 +151,7 @@ export const mockLargeHouseholdResult: Household = {
 // Mock API responses
 export const mockSuccessfulCalculationResponse: HouseholdCalculationResponse = {
   status: 'ok',
-  result: mockHouseholdResult,
+  result: mockHouseholdResult.householdData,
 };
 
 export const mockErrorCalculationResponse: HouseholdCalculationResponse = {
@@ -162,7 +162,7 @@ export const mockErrorCalculationResponse: HouseholdCalculationResponse = {
 
 export const mockUKCalculationResponse: HouseholdCalculationResponse = {
   status: 'ok',
-  result: mockHouseholdResultUK,
+  result: mockHouseholdResultUK.householdData,
 };
 
 // Network error mock
