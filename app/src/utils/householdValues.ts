@@ -6,7 +6,7 @@ import { MetadataState } from '@/types/metadata';
  * Based on the v1 app's getValueFromHousehold function
  *
  * @param variableName - The name of the variable to extract
- * @param timePeriod - Specific time period (e.g., "2024"), or null to aggregate all periods
+ * @param timePeriod - Specific time period (e.g., "2025"), or null to aggregate all periods
  * @param entityName - Specific entity name (e.g., "your household"), or null to aggregate all entities
  * @param household - The household data structure
  * @param metadata - The metadata containing variable definitions
@@ -177,7 +177,7 @@ export function formatVariableValue(variable: any, value: number, precision = 0)
  * Based on the v1 app's getParameterAtInstant function
  *
  * @param parameter - The parameter metadata
- * @param instant - The instant in time (e.g., "2024-01-01")
+ * @param instant - The instant in time (e.g., "2025-01-01")
  * @returns The parameter value at that instant
  */
 export function getParameterAtInstant(parameter: any, instant: string): any {

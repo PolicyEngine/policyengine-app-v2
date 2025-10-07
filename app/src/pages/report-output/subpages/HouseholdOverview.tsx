@@ -11,6 +11,7 @@ import {
   getValueFromHousehold,
   shouldShowVariable,
 } from '@/utils/householdValues';
+import { CURRENT_YEAR } from '@/constants';
 
 interface HouseholdOverviewProps {
   output: Household;
@@ -84,7 +85,7 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
         // It's a parameter name - resolve it
         const parameter = metadata.parameters[variable.adds];
         if (parameter) {
-          addsArray = getParameterAtInstant(parameter, '2024-01-01') || [];
+          addsArray = getParameterAtInstant(parameter, `${CURRENT_YEAR}-01-01`) || [];
         }
       } else if (Array.isArray(variable.adds)) {
         addsArray = variable.adds;
@@ -96,7 +97,7 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
         // It's a parameter name - resolve it
         const parameter = metadata.parameters[variable.subtracts];
         if (parameter) {
-          subtractsArray = getParameterAtInstant(parameter, '2024-01-01') || [];
+          subtractsArray = getParameterAtInstant(parameter, '2025-01-01') || [];
         }
       } else if (Array.isArray(variable.subtracts)) {
         subtractsArray = variable.subtracts;
