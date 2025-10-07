@@ -1,6 +1,6 @@
-import { CURRENT_YEAR } from '@/constants';
 import { configureStore } from '@reduxjs/toolkit';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import flowReducer from '@/reducers/flowReducer';
 import metadataReducer from '@/reducers/metadataReducer';
 import policyReducer from '@/reducers/policyReducer';

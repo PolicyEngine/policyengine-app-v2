@@ -1,6 +1,6 @@
-import { CURRENT_YEAR } from '@/constants';
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { UserReport } from '@/types/ingredients/UserReport';
 
 // Test constants

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Group, Stack, Text } from '@mantine/core';
+import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
@@ -11,7 +12,6 @@ import {
   getValueFromHousehold,
   shouldShowVariable,
 } from '@/utils/householdValues';
-import { CURRENT_YEAR } from '@/constants';
 
 interface HouseholdOverviewProps {
   output: Household;

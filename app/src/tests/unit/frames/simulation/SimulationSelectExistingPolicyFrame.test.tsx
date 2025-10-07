@@ -128,7 +128,11 @@ describe('SimulationSelectExistingPolicyFrame', () => {
       policyReducer.addPolicyParamAtPosition({
         position: 1,
         name: 'income_tax_rate',
-        valueInterval: { startDate: `${CURRENT_YEAR}-01-01`, endDate: `${CURRENT_YEAR}-12-31`, value: 0.25 },
+        valueInterval: {
+          startDate: `${CURRENT_YEAR}-01-01`,
+          endDate: `${CURRENT_YEAR}-12-31`,
+          value: 0.25,
+        },
       })
     );
 

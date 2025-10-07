@@ -86,7 +86,12 @@ export const mockUKMetadataState: MetadataState = {
     region: [{ name: 'uk', label: 'United Kingdom' }],
     time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
     datasets: [
-      { name: `frs_${CURRENT_YEAR}`, label: `FRS ${CURRENT_YEAR}`, title: `Family Resources Survey ${CURRENT_YEAR}`, default: true },
+      {
+        name: `frs_${CURRENT_YEAR}`,
+        label: `FRS ${CURRENT_YEAR}`,
+        title: `Family Resources Survey ${CURRENT_YEAR}`,
+        default: true,
+      },
     ],
   },
   version: '2.0.0',

@@ -1,5 +1,5 @@
-import { CURRENT_YEAR } from '@/constants';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';

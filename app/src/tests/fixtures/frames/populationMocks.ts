@@ -1,5 +1,5 @@
-import { CURRENT_YEAR } from '@/constants';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';

@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
-import { CURRENT_YEAR } from '@/constants';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,

@@ -1,5 +1,5 @@
-import { CURRENT_YEAR } from '@/constants';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Population } from '@/types/ingredients/Population';
