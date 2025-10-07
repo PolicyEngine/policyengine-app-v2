@@ -10,7 +10,7 @@ import {
 } from '@/tests/fixtures/libs/calculations/handlerMocks';
 
 // Mock the API
-vi.mock('@/api/household_calculation');
+vi.mock('@/api/householdCalculation');
 
 describe('HouseholdCalculationHandler', () => {
   let handler: HouseholdCalculationHandler;
@@ -82,7 +82,7 @@ describe('HouseholdCalculationHandler', () => {
       // Then
       expect(result).toEqual({
         status: 'ok',
-        result: MOCK_HOUSEHOLD_RESULT,
+        result: MOCK_HOUSEHOLD_RESULT.householdData,
       });
     });
 
@@ -175,7 +175,7 @@ describe('HouseholdCalculationHandler', () => {
       // Then
       expect(status).toEqual({
         status: 'ok',
-        result: MOCK_HOUSEHOLD_RESULT,
+        result: MOCK_HOUSEHOLD_RESULT.householdData,
       });
     });
 

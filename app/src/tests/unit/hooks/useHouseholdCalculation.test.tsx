@@ -19,7 +19,7 @@ import {
 } from '@/tests/fixtures/hooks/useHouseholdCalculationMocks';
 
 // Mock the API module
-vi.mock('@/api/household_calculation', () => ({
+vi.mock('@/api/householdCalculation', () => ({
   fetchHouseholdCalculation: vi.fn(),
 }));
 

@@ -101,7 +101,10 @@ describe('ApiHouseholdStore', () => {
       const result = await store.findByUser(userId);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith(`/api/user-household-associations/user/${userId}`);
+      expect(global.fetch).toHaveBeenCalledWith(
+        `/api/user-household-associations/user/${userId}`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
       expect(UserHouseholdAdapter.fromApiResponse).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockUserHouseholdPopulationList);
     });
@@ -155,7 +158,8 @@ describe('ApiHouseholdStore', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `/api/user-household-associations/${userId}/${householdId}`
+        `/api/user-household-associations/${userId}/${householdId}`,
+        { headers: { 'Content-Type': 'application/json' } }
       );
       expect(UserHouseholdAdapter.fromApiResponse).toHaveBeenCalledWith(mockApiResponse);
       expect(result).toEqual(mockUserHouseholdPopulation);

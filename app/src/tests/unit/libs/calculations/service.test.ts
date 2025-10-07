@@ -15,7 +15,7 @@ import {
 } from '@/tests/fixtures/libs/calculations/serviceMocks';
 
 // Mock the API modules
-vi.mock('@/api/household_calculation');
+vi.mock('@/api/householdCalculation');
 vi.mock('@/api/economy');
 
 describe('CalculationService', () => {
