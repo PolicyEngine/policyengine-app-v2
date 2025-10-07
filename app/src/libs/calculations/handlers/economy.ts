@@ -1,5 +1,6 @@
 import { EconomyCalculationParams, fetchEconomyCalculation } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
+import { CURRENT_YEAR } from '@/constants';
 import { CalculationStatusResponse } from '../status';
 
 /**
@@ -19,7 +20,7 @@ export class EconomyCalculationHandler {
 
     const params: EconomyCalculationParams = {
       region: meta.region || meta.countryId,
-      time_period: '2024', // TODO: Make dynamic
+      time_period: CURRENT_YEAR, // TODO: Make dynamic
     };
 
     const response = await fetchEconomyCalculation(

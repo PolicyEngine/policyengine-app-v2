@@ -38,7 +38,7 @@ describe('getValueFromHousehold', () => {
     );
 
     // Then
-    expect(result).toBe(EXPECTED_VALUES.HOUSEHOLD_INCOME_2024);
+    expect(result).toBe(EXPECTED_VALUES.HOUSEHOLD_INCOME_2025);
   });
 
   test('given person variable with specific time period and entity then returns correct value', () => {
@@ -162,7 +162,7 @@ describe('formatVariableValue', () => {
   test('given USD currency variable then returns formatted value with dollar sign', () => {
     // Given
     const variable = MOCK_HOUSEHOLD_INCOME_VARIABLE;
-    const value = EXPECTED_VALUES.HOUSEHOLD_INCOME_2024;
+    const value = EXPECTED_VALUES.HOUSEHOLD_INCOME_2025;
 
     // When
     const result = formatVariableValue(variable, value);
@@ -174,7 +174,7 @@ describe('formatVariableValue', () => {
   test('given percentage variable then returns formatted value with percent sign', () => {
     // Given
     const variable = MOCK_TAX_RATE_VARIABLE;
-    const value = EXPECTED_VALUES.TAX_RATE_2024;
+    const value = EXPECTED_VALUES.TAX_RATE_2025;
 
     // When
     const result = formatVariableValue(variable, value);
@@ -224,7 +224,7 @@ describe('formatVariableValue', () => {
 describe('getParameterAtInstant', () => {
   test('given instant matching exact date then returns value at that date', () => {
     // Given
-    const instant = '2024-01-01';
+    const instant = '2025-01-01';
 
     // When
     const result = getParameterAtInstant(MOCK_PARAMETER, instant);
@@ -235,7 +235,7 @@ describe('getParameterAtInstant', () => {
 
   test('given instant between dates then returns most recent prior value', () => {
     // Given
-    const instant = '2024-06-15';
+    const instant = '2025-06-15';
 
     // When
     const result = getParameterAtInstant(MOCK_PARAMETER, instant);
@@ -268,7 +268,7 @@ describe('getParameterAtInstant', () => {
 
   test('given null parameter then returns empty array', () => {
     // Given
-    const instant = '2024-01-01';
+    const instant = '2025-01-01';
 
     // When
     const result = getParameterAtInstant(null, instant);
@@ -310,7 +310,7 @@ describe('shouldShowVariable', () => {
         ...MOCK_HOUSEHOLD_DATA.householdData,
         people: {
           'person 1': {
-            benefits: { '2024': 0 },
+            benefits: { '2025': 0 },
           },
         },
       },

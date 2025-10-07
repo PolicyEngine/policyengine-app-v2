@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
 import { MetadataState } from '@/types/metadata';
 
@@ -83,28 +84,28 @@ export const MOCK_HOUSEHOLD_DATA: Household = {
     households: {
       'your household': {
         household_income: {
-          '2024': 50000,
+          [CURRENT_YEAR]: 50000,
         },
         tax_rate: {
-          '2024': 0.15,
+          [CURRENT_YEAR]: 0.15,
         },
       },
     },
     people: {
       'person 1': {
         age: {
-          '2024': 35,
+          [CURRENT_YEAR]: 35,
         },
         benefits: {
-          '2024': 5000,
+          [CURRENT_YEAR]: 5000,
         },
       },
       'person 2': {
         age: {
-          '2024': 32,
+          [CURRENT_YEAR]: 32,
         },
         benefits: {
-          '2024': 3000,
+          [CURRENT_YEAR]: 3000,
         },
       },
     },
@@ -118,28 +119,28 @@ export const MOCK_HOUSEHOLD_DATA_REFORM: Household = {
     households: {
       'your household': {
         household_income: {
-          '2024': 52000,
+          [CURRENT_YEAR]: 52000,
         },
         tax_rate: {
-          '2024': 0.12,
+          [CURRENT_YEAR]: 0.12,
         },
       },
     },
     people: {
       'person 1': {
         age: {
-          '2024': 35,
+          [CURRENT_YEAR]: 35,
         },
         benefits: {
-          '2024': 7000,
+          [CURRENT_YEAR]: 7000,
         },
       },
       'person 2': {
         age: {
-          '2024': 32,
+          [CURRENT_YEAR]: 32,
         },
         benefits: {
-          '2024': 5000,
+          [CURRENT_YEAR]: 5000,
         },
       },
     },
@@ -154,8 +155,8 @@ export const MOCK_HOUSEHOLD_DATA_MULTI_PERIOD: Household = {
       'your household': {
         household_income: {
           '2023': 48000,
-          '2024': 50000,
-          '2025': 52000,
+          [CURRENT_YEAR]: 50000,
+          '2026': 52000,
         },
       },
     },
@@ -168,15 +169,15 @@ export const MOCK_PARAMETER = {
   values: {
     '2020-01-01': 12000,
     '2023-01-01': 13850,
-    '2024-01-01': 14600,
-    '2025-01-01': 15000,
+    [`${CURRENT_YEAR}-01-01`]: 14600,
+    '2026-01-01': 15000,
   },
 };
 
 export const TEST_TIME_PERIODS = {
   YEAR_2023: '2023',
-  YEAR_2024: '2024',
-  YEAR_2025: '2025',
+  YEAR_2024: CURRENT_YEAR,
+  YEAR_2025: CURRENT_YEAR,
 } as const;
 
 export const TEST_ENTITY_NAMES = {
@@ -194,7 +195,7 @@ export const TEST_VARIABLE_NAMES = {
 } as const;
 
 export const EXPECTED_VALUES = {
-  HOUSEHOLD_INCOME_2024: 50000,
+  HOUSEHOLD_INCOME_2025: 50000,
   AGE_PERSON_1: 35,
   AGE_PERSON_2: 32,
   AGE_TOTAL: 67,
@@ -202,7 +203,7 @@ export const EXPECTED_VALUES = {
   BENEFITS_PERSON_2: 3000,
   BENEFITS_TOTAL: 8000,
   BENEFITS_REFORM_TOTAL: 12000,
-  TAX_RATE_2024: 0.15,
+  TAX_RATE_2025: 0.15,
   HOUSEHOLD_INCOME_ALL_PERIODS: 150000, // 48000 + 50000 + 52000
 } as const;
 

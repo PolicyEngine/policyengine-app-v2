@@ -46,8 +46,8 @@ export const MOCK_HOUSEHOLD_RESULT: Household = {
   householdData: {
     people: {
       you: {
-        age: { 2024: 35 },
-        employment_income: { 2024: 50000 },
+        age: { 2025: 35 },
+        employment_income: { 2025: 50000 },
       },
     },
   },

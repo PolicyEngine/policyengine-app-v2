@@ -1,5 +1,6 @@
 import { vi } from 'vitest';
 import { HouseholdCalculationResponse } from '@/api/householdCalculation';
+import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
 
 // Test IDs and constants
@@ -56,32 +57,32 @@ export const mockHouseholdResult: Household = {
   householdData: {
     people: {
       person1: {
-        age: { 2024: 30 },
-        employment_income: { 2024: 50000 },
-        capital_gains: { 2024: 5000 },
+        age: { [CURRENT_YEAR]: 30 },
+        employment_income: { [CURRENT_YEAR]: 50000 },
+        capital_gains: { [CURRENT_YEAR]: 5000 },
       },
       person2: {
-        age: { 2024: 28 },
-        employment_income: { 2024: 45000 },
-        dividend_income: { 2024: 2000 },
+        age: { [CURRENT_YEAR]: 28 },
+        employment_income: { [CURRENT_YEAR]: 45000 },
+        dividend_income: { [CURRENT_YEAR]: 2000 },
       },
     },
     families: {
       family1: {
         members: ['person1', 'person2'],
-        family_size: { 2024: 2 },
+        family_size: { [CURRENT_YEAR]: 2 },
       },
     },
     tax_units: {
       tax_unit1: {
         members: ['person1', 'person2'],
-        adjusted_gross_income: { 2024: 102000 },
+        adjusted_gross_income: { [CURRENT_YEAR]: 102000 },
       },
     },
     households: {
       household1: {
         members: ['person1', 'person2'],
-        household_size: { 2024: 2 },
+        household_size: { [CURRENT_YEAR]: 2 },
       },
     },
   },
@@ -94,12 +95,12 @@ export const mockHouseholdResultUK: Household = {
   householdData: {
     people: {
       person1: {
-        age: { 2024: 35 },
-        employment_income: { 2024: 40000 },
+        age: { [CURRENT_YEAR]: 35 },
+        employment_income: { [CURRENT_YEAR]: 40000 },
       },
       person2: {
-        age: { 2024: 33 },
-        employment_income: { 2024: 35000 },
+        age: { [CURRENT_YEAR]: 33 },
+        employment_income: { [CURRENT_YEAR]: 35000 },
       },
     },
     benunits: {
@@ -121,28 +122,28 @@ export const mockLargeHouseholdResult: Household = {
   countryId: 'us',
   householdData: {
     people: {
-      person1: { age: { 2024: 40 }, employment_income: { 2024: 75000 } },
-      person2: { age: { 2024: 38 }, employment_income: { 2024: 65000 } },
-      person3: { age: { 2024: 16 } },
-      person4: { age: { 2024: 14 } },
-      person5: { age: { 2024: 10 } },
+      person1: { age: { [CURRENT_YEAR]: 40 }, employment_income: { [CURRENT_YEAR]: 75000 } },
+      person2: { age: { [CURRENT_YEAR]: 38 }, employment_income: { [CURRENT_YEAR]: 65000 } },
+      person3: { age: { [CURRENT_YEAR]: 16 } },
+      person4: { age: { [CURRENT_YEAR]: 14 } },
+      person5: { age: { [CURRENT_YEAR]: 10 } },
     },
     families: {
       family1: {
         members: ['person1', 'person2', 'person3', 'person4', 'person5'],
-        family_size: { 2024: 5 },
+        family_size: { [CURRENT_YEAR]: 5 },
       },
     },
     tax_units: {
       tax_unit1: {
         members: ['person1', 'person2', 'person3', 'person4', 'person5'],
-        adjusted_gross_income: { 2024: 140000 },
+        adjusted_gross_income: { [CURRENT_YEAR]: 140000 },
       },
     },
     households: {
       household1: {
         members: ['person1', 'person2', 'person3', 'person4', 'person5'],
-        household_size: { 2024: 5 },
+        household_size: { [CURRENT_YEAR]: 5 },
       },
     },
   },

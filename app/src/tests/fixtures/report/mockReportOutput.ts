@@ -17,7 +17,7 @@ export const MOCK_ECONOMY_REPORT_OUTPUT = {
   },
   cliff_impact: null,
   constituency_impact: null,
-  data_version: '2024.1.0',
+  data_version: '2025.1.0',
   intra_decile: {
     all: {
       'Gain more than 5%': 0.08, // 8%

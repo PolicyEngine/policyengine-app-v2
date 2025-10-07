@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { ActionIcon, Box, Group, Stack, Text } from '@mantine/core';
+import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
@@ -84,7 +85,7 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
         // It's a parameter name - resolve it
         const parameter = metadata.parameters[variable.adds];
         if (parameter) {
-          addsArray = getParameterAtInstant(parameter, '2024-01-01') || [];
+          addsArray = getParameterAtInstant(parameter, `${CURRENT_YEAR}-01-01`) || [];
         }
       } else if (Array.isArray(variable.adds)) {
         addsArray = variable.adds;
@@ -96,7 +97,7 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
         // It's a parameter name - resolve it
         const parameter = metadata.parameters[variable.subtracts];
         if (parameter) {
-          subtractsArray = getParameterAtInstant(parameter, '2024-01-01') || [];
+          subtractsArray = getParameterAtInstant(parameter, '2025-01-01') || [];
         }
       } else if (Array.isArray(variable.subtracts)) {
         subtractsArray = variable.subtracts;

@@ -52,7 +52,7 @@ describe('HouseholdAdapter', () => {
         id: 123,
         country_id: 'uk',
         household_json: {
-          people: { person1: { age: { 2024: 30 } } },
+          people: { person1: { age: { 2025: 30 } } },
           tax_units: { unit1: { members: ['person1'] } },
           marital_units: { unit1: { members: ['person1'] } },
         },
@@ -85,8 +85,8 @@ describe('HouseholdAdapter', () => {
         country_id: 'us',
         household_json: {
           people: {
-            person1: { age: { 2024: 25 } },
-            person2: { age: { 2024: 30 } },
+            person1: { age: { 2025: 25 } },
+            person2: { age: { 2025: 30 } },
           },
         },
       };
@@ -134,7 +134,7 @@ describe('HouseholdAdapter', () => {
 
     test('given household data with tax_units then converts to snake_case in payload', () => {
       const householdData = {
-        people: { person1: { age: { 2024: 30 } } },
+        people: { person1: { age: { 2025: 30 } } },
         taxUnits: { unit1: { members: ['person1'] } },
       };
 
@@ -193,8 +193,8 @@ describe('HouseholdAdapter', () => {
     test('given people entity then treats it as special case without conversion', () => {
       const householdData = {
         people: {
-          person1: { age: { 2024: 40 } },
-          person2: { age: { 2024: 35 } },
+          person1: { age: { 2025: 40 } },
+          person2: { age: { 2025: 35 } },
         },
       };
 
@@ -227,7 +227,7 @@ describe('HouseholdAdapter', () => {
         id: 999,
         country_id: 'us',
         household_json: {
-          people: { person1: { age: { 2024: 50 } } },
+          people: { person1: { age: { 2025: 50 } } },
         },
       };
 

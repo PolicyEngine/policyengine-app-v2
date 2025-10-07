@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 import { PersonWithName } from '@/utils/HouseholdQueries';
 
@@ -35,10 +36,10 @@ export const QUERY_COUNTRIES = {
 
 // Years
 export const QUERY_YEARS = {
-  CURRENT: '2024',
+  CURRENT: CURRENT_YEAR,
   PAST: '2023',
-  FUTURE: '2025',
-  NON_EXISTENT: '2026',
+  FUTURE: '2026',
+  NON_EXISTENT: '2027',
 } as const;
 
 // Entity names

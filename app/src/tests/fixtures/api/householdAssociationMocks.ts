@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
@@ -6,8 +7,8 @@ export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
   householdId: '123',
   userId: 'user-456',
   label: 'My Test Household',
-  createdAt: '2024-01-15T10:00:00Z',
-  updatedAt: '2024-01-15T10:00:00Z',
+  createdAt: `${CURRENT_YEAR}-01-15T10:00:00Z`,
+  updatedAt: `${CURRENT_YEAR}-01-15T10:00:00Z`,
   isCreated: true,
 } as any;
 
@@ -18,8 +19,8 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
     householdId: '1',
     userId: 'user-456',
     label: 'First Household',
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: '2024-01-10T10:00:00Z',
+    createdAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     isCreated: true,
   } as any,
   {
@@ -28,8 +29,8 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
     householdId: '2',
     userId: 'user-456',
     label: 'Second Household',
-    createdAt: '2024-01-12T10:00:00Z',
-    updatedAt: '2024-01-12T10:00:00Z',
+    createdAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     isCreated: true,
   } as any,
 ];
@@ -40,8 +41,8 @@ export const mockApiResponse = {
   user_id: 'user-456',
   user_label: 'My Test Household',
   country_id: 'us',
-  created_at: '2024-01-15T10:00:00Z',
-  updated_at: '2024-01-15T10:00:00Z',
+  created_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
+  updated_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
   is_default: false,
 };
 
@@ -52,8 +53,8 @@ export const mockApiResponseList = [
     user_id: 'user-456',
     user_label: 'First Household',
     country_id: 'us',
-    created_at: '2024-01-10T10:00:00Z',
-    updated_at: '2024-01-10T10:00:00Z',
+    created_at: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updated_at: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     is_default: true,
   },
   {
@@ -62,8 +63,8 @@ export const mockApiResponseList = [
     user_id: 'user-456',
     user_label: 'Second Household',
     country_id: 'uk',
-    created_at: '2024-01-12T10:00:00Z',
-    updated_at: '2024-01-12T10:00:00Z',
+    created_at: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updated_at: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     is_default: false,
   },
 ];

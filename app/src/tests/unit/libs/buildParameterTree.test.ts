@@ -52,7 +52,7 @@ import {
   TEST_DESCRIPTION,
   TEST_PERIOD,
   TEST_UNIT,
-  TEST_VALUE_2024,
+  TEST_VALUE_2025,
 } from '@/tests/fixtures/libs/buildParameterTreeMocks';
 
 describe('buildParameterTree', () => {
@@ -277,7 +277,7 @@ describe('buildParameterTree', () => {
     expect(incomeTaxNode?.description).toBe(TEST_DESCRIPTION);
     expect(incomeTaxNode?.unit).toBe(TEST_UNIT);
     expect(incomeTaxNode?.period).toBe(TEST_PERIOD);
-    expect(incomeTaxNode?.values).toEqual(TEST_VALUE_2024);
+    expect(incomeTaxNode?.values).toEqual(TEST_VALUE_2025);
     expect(incomeTaxNode?.economy).toBe(true);
     expect(incomeTaxNode?.household).toBe(false);
     expect(incomeTaxNode?.type).toBe('parameter');

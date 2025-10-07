@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { EconomyCalculationParams, fetchEconomyCalculation } from './economy';
 import { fetchHouseholdCalculation } from './householdCalculation';
@@ -43,11 +44,11 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
     console.log('[fetchCalculationWithMeta] Type is economy');
     // TODO: Update to use dynamic time_period when available in UI
     console.log(
-      '[fetchCalculationWithMeta] Temporarily using 2024 as time_period for economy calculation'
+      `[fetchCalculationWithMeta] Temporarily using ${CURRENT_YEAR} as time_period for economy calculation`
     );
     const params: EconomyCalculationParams = {
       region: meta.region || meta.countryId,
-      time_period: '2024',
+      time_period: CURRENT_YEAR,
     };
 
     console.log('[fetchCalculationWithMeta] Economy calculation params:');

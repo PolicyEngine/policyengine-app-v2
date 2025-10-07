@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
 import { MetadataApiPayload } from '@/types/metadata';
 
@@ -7,7 +8,7 @@ export const TEST_PARAMETER_LABEL = 'Income Tax';
 export const TEST_BRACKET_NAME = 'gov.tax.brackets[0]';
 export const TEST_UNIT = 'currency-GBP';
 export const TEST_DESCRIPTION = 'Tax on income';
-export const TEST_PERIOD = '2024';
+export const TEST_PERIOD = CURRENT_YEAR;
 
 // Mock parameters - Simple flat structure
 export const mockSimpleParameters = {
@@ -17,7 +18,7 @@ export const mockSimpleParameters = {
     description: TEST_DESCRIPTION,
     unit: TEST_UNIT,
     period: TEST_PERIOD,
-    values: { '2024': 0.2 },
+    values: { [CURRENT_YEAR]: 0.2 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -28,8 +29,8 @@ export const mockSimpleParameters = {
     label: 'child_benefit',
     description: 'Benefit for children',
     unit: 'currency-GBP',
-    period: '2024',
-    values: { '2024': 100 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 100 },
     economy: false,
     household: true,
     type: 'parameter' as const,
@@ -55,7 +56,7 @@ export const mockNestedParameters = {
     description: TEST_DESCRIPTION,
     unit: TEST_UNIT,
     period: TEST_PERIOD,
-    values: { '2024': 0.2 },
+    values: { [CURRENT_YEAR]: 0.2 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -66,8 +67,8 @@ export const mockNestedParameters = {
     label: 'capital_gains',
     description: 'Tax on capital gains',
     unit: 'currency-GBP',
-    period: '2024',
-    values: { '2024': 0.15 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 0.15 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -83,8 +84,8 @@ export const mockNestedParameters = {
     label: 'child_benefit',
     description: 'Benefit for children',
     unit: 'currency-GBP',
-    period: '2024',
-    values: { '2024': 100 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 100 },
     economy: false,
     household: true,
     type: 'parameter' as const,
@@ -99,8 +100,8 @@ export const mockBracketParameters = {
     label: 'First bracket',
     description: 'First tax bracket',
     unit: 'currency-GBP',
-    period: '2024',
-    values: { '2024': 12570 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 12570 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -111,8 +112,8 @@ export const mockBracketParameters = {
     label: 'Second bracket',
     description: 'Second tax bracket',
     unit: 'currency-GBP',
-    period: '2024',
-    values: { '2024': 50270 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 50270 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -123,8 +124,8 @@ export const mockBracketParameters = {
     label: 'Third bracket',
     description: 'Third tax bracket',
     unit: 'currency-GBP',
-    period: '2024',
-    values: { '2024': 125140 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 125140 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -140,7 +141,7 @@ export const mockFilteredParameters = {
     description: TEST_DESCRIPTION,
     unit: TEST_UNIT,
     period: TEST_PERIOD,
-    values: { '2024': 0.2 },
+    values: { [CURRENT_YEAR]: 0.2 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -183,7 +184,7 @@ export const mockNonApplicableParameters = {
     description: TEST_DESCRIPTION,
     unit: TEST_UNIT,
     period: TEST_PERIOD,
-    values: { '2024': 0.2 },
+    values: { [CURRENT_YEAR]: 0.2 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -214,8 +215,8 @@ export const mockSpecialCharParameters = {
     label: 'income_tax_rate',
     description: 'Tax rate with underscores',
     unit: 'percent',
-    period: '2024',
-    values: { '2024': 0.2 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 0.2 },
     economy: true,
     household: false,
     type: 'parameter' as const,
@@ -226,8 +227,8 @@ export const mockSpecialCharParameters = {
     label: 'child_care_support',
     description: 'Support for child care',
     unit: 'currency-GBP',
-    period: '2024',
-    values: { '2024': 500 },
+    period: CURRENT_YEAR,
+    values: { [CURRENT_YEAR]: 500 },
     economy: false,
     household: true,
     type: 'parameter' as const,
@@ -254,8 +255,8 @@ export const expectedSimpleTree: ParameterTreeNode = {
           parameter: 'gov.benefit.child_benefit',
           description: 'Benefit for children',
           unit: 'currency-GBP',
-          period: '2024',
-          values: { '2024': 100 },
+          period: CURRENT_YEAR,
+          values: { [CURRENT_YEAR]: 100 },
           economy: false,
           household: true,
         },
@@ -276,7 +277,7 @@ export const expectedSimpleTree: ParameterTreeNode = {
           description: TEST_DESCRIPTION,
           unit: TEST_UNIT,
           period: TEST_PERIOD,
-          values: { '2024': 0.2 },
+          values: { [CURRENT_YEAR]: 0.2 },
           economy: true,
           household: false,
         },
@@ -367,7 +368,7 @@ export const mockDeepNestedParameters = {
     economy: true,
     household: false,
     type: 'parameter' as const,
-    values: { '2024': 12570 },
+    values: { [CURRENT_YEAR]: 12570 },
   },
 };
 
@@ -385,7 +386,7 @@ export const mockBracketIndicesParameters = {
     economy: true,
     household: false,
     type: 'parameter' as const,
-    values: { '2024': 0 },
+    values: { [CURRENT_YEAR]: 0 },
   },
   'gov.tax.rates[1].threshold': {
     parameter: 'gov.tax.rates[1].threshold',
@@ -393,7 +394,7 @@ export const mockBracketIndicesParameters = {
     economy: true,
     household: false,
     type: 'parameter' as const,
-    values: { '2024': 12570 },
+    values: { [CURRENT_YEAR]: 12570 },
   },
 };
 
@@ -435,8 +436,8 @@ export const EXPECTED_THREE_CHILDREN = 3;
 export const EXPECTED_ONE_CHILD = 1;
 
 // Test values
-export const TEST_VALUE_2024 = { '2024': 0.2 };
-export const TEST_VALUE_12570 = { '2024': 12570 };
+export const TEST_VALUE_2025 = { [CURRENT_YEAR]: 0.2 };
+export const TEST_VALUE_12570 = { [CURRENT_YEAR]: 12570 };
 
 // Test utilities
 export const expectNodeToHaveLabel = (node: ParameterTreeNode | undefined, label: string) => {

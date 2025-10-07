@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchEconomyCalculation } from '@/api/economy';
-import { BASE_URL } from '@/constants';
+import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   ERROR_MESSAGES,
   HTTP_STATUS,
@@ -32,7 +32,7 @@ describe('economy API', () => {
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: TEST_REGIONS.ENHANCED_US, time_period: '2024' };
+      const params = { region: TEST_REGIONS.ENHANCED_US, time_period: CURRENT_YEAR };
       const mockResponse = mockSuccessResponse(mockCompletedResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -46,7 +46,7 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=2024`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=${CURRENT_YEAR}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ describe('economy API', () => {
       const countryId = TEST_COUNTRIES.UK;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: 'uk', time_period: '2024' };
+      const params = { region: 'uk', time_period: CURRENT_YEAR };
       const mockResponse = mockSuccessResponse(mockPendingResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -75,7 +75,7 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=uk&time_period=2024`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=uk&time_period=${CURRENT_YEAR}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -94,7 +94,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const params = { region: 'us', time_period: '2024' };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       const result = await fetchEconomyCalculation(
         countryId,
         reformPolicyId,
@@ -118,7 +118,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const params = { region: 'us', time_period: '2024' };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       const result = await fetchEconomyCalculation(
         countryId,
         reformPolicyId,
@@ -141,7 +141,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const params = { region: 'us', time_period: '2024' };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       const result = await fetchEconomyCalculation(
         countryId,
         reformPolicyId,
@@ -164,7 +164,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      const params = { region: 'us', time_period: '2024' };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
         fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Not Found'));
@@ -179,7 +179,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When/Then
-      const params = { region: 'us', time_period: '2024' };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
         fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Error'));
@@ -193,7 +193,7 @@ describe('economy API', () => {
       (global.fetch as any).mockRejectedValue(mockNetworkError);
 
       // When/Then
-      const params = { region: 'us', time_period: '2024' };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
         fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.NETWORK_ERROR);
@@ -204,7 +204,7 @@ describe('economy API', () => {
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: undefined, time_period: '2024' } as any;
+      const params = { region: undefined, time_period: CURRENT_YEAR } as any;
       const mockResponse = mockSuccessResponse(mockPendingResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -213,7 +213,7 @@ describe('economy API', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?time_period=2024`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?time_period=${CURRENT_YEAR}`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -231,7 +231,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const params = { region: 'us', time_period: '2024' };
+      const params = { region: 'us', time_period: CURRENT_YEAR };
       for (const country of countries) {
         await fetchEconomyCalculation(country, reformPolicyId, baselinePolicyId, params);
       }
@@ -239,7 +239,7 @@ describe('economy API', () => {
       // Then
       expect(global.fetch).toHaveBeenNthCalledWith(
         1,
-        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`,
+        `${BASE_URL}/${TEST_COUNTRIES.US}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -248,7 +248,7 @@ describe('economy API', () => {
       );
       expect(global.fetch).toHaveBeenNthCalledWith(
         2,
-        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`,
+        `${BASE_URL}/${TEST_COUNTRIES.UK}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
@@ -257,7 +257,7 @@ describe('economy API', () => {
       );
       expect(global.fetch).toHaveBeenNthCalledWith(
         3,
-        `${BASE_URL}/${TEST_COUNTRIES.CA}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=2024`,
+        `${BASE_URL}/${TEST_COUNTRIES.CA}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=us&time_period=${CURRENT_YEAR}`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',

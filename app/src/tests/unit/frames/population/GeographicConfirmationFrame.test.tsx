@@ -45,6 +45,7 @@ vi.mock('@/mocks/regions', () => ({
 // Mock constants
 vi.mock('@/constants', () => ({
   MOCK_USER_ID: 'test-user-123',
+  CURRENT_YEAR: '2025',
 }));
 
 // Mock hooks

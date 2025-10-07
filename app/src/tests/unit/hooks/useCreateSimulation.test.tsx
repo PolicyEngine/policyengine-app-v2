@@ -45,6 +45,7 @@ vi.mock('@/reducers/metadataReducer', async (importOriginal) => {
 
 vi.mock('@/constants', () => ({
   MOCK_USER_ID: 'anonymous',
+  CURRENT_YEAR: '2025',
 }));
 
 vi.mock('@/libs/queryKeys', () => ({

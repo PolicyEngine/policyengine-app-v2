@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
+import { CURRENT_YEAR } from '@/constants';
 import SetPopulationLabelFrame from '@/frames/population/SetPopulationLabelFrame';
 import populationReducer from '@/reducers/populationReducer';
 import reportReducer from '@/reducers/reportReducer';
@@ -223,7 +224,7 @@ describe('SetPopulationLabelFrame', () => {
 
       const input = screen.getByPlaceholderText(UI_TEXT.LABEL_PLACEHOLDER);
       await user.clear(input);
-      await user.type(input, 'My Family 2024');
+      await user.type(input, `My Family ${CURRENT_YEAR}`);
 
       // When
       const submitButton = screen.getByRole('button', { name: UI_TEXT.CONTINUE_BUTTON });
@@ -232,7 +233,7 @@ describe('SetPopulationLabelFrame', () => {
       // Then
       expect(mockOnNavigate).toHaveBeenCalledWith('household');
       const state = store.getState();
-      expect(state.population.populations[0]?.label).toBe('My Family 2024');
+      expect(state.population.populations[0]?.label).toBe(`My Family ${CURRENT_YEAR}`);
     });
 
     test('given label with leading/trailing spaces when submitted then trims label', async () => {
