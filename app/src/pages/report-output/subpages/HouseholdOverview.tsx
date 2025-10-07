@@ -234,9 +234,9 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
             <VariableArithmetic
               variableName="household_net_income"
               household={output}
-              isAdd={true}
+              isAdd
               defaultExpanded={false}
-              childrenOnly={true} // Only show children, not the root variable itself
+              childrenOnly // Only show children, not the root variable itself
             />
           </Box>
 

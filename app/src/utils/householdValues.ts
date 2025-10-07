@@ -83,12 +83,10 @@ export function getValueFromHousehold(
         for (let i = 0; i < entityData.length; i++) {
           (total as number[])[i] += entityData[i];
         }
+      } else if (Array.isArray(total)) {
+        console.warn('Mixed array and scalar values in aggregation');
       } else {
-        if (Array.isArray(total)) {
-          console.warn('Mixed array and scalar values in aggregation');
-        } else {
-          total += entityData;
-        }
+        total += entityData;
       }
     }
     return total;
@@ -166,12 +164,10 @@ export function formatVariableValue(
 
   if (variable.unit === '/1') {
     // Percentage
-    return (
-      (value * 100).toLocaleString(undefined, {
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision,
-      }) + '%'
-    );
+    return `${(value * 100).toLocaleString(undefined, {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
+    })}%`;
   }
 
   return Math.abs(value).toLocaleString(undefined, {
