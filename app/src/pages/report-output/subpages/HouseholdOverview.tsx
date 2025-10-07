@@ -32,7 +32,7 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
   console.log(metadata);
 
   // Get the root variable (household_net_income)
-  const rootVariable = metadata.variables['household_net_income'];
+  const rootVariable = metadata.variables.household_net_income;
   if (!rootVariable) {
     return (
       <Box>

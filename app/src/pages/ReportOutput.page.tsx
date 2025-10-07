@@ -188,7 +188,7 @@ export default function ReportOutputPage() {
   }, [subpage, navigate, output, status]);
 
   // Determine which tabs to show based on output type
-  const tabs = output && outputType ? getTabsForOutputType(outputType, output) : [];
+  const tabs = output && outputType ? getTabsForOutputType(outputType) : [];
 
   // Format timestamp (placeholder for now)
   const timestamp = 'Ran today at 05:23:41';
@@ -400,7 +400,6 @@ export function isUKEconomyOutput(output: EconomyReportOutput): boolean {
  */
 function getTabsForOutputType(
   outputType: ReportOutputType,
-  output: EconomyReportOutput | any
 ): Array<{ value: string; label: string }> {
   if (outputType === 'economy') {
     // Economy report tabs matching the design

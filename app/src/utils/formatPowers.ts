@@ -15,9 +15,9 @@ export function formatPowers(value: number): [number, string] {
   let displayValue = value;
 
   for (const [power, unit] of powers) {
-    if (value / Math.pow(10, power) >= 1) {
-      displayValue = value / Math.pow(10, power);
-      label = ' ' + unit;
+    if (value / 10 ** power >= 1) {
+      displayValue = value / 10 ** power;
+      label = ` ${unit}`;
       break;
     }
   }
@@ -34,6 +34,6 @@ export function formatBudgetaryImpact(value: number): { display: string; label: 
   const [displayValue, label] = formatPowers(absValue);
   return {
     display: displayValue.toFixed(1),
-    label: label,
+    label,
   };
 }

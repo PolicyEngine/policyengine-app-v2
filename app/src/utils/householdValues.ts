@@ -1,4 +1,4 @@
-import { Household, HouseholdData } from '@/types/ingredients/Household';
+import { Household } from '@/types/ingredients/Household';
 import { MetadataState } from '@/types/metadata';
 
 /**
