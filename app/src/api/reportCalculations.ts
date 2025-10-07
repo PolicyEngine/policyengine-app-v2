@@ -1,6 +1,6 @@
 import { countryIds } from '@/libs/countries';
 import { EconomyCalculationParams, fetchEconomyCalculation } from './economy';
-import { fetchHouseholdCalculation } from './household_calculation';
+import { fetchHouseholdCalculation } from './householdCalculation';
 
 /**
  * Metadata needed to fetch a calculation

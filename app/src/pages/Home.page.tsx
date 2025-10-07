@@ -1,4 +1,5 @@
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
 import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
@@ -9,18 +10,11 @@ import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { ReportViewFlow } from '@/flows/reportViewFlow';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { SimulationViewFlow } from '@/flows/simulationViewFlow';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFetchMetadata } from '@/hooks/useMetadata';
 import { clearFlow, setFlow } from '../reducers/flowReducer';
 
 export default function HomePage() {
   const dispatch = useDispatch();
-
-  // Get current country from URL for UI formatting
-  const countryId = useCurrentCountry();
-
-  // Ensure metadata is fetched for current country
-  useFetchMetadata(countryId);
+  const navigate = useNavigate();
 
   // Note: Below is for testing purposes only
   return (
@@ -52,6 +46,12 @@ export default function HomePage() {
       </Button>
       <Button variant="default" onClick={() => dispatch(setFlow(ReportViewFlow))}>
         Show Report View
+      </Button>
+      <Button variant="default" onClick={() => navigate('/us/report-output-demo')}>
+        View Economy Report Output (Demo)
+      </Button>
+      <Button variant="default" onClick={() => navigate('/us/household-output-demo')}>
+        View Household Report Output (Demo)
       </Button>
       <FlowContainer />
     </>

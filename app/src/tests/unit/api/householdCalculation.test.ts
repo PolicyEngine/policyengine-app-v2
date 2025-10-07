@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
+import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { BASE_URL } from '@/constants';
 import {
   ERROR_MESSAGES,
@@ -69,8 +69,9 @@ describe('household_calculation API', () => {
           signal: expect.any(AbortSignal),
         })
       );
-      expect(result.countryId).toBe('uk');
       expect(result).toEqual(mockUKCalculationResponse.result);
+      // Verify it has UK-specific structure (benunits instead of families)
+      expect(result.benunits).toBeDefined();
     });
 
     test('given API returns error status then throws error with message', async () => {

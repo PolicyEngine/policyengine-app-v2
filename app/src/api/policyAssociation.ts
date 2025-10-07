@@ -33,7 +33,9 @@ export class ApiPolicyStore implements UserPolicyStore {
   }
 
   async findByUser(userId: string): Promise<UserPolicy[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -45,7 +47,9 @@ export class ApiPolicyStore implements UserPolicyStore {
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;

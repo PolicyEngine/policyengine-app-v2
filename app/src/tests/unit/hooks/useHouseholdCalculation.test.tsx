@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
+import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { useHouseholdCalculation } from '@/hooks/useHouseholdCalculation';
 import {
   mockHouseholdResult,
@@ -19,7 +19,7 @@ import {
 } from '@/tests/fixtures/hooks/useHouseholdCalculationMocks';
 
 // Mock the API module
-vi.mock('@/api/household_calculation', () => ({
+vi.mock('@/api/householdCalculation', () => ({
   fetchHouseholdCalculation: vi.fn(),
 }));
 
@@ -55,7 +55,7 @@ describe('useHouseholdCalculation', () => {
   test('given valid parameters then initiates household calculation', async () => {
     // Given
     const { wrapper } = createTestWrapper();
-    (fetchHouseholdCalculation as any).mockResolvedValue(mockHouseholdResult);
+    (fetchHouseholdCalculation as any).mockResolvedValue(mockHouseholdResult.householdData);
 
     // When
     renderHook(
@@ -81,7 +81,7 @@ describe('useHouseholdCalculation', () => {
   test('given calculation completes then calls onSuccess', async () => {
     // Given
     const { wrapper } = createTestWrapper();
-    (fetchHouseholdCalculation as any).mockResolvedValue(mockHouseholdResult);
+    (fetchHouseholdCalculation as any).mockResolvedValue(mockHouseholdResult.householdData);
 
     // When
     const { result } = renderHook(
@@ -97,10 +97,10 @@ describe('useHouseholdCalculation', () => {
 
     // Then
     await waitFor(() => {
-      expect(result.current.data).toEqual(mockHouseholdResult);
+      expect(result.current.data).toEqual(mockHouseholdResult.householdData);
     });
 
-    expect(mockOnSuccess).toHaveBeenCalledWith(mockHouseholdResult);
+    expect(mockOnSuccess).toHaveBeenCalledWith(mockHouseholdResult.householdData);
     expect(mockOnSuccess).toHaveBeenCalledTimes(1);
   });
 
@@ -133,7 +133,7 @@ describe('useHouseholdCalculation', () => {
   test('given UK parameters then returns UK household data', async () => {
     // Given
     const { wrapper } = createTestWrapper();
-    (fetchHouseholdCalculation as any).mockResolvedValue(mockHouseholdResultUK);
+    (fetchHouseholdCalculation as any).mockResolvedValue(mockHouseholdResultUK.householdData);
 
     // When
     const { result } = renderHook(
@@ -148,16 +148,17 @@ describe('useHouseholdCalculation', () => {
 
     // Then
     await waitFor(() => {
-      expect(result.current.household).toEqual(mockHouseholdResultUK);
+      expect(result.current.household).toEqual(mockHouseholdResultUK.householdData);
     });
 
-    expect(result.current.household?.countryId).toBe('uk');
+    // Verify household data has people
+    expect(result.current.household?.people).toBeDefined();
   });
 
   test('given large household then handles complex data correctly', async () => {
     // Given
     const { wrapper } = createTestWrapper();
-    (fetchHouseholdCalculation as any).mockResolvedValue(mockLargeHouseholdResult);
+    (fetchHouseholdCalculation as any).mockResolvedValue(mockLargeHouseholdResult.householdData);
 
     // When
     const { result } = renderHook(
@@ -172,10 +173,10 @@ describe('useHouseholdCalculation', () => {
 
     // Then
     await waitFor(() => {
-      expect(result.current.household).toEqual(mockLargeHouseholdResult);
+      expect(result.current.household).toEqual(mockLargeHouseholdResult.householdData);
     });
 
-    const people = Object.keys(result.current.household?.householdData.people || {});
+    const people = Object.keys(result.current.household?.people || {});
     expect(people).toHaveLength(5);
   });
 

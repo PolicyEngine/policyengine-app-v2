@@ -101,7 +101,8 @@ describe('ApiReportStore', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `/api/user-report-associations/user/${TEST_USER_ID}`
+        `/api/user-report-associations/user/${TEST_USER_ID}`,
+        { headers: { 'Content-Type': 'application/json' } }
       );
       expect(UserReportAdapter.fromApiResponse).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockUserReportList);
@@ -155,7 +156,8 @@ describe('ApiReportStore', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
-        `/api/user-report-associations/${TEST_USER_ID}/${TEST_REPORT_ID}`
+        `/api/user-report-associations/${TEST_USER_ID}/${TEST_REPORT_ID}`,
+        { headers: { 'Content-Type': 'application/json' } }
       );
       expect(UserReportAdapter.fromApiResponse).toHaveBeenCalledWith(mockApiResponse);
       expect(result).toEqual(mockUserReport);
