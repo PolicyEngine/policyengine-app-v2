@@ -1,14 +1,14 @@
 import { useState } from 'react';
+import { IconCircleMinus, IconCirclePlus, IconTriangleFilled } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
-import { Box, Stack, Text, Group, ActionIcon } from '@mantine/core';
-import { IconTriangleFilled, IconCirclePlus, IconCircleMinus } from '@tabler/icons-react';
-import { Household } from '@/types/ingredients/Household';
-import { RootState } from '@/store';
+import { ActionIcon, Box, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { RootState } from '@/store';
+import { Household } from '@/types/ingredients/Household';
 import {
-  getValueFromHousehold,
   formatVariableValue,
   getParameterAtInstant,
+  getValueFromHousehold,
   shouldShowVariable,
 } from '@/utils/householdValues';
 
@@ -243,8 +243,8 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
           {/* Description */}
           <Box ta="center" mt={spacing.sm}>
             <Text size="sm" c={colors.text.secondary}>
-              Here&apos;s how we calculated your household&apos;s net income. Click to expand a section and
-              see the breakdown.
+              Here&apos;s how we calculated your household&apos;s net income. Click to expand a
+              section and see the breakdown.
             </Text>
           </Box>
         </Stack>

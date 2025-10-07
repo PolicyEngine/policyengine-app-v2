@@ -1,5 +1,5 @@
-import { Household } from '@/types/ingredients/Household';
 import US_HOUSEHOLD_RUN from '@/mocks/US_household_run.json';
+import { Household } from '@/types/ingredients/Household';
 
 /**
  * Mock economy report output for demo and testing purposes

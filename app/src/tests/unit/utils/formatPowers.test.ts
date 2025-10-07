@@ -1,10 +1,10 @@
-import { describe, test, expect } from 'vitest';
-import { formatPowers, formatBudgetaryImpact } from '@/utils/formatPowers';
+import { describe, expect, test } from 'vitest';
 import {
-  TEST_VALUES,
   EXPECTED_FORMATTED_VALUES,
   EXPECTED_POWER_TUPLES,
+  TEST_VALUES,
 } from '@/tests/fixtures/utils/formatPowersMocks';
+import { formatBudgetaryImpact, formatPowers } from '@/utils/formatPowers';
 
 describe('formatPowers', () => {
   test('given zero value then returns zero with no label', () => {

@@ -1,25 +1,25 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
-  getValueFromHousehold,
+  EXPECTED_FORMATTED_VALUES,
+  EXPECTED_VALUES,
+  MOCK_AGE_VARIABLE,
+  MOCK_HOUSEHOLD_DATA,
+  MOCK_HOUSEHOLD_DATA_MULTI_PERIOD,
+  MOCK_HOUSEHOLD_DATA_REFORM,
+  MOCK_HOUSEHOLD_INCOME_VARIABLE,
+  MOCK_METADATA,
+  MOCK_PARAMETER,
+  MOCK_TAX_RATE_VARIABLE,
+  TEST_ENTITY_NAMES,
+  TEST_TIME_PERIODS,
+  TEST_VARIABLE_NAMES,
+} from '@/tests/fixtures/utils/householdValuesMocks';
+import {
   formatVariableValue,
   getParameterAtInstant,
+  getValueFromHousehold,
   shouldShowVariable,
 } from '@/utils/householdValues';
-import {
-  MOCK_METADATA,
-  MOCK_HOUSEHOLD_DATA,
-  MOCK_HOUSEHOLD_DATA_REFORM,
-  MOCK_HOUSEHOLD_DATA_MULTI_PERIOD,
-  MOCK_PARAMETER,
-  MOCK_HOUSEHOLD_INCOME_VARIABLE,
-  MOCK_AGE_VARIABLE,
-  MOCK_TAX_RATE_VARIABLE,
-  TEST_TIME_PERIODS,
-  TEST_ENTITY_NAMES,
-  TEST_VARIABLE_NAMES,
-  EXPECTED_VALUES,
-  EXPECTED_FORMATTED_VALUES,
-} from '@/tests/fixtures/utils/householdValuesMocks';
 
 describe('getValueFromHousehold', () => {
   test('given household variable with specific time period and entity then returns correct value', () => {
@@ -284,12 +284,7 @@ describe('shouldShowVariable', () => {
     const variableName = TEST_VARIABLE_NAMES.HOUSEHOLD_INCOME;
 
     // When
-    const result = shouldShowVariable(
-      variableName,
-      MOCK_HOUSEHOLD_DATA,
-      null,
-      MOCK_METADATA
-    );
+    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA);
 
     // Then
     expect(result).toBe(true);
@@ -300,12 +295,7 @@ describe('shouldShowVariable', () => {
     const variableName = TEST_VARIABLE_NAMES.NONEXISTENT;
 
     // When
-    const result = shouldShowVariable(
-      variableName,
-      MOCK_HOUSEHOLD_DATA,
-      null,
-      MOCK_METADATA
-    );
+    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA);
 
     // Then
     expect(result).toBe(false);

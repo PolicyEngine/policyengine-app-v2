@@ -41,7 +41,8 @@ export default function LoadingPage({
       <Box>
         <Group justify="space-between" align="center" mb={spacing.xs}>
           <Text fw={typography.fontWeight.medium} c={colors.text.primary}>
-            {message || (queuePosition ? `Queue position: ${queuePosition}` : 'Processing calculation...')}
+            {message ||
+              (queuePosition ? `Queue position: ${queuePosition}` : 'Processing calculation...')}
           </Text>
           <Group gap={spacing.xs}>
             <Loader size="sm" />

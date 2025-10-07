@@ -1,12 +1,11 @@
-import { Box, Stack, Text, Title } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
+import { Box, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 /**
  * 404 page for invalid sub-page routes
  */
 export default function NotFoundSubPage() {
-
   return (
     <Box
       p={spacing.xl}

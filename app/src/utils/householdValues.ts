@@ -140,11 +140,7 @@ export function getValueFromHousehold(
  * @param precision - Number of decimal places (default: 0 for household overview)
  * @returns Formatted string
  */
-export function formatVariableValue(
-  variable: any,
-  value: number,
-  precision = 0
-): string {
+export function formatVariableValue(variable: any, value: number, precision = 0): string {
   const currencyMap: Record<string, string> = {
     'currency-USD': '$',
     'currency-GBP': '£',

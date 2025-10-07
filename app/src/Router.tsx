@@ -1,10 +1,10 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
-import ReportOutputPage from './pages/ReportOutput.page';
-import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
+import ReportOutputPage from './pages/ReportOutput.page';
+import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';

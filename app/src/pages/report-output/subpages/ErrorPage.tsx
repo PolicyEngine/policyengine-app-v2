@@ -1,6 +1,6 @@
-import { Alert, Button, Stack } from '@mantine/core';
 import { IconAlertCircle } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
+import { Alert, Button, Stack } from '@mantine/core';
 import { spacing } from '@/designTokens';
 
 interface ErrorPageProps {
@@ -15,7 +15,12 @@ export default function ErrorPage({ error }: ErrorPageProps) {
 
   return (
     <Stack gap={spacing.md}>
-      <Alert icon={<IconAlertCircle size={20} />} title="Calculation Failed" color="red" variant="light">
+      <Alert
+        icon={<IconAlertCircle size={20} />}
+        title="Calculation Failed"
+        color="red"
+        variant="light"
+      >
         {typeof error === 'string'
           ? error
           : error?.message || 'An unexpected error occurred during calculation.'}

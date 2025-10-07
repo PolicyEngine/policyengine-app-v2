@@ -1,4 +1,4 @@
-import { Box, Stack, Text, Group, SimpleGrid } from '@mantine/core';
+import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { EconomyReportOutput } from '@/api/economy';
 import { colors, spacing } from '@/designTokens';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
@@ -23,13 +23,13 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
     console.error('EconomyOverview: baseline poverty rate reported as 0; API error likely');
     povertyRateChange = Infinity;
   } else {
-    povertyRateChange = (povertyOverview.reform - povertyOverview.baseline) / povertyOverview.baseline;
+    povertyRateChange =
+      (povertyOverview.reform - povertyOverview.baseline) / povertyOverview.baseline;
   }
 
   // Calculate winners and losers percentages
   const decileOverview = output.intra_decile.all;
-  const winnersPercent =
-    decileOverview['Gain more than 5%'] + decileOverview['Gain less than 5%'];
+  const winnersPercent = decileOverview['Gain more than 5%'] + decileOverview['Gain less than 5%'];
   const losersPercent = decileOverview['Lose more than 5%'] + decileOverview['Lose less than 5%'];
 
   // Render budgetary impact metric
@@ -52,7 +52,11 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
       );
     }
 
-    if (budgetaryImpact === null || budgetaryImpact === undefined || Number.isNaN(budgetaryImpact)) {
+    if (
+      budgetaryImpact === null ||
+      budgetaryImpact === undefined ||
+      Number.isNaN(budgetaryImpact)
+    ) {
       return (
         <Box>
           <Text

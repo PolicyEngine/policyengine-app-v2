@@ -1,6 +1,6 @@
 import { EconomyReportOutput } from '@/api/economy';
-import { Household } from '@/types/ingredients/Household';
 import { ReportOutputType } from '@/pages/ReportOutput.page';
+import { Household } from '@/types/ingredients/Household';
 import EconomyOverview from './EconomyOverview';
 import HouseholdOverview from './HouseholdOverview';
 

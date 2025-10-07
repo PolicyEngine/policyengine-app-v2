@@ -265,6 +265,5 @@ describe('economy API', () => {
         })
       );
     });
-
   });
 });

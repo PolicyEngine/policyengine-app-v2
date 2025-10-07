@@ -1,7 +1,10 @@
 import { useEffect } from 'react';
-import { useNavigate, useParams, useLocation } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  MOCK_DEMO_HOUSEHOLD_ID,
+  MOCK_DEMO_REPORT_ID,
+} from '@/tests/fixtures/report/mockReportOutput';
 import ReportOutputPage from './ReportOutput.page';
-import { MOCK_DEMO_REPORT_ID, MOCK_DEMO_HOUSEHOLD_ID } from '@/tests/fixtures/report/mockReportOutput';
 
 /**
  * Demo wrapper for ReportOutputPage

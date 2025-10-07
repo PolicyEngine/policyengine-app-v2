@@ -1,35 +1,42 @@
 import { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import {
-  Container,
-  Stack,
-  Title,
-  Text,
-  Box,
-  Group,
-  Button,
+  IconChevronLeft,
+  IconClock,
+  IconPencil,
+  IconRefresh,
+  IconShare,
+  IconStack2,
+} from '@tabler/icons-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
   ActionIcon,
   Anchor,
+  Box,
+  Button,
+  Container,
+  Group,
+  Stack,
+  Text,
+  Title,
 } from '@mantine/core';
-import { IconPencil, IconClock, IconShare, IconRefresh, IconChevronLeft, IconStack2 } from '@tabler/icons-react';
 import { EconomyReportOutput } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
-import { colors, spacing, typography } from '@/designTokens';
-import { Household, HouseholdData } from '@/types/ingredients/Household';
-import { useUserReportById } from '@/hooks/useUserReports';
-import { useReportOutput } from '@/hooks/useReportOutput';
 import { MOCK_USER_ID } from '@/constants';
+import { colors, spacing, typography } from '@/designTokens';
+import { useReportOutput } from '@/hooks/useReportOutput';
+import { useUserReportById } from '@/hooks/useUserReports';
 import {
+  MOCK_DEMO_HOUSEHOLD_ID,
+  MOCK_DEMO_REPORT_ID,
   MOCK_ECONOMY_REPORT_OUTPUT,
   MOCK_HOUSEHOLD_OUTPUT,
-  MOCK_DEMO_REPORT_ID,
-  MOCK_DEMO_HOUSEHOLD_ID,
 } from '@/tests/fixtures/report/mockReportOutput';
-import OverviewSubPage from './report-output/subpages/OverviewSubPage';
-import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
-import LoadingPage from './report-output/subpages/LoadingPage';
+import { Household, HouseholdData } from '@/types/ingredients/Household';
 import ErrorPage from './report-output/subpages/ErrorPage';
+import LoadingPage from './report-output/subpages/LoadingPage';
+import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
+import OverviewSubPage from './report-output/subpages/OverviewSubPage';
 
 /**
  * Type discriminator for output types
@@ -114,7 +121,8 @@ function useReportData(reportId: string) {
   const progress = status === 'pending' ? (result as any).progress : undefined;
   const message = status === 'pending' ? (result as any).message : undefined;
   const queuePosition = status === 'pending' ? (result as any).queuePosition : undefined;
-  const estimatedTimeRemaining = status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
+  const estimatedTimeRemaining =
+    status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
 
   // Determine output type from cached metadata instead of type guards
   // The metadata is cached during the calculation query and contains the definitive type
@@ -339,7 +347,8 @@ export default function ReportOutputPage() {
                   alignItems: 'center',
                   gap: spacing.xs,
                   position: 'relative',
-                  borderRight: index < tabs.length - 1 ? `1px solid ${colors.border.light}` : 'none',
+                  borderRight:
+                    index < tabs.length - 1 ? `1px solid ${colors.border.light}` : 'none',
                   marginBottom: '-1px',
                 }}
               >
@@ -349,7 +358,9 @@ export default function ReportOutputPage() {
                   style={{
                     color: activeTab === tab.value ? colors.text.primary : colors.gray[700],
                     fontWeight:
-                      activeTab === tab.value ? typography.fontWeight.medium : typography.fontWeight.normal,
+                      activeTab === tab.value
+                        ? typography.fontWeight.medium
+                        : typography.fontWeight.normal,
                   }}
                 >
                   {tab.label}
@@ -399,7 +410,7 @@ export function isUKEconomyOutput(output: EconomyReportOutput): boolean {
  * Note: The output type is determined from cached CalculationMeta, not from type guards
  */
 function getTabsForOutputType(
-  outputType: ReportOutputType,
+  outputType: ReportOutputType
 ): Array<{ value: string; label: string }> {
   if (outputType === 'economy') {
     // Economy report tabs matching the design
@@ -428,5 +439,3 @@ function getTabsForOutputType(
   // Fallback
   return [{ value: 'overview', label: 'Overview' }];
 }
-
-
