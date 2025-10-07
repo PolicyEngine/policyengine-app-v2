@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs } from '@mantine/core';
-import moment from 'moment';
+import { timeAgo } from '@/utils/datetime';
 import {
   ColumnConfig,
   IngredientRecord,
   TextValue,
+  LinkValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
@@ -197,7 +198,7 @@ export default function SimulationsPage() {
           text: creatorName ? `by ${creatorName}` : '',
         } as TextValue,
         dateCreated: {
-          text: moment(sim.created_at).fromNow(),
+          text: timeAgo(sim.created_at),
         } as TextValue,
         status: {
           text: sim.error ? 'Failed' : (sim.has_result ? 'Ready' : 'Pending'),

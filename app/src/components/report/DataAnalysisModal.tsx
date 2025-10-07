@@ -7,29 +7,17 @@ import {
   Text,
   Textarea,
   Alert,
-  Card,
-  Title,
   Badge,
   LoadingOverlay,
   Box,
-  ScrollArea,
-  Select,
   MultiSelect,
-  Radio,
   Paper,
-  Divider,
   Transition,
-  Chip,
-  ActionIcon,
-  Tooltip,
 } from '@mantine/core';
 import {
   IconSparkles,
   IconAlertCircle,
-  IconChevronRight,
-  IconInfoCircle,
   IconRefresh,
-  IconX,
   IconCheck,
 } from '@tabler/icons-react';
 import BaseModal from '@/components/shared/BaseModal';
@@ -38,12 +26,6 @@ import { simulationsAPI } from '@/api/v2/simulations';
 import { userSimulationsAPI } from '@/api/v2/userSimulations';
 import { MOCK_USER_ID } from '@/constants';
 
-type DataType = 'single' | 'comparison';
-
-interface SimulationSelection {
-  type: DataType;
-  simulations: string[];
-}
 
 interface DataAnalysisModalProps {
   opened: boolean;
@@ -62,8 +44,7 @@ export default function DataAnalysisModal({
   onSubmit,
   reportId,
 }: DataAnalysisModalProps) {
-  const [step, setStep] = useState<'selection' | 'description' | 'confirmation'>('selection');
-  const [dataType, setDataType] = useState<DataType>('single');
+  const [step, setStep] = useState<'selection' | 'confirmation'>('selection');
   const [selectedSimulations, setSelectedSimulations] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -101,7 +82,6 @@ export default function DataAnalysisModal({
   useEffect(() => {
     if (opened) {
       setStep('selection');
-      setDataType('single');
       setSelectedSimulations([]);
       setDescription('');
       setError(null);
@@ -109,20 +89,12 @@ export default function DataAnalysisModal({
     }
   }, [opened]);
 
-  const handleProceedToDescription = () => {
+  const handleParse = async () => {
     if (selectedSimulations.length === 0) {
       setError('Please select at least one simulation');
       return;
     }
-    if (dataType === 'comparison' && selectedSimulations.length !== 2) {
-      setError('Please select exactly two simulations for comparison');
-      return;
-    }
-    setError(null);
-    setStep('description');
-  };
 
-  const handleParse = async () => {
     if (!description.trim()) {
       setError('Please describe what data you want to analyse');
       return;
@@ -132,17 +104,28 @@ export default function DataAnalysisModal({
     setError(null);
 
     try {
-      // Enhanced description with simulation context
-      const enhancedDescription = dataType === 'comparison'
-        ? `Compare the following between these two simulations: ${description}`
-        : `For this simulation: ${description}`;
+      // Build rich context with simulation details
+      const simulationContext = selectedSimulations.map((simId, idx) => {
+        const sim = simulations?.find(s => s.id === simId);
+        const userSim = userSimulations.find(us => us.simulation_id === simId);
+        const displayName = userSim?.custom_name || sim?.name || `Simulation ${idx + 1}`;
+        return `- ${displayName} (ID: ${simId})`;
+      }).join('\n');
 
-      // Call API with simulation IDs embedded
+      // Enhanced prompt that makes it clear the LLM should handle ALL selected simulations
+      const enhancedDescription = `Available simulations:
+${simulationContext}
+
+User request: ${description}
+
+IMPORTANT: The user has selected ${selectedSimulations.length} simulation${selectedSimulations.length > 1 ? 's' : ''}. Make sure to include data for ALL of them in your response. If the request mentions comparing or showing differences, create aggregate_changes. Otherwise, create separate aggregates for each simulation.`;
+
+      // Call API - let the backend infer whether to create aggregates or aggregate changes
       const response = await dataRequestsAPI.parse(
         enhancedDescription,
         reportId,
         selectedSimulations,
-        dataType === 'comparison'
+        false // Don't force comparison mode - let LLM infer from text
       );
 
       setParsedResponse(response);
@@ -158,30 +141,19 @@ export default function DataAnalysisModal({
   const handleConfirm = () => {
     if (!parsedResponse) return;
 
-    // Separate aggregates and aggregate changes based on data type
+    // Check the response to see what type of data was returned
+    // If any aggregate has baseline_simulation_id and comparison_simulation_id, it's a comparison
+    const isComparison = parsedResponse.aggregates.some(
+      agg => agg.baseline_simulation_id && agg.comparison_simulation_id
+    );
+
     let aggregates: any[] = [];
     let aggregateChanges: any[] = [];
 
-    if (dataType === 'single') {
-      aggregates = parsedResponse.aggregates;
+    if (isComparison) {
+      aggregateChanges = parsedResponse.aggregates;
     } else {
-      // For comparisons, ensure we have the correct field names
-      // Map the simulation IDs to baseline and comparison
-      aggregateChanges = parsedResponse.aggregates.map(agg => {
-        // If the backend already provided baseline_simulation_id and comparison_simulation_id, use them
-        if (agg.baseline_simulation_id && agg.comparison_simulation_id) {
-          return agg;
-        }
-
-        // Otherwise, map from selectedSimulations
-        return {
-          ...agg,
-          baseline_simulation_id: agg.baseline_simulation_id || selectedSimulations[0],
-          comparison_simulation_id: agg.comparison_simulation_id || selectedSimulations[1],
-          // Remove simulation_id if it exists to avoid confusion
-          simulation_id: undefined,
-        };
-      });
+      aggregates = parsedResponse.aggregates;
     }
 
     onSubmit(
@@ -194,123 +166,32 @@ export default function DataAnalysisModal({
   };
 
   const handleBack = () => {
-    if (step === 'description') {
+    if (step === 'confirmation') {
       setStep('selection');
-      setError(null);
-    } else if (step === 'confirmation') {
-      setStep('description');
       setParsedResponse(null);
     }
   };
 
   const renderSelectionStep = () => (
     <Stack>
-      <Text size="sm" c="dimmed">Choose the type of analysis and simulations to use</Text>
+      <Text size="sm" c="dimmed">Select simulations and describe what data you'd like to analyse</Text>
 
-      <Radio.Group
-        value={dataType}
-        onChange={(value) => {
-          setDataType(value as DataType);
-          setSelectedSimulations([]);
-        }}
-      >
-        <Stack gap="sm">
-          <Paper withBorder p="sm">
-            <Radio
-              value="single"
-              label={
-                <Stack gap={4}>
-                  <Text size="sm" fw={500}>Single simulation</Text>
-                  <Text size="xs" c="dimmed">
-                    View metrics from one policy
-                  </Text>
-                </Stack>
-              }
-            />
-          </Paper>
-
-          <Paper withBorder p="sm">
-            <Radio
-              value="comparison"
-              label={
-                <Stack gap={4}>
-                  <Text size="sm" fw={500}>Compare simulations</Text>
-                  <Text size="xs" c="dimmed">
-                    See changes between baseline and reform
-                  </Text>
-                </Stack>
-              }
-            />
-          </Paper>
-        </Stack>
-      </Radio.Group>
-
-      <Divider />
-
-      {dataType === 'single' ? (
-        <Select
-          label="Simulation"
-          placeholder="Choose a simulation"
-          data={simulationOptions}
-          value={selectedSimulations[0] || ''}
-          onChange={(value) => setSelectedSimulations(value ? [value] : [])}
-          searchable
-          required
-          disabled={simulationsLoading}
-          size="sm"
-        />
-      ) : (
-        <Stack gap="sm">
-          <Select
-            label="Baseline"
-            placeholder="Select baseline simulation"
-            data={simulationOptions}
-            value={selectedSimulations[0] || ''}
-            onChange={(value) => {
-              const newSelection = [...selectedSimulations];
-              newSelection[0] = value || '';
-              setSelectedSimulations(newSelection.filter(s => s));
-            }}
-            searchable
-            required
-            disabled={simulationsLoading}
-            size="sm"
-          />
-          <Select
-            label="Reform"
-            placeholder="Select reform simulation"
-            data={simulationOptions}
-            value={selectedSimulations[1] || ''}
-            onChange={(value) => {
-              const newSelection = [...selectedSimulations];
-              newSelection[1] = value || '';
-              setSelectedSimulations(newSelection.filter(s => s));
-            }}
-            searchable
-            required
-            disabled={simulationsLoading}
-            size="sm"
-          />
-        </Stack>
-      )}
-
-      {error && (
-        <Alert icon={<IconAlertCircle size={16} />} color="red" size="sm">
-          {error}
-        </Alert>
-      )}
-    </Stack>
-  );
-
-  const renderDescriptionStep = () => (
-    <Stack>
-      <Text size="sm" c="dimmed">Describe the data you'd like to see</Text>
+      <MultiSelect
+        label="Simulations"
+        placeholder="Select one or more simulations"
+        data={simulationOptions}
+        value={selectedSimulations}
+        onChange={setSelectedSimulations}
+        searchable
+        required
+        disabled={simulationsLoading}
+        size="sm"
+        description="Select one simulation to view metrics, or multiple to compare"
+      />
 
       <Textarea
-        placeholder={dataType === 'single'
-          ? "e.g., Show average household income by income decile"
-          : "e.g., Compare the change in tax revenue between the two policies"
-        }
+        label="Description"
+        placeholder="e.g., Show average household income by income decile, or compare tax revenue changes between simulations"
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         minRows={4}
@@ -358,8 +239,6 @@ export default function DataAnalysisModal({
     switch (step) {
       case 'selection':
         return renderSelectionStep();
-      case 'description':
-        return renderDescriptionStep();
       case 'confirmation':
         return renderConfirmationStep();
       default:
@@ -376,23 +255,8 @@ export default function DataAnalysisModal({
               Cancel
             </Button>
             <Button
-              onClick={handleProceedToDescription}
-              disabled={selectedSimulations.length === 0 || simulationsLoading}
-              rightSection={<IconChevronRight size={16} />}
-            >
-              Next
-            </Button>
-          </>
-        );
-      case 'description':
-        return (
-          <>
-            <Button variant="subtle" onClick={handleBack}>
-              Back
-            </Button>
-            <Button
               onClick={handleParse}
-              disabled={!description.trim()}
+              disabled={selectedSimulations.length === 0 || !description.trim() || simulationsLoading}
               loading={isLoading}
               leftSection={<IconSparkles size={16} />}
             >
@@ -439,7 +303,7 @@ export default function DataAnalysisModal({
         <Stack>
           {/* Progress indicator */}
           <Group justify="center" gap="xs">
-            {['selection', 'description', 'confirmation'].map((s, idx) => (
+            {['selection', 'confirmation'].map((s, idx) => (
               <Box
                 key={s}
                 style={{
@@ -448,7 +312,7 @@ export default function DataAnalysisModal({
                   borderRadius: '50%',
                   backgroundColor:
                     step === s ? 'var(--mantine-color-blue-6)' :
-                    ['selection', 'description', 'confirmation'].indexOf(step) > idx ?
+                    ['selection', 'confirmation'].indexOf(step) > idx ?
                       'var(--mantine-color-green-6)' :
                       'var(--mantine-color-gray-3)',
                   transition: 'background-color 0.2s ease',

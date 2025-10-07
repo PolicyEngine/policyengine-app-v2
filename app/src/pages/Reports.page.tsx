@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs } from '@mantine/core';
-import moment from 'moment';
+import { timeAgo } from '@/utils/datetime';
 import ReportCreationModal from '@/components/report/ReportCreationModal';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
 import { reportsAPI } from '@/api/v2/reports';
@@ -191,7 +191,7 @@ export default function ReportsPage() {
           text: report.status ? report.status.charAt(0).toUpperCase() + report.status.slice(1) : 'Draft',
         } as TextValue,
         dateCreated: {
-          text: moment(report.created_at).fromNow(),
+          text: timeAgo(report.created_at),
         } as TextValue,
       };
     }) || [];

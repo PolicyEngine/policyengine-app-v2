@@ -23,7 +23,7 @@ import { parametersAPI } from '@/api/parameters';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
 import AddToLibraryButton from '@/components/common/AddToLibraryButton';
-import ResourceIdLink from '@/components/common/ResourceIdLink';
+import PolicyLink from '@/components/common/PolicyLink';
 import { colors, spacing, typography } from '@/designTokens';
 import { timeAgo, formatDateTime } from '@/utils/datetime';
 
@@ -39,7 +39,7 @@ interface Dynamic {
 }
 
 export default function DynamicDetailPage() {
-  const { dynamicId, countryId } = useParams<{ dynamicId: string; countryId: string }>();
+  const { dynamicId } = useParams<{ dynamicId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
@@ -202,11 +202,7 @@ export default function DynamicDetailPage() {
                 <Text size="sm" fw={600} mb="xs">
                   Associated policy
                 </Text>
-                <ResourceIdLink
-                  resourceType="policy"
-                  resourceId={dynamic.policy_id}
-                  countryId={countryId}
-                />
+                <PolicyLink policyId={dynamic.policy_id} />
               </div>
             )}
 

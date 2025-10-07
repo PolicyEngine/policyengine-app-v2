@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs } from '@mantine/core';
-import moment from 'moment';
+import { timeAgo } from '@/utils/datetime';
 import { apiClient } from '@/api/apiClient';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -209,7 +209,7 @@ export default function DynamicsPage() {
           text: dynamic.type || 'Standard',
         } as TextValue,
         dateCreated: {
-          text: moment(dynamic.created_at).fromNow(),
+          text: timeAgo(dynamic.created_at),
         } as TextValue,
       };
     }) || [];

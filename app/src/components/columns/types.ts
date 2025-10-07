@@ -17,6 +17,7 @@ export interface LinkColumnConfig extends BaseColumnConfig {
   size?: 'xs' | 'sm' | 'md' | 'lg';
   color?: string;
   urlPrefix?: string;
+  resourceType?: 'policy' | 'simulation' | 'dataset' | 'dynamic' | 'report' | 'model-version';
 }
 
 export interface BulletsColumnConfig extends BaseColumnConfig {
@@ -63,6 +64,7 @@ export interface TextValue {
 export interface LinkValue {
   text: string;
   url?: string;
+  resourceId?: string;
 }
 
 export interface BulletValue {

@@ -32,11 +32,16 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFetchMetadata } from '@/hooks/useMetadata';
+import { usersAPI } from '@/api/v2/users';
 import { reportsAPI } from '@/api/v2/reports';
+import { simulationsAPI } from '@/api/v2/simulations';
+import { datasetsAPI } from '@/api/v2/datasets';
+import { userReportsAPI } from '@/api/v2/userReports';
 import { userSimulationsAPI } from '@/api/v2/userSimulations';
 import { userPoliciesAPI } from '@/api/v2/userPolicies';
 import { userDynamicsAPI } from '@/api/v2/userDynamics';
 import { userDatasetsAPI } from '@/api/v2/userDatasets';
+import { apiClient } from '@/api/apiClient';
 import { MOCK_USER_ID } from '@/constants';
 
 export default function HomePage() {
@@ -48,31 +53,109 @@ export default function HomePage() {
 
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
-  // Fetch all user data
-  const { data: reports = [] } = useQuery({
-    queryKey: ['reports', userId],
-    queryFn: () => reportsAPI.list({ limit: 100, user_id: userId }),
+  // Fetch user to get resource IDs
+  const { data: user } = useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => usersAPI.getUser(userId),
   });
 
-  const { data: simulations = [] } = useQuery({
+  // Fetch user associations for custom names
+  const { data: userReports = [] } = useQuery({
+    queryKey: ['userReports', userId],
+    queryFn: () => userReportsAPI.list(userId),
+    enabled: !!user,
+  });
+
+  const { data: userSimulations = [] } = useQuery({
     queryKey: ['userSimulations', userId],
-    queryFn: () => userSimulationsAPI.list({ limit: 100 }),
+    queryFn: () => userSimulationsAPI.list(userId),
+    enabled: !!user,
   });
 
-  const { data: policies = [] } = useQuery({
+  const { data: userPolicies = [] } = useQuery({
     queryKey: ['userPolicies', userId],
-    queryFn: () => userPoliciesAPI.list({ limit: 100 }),
+    queryFn: () => userPoliciesAPI.list(userId),
+    enabled: !!user,
   });
 
-  const { data: dynamics = [] } = useQuery({
+  const { data: userDynamics = [] } = useQuery({
     queryKey: ['userDynamics', userId],
-    queryFn: () => userDynamicsAPI.list({ limit: 100 }),
+    queryFn: () => userDynamicsAPI.list(userId),
+    enabled: !!user,
   });
 
-  const { data: datasets = [] } = useQuery({
+  const { data: userDatasets = [] } = useQuery({
     queryKey: ['userDatasets', userId],
-    queryFn: () => userDatasetsAPI.list({ limit: 100 }),
+    queryFn: () => userDatasetsAPI.list(userId),
+    enabled: !!user,
   });
+
+  // Fetch actual resources
+  const { data: allReports = [] } = useQuery({
+    queryKey: ['reports'],
+    queryFn: () => reportsAPI.list({ limit: 1000 }),
+    enabled: !!user?.reports?.length,
+  });
+
+  const { data: allSimulations = [] } = useQuery({
+    queryKey: ['simulations'],
+    queryFn: () => simulationsAPI.list({ limit: 1000 }),
+    enabled: !!user?.simulations?.length,
+  });
+
+  const { data: allPolicies = [] } = useQuery({
+    queryKey: ['policies'],
+    queryFn: () => apiClient.get<any[]>('/policies/', { params: { limit: 1000 } }),
+    enabled: !!user?.policies?.length,
+  });
+
+  const { data: allDynamics = [] } = useQuery({
+    queryKey: ['dynamics'],
+    queryFn: () => apiClient.get<any[]>('/dynamics/', { params: { limit: 1000 } }),
+    enabled: !!user?.dynamics?.length,
+  });
+
+  const { data: allDatasets = [] } = useQuery({
+    queryKey: ['datasets'],
+    queryFn: () => datasetsAPI.list({ limit: 1000 }),
+    enabled: !!user?.datasets?.length,
+  });
+
+  // Filter to user's resources and add custom names
+  const reports = allReports
+    .filter(r => user?.reports?.includes(r.id))
+    .map(r => {
+      const userReport = userReports.find(ur => ur.report_id === r.id);
+      return { ...r, name: userReport?.custom_name || r.name, label: r.name };
+    });
+
+  const simulations = allSimulations
+    .filter(s => user?.simulations?.includes(s.id))
+    .map(s => {
+      const userSim = userSimulations.find(us => us.simulation_id === s.id);
+      return { ...s, name: userSim?.custom_name || s.name, label: s.name };
+    });
+
+  const policies = allPolicies
+    .filter(p => user?.policies?.includes(p.id))
+    .map(p => {
+      const userPolicy = userPolicies.find(up => up.policy_id === p.id);
+      return { ...p, name: userPolicy?.custom_name || p.label, label: p.label };
+    });
+
+  const dynamics = allDynamics
+    .filter(d => user?.dynamics?.includes(d.id))
+    .map(d => {
+      const userDynamic = userDynamics.find(ud => ud.dynamic_id === d.id);
+      return { ...d, name: userDynamic?.custom_name || d.name, label: d.name };
+    });
+
+  const datasets = allDatasets
+    .filter(d => user?.datasets?.includes(d.id))
+    .map(d => {
+      const userDataset = userDatasets.find(ud => ud.dataset_id === d.id);
+      return { ...d, name: userDataset?.custom_name || d.label, label: d.label };
+    });
 
   // Combine all items with timestamps for recent activity
   const allItems = [

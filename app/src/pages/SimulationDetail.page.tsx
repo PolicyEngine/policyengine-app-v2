@@ -21,11 +21,13 @@ import { userSimulationsAPI } from '@/api/v2/userSimulations';
 import { MOCK_USER_ID } from '@/constants';
 import ReportRenameModal from '@/components/report/ReportRenameModal';
 import AddToLibraryButton from '@/components/common/AddToLibraryButton';
-import ResourceIdLink from '@/components/common/ResourceIdLink';
+import PolicyLink from '@/components/common/PolicyLink';
+import DatasetLink from '@/components/common/DatasetLink';
+import ModelVersionLink from '@/components/common/ModelVersionLink';
 import { timeAgo, formatDateTime } from '@/utils/datetime';
 
 export default function SimulationDetailPage() {
-  const { simulationId, countryId } = useParams<{ simulationId: string; countryId: string }>();
+  const { simulationId } = useParams<{ simulationId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
@@ -174,11 +176,7 @@ export default function SimulationDetailPage() {
               <Text size="sm" fw={600} mb="xs">
                 Policy
               </Text>
-              <ResourceIdLink
-                resourceType="policy"
-                resourceId={simulation.policy_id}
-                countryId={countryId}
-              />
+              <PolicyLink policyId={simulation.policy_id} />
             </div>
 
             <div>
@@ -193,11 +191,7 @@ export default function SimulationDetailPage() {
                 <Text size="sm" fw={600} mb="xs">
                   Model version
                 </Text>
-                <ResourceIdLink
-                  resourceType="model-version"
-                  resourceId={simulation.model_version_id}
-                  countryId={countryId}
-                />
+                <ModelVersionLink modelVersionId={simulation.model_version_id} />
               </div>
             )}
 
@@ -206,11 +200,7 @@ export default function SimulationDetailPage() {
                 <Text size="sm" fw={600} mb="xs">
                   Dataset
                 </Text>
-                <ResourceIdLink
-                  resourceType="dataset"
-                  resourceId={simulation.dataset_id}
-                  countryId={countryId}
-                />
+                <DatasetLink datasetId={simulation.dataset_id} />
               </div>
             )}
 

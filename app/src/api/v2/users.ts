@@ -9,6 +9,11 @@ export interface UserResponse {
   current_model_id: string;
   created_at: string;
   updated_at: string;
+  policies?: any[];
+  simulations?: any[];
+  reports?: any[];
+  datasets?: any[];
+  dynamics?: any[];
 }
 
 export interface UserCreate {

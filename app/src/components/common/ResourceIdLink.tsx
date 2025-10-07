@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 interface ResourceIdLinkProps {
   resourceType: 'policy' | 'simulation' | 'report' | 'dataset' | 'dynamic' | 'model-version';
   resourceId: string;
-  countryId?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg';
   label?: string;
 }
@@ -12,7 +11,6 @@ interface ResourceIdLinkProps {
 export default function ResourceIdLink({
   resourceType,
   resourceId,
-  countryId = 'us',
   size = 'sm',
   label,
 }: ResourceIdLinkProps) {
@@ -21,17 +19,17 @@ export default function ResourceIdLink({
   const getPath = () => {
     switch (resourceType) {
       case 'policy':
-        return `/${countryId}/policy/${resourceId}`;
+        return `/policy/${resourceId}`;
       case 'simulation':
-        return `/${countryId}/simulation/${resourceId}`;
+        return `/simulation/${resourceId}`;
       case 'report':
         return `/report/${resourceId}`;
       case 'dataset':
-        return `/${countryId}/dataset/${resourceId}`;
+        return `/dataset/${resourceId}`;
       case 'dynamic':
-        return `/${countryId}/dynamic/${resourceId}`;
+        return `/dynamic/${resourceId}`;
       case 'model-version':
-        return `/${countryId}/model-version/${resourceId}`;
+        return `/model-version/${resourceId}`;
     }
   };
 

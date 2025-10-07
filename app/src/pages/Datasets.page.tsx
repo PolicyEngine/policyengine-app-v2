@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Tabs } from '@mantine/core';
-import moment from 'moment';
 import { datasetsAPI } from '@/api/v2/datasets';
 import { userDatasetsAPI } from '@/api/v2/userDatasets';
 import { usersAPI } from '@/api/v2/users';

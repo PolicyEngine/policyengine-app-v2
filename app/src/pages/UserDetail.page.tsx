@@ -17,10 +17,10 @@ import {
 } from '@mantine/core';
 import { IconChevronLeft, IconPencil, IconCheck, IconX } from '@tabler/icons-react';
 import { usersAPI } from '@/api/v2/users';
-import moment from 'moment';
+import { formatDateTime } from '@/utils/datetime';
 
 export default function UserDetailPage() {
-  const { userId, countryId } = useParams<{ userId: string; countryId: string }>();
+  const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [editMode, setEditMode] = useState(false);
@@ -246,13 +246,13 @@ export default function UserDetailPage() {
 
             <Group gap="xs">
               <Text size="xs" c="dimmed">
-                Created: {moment(user.created_at).format('MMMM D, YYYY h:mm A')}
+                Created: {formatDateTime(user.created_at)}
               </Text>
               <Text size="xs" c="dimmed">
                 •
               </Text>
               <Text size="xs" c="dimmed">
-                Updated: {moment(user.updated_at).format('MMMM D, YYYY h:mm A')}
+                Updated: {formatDateTime(user.updated_at)}
               </Text>
             </Group>
           </Stack>

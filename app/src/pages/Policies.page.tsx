@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Tabs } from '@mantine/core';
-import moment from 'moment';
+import { timeAgo } from '@/utils/datetime';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import PolicyCreationFlow from '@/components/policy/PolicyCreationFlow';
@@ -196,7 +196,7 @@ export default function PoliciesPage() {
           text: creatorName ? `by ${creatorName}` : '',
         } as TextValue,
         dateCreated: {
-          text: moment(policy.created_at).fromNow(),
+          text: timeAgo(policy.created_at),
         } as TextValue,
         provisions: {
           text: policy.description || 'No description',

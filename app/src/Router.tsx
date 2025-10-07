@@ -14,6 +14,7 @@ import SimulationsPage from './pages/Simulations.page';
 import SimulationDetailPage from './pages/SimulationDetail.page';
 import UserDetailPage from './pages/UserDetail.page';
 import VariableDetailPage from './pages/VariableDetail.page';
+import ModelVersionDetailPage from './pages/ModelVersionDetail.page';
 
 const router = createBrowserRouter(
   [
@@ -76,6 +77,10 @@ const router = createBrowserRouter(
         {
           path: 'variable/:variableName',
           element: <VariableDetailPage />,
+        },
+        {
+          path: 'model-version/:modelVersionId',
+          element: <ModelVersionDetailPage />,
         },
       ],
     },

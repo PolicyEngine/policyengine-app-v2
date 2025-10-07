@@ -24,7 +24,7 @@ import AddToLibraryButton from '@/components/common/AddToLibraryButton';
 import { timeAgo, formatDateTime } from '@/utils/datetime';
 
 export default function DatasetDetailPage() {
-  const { datasetId, countryId } = useParams<{ datasetId: string; countryId: string }>();
+  const { datasetId } = useParams<{ datasetId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
