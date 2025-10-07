@@ -103,7 +103,7 @@ export const MOCK_ECONOMY_OPTIONS = {
   time_period: [
     { name: 2022, label: '2022' },
     { name: 2023, label: '2023' },
-    { name: parseInt(CURRENT_YEAR), label: CURRENT_YEAR },
+    { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
   ],
   datasets: [
     { name: 'cps_2022', label: 'CPS 2022', title: 'Current Population Survey 2022', default: true },

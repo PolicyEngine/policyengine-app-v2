@@ -1,4 +1,3 @@
-import { CURRENT_YEAR } from '@/constants';
 import { vi } from 'vitest';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';

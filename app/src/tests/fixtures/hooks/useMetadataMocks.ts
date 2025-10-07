@@ -51,7 +51,7 @@ export const mockLoadedMetadataState: MetadataState = {
   },
   economyOptions: {
     region: [{ name: 'us', label: 'United States' }],
-    time_period: [{ name: parseInt(CURRENT_YEAR), label: CURRENT_YEAR }],
+    time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
     datasets: [
       {
         name: `cps_${CURRENT_YEAR}`,
@@ -84,7 +84,7 @@ export const mockUKMetadataState: MetadataState = {
   },
   economyOptions: {
     region: [{ name: 'uk', label: 'United Kingdom' }],
-    time_period: [{ name: parseInt(CURRENT_YEAR), label: CURRENT_YEAR }],
+    time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
     datasets: [
       { name: `frs_${CURRENT_YEAR}`, label: `FRS ${CURRENT_YEAR}`, title: `Family Resources Survey ${CURRENT_YEAR}`, default: true },
     ],

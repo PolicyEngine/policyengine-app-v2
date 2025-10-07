@@ -21,11 +21,11 @@ export const TIME_PERIOD_2023 = {
   label: '2023',
 };
 export const TIME_PERIOD_2024 = {
-  name: parseInt(CURRENT_YEAR),
+  name: parseInt(CURRENT_YEAR, 10),
   label: CURRENT_YEAR,
 };
 export const TIME_PERIOD_2025 = {
-  name: parseInt(CURRENT_YEAR),
+  name: parseInt(CURRENT_YEAR, 10),
   label: CURRENT_YEAR,
 };
 

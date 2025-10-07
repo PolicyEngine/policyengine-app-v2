@@ -71,8 +71,8 @@ export const mockMetadataResponse: MetadataApiPayload = {
       ],
       time_period: [
         { name: 2023, label: '2023' },
-        { name: parseInt(CURRENT_YEAR), label: CURRENT_YEAR },
-        { name: parseInt(CURRENT_YEAR), label: CURRENT_YEAR },
+        { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
+        { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
       ],
       datasets: [
         {
