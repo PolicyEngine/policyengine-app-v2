@@ -24,13 +24,23 @@ vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),
 }));
 
-// Mock the dispatch
+// Mock the dispatch and navigate
 const mockDispatch = vi.fn();
+const mockNavigate = vi.fn();
+
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual('react-redux');
   return {
     ...actual,
     useDispatch: () => mockDispatch,
+  };
+});
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -47,23 +57,43 @@ vi.mock('@/components/IngredientReadView', () => ({
       data,
       searchValue,
       onSearchChange,
-    }) => (
-      <div data-testid="ingredient-read-view">
-        <h1>{title}</h1>
-        <p>{subtitle}</p>
-        {isLoading && <div>Loading...</div>}
-        {isError && <div>Error: {error?.message}</div>}
-        {data && <div>Data count: {data.length}</div>}
-        <button type="button" onClick={onBuild}>
-          Build Report
-        </button>
-        <input
-          value={searchValue}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search"
-        />
-      </div>
-    )
+      columns,
+    }) => {
+      // Extract menu action handler if columns are provided
+      const menuColumn = columns?.find((col: any) => col.type === 'split-menu');
+      const handleMenuAction = menuColumn?.onAction;
+
+      return (
+        <div data-testid="ingredient-read-view">
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+          {isLoading && <div>Loading...</div>}
+          {isError && <div>Error: {error?.message}</div>}
+          {data && (
+            <>
+              <div>Data count: {data.length}</div>
+              {data.length > 0 && handleMenuAction && (
+                <button
+                  type="button"
+                  onClick={() => handleMenuAction('view-output', data[0].id)}
+                  data-testid="view-output-button"
+                >
+                  View Output
+                </button>
+              )}
+            </>
+          )}
+          <button type="button" onClick={onBuild}>
+            Build Report
+          </button>
+          <input
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search"
+          />
+        </div>
+      );
+    }
   ),
 }));
 
@@ -71,11 +101,13 @@ describe('ReportsPage', () => {
   const mockStore = configureStore({
     reducer: {
       flow: flowReducer,
+      metadata: () => ({ currentCountry: 'us' }),
     },
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockClear();
     (useUserReports as any).mockReturnValue(mockDefaultHookReturn);
   });
 
@@ -196,5 +228,21 @@ describe('ReportsPage', () => {
 
     // Then
     expect(screen.getByText('Data count: 3')).toBeInTheDocument();
+  });
+
+  test('given user clicks view output then navigates with UserReport ID', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(
+      <Provider store={mockStore}>
+        <ReportsPage />
+      </Provider>
+    );
+
+    // When
+    await user.click(screen.getByTestId('view-output-button'));
+
+    // Then
+    expect(mockNavigate).toHaveBeenCalledWith('/us/report-output/report-1');
   });
 });

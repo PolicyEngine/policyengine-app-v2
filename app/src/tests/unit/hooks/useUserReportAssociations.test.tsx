@@ -7,6 +7,7 @@ import {
   useCreateReportAssociation,
   useReportAssociation,
   useReportAssociationsByUser,
+  useUserReportByUserReportId,
   useUserReportStore,
 } from '@/hooks/useUserReportAssociations';
 import {
@@ -170,6 +171,57 @@ describe('useUserReportAssociations hooks', () => {
 
       // When
       const { result } = renderHook(() => useReportAssociation(userId, reportId), { wrapper });
+
+      // Then
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true);
+      });
+
+      expect(result.current.error).toEqual(error);
+    });
+  });
+
+  describe('useUserReportByUserReportId', () => {
+    test('given valid user report ID when fetching then returns report', async () => {
+      // Given
+      const userReportId = 'sur-abc123';
+
+      // When
+      const { result } = renderHook(() => useUserReportByUserReportId(userReportId), { wrapper });
+
+      // Then
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data).toEqual(mockUserReport);
+      expect(mockStore.findByUserReportId).toHaveBeenCalledWith(userReportId);
+    });
+
+    test('given non-existent user report ID then returns null', async () => {
+      // Given
+      const userReportId = 'non-existent-id';
+      mockStore.findByUserReportId.mockResolvedValue(null);
+
+      // When
+      const { result } = renderHook(() => useUserReportByUserReportId(userReportId), { wrapper });
+
+      // Then
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true);
+      });
+
+      expect(result.current.data).toBeNull();
+    });
+
+    test('given fetch error then returns error state', async () => {
+      // Given
+      const userReportId = 'sur-abc123';
+      const error = new Error('Failed to fetch user report');
+      mockStore.findByUserReportId.mockRejectedValue(error);
+
+      // When
+      const { result } = renderHook(() => useUserReportByUserReportId(userReportId), { wrapper });
 
       // Then
       await waitFor(() => {
