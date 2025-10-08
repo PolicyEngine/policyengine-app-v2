@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useUserReports } from '@/hooks/useUserReports';
 import { countryIds } from '@/libs/countries';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -13,6 +15,8 @@ export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const countryId = useSelector(selectCurrentCountry) || 'us';
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -29,8 +33,8 @@ export default function ReportsPage() {
   const handleMenuAction = (action: string, recordId: string) => {
     switch (action) {
       case 'view-output':
-        // TODO: Implement view output functionality
-        console.log('View output:', recordId);
+        // recordId is now the UserReport.id
+        navigate(`/${countryId}/report-output/${recordId}`);
         break;
       case 'export':
         // TODO: Implement export functionality
@@ -119,7 +123,7 @@ export default function ReportsPage() {
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.userReport.reportId,
+      id: item.userReport.id,
       report: {
         text: item.userReport.label || `Report #${item.userReport.reportId}`,
       } as TextValue,

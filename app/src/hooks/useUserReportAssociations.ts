@@ -48,6 +48,18 @@ export const useReportAssociation = (userId: string, reportId: string) => {
   });
 };
 
+export const useUserReportByUserReportId = (userReportId: string) => {
+  const store = useUserReportStore();
+  const isLoggedIn = false; // TODO: Replace with actual auth check in future
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+
+  return useQuery({
+    queryKey: reportAssociationKeys.byUserReportId(userReportId),
+    queryFn: () => store.findByUserReportId(userReportId),
+    ...config,
+  });
+};
+
 export const useCreateReportAssociation = () => {
   const store = useUserReportStore();
   const queryClient = useQueryClient();
