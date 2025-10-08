@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-// Now import everything else
 import PopulationsPage from '@/pages/Populations.page';
 import {
   createEmptyDataState,
