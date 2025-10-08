@@ -2,7 +2,7 @@ import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { SessionStorageReportStore } from '@/api/reportAssociation';
+import { LocalStorageReportStore } from '@/api/reportAssociation';
 import {
   useCreateReportAssociation,
   useReportAssociation,
@@ -24,10 +24,11 @@ vi.mock('@/api/reportAssociation', () => {
     create: vi.fn(),
     findByUser: vi.fn(),
     findById: vi.fn(),
+    findByUserReportId: vi.fn(),
   };
   return {
     ApiReportStore: vi.fn(() => mockStore),
-    SessionStorageReportStore: vi.fn(() => mockStore),
+    LocalStorageReportStore: vi.fn(() => mockStore),
   };
 });
 
@@ -38,7 +39,7 @@ vi.mock('@/libs/queryConfig', () => ({
       staleTime: 5 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
     },
-    sessionStorage: {
+    localStorage: {
       staleTime: 0,
       cacheTime: 0,
     },
@@ -50,6 +51,7 @@ vi.mock('@/libs/queryKeys', () => ({
     byUser: (userId: string) => ['report-associations', 'byUser', userId],
     byReport: (id: string) => ['report-associations', 'byReport', id],
     specific: (userId: string, id: string) => ['report-associations', 'specific', userId, id],
+    byUserReportId: (userReportId: string) => ['report-associations', 'byUserReportId', userReportId],
   },
 }));
 
@@ -62,12 +64,13 @@ describe('useUserReportAssociations hooks', () => {
     queryClient = createMockQueryClient();
 
     // Get the mock store instance
-    mockStore = (SessionStorageReportStore as any)();
+    mockStore = (LocalStorageReportStore as any)();
 
     // Set default mock implementations
     mockStore.create.mockResolvedValue(mockUserReport);
     mockStore.findByUser.mockResolvedValue(mockUserReportList);
     mockStore.findById.mockResolvedValue(mockUserReport);
+    mockStore.findByUserReportId.mockResolvedValue(mockUserReport);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -75,7 +78,7 @@ describe('useUserReportAssociations hooks', () => {
   );
 
   describe('useUserReportStore', () => {
-    test('given user not logged in then returns session storage store', () => {
+    test('given user not logged in then returns local storage store', () => {
       // When
       const { result } = renderHook(() => useUserReportStore());
 
@@ -84,6 +87,7 @@ describe('useUserReportAssociations hooks', () => {
       expect(result.current.create).toBeDefined();
       expect(result.current.findByUser).toBeDefined();
       expect(result.current.findById).toBeDefined();
+      expect(result.current.findByUserReportId).toBeDefined();
     });
   });
 

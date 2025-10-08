@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
-import { ApiReportStore, SessionStorageReportStore } from '@/api/reportAssociation';
+import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import {
   mockApiResponse,
   mockApiResponseList,
@@ -195,36 +195,36 @@ describe('ApiReportStore', () => {
   });
 });
 
-describe('SessionStorageReportStore', () => {
-  let store: SessionStorageReportStore;
-  let mockSessionStorage: { [key: string]: string };
+describe('LocalStorageReportStore', () => {
+  let store: LocalStorageReportStore;
+  let mockLocalStorage: { [key: string]: string };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSessionStorage = {};
+    mockLocalStorage = {};
 
-    // Mock sessionStorage
-    Object.defineProperty(window, 'sessionStorage', {
+    // Mock localStorage
+    Object.defineProperty(window, 'localStorage', {
       value: {
-        getItem: vi.fn((key) => mockSessionStorage[key] || null),
+        getItem: vi.fn((key) => mockLocalStorage[key] || null),
         setItem: vi.fn((key, value) => {
-          mockSessionStorage[key] = value;
+          mockLocalStorage[key] = value;
         }),
         removeItem: vi.fn((key) => {
-          delete mockSessionStorage[key];
+          delete mockLocalStorage[key];
         }),
         clear: vi.fn(() => {
-          mockSessionStorage = {};
+          mockLocalStorage = {};
         }),
       },
       writable: true,
     });
 
-    store = new SessionStorageReportStore();
+    store = new LocalStorageReportStore();
   });
 
   describe('create', () => {
-    test('given new report association then stores in session storage', async () => {
+    test('given new report association then stores in local storage', async () => {
       // Given
       const report = { ...mockUserReport };
       delete (report as any).createdAt; // Test that createdAt is generated
@@ -241,7 +241,7 @@ describe('SessionStorageReportStore', () => {
       expect(result.id).toBeDefined();
       expect(result.id).toMatch(/^sur-/); // Should have the sur- prefix
       expect(result.createdAt).toBeDefined();
-      expect(sessionStorage.setItem).toHaveBeenCalledWith(
+      expect(localStorage.setItem).toHaveBeenCalledWith(
         'user-report-associations',
         expect.any(String)
       );
@@ -249,7 +249,7 @@ describe('SessionStorageReportStore', () => {
 
     test('given duplicate association then throws error', async () => {
       // Given
-      mockSessionStorage['user-report-associations'] = JSON.stringify([mockUserReport]);
+      mockLocalStorage['user-report-associations'] = JSON.stringify([mockUserReport]);
 
       // When/Then
       await expect(store.create(mockUserReport)).rejects.toThrow('Association already exists');
@@ -258,7 +258,7 @@ describe('SessionStorageReportStore', () => {
     test('given existing reports then appends new report', async () => {
       // Given
       const existingReport = mockUserReportList[0];
-      mockSessionStorage['user-report-associations'] = JSON.stringify([existingReport]);
+      mockLocalStorage['user-report-associations'] = JSON.stringify([existingReport]);
       const newReport = {
         ...mockUserReport,
         reportId: 'new-report',
@@ -269,7 +269,7 @@ describe('SessionStorageReportStore', () => {
       await store.create(newReport);
 
       // Then
-      const stored = JSON.parse(mockSessionStorage['user-report-associations']);
+      const stored = JSON.parse(mockLocalStorage['user-report-associations']);
       expect(stored).toHaveLength(2);
       expect(stored[1].reportId).toBe('new-report');
     });
@@ -283,7 +283,7 @@ describe('SessionStorageReportStore', () => {
         userId: 'other-user',
         reportId: 'other-report',
       };
-      mockSessionStorage['user-report-associations'] = JSON.stringify([
+      mockLocalStorage['user-report-associations'] = JSON.stringify([
         ...mockUserReportList,
         otherUserReport,
       ]);
@@ -298,7 +298,7 @@ describe('SessionStorageReportStore', () => {
 
     test('given user with no reports then returns empty array', async () => {
       // Given
-      mockSessionStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
 
       // When
       const result = await store.findByUser('user-with-no-reports');
@@ -317,7 +317,7 @@ describe('SessionStorageReportStore', () => {
 
     test('given corrupted storage data then returns empty array', async () => {
       // Given
-      mockSessionStorage['user-report-associations'] = 'invalid-json';
+      mockLocalStorage['user-report-associations'] = 'invalid-json';
 
       // When
       const result = await store.findByUser(TEST_USER_ID);
@@ -330,7 +330,7 @@ describe('SessionStorageReportStore', () => {
   describe('findById', () => {
     test('given existing association then returns report', async () => {
       // Given
-      mockSessionStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
 
       // When
       const result = await store.findById(TEST_USER_ID, 'report-1');
@@ -341,7 +341,7 @@ describe('SessionStorageReportStore', () => {
 
     test('given non-existent association then returns null', async () => {
       // Given
-      mockSessionStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
 
       // When
       const result = await store.findById(TEST_USER_ID, 'non-existent');
@@ -352,10 +352,43 @@ describe('SessionStorageReportStore', () => {
 
     test('given wrong user ID then returns null', async () => {
       // Given
-      mockSessionStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
 
       // When
       const result = await store.findById('wrong-user', 'report-1');
+
+      // Then
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('findByUserReportId', () => {
+    test('given existing user report ID then returns report', async () => {
+      // Given
+      const userReportWithId = { ...mockUserReport, id: 'sur-abc123' };
+      mockLocalStorage['user-report-associations'] = JSON.stringify([userReportWithId]);
+
+      // When
+      const result = await store.findByUserReportId('sur-abc123');
+
+      // Then
+      expect(result).toEqual(userReportWithId);
+    });
+
+    test('given non-existent user report ID then returns null', async () => {
+      // Given
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+
+      // When
+      const result = await store.findByUserReportId('non-existent-id');
+
+      // Then
+      expect(result).toBeNull();
+    });
+
+    test('given empty storage then returns null', async () => {
+      // When
+      const result = await store.findByUserReportId('any-id');
 
       // Then
       expect(result).toBeNull();
