@@ -1,16 +1,16 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiSimulationStore, SessionStorageSimulationStore } from '../api/simulationAssociation';
+import { ApiSimulationStore, LocalStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys } from '../libs/queryKeys';
 import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 const apiSimulationStore = new ApiSimulationStore();
-const sessionSimulationStore = new SessionStorageSimulationStore();
+const localSimulationStore = new LocalStorageSimulationStore();
 
 export const useUserSimulationStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiSimulationStore : sessionSimulationStore;
+  return isLoggedIn ? apiSimulationStore : localSimulationStore;
 };
 
 /**
@@ -27,7 +27,7 @@ export const useSimulationAssociationsByUser = (userId: string) => {
   const store = useUserSimulationStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: simulationAssociationKeys.byUser(userId),
@@ -39,7 +39,7 @@ export const useSimulationAssociationsByUser = (userId: string) => {
 export const useSimulationAssociation = (userId: string, simulationId: string) => {
   const store = useUserSimulationStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: simulationAssociationKeys.specific(userId, simulationId),

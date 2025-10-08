@@ -1,16 +1,16 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiReportStore, SessionStorageReportStore } from '../api/reportAssociation';
+import { ApiReportStore, LocalStorageReportStore } from '../api/reportAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { reportAssociationKeys } from '../libs/queryKeys';
 import { UserReport } from '../types/ingredients/UserReport';
 
 const apiReportStore = new ApiReportStore();
-const sessionReportStore = new SessionStorageReportStore();
+const localReportStore = new LocalStorageReportStore();
 
 export const useUserReportStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiReportStore : sessionReportStore;
+  return isLoggedIn ? apiReportStore : localReportStore;
 };
 
 /**
@@ -27,7 +27,7 @@ export const useReportAssociationsByUser = (userId: string) => {
   const store = useUserReportStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: reportAssociationKeys.byUser(userId),
@@ -39,7 +39,7 @@ export const useReportAssociationsByUser = (userId: string) => {
 export const useReportAssociation = (userId: string, reportId: string) => {
   const store = useUserReportStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: reportAssociationKeys.specific(userId, reportId),

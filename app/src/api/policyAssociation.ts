@@ -94,7 +94,7 @@ export class ApiPolicyStore implements UserPolicyStore {
   */
 }
 
-export class SessionStoragePolicyStore implements UserPolicyStore {
+export class LocalStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
@@ -134,7 +134,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
 
   private getStoredPolicies(): UserPolicy[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -142,7 +142,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
   }
 
   private setStoredPolicies(policies: UserPolicy[]): void {
-    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
   }
 
   // Not yet implemented, but keeping for future use
