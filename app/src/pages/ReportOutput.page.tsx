@@ -25,6 +25,7 @@ import { CalculationMeta } from '@/api/reportCalculations';
 import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { useReportOutput } from '@/hooks/useReportOutput';
+import { useUserReportByUserReportId } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import {
   MOCK_DEMO_HOUSEHOLD_ID,
@@ -66,19 +67,59 @@ function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
 
 /**
  * Hook to fetch and manage report output data
- * If the report ID matches a demo ID, returns mock data instead of fetching
+ * Now fetches UserReport first by its ID, then uses the base reportId for calculations
  */
-function useReportData(reportId: string) {
+function useReportData(userReportId: string) {
   const queryClient = useQueryClient();
 
-  // Check if this is a demo report
-  const isDemoEconomyReport = reportId === MOCK_DEMO_REPORT_ID;
-  const isDemoHouseholdReport = reportId === MOCK_DEMO_HOUSEHOLD_ID;
+  // Step 1: Fetch UserReport by its ID
+  const {
+    data: userReport,
+    isLoading: userReportLoading,
+    error: userReportError,
+  } = useUserReportByUserReportId(userReportId);
+
+  // Step 2: If UserReport not found, return error state early
+  if (!userReportLoading && !userReport) {
+    return {
+      status: 'error' as const,
+      output: null,
+      outputType: undefined,
+      error: userReportError || new Error('Report not found'),
+      normalizedReport: { report: undefined },
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
+    };
+  }
+
+  // Step 3: Extract base reportId from UserReport
+  const baseReportId = userReport?.reportId;
+
+  // If still loading UserReport, return loading state
+  if (userReportLoading || !baseReportId) {
+    return {
+      status: 'pending' as const,
+      output: null,
+      outputType: undefined,
+      error: undefined,
+      normalizedReport: { report: undefined },
+      progress: undefined,
+      message: 'Loading report...',
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
+    };
+  }
+
+  // Check if this is a demo report (using base reportId)
+  const isDemoEconomyReport = baseReportId === MOCK_DEMO_REPORT_ID;
+  const isDemoHouseholdReport = baseReportId === MOCK_DEMO_HOUSEHOLD_ID;
 
   // If demo economy report, return mock economy data
   if (isDemoEconomyReport) {
     const userId = MOCK_USER_ID.toString();
-    const normalizedReport = useUserReportById(userId, reportId);
+    const normalizedReport = useUserReportById(userId, baseReportId);
 
     return {
       status: 'complete' as const,
@@ -96,7 +137,7 @@ function useReportData(reportId: string) {
   // If demo household report, return mock household data
   if (isDemoHouseholdReport) {
     const userId = MOCK_USER_ID.toString();
-    const normalizedReport = useUserReportById(userId, reportId);
+    const normalizedReport = useUserReportById(userId, baseReportId);
 
     return {
       status: 'complete' as const,
@@ -111,11 +152,11 @@ function useReportData(reportId: string) {
     };
   }
 
-  // Otherwise, fetch real data
-  const result = useReportOutput({ reportId });
+  // Step 4: Fetch real data using base reportId
+  const result = useReportOutput({ reportId: baseReportId });
   const { status, data, error } = result;
   const userId = MOCK_USER_ID.toString();
-  const normalizedReport = useUserReportById(userId, reportId);
+  const normalizedReport = useUserReportById(userId, baseReportId);
 
   // Extract progress information if status is pending
   const progress = status === 'pending' ? (result as any).progress : undefined;
@@ -126,7 +167,7 @@ function useReportData(reportId: string) {
 
   // Determine output type from cached metadata instead of type guards
   // The metadata is cached during the calculation query and contains the definitive type
-  const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', reportId]);
+  const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', baseReportId]);
   const outputType: ReportOutputType | undefined = metadata?.type;
 
   // Wrap household data in Household structure
@@ -135,7 +176,7 @@ function useReportData(reportId: string) {
 
   if (outputType === 'household' && data) {
     const wrappedOutput: Household = {
-      id: reportId,
+      id: baseReportId,
       countryId: metadata?.countryId || 'us',
       householdData: data as HouseholdData,
     };
@@ -157,10 +198,10 @@ function useReportData(reportId: string) {
 
 export default function ReportOutputPage() {
   const navigate = useNavigate();
-  const { reportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
+  const { reportId: userReportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
 
-  // If no reportId, show error
-  if (!reportId) {
+  // If no userReportId, show error
+  if (!userReportId) {
     return (
       <Container size="xl" px={spacing.xl}>
         <Stack gap={spacing.xl}>
@@ -180,7 +221,7 @@ export default function ReportOutputPage() {
     message,
     queuePosition,
     estimatedTimeRemaining,
-  } = useReportData(reportId);
+  } = useReportData(userReportId);
 
   const { report } = normalizedReport;
   const DEFAULT_PAGE = 'overview';
