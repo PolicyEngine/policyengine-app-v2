@@ -41,6 +41,7 @@ export const MOCK_HOUSEHOLD_META: CalculationMeta = {
     reform: 'policy-2',
   },
   populationId: 'household-123',
+  simulationIds: ['sim-1', 'sim-2'],
 };
 
 export const MOCK_ECONOMY_META_NATIONAL: CalculationMeta = {
@@ -51,6 +52,7 @@ export const MOCK_ECONOMY_META_NATIONAL: CalculationMeta = {
     reform: 'policy-3',
   },
   populationId: 'us',
+  simulationIds: ['sim-3', 'sim-4'],
 };
 
 export const MOCK_ECONOMY_META_SUBNATIONAL: CalculationMeta = {
@@ -62,6 +64,7 @@ export const MOCK_ECONOMY_META_SUBNATIONAL: CalculationMeta = {
   },
   populationId: 'us-california',
   region: 'california',
+  simulationIds: ['sim-5', 'sim-6'],
 };
 
 // Mock calculation manager

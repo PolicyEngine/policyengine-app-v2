@@ -2,7 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { EconomyCalculationResponse } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
-import { Household } from '@/types/ingredients/Household';
+import { HouseholdData } from '@/types/ingredients/Household';
 
 // Report IDs
 export const TEST_REPORT_ID = 'report-123';
@@ -17,6 +17,7 @@ export const HOUSEHOLD_CALCULATION_META: CalculationMeta = {
     reform: 'policy-reform-456',
   },
   populationId: 'household-789',
+  simulationIds: ['sim-baseline-1', 'sim-reform-1'],
 };
 
 export const ECONOMY_CALCULATION_META: CalculationMeta = {
@@ -28,6 +29,7 @@ export const ECONOMY_CALCULATION_META: CalculationMeta = {
   },
   populationId: 'us',
   region: 'ca',
+  simulationIds: ['sim-baseline-2', 'sim-reform-2'],
 };
 
 export const ECONOMY_NATIONAL_META: CalculationMeta = {
@@ -37,18 +39,15 @@ export const ECONOMY_NATIONAL_META: CalculationMeta = {
     baseline: 'policy-baseline-uk',
   },
   populationId: 'uk',
+  simulationIds: ['sim-baseline-3'],
 };
 
 // Household calculation results
-export const MOCK_HOUSEHOLD_RESULT: Household = {
-  id: 'household-789',
-  countryId: 'us',
-  householdData: {
-    people: {
-      you: {
-        age: { 2025: 35 },
-        employment_income: { 2025: 50000 },
-      },
+export const MOCK_HOUSEHOLD_RESULT: HouseholdData = {
+  people: {
+    you: {
+      age: { 2025: 35 },
+      employment_income: { 2025: 50000 },
     },
   },
 };

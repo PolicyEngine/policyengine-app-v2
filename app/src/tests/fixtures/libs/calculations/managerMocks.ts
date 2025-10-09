@@ -17,6 +17,7 @@ export const MANAGER_HOUSEHOLD_META: CalculationMeta = {
     reform: 'manager-policy-reform',
   },
   populationId: 'manager-household-001',
+  simulationIds: ['manager-sim-1', 'manager-sim-2'],
 };
 
 export const MANAGER_ECONOMY_META: CalculationMeta = {
@@ -27,6 +28,7 @@ export const MANAGER_ECONOMY_META: CalculationMeta = {
   },
   populationId: 'uk',
   region: 'london',
+  simulationIds: ['manager-sim-uk-1'],
 };
 
 // Invalid metadata for testing error cases
@@ -37,6 +39,7 @@ export const INVALID_TYPE_META: CalculationMeta = {
     baseline: 'invalid-policy',
   },
   populationId: 'invalid-001',
+  simulationIds: ['invalid-sim-1'],
 };
 
 // Mock status responses
