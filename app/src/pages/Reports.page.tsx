@@ -1,7 +1,13 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import {
+  BulletsValue,
+  ColumnConfig,
+  IngredientRecord,
+  LinkValue,
+  TextValue,
+} from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
@@ -75,7 +81,7 @@ export default function ReportsPage() {
     {
       key: 'report',
       header: 'Report',
-      type: 'text',
+      type: 'link',
     },
     {
       key: 'dateCreated',
@@ -126,7 +132,8 @@ export default function ReportsPage() {
       id: item.userReport.id,
       report: {
         text: item.userReport.label || `Report #${item.userReport.reportId}`,
-      } as TextValue,
+        url: `/${countryId}/report-output/${item.userReport.id}`,
+      } as LinkValue,
       dateCreated: {
         text: item.userReport.createdAt
           ? formatDate(

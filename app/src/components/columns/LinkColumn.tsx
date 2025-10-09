@@ -14,6 +14,7 @@ export function LinkColumn({ config, value }: LinkColumnProps) {
       c={config.color || colors.blue[600]}
       href={value.url || `${config.urlPrefix || '#'}${value.text}`}
       td="none"
+      onClick={(e) => e.stopPropagation()}
     >
       {value.text}
     </Anchor>
