@@ -48,7 +48,7 @@ export const useReportAssociation = (userId: string, reportId: string) => {
   });
 };
 
-export const useUserReportByUserReportId = (userReportId: string) => {
+export const useReportAssociationById = (userReportId: string) => {
   const store = useUserReportStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;

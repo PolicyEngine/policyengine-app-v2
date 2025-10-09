@@ -1,10 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { MOCK_USER_ID } from '@/constants';
-import { useReportOutput } from '@/hooks/useReportOutput';
-import { useUserReportByUserReportId } from '@/hooks/useUserReportAssociations';
-import { useUserReportById } from '@/hooks/useUserReports';
+import { useReportData } from '@/hooks/useReportData';
 import ReportOutputPage from '@/pages/ReportOutput.page';
 import {
   mockEconomyOutput,
@@ -25,17 +22,9 @@ vi.mock('react-router-dom', () => ({
   useParams: () => mockParams,
 }));
 
-// Mock hooks
-vi.mock('@/hooks/useUserReportAssociations', () => ({
-  useUserReportByUserReportId: vi.fn(),
-}));
-
-vi.mock('@/hooks/useReportOutput', () => ({
-  useReportOutput: vi.fn(),
-}));
-
-vi.mock('@/hooks/useUserReports', () => ({
-  useUserReportById: vi.fn(),
+// Mock useReportData hook
+vi.mock('@/hooks/useReportData', () => ({
+  useReportData: vi.fn(),
 }));
 
 // Mock subpage components
@@ -71,27 +60,18 @@ describe('ReportOutputPage', () => {
       },
     });
 
-    // Set default mock implementations
-    (useUserReportByUserReportId as any).mockReturnValue({
-      data: mockUserReport,
-      isLoading: false,
-      error: null,
-    });
-
-    (useReportOutput as any).mockReturnValue({
+    // Set default mock implementation for useReportData
+    (useReportData as any).mockReturnValue({
       status: 'complete',
-      data: mockEconomyOutput,
+      output: mockEconomyOutput,
+      outputType: 'economy',
       error: null,
-    });
-
-    (useUserReportById as any).mockReturnValue({
-      report: mockReportData,
-    });
-
-    // Mock queryClient.getQueryData for metadata
-    queryClient.setQueryData(['calculation-meta', 'base-report-456'], {
-      type: 'economy',
-      countryId: 'us',
+      normalizedReport: { report: mockReportData },
+      userReport: mockUserReport,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
   });
 
@@ -125,10 +105,17 @@ describe('ReportOutputPage', () => {
 
   test('given user report not found when rendering then shows error page', async () => {
     // Given
-    (useUserReportByUserReportId as any).mockReturnValue({
-      data: null,
-      isLoading: false,
+    (useReportData as any).mockReturnValue({
+      status: 'error',
+      output: null,
+      outputType: undefined,
       error: new Error('Not found'),
+      normalizedReport: { report: undefined },
+      userReport: undefined,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
 
     // When
@@ -143,10 +130,17 @@ describe('ReportOutputPage', () => {
 
   test('given user report loading when rendering then shows loading page', async () => {
     // Given
-    (useUserReportByUserReportId as any).mockReturnValue({
-      data: null,
-      isLoading: true,
-      error: null,
+    (useReportData as any).mockReturnValue({
+      status: 'pending',
+      output: null,
+      outputType: undefined,
+      error: undefined,
+      normalizedReport: { report: undefined },
+      userReport: undefined,
+      progress: undefined,
+      message: 'Loading report...',
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
 
     // When
@@ -161,12 +155,17 @@ describe('ReportOutputPage', () => {
 
   test('given report output pending when rendering then shows loading page', async () => {
     // Given
-    (useReportOutput as any).mockReturnValue({
+    (useReportData as any).mockReturnValue({
       status: 'pending',
-      data: null,
+      output: null,
+      outputType: undefined,
       error: null,
+      normalizedReport: { report: mockReportData },
+      userReport: mockUserReport,
       progress: 50,
       message: 'Calculating...',
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
 
     // When
@@ -180,10 +179,17 @@ describe('ReportOutputPage', () => {
 
   test('given report output error when rendering then shows error page', async () => {
     // Given
-    (useReportOutput as any).mockReturnValue({
+    (useReportData as any).mockReturnValue({
       status: 'error',
-      data: null,
+      output: null,
+      outputType: undefined,
       error: new Error('Calculation failed'),
+      normalizedReport: { report: undefined },
+      userReport: undefined,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
 
     // When
@@ -206,17 +212,14 @@ describe('ReportOutputPage', () => {
     });
   });
 
-  test('given user report ID then fetches UserReport first then base report', async () => {
+  test('given user report ID then fetches report data', async () => {
     // When
     renderWithClient(<ReportOutputPage />);
 
     // Then
     await waitFor(() => {
-      expect(useUserReportByUserReportId).toHaveBeenCalledWith('sur-test123');
+      expect(useReportData).toHaveBeenCalledWith('sur-test123');
     });
-
-    expect(useReportOutput).toHaveBeenCalledWith({ reportId: 'base-report-456' });
-    expect(useUserReportById).toHaveBeenCalledWith(MOCK_USER_ID.toString(), 'base-report-456');
   });
 
   test('given user report with custom label then displays custom label', async () => {
@@ -229,13 +232,17 @@ describe('ReportOutputPage', () => {
       ...mockReportData,
       label: 'My Custom Report Name',
     };
-    (useUserReportByUserReportId as any).mockReturnValue({
-      data: customUserReport,
-      isLoading: false,
+    (useReportData as any).mockReturnValue({
+      status: 'complete',
+      output: mockEconomyOutput,
+      outputType: 'economy',
       error: null,
-    });
-    (useUserReportById as any).mockReturnValue({
-      report: customReportData,
+      normalizedReport: { report: customReportData },
+      userReport: customUserReport,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
 
     // When
@@ -253,10 +260,17 @@ describe('ReportOutputPage', () => {
       ...mockUserReport,
       label: undefined,
     };
-    (useUserReportByUserReportId as any).mockReturnValue({
-      data: userReportWithoutLabel,
-      isLoading: false,
+    (useReportData as any).mockReturnValue({
+      status: 'complete',
+      output: mockEconomyOutput,
+      outputType: 'economy',
       error: null,
+      normalizedReport: { report: mockReportData },
+      userReport: userReportWithoutLabel,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
 
     // When
@@ -270,10 +284,21 @@ describe('ReportOutputPage', () => {
 
   test('given household output type then renders household data correctly', async () => {
     // Given
-    (useReportOutput as any).mockReturnValue({
+    (useReportData as any).mockReturnValue({
       status: 'complete',
-      data: mockHouseholdData,
+      output: {
+        id: 'base-report-456',
+        countryId: 'us',
+        householdData: mockHouseholdData,
+      },
+      outputType: 'household',
       error: null,
+      normalizedReport: { report: mockReportData },
+      userReport: mockUserReport,
+      progress: undefined,
+      message: undefined,
+      queuePosition: undefined,
+      estimatedTimeRemaining: undefined,
     });
 
     queryClient.setQueryData(['calculation-meta', 'base-report-456'], {

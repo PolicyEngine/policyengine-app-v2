@@ -1,10 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { MOCK_USER_ID } from '@/constants';
 import { useReportData } from '@/hooks/useReportData';
 import { useReportOutput } from '@/hooks/useReportOutput';
-import { useUserReportByUserReportId } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import {
   BASE_REPORT_ID,
@@ -19,17 +17,10 @@ import {
   mockReportOutputPending,
   mockReportOutputSuccess,
   mockUserReport,
-  mockUserReportByIdLoading,
-  mockUserReportByIdNotFound,
-  mockUserReportByIdSuccess,
   USER_REPORT_ID,
 } from '@/tests/fixtures/hooks/useReportDataMocks';
 
 // Mock the dependent hooks
-vi.mock('@/hooks/useUserReportAssociations', () => ({
-  useUserReportByUserReportId: vi.fn(),
-}));
-
 vi.mock('@/hooks/useReportOutput', () => ({
   useReportOutput: vi.fn(),
 }));
@@ -51,9 +42,14 @@ describe('useReportData', () => {
     });
 
     // Default successful mocks
-    (useUserReportByUserReportId as any).mockReturnValue(mockUserReportByIdSuccess);
+    // useUserReportById now returns userReport as part of its structure
+    (useUserReportById as any).mockReturnValue({
+      ...mockNormalizedReport,
+      userReport: mockUserReport,
+      isLoading: false,
+      error: null,
+    });
     (useReportOutput as any).mockReturnValue(mockReportOutputSuccess);
-    (useUserReportById as any).mockReturnValue(mockNormalizedReport);
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -73,14 +69,27 @@ describe('useReportData', () => {
       expect(result.current.output).toEqual(mockEconomyOutput);
       expect(result.current.outputType).toBe('economy');
       expect(result.current.error).toBeNull();
-      expect(result.current.normalizedReport).toEqual(mockNormalizedReport);
+      // normalizedReport now contains the full structure returned by useUserReportById
+      expect(result.current.normalizedReport.report).toEqual(mockNormalizedReport.report);
+      expect(result.current.normalizedReport.userReport).toEqual(mockUserReport);
       expect(result.current.userReport).toEqual(mockUserReport);
     });
   });
 
   test('given user report loading when fetching then returns loading state', async () => {
-    // Given
-    (useUserReportByUserReportId as any).mockReturnValue(mockUserReportByIdLoading);
+    // Given - useUserReportById now returns loading state directly
+    (useUserReportById as any).mockReturnValue({
+      userReport: null,
+      report: null,
+      simulations: [],
+      policies: [],
+      households: [],
+      userSimulations: [],
+      userPolicies: [],
+      userHouseholds: [],
+      isLoading: true,
+      error: null,
+    });
 
     // When
     const { result } = renderHook(() => useReportData(USER_REPORT_ID), { wrapper });
@@ -94,7 +103,19 @@ describe('useReportData', () => {
 
   test('given user report not found when fetching then returns error state', async () => {
     // Given
-    (useUserReportByUserReportId as any).mockReturnValue(mockUserReportByIdNotFound);
+    const notFoundError = new Error('UserReport not found');
+    (useUserReportById as any).mockReturnValue({
+      userReport: null,
+      report: null,
+      simulations: [],
+      policies: [],
+      households: [],
+      userSimulations: [],
+      userPolicies: [],
+      userHouseholds: [],
+      isLoading: false,
+      error: notFoundError,
+    });
 
     // When
     const { result } = renderHook(() => useReportData(USER_REPORT_ID), { wrapper });
@@ -102,14 +123,21 @@ describe('useReportData', () => {
     // Then
     expect(result.current.status).toBe('error');
     expect(result.current.output).toBeNull();
-    expect(result.current.error).toEqual(mockUserReportByIdNotFound.error);
+    expect(result.current.error).toEqual(notFoundError);
     expect(result.current.normalizedReport.report).toBeUndefined();
   });
 
-  test('given user report without base reportId when fetching then returns error state', async () => {
-    // Given
-    (useUserReportByUserReportId as any).mockReturnValue({
-      data: { ...mockUserReport, reportId: undefined },
+  test('given user report without base report when fetching then returns error state', async () => {
+    // Given - UserReport exists but base report wasn't fetched
+    (useUserReportById as any).mockReturnValue({
+      userReport: mockUserReport,
+      report: null,  // No base report
+      simulations: [],
+      policies: [],
+      households: [],
+      userSimulations: [],
+      userPolicies: [],
+      userHouseholds: [],
       isLoading: false,
       error: null,
     });
@@ -235,9 +263,10 @@ describe('useReportData', () => {
 
     // Then
     await waitFor(() => {
-      expect(useUserReportByUserReportId).toHaveBeenCalledWith(USER_REPORT_ID);
-      expect(useReportOutput).toHaveBeenCalledWith({ reportId: BASE_REPORT_ID });
-      expect(useUserReportById).toHaveBeenCalledWith(MOCK_USER_ID.toString(), BASE_REPORT_ID);
+      // useUserReportById now takes only userReportId
+      expect(useUserReportById).toHaveBeenCalledWith(USER_REPORT_ID);
+      // useReportOutput now takes enabled parameter
+      expect(useReportOutput).toHaveBeenCalledWith({ reportId: BASE_REPORT_ID, enabled: true });
     });
   });
 

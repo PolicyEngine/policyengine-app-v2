@@ -10,7 +10,7 @@ import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
 import { useHouseholdAssociationsByUser } from '@/hooks/useUserHousehold';
 import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
-import { useReportAssociationsByUser } from '@/hooks/useUserReportAssociations';
+import { useReportAssociationsByUser, useReportAssociationById } from '@/hooks/useUserReportAssociations';
 import { useUserReportById, useUserReports } from '@/hooks/useUserReports';
 import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssociations';
 import metadataReducer from '@/reducers/metadataReducer';
@@ -18,7 +18,9 @@ import { mockReport, mockReportMetadata } from '@/tests/fixtures/adapters/report
 import {
   createMockQueryClient,
   mockUserReportList,
+  TEST_LABEL,
   TEST_REPORT_ID,
+  TEST_TIMESTAMP,
   TEST_USER_ID,
 } from '@/tests/fixtures/api/reportAssociationMocks';
 import {
@@ -54,6 +56,7 @@ vi.mock('@normy/react-query', () => ({
 // Mock the association hooks
 vi.mock('@/hooks/useUserReportAssociations', () => ({
   useReportAssociationsByUser: vi.fn(),
+  useReportAssociationById: vi.fn(),
 }));
 
 vi.mock('@/hooks/useUserSimulationAssociations', () => ({
@@ -586,6 +589,21 @@ describe('useUserReportById', () => {
       isLoading: false,
       error: null,
     });
+
+    // Mock useReportAssociationById to return a UserReport
+    (useReportAssociationById as any).mockReturnValue({
+      data: {
+        id: TEST_REPORT_ID,
+        userId: TEST_USER_ID,
+        reportId: TEST_REPORT_ID,
+        label: TEST_LABEL,
+        createdAt: TEST_TIMESTAMP,
+        updatedAt: TEST_TIMESTAMP,
+        isCreated: true,
+      },
+      isLoading: false,
+      error: null,
+    });
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -594,13 +612,12 @@ describe('useUserReportById', () => {
     </Provider>
   );
 
-  test('given report ID when fetching then returns single report with full context', async () => {
+  test('given user report ID when fetching then returns single report with full context', async () => {
     // Given
-    const userId = TEST_USER_ID;
-    const reportId = TEST_REPORT_ID;
+    const userReportId = TEST_REPORT_ID;
 
     // When
-    const { result } = renderHook(() => useUserReportById(userId, reportId), { wrapper });
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
 
     // Then
     await waitFor(() => {
@@ -612,30 +629,45 @@ describe('useUserReportById', () => {
     expect(result.current.policies).toBeDefined();
     expect(result.current.userSimulations).toBeDefined();
     expect(result.current.userPolicies).toBeDefined();
+    expect(result.current.userReport).toBeDefined();
   });
 
   test('given non-existent report ID then fetches from API', async () => {
     // Given
-    const userId = TEST_USER_ID;
-    const reportId = 'non-cached-report';
+    const userReportId = 'non-cached-report';
+    const baseReportId = 'non-cached-base-report';
     const fetchSpy = vi.spyOn(reportApi, 'fetchReportById');
 
+    // Mock useReportAssociationById for this specific test
+    (useReportAssociationById as any).mockReturnValueOnce({
+      data: {
+        id: userReportId,
+        userId: TEST_USER_ID,
+        reportId: baseReportId,
+        label: 'Non-cached Report',
+        createdAt: TEST_TIMESTAMP,
+        updatedAt: TEST_TIMESTAMP,
+        isCreated: true,
+      },
+      isLoading: false,
+      error: null,
+    });
+
     // When
-    renderHook(() => useUserReportById(userId, reportId), { wrapper });
+    renderHook(() => useUserReportById(userReportId), { wrapper });
 
     // Then
     await waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalledWith('us', reportId);
+      expect(fetchSpy).toHaveBeenCalledWith('us', baseReportId);
     });
   });
 
   test('given cached report then uses normalized cache', async () => {
     // Given
-    const userId = TEST_USER_ID;
-    const reportId = TEST_REPORT_ID;
+    const userReportId = TEST_REPORT_ID;
 
     // When
-    const { result } = renderHook(() => useUserReportById(userId, reportId), { wrapper });
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
 
     // Then
     await waitFor(() => {

@@ -7,7 +7,7 @@ import {
   useCreateReportAssociation,
   useReportAssociation,
   useReportAssociationsByUser,
-  useUserReportByUserReportId,
+  useReportAssociationById,
   useUserReportStore,
 } from '@/hooks/useUserReportAssociations';
 import {
@@ -181,13 +181,13 @@ describe('useUserReportAssociations hooks', () => {
     });
   });
 
-  describe('useUserReportByUserReportId', () => {
+  describe('useReportAssociationById', () => {
     test('given valid user report ID when fetching then returns report', async () => {
       // Given
       const userReportId = 'sur-abc123';
 
       // When
-      const { result } = renderHook(() => useUserReportByUserReportId(userReportId), { wrapper });
+      const { result } = renderHook(() => useReportAssociationById(userReportId), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -204,7 +204,7 @@ describe('useUserReportAssociations hooks', () => {
       mockStore.findByUserReportId.mockResolvedValue(null);
 
       // When
-      const { result } = renderHook(() => useUserReportByUserReportId(userReportId), { wrapper });
+      const { result } = renderHook(() => useReportAssociationById(userReportId), { wrapper });
 
       // Then
       await waitFor(() => {
@@ -221,7 +221,7 @@ describe('useUserReportAssociations hooks', () => {
       mockStore.findByUserReportId.mockRejectedValue(error);
 
       // When
-      const { result } = renderHook(() => useUserReportByUserReportId(userReportId), { wrapper });
+      const { result } = renderHook(() => useReportAssociationById(userReportId), { wrapper });
 
       // Then
       await waitFor(() => {

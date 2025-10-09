@@ -1,10 +1,8 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { EconomyReportOutput } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
-import { MOCK_USER_ID } from '@/constants';
 import { Household, HouseholdData } from '@/types/ingredients/Household';
 import { useReportOutput } from './useReportOutput';
-import { useUserReportByUserReportId } from './useUserReportAssociations';
 import { useUserReportById } from './useUserReports';
 
 /**
@@ -81,43 +79,41 @@ function getProgressInfo(result: any): ProgressInfo {
 
 /**
  * Hook to fetch and manage report output data
- * Fetches UserReport first by its ID, then uses the base reportId for calculations
+ * Uses the new unified useUserReportById hook that fetches everything from userReportId
  *
  * @param userReportId - The ID of the UserReport to fetch
  * @returns Report data including status, output, and metadata
  */
 export function useReportData(userReportId: string): ReportDataResult {
   const queryClient = useQueryClient();
-  const userId = MOCK_USER_ID.toString();
 
-  // Step 1: Fetch UserReport by its ID
-  const {
-    data: userReport,
-    isLoading: userReportLoading,
-    error: userReportError,
-  } = useUserReportByUserReportId(userReportId);
+  // Step 1: Fetch complete normalized report structure (includes UserReport, base Report, etc.)
+  const normalizedReport = useUserReportById(userReportId);
 
-  // Step 2: Extract base reportId from UserReport
-  const baseReportId = userReport?.reportId;
+  // Extract data from normalized report
+  const { userReport, report, isLoading: normalizedLoading, error: normalizedError } = normalizedReport;
+  const baseReportId = report?.id;
 
-  // Step 3: Fetch normalized report and real data using base reportId
-  // These hooks must be called unconditionally to comply with Rules of Hooks
-  const normalizedReport = useUserReportById(userId, baseReportId || '');
-  const reportOutputResult = useReportOutput({ reportId: baseReportId || '' });
+  // Step 2: Fetch report output using base reportId
+  // This hook must be called unconditionally to comply with Rules of Hooks
+  const reportOutputResult = useReportOutput({
+    reportId: baseReportId || '',
+    enabled: !!baseReportId  // Only enable when we have a valid base report ID
+  });
 
-  // Step 4: Handle loading and error states
-  if (userReportLoading) {
+  // Step 3: Handle loading and error states
+  if (normalizedLoading) {
     return LOADING_PROPS;
   }
 
   if (!userReport || !baseReportId) {
     return {
       ...ERROR_PROPS,
-      error: userReportError || ERROR_PROPS.error,
+      error: normalizedError || ERROR_PROPS.error,
     };
   }
 
-  // Step 5: Process the report output result
+  // Step 4: Process the report output result
   const { status, data, error } = reportOutputResult;
 
   // Extract progress information if status is pending
