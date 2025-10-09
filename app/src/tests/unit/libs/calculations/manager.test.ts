@@ -103,10 +103,10 @@ describe('CalculationManager', () => {
     test('given successful household calculation then updates report status', async () => {
       // Given
       mockService.executeCalculation.mockImplementation(
-        async (reportId: any, meta: any, onComplete: any) => {
+        async (reportId: any, meta: any, callbacks: any) => {
           // Simulate the callback being invoked for household calculations
-          if (meta.type === 'household' && onComplete) {
-            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          if (meta.type === 'household' && callbacks?.onComplete) {
+            await callbacks.onComplete(reportId, 'ok', null);
           }
           return OK_STATUS_HOUSEHOLD;
         }
@@ -123,7 +123,7 @@ describe('CalculationManager', () => {
         expect.objectContaining({
           id: TEST_REPORT_ID,
           status: 'complete',
-          output: OK_STATUS_HOUSEHOLD.result,
+          output: null, // Household calculations have null output
         })
       );
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
@@ -134,10 +134,10 @@ describe('CalculationManager', () => {
     test('given failed calculation then marks report as error', async () => {
       // Given
       mockService.executeCalculation.mockImplementation(
-        async (reportId: any, meta: any, onComplete: any) => {
+        async (reportId: any, meta: any, callbacks: any) => {
           // Simulate the callback being invoked for household calculations
-          if (meta.type === 'household' && onComplete) {
-            await onComplete(reportId, 'error', undefined);
+          if (meta.type === 'household' && callbacks?.onComplete) {
+            await callbacks.onComplete(reportId, 'error', undefined);
           }
           return ERROR_STATUS;
         }
@@ -175,10 +175,10 @@ describe('CalculationManager', () => {
     test('given already updated report then skips duplicate update', async () => {
       // Given
       mockService.executeCalculation.mockImplementation(
-        async (reportId: any, meta: any, onComplete: any) => {
+        async (reportId: any, meta: any, callbacks: any) => {
           // Simulate the callback being invoked for household calculations
-          if (meta.type === 'household' && onComplete) {
-            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          if (meta.type === 'household' && callbacks?.onComplete) {
+            await callbacks.onComplete(reportId, 'ok', null);
           }
           return OK_STATUS_HOUSEHOLD;
         }
@@ -199,10 +199,10 @@ describe('CalculationManager', () => {
       // Given
       vi.useFakeTimers();
       mockService.executeCalculation.mockImplementation(
-        async (reportId: any, meta: any, onComplete: any) => {
+        async (reportId: any, meta: any, callbacks: any) => {
           // Simulate the callback being invoked for household calculations
-          if (meta.type === 'household' && onComplete) {
-            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          if (meta.type === 'household' && callbacks?.onComplete) {
+            await callbacks.onComplete(reportId, 'ok', null);
           }
           return OK_STATUS_HOUSEHOLD;
         }
@@ -238,7 +238,10 @@ describe('CalculationManager', () => {
       expect(mockService.executeCalculation).toHaveBeenCalledWith(
         TEST_REPORT_ID,
         HOUSEHOLD_META,
-        expect.any(Function) // The callback function
+        expect.objectContaining({
+          onComplete: expect.any(Function),
+          onSimulationComplete: expect.any(Function),
+        })
       );
       expect(mockProgressUpdater.startProgressUpdates).toHaveBeenCalledWith(
         TEST_REPORT_ID,
@@ -271,10 +274,10 @@ describe('CalculationManager', () => {
     test('given new calculation then resets report tracking', async () => {
       // Given
       mockService.executeCalculation.mockImplementation(
-        async (reportId: any, meta: any, onComplete: any) => {
+        async (reportId: any, meta: any, callbacks: any) => {
           // Simulate the callback being invoked for household calculations
-          if (meta.type === 'household' && onComplete) {
-            await onComplete(reportId, 'ok', OK_STATUS_HOUSEHOLD.result);
+          if (meta.type === 'household' && callbacks?.onComplete) {
+            await callbacks.onComplete(reportId, 'ok', null);
           }
           return OK_STATUS_HOUSEHOLD;
         }
@@ -336,7 +339,8 @@ describe('CalculationManager', () => {
         TEST_REPORT_ID,
         'complete',
         'us',
-        OK_STATUS_HOUSEHOLD.result
+        OK_STATUS_HOUSEHOLD.result,
+        HOUSEHOLD_META
       );
 
       // Then
@@ -357,7 +361,8 @@ describe('CalculationManager', () => {
         TEST_REPORT_ID,
         'complete',
         'us',
-        OK_STATUS_HOUSEHOLD.result
+        OK_STATUS_HOUSEHOLD.result,
+        HOUSEHOLD_META
       );
 
       // Advance time for retry
@@ -384,7 +389,8 @@ describe('CalculationManager', () => {
         TEST_REPORT_ID,
         'complete',
         'us',
-        OK_STATUS_HOUSEHOLD.result
+        OK_STATUS_HOUSEHOLD.result,
+        HOUSEHOLD_META
       );
 
       // Advance time for retry
