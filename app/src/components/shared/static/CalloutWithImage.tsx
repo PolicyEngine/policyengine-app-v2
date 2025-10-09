@@ -23,7 +23,7 @@ export default function CalloutWithImage({
   imageAlt,
 }: CalloutWithImageProps) {
   return (
-    <Container size="xl" px="sm" py="3xl" style={{borderBottom: `1px solid ${colors.border.dark}`}}>
+    <Container size="xl" px="sm" py="3xl">
       <Grid align="center" gutter="xl">
         {/* Left Column */}
         <Grid.Col span={{ base: 12, md: 6 }}>

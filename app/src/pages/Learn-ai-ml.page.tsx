@@ -2,6 +2,7 @@ import React from 'react';
 import CalloutWithImage from '@/components/shared/static/CalloutWithImage';
 import { CardsWithHeader } from '@/components/shared/static/CardsWithHeader';
 import PageHeader from '@/components/shared/static/PageHeader';
+import { TitleCardWithHeader } from '@/components/shared/static/TextCardWithHeader';
 import aiAnalysisImg from '@/assets/ai-analysis.png';
 import usHouseholdAiImg from '@/assets/us-household-ai.png';
 
@@ -27,29 +28,53 @@ export default function HomePage() {
                         title: 'Instant analysis',
                         description: 'Generate comprehensive policy analysis with natural language, tailored to different knowledge levels',
                         icon: '✨',
-                        background: "white",
+                        background: "gray",
                     },
                     {
                         title: 'Plain language explanations',
                         description: "Understand complex tax and benefit calculations through clear, accessible explanations of your household's finances",
                         icon: '🧠',
-                        background: 'white',
+                        background: 'gray',
                     },
                     {
                         title: 'Data-driven insights',
                         description: "Combine computational precision with narrative insights to tell the complete story of policy impacts",
                         icon: '📊',
-                        background: 'white',
+                        background: 'gray',
                     },
                 ]}
             />
 
-            <CalloutWithImage
-                title="How it works"
+            <TitleCardWithHeader
+                title="Our AI Journey"
+                sections={[
+                    {
+                        heading: "Machine learning foundations: 2021-2022",
+                        body: "PolicyEngine has leveraged artificial intelligence since our inception. In 2021, we pioneered the use of machine learning to enhance our microsimulation models, applying gradient descent to optimized survey weights and match administrative totals with unprecedented accuracy.",
+                    },
+                    {
+                        body: "By 2022, our UK model had achieved up to 80% lower aggregate errors compared to other microsimulation models. This foundation of AI-enhanced accuracy has been central to our mission of providing reliable policy analysis.",
+                    },
+                    {
+                        heading: "Data science innovation: 2023",
+                        body: "We expanded our AI capabilities in 2023 with our Enhanced Current Population Survey (ECPS) for the US model, using quantile regression forests to integrate tax record information with survey data, creating the first open alternative to restricted tax microdata for policy microsimulation.",
+                    },
+                    {
+                        heading: "AI-Powered Analysis: 2023-Present",
+                        body: "When OpenAI released GPT-4 in March 2023, we immediately recognized its potential to democratize policy understanding. Within just one month, we launched our AI-powered Analysis tool that translates complex computational results into accessible narratives.",
+                    },
+                    {
+                        body: "In 2024, we extended this capability to household-level calculations with Anthropic's Claude API, enabling users to understand exactly how their taxes and benefits are calculated through plain-language explanations.",
+                    },
+                ]}
+                backgroundColor="gray"
+            />
+
+            {/*<TitleCardWithHeader
                 description="PolicyEngine integrates large language models with our computational tax-benefit engine to transform complex calculations into clear explanations.\nFor household calculations, we process thousands of intermediate values across tax and benefit programs, then use Anthropic's Claude API to generate plain-language explanations of eligibility, amounts, and potential changes.\nFor policy analysis, we leverage GPT-4 to weave narratives from our computational results, explaining reforms in terms anyone can understand - from simplified `ELI5` explanations to detailed technical analyses for policy experts."
                 imageSrc={aiAnalysisImg}
                 imageAlt="AI Analysis Generation Modes"
-            />
+            />*/}
 
             <h1>Watch our AI Demo</h1>
             <iframe
