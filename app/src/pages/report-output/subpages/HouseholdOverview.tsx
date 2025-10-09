@@ -14,7 +14,8 @@ import {
 } from '@/utils/householdValues';
 
 interface HouseholdOverviewProps {
-  output: Household;
+  baseline: Household | null;
+  reform: Household | null;
 }
 
 /**
@@ -22,15 +23,14 @@ interface HouseholdOverviewProps {
  * Based on the v1 NetIncomeBreakdown.jsx component with recursive expansion logic
  *
  * Structure:
- * - Title showing total net income at top
+ * - Title showing total net income at top (or comparison if reform exists)
  * - Recursive breakdown of income components
  * - Each component can expand to show its children
  * - Up arrows (blue) for additions, down arrows (gray) for subtractions
+ * - Shows comparison "rises by" / "falls by" when reform is present
  */
-export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
+export default function HouseholdOverview({ baseline, reform }: HouseholdOverviewProps) {
   const metadata = useSelector((state: RootState) => state.metadata);
-
-  console.log(metadata);
 
   // Get the root variable (household_net_income)
   const rootVariable = metadata.variables.household_net_income;
@@ -42,17 +42,50 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
     );
   }
 
-  // Calculate the net income value
-  const netIncome = getValueFromHousehold('household_net_income', null, null, output, metadata);
-  const netIncomeValue = typeof netIncome === 'number' ? netIncome : 0;
+  if (!baseline) {
+    return (
+      <Box>
+        <Text c="red">Error: Baseline household data not found</Text>
+      </Box>
+    );
+  }
+
+  const hasReform = reform !== null && reform !== undefined;
+
+  // Calculate baseline net income
+  const baselineNetIncome = getValueFromHousehold(
+    'household_net_income',
+    null,
+    null,
+    baseline,
+    metadata
+  );
+  const baselineValue = typeof baselineNetIncome === 'number' ? baselineNetIncome : 0;
+
+  // Calculate reform net income and difference if reform exists
+  let reformValue = 0;
+  let netIncomeDiff = 0;
+  if (hasReform) {
+    const reformNetIncome = getValueFromHousehold(
+      'household_net_income',
+      null,
+      null,
+      reform,
+      metadata
+    );
+    reformValue = typeof reformNetIncome === 'number' ? reformNetIncome : 0;
+    netIncomeDiff = reformValue - baselineValue;
+  }
 
   /**
    * Recursive component that renders a variable and its children
    * Based on the v1 app's VariableArithmetic component
+   * Now supports comparison between baseline and reform
    */
   interface VariableArithmeticProps {
     variableName: string;
-    household: Household;
+    householdBaseline: Household;
+    householdReform: Household | null;
     isAdd: boolean;
     defaultExpanded?: boolean;
     childrenOnly?: boolean;
@@ -60,7 +93,8 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
 
   const VariableArithmetic = ({
     variableName,
-    household,
+    householdBaseline,
+    householdReform,
     isAdd,
     defaultExpanded = false,
     childrenOnly = false,
@@ -72,9 +106,77 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
       return null;
     }
 
-    // Get the value for this variable
-    const value = getValueFromHousehold(variableName, null, null, household, metadata);
+    // Get baseline value
+    const value = getValueFromHousehold(variableName, null, null, householdBaseline, metadata);
     const numericValue = typeof value === 'number' ? value : 0;
+
+    // Check if reform exists and calculate comparison
+    const hasReformForVar = householdReform !== null && householdReform !== undefined;
+    let valueStr: React.ReactNode;
+    let nodeSign = isAdd;
+
+    if (hasReformForVar) {
+      // Get reform value and calculate difference
+      const reformValue = getValueFromHousehold(
+        variableName,
+        null,
+        null,
+        householdReform,
+        metadata
+      );
+      const reformNumeric = typeof reformValue === 'number' ? reformValue : 0;
+      const diff = reformNumeric - numericValue;
+
+      // Adjust sign based on whether reform increases or decreases value (XOR logic from v1)
+      if (!childrenOnly) {
+        nodeSign = nodeSign !== diff < 0;
+      }
+
+      // Format the difference text
+      if (diff > 0) {
+        valueStr = (
+          <>
+            Your {variable.label} rise{variable.label.endsWith('s') ? '' : 's'} by{' '}
+            <Text
+              span
+              fw={typography.fontWeight.semibold}
+              c={nodeSign ? colors.primary[700] : colors.text.secondary}
+            >
+              {formatVariableValue(variable, diff, 0)}
+            </Text>
+          </>
+        );
+      } else if (diff < 0) {
+        valueStr = (
+          <>
+            Your {variable.label} fall{variable.label.endsWith('s') ? '' : 's'} by{' '}
+            <Text
+              span
+              fw={typography.fontWeight.semibold}
+              c={nodeSign ? colors.primary[700] : colors.text.secondary}
+            >
+              {formatVariableValue(variable, Math.abs(diff), 0)}
+            </Text>
+          </>
+        );
+      } else {
+        valueStr = `Your ${variable.label} ${variable.label.endsWith('s') ? "don't" : "doesn't"} change`;
+      }
+    } else {
+      // No reform - show baseline only
+      valueStr = (
+        <>
+          Your {variable.label} {variable.label.endsWith('s') ? 'are' : 'is'}{' '}
+          <Text
+            span
+            fw={typography.fontWeight.semibold}
+            c={nodeSign ? colors.primary[700] : colors.text.secondary}
+          >
+            {formatVariableValue(variable, numericValue, 0)}
+          </Text>
+        </>
+      );
+    }
 
     // Get child variables (adds and subtracts)
     let addsArray: string[] = [];
@@ -104,12 +206,12 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
       }
     }
 
-    // Filter child variables to only show non-zero ones
+    // Filter child variables to only show non-zero ones (in baseline or reform)
     const visibleAdds = addsArray.filter((v) =>
-      shouldShowVariable(v, household, null, metadata, false)
+      shouldShowVariable(v, householdBaseline, householdReform, metadata, false)
     );
     const visibleSubtracts = subtractsArray.filter((v) =>
-      shouldShowVariable(v, household, null, metadata, false)
+      shouldShowVariable(v, householdBaseline, householdReform, metadata, false)
     );
 
     // Recursively render children
@@ -117,7 +219,8 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
       <VariableArithmetic
         key={childVar}
         variableName={childVar}
-        household={household}
+        householdBaseline={householdBaseline}
+        householdReform={householdReform}
         isAdd={isAdd} // Children of additions keep the same sign
         defaultExpanded={false}
       />
@@ -127,7 +230,8 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
       <VariableArithmetic
         key={childVar}
         variableName={childVar}
-        household={household}
+        householdBaseline={householdBaseline}
+        householdReform={householdReform}
         isAdd={!isAdd} // Children of subtractions flip the sign
         defaultExpanded={false}
       />
@@ -141,8 +245,8 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
       return <>{childNodes}</>;
     }
 
-    // Determine colors and icons based on isAdd
-    const Arrow = isAdd ? (
+    // Determine colors and icons based on nodeSign (adjusted for comparison)
+    const Arrow = nodeSign ? (
       <IconTriangleFilled size={14} style={{ color: colors.primary[700] }} />
     ) : (
       <IconTriangleFilled
@@ -151,8 +255,7 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
       />
     );
 
-    const valueColor = isAdd ? colors.primary[700] : colors.text.secondary;
-    const borderColor = isAdd ? colors.primary[700] : colors.text.secondary;
+    const borderColor = nodeSign ? colors.primary[700] : colors.text.secondary;
 
     return (
       <Box>
@@ -176,12 +279,9 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
         >
           <Group justify="space-between" align="center">
             <Group gap={spacing.sm}>
-              <Text size="md" fw={typography.fontWeight.normal} c={colors.text.secondary}>
-                Your {variable.label} {variable.label.endsWith('s') ? 'are' : 'is'}
-              </Text>
               {Arrow}
-              <Text size="md" fw={typography.fontWeight.semibold} c={valueColor}>
-                {formatVariableValue(variable, numericValue, 0)}
+              <Text size="md" fw={typography.fontWeight.normal} c={colors.text.secondary}>
+                {valueStr}
               </Text>
             </Group>
             {expandable && (
@@ -222,7 +322,23 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
           {/* Main Title */}
           <Box>
             <Text size="xl" fw={typography.fontWeight.semibold} c={colors.primary[700]}>
-              Your net income is {formatVariableValue(rootVariable, netIncomeValue, 0)}
+              {hasReform ? (
+                netIncomeDiff > 0 ? (
+                  <>
+                    Your net income increases by{' '}
+                    {formatVariableValue(rootVariable, netIncomeDiff, 0)}
+                  </>
+                ) : netIncomeDiff < 0 ? (
+                  <>
+                    Your net income decreases by{' '}
+                    {formatVariableValue(rootVariable, Math.abs(netIncomeDiff), 0)}
+                  </>
+                ) : (
+                  <>Your net income doesn&apos;t change</>
+                )
+              ) : (
+                <>Your net income is {formatVariableValue(rootVariable, baselineValue, 0)}</>
+              )}
             </Text>
           </Box>
 
@@ -234,7 +350,8 @@ export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
           >
             <VariableArithmetic
               variableName="household_net_income"
-              household={output}
+              householdBaseline={baseline}
+              householdReform={reform}
               isAdd
               defaultExpanded={false}
               childrenOnly // Only show children, not the root variable itself
