@@ -71,7 +71,7 @@ export function useCreateReport(reportLabel?: string) {
 
     onSuccess: async (result) => {
       try {
-        const { report, userReport, simulations, populations } = result;
+        const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
 
         // Invalidate queries

@@ -69,9 +69,9 @@ describe('useReportData', () => {
       expect(result.current.output).toEqual(mockEconomyOutput);
       expect(result.current.outputType).toBe('economy');
       expect(result.current.error).toBeNull();
-      // normalizedReport now contains the full structure returned by useUserReportById
+      // Check normalized report structure
       expect(result.current.normalizedReport.report).toEqual(mockNormalizedReport.report);
-      expect(result.current.normalizedReport.userReport).toEqual(mockUserReport);
+      // Check userReport is returned directly (not nested in normalizedReport)
       expect(result.current.userReport).toEqual(mockUserReport);
     });
   });
