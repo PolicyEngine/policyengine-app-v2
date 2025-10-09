@@ -311,12 +311,12 @@ describe('ReportSubmitFrame', () => {
         // No userReportId
       };
 
-      let thrownError: Error | null = null;
+      let thrownError: unknown;
       mockCreateReport.mockImplementation((_data: any, options: any) => {
         // Wrap in try-catch to simulate error handling
         try {
           options.onSuccess(mockReportData);
-        } catch (error: any) {
+        } catch (error) {
           thrownError = error;
         }
         return Promise.resolve();
@@ -330,10 +330,8 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(thrownError).toBeDefined();
-      if (thrownError) {
-        expect(thrownError.message).toBe('UserReport ID not found in report data. Report created but navigation failed.');
-      }
+      expect(thrownError).toBeInstanceOf(Error);
+      expect((thrownError as Error).message).toBe('UserReport ID not found in report data. Report created but navigation failed.');
       expect(mockNavigate).not.toHaveBeenCalled();
     });
 
