@@ -28,6 +28,7 @@ import {
   TEST_LABEL,
   TEST_REPORT_ID_STRING,
   TEST_USER_ID,
+  TEST_USER_REPORT_ID,
 } from '@/tests/fixtures/hooks/reportHooksMocks';
 
 // Mock the API
@@ -160,6 +161,25 @@ describe('useCreateReport', () => {
       // Then
       await waitFor(() => {
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['reports'] });
+      });
+    });
+
+    test('given successful creation then stores UserReport ID with report data', async () => {
+      // When
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: mockReportCreationPayload,
+      });
+
+      // Then
+      await waitFor(() => {
+        const cachedData = queryClient.getQueryData(['report', TEST_REPORT_ID_STRING]);
+        expect(cachedData).toEqual({
+          ...mockReportMetadata,
+          userReportId: TEST_USER_REPORT_ID,
+        });
       });
     });
   });

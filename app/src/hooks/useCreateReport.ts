@@ -43,17 +43,23 @@ export function useCreateReport(reportLabel?: string) {
 
         console.log('Report label in useCreateReport:', reportLabel);
 
-        // Store report data in cache for easy access
+        // Store report data without userReportId for now
         queryClient.setQueryData(['report', String(data.id)], data);
 
         // Create association with current user (or anonymous for session storage)
         const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
 
-        await createAssociation.mutateAsync({
+        const userReport = await createAssociation.mutateAsync({
           userId,
-          reportId: String(data.id), // Convert the numeric ID from metadata to string
+          reportId: String(data.id), 
           label: reportLabel,
           isCreated: true,
+        });
+
+        // Update cached report to store UserReport ID for report output display
+        queryClient.setQueryData(['report', String(data.id)], {
+          ...data,
+          userReportId: userReport.id,
         });
 
         const { simulation1, simulation2 } = variables.simulations || {};
