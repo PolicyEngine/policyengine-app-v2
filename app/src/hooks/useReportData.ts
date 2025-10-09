@@ -21,6 +21,7 @@ export interface ReportDataResult {
   outputType: ReportOutputType | undefined;
   error: Error | null | undefined;
   normalizedReport: { report: any };
+  userReport: any;
   progress: number | undefined;
   message: string | undefined;
   queuePosition: number | undefined;
@@ -36,6 +37,7 @@ const ERROR_PROPS: ReportDataResult = {
   outputType: undefined,
   error: new Error('Report not found'),
   normalizedReport: { report: undefined },
+  userReport: undefined,
   progress: undefined,
   message: undefined,
   queuePosition: undefined,
@@ -48,6 +50,7 @@ const LOADING_PROPS: ReportDataResult = {
   outputType: undefined,
   error: undefined,
   normalizedReport: { report: undefined },
+  userReport: undefined,
   progress: undefined,
   message: 'Loading report...',
   queuePosition: undefined,
@@ -151,6 +154,7 @@ export function useReportData(userReportId: string): ReportDataResult {
     outputType,
     error,
     normalizedReport,
+    userReport,
     progress: progressInfo.progress,
     message: progressInfo.message,
     queuePosition: progressInfo.queuePosition,

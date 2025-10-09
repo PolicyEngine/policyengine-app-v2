@@ -74,6 +74,7 @@ describe('useReportData', () => {
       expect(result.current.outputType).toBe('economy');
       expect(result.current.error).toBeNull();
       expect(result.current.normalizedReport).toEqual(mockNormalizedReport);
+      expect(result.current.userReport).toEqual(mockUserReport);
     });
   });
 

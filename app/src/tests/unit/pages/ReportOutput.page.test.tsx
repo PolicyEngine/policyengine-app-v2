@@ -247,6 +247,27 @@ describe('ReportOutputPage', () => {
     });
   });
 
+  test('given user report without label then displays user report ID', async () => {
+    // Given
+    const userReportWithoutLabel = {
+      ...mockUserReport,
+      label: undefined,
+    };
+    (useUserReportByUserReportId as any).mockReturnValue({
+      data: userReportWithoutLabel,
+      isLoading: false,
+      error: null,
+    });
+
+    // When
+    renderWithClient(<ReportOutputPage />);
+
+    // Then
+    await waitFor(() => {
+      expect(screen.getByText('sur-test123')).toBeInTheDocument();
+    });
+  });
+
   test('given household output type then renders household data correctly', async () => {
     // Given
     (useReportOutput as any).mockReturnValue({

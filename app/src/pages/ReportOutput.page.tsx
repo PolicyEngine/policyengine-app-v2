@@ -68,14 +68,13 @@ export default function ReportOutputPage() {
     output,
     outputType,
     error,
-    normalizedReport,
+    userReport,
     progress,
     message,
     queuePosition,
     estimatedTimeRemaining,
   } = useReportData(userReportId);
 
-  const { report } = normalizedReport;
   const DEFAULT_PAGE = 'overview';
 
   // Use URL param for active tab, default to 'overview'
@@ -169,7 +168,7 @@ export default function ReportOutputPage() {
                 fw={typography.fontWeight.semibold}
                 fz={typography.fontSize['3xl']}
               >
-                {report?.label || `Report ${String(report?.id || '').padStart(4, '0')}`}
+                {userReport?.label || userReportId}
               </Title>
               <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Edit report name">
                 <IconPencil size={18} />
