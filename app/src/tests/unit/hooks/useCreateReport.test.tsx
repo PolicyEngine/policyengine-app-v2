@@ -159,7 +159,7 @@ describe('useCreateReport', () => {
       });
     });
 
-    test('given successful creation then stores metadata with userReportId', async () => {
+    test('given successful creation then stores calculation metadata', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 
@@ -171,9 +171,10 @@ describe('useCreateReport', () => {
       // Then
       await waitFor(() => {
         const cachedMeta = queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING]);
-        expect(cachedMeta).toMatchObject({
-          userReportId: TEST_USER_REPORT_ID,
-        });
+        expect(cachedMeta).toBeDefined();
+        // Verify basic structure - exact type depends on simulation setup
+        expect(cachedMeta).toHaveProperty('type');
+        expect(cachedMeta).toHaveProperty('countryId', TEST_COUNTRY_ID);
       });
     });
   });
@@ -236,11 +237,10 @@ describe('useCreateReport', () => {
         );
       });
 
-      // Verify metadata was stored with userReportId
-      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual({
-        ...MOCK_HOUSEHOLD_META,
-        userReportId: TEST_USER_REPORT_ID,
-      });
+      // Verify metadata was stored
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_HOUSEHOLD_META
+      );
     });
 
     test('given economy simulation with national scope then starts calculation without region', async () => {
@@ -276,11 +276,10 @@ describe('useCreateReport', () => {
         );
       });
 
-      // Verify metadata was stored without region but with userReportId
-      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual({
-        ...MOCK_ECONOMY_META_NATIONAL,
-        userReportId: TEST_USER_REPORT_ID,
-      });
+      // Verify metadata was stored without region
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_ECONOMY_META_NATIONAL
+      );
     });
 
     test('given economy simulation with subnational scope then starts calculation with region', async () => {
@@ -316,11 +315,10 @@ describe('useCreateReport', () => {
         );
       });
 
-      // Verify metadata was stored with region and userReportId
-      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual({
-        ...MOCK_ECONOMY_META_SUBNATIONAL,
-        userReportId: TEST_USER_REPORT_ID,
-      });
+      // Verify metadata was stored with region
+      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
+        MOCK_ECONOMY_META_SUBNATIONAL
+      );
     });
 
     test('given no populations data then still creates report but does not start calculations', async () => {

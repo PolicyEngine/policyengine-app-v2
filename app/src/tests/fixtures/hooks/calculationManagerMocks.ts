@@ -83,11 +83,7 @@ export const createMockCalculationManager = () => ({
       baseMeta = MOCK_ECONOMY_META_NATIONAL;
     }
 
-    // Include userReportId if provided
-    return {
-      ...baseMeta,
-      ...(params.userReportId && { userReportId: params.userReportId }),
-    };
+    return baseMeta;
   }),
   getQueryOptions: vi.fn((reportId: string, _meta: CalculationMeta) => ({
     queryKey: ['calculation', reportId] as const,

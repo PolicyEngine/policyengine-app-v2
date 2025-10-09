@@ -80,14 +80,13 @@ export function useCreateReport(reportLabel?: string) {
         // Cache the report data
         queryClient.setQueryData(['report', reportIdStr], report);
 
-        // Build metadata with userReportId included
+        // Build metadata
         const calculationMeta = manager.buildMetadata({
           simulation1: simulations?.simulation1 || null,
           simulation2: simulations?.simulation2 || null,
           household: populations?.household1,
           geography: populations?.geography1,
           countryId: report.country_id,
-          userReportId: userReport.id,
         });
 
         // Store metadata; we need to do this because API v1 doesn't run report by 
