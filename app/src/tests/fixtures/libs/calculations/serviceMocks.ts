@@ -61,11 +61,13 @@ const mockHousehold: Household = {
 export const HOUSEHOLD_BUILD_PARAMS: BuildMetadataParams = {
   simulation1: {
     ...mockSimulation,
+    id: 'sim-1',
     populationType: 'household',
     policyId: 'policy-baseline',
   },
   simulation2: {
     ...mockSimulation,
+    id: 'sim-2',
     populationType: 'household',
     policyId: 'policy-reform',
   },
@@ -77,11 +79,13 @@ export const HOUSEHOLD_BUILD_PARAMS: BuildMetadataParams = {
 export const ECONOMY_BUILD_PARAMS: BuildMetadataParams = {
   simulation1: {
     ...mockSimulation,
+    id: 'sim-1',
     populationType: 'geography',
     policyId: 'policy-baseline',
   },
   simulation2: {
     ...mockSimulation,
+    id: 'sim-2',
     populationType: 'geography',
     policyId: 'policy-reform',
   },
@@ -100,6 +104,7 @@ export const HOUSEHOLD_META: CalculationMeta = {
   },
   populationId: 'household-123',
   region: undefined,
+  simulationIds: ['sim-1', 'sim-2'],
 };
 
 export const ECONOMY_META: CalculationMeta = {
@@ -111,6 +116,7 @@ export const ECONOMY_META: CalculationMeta = {
   },
   populationId: 'us',
   region: undefined,
+  simulationIds: ['sim-1', 'sim-2'],
 };
 
 // Status responses

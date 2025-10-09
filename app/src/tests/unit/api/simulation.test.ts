@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { createSimulation, fetchSimulationById } from '@/api/simulation';
+import { createSimulation, fetchSimulationById, updateSimulationOutput } from '@/api/simulation';
 import { BASE_URL } from '@/constants';
 import {
   ERROR_MESSAGES,
@@ -9,8 +9,10 @@ import {
   mockErrorResponse,
   mockFetchSimulationNotFoundResponse,
   mockFetchSimulationSuccessResponse,
+  mockHouseholdData,
   mockNonJsonResponse,
   mockSimulationMetadata,
+  mockSimulationMetadataWithOutput,
   mockSimulationPayload,
   mockSimulationPayloadGeography,
   mockSimulationPayloadMinimal,
@@ -18,6 +20,7 @@ import {
   SIMULATION_IDS,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/simulationMocks';
+import { Simulation } from '@/types/ingredients/Simulation';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -354,5 +357,253 @@ describe('fetchSimulationById', () => {
     // Then
     expect(result).toEqual(geographyMetadata);
     expect(result.population_type).toBe('geography');
+  });
+});
+
+describe('updateSimulationOutput', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  test('given valid simulation with output then updates simulation successfully', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    const mockResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue({ status: 'ok', result: mockSimulationMetadataWithOutput }),
+    };
+    mockFetch.mockResolvedValueOnce(mockResponse as any);
+
+    const simulation: Simulation = {
+      id: SIMULATION_IDS.VALID,
+      countryId: TEST_COUNTRIES.US,
+      apiVersion: '1.0.0',
+      policyId: '1',
+      populationId: '123',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      output: {
+        countryId: TEST_COUNTRIES.US,
+        householdData: mockHouseholdData,
+      },
+    };
+
+    // When
+    const result = await updateSimulationOutput(
+      TEST_COUNTRIES.US,
+      SIMULATION_IDS.VALID,
+      simulation
+    );
+
+    // Then
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        id: parseInt(SIMULATION_IDS.VALID, 10),
+        output_json: JSON.stringify(mockHouseholdData),
+      }),
+    });
+    expect(result).toEqual(mockSimulationMetadataWithOutput);
+  });
+
+  test('given simulation without output then updates with null output', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    const mockResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue({ status: 'ok', result: mockSimulationMetadata }),
+    };
+    mockFetch.mockResolvedValueOnce(mockResponse as any);
+
+    const simulation: Simulation = {
+      id: SIMULATION_IDS.VALID,
+      countryId: TEST_COUNTRIES.US,
+      apiVersion: '1.0.0',
+      policyId: '1',
+      populationId: '123',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      output: null,
+    };
+
+    // When
+    const result = await updateSimulationOutput(
+      TEST_COUNTRIES.US,
+      SIMULATION_IDS.VALID,
+      simulation
+    );
+
+    // Then
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        id: parseInt(SIMULATION_IDS.VALID, 10),
+        output_json: null,
+      }),
+    });
+    expect(result).toEqual(mockSimulationMetadata);
+  });
+
+  test('given different country ID then uses correct endpoint', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    const mockResponse = {
+      ok: true,
+      json: vi.fn().mockResolvedValue({ status: 'ok', result: mockSimulationMetadataWithOutput }),
+    };
+    mockFetch.mockResolvedValueOnce(mockResponse as any);
+
+    const simulation: Simulation = {
+      id: SIMULATION_IDS.VALID,
+      countryId: TEST_COUNTRIES.UK,
+      apiVersion: '1.0.0',
+      policyId: '1',
+      populationId: '123',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      output: {
+        countryId: TEST_COUNTRIES.UK,
+        householdData: mockHouseholdData,
+      },
+    };
+
+    // When
+    await updateSimulationOutput(TEST_COUNTRIES.UK, SIMULATION_IDS.VALID, simulation);
+
+    // Then
+    expect(mockFetch).toHaveBeenCalledWith(
+      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation`,
+      expect.any(Object)
+    );
+  });
+
+  test('given HTTP error response then throws error with status', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(
+      mockErrorResponse(HTTP_STATUS.INTERNAL_SERVER_ERROR, 'Internal Server Error') as any
+    );
+
+    const simulation: Simulation = {
+      id: SIMULATION_IDS.VALID,
+      countryId: TEST_COUNTRIES.US,
+      apiVersion: '1.0.0',
+      policyId: '1',
+      populationId: '123',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      output: {
+        countryId: TEST_COUNTRIES.US,
+        householdData: mockHouseholdData,
+      },
+    };
+
+    // When/Then
+    await expect(
+      updateSimulationOutput(TEST_COUNTRIES.US, SIMULATION_IDS.VALID, simulation)
+    ).rejects.toThrow(
+      ERROR_MESSAGES.UPDATE_FAILED_WITH_STATUS(
+        SIMULATION_IDS.VALID,
+        HTTP_STATUS.INTERNAL_SERVER_ERROR,
+        'Internal Server Error'
+      )
+    );
+  });
+
+  test('given 404 not found then throws error with status', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(mockErrorResponse(HTTP_STATUS.NOT_FOUND, 'Not Found') as any);
+
+    const simulation: Simulation = {
+      id: SIMULATION_IDS.NON_EXISTENT,
+      countryId: TEST_COUNTRIES.US,
+      apiVersion: '1.0.0',
+      policyId: '1',
+      populationId: '123',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      output: {
+        countryId: TEST_COUNTRIES.US,
+        householdData: mockHouseholdData,
+      },
+    };
+
+    // When/Then
+    await expect(
+      updateSimulationOutput(TEST_COUNTRIES.US, SIMULATION_IDS.NON_EXISTENT, simulation)
+    ).rejects.toThrow(
+      ERROR_MESSAGES.UPDATE_FAILED_WITH_STATUS(
+        SIMULATION_IDS.NON_EXISTENT,
+        HTTP_STATUS.NOT_FOUND,
+        'Not Found'
+      )
+    );
+  });
+
+  test('given non-JSON response then throws parse error', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    mockFetch.mockResolvedValueOnce(mockNonJsonResponse() as any);
+
+    const simulation: Simulation = {
+      id: SIMULATION_IDS.VALID,
+      countryId: TEST_COUNTRIES.US,
+      apiVersion: '1.0.0',
+      policyId: '1',
+      populationId: '123',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      output: {
+        countryId: TEST_COUNTRIES.US,
+        householdData: mockHouseholdData,
+      },
+    };
+
+    // When/Then
+    await expect(
+      updateSimulationOutput(TEST_COUNTRIES.US, SIMULATION_IDS.VALID, simulation)
+    ).rejects.toThrow(/Failed to parse simulation update response/);
+  });
+
+  test('given network failure then throws error', async () => {
+    // Given
+    const mockFetch = vi.mocked(global.fetch);
+    const networkError = new Error('Network error');
+    mockFetch.mockRejectedValueOnce(networkError);
+
+    const simulation: Simulation = {
+      id: SIMULATION_IDS.VALID,
+      countryId: TEST_COUNTRIES.US,
+      apiVersion: '1.0.0',
+      policyId: '1',
+      populationId: '123',
+      populationType: 'household',
+      label: null,
+      isCreated: true,
+      output: {
+        countryId: TEST_COUNTRIES.US,
+        householdData: mockHouseholdData,
+      },
+    };
+
+    // When/Then
+    await expect(
+      updateSimulationOutput(TEST_COUNTRIES.US, SIMULATION_IDS.VALID, simulation)
+    ).rejects.toThrow(networkError);
   });
 });

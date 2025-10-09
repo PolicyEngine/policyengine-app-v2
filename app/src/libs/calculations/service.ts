@@ -65,6 +65,15 @@ export class CalculationService {
         ? geography.geographyId
         : undefined;
 
+    // Collect simulation IDs to update with calculation results
+    const simulationIds: string[] = [];
+    if (simulation1.id) {
+      simulationIds.push(simulation1.id);
+    }
+    if (simulation2?.id) {
+      simulationIds.push(simulation2.id);
+    }
+
     return {
       type,
       countryId: countryId as any,
@@ -74,6 +83,7 @@ export class CalculationService {
       },
       populationId,
       region,
+      simulationIds,
     };
   }
 
@@ -113,15 +123,49 @@ export class CalculationService {
    * Execute a calculation through the appropriate handler
    * @param reportId - The report ID
    * @param meta - The calculation metadata
-   * @param onComplete - Optional callback for household calculation completion
+   * @param callbacks - Optional callbacks for completion events
    */
   async executeCalculation(
     reportId: string,
     meta: CalculationMeta,
-    onComplete?: (reportId: string, status: 'ok' | 'error', result?: any) => Promise<void>
+    callbacks?: {
+      onComplete?: (reportId: string, status: 'ok' | 'error', result?: any) => Promise<void>;
+      onSimulationComplete?: (simulationId: string, result: any, policyId: string) => Promise<void>;
+    }
   ): Promise<CalculationStatusResponse> {
     if (meta.type === 'household') {
-      return this.householdHandler.execute(reportId, meta, onComplete);
+      // Loop through each simulation and run calculation
+      for (let index = 0; index < meta.simulationIds.length; index++) {
+        const simulationId = meta.simulationIds[index];
+        const policyId = index === 0 ? meta.policyIds.baseline : meta.policyIds.reform;
+
+        if (!policyId) {
+          continue;
+        }
+
+        const singleSimMeta: CalculationMeta = {
+          ...meta,
+          policyIds: { baseline: policyId, reform: undefined },
+          simulationIds: [simulationId],
+        };
+
+        await this.householdHandler.execute(
+          `${reportId}-sim-${simulationId}`,
+          singleSimMeta,
+          async (_, status, res) => {
+            if (status === 'ok' && callbacks?.onSimulationComplete) {
+              await callbacks.onSimulationComplete(simulationId, res, policyId);
+            }
+          }
+        );
+      }
+
+      // Notify overall completion
+      if (callbacks?.onComplete) {
+        await callbacks.onComplete(reportId, 'ok', null);
+      }
+
+      return { status: 'ok', result: null };
     }
     return this.economyHandler.execute(reportId, meta);
   }
