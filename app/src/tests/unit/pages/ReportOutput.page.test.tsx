@@ -33,23 +33,23 @@ vi.mock('@/hooks/useUserReports', () => ({
 }));
 
 // Mock subpage components
-vi.mock('@/pages/report-output/subpages/OverviewSubPage', () => ({
+vi.mock('@/pages/report-output/OverviewSubPage', () => ({
   default: vi.fn(() => <div data-testid="overview-subpage">Overview</div>),
 }));
 
-vi.mock('@/pages/report-output/subpages/LoadingPage', () => ({
+vi.mock('@/pages/report-output/LoadingPage', () => ({
   default: vi.fn(({ message }) => (
     <div data-testid="loading-subpage">{message || 'Loading...'}</div>
   )),
 }));
 
-vi.mock('@/pages/report-output/subpages/ErrorPage', () => ({
+vi.mock('@/pages/report-output/ErrorPage', () => ({
   default: vi.fn(({ error }) => (
     <div data-testid="error-subpage">Error: {error?.message || 'Unknown error'}</div>
   )),
 }));
 
-vi.mock('@/pages/report-output/subpages/NotFoundSubPage', () => ({
+vi.mock('@/pages/report-output/NotFoundSubPage', () => ({
   default: vi.fn(() => <div data-testid="not-found-subpage">Not Found</div>),
 }));
 

@@ -34,10 +34,10 @@ import {
   MOCK_HOUSEHOLD_OUTPUT,
 } from '@/tests/fixtures/report/mockReportOutput';
 import { Household, HouseholdData } from '@/types/ingredients/Household';
-import ErrorPage from './report-output/subpages/ErrorPage';
-import LoadingPage from './report-output/subpages/LoadingPage';
-import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
-import OverviewSubPage from './report-output/subpages/OverviewSubPage';
+import ErrorPage from './report-output/ErrorPage';
+import LoadingPage from './report-output/LoadingPage';
+import NotFoundSubPage from './report-output/NotFoundSubPage';
+import OverviewSubPage from './report-output/OverviewSubPage';
 
 /**
  * Type discriminator for output types

@@ -2,8 +2,8 @@ import { useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useFetchMetadata } from '@/hooks/useMetadata';
-import ErrorPage from '@/pages/report-output/subpages/ErrorPage';
-import LoadingPage from '@/pages/report-output/subpages/LoadingPage';
+import ErrorPage from '@/pages/report-output/ErrorPage';
+import LoadingPage from '@/pages/report-output/LoadingPage';
 import { RootState } from '@/store';
 
 /**
