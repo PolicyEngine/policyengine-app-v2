@@ -21,8 +21,8 @@ import {
   IconX,
 } from '@tabler/icons-react';
 import { ReportElement } from '@/api/v2/reportElements';
-import ReactMarkdown from 'react-markdown';
 import DataElementCell from './DataElementCell';
+import MarkdownRenderer from '@/components/shared/MarkdownRenderer';
 
 interface ReportElementCellProps {
   element: ReportElement;
@@ -104,21 +104,13 @@ export default function ReportElementCell({
         );
       }
 
-      return (
-        <Box
-          className="markdown-content"
-          style={{
-            minHeight: rem(40),
-            padding: isEditing ? 0 : rem(8),
-          }}
-        >
-          {content ? (
-            <ReactMarkdown>{content}</ReactMarkdown>
-          ) : (
-            <Text color="dimmed" style={{ fontStyle: 'italic' }}>
-              Empty section
-            </Text>
-          )}
+      return content ? (
+        <MarkdownRenderer content={content} className="markdown-content" />
+      ) : (
+        <Box style={{ padding: rem(8) }}>
+          <Text c="dimmed" style={{ fontStyle: 'italic' }}>
+            Empty section
+          </Text>
         </Box>
       );
     }
@@ -135,7 +127,7 @@ export default function ReportElementCell({
 
     // Placeholder for other element types
     return (
-      <Text color="dimmed" style={{ fontStyle: 'italic' }}>
+      <Text c="dimmed" style={{ fontStyle: 'italic' }}>
         {element.type} element (not yet implemented)
       </Text>
     );
@@ -158,7 +150,7 @@ export default function ReportElementCell({
               size={18}
               style={{ color: theme.colors.gray[5], cursor: 'grab' }}
             />
-            <Text size="xs" color="dimmed">
+            <Text size="xs" c="dimmed">
               {element.type.charAt(0).toUpperCase() + element.type.slice(1)}
             </Text>
           </Group>

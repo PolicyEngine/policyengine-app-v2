@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Button,
   Group,
@@ -7,49 +7,53 @@ import {
   Text,
   Textarea,
   Alert,
-  Badge,
   LoadingOverlay,
   Box,
-  MultiSelect,
   Paper,
-  Transition,
+  Checkbox,
+  ScrollArea,
+  Code,
+  Collapse,
+  ActionIcon,
 } from '@mantine/core';
 import {
-  IconSparkles,
   IconAlertCircle,
-  IconRefresh,
-  IconCheck,
+  IconChevronDown,
+  IconChevronUp,
 } from '@tabler/icons-react';
 import BaseModal from '@/components/shared/BaseModal';
-import { dataRequestsAPI, DataRequestResponse } from '@/api/v2/dataRequests';
+import { reportElementsAPI } from '@/api/v2/reportElements';
 import { simulationsAPI } from '@/api/v2/simulations';
 import { userSimulationsAPI } from '@/api/v2/userSimulations';
+import { policiesAPI } from '@/api/v2/policies';
+import { datasetsAPI } from '@/api/v2/datasets';
 import { MOCK_USER_ID } from '@/constants';
-
 
 interface DataAnalysisModalProps {
   opened: boolean;
   onClose: () => void;
-  onSubmit: (
-    aggregates: any[],
-    aggregateChanges: any[],
-    explanation?: string
-  ) => void;
   reportId: string;
+}
+
+interface SimulationSelection {
+  id: string;
+  selected: boolean;
+  customName?: string;
+  policyName?: string;
+  datasetName?: string;
 }
 
 export default function DataAnalysisModal({
   opened,
   onClose,
-  onSubmit,
   reportId,
 }: DataAnalysisModalProps) {
-  const [step, setStep] = useState<'selection' | 'confirmation'>('selection');
-  const [selectedSimulations, setSelectedSimulations] = useState<string[]>([]);
+  const queryClient = useQueryClient();
+  const [selectedSimulations, setSelectedSimulations] = useState<SimulationSelection[]>([]);
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [parsedResponse, setParsedResponse] = useState<DataRequestResponse | null>(null);
+  const [showContext, setShowContext] = useState(false);
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   // Fetch simulations
@@ -66,31 +70,95 @@ export default function DataAnalysisModal({
     enabled: opened,
   });
 
-  // Simulation options with better labels using user-provided names
-  const simulationOptions = simulations?.filter(s => s.id).map(s => {
-    const userSim = userSimulations.find(us => us.simulation_id === s.id);
-    const displayName = userSim?.custom_name || `Simulation ${s.id?.slice(0, 8) || ''}`;
+  // Initialize simulation selections with metadata
+  useEffect(() => {
+    if (!simulations || !opened) return;
 
-    return {
-      value: s.id || '',
-      label: displayName,
+    const loadSimulationMetadata = async () => {
+      const selections: SimulationSelection[] = await Promise.all(
+        simulations.filter(s => s.id).map(async (sim) => {
+          const userSim = userSimulations.find(us => us.simulation_id === sim.id);
+
+          // Fetch policy and dataset names
+          let policyName = 'Default policy';
+          let datasetName = 'Default dataset';
+
+          try {
+            if (sim.policy_id) {
+              const policy = await policiesAPI.get(sim.policy_id);
+              policyName = policy.name || `Policy ${sim.policy_id.slice(0, 8)}`;
+            }
+            if (sim.dataset_id) {
+              const dataset = await datasetsAPI.getDataset(sim.dataset_id);
+              datasetName = dataset.name || `Dataset ${sim.dataset_id.slice(0, 8)}`;
+            }
+          } catch (err) {
+            console.error('Error loading simulation metadata:', err);
+          }
+
+          return {
+            id: sim.id || '',
+            selected: false,
+            customName: userSim?.custom_name || undefined,
+            policyName,
+            datasetName,
+          };
+        })
+      );
+
+      setSelectedSimulations(selections);
     };
-  }).filter(opt => opt.value) || [];
 
+    loadSimulationMetadata();
+  }, [simulations, userSimulations, opened]);
 
   // Reset form when modal opens/closes
   useEffect(() => {
     if (opened) {
-      setStep('selection');
-      setSelectedSimulations([]);
       setDescription('');
       setError(null);
-      setParsedResponse(null);
+      setShowContext(false);
     }
   }, [opened]);
 
-  const handleParse = async () => {
-    if (selectedSimulations.length === 0) {
+  const handleToggleSimulation = (simId: string) => {
+    setSelectedSimulations(prev =>
+      prev.map(sim =>
+        sim.id === simId ? { ...sim, selected: !sim.selected } : sim
+      )
+    );
+  };
+
+  const handleSelectAll = () => {
+    const allSelected = selectedSimulations.every(s => s.selected);
+    setSelectedSimulations(prev =>
+      prev.map(sim => ({ ...sim, selected: !allSelected }))
+    );
+  };
+
+  const getSelectedCount = () => selectedSimulations.filter(s => s.selected).length;
+
+  const buildLLMContext = () => {
+    const selected = selectedSimulations.filter(s => s.selected);
+
+    return `Available simulations for analysis:
+${selected.map((sim, idx) => {
+  const name = sim.customName || `Simulation ${idx + 1}`;
+  return `
+- ${name} (ID: ${sim.id})
+  Policy: ${sim.policyName}
+  Dataset: ${sim.datasetName}`;
+}).join('')}
+
+Total simulations selected: ${selected.length}
+
+User request: ${description}`;
+  };
+
+  const handleSubmit = async () => {
+    const selected = selectedSimulations.filter(s => s.selected);
+
+    if (selected.length === 0) {
       setError('Please select at least one simulation');
       return;
     }
@@ -104,187 +172,24 @@ export default function DataAnalysisModal({
     setError(null);
 
     try {
-      // Build rich context with simulation details
-      const simulationContext = selectedSimulations.map((simId, idx) => {
-        const sim = simulations?.find(s => s.id === simId);
-        const userSim = userSimulations.find(us => us.simulation_id === simId);
-        const displayName = userSim?.custom_name || sim?.name || `Simulation ${idx + 1}`;
-        return `- ${displayName} (ID: ${simId})`;
-      }).join('\n');
-
-      // Enhanced prompt that makes it clear the LLM should handle ALL selected simulations
-      const enhancedDescription = `Available simulations:
-${simulationContext}
-
-User request: ${description}
-
-IMPORTANT: The user has selected ${selectedSimulations.length} simulation${selectedSimulations.length > 1 ? 's' : ''}. Make sure to include data for ALL of them in your response. If the request mentions comparing or showing differences, create aggregate_changes. Otherwise, create separate aggregates for each simulation.`;
-
-      // Call API - let the backend infer whether to create aggregates or aggregate changes
-      const response = await dataRequestsAPI.parse(
-        enhancedDescription,
+      // Call new AI endpoint
+      const response = await reportElementsAPI.createAI(
+        buildLLMContext(),
         reportId,
-        selectedSimulations,
-        false // Don't force comparison mode - let LLM infer from text
+        selected.map(s => s.id)
       );
 
-      setParsedResponse(response);
-      setStep('confirmation');
+      console.log('AI report element created:', response);
+
+      // Just refresh the report elements - the AI endpoint already created the element
+      await queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
+
+      onClose();
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to understand your request. Please try rephrasing.');
-      console.error('Parse error:', err);
+      setError(err.response?.data?.detail || 'Failed to create report element. Please try again.');
+      console.error('Error creating AI report element:', err);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleConfirm = () => {
-    if (!parsedResponse) return;
-
-    // Check the response to see what type of data was returned
-    // If any aggregate has baseline_simulation_id and comparison_simulation_id, it's a comparison
-    const isComparison = parsedResponse.aggregates.some(
-      agg => agg.baseline_simulation_id && agg.comparison_simulation_id
-    );
-
-    let aggregates: any[] = [];
-    let aggregateChanges: any[] = [];
-
-    if (isComparison) {
-      aggregateChanges = parsedResponse.aggregates;
-    } else {
-      aggregates = parsedResponse.aggregates;
-    }
-
-    onSubmit(
-      aggregates,
-      aggregateChanges,
-      parsedResponse.explanation
-    );
-
-    onClose();
-  };
-
-  const handleBack = () => {
-    if (step === 'confirmation') {
-      setStep('selection');
-      setParsedResponse(null);
-    }
-  };
-
-  const renderSelectionStep = () => (
-    <Stack>
-      <Text size="sm" c="dimmed">Select simulations and describe what data you'd like to analyse</Text>
-
-      <MultiSelect
-        label="Simulations"
-        placeholder="Select one or more simulations"
-        data={simulationOptions}
-        value={selectedSimulations}
-        onChange={setSelectedSimulations}
-        searchable
-        required
-        disabled={simulationsLoading}
-        size="sm"
-        description="Select one simulation to view metrics, or multiple to compare"
-      />
-
-      <Textarea
-        label="Description"
-        placeholder="e.g., Show average household income by income decile, or compare tax revenue changes between simulations"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        minRows={4}
-        maxRows={8}
-        autosize
-        required
-      />
-
-      {error && (
-        <Alert icon={<IconAlertCircle size={16} />} color="red">
-          {error}
-        </Alert>
-      )}
-    </Stack>
-  );
-
-  const renderConfirmationStep = () => {
-    if (!parsedResponse) return null;
-
-    return (
-      <Stack>
-        <Text size="sm" c="dimmed">Review the analysis to be created</Text>
-
-        <Paper p="sm" withBorder>
-          <Text size="sm">{parsedResponse.explanation}</Text>
-        </Paper>
-
-        <Group gap="xs">
-          <Badge variant="light" size="sm">
-            {parsedResponse.aggregates.length} data {parsedResponse.aggregates.length === 1 ? 'point' : 'points'}
-          </Badge>
-          <Badge variant="light" size="sm">
-            {parsedResponse.chart_type || 'table'} view
-          </Badge>
-        </Group>
-
-        <Text size="xs" c="dimmed">
-          You can customise the visualisation after adding it to your report.
-        </Text>
-      </Stack>
-    );
-  };
-
-  const getStepContent = () => {
-    switch (step) {
-      case 'selection':
-        return renderSelectionStep();
-      case 'confirmation':
-        return renderConfirmationStep();
-      default:
-        return null;
-    }
-  };
-
-  const getActionButtons = () => {
-    switch (step) {
-      case 'selection':
-        return (
-          <>
-            <Button variant="subtle" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleParse}
-              disabled={selectedSimulations.length === 0 || !description.trim() || simulationsLoading}
-              loading={isLoading}
-              leftSection={<IconSparkles size={16} />}
-            >
-              Analyse
-            </Button>
-          </>
-        );
-      case 'confirmation':
-        return (
-          <>
-            <Button
-              variant="subtle"
-              onClick={handleBack}
-              leftSection={<IconRefresh size={16} />}
-            >
-              Try again
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              leftSection={<IconCheck size={16} />}
-              color="green"
-            >
-              Create visualisation
-            </Button>
-          </>
-        );
-      default:
-        return null;
     }
   };
 
@@ -293,49 +198,121 @@ IMPORTANT: The user has selected ${selectedSimulations.length} simulation${selec
       opened={opened}
       onClose={onClose}
       title="Add data analysis"
-      size="md"
-      primaryButton={undefined}
-      secondaryButton={undefined}
+      size="lg"
+      primaryButton={{
+        label: 'Create analysis',
+        onClick: handleSubmit,
+        disabled: getSelectedCount() === 0 || !description.trim() || simulationsLoading,
+        loading: isLoading,
+      }}
+      secondaryButton={{
+        label: 'Cancel',
+        onClick: onClose,
+      }}
     >
-      <Box style={{ position: 'relative', minHeight: 350 }}>
+      <Box style={{ position: 'relative', minHeight: 400 }}>
         <LoadingOverlay visible={isLoading} />
 
         <Stack>
-          {/* Progress indicator */}
-          <Group justify="center" gap="xs">
-            {['selection', 'confirmation'].map((s, idx) => (
-              <Box
-                key={s}
-                style={{
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  backgroundColor:
-                    step === s ? 'var(--mantine-color-blue-6)' :
-                    ['selection', 'confirmation'].indexOf(step) > idx ?
-                      'var(--mantine-color-green-6)' :
-                      'var(--mantine-color-gray-3)',
-                  transition: 'background-color 0.2s ease',
-                }}
-              />
-            ))}
-          </Group>
+          <Text size="sm" c="dimmed">
+            Select simulations from your library and describe what data you'd like to analyse
+          </Text>
 
-          <Transition
-            mounted={true}
-            transition="fade"
-            duration={200}
-          >
-            {(styles) => (
-              <Box style={styles}>
-                {getStepContent()}
-              </Box>
-            )}
-          </Transition>
+          {/* Simulation selector */}
+          <Paper withBorder p="md">
+            <Group justify="space-between" mb="sm">
+              <Text size="sm" fw={500}>
+                Simulations ({getSelectedCount()} selected)
+              </Text>
+              <Button
+                size="xs"
+                variant="subtle"
+                onClick={handleSelectAll}
+                disabled={simulationsLoading}
+              >
+                {selectedSimulations.every(s => s.selected) ? 'Deselect all' : 'Select all'}
+              </Button>
+            </Group>
 
-          <Group justify="space-between" mt="lg">
-            {getActionButtons()}
-          </Group>
+            <ScrollArea h={200}>
+              <Stack gap="xs">
+                {selectedSimulations.map(sim => {
+                  const displayName = sim.customName || `${sim.policyName} / ${sim.datasetName}`;
+
+                  return (
+                    <Checkbox
+                      key={sim.id}
+                      checked={sim.selected}
+                      onChange={() => handleToggleSimulation(sim.id)}
+                      label={
+                        <Group gap="xs">
+                          <Text size="sm">{displayName}</Text>
+                          <Text size="xs" c="dimmed">
+                            ({sim.id.slice(0, 8)})
+                          </Text>
+                        </Group>
+                      }
+                    />
+                  );
+                })}
+                {selectedSimulations.length === 0 && !simulationsLoading && (
+                  <Text size="sm" c="dimmed" ta="center" py="md">
+                    No simulations available. Create simulations first.
+                  </Text>
+                )}
+              </Stack>
+            </ScrollArea>
+          </Paper>
+
+          {/* Description */}
+          <Textarea
+            label="Analysis description"
+            placeholder="e.g., Show average household income by income decile for all simulations, or compare tax revenue changes between reforms"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            minRows={4}
+            maxRows={8}
+            autosize
+            required
+          />
+
+          {/* Show/hide context */}
+          {selectedSimulations.length > 0 && (
+            <Group>
+              <ActionIcon
+                variant="subtle"
+                onClick={() => setShowContext(!showContext)}
+                size="sm"
+              >
+                {showContext ? <IconChevronUp size={14} /> : <IconChevronDown size={14} />}
+              </ActionIcon>
+              <Text size="xs" c="dimmed">
+                {showContext ? 'Hide' : 'Show'} LLM context
+              </Text>
+            </Group>
+          )}
+
+          {/* LLM context preview */}
+          <Collapse in={showContext}>
+            <Paper p="sm" withBorder bg="gray.0">
+              <Text size="xs" fw={500} mb="xs">Context sent to AI:</Text>
+              <Code block style={{ whiteSpace: 'pre-wrap', fontSize: '11px' }}>
+                {buildLLMContext()}
+              </Code>
+            </Paper>
+          </Collapse>
+
+          {/* Error display */}
+          {error && (
+            <Alert icon={<IconAlertCircle size={16} />} color="red">
+              {error}
+            </Alert>
+          )}
+
+          <Text size="xs" c="dimmed">
+            The AI will create report elements with data from all selected simulations.
+            You can further process the data with AI after creation.
+          </Text>
         </Stack>
       </Box>
     </BaseModal>

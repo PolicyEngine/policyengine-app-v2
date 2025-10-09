@@ -1,169 +1,91 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation } from 'react-router-dom';
 import {
   Box,
-  Card,
   Text,
   Table,
   LoadingOverlay,
   Center,
   Stack,
-  Title,
   Paper,
   Group,
-  useMantineTheme,
-  Select,
-  MultiSelect,
-  ActionIcon,
-  Menu,
-  Switch,
-  TextInput,
-  NumberInput,
-  SegmentedControl,
-  Divider,
-  Button,
   ScrollArea,
-  Slider,
+  Tabs,
+  Button,
+  Textarea,
+  Badge,
+  SegmentedControl,
+  useMantineTheme,
+  rem,
+  Code,
 } from '@mantine/core';
-import Plot from 'react-plotly.js';
 import {
-  IconChartBar,
-  IconChartLine,
+  IconSparkles,
   IconTable,
-  IconCards,
-  IconSettings,
-  IconArrowUp,
-  IconArrowDown,
-  IconFilter,
-  IconFilterOff,
+  IconChartBar,
 } from '@tabler/icons-react';
-import { aggregatesAPI, AggregateTable } from '@/api/v2/aggregates';
-import { aggregateChangesAPI, AggregateChange } from '@/api/v2/aggregateChanges';
+import Plot from 'react-plotly.js';
+import { aggregatesAPI } from '@/api/v2/aggregates';
+import MarkdownRenderer from '@/components/shared/MarkdownRenderer';
+import { aggregateChangesAPI } from '@/api/v2/aggregateChanges';
 import { simulationsAPI } from '@/api/v2/simulations';
-import { ReportElement } from '@/api/v2/reportElements';
-import { reportElementsAPI } from '@/api/v2/reportElements';
-import { modelVersionsAPI } from '@/api/v2/modelVersions';
+import { ReportElement, reportElementsAPI } from '@/api/v2/reportElements';
+import { userSimulationsAPI } from '@/api/v2/userSimulations';
+import { policiesAPI } from '@/api/v2/policies';
+import { datasetsAPI } from '@/api/v2/datasets';
+import { MOCK_USER_ID } from '@/constants';
 import BaseModal from '@/components/shared/BaseModal';
-import LinkableEntity from '@/components/shared/LinkableEntity';
-import { getSmartChartDefaults } from '@/utils/chartDefaults';
 
 interface DataElementCellProps {
   element: ReportElement;
   isEditing?: boolean;
 }
 
-type ChartType = 'table' | 'bar_chart' | 'line_chart' | 'metric_card';
-
-interface ChartConfig {
-  chartType: ChartType;
-  xAxisColumns: string[];
-  yAxisColumns: string[];
-  colorColumn: string;
-  barMode: 'group' | 'stack';
-  title?: string;
-  xAxisTitle?: string;
-  yAxisTitle?: string;
-  showLegend: boolean;
-  showGrid: boolean;
-  height?: number;
-  // Advanced Plotly layout options
-  legendPosition?: string;
-  legendOrientation?: string;
-  xAxisType?: string;
-  yAxisType?: string;
-  hoverMode?: string | false;
-  yAxisTickFormat?: string;
-  xAxisTickAngle?: number;
-  customLayout?: string;
-  // Legacy support
-  xAxisColumn?: string;
-  yAxisColumn?: string;
-}
-
 export default function DataElementCell({
   element,
-  isEditing = false,
 }: DataElementCellProps) {
+  console.log('[DataElementCell] Rendering with element:', {
+    id: element.id,
+    label: element.label,
+    type: element.type,
+    processed_output_type: element.processed_output_type,
+    processed_output_preview: element.processed_output?.substring(0, 100)
+  });
+
   const theme = useMantineTheme();
-  const location = useLocation();
   const queryClient = useQueryClient();
 
-  // Load config from metadata or use defaults
-  const savedConfig = (element as any).report_element_metadata as ChartConfig | undefined;
-
-  const [chartType, setChartType] = useState<ChartType>(
-    savedConfig?.chartType || (element.chart_type as ChartType) || 'table'
+  const [viewMode, setViewMode] = useState<'data' | 'processed'>(
+    element.processed_output_type ? 'processed' : 'data'
   );
-  const [xAxisColumns, setXAxisColumns] = useState<string[]>(
-    savedConfig?.xAxisColumns || (savedConfig?.xAxisColumn ? [savedConfig.xAxisColumn] : element.x_axis_variable ? [element.x_axis_variable] : [])
-  );
-  const [yAxisColumns, setYAxisColumns] = useState<string[]>(
-    savedConfig?.yAxisColumns || (savedConfig?.yAxisColumn ? [savedConfig.yAxisColumn] : element.y_axis_variable ? [element.y_axis_variable] : [])
-  );
-  const [barMode, setBarMode] = useState<'group' | 'stack'>(
-    savedConfig?.barMode || 'group'
-  );
-  const [showSettings, setShowSettings] = useState(false);
+  const [aiPromptOpened, setAiPromptOpened] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+  const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
-  // Additional chart options
-  const [chartTitle, setChartTitle] = useState(savedConfig?.title || '');
-  const [xAxisTitle, setXAxisTitle] = useState(savedConfig?.xAxisTitle || '');
-  const [yAxisTitle, setYAxisTitle] = useState(savedConfig?.yAxisTitle || '');
-  const [showLegend, setShowLegend] = useState(savedConfig?.showLegend !== false);
-  const [showGrid, setShowGrid] = useState(savedConfig?.showGrid !== false);
-  const [chartHeight, setChartHeight] = useState(savedConfig?.height || 400);
-
-  // Advanced Plotly layout options
-  const [legendPosition, setLegendPosition] = useState(savedConfig?.legendPosition || 'right');
-  const [legendOrientation, setLegendOrientation] = useState(savedConfig?.legendOrientation || 'v');
-  const [xAxisType, setXAxisType] = useState(savedConfig?.xAxisType || '-');
-  const [yAxisType, setYAxisType] = useState(savedConfig?.yAxisType || '-');
-  const [hoverMode, setHoverMode] = useState(savedConfig?.hoverMode || 'closest');
-  const [yAxisTickFormat, setYAxisTickFormat] = useState(savedConfig?.yAxisTickFormat || '');
-  const [xAxisTickAngle, setXAxisTickAngle] = useState(savedConfig?.xAxisTickAngle || 0);
-  const [customLayout, setCustomLayout] = useState(savedConfig?.customLayout || '{}');
-  const [settingsStep, setSettingsStep] = useState(0); // For multistep modal
-  const [isHovered, setIsHovered] = useState(false); // For hover effect
-
-  // Table state
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Steps for the settings modal
-  const settingsSteps = ['Data', 'Appearance', 'Advanced'];
-  const totalSteps = settingsSteps.length;
-
-  // Get country from URL
-  const getCountryDisplay = (countryId: string) => {
-    return countryId.toUpperCase();
-  };
-
-  // Fetch aggregate or aggregate change data for this element
-  const isAggregateChange = element.data_table === 'aggregate_changes';
-
+  // Fetch aggregates for this element
   const { data: aggregates, isLoading: aggregatesLoading } = useQuery({
-    queryKey: ['elementAggregates', element.id, element.data_table],
-    queryFn: async () => {
-      if (isAggregateChange) {
-        return aggregateChangesAPI.getByReportElement(element.id);
-      } else {
-        return aggregatesAPI.getByReportElement(element.id);
-      }
-    },
+    queryKey: ['elementAggregates', element.id],
+    queryFn: () => aggregatesAPI.getByReportElement(element.id),
   });
 
-  // Fetch model version details if we have a model_version_id
-  const { data: modelVersion } = useQuery({
-    queryKey: ['modelVersion', element.model_version_id],
-    queryFn: () => modelVersionsAPI.get(element.model_version_id!),
-    enabled: !!element.model_version_id,
+  // Fetch aggregate changes for this element
+  const { data: aggregateChanges, isLoading: aggregateChangesLoading } = useQuery({
+    queryKey: ['elementAggregateChanges', element.id],
+    queryFn: () => aggregateChangesAPI.getByReportElement(element.id),
   });
 
-  // Fetch simulation details for labels
-  const simulationIds = [...new Set(aggregates?.map(a => a.simulation_id) || [])];
+  // Fetch simulations for labels
+  const simulationIds = useMemo(() => {
+    const ids = new Set<string>();
+    aggregates?.forEach(a => ids.add(a.simulation_id));
+    aggregateChanges?.forEach(a => {
+      ids.add(a.baseline_simulation_id);
+      ids.add(a.comparison_simulation_id);
+    });
+    return Array.from(ids);
+  }, [aggregates, aggregateChanges]);
+
   const { data: simulations } = useQuery({
     queryKey: ['simulations', simulationIds],
     queryFn: async () => {
@@ -176,17 +98,28 @@ export default function DataElementCell({
     enabled: simulationIds.length > 0,
   });
 
+  // Fetch user simulations for custom names
+  const { data: userSimulations = [] } = useQuery({
+    queryKey: ['userSimulations', userId],
+    queryFn: () => userSimulationsAPI.list(userId),
+    enabled: simulationIds.length > 0,
+  });
+
   // Update mutation
   const updateElementMutation = useMutation({
     mutationFn: ({ elementId, data }: { elementId: string; data: any }) =>
       reportElementsAPI.update(elementId, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reportElements'] });
+      queryClient.invalidateQueries({ queryKey: ['elementAggregates', element.id] });
+      queryClient.invalidateQueries({ queryKey: ['elementAggregateChanges', element.id] });
     },
   });
 
   // Helper to get simulation label
   const getSimLabel = (simId: string) => {
+    const userSim = userSimulations.find(us => us.simulation_id === simId);
+    if (userSim?.custom_name) return userSim.custom_name;
     const sim = simulations?.find(s => s?.id === simId);
     return (sim as any)?.label || `Simulation ${simId.slice(0, 8)}`;
   };
@@ -202,304 +135,350 @@ export default function DataElementCell({
       return `${(value / 1e6).toFixed(2)}M`;
     } else if (Math.abs(value) >= 1e3) {
       return `${(value / 1e3).toFixed(2)}K`;
+    } else if (Math.abs(value) >= 100) {
+      return value.toFixed(0);
     } else {
       return value.toFixed(2);
     }
   };
 
-  // Build dataframe from aggregates with proper column names and apply filters/sorting
-  const dataframe = useMemo(() => {
-    if (!aggregates || aggregates.length === 0) return { rows: [], columns: [] };
+  // Handle AI processing
+  const handleAIProcess = async () => {
+    if (!aiPrompt.trim()) return;
 
-    let rows: Record<string, any>[];
+    setIsProcessing(true);
+    try {
+      // Create context with simulation information and theme
+      // Include detailed simulation info with policy and dataset names
+      const simulationDetails = await Promise.all(simulationIds.map(async (id) => {
+        const userSim = userSimulations.find(us => us.simulation_id === id);
+        const sim = simulations?.find(s => s?.id === id);
 
-    if (isAggregateChange) {
-      // Handle AggregateChange data
-      const aggChanges = aggregates as AggregateChange[];
-      rows = aggChanges.map(agg => ({
-        'Baseline sim': getSimLabel(agg.baseline_simulation_id),
-        'Comparison sim': getSimLabel(agg.comparison_simulation_id),
-        'Entity': agg.entity,
-        'Variable': agg.variable_name,
-        'Function': agg.aggregate_function,
-        'Year': agg.year || null,
-        'Filter variable': agg.filter_variable_name || null,
-        'Filter value': agg.filter_variable_value || null,
-        'Filter ≥': agg.filter_variable_geq,
-        'Filter ≤': agg.filter_variable_leq,
-        'Quantile ≥': agg.filter_variable_quantile_geq,
-        'Quantile ≤': agg.filter_variable_quantile_leq,
-        'Quantile value': agg.filter_variable_quantile_value || null,
-        'Baseline': agg.baseline_value || 0,
-        'Comparison': agg.comparison_value || 0,
-        'Change': agg.change || 0,
-        'Relative change (%)': agg.relative_change !== null ? agg.relative_change * 100 : 0,
-        // Keep original IDs for reference
-        baseline_simulation_id: agg.baseline_simulation_id,
-        comparison_simulation_id: agg.comparison_simulation_id,
-      } as Record<string, any>));
-    } else {
-      // Handle regular Aggregate data
-      rows = aggregates.map(agg => ({
-        'Simulation': getSimLabel(agg.simulation_id),
-        'Entity': agg.entity,
-        'Variable': agg.variable_name,
-        'Function': agg.aggregate_function,
-        'Year': agg.year || null,
-        'Filter variable': agg.filter_variable_name || null,
-        'Filter value': agg.filter_variable_value || null,
-        'Filter ≥': agg.filter_variable_geq,
-        'Filter ≤': agg.filter_variable_leq,
-        'Quantile ≥': agg.filter_variable_quantile_geq,
-        'Quantile ≤': agg.filter_variable_quantile_leq,
-        'Quantile value': agg.filter_variable_quantile_value || null,
-        'Value': agg.value || 0,
-        // Keep original IDs for reference
-        simulation_id: agg.simulation_id,
-      } as Record<string, any>));
-    }
+        // Fetch policy and dataset names
+        let policyName = 'Default policy';
+        let datasetName = 'Default dataset';
+        let dynamicName = undefined;
 
-    // Get unique columns
-    const columns = Object.keys(rows[0] || {});
-
-    // Apply column filters
-    let filteredRows = rows;
-    Object.entries(columnFilters).forEach(([column, filterValue]) => {
-      if (filterValue) {
-        filteredRows = filteredRows.filter(row => {
-          const cellValue = row[column];
-          if (cellValue === null || cellValue === undefined) return false;
-          return String(cellValue).toLowerCase().includes(filterValue.toLowerCase());
-        });
-      }
-    });
-
-    // Apply sorting
-    if (sortColumn && filteredRows.length > 0) {
-      filteredRows = [...filteredRows].sort((a, b) => {
-        const aVal = a[sortColumn];
-        const bVal = b[sortColumn];
-
-        // Handle nulls
-        if (aVal === null || aVal === undefined) return 1;
-        if (bVal === null || bVal === undefined) return -1;
-
-        // Numeric comparison
-        if (typeof aVal === 'number' && typeof bVal === 'number') {
-          return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
-        }
-
-        // String comparison
-        const aStr = String(aVal).toLowerCase();
-        const bStr = String(bVal).toLowerCase();
-        const comparison = aStr.localeCompare(bStr);
-        return sortDirection === 'asc' ? comparison : -comparison;
-      });
-    }
-
-    return { rows: filteredRows, columns };
-  }, [aggregates, simulations, isAggregateChange, columnFilters, sortColumn, sortDirection]);
-
-  // Get available columns for axis selection (exclude only internal IDs)
-  const availableColumns = dataframe.columns.filter(
-    col => !['simulation_id', 'baseline_simulation_id', 'comparison_simulation_id'].includes(col)
-  );
-
-  // Handle step navigation
-  const handleNextStep = () => {
-    if (settingsStep < totalSteps - 1) {
-      setSettingsStep(settingsStep + 1);
-    } else {
-      handleSaveConfig();
-    }
-  };
-
-  const handlePreviousStep = () => {
-    if (settingsStep > 0) {
-      setSettingsStep(settingsStep - 1);
-    }
-  };
-
-  // Save chart configuration
-  const handleSaveConfig = () => {
-    const config: ChartConfig = {
-      chartType,
-      xAxisColumns,
-      yAxisColumns,
-      colorColumn: '',
-      barMode,
-      title: chartTitle,
-      xAxisTitle,
-      yAxisTitle,
-      showLegend,
-      showGrid,
-      height: chartHeight,
-      // Advanced Plotly options
-      legendPosition,
-      legendOrientation,
-      xAxisType,
-      yAxisType,
-      hoverMode,
-      yAxisTickFormat,
-      xAxisTickAngle,
-      customLayout,
-    };
-
-    updateElementMutation.mutate({
-      elementId: element.id,
-      data: {
-        chart_type: chartType,
-        x_axis_variable: xAxisColumns[0] || null,
-        y_axis_variable: yAxisColumns[0] || null,
-        report_element_metadata: config as any,
-      },
-    });
-    setShowSettings(false);
-  };
-
-  // Create consistent Plotly layout styling
-  const createPlotlyLayout = (extraProps = {}) => {
-    // Build legend position object based on settings
-    const legendConfig: any = {
-      bgcolor: 'transparent',
-      borderwidth: 0,
-      font: {
-        size: 10,
-        color: theme.colors.gray[6],
-      },
-      orientation: legendOrientation,
-    };
-
-    // Set legend position
-    if (legendPosition === 'top') {
-      legendConfig.x = 0.5;
-      legendConfig.y = 1.1;
-      legendConfig.xanchor = 'center';
-      legendConfig.yanchor = 'bottom';
-    } else if (legendPosition === 'bottom') {
-      legendConfig.x = 0.5;
-      legendConfig.y = -0.15;
-      legendConfig.xanchor = 'center';
-      legendConfig.yanchor = 'top';
-    } else if (legendPosition === 'left') {
-      legendConfig.x = -0.1;
-      legendConfig.y = 0.5;
-      legendConfig.xanchor = 'right';
-      legendConfig.yanchor = 'middle';
-    } else { // right (default)
-      legendConfig.x = 1;
-      legendConfig.y = 0.5;
-      legendConfig.xanchor = 'left';
-      legendConfig.yanchor = 'middle';
-    }
-
-    return {
-      title: chartTitle ? {
-        text: chartTitle,
-        font: {
-          size: 18,
-          color: theme.colors.gray[8],
-          weight: 600,
-        },
-        x: 0,
-        xanchor: 'left',
-      } : undefined,
-      margin: {
-        l: 60,
-        r: 30,
-        t: chartTitle ? 40 : 20,
-        b: 50
-      },
-      paper_bgcolor: 'transparent',
-      plot_bgcolor: 'white',
-      font: {
-        family: theme.fontFamily,
-        color: theme.colors.gray[7],
-        size: 11,
-      },
-      xaxis: {
-        title: xAxisTitle || xAxisColumns.join(', ') || undefined,
-        type: xAxisType === '-' ? undefined : xAxisType,
-        gridcolor: showGrid ? theme.colors.gray[2] : 'transparent',
-        linecolor: theme.colors.gray[3],
-        tickfont: {
-          color: theme.colors.gray[6],
-          size: 10,
-        },
-        tickangle: xAxisTickAngle,
-      },
-      yaxis: {
-        title: yAxisTitle || yAxisColumns.join(', ') || undefined,
-        type: yAxisType === '-' ? undefined : yAxisType,
-        gridcolor: showGrid ? theme.colors.gray[2] : 'transparent',
-        linecolor: theme.colors.gray[3],
-        tickformat: yAxisTickFormat || undefined,
-        tickfont: {
-          color: theme.colors.gray[6],
-          size: 10,
-        },
-      },
-      showlegend: showLegend,
-      legend: legendConfig,
-      hovermode: hoverMode,
-      ...extraProps,
-      // Apply custom JSON layout options
-      ...((() => {
         try {
-          return customLayout ? JSON.parse(customLayout) : {};
-        } catch {
-          return {};
+          if (sim?.policy_id) {
+            const policy = await policiesAPI.get(sim.policy_id);
+            policyName = policy.name || `Policy ${sim.policy_id.slice(0, 8)}`;
+          }
+          if (sim?.dataset_id) {
+            const dataset = await datasetsAPI.getDataset(sim.dataset_id);
+            datasetName = dataset.name || `Dataset ${sim.dataset_id.slice(0, 8)}`;
+          }
+          // TODO: Add dynamic name fetching if needed
+        } catch (err) {
+          console.error('Error loading simulation metadata:', err);
         }
-      })()),
-    };
-  };
 
-  const plotConfig = {
-    displayModeBar: false,
-    responsive: true,
-  };
+        return {
+          id,
+          name: userSim?.custom_name || getSimLabel(id),
+          label: userSim?.custom_name || getSimLabel(id),
+          custom_name: userSim?.custom_name,
+          policy_name: policyName,
+          dataset_name: datasetName,
+          dynamic_name: dynamicName,
+          // Include simulation metadata
+          policy_id: sim?.policy_id,
+          dataset_id: sim?.dataset_id,
+          dynamic_id: sim?.dynamic_id,
+        };
+      }));
 
-  // Color palette
-  const colors = [
-    theme.colors.blue[6],
-    theme.colors.red[6],
-    theme.colors.green[6],
-    theme.colors.orange[6],
-    theme.colors.grape[6],
-    theme.colors.cyan[6],
-    theme.colors.pink[6],
-    theme.colors.teal[6],
-  ];
+      const context = {
+        simulations: simulationDetails,
+        aggregates: aggregates || [],
+        aggregate_changes: aggregateChanges || [],
+        theme: {
+          colors: {
+            primary: theme.colors.primary[6],
+            secondary: theme.colors.gray[6],
+            background: 'rgba(0,0,0,0)', // Transparent background
+            grid: theme.colors.gray[2],
+            text: theme.colors.gray[8],
+            success: theme.colors.green[6],
+            error: theme.colors.red[6],
+          },
+          font: theme.fontFamily,
+        }
+      };
 
-  // Set default axes using smart defaults
-  useEffect(() => {
-    if (xAxisColumns.length === 0 || yAxisColumns.length === 0 || (!xAxisTitle && !yAxisTitle)) {
-      const smartDefaults = getSmartChartDefaults(
-        dataframe.rows,
-        availableColumns,
-        isAggregateChange
+      console.log('[AI REQUEST] Sending context to backend:', {
+        simulationCount: simulationDetails.length,
+        simulations: simulationDetails,
+        aggregatesCount: aggregates?.length || 0,
+        aggregateChangesCount: aggregateChanges?.length || 0
+      });
+
+      // Make request to AI endpoint to process the data
+      // The backend already updates the DB, so we just need to invalidate queries
+      await reportElementsAPI.processWithAI(
+        aiPrompt,
+        context,
+        element.id
       );
 
-      if (xAxisColumns.length === 0 && smartDefaults.xAxisColumns.length > 0) {
-        setXAxisColumns(smartDefaults.xAxisColumns);
-      }
+      // Invalidate queries to refetch the updated element
+      queryClient.invalidateQueries({ queryKey: ['reportElements'] });
+      queryClient.invalidateQueries({ queryKey: ['elementAggregates', element.id] });
+      queryClient.invalidateQueries({ queryKey: ['elementAggregateChanges', element.id] });
 
-      if (yAxisColumns.length === 0 && smartDefaults.yAxisColumns.length > 0) {
-        setYAxisColumns(smartDefaults.yAxisColumns);
-      }
-
-      // Set axis titles if not already set from saved config
-      if (!xAxisTitle && smartDefaults.xAxisTitle) {
-        setXAxisTitle(smartDefaults.xAxisTitle);
-      }
-
-      if (!yAxisTitle && smartDefaults.yAxisTitle) {
-        setYAxisTitle(smartDefaults.yAxisTitle);
-      }
+      // Switch to processed view
+      setViewMode('processed');
+      setAiPromptOpened(false);
+      setAiPrompt('');
+    } catch (error) {
+      console.error('AI processing failed:', error);
+    } finally {
+      setIsProcessing(false);
     }
-  }, [availableColumns, dataframe.rows, isAggregateChange]);
+  };
 
-  if (aggregatesLoading) {
+  // Helper to format column names from snake_case to Title Case
+  const formatColumnName = (key: string): string => {
+    return key
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, char => char.toUpperCase())
+      .replace(/\bId\b/g, 'ID');
+  };
+
+  // Helper to format cell value based on field type
+  const formatCellValue = (key: string, value: any): string => {
+    if (value === null || value === undefined) return '-';
+
+    // Special handling for simulation IDs
+    if (key.includes('simulation_id')) {
+      return getSimLabel(value);
+    }
+
+    // Format numeric values (but not IDs or years)
+    if (typeof value === 'number' && !key.includes('_id') && !key.includes('year')) {
+      if (key === 'relative_change') {
+        return `${(value * 100).toFixed(1)}%`;
+      }
+      return formatNumber(value);
+    }
+
+    // Format booleans
+    if (typeof value === 'boolean') {
+      return value ? 'Yes' : 'No';
+    }
+
+    // Format arrays/objects as JSON
+    if (typeof value === 'object') {
+      return JSON.stringify(value);
+    }
+
+    return String(value);
+  };
+
+  // Render table for a specific data type
+  const renderTable = (data: any[]) => {
+    if (!data || data.length === 0) {
+      return (
+        <Center p="xl">
+          <Text c="dimmed">No data available</Text>
+        </Center>
+      );
+    }
+
+    // Get all unique columns from all data rows
+    const allColumns = new Set<string>();
+    data.forEach(d => {
+      Object.keys(d).forEach(key => allColumns.add(key));
+    });
+
+    // Convert to array and sort for consistent ordering
+    const columns = Array.from(allColumns).sort((a, b) => {
+      // Priority order for important columns
+      const priority = ['id', 'simulation_id', 'baseline_simulation_id', 'comparison_simulation_id',
+                       'variable_name', 'aggregate_function', 'value', 'baseline_value',
+                       'comparison_value', 'change', 'relative_change'];
+      const aIndex = priority.indexOf(a);
+      const bIndex = priority.indexOf(b);
+      if (aIndex !== -1 && bIndex !== -1) return aIndex - bIndex;
+      if (aIndex !== -1) return -1;
+      if (bIndex !== -1) return 1;
+      return a.localeCompare(b);
+    });
+
+    return (
+      <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
+        <ScrollArea>
+          <Table
+            horizontalSpacing="md"
+            verticalSpacing="sm"
+            highlightOnHover
+            withTableBorder={false}
+          >
+            <Table.Thead>
+              <Table.Tr>
+                {columns.map(col => (
+                  <Table.Th key={col}>
+                    <Text size="xs" fw={600}>{formatColumnName(col)}</Text>
+                  </Table.Th>
+                ))}
+              </Table.Tr>
+            </Table.Thead>
+            <Table.Tbody>
+              {data.map((row, idx) => (
+                <Table.Tr key={idx}>
+                  {columns.map(col => {
+                    const value = formatCellValue(col, row[col]);
+                    const isChangeColumn = col === 'change';
+                    const isNumeric = typeof value === 'string' && value !== '-' &&
+                                    (value.includes('B') || value.includes('M') || value.includes('K') || value.includes('%'));
+
+                    return (
+                      <Table.Td key={col}>
+                        <Text
+                          size="sm"
+                          c={isChangeColumn && value !== '-' ?
+                            (value.startsWith('-') ? 'red.7' : 'green.7') : undefined
+                          }
+                          fw={isNumeric ? 500 : 400}
+                        >
+                          {value}
+                        </Text>
+                      </Table.Td>
+                    );
+                  })}
+                </Table.Tr>
+              ))}
+            </Table.Tbody>
+          </Table>
+        </ScrollArea>
+      </Paper>
+    );
+  };
+
+  // Render raw data view with tabs
+  const renderDataView = () => {
+    const hasAggregates = aggregates && aggregates.length > 0;
+    const hasAggregateChanges = aggregateChanges && aggregateChanges.length > 0;
+
+    if (!hasAggregates && !hasAggregateChanges) {
+      return (
+        <Center p="xl">
+          <Stack align="center" gap="xs">
+            <Text c="dimmed">No data available</Text>
+            <Text size="xs" c="dimmed">
+              Use the AI process button to generate insights
+            </Text>
+          </Stack>
+        </Center>
+      );
+    }
+
+    return (
+      <Tabs defaultValue={hasAggregates ? 'aggregates' : 'changes'}>
+        <Tabs.List>
+          {hasAggregates && (
+            <Tabs.Tab
+              value="aggregates"
+              leftSection={<IconTable size={14} />}
+              rightSection={<Badge size="xs" variant="light">{aggregates.length}</Badge>}
+            >
+              Aggregates
+            </Tabs.Tab>
+          )}
+          {hasAggregateChanges && (
+            <Tabs.Tab
+              value="changes"
+              leftSection={<IconChartBar size={14} />}
+              rightSection={<Badge size="xs" variant="light">{aggregateChanges.length}</Badge>}
+            >
+              Changes
+            </Tabs.Tab>
+          )}
+        </Tabs.List>
+
+        {hasAggregates && (
+          <Tabs.Panel value="aggregates" pt="md">
+            {renderTable(aggregates)}
+          </Tabs.Panel>
+        )}
+        {hasAggregateChanges && (
+          <Tabs.Panel value="changes" pt="md">
+            {renderTable(aggregateChanges)}
+          </Tabs.Panel>
+        )}
+      </Tabs>
+    );
+  };
+
+  // Render AI-generated content
+  const renderProcessedView = () => {
+    console.log('[RENDER] renderProcessedView - element:', {
+      id: element.id,
+      processed_output_type: element.processed_output_type,
+      processed_output_length: element.processed_output?.length,
+      processed_output_preview: element.processed_output?.substring(0, 200)
+    });
+
+    if (!element.processed_output_type || !element.processed_output) {
+      return (
+        <Center p="xl">
+          <Stack align="center" gap="xs">
+            <Text c="dimmed">No processed output yet</Text>
+            <Button
+              size="sm"
+              leftSection={<IconSparkles size={16} />}
+              onClick={() => setAiPromptOpened(true)}
+            >
+              Process with AI
+            </Button>
+          </Stack>
+        </Center>
+      );
+    }
+
+    const contentType = element.processed_output_type;
+    const content = element.processed_output || '';
+
+    console.log('[RENDER] contentType:', contentType, 'contentLength:', content.length);
+
+    if (contentType === 'markdown') {
+      console.log('[RENDER] Rendering markdown, content:', content);
+      return <MarkdownRenderer content={content} className="markdown-content" />;
+    }
+
+    if (contentType === 'plotly') {
+      // Parse the JSON string to get plotly data
+      let plotlyContent: any = { data: [], layout: {} };
+      try {
+        plotlyContent = JSON.parse(content);
+      } catch (e) {
+        console.error('Failed to parse Plotly JSON:', e);
+        return (
+          <Box p="md">
+            <Text c="red">Error: Invalid Plotly data</Text>
+          </Box>
+        );
+      }
+
+      return (
+        <Box style={{ height: 400 }}>
+          <Plot
+            data={plotlyContent.data || []}
+            layout={{
+              ...(plotlyContent.layout || {}),
+              autosize: true,
+            }}
+            config={{ displayModeBar: false, responsive: true }}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </Box>
+      );
+    }
+
+    return null;
+  };
+
+  if (aggregatesLoading || aggregateChangesLoading) {
     return (
       <Box style={{ position: 'relative', minHeight: 200 }}>
         <LoadingOverlay visible />
@@ -507,662 +486,78 @@ export default function DataElementCell({
     );
   }
 
-  if (!aggregates || aggregates.length === 0) {
-    return (
-      <Center p="xl">
-        <Text color="dimmed">No data available</Text>
-      </Center>
-    );
-  }
-
-  // Render visualizations based on selected chart type
-  const renderVisualization = () => {
-    if (chartType === 'metric_card' && dataframe.rows.length === 1) {
-      // Single metric display
-      const row = dataframe.rows[0];
-      return (
-        <Paper p="xl" radius="md" withBorder>
-          <Stack align="center" gap="xs">
-            <Text size="sm" color="dimmed" tt="uppercase" fw={500}>
-              {row['Variable']}
-            </Text>
-            <Title order={2} style={{ fontSize: '2.5rem' }}>
-              {formatNumber(row['Value'])}
-            </Title>
-            <Group gap="xs">
-              <Text size="xs" color="dimmed">
-                {row['Function']}
-              </Text>
-              <Text size="xs" color="dimmed">•</Text>
-              <Text size="xs" color="dimmed">
-                {row['Simulation']}
-              </Text>
-            </Group>
-          </Stack>
-        </Paper>
-      );
-    }
-
-    if (chartType === 'table') {
-      // Use smart defaults for column ordering - show ALL columns
-      const smartDefaults = getSmartChartDefaults(
-        dataframe.rows,
-        availableColumns,
-        isAggregateChange
-      );
-
-      const displayColumns = smartDefaults.columnOrder;
-
-      const handleSort = (column: string) => {
-        if (sortColumn === column) {
-          setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
-        } else {
-          setSortColumn(column);
-          setSortDirection('asc');
-        }
-      };
-
-      const handleFilterChange = (column: string, value: string) => {
-        setColumnFilters(prev => ({
-          ...prev,
-          [column]: value
-        }));
-      };
-
-      const clearFilters = () => {
-        setColumnFilters({});
-      };
-
-      const hasActiveFilters = Object.values(columnFilters).some(v => v);
-
-      return (
-        <Stack gap="xs">
-          <Group justify="space-between">
-            <Group gap="xs">
-              <Button
-                size="xs"
-                variant={showFilters ? 'light' : 'subtle'}
-                leftSection={<IconFilter size={14} />}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                {showFilters ? 'Hide filters' : 'Show filters'}
-              </Button>
-              {hasActiveFilters && (
-                <Button
-                  size="xs"
-                  variant="subtle"
-                  color="red"
-                  leftSection={<IconFilterOff size={14} />}
-                  onClick={clearFilters}
-                >
-                  Clear
-                </Button>
-              )}
-            </Group>
-            <Text size="xs" c="dimmed">
-              {dataframe.rows.length} row{dataframe.rows.length !== 1 ? 's' : ''}
-            </Text>
-          </Group>
-          <Paper withBorder radius="md" style={{ overflow: 'hidden' }}>
-            <ScrollArea>
-              <Table
-                horizontalSpacing="md"
-                verticalSpacing="sm"
-                highlightOnHover
-                withTableBorder={false}
-              >
-                <Table.Thead style={{
-                  backgroundColor: theme.colors.gray[0],
-                  position: 'sticky',
-                  top: 0,
-                  zIndex: 1,
-                }}>
-                  <Table.Tr>
-                    {displayColumns.map((col) => {
-                      const isNumeric = ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col);
-                      return (
-                        <Table.Th
-                          key={col}
-                          style={{
-                            fontWeight: 600,
-                            fontSize: '0.75rem',
-                            color: theme.colors.gray[7],
-                            textAlign: isNumeric ? 'right' : 'left',
-                            cursor: 'pointer',
-                            userSelect: 'none',
-                            transition: 'background-color 0.15s ease',
-                            padding: '12px 16px',
-                            whiteSpace: 'nowrap',
-                          }}
-                          onClick={() => handleSort(col)}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = theme.colors.gray[1];
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                          }}
-                        >
-                          <Group gap={6} justify={isNumeric ? 'flex-end' : 'flex-start'}>
-                            <Text size="xs" fw={600}>{col}</Text>
-                            {sortColumn === col ? (
-                              sortDirection === 'asc' ? <IconArrowUp size={14} /> : <IconArrowDown size={14} />
-                            ) : (
-                              <Box style={{ width: 14, height: 14, opacity: 0 }} />
-                            )}
-                          </Group>
-                        </Table.Th>
-                      );
-                    })}
-                  </Table.Tr>
-                  {showFilters && (
-                    <Table.Tr style={{
-                      backgroundColor: theme.colors.gray[0],
-                      borderTop: `1px solid ${theme.colors.gray[2]}`,
-                    }}>
-                      {displayColumns.map((col) => {
-                        const isNumeric = ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col);
-                        return (
-                          <Table.Th key={`filter-${col}`} style={{ padding: '8px' }}>
-                            <TextInput
-                              size="xs"
-                              placeholder={`Filter ${col.toLowerCase()}...`}
-                              value={columnFilters[col] || ''}
-                              onChange={(e) => handleFilterChange(col, e.target.value)}
-                              styles={{
-                                input: {
-                                  fontSize: '0.75rem',
-                                  backgroundColor: 'white',
-                                  border: `1px solid ${theme.colors.gray[3]}`,
-                                  textAlign: isNumeric ? 'right' : 'left',
-                                  '&:focus': {
-                                    borderColor: theme.colors.blue[5],
-                                  },
-                                }
-                              }}
-                            />
-                          </Table.Th>
-                        );
-                      })}
-                    </Table.Tr>
-                  )}
-                </Table.Thead>
-                <Table.Tbody>
-                  {dataframe.rows.map((row, idx) => {
-                    const isNumeric = (col: string) => ['Value', 'Change', 'Baseline', 'Comparison', 'Relative change (%)', 'Relative change'].includes(col);
-                    return (
-                      <Table.Tr
-                        key={idx}
-                        style={{
-                          transition: 'background-color 0.15s ease',
-                        }}
-                      >
-                        {displayColumns.map((col) => {
-                          // Render linkable entities for simulation and variable columns
-                          if (col === 'Simulation' && row['simulation_id']) {
-                            return (
-                              <Table.Td key={col} style={{ fontSize: '0.875rem' }}>
-                                <LinkableEntity
-                                  type="simulation"
-                                  id={row['simulation_id']}
-                                  label={row[col]}
-                                  size="sm"
-                                />
-                              </Table.Td>
-                            );
-                          }
-
-                          if (col === 'Baseline sim' && row['baseline_simulation_id']) {
-                            return (
-                              <Table.Td key={col} style={{ fontSize: '0.875rem' }}>
-                                <LinkableEntity
-                                  type="simulation"
-                                  id={row['baseline_simulation_id']}
-                                  label={row[col]}
-                                  size="sm"
-                                />
-                              </Table.Td>
-                            );
-                          }
-
-                          if (col === 'Comparison sim' && row['comparison_simulation_id']) {
-                            return (
-                              <Table.Td key={col} style={{ fontSize: '0.875rem' }}>
-                                <LinkableEntity
-                                  type="simulation"
-                                  id={row['comparison_simulation_id']}
-                                  label={row[col]}
-                                  size="sm"
-                                />
-                              </Table.Td>
-                            );
-                          }
-
-                          if (col === 'Variable') {
-                            return (
-                              <Table.Td key={col} style={{ fontSize: '0.875rem', minWidth: '200px' }}>
-                                <LinkableEntity
-                                  type="variable"
-                                  id={row[col]}
-                                  size="sm"
-                                />
-                              </Table.Td>
-                            );
-                          }
-
-                          // Regular cell rendering
-                          return (
-                            <Table.Td
-                              key={col}
-                              style={{
-                                fontSize: '0.875rem',
-                                textAlign: isNumeric(col) ? 'right' : 'left',
-                                fontWeight: ['Value', 'Change', 'Baseline', 'Comparison'].includes(col) ? 500 : 400,
-                                color: col === 'Change' && typeof row[col] === 'number'
-                                  ? row[col] > 0 ? theme.colors.green[7] : row[col] < 0 ? theme.colors.red[7] : theme.colors.gray[7]
-                                  : theme.colors.gray[8],
-                              }}
-                            >
-                              {col === 'Relative change (%)' && typeof row[col] === 'number'
-                                ? `${row[col].toFixed(1)}%`
-                                : typeof row[col] === 'string'
-                                  ? row[col] || '-'
-                                  : typeof row[col] === 'number'
-                                    ? formatNumber(row[col])
-                                    : row[col] || '-'
-                              }
-                            </Table.Td>
-                          );
-                        })}
-                      </Table.Tr>
-                    );
-                  })}
-                </Table.Tbody>
-              </Table>
-            </ScrollArea>
-          </Paper>
-        </Stack>
-      );
-    }
-
-    if (chartType === 'bar_chart') {
-      // Handle multi-axis bar charts
-      const xCol = xAxisColumns[0] || 'Value';
-
-      const plotData: any[] = [];
-      let colorIdx = 0;
-
-      // Create a trace for each Y-axis column
-      yAxisColumns.forEach(yCol => {
-        // Build arrays directly from rows - don't deduplicate X values
-        // Each row should be a separate data point
-        const validRows = dataframe.rows.filter(r =>
-          r[xCol] !== null && r[xCol] !== undefined &&
-          typeof r[yCol] === 'number'
-        );
-
-        // Debug logging
-        console.log('Bar chart data:', {
-          yCol,
-          sampleRows: validRows.slice(0, 3),
-          yValues: validRows.slice(0, 3).map(r => r[yCol]),
-        });
-
-        const yData = validRows.map(r => r[yCol] as number);
-        console.log('Final Y data being sent to Plotly:', yData.slice(0, 5));
-
-        plotData.push({
-          x: validRows.map(r => String(r[xCol])),
-          y: yData,
-          type: 'bar' as const,
-          name: yAxisColumns.length > 1 ? yCol : undefined,
-          marker: { color: colors[colorIdx++ % colors.length] },
-        });
-      });
-
-      console.log('Full plotData:', plotData);
-
-      const layout = createPlotlyLayout({
-        barmode: barMode,
-        showlegend: yAxisColumns.length > 1,
-      });
-
-      return (
-        <Box style={{ height: chartHeight, position: 'relative' }}>
-          <Plot
-            data={plotData}
-            layout={layout}
-            config={plotConfig}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </Box>
-      );
-    }
-
-    if (chartType === 'line_chart') {
-      // Handle multi-axis line charts
-      const xCol = xAxisColumns[0] || 'Value';
-
-      const plotData: any[] = [];
-      let colorIdx = 0;
-
-      // Create a trace for each Y-axis column
-      yAxisColumns.forEach(yCol => {
-        // Build arrays directly from rows - each row is a separate data point
-        const validRows = dataframe.rows.filter(r =>
-          r[xCol] !== null && r[xCol] !== undefined &&
-          typeof r[yCol] === 'number'
-        );
-
-        plotData.push({
-          x: validRows.map(r => String(r[xCol])),
-          y: validRows.map(r => r[yCol] as number),
-          type: 'scatter' as const,
-          mode: 'lines+markers' as const,
-          name: yAxisColumns.length > 1 ? yCol : undefined,
-          line: { color: colors[colorIdx % colors.length], width: 2 },
-          marker: { size: 6, color: colors[colorIdx % colors.length] },
-        });
-        colorIdx++;
-      });
-
-      const layout = createPlotlyLayout({
-        showlegend: yAxisColumns.length > 1,
-      });
-
-      return (
-        <Box style={{ height: chartHeight, position: 'relative' }}>
-          <Plot
-            data={plotData}
-            layout={layout}
-            config={plotConfig}
-            style={{ width: '100%', height: '100%' }}
-          />
-        </Box>
-      );
-    }
-
-    // Default: show raw data
-    return (
-      <Stack>
-        {dataframe.rows.slice(0, 10).map((row, idx) => (
-          <Text key={idx} size="sm">
-            {row['Variable']}: {formatNumber(row['Value'])} ({row['Simulation']})
-          </Text>
-        ))}
-        {dataframe.rows.length > 10 && (
-          <Text size="xs" color="dimmed">... and {dataframe.rows.length - 10} more rows</Text>
-        )}
-      </Stack>
-    );
-  };
-
   return (
-    <Stack gap="xs"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Header with chart type selector and settings */}
-      <Group justify="space-between"
-        style={{
-          opacity: isHovered ? 1 : 0.3,
-          transition: 'opacity 0.2s ease-in-out'
-        }}
-      >
+    <Stack gap="md">
+      {/* Header with view mode toggle and AI button */}
+      <Group justify="space-between" pr={40}> {/* Add padding-right to avoid menu overlap */}
+        <Text size="sm" fw={500}>{element.label}</Text>
         <Group gap="xs">
           <SegmentedControl
-            value={chartType}
-            onChange={(value) => setChartType(value as ChartType)}
+            value={viewMode}
+            onChange={(value) => setViewMode(value as 'data' | 'processed')}
             data={[
-              { value: 'table', label: <IconTable size={16} /> },
-              { value: 'bar_chart', label: <IconChartBar size={16} /> },
-              { value: 'line_chart', label: <IconChartLine size={16} /> },
-              ...(dataframe.rows.length === 1
-                ? [{ value: 'metric_card' as const, label: <IconCards size={16} /> }]
-                : []),
+              { value: 'data', label: <IconTable size={16} /> },
+              { value: 'processed', label: <IconChartBar size={16} /> },
             ]}
+            size="xs"
           />
-
-          {(chartType === 'bar_chart' || chartType === 'line_chart') && (
-            <Button
-              variant={showSettings ? 'filled' : 'light'}
-              leftSection={<IconSettings size={16} />}
-              size="xs"
-              onClick={() => setShowSettings(!showSettings)}
-            >
-              Customise
-            </Button>
-          )}
+          <Button
+            size="xs"
+            leftSection={<IconSparkles size={14} />}
+            onClick={() => setAiPromptOpened(true)}
+            variant="light"
+          >
+            AI process
+          </Button>
         </Group>
-
-        <div /> {/* Empty div to maintain space-between layout */}
       </Group>
 
-      {/* Settings Modal - Using BaseModal for consistency */}
+      {/* Content based on view mode */}
+      <Box>
+        {viewMode === 'data' ? renderDataView() : renderProcessedView()}
+      </Box>
+
+      {/* AI Prompt Modal */}
       <BaseModal
-        opened={showSettings && (chartType === 'bar_chart' || chartType === 'line_chart')}
+        opened={aiPromptOpened}
         onClose={() => {
-          setShowSettings(false);
-          setSettingsStep(0);
+          setAiPromptOpened(false);
+          setAiPrompt('');
         }}
-        title={`Customise chart - ${settingsSteps[settingsStep]}`}
+        title="Process data with AI"
         size="md"
         primaryButton={{
-          label: settingsStep === totalSteps - 1 ? 'Apply changes' : 'Next',
-          onClick: handleNextStep,
+          label: 'Process',
+          onClick: handleAIProcess,
+          loading: isProcessing,
+          disabled: !aiPrompt.trim(),
         }}
         secondaryButton={{
-          label: 'Back',
-          onClick: handlePreviousStep,
-          disabled: settingsStep === 0,
+          label: 'Cancel',
+          onClick: () => {
+            setAiPromptOpened(false);
+            setAiPrompt('');
+          },
         }}
       >
-        <Stack gap="md">
-
-          {/* Step 1: Data configuration */}
-          {settingsStep === 0 && (
-            <Stack gap="sm">
-              <Text size="sm" color="dimmed" mb="xs">
-                Configure which data to display on each axis
-              </Text>
-              <MultiSelect
-                label="X-axis"
-                value={xAxisColumns}
-                onChange={setXAxisColumns}
-                data={availableColumns}
-                size="sm"
-                placeholder="Select columns"
-                searchable
-                description="Select one or more columns for the X-axis"
-              />
-              <MultiSelect
-                label="Y-axis"
-                value={yAxisColumns}
-                onChange={setYAxisColumns}
-                data={availableColumns}
-                size="sm"
-                placeholder="Select columns"
-                searchable
-                description="Select one or more columns for the Y-axis"
-              />
-              {chartType === 'bar_chart' && yAxisColumns.length > 1 && (
-                <Box>
-                  <Text size="sm" mb="xs" fw={500}>Bar mode</Text>
-                  <SegmentedControl
-                    value={barMode}
-                    onChange={(val) => setBarMode(val as 'group' | 'stack')}
-                    data={[
-                      { label: 'Grouped', value: 'group' },
-                      { label: 'Stacked', value: 'stack' },
-                    ]}
-                    fullWidth
-                    size="sm"
-                  />
-                </Box>
-              )}
-            </Stack>
-          )}
-
-          {/* Step 2: Appearance */}
-          {settingsStep === 1 && (
-            <Stack gap="sm">
-              <Text size="sm" color="dimmed" mb="xs">
-                Customise how your chart looks
-              </Text>
-              <TextInput
-                label="Chart title"
-                value={chartTitle}
-                onChange={(e) => setChartTitle(e.target.value)}
-                placeholder="Enter a title for your chart"
-                size="sm"
-              />
-              <Group grow>
-                <TextInput
-                  label="X-axis label"
-                  value={xAxisTitle}
-                  onChange={(e) => setXAxisTitle(e.target.value)}
-                  placeholder={xAxisColumns.join(', ') || 'Auto'}
-                  size="sm"
-                />
-                <TextInput
-                  label="Y-axis label"
-                  value={yAxisTitle}
-                  onChange={(e) => setYAxisTitle(e.target.value)}
-                  placeholder={yAxisColumns.join(', ') || 'Auto'}
-                  size="sm"
-                />
-              </Group>
-              <Group>
-                <Switch
-                  label="Show grid lines"
-                  checked={showGrid}
-                  onChange={(e) => setShowGrid(e.currentTarget.checked)}
-                  size="md"
-                />
-                {yAxisColumns.length > 1 && (
-                  <Switch
-                    label="Show legend"
-                    checked={showLegend}
-                    onChange={(e) => setShowLegend(e.currentTarget.checked)}
-                    size="md"
-                  />
-                )}
-              </Group>
-              {yAxisColumns.length > 1 && showLegend && (
-                <Group grow>
-                  <Select
-                    label="Legend position"
-                    value={legendPosition}
-                    onChange={(val) => setLegendPosition(val || 'right')}
-                    data={[
-                      { value: 'right', label: 'Right' },
-                      { value: 'left', label: 'Left' },
-                      { value: 'top', label: 'Top' },
-                      { value: 'bottom', label: 'Bottom' },
-                    ]}
-                    size="sm"
-                  />
-                  <Select
-                    label="Legend style"
-                    value={legendOrientation}
-                    onChange={(val) => setLegendOrientation(val || 'v')}
-                    data={[
-                      { value: 'v', label: 'Vertical' },
-                      { value: 'h', label: 'Horizontal' },
-                    ]}
-                    size="sm"
-                  />
-                </Group>
-              )}
-            </Stack>
-          )}
-
-          {/* Step 3: Advanced options */}
-          {settingsStep === 2 && (
-            <Stack gap="sm">
-              <Text size="sm" color="dimmed" mb="xs">
-                Fine-tune axis scales and formatting
-              </Text>
-              <Group grow>
-                <Select
-                  label="X-axis scale"
-                  value={xAxisType}
-                  onChange={(val) => setXAxisType(val || '-')}
-                  data={[
-                    { value: '-', label: 'Auto' },
-                    { value: 'linear', label: 'Linear' },
-                    { value: 'log', label: 'Logarithmic' },
-                    { value: 'date', label: 'Date' },
-                    { value: 'category', label: 'Category' },
-                  ]}
-                  size="sm"
-                />
-                <Select
-                  label="Y-axis scale"
-                  value={yAxisType}
-                  onChange={(val) => setYAxisType(val || '-')}
-                  data={[
-                    { value: '-', label: 'Auto' },
-                    { value: 'linear', label: 'Linear' },
-                    { value: 'log', label: 'Logarithmic' },
-                  ]}
-                  size="sm"
-                />
-              </Group>
-              <Group grow>
-                <TextInput
-                  label="Number format"
-                  value={yAxisTickFormat}
-                  onChange={(e) => setYAxisTickFormat(e.target.value)}
-                  placeholder="Auto"
-                  size="sm"
-                  description="e.g. .2s for SI, .0% for percent, or leave blank for auto"
-                />
-                <NumberInput
-                  label="X-axis label angle"
-                  value={xAxisTickAngle}
-                  onChange={(val) => setXAxisTickAngle(typeof val === 'number' ? val : 0)}
-                  min={-90}
-                  max={90}
-                  step={15}
-                  size="sm"
-                  description="Rotate labels if they overlap"
-                />
-              </Group>
-              <Select
-                label="Hover interaction"
-                value={hoverMode === false ? 'false' : (hoverMode as string)}
-                onChange={(val) => setHoverMode(val === 'false' ? false : (val as string || 'closest'))}
-                data={[
-                  { value: 'closest', label: 'Show closest point' },
-                  { value: 'x', label: 'Compare all data at X position' },
-                  { value: 'x unified', label: 'Unified tooltip at X' },
-                  { value: 'false', label: 'Disable hover' },
-                ]}
-                size="sm"
-              />
-            </Stack>
-          )}
+        <Stack>
+          <Text size="sm" c="dimmed">
+            Describe what you want to create from this data
+          </Text>
+          <Textarea
+            placeholder="e.g., Create a bar chart showing revenue impact sorted by amount, or write a summary table with key metrics"
+            value={aiPrompt}
+            onChange={(e) => setAiPrompt(e.target.value)}
+            minRows={4}
+            maxRows={8}
+            autosize
+            autoFocus
+          />
+          <Text size="xs" c="dimmed">
+            The AI will analyse your data and create visualisations or summaries based on your request.
+          </Text>
         </Stack>
       </BaseModal>
-
-      {/* Visualization */}
-      {renderVisualization()}
-
-      {/* Model version citation */}
-      {modelVersion && (
-        <Group justify="flex-end">
-          <Text
-            size="xs"
-            c="dimmed"
-            style={{
-              opacity: isHovered ? 0.7 : 0.3,
-              transition: 'opacity 0.2s ease-in-out'
-            }}
-          >
-            PolicyEngine {modelVersion.country_id ? getCountryDisplay(modelVersion.country_id) : ''} v{modelVersion.version}
-          </Text>
-        </Group>
-      )}
     </Stack>
   );
 }

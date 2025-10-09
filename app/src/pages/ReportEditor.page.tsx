@@ -135,14 +135,18 @@ export default function ReportEditorPage() {
     const element = sortedElements[index];
     const prevElement = sortedElements[index - 1];
 
+    // Use actual numeric positions, defaulting to index if undefined
+    const elementPos = element.position ?? index;
+    const prevElementPos = prevElement.position ?? (index - 1);
+
     await Promise.all([
       updateElementMutation.mutateAsync({
         id: element.id,
-        data: { position: prevElement.position },
+        data: { position: prevElementPos },
       }),
       updateElementMutation.mutateAsync({
         id: prevElement.id,
-        data: { position: element.position },
+        data: { position: elementPos },
       }),
     ]);
   };
@@ -152,14 +156,18 @@ export default function ReportEditorPage() {
     const element = sortedElements[index];
     const nextElement = sortedElements[index + 1];
 
+    // Use actual numeric positions, defaulting to index if undefined
+    const elementPos = element.position ?? index;
+    const nextElementPos = nextElement.position ?? (index + 1);
+
     await Promise.all([
       updateElementMutation.mutateAsync({
         id: element.id,
-        data: { position: nextElement.position },
+        data: { position: nextElementPos },
       }),
       updateElementMutation.mutateAsync({
         id: nextElement.id,
-        data: { position: element.position },
+        data: { position: elementPos },
       }),
     ]);
   };
@@ -174,7 +182,12 @@ export default function ReportEditorPage() {
     setIsCreatingElement(true); // Show loading state
 
     try {
-      const position = sortedElements.length;
+      // Find the maximum position and add 1
+      const maxPosition = sortedElements.reduce((max, el) => {
+        const pos = el.position ?? 0;
+        return Math.max(max, pos);
+      }, -1);
+      const position = maxPosition + 1;
       const label = explanation || 'Data analysis';
 
       // Determine data type based on which array has content
@@ -233,7 +246,12 @@ export default function ReportEditorPage() {
   // Handle adding a markdown element
   const handleAddMarkdownElement = async () => {
     try {
-      const position = sortedElements.length;
+      // Find the maximum position and add 1
+      const maxPosition = sortedElements.reduce((max, el) => {
+        const pos = el.position ?? 0;
+        return Math.max(max, pos);
+      }, -1);
+      const position = maxPosition + 1;
       console.log('Creating markdown element at position:', position);
 
       const response = await reportElementsAPI.create({
@@ -270,7 +288,12 @@ export default function ReportEditorPage() {
     setIsCreatingElement(true);
 
     try {
-      const position = sortedElements.length;
+      // Find the maximum position and add 1
+      const maxPosition = sortedElements.reduce((max, el) => {
+        const pos = el.position ?? 0;
+        return Math.max(max, pos);
+      }, -1);
+      const position = maxPosition + 1;
       const label = explanation;
 
       // Determine data type based on which array has content
@@ -483,7 +506,6 @@ export default function ReportEditorPage() {
       <DataAnalysisModal
         opened={dataModalOpened}
         onClose={() => setDataModalOpened(false)}
-        onSubmit={handleCreateDataElement}
         reportId={reportId!}
       />
     </Container>

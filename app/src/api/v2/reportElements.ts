@@ -6,46 +6,33 @@ export interface ReportElement {
   id: string;
   report_id?: string;
   label: string;
-  type: string; // 'markdown', 'data', etc.
+  type: string; // 'markdown' or 'data'
   markdown_content?: string; // For markdown type elements
-  data?: any; // For data element configuration
-  data_table?: string;
-  data_type?: string;
-  chart_type?: string;
-  x_axis_variable?: string;
-  y_axis_variable?: string;
-  model_version_id?: string;
+  position?: number;
+  processed_output_type?: 'markdown' | 'plotly';
+  processed_output?: string; // Markdown text or JSON string for plotly
   created_at?: string;
   updated_at?: string;
-  position?: number;
 }
 
 export interface ReportElementCreate {
   report_id?: string;
   label: string; // Required by API
-  type: string; // Required by API
+  type: string; // Required by API ('markdown' or 'data')
   markdown_content?: string; // For markdown elements
-  data_type?: string;
-  data?: any; // For aggregate inputs
-  data_table?: string; // 'aggregates' or 'aggregate_changes'
-  chart_type?: string;
-  x_axis_variable?: string;
-  y_axis_variable?: string;
-  model_version_id?: string;
-  group_by?: string;
-  color_by?: string;
-  size_by?: string;
   position?: number;
-  visible?: boolean;
+  processed_output_type?: string;
+  processed_output?: string;
 }
 
 export interface ReportElementUpdate {
   label?: string;
+  type?: string;
   markdown_content?: string; // For updating markdown
   position?: number;
-  type?: string;
-  data_type?: string;
-  data?: any;}
+  processed_output_type?: string;
+  processed_output?: string;
+}
 
 // For markdown elements specifically
 export interface MarkdownContent {
@@ -66,25 +53,15 @@ class ReportElementsAPI {
 
   async create(data: ReportElementCreate): Promise<ReportElement> {
     // API expects label and type as required fields
-    // For markdown, also include markdown_content
     const payload: any = {
       label: data.label,
       type: data.type,
       report_id: data.report_id,
-      data_type: data.data_type,
-      data: data.data,
-      data_table: data.data_table,
       position: data.position,
-      chart_type: data.chart_type,
-      x_axis_variable: data.x_axis_variable,
-      y_axis_variable: data.y_axis_variable,
-      model_version_id: data.model_version_id
+      markdown_content: data.markdown_content,
+      processed_output_type: data.processed_output_type,
+      processed_output: data.processed_output
     };
-
-    // Add markdown_content if it's a markdown element
-    if (data.type === 'markdown' && data.markdown_content) {
-      payload.markdown_content = data.markdown_content;
-    }
 
     console.log('Sending report element create request:', {
       url: `/report-elements/`,
@@ -143,6 +120,61 @@ class ReportElementsAPI {
     // );
     console.warn('Reorder endpoint not implemented yet');
     return Promise.resolve();
+  }
+
+  async createAI(
+    prompt: string,
+    reportId: string,
+    simulationIds: string[]
+  ): Promise<{
+    report_element: ReportElement;
+    aggregates: any[];
+    aggregate_changes: any[];
+    explanation: string;
+  }> {
+    console.log('Creating AI report element:', {
+      prompt,
+      reportId,
+      simulationIds
+    });
+
+    const response = await apiClient.post<{
+      report_element: ReportElement;
+      aggregates: any[];
+      aggregate_changes: any[];
+      explanation: string;
+    }>('/report-elements/ai', {
+      prompt,
+      report_id: reportId,
+      simulation_ids: simulationIds
+    });
+
+    console.log('AI report element response:', response);
+    return response;
+  }
+
+  async processWithAI(
+    prompt: string,
+    context: any,
+    elementId: string
+  ): Promise<{
+    type: 'markdown' | 'plotly';
+    content: any;
+  }> {
+    const response = await apiClient.post<{
+      type: 'markdown' | 'plotly';
+      content: any;
+    }>('/report-elements/ai/process', {
+      prompt,
+      context,
+      element_id: elementId
+    });
+
+    console.log('[API] processWithAI response:', response);
+    console.log('[API] response.type:', response.type);
+    console.log('[API] response.content:', typeof response.content, response.content);
+
+    return response;
   }
 }
 
