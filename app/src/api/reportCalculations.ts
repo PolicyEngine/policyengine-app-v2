@@ -4,7 +4,7 @@ import { EconomyCalculationParams, fetchEconomyCalculation } from './economy';
 import { fetchHouseholdCalculation } from './householdCalculation';
 
 /**
- * Metadata needed to fetch a calculation
+ * Metadata needed to fetch a calculation and store results
  * This is stored alongside the calculation in the cache when a report is created
  */
 export interface CalculationMeta {
@@ -16,6 +16,7 @@ export interface CalculationMeta {
   };
   populationId: string;
   region?: string;
+  simulationIds: string[]; // Track which simulations to update with calculation results
 }
 
 /**

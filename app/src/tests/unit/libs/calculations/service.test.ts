@@ -160,19 +160,27 @@ describe('CalculationService', () => {
   });
 
   describe('executeCalculation', () => {
-    test('given household calculation request then starts calculation and returns computing', async () => {
+    test('given household calculation request then executes calculations for each simulation', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
-        MOCK_HOUSEHOLD_RESULT.householdData
-      );
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      const onSimulationComplete = vi.fn();
+      const onComplete = vi.fn();
 
       // When
-      const result = await service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+      const result = await service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META, {
+        onSimulationComplete,
+        onComplete,
+      });
 
-      // Then - household returns computing status initially
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(0);
-      expect(result.message).toBe('Initializing calculation...');
+      // Then - loops through simulationIds and calls callbacks
+      expect(result.status).toBe('ok');
+      expect(result.result).toBeNull(); // Report output is null for household
+      expect(onSimulationComplete).toHaveBeenCalledWith(
+        'sim-1',
+        MOCK_HOUSEHOLD_RESULT,
+        'policy-baseline'
+      );
+      expect(onComplete).toHaveBeenCalledWith(TEST_REPORT_ID, 'ok', null);
     });
 
     test('given economy calculation request then executes economy handler', async () => {
@@ -187,27 +195,38 @@ describe('CalculationService', () => {
       expect(result.result).toBe(ECONOMY_OK_RESPONSE.result);
     });
 
-    test('given existing household calculation then returns current status without new API call', async () => {
-      // Given - use a promise that doesn't resolve immediately
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
-        () =>
-          new Promise((resolve) =>
-            setTimeout(() => resolve(MOCK_HOUSEHOLD_RESULT.householdData), 1000)
-          )
+    test('given household calculation with multiple simulations then executes each separately', async () => {
+      // Given - metadata with 2 simulations
+      const multiSimMeta: CalculationMeta = {
+        ...HOUSEHOLD_META,
+        policyIds: {
+          baseline: 'policy-1',
+          reform: 'policy-2',
+        },
+        simulationIds: ['sim-1', 'sim-2'],
+      };
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      const onSimulationComplete = vi.fn();
+
+      // When
+      await service.executeCalculation(TEST_REPORT_ID, multiSimMeta, {
+        onSimulationComplete,
+      });
+
+      // Then - should call onSimulationComplete for each simulation
+      expect(onSimulationComplete).toHaveBeenCalledTimes(2);
+      expect(onSimulationComplete).toHaveBeenNthCalledWith(
+        1,
+        'sim-1',
+        MOCK_HOUSEHOLD_RESULT,
+        'policy-1'
       );
-
-      // Start first calculation
-      const firstResult = await service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
-      expect(firstResult.status).toBe('computing');
-
-      vi.clearAllMocks();
-
-      // When - execute again with same reportId (while still computing)
-      const result = await service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
-
-      // Then - should return current status without new API call
-      expect(householdApi.fetchHouseholdCalculation).not.toHaveBeenCalled();
-      expect(result.status).toBe('computing'); // Still computing
+      expect(onSimulationComplete).toHaveBeenNthCalledWith(
+        2,
+        'sim-2',
+        MOCK_HOUSEHOLD_RESULT,
+        'policy-2'
+      );
     });
   });
 
@@ -232,7 +251,7 @@ describe('CalculationService', () => {
   });
 
   describe('getStatus', () => {
-    test('given household calculation then returns status from handler', async () => {
+    test('given household calculation then returns null (calculations use unique sim keys)', async () => {
       // Given
       vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
         () => new Promise(() => {}) // Never resolves
@@ -244,12 +263,11 @@ describe('CalculationService', () => {
       // Allow promise to register
       await Promise.resolve();
 
-      // When
+      // When - getStatus with reportId returns null because handler uses unique keys
       const status = service.getStatus(TEST_REPORT_ID, 'household');
 
-      // Then
-      expect(status).toBeDefined();
-      expect(status?.status).toBe('computing');
+      // Then - Service doesn't track by reportId for household anymore
+      expect(status).toBeNull();
     });
 
     test('given economy calculation then returns null', () => {
