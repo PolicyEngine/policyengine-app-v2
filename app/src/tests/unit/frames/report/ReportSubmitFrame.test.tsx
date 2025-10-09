@@ -12,13 +12,13 @@ import {
   createMockReportState,
   createMockReportStateNoLabels,
   defaultFlowProps,
+  MOCK_REPORT_123,
+  MOCK_REPORT_456,
+  MOCK_REPORT_789,
   mockCreateReport,
   mockReportWithLabel,
   mockResetIngredient,
   mockSimulation1,
-  MOCK_REPORT_123,
-  MOCK_REPORT_456,
-  MOCK_REPORT_789,
 } from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';

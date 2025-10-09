@@ -39,7 +39,10 @@ export type UseReportOutputResult = PendingResult | CompleteResult | ErrorResult
  * Hook to get report calculation results.
  * Uses the unified calculation system that works for both household and economy calculations.
  */
-export function useReportOutput({ reportId, enabled = true }: UseReportOutputParams): UseReportOutputResult {
+export function useReportOutput({
+  reportId,
+  enabled = true,
+}: UseReportOutputParams): UseReportOutputResult {
   const queryClient = useQueryClient();
   const countryId = useSelector((state: RootState) => state.metadata.currentCountry || 'us');
 

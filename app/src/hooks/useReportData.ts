@@ -91,14 +91,19 @@ export function useReportData(userReportId: string): ReportDataResult {
   const normalizedReport = useUserReportById(userReportId);
 
   // Extract data from normalized report
-  const { userReport, report, isLoading: normalizedLoading, error: normalizedError } = normalizedReport;
+  const {
+    userReport,
+    report,
+    isLoading: normalizedLoading,
+    error: normalizedError,
+  } = normalizedReport;
   const baseReportId = report?.id;
 
   // Step 2: Fetch report output using base reportId
   // This hook must be called unconditionally to comply with Rules of Hooks
   const reportOutputResult = useReportOutput({
     reportId: baseReportId || '',
-    enabled: !!baseReportId  // Only enable when we have a valid base report ID
+    enabled: !!baseReportId, // Only enable when we have a valid base report ID
   });
 
   // Step 3: Handle loading and error states

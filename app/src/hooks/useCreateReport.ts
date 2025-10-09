@@ -89,7 +89,7 @@ export function useCreateReport(reportLabel?: string) {
           countryId: report.country_id,
         });
 
-        // Store metadata; we need to do this because API v1 doesn't run report by 
+        // Store metadata; we need to do this because API v1 doesn't run report by
         // report ID, but rather by simulation + population; should not be necessary in
         // API v2
         queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);

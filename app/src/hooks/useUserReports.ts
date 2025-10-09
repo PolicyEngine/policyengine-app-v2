@@ -19,7 +19,7 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
-import { useReportAssociationsByUser, useReportAssociationById } from './useUserReportAssociations';
+import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
 import {
   combineLoadingStates,

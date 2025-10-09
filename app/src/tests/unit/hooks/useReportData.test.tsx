@@ -131,7 +131,7 @@ describe('useReportData', () => {
     // Given - UserReport exists but base report wasn't fetched
     (useUserReportById as any).mockReturnValue({
       userReport: mockUserReport,
-      report: null,  // No base report
+      report: null, // No base report
       simulations: [],
       policies: [],
       households: [],

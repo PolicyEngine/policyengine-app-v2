@@ -6,8 +6,8 @@ import { LocalStorageReportStore } from '@/api/reportAssociation';
 import {
   useCreateReportAssociation,
   useReportAssociation,
-  useReportAssociationsByUser,
   useReportAssociationById,
+  useReportAssociationsByUser,
   useUserReportStore,
 } from '@/hooks/useUserReportAssociations';
 import {
@@ -52,7 +52,11 @@ vi.mock('@/libs/queryKeys', () => ({
     byUser: (userId: string) => ['report-associations', 'byUser', userId],
     byReport: (id: string) => ['report-associations', 'byReport', id],
     specific: (userId: string, id: string) => ['report-associations', 'specific', userId, id],
-    byUserReportId: (userReportId: string) => ['report-associations', 'byUserReportId', userReportId],
+    byUserReportId: (userReportId: string) => [
+      'report-associations',
+      'byUserReportId',
+      userReportId,
+    ],
   },
 }));
 

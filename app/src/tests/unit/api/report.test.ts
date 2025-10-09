@@ -17,8 +17,8 @@ import {
   mockReportMetadata,
 } from '@/tests/fixtures/adapters/reportMocks';
 import {
-  createMockUserReport,
   createMockReportWithAssociationResult,
+  createMockUserReport,
   MOCK_USER_LABEL,
 } from '@/tests/fixtures/api/reportMocks';
 
@@ -236,7 +236,11 @@ describe('report API', () => {
         isCreated: true,
       });
 
-      const expectedResult = createMockReportWithAssociationResult(mockReportMetadata, userId, label);
+      const expectedResult = createMockReportWithAssociationResult(
+        mockReportMetadata,
+        userId,
+        label
+      );
       expect(result).toEqual(expectedResult);
 
       createSpy.mockRestore();
