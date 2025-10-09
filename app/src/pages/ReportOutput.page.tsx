@@ -86,6 +86,8 @@ function useReportData(reportId: string) {
       outputType: 'economy' as ReportOutputType,
       error: undefined,
       normalizedReport,
+      baseline: null, // Economy doesn't use baseline/reform (uses Report.output)
+      reform: null,
       progress: undefined,
       message: undefined,
       queuePosition: undefined,
@@ -98,12 +100,27 @@ function useReportData(reportId: string) {
     const userId = MOCK_USER_ID.toString();
     const normalizedReport = useUserReportById(userId, reportId);
 
+    // Extract baseline and reform from demo report's simulations
+    const { report, simulations } = normalizedReport;
+    let baseline: Household | null = null;
+    let reform: Household | null = null;
+
+    if (report && simulations) {
+      const baselineSim = simulations.find((s) => s.id === report.simulationIds?.[0]);
+      const reformSim = simulations.find((s) => s.id === report.simulationIds?.[1]);
+
+      baseline = baselineSim?.output || null;
+      reform = reformSim?.output || null;
+    }
+
     return {
       status: 'complete' as const,
       output: MOCK_HOUSEHOLD_OUTPUT,
       outputType: 'household' as ReportOutputType,
       error: undefined,
       normalizedReport,
+      baseline,
+      reform,
       progress: undefined,
       message: undefined,
       queuePosition: undefined,
@@ -142,12 +159,28 @@ function useReportData(reportId: string) {
     output = wrappedOutput;
   }
 
+  // Extract baseline and reform simulation outputs for household calculations
+  // Position 0 = baseline, Position 1 = reform (if exists)
+  const { report, simulations } = normalizedReport;
+  let baseline: Household | null = null;
+  let reform: Household | null = null;
+
+  if (outputType === 'household' && report && simulations) {
+    const baselineSim = simulations.find((s) => s.id === report.simulationIds?.[0]);
+    const reformSim = simulations.find((s) => s.id === report.simulationIds?.[1]);
+
+    baseline = baselineSim?.output || null;
+    reform = reformSim?.output || null;
+  }
+
   return {
     status,
     output,
     outputType,
     error,
     normalizedReport,
+    baseline,
+    reform,
     progress,
     message,
     queuePosition,
@@ -176,6 +209,8 @@ export default function ReportOutputPage() {
     outputType,
     error,
     normalizedReport,
+    baseline,
+    reform,
     progress,
     message,
     queuePosition,
@@ -234,7 +269,12 @@ export default function ReportOutputPage() {
     switch (activeTab) {
       case 'overview':
         return output && outputType ? (
-          <OverviewSubPage output={output} outputType={outputType} />
+          <OverviewSubPage
+            output={output}
+            outputType={outputType}
+            baseline={baseline}
+            reform={reform}
+          />
         ) : (
           <NotFoundSubPage />
         );

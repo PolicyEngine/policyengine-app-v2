@@ -78,6 +78,11 @@ async function getOrReconstructMetadata(
         sim1.population_type === 'geography' && sim1.population_id !== report.country_id
           ? String(sim1.population_id)
           : undefined,
+      // Simulation IDs needed for storing household calculation outputs
+      simulationIds: [
+        String(report.simulation_1_id),
+        ...(report.simulation_2_id ? [String(report.simulation_2_id)] : []),
+      ],
     };
 
     console.log(
