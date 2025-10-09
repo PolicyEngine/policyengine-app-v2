@@ -7,7 +7,6 @@ import {
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ActionIcon,
@@ -21,28 +20,12 @@ import {
   Title,
 } from '@mantine/core';
 import { EconomyReportOutput } from '@/api/economy';
-import { CalculationMeta } from '@/api/reportCalculations';
-import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
-import { useReportOutput } from '@/hooks/useReportOutput';
-import { useUserReportByUserReportId } from '@/hooks/useUserReportAssociations';
-import { useUserReportById } from '@/hooks/useUserReports';
-import {
-  MOCK_DEMO_HOUSEHOLD_ID,
-  MOCK_DEMO_REPORT_ID,
-  MOCK_ECONOMY_REPORT_OUTPUT,
-  MOCK_HOUSEHOLD_OUTPUT,
-} from '@/tests/fixtures/report/mockReportOutput';
-import { Household, HouseholdData } from '@/types/ingredients/Household';
+import { ReportOutputType, useReportData } from '@/hooks/useReportData';
 import ErrorPage from './report-output/ErrorPage';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
-
-/**
- * Type discriminator for output types
- */
-export type ReportOutputType = 'household' | 'economy';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -63,137 +46,6 @@ type ValidSubPage = (typeof VALID_SUBPAGES)[number];
 
 function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
   return VALID_SUBPAGES.includes(subpage as ValidSubPage);
-}
-
-/**
- * Hook to fetch and manage report output data
- * Now fetches UserReport first by its ID, then uses the base reportId for calculations
- */
-function useReportData(userReportId: string) {
-  const queryClient = useQueryClient();
-
-  // Step 1: Fetch UserReport by its ID
-  const {
-    data: userReport,
-    isLoading: userReportLoading,
-    error: userReportError,
-  } = useUserReportByUserReportId(userReportId);
-
-  // Step 2: If UserReport not found, return error state early
-  if (!userReportLoading && !userReport) {
-    return {
-      status: 'error' as const,
-      output: null,
-      outputType: undefined,
-      error: userReportError || new Error('Report not found'),
-      normalizedReport: { report: undefined },
-      progress: undefined,
-      message: undefined,
-      queuePosition: undefined,
-      estimatedTimeRemaining: undefined,
-    };
-  }
-
-  // Step 3: Extract base reportId from UserReport
-  const baseReportId = userReport?.reportId;
-
-  // If still loading UserReport, return loading state
-  if (userReportLoading || !baseReportId) {
-    return {
-      status: 'pending' as const,
-      output: null,
-      outputType: undefined,
-      error: undefined,
-      normalizedReport: { report: undefined },
-      progress: undefined,
-      message: 'Loading report...',
-      queuePosition: undefined,
-      estimatedTimeRemaining: undefined,
-    };
-  }
-
-  // Check if this is a demo report (using base reportId)
-  const isDemoEconomyReport = baseReportId === MOCK_DEMO_REPORT_ID;
-  const isDemoHouseholdReport = baseReportId === MOCK_DEMO_HOUSEHOLD_ID;
-
-  // If demo economy report, return mock economy data
-  if (isDemoEconomyReport) {
-    const userId = MOCK_USER_ID.toString();
-    const normalizedReport = useUserReportById(userId, baseReportId);
-
-    return {
-      status: 'complete' as const,
-      output: MOCK_ECONOMY_REPORT_OUTPUT,
-      outputType: 'economy' as ReportOutputType,
-      error: undefined,
-      normalizedReport,
-      progress: undefined,
-      message: undefined,
-      queuePosition: undefined,
-      estimatedTimeRemaining: undefined,
-    };
-  }
-
-  // If demo household report, return mock household data
-  if (isDemoHouseholdReport) {
-    const userId = MOCK_USER_ID.toString();
-    const normalizedReport = useUserReportById(userId, baseReportId);
-
-    return {
-      status: 'complete' as const,
-      output: MOCK_HOUSEHOLD_OUTPUT,
-      outputType: 'household' as ReportOutputType,
-      error: undefined,
-      normalizedReport,
-      progress: undefined,
-      message: undefined,
-      queuePosition: undefined,
-      estimatedTimeRemaining: undefined,
-    };
-  }
-
-  // Step 4: Fetch real data using base reportId
-  const result = useReportOutput({ reportId: baseReportId });
-  const { status, data, error } = result;
-  const userId = MOCK_USER_ID.toString();
-  const normalizedReport = useUserReportById(userId, baseReportId);
-
-  // Extract progress information if status is pending
-  const progress = status === 'pending' ? (result as any).progress : undefined;
-  const message = status === 'pending' ? (result as any).message : undefined;
-  const queuePosition = status === 'pending' ? (result as any).queuePosition : undefined;
-  const estimatedTimeRemaining =
-    status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
-
-  // Determine output type from cached metadata instead of type guards
-  // The metadata is cached during the calculation query and contains the definitive type
-  const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', baseReportId]);
-  const outputType: ReportOutputType | undefined = metadata?.type;
-
-  // Wrap household data in Household structure
-  // The API returns raw HouseholdData, but components expect the Household wrapper
-  let output: EconomyReportOutput | Household | null | undefined = data;
-
-  if (outputType === 'household' && data) {
-    const wrappedOutput: Household = {
-      id: baseReportId,
-      countryId: metadata?.countryId || 'us',
-      householdData: data as HouseholdData,
-    };
-    output = wrappedOutput;
-  }
-
-  return {
-    status,
-    output,
-    outputType,
-    error,
-    normalizedReport,
-    progress,
-    message,
-    queuePosition,
-    estimatedTimeRemaining,
-  };
 }
 
 export default function ReportOutputPage() {

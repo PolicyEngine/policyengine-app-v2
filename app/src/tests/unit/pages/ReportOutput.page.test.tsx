@@ -1,11 +1,17 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { useUserReportByUserReportId } from '@/hooks/useUserReportAssociations';
+import { MOCK_USER_ID } from '@/constants';
 import { useReportOutput } from '@/hooks/useReportOutput';
+import { useUserReportByUserReportId } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import ReportOutputPage from '@/pages/ReportOutput.page';
-import { MOCK_USER_ID } from '@/constants';
+import {
+  mockEconomyOutput,
+  mockHouseholdData,
+  mockReportData,
+  mockUserReport,
+} from '@/tests/fixtures/pages/reportOutputMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -20,7 +26,7 @@ vi.mock('react-router-dom', () => ({
 }));
 
 // Mock hooks
-vi.mock('@/hooks/useUserReportByUserReportId', () => ({
+vi.mock('@/hooks/useUserReportAssociations', () => ({
   useUserReportByUserReportId: vi.fn(),
 }));
 
@@ -38,13 +44,13 @@ vi.mock('@/pages/report-output/OverviewSubPage', () => ({
 }));
 
 vi.mock('@/pages/report-output/LoadingPage', () => ({
-  default: vi.fn(({ message }) => (
+  default: vi.fn(({ message }: { message?: string }) => (
     <div data-testid="loading-subpage">{message || 'Loading...'}</div>
   )),
 }));
 
 vi.mock('@/pages/report-output/ErrorPage', () => ({
-  default: vi.fn(({ error }) => (
+  default: vi.fn(({ error }: { error?: Error }) => (
     <div data-testid="error-subpage">Error: {error?.message || 'Unknown error'}</div>
   )),
 }));
@@ -55,27 +61,6 @@ vi.mock('@/pages/report-output/NotFoundSubPage', () => ({
 
 describe('ReportOutputPage', () => {
   let queryClient: QueryClient;
-
-  const mockUserReport = {
-    id: 'sur-test123',
-    userId: MOCK_USER_ID.toString(),
-    reportId: 'base-report-456',
-    label: 'Test Report',
-    createdAt: '2025-01-15T10:00:00Z',
-    isCreated: true,
-  };
-
-  const mockReportData = {
-    id: 'base-report-456',
-    label: 'Test Report',
-    countryId: 'us',
-    status: 'complete' as const,
-  };
-
-  const mockEconomyOutput = {
-    poverty_by_age_group: {},
-    poverty_by_gender: {},
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -240,10 +225,17 @@ describe('ReportOutputPage', () => {
       ...mockUserReport,
       label: 'My Custom Report Name',
     };
+    const customReportData = {
+      ...mockReportData,
+      label: 'My Custom Report Name',
+    };
     (useUserReportByUserReportId as any).mockReturnValue({
       data: customUserReport,
       isLoading: false,
       error: null,
+    });
+    (useUserReportById as any).mockReturnValue({
+      report: customReportData,
     });
 
     // When
@@ -257,10 +249,6 @@ describe('ReportOutputPage', () => {
 
   test('given household output type then renders household data correctly', async () => {
     // Given
-    const mockHouseholdData = {
-      earnings: { 2025: 50000 },
-    };
-
     (useReportOutput as any).mockReturnValue({
       status: 'complete',
       data: mockHouseholdData,

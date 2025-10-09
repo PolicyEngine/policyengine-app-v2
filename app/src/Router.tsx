@@ -4,7 +4,6 @@ import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
-import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
@@ -28,7 +27,6 @@ const router = createBrowserRouter(
             {
               element: <Layout />,
               children: [
-                // Note: This is a temporary debug path for viewing report outputs
                 {
                   path: 'report-output/:reportId',
                   element: <ReportOutputPage />,
@@ -36,28 +34,6 @@ const router = createBrowserRouter(
                     {
                       path: ':subpage',
                       element: <ReportOutputPage />,
-                    },
-                  ],
-                },
-                // Demo path for economy report output
-                {
-                  path: 'report-output-demo',
-                  element: <ReportOutputPageDemo />,
-                  children: [
-                    {
-                      path: ':subpage',
-                      element: <ReportOutputPageDemo />,
-                    },
-                  ],
-                },
-                // Demo path for household report output
-                {
-                  path: 'household-output-demo',
-                  element: <ReportOutputPageDemo />,
-                  children: [
-                    {
-                      path: ':subpage',
-                      element: <ReportOutputPageDemo />,
                     },
                   ],
                 },
