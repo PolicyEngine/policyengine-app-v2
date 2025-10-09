@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as economyApi from '@/api/economy';
 import * as householdApi from '@/api/householdCalculation';
+import { CalculationMeta } from '@/api/reportCalculations';
 import { CalculationService } from '@/libs/calculations/service';
 import { ECONOMY_OK_RESPONSE } from '@/tests/fixtures/libs/calculations/handlerMocks';
 import {
@@ -162,7 +163,9 @@ describe('CalculationService', () => {
   describe('executeCalculation', () => {
     test('given household calculation request then executes calculations for each simulation', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
+        MOCK_HOUSEHOLD_RESULT.householdData
+      );
       const onSimulationComplete = vi.fn();
       const onComplete = vi.fn();
 
@@ -177,7 +180,7 @@ describe('CalculationService', () => {
       expect(result.result).toBeNull(); // Report output is null for household
       expect(onSimulationComplete).toHaveBeenCalledWith(
         'sim-1',
-        MOCK_HOUSEHOLD_RESULT,
+        MOCK_HOUSEHOLD_RESULT.householdData,
         'policy-baseline'
       );
       expect(onComplete).toHaveBeenCalledWith(TEST_REPORT_ID, 'ok', null);
@@ -205,7 +208,9 @@ describe('CalculationService', () => {
         },
         simulationIds: ['sim-1', 'sim-2'],
       };
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
+        MOCK_HOUSEHOLD_RESULT.householdData
+      );
       const onSimulationComplete = vi.fn();
 
       // When
@@ -218,13 +223,13 @@ describe('CalculationService', () => {
       expect(onSimulationComplete).toHaveBeenNthCalledWith(
         1,
         'sim-1',
-        MOCK_HOUSEHOLD_RESULT,
+        MOCK_HOUSEHOLD_RESULT.householdData,
         'policy-1'
       );
       expect(onSimulationComplete).toHaveBeenNthCalledWith(
         2,
         'sim-2',
-        MOCK_HOUSEHOLD_RESULT,
+        MOCK_HOUSEHOLD_RESULT.householdData,
         'policy-2'
       );
     });
