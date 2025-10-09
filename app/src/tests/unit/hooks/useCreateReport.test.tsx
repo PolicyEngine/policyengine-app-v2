@@ -11,8 +11,6 @@ import {
   MOCK_HOUSEHOLD_META,
 } from '@/tests/fixtures/hooks/calculationManagerMocks';
 import {
-  CONSOLE_MESSAGES,
-  createMockCreateAssociation,
   createMockQueryClient,
   ERROR_MESSAGES,
   mockEconomySimulation,

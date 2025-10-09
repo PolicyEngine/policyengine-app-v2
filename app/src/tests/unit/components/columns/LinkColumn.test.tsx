@@ -73,10 +73,10 @@ describe('LinkColumn', () => {
     const parentClickHandler = vi.fn();
 
     // When
-    const { container } = render(
-      <div onClick={parentClickHandler}>
+    render(
+      <button type="button" onClick={parentClickHandler}>
         <LinkColumn config={mockConfig} value={value} />
-      </div>
+      </button>
     );
 
     const link = screen.getByRole('link', { name: 'Click me' });
