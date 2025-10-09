@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { HouseholdData } from '@/types/ingredients/Household';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
 
@@ -42,6 +43,28 @@ export const mockSimulationPayloadMinimal: SimulationCreationPayload = {
   policy_id: 1,
 };
 
+// Household output data for testing
+export const mockHouseholdData: HouseholdData = {
+  people: {
+    person1: {
+      age: { '2024': 30 },
+      employment_income: { '2024': 50000 },
+    },
+    person2: {
+      age: { '2024': 28 },
+      employment_income: { '2024': 45000 },
+    },
+  },
+  households: {
+    household1: {
+      members: ['person1', 'person2'],
+      state_name: { '2024': 'California' },
+    },
+  },
+};
+
+export const mockHouseholdOutputJson = JSON.stringify(mockHouseholdData);
+
 // API response structures
 export const mockSimulationMetadata: SimulationMetadata = {
   id: parseInt(SIMULATION_IDS.VALID, 10),
@@ -50,6 +73,11 @@ export const mockSimulationMetadata: SimulationMetadata = {
   population_id: mockSimulationPayload.population_id,
   population_type: mockSimulationPayload.population_type!,
   policy_id: mockSimulationPayload.policy_id.toString(),
+};
+
+export const mockSimulationMetadataWithOutput: SimulationMetadata = {
+  ...mockSimulationMetadata,
+  output_json: mockHouseholdOutputJson,
 };
 
 export const mockCreateSimulationSuccessResponse = {
@@ -104,6 +132,18 @@ export const mockNonJsonResponse = () => ({
   json: vi.fn().mockRejectedValue(new SyntaxError('Unexpected token < in JSON')),
 });
 
+export const mockUpdateSimulationSuccessResponse = {
+  status: 'ok',
+  message: 'Simulation updated successfully',
+  result: mockSimulationMetadataWithOutput,
+};
+
+export const mockUpdateSimulationErrorResponse = {
+  status: 'error',
+  message: 'Failed to update simulation',
+  result: null,
+};
+
 // Error messages that match the implementation
 export const ERROR_MESSAGES = {
   CREATE_FAILED: 'Failed to create simulation',
@@ -113,4 +153,8 @@ export const ERROR_MESSAGES = {
   FETCH_FAILED: (id: string) => `Failed to fetch simulation ${id}`,
   FETCH_FAILED_WITH_STATUS: (id: string, status: number, statusText: string) =>
     `Failed to fetch simulation ${id}: ${status} ${statusText}`,
+  UPDATE_FAILED: (id: string) => `Failed to update simulation ${id}`,
+  UPDATE_FAILED_WITH_STATUS: (id: string, status: number, statusText: string) =>
+    `Failed to update simulation ${id}: ${status} ${statusText}`,
+  UPDATE_PARSE_FAILED: (error: any) => `Failed to parse simulation update response: ${error}`,
 } as const;
