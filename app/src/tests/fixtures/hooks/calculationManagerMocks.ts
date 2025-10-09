@@ -71,15 +71,23 @@ export const createMockCalculationManager = () => ({
   getStatus: vi.fn(),
   getCacheKey: vi.fn((reportId: string) => ['calculation', reportId] as const),
   buildMetadata: vi.fn((params: any) => {
+    let baseMeta: CalculationMeta;
+
     // Determine type based on simulations
     if (params.simulation1?.populationType === 'household') {
-      return MOCK_HOUSEHOLD_META;
+      baseMeta = MOCK_HOUSEHOLD_META;
+    } else if (params.geography?.scope === 'subnational') {
+      // For economy simulations, check if geography has region
+      baseMeta = MOCK_ECONOMY_META_SUBNATIONAL;
+    } else {
+      baseMeta = MOCK_ECONOMY_META_NATIONAL;
     }
-    // For economy simulations, check if geography has region
-    if (params.geography?.scope === 'subnational') {
-      return MOCK_ECONOMY_META_SUBNATIONAL;
-    }
-    return MOCK_ECONOMY_META_NATIONAL;
+
+    // Include userReportId if provided
+    return {
+      ...baseMeta,
+      ...(params.userReportId && { userReportId: params.userReportId }),
+    };
   }),
   getQueryOptions: vi.fn((reportId: string, _meta: CalculationMeta) => ({
     queryKey: ['calculation', reportId] as const,

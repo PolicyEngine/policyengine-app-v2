@@ -71,12 +71,7 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
       },
       {
         onSuccess: (data) => {
-          // Navigate routes to absolute path with leading slash, otherwise relative
-          const userReportId = (data as any).userReportId;
-          if (!userReportId) {
-            throw new Error('UserReport ID not found in report data. Report created but navigation failed.');
-          }
-          navigate(`report-output/${userReportId}`);
+          navigate(`report-output/${data.userReport.id}`);
           if (!isInSubflow) {
             resetIngredient('report');
           }

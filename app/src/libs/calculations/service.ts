@@ -15,6 +15,7 @@ export interface BuildMetadataParams {
   household?: Household | null;
   geography?: Geography | null;
   countryId: string;
+  userReportId?: string;
 }
 
 /**
@@ -36,7 +37,7 @@ export class CalculationService {
    * Centralizes all metadata construction logic
    */
   buildMetadata(params: BuildMetadataParams): CalculationMeta {
-    const { simulation1, simulation2, household, geography, countryId } = params;
+    const { simulation1, simulation2, household, geography, countryId, userReportId } = params;
 
     if (!simulation1) {
       throw new Error('Primary simulation is required');
@@ -74,6 +75,7 @@ export class CalculationService {
       },
       populationId,
       region,
+      userReportId,
     };
   }
 

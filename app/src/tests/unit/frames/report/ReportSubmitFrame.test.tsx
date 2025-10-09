@@ -16,6 +16,9 @@ import {
   mockReportWithLabel,
   mockResetIngredient,
   mockSimulation1,
+  MOCK_REPORT_123,
+  MOCK_REPORT_456,
+  MOCK_REPORT_789,
 } from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -219,13 +222,8 @@ describe('ReportSubmitFrame', () => {
     test('given successful creation then navigates using UserReport ID and resets', async () => {
       // Given
       const user = userEvent.setup();
-      const mockReportData = {
-        id: 'report-123',
-        status: 'pending',
-        userReportId: 'sur-report-123'
-      };
       mockCreateReport.mockImplementation((_data: any, options: any) => {
-        options.onSuccess(mockReportData);
+        options.onSuccess(MOCK_REPORT_123);
         return Promise.resolve();
       });
       renderComponent();
@@ -234,20 +232,15 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${mockReportData.userReportId}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${MOCK_REPORT_123.userReport.id}`);
       expect(mockResetIngredient).toHaveBeenCalledWith('report');
     });
 
     test('given in subflow when successful then does not reset', async () => {
       // Given
       const user = userEvent.setup();
-      const mockReportData = {
-        id: 'report-456',
-        status: 'pending',
-        userReportId: 'sur-report-456'
-      };
       mockCreateReport.mockImplementation((_data: any, options: any) => {
-        options.onSuccess(mockReportData);
+        options.onSuccess(MOCK_REPORT_456);
         return Promise.resolve();
       });
       renderComponent({ isInSubflow: true });
@@ -256,7 +249,7 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${mockReportData.userReportId}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${MOCK_REPORT_456.userReport.id}`);
       expect(mockResetIngredient).not.toHaveBeenCalled();
     });
 
@@ -275,21 +268,14 @@ describe('ReportSubmitFrame', () => {
       expect(button).toHaveAttribute('data-loading', 'true');
     });
 
-    test('given successful creation then passes data to onSuccess callback', async () => {
+    test('given successful creation then passes complete data structure to onSuccess callback', async () => {
       // Given
       const user = userEvent.setup();
-      const mockReportData = {
-        id: 'report-789',
-        status: 'pending',
-        countryId: 'us',
-        simulationIds: ['1', '2'],
-        userReportId: 'sur-report-789'
-      };
       let capturedData: any = null;
       mockCreateReport.mockImplementation((_data: any, options: any) => {
         // Capture what's passed to onSuccess
-        capturedData = mockReportData;
-        options.onSuccess(mockReportData);
+        capturedData = MOCK_REPORT_789;
+        options.onSuccess(MOCK_REPORT_789);
         return Promise.resolve();
       });
       renderComponent();
@@ -297,42 +283,9 @@ describe('ReportSubmitFrame', () => {
       // When
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
-      // Then - verify the callback received the report data
-      expect(capturedData).toEqual(mockReportData);
-      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${mockReportData.userReportId}`);
-    });
-
-    test('given missing userReportId then throws error', async () => {
-      // Given
-      const user = userEvent.setup();
-      const mockReportData = {
-        id: 'report-999',
-        status: 'pending'
-        // No userReportId
-      };
-
-      let thrownError: unknown;
-      mockCreateReport.mockImplementation((_data: any, options: any) => {
-        // Wrap in try-catch to simulate error handling
-        try {
-          options.onSuccess(mockReportData);
-        } catch (error) {
-          thrownError = error;
-        }
-        return Promise.resolve();
-      });
-
-      // Clear previous mock navigate calls
-      mockNavigate.mockClear();
-      renderComponent();
-
-      // When
-      await user.click(screen.getByRole('button', { name: /Generate Report/i }));
-
-      // Then
-      expect(thrownError).toBeInstanceOf(Error);
-      expect((thrownError as Error).message).toBe('UserReport ID not found in report data. Report created but navigation failed.');
-      expect(mockNavigate).not.toHaveBeenCalled();
+      // Then - verify the callback received the complete report data structure
+      expect(capturedData).toEqual(MOCK_REPORT_789);
+      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${MOCK_REPORT_789.userReport.id}`);
     });
 
     test('given household and geography data available then passes populations to createReport', async () => {

@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createReport } from '@/api/report';
+import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
 import { MOCK_USER_ID } from '@/constants';
 import { getCalculationManager } from '@/libs/calculations';
 import { countryIds } from '@/libs/countries';
@@ -8,11 +8,24 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
-import { useCreateReportAssociation } from './useUserReportAssociations';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: (typeof countryIds)[number];
   payload: ReportCreationPayload;
+  simulations?: {
+    simulation1?: Simulation | null;
+    simulation2?: Simulation | null;
+  };
+  populations?: {
+    household1?: Household | null;
+    household2?: Household | null;
+    geography1?: Geography | null;
+    geography2?: Geography | null;
+  };
+}
+
+// Extended result type that includes simulations and populations for onSuccess
+interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
   simulations?: {
     simulation1?: Simulation | null;
     simulation2?: Simulation | null;
@@ -30,51 +43,52 @@ interface CreateReportAndBeginCalculationParams {
 // with the creation of API v2, where we can merely pass simulation IDs to create a report.
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
-  const createAssociation = useCreateReportAssociation();
-
   const manager = getCalculationManager(queryClient);
+  const userId = MOCK_USER_ID;
 
   const mutation = useMutation({
-    mutationFn: ({ countryId, payload }: CreateReportAndBeginCalculationParams) =>
-      createReport(countryId as any, payload),
-    onSuccess: async (data, variables) => {
+    mutationFn: async ({
+      countryId,
+      payload,
+      simulations,
+      populations,
+    }: CreateReportAndBeginCalculationParams): Promise<ExtendedCreateReportResult> => {
+      // Call the combined API function
+      const result = await createReportAndAssociateWithUser({
+        countryId: countryId as any,
+        payload,
+        userId,
+        label: reportLabel,
+      });
+
+      // Attach simulations and populations for use in onSuccess
+      return {
+        ...result,
+        simulations,
+        populations,
+      };
+    },
+
+    onSuccess: async (result) => {
       try {
+        const { report, userReport, simulations, populations } = result;
+        const reportIdStr = String(report.id);
+
+        // Invalidate queries
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
 
-        console.log('Report label in useCreateReport:', reportLabel);
+        // Cache the report data
+        queryClient.setQueryData(['report', reportIdStr], report);
 
-        // Store report data without userReportId for now
-        queryClient.setQueryData(['report', String(data.id)], data);
-
-        // Create association with current user (or anonymous for session storage)
-        const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
-
-        const userReport = await createAssociation.mutateAsync({
-          userId,
-          reportId: String(data.id), 
-          label: reportLabel,
-          isCreated: true,
-        });
-
-        // Update cached report to store UserReport ID for report output display
-        queryClient.setQueryData(['report', String(data.id)], {
-          ...data,
+        // Build metadata with userReportId included
+        const calculationMeta = manager.buildMetadata({
+          simulation1: simulations?.simulation1 || null,
+          simulation2: simulations?.simulation2 || null,
+          household: populations?.household1,
+          geography: populations?.geography1,
+          countryId: report.country_id,
           userReportId: userReport.id,
         });
-
-        const { simulation1, simulation2 } = variables.simulations || {};
-        const { household1, geography1 } = variables.populations || {};
-
-        // Build metadata using the centralized logic in manager
-        const calculationMeta = manager.buildMetadata({
-          simulation1: simulation1 || null,
-          simulation2: simulation2 || null,
-          household: household1,
-          geography: geography1,
-          countryId: data.country_id,
-        });
-
-        const reportIdStr = String(data.id);
 
         // Store metadata
         queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
@@ -90,7 +104,7 @@ export function useCreateReport(reportLabel?: string) {
           await manager.startCalculation(reportIdStr, calculationMeta);
         }
       } catch (error) {
-        console.error('Report created but post-creation tasks failed:', error);
+        console.error('Post-creation tasks failed:', error);
       }
     },
   });

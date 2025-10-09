@@ -16,6 +16,7 @@ export interface CalculationMeta {
   };
   populationId: string;
   region?: string;
+  userReportId?: string;
 }
 
 /**

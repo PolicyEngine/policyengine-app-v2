@@ -1,6 +1,13 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { createReport, fetchReportById, markReportCompleted, markReportError } from '@/api/report';
-import { BASE_URL } from '@/constants';
+import {
+  createReport,
+  createReportAndAssociateWithUser,
+  fetchReportById,
+  markReportCompleted,
+  markReportError,
+} from '@/api/report';
+import { LocalStorageReportStore } from '@/api/reportAssociation';
+import { BASE_URL, MOCK_USER_ID } from '@/constants';
 import {
   mockCompletedReportPayload,
   mockErrorReport,
@@ -9,6 +16,11 @@ import {
   mockReportCreationPayload,
   mockReportMetadata,
 } from '@/tests/fixtures/adapters/reportMocks';
+import {
+  createMockUserReport,
+  createMockReportWithAssociationResult,
+  MOCK_USER_LABEL,
+} from '@/tests/fixtures/api/reportMocks';
 
 // Mock fetch globally
 global.fetch = vi.fn();
@@ -178,6 +190,104 @@ describe('report API', () => {
       await expect(markReportError(countryId, reportId, mockErrorReport)).rejects.toThrow(
         'Failed to update report report-123'
       );
+    });
+  });
+
+  describe('createReportAndAssociateWithUser', () => {
+    test('given valid params then creates report and association', async () => {
+      // Given
+      const countryId = 'us';
+      const payload = mockReportCreationPayload;
+      const userId = MOCK_USER_ID;
+      const label = MOCK_USER_LABEL;
+
+      const mockApiResponse = { result: mockReportMetadata };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockApiResponse),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // Mock localStorage
+      const mockUserReport = createMockUserReport(String(mockReportMetadata.id), userId, label);
+
+      const createSpy = vi.spyOn(LocalStorageReportStore.prototype, 'create');
+      createSpy.mockResolvedValue(mockUserReport);
+
+      // When
+      const result = await createReportAndAssociateWithUser({
+        countryId,
+        payload,
+        userId,
+        label,
+      });
+
+      // Then
+      expect(global.fetch).toHaveBeenCalledWith(`${BASE_URL}/${countryId}/report`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      expect(createSpy).toHaveBeenCalledWith({
+        userId,
+        reportId: String(mockReportMetadata.id),
+        label,
+        isCreated: true,
+      });
+
+      const expectedResult = createMockReportWithAssociationResult(mockReportMetadata, userId, label);
+      expect(result).toEqual(expectedResult);
+
+      createSpy.mockRestore();
+    });
+
+    test('given API error then throws error', async () => {
+      // Given
+      const countryId = 'us';
+      const payload = mockReportCreationPayload;
+      const mockResponse = {
+        ok: false,
+        status: 500,
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When & Then
+      await expect(
+        createReportAndAssociateWithUser({
+          countryId,
+          payload,
+          userId: MOCK_USER_ID,
+          label: 'Test',
+        })
+      ).rejects.toThrow('Failed to create report');
+    });
+
+    test('given association error then throws error', async () => {
+      // Given
+      const countryId = 'us';
+      const payload = mockReportCreationPayload;
+      const mockApiResponse = { result: mockReportMetadata };
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockApiResponse),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      const createSpy = vi.spyOn(LocalStorageReportStore.prototype, 'create');
+      createSpy.mockRejectedValue(new Error('Failed to create association'));
+
+      // When & Then
+      await expect(
+        createReportAndAssociateWithUser({
+          countryId,
+          payload,
+          userId: MOCK_USER_ID,
+          label: 'Test',
+        })
+      ).rejects.toThrow('Failed to create association');
+
+      createSpy.mockRestore();
     });
   });
 });
