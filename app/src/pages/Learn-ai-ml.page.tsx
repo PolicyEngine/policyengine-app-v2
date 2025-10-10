@@ -3,10 +3,30 @@ import CalloutWithImage from '@/components/shared/static/CalloutWithImage';
 import { CardsWithHeader } from '@/components/shared/static/CardsWithHeader';
 import PageHeader from '@/components/shared/static/PageHeader';
 import { TitleCardWithHeader } from '@/components/shared/static/TextCardWithHeader';
+import TwoColumnView from '@/components/TwoColumnView';
 import aiAnalysisImg from '@/assets/ai-analysis.png';
 import usHouseholdAiImg from '@/assets/us-household-ai.png';
 
 export default function HomePage() {
+
+    const leftColumnContent = (
+    <>
+        PolicyEngine integrates large language models with our computational tax-benefit engine to transform complex calculations into clear explanations.
+        <br /><br />
+        For household calculations, we process thousands of intermediate values across tax and benefit programs, then use Anthropic's Claude API to generate plain-language explanations of eligibility, amounts, and potential changes.
+        <br /><br />
+        For policy analysis, we leverage GPT-4 to weave narratives from our computational results, explaining reforms in terms anyone can understand - from simplified `ELI5` explanations to detailed technical analyses for policy experts.
+    </>
+    );
+
+    const rightColumnContent = (
+        <img 
+        src={aiAnalysisImg} 
+        alt="Diagram illustrating AI analysis" 
+        style={{ maxWidth: '100%', height: 'auto' }}
+        />
+    );
+
     return (
         <>
             <PageHeader
@@ -70,11 +90,11 @@ export default function HomePage() {
                 backgroundColor="gray"
             />
 
-            {/*<TitleCardWithHeader
-                description="PolicyEngine integrates large language models with our computational tax-benefit engine to transform complex calculations into clear explanations.\nFor household calculations, we process thousands of intermediate values across tax and benefit programs, then use Anthropic's Claude API to generate plain-language explanations of eligibility, amounts, and potential changes.\nFor policy analysis, we leverage GPT-4 to weave narratives from our computational results, explaining reforms in terms anyone can understand - from simplified `ELI5` explanations to detailed technical analyses for policy experts."
-                imageSrc={aiAnalysisImg}
-                imageAlt="AI Analysis Generation Modes"
-            />*/}
+            <TwoColumnView
+                title='How it works'
+                leftColumn={leftColumnContent}
+                rightColumn={rightColumnContent}
+            />
 
             <h1>Watch our AI Demo</h1>
             <iframe
