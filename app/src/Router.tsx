@@ -4,6 +4,7 @@ import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
+import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
@@ -56,7 +57,7 @@ const router = createBrowserRouter(
                 },
                 {
                   path: 'reports',
-                  element: <div>Reports page</div>,
+                  element: <ReportsPage />,
                 },
                 {
                   path: 'simulations',

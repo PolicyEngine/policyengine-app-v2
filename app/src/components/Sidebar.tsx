@@ -5,6 +5,7 @@ import {
   IconGitBranch,
   IconHome,
   IconPlus,
+  IconScale,
   IconSettings2,
   IconUsers,
 } from '@tabler/icons-react';
@@ -30,15 +31,12 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Home', icon: IconHome, path: `/${countryId}` },
     { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
-    { label: 'Configurations', icon: IconSettings2, path: `/${countryId}/configurations` },
-  ];
-
-  const policyItems = [
+    { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
     { label: 'Populations', icon: IconUsers, path: `/${countryId}/populations` },
   ];
 
   const resourceItems = [
-    { label: 'GitHub', icon: IconGitBranch, path: 'https://github.com', external: true },
+    { label: 'GitHub', icon: IconGitBranch, path: 'https://github.com/PolicyEngine', external: true },
     { label: 'Join Slack', icon: IconExternalLink, path: 'https://slack.com', external: true },
     { label: 'Visit Blog', icon: IconBook, path: 'https://blog.example.com', external: true },
     { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
@@ -82,7 +80,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
               },
             }}
           >
-            Create new
+            Create report
           </Button>
         </Box>
       </Stack>
@@ -90,14 +88,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       <Stack gap={0} style={{ flex: 1 }}>
         <SidebarSection>
           {navItems.map((item) => (
-            <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
-          ))}
-        </SidebarSection>
-
-        <SidebarDivider />
-
-        <SidebarSection title="Policies">
-          {policyItems.map((item) => (
             <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
           ))}
         </SidebarSection>
@@ -122,49 +112,6 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
           ))}
         </SidebarSection>
       </Stack>
-
-      <Box p={16}>
-        <Divider mb={16} color={colors.border.light} />
-        <Stack gap={8}>
-          <Text size="xs" c={colors.text.secondary} style={{ fontSize: 10 }}>
-            Running 2 items
-          </Text>
-          <Box
-            p={8}
-            style={{
-              border: `1px solid ${colors.border.light}`,
-              borderRadius: 6,
-              cursor: 'pointer',
-            }}
-          >
-            <Stack gap={4}>
-              <Text size="xs" fw={600} c={colors.gray[900]} style={{ fontSize: 12 }}>
-                Report title
-              </Text>
-              <Text size="xs" c={colors.text.secondary} style={{ fontSize: 11 }}>
-                300 KB
-              </Text>
-            </Stack>
-          </Box>
-          <Button
-            variant="subtle"
-            size="xs"
-            c={colors.gray[700]}
-            styles={{
-              root: {
-                fontSize: 12,
-                fontWeight: 400,
-                height: 'auto',
-                padding: '4px 0',
-              },
-            }}
-          >
-            View Report
-          </Button>
-        </Stack>
-        <Divider my={16} color={colors.border.light} />
-        <SidebarUser name="Olivia Rhye" initials="OR" />
-      </Box>
     </Stack>
   );
 }
