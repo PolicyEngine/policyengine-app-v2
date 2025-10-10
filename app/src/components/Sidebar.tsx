@@ -10,13 +10,12 @@ import {
   IconUsers,
 } from '@tabler/icons-react';
 import { useLocation } from 'react-router-dom';
-import { Box, Button, Divider, Stack, Text } from '@mantine/core';
+import { Box, Button, Stack } from '@mantine/core';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, spacing, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
-import SidebarUser from './sidebar/SidebarUser';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -36,7 +35,12 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   ];
 
   const resourceItems = [
-    { label: 'GitHub', icon: IconGitBranch, path: 'https://github.com/PolicyEngine', external: true },
+    {
+      label: 'GitHub',
+      icon: IconGitBranch,
+      path: 'https://github.com/PolicyEngine',
+      external: true,
+    },
     { label: 'Join Slack', icon: IconExternalLink, path: 'https://slack.com', external: true },
     { label: 'Visit Blog', icon: IconBook, path: 'https://blog.example.com', external: true },
     { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
