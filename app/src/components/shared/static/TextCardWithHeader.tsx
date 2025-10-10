@@ -3,7 +3,7 @@ import { colors } from '../../../designTokens';
 
 interface Section {
   heading?: string;
-  body: string | string[];
+  body: string | string[] | React.ReactNode | React.ReactNode[];
 }
 
 interface TitleCardWithHeaderProps {
