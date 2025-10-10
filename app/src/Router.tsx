@@ -1,12 +1,12 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home.page';
+import LearnAiMlPage from './pages/Learn-ai-ml.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportOutputPageDemo from './pages/ReportOutputDemo.page';
 import SimulationsPage from './pages/Simulations.page';
-import LearnAiMlPage from './pages/Learn-ai-ml.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
