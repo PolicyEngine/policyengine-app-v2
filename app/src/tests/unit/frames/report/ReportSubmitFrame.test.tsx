@@ -25,9 +25,13 @@ import { Simulation } from '@/types/ingredients/Simulation';
 
 // Mock React Router
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock the hooks
 vi.mock('@/hooks/useCreateReport', () => ({

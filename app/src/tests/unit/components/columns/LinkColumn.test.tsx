@@ -98,6 +98,6 @@ describe('LinkColumn', () => {
 
     // Then
     const link = screen.getByRole('link', { name: 'No URL' });
-    expect(link).toHaveAttribute('href', '#No URL');
+    expect(link).toHaveAttribute('href', '/#No URL');
   });
 });

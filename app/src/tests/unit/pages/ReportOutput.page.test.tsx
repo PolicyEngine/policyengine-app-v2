@@ -17,10 +17,14 @@ vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 const mockNavigate = vi.fn();
 const mockParams = { reportId: 'sur-test123', subpage: undefined };
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
-  useParams: () => mockParams,
-}));
+vi.mock('react-router-dom', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('react-router-dom')>();
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+    useParams: () => mockParams,
+  };
+});
 
 // Mock useReportData hook
 vi.mock('@/hooks/useReportData', () => ({
