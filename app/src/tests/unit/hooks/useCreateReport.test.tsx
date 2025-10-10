@@ -2,9 +2,8 @@ import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { createReport } from '@/api/report';
+import { createReportAndAssociateWithUser } from '@/api/report';
 import { useCreateReport } from '@/hooks/useCreateReport';
-import { useCreateReportAssociation } from '@/hooks/useUserReportAssociations';
 import {
   createMockCalculationManager,
   MOCK_ECONOMY_META_NATIONAL,
@@ -12,8 +11,6 @@ import {
   MOCK_HOUSEHOLD_META,
 } from '@/tests/fixtures/hooks/calculationManagerMocks';
 import {
-  CONSOLE_MESSAGES,
-  createMockCreateAssociation,
   createMockQueryClient,
   ERROR_MESSAGES,
   mockEconomySimulation,
@@ -23,21 +20,18 @@ import {
   mockReportCreationPayload,
   mockReportMetadata,
   mockSubnationalGeography,
+  mockUserReportAssociation,
   setupConsoleMocks,
   TEST_COUNTRY_ID,
   TEST_LABEL,
   TEST_REPORT_ID_STRING,
   TEST_USER_ID,
+  TEST_USER_REPORT_ID,
 } from '@/tests/fixtures/hooks/reportHooksMocks';
 
 // Mock the API
 vi.mock('@/api/report', () => ({
-  createReport: vi.fn(),
-}));
-
-// Mock the association hook
-vi.mock('@/hooks/useUserReportAssociations', () => ({
-  useCreateReportAssociation: vi.fn(),
+  createReportAndAssociateWithUser: vi.fn(),
 }));
 
 // Mock query keys
@@ -73,7 +67,6 @@ vi.mock('@/libs/calculations', () => ({
 
 describe('useCreateReport', () => {
   let queryClient: ReturnType<typeof createMockQueryClient>;
-  let mockCreateAssociation: ReturnType<typeof createMockCreateAssociation>;
   let consoleMocks: ReturnType<typeof setupConsoleMocks>;
 
   beforeEach(() => {
@@ -81,12 +74,16 @@ describe('useCreateReport', () => {
     queryClient = createMockQueryClient();
     consoleMocks = setupConsoleMocks();
 
-    // Set up mock for createAssociation
-    mockCreateAssociation = createMockCreateAssociation();
-    (useCreateReportAssociation as any).mockReturnValue(mockCreateAssociation);
-
-    // Set default mock for createReport
-    (createReport as any).mockResolvedValue(mockReportMetadata);
+    // Set default mock for createReportAndAssociateWithUser
+    (createReportAndAssociateWithUser as any).mockResolvedValue({
+      report: mockReportMetadata,
+      userReport: mockUserReportAssociation,
+      metadata: {
+        baseReportId: TEST_REPORT_ID_STRING,
+        userReportId: TEST_USER_REPORT_ID,
+        countryId: TEST_COUNTRY_ID,
+      },
+    });
 
     // Reset manager mocks
     mockManager.startCalculation.mockReset().mockResolvedValue(undefined);
@@ -102,7 +99,7 @@ describe('useCreateReport', () => {
   );
 
   describe('successful report creation', () => {
-    test('given valid data when creating report then creates report and association', async () => {
+    test('given valid data when creating report then creates report with association', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 
@@ -113,16 +110,13 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        expect(createReport).toHaveBeenCalledWith(TEST_COUNTRY_ID, mockReportCreationPayload);
-        expect(mockCreateAssociation.mutateAsync).toHaveBeenCalledWith({
+        expect(createReportAndAssociateWithUser).toHaveBeenCalledWith({
+          countryId: TEST_COUNTRY_ID,
+          payload: mockReportCreationPayload,
           userId: TEST_USER_ID,
-          reportId: TEST_REPORT_ID_STRING,
           label: TEST_LABEL,
-          isCreated: true,
         });
       });
-
-      expect(consoleMocks.logSpy).toHaveBeenCalledWith(CONSOLE_MESSAGES.LABEL_LOG, TEST_LABEL);
     });
 
     test('given no label when creating report then creates with undefined label', async () => {
@@ -136,11 +130,11 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        expect(mockCreateAssociation.mutateAsync).toHaveBeenCalledWith({
+        expect(createReportAndAssociateWithUser).toHaveBeenCalledWith({
+          countryId: TEST_COUNTRY_ID,
+          payload: mockReportCreationPayload,
           userId: TEST_USER_ID,
-          reportId: TEST_REPORT_ID_STRING,
           label: undefined,
-          isCreated: true,
         });
       });
     });
@@ -162,13 +156,32 @@ describe('useCreateReport', () => {
         expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['reports'] });
       });
     });
+
+    test('given successful creation then stores calculation metadata', async () => {
+      // When
+      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
+
+      await result.current.createReport({
+        countryId: TEST_COUNTRY_ID,
+        payload: mockReportCreationPayload,
+      });
+
+      // Then
+      await waitFor(() => {
+        const cachedMeta = queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING]);
+        expect(cachedMeta).toBeDefined();
+        // Verify basic structure - exact type depends on simulation setup
+        expect(cachedMeta).toHaveProperty('type');
+        expect(cachedMeta).toHaveProperty('countryId', TEST_COUNTRY_ID);
+      });
+    });
   });
 
   describe('error handling', () => {
     test('given API error when creating report then throws error', async () => {
       // Given
       const error = new Error(ERROR_MESSAGES.CREATE_REPORT_FAILED);
-      (createReport as any).mockRejectedValue(error);
+      (createReportAndAssociateWithUser as any).mockRejectedValue(error);
 
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
@@ -180,33 +193,6 @@ describe('useCreateReport', () => {
           payload: mockReportCreationPayload,
         })
       ).rejects.toThrow(ERROR_MESSAGES.CREATE_REPORT_FAILED);
-
-      expect(mockCreateAssociation.mutateAsync).not.toHaveBeenCalled();
-    });
-
-    test('given association creation fails then logs error but report creation succeeds', async () => {
-      // Given
-      const associationError = new Error(ERROR_MESSAGES.CREATE_ASSOCIATION_FAILED);
-      mockCreateAssociation.mutateAsync.mockRejectedValue(associationError);
-
-      // When
-      const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
-
-      const response = await result.current.createReport({
-        countryId: TEST_COUNTRY_ID,
-        payload: mockReportCreationPayload,
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(consoleMocks.errorSpy).toHaveBeenCalledWith(
-          'Report created but post-creation tasks failed:',
-          associationError
-        );
-      });
-
-      // Report creation should still return the metadata
-      expect(response).toEqual(mockReportMetadata);
     });
   });
 
@@ -351,12 +337,10 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should still create report and association
-        expect(createReport).toHaveBeenCalled();
-        expect(mockCreateAssociation.mutateAsync).toHaveBeenCalled();
+        // Should still create report via combined function
+        expect(createReportAndAssociateWithUser).toHaveBeenCalled();
 
         // Should still prefetch the calculation query
-        // Note: startCalculation is called inside queryFn, not directly
         expect(prefetchSpy).toHaveBeenCalled();
       });
     });
@@ -382,13 +366,14 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should log error but still return report metadata
+        // Should log error but still return result with report and userReport
         expect(consoleMocks.errorSpy).toHaveBeenCalledWith(
-          'Report created but post-creation tasks failed:',
+          'Post-creation tasks failed:',
           expect.any(Error)
         );
       });
-      expect(response).toEqual(mockReportMetadata);
+      expect(response.report).toEqual(mockReportMetadata);
+      expect(response.userReport).toEqual(mockUserReportAssociation);
     });
   });
 
@@ -399,7 +384,7 @@ describe('useCreateReport', () => {
       const pendingPromise = new Promise((resolve) => {
         resolveFn = resolve;
       });
-      (createReport as any).mockReturnValue(pendingPromise);
+      (createReportAndAssociateWithUser as any).mockReturnValue(pendingPromise);
 
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
@@ -416,7 +401,15 @@ describe('useCreateReport', () => {
       });
 
       // Resolve to clean up
-      resolveFn(mockReportMetadata);
+      resolveFn({
+        report: mockReportMetadata,
+        userReport: mockUserReportAssociation,
+        metadata: {
+          baseReportId: TEST_REPORT_ID_STRING,
+          userReportId: TEST_USER_REPORT_ID,
+          countryId: TEST_COUNTRY_ID,
+        },
+      });
       await createPromise;
 
       await waitFor(() => {
@@ -427,7 +420,7 @@ describe('useCreateReport', () => {
     test('given mutation error then error is accessible', async () => {
       // Given
       const error = new Error(ERROR_MESSAGES.API_ERROR);
-      (createReport as any).mockRejectedValue(error);
+      (createReportAndAssociateWithUser as any).mockRejectedValue(error);
 
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });

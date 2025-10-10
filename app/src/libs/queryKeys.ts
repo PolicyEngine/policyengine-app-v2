@@ -30,6 +30,8 @@ export const reportAssociationKeys = {
   byReport: (reportId: string) => [...reportAssociationKeys.all, 'report_id', reportId] as const,
   specific: (userId: string, reportId: string) =>
     [...reportAssociationKeys.all, 'specific', userId, reportId] as const,
+  byUserReportId: (userReportId: string) =>
+    [...reportAssociationKeys.all, 'user_report_id', userReportId] as const,
 };
 
 // Keep your existing keys unchanged

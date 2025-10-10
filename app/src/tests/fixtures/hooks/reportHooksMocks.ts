@@ -39,10 +39,13 @@ export const mockUserReportAssociation: UserReport = {
   reportId: TEST_REPORT_ID_STRING,
   label: TEST_LABEL,
   isCreated: true,
-  id: TEST_REPORT_ID_STRING,
+  id: `sur-${TEST_REPORT_ID_STRING}`,
   createdAt: TEST_TIMESTAMP,
   updatedAt: TEST_TIMESTAMP,
 };
+
+// Constant for UserReport ID
+export const TEST_USER_REPORT_ID = `sur-${TEST_REPORT_ID_STRING}`;
 
 // Mock Create Association function
 export const createMockCreateAssociation = () => ({

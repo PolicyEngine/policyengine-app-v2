@@ -95,11 +95,11 @@ export class ApiSimulationStore implements UserSimulationStore {
   */
 }
 
-export class SessionStorageSimulationStore implements UserSimulationStore {
+export class LocalStorageSimulationStore implements UserSimulationStore {
   private readonly STORAGE_KEY = 'user-simulation-associations';
 
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
-    // Generate a unique ID for session storage
+    // Generate a unique ID for local storage
     // Format: "sus-[short-timestamp][random]"
     // Use base36 encoding for compactness
     const timestamp = Date.now().toString(36);
@@ -142,7 +142,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
 
   private getStoredSimulations(): UserSimulation[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -150,7 +150,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   }
 
   private setStoredSimulations(simulations: UserSimulation[]): void {
-    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(simulations));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(simulations));
   }
 
   // Not yet implemented, but keeping for future use

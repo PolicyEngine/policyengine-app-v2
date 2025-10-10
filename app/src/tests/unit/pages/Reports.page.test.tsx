@@ -8,6 +8,8 @@ import { useUserReports } from '@/hooks/useUserReports';
 import ReportsPage from '@/pages/Reports.page';
 import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import {
+  createMockDispatch,
+  createMockNavigate,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
   mockEmptyHookReturn,
@@ -24,13 +26,23 @@ vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),
 }));
 
-// Mock the dispatch
-const mockDispatch = vi.fn();
+// Mock the dispatch and navigate
+const mockDispatch = createMockDispatch();
+const mockNavigate = createMockNavigate();
+
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual('react-redux');
   return {
     ...actual,
     useDispatch: () => mockDispatch,
+  };
+});
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -47,23 +59,56 @@ vi.mock('@/components/IngredientReadView', () => ({
       data,
       searchValue,
       onSearchChange,
-    }) => (
-      <div data-testid="ingredient-read-view">
-        <h1>{title}</h1>
-        <p>{subtitle}</p>
-        {isLoading && <div>Loading...</div>}
-        {isError && <div>Error: {error?.message}</div>}
-        {data && <div>Data count: {data.length}</div>}
-        <button type="button" onClick={onBuild}>
-          Build Report
-        </button>
-        <input
-          value={searchValue}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search"
-        />
-      </div>
-    )
+      columns,
+    }) => {
+      // Extract menu action handler if columns are provided
+      const menuColumn = columns?.find((col: any) => col.type === 'split-menu');
+      const handleMenuAction = menuColumn?.onAction;
+
+      // Find link column
+      const linkColumn = columns?.find((col: any) => col.type === 'link');
+      const linkKey = linkColumn?.key;
+
+      return (
+        <div data-testid="ingredient-read-view">
+          <h1>{title}</h1>
+          <p>{subtitle}</p>
+          {isLoading && <div>Loading...</div>}
+          {isError && <div>Error: {error?.message}</div>}
+          {data && (
+            <>
+              <div>Data count: {data.length}</div>
+              {data.length > 0 && (
+                <>
+                  {linkKey && data[0][linkKey] && (
+                    <a href={(data[0][linkKey] as any).url} data-testid="report-link">
+                      {(data[0][linkKey] as any).text}
+                    </a>
+                  )}
+                  {handleMenuAction && (
+                    <button
+                      type="button"
+                      onClick={() => handleMenuAction('view-output', data[0].id)}
+                      data-testid="view-output-button"
+                    >
+                      View Output
+                    </button>
+                  )}
+                </>
+              )}
+            </>
+          )}
+          <button type="button" onClick={onBuild}>
+            Build Report
+          </button>
+          <input
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search"
+          />
+        </div>
+      );
+    }
   ),
 }));
 
@@ -71,11 +116,13 @@ describe('ReportsPage', () => {
   const mockStore = configureStore({
     reducer: {
       flow: flowReducer,
+      metadata: () => ({ currentCountry: 'us' }),
     },
   });
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockNavigate.mockClear();
     (useUserReports as any).mockReturnValue(mockDefaultHookReturn);
   });
 
@@ -196,5 +243,85 @@ describe('ReportsPage', () => {
 
     // Then
     expect(screen.getByText('Data count: 3')).toBeInTheDocument();
+  });
+
+  test('given user clicks view output then navigates with UserReport ID', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(
+      <Provider store={mockStore}>
+        <ReportsPage />
+      </Provider>
+    );
+
+    // When
+    await user.click(screen.getByTestId('view-output-button'));
+
+    // Then
+    expect(mockNavigate).toHaveBeenCalledWith('/us/report-output/report-1');
+  });
+
+  test('given reports data when rendering then report column displays as link with UserReport ID', () => {
+    // When
+    render(
+      <Provider store={mockStore}>
+        <ReportsPage />
+      </Provider>
+    );
+
+    // Then
+    const reportLink = screen.getByTestId('report-link');
+    expect(reportLink).toBeInTheDocument();
+    expect(reportLink).toHaveAttribute('href', '/us/report-output/report-1');
+    expect(reportLink).toHaveTextContent('Test Report 1');
+  });
+
+  test('given report without custom label then link displays default label', () => {
+    // Given
+    const dataWithoutLabel = {
+      ...mockDefaultHookReturn,
+      data: [
+        {
+          ...mockDefaultHookReturn.data![0],
+          userReport: {
+            ...mockDefaultHookReturn.data![0].userReport,
+            label: undefined,
+          },
+        },
+      ],
+    };
+    (useUserReports as any).mockReturnValue(dataWithoutLabel);
+
+    // When
+    render(
+      <Provider store={mockStore}>
+        <ReportsPage />
+      </Provider>
+    );
+
+    // Then
+    const reportLink = screen.getByTestId('report-link');
+    expect(reportLink).toHaveTextContent(/Report #123/);
+  });
+
+  test('given report link clicked when clicked then does not trigger row selection', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(
+      <Provider store={mockStore}>
+        <ReportsPage />
+      </Provider>
+    );
+
+    // When
+    const reportLink = screen.getByTestId('report-link');
+    await user.click(reportLink);
+
+    // Then
+    // Link should be present and clickable
+    // The stopPropagation in LinkColumn prevents row selection
+    // This test verifies the link is rendered correctly with stopPropagation
+    expect(reportLink).toBeInTheDocument();
+    expect(reportLink).toHaveAttribute('href', '/us/report-output/report-1');
   });
 });

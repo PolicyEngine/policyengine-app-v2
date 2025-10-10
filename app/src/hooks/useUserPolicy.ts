@@ -4,17 +4,17 @@ import { useSelector } from 'react-redux';
 import { fetchPolicyById } from '@/api/policy';
 import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
-import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociation';
+import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 const apiPolicyStore = new ApiPolicyStore();
-const sessionPolicyStore = new SessionStoragePolicyStore();
+const localPolicyStore = new LocalStoragePolicyStore();
 
 export const useUserPolicyStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiPolicyStore : sessionPolicyStore;
+  return isLoggedIn ? apiPolicyStore : localPolicyStore;
 };
 
 // This fetches only the user-policy associations; see
@@ -23,7 +23,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
   const store = useUserPolicyStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.byUser(userId),
@@ -35,7 +35,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
 export const usePolicyAssociation = (userId: string, policyId: string) => {
   const store = useUserPolicyStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.specific(userId, policyId),

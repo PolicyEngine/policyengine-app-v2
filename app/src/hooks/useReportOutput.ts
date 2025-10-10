@@ -5,6 +5,7 @@ import { RootState } from '@/store';
 
 export interface UseReportOutputParams {
   reportId: string;
+  enabled?: boolean;
 }
 
 export interface PendingResult {
@@ -38,14 +39,17 @@ export type UseReportOutputResult = PendingResult | CompleteResult | ErrorResult
  * Hook to get report calculation results.
  * Uses the unified calculation system that works for both household and economy calculations.
  */
-export function useReportOutput({ reportId }: UseReportOutputParams): UseReportOutputResult {
+export function useReportOutput({
+  reportId,
+  enabled = true,
+}: UseReportOutputParams): UseReportOutputResult {
   const queryClient = useQueryClient();
   const countryId = useSelector((state: RootState) => state.metadata.currentCountry || 'us');
 
   // Use unified query that works for both calculation types
   const { data, error, isLoading } = useQuery({
     ...calculationQueries.forReport(reportId, undefined, queryClient, countryId),
-    enabled: true,
+    enabled,
   });
 
   // Simplified status handling - both types return same format

@@ -7,7 +7,6 @@ import {
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
-import { useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   ActionIcon,
@@ -21,27 +20,12 @@ import {
   Title,
 } from '@mantine/core';
 import { EconomyReportOutput } from '@/api/economy';
-import { CalculationMeta } from '@/api/reportCalculations';
-import { MOCK_USER_ID } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
-import { useReportOutput } from '@/hooks/useReportOutput';
-import { useUserReportById } from '@/hooks/useUserReports';
-import {
-  MOCK_DEMO_HOUSEHOLD_ID,
-  MOCK_DEMO_REPORT_ID,
-  MOCK_ECONOMY_REPORT_OUTPUT,
-  MOCK_HOUSEHOLD_OUTPUT,
-} from '@/tests/fixtures/report/mockReportOutput';
-import { Household, HouseholdData } from '@/types/ingredients/Household';
-import ErrorPage from './report-output/subpages/ErrorPage';
-import LoadingPage from './report-output/subpages/LoadingPage';
-import NotFoundSubPage from './report-output/subpages/NotFoundSubPage';
-import OverviewSubPage from './report-output/subpages/OverviewSubPage';
-
-/**
- * Type discriminator for output types
- */
-export type ReportOutputType = 'household' | 'economy';
+import { ReportOutputType, useReportData } from '@/hooks/useReportData';
+import ErrorPage from './report-output/ErrorPage';
+import LoadingPage from './report-output/LoadingPage';
+import NotFoundSubPage from './report-output/NotFoundSubPage';
+import OverviewSubPage from './report-output/OverviewSubPage';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -64,103 +48,12 @@ function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
   return VALID_SUBPAGES.includes(subpage as ValidSubPage);
 }
 
-/**
- * Hook to fetch and manage report output data
- * If the report ID matches a demo ID, returns mock data instead of fetching
- */
-function useReportData(reportId: string) {
-  const queryClient = useQueryClient();
-
-  // Check if this is a demo report
-  const isDemoEconomyReport = reportId === MOCK_DEMO_REPORT_ID;
-  const isDemoHouseholdReport = reportId === MOCK_DEMO_HOUSEHOLD_ID;
-
-  // If demo economy report, return mock economy data
-  if (isDemoEconomyReport) {
-    const userId = MOCK_USER_ID.toString();
-    const normalizedReport = useUserReportById(userId, reportId);
-
-    return {
-      status: 'complete' as const,
-      output: MOCK_ECONOMY_REPORT_OUTPUT,
-      outputType: 'economy' as ReportOutputType,
-      error: undefined,
-      normalizedReport,
-      progress: undefined,
-      message: undefined,
-      queuePosition: undefined,
-      estimatedTimeRemaining: undefined,
-    };
-  }
-
-  // If demo household report, return mock household data
-  if (isDemoHouseholdReport) {
-    const userId = MOCK_USER_ID.toString();
-    const normalizedReport = useUserReportById(userId, reportId);
-
-    return {
-      status: 'complete' as const,
-      output: MOCK_HOUSEHOLD_OUTPUT,
-      outputType: 'household' as ReportOutputType,
-      error: undefined,
-      normalizedReport,
-      progress: undefined,
-      message: undefined,
-      queuePosition: undefined,
-      estimatedTimeRemaining: undefined,
-    };
-  }
-
-  // Otherwise, fetch real data
-  const result = useReportOutput({ reportId });
-  const { status, data, error } = result;
-  const userId = MOCK_USER_ID.toString();
-  const normalizedReport = useUserReportById(userId, reportId);
-
-  // Extract progress information if status is pending
-  const progress = status === 'pending' ? (result as any).progress : undefined;
-  const message = status === 'pending' ? (result as any).message : undefined;
-  const queuePosition = status === 'pending' ? (result as any).queuePosition : undefined;
-  const estimatedTimeRemaining =
-    status === 'pending' ? (result as any).estimatedTimeRemaining : undefined;
-
-  // Determine output type from cached metadata instead of type guards
-  // The metadata is cached during the calculation query and contains the definitive type
-  const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', reportId]);
-  const outputType: ReportOutputType | undefined = metadata?.type;
-
-  // Wrap household data in Household structure
-  // The API returns raw HouseholdData, but components expect the Household wrapper
-  let output: EconomyReportOutput | Household | null | undefined = data;
-
-  if (outputType === 'household' && data) {
-    const wrappedOutput: Household = {
-      id: reportId,
-      countryId: metadata?.countryId || 'us',
-      householdData: data as HouseholdData,
-    };
-    output = wrappedOutput;
-  }
-
-  return {
-    status,
-    output,
-    outputType,
-    error,
-    normalizedReport,
-    progress,
-    message,
-    queuePosition,
-    estimatedTimeRemaining,
-  };
-}
-
 export default function ReportOutputPage() {
   const navigate = useNavigate();
-  const { reportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
+  const { reportId: userReportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
 
-  // If no reportId, show error
-  if (!reportId) {
+  // If no userReportId, show error
+  if (!userReportId) {
     return (
       <Container size="xl" px={spacing.xl}>
         <Stack gap={spacing.xl}>
@@ -175,14 +68,13 @@ export default function ReportOutputPage() {
     output,
     outputType,
     error,
-    normalizedReport,
+    userReport,
     progress,
     message,
     queuePosition,
     estimatedTimeRemaining,
-  } = useReportData(reportId);
+  } = useReportData(userReportId);
 
-  const { report } = normalizedReport;
   const DEFAULT_PAGE = 'overview';
 
   // Use URL param for active tab, default to 'overview'
@@ -276,7 +168,7 @@ export default function ReportOutputPage() {
                 fw={typography.fontWeight.semibold}
                 fz={typography.fontSize['3xl']}
               >
-                {report?.label || `Report ${String(report?.id || '').padStart(4, '0')}`}
+                {userReport?.label || userReportId}
               </Title>
               <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Edit report name">
                 <IconPencil size={18} />

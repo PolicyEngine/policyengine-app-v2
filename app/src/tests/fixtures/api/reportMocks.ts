@@ -318,3 +318,31 @@ export const createReportUpdateErrorResponse = (status: number, message?: string
   error: message || 'Report update failed',
   status,
 });
+
+// Mock data for createReportAndAssociateWithUser
+export const MOCK_USER_REPORT_ID = 'sur-123';
+export const MOCK_USER_LABEL = 'Test Report';
+
+export const createMockUserReport = (reportId: string, userId: string, label?: string) => ({
+  id: MOCK_USER_REPORT_ID,
+  userId,
+  reportId,
+  label: label || MOCK_USER_LABEL,
+  isCreated: true,
+  createdAt: '2025-01-01T00:00:00Z',
+  updatedAt: '2025-01-01T00:00:00Z',
+});
+
+export const createMockReportWithAssociationResult = (
+  reportMetadata: ReportMetadata,
+  userId: string,
+  label?: string
+) => ({
+  report: reportMetadata,
+  userReport: createMockUserReport(String(reportMetadata.id), userId, label),
+  metadata: {
+    baseReportId: String(reportMetadata.id),
+    userReportId: MOCK_USER_REPORT_ID,
+    countryId: reportMetadata.country_id,
+  },
+});

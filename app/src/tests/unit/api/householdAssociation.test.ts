@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
-import { ApiHouseholdStore, SessionStorageHouseholdStore } from '@/api/householdAssociation';
+import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
 import {
   mockApiResponse,
   mockApiResponseList,
@@ -200,36 +200,36 @@ describe('ApiHouseholdStore', () => {
   });
 });
 
-describe('SessionStorageHouseholdStore', () => {
-  let store: SessionStorageHouseholdStore;
-  let mockSessionStorage: { [key: string]: string };
+describe('LocalStorageHouseholdStore', () => {
+  let store: LocalStorageHouseholdStore;
+  let mockLocalStorage: { [key: string]: string };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockSessionStorage = {};
+    mockLocalStorage = {};
 
-    // Mock sessionStorage
-    Object.defineProperty(window, 'sessionStorage', {
+    // Mock localStorage
+    Object.defineProperty(window, 'localStorage', {
       value: {
-        getItem: vi.fn((key) => mockSessionStorage[key] || null),
+        getItem: vi.fn((key) => mockLocalStorage[key] || null),
         setItem: vi.fn((key, value) => {
-          mockSessionStorage[key] = value;
+          mockLocalStorage[key] = value;
         }),
         removeItem: vi.fn((key) => {
-          delete mockSessionStorage[key];
+          delete mockLocalStorage[key];
         }),
         clear: vi.fn(() => {
-          mockSessionStorage = {};
+          mockLocalStorage = {};
         }),
       },
       writable: true,
     });
 
-    store = new SessionStorageHouseholdStore();
+    store = new LocalStorageHouseholdStore();
   });
 
   describe('create', () => {
-    test('given new household association then stores in session storage', async () => {
+    test('given new household association then stores in local storage', async () => {
       // Given
       const household = { ...mockUserHouseholdPopulation };
       delete (household as any).createdAt; // Test that createdAt is generated
@@ -245,7 +245,7 @@ describe('SessionStorageHouseholdStore', () => {
         isCreated: true,
       });
       expect(result.createdAt).toBeDefined();
-      expect(sessionStorage.setItem).toHaveBeenCalledWith(
+      expect(localStorage.setItem).toHaveBeenCalledWith(
         'user-population-households',
         expect.any(String)
       );
@@ -253,7 +253,7 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given duplicate association then throws error', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify([
+      mockLocalStorage['user-population-households'] = JSON.stringify([
         mockUserHouseholdPopulation,
       ]);
 
@@ -266,7 +266,7 @@ describe('SessionStorageHouseholdStore', () => {
     test('given existing households then appends new household', async () => {
       // Given
       const existingHousehold = mockUserHouseholdPopulationList[0];
-      mockSessionStorage['user-population-households'] = JSON.stringify([existingHousehold]);
+      mockLocalStorage['user-population-households'] = JSON.stringify([existingHousehold]);
       const newHousehold = {
         ...mockUserHouseholdPopulation,
         householdId: 'new-household',
@@ -277,20 +277,20 @@ describe('SessionStorageHouseholdStore', () => {
       await store.create(newHousehold);
 
       // Then
-      const stored = JSON.parse(mockSessionStorage['user-population-households']);
+      const stored = JSON.parse(mockLocalStorage['user-population-households']);
       expect(stored).toHaveLength(2);
       expect(stored[1].householdId).toBe('new-household');
     });
 
     test('given storage failure then throws error', async () => {
       // Given
-      (sessionStorage.setItem as any).mockImplementation(() => {
+      (localStorage.setItem as any).mockImplementation(() => {
         throw new Error('QuotaExceededError');
       });
 
       // When/Then
       await expect(store.create(mockUserHouseholdPopulation)).rejects.toThrow(
-        'Failed to store households in session storage'
+        'Failed to store households in local storage'
       );
     });
   });
@@ -304,7 +304,7 @@ describe('SessionStorageHouseholdStore', () => {
         userId: 'other-user',
         householdId: 'other-household',
       };
-      mockSessionStorage['user-population-households'] = JSON.stringify([
+      mockLocalStorage['user-population-households'] = JSON.stringify([
         ...mockUserHouseholdPopulationList,
         otherUserHousehold,
       ]);
@@ -319,7 +319,7 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given user with no households then returns empty array', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(
+      mockLocalStorage['user-population-households'] = JSON.stringify(
         mockUserHouseholdPopulationList
       );
 
@@ -340,7 +340,7 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given corrupted storage data then returns empty array', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = 'invalid-json';
+      mockLocalStorage['user-population-households'] = 'invalid-json';
 
       // When
       const result = await store.findByUser('user-456');
@@ -353,7 +353,7 @@ describe('SessionStorageHouseholdStore', () => {
   describe('findById', () => {
     test('given existing association then returns household', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(
+      mockLocalStorage['user-population-households'] = JSON.stringify(
         mockUserHouseholdPopulationList
       );
 
@@ -366,7 +366,7 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given non-existent association then returns null', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(
+      mockLocalStorage['user-population-households'] = JSON.stringify(
         mockUserHouseholdPopulationList
       );
 
@@ -379,7 +379,7 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given wrong user ID then returns null', async () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(
+      mockLocalStorage['user-population-households'] = JSON.stringify(
         mockUserHouseholdPopulationList
       );
 
@@ -394,7 +394,7 @@ describe('SessionStorageHouseholdStore', () => {
   describe('utility methods', () => {
     test('given households in storage then getAllAssociations returns all', () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(
+      mockLocalStorage['user-population-households'] = JSON.stringify(
         mockUserHouseholdPopulationList
       );
 
@@ -407,7 +407,7 @@ describe('SessionStorageHouseholdStore', () => {
 
     test('given households in storage then clearAllAssociations removes them', () => {
       // Given
-      mockSessionStorage['user-population-households'] = JSON.stringify(
+      mockLocalStorage['user-population-households'] = JSON.stringify(
         mockUserHouseholdPopulationList
       );
 
@@ -415,8 +415,8 @@ describe('SessionStorageHouseholdStore', () => {
       store.clearAllAssociations();
 
       // Then
-      expect(sessionStorage.removeItem).toHaveBeenCalledWith('user-population-households');
-      expect(mockSessionStorage['user-population-households']).toBeUndefined();
+      expect(localStorage.removeItem).toHaveBeenCalledWith('user-population-households');
+      expect(mockLocalStorage['user-population-households']).toBeUndefined();
     });
   });
 });
