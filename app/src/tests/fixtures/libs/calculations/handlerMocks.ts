@@ -46,8 +46,8 @@ export const MOCK_HOUSEHOLD_RESULT: Household = {
   householdData: {
     people: {
       you: {
-        age: { 2024: 35 },
-        employment_income: { 2024: 50000 },
+        age: { 2025: 35 },
+        employment_income: { 2025: 50000 },
       },
     },
   },
@@ -134,3 +134,16 @@ export function createDelayedPromise<T>(value: T, delay?: number): Promise<T> {
     setTimeout(() => resolve(value), delay);
   });
 }
+
+// Mock handlers for new architecture
+export const createMockHouseholdHandler = () => ({
+  execute: vi.fn(),
+  getStatus: vi.fn(),
+  isActive: vi.fn(),
+});
+
+export const createMockEconomyHandler = () => ({
+  execute: vi.fn(),
+  getStatus: vi.fn(),
+  isActive: vi.fn(),
+});

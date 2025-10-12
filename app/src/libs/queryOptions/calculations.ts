@@ -150,12 +150,13 @@ export const calculationQueries = {
             JSON.stringify(calculationMeta, null, 2)
           );
 
-          // Start the calculation if needed and fetch the result
-          console.log('[calculationQueries.queryFn] Starting calculation via manager');
-          await manager.startCalculation(reportId, calculationMeta);
+          // For household calculations, ensure progress updates are started
+          if (calculationMeta.type === 'household') {
+            await manager.startCalculation(reportId, calculationMeta);
+          }
 
           console.log('[calculationQueries.queryFn] Fetching calculation via manager');
-          const result = await manager.fetchCalculation(calculationMeta);
+          const result = await manager.fetchCalculation(reportId, calculationMeta);
           console.log('[calculationQueries.queryFn] Manager returned result:', result);
 
           return result;

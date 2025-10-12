@@ -1,5 +1,6 @@
 // src/reducers/populationReducer.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { CURRENT_YEAR } from '@/constants';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Population } from '@/types/ingredients/Population';
@@ -127,7 +128,7 @@ export const populationSlice = createSlice({
           geography: null,
         };
       }
-      const { countryId, year = '2024' } = action.payload;
+      const { countryId, year = CURRENT_YEAR } = action.payload;
       const builder = new HouseholdBuilder(countryId as any, year);
       state.populations[action.payload.position]!.household = builder.build();
       state.populations[action.payload.position]!.geography = null;

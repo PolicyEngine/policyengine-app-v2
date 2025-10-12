@@ -19,7 +19,7 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
-import { useReportAssociationsByUser } from './useUserReportAssociations';
+import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
 import {
   combineLoadingStates,
@@ -209,9 +209,18 @@ export const useUserReports = (userId: string) => {
       ?.filter((userRep) => userRep.reportId) // Filter out associations without reportId
       .map((userRep) => {
         // Get report from normalized cache or query results
-        const report =
-          (queryNormalizer.getObjectById(userRep.reportId) as Report | undefined) ||
-          reports.find((r) => r.reportId === userRep.reportId);
+        const cachedReport = queryNormalizer.getObjectById(userRep.reportId) as Report | undefined;
+        const directReport = reports.find((r) => r.id === userRep.reportId);
+
+        console.log(`Report ${userRep.reportId}:`);
+        console.log('  From Normy cache:', cachedReport);
+        console.log('  From direct query:', directReport);
+        console.log('  Cache has status?', cachedReport?.status);
+        console.log('  Direct has status?', directReport?.status);
+        console.log('  All cache fields:', cachedReport ? Object.keys(cachedReport) : 'N/A');
+        console.log('  All direct fields:', directReport ? Object.keys(directReport) : 'N/A');
+
+        const report = cachedReport || directReport;
 
         // Get related simulations
         const reportSimulations =
@@ -346,34 +355,50 @@ export const useUserReports = (userId: string) => {
 };
 
 /**
- * Hook for accessing a single report with full context
+ * Hook for accessing a single report with full context by user report ID
  * Leverages the normalized cache for efficient data access
+ *
+ * @param userReportId - The user report ID (e.g., 'sur-abc123')
+ * @returns Complete report data including UserReport, base Report, and all related entities
  */
-export const useUserReportById = (userId: string, reportId: string) => {
+export const useUserReportById = (userReportId: string) => {
   const queryNormalizer = useQueryNormalizer();
   const country = 'us';
 
-  // Try to get from normalized cache first
-  const cachedReport = queryNormalizer.getObjectById(reportId) as Report | undefined;
+  // Step 1: Fetch UserReport by userReportId to get the base reportId
+  const {
+    data: userReport,
+    isLoading: userReportLoading,
+    error: userReportError,
+  } = useReportAssociationById(userReportId);
 
-  // Fetch if not in cache
+  // Extract base reportId and userId from UserReport
+  const baseReportId = userReport?.reportId;
+  const userId = userReport?.userId;
+
+  // Try to get base report from normalized cache first
+  const cachedReport = baseReportId
+    ? (queryNormalizer.getObjectById(baseReportId) as Report | undefined)
+    : undefined;
+
+  // Step 2: Fetch base report if not in cache
   const {
     data: report,
     isLoading: repLoading,
     error: repError,
   } = useQuery({
-    queryKey: reportKeys.byId(reportId),
+    queryKey: reportKeys.byId(baseReportId!),
     queryFn: async () => {
-      const metadata = await fetchReportById(country, reportId);
+      const metadata = await fetchReportById(country, baseReportId!);
       return ReportAdapter.fromMetadata(metadata);
     },
-    enabled: !cachedReport,
+    enabled: !!baseReportId && !cachedReport,
     staleTime: 5 * 60 * 1000,
   });
 
   const finalReport = cachedReport || report;
 
-  // Fetch simulations for the report
+  // Step 3: Fetch simulations for the report
   const simulationIds = finalReport?.simulationIds ?? [];
 
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
@@ -390,10 +415,9 @@ export const useUserReportById = (userId: string, reportId: string) => {
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
 
-  // Extract policy IDs from simulations
+  // Step 4: Extract policy IDs from simulations and fetch policies
   const policyIds = extractUniqueIds(simulations, 'policyId');
 
-  // Fetch policies
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
     queryFn: async (id) => {
@@ -406,10 +430,10 @@ export const useUserReportById = (userId: string, reportId: string) => {
 
   const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
 
-  // Get user associations
-  const { data: simulationAssociations } = useSimulationAssociationsByUser(userId);
-  const { data: policyAssociations } = usePolicyAssociationsByUser(userId);
-  const { data: householdAssociations } = useHouseholdAssociationsByUser(userId);
+  // Step 5: Get user associations (only if we have userId)
+  const { data: simulationAssociations } = useSimulationAssociationsByUser(userId || '');
+  const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
+  const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
 
   const userSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
@@ -419,7 +443,7 @@ export const useUserReportById = (userId: string, reportId: string) => {
     simulations.some((s) => s.policyId === pa.policyId)
   );
 
-  // Extract households from simulations
+  // Step 6: Extract households from simulations and fetch them
   const householdIds = simulations
     .filter((s) => s.populationType === 'household' && s.populationId)
     .map((s) => s.populationId as string);
@@ -441,6 +465,7 @@ export const useUserReportById = (userId: string, reportId: string) => {
   );
 
   return {
+    userReport,
     report: finalReport,
     simulations,
     policies,
@@ -449,10 +474,16 @@ export const useUserReportById = (userId: string, reportId: string) => {
     userPolicies,
     userHouseholds,
     isLoading:
+      userReportLoading ||
       repLoading ||
       simulationResults.isLoading ||
       policyResults.isLoading ||
       householdResults.isLoading,
-    error: repError || simulationResults.error || policyResults.error || householdResults.error,
+    error:
+      userReportError ||
+      repError ||
+      simulationResults.error ||
+      policyResults.error ||
+      householdResults.error,
   };
 };

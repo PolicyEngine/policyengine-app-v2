@@ -42,7 +42,11 @@ export async function fetchEconomyCalculation(
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
   console.log('[fetchEconomyCalculation] Fetching URL:', url);
 
-  const response = await fetch(url);
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
   console.log('[fetchEconomyCalculation] Response status:', response.status, response.statusText);
 
   if (!response.ok) {

@@ -12,6 +12,7 @@ import {
 } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import FlowView from '@/components/common/FlowView';
+import { CURRENT_YEAR } from '@/constants';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import {
@@ -52,7 +53,7 @@ export default function HouseholdBuilderFrame({
     if (populationState?.household) {
       return populationState.household;
     }
-    const builder = new HouseholdBuilder(countryId as any, '2024');
+    const builder = new HouseholdBuilder(countryId as any, CURRENT_YEAR);
     return builder.build();
   });
 
@@ -71,7 +72,7 @@ export default function HouseholdBuilderFrame({
   };
 
   // State for form controls
-  const [taxYear, setTaxYear] = useState<string>('2024');
+  const [taxYear, setTaxYear] = useState<string>(CURRENT_YEAR);
   const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
   const [numChildren, setNumChildren] = useState<number>(0);
 
@@ -555,7 +556,7 @@ export default function HouseholdBuilderFrame({
       <Select
         label="Tax Year"
         value={taxYear}
-        onChange={(val) => setTaxYear(val || '2024')}
+        onChange={(val) => setTaxYear(val || CURRENT_YEAR)}
         data={taxYears}
         placeholder="Select Tax Year"
         required

@@ -130,7 +130,7 @@ describe('getDateRange', () => {
     const unsortedPeriods = [
       { name: 2025, label: '2025' },
       { name: 2022, label: '2022' },
-      { name: 2024, label: '2024' },
+      { name: 2025, label: '2025' },
       { name: 2023, label: '2023' },
     ];
     const state = createMockRootState({

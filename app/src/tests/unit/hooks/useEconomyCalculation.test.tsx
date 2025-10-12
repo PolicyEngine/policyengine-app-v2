@@ -4,6 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 // Import after mocking
 import { fetchEconomyCalculation } from '@/api/economy';
+import { CURRENT_YEAR } from '@/constants';
 import { useEconomyCalculation } from '@/hooks/useEconomyCalculation';
 import {
   mockCompletedResponse,
@@ -68,7 +69,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: TEST_REGIONS.ENHANCED_US, time_period: '2024' },
+          params: { region: TEST_REGIONS.ENHANCED_US, time_period: CURRENT_YEAR },
         }),
       { wrapper }
     );
@@ -79,7 +80,7 @@ describe('useEconomyCalculation', () => {
         TEST_COUNTRIES.US,
         TEST_POLICY_IDS.REFORM,
         TEST_POLICY_IDS.BASELINE,
-        { region: TEST_REGIONS.ENHANCED_US, time_period: '2024' }
+        { region: TEST_REGIONS.ENHANCED_US, time_period: CURRENT_YEAR }
       );
     });
   });
@@ -96,7 +97,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: 'us', time_period: '2024' },
+          params: { region: 'us', time_period: CURRENT_YEAR },
           onSuccess: mockOnSuccess,
         }),
       { wrapper }
@@ -122,7 +123,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: 'us', time_period: '2024' },
+          params: { region: 'us', time_period: CURRENT_YEAR },
           onError: mockOnError,
         }),
       { wrapper }
@@ -160,7 +161,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: 'us', time_period: '2024' },
+          params: { region: 'us', time_period: CURRENT_YEAR },
           onQueueUpdate: mockOnQueueUpdate,
           onSuccess: mockOnSuccess,
         }),
@@ -221,7 +222,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: 'us', time_period: '2024' },
+          params: { region: 'us', time_period: CURRENT_YEAR },
           onError: mockOnError,
         }),
       { wrapper }
@@ -262,7 +263,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: 'us', time_period: '2024' },
+          params: { region: 'us', time_period: CURRENT_YEAR },
           enabled: false,
         }),
       { wrapper }
@@ -287,7 +288,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.US,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: 'us', time_period: '2024' },
+          params: { region: 'us', time_period: CURRENT_YEAR },
           onError: mockOnError,
         }),
       { wrapper }
@@ -316,7 +317,7 @@ describe('useEconomyCalculation', () => {
           countryId: TEST_COUNTRIES.UK,
           reformPolicyId: TEST_POLICY_IDS.REFORM,
           baselinePolicyId: TEST_POLICY_IDS.BASELINE,
-          params: { region: 'uk', time_period: '2024' },
+          params: { region: 'uk', time_period: CURRENT_YEAR },
         }),
       { wrapper }
     );
@@ -330,7 +331,7 @@ describe('useEconomyCalculation', () => {
       TEST_COUNTRIES.UK,
       TEST_POLICY_IDS.REFORM,
       TEST_POLICY_IDS.BASELINE,
-      { region: 'uk', time_period: '2024' }
+      { region: 'uk', time_period: CURRENT_YEAR }
     );
   });
 });

@@ -5,8 +5,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchHouseholdById } from '@/api/household';
-import { SessionStorageHouseholdStore } from '@/api/householdAssociation';
-// Now import everything
+import { LocalStorageHouseholdStore } from '@/api/householdAssociation';
 import {
   useCreateHouseholdAssociation,
   useHouseholdAssociation,
@@ -37,7 +36,7 @@ vi.mock('@/api/householdAssociation', () => {
   };
   return {
     ApiHouseholdStore: vi.fn(() => mockStore),
-    SessionStorageHouseholdStore: vi.fn(() => mockStore),
+    LocalStorageHouseholdStore: vi.fn(() => mockStore),
   };
 });
 
@@ -53,7 +52,7 @@ vi.mock('@/libs/queryConfig', () => ({
       staleTime: 5 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
     },
-    sessionStorage: {
+    localStorage: {
       staleTime: 0,
       cacheTime: 0,
     },
@@ -91,8 +90,8 @@ describe('useUserHousehold hooks', () => {
 
     // Get the mock store instance
     const mockStore =
-      (SessionStorageHouseholdStore as any).mock.results[0]?.value ||
-      (SessionStorageHouseholdStore as any)();
+      (LocalStorageHouseholdStore as any).mock.results[0]?.value ||
+      (LocalStorageHouseholdStore as any)();
 
     // Set default mock implementations
     mockStore.create.mockResolvedValue(mockUserHouseholdPopulation);
@@ -112,7 +111,7 @@ describe('useUserHousehold hooks', () => {
   );
 
   describe('useUserHouseholdStore', () => {
-    test('given user not logged in then returns session storage store', () => {
+    test('given user not logged in then returns local storage store', () => {
       // When
       const { result } = renderHook(() => useUserHouseholdStore());
 
@@ -138,7 +137,7 @@ describe('useUserHousehold hooks', () => {
       });
 
       expect(result.current.data).toEqual(mockUserHouseholdPopulationList);
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       expect(mockStore.findByUser).toHaveBeenCalledWith(userId);
 
       // Verify console logs
@@ -161,14 +160,14 @@ describe('useUserHousehold hooks', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       expect(mockStore.findByUser).toHaveBeenCalledWith('');
     });
 
     test('given store error when fetching then returns error state', async () => {
       // Given
       const error = new Error('Failed to fetch');
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
@@ -202,13 +201,13 @@ describe('useUserHousehold hooks', () => {
       });
 
       expect(result.current.data).toEqual(mockUserHouseholdPopulation);
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       expect(mockStore.findById).toHaveBeenCalledWith(userId, householdId);
     });
 
     test('given non-existent association when fetching then returns null', async () => {
       // Given
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       mockStore.findById.mockResolvedValue(null);
 
       // When
@@ -247,7 +246,7 @@ describe('useUserHousehold hooks', () => {
       });
 
       // Verify type was added
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       expect(mockStore.create).toHaveBeenCalledWith({
         ...newHousehold,
         type: 'household',
@@ -278,7 +277,7 @@ describe('useUserHousehold hooks', () => {
     test('given creation fails when creating then returns error', async () => {
       // Given
       const error = new Error('Creation failed');
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       mockStore.create.mockRejectedValue(error);
       const { result } = renderHook(() => useCreateHouseholdAssociation(), { wrapper });
 
@@ -330,7 +329,7 @@ describe('useUserHousehold hooks', () => {
 
     test('given user with no households when fetching then returns empty array', async () => {
       // Given
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       mockStore.findByUser.mockResolvedValue([]);
 
       // When
@@ -348,7 +347,7 @@ describe('useUserHousehold hooks', () => {
     test('given association fetch fails when fetching then returns error', async () => {
       // Given
       const error = new Error('Association fetch failed');
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
@@ -446,7 +445,7 @@ describe('useUserHousehold hooks', () => {
         mockUserHouseholdPopulation,
         { ...mockUserHouseholdPopulation, householdId: null },
       ];
-      const mockStore = (SessionStorageHouseholdStore as any)();
+      const mockStore = (LocalStorageHouseholdStore as any)();
       mockStore.findByUser.mockResolvedValue(associationsWithNullId);
 
       // When

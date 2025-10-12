@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { MetadataState } from '@/types/metadata';
 
 // Test country IDs
@@ -40,7 +41,7 @@ export const mockLoadedMetadataState: MetadataState = {
     age: { label: 'Age', unit: 'year' },
   },
   parameters: {
-    tax_rate: { label: 'Tax Rate', values: { '2024': 0.25 } },
+    tax_rate: { label: 'Tax Rate', values: { [CURRENT_YEAR]: 0.25 } },
   },
   entities: {
     person: { label: 'Person', plural: 'People' },
@@ -50,12 +51,12 @@ export const mockLoadedMetadataState: MetadataState = {
   },
   economyOptions: {
     region: [{ name: 'us', label: 'United States' }],
-    time_period: [{ name: 2024, label: '2024' }],
+    time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
     datasets: [
       {
-        name: 'cps_2024',
-        label: 'CPS 2024',
-        title: 'Current Population Survey 2024',
+        name: `cps_${CURRENT_YEAR}`,
+        label: `CPS ${CURRENT_YEAR}`,
+        title: `Current Population Survey ${CURRENT_YEAR}`,
         default: true,
       },
     ],
@@ -83,9 +84,14 @@ export const mockUKMetadataState: MetadataState = {
   },
   economyOptions: {
     region: [{ name: 'uk', label: 'United Kingdom' }],
-    time_period: [{ name: 2024, label: '2024' }],
+    time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
     datasets: [
-      { name: 'frs_2024', label: 'FRS 2024', title: 'Family Resources Survey 2024', default: true },
+      {
+        name: `frs_${CURRENT_YEAR}`,
+        label: `FRS ${CURRENT_YEAR}`,
+        title: `Family Resources Survey ${CURRENT_YEAR}`,
+        default: true,
+      },
     ],
   },
   version: '2.0.0',

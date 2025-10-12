@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-// Now import everything else
 import PopulationsPage from '@/pages/Populations.page';
 import {
   createEmptyDataState,
@@ -34,6 +33,7 @@ vi.mock('@/hooks/useUserGeographic', () => ({
 vi.mock('@/constants', () => ({
   MOCK_USER_ID: 'test-user-123',
   BASE_URL: 'https://api.test.com',
+  CURRENT_YEAR: '2025',
 }));
 
 describe('PopulationsPage', () => {
@@ -172,7 +172,7 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then
-      // Format dates as 'short-month-day-year' format: "Jan 15, 2024"
+      // Format dates as 'short-month-day-year' format: "Jan 15, 2025"
       const date1 = new Date(POPULATION_TEST_IDS.TIMESTAMP_1).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',

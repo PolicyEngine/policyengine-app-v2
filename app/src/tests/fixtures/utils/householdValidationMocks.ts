@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
 import {
@@ -45,10 +46,10 @@ export const VALIDATION_COUNTRIES = {
 
 // Years
 export const VALIDATION_YEARS = {
-  DEFAULT: '2024',
+  DEFAULT: CURRENT_YEAR,
   PAST: '2023',
-  FUTURE: '2025',
-  MISSING: '2026',
+  FUTURE: '2026',
+  MISSING: '2027',
 } as const;
 
 // Entity names

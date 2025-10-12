@@ -107,7 +107,10 @@ describe('Calculation Waterfall Reconstruction', () => {
         CALCULATION_QUERY_TEST_REPORT_ID,
         HOUSEHOLD_META_WITH_REFORM
       );
-      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(HOUSEHOLD_META_WITH_REFORM);
+      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(
+        CALCULATION_QUERY_TEST_REPORT_ID,
+        HOUSEHOLD_META_WITH_REFORM
+      );
       expect(result).toEqual(HOUSEHOLD_CALCULATION_RESULT);
 
       // Verify metadata was cached
@@ -142,11 +145,12 @@ describe('Calculation Waterfall Reconstruction', () => {
         CALCULATION_QUERY_TEST_COUNTRY_ID,
         ECONOMY_REPORT.simulation_1_id
       );
-      expect(mockManager.startCalculation).toHaveBeenCalledWith(
+      // startCalculation is only called for household calculations, not economy
+      expect(mockManager.startCalculation).not.toHaveBeenCalled();
+      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(
         CALCULATION_QUERY_TEST_REPORT_ID,
         ECONOMY_META_SUBNATIONAL
       );
-      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(ECONOMY_META_SUBNATIONAL);
       expect(result).toEqual(ECONOMY_CALCULATION_RESULT);
     });
 
@@ -208,7 +212,10 @@ describe('Calculation Waterfall Reconstruction', () => {
       await queryOptions.queryFn();
 
       // Then
-      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(ECONOMY_META_NATIONAL);
+      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(
+        CALCULATION_QUERY_TEST_REPORT_ID,
+        ECONOMY_META_NATIONAL
+      );
     });
 
     test('given parallel simulation fetches then both complete successfully', async () => {
@@ -270,7 +277,10 @@ describe('Calculation Waterfall Reconstruction', () => {
         CALCULATION_QUERY_TEST_REPORT_ID,
         HOUSEHOLD_META_WITH_REFORM
       );
-      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(HOUSEHOLD_META_WITH_REFORM);
+      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(
+        CALCULATION_QUERY_TEST_REPORT_ID,
+        HOUSEHOLD_META_WITH_REFORM
+      );
       expect(result).toEqual(HOUSEHOLD_CALCULATION_RESULT);
     });
 
@@ -294,7 +304,10 @@ describe('Calculation Waterfall Reconstruction', () => {
         CALCULATION_QUERY_TEST_REPORT_ID,
         HOUSEHOLD_META_WITH_REFORM
       );
-      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(HOUSEHOLD_META_WITH_REFORM);
+      expect(mockManager.fetchCalculation).toHaveBeenCalledWith(
+        CALCULATION_QUERY_TEST_REPORT_ID,
+        HOUSEHOLD_META_WITH_REFORM
+      );
       expect(result).toEqual(HOUSEHOLD_CALCULATION_RESULT);
     });
   });

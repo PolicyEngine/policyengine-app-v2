@@ -41,7 +41,7 @@ export const mockReportOutputLarge = { budget: { budgetary_impact: 3000 } } as a
 
 // Mock reports
 export const createMockReport = (overrides?: Partial<Report>): Report => ({
-  reportId: MOCK_REPORT_ID,
+  id: MOCK_REPORT_ID,
   label: 'Test Report',
   countryId: 'us',
   apiVersion: 'v1',

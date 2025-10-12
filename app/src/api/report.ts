@@ -1,9 +1,13 @@
 import { ReportAdapter } from '@/adapters/ReportAdapter';
+import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { Report } from '@/types/ingredients/Report';
+import { UserReport } from '@/types/ingredients/UserReport';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload, ReportSetOutputPayload } from '@/types/payloads';
+
+export type CountryId = (typeof countryIds)[number];
 
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],
@@ -84,4 +88,66 @@ export async function markReportError(
 ): Promise<ReportMetadata> {
   const data = ReportAdapter.toErrorReportPayload(report);
   return updateReport(countryId, reportId, data);
+}
+
+/**
+ * Parameters for creating a report with user association
+ */
+export interface CreateReportWithAssociationParams {
+  countryId: CountryId;
+  payload: ReportCreationPayload;
+  userId: string | number;
+  label?: string;
+}
+
+/**
+ * Result of creating a report with user association
+ * Contains both the base report and the user association
+ */
+export interface CreateReportWithAssociationResult {
+  report: ReportMetadata;
+  userReport: UserReport;
+  metadata: {
+    baseReportId: string;
+    userReportId: string;
+    countryId: CountryId;
+  };
+}
+
+/**
+ * Create a report and associate it with a user in one operation
+ * This combines report creation with user association for a cleaner flow
+ *
+ * @param params - Parameters including countryId, payload, userId, and optional label
+ * @returns Combined result with report, userReport, and metadata
+ */
+export async function createReportAndAssociateWithUser(
+  params: CreateReportWithAssociationParams
+): Promise<CreateReportWithAssociationResult> {
+  // 1. Create the base report via API
+  const report = await createReport(params.countryId, params.payload);
+
+  // 2. Determine which store to use (localStorage vs API)
+  // TODO: Get isLoggedIn from auth context
+  const isLoggedIn = false;
+  const reportStore = isLoggedIn ? new ApiReportStore() : new LocalStorageReportStore();
+
+  // 3. Create UserReport association
+  const userReport = await reportStore.create({
+    userId: String(params.userId),
+    reportId: String(report.id),
+    label: params.label,
+    isCreated: true,
+  });
+
+  // 4. Return combined result
+  return {
+    report,
+    userReport,
+    metadata: {
+      baseReportId: String(report.id),
+      userReportId: userReport.id,
+      countryId: params.countryId,
+    },
+  };
 }

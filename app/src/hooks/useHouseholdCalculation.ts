@@ -1,14 +1,14 @@
 import { useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { fetchHouseholdCalculation } from '@/api/household_calculation';
-import { Household } from '@/types/ingredients/Household';
+import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import { HouseholdData } from '@/types/ingredients/Household';
 
 interface UseHouseholdCalculationOptions {
   countryId: string;
   householdId: string;
   policyId: string;
   enabled?: boolean;
-  onSuccess?: (data: Household) => void;
+  onSuccess?: (data: HouseholdData) => void;
   onError?: (error: Error) => void;
 }
 
@@ -35,7 +35,7 @@ export function useHouseholdCalculation({
     return result;
   }, [countryId, householdId, policyId, onSuccess]);
 
-  const query = useQuery<Household>({
+  const query = useQuery<HouseholdData>({
     queryKey: ['household_calculation', countryId, householdId, policyId],
     queryFn: queryFnWithCallbacks,
     enabled,

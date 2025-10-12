@@ -5,16 +5,16 @@ import { fetchHouseholdById } from '@/api/household';
 import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
+import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
 const apiHouseholdStore = new ApiHouseholdStore();
-const sessionHouseholdStore = new SessionStorageHouseholdStore();
+const localHouseholdStore = new LocalStorageHouseholdStore();
 
 export const useUserHouseholdStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiHouseholdStore : sessionHouseholdStore;
+  return isLoggedIn ? apiHouseholdStore : localHouseholdStore;
 };
 
 // This fetches only the user-household associations; see
@@ -23,7 +23,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   const store = useUserHouseholdStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   console.log('userId', userId);
   console.log('store', store);
@@ -43,7 +43,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
 export const useHouseholdAssociation = (userId: string, householdId: string) => {
   const store = useUserHouseholdStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: householdAssociationKeys.specific(userId, householdId),

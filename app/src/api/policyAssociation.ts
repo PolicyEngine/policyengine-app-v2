@@ -33,7 +33,9 @@ export class ApiPolicyStore implements UserPolicyStore {
   }
 
   async findByUser(userId: string): Promise<UserPolicy[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -45,7 +47,9 @@ export class ApiPolicyStore implements UserPolicyStore {
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;
@@ -90,7 +94,7 @@ export class ApiPolicyStore implements UserPolicyStore {
   */
 }
 
-export class SessionStoragePolicyStore implements UserPolicyStore {
+export class LocalStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
@@ -130,7 +134,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
 
   private getStoredPolicies(): UserPolicy[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -138,7 +142,7 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
   }
 
   private setStoredPolicies(policies: UserPolicy[]): void {
-    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
   }
 
   // Not yet implemented, but keeping for future use

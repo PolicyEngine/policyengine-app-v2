@@ -32,7 +32,9 @@ export class ApiGeographicStore implements UserGeographicStore {
   }
 
   async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -42,7 +44,9 @@ export class ApiGeographicStore implements UserGeographicStore {
   }
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;
@@ -87,7 +91,7 @@ export class ApiGeographicStore implements UserGeographicStore {
   */
 }
 
-export class SessionStorageGeographicStore implements UserGeographicStore {
+export class LocalStorageGeographicStore implements UserGeographicStore {
   private readonly STORAGE_KEY = 'user-geographic-associations';
 
   async create(population: UserGeographyPopulation): Promise<UserGeographyPopulation> {
@@ -157,7 +161,7 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
 
   private getStoredPopulations(): UserGeographyPopulation[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -166,9 +170,9 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
 
   private setStoredPopulations(populations: UserGeographyPopulation[]): void {
     try {
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(populations));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(populations));
     } catch (error) {
-      throw new Error('Failed to store geographic populations in session storage');
+      throw new Error('Failed to store geographic populations in local storage');
     }
   }
 
@@ -178,6 +182,6 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
   }
 
   clearAllPopulations(): void {
-    sessionStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.STORAGE_KEY);
   }
 }

@@ -8,11 +8,51 @@ import { themeDefaults } from './defaults';
 export const themeComponents = {
   Text: {
     defaultProps: themeDefaults.Text,
-    styles: {
-      root: {
-        fontFamily: typography.fontFamily.primary,
-        color: colors.text.primary,
-      },
+    styles: (_theme: any, params: any) => {
+      if (params.variant === 'tab') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.gray[700],
+            fontWeight: typography.fontWeight.normal,
+          },
+        };
+      }
+
+      if (params.variant === 'metricLabel') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+          },
+        };
+      }
+
+      if (params.variant === 'metricValue') {
+        return {
+          root: {
+            fontSize: typography.fontSize.xl,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
+          },
+        };
+      }
+
+      if (params.variant === 'metricDescription') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+          },
+        };
+      }
+
+      return {
+        root: {
+          fontFamily: typography.fontFamily.primary,
+          color: colors.text.primary,
+        },
+      };
     },
   },
 
@@ -28,7 +68,7 @@ export const themeComponents = {
     },
   },
   Container: Container.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       if (params.variant === 'guttered') {
         return {
           root: {
@@ -43,7 +83,7 @@ export const themeComponents = {
     },
   }),
   Card: Card.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       // Card List variants - compact styling for variable-length lists
       if (params.variant === 'cardList--active') {
         return {
@@ -206,7 +246,7 @@ export const themeComponents = {
     defaultProps: themeDefaults.ActionIcon,
   },
   Title: Title.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       if (params.variant === 'colored') {
         return {
           root: {

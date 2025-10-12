@@ -24,7 +24,7 @@ export class UserSimulationAdapter {
    */
   static fromApiResponse(apiData: any): UserSimulation {
     return {
-      id: apiData.simulationId,
+      id: apiData.id,
       userId: apiData.userId,
       simulationId: apiData.simulationId,
       label: apiData.label,

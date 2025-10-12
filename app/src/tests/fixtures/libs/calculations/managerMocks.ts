@@ -1,7 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import { CalculationMeta } from '@/api/reportCalculations';
-import { CalculationHandler } from '@/libs/calculations/handlers';
 import { CalculationStatusResponse } from '@/libs/calculations/status';
 
 // Test report IDs
@@ -61,7 +60,7 @@ export const MANAGER_ERROR_STATUS: CalculationStatusResponse = {
 };
 
 // Mock handlers
-export class MockCalculationHandler extends CalculationHandler {
+export class MockCalculationHandler {
   fetchMock = vi.fn();
   getStatusMock = vi.fn();
   startCalculationMock = vi.fn();
@@ -102,8 +101,8 @@ export function createMockManagerQueryClient(): QueryClient {
 
 // Helper to create mock handlers for injection
 export function createMockHandlers() {
-  const householdHandler = new MockCalculationHandler(createMockManagerQueryClient());
-  const economyHandler = new MockCalculationHandler(createMockManagerQueryClient());
+  const householdHandler = new MockCalculationHandler();
+  const economyHandler = new MockCalculationHandler();
 
   return {
     household: householdHandler,

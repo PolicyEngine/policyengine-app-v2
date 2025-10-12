@@ -1,5 +1,6 @@
 export const FOREVER = '2100-12-31';
 export const BASE_URL = 'https://api.policyengine.org';
+export const CURRENT_YEAR = '2025';
 
 /**
  * Mock user ID used for anonymous/unauthenticated users

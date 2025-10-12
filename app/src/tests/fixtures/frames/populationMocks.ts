@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
@@ -8,7 +9,7 @@ import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 // Test IDs and labels
 export const TEST_USER_ID = 'test-user-123';
 export const TEST_HOUSEHOLD_ID = '456';
-export const TEST_POPULATION_LABEL = 'Test Population 2024';
+export const TEST_POPULATION_LABEL = `Test Population ${CURRENT_YEAR}`;
 export const EMPTY_LABEL = '';
 export const LONG_LABEL = 'A'.repeat(101); // Over 100 char limit
 
@@ -60,7 +61,7 @@ export const UI_TEXT = {
   // SetPopulationLabelFrame
   NAME_POPULATION_TITLE: 'Name Your Population',
   POPULATION_LABEL: 'Population Label',
-  LABEL_PLACEHOLDER: 'e.g., My Family 2024, California Low Income, UK National Average',
+  LABEL_PLACEHOLDER: `e.g., My Family ${CURRENT_YEAR}, California Low Income, UK National Average`,
   LABEL_DESCRIPTION: 'Give your population a descriptive name to help identify it later.',
   LABEL_HELP_TEXT: 'This label will help you identify this population when creating simulations.',
   ERROR_EMPTY_LABEL: 'Please enter a label for your population',
@@ -144,8 +145,8 @@ export const getMockHousehold = (): Household => ({
   householdData: {
     people: {
       you: {
-        age: { 2024: 30 },
-        employment_income: { 2024: 50000 },
+        age: { [CURRENT_YEAR]: 30 },
+        employment_income: { [CURRENT_YEAR]: 50000 },
       },
     },
     families: {},
@@ -377,6 +378,7 @@ export const createMockStore = (overrides?: Partial<RootState>) => ({
 });
 
 export const mockTaxYears = [
+  { value: '2025', label: '2025' },
   { value: '2024', label: '2024' },
   { value: '2023', label: '2023' },
   { value: '2022', label: '2022' },

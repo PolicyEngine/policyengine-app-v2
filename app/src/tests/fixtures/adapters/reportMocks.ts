@@ -107,7 +107,7 @@ export const mockReportOutput: ReportOutputSocietyWideUS = {
 };
 
 export const mockReport: Report = {
-  reportId: '123',
+  id: '123',
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: ['456', '789'],
@@ -116,7 +116,7 @@ export const mockReport: Report = {
 };
 
 export const mockPendingReport: Report = {
-  reportId: '1',
+  id: '1',
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: ['111'],
@@ -125,7 +125,7 @@ export const mockPendingReport: Report = {
 };
 
 export const mockErrorReport: Report = {
-  reportId: '2',
+  id: '2',
   countryId: 'us',
   apiVersion: 'v1',
   simulationIds: ['222', '333'],

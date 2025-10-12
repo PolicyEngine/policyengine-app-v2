@@ -32,7 +32,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   }
 
   async findByUser(userId: string): Promise<UserHouseholdPopulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user households');
     }
@@ -42,7 +44,9 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   }
 
   async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${householdId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;
@@ -87,7 +91,7 @@ export class ApiHouseholdStore implements UserHouseholdStore {
   */
 }
 
-export class SessionStorageHouseholdStore implements UserHouseholdStore {
+export class LocalStorageHouseholdStore implements UserHouseholdStore {
   private readonly STORAGE_KEY = 'user-population-households';
 
   async create(household: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
@@ -160,7 +164,7 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
 
   private getStoredHouseholds(): UserHouseholdPopulation[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -169,9 +173,9 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
 
   private setStoredHouseholds(households: UserHouseholdPopulation[]): void {
     try {
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(households));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(households));
     } catch (error) {
-      throw new Error('Failed to store households in session storage');
+      throw new Error('Failed to store households in local storage');
     }
   }
 
@@ -181,6 +185,6 @@ export class SessionStorageHouseholdStore implements UserHouseholdStore {
   }
 
   clearAllAssociations(): void {
-    sessionStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.STORAGE_KEY);
   }
 }

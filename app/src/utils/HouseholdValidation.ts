@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
 import * as HouseholdQueries from './HouseholdQueries';
@@ -61,7 +62,7 @@ export const HouseholdValidation = {
     }
 
     // Generic validation (use current year as default)
-    this.validateGenericHousehold(household, errors, warnings, '2024');
+    this.validateGenericHousehold(household, errors, warnings, CURRENT_YEAR);
 
     // Country-specific validation
     switch (countryId) {
@@ -87,7 +88,7 @@ export const HouseholdValidation = {
     household: Household,
     errors: ValidationError[],
     warnings: ValidationWarning[],
-    year: string = '2024'
+    year: string = CURRENT_YEAR
   ): void {
     // Check that all people have required fields based on metadata
     const currentYear = year;

@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import populationReducer, {
   clearAllPopulations,
   clearPopulationAtPosition,
@@ -283,7 +284,7 @@ describe('populationReducer', () => {
         initializeHouseholdAtPosition({
           position: 0,
           countryId: 'us',
-          year: '2024',
+          year: CURRENT_YEAR,
         })
       );
 

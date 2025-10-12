@@ -6,6 +6,7 @@ export interface UserReportStore {
   create: (report: Omit<UserReport, 'id' | 'createdAt'>) => Promise<UserReport>;
   findByUser: (userId: string) => Promise<UserReport[]>;
   findById: (userId: string, reportId: string) => Promise<UserReport | null>;
+  findByUserReportId: (userReportId: string) => Promise<UserReport | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, reportId: string, updates: Partial<UserReport>): Promise<UserReport>;
   // delete(userId: string, reportId: string): Promise<void>;
@@ -33,7 +34,9 @@ export class ApiReportStore implements UserReportStore {
   }
 
   async findByUser(userId: string): Promise<UserReport[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
@@ -45,7 +48,9 @@ export class ApiReportStore implements UserReportStore {
   }
 
   async findById(userId: string, reportId: string): Promise<UserReport | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${reportId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${reportId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;
@@ -53,6 +58,24 @@ export class ApiReportStore implements UserReportStore {
 
     if (!response.ok) {
       throw new Error('Failed to fetch association');
+    }
+
+    const apiData = await response.json();
+    return UserReportAdapter.fromApiResponse(apiData);
+  }
+
+  // Note: This method relies on as-of-yet unimplemented API endpoint; will alter once available
+  async findByUserReportId(userReportId: string): Promise<UserReport | null> {
+    const response = await fetch(`${this.BASE_URL}/${userReportId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch user report');
     }
 
     const apiData = await response.json();
@@ -90,13 +113,20 @@ export class ApiReportStore implements UserReportStore {
   */
 }
 
-export class SessionStorageReportStore implements UserReportStore {
+export class LocalStorageReportStore implements UserReportStore {
   private readonly STORAGE_KEY = 'user-report-associations';
 
   async create(report: Omit<UserReport, 'id' | 'createdAt'>): Promise<UserReport> {
+    // Generate a unique ID for local storage
+    // Format: "sur-[short-timestamp][random]"
+    // Use base36 encoding for compactness
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const uniqueId = `sur-${timestamp}${random}`;
+
     const newReport: UserReport = {
       ...report,
-      id: report.reportId, // Use reportId as the ID
+      id: uniqueId,
       createdAt: new Date().toISOString(),
       isCreated: true,
     };
@@ -128,9 +158,14 @@ export class SessionStorageReportStore implements UserReportStore {
     return reports.find((r) => r.userId === userId && r.reportId === reportId) || null;
   }
 
+  async findByUserReportId(userReportId: string): Promise<UserReport | null> {
+    const reports = this.getStoredReports();
+    return reports.find((r) => r.id === userReportId) || null;
+  }
+
   private getStoredReports(): UserReport[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -138,7 +173,7 @@ export class SessionStorageReportStore implements UserReportStore {
   }
 
   private setStoredReports(reports: UserReport[]): void {
-    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(reports));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(reports));
   }
 
   // Not yet implemented, but keeping for future use

@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { HouseholdData } from '@/types/ingredients/Household';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
@@ -35,12 +36,12 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   household_json: {
     people: {
       person1: {
-        age: { 2024: 30 },
-        employment_income: { 2024: 50000 },
+        age: { [CURRENT_YEAR]: 30 },
+        employment_income: { [CURRENT_YEAR]: 50000 },
       },
       person2: {
-        age: { 2024: 28 },
-        employment_income: { 2024: 45000 },
+        age: { [CURRENT_YEAR]: 28 },
+        employment_income: { [CURRENT_YEAR]: 45000 },
       },
     },
     tax_units: {
@@ -79,7 +80,7 @@ export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
   household_json: {
     people: {
       person1: {
-        age: { 2024: 40 },
+        age: { [CURRENT_YEAR]: 40 },
       },
     },
     // @ts-expect-error
@@ -94,12 +95,12 @@ export const mockHouseholdMetadataWithUnknownEntity: HouseholdMetadata = {
 export const mockHouseholdData: HouseholdData = {
   people: {
     person1: {
-      age: { 2024: 30 },
-      employment_income: { 2024: 50000 },
+      age: { 2025: 30 },
+      employment_income: { 2025: 50000 },
     },
     person2: {
-      age: { 2024: 28 },
-      employment_income: { 2024: 45000 },
+      age: { 2025: 28 },
+      employment_income: { 2025: 45000 },
     },
   },
   taxUnits: {
@@ -117,9 +118,9 @@ export const mockHouseholdData: HouseholdData = {
 
 export const mockHouseholdDataWithMultipleEntities: HouseholdData = {
   people: {
-    person1: { age: { 2024: 25 } },
-    person2: { age: { 2024: 23 } },
-    person3: { age: { 2024: 5 } },
+    person1: { age: { [CURRENT_YEAR]: 25 } },
+    person2: { age: { [CURRENT_YEAR]: 23 } },
+    person3: { age: { [CURRENT_YEAR]: 5 } },
   },
   taxUnits: {
     tax_unit1: {
@@ -145,7 +146,7 @@ export const mockEmptyHouseholdData: HouseholdData = {
 
 export const mockHouseholdDataWithUnknownEntity: HouseholdData = {
   people: {
-    person1: { age: { 2024: 30 } },
+    person1: { age: { [CURRENT_YEAR]: 30 } },
   },
   customEntity: {
     entity1: { custom_field: 'value' },

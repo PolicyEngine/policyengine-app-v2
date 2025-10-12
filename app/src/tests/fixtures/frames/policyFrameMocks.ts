@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
@@ -29,8 +30,8 @@ export const createMockFlowProps = (overrides?: Partial<any>) => ({
 
 // Mock policy data
 export const MOCK_VALUE_INTERVAL: ValueInterval = {
-  startDate: '2024-01-01',
-  endDate: '2024-12-31',
+  startDate: `${CURRENT_YEAR}-01-01`,
+  endDate: `${CURRENT_YEAR}-12-31`,
   value: 0.25,
 };
 

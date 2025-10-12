@@ -2,14 +2,6 @@ import { vi } from 'vitest';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { CalculationStatusResponse } from '@/libs/calculations/status';
 
-// Mock calculation manager
-export const createMockCalculationManager = () => ({
-  startCalculation: vi.fn().mockResolvedValue(undefined),
-  fetchCalculation: vi.fn(),
-  getStatus: vi.fn(),
-  getCacheKey: vi.fn((reportId: string) => ['calculation', reportId] as const),
-});
-
 // Mock calculation responses
 export const MOCK_HOUSEHOLD_CALCULATION_RESPONSE: CalculationStatusResponse = {
   status: 'ok',
@@ -71,3 +63,32 @@ export const MOCK_ECONOMY_META_SUBNATIONAL: CalculationMeta = {
   populationId: 'us-california',
   region: 'california',
 };
+
+// Mock calculation manager
+export const createMockCalculationManager = () => ({
+  startCalculation: vi.fn().mockResolvedValue(undefined),
+  fetchCalculation: vi.fn(),
+  getStatus: vi.fn(),
+  getCacheKey: vi.fn((reportId: string) => ['calculation', reportId] as const),
+  buildMetadata: vi.fn((params: any) => {
+    let baseMeta: CalculationMeta;
+
+    // Determine type based on simulations
+    if (params.simulation1?.populationType === 'household') {
+      baseMeta = MOCK_HOUSEHOLD_META;
+    } else if (params.geography?.scope === 'subnational') {
+      // For economy simulations, check if geography has region
+      baseMeta = MOCK_ECONOMY_META_SUBNATIONAL;
+    } else {
+      baseMeta = MOCK_ECONOMY_META_NATIONAL;
+    }
+
+    return baseMeta;
+  }),
+  getQueryOptions: vi.fn((reportId: string, _meta: CalculationMeta) => ({
+    queryKey: ['calculation', reportId] as const,
+    queryFn: vi.fn().mockResolvedValue(MOCK_HOUSEHOLD_CALCULATION_RESPONSE),
+    refetchInterval: vi.fn(() => false),
+    staleTime: Infinity,
+  })),
+});

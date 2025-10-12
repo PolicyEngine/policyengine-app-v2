@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
 
@@ -36,12 +37,12 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   household_json: {
     people: {
       person1: {
-        age: { 2024: 30 },
-        employment_income: { 2024: 50000 },
+        age: { [CURRENT_YEAR]: 30 },
+        employment_income: { [CURRENT_YEAR]: 50000 },
       },
       person2: {
-        age: { 2024: 28 },
-        employment_income: { 2024: 45000 },
+        age: { [CURRENT_YEAR]: 28 },
+        employment_income: { [CURRENT_YEAR]: 45000 },
       },
     },
     families: {},
@@ -67,7 +68,7 @@ export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
   data: {
     people: {
       person1: {
-        age: { 2024: 25 },
+        age: { [CURRENT_YEAR]: 25 },
       },
     },
     families: {},
@@ -89,10 +90,10 @@ export const mockLargeHouseholdPayload: HouseholdCreationPayload = {
   country_id: 'us',
   data: {
     people: {
-      person1: { age: { 2024: 30 }, employment_income: { 2024: 50000 } },
-      person2: { age: { 2024: 28 }, employment_income: { 2024: 45000 } },
-      person3: { age: { 2024: 5 } },
-      person4: { age: { 2024: 3 } },
+      person1: { age: { [CURRENT_YEAR]: 30 }, employment_income: { [CURRENT_YEAR]: 50000 } },
+      person2: { age: { [CURRENT_YEAR]: 28 }, employment_income: { [CURRENT_YEAR]: 45000 } },
+      person3: { age: { [CURRENT_YEAR]: 5 } },
+      person4: { age: { [CURRENT_YEAR]: 3 } },
     },
     families: {},
     spm_units: {},
