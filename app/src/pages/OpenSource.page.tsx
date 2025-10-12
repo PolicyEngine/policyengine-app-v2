@@ -9,7 +9,7 @@ export default function OpenSourcePage() {
         title="Open source"
         description="PolicyEngine's commitment to open source software and transparent policy analysis"
       />
-      
+
       <TitleCardWithHeader
         title="Coming soon"
         sections={[
