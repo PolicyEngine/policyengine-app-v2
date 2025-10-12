@@ -1,16 +1,15 @@
-import {Text} from '@mantine/core';
+import {Text, Stack} from '@mantine/core';
 import PageHeader from '@/components/shared/static/PageHeader';
 import { TitleCardWithHeader } from '@/components/shared/static/TextCardWithHeader';
 
 export default function OpenSourcePage() {
   return (
-    <>
-      <PageHeader
+    <Stack gap="lg">
+      <PageHeader
         title="Open source"
         description="PolicyEngine's commitment to open source software and transparent policy analysis"
       />
-
-{/*       <TitleCardWithHeader
+      <TitleCardWithHeader
         title="Coming soon"
         sections={[
           {
@@ -32,8 +31,7 @@ export default function OpenSourcePage() {
             ),
           },
         ]}
-      /> */}
-
-    </>
+      />
+    </Stack>
   );
 }
