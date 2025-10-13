@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home.page';
+import MicrosimPage from './pages/Microsim.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -74,6 +75,10 @@ const router = createBrowserRouter(
                 {
                   path: 'account',
                   element: <div>Account settings page</div>,
+                },
+                {
+                  path: 'microsim',
+                  element: <MicrosimPage />,
                 },
               ],
             },
