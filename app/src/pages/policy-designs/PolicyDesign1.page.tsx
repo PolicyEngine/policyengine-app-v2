@@ -262,24 +262,24 @@ export default function PolicyDesign1Page() {
               {/* Left sidebar with policy type tabs */}
               <Box
                 style={{
-                  minWidth: '200px',
-                  borderRight: `1px solid ${colors.border.light}`,
+                  minWidth: '240px',
                   paddingRight: spacing.lg,
                 }}
               >
-                <Stack gap={spacing.xs}>
+                <Stack gap={4}>
                   <Box
                     onClick={() => setActivePolicyTab('baseline')}
-                    p={spacing.sm}
+                    py={spacing.sm}
+                    px={spacing.md}
                     style={{
                       cursor: 'pointer',
-                      borderRadius: '6px',
                       backgroundColor:
-                        activePolicyTab === 'baseline' ? colors.primary[50] : 'transparent',
+                        activePolicyTab === 'baseline' ? colors.gray[50] : 'transparent',
                       borderLeft:
                         activePolicyTab === 'baseline'
                           ? `3px solid ${colors.primary[500]}`
                           : '3px solid transparent',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     <Text
@@ -289,23 +289,24 @@ export default function PolicyDesign1Page() {
                           ? typography.fontWeight.medium
                           : typography.fontWeight.normal
                       }
-                      c={activePolicyTab === 'baseline' ? colors.text.primary : colors.gray[700]}
+                      c={activePolicyTab === 'baseline' ? colors.text.primary : colors.text.secondary}
                     >
                       Baseline Policy
                     </Text>
                   </Box>
                   <Box
                     onClick={() => setActivePolicyTab('reform')}
-                    p={spacing.sm}
+                    py={spacing.sm}
+                    px={spacing.md}
                     style={{
                       cursor: 'pointer',
-                      borderRadius: '6px',
                       backgroundColor:
-                        activePolicyTab === 'reform' ? colors.primary[50] : 'transparent',
+                        activePolicyTab === 'reform' ? colors.gray[50] : 'transparent',
                       borderLeft:
                         activePolicyTab === 'reform'
                           ? `3px solid ${colors.primary[500]}`
                           : '3px solid transparent',
+                      transition: 'all 0.15s ease',
                     }}
                   >
                     <Text
@@ -315,12 +316,19 @@ export default function PolicyDesign1Page() {
                           ? typography.fontWeight.medium
                           : typography.fontWeight.normal
                       }
-                      c={activePolicyTab === 'reform' ? colors.text.primary : colors.gray[700]}
+                      c={activePolicyTab === 'reform' ? colors.text.primary : colors.text.secondary}
                     >
                       Reform Policy
                     </Text>
                   </Box>
                 </Stack>
+
+                {/* Subtle note about tab styling */}
+                <Box mt={spacing.lg}>
+                  <Text size="xs" c={colors.text.secondary} style={{ fontStyle: 'italic' }}>
+                    Tab background uses gray (colors.gray[50])
+                  </Text>
+                </Box>
               </Box>
 
               {/* Right content area */}
