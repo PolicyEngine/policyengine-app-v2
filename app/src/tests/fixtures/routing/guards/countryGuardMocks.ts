@@ -108,3 +108,15 @@ export function createNavigateMock() {
       navigateCalls.some((call) => call.to === to && call.replace === replace),
   };
 }
+
+/**
+ * Constants for test content
+ */
+export const TEST_CONTENT = {
+  PROTECTED: 'Protected Content',
+  SHOULD_NOT_RENDER: 'Should not render',
+} as const;
+
+export const TEST_IDS = {
+  PROTECTED_CONTENT: 'protected-content',
+} as const;
