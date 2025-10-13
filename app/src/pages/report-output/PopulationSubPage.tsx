@@ -1,6 +1,8 @@
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import HouseholdSubPage from './HouseholdSubPage';
+import GeographySubPage from './GeographySubPage';
 
 interface PopulationSubPageProps {
   households?: Household[];
@@ -10,10 +12,10 @@ interface PopulationSubPageProps {
 }
 
 /**
- * PopulationSubPage - Displays population information for a report
+ * PopulationSubPage - Routes to the appropriate population component
  *
- * This component shows household or geography data depending on the
- * population type used in the report's simulations.
+ * This component determines the population type and renders either
+ * HouseholdSubPage or GeographySubPage accordingly.
  */
 export default function PopulationSubPage({
   households,
@@ -21,25 +23,23 @@ export default function PopulationSubPage({
   userHouseholds,
   populationType,
 }: PopulationSubPageProps) {
-  if (populationType === 'household' && (!households || households.length === 0)) {
-    return <div>No household data available</div>;
+  // Handle household population type
+  if (populationType === 'household') {
+    if (!households || households.length === 0) {
+      return <div>No household data available</div>;
+    }
+
+    return <HouseholdSubPage households={households} userHouseholds={userHouseholds} />;
   }
 
-  if (populationType === 'geography' && (!geographies || geographies.length === 0)) {
-    return <div>No geography data available</div>;
+  // Handle geography population type
+  if (populationType === 'geography') {
+    if (!geographies || geographies.length === 0) {
+      return <div>No geography data available</div>;
+    }
+
+    return <GeographySubPage geographies={geographies} />;
   }
 
-  return (
-    <div>
-      <h2>Population Sub-Page (Placeholder)</h2>
-      <p>Population Type: {populationType}</p>
-      {populationType === 'household' && (
-        <>
-          <p>Number of Households: {households?.length || 0}</p>
-          <p>Number of User Households: {userHouseholds?.length || 0}</p>
-        </>
-      )}
-      {populationType === 'geography' && <p>Number of Geographies: {geographies?.length || 0}</p>}
-    </div>
-  );
+  return <div>Invalid population type</div>;
 }
