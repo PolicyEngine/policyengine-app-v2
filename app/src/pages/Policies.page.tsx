@@ -1,13 +1,28 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
+
+// Helper function to count parameter changes in a policy
+const countParameterChanges = (policy: PolicyMetadata | undefined): number => {
+  console.log('Counting parameter changes for policy:', policy);
+  if (!policy?.policy_json) return 0;
+
+  let count = 0;
+
+  for (const paramName in policy.policy_json) {
+    count += policy.policy_json[paramName] ? Object.keys(policy.policy_json[paramName]).length : 0;
+  }
+
+  return count;
+};
 
 export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -75,19 +90,8 @@ export default function PoliciesPage() {
     },
     {
       key: 'provisions',
-      header: 'Provisions',
+      header: 'Parameter changes',
       type: 'text',
-    },
-    {
-      key: 'connections',
-      header: 'Connections',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
     },
     {
       key: 'actions',
@@ -124,26 +128,14 @@ export default function PoliciesPage() {
           : '',
       } as TextValue,
       provisions: {
-        text: '7 provisions', // TODO: Get actual provisions count
+        text: `${countParameterChanges(item.policy)} parameter change${countParameterChanges(item.policy) !== 1 ? 's' : ''}`,
       } as TextValue,
-      connections: {
-        items: [
-          {
-            text: 'Sample simulation',
-            badge: '',
-          },
-          {
-            text: 'Sample report',
-            badge: '',
-          },
-        ],
-      } as BulletsValue,
     })) || [];
 
   return (
     <IngredientReadView
       ingredient="policy"
-      title="Your policies"
+      title="Your saved policies"
       subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
       onBuild={handleBuildPolicy}
       isLoading={isLoading}

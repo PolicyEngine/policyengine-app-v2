@@ -150,11 +150,9 @@ export default function ReportsPage() {
       simulations: {
         items: item.simulations?.map((sim, index) => ({
           text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-          badge: item.userPolicies?.find((p) => p.policyId === sim.policyId)?.label ? 1 : 0,
         })) || [
           {
             text: 'No simulations',
-            badge: 0,
           },
         ],
       } as BulletsValue,
@@ -166,7 +164,7 @@ export default function ReportsPage() {
   return (
     <IngredientReadView
       ingredient="report"
-      title="Reports"
+      title="Your saved reports"
       subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
       onBuild={handleBuildReport}
       isLoading={isLoading}

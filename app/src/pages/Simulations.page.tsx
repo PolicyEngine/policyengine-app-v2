@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import {
-  BulletsValue,
   ColumnConfig,
   IngredientRecord,
-  LinkValue,
   TextValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -75,18 +73,7 @@ export default function SimulationsPage() {
     {
       key: 'population',
       header: 'Population',
-      type: 'link',
-    },
-    {
-      key: 'connected',
-      header: 'Connected',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
+      type: 'text',
     },
     {
       key: 'actions',
@@ -125,22 +112,13 @@ export default function SimulationsPage() {
           item.userHousehold?.label ||
           item.geography?.name ||
           (item.household ? `Household #${item.household.id}` : 'No population'),
-        url: item.household?.id ? `#${item.household.id}` : '#',
-      } as LinkValue,
-      connected: {
-        items: [
-          {
-            text: 'No reports yet', // TODO: Connect to actual reports
-            badge: 0,
-          },
-        ],
-      } as BulletsValue,
+      } as TextValue,
     })) || [];
 
   return (
     <IngredientReadView
       ingredient="simulation"
-      title="Simulations"
+      title="Your saved simulations"
       subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
       onBuild={handleBuildSimulation}
       isLoading={isLoading}

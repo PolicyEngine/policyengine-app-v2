@@ -170,17 +170,6 @@ export default function PopulationsPage() {
       ],
     },
     {
-      key: 'connections',
-      header: 'Connections',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
-    },
-    {
       key: 'actions',
       header: '',
       type: 'split-menu',
@@ -218,18 +207,6 @@ export default function PopulationsPage() {
         details: {
           items: detailsItems,
         } as BulletsValue,
-        connections: {
-          items: [
-            {
-              text: 'Sample simulation',
-              badge: '',
-            },
-            {
-              text: 'Sample report',
-              badge: '',
-            },
-          ],
-        } as BulletsValue,
       };
     }) || [];
 
@@ -256,14 +233,6 @@ export default function PopulationsPage() {
         details: {
           items: detailsItems,
         } as BulletsValue,
-        connections: {
-          items: [
-            {
-              text: 'Available for simulations',
-              badge: '',
-            },
-          ],
-        } as BulletsValue,
       };
     }) || [];
 
@@ -273,7 +242,7 @@ export default function PopulationsPage() {
   return (
     <IngredientReadView
       ingredient="population"
-      title="Your populations"
+      title="Your saved populations"
       subtitle="Create a population configuration or find and save existing populations to use in your simulation configurations."
       onBuild={handleBuildPopulation}
       isLoading={isLoading}
