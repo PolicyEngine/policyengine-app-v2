@@ -7,22 +7,7 @@ import {
   mockPolicyWithOneParameterMultipleRanges,
   mockPolicyWithOneParameterOneRange,
 } from '@/tests/fixtures/utils/countParameterChangesMocks';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
-
-// Helper function to count parameter changes in a policy
-const countParameterChanges = (policy: PolicyMetadata | undefined): number => {
-  if (!policy?.policy_json) {
-    return 0;
-  }
-
-  let count = 0;
-
-  for (const paramName in policy.policy_json) {
-    count += policy.policy_json[paramName] ? Object.keys(policy.policy_json[paramName]).length : 0;
-  }
-
-  return count;
-};
+import { countParameterChanges } from '@/utils/countParameterChanges';
 
 describe('countParameterChanges', () => {
   test('given undefined policy then returns 0', () => {

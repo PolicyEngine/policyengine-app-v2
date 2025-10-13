@@ -7,23 +7,8 @@ import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { formatDate } from '@/utils/dateUtils';
-
-// Helper function to count parameter changes in a policy
-const countParameterChanges = (policy: PolicyMetadata | undefined): number => {
-  if (!policy?.policy_json) {
-    return 0;
-  }
-
-  let count = 0;
-
-  for (const paramName in policy.policy_json) {
-    count += policy.policy_json[paramName] ? Object.keys(policy.policy_json[paramName]).length : 0;
-  }
-
-  return count;
-};
+import { countParameterChanges } from '@/utils/countParameterChanges';
 
 export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
