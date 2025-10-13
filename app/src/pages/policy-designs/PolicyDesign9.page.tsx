@@ -293,26 +293,26 @@ export default function PolicyDesign9Page() {
               {/* Left sidebar with policy tabs */}
               <Box
                 style={{
-                  minWidth: '200px',
-                  borderRight: `1px solid ${colors.border.light}`,
+                  minWidth: '240px',
                   paddingRight: spacing.lg,
                 }}
               >
-                <Stack gap={spacing.xs}>
+                <Stack gap={4}>
                   {policyTabs.map((tab) => (
                     <Box
                       key={tab.value}
                       onClick={() => setActivePolicyTab(tab.value)}
-                      p={spacing.sm}
+                      py={spacing.sm}
+                      px={spacing.md}
                       style={{
                         cursor: 'pointer',
-                        borderRadius: '6px',
                         backgroundColor:
-                          activePolicyTab === tab.value ? colors.primary[50] : 'transparent',
+                          activePolicyTab === tab.value ? colors.gray[50] : 'transparent',
                         borderLeft:
                           activePolicyTab === tab.value
                             ? `3px solid ${colors.primary[500]}`
                             : '3px solid transparent',
+                        transition: 'all 0.15s ease',
                       }}
                     >
                       <Text
@@ -322,7 +322,7 @@ export default function PolicyDesign9Page() {
                             ? typography.fontWeight.medium
                             : typography.fontWeight.normal
                         }
-                        c={activePolicyTab === tab.value ? colors.text.primary : colors.gray[700]}
+                        c={activePolicyTab === tab.value ? colors.text.primary : colors.text.secondary}
                       >
                         {tab.label}
                       </Text>

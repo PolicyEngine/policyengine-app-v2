@@ -219,44 +219,69 @@ export default function PolicyDesign4Page() {
             <Box
               style={{
                 border: `1px solid ${colors.border.light}`,
-                borderRadius: '12px',
+                borderRadius: spacing.radius.lg,
                 overflow: 'hidden',
+                backgroundColor: colors.white,
               }}
             >
-              <Table
-                striped
-                highlightOnHover
-                styles={{
-                  table: {
-                    borderCollapse: 'separate',
-                    borderSpacing: 0,
-                  },
-                  th: {
-                    backgroundColor: colors.gray[100],
-                    color: colors.text.primary,
-                    fontWeight: typography.fontWeight.semibold,
-                    padding: spacing.md,
-                    borderBottom: `2px solid ${colors.border.light}`,
-                  },
-                  td: {
-                    padding: spacing.md,
-                    borderBottom: `1px solid ${colors.border.light}`,
-                  },
-                  tr: {
-                    '&:last-child td': {
-                      borderBottom: 'none',
-                    },
-                  },
-                }}
-              >
-                <Table.Thead>
+              <Table>
+                <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
                   <Table.Tr>
-                    <Table.Th style={{ width: '45%' }}>Parameter</Table.Th>
-                    <Table.Th style={{ width: '18.33%', textAlign: 'right' }}>
+                    <Table.Th
+                      style={{
+                        width: '45%',
+                        fontSize: typography.fontSize.xs,
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      Parameter
+                    </Table.Th>
+                    <Table.Th
+                      style={{
+                        width: '18.33%',
+                        textAlign: 'right',
+                        fontSize: typography.fontSize.xs,
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
                       Current Law
                     </Table.Th>
-                    <Table.Th style={{ width: '18.33%', textAlign: 'right' }}>Baseline</Table.Th>
-                    <Table.Th style={{ width: '18.33%', textAlign: 'right' }}>Reform</Table.Th>
+                    <Table.Th
+                      style={{
+                        width: '18.33%',
+                        textAlign: 'right',
+                        fontSize: typography.fontSize.xs,
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      Baseline
+                    </Table.Th>
+                    <Table.Th
+                      style={{
+                        width: '18.33%',
+                        textAlign: 'right',
+                        fontSize: typography.fontSize.xs,
+                        fontWeight: typography.fontWeight.medium,
+                        color: colors.text.secondary,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      Reform
+                    </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
               <Table.Tbody>
@@ -281,7 +306,7 @@ export default function PolicyDesign4Page() {
 
                   return (
                     <Table.Tr key={paramName}>
-                      <Table.Td>
+                      <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
                         <Box>
                           <Text size="sm" fw={typography.fontWeight.medium}>
                             {paramLabel}
@@ -291,7 +316,12 @@ export default function PolicyDesign4Page() {
                           </Text>
                         </Box>
                       </Table.Td>
-                      <Table.Td style={{ textAlign: 'right' }}>
+                      <Table.Td
+                        style={{
+                          textAlign: 'right',
+                          padding: `${spacing.md} ${spacing.lg}`,
+                        }}
+                      >
                         <Text
                           size="sm"
                           fw={typography.fontWeight.medium}
@@ -304,7 +334,12 @@ export default function PolicyDesign4Page() {
                           {currentLawValue || '—'}
                         </Text>
                       </Table.Td>
-                      <Table.Td style={{ textAlign: 'right' }}>
+                      <Table.Td
+                        style={{
+                          textAlign: 'right',
+                          padding: `${spacing.md} ${spacing.lg}`,
+                        }}
+                      >
                         <Text
                           size="sm"
                           fw={typography.fontWeight.medium}
@@ -317,7 +352,12 @@ export default function PolicyDesign4Page() {
                           {baselineValue || '—'}
                         </Text>
                       </Table.Td>
-                      <Table.Td style={{ textAlign: 'right' }}>
+                      <Table.Td
+                        style={{
+                          textAlign: 'right',
+                          padding: `${spacing.md} ${spacing.lg}`,
+                        }}
+                      >
                         <Text
                           size="sm"
                           fw={typography.fontWeight.bold}
