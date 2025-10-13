@@ -2,7 +2,7 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { TEST_POLICY_IDS } from './report-output/PolicySubPage';
+import { TEST_POLICY_IDS } from './PolicySubPage';
 
 /**
  * Mock data for SimulationSubPage tests
@@ -52,7 +52,7 @@ export const mockGeographySimulation: Simulation = {
   countryId: 'us',
   apiVersion: '1.0',
   policyId: TEST_POLICY_IDS.BASELINE,
-  populationId: 'ca',
+  populationId: TEST_GEOGRAPHY_IDS.CALIFORNIA,
   populationType: 'geography',
   label: 'California Simulation',
   isCreated: true,
@@ -111,4 +111,43 @@ export const mockGeography: Geography = {
   scope: 'subnational',
   geographyId: 'ca',
   name: 'California',
+};
+
+// Test prop configurations (helpers for common test scenarios)
+export const createSimulationSubPageProps = {
+  empty: () => ({
+    simulations: [],
+    policies: [],
+    households: [],
+    geographies: [],
+    userSimulations: [],
+  }),
+  undefined: () => ({
+    simulations: undefined,
+    policies: undefined,
+    households: undefined,
+    geographies: undefined,
+    userSimulations: undefined,
+  }),
+  singleSimulation: () => ({
+    simulations: [mockBaselineSimulation],
+    policies: [],
+    households: [mockHousehold],
+    geographies: [],
+    userSimulations: [mockUserBaselineSimulation],
+  }),
+  baselineAndReform: () => ({
+    simulations: [mockBaselineSimulation, mockReformSimulation],
+    policies: [],
+    households: [mockHousehold],
+    geographies: [],
+    userSimulations: [],
+  }),
+  withGeography: () => ({
+    simulations: [mockGeographySimulation],
+    policies: [],
+    households: [],
+    geographies: [mockGeography],
+    userSimulations: [],
+  }),
 };
