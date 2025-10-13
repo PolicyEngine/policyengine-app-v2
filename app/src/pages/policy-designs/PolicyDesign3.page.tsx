@@ -45,9 +45,10 @@ function PolicyColumn({ policy, title }: { policy: Policy; title: string }) {
         p={spacing.md}
         mb={spacing.md}
         style={{
-          backgroundColor: colors.primary[50],
+          backgroundColor: colors.white,
           borderRadius: '8px',
-          border: `1px solid ${colors.primary[200]}`,
+          borderLeft: `3px solid ${colors.primary[500]}`,
+          border: `1px solid ${colors.border.light}`,
         }}
       >
         <Text size="xs" c={colors.text.secondary} mb={spacing.xs}>
