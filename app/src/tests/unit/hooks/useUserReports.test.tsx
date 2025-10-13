@@ -585,8 +585,12 @@ describe('useUserReportById', () => {
     queryClient = createMockQueryClient();
     store = createMockStore();
 
-    // Setup API mocks
-    vi.spyOn(reportApi, 'fetchReportById').mockResolvedValue(mockReportMetadata);
+    // Setup API mocks - use IDs that match mockReport's simulationIds
+    vi.spyOn(reportApi, 'fetchReportById').mockResolvedValue({
+      ...mockReportMetadata,
+      simulation_1_id: TEST_SIMULATION_ID_1,
+      simulation_2_id: TEST_SIMULATION_ID_2,
+    });
     vi.spyOn(simulationApi, 'fetchSimulationById').mockImplementation((_country, id) => {
       if (id === TEST_SIMULATION_ID_1 || id === '456') {
         return Promise.resolve(mockSimulationMetadata1);
@@ -711,7 +715,100 @@ describe('useUserReportById', () => {
 
     // Then
     await waitFor(() => {
-      expect(result.current.report).toEqual(mockReport);
+      expect(result.current.report).toEqual({
+        ...mockReport,
+        simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
+      });
     });
+  });
+
+  test('given report with household simulations then includes household data', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.households).toBeDefined();
+    expect(result.current.households.length).toBeGreaterThan(0);
+    expect(result.current.userHouseholds).toBeDefined();
+  });
+
+  test('given report with geography simulations then constructs geography data', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.geographies).toBeDefined();
+    expect(result.current.geographies.length).toBeGreaterThan(0);
+
+    const geography = result.current.geographies.find((g) => g.geographyId === 'california');
+    expect(geography).toBeDefined();
+    expect(geography?.name).toBe('California');
+    expect(geography?.countryId).toBe('us');
+    expect(geography?.scope).toBe('subnational');
+  });
+
+  test('given geography simulation with no matching region data then geographies array is empty', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // Mock simulations with non-existent geography
+    vi.spyOn(simulationApi, 'fetchSimulationById').mockImplementation((_country, id) => {
+      if (id === TEST_SIMULATION_ID_1) {
+        return Promise.resolve(mockSimulationMetadata1);
+      }
+      if (id === TEST_SIMULATION_ID_2) {
+        return Promise.resolve({
+          ...mockSimulationMetadata2,
+          population_id: 'nonexistent-region',
+          population_type: 'geography',
+        });
+      }
+      return Promise.reject(new Error('Simulation not found'));
+    });
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // Should have an empty geographies array or no geography for the nonexistent region
+    expect(result.current.geographies).toBeDefined();
+    const nonexistentGeo = result.current.geographies.find((g) => g.geographyId === 'nonexistent-region');
+    expect(nonexistentGeo).toBeUndefined();
+  });
+
+  test('given report with both household and geography simulations then includes both types of data', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.households).toBeDefined();
+    expect(result.current.geographies).toBeDefined();
+    expect(result.current.households.length).toBeGreaterThan(0);
+    expect(result.current.geographies.length).toBeGreaterThan(0);
   });
 });

@@ -576,12 +576,32 @@ export const useUserReportById = (userReportId: string) => {
     households.some((h) => h.id === ha.householdId)
   );
 
+  // Step 7: Get geography data from simulations
+  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+
+  const geographies: Geography[] = [];
+  simulations.forEach((sim) => {
+    if (sim.populationType === 'geography' && sim.populationId) {
+      const regionData = geographyOptions?.find((r) => r.name === sim.populationId);
+      if (regionData) {
+        geographies.push({
+          id: `${sim.countryId}-${sim.populationId}`,
+          countryId: sim.countryId,
+          scope: 'subnational' as const,
+          geographyId: sim.populationId,
+          name: regionData.label || regionData.name,
+        } as Geography);
+      }
+    }
+  });
+
   return {
     userReport,
     report: finalReport,
     simulations,
     policies,
     households,
+    geographies,
     userSimulations,
     userPolicies,
     userHouseholds,
