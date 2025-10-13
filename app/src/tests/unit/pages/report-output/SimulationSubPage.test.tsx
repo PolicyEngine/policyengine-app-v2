@@ -9,7 +9,7 @@ import {
   mockUserBaselineSimulation,
   mockUserReformSimulation,
 } from '@/tests/fixtures/pages/SimulationSubPageMocks';
-import { mockBaselinePolicy, mockReformPolicy } from '@/tests/fixtures/pages/PolicySubPageMocks';
+import { mockBaselinePolicy, mockReformPolicy } from '@/tests/fixtures/pages/report-output/PolicySubPage';
 
 describe('SimulationSubPage', () => {
   test('given no simulations then displays no data message', () => {

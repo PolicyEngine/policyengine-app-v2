@@ -2,7 +2,7 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
-import { TEST_POLICY_IDS } from './PolicySubPageMocks';
+import { TEST_POLICY_IDS } from './report-output/PolicySubPage';
 
 /**
  * Mock data for SimulationSubPage tests
