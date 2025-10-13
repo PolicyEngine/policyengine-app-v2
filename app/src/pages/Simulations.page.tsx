@@ -1,10 +1,6 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  ColumnConfig,
-  IngredientRecord,
-  TextValue,
-} from '@/components/columns';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';

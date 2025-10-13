@@ -5,15 +5,16 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
+import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { formatDate } from '@/utils/dateUtils';
 
 // Helper function to count parameter changes in a policy
 const countParameterChanges = (policy: PolicyMetadata | undefined): number => {
-  console.log('Counting parameter changes for policy:', policy);
-  if (!policy?.policy_json) return 0;
+  if (!policy?.policy_json) {
+    return 0;
+  }
 
   let count = 0;
 

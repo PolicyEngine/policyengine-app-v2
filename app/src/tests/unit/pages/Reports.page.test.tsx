@@ -135,7 +135,7 @@ describe('ReportsPage', () => {
     );
 
     // Then
-    expect(screen.getByText('Reports')).toBeInTheDocument();
+    expect(screen.getByText('Your saved reports')).toBeInTheDocument();
     expect(screen.getByText(/Generate comprehensive impact analyses/)).toBeInTheDocument();
     expect(screen.getByText('Data count: 2')).toBeInTheDocument();
   });
