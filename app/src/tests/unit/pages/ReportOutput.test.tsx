@@ -4,7 +4,7 @@ import ReportOutputPage from '@/pages/ReportOutput.page';
 import * as useReportDataModule from '@/hooks/useReportData';
 import { NormalizedReportData } from '@/hooks/useReportData';
 import { mockUSReportOutput } from '@/tests/fixtures/api/economyMocks';
-import { mockBaselinePolicy, mockReformPolicy, mockCurrentLawPolicy } from '@/tests/fixtures/pages/PolicySubPageMocks';
+import { mockBaselinePolicy, mockReformPolicy, mockCurrentLawPolicy } from '@/tests/fixtures/pages/report-output/PolicySubPage';
 import { mockBaselineSimulation, mockReformSimulation, mockHousehold, mockUserBaselineSimulation, mockUserReformSimulation } from '@/tests/fixtures/pages/SimulationSubPageMocks';
 import { mockUserHousehold } from '@/tests/fixtures/pages/PopulationSubPageMocks';
 

@@ -5,7 +5,7 @@ import { UserPolicy } from '@/types/ingredients/UserPolicy';
  * Mock data for PolicySubPage tests
  */
 
-// Test IDs
+// Test IDs and constants
 export const TEST_POLICY_IDS = {
   BASELINE: 'pol-baseline-123',
   REFORM: 'pol-reform-456',
@@ -13,6 +13,27 @@ export const TEST_POLICY_IDS = {
 } as const;
 
 export const TEST_USER_ID = 'user-xyz-789';
+
+export const TEST_PARAMETER_NAMES = {
+  EITC_MAX: 'gov.irs.credits.eitc.max[0]',
+  TEST_RATE: 'test.rate',
+} as const;
+
+// Mock parameter metadata (for mocking Redux state)
+export const mockParameterMetadata = {
+  [TEST_PARAMETER_NAMES.EITC_MAX]: {
+    label: 'Maximum EITC for 0 children',
+    unit: 'currency-USD',
+    type: 'parameter',
+    parameter: TEST_PARAMETER_NAMES.EITC_MAX,
+  },
+  [TEST_PARAMETER_NAMES.TEST_RATE]: {
+    label: 'Test Rate',
+    unit: '%',
+    type: 'parameter',
+    parameter: TEST_PARAMETER_NAMES.TEST_RATE,
+  },
+};
 
 // Mock Policies
 export const mockBaselinePolicy: Policy = {
@@ -22,7 +43,7 @@ export const mockBaselinePolicy: Policy = {
   label: 'Baseline Policy',
   parameters: [
     {
-      name: 'gov.irs.credits.eitc.max[0]',
+      name: TEST_PARAMETER_NAMES.EITC_MAX,
       values: [
         {
           startDate: '2024-01-01',
@@ -42,7 +63,7 @@ export const mockReformPolicy: Policy = {
   label: 'Reform Policy',
   parameters: [
     {
-      name: 'gov.irs.credits.eitc.max[0]',
+      name: TEST_PARAMETER_NAMES.EITC_MAX,
       values: [
         {
           startDate: '2024-01-01',
@@ -79,4 +100,38 @@ export const mockUserReformPolicy: UserPolicy = {
   policyId: TEST_POLICY_IDS.REFORM,
   label: 'My Reform Policy',
   createdAt: '2025-01-15T11:00:00Z',
+};
+
+// Test prop configurations (helpers for common test scenarios)
+export const createPolicySubPageProps = {
+  empty: () => ({
+    policies: [],
+    userPolicies: [],
+    reportType: 'economy' as const,
+  }),
+  undefined: () => ({
+    policies: undefined,
+    userPolicies: undefined,
+    reportType: 'economy' as const,
+  }),
+  singlePolicy: () => ({
+    policies: [mockBaselinePolicy],
+    userPolicies: [mockUserBaselinePolicy],
+    reportType: 'economy' as const,
+  }),
+  baselineOnly: () => ({
+    policies: [mockBaselinePolicy],
+    userPolicies: [],
+    reportType: 'household' as const,
+  }),
+  baselineAndReform: () => ({
+    policies: [mockBaselinePolicy, mockReformPolicy],
+    userPolicies: [],
+    reportType: 'household' as const,
+  }),
+  economyWithCurrentLaw: () => ({
+    policies: [mockCurrentLawPolicy, mockBaselinePolicy, mockReformPolicy],
+    userPolicies: [],
+    reportType: 'economy' as const,
+  }),
 };
