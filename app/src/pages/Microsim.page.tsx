@@ -11,7 +11,7 @@ export default function MicrosimPage() {
   const navigate = useNavigate();
   const { countryId } = useParams<{ countryId: string }>();
   return (
-    <Container size={'xl'}>
+    <Container size='xl'>
       <PageHeader
         title="Microsimulation"
         description="How PolicyEngine's tax and benefit models work"
