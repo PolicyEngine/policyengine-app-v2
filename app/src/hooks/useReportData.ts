@@ -1,7 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { EconomyReportOutput } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
+import { Geography } from '@/types/ingredients/Geography';
 import { Household, HouseholdData } from '@/types/ingredients/Household';
+import { Policy } from '@/types/ingredients/Policy';
+import { Report } from '@/types/ingredients/Report';
+import { Simulation } from '@/types/ingredients/Simulation';
+import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { UserReport } from '@/types/ingredients/UserReport';
+import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { useReportOutput } from './useReportOutput';
 import { useUserReportById } from './useUserReports';
 
@@ -11,6 +19,23 @@ import { useUserReportById } from './useUserReports';
 export type ReportOutputType = 'household' | 'economy';
 
 /**
+ * Normalized report data structure returned by useUserReportById
+ */
+export interface NormalizedReportData {
+  userReport: UserReport | null | undefined;
+  report: Report | undefined;
+  simulations: Simulation[];
+  policies: Policy[];
+  households: Household[];
+  geographies?: Geography[];
+  userSimulations: UserSimulation[] | undefined;
+  userPolicies: UserPolicy[] | undefined;
+  userHouseholds: UserHouseholdPopulation[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}
+
+/**
  * Return type for useReportData hook
  */
 export interface ReportDataResult {
@@ -18,7 +43,7 @@ export interface ReportDataResult {
   output: EconomyReportOutput | Household | null | undefined;
   outputType: ReportOutputType | undefined;
   error: Error | null | undefined;
-  normalizedReport: { report: any };
+  normalizedReport: NormalizedReportData;
   userReport: any;
   progress: number | undefined;
   message: string | undefined;
@@ -29,12 +54,26 @@ export interface ReportDataResult {
 /**
  * Constant return values for common states
  */
+const EMPTY_NORMALIZED_REPORT: NormalizedReportData = {
+  userReport: undefined,
+  report: undefined,
+  simulations: [],
+  policies: [],
+  households: [],
+  geographies: [],
+  userSimulations: undefined,
+  userPolicies: undefined,
+  userHouseholds: undefined,
+  isLoading: false,
+  error: null,
+};
+
 const ERROR_PROPS: ReportDataResult = {
   status: 'error',
   output: null,
   outputType: undefined,
   error: new Error('Report not found'),
-  normalizedReport: { report: undefined },
+  normalizedReport: EMPTY_NORMALIZED_REPORT,
   userReport: undefined,
   progress: undefined,
   message: undefined,
@@ -47,7 +86,7 @@ const LOADING_PROPS: ReportDataResult = {
   output: null,
   outputType: undefined,
   error: undefined,
-  normalizedReport: { report: undefined },
+  normalizedReport: EMPTY_NORMALIZED_REPORT,
   userReport: undefined,
   progress: undefined,
   message: 'Loading report...',

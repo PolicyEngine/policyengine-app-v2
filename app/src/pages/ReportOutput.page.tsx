@@ -26,6 +26,9 @@ import ErrorPage from './report-output/ErrorPage';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
+import PolicySubPage from './report-output/PolicySubPage';
+import PopulationSubPage from './report-output/PopulationSubPage';
+import SimulationSubPage from './report-output/SimulationSubPage';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -41,7 +44,7 @@ import OverviewSubPage from './report-output/OverviewSubPage';
  */
 
 // Valid sub-pages registry
-const VALID_SUBPAGES = ['overview', 'loading', 'error'] as const;
+const VALID_SUBPAGES = ['overview', 'policy', 'simulation', 'population', 'loading', 'error'] as const;
 type ValidSubPage = (typeof VALID_SUBPAGES)[number];
 
 function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
@@ -69,6 +72,7 @@ export default function ReportOutputPage() {
     outputType,
     error,
     userReport,
+    normalizedReport,
     progress,
     message,
     queuePosition,
@@ -130,6 +134,35 @@ export default function ReportOutputPage() {
         ) : (
           <NotFoundSubPage />
         );
+      case 'policy':
+        return (
+          <PolicySubPage
+            policies={normalizedReport.policies}
+            userPolicies={normalizedReport.userPolicies}
+            reportType={outputType || 'economy'}
+          />
+        );
+      case 'simulation':
+        return (
+          <SimulationSubPage
+            simulations={normalizedReport.simulations}
+            policies={normalizedReport.policies}
+            households={normalizedReport.households}
+            geographies={normalizedReport.geographies}
+            userSimulations={normalizedReport.userSimulations}
+          />
+        );
+      case 'population': {
+        const populationType = normalizedReport.simulations?.[0]?.populationType || 'household';
+        return (
+          <PopulationSubPage
+            households={normalizedReport.households}
+            geographies={normalizedReport.geographies}
+            userHouseholds={normalizedReport.userHouseholds}
+            populationType={populationType}
+          />
+        );
+      }
       case 'loading':
         return (
           <LoadingPage
@@ -311,7 +344,8 @@ function getTabsForOutputType(
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'dynamics', label: 'Dynamics' },
-      { value: 'parameters', label: 'Parameters' },
+      { value: 'policy', label: 'Policy' },
+      { value: 'simulation', label: 'Simulation' },
       { value: 'population', label: 'Population' },
     ];
 
@@ -323,7 +357,8 @@ function getTabsForOutputType(
       { value: 'overview', label: 'Overview' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
-      { value: 'parameters', label: 'Parameters' },
+      { value: 'policy', label: 'Policy' },
+      { value: 'simulation', label: 'Simulation' },
       { value: 'population', label: 'Population' },
     ];
   }
