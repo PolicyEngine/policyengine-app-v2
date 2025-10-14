@@ -24,10 +24,18 @@ import {
   resetAllMocks,
 } from '@/tests/fixtures/components/common/FlowViewMocks';
 
+// Mock useCancelFlow hook
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('FlowView', () => {
   beforeEach(() => {
     resetAllMocks();
+    mockHandleCancel.mockClear();
     vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   describe('Basic Rendering', () => {
@@ -354,7 +362,7 @@ describe('FlowView', () => {
       expect(submitButton).toHaveAttribute('data-loading', 'true');
     });
 
-    test('given no cancel action onClick then uses default console.log', async () => {
+    test('given no cancel action then uses console.warn fallback', async () => {
       const user = userEvent.setup();
 
       render(
@@ -364,7 +372,7 @@ describe('FlowView', () => {
       const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
       await user.click(cancelButton);
 
-      expect(vi.mocked(console.log)).toHaveBeenCalledWith(FLOW_VIEW_STRINGS.CANCEL_CLICKED_MSG);
+      expect(vi.mocked(console.warn)).toHaveBeenCalledWith('Cancel action not configured');
     });
 
     test('given user clicks cancel button then calls cancel handler', async () => {
@@ -422,6 +430,125 @@ describe('FlowView', () => {
       expect(
         screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON })
       ).toBeInTheDocument();
+    });
+  });
+
+  describe('useCancelFlow Integration', () => {
+    test('given ingredientType in cancelAction then uses useCancelFlow hook', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      render(
+        <FlowView
+          title={FLOW_VIEW_STRINGS.MAIN_TITLE}
+          cancelAction={{ ingredientType: 'policy' }}
+        />
+      );
+
+      // When
+      const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
+      await user.click(cancelButton);
+
+      // Then
+      expect(mockHandleCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('given both onClick and ingredientType then onClick takes priority', async () => {
+      // Given
+      const user = userEvent.setup();
+      const explicitOnClick = vi.fn();
+
+      render(
+        <FlowView
+          title={FLOW_VIEW_STRINGS.MAIN_TITLE}
+          cancelAction={{ onClick: explicitOnClick, ingredientType: 'simulation' }}
+        />
+      );
+
+      // When
+      const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
+      await user.click(cancelButton);
+
+      // Then
+      expect(explicitOnClick).toHaveBeenCalledTimes(1);
+      expect(mockHandleCancel).not.toHaveBeenCalled();
+    });
+
+    test('given ingredientType policy then cancel button works correctly', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      render(
+        <FlowView
+          title={FLOW_VIEW_STRINGS.MAIN_TITLE}
+          cancelAction={{ ingredientType: 'policy' }}
+          primaryAction={mockPrimaryAction}
+        />
+      );
+
+      // When
+      const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
+      await user.click(cancelButton);
+
+      // Then
+      expect(mockHandleCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('given ingredientType population then cancel button works correctly', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      render(
+        <FlowView
+          title={FLOW_VIEW_STRINGS.MAIN_TITLE}
+          cancelAction={{ ingredientType: 'population', label: 'Go Back' }}
+        />
+      );
+
+      // When
+      const cancelButton = screen.getByRole('button', { name: 'Go Back' });
+      await user.click(cancelButton);
+
+      // Then
+      expect(mockHandleCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('given ingredientType simulation then cancel button works correctly', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      render(
+        <FlowView
+          title={FLOW_VIEW_STRINGS.MAIN_TITLE}
+          cancelAction={{ ingredientType: 'simulation' }}
+        />
+      );
+
+      // When
+      const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
+      await user.click(cancelButton);
+
+      // Then
+      expect(mockHandleCancel).toHaveBeenCalledTimes(1);
+    });
+
+    test('given ingredientType report then cancel button works correctly', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      render(
+        <FlowView
+          title={FLOW_VIEW_STRINGS.MAIN_TITLE}
+          cancelAction={{ ingredientType: 'report' }}
+        />
+      );
+
+      // When
+      const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
+      await user.click(cancelButton);
+
+      // Then
+      expect(mockHandleCancel).toHaveBeenCalledTimes(1);
     });
   });
 });
