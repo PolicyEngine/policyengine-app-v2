@@ -3,7 +3,7 @@ import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } f
 import { MOCK_USER_ID } from '@/constants';
 import { getCalculationManager } from '@/libs/calculations';
 import { countryIds } from '@/libs/countries';
-import { reportKeys } from '@/libs/queryKeys';
+import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -74,8 +74,9 @@ export function useCreateReport(reportLabel?: string) {
         const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
 
-        // Invalidate queries
+        // Invalidate queries - both base reports and user associations
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
+        queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
         // Cache the report data
         queryClient.setQueryData(['report', reportIdStr], report);

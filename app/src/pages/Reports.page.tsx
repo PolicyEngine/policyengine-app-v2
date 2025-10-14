@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
 import {
   BulletsValue,
   ColumnConfig,
@@ -13,10 +12,9 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { usePendingReportsMonitor } from '@/hooks/usePendingReportsMonitor';
 import { useUserReports } from '@/hooks/useUserReports';
-import { useReportLoadingStatus } from '@/hooks/useReportLoadingStatus';
 import { countryIds } from '@/libs/countries';
-import { calculationQueries } from '@/libs/queryOptions/calculations';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -31,44 +29,9 @@ export default function ReportsPage() {
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Monitor pending reports and invalidate queries when they complete
-  useEffect(() => {
-    if (!data) return;
-
-    // Find all pending reports
-    const pendingReportIds = data
-      .filter((item) => item.report?.status === 'pending')
-      .map((item) => item.report?.id)
-      .filter((id): id is string => !!id);
-
-    if (pendingReportIds.length === 0) return;
-
-    // Ensure calculation queries are started for all pending reports
-    // This triggers the polling mechanism in calculationQueries
-    pendingReportIds.forEach((reportId) => {
-      queryClient.prefetchQuery(calculationQueries.forReport(reportId, undefined, queryClient, countryId));
-    });
-
-    // Subscribe to query cache updates for all pending reports
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (
-        event.type === 'updated' &&
-        event.query.queryKey[0] === 'calculation' &&
-        pendingReportIds.includes(event.query.queryKey[1] as string)
-      ) {
-        const calculationData = event.query.state.data as any;
-
-        // If a pending report just completed, invalidate the reports list
-        if (calculationData?.status === 'ok' || calculationData?.status === 'error') {
-          console.log('Report completed, invalidating reports list');
-          queryClient.invalidateQueries({ queryKey: ['report'] });
-          queryClient.invalidateQueries({ queryKey: ['user-report'] });
-        }
-      }
-    });
-
-    return unsubscribe;
-  }, [data, queryClient]);
+  // Monitor pending reports and auto-refresh when they complete
+  const reports = data?.map((item) => ({ id: item.report?.id, status: item.report?.status }));
+  usePendingReportsMonitor(reports, countryId);
 
   const handleBuildReport = () => {
     dispatch(setFlow(ReportCreationFlow));
