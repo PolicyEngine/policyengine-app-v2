@@ -1,6 +1,7 @@
 import { IconCheck, IconChevronRight } from '@tabler/icons-react';
 import { Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
 import { spacing } from '@/designTokens';
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
 interface SetupConditionCard {
@@ -58,7 +59,8 @@ interface FlowViewProps {
 
   cancelAction?: {
     label?: string; // defaults to "Cancel"
-    onClick?: () => void; // defaults to console.log placeholder
+    onClick?: () => void; // if not provided, must provide ingredientType
+    ingredientType?: 'policy' | 'population' | 'simulation' | 'report'; // if provided, uses useCancelFlow
   };
 
   // Preset configurations
@@ -78,6 +80,15 @@ export default function FlowView({
   buttonPanelCards,
   cardListItems,
 }: FlowViewProps) {
+  // Use cancel flow hook if ingredientType is provided
+  const { handleCancel } = cancelAction?.ingredientType
+    ? useCancelFlow(cancelAction.ingredientType)
+    : { handleCancel: undefined };
+
+  // Determine cancel handler: explicit onClick takes priority, then hook, then no-op
+  const cancelHandler =
+    cancelAction?.onClick || handleCancel || (() => console.warn('Cancel action not configured'));
+
   // Generate buttons from convenience props if explicit buttons not provided
   function getButtons(): ButtonConfig[] {
     // If explicit buttons provided, use them
@@ -95,7 +106,7 @@ export default function FlowView({
         {
           label: cancelAction?.label || 'Cancel',
           variant: 'default',
-          onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
+          onClick: cancelHandler,
         },
       ];
     }
@@ -107,7 +118,7 @@ export default function FlowView({
     generatedButtons.push({
       label: cancelAction?.label || 'Cancel',
       variant: 'default',
-      onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
+      onClick: cancelHandler,
     });
 
     // Add primary action if provided
