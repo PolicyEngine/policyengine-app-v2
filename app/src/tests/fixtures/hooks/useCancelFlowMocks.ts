@@ -85,6 +85,7 @@ export const createMockRootState = (
 // Mock functions
 export const createMockNavigate = () => vi.fn();
 export const createMockDispatch = () => vi.fn();
+export const createMockHandleCancel = () => vi.fn();
 
 // Mock useIngredientReset return value
 export const createMockUseIngredientReset = () => ({
