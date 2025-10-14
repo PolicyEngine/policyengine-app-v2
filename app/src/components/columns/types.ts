@@ -58,6 +58,7 @@ export type ColumnConfig =
 // Data value interfaces
 export interface TextValue {
   text: string;
+  loading?: boolean;
 }
 
 export interface LinkValue {

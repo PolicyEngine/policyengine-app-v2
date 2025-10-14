@@ -75,6 +75,8 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
     }
 
     const formatted = formatBudgetaryImpact(budgetaryImpact);
+    const isCost = budgetaryImpact > 0;
+    const action = isCost ? 'Costs' : 'Raises';
 
     return (
       <Box>
@@ -86,14 +88,19 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
         >
           Cost
         </Text>
-        <Text variant="metricValue" c={colors.primary[700]} mt={spacing.sm}>
-          ${formatted.display}
+        <Group gap={spacing.xs} align="baseline" mt={spacing.sm}>
+          <Text variant="metricValue" c={colors.primary[700]}>
+            {action}
+          </Text>
+          <Text variant="metricValue" c={colors.primary[700]}>
+            ${formatted.display}
+          </Text>
           {formatted.label && (
-            <Text span variant="metricValue">
+            <Text variant="metricValue" c={colors.primary[700]}>
               {formatted.label}
             </Text>
           )}
-        </Text>
+        </Group>
       </Box>
     );
   };
