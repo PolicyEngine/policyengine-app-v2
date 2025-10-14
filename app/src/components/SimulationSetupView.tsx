@@ -1,5 +1,6 @@
 import { useSelector } from 'react-redux';
 import { Card, Container, Stack, Text } from '@mantine/core';
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // TODO: Refactor these props based on integration of population
@@ -20,6 +21,7 @@ export default function SimulationSetupView({
   onNext,
   canProceed,
 }: SimulationSetupViewProps) {
+  const { handleCancel } = useCancelFlow('simulation');
   const userDefinedPolicy = useSelector((state: any) => state.policy);
   const userDefinedPopulation = useSelector((state: any) => state.population);
 
@@ -38,9 +40,7 @@ export default function SimulationSetupView({
   const cancelButtonConfig: ButtonConfig = {
     label: 'Cancel',
     variant: 'default' as const,
-    onClick: () => {
-      console.log('Cancel clicked');
-    },
+    onClick: handleCancel,
   };
 
   const buttonConfig: ButtonConfig[] = canProceed
