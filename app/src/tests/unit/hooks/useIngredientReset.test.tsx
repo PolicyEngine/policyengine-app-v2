@@ -21,10 +21,18 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
 // Mock the reducers - mocks must be defined inline due to hoisting
 vi.mock('@/reducers/policyReducer', () => ({
   clearAllPolicies: vi.fn(() => ({ type: 'policy/clearAllPolicies' })),
+  clearPolicyAtPosition: vi.fn((position: number) => ({
+    type: 'policy/clearPolicyAtPosition',
+    payload: position,
+  })),
 }));
 
 vi.mock('@/reducers/populationReducer', () => ({
   clearAllPopulations: vi.fn(() => ({ type: 'population/clearAllPopulations' })),
+  clearPopulationAtPosition: vi.fn((position: number) => ({
+    type: 'population/clearPopulationAtPosition',
+    payload: position,
+  })),
 }));
 
 vi.mock('@/reducers/reportReducer', () => ({
@@ -38,6 +46,10 @@ vi.mock('@/reducers/reportReducer', () => ({
 
 vi.mock('@/reducers/simulationsReducer', () => ({
   clearAllSimulations: vi.fn(() => ({ type: 'simulations/clearAllSimulations' })),
+  clearSimulationAtPosition: vi.fn((position: number) => ({
+    type: 'simulations/clearSimulationAtPosition',
+    payload: position,
+  })),
 }));
 
 describe('useIngredientReset', () => {
@@ -159,5 +171,153 @@ describe('useIngredientReset', () => {
 
     expect(modeCalls.length).toBeGreaterThan(0);
     expect(positionCalls.length).toBeGreaterThan(0);
+  });
+
+  test('given policy reset at position 0 then clears policy at position 0 and resets mode', () => {
+    // Given
+    const { result } = renderHook(() => useIngredientReset(), { wrapper });
+
+    // When
+    result.current.resetIngredientAtPosition(TEST_INGREDIENTS.POLICY, TEST_POSITIONS.FIRST);
+
+    // Then
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POLICY_AT_POSITION,
+      payload: TEST_POSITIONS.FIRST,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setMode',
+      payload: TEST_MODES.STANDALONE,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setActiveSimulationPosition',
+      payload: TEST_POSITIONS.FIRST,
+    });
+  });
+
+  test('given policy reset at position 1 then clears policy at position 1 and resets mode', () => {
+    // Given
+    const { result } = renderHook(() => useIngredientReset(), { wrapper });
+
+    // When
+    result.current.resetIngredientAtPosition(TEST_INGREDIENTS.POLICY, TEST_POSITIONS.SECOND);
+
+    // Then
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POLICY_AT_POSITION,
+      payload: TEST_POSITIONS.SECOND,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setMode',
+      payload: TEST_MODES.STANDALONE,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setActiveSimulationPosition',
+      payload: TEST_POSITIONS.FIRST,
+    });
+  });
+
+  test('given population reset at position 0 then clears population at position 0 and resets mode', () => {
+    // Given
+    const { result } = renderHook(() => useIngredientReset(), { wrapper });
+
+    // When
+    result.current.resetIngredientAtPosition(TEST_INGREDIENTS.POPULATION, TEST_POSITIONS.FIRST);
+
+    // Then
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POPULATION_AT_POSITION,
+      payload: TEST_POSITIONS.FIRST,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setMode',
+      payload: TEST_MODES.STANDALONE,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setActiveSimulationPosition',
+      payload: TEST_POSITIONS.FIRST,
+    });
+  });
+
+  test('given population reset at position 1 then clears population at position 1 and resets mode', () => {
+    // Given
+    const { result } = renderHook(() => useIngredientReset(), { wrapper });
+
+    // When
+    result.current.resetIngredientAtPosition(TEST_INGREDIENTS.POPULATION, TEST_POSITIONS.SECOND);
+
+    // Then
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POPULATION_AT_POSITION,
+      payload: TEST_POSITIONS.SECOND,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setMode',
+      payload: TEST_MODES.STANDALONE,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setActiveSimulationPosition',
+      payload: TEST_POSITIONS.FIRST,
+    });
+  });
+
+  test('given simulation reset at position 0 then clears simulation, policy, and population at position 0', () => {
+    // Given
+    const { result } = renderHook(() => useIngredientReset(), { wrapper });
+
+    // When
+    result.current.resetIngredientAtPosition(TEST_INGREDIENTS.SIMULATION, TEST_POSITIONS.FIRST);
+
+    // Then
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_SIMULATION_AT_POSITION,
+      payload: TEST_POSITIONS.FIRST,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POLICY_AT_POSITION,
+      payload: TEST_POSITIONS.FIRST,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POPULATION_AT_POSITION,
+      payload: TEST_POSITIONS.FIRST,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setMode',
+      payload: TEST_MODES.STANDALONE,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setActiveSimulationPosition',
+      payload: TEST_POSITIONS.FIRST,
+    });
+  });
+
+  test('given simulation reset at position 1 then clears simulation, policy, and population at position 1', () => {
+    // Given
+    const { result } = renderHook(() => useIngredientReset(), { wrapper });
+
+    // When
+    result.current.resetIngredientAtPosition(TEST_INGREDIENTS.SIMULATION, TEST_POSITIONS.SECOND);
+
+    // Then
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_SIMULATION_AT_POSITION,
+      payload: TEST_POSITIONS.SECOND,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POLICY_AT_POSITION,
+      payload: TEST_POSITIONS.SECOND,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_POPULATION_AT_POSITION,
+      payload: TEST_POSITIONS.SECOND,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setMode',
+      payload: TEST_MODES.STANDALONE,
+    });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: 'report/setActiveSimulationPosition',
+      payload: TEST_POSITIONS.FIRST,
+    });
   });
 });
