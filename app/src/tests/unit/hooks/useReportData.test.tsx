@@ -284,7 +284,7 @@ describe('useReportData', () => {
     });
   });
 
-  test('given household output without metadata when wrapping then defaults to us', async () => {
+  test('given household output without countryId when wrapping then returns raw data', async () => {
     // Given
     (useReportOutput as any).mockReturnValue(mockReportOutputHousehold);
     queryClient.setQueryData(['calculation-meta', BASE_REPORT_ID], {
@@ -297,11 +297,8 @@ describe('useReportData', () => {
 
     // Then
     await waitFor(() => {
-      expect(result.current.output).toEqual({
-        id: BASE_REPORT_ID,
-        countryId: 'us', // Should default to 'us'
-        householdData: mockHouseholdData,
-      });
+      // Without countryId, output is not wrapped in Household structure
+      expect(result.current.output).toEqual(mockHouseholdData);
     });
   });
 });
