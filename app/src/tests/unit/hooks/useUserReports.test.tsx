@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as householdApi from '@/api/household';
 import * as policyApi from '@/api/policy';
@@ -172,7 +173,13 @@ describe('useUserReports', () => {
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/us/reports']}>
+          <Routes>
+            <Route path="/:countryId/*" element={children} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     </Provider>
   );
 
@@ -611,7 +618,13 @@ describe('useUserReportById', () => {
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/us/reports']}>
+          <Routes>
+            <Route path="/:countryId/*" element={children} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     </Provider>
   );
 

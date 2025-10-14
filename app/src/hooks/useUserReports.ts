@@ -6,6 +6,7 @@ import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -65,7 +66,7 @@ interface EnhancedUserReport {
  * For simple lists or counts, use useReportAssociationsByUser instead
  */
 export const useUserReports = (userId: string) => {
-  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
+  const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
 
   // Get geography data from metadata
@@ -363,7 +364,7 @@ export const useUserReports = (userId: string) => {
  */
 export const useUserReportById = (userReportId: string) => {
   const queryNormalizer = useQueryNormalizer();
-  const country = 'us';
+  const country = useCurrentCountry();
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId
   const {

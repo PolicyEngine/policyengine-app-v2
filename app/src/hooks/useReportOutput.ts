@@ -1,7 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { calculationQueries } from '@/libs/queryOptions/calculations';
-import { RootState } from '@/store';
 
 export interface UseReportOutputParams {
   reportId: string;
@@ -44,7 +43,7 @@ export function useReportOutput({
   enabled = true,
 }: UseReportOutputParams): UseReportOutputResult {
   const queryClient = useQueryClient();
-  const countryId = useSelector((state: RootState) => state.metadata.currentCountry || 'us');
+  const countryId = useCurrentCountry();
 
   // Use unified query that works for both calculation types
   const { data, error, isLoading } = useQuery({

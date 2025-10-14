@@ -14,6 +14,7 @@ import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import FlowView from '@/components/common/FlowView';
 import { CURRENT_YEAR } from '@/constants';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import {
   getBasicInputFields,
@@ -46,7 +47,7 @@ export default function HouseholdBuilderFrame({
   const populationState = useSelector((state: RootState) => selectActivePopulation(state));
   const { createHousehold, isPending } = useCreateHousehold(populationState?.label || '');
   const { resetIngredient } = useIngredientReset();
-  const countryId = 'us'; // TODO: Get from application state when available
+  const countryId = useCurrentCountry();
 
   // Initialize with empty household if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {

@@ -3,6 +3,7 @@ import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import HouseholdBuilderFrame from '@/frames/population/HouseholdBuilderFrame';
@@ -178,7 +179,11 @@ describe('HouseholdBuilderFrame', () => {
     return render(
       <Provider store={store}>
         <MantineProvider>
-          <HouseholdBuilderFrame {...props} />
+          <MemoryRouter initialEntries={['/us/populations']}>
+            <Routes>
+              <Route path="/:countryId/*" element={<HouseholdBuilderFrame {...props} />} />
+            </Routes>
+          </MemoryRouter>
         </MantineProvider>
       </Provider>
     );

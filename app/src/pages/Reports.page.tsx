@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import {
   BulletsValue,
@@ -11,10 +11,10 @@ import {
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
-import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function ReportsPage() {
@@ -22,7 +22,7 @@ export default function ReportsPage() {
   const { data, isLoading, isError, error } = useUserReports(userId);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const countryId = useSelector(selectCurrentCountry) || 'us';
+  const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -139,7 +139,7 @@ export default function ReportsPage() {
           ? formatDate(
               item.userReport.createdAt,
               'short-month-day-year',
-              (item.report?.countryId || 'us') as (typeof countryIds)[number],
+              (item.report?.countryId || countryId) as (typeof countryIds)[number],
               true
             )
           : '',
