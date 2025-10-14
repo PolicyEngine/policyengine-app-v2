@@ -92,11 +92,17 @@ export default function SimulationTable({
     const now = new Date();
     const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
 
-    if (diffInHours < 1) return 'Just now';
-    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInHours < 1) {
+      return 'Just now';
+    }
+    if (diffInHours < 24) {
+      return `${diffInHours}h ago`;
+    }
 
     const diffInDays = Math.floor(diffInHours / 24);
-    if (diffInDays < 7) return `${diffInDays}d ago`;
+    if (diffInDays < 7) {
+      return `${diffInDays}d ago`;
+    }
 
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
@@ -298,7 +304,7 @@ export default function SimulationTable({
                         </Button>
                       </Menu.Target>
                       <Menu.Dropdown>
-                        {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
+                        {getDropdownMenuConfigs(simulation.simulationId).map((config) => (
                           <React.Fragment key={config.label}>
                             {config.isDivider && <Menu.Divider />}
                             <Menu.Item
@@ -324,7 +330,7 @@ export default function SimulationTable({
                         </ActionIcon>
                       </Menu.Target>
                       <Menu.Dropdown>
-                        {getDropdownMenuConfigs(simulation.simulationId).map((config, index) => (
+                        {getDropdownMenuConfigs(simulation.simulationId).map((config) => (
                           <React.Fragment key={config.label}>
                             {config.isDivider && <Menu.Divider />}
                             <Menu.Item
