@@ -42,12 +42,17 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
     isDisabled: !selectedAction,
   };
 
+  const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
   return (
     <FlowView
       title="Select Population"
       variant="buttonPanel"
       buttonPanelCards={buttonPanelCards}
       primaryAction={primaryAction}
+      cancelAction={cancelAction}
     />
   );
 }

@@ -187,7 +187,11 @@ export default function SimulationSelectExistingPopulationFrame({
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
-    return (
+    const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
+  return (
       <FlowView
         title="Select an Existing Population"
         content={<Text>Loading populations...</Text>}
@@ -197,7 +201,11 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   if (isError) {
-    return (
+    const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
+  return (
       <FlowView
         title="Select an Existing Population"
         content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
@@ -207,7 +215,11 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
-    return (
+    const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
+  return (
       <FlowView
         title="Select an Existing Population"
         content={<Text>No populations available. Please create a new population.</Text>}
@@ -312,6 +324,10 @@ export default function SimulationSelectExistingPopulationFrame({
     isDisabled: !canProceed(),
   };
 
+  const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
   return (
     <FlowView
       title="Select an Existing Population"
@@ -319,6 +335,7 @@ export default function SimulationSelectExistingPopulationFrame({
       content={content}
       cardListItems={cardListItems}
       primaryAction={primaryAction}
+      cancelAction={cancelAction}
     />
   );
 }
