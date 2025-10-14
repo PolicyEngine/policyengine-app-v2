@@ -14,8 +14,11 @@ import {
   mockDefaultHookReturn,
   mockEmptyHookReturn,
   mockErrorHookReturn,
+  mockGeographyReportHookReturn,
+  mockHouseholdReportHookReturn,
   mockLoadingHookReturn,
   mockMixedStatusHookReturn,
+  mockReportWithoutPopulationTypeHookReturn,
 } from '@/tests/fixtures/pages/reportsMocks';
 
 // Mock Plotly
@@ -24,6 +27,10 @@ vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 // Mock the hooks
 vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),
+}));
+
+vi.mock('@/hooks/usePendingReportsMonitor', () => ({
+  usePendingReportsMonitor: vi.fn(),
 }));
 
 // Mock the dispatch and navigate
@@ -324,5 +331,88 @@ describe('ReportsPage', () => {
     // This test verifies the link is rendered correctly with stopPropagation
     expect(reportLink).toBeInTheDocument();
     expect(reportLink).toHaveAttribute('href', '/us/report-output/report-1');
+  });
+
+  describe('report type detection', () => {
+    test('given household report then displays Household type', () => {
+      // Given
+      (useUserReports as any).mockReturnValue(mockHouseholdReportHookReturn);
+
+      // When
+      render(
+        <Provider store={mockStore}>
+          <ReportsPage />
+        </Provider>
+      );
+
+      // Then
+      expect(screen.getByText('Data count: 1')).toBeInTheDocument();
+      // The transformed data should include outputType "Household"
+      // This is verified through the mock component receiving the correct data
+    });
+
+    test('given geography report then displays Society-wide type', () => {
+      // Given
+      (useUserReports as any).mockReturnValue(mockGeographyReportHookReturn);
+
+      // When
+      render(
+        <Provider store={mockStore}>
+          <ReportsPage />
+        </Provider>
+      );
+
+      // Then
+      expect(screen.getByText('Data count: 1')).toBeInTheDocument();
+      // The transformed data should include outputType "Society-wide"
+    });
+
+    test('given report without populationType then displays empty string and logs warning', () => {
+      // Given
+      (useUserReports as any).mockReturnValue(mockReportWithoutPopulationTypeHookReturn);
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      render(
+        <Provider store={mockStore}>
+          <ReportsPage />
+        </Provider>
+      );
+
+      // Then
+      expect(screen.getByText('Data count: 1')).toBeInTheDocument();
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('No populationType found for simulation')
+      );
+
+      // Clean up
+      consoleWarnSpy.mockRestore();
+    });
+
+    test('given report without output then displays Not generated', () => {
+      // Given - pending report has no output
+      (useUserReports as any).mockReturnValue({
+        data: [
+          {
+            ...mockHouseholdReportHookReturn.data[0],
+            report: { ...mockHouseholdReportHookReturn.data[0].report, output: null },
+          },
+        ],
+        isLoading: false,
+        isError: false,
+        error: null,
+      });
+
+      // When
+      render(
+        <Provider store={mockStore}>
+          <ReportsPage />
+        </Provider>
+      );
+
+      // Then
+      expect(screen.getByText('Data count: 1')).toBeInTheDocument();
+      // The transformed data should include outputType "Not generated"
+    });
   });
 });

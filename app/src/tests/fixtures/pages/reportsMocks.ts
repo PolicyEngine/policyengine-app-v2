@@ -7,6 +7,25 @@ import {
   mockUserSimulations,
 } from '../hooks/useUserReportsMocks';
 
+// Mock simulations with different population types
+export const mockHouseholdSimulation = {
+  ...mockSimulation1,
+  populationType: 'household' as const,
+  populationId: 'household-123',
+};
+
+export const mockGeographySimulation = {
+  ...mockSimulation2,
+  populationType: 'geography' as const,
+  populationId: 'us',
+};
+
+export const mockSimulationWithoutPopulationType = {
+  ...mockSimulation1,
+  populationType: undefined,
+  populationId: 'us',
+};
+
 // Mock report data for tests
 export const mockReportData = [
   {
@@ -111,6 +130,94 @@ export const mockEmptyHookReturn = {
 
 export const mockMixedStatusHookReturn = {
   data: mockMixedStatusReportData,
+  isLoading: false,
+  isError: false,
+  error: null,
+};
+
+// Mock report data for testing report type detection
+export const mockHouseholdReportData = [
+  {
+    userReport: {
+      id: 'household-report-1',
+      userId: MOCK_USER_ID,
+      reportId: '456',
+      label: 'Household Report',
+      createdAt: `${CURRENT_YEAR}-01-15T10:30:00Z`,
+    },
+    report: mockReport, // Has output
+    simulations: [mockHouseholdSimulation],
+    userSimulations: mockUserSimulations,
+    userPolicies: mockUserPolicies,
+    policies: [],
+    households: [],
+    geographies: [],
+    userHouseholds: [],
+    isLoading: false,
+    error: null,
+  },
+];
+
+export const mockGeographyReportData = [
+  {
+    userReport: {
+      id: 'geography-report-1',
+      userId: MOCK_USER_ID,
+      reportId: '789',
+      label: 'Geography Report',
+      createdAt: `${CURRENT_YEAR}-01-15T10:30:00Z`,
+    },
+    report: mockReport, // Has output
+    simulations: [mockGeographySimulation],
+    userSimulations: mockUserSimulations,
+    userPolicies: mockUserPolicies,
+    policies: [],
+    households: [],
+    geographies: [],
+    userHouseholds: [],
+    isLoading: false,
+    error: null,
+  },
+];
+
+export const mockReportWithoutPopulationTypeData = [
+  {
+    userReport: {
+      id: 'unknown-report-1',
+      userId: MOCK_USER_ID,
+      reportId: '999',
+      label: 'Unknown Type Report',
+      createdAt: `${CURRENT_YEAR}-01-15T10:30:00Z`,
+    },
+    report: mockReport, // Has output
+    simulations: [mockSimulationWithoutPopulationType],
+    userSimulations: mockUserSimulations,
+    userPolicies: mockUserPolicies,
+    policies: [],
+    households: [],
+    geographies: [],
+    userHouseholds: [],
+    isLoading: false,
+    error: null,
+  },
+];
+
+export const mockHouseholdReportHookReturn = {
+  data: mockHouseholdReportData,
+  isLoading: false,
+  isError: false,
+  error: null,
+};
+
+export const mockGeographyReportHookReturn = {
+  data: mockGeographyReportData,
+  isLoading: false,
+  isError: false,
+  error: null,
+};
+
+export const mockReportWithoutPopulationTypeHookReturn = {
+  data: mockReportWithoutPopulationTypeData,
   isLoading: false,
   isError: false,
   error: null,
