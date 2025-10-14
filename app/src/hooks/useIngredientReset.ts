@@ -1,8 +1,11 @@
 import { useDispatch } from 'react-redux';
-import { clearAllPolicies } from '@/reducers/policyReducer';
-import { clearAllPopulations } from '@/reducers/populationReducer';
+import { clearAllPolicies, clearPolicyAtPosition } from '@/reducers/policyReducer';
+import { clearAllPopulations, clearPopulationAtPosition } from '@/reducers/populationReducer';
 import { clearReport, setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
-import { clearAllSimulations } from '@/reducers/simulationsReducer';
+import {
+  clearAllSimulations,
+  clearSimulationAtPosition,
+} from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
 
 export const ingredients = ['policy', 'simulation', 'population', 'report'];
@@ -57,5 +60,36 @@ export const useIngredientReset = () => {
     sortedIngredients.forEach((ingredient) => resetIngredient(ingredient));
   };
 
-  return { resetIngredient, resetIngredients };
+  const resetIngredientAtPosition = (
+    ingredientName: 'policy' | 'population' | 'simulation',
+    position: 0 | 1
+  ) => {
+    switch (ingredientName) {
+      case 'policy':
+        dispatch(clearPolicyAtPosition(position));
+        // Reset to standalone mode when clearing any ingredient
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
+        break;
+      case 'population':
+        dispatch(clearPopulationAtPosition(position));
+        // Reset to standalone mode when clearing any ingredient
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
+        break;
+      case 'simulation':
+        // Simulation depends on policy + population - cascade at position
+        dispatch(clearSimulationAtPosition(position));
+        dispatch(clearPolicyAtPosition(position));
+        dispatch(clearPopulationAtPosition(position));
+        // Reset to standalone mode when clearing any ingredient
+        dispatch(setMode('standalone'));
+        dispatch(setActiveSimulationPosition(0));
+        break;
+      default:
+        console.error(`Position-aware reset not supported for: ${ingredientName}`);
+    }
+  };
+
+  return { resetIngredient, resetIngredients, resetIngredientAtPosition };
 };
