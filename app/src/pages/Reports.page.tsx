@@ -151,7 +151,9 @@ export default function ReportsPage() {
           reportType = 'Society-wide';
         } else {
           // Fallback: if no populationType, show empty string
-          console.warn('[Reports.page] No populationType found for simulation, defaulting to empty string');
+          console.warn(
+            '[Reports.page] No populationType found for simulation, defaulting to empty string'
+          );
           reportType = '';
         }
       }

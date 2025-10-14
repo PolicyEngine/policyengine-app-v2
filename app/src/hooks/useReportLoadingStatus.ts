@@ -50,7 +50,9 @@ export function useReportLoadingStatus(
 
   // Subscribe to query changes to detect status transitions
   useEffect(() => {
-    if (!reportId || !onStatusChange) return;
+    if (!reportId || !onStatusChange) {
+      return;
+    }
 
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       // Only listen to updates for this specific report's calculation query

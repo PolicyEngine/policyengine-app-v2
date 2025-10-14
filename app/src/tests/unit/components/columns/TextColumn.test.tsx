@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import { TextColumn } from '@/components/columns/TextColumn';
 import {
   BOLD_WEIGHT_CONFIG,

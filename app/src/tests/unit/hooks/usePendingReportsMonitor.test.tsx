@@ -89,7 +89,9 @@ describe('usePendingReportsMonitor', () => {
     const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
 
     // When
-    renderHook(() => usePendingReportsMonitor(mockReportsAllComplete, TEST_COUNTRY_ID), { wrapper });
+    renderHook(() => usePendingReportsMonitor(mockReportsAllComplete, TEST_COUNTRY_ID), {
+      wrapper,
+    });
 
     // Then
     expect(prefetchSpy).not.toHaveBeenCalled();
@@ -100,7 +102,9 @@ describe('usePendingReportsMonitor', () => {
     const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
 
     // When
-    renderHook(() => usePendingReportsMonitor(mockReportsWithPending, TEST_COUNTRY_ID), { wrapper });
+    renderHook(() => usePendingReportsMonitor(mockReportsWithPending, TEST_COUNTRY_ID), {
+      wrapper,
+    });
 
     // Then
     expect(prefetchSpy).toHaveBeenCalledTimes(2);
@@ -163,7 +167,7 @@ describe('usePendingReportsMonitor', () => {
     queryClient.setQueryData(['calculation', PENDING_REPORT_ID_1], mockCalculationComputing);
 
     // Then - Wait a bit to ensure no invalidation occurs
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
     expect(invalidateSpy).not.toHaveBeenCalled();
   });
 
@@ -172,7 +176,9 @@ describe('usePendingReportsMonitor', () => {
     const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
 
     // When
-    renderHook(() => usePendingReportsMonitor(mockReportsWithMissingIds, TEST_COUNTRY_ID), { wrapper });
+    renderHook(() => usePendingReportsMonitor(mockReportsWithMissingIds, TEST_COUNTRY_ID), {
+      wrapper,
+    });
 
     // Then - Should only prefetch for the valid report
     expect(prefetchSpy).toHaveBeenCalledTimes(1);
@@ -180,9 +186,12 @@ describe('usePendingReportsMonitor', () => {
 
   test('given hook unmounts then unsubscribes from cache updates', () => {
     // Given
-    const { unmount } = renderHook(() => usePendingReportsMonitor([mockPendingReport1], TEST_COUNTRY_ID), {
-      wrapper,
-    });
+    const { unmount } = renderHook(
+      () => usePendingReportsMonitor([mockPendingReport1], TEST_COUNTRY_ID),
+      {
+        wrapper,
+      }
+    );
 
     // When
     unmount();

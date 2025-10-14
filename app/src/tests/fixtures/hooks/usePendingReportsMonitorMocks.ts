@@ -9,11 +9,7 @@ export const mockPendingReport1 = { id: PENDING_REPORT_ID_1, status: 'pending' }
 export const mockPendingReport2 = { id: PENDING_REPORT_ID_2, status: 'pending' };
 export const mockCompleteReport = { id: COMPLETE_REPORT_ID, status: 'complete' };
 
-export const mockReportsWithPending = [
-  mockPendingReport1,
-  mockPendingReport2,
-  mockCompleteReport,
-];
+export const mockReportsWithPending = [mockPendingReport1, mockPendingReport2, mockCompleteReport];
 
 export const mockReportsAllComplete = [mockCompleteReport];
 
@@ -26,7 +22,9 @@ export const mockReportsWithMissingIds = [
 // Mock calculation status responses
 export const mockCalculationComplete = {
   status: 'ok',
-  result: { /* mock result data */ },
+  result: {
+    /* mock result data */
+  },
 };
 
 export const mockCalculationError = {

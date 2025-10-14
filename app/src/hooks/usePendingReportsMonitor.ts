@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CalculationStatusResponse } from '@/libs/calculations';
-import { calculationQueries } from '@/libs/queryOptions/calculations';
 import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
+import { calculationQueries } from '@/libs/queryOptions/calculations';
 
 /**
  * Hook to monitor pending reports and automatically refresh the reports list
@@ -24,7 +24,9 @@ export function usePendingReportsMonitor(
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!reports) return;
+    if (!reports) {
+      return;
+    }
 
     // Extract IDs of all pending reports
     const pendingReportIds = reports
@@ -32,7 +34,9 @@ export function usePendingReportsMonitor(
       .map((report) => report.id)
       .filter((id): id is string => !!id);
 
-    if (pendingReportIds.length === 0) return;
+    if (pendingReportIds.length === 0) {
+      return;
+    }
 
     // Start calculation queries for all pending reports
     // This triggers the polling mechanism in calculationQueries
