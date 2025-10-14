@@ -29,13 +29,14 @@ const initialState: ReportState = {
  * Thunk to clear report and initialize with current country from metadata state
  * This automatically reads the country that was synced by CountryGuard
  */
-export const clearReport = createAsyncThunk<(typeof countryIds)[number], void, { state: RootState }>(
-  'report/clearReport',
-  async (_, { getState }) => {
-    const state = getState();
-    return (state.metadata.currentCountry || 'us') as (typeof countryIds)[number];
-  }
-);
+export const clearReport = createAsyncThunk<
+  (typeof countryIds)[number],
+  void,
+  { state: RootState }
+>('report/clearReport', async (_, { getState }) => {
+  const state = getState();
+  return (state.metadata.currentCountry || 'us') as (typeof countryIds)[number];
+});
 
 export const reportSlice = createSlice({
   name: 'report',

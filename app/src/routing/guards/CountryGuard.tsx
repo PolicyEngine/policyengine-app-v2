@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
-import { Navigate, Outlet, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { Navigate, Outlet, useParams } from 'react-router-dom';
 import { countryIds } from '@/libs/countries';
 import { setCurrentCountry } from '@/reducers/metadataReducer';
 import { clearAllPolicies } from '@/reducers/policyReducer';

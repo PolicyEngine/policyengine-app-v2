@@ -1,10 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { MantineProvider } from '@mantine/core';
-import { render, waitFor } from '@testing-library/react';
 import { screen, userEvent } from '@test-utils';
+import { render, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { MantineProvider } from '@mantine/core';
 import ReportCreationFrame from '@/frames/report/ReportCreationFrame';
 import flowReducer from '@/reducers/flowReducer';
 import metadataReducer from '@/reducers/metadataReducer';

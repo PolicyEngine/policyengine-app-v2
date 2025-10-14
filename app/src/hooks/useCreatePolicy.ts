@@ -3,8 +3,8 @@ import { createPolicy } from '@/api/policy';
 import { MOCK_USER_ID } from '@/constants';
 import { policyKeys } from '@/libs/queryKeys';
 import { PolicyCreationPayload } from '@/types/payloads';
-import { useCreatePolicyAssociation } from './useUserPolicy';
 import { useCurrentCountry } from './useCurrentCountry';
+import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {
   const queryClient = useQueryClient();

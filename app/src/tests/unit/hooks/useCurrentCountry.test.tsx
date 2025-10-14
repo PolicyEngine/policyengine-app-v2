@@ -115,7 +115,7 @@ describe('useCurrentCountry', () => {
     test('given URL change then returns new country', () => {
       // Given - Start with UK
       const wrapper = createRouterWrapper(TEST_PATHS.UK_POLICIES);
-      const { result, rerender } = renderHook(() => useCurrentCountry(), { wrapper });
+      const { result } = renderHook(() => useCurrentCountry(), { wrapper });
       expect(result.current).toBe(TEST_COUNTRIES.UK);
 
       // When - Change to wrapper with US URL

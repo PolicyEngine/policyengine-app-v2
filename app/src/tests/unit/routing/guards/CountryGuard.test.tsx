@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
+  renderCountryGuardAtRoot,
+  renderCountryGuardWithStore,
+} from '@/tests/fixtures/routing/guards/countryGuardHelpers';
+import {
   EXPECTED_REDIRECTS,
+  TEST_IDS,
   TEST_PATHS,
   VALID_COUNTRIES,
-  TEST_IDS,
 } from '@/tests/fixtures/routing/guards/countryGuardMocks';
-import {
-  renderCountryGuardWithStore,
-  renderCountryGuardAtRoot,
-} from '@/tests/fixtures/routing/guards/countryGuardHelpers';
 
 // Mock Navigate to track redirects
 const mockNavigate = vi.fn();
@@ -278,7 +278,7 @@ describe('CountryGuard', () => {
         { path: '/il/test', country: VALID_COUNTRIES.IL },
       ];
 
-      testCases.forEach(({ path, country }) => {
+      testCases.forEach(({ path }) => {
         vi.clearAllMocks();
         const { getByTestId, unmount } = renderCountryGuardWithStore(path);
         expect(getByTestId(TEST_IDS.PROTECTED_CONTENT)).toBeDefined();

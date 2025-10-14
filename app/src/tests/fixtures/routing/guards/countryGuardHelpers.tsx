@@ -5,13 +5,13 @@
  * CountryGuard with proper context providers
  */
 import React from 'react';
-import { render } from '@testing-library/react';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { render } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import metadataReducer from '@/reducers/metadataReducer';
 import { CountryGuard } from '@/routing/guards/CountryGuard';
-import { TEST_IDS, TEST_CONTENT } from './countryGuardMocks';
+import { TEST_CONTENT, TEST_IDS } from './countryGuardMocks';
 
 /**
  * Helper to create a fresh Redux store for each test

@@ -1,16 +1,16 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, waitFor } from '@testing-library/react';
 import { screen, userEvent } from '@test-utils';
+import { render, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { CountryGuard } from '@/routing/guards/CountryGuard';
 import flowReducer from '@/reducers/flowReducer';
 import metadataReducer from '@/reducers/metadataReducer';
 import policyReducer from '@/reducers/policyReducer';
 import populationReducer from '@/reducers/populationReducer';
 import reportReducer from '@/reducers/reportReducer';
 import simulationsReducer from '@/reducers/simulationsReducer';
+import { CountryGuard } from '@/routing/guards/CountryGuard';
 
 /**
  * Integration tests for country navigation and state management.
@@ -30,9 +30,15 @@ function TestComponent() {
   return (
     <div>
       <div data-testid="current-country">{countryId}</div>
-      <button onClick={() => navigate('/uk/test')}>Go to UK</button>
-      <button onClick={() => navigate('/us/test')}>Go to US</button>
-      <button onClick={() => navigate('/ca/test')}>Go to CA</button>
+      <button type="button" onClick={() => navigate('/uk/test')}>
+        Go to UK
+      </button>
+      <button type="button" onClick={() => navigate('/us/test')}>
+        Go to US
+      </button>
+      <button type="button" onClick={() => navigate('/ca/test')}>
+        Go to CA
+      </button>
     </div>
   );
 }
@@ -71,7 +77,15 @@ describe('Country Navigation Integration', () => {
         <MemoryRouter initialEntries={[initialPath]}>
           <Routes>
             <Route path="/:countryId" element={<CountryGuard />}>
-              <Route path="test" element={<><TestComponent /><StateDisplay /></>} />
+              <Route
+                path="test"
+                element={
+                  <>
+                    <TestComponent />
+                    <StateDisplay />
+                  </>
+                }
+              />
             </Route>
           </Routes>
         </MemoryRouter>
@@ -277,7 +291,6 @@ describe('Country Navigation Integration', () => {
 
   test('given navigation within same country then state is preserved', async () => {
     // Given
-    const user = userEvent.setup();
     const { rerender } = render(
       <Provider store={store}>
         <MemoryRouter initialEntries={['/us/test']}>
