@@ -134,43 +134,64 @@ export default function ReportsPage() {
 
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.userReport.id,
-      report: {
-        text: item.userReport.label || `Report #${item.userReport.reportId}`,
-        url: `/${countryId}/report-output/${item.userReport.id}`,
-      } as LinkValue,
-      dateCreated: {
-        text: item.userReport.createdAt
-          ? formatDate(
-              item.userReport.createdAt,
-              'short-month-day-year',
-              (item.report?.countryId || countryId) as (typeof countryIds)[number],
-              true
-            )
-          : '',
-      } as TextValue,
-      status: {
-        text: formatStatus(item.report?.status || 'pending'),
-        loading: item.report?.status === 'pending',
-      } as TextValue,
-      simulations: {
-        items: item.simulations?.map((sim, index) => ({
-          text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-        })) || [
-          {
-            text: 'No simulations',
-          },
-        ],
-      } as BulletsValue,
-      outputType: {
-        text: item.report?.output
-          ? item.simulations?.[0]?.populationType === 'household'
-            ? 'Household'
-            : 'Society-wide'
-          : 'Not generated',
-      } as TextValue,
-    })) || [];
+    data?.map((item) => {
+      // Debug logging for population type
+      const firstSim = item.simulations?.[0];
+      console.log('[Reports.page] Report:', item.userReport.id);
+      console.log('  - First simulation:', firstSim);
+      console.log('  - Population type:', firstSim?.populationType);
+      console.log('  - Has output:', !!item.report?.output);
+
+      // Determine report type
+      let reportType = 'Not generated';
+      if (item.report?.output) {
+        if (firstSim?.populationType === 'household') {
+          reportType = 'Household';
+        } else if (firstSim?.populationType === 'geography') {
+          reportType = 'Society-wide';
+        } else {
+          // Fallback: if no populationType, show empty string
+          console.warn('[Reports.page] No populationType found for simulation, defaulting to empty string');
+          reportType = '';
+        }
+      }
+
+      return {
+        id: item.userReport.id,
+        report: {
+          text: item.userReport.label || `Report #${item.userReport.reportId}`,
+          url: `/${countryId}/report-output/${item.userReport.id}`,
+        } as LinkValue,
+        dateCreated: {
+          text: item.userReport.createdAt
+            ? formatDate(
+                item.userReport.createdAt,
+                'short-month-day-year',
+                (item.report?.countryId || 'us') as (typeof countryIds)[number],
+                true
+              )
+            : '',
+        } as TextValue,
+        status: {
+          text: formatStatus(item.report?.status || 'pending'),
+          loading: item.report?.status === 'pending',
+        } as TextValue,
+        simulations: {
+          items: item.simulations?.map((sim, index) => ({
+            text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
+            badge: item.userPolicies?.find((p) => p.policyId === sim.policyId)?.label ? 1 : 0,
+          })) || [
+            {
+              text: 'No simulations',
+              badge: 0,
+            },
+          ],
+        } as BulletsValue,
+        outputType: {
+          text: reportType,
+        } as TextValue,
+      };
+    }) || [];
 
   return (
     <IngredientReadView
