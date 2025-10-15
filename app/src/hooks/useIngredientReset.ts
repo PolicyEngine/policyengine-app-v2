@@ -1,12 +1,9 @@
 import { useDispatch } from 'react-redux';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { clearAllPolicies, clearPolicyAtPosition } from '@/reducers/policyReducer';
-import { clearAllPopulations, clearPopulationAtPosition } from '@/reducers/populationReducer';
+import { clearAllPolicies } from '@/reducers/policyReducer';
+import { clearAllPopulations } from '@/reducers/populationReducer';
 import { clearReport, setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
-import {
-  clearAllSimulations,
-  clearSimulationAtPosition,
-} from '@/reducers/simulationsReducer';
+import { clearAllSimulations } from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
 
 export const ingredients = ['policy', 'simulation', 'population', 'report'];
@@ -62,60 +59,5 @@ export const useIngredientReset = () => {
     sortedIngredients.forEach((ingredient) => resetIngredient(ingredient));
   };
 
-  const resetIngredientAtPosition = (
-    ingredientName: 'policy' | 'population' | 'simulation',
-    position: 0 | 1
-  ) => {
-    switch (ingredientName) {
-      case 'policy':
-        dispatch(clearPolicyAtPosition(position));
-        // Reset to standalone mode when clearing any ingredient
-        dispatch(setMode('standalone'));
-        dispatch(setActiveSimulationPosition(0));
-        break;
-      case 'population':
-        dispatch(clearPopulationAtPosition(position));
-        // Reset to standalone mode when clearing any ingredient
-        dispatch(setMode('standalone'));
-        dispatch(setActiveSimulationPosition(0));
-        break;
-      case 'simulation':
-        // Simulation depends on policy + population - cascade at position
-        dispatch(clearSimulationAtPosition(position));
-        dispatch(clearPolicyAtPosition(position));
-        dispatch(clearPopulationAtPosition(position));
-        // Reset to standalone mode when clearing any ingredient
-        dispatch(setMode('standalone'));
-        dispatch(setActiveSimulationPosition(0));
-        break;
-      default:
-        console.error(`Position-aware reset not supported for: ${ingredientName}`);
-    }
-  };
-
-  // Clear ingredient at position WITHOUT resetting mode/position
-  // Use this when backing out of a subflow - you're still in the parent context
-  const clearIngredientAtPosition = (
-    ingredientName: 'policy' | 'population' | 'simulation',
-    position: 0 | 1
-  ) => {
-    switch (ingredientName) {
-      case 'policy':
-        dispatch(clearPolicyAtPosition(position));
-        break;
-      case 'population':
-        dispatch(clearPopulationAtPosition(position));
-        break;
-      case 'simulation':
-        // Simulation depends on policy + population - cascade at position
-        dispatch(clearSimulationAtPosition(position));
-        dispatch(clearPolicyAtPosition(position));
-        dispatch(clearPopulationAtPosition(position));
-        break;
-      default:
-        console.error(`Position-aware clear not supported for: ${ingredientName}`);
-    }
-  };
-
-  return { resetIngredient, resetIngredients, resetIngredientAtPosition, clearIngredientAtPosition };
+  return { resetIngredient, resetIngredients };
 };

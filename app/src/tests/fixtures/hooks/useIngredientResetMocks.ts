@@ -35,12 +35,9 @@ export const TEST_INGREDIENTS = {
 // Expected action types
 export const ACTION_TYPES = {
   CLEAR_ALL_POLICIES: 'policy/clearAllPolicies',
-  CLEAR_POLICY_AT_POSITION: 'policy/clearPolicyAtPosition',
   CLEAR_ALL_POPULATIONS: 'population/clearAllPopulations',
-  CLEAR_POPULATION_AT_POSITION: 'population/clearPopulationAtPosition',
   CLEAR_REPORT: 'report/clearReport',
   CLEAR_ALL_SIMULATIONS: 'simulations/clearAllSimulations',
-  CLEAR_SIMULATION_AT_POSITION: 'simulations/clearSimulationAtPosition',
   SET_MODE: 'report/setMode',
   SET_ACTIVE_SIMULATION_POSITION: 'report/setActiveSimulationPosition',
 } as const;
