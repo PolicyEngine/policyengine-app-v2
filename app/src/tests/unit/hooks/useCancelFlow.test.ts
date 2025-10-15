@@ -21,8 +21,6 @@ vi.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-let mockUseSelector: any;
-
 vi.mock('react-redux', () => ({
   useDispatch: () => mockDispatch,
   useSelector: (selector: any) => selector(mockRootState),
@@ -34,11 +32,10 @@ vi.mock('@/hooks/useIngredientReset', () => ({
 
 vi.mock('@/reducers/flowReducer', () => ({
   clearFlow: vi.fn(() => ({ type: 'flow/clearFlow' })),
-  returnFromFlow: vi.fn(() => ({ type: 'flow/returnFromFlow' })),
 }));
 
 // Import mocked modules for assertions
-import { clearFlow, returnFromFlow } from '@/reducers/flowReducer';
+import { clearFlow } from '@/reducers/flowReducer';
 
 let mockRootState: ReturnType<typeof createMockRootState>;
 
@@ -49,65 +46,26 @@ describe('useCancelFlow', () => {
     mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
   });
 
-  describe('given policy cancellation', () => {
-    test('given standalone flow then clears policy at position and navigates to policies page', () => {
-      // Given
+  describe('Nuclear option behavior', () => {
+    test('given policy cancellation then clears all policies, exits all flows, and navigates', () => {
+      // Given - Can be in any context (standalone or subflow, any position)
       mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
       // When
       result.current.handleCancel();
 
-      // Then
-      expect(mockUseIngredientReset.resetIngredientAtPosition).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.POLICY,
-        TEST_POSITIONS.FIRST
+      // Then - Always clears ALL, exits ALL flows, and navigates
+      expect(mockUseIngredientReset.resetIngredient).toHaveBeenCalledWith(
+        TEST_INGREDIENT_TYPES.POLICY
       );
       expect(clearFlow).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith(
         EXPECTED_NAVIGATION_PATHS.POLICIES(TEST_COUNTRIES.US)
       );
-      expect(returnFromFlow).not.toHaveBeenCalled();
     });
 
-    test('given subflow then clears policy at position and returns to parent flow', () => {
-      // Given
-      mockRootState = createMockRootState(1, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
-      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
-
-      // When
-      result.current.handleCancel();
-
-      // Then - In subflow, should use clearIngredientAtPosition (no mode/position reset)
-      expect(mockUseIngredientReset.clearIngredientAtPosition).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.POLICY,
-        TEST_POSITIONS.FIRST
-      );
-      expect(returnFromFlow).toHaveBeenCalled();
-      expect(clearFlow).not.toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-
-    test('given position 1 then clears policy at position 1', () => {
-      // Given - Update state before rendering hook
-      const stateAtPositionOne = createMockRootState(0, TEST_POSITIONS.SECOND, TEST_COUNTRIES.US);
-      mockRootState = stateAtPositionOne;
-
-      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
-
-      // When
-      result.current.handleCancel();
-
-      // Then
-      expect(mockUseIngredientReset.resetIngredientAtPosition).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.POLICY,
-        TEST_POSITIONS.SECOND
-      );
-    });
-  });
-
-  describe('given population cancellation', () => {
-    test('given standalone flow then clears population at position and navigates to populations page', () => {
+    test('given population cancellation then clears all populations, exits all flows, and navigates', () => {
       // Given
       mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POPULATION));
@@ -116,9 +74,8 @@ describe('useCancelFlow', () => {
       result.current.handleCancel();
 
       // Then
-      expect(mockUseIngredientReset.resetIngredientAtPosition).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.POPULATION,
-        TEST_POSITIONS.FIRST
+      expect(mockUseIngredientReset.resetIngredient).toHaveBeenCalledWith(
+        TEST_INGREDIENT_TYPES.POPULATION
       );
       expect(clearFlow).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith(
@@ -126,26 +83,7 @@ describe('useCancelFlow', () => {
       );
     });
 
-    test('given subflow then clears population at position and returns to parent flow', () => {
-      // Given
-      mockRootState = createMockRootState(2, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
-      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POPULATION));
-
-      // When
-      result.current.handleCancel();
-
-      // Then - In subflow, should use clearIngredientAtPosition (no mode/position reset)
-      expect(mockUseIngredientReset.clearIngredientAtPosition).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.POPULATION,
-        TEST_POSITIONS.FIRST
-      );
-      expect(returnFromFlow).toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('given simulation cancellation', () => {
-    test('given standalone flow then clears simulation at position with cascading and navigates', () => {
+    test('given simulation cancellation then clears all simulations, exits all flows, and navigates', () => {
       // Given
       mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.SIMULATION));
@@ -154,9 +92,8 @@ describe('useCancelFlow', () => {
       result.current.handleCancel();
 
       // Then
-      expect(mockUseIngredientReset.resetIngredientAtPosition).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.SIMULATION,
-        TEST_POSITIONS.FIRST
+      expect(mockUseIngredientReset.resetIngredient).toHaveBeenCalledWith(
+        TEST_INGREDIENT_TYPES.SIMULATION
       );
       expect(clearFlow).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith(
@@ -164,32 +101,7 @@ describe('useCancelFlow', () => {
       );
     });
 
-    test('given subflow then clears simulation at position with cascading and returns', () => {
-      // Given - Update state before rendering hook
-      const stateInSubflowAtPositionOne = createMockRootState(
-        1,
-        TEST_POSITIONS.SECOND,
-        TEST_COUNTRIES.US
-      );
-      mockRootState = stateInSubflowAtPositionOne;
-
-      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.SIMULATION));
-
-      // When
-      result.current.handleCancel();
-
-      // Then - In subflow, should use clearIngredientAtPosition (no mode/position reset)
-      expect(mockUseIngredientReset.clearIngredientAtPosition).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.SIMULATION,
-        TEST_POSITIONS.SECOND
-      );
-      expect(returnFromFlow).toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('given report cancellation', () => {
-    test('given standalone flow then clears all reports and navigates to reports page', () => {
+    test('given report cancellation then clears all reports, exits all flows, and navigates', () => {
       // Given
       mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.REPORT));
@@ -206,25 +118,83 @@ describe('useCancelFlow', () => {
         EXPECTED_NAVIGATION_PATHS.REPORTS(TEST_COUNTRIES.US)
       );
     });
+  });
 
-    test('given subflow then clears all reports and returns to parent flow', () => {
-      // Given
-      mockRootState = createMockRootState(1, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
-      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.REPORT));
+  describe('Context independence', () => {
+    test('given standalone flow then behavior is same as subflow', () => {
+      // Given - Standalone flow (flowStack length = 0)
+      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
+      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
       // When
       result.current.handleCancel();
 
-      // Then
+      // Then - Nuclear option behavior
       expect(mockUseIngredientReset.resetIngredient).toHaveBeenCalledWith(
-        TEST_INGREDIENT_TYPES.REPORT
+        TEST_INGREDIENT_TYPES.POLICY
       );
-      expect(returnFromFlow).toHaveBeenCalled();
-      expect(mockNavigate).not.toHaveBeenCalled();
+      expect(clearFlow).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith(
+        EXPECTED_NAVIGATION_PATHS.POLICIES(TEST_COUNTRIES.US)
+      );
+    });
+
+    test('given subflow then behavior is same as standalone', () => {
+      // Given - Subflow (flowStack length = 1)
+      mockRootState = createMockRootState(1, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
+      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
+
+      // When
+      result.current.handleCancel();
+
+      // Then - Same nuclear option behavior
+      expect(mockUseIngredientReset.resetIngredient).toHaveBeenCalledWith(
+        TEST_INGREDIENT_TYPES.POLICY
+      );
+      expect(clearFlow).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith(
+        EXPECTED_NAVIGATION_PATHS.POLICIES(TEST_COUNTRIES.US)
+      );
+    });
+
+    test('given deep subflow then still exits all flows', () => {
+      // Given - Deep subflow (flowStack length = 3)
+      mockRootState = createMockRootState(3, TEST_POSITIONS.SECOND, TEST_COUNTRIES.UK);
+      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.SIMULATION));
+
+      // When
+      result.current.handleCancel();
+
+      // Then - Clears ALL flows, not just one level
+      expect(mockUseIngredientReset.resetIngredient).toHaveBeenCalledWith(
+        TEST_INGREDIENT_TYPES.SIMULATION
+      );
+      expect(clearFlow).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith(
+        EXPECTED_NAVIGATION_PATHS.SIMULATIONS(TEST_COUNTRIES.UK)
+      );
+    });
+
+    test('given position 1 then still resets all (position-independent)', () => {
+      // Given - At position 1
+      mockRootState = createMockRootState(0, TEST_POSITIONS.SECOND, TEST_COUNTRIES.US);
+      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POPULATION));
+
+      // When
+      result.current.handleCancel();
+
+      // Then - Clears ALL, regardless of position
+      expect(mockUseIngredientReset.resetIngredient).toHaveBeenCalledWith(
+        TEST_INGREDIENT_TYPES.POPULATION
+      );
+      expect(clearFlow).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith(
+        EXPECTED_NAVIGATION_PATHS.POPULATIONS(TEST_COUNTRIES.US)
+      );
     });
   });
 
-  describe('given different country IDs', () => {
+  describe('Country-specific navigation', () => {
     test('given UK country then navigates to UK policies page', () => {
       // Given
       mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.UK);
@@ -251,6 +221,18 @@ describe('useCancelFlow', () => {
       expect(mockNavigate).toHaveBeenCalledWith(
         EXPECTED_NAVIGATION_PATHS.POPULATIONS(TEST_COUNTRIES.US)
       );
+    });
+  });
+
+  describe('Return value', () => {
+    test('given hook called then returns handleCancel function', () => {
+      // Given
+      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
+      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
+
+      // Then
+      expect(result.current).toHaveProperty('handleCancel');
+      expect(typeof result.current.handleCancel).toBe('function');
     });
   });
 });
