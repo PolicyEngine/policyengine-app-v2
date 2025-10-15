@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fetchHouseholdById } from '@/api/household';
 import { LocalStorageHouseholdStore } from '@/api/householdAssociation';
@@ -106,7 +107,13 @@ describe('useUserHousehold hooks', () => {
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/us/populations']}>
+          <Routes>
+            <Route path="/:countryId/*" element={children} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     </Provider>
   );
 
@@ -395,7 +402,13 @@ describe('useUserHousehold hooks', () => {
 
       const customWrapper = ({ children }: { children: React.ReactNode }) => (
         <Provider store={store}>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={['/uk/populations']}>
+              <Routes>
+                <Route path="/:countryId/*" element={children} />
+              </Routes>
+            </MemoryRouter>
+          </QueryClientProvider>
         </Provider>
       );
 
@@ -422,7 +435,13 @@ describe('useUserHousehold hooks', () => {
 
       const customWrapper = ({ children }: { children: React.ReactNode }) => (
         <Provider store={store}>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={['/us/populations']}>
+              <Routes>
+                <Route path="/:countryId/*" element={children} />
+              </Routes>
+            </MemoryRouter>
+          </QueryClientProvider>
         </Provider>
       );
 

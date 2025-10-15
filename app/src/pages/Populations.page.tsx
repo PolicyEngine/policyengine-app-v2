@@ -199,7 +199,7 @@ export default function PopulationsPage() {
             ? formatDate(
                 item.association.createdAt,
                 'short-month-day-year',
-                (item.household?.country_id || 'us') as (typeof countryIds)[number],
+                item.household?.country_id as (typeof countryIds)[number],
                 true
               )
             : '',
@@ -225,7 +225,7 @@ export default function PopulationsPage() {
             ? formatDate(
                 association.createdAt,
                 'short-month-day-year',
-                (association?.countryId || 'us') as (typeof countryIds)[number],
+                association?.countryId as (typeof countryIds)[number],
                 true
               )
             : '',

@@ -1,8 +1,7 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { fetchPolicyById } from '@/api/policy';
-import { selectCurrentCountry } from '@/reducers/metadataReducer';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
@@ -142,8 +141,7 @@ export function isPolicyMetadataWithAssociation(
 }
 
 export const useUserPolicies = (userId: string) => {
-  // Get country from metadata state, fallback to 'us' if not available
-  const country = useSelector(selectCurrentCountry) || 'us';
+  const country = useCurrentCountry();
 
   // First, get the associations
   const {

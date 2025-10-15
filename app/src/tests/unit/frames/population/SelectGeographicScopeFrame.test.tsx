@@ -3,6 +3,7 @@ import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
@@ -87,10 +88,17 @@ describe('SelectGeographicScopeFrame', () => {
       },
     });
 
+    // Use the country from metadata state for the router path
+    const countryForRouter = fullMetadataState.currentCountry || TEST_COUNTRIES.US;
+
     return render(
       <Provider store={store}>
         <MantineProvider>
-          <SelectGeographicScopeFrame {...props} />
+          <MemoryRouter initialEntries={[`/${countryForRouter}/populations`]}>
+            <Routes>
+              <Route path="/:countryId/*" element={<SelectGeographicScopeFrame {...props} />} />
+            </Routes>
+          </MemoryRouter>
         </MantineProvider>
       </Provider>
     );

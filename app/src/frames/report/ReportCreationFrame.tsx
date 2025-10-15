@@ -3,10 +3,11 @@ import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { clearReport, updateLabel } from '@/reducers/reportReducer';
+import { AppDispatch } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) {
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
   const [localLabel, setLocalLabel] = useState('');
 
   // Clear any existing report data when mounting

@@ -23,9 +23,10 @@ export async function fetchPolicyById(country: string, policyId: string): Promis
 }
 
 export async function createPolicy(
+  countryId: string,
   data: PolicyCreationPayload
 ): Promise<{ result: { policy_id: string } }> {
-  const url = `${BASE_URL}/us/policy`;
+  const url = `${BASE_URL}/${countryId}/policy`;
 
   const res = await fetch(url, {
     method: 'POST',

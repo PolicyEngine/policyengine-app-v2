@@ -2,15 +2,18 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createPolicy } from '@/api/policy';
 import { MOCK_USER_ID } from '@/constants';
 import { policyKeys } from '@/libs/queryKeys';
+import { PolicyCreationPayload } from '@/types/payloads';
+import { useCurrentCountry } from './useCurrentCountry';
 import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {
   const queryClient = useQueryClient();
+  const countryId = useCurrentCountry();
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreatePolicyAssociation();
 
   const mutation = useMutation({
-    mutationFn: createPolicy,
+    mutationFn: (data: PolicyCreationPayload) => createPolicy(countryId, data),
     onSuccess: async (data) => {
       try {
         queryClient.invalidateQueries({ queryKey: policyKeys.all });

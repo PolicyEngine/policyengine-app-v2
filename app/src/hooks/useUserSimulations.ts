@@ -5,6 +5,7 @@ import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -58,7 +59,7 @@ interface EnhancedUserSimulation {
  * For simple lists or counts, use useSimulationAssociationsByUser instead
  */
 export const useUserSimulations = (userId: string) => {
-  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
+  const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
 
   // Get geography data from metadata
@@ -275,7 +276,7 @@ export const useUserSimulations = (userId: string) => {
  */
 export const useUserSimulationById = (userId: string, simulationId: string) => {
   const queryNormalizer = useQueryNormalizer();
-  const country = 'us';
+  const country = useCurrentCountry();
 
   // Try to get from normalized cache first
   const cachedSimulation = queryNormalizer.getObjectById(simulationId) as Simulation | undefined;

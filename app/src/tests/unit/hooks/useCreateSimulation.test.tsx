@@ -2,11 +2,11 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createSimulation } from '@/api/simulation';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 import { useCreateSimulationAssociation } from '@/hooks/useUserSimulationAssociations';
-import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import {
   mockSimulationPayload,
   mockSimulationPayloadGeography,
@@ -34,14 +34,6 @@ vi.mock('@/api/simulation', () => ({
 vi.mock('@/hooks/useUserSimulationAssociations', () => ({
   useCreateSimulationAssociation: vi.fn(),
 }));
-
-vi.mock('@/reducers/metadataReducer', async (importOriginal) => {
-  const actual = (await importOriginal()) as any;
-  return {
-    ...actual,
-    selectCurrentCountry: vi.fn(),
-  };
-});
 
 vi.mock('@/constants', () => ({
   MOCK_USER_ID: 'anonymous',
@@ -78,9 +70,6 @@ describe('useCreateSimulation', () => {
     // Setup console spies
     consoleSpies = setupConsoleSpies();
 
-    // Setup selector mock
-    (selectCurrentCountry as any).mockImplementation((state: any) => state.metadata.currentCountry);
-
     // Setup mocks with default implementations
     setupDefaultMocks();
 
@@ -97,7 +86,13 @@ describe('useCreateSimulation', () => {
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={mockStore}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/us/simulations']}>
+          <Routes>
+            <Route path="/:countryId/*" element={children} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     </Provider>
   );
 
@@ -192,7 +187,13 @@ describe('useCreateSimulation', () => {
 
       const ukWrapper = ({ children }: { children: React.ReactNode }) => (
         <Provider store={ukStore}>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+          <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={['/uk/simulations']}>
+              <Routes>
+                <Route path="/:countryId/*" element={children} />
+              </Routes>
+            </MemoryRouter>
+          </QueryClientProvider>
         </Provider>
       );
 
@@ -207,25 +208,31 @@ describe('useCreateSimulation', () => {
       expect(createSimulation).toHaveBeenCalledWith(TEST_COUNTRIES.UK, mockSimulationPayload);
     });
 
-    test('given no country in state when createSimulation called then defaults to us', async () => {
+    test('given UK country when createSimulation called then uses UK endpoint', async () => {
       // Given
-      const emptyStore = createMockStoreWithCountry(null);
+      const ukStore = createMockStoreWithCountry(TEST_COUNTRIES.UK);
 
-      const emptyWrapper = ({ children }: { children: React.ReactNode }) => (
-        <Provider store={emptyStore}>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      const ukWrapper = ({ children }: { children: React.ReactNode }) => (
+        <Provider store={ukStore}>
+          <QueryClientProvider client={queryClient}>
+            <MemoryRouter initialEntries={['/uk/simulations']}>
+              <Routes>
+                <Route path="/:countryId/*" element={children} />
+              </Routes>
+            </MemoryRouter>
+          </QueryClientProvider>
         </Provider>
       );
 
       const { result } = renderHook(() => useCreateSimulation(TEST_LABELS.SIMULATION), {
-        wrapper: emptyWrapper,
+        wrapper: ukWrapper,
       });
 
       // When
       await result.current.createSimulation(mockSimulationPayload);
 
       // Then
-      expect(createSimulation).toHaveBeenCalledWith('us', mockSimulationPayload);
+      expect(createSimulation).toHaveBeenCalledWith('uk', mockSimulationPayload);
     });
   });
 

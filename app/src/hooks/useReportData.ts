@@ -140,10 +140,10 @@ export function useReportData(userReportId: string): ReportDataResult {
   // The API returns raw HouseholdData, but components expect the Household wrapper
   let output: EconomyReportOutput | Household | null | undefined = data;
 
-  if (outputType === 'household' && data) {
+  if (outputType === 'household' && data && metadata?.countryId) {
     const wrappedOutput: Household = {
       id: baseReportId,
-      countryId: metadata?.countryId || 'us',
+      countryId: metadata.countryId,
       householdData: data as HouseholdData,
     };
     output = wrappedOutput;

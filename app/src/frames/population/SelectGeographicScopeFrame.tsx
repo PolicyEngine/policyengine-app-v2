@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { uk_regions, us_regions } from '@/mocks/regions';
 import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
 import { createPopulationAtPosition, setGeographyAtPosition } from '@/reducers/populationReducer';
@@ -23,9 +24,8 @@ export default function SelectGeographicScopeFrame({
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
   const populationState = useSelector((state: RootState) => selectActivePopulation(state));
 
-  // Get current country from metadata state, fallback to 'us' if not available
-  const currentCountry: string =
-    useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  // Get current country from URL
+  const currentCountry = useCurrentCountry();
 
   // Set mode to standalone if not in a subflow (this is the first frame of population flow)
   useEffect(() => {

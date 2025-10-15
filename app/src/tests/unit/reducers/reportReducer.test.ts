@@ -204,14 +204,15 @@ describe('reportReducer', () => {
   });
 
   describe('clearReport action', () => {
-    test('given populated report then resets to initial state but preserves country and api version', () => {
+    test('given populated report then resets to initial state and sets country from thunk', () => {
       // Given
       const initialState = {
         ...MOCK_COMPLETE_REPORT,
         activeSimulationPosition: 1 as 0 | 1,
         mode: 'report' as 'standalone' | 'report',
       };
-      const action = clearReport();
+      vi.advanceTimersByTime(1000);
+      const action = clearReport.fulfilled('uk', '', undefined);
 
       // When
       const state = reportReducer(initialState, action);
@@ -222,22 +223,21 @@ describe('reportReducer', () => {
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');
       expectOutput(state, null);
-      expect(state.countryId).toBe('us'); // Preserved
+      expect(state.countryId).toBe('uk'); // Set from thunk payload
       expect(state.apiVersion).toBe('v1'); // Preserved
-      expect(state.createdAt).toBe('2024-01-15T10:00:00.000Z');
-      expect(state.updatedAt).toBe('2024-01-15T10:00:00.000Z');
+      expect(state.createdAt).not.toBe('2024-01-15T10:00:00.000Z'); // Reset
       expect(state.activeSimulationPosition).toBe(0);
       expect(state.mode).toBe('standalone');
     });
 
-    test('given error report then resets all fields but preserves country and api version', () => {
+    test('given error report then resets all fields and sets country from thunk', () => {
       // Given
       const initialState = {
         ...MOCK_ERROR_REPORT,
         activeSimulationPosition: 1 as 0 | 1,
         mode: 'report' as 'standalone' | 'report',
       };
-      const action = clearReport();
+      const action = clearReport.fulfilled('us', '', undefined);
 
       // When
       const state = reportReducer(initialState, action);
@@ -247,7 +247,7 @@ describe('reportReducer', () => {
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');
       expectOutput(state, null);
-      expect(state.countryId).toBe('uk'); // Preserved
+      expect(state.countryId).toBe('us'); // Set from thunk payload
       expect(state.apiVersion).toBe('v2'); // Preserved
       expect(state.activeSimulationPosition).toBe(0);
       expect(state.mode).toBe('standalone');
@@ -604,7 +604,7 @@ describe('reportReducer', () => {
       expectStatus(state, 'error');
 
       // When & Then - Clear report
-      state = reportReducer(state as any, clearReport());
+      state = reportReducer(state as any, clearReport.fulfilled('us', '', undefined));
       expectReportId(state, '');
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');
