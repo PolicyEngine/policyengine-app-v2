@@ -1,6 +1,7 @@
 import { IconCheck, IconChevronRight } from '@tabler/icons-react';
 import { Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
 import { spacing } from '@/designTokens';
+import { useBackButton } from '@/hooks/useBackButton';
 import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
@@ -80,6 +81,9 @@ export default function FlowView({
   buttonPanelCards,
   cardListItems,
 }: FlowViewProps) {
+  // Use back button hook
+  const { handleBack, canGoBack } = useBackButton();
+
   // Use cancel flow hook if ingredientType is provided
   const { handleCancel } = cancelAction?.ingredientType
     ? useCancelFlow(cancelAction.ingredientType)
@@ -111,8 +115,17 @@ export default function FlowView({
       ];
     }
 
-    // Default behavior: cancel + primary (or just cancel if no primary action)
+    // Default behavior: back + cancel + primary (or just cancel if no primary action)
     const generatedButtons: ButtonConfig[] = [];
+
+    // Add back button if there's frame history
+    if (canGoBack) {
+      generatedButtons.push({
+        label: 'Back',
+        variant: 'default',
+        onClick: handleBack,
+      });
+    }
 
     // Always add cancel button unless explicitly disabled
     generatedButtons.push({
