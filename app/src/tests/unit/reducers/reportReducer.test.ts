@@ -211,6 +211,7 @@ describe('reportReducer', () => {
         activeSimulationPosition: 1 as 0 | 1,
         mode: 'report' as 'standalone' | 'report',
       };
+      vi.advanceTimersByTime(1000);
       const action = clearReport.fulfilled('uk', '', undefined);
 
       // When

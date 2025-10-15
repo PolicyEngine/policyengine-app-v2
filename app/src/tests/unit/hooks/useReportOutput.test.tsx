@@ -36,6 +36,11 @@ vi.mock('@/libs/queryOptions/calculations', () => ({
   },
 }));
 
+// Mock useCurrentCountry
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 describe('useReportOutput', () => {
   const mockReportId = MOCK_REPORT_ID;
   const { createWrapper } = createQueryClientWrapper();
