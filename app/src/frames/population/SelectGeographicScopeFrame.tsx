@@ -10,6 +10,80 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
 
+/**
+ * Format geography ID for US regions
+ * US states need just the state code without prefix (e.g., "ca" not "state/ca")
+ */
+export function formatUSGeographyId(
+  selectedValue: string,
+  scope: 'national' | 'subnational'
+): string {
+  if (scope === 'national') {
+    return 'us';
+  }
+
+  // Extract state code from "state/ca" or just "ca"
+  if (selectedValue.includes('/')) {
+    return selectedValue.split('/').pop() || selectedValue;
+  }
+
+  return selectedValue;
+}
+
+/**
+ * Default geography ID formatter that preserves the full path
+ * Used by UK and other countries that need full path preservation
+ * UK regions keep their full path with prefix (e.g., "constituency/Brighton..." or "country/england")
+ */
+export function formatDefaultGeographyId(
+  selectedValue: string,
+  scope: 'national' | 'subnational',
+  countryId: string
+): string {
+  if (scope === 'national') {
+    return countryId;
+  }
+
+  // Keep the full path with prefix (constituency/ or country/)
+  return selectedValue;
+}
+
+/**
+ * Main function to format geography ID based on country
+ * US requires special handling to extract state codes; all other countries use default formatter
+ */
+export function formatGeographyId(
+  countryId: string,
+  selectedValue: string,
+  scope: 'national' | 'subnational'
+): string {
+  // US needs special handling to extract state codes (e.g., "ca" from "state/ca")
+  if (countryId === 'us') {
+    return formatUSGeographyId(selectedValue, scope);
+  }
+
+  // All other countries (including UK) use default formatter which preserves full paths
+  return formatDefaultGeographyId(selectedValue, scope, countryId);
+}
+
+/**
+ * Format display ID for Geography.id field
+ * Converts slashes to hyphens and adds country prefix
+ */
+export function formatDisplayId(
+  countryId: string,
+  geographyId: string,
+  scope: 'national' | 'subnational'
+): string {
+  if (scope === 'national') {
+    return countryId;
+  }
+
+  // Replace slashes with hyphens for ID format
+  const sanitizedValue = geographyId.replace(/\//g, '-');
+  return `${countryId}-${sanitizedValue}`;
+}
+
 export default function SelectGeographicScopeFrame({
   onNavigate,
   isInSubflow,
@@ -72,32 +146,41 @@ export default function SelectGeographicScopeFrame({
     }
   };
 
-  // Helper function to extract value after last slash
-  const extractRegionValue = (fullValue: string) => {
-    console.log('Extracting region value from:', fullValue);
-    return fullValue.split('/').pop() || fullValue;
-  };
-
   function submissionHandler() {
     // Validate that if state is selected, a region must be chosen
     if (scope === 'state' && !selectedRegion) {
-      // TODO: Add proper error handling/notification here
       console.warn('State selected but no region chosen');
       return;
     }
 
     // Create Geography object for non-household selections
     if (scope !== 'household') {
+      const geographicScope: 'national' | 'subnational' =
+        scope === 'national' ? 'national' : 'subnational';
+
+      // Use formatter functions to create properly formatted IDs
+      const geographyId = formatGeographyId(
+        currentCountry,
+        selectedRegion || currentCountry,
+        geographicScope
+      );
+
+      const displayId = formatDisplayId(currentCountry, geographyId, geographicScope);
+
       const geography: Geography = {
-        id:
-          scope === 'national'
-            ? currentCountry
-            : `${currentCountry}-${extractRegionValue(selectedRegion)}`,
+        id: displayId,
         countryId: currentCountry as any,
-        scope: scope === 'national' ? 'national' : 'subnational',
-        geographyId: scope === 'national' ? currentCountry : extractRegionValue(selectedRegion),
+        scope: geographicScope,
+        geographyId,
       };
-      console.log('Dispatching geography:', geography);
+
+      console.log('Created geography:', {
+        countryId: currentCountry,
+        scope: geographicScope,
+        selectedRegion,
+        geography,
+      });
+
       dispatch(
         setGeographyAtPosition({
           position: currentPosition,

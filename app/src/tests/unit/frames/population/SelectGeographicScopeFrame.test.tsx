@@ -14,6 +14,21 @@ import {
   mockFlowProps,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/frames/populationMocks';
+import {
+  formatUSGeographyId,
+  formatDefaultGeographyId,
+  formatGeographyId,
+  formatDisplayId,
+} from '@/frames/population/SelectGeographicScopeFrame';
+import {
+  TEST_COUNTRIES as GEO_TEST_COUNTRIES,
+  TEST_SCOPES,
+  US_STATES,
+  UK_REGIONS,
+  EXPECTED_GEOGRAPHY_IDS,
+  EXPECTED_DISPLAY_IDS,
+  EDGE_CASES,
+} from '@/tests/fixtures/frames/population/geographyConstants';
 
 // Mock the regions data
 vi.mock('@/mocks/regions', () => ({
@@ -352,7 +367,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then
       const state = store.getState();
-      expect(state.population.populations[0]?.geography?.geographyId).toBe('london'); // Not 'constituency/london'
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('constituency/london');
     });
   });
 
@@ -384,5 +399,356 @@ describe('SelectGeographicScopeFrame', () => {
         expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
       });
     });
+  });
+});
+
+
+describe('formatUSGeographyId', () => {
+  test('given national scope then returns "us"', () => {
+    // Given & When
+    const result = formatUSGeographyId(GEO_TEST_COUNTRIES.US, TEST_SCOPES.NATIONAL);
+
+    // Then
+    expect(result).toBe(EXPECTED_GEOGRAPHY_IDS.US_NATIONAL);
+  });
+
+  test('given national scope with any value then returns "us"', () => {
+    // Given & When
+    const result = formatUSGeographyId('anything', TEST_SCOPES.NATIONAL);
+
+    // Then
+    expect(result).toBe(EXPECTED_GEOGRAPHY_IDS.US_NATIONAL);
+  });
+
+  test('given state code with prefix then extracts code', () => {
+    // Given & When
+    const resultCA = formatUSGeographyId(
+      US_STATES.CALIFORNIA_WITH_PREFIX,
+      TEST_SCOPES.SUBNATIONAL
+    );
+    const resultNY = formatUSGeographyId(
+      US_STATES.NEW_YORK_WITH_PREFIX,
+      TEST_SCOPES.SUBNATIONAL
+    );
+    const resultTX = formatUSGeographyId(US_STATES.TEXAS_WITH_PREFIX, TEST_SCOPES.SUBNATIONAL);
+
+    // Then
+    expect(resultCA).toBe(EXPECTED_GEOGRAPHY_IDS.US_CALIFORNIA);
+    expect(resultNY).toBe(EXPECTED_GEOGRAPHY_IDS.US_NEW_YORK);
+    expect(resultTX).toBe('tx');
+  });
+
+  test('given state code without prefix then returns as-is', () => {
+    // Given & When
+    const resultCA = formatUSGeographyId(
+      US_STATES.CALIFORNIA_WITHOUT_PREFIX,
+      TEST_SCOPES.SUBNATIONAL
+    );
+    const resultNY = formatUSGeographyId(
+      US_STATES.NEW_YORK_WITHOUT_PREFIX,
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(resultCA).toBe(EXPECTED_GEOGRAPHY_IDS.US_CALIFORNIA);
+    expect(resultNY).toBe(EXPECTED_GEOGRAPHY_IDS.US_NEW_YORK);
+  });
+
+  test('given edge cases then handles gracefully', () => {
+    // Given & When
+    const trailingSlashResult = formatUSGeographyId(
+      EDGE_CASES.TRAILING_SLASH,
+      TEST_SCOPES.SUBNATIONAL
+    );
+    const justSlashResult = formatUSGeographyId(EDGE_CASES.JUST_SLASH, TEST_SCOPES.SUBNATIONAL);
+
+    // Then
+    // "state/" splits to ["state", ""] and pop() returns "" which is falsy, so fallback returns "state/"
+    expect(trailingSlashResult).toBe(EDGE_CASES.TRAILING_SLASH);
+    // "/" splits to ["", ""] and pop() returns "" which is falsy, so fallback returns "/"
+    expect(justSlashResult).toBe(EDGE_CASES.JUST_SLASH);
+  });
+});
+
+describe('formatDefaultGeographyId', () => {
+  test('given UK national scope then returns "uk"', () => {
+    // Given & When
+    const result = formatDefaultGeographyId(
+      GEO_TEST_COUNTRIES.UK,
+      TEST_SCOPES.NATIONAL,
+      GEO_TEST_COUNTRIES.UK
+    );
+
+    // Then
+    expect(result).toBe(EXPECTED_GEOGRAPHY_IDS.UK_NATIONAL);
+  });
+
+  test('given UK national scope with any value then returns "uk"', () => {
+    // Given & When
+    const result = formatDefaultGeographyId('anything', TEST_SCOPES.NATIONAL, GEO_TEST_COUNTRIES.UK);
+
+    // Then
+    expect(result).toBe(EXPECTED_GEOGRAPHY_IDS.UK_NATIONAL);
+  });
+
+  test('given UK constituency path then keeps full path with prefix', () => {
+    // Given & When
+    const resultBrighton = formatDefaultGeographyId(
+      UK_REGIONS.CONSTITUENCY_BRIGHTON,
+      TEST_SCOPES.SUBNATIONAL,
+      GEO_TEST_COUNTRIES.UK
+    );
+    const resultAldershot = formatDefaultGeographyId(
+      UK_REGIONS.CONSTITUENCY_ALDERSHOT,
+      TEST_SCOPES.SUBNATIONAL,
+      GEO_TEST_COUNTRIES.UK
+    );
+
+    // Then
+    expect(resultBrighton).toBe(EXPECTED_GEOGRAPHY_IDS.UK_CONSTITUENCY_BRIGHTON);
+    expect(resultAldershot).toBe(EXPECTED_GEOGRAPHY_IDS.UK_CONSTITUENCY_ALDERSHOT);
+  });
+
+  test('given UK country path then keeps full path with prefix', () => {
+    // Given & When
+    const resultEngland = formatDefaultGeographyId(
+      UK_REGIONS.COUNTRY_ENGLAND,
+      TEST_SCOPES.SUBNATIONAL,
+      GEO_TEST_COUNTRIES.UK
+    );
+    const resultScotland = formatDefaultGeographyId(
+      UK_REGIONS.COUNTRY_SCOTLAND,
+      TEST_SCOPES.SUBNATIONAL,
+      GEO_TEST_COUNTRIES.UK
+    );
+    const resultWales = formatDefaultGeographyId(
+      UK_REGIONS.COUNTRY_WALES,
+      TEST_SCOPES.SUBNATIONAL,
+      GEO_TEST_COUNTRIES.UK
+    );
+    const resultNI = formatDefaultGeographyId(
+      UK_REGIONS.COUNTRY_NI,
+      TEST_SCOPES.SUBNATIONAL,
+      GEO_TEST_COUNTRIES.UK
+    );
+
+    // Then
+    expect(resultEngland).toBe(UK_REGIONS.COUNTRY_ENGLAND);
+    expect(resultScotland).toBe(EXPECTED_GEOGRAPHY_IDS.UK_COUNTRY_SCOTLAND);
+    expect(resultWales).toBe(UK_REGIONS.COUNTRY_WALES);
+    expect(resultNI).toBe(UK_REGIONS.COUNTRY_NI);
+  });
+});
+
+describe('formatGeographyId', () => {
+  test('given US country then delegates to formatUSGeographyId', () => {
+    // Given & When
+    const resultNational = formatGeographyId(
+      GEO_TEST_COUNTRIES.US,
+      GEO_TEST_COUNTRIES.US,
+      TEST_SCOPES.NATIONAL
+    );
+    const resultState = formatGeographyId(
+      GEO_TEST_COUNTRIES.US,
+      US_STATES.CALIFORNIA_WITH_PREFIX,
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(resultNational).toBe(EXPECTED_GEOGRAPHY_IDS.US_NATIONAL);
+    expect(resultState).toBe(EXPECTED_GEOGRAPHY_IDS.US_CALIFORNIA);
+  });
+
+  test('given UK country then delegates to formatDefaultGeographyId', () => {
+    // Given & When
+    const resultNational = formatGeographyId(
+      GEO_TEST_COUNTRIES.UK,
+      GEO_TEST_COUNTRIES.UK,
+      TEST_SCOPES.NATIONAL
+    );
+    const resultConstituency = formatGeographyId(
+      GEO_TEST_COUNTRIES.UK,
+      UK_REGIONS.CONSTITUENCY_BRIGHTON,
+      TEST_SCOPES.SUBNATIONAL
+    );
+    const resultCountry = formatGeographyId(
+      GEO_TEST_COUNTRIES.UK,
+      UK_REGIONS.COUNTRY_SCOTLAND,
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(resultNational).toBe(EXPECTED_GEOGRAPHY_IDS.UK_NATIONAL);
+    expect(resultConstituency).toBe(EXPECTED_GEOGRAPHY_IDS.UK_CONSTITUENCY_BRIGHTON);
+    expect(resultCountry).toBe(EXPECTED_GEOGRAPHY_IDS.UK_COUNTRY_SCOTLAND);
+  });
+
+  test('given unknown country then uses default formatting', () => {
+    // Given & When
+    const result = formatGeographyId(
+      GEO_TEST_COUNTRIES.UNKNOWN,
+      'province/ontario',
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(result).toBe('province/ontario');
+  });
+});
+
+describe('formatDisplayId', () => {
+  test('given national scope then returns country ID', () => {
+    // Given & When
+    const resultUS = formatDisplayId(
+      GEO_TEST_COUNTRIES.US,
+      EXPECTED_GEOGRAPHY_IDS.US_NATIONAL,
+      TEST_SCOPES.NATIONAL
+    );
+    const resultUK = formatDisplayId(
+      GEO_TEST_COUNTRIES.UK,
+      EXPECTED_GEOGRAPHY_IDS.UK_NATIONAL,
+      TEST_SCOPES.NATIONAL
+    );
+
+    // Then
+    expect(resultUS).toBe(EXPECTED_DISPLAY_IDS.US_NATIONAL);
+    expect(resultUK).toBe(EXPECTED_DISPLAY_IDS.UK_NATIONAL);
+  });
+
+  test('given US state display IDs then formats correctly', () => {
+    // Given & When
+    const resultCA = formatDisplayId(
+      GEO_TEST_COUNTRIES.US,
+      EXPECTED_GEOGRAPHY_IDS.US_CALIFORNIA,
+      TEST_SCOPES.SUBNATIONAL
+    );
+    const resultNY = formatDisplayId(
+      GEO_TEST_COUNTRIES.US,
+      EXPECTED_GEOGRAPHY_IDS.US_NEW_YORK,
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(resultCA).toBe(EXPECTED_DISPLAY_IDS.US_CALIFORNIA);
+    expect(resultNY).toBe(EXPECTED_DISPLAY_IDS.US_NEW_YORK);
+  });
+
+  test('given UK constituency then replaces slashes with hyphens', () => {
+    // Given & When
+    const resultBrighton = formatDisplayId(
+      GEO_TEST_COUNTRIES.UK,
+      EXPECTED_GEOGRAPHY_IDS.UK_CONSTITUENCY_BRIGHTON,
+      TEST_SCOPES.SUBNATIONAL
+    );
+    const resultAldershot = formatDisplayId(
+      GEO_TEST_COUNTRIES.UK,
+      EXPECTED_GEOGRAPHY_IDS.UK_CONSTITUENCY_ALDERSHOT,
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(resultBrighton).toBe(EXPECTED_DISPLAY_IDS.UK_CONSTITUENCY_BRIGHTON);
+    expect(resultAldershot).toBe(EXPECTED_DISPLAY_IDS.UK_CONSTITUENCY_ALDERSHOT);
+  });
+
+  test('given UK country then replaces slashes with hyphens', () => {
+    // Given & When
+    const resultScotland = formatDisplayId(
+      GEO_TEST_COUNTRIES.UK,
+      EXPECTED_GEOGRAPHY_IDS.UK_COUNTRY_SCOTLAND,
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(resultScotland).toBe(EXPECTED_DISPLAY_IDS.UK_COUNTRY_SCOTLAND);
+  });
+
+  test('given multiple slashes then replaces all with hyphens', () => {
+    // Given & When
+    const result = formatDisplayId(
+      GEO_TEST_COUNTRIES.UK,
+      EDGE_CASES.MULTIPLE_SLASHES,
+      TEST_SCOPES.SUBNATIONAL
+    );
+
+    // Then
+    expect(result).toBe('uk-country-region-subregion');
+  });
+});
+
+describe('Integration: Full geography object creation', () => {
+  test('given US state then produces correct geography IDs', () => {
+    // Given
+    const countryId = GEO_TEST_COUNTRIES.US;
+    const selectedValue = US_STATES.CALIFORNIA_WITH_PREFIX;
+    const scope = TEST_SCOPES.SUBNATIONAL;
+
+    // When
+    const geographyId = formatGeographyId(countryId, selectedValue, scope);
+    const displayId = formatDisplayId(countryId, geographyId, scope);
+
+    // Then
+    expect(geographyId).toBe(EXPECTED_GEOGRAPHY_IDS.US_CALIFORNIA);
+    expect(displayId).toBe(EXPECTED_DISPLAY_IDS.US_CALIFORNIA);
+  });
+
+  test('given UK constituency then produces correct geography IDs', () => {
+    // Given
+    const countryId = GEO_TEST_COUNTRIES.UK;
+    const selectedValue = UK_REGIONS.CONSTITUENCY_BRIGHTON;
+    const scope = TEST_SCOPES.SUBNATIONAL;
+
+    // When
+    const geographyId = formatGeographyId(countryId, selectedValue, scope);
+    const displayId = formatDisplayId(countryId, geographyId, scope);
+
+    // Then
+    expect(geographyId).toBe(EXPECTED_GEOGRAPHY_IDS.UK_CONSTITUENCY_BRIGHTON);
+    expect(displayId).toBe(EXPECTED_DISPLAY_IDS.UK_CONSTITUENCY_BRIGHTON);
+  });
+
+  test('given UK country then produces correct geography IDs', () => {
+    // Given
+    const countryId = GEO_TEST_COUNTRIES.UK;
+    const selectedValue = UK_REGIONS.COUNTRY_SCOTLAND;
+    const scope = TEST_SCOPES.SUBNATIONAL;
+
+    // When
+    const geographyId = formatGeographyId(countryId, selectedValue, scope);
+    const displayId = formatDisplayId(countryId, geographyId, scope);
+
+    // Then
+    expect(geographyId).toBe(EXPECTED_GEOGRAPHY_IDS.UK_COUNTRY_SCOTLAND);
+    expect(displayId).toBe(EXPECTED_DISPLAY_IDS.UK_COUNTRY_SCOTLAND);
+  });
+
+  test('given US national scope then produces correct geography IDs', () => {
+    // Given
+    const countryId = GEO_TEST_COUNTRIES.US;
+    const selectedValue = GEO_TEST_COUNTRIES.US;
+    const scope = TEST_SCOPES.NATIONAL;
+
+    // When
+    const geographyId = formatGeographyId(countryId, selectedValue, scope);
+    const displayId = formatDisplayId(countryId, geographyId, scope);
+
+    // Then
+    expect(geographyId).toBe(EXPECTED_GEOGRAPHY_IDS.US_NATIONAL);
+    expect(displayId).toBe(EXPECTED_DISPLAY_IDS.US_NATIONAL);
+  });
+
+  test('given UK national scope then produces correct geography IDs', () => {
+    // Given
+    const countryId = GEO_TEST_COUNTRIES.UK;
+    const selectedValue = GEO_TEST_COUNTRIES.UK;
+    const scope = TEST_SCOPES.NATIONAL;
+
+    // When
+    const geographyId = formatGeographyId(countryId, selectedValue, scope);
+    const displayId = formatDisplayId(countryId, geographyId, scope);
+
+    // Then
+    expect(geographyId).toBe(EXPECTED_GEOGRAPHY_IDS.UK_NATIONAL);
+    expect(displayId).toBe(EXPECTED_DISPLAY_IDS.UK_NATIONAL);
   });
 });

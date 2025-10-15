@@ -57,6 +57,10 @@ storybook-static/
 # Archived approaches (kept for reference)
 app/src/_archived/
 
+# Claude local planning files (not tracked in git)
+# This folder is for local development planning and implementation docs
+.claude-plans/
+
 # Python
 __pycache__/
 *.py[cod]
