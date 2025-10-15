@@ -12,7 +12,7 @@ export const useCancelFlow = (
   const navigate = useNavigate();
 
   // Use existing ingredient reset hook
-  const { resetIngredient, resetIngredientAtPosition } = useIngredientReset();
+  const { resetIngredient, resetIngredientAtPosition, clearIngredientAtPosition } = useIngredientReset();
 
   // Get context
   const { flowStack } = useSelector((state: RootState) => state.flow);
@@ -23,27 +23,47 @@ export const useCancelFlow = (
     const isInSubflow = flowStack.length > 0;
 
     // Step 1: Clear ingredient state with cascading
-    switch (ingredientType) {
-      case 'policy':
-        // Policy has no dependencies - clear at current position only
-        resetIngredientAtPosition('policy', currentPosition);
-        break;
+    if (isInSubflow) {
+      // In subflow: Clear ingredient data WITHOUT resetting mode/position
+      // We're just backing out one level, still in the parent context
+      switch (ingredientType) {
+        case 'policy':
+          clearIngredientAtPosition('policy', currentPosition);
+          break;
 
-      case 'population':
-        // Population has no dependencies - clear at current position only
-        resetIngredientAtPosition('population', currentPosition);
-        break;
+        case 'population':
+          clearIngredientAtPosition('population', currentPosition);
+          break;
 
-      case 'simulation':
-        // Simulation depends on policy + population at current position
-        // Clear simulation (which cascades to clear policies + populations at position)
-        resetIngredientAtPosition('simulation', currentPosition);
-        break;
+        case 'simulation':
+          // Simulation cascades to clear policy + population at position
+          clearIngredientAtPosition('simulation', currentPosition);
+          break;
 
-      case 'report':
-        // Report depends on everything - clear all positions
-        resetIngredient('report');
-        break;
+        case 'report':
+          // Report clears everything including mode/position
+          resetIngredient('report');
+          break;
+      }
+    } else {
+      // Standalone flow: Clear ingredient data AND reset mode/position
+      switch (ingredientType) {
+        case 'policy':
+          resetIngredientAtPosition('policy', currentPosition);
+          break;
+
+        case 'population':
+          resetIngredientAtPosition('population', currentPosition);
+          break;
+
+        case 'simulation':
+          resetIngredientAtPosition('simulation', currentPosition);
+          break;
+
+        case 'report':
+          resetIngredient('report');
+          break;
+      }
     }
 
     // Step 2: Handle navigation based on context

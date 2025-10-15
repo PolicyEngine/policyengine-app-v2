@@ -104,10 +104,17 @@ vi.mock('@/libs/metadataUtils', () => ({
   getFieldOptions: () => mockFieldOptions,
 }));
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('HouseholdBuilderFrame', () => {
   let store: any;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockCreateHousehold.mockReset();
     mockResetIngredient.mockReset();

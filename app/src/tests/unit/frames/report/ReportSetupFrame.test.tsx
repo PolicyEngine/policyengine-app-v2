@@ -38,8 +38,15 @@ vi.mock('react-redux', async () => {
   };
 });
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('ReportSetupFrame', () => {
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockDispatch.mockClear();
     mockReportFlowProps.onNavigate.mockClear();

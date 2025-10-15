@@ -39,6 +39,12 @@ vi.mock('@/hooks/useUserPolicy', () => ({
   isPolicyMetadataWithAssociation: (policy: any) => policy && policy.policy && policy.association,
 }));
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('SimulationSelectExistingPolicyFrame', () => {
   const mockFlowProps = {
     onNavigate: mockOnNavigate,
@@ -52,6 +58,7 @@ describe('SimulationSelectExistingPolicyFrame', () => {
   };
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockOnNavigate.mockClear();
     mockDispatch.mockClear();

@@ -20,6 +20,12 @@ import {
   SELECTED_SIMULATION_LOG_PREFIX,
 } from '@/tests/fixtures/frames/ReportSelectExistingSimulationFrame';
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('ReportSelectExistingSimulationFrame', () => {
   let store: any;
   let mockOnNavigate: ReturnType<typeof vi.fn>;
@@ -28,6 +34,7 @@ describe('ReportSelectExistingSimulationFrame', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
 
     // Create a fresh store for each test

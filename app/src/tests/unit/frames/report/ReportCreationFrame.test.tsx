@@ -17,6 +17,12 @@ import {
   TEST_REPORT_LABEL,
 } from '@/tests/fixtures/frames/ReportCreationFrame';
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('ReportCreationFrame', () => {
   let store: any;
   let mockOnNavigate: ReturnType<typeof vi.fn>;
@@ -24,6 +30,7 @@ describe('ReportCreationFrame', () => {
   let defaultFlowProps: any;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
 
     // Create a fresh store for each test

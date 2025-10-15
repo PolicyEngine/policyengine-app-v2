@@ -78,8 +78,8 @@ describe('useCancelFlow', () => {
       // When
       result.current.handleCancel();
 
-      // Then
-      expect(mockUseIngredientReset.resetIngredientAtPosition).toHaveBeenCalledWith(
+      // Then - In subflow, should use clearIngredientAtPosition (no mode/position reset)
+      expect(mockUseIngredientReset.clearIngredientAtPosition).toHaveBeenCalledWith(
         TEST_INGREDIENT_TYPES.POLICY,
         TEST_POSITIONS.FIRST
       );
@@ -134,8 +134,8 @@ describe('useCancelFlow', () => {
       // When
       result.current.handleCancel();
 
-      // Then
-      expect(mockUseIngredientReset.resetIngredientAtPosition).toHaveBeenCalledWith(
+      // Then - In subflow, should use clearIngredientAtPosition (no mode/position reset)
+      expect(mockUseIngredientReset.clearIngredientAtPosition).toHaveBeenCalledWith(
         TEST_INGREDIENT_TYPES.POPULATION,
         TEST_POSITIONS.FIRST
       );
@@ -178,8 +178,8 @@ describe('useCancelFlow', () => {
       // When
       result.current.handleCancel();
 
-      // Then
-      expect(mockUseIngredientReset.resetIngredientAtPosition).toHaveBeenCalledWith(
+      // Then - In subflow, should use clearIngredientAtPosition (no mode/position reset)
+      expect(mockUseIngredientReset.clearIngredientAtPosition).toHaveBeenCalledWith(
         TEST_INGREDIENT_TYPES.SIMULATION,
         TEST_POSITIONS.SECOND
       );

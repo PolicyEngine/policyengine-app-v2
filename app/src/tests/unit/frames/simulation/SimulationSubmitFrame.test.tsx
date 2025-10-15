@@ -37,12 +37,19 @@ vi.mock('@/hooks/useIngredientReset', () => ({
   })),
 }));
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('SimulationSubmitFrame - Compatibility Features', () => {
   let mockOnNavigate: ReturnType<typeof vi.fn>;
   let mockOnReturn: ReturnType<typeof vi.fn>;
   let defaultFlowProps: any;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
 
     mockOnNavigate = vi.fn();
