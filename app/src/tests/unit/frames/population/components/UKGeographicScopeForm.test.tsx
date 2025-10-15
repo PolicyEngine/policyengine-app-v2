@@ -23,7 +23,7 @@ describe('UKGeographicScopeForm', () => {
     onRegionChange: vi.fn(),
   };
 
-  const renderComponent = (props = defaultProps) => {
+  const renderComponent = (props: typeof defaultProps | any = defaultProps) => {
     return render(
       <MantineProvider>
         <UKGeographicScopeForm {...props} />
@@ -53,7 +53,8 @@ describe('UKGeographicScopeForm', () => {
 
   test('given country scope selected then shows country dropdown', () => {
     // When
-    renderComponent({ ...defaultProps, scope: 'country' });
+    const props = { ...defaultProps, scope: 'country' as 'country' };
+    renderComponent(props);
 
     // Then
     expect(screen.getByPlaceholderText('Pick a country')).toBeInTheDocument();
@@ -61,7 +62,8 @@ describe('UKGeographicScopeForm', () => {
 
   test('given constituency scope selected then shows constituency dropdown', () => {
     // When
-    renderComponent({ ...defaultProps, scope: 'constituency' });
+    const props = { ...defaultProps, scope: 'constituency' as 'constituency' };
+    renderComponent(props);
 
     // Then
     expect(screen.getByPlaceholderText('Search for a constituency')).toBeInTheDocument();
@@ -105,7 +107,8 @@ describe('UKGeographicScopeForm', () => {
   test('given user clicks uk-wide radio then calls onScopeChange', async () => {
     // Given
     const onScopeChange = vi.fn();
-    renderComponent({ ...defaultProps, scope: 'country', onScopeChange });
+    const props = { ...defaultProps, scope: 'country' as 'country', onScopeChange };
+    renderComponent(props);
 
     // When
     const ukWideRadio = screen.getByLabelText('UK-wide');
@@ -131,7 +134,8 @@ describe('UKGeographicScopeForm', () => {
   test('given user selects country then calls onRegionChange', async () => {
     // Given
     const onRegionChange = vi.fn();
-    renderComponent({ ...defaultProps, scope: 'country', onRegionChange });
+    const props = { ...defaultProps, scope: 'country' as 'country', onRegionChange };
+    renderComponent(props);
 
     // When
     const dropdown = screen.getByPlaceholderText('Pick a country');

@@ -26,6 +26,7 @@ import ErrorPage from './report-output/ErrorPage';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
+import UKGeographicImpact from './report-output/UKGeographicImpact';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -41,7 +42,7 @@ import OverviewSubPage from './report-output/OverviewSubPage';
  */
 
 // Valid sub-pages registry
-const VALID_SUBPAGES = ['overview', 'loading', 'error'] as const;
+const VALID_SUBPAGES = ['overview', 'geographic-impact', 'loading', 'error'] as const;
 type ValidSubPage = (typeof VALID_SUBPAGES)[number];
 
 function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
@@ -88,7 +89,8 @@ export default function ReportOutputPage() {
   }, [subpage, navigate, output, status]);
 
   // Determine which tabs to show based on output type
-  const tabs = output && outputType ? getTabsForOutputType(outputType) : [];
+  const tabs =
+    output && outputType ? getTabsForOutputType(outputType, output as EconomyReportOutput) : [];
 
   // Format timestamp (placeholder for now)
   const timestamp = 'Ran today at 05:23:41';
@@ -127,6 +129,15 @@ export default function ReportOutputPage() {
       case 'overview':
         return output && outputType ? (
           <OverviewSubPage output={output} outputType={outputType} />
+        ) : (
+          <NotFoundSubPage />
+        );
+      case 'geographic-impact':
+        return output && outputType === 'economy' ? (
+          <UKGeographicImpact
+            output={output as EconomyReportOutput}
+            userGeography={userReport?.populations?.geography1}
+          />
         ) : (
           <NotFoundSubPage />
         );
@@ -302,7 +313,8 @@ export function isUKEconomyOutput(output: EconomyReportOutput): boolean {
  * Note: The output type is determined from cached CalculationMeta, not from type guards
  */
 function getTabsForOutputType(
-  outputType: ReportOutputType
+  outputType: ReportOutputType,
+  output?: EconomyReportOutput
 ): Array<{ value: string; label: string }> {
   if (outputType === 'economy') {
     // Economy report tabs matching the design
@@ -314,6 +326,11 @@ function getTabsForOutputType(
       { value: 'parameters', label: 'Parameters' },
       { value: 'population', label: 'Population' },
     ];
+
+    // Add Geographic Impact tab for UK economy reports
+    if (output && isUKEconomyOutput(output)) {
+      baseTabs.splice(1, 0, { value: 'geographic-impact', label: 'Geographic Impact' });
+    }
 
     return baseTabs;
   }

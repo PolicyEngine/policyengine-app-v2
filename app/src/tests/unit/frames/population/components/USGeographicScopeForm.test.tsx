@@ -21,7 +21,7 @@ describe('USGeographicScopeForm', () => {
     onStateChange: vi.fn(),
   };
 
-  const renderComponent = (props = defaultProps) => {
+  const renderComponent = (props: typeof defaultProps | any = defaultProps) => {
     return render(
       <MantineProvider>
         <USGeographicScopeForm {...props} />
@@ -50,7 +50,8 @@ describe('USGeographicScopeForm', () => {
 
   test('given state scope selected then shows state dropdown', () => {
     // When
-    renderComponent({ ...defaultProps, scope: 'state' });
+    const props = { ...defaultProps, scope: 'state' as 'state' };
+    renderComponent(props);
 
     // Then
     expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
@@ -80,7 +81,8 @@ describe('USGeographicScopeForm', () => {
   test('given user clicks national radio then calls onScopeChange', async () => {
     // Given
     const onScopeChange = vi.fn();
-    renderComponent({ ...defaultProps, scope: 'state', onScopeChange });
+    const props = { ...defaultProps, scope: 'state' as 'state', onScopeChange };
+    renderComponent(props);
 
     // When
     const nationalRadio = screen.getByLabelText('National');
@@ -106,7 +108,8 @@ describe('USGeographicScopeForm', () => {
   test('given user selects state then calls onStateChange', async () => {
     // Given
     const onStateChange = vi.fn();
-    renderComponent({ ...defaultProps, scope: 'state', onStateChange });
+    const props = { ...defaultProps, scope: 'state' as 'state', onStateChange };
+    renderComponent(props);
 
     // When
     const dropdown = screen.getByPlaceholderText('Pick a state');
