@@ -93,5 +93,29 @@ export const useIngredientReset = () => {
     }
   };
 
-  return { resetIngredient, resetIngredients, resetIngredientAtPosition };
+  // Clear ingredient at position WITHOUT resetting mode/position
+  // Use this when backing out of a subflow - you're still in the parent context
+  const clearIngredientAtPosition = (
+    ingredientName: 'policy' | 'population' | 'simulation',
+    position: 0 | 1
+  ) => {
+    switch (ingredientName) {
+      case 'policy':
+        dispatch(clearPolicyAtPosition(position));
+        break;
+      case 'population':
+        dispatch(clearPopulationAtPosition(position));
+        break;
+      case 'simulation':
+        // Simulation depends on policy + population - cascade at position
+        dispatch(clearSimulationAtPosition(position));
+        dispatch(clearPolicyAtPosition(position));
+        dispatch(clearPopulationAtPosition(position));
+        break;
+      default:
+        console.error(`Position-aware clear not supported for: ${ingredientName}`);
+    }
+  };
+
+  return { resetIngredient, resetIngredients, resetIngredientAtPosition, clearIngredientAtPosition };
 };

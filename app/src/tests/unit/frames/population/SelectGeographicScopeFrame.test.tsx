@@ -16,6 +16,12 @@ import {
   TEST_COUNTRIES,
 } from '@/tests/fixtures/frames/populationMocks';
 
+// Mock useCancelFlow - must be inline due to vitest hoisting
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 // Mock region data for tests
 const mockUSRegions = [
   { name: 'us', label: 'United States' },
@@ -38,6 +44,7 @@ describe('SelectGeographicScopeFrame', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHandleCancel.mockClear();
   });
 
   const renderComponent = (

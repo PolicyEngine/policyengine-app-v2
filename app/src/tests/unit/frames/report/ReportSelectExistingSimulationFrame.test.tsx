@@ -32,6 +32,12 @@ vi.mock('@/hooks/useUserSimulations', () => ({
   useUserSimulations: (userId: string) => mockUseUserSimulations(userId),
 }));
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('ReportSelectExistingSimulationFrame', () => {
   let store: any;
   let queryClient: QueryClient;
@@ -41,6 +47,7 @@ describe('ReportSelectExistingSimulationFrame', () => {
   let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
 
     // Create QueryClient

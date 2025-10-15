@@ -6,6 +6,12 @@ import { mockOnNavigate } from '@/tests/fixtures/frames/simulationFrameMocks';
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('SimulationSetupPopulationFrame', () => {
   const mockFlowProps = {
     onNavigate: mockOnNavigate,
@@ -19,6 +25,7 @@ describe('SimulationSetupPopulationFrame', () => {
   };
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockOnNavigate.mockClear();
   });

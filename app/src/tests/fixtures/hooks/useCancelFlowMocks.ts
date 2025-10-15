@@ -92,6 +92,7 @@ export const createMockUseIngredientReset = () => ({
   resetIngredient: vi.fn(),
   resetIngredients: vi.fn(),
   resetIngredientAtPosition: vi.fn(),
+  clearIngredientAtPosition: vi.fn(),
 });
 
 // Expected navigation paths

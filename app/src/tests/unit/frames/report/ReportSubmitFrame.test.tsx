@@ -59,10 +59,17 @@ vi.mock('@/reducers/populationReducer', () => ({
   selectGeographyAtPosition: vi.fn(() => null),
 }));
 
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('ReportSubmitFrame', () => {
   let store: any;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     clearAllMocks();
 
     (useCreateReport as any).mockReturnValue({
