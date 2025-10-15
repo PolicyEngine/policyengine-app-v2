@@ -232,6 +232,7 @@ describe('useUserHousehold hooks', () => {
         id: TEST_IDS.HOUSEHOLD_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
         userId: TEST_IDS.USER_ID,
+        countryId: GEO_CONSTANTS.COUNTRY_US,
         label: TEST_LABELS.HOUSEHOLD,
       };
 
@@ -287,6 +288,7 @@ describe('useUserHousehold hooks', () => {
           id: TEST_IDS.HOUSEHOLD_ID,
           householdId: TEST_IDS.HOUSEHOLD_ID,
           userId: TEST_IDS.USER_ID,
+          countryId: GEO_CONSTANTS.COUNTRY_US,
           label: TEST_LABELS.HOUSEHOLD,
         })
       ).rejects.toThrow('Creation failed');
@@ -386,7 +388,11 @@ describe('useUserHousehold hooks', () => {
     });
 
     test('given different country in metadata then uses correct country for fetch', async () => {
-      // Given
+      // Given - Create a UK household association
+      const ukHouseholdAssociation = { ...mockUserHouseholdPopulation, countryId: GEO_CONSTANTS.COUNTRY_UK };
+      const mockStore = (LocalStorageHouseholdStore as any)();
+      mockStore.findByUser.mockResolvedValue([ukHouseholdAssociation]);
+
       store = configureStore({
         reducer: {
           metadata: () => ({ currentCountry: GEO_CONSTANTS.COUNTRY_UK }),
@@ -439,11 +445,11 @@ describe('useUserHousehold hooks', () => {
       expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_US, expect.any(String));
     });
 
-    test('given associations without household IDs then filters them out', async () => {
+    test('given associations without household IDs then includes them in results', async () => {
       // Given
       const associationsWithNullId = [
         mockUserHouseholdPopulation,
-        { ...mockUserHouseholdPopulation, householdId: null },
+        { ...mockUserHouseholdPopulation, householdId: null, id: 'null-id' },
       ];
       const mockStore = (LocalStorageHouseholdStore as any)();
       mockStore.findByUser.mockResolvedValue(associationsWithNullId);
@@ -456,9 +462,9 @@ describe('useUserHousehold hooks', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // Should only have one household in result (the one with ID)
-      expect(result.current.data).toHaveLength(1);
-      // But fetchHouseholdById is called for both (including null)
+      // Should have both households in result (country filtering doesn't remove nulls)
+      expect(result.current.data).toHaveLength(2);
+      // fetchHouseholdById is called for both (including null)
       expect(fetchHouseholdById).toHaveBeenCalledTimes(2);
       expect(fetchHouseholdById).toHaveBeenCalledWith(
         GEO_CONSTANTS.COUNTRY_US,

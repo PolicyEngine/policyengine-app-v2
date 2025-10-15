@@ -1,6 +1,7 @@
 import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
 import { MetadataApiPayload, MetadataState } from '@/types/metadata';
+import { CountryId } from '@/types/common';
 
 // Test constants
 export const TEST_COUNTRY_US = 'us';
@@ -206,14 +207,14 @@ export const MOCK_ERROR_STATE: MetadataState = {
 };
 
 // Mock state after clearing
-export const createMockClearedState = (country: string | null): MetadataState => ({
+export const createMockClearedState = (country: CountryId | null): MetadataState => ({
   ...EXPECTED_INITIAL_STATE,
   currentCountry: country,
 });
 
 // Expected state after successful fetch
 export const createExpectedFulfilledState = (
-  country: string,
+  country: CountryId,
   apiPayload: MetadataApiPayload
 ): MetadataState => ({
   loading: false,

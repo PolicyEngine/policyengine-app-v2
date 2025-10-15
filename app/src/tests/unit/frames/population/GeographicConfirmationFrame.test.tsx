@@ -85,7 +85,7 @@ describe('GeographicConfirmationFrame', () => {
     const fullMetadataState = {
       loading: false,
       error: null,
-      currentCountry: TEST_COUNTRIES.US as string,
+      currentCountry: TEST_COUNTRIES.US,
       variables: {},
       parameters: {},
       entities: {},

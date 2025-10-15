@@ -15,6 +15,7 @@ import {
   mockFlowProps,
   mockTaxYears,
 } from '@/tests/fixtures/frames/populationMocks';
+import { MetadataState } from '@/types/metadata';
 
 // Mock household utilities
 vi.mock('@/utils/HouseholdBuilder', () => ({
@@ -139,10 +140,10 @@ describe('HouseholdBuilderFrame', () => {
       populations: [null, null],
       ...populationState,
     };
-    const fullMetadataState = {
+    const fullMetadataState: MetadataState = {
       loading: false,
       error: null,
-      currentCountry: 'us',
+      currentCountry: 'us' as const,
       variables: {
         age: { defaultValue: 30 },
         employment_income: { defaultValue: 0 },
@@ -153,10 +154,6 @@ describe('HouseholdBuilderFrame', () => {
       economyOptions: { region: [], time_period: [], datasets: [] },
       currentLawId: 0,
       basicInputs: ['age', 'employment_income'],
-      basic_inputs: {
-        person: ['age', 'employment_income'],
-        household: ['state_code'],
-      },
       modelledPolicies: { core: {}, filtered: {} },
       version: null,
       parameterTree: null,

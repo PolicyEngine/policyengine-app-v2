@@ -1,6 +1,7 @@
 import { createSelector } from '@reduxjs/toolkit';
 import { RootState } from '@/store';
 import { MetadataApiPayload, MetadataState } from '@/types/metadata';
+import { CountryId } from '@/types/common';
 
 // Memoized selectors to prevent unnecessary re-renders
 export const getTaxYears = createSelector(
@@ -137,7 +138,7 @@ export function transformMetadataPayload(
 ): Omit<MetadataState, 'loading' | 'error' | 'lastFetched'> {
   const data = payload.result;
   return {
-    currentCountry: country,
+    currentCountry: country as CountryId,
     variables: data.variables ?? {},
     parameters: data.parameters ?? {},
     entities: data.entities ?? {},

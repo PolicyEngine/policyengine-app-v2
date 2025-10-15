@@ -1,11 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { createPolicy } from '@/api/policy';
 import { MOCK_USER_ID } from '@/constants';
 import { policyKeys } from '@/libs/queryKeys';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {
   const queryClient = useQueryClient();
+  const country = useSelector(selectCurrentCountry) || 'us';
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreatePolicyAssociation();
 
@@ -21,6 +24,7 @@ export function useCreatePolicy(policyLabel?: string) {
         await createAssociation.mutateAsync({
           userId,
           policyId: data.result.policy_id, // This is from the API response structure; may be modified in API v2
+          countryId: country,
           label: policyLabel,
           isCreated: true,
         });

@@ -5,6 +5,7 @@ import { fetchHouseholdById } from '@/api/household';
 import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
+import { filterByCountry } from '@/utils/countryFilters';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
@@ -166,8 +167,11 @@ export const useUserHouseholds = (userId: string) => {
 
   console.log('associations', associations);
 
-  // Extract household IDs
-  const householdIds = associations?.map((a) => a.householdId) ?? [];
+  // Filter associations by current country
+  const filteredAssociations = filterByCountry(associations, country);
+
+  // Extract household IDs from filtered associations
+  const householdIds = filteredAssociations?.map((a) => a.householdId) ?? [];
 
   console.log('householdIds', householdIds);
 
@@ -176,7 +180,7 @@ export const useUserHouseholds = (userId: string) => {
     queries: householdIds.map((householdId) => ({
       queryKey: householdKeys.byId(householdId),
       queryFn: () => fetchHouseholdById(country, householdId),
-      enabled: !!associations, // Only run when associations are loaded
+      enabled: !!filteredAssociations && filteredAssociations.length > 0,
       staleTime: 5 * 60 * 1000,
     })),
   });
@@ -186,24 +190,21 @@ export const useUserHouseholds = (userId: string) => {
   const error = associationsError || householdQueries.find((q) => q.error)?.error;
   const isError = !!error;
 
-  // Map associations to households - filter out associations without householdId
-  // TODO: Determine if this filter action is needed
+  // Map filtered associations to households
   const householdsWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
-    associations
-      ?.filter((association) => association.householdId)
-      .map((association, index) => ({
-        association,
-        household: householdQueries[index]?.data,
-        isLoading: householdQueries[index]?.isLoading ?? false,
-        error: householdQueries[index]?.error ?? null,
-        isError: !!householdQueries[index]?.error,
-      }));
+    filteredAssociations?.map((association, index) => ({
+      association,
+      household: householdQueries[index]?.data,
+      isLoading: householdQueries[index]?.isLoading ?? false,
+      error: householdQueries[index]?.error ?? null,
+      isError: !!householdQueries[index]?.error,
+    }));
 
   return {
     data: householdsWithAssociations,
     isLoading,
     isError,
     error,
-    associations, // Still available if needed separately
+    associations: filteredAssociations, // Return filtered associations
   };
 };

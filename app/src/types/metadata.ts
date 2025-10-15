@@ -1,3 +1,5 @@
+import { CountryId } from './common';
+
 export interface MetadataApiPayload {
   status: string;
   message: string | null;
@@ -38,7 +40,7 @@ export interface ParameterTreeNode {
 }
 
 export interface MetadataState {
-  currentCountry: string | null;
+  currentCountry: CountryId | null;
   loading: boolean;
   error: string | null;
 

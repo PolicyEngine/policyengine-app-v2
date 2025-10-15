@@ -2,12 +2,11 @@ import { ReportAdapter } from '@/adapters/ReportAdapter';
 import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
+import { CountryId } from '@/types/common';
 import { Report } from '@/types/ingredients/Report';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { ReportCreationPayload, ReportSetOutputPayload } from '@/types/payloads';
-
-export type CountryId = (typeof countryIds)[number];
 
 export async function fetchReportById(
   countryId: (typeof countryIds)[number],

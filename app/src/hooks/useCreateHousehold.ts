@@ -1,11 +1,14 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useSelector } from 'react-redux';
 import { createHousehold } from '@/api/household';
 import { MOCK_USER_ID } from '@/constants';
 import { householdKeys } from '@/libs/queryKeys';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { useCreateHouseholdAssociation } from './useUserHousehold';
 
 export function useCreateHousehold(householdLabel?: string) {
   const queryClient = useQueryClient();
+  const country = useSelector(selectCurrentCountry) || 'us';
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateHouseholdAssociation();
 
@@ -20,6 +23,7 @@ export function useCreateHousehold(householdLabel?: string) {
         await createAssociation.mutateAsync({
           userId,
           householdId: data.result.household_id, // This is from the API response structure; may be modified in API v2
+          countryId: country,
           label: householdLabel,
         });
       } catch (error) {

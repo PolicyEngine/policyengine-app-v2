@@ -2,6 +2,8 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { Provider } from 'react-redux';
+import { configureStore } from '@reduxjs/toolkit';
 import { createHousehold } from '@/api/household';
 // Now import the actual implementations
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
@@ -15,6 +17,7 @@ import {
   mockCreateHouseholdAssociationMutateAsync,
   mockCreateHouseholdResponse,
   mockHouseholdCreationPayload,
+  mockReduxState,
   QUERY_KEY_PATTERNS,
   setupMockConsole,
   TEST_IDS,
@@ -45,11 +48,19 @@ vi.mock('@/hooks/useUserHousehold', () => ({
 describe('useCreateHousehold', () => {
   let queryClient: QueryClient;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
+  let store: any;
 
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createMockQueryClient();
     consoleMocks = setupMockConsole();
+
+    // Create Redux store for the tests
+    store = configureStore({
+      reducer: {
+        metadata: () => mockReduxState.metadata,
+      },
+    });
 
     // Set up the mocked functions
     (createHousehold as any).mockImplementation(mockCreateHousehold);
@@ -71,7 +82,9 @@ describe('useCreateHousehold', () => {
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </Provider>
   );
 
   describe('successful household creation', () => {
@@ -94,6 +107,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
+        countryId: 'us',
         label: TEST_LABELS.HOUSEHOLD,
       });
 
@@ -117,6 +131,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
+        countryId: 'us',
         label: undefined,
       });
     });
@@ -133,6 +148,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
+        countryId: 'us',
         label: customLabel,
       });
     });
@@ -291,6 +307,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: undefined,
+        countryId: 'us',
         label: TEST_LABELS.HOUSEHOLD,
       });
     });

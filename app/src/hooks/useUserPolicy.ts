@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { fetchPolicyById } from '@/api/policy';
 import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
+import { filterByCountry } from '@/utils/countryFilters';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
@@ -152,15 +153,18 @@ export const useUserPolicies = (userId: string) => {
     error: associationsError,
   } = usePolicyAssociationsByUser(userId);
 
-  // Extract policy IDs
-  const policyIds = associations?.map((a) => a.policyId) ?? [];
+  // Filter associations by current country
+  const filteredAssociations = filterByCountry(associations, country);
+
+  // Extract policy IDs from filtered associations
+  const policyIds = filteredAssociations?.map((a) => a.policyId) ?? [];
 
   // Fetch all policies in parallel
   const policyQueries = useQueries({
     queries: policyIds.map((policyId) => ({
       queryKey: policyKeys.byId(policyId.toString()),
       queryFn: () => fetchPolicyById(country, policyId.toString()),
-      enabled: !!associations, // Only run when associations are loaded
+      enabled: !!filteredAssociations && filteredAssociations.length > 0,
       staleTime: 5 * 60 * 1000,
     })),
   });
@@ -170,9 +174,9 @@ export const useUserPolicies = (userId: string) => {
   const error = associationsError || policyQueries.find((q) => q.error)?.error;
   const isError = !!error;
 
-  // Simple index-based mapping since queries are in same order as associations
+  // Simple index-based mapping since queries are in same order as filtered associations
   const policiesWithAssociations: UserPolicyMetadataWithAssociation[] | undefined =
-    associations?.map((association, index) => ({
+    filteredAssociations?.map((association, index) => ({
       association,
       policy: policyQueries[index]?.data,
       isLoading: policyQueries[index]?.isLoading ?? false,
@@ -185,6 +189,6 @@ export const useUserPolicies = (userId: string) => {
     isLoading,
     isError,
     error,
-    associations, // Still available if needed separately
+    associations: filteredAssociations, // Return filtered associations
   };
 };

@@ -3,6 +3,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { MetadataState } from '@/types/metadata';
+import { CountryId } from '@/types/common';
 
 const initialState: MetadataState = {
   loading: false,
@@ -41,7 +42,7 @@ const metadataSlice = createSlice({
   name: 'metadata',
   initialState,
   reducers: {
-    setCurrentCountry(state, action: PayloadAction<string>) {
+    setCurrentCountry(state, action: PayloadAction<CountryId>) {
       state.currentCountry = action.payload;
       // Optionally clear existing metadata when country changes
       // This prevents showing stale data from previous country
@@ -80,7 +81,7 @@ const metadataSlice = createSlice({
 
         state.loading = false;
         state.error = null;
-        state.currentCountry = country;
+        state.currentCountry = country as CountryId;
 
         // Transform API response to state
         state.variables = body.variables;

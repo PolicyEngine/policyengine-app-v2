@@ -3,9 +3,11 @@ import { useSelector } from 'react-redux';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { filterByCountry } from '@/utils/countryFilters';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
 const apiGeographicStore = new ApiGeographicStore();
@@ -90,8 +92,9 @@ export function isGeographicMetadataWithAssociation(
 }
 
 export const useUserGeographics = (userId: string) => {
-  // Get metadata for label lookups
+  // Get metadata for label lookups and current country
   const metadata = useSelector((state: RootState) => state.metadata);
+  const currentCountry = useSelector(selectCurrentCountry);
 
   // First, get the populations
   const {
@@ -99,6 +102,9 @@ export const useUserGeographics = (userId: string) => {
     isLoading: populationsLoading,
     error: populationsError,
   } = useGeographicAssociationsByUser(userId);
+
+  // Filter populations by current country
+  const filteredPopulations = filterByCountry(populations, currentCountry);
 
   // Helper function to get proper label from metadata or fallback
   const getGeographyName = (population: UserGeographyPopulation): string => {
@@ -129,10 +135,10 @@ export const useUserGeographics = (userId: string) => {
     return population.geographyId;
   };
 
-  // For geographic populations, we construct Geography objects from the population data
+  // For geographic populations, we construct Geography objects from the filtered population data
   // since they don't require API fetching like households do
   const geographicsWithAssociations: UserGeographicMetadataWithAssociation[] | undefined =
-    populations?.map((population) => {
+    filteredPopulations?.map((population) => {
       // Construct a Geography object from the population data
       const geography: Geography = {
         id: population.geographyId,
@@ -156,6 +162,6 @@ export const useUserGeographics = (userId: string) => {
     isLoading: populationsLoading,
     isError: !!populationsError,
     error: populationsError,
-    associations: populations, // Still available if needed separately
+    associations: filteredPopulations, // Return filtered associations
   };
 };

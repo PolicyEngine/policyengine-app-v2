@@ -70,12 +70,12 @@ describe('SelectGeographicScopeFrame', () => {
   });
 
   const renderComponent = (
-    metadataState: Partial<any> = { currentCountry: TEST_COUNTRIES.US as string },
+    metadataState: Partial<any> = { currentCountry: TEST_COUNTRIES.US },
     props = mockFlowProps
   ) => {
     const fullMetadataState = {
       ...mockMetadataState,
-      currentCountry: TEST_COUNTRIES.US as string,
+      currentCountry: TEST_COUNTRIES.US,
       ...metadataState,
     };
 
