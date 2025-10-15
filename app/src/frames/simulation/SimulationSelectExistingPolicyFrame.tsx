@@ -114,11 +114,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
-    const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
-
-  return (
+    return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text>Loading policies...</Text>}
@@ -128,11 +124,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   }
 
   if (isError) {
-    const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
-
-  return (
+    return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}

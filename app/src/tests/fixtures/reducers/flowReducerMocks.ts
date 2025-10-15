@@ -257,7 +257,9 @@ export const expectedStateAfterNavigateToFlow: FlowState = {
 export const expectedStateAfterNavigateToFlowWithReturn: FlowState = {
   currentFlow: mockSubFlow,
   currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
-  flowStack: [createFlowStackEntry(mockMainFlow, FRAME_NAMES.INITIAL_FRAME, [], FRAME_NAMES.RETURN_FRAME)],
+  flowStack: [
+    createFlowStackEntry(mockMainFlow, FRAME_NAMES.INITIAL_FRAME, [], FRAME_NAMES.RETURN_FRAME),
+  ],
   frameHistory: [],
 };
 

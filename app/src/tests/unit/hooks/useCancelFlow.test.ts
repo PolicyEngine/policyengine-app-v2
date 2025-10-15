@@ -1,6 +1,8 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCancelFlow } from '@/hooks/useCancelFlow';
+// Import mocked modules for assertions
+import { clearFlow } from '@/reducers/flowReducer';
 import {
   createMockDispatch,
   createMockNavigate,
@@ -33,9 +35,6 @@ vi.mock('@/hooks/useIngredientReset', () => ({
 vi.mock('@/reducers/flowReducer', () => ({
   clearFlow: vi.fn(() => ({ type: 'flow/clearFlow' })),
 }));
-
-// Import mocked modules for assertions
-import { clearFlow } from '@/reducers/flowReducer';
 
 let mockRootState: ReturnType<typeof createMockRootState>;
 

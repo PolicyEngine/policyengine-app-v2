@@ -2,9 +2,7 @@ import { Button, Group } from '@mantine/core';
 import { useCancelFlow } from '@/hooks/useCancelFlow';
 import { FlowComponentProps } from '@/types/flow';
 
-export default function PolicyParameterSelectorFooter({
-  onNavigate,
-}: FlowComponentProps) {
+export default function PolicyParameterSelectorFooter({ onNavigate }: FlowComponentProps) {
   const { handleCancel } = useCancelFlow('policy');
 
   function handleNext() {

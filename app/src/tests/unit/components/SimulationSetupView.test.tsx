@@ -2,11 +2,13 @@ import { render, screen, userEvent } from '@test-utils';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSetupView from '@/components/SimulationSetupView';
+// Import after mocks to get mocked versions
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import {
-  SIMULATION_SETUP_STRINGS,
   createMockStore,
   mockPolicyState,
   mockPopulationState,
+  SIMULATION_SETUP_STRINGS,
 } from '@/tests/fixtures/components/SimulationSetupViewMocks';
 
 // Mock useBackButton hook
@@ -20,10 +22,6 @@ const mockHandleCancel = vi.fn();
 vi.mock('@/hooks/useCancelFlow', () => ({
   useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
 }));
-
-// Import after mocks to get mocked versions
-import { useBackButton } from '@/hooks/useBackButton';
-import { useCancelFlow } from '@/hooks/useCancelFlow';
 
 describe('SimulationSetupView', () => {
   const mockOnPolicySelect = vi.fn();
@@ -83,7 +81,7 @@ describe('SimulationSetupView', () => {
         onPolicySelect={mockOnPolicySelect}
         onPopulationSelect={mockOnPopulationSelect}
         onNext={mockOnNext}
-        canProceed={true}
+        canProceed
       />
     );
 
@@ -101,7 +99,7 @@ describe('SimulationSetupView', () => {
         onPolicySelect={mockOnPolicySelect}
         onPopulationSelect={mockOnPopulationSelect}
         onNext={mockOnNext}
-        canProceed={true}
+        canProceed
       />
     );
 
@@ -127,7 +125,9 @@ describe('SimulationSetupView', () => {
     );
 
     // When
-    const cancelButton = screen.getByRole('button', { name: SIMULATION_SETUP_STRINGS.CANCEL_BUTTON });
+    const cancelButton = screen.getByRole('button', {
+      name: SIMULATION_SETUP_STRINGS.CANCEL_BUTTON,
+    });
     await user.click(cancelButton);
 
     // Then
@@ -162,7 +162,9 @@ describe('SimulationSetupView', () => {
     );
 
     // Then
-    expect(screen.getAllByText(SIMULATION_SETUP_STRINGS.TEST_POLICY_LABEL).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(SIMULATION_SETUP_STRINGS.TEST_POLICY_LABEL).length).toBeGreaterThan(
+      0
+    );
   });
 
   test('given created population then shows selected population card', () => {
@@ -178,7 +180,9 @@ describe('SimulationSetupView', () => {
     );
 
     // Then
-    expect(screen.getAllByText(SIMULATION_SETUP_STRINGS.TEST_POPULATION_LABEL).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(SIMULATION_SETUP_STRINGS.TEST_POPULATION_LABEL).length
+    ).toBeGreaterThan(0);
   });
 
   test('given component renders then displays cancel button', () => {
@@ -193,7 +197,9 @@ describe('SimulationSetupView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: SIMULATION_SETUP_STRINGS.CANCEL_BUTTON })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: SIMULATION_SETUP_STRINGS.CANCEL_BUTTON })
+    ).toBeInTheDocument();
   });
 
   test('given component renders then displays next button', () => {
@@ -208,6 +214,8 @@ describe('SimulationSetupView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: SIMULATION_SETUP_STRINGS.NEXT_BUTTON })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: SIMULATION_SETUP_STRINGS.NEXT_BUTTON })
+    ).toBeInTheDocument();
   });
 });

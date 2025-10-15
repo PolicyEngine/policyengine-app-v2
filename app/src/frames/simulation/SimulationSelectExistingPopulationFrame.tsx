@@ -187,11 +187,7 @@ export default function SimulationSelectExistingPopulationFrame({
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
-    const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
-
-  return (
+    return (
       <FlowView
         title="Select an Existing Population"
         content={<Text>Loading populations...</Text>}
@@ -201,11 +197,7 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   if (isError) {
-    const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
-
-  return (
+    return (
       <FlowView
         title="Select an Existing Population"
         content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}

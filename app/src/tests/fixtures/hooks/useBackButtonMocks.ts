@@ -12,20 +12,14 @@ export const TEST_FRAME_NAMES = {
 export const createMockDispatch = () => vi.fn();
 
 // Mock state creators
-export const createMockFlowState = (
-  frameHistory: ComponentKey[] = [],
-  flowStack: any[] = []
-) => ({
+export const createMockFlowState = (frameHistory: ComponentKey[] = [], flowStack: any[] = []) => ({
   currentFlow: null,
   currentFrame: TEST_FRAME_NAMES.FRAME_A,
   flowStack,
   frameHistory,
 });
 
-export const createMockRootState = (
-  frameHistory: ComponentKey[] = [],
-  flowStack: any[] = []
-) => ({
+export const createMockRootState = (frameHistory: ComponentKey[] = [], flowStack: any[] = []) => ({
   flow: createMockFlowState(frameHistory, flowStack),
   report: {
     id: '',
