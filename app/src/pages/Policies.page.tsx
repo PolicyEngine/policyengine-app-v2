@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
+import { countParameterChanges } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function PoliciesPage() {
@@ -75,19 +76,8 @@ export default function PoliciesPage() {
     },
     {
       key: 'provisions',
-      header: 'Provisions',
+      header: 'Parameter changes',
       type: 'text',
-    },
-    {
-      key: 'connections',
-      header: 'Connections',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
     },
     {
       key: 'actions',
@@ -124,26 +114,14 @@ export default function PoliciesPage() {
           : '',
       } as TextValue,
       provisions: {
-        text: '7 provisions', // TODO: Get actual provisions count
+        text: `${countParameterChanges(item.policy)} parameter change${countParameterChanges(item.policy) !== 1 ? 's' : ''}`,
       } as TextValue,
-      connections: {
-        items: [
-          {
-            text: 'Sample simulation',
-            badge: '',
-          },
-          {
-            text: 'Sample report',
-            badge: '',
-          },
-        ],
-      } as BulletsValue,
     })) || [];
 
   return (
     <IngredientReadView
       ingredient="policy"
-      title="Your policies"
+      title="Your saved policies"
       subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
       onBuild={handleBuildPolicy}
       isLoading={isLoading}

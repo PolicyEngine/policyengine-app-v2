@@ -88,7 +88,7 @@ export default function IngredientReadView({
           c={colors.text.title}
           mb={spacing.lg}
         >
-          Your Saved {title}
+          {title}
         </Title>
 
         {/* Filters and Search */}

@@ -94,7 +94,9 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then
-      expect(screen.getByText(POPULATION_LABELS.PAGE_TITLE)).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Your saved populations', level: 2 })
+      ).toBeInTheDocument();
       expect(screen.getByText(POPULATION_LABELS.PAGE_SUBTITLE)).toBeInTheDocument();
     });
 
@@ -457,7 +459,7 @@ describe('PopulationsPage', () => {
   });
 
   describe('column configuration', () => {
-    test('given page renders then displays correct column headers', () => {
+    test('given page renders then displays correct column headers without connections', () => {
       // When
       renderPage();
 
@@ -465,30 +467,21 @@ describe('PopulationsPage', () => {
       expect(screen.getByText(POPULATION_COLUMNS.NAME)).toBeInTheDocument();
       expect(screen.getByText(POPULATION_COLUMNS.DATE)).toBeInTheDocument();
       expect(screen.getByText(POPULATION_COLUMNS.DETAILS)).toBeInTheDocument();
-      expect(screen.getByText(POPULATION_COLUMNS.CONNECTIONS)).toBeInTheDocument();
+      // Connections column should not be present
+      expect(screen.queryByText(POPULATION_COLUMNS.CONNECTIONS)).not.toBeInTheDocument();
     });
 
-    test('given household data then displays connections placeholders', () => {
+    test('given column configuration then does not include connections column', () => {
       // When
       renderPage();
 
       // Then
-      // Check for multiple occurrences since there are multiple households
-      const simulations = screen.getAllByText(POPULATION_DETAILS.SAMPLE_SIMULATION);
-      const reports = screen.getAllByText(POPULATION_DETAILS.SAMPLE_REPORT);
-
-      expect(simulations.length).toBeGreaterThan(0);
-      expect(reports.length).toBeGreaterThan(0);
-    });
-
-    test('given geographic data then displays available for simulations', () => {
-      // When
-      renderPage();
-
-      // Then
-      // Check for multiple occurrences since there are multiple geographic associations
-      const available = screen.getAllByText(POPULATION_DETAILS.AVAILABLE_FOR_SIMULATIONS);
-      expect(available.length).toBeGreaterThan(0);
+      // The component should render successfully without connections column
+      expect(
+        screen.getByRole('heading', { name: 'Your saved populations', level: 2 })
+      ).toBeInTheDocument();
+      // Verify data is displayed correctly
+      expect(screen.getByText(POPULATION_LABELS.HOUSEHOLD_1)).toBeInTheDocument();
     });
   });
 });
