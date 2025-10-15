@@ -17,6 +17,7 @@ interface BaseUserPopulation {
 export interface UserHouseholdPopulation extends BaseUserPopulation {
   type: 'household';
   householdId: string;
+  countryId: (typeof countryIds)[number];
 }
 
 export interface UserGeographyPopulation extends BaseUserPopulation {

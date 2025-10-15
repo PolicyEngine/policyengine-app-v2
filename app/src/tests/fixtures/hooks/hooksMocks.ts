@@ -127,6 +127,7 @@ export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
   id: TEST_IDS.HOUSEHOLD_ID,
   householdId: TEST_IDS.HOUSEHOLD_ID,
   userId: TEST_IDS.USER_ID,
+  countryId: GEO_CONSTANTS.COUNTRY_US,
   label: TEST_LABELS.HOUSEHOLD,
   createdAt: TEST_IDS.TIMESTAMP,
   updatedAt: TEST_IDS.TIMESTAMP,
@@ -139,6 +140,7 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
     ...mockUserHouseholdPopulation,
     id: TEST_IDS.HOUSEHOLD_ID_2,
     householdId: TEST_IDS.HOUSEHOLD_ID_2,
+    countryId: GEO_CONSTANTS.COUNTRY_US,
     label: TEST_LABELS.HOUSEHOLD_2,
   },
 ];

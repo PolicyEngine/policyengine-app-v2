@@ -14,6 +14,7 @@ export class UserPolicyAdapter {
     return {
       userId: userPolicy.userId.toString(),
       policyId: userPolicy.policyId.toString(),
+      countryId: userPolicy.countryId,
       label: userPolicy.label,
       updatedAt: userPolicy.updatedAt || new Date().toISOString(),
     };
@@ -27,6 +28,7 @@ export class UserPolicyAdapter {
       id: apiData.policyId,
       userId: apiData.userId,
       policyId: apiData.policyId,
+      countryId: apiData.countryId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,
