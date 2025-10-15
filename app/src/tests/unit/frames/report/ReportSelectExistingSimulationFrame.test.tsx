@@ -20,6 +20,12 @@ import {
   SELECTED_SIMULATION_LOG_PREFIX,
 } from '@/tests/fixtures/frames/ReportSelectExistingSimulationFrame';
 
+// Mock useBackButton hook
+const mockHandleBack = vi.fn();
+vi.mock('@/hooks/useBackButton', () => ({
+  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
+}));
+
 // Mock useCancelFlow
 const mockHandleCancel = vi.fn();
 vi.mock('@/hooks/useCancelFlow', () => ({

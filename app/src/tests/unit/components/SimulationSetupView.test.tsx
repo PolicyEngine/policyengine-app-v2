@@ -9,13 +9,20 @@ import {
   mockPopulationState,
 } from '@/tests/fixtures/components/SimulationSetupViewMocks';
 
+// Mock useBackButton hook
+const mockHandleBack = vi.fn();
+vi.mock('@/hooks/useBackButton', () => ({
+  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
+}));
+
 // Mock useCancelFlow hook
 const mockHandleCancel = vi.fn();
 vi.mock('@/hooks/useCancelFlow', () => ({
   useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
 }));
 
-// Import after mock to get mocked version
+// Import after mocks to get mocked versions
+import { useBackButton } from '@/hooks/useBackButton';
 import { useCancelFlow } from '@/hooks/useCancelFlow';
 
 describe('SimulationSetupView', () => {
@@ -25,6 +32,7 @@ describe('SimulationSetupView', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockHandleBack.mockClear();
   });
 
   const renderWithStore = (component: React.ReactElement, storeState?: any) => {

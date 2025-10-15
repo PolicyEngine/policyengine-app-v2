@@ -1,6 +1,7 @@
 import { IconCheck } from '@tabler/icons-react';
 import { Badge, Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
+import { useBackButton } from '@/hooks/useBackButton';
 import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
@@ -54,9 +55,19 @@ export default function IngredientSubmissionView({
   submitButtonLoading,
   ingredientType,
 }: IngredientSubmissionViewProps) {
+  const { handleBack, canGoBack } = useBackButton();
   const { handleCancel } = useCancelFlow(ingredientType);
 
   const buttonConfig: ButtonConfig[] = [
+    ...(canGoBack
+      ? [
+          {
+            label: 'Back',
+            variant: 'default' as const,
+            onClick: handleBack,
+          },
+        ]
+      : []),
     {
       label: 'Cancel',
       variant: 'default' as const,

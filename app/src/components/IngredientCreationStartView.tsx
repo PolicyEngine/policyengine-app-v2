@@ -1,4 +1,5 @@
 import { Container, Divider, Stack, Title } from '@mantine/core';
+import { useBackButton } from '@/hooks/useBackButton';
 import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
@@ -17,9 +18,19 @@ export default function IngredientCreationStartView({
   submissionHandler,
   ingredientType,
 }: IngredientCreationStartViewProps) {
+  const { handleBack, canGoBack } = useBackButton();
   const { handleCancel } = useCancelFlow(ingredientType);
 
   const buttonConfig: ButtonConfig[] = [
+    ...(canGoBack
+      ? [
+          {
+            label: 'Back',
+            variant: 'default' as const,
+            onClick: handleBack,
+          },
+        ]
+      : []),
     {
       label: 'Cancel',
       variant: 'default' as const,
