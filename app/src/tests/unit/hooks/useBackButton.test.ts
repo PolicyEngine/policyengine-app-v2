@@ -1,6 +1,8 @@
 import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useBackButton } from '@/hooks/useBackButton';
+// Import mocked module for assertions
+import { navigateToPreviousFrame, returnFromFlow } from '@/reducers/flowReducer';
 import {
   createMockDispatch,
   createMockRootState,
@@ -23,9 +25,6 @@ vi.mock('@/reducers/flowReducer', () => ({
   navigateToPreviousFrame: vi.fn(() => ({ type: 'flow/navigateToPreviousFrame' })),
   returnFromFlow: vi.fn(() => ({ type: 'flow/returnFromFlow' })),
 }));
-
-// Import mocked module for assertions
-import { navigateToPreviousFrame, returnFromFlow } from '@/reducers/flowReducer';
 
 let mockRootState: ReturnType<typeof createMockRootState>;
 

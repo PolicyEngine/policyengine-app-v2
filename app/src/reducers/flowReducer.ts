@@ -82,7 +82,9 @@ export const flowSlice = createSlice({
 
           // If useReturnFrame is true and returnFrame exists, use it; otherwise use the actual frame
           const shouldUseReturnFrame = action.payload?.useReturnFrame && previousState.returnFrame;
-          state.currentFrame = shouldUseReturnFrame ? previousState.returnFrame! : previousState.frame;
+          state.currentFrame = shouldUseReturnFrame
+            ? previousState.returnFrame!
+            : previousState.frame;
 
           // Restore frame history from the parent flow
           state.frameHistory = previousState.frameHistory;

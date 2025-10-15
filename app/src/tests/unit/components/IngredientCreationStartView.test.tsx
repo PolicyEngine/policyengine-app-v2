@@ -1,9 +1,11 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import IngredientCreationStartView from '@/components/IngredientCreationStartView';
+// Import after mock to get mocked version
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import {
-  INGREDIENT_CREATION_STRINGS,
   createTestInput,
+  INGREDIENT_CREATION_STRINGS,
 } from '@/tests/fixtures/components/IngredientCreationStartViewMocks';
 
 // Mock useCancelFlow hook
@@ -11,9 +13,6 @@ const mockHandleCancel = vi.fn();
 vi.mock('@/hooks/useCancelFlow', () => ({
   useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
 }));
-
-// Import after mock to get mocked version
-import { useCancelFlow } from '@/hooks/useCancelFlow';
 
 describe('IngredientCreationStartView', () => {
   const mockSubmissionHandler = vi.fn();
@@ -33,7 +32,9 @@ describe('IngredientCreationStartView', () => {
     );
 
     // Then
-    expect(screen.getByRole('heading', { name: INGREDIENT_CREATION_STRINGS.TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: INGREDIENT_CREATION_STRINGS.TITLE })
+    ).toBeInTheDocument();
   });
 
   test('given form inputs then renders inputs', () => {
@@ -66,7 +67,9 @@ describe('IngredientCreationStartView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.SUBMIT_TEXT })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.SUBMIT_TEXT })
+    ).toBeInTheDocument();
   });
 
   test('given no custom submit text then defaults to title', () => {
@@ -80,7 +83,9 @@ describe('IngredientCreationStartView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.TITLE })
+    ).toBeInTheDocument();
   });
 
   test('given user clicks submit button then calls submission handler', async () => {
@@ -116,7 +121,9 @@ describe('IngredientCreationStartView', () => {
     );
 
     // When
-    const cancelButton = screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.CANCEL_BUTTON });
+    const cancelButton = screen.getByRole('button', {
+      name: INGREDIENT_CREATION_STRINGS.CANCEL_BUTTON,
+    });
     await user.click(cancelButton);
 
     // Then
@@ -190,7 +197,11 @@ describe('IngredientCreationStartView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.CANCEL_BUTTON })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.CANCEL_BUTTON })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_CREATION_STRINGS.TITLE })
+    ).toBeInTheDocument();
   });
 });

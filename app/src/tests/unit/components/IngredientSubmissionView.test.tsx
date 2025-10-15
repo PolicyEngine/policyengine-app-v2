@@ -1,6 +1,8 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import IngredientSubmissionView from '@/components/IngredientSubmissionView';
+// Import after mock to get mocked version
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import {
   INGREDIENT_SUBMISSION_STRINGS,
   mockSummaryBoxes,
@@ -12,9 +14,6 @@ const mockHandleCancel = vi.fn();
 vi.mock('@/hooks/useCancelFlow', () => ({
   useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
 }));
-
-// Import after mock to get mocked version
-import { useCancelFlow } from '@/hooks/useCancelFlow';
 
 describe('IngredientSubmissionView', () => {
   const mockSubmissionHandler = vi.fn();
@@ -34,7 +33,9 @@ describe('IngredientSubmissionView', () => {
     );
 
     // Then
-    expect(screen.getByRole('heading', { name: INGREDIENT_SUBMISSION_STRINGS.TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: INGREDIENT_SUBMISSION_STRINGS.TITLE })
+    ).toBeInTheDocument();
   });
 
   test('given subtitle then renders subtitle correctly', () => {
@@ -64,7 +65,9 @@ describe('IngredientSubmissionView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.SUBMIT_TEXT })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.SUBMIT_TEXT })
+    ).toBeInTheDocument();
   });
 
   test('given no custom submit text then defaults to title', () => {
@@ -78,7 +81,9 @@ describe('IngredientSubmissionView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.TITLE })
+    ).toBeInTheDocument();
   });
 
   test('given summary boxes then renders all boxes', () => {
@@ -148,7 +153,9 @@ describe('IngredientSubmissionView', () => {
     );
 
     // When
-    const cancelButton = screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.CANCEL_BUTTON });
+    const cancelButton = screen.getByRole('button', {
+      name: INGREDIENT_SUBMISSION_STRINGS.CANCEL_BUTTON,
+    });
     await user.click(cancelButton);
 
     // Then
@@ -161,7 +168,7 @@ describe('IngredientSubmissionView', () => {
       <IngredientSubmissionView
         title={INGREDIENT_SUBMISSION_STRINGS.TITLE}
         submissionHandler={mockSubmissionHandler}
-        submitButtonLoading={true}
+        submitButtonLoading
         ingredientType="policy"
       />
     );
@@ -238,7 +245,11 @@ describe('IngredientSubmissionView', () => {
     );
 
     // Then
-    expect(screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.CANCEL_BUTTON })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.TITLE })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.CANCEL_BUTTON })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: INGREDIENT_SUBMISSION_STRINGS.TITLE })
+    ).toBeInTheDocument();
   });
 });
