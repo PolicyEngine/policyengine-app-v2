@@ -1,3 +1,4 @@
+import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { SimulationCreationPayload } from '@/types/payloads';
@@ -24,6 +25,20 @@ export class SimulationAdapter {
       throw new Error('Simulation metadata missing population_type');
     }
 
+    // Parse output_json if present
+    let output: Household | null = null;
+    if (metadata.output_json) {
+      try {
+        const householdData = JSON.parse(metadata.output_json);
+        output = {
+          countryId: metadata.country_id,
+          householdData,
+        };
+      } catch (error) {
+        console.error('[SimulationAdapter] Failed to parse output_json:', error);
+      }
+    }
+
     return {
       id: String(metadata.id),
       countryId: metadata.country_id,
@@ -33,6 +48,7 @@ export class SimulationAdapter {
       populationType,
       label: null,
       isCreated: true,
+      output,
     };
   }
 

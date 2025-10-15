@@ -74,6 +74,7 @@ export const HOUSEHOLD_META_WITH_REFORM: CalculationMeta = {
   },
   populationId: 'household123',
   region: undefined,
+  simulationIds: ['sim1', 'sim2'],
 };
 
 export const ECONOMY_META_SUBNATIONAL: CalculationMeta = {
@@ -85,6 +86,7 @@ export const ECONOMY_META_SUBNATIONAL: CalculationMeta = {
   },
   populationId: 'ca',
   region: 'ca',
+  simulationIds: ['sim1'],
 };
 
 export const ECONOMY_META_NATIONAL: CalculationMeta = {
@@ -96,6 +98,7 @@ export const ECONOMY_META_NATIONAL: CalculationMeta = {
   },
   populationId: 'us',
   region: undefined,
+  simulationIds: ['sim1'],
 };
 
 // Test calculation results

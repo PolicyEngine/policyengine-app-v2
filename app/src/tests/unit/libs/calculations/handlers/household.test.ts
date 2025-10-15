@@ -28,9 +28,7 @@ describe('HouseholdCalculationHandler', () => {
   describe('execute', () => {
     test('given new calculation request then starts calculation and returns computing status', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
-        MOCK_HOUSEHOLD_RESULT.householdData
-      );
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
 
       // When
       const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
@@ -68,9 +66,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation then returns ok status with result', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
-        MOCK_HOUSEHOLD_RESULT.householdData
-      );
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Wait for completion
@@ -80,9 +76,10 @@ describe('HouseholdCalculationHandler', () => {
       const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
+      // Report-level returns null - actual data delivered via onSimulationComplete callback
       expect(result).toEqual({
         status: 'ok',
-        result: MOCK_HOUSEHOLD_RESULT.householdData,
+        result: null,
       });
     });
 
@@ -163,9 +160,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation then returns result', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
-        MOCK_HOUSEHOLD_RESULT.householdData
-      );
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
       await advanceTimeAndFlush(0);
 
@@ -173,9 +168,10 @@ describe('HouseholdCalculationHandler', () => {
       const status = handler.getStatus(TEST_REPORT_ID);
 
       // Then
+      // Report-level returns null - actual data delivered via onSimulationComplete callback
       expect(status).toEqual({
         status: 'ok',
-        result: MOCK_HOUSEHOLD_RESULT.householdData,
+        result: null,
       });
     });
 
@@ -205,9 +201,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation then returns true until cleanup', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
-        MOCK_HOUSEHOLD_RESULT.householdData
-      );
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
       await advanceTimeAndFlush(0);
 
@@ -220,9 +214,7 @@ describe('HouseholdCalculationHandler', () => {
 
     test('given completed calculation after cleanup then returns false', async () => {
       // Given
-      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(
-        MOCK_HOUSEHOLD_RESULT.householdData
-      );
+      vi.mocked(householdApi.fetchHouseholdCalculation).mockResolvedValue(MOCK_HOUSEHOLD_RESULT);
       await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
       await advanceTimeAndFlush(0);
 

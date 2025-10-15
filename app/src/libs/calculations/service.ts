@@ -1,6 +1,6 @@
 import { CalculationMeta } from '@/api/reportCalculations';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
+import { Household, HouseholdData } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { EconomyCalculationHandler } from './handlers/economy';
 import { HouseholdCalculationHandler } from './handlers/household';
@@ -65,6 +65,15 @@ export class CalculationService {
         ? geography.geographyId
         : undefined;
 
+    // Collect simulation IDs to update with calculation results
+    const simulationIds: string[] = [];
+    if (simulation1.id) {
+      simulationIds.push(simulation1.id);
+    }
+    if (simulation2?.id) {
+      simulationIds.push(simulation2.id);
+    }
+
     return {
       type,
       countryId: countryId as any,
@@ -74,6 +83,7 @@ export class CalculationService {
       },
       populationId,
       region,
+      simulationIds,
     };
   }
 
@@ -111,17 +121,25 @@ export class CalculationService {
 
   /**
    * Execute a calculation through the appropriate handler
+   * Simple pass-through to the correct handler based on calculation type
    * @param reportId - The report ID
    * @param meta - The calculation metadata
-   * @param onComplete - Optional callback for household calculation completion
+   * @param callbacks - Optional callbacks for completion events
    */
   async executeCalculation(
     reportId: string,
     meta: CalculationMeta,
-    onComplete?: (reportId: string, status: 'ok' | 'error', result?: any) => Promise<void>
+    callbacks?: {
+      onComplete?: (reportId: string, status: 'ok' | 'error', result?: any) => Promise<void>;
+      onSimulationComplete?: (
+        simulationId: string,
+        result: HouseholdData,
+        policyId: string
+      ) => Promise<void>;
+    }
   ): Promise<CalculationStatusResponse> {
     if (meta.type === 'household') {
-      return this.householdHandler.execute(reportId, meta, onComplete);
+      return this.householdHandler.execute(reportId, meta, callbacks);
     }
     return this.economyHandler.execute(reportId, meta);
   }
