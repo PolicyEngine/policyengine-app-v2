@@ -8,6 +8,7 @@ interface FlowState {
   flowStack: Array<{
     flow: Flow;
     frame: ComponentKey;
+    returnFrame?: ComponentKey;
     frameHistory: ComponentKey[];
   }>;
   frameHistory: ComponentKey[];
@@ -135,10 +136,12 @@ export const createFlowState = (overrides: Partial<FlowState> = {}): FlowState =
 export const createFlowStackEntry = (
   flow: Flow,
   frame: ComponentKey,
-  frameHistory: ComponentKey[] = []
+  frameHistory: ComponentKey[] = [],
+  returnFrame?: ComponentKey
 ) => ({
   flow,
   frame,
+  returnFrame,
   frameHistory,
 });
 
@@ -146,18 +149,21 @@ export const createFlowStackEntry = (
 export const mockEmptyStack: Array<{
   flow: Flow;
   frame: ComponentKey;
+  returnFrame?: ComponentKey;
   frameHistory: ComponentKey[];
 }> = [];
 
 export const mockSingleLevelStack: Array<{
   flow: Flow;
   frame: ComponentKey;
+  returnFrame?: ComponentKey;
   frameHistory: ComponentKey[];
 }> = [createFlowStackEntry(mockMainFlow, FRAME_NAMES.SECOND_FRAME)];
 
 export const mockTwoLevelStack: Array<{
   flow: Flow;
   frame: ComponentKey;
+  returnFrame?: ComponentKey;
   frameHistory: ComponentKey[];
 }> = [
   createFlowStackEntry(mockMainFlow, FRAME_NAMES.SECOND_FRAME),
@@ -167,6 +173,7 @@ export const mockTwoLevelStack: Array<{
 export const mockThreeLevelStack: Array<{
   flow: Flow;
   frame: ComponentKey;
+  returnFrame?: ComponentKey;
   frameHistory: ComponentKey[];
 }> = [
   createFlowStackEntry(mockMainFlow, FRAME_NAMES.SECOND_FRAME),
@@ -250,7 +257,7 @@ export const expectedStateAfterNavigateToFlow: FlowState = {
 export const expectedStateAfterNavigateToFlowWithReturn: FlowState = {
   currentFlow: mockSubFlow,
   currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
-  flowStack: [createFlowStackEntry(mockMainFlow, FRAME_NAMES.RETURN_FRAME)],
+  flowStack: [createFlowStackEntry(mockMainFlow, FRAME_NAMES.INITIAL_FRAME, [], FRAME_NAMES.RETURN_FRAME)],
   frameHistory: [],
 };
 

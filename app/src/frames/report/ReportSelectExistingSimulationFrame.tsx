@@ -49,14 +49,15 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
 
   if (configuredSimulations.length === 0) {
     const cancelAction = {
-    ingredientType: 'report' as const,
-  };
+      ingredientType: 'report' as const,
+    };
 
-  return (
+    return (
       <FlowView
         title="Select an Existing Simulation"
         content={<Text>No simulations available. Please create a new simulation.</Text>}
         buttonPreset="cancel-only"
+        cancelAction={cancelAction}
       />
     );
   }
