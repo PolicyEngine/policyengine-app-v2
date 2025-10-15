@@ -43,7 +43,7 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
             pb={spacing.xs}
             style={{ borderBottom: `1px solid ${colors.border.light}` }}
           >
-            Cost
+            Budgetary impact
           </Text>
           <Text variant="metricValue" mt={spacing.sm}>
             Has no impact on the budget
@@ -65,7 +65,7 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
             pb={spacing.xs}
             style={{ borderBottom: `1px solid ${colors.border.light}` }}
           >
-            Cost
+            Budgetary impact
           </Text>
           <Text variant="metricValue" c="red" mt={spacing.sm}>
             Error calculating budget impact
@@ -75,7 +75,7 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
     }
 
     const formatted = formatBudgetaryImpact(budgetaryImpact);
-    const isCost = budgetaryImpact > 0;
+    const isCost = budgetaryImpact < 0;
     const action = isCost ? 'Costs' : 'Raises';
 
     return (
@@ -86,7 +86,7 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
           pb={spacing.xs}
           style={{ borderBottom: `1px solid ${colors.border.light}` }}
         >
-          Cost
+          Budgetary impact
         </Text>
         <Group gap={spacing.xs} align="baseline" mt={spacing.sm}>
           <Text variant="metricValue" c={colors.primary[700]}>
