@@ -76,9 +76,10 @@ describe('HouseholdCalculationHandler', () => {
       const result = await handler.execute(TEST_REPORT_ID, HOUSEHOLD_CALCULATION_META);
 
       // Then
+      // Report-level returns null - actual data delivered via onSimulationComplete callback
       expect(result).toEqual({
         status: 'ok',
-        result: MOCK_HOUSEHOLD_RESULT,
+        result: null,
       });
     });
 
@@ -167,9 +168,10 @@ describe('HouseholdCalculationHandler', () => {
       const status = handler.getStatus(TEST_REPORT_ID);
 
       // Then
+      // Report-level returns null - actual data delivered via onSimulationComplete callback
       expect(status).toEqual({
         status: 'ok',
-        result: MOCK_HOUSEHOLD_RESULT,
+        result: null,
       });
     });
 

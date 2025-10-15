@@ -405,7 +405,10 @@ describe('updateSimulationOutput', () => {
       },
       body: JSON.stringify({
         id: parseInt(SIMULATION_IDS.VALID, 10),
-        output_json: JSON.stringify(mockHouseholdData),
+        output_json: JSON.stringify({
+          countryId: TEST_COUNTRIES.US,
+          householdData: mockHouseholdData,
+        }),
       }),
     });
     expect(result).toEqual(mockSimulationMetadataWithOutput);

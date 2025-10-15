@@ -20,6 +20,10 @@ export const mockNormalizedReport = {
     label: 'Test Report',
     countryId: 'us',
   },
+  simulations: {
+    simulation1: { id: 'sim-1' },
+    simulation2: { id: 'sim-2' },
+  },
 };
 
 // Mock economy output
@@ -100,7 +104,7 @@ export const mockReportOutputError = {
 
 export const mockReportOutputHousehold = {
   status: 'complete' as const,
-  data: mockHouseholdData,
+  data: null, // Household reports have null output (data is in simulations)
   error: null,
 };
 

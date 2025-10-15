@@ -162,9 +162,24 @@ export class CalculationManager {
 
   /**
    * Get query options for a calculation
+   *
+   * TEMPORARY FIX?: This duplicates service.getQueryOptions but calls fetchCalculation (with callbacks)
+   * instead of calling handler directly (without callbacks). This ensures onSimulationComplete fires
+   * and simulation outputs are saved to DB. However, this creates 3 different TQ configs:
+   * 1. service.getQueryOptions() - calls handler directly (no callbacks) - SHOULD BE REMOVED
+   * 2. manager.getQueryOptions() - calls fetchCalculation (with callbacks) - THIS METHOD
+   * 3. calculationQueries.forReport() - calls startCalculation + fetchCalculation
+   *
+   * TODO: Consolidate query config creation - should manager be single source of truth?
    */
   getQueryOptions(reportId: string, meta: CalculationMeta) {
-    return this.service.getQueryOptions(reportId, meta);
+    return {
+      queryKey: ['calculation', reportId] as const,
+      queryFn: () => this.fetchCalculation(reportId, meta),
+      // Household uses synthetic progress, no refetch needed
+      // Economy polls via refetchInterval in service
+      ...(meta.type === 'household' ? { refetchInterval: false, staleTime: Infinity } : {}),
+    };
   }
 
   /**
@@ -187,13 +202,17 @@ export class CalculationManager {
     calculationMeta?: CalculationMeta
   ): Promise<void> {
     // Create a minimal Report object with just the necessary fields
-    // For household: output is null (stored in Simulation)
+    // For household: output is {} (empty object, actual data stored in Simulation)
     // For economy: output contains the comparison results
     const report: Report = {
       id: reportId,
       status,
       output:
-        status === 'complete' && calculationMeta?.type !== 'household' ? result || null : null,
+        status === 'complete'
+          ? calculationMeta?.type === 'household'
+            ? ({} as any) // Empty object for household reports instead of null to prevent PATCH 400 erorr (expects non null comparison TODO in separate PR)
+            : result || null
+          : null,
       countryId,
       apiVersion: '',
       simulationIds: [],

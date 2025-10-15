@@ -94,11 +94,9 @@ export async function updateSimulationOutput(
 ): Promise<SimulationMetadata> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
-  console.log('[updateSimulationOutput] Updating simulation:', simulationId, 'with output');
-
   const payload = {
     id: parseInt(simulationId, 10),
-    output_json: simulation.output ? JSON.stringify(simulation.output.householdData) : null,
+    output_json: simulation.output ? JSON.stringify(simulation.output) : null,
   };
 
   const response = await fetch(url, {

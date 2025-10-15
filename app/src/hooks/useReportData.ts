@@ -1,7 +1,8 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { EconomyReportOutput } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
-import { Household, HouseholdData } from '@/types/ingredients/Household';
+import { fetchSimulationById } from '@/api/simulation';
+import { Household } from '@/types/ingredients/Household';
 import { useReportOutput } from './useReportOutput';
 import { useUserReportById } from './useUserReports';
 
@@ -99,14 +100,27 @@ export function useReportData(userReportId: string): ReportDataResult {
   } = normalizedReport;
   const baseReportId = report?.id;
 
-  // Step 2: Fetch report output using base reportId
+  // Step 2: Get metadata early to determine if we need simulation data
+  const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', baseReportId]);
+  const outputType: ReportOutputType | undefined = metadata?.type;
+  const reformSimId = metadata?.simulationIds?.[1] || metadata?.simulationIds?.[0];
+
+  // Step 3: Fetch report output using base reportId
   // This hook must be called unconditionally to comply with Rules of Hooks
   const reportOutputResult = useReportOutput({
     reportId: baseReportId || '',
     enabled: !!baseReportId, // Only enable when we have a valid base report ID
   });
 
-  // Step 3: Handle loading and error states
+  // Step 4: Fetch simulation output for household reports
+  // This hook must be called unconditionally to comply with Rules of Hooks
+  const { data: simulationData } = useQuery({
+    queryKey: ['simulation', reformSimId || 'none'],
+    queryFn: () => fetchSimulationById(metadata!.countryId, reformSimId!),
+    enabled: !!baseReportId && outputType === 'household' && !!reformSimId,
+  });
+
+  // Step 5: Handle loading and error states
   if (normalizedLoading) {
     return LOADING_PROPS;
   }
@@ -118,7 +132,7 @@ export function useReportData(userReportId: string): ReportDataResult {
     };
   }
 
-  // Step 4: Process the report output result
+  // Step 6: Process the report output result
   const { status, data, error } = reportOutputResult;
 
   // Extract progress information if status is pending
@@ -132,21 +146,32 @@ export function useReportData(userReportId: string): ReportDataResult {
           estimatedTimeRemaining: undefined,
         };
 
-  // Determine output type from cached metadata
-  const metadata = queryClient.getQueryData<CalculationMeta>(['calculation-meta', baseReportId]);
-  const outputType: ReportOutputType | undefined = metadata?.type;
-
-  // Wrap household data in Household structure
-  // The API returns raw HouseholdData, but components expect the Household wrapper
+  // For economy reports, use the report output directly
+  // For household reports, construct from simulation output
   let output: EconomyReportOutput | Household | null | undefined = data;
 
-  if (outputType === 'household' && data) {
-    const wrappedOutput: Household = {
-      id: baseReportId,
-      countryId: metadata?.countryId || 'us',
-      householdData: data as HouseholdData,
-    };
-    output = wrappedOutput;
+  if (outputType === 'household' && simulationData?.output_json) {
+    const parsed =
+      typeof simulationData.output_json === 'string'
+        ? JSON.parse(simulationData.output_json)
+        : simulationData.output_json;
+
+    // Check if already wrapped (has countryId and householdData properties)
+    if (parsed.countryId && parsed.householdData) {
+      // Already a Household object, just add the ID
+      output = {
+        ...parsed,
+        id: baseReportId,
+      };
+    } else {
+      // Raw HouseholdData, need to wrap it
+      const wrappedOutput: Household = {
+        id: baseReportId,
+        countryId: metadata!.countryId,
+        householdData: parsed,
+      };
+      output = wrappedOutput;
+    }
   }
 
   return {

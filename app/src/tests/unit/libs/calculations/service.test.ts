@@ -169,15 +169,21 @@ describe('CalculationService', () => {
       const onSimulationComplete = vi.fn();
       const onComplete = vi.fn();
 
-      // When
+      // When - first call starts calculations
       const result = await service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META, {
         onSimulationComplete,
         onComplete,
       });
 
-      // Then - loops through simulationIds and calls callbacks
-      expect(result.status).toBe('ok');
-      expect(result.result).toBeNull(); // Report output is null for household
+      // Then - returns computing status initially (calculations are async)
+      expect(result.status).toBe('computing');
+      expect(result.progress).toBe(0);
+
+      // Wait for async callbacks to complete
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+
+      // Verify callbacks were called
       expect(onSimulationComplete).toHaveBeenCalledWith(
         'sim-1',
         MOCK_HOUSEHOLD_RESULT.householdData,
@@ -256,23 +262,24 @@ describe('CalculationService', () => {
   });
 
   describe('getStatus', () => {
-    test('given household calculation then returns null (calculations use unique sim keys)', async () => {
+    test('given household calculation then returns aggregated status', async () => {
       // Given
       vi.mocked(householdApi.fetchHouseholdCalculation).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
       // Start calculation
-      service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
+      await service.executeCalculation(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Allow promise to register
       await Promise.resolve();
 
-      // When - getStatus with reportId returns null because handler uses unique keys
+      // When - getStatus with reportId now works (handler aggregates across sim keys)
       const status = service.getStatus(TEST_REPORT_ID, 'household');
 
-      // Then - Service doesn't track by reportId for household anymore
-      expect(status).toBeNull();
+      // Then - Returns aggregated status across all simulations
+      expect(status).toBeDefined();
+      expect(status?.status).toBe('computing');
     });
 
     test('given economy calculation then returns null', () => {

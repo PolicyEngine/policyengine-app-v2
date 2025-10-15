@@ -1,6 +1,6 @@
 import { CalculationMeta } from '@/api/reportCalculations';
 import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
+import { Household, HouseholdData } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { EconomyCalculationHandler } from './handlers/economy';
 import { HouseholdCalculationHandler } from './handlers/household';
@@ -121,6 +121,7 @@ export class CalculationService {
 
   /**
    * Execute a calculation through the appropriate handler
+   * Simple pass-through to the correct handler based on calculation type
    * @param reportId - The report ID
    * @param meta - The calculation metadata
    * @param callbacks - Optional callbacks for completion events
@@ -130,42 +131,15 @@ export class CalculationService {
     meta: CalculationMeta,
     callbacks?: {
       onComplete?: (reportId: string, status: 'ok' | 'error', result?: any) => Promise<void>;
-      onSimulationComplete?: (simulationId: string, result: any, policyId: string) => Promise<void>;
+      onSimulationComplete?: (
+        simulationId: string,
+        result: HouseholdData,
+        policyId: string
+      ) => Promise<void>;
     }
   ): Promise<CalculationStatusResponse> {
     if (meta.type === 'household') {
-      // Loop through each simulation and run calculation
-      for (let index = 0; index < meta.simulationIds.length; index++) {
-        const simulationId = meta.simulationIds[index];
-        const policyId = index === 0 ? meta.policyIds.baseline : meta.policyIds.reform;
-
-        if (!policyId) {
-          continue;
-        }
-
-        const singleSimMeta: CalculationMeta = {
-          ...meta,
-          policyIds: { baseline: policyId, reform: undefined },
-          simulationIds: [simulationId],
-        };
-
-        await this.householdHandler.execute(
-          `${reportId}-sim-${simulationId}`,
-          singleSimMeta,
-          async (_, status, res) => {
-            if (status === 'ok' && callbacks?.onSimulationComplete) {
-              await callbacks.onSimulationComplete(simulationId, res, policyId);
-            }
-          }
-        );
-      }
-
-      // Notify overall completion
-      if (callbacks?.onComplete) {
-        await callbacks.onComplete(reportId, 'ok', null);
-      }
-
-      return { status: 'ok', result: null };
+      return this.householdHandler.execute(reportId, meta, callbacks);
     }
     return this.economyHandler.execute(reportId, meta);
   }

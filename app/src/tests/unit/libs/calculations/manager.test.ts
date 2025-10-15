@@ -80,22 +80,26 @@ describe('CalculationManager', () => {
   });
 
   describe('getQueryOptions', () => {
-    test('given report and metadata then delegates to service', () => {
-      // Given
-      const expectedOptions = {
-        queryKey: ['calculation', TEST_REPORT_ID] as const,
-        queryFn: vi.fn(),
-        refetchInterval: false as const,
-        staleTime: Infinity,
-      };
-      mockService.getQueryOptions.mockReturnValue(expectedOptions);
-
+    test('given household metadata then returns config with fetchCalculation', () => {
       // When
       const result = manager.getQueryOptions(TEST_REPORT_ID, HOUSEHOLD_META);
 
       // Then
-      expect(result).toBe(expectedOptions);
-      expect(mockService.getQueryOptions).toHaveBeenCalledWith(TEST_REPORT_ID, HOUSEHOLD_META);
+      expect(result.queryKey).toEqual(['calculation', TEST_REPORT_ID]);
+      expect(result.queryFn).toBeTypeOf('function');
+      expect(result.refetchInterval).toBe(false);
+      expect(result.staleTime).toBe(Infinity);
+    });
+
+    test('given economy metadata then returns config without refetch settings', () => {
+      // When
+      const result = manager.getQueryOptions(TEST_REPORT_ID, ECONOMY_META);
+
+      // Then
+      expect(result.queryKey).toEqual(['calculation', TEST_REPORT_ID]);
+      expect(result.queryFn).toBeTypeOf('function');
+      expect(result.refetchInterval).toBeUndefined();
+      expect(result.staleTime).toBeUndefined();
     });
   });
 
@@ -123,7 +127,7 @@ describe('CalculationManager', () => {
         expect.objectContaining({
           id: TEST_REPORT_ID,
           status: 'complete',
-          output: null, // Household calculations have null output
+          output: {}, // Household calculations have empty object output
         })
       );
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
