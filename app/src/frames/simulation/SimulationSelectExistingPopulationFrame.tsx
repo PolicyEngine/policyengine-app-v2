@@ -266,14 +266,15 @@ export default function SimulationSelectExistingPopulationFrame({
 
   if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
     const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
+      ingredientType: 'simulation' as const,
+    };
 
-  return (
+    return (
       <FlowView
         title="Select an Existing Population"
         content={<Text>No populations available. Please create a new population.</Text>}
         buttonPreset="cancel-only"
+        cancelAction={cancelAction}
       />
     );
   }

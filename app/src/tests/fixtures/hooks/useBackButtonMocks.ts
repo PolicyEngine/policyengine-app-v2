@@ -12,15 +12,21 @@ export const TEST_FRAME_NAMES = {
 export const createMockDispatch = () => vi.fn();
 
 // Mock state creators
-export const createMockFlowState = (frameHistory: ComponentKey[] = []) => ({
+export const createMockFlowState = (
+  frameHistory: ComponentKey[] = [],
+  flowStack: any[] = []
+) => ({
   currentFlow: null,
   currentFrame: TEST_FRAME_NAMES.FRAME_A,
-  flowStack: [],
+  flowStack,
   frameHistory,
 });
 
-export const createMockRootState = (frameHistory: ComponentKey[] = []) => ({
-  flow: createMockFlowState(frameHistory),
+export const createMockRootState = (
+  frameHistory: ComponentKey[] = [],
+  flowStack: any[] = []
+) => ({
+  flow: createMockFlowState(frameHistory, flowStack),
   report: {
     id: '',
     label: null,
@@ -63,3 +69,17 @@ export const MOCK_STATE_WITH_MULTIPLE_HISTORY = createMockRootState([
   TEST_FRAME_NAMES.FRAME_A,
   TEST_FRAME_NAMES.FRAME_B,
 ]);
+
+// Mock flow stack entry
+export const createMockFlowStackEntry = () => ({
+  flow: {
+    initialFrame: TEST_FRAME_NAMES.FRAME_A,
+    frames: {},
+  },
+  frame: TEST_FRAME_NAMES.FRAME_C,
+  returnFrame: undefined,
+  frameHistory: [TEST_FRAME_NAMES.FRAME_A, TEST_FRAME_NAMES.FRAME_B],
+});
+
+// State with subflow (no frame history but has parent flow)
+export const MOCK_STATE_IN_SUBFLOW = createMockRootState([], [createMockFlowStackEntry()]);

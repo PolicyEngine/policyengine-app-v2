@@ -4,6 +4,7 @@ import { useBackButton } from '@/hooks/useBackButton';
 import {
   createMockDispatch,
   createMockRootState,
+  MOCK_STATE_IN_SUBFLOW,
   MOCK_STATE_WITH_MULTIPLE_HISTORY,
   MOCK_STATE_WITH_NO_HISTORY,
   MOCK_STATE_WITH_SINGLE_HISTORY,
@@ -20,10 +21,11 @@ vi.mock('react-redux', () => ({
 
 vi.mock('@/reducers/flowReducer', () => ({
   navigateToPreviousFrame: vi.fn(() => ({ type: 'flow/navigateToPreviousFrame' })),
+  returnFromFlow: vi.fn(() => ({ type: 'flow/returnFromFlow' })),
 }));
 
 // Import mocked module for assertions
-import { navigateToPreviousFrame } from '@/reducers/flowReducer';
+import { navigateToPreviousFrame, returnFromFlow } from '@/reducers/flowReducer';
 
 let mockRootState: ReturnType<typeof createMockRootState>;
 
@@ -35,9 +37,9 @@ describe('useBackButton', () => {
   });
 
   describe('canGoBack', () => {
-    test('given empty frame history then canGoBack is false', () => {
+    test('given empty frame history and no parent flow then canGoBack is false', () => {
       // Given
-      mockRootState = createMockRootState([]);
+      mockRootState = createMockRootState([], []);
       const { result } = renderHook(() => useBackButton());
 
       // Then
@@ -61,6 +63,15 @@ describe('useBackButton', () => {
       // Then
       expect(result.current.canGoBack).toBe(true);
     });
+
+    test('given empty frame history but in subflow then canGoBack is true', () => {
+      // Given - first frame of subflow, no frame history but has parent flow
+      mockRootState = MOCK_STATE_IN_SUBFLOW;
+      const { result } = renderHook(() => useBackButton());
+
+      // Then
+      expect(result.current.canGoBack).toBe(true);
+    });
   });
 
   describe('handleBack', () => {
@@ -79,7 +90,7 @@ describe('useBackButton', () => {
 
     test('given canGoBack is false then does not dispatch', () => {
       // Given
-      mockRootState = createMockRootState([]);
+      mockRootState = createMockRootState([], []);
       const { result } = renderHook(() => useBackButton());
 
       // When
@@ -87,6 +98,7 @@ describe('useBackButton', () => {
 
       // Then
       expect(navigateToPreviousFrame).not.toHaveBeenCalled();
+      expect(returnFromFlow).not.toHaveBeenCalled();
       expect(mockDispatch).not.toHaveBeenCalled();
     });
 
@@ -100,7 +112,22 @@ describe('useBackButton', () => {
 
       // Then
       expect(navigateToPreviousFrame).toHaveBeenCalled();
+      expect(returnFromFlow).not.toHaveBeenCalled();
       expect(mockDispatch).toHaveBeenCalledWith({ type: 'flow/navigateToPreviousFrame' });
+    });
+
+    test('given first frame of subflow then dispatches returnFromFlow', () => {
+      // Given - empty frame history but has parent flow in stack
+      mockRootState = MOCK_STATE_IN_SUBFLOW;
+      const { result } = renderHook(() => useBackButton());
+
+      // When
+      result.current.handleBack();
+
+      // Then
+      expect(navigateToPreviousFrame).not.toHaveBeenCalled();
+      expect(returnFromFlow).toHaveBeenCalled();
+      expect(mockDispatch).toHaveBeenCalledWith({ type: 'flow/returnFromFlow' });
     });
   });
 

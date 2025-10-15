@@ -93,13 +93,25 @@ export default function FlowView({
     }
 
     if (buttonPreset === 'cancel-only') {
-      return [
-        {
-          label: cancelAction?.label || 'Cancel',
+      const buttons: ButtonConfig[] = [];
+
+      // Add back button if there's frame history or parent flow
+      if (canGoBack) {
+        buttons.push({
+          label: 'Back',
           variant: 'default',
-          onClick: cancelHandler,
-        },
-      ];
+          onClick: handleBack,
+        });
+      }
+
+      // Add cancel button
+      buttons.push({
+        label: cancelAction?.label || 'Cancel',
+        variant: 'default',
+        onClick: cancelHandler,
+      });
+
+      return buttons;
     }
 
     // Default behavior: back + cancel + primary (or just cancel if no primary action)

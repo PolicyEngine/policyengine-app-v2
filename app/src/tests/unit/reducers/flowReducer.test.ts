@@ -145,7 +145,7 @@ describe('flowReducer', () => {
       );
     });
 
-    test('given return frame then uses it in stack entry', () => {
+    test('given return frame then saves both actual frame and return frame in stack', () => {
       const state = flowReducer(
         mockStateWithMainFlow,
         navigateToFlow({
@@ -155,7 +155,8 @@ describe('flowReducer', () => {
       );
 
       expect(state).toEqual(expectedStateAfterNavigateToFlowWithReturn);
-      expect(state.flowStack[0].frame).toEqual(FRAME_NAMES.RETURN_FRAME);
+      expect(state.flowStack[0].frame).toEqual(FRAME_NAMES.INITIAL_FRAME); // Actual frame (for Back button)
+      expect(state.flowStack[0].returnFrame).toEqual(FRAME_NAMES.RETURN_FRAME); // Return frame (for completion)
     });
 
     test('given no current flow then does not push to stack', () => {
@@ -264,6 +265,48 @@ describe('flowReducer', () => {
       expect(state.currentFrame).toEqual(FRAME_NAMES.THIRD_FRAME);
       expect(state.flowStack).toEqual(mockEmptyStack);
     });
+
+    test('given useReturnFrame true with returnFrame defined then uses returnFrame', () => {
+      const stateWithBothFrames = createFlowState({
+        currentFlow: mockSubFlow,
+        currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
+        flowStack: [
+          createFlowStackEntry(
+            mockMainFlow,
+            FRAME_NAMES.SECOND_FRAME, // Actual frame
+            [],
+            FRAME_NAMES.THIRD_FRAME // Return frame
+          ),
+        ],
+      });
+
+      const state = flowReducer(stateWithBothFrames, returnFromFlow({ useReturnFrame: true }));
+
+      expect(state.currentFlow).toEqual(mockMainFlow);
+      expect(state.currentFrame).toEqual(FRAME_NAMES.THIRD_FRAME); // Uses returnFrame
+      expect(state.flowStack).toEqual(mockEmptyStack);
+    });
+
+    test('given useReturnFrame false then uses actual frame', () => {
+      const stateWithBothFrames = createFlowState({
+        currentFlow: mockSubFlow,
+        currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
+        flowStack: [
+          createFlowStackEntry(
+            mockMainFlow,
+            FRAME_NAMES.SECOND_FRAME, // Actual frame
+            [],
+            FRAME_NAMES.THIRD_FRAME // Return frame
+          ),
+        ],
+      });
+
+      const state = flowReducer(stateWithBothFrames, returnFromFlow());
+
+      expect(state.currentFlow).toEqual(mockMainFlow);
+      expect(state.currentFrame).toEqual(FRAME_NAMES.SECOND_FRAME); // Uses actual frame
+      expect(state.flowStack).toEqual(mockEmptyStack);
+    });
   });
 
   describe('Complex Scenarios', () => {
@@ -288,16 +331,17 @@ describe('flowReducer', () => {
       );
       expect(state.currentFlow).toEqual(mockSubFlow);
       expect(state.flowStack).toHaveLength(1);
-      expect(state.flowStack[0].frame).toEqual(FRAME_NAMES.THIRD_FRAME);
+      expect(state.flowStack[0].frame).toEqual(FRAME_NAMES.SECOND_FRAME); // Actual frame (for Back button)
+      expect(state.flowStack[0].returnFrame).toEqual(FRAME_NAMES.THIRD_FRAME); // Return frame (for completion)
 
       // Navigate within sub flow
       state = flowReducer(state, navigateToFrame(FRAME_NAMES.SUB_SECOND_FRAME));
       expect(state.currentFrame).toEqual(FRAME_NAMES.SUB_SECOND_FRAME);
 
-      // Return from sub flow
+      // Return from sub flow (Back button - no useReturnFrame)
       state = flowReducer(state, returnFromFlow());
       expect(state.currentFlow).toEqual(mockMainFlow);
-      expect(state.currentFrame).toEqual(FRAME_NAMES.THIRD_FRAME);
+      expect(state.currentFrame).toEqual(FRAME_NAMES.SECOND_FRAME); // Goes to actual frame, not returnFrame
       expect(state.flowStack).toEqual(mockEmptyStack);
     });
 

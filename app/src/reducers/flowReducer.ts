@@ -8,7 +8,8 @@ interface FlowState {
   // Stack to track nested flows - when we enter a subflow, we push the current state
   flowStack: Array<{
     flow: Flow;
-    frame: ComponentKey;
+    frame: ComponentKey; // Frame to return to (for Back button - always the frame we were on)
+    returnFrame?: ComponentKey; // Frame to return to on successful completion (from returnTo)
     frameHistory: ComponentKey[]; // Preserve frame history per flow
   }>;
   // Stack to track frame navigation history within the current flow
@@ -54,7 +55,8 @@ export const flowSlice = createSlice({
         // Push current state onto stack, including frame history
         state.flowStack.push({
           flow: state.currentFlow,
-          frame: action.payload.returnFrame || state.currentFrame,
+          frame: state.currentFrame, // Always save the actual current frame for Back button
+          returnFrame: action.payload.returnFrame, // Save the desired return frame for completion
           frameHistory: state.frameHistory,
         });
       }
@@ -71,14 +73,22 @@ export const flowSlice = createSlice({
       state.frameHistory = [];
     },
     // Return from a subflow - pops from stack
-    returnFromFlow: (state) => {
-      if (state.flowStack.length > 0) {
-        const previousState = state.flowStack.pop()!;
-        state.currentFlow = previousState.flow;
-        state.currentFrame = previousState.frame;
-        // Restore frame history from the parent flow
-        state.frameHistory = previousState.frameHistory;
-      }
+    // Uses returnFrame if specified (for successful completion), otherwise uses frame (for Back button)
+    returnFromFlow: {
+      reducer: (state, action: PayloadAction<{ useReturnFrame?: boolean } | undefined>) => {
+        if (state.flowStack.length > 0) {
+          const previousState = state.flowStack.pop()!;
+          state.currentFlow = previousState.flow;
+
+          // If useReturnFrame is true and returnFrame exists, use it; otherwise use the actual frame
+          const shouldUseReturnFrame = action.payload?.useReturnFrame && previousState.returnFrame;
+          state.currentFrame = shouldUseReturnFrame ? previousState.returnFrame! : previousState.frame;
+
+          // Restore frame history from the parent flow
+          state.frameHistory = previousState.frameHistory;
+        }
+      },
+      prepare: (payload?: { useReturnFrame?: boolean }) => ({ payload }),
     },
     // Navigate to previous frame in history
     navigateToPreviousFrame: (state) => {

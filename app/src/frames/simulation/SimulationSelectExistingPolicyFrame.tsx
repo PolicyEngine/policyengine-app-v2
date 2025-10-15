@@ -161,14 +161,15 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   if (userPolicies.length === 0) {
     const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
+      ingredientType: 'simulation' as const,
+    };
 
-  return (
+    return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text>No policies available. Please create a new policy.</Text>}
         buttonPreset="cancel-only"
+        cancelAction={cancelAction}
       />
     );
   }
