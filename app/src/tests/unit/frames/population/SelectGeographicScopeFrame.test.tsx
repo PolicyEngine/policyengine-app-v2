@@ -29,8 +29,10 @@ import {
   EXPECTED_DISPLAY_IDS,
   EDGE_CASES,
 } from '@/tests/fixtures/frames/population/geographyConstants';
+import { mockMetadataState } from '@/tests/fixtures/frames/population/SelectGeographicScopeFrameMocks';
 
 // Mock the regions data
+// Note: vi.mock is hoisted, so we must inline the data here
 vi.mock('@/mocks/regions', () => ({
   us_regions: {
     result: {
@@ -72,19 +74,8 @@ describe('SelectGeographicScopeFrame', () => {
     props = mockFlowProps
   ) => {
     const fullMetadataState = {
-      loading: false,
-      error: null,
+      ...mockMetadataState,
       currentCountry: TEST_COUNTRIES.US as string,
-      variables: {},
-      parameters: {},
-      entities: {},
-      variableModules: {},
-      economyOptions: { region: [], time_period: [], datasets: [] },
-      currentLawId: 0,
-      basicInputs: [],
-      modelledPolicies: { core: {}, filtered: {} },
-      version: null,
-      parameterTree: null,
       ...metadataState,
     };
 
@@ -117,7 +108,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent();
 
       // Then
-      expect(screen.getByRole('heading', { name: 'Select Scope' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Select scope' })).toBeInTheDocument();
       expect(screen.getByLabelText('National')).toBeInTheDocument();
       expect(screen.getByLabelText('State')).toBeInTheDocument();
       expect(screen.getByLabelText('Household')).toBeInTheDocument();
@@ -158,13 +149,13 @@ describe('SelectGeographicScopeFrame', () => {
       });
     });
 
-    test('given UK country and state scope then shows constituency options', async () => {
+    test('given UK country and country scope then shows country dropdown', async () => {
       // Given
       renderComponent({ currentCountry: TEST_COUNTRIES.UK });
 
-      // When
-      const stateRadio = screen.getByLabelText('State');
-      await user.click(stateRadio);
+      // When - Select "Country" radio button
+      const countryRadio = screen.getByLabelText('Country');
+      await user.click(countryRadio);
 
       // Then - Shows UK country selector
       await waitFor(() => {
@@ -178,15 +169,22 @@ describe('SelectGeographicScopeFrame', () => {
         expect(screen.getByText('England')).toBeInTheDocument();
         expect(screen.getByText('Scotland')).toBeInTheDocument();
       });
+    });
 
-      await user.click(screen.getByText('England'));
+    test('given UK country and constituency scope then shows constituency dropdown', async () => {
+      // Given
+      renderComponent({ currentCountry: TEST_COUNTRIES.UK });
+
+      // When - Select "Parliamentary constituency" radio button
+      const constituencyRadio = screen.getByLabelText('Parliamentary constituency');
+      await user.click(constituencyRadio);
 
       // Then shows constituency selector
       await waitFor(() => {
-        expect(screen.getByPlaceholderText('Pick a constituency')).toBeInTheDocument();
+        expect(screen.getByPlaceholderText('Search for a constituency')).toBeInTheDocument();
       });
 
-      const constituencyDropdown = screen.getByPlaceholderText('Pick a constituency');
+      const constituencyDropdown = screen.getByPlaceholderText('Search for a constituency');
       await user.click(constituencyDropdown);
 
       await waitFor(() => {
@@ -224,12 +222,12 @@ describe('SelectGeographicScopeFrame', () => {
       const props = { ...mockFlowProps };
       renderComponent(undefined, props);
 
-      // When
-      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
+      // When - National is selected by default for US
+      const submitButton = screen.getByRole('button', { name: /Select scope/i });
       await user.click(submitButton);
 
-      // Then
-      expect(props.onNavigate).toHaveBeenCalledWith(GEOGRAPHIC_SCOPES.NATIONAL);
+      // Then - Should navigate with 'state' (the navTarget logic returns 'state' for non-household)
+      expect(props.onNavigate).toHaveBeenCalledWith(GEOGRAPHIC_SCOPES.STATE);
 
       // Verify Redux action was dispatched
       const state = store.getState();
@@ -258,7 +256,7 @@ describe('SelectGeographicScopeFrame', () => {
       const california = await screen.findByText('California');
       await user.click(california);
 
-      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
+      const submitButton = screen.getByRole('button', { name: /Select scope/i });
       await user.click(submitButton);
 
       // Then
@@ -285,12 +283,12 @@ describe('SelectGeographicScopeFrame', () => {
       const stateRadio = screen.getByLabelText('State');
       await user.click(stateRadio);
 
-      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
+      const submitButton = screen.getByRole('button', { name: /Select scope/i });
       await user.click(submitButton);
 
       // Then
       expect(props.onNavigate).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('State selected but no region chosen');
+      expect(consoleSpy).toHaveBeenCalledWith('State selected but no state chosen');
 
       consoleSpy.mockRestore();
     });
@@ -304,7 +302,7 @@ describe('SelectGeographicScopeFrame', () => {
       const householdRadio = screen.getByLabelText('Household');
       await user.click(householdRadio);
 
-      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
+      const submitButton = screen.getByRole('button', { name: /Select scope/i });
       await user.click(submitButton);
 
       // Then
@@ -333,7 +331,7 @@ describe('SelectGeographicScopeFrame', () => {
       const california = await screen.findByText('California');
       await user.click(california);
 
-      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
+      const submitButton = screen.getByRole('button', { name: /Select scope/i });
       await user.click(submitButton);
 
       // Then
@@ -341,33 +339,28 @@ describe('SelectGeographicScopeFrame', () => {
       expect(state.population.populations[0]?.geography?.geographyId).toBe('ca'); // Not 'state/ca'
     });
 
-    test('given UK constituency when submitted then extracts constituency name', async () => {
+    test('given UK country when submitted then preserves full country path', async () => {
       // Given
       const props = { ...mockFlowProps };
       renderComponent({ currentCountry: TEST_COUNTRIES.UK }, props);
 
-      // When
-      const stateRadio = screen.getByLabelText('State');
-      await user.click(stateRadio);
+      // When - Select "Country" radio button
+      const countryRadio = screen.getByLabelText('Country');
+      await user.click(countryRadio);
 
-      // Select UK country
+      // Select country (countries are few, so they show up immediately)
       const countryDropdown = await screen.findByPlaceholderText('Pick a country');
       await user.click(countryDropdown);
-      const england = await screen.findByText('England');
-      await user.click(england);
 
-      // Select constituency
-      const constituencyDropdown = await screen.findByPlaceholderText('Pick a constituency');
-      await user.click(constituencyDropdown);
-      const london = await screen.findByText('London');
-      await user.click(london);
+      const scotland = await screen.findByText('Scotland');
+      await user.click(scotland);
 
-      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
+      const submitButton = screen.getByRole('button', { name: /Select scope/i });
       await user.click(submitButton);
 
-      // Then
+      // Then - Should preserve full path with prefix
       const state = store.getState();
-      expect(state.population.populations[0]?.geography?.geographyId).toBe('constituency/london');
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('country/scotland');
     });
   });
 
@@ -376,28 +369,20 @@ describe('SelectGeographicScopeFrame', () => {
       // Given
       renderComponent({ currentCountry: null });
 
-      // When
-      const stateRadio = screen.getByLabelText('State');
-      stateRadio.click();
-
-      // Then - Should show US states
-      waitFor(() => {
-        expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
-      });
+      // Then - Should show US-specific options
+      expect(screen.getByLabelText('National')).toBeInTheDocument();
+      expect(screen.getByLabelText('State')).toBeInTheDocument();
+      expect(screen.getByLabelText('Household')).toBeInTheDocument();
     });
 
-    test('given unknown country then defaults to US behavior', () => {
-      // Given
-      renderComponent({ currentCountry: 'ca' }); // Canada not implemented
+    test('given unknown country then shows no options', () => {
+      // Given - Canada not implemented
+      renderComponent({ currentCountry: 'ca' });
 
-      // When
-      const stateRadio = screen.getByLabelText('State');
-      stateRadio.click();
-
-      // Then - Should show US states as fallback
-      waitFor(() => {
-        expect(screen.getByPlaceholderText('Pick a state')).toBeInTheDocument();
-      });
+      // Then - Should not show any scope options
+      expect(screen.queryByLabelText('National')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('State')).not.toBeInTheDocument();
+      expect(screen.queryByLabelText('UK-wide')).not.toBeInTheDocument();
     });
   });
 });

@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Box, Radio, Select, Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { uk_regions, us_regions } from '@/mocks/regions';
 import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
 import { createPopulationAtPosition, setGeographyAtPosition } from '@/reducers/populationReducer';
 import { setMode } from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Geography } from '@/types/ingredients/Geography';
+import USGeographicScopeForm from './components/USGeographicScopeForm';
+import UKGeographicScopeForm from './components/UKGeographicScopeForm';
 
 /**
  * Format geography ID for US regions
@@ -89,17 +89,27 @@ export default function SelectGeographicScopeFrame({
   isInSubflow,
 }: FlowComponentProps) {
   const dispatch = useDispatch();
-  const [scope, setScope] = useState<'national' | 'state' | 'household'>('national');
-  const [selectedCountry, setSelectedCountry] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('');
+
+  // US-specific state
+  const [usScope, setUsScope] = useState<'national' | 'state' | 'household'>('national');
+  const [selectedUsState, setSelectedUsState] = useState('');
+
+  // UK-specific state
+  const [ukScope, setUkScope] = useState<'uk-wide' | 'country' | 'constituency' | 'household'>(
+    'uk-wide'
+  );
+  const [selectedUkRegion, setSelectedUkRegion] = useState('');
 
   // Get current position and population
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
   const populationState = useSelector((state: RootState) => selectActivePopulation(state));
 
-  // Get current country from metadata state, fallback to 'us' if not available
+  // Get current country and region options from metadata state
   const currentCountry: string =
     useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  const regionOptions = useSelector(
+    (state: RootState) => state.metadata.economyOptions?.region || []
+  );
 
   // Set mode to standalone if not in a subflow (this is the first frame of population flow)
   useEffect(() => {
@@ -115,161 +125,119 @@ export default function SelectGeographicScopeFrame({
     }
   }, [dispatch, currentPosition, populationState]);
 
-  const usStates = us_regions.result.economy_options.region
-    .filter((r) => r.name !== 'us')
-    .map((s) => ({ value: s.name, label: s.label }));
-
-  const ukCountryOptions = uk_regions.result.economy_options.region
-    .filter((r) => r.name.startsWith('country/'))
-    .map((c) => ({ value: c.name, label: c.label }));
-
-  // Show ALL constituencies (for now)
-  const ukRegionOptions = uk_regions.result.economy_options.region
-    .filter((r) => r.name.startsWith('constituency/'))
-    .map((r) => ({ value: r.name, label: r.label }));
-
-  /*
-  // Previous filtering by UK country:
-  const ukRegionOptions = uk_regions.result.economy_options.region.filter(r =>
-    r.name.startsWith('constituency/') &&
-    (selectedCountry ? r.name.toLowerCase().includes(selectedCountry.split('/')[1]) : true)
-  );
-  */
-
-  const handleScopeChange = (value: string) => {
-    setScope(value as 'national' | 'state' | 'household');
-
+  const handleUsScopeChange = (value: 'national' | 'state' | 'household') => {
+    setUsScope(value);
     if (value !== 'state') {
-      setSelectedCountry('');
-      setSelectedRegion('');
-      // clear from local state only
+      setSelectedUsState('');
+    }
+  };
+
+  const handleUkScopeChange = (
+    value: 'uk-wide' | 'country' | 'constituency' | 'household'
+  ) => {
+    setUkScope(value);
+    if (value !== 'country' && value !== 'constituency') {
+      setSelectedUkRegion('');
     }
   };
 
   function submissionHandler() {
-    // Validate that if state is selected, a region must be chosen
-    if (scope === 'state' && !selectedRegion) {
-      console.warn('State selected but no region chosen');
+    let scope: 'national' | 'subnational';
+    let selectedValue: string;
+
+    // Determine scope and selected value based on country
+    if (currentCountry === 'us') {
+      if (usScope === 'household') {
+        onNavigate('household');
+        return;
+      }
+
+      scope = usScope === 'national' ? 'national' : 'subnational';
+      selectedValue = usScope === 'state' ? selectedUsState : currentCountry;
+
+      // Validate state selection
+      if (usScope === 'state' && !selectedUsState) {
+        console.warn('State selected but no state chosen');
+        return;
+      }
+    } else if (currentCountry === 'uk') {
+      if (ukScope === 'household') {
+        onNavigate('household');
+        return;
+      }
+
+      scope = ukScope === 'uk-wide' ? 'national' : 'subnational';
+      selectedValue = ukScope === 'uk-wide' ? currentCountry : selectedUkRegion;
+
+      // Validate region selection
+      if ((ukScope === 'country' || ukScope === 'constituency') && !selectedUkRegion) {
+        console.warn('Region selected but no region chosen');
+        return;
+      }
+    } else {
+      console.error('Unsupported country:', currentCountry);
       return;
     }
 
-    // Create Geography object for non-household selections
-    if (scope !== 'household') {
-      const geographicScope: 'national' | 'subnational' =
-        scope === 'national' ? 'national' : 'subnational';
+    // Create Geography object
+    const geographyId = formatGeographyId(currentCountry, selectedValue, scope);
+    const displayId = formatDisplayId(currentCountry, geographyId, scope);
 
-      // Use formatter functions to create properly formatted IDs
-      const geographyId = formatGeographyId(
-        currentCountry,
-        selectedRegion || currentCountry,
-        geographicScope
-      );
+    const geography: Geography = {
+      id: displayId,
+      countryId: currentCountry as any,
+      scope: scope,
+      geographyId,
+    };
 
-      const displayId = formatDisplayId(currentCountry, geographyId, geographicScope);
+    console.log('Created geography:', {
+      countryId: currentCountry,
+      scope,
+      selectedValue,
+      geography,
+    });
 
-      const geography: Geography = {
-        id: displayId,
-        countryId: currentCountry as any,
-        scope: geographicScope,
-        geographyId,
-      };
-
-      console.log('Created geography:', {
-        countryId: currentCountry,
-        scope: geographicScope,
-        selectedRegion,
+    dispatch(
+      setGeographyAtPosition({
+        position: currentPosition,
         geography,
-      });
+      })
+    );
 
-      dispatch(
-        setGeographyAtPosition({
-          position: currentPosition,
-          geography,
-        })
-      );
-    }
-    onNavigate(scope);
+    // Navigate based on household vs non-household
+    const navTarget =
+      (currentCountry === 'us' ? usScope : ukScope) === 'household' ? 'household' : 'state';
+    onNavigate(navTarget as any);
   }
 
   const formInputs = (
-    <Stack>
-      <Radio
-        value="national"
-        label="National"
-        checked={scope === 'national'}
-        onChange={() => handleScopeChange('national')}
-      />
-
-      <Box>
-        <Radio
-          value="state"
-          label="State"
-          checked={scope === 'state'}
-          onChange={() => handleScopeChange('state')}
+    <>
+      {currentCountry === 'us' && (
+        <USGeographicScopeForm
+          scope={usScope}
+          selectedState={selectedUsState}
+          regionOptions={regionOptions}
+          onScopeChange={handleUsScopeChange}
+          onStateChange={setSelectedUsState}
         />
+      )}
 
-        {scope === 'state' && (
-          <Box ml={24} mt="xs">
-            {currentCountry === 'us' && (
-              <Select
-                label="Select State"
-                placeholder="Pick a state"
-                data={usStates}
-                value={selectedRegion}
-                onChange={(val) => {
-                  setSelectedRegion(val || '');
-                  // State will be handled in submissionHandler
-                }}
-              />
-            )}
-
-            {currentCountry === 'uk' && (
-              <>
-                {/* Note: Only storing final constituency selection, not country selection */}
-                <Select
-                  label="Select Country"
-                  placeholder="Pick a country"
-                  data={ukCountryOptions}
-                  value={selectedCountry}
-                  onChange={(val) => {
-                    setSelectedCountry(val || '');
-                    setSelectedRegion('');
-                    // Region cleared in local state above
-                  }}
-                />
-                {selectedCountry && (
-                  <Select
-                    label="Select Constituency"
-                    placeholder="Pick a constituency"
-                    data={ukRegionOptions}
-                    value={selectedRegion}
-                    onChange={(val) => {
-                      setSelectedRegion(val || '');
-                      // Region will be handled in submissionHandler
-                    }}
-                    searchable
-                    mt="xs"
-                  />
-                )}
-              </>
-            )}
-          </Box>
-        )}
-      </Box>
-
-      <Radio
-        value="household"
-        label="Household"
-        checked={scope === 'household'}
-        onChange={() => handleScopeChange('household')}
-      />
-    </Stack>
+      {currentCountry === 'uk' && (
+        <UKGeographicScopeForm
+          scope={ukScope}
+          selectedRegion={selectedUkRegion}
+          regionOptions={regionOptions}
+          onScopeChange={handleUkScopeChange}
+          onRegionChange={setSelectedUkRegion}
+        />
+      )}
+    </>
   );
 
   const primaryAction = {
-    label: 'Select Scope',
+    label: 'Select scope',
     onClick: submissionHandler,
   };
 
-  return <FlowView title="Select Scope" content={formInputs} primaryAction={primaryAction} />;
+  return <FlowView title="Select scope" content={formInputs} primaryAction={primaryAction} />;
 }
