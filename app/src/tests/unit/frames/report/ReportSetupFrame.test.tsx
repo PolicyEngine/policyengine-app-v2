@@ -32,8 +32,8 @@ vi.mock('react-redux', async () => {
     ...actual,
     useDispatch: () => mockDispatch,
     useSelector: (selector: any) => {
-      // Call the selector with a fake state
-      return selector({});
+      // Call the selector with a fake state including metadata
+      return selector({ metadata: { currentCountry: 'us' } });
     },
   };
 });
@@ -55,6 +55,7 @@ describe('ReportSetupFrame', () => {
 
     // Then
     expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setMode('report'));
+    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.updateCountryId('us'));
   });
 
   test('given both simulations configured then shows comparison view', () => {

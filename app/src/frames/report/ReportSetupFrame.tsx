@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
-import { setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
+import { setActiveSimulationPosition, setMode, updateCountryId } from '@/reducers/reportReducer';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import {
   createSimulationAtPosition,
   selectSimulationAtPosition,
@@ -16,11 +17,13 @@ interface ReportSetupFrameProps extends FlowComponentProps {}
 export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) {
   const dispatch = useDispatch();
   const [selectedCard, setSelectedCard] = useState<SimulationCard | null>(null);
+  const currentCountry = useSelector(selectCurrentCountry)!;
 
-  // Set mode to 'report' on mount
+  // Set mode to 'report' and initialize country on mount
   useEffect(() => {
     dispatch(setMode('report'));
-  }, [dispatch]);
+    dispatch(updateCountryId(currentCountry));
+  }, [dispatch, currentCountry]);
 
   // Use position-based selectors - position IS the stable reference
   const simulation1 = useSelector((state: RootState) => selectSimulationAtPosition(state, 0));
