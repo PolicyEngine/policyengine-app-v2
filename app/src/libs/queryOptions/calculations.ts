@@ -1,4 +1,5 @@
 import { Query, QueryClient } from '@tanstack/react-query';
+import { convertJsonToReportOutput } from '@/adapters/conversionHelpers';
 import { fetchReportById } from '@/api/report';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { fetchSimulationById } from '@/api/simulation';
@@ -19,10 +20,6 @@ async function getOrReconstructMetadata(
 ): Promise<CalculationMeta> {
   // Use provided metadata
   if (meta) {
-    console.log(
-      '[getOrReconstructMetadata] Using provided metadata:',
-      JSON.stringify(meta, null, 2)
-    );
     return meta;
   }
 
@@ -32,10 +29,6 @@ async function getOrReconstructMetadata(
     const cached = queryClient.getQueryData<CalculationMeta>(metaKey);
 
     if (cached) {
-      console.log(
-        '[getOrReconstructMetadata] Using cached metadata:',
-        JSON.stringify(cached, null, 2)
-      );
       return cached;
     }
   }
@@ -45,15 +38,9 @@ async function getOrReconstructMetadata(
     throw new Error(`Country ID required for metadata reconstruction of report ${reportId}`);
   }
 
-  console.log(
-    '[getOrReconstructMetadata] Starting waterfall reconstruction for reportId:',
-    reportId
-  );
-
   try {
     // Step 1: Fetch report
     const report = await fetchReportById(countryId as any, reportId);
-    console.log('[getOrReconstructMetadata] Report fetched:', report);
 
     // Step 2: Fetch simulations in parallel
     const [sim1, sim2] = await Promise.all([
@@ -62,7 +49,6 @@ async function getOrReconstructMetadata(
         ? fetchSimulationById(report.country_id, report.simulation_2_id)
         : Promise.resolve(null),
     ]);
-    console.log('[getOrReconstructMetadata] Simulations fetched:', { sim1, sim2 });
 
     // Step 3: Reconstruct metadata based on simulation type
     const reconstructedMeta: CalculationMeta = {
@@ -80,20 +66,13 @@ async function getOrReconstructMetadata(
           : undefined,
     };
 
-    console.log(
-      '[getOrReconstructMetadata] Reconstructed metadata:',
-      JSON.stringify(reconstructedMeta, null, 2)
-    );
-
     // Step 4: Cache reconstructed metadata for future use
     if (queryClient) {
-      console.log('[getOrReconstructMetadata] Caching reconstructed metadata');
       queryClient.setQueryData(['calculation-meta', reportId], reconstructedMeta);
     }
 
     return reconstructedMeta;
   } catch (error) {
-    console.error('[getOrReconstructMetadata] Waterfall reconstruction failed:', error);
     throw new Error(`Failed to reconstruct metadata for report ${reportId}: ${error}`);
   }
 }
@@ -116,28 +95,43 @@ export const calculationQueries = {
     queryClient?: QueryClient,
     countryId?: string
   ) => {
-    console.log('[calculationQueries.forReport] Called with:');
-    console.log('  - reportId:', reportId, 'type:', typeof reportId);
-    console.log('  - meta provided?', !!meta);
-    console.log('  - meta:', meta ? JSON.stringify(meta, null, 2) : 'none');
-    console.log('  - queryClient provided?', !!queryClient);
-
     return {
-      queryKey: ['calculation', reportId] as const,
+      queryKey: ['calculation', reportId, 'v2'] as const, // Added v2 to force cache invalidation
       queryFn: async () => {
-        console.log('[calculationQueries.queryFn] Starting fetch for reportId:', reportId);
-
         // Require queryClient for manager
         if (!queryClient) {
-          console.error('[calculationQueries.queryFn] No QueryClient provided');
           throw new Error('QueryClient is required for calculation queries');
         }
 
-        // Get the calculation manager
-        const manager = getCalculationManager(queryClient);
-        console.log('[calculationQueries.queryFn] Got calculation manager');
-
         try {
+          // Step 1: Always fetch the Report first to check its status
+          const reportMetadata = await fetchReportById(countryId as any, reportId);
+
+          // Step 2: If report is complete, return its output directly (single source of truth)
+          if (reportMetadata.status === 'complete' && reportMetadata.output) {
+            // Still need to reconstruct and cache metadata so useReportData knows the output type
+            await getOrReconstructMetadata(reportId, meta, queryClient, countryId);
+
+            // Parse the JSON-stringified output from the API
+            const parsedOutput = convertJsonToReportOutput(reportMetadata.output);
+            return {
+              status: 'ok' as const,
+              result: parsedOutput,
+            };
+          }
+
+          // Step 3: If report errored, return error status
+          if (reportMetadata.status === 'error') {
+            return {
+              status: 'error' as const,
+              result: null,
+              error: 'Report calculation failed',
+            };
+          }
+
+          // Step 4: Report is pending - get metadata and call calculation endpoint
+          const manager = getCalculationManager(queryClient);
+
           // Get or reconstruct metadata
           const calculationMeta = await getOrReconstructMetadata(
             reportId,
@@ -145,65 +139,39 @@ export const calculationQueries = {
             queryClient,
             countryId
           );
-          console.log(
-            '[calculationQueries.queryFn] Got metadata:',
-            JSON.stringify(calculationMeta, null, 2)
-          );
 
           // For household calculations, ensure progress updates are started
           if (calculationMeta.type === 'household') {
             await manager.startCalculation(reportId, calculationMeta);
           }
 
-          console.log('[calculationQueries.queryFn] Fetching calculation via manager');
           const result = await manager.fetchCalculation(reportId, calculationMeta);
-          console.log('[calculationQueries.queryFn] Manager returned result:', result);
-
           return result;
         } catch (error) {
-          console.error('[calculationQueries.queryFn] Calculation failed:', error);
           throw error;
         }
       },
       refetchInterval: (query: Query<CalculationStatusResponse, Error>) => {
-        console.log('[calculationQueries.refetchInterval] Checking if should refetch');
         const data = query.state.data;
-        console.log('[calculationQueries.refetchInterval] Current data:', data);
 
         // Check if we have metadata to determine calculation type
-        const queryKey = query.queryKey as readonly ['calculation', string];
+        const queryKey = query.queryKey as readonly ['calculation', string, string];
         const reportId = queryKey[1];
         const metadataKey = ['calculation-meta', reportId] as const;
         const metadata = queryClient?.getQueryData<CalculationMeta>(metadataKey);
 
-        console.log('[calculationQueries.refetchInterval] Metadata:', metadata);
-
         // Only poll for economy calculations with computing status
         // Household calculations use synthetic progress via cache updates, no polling needed
         if (data && typeof data === 'object' && 'status' in data) {
-          console.log('[calculationQueries.refetchInterval] Data has status field:', data.status);
-
           if (data.status === 'computing') {
             // Check if this is a household calculation
             if (metadata?.type === 'household') {
-              console.log(
-                '[calculationQueries.refetchInterval] Household calculation - no polling needed (synthetic progress via cache)'
-              );
               return false; // No polling for household calculations
             }
 
             // Economy calculation - poll the API
-            console.log(
-              '[calculationQueries.refetchInterval] Economy calculation - will refetch in 1000ms'
-            );
             return 1000; // Poll every second for economy calculations
           }
-
-          console.log('[calculationQueries.refetchInterval] Status is not computing, no refetch');
-        } else {
-          console.log(
-            '[calculationQueries.refetchInterval] Data does not have status field or is not an object, no refetch'
-          );
         }
         return false;
       },

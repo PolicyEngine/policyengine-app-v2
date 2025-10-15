@@ -49,6 +49,7 @@ export function usePendingReportsMonitor(
     // Subscribe to query cache updates and invalidate reports list when any complete
     const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
       // Only handle updates to calculation queries for our pending reports
+      // Query key is now ['calculation', reportId, 'v2']
       if (
         event.type === 'updated' &&
         event.query.queryKey[0] === 'calculation' &&
