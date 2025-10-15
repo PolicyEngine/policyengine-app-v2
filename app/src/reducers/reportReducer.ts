@@ -12,7 +12,7 @@ interface ReportState extends Report {
 const initialState: ReportState = {
   id: '',
   label: null,
-  countryId: 'us', // Default countryId, to be updated as needed
+  countryId: null as any, // Will be set from metadata when report is initialized
   simulationIds: [],
   apiVersion: null,
   status: 'pending',

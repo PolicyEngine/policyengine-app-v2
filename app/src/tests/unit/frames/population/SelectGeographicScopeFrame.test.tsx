@@ -365,16 +365,6 @@ describe('SelectGeographicScopeFrame', () => {
   });
 
   describe('Country-specific behavior', () => {
-    test('given no metadata country then defaults to US', () => {
-      // Given
-      renderComponent({ currentCountry: null });
-
-      // Then - Should show US-specific options
-      expect(screen.getByLabelText('National')).toBeInTheDocument();
-      expect(screen.getByLabelText('State')).toBeInTheDocument();
-      expect(screen.getByLabelText('Household')).toBeInTheDocument();
-    });
-
     test('given unknown country then shows no options', () => {
       // Given - Canada not implemented
       renderComponent({ currentCountry: 'ca' });

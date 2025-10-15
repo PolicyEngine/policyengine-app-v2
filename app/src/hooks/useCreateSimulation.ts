@@ -10,7 +10,7 @@ import { useCreateSimulationAssociation } from './useUserSimulationAssociations'
 
 export function useCreateSimulation(simulationLabel?: string) {
   const queryClient = useQueryClient();
-  const country = (useSelector(selectCurrentCountry) || 'us') as (typeof countryIds)[number];
+  const country = useSelector(selectCurrentCountry)! as (typeof countryIds)[number];
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateSimulationAssociation();
 

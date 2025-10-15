@@ -22,7 +22,7 @@ export default function ReportsPage() {
   const { data, isLoading, isError, error } = useUserReports(userId);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const countryId = useSelector(selectCurrentCountry) || 'us';
+  const countryId = useSelector(selectCurrentCountry)!;
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -135,11 +135,11 @@ export default function ReportsPage() {
         url: `/${countryId}/report-output/${item.userReport.id}`,
       } as LinkValue,
       dateCreated: {
-        text: item.userReport.createdAt
+        text: item.userReport.createdAt && item.report?.countryId
           ? formatDate(
               item.userReport.createdAt,
               'short-month-day-year',
-              (item.report?.countryId || 'us') as (typeof countryIds)[number],
+              item.report.countryId as (typeof countryIds)[number],
               true
             )
           : '',

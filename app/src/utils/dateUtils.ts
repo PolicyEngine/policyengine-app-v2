@@ -19,7 +19,7 @@ export type DateFormatType =
 export function formatDate(
   dateStr: string,
   formatType: DateFormatType,
-  countryId: (typeof countryIds)[number] = 'us',
+  countryId: (typeof countryIds)[number],
   stripTime: boolean = false
 ): string {
   console.log('Formatting date:', dateStr, 'with format type:', formatType);

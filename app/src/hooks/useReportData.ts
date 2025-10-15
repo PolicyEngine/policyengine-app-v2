@@ -143,7 +143,7 @@ export function useReportData(userReportId: string): ReportDataResult {
   if (outputType === 'household' && data) {
     const wrappedOutput: Household = {
       id: baseReportId,
-      countryId: metadata?.countryId || 'us',
+      countryId: metadata?.countryId!,
       householdData: data as HouseholdData,
     };
     output = wrappedOutput;

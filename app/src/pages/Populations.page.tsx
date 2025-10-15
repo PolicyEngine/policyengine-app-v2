@@ -206,11 +206,11 @@ export default function PopulationsPage() {
           text: item.association.label || `Household #${item.association.householdId}`,
         } as TextValue,
         dateCreated: {
-          text: item.association.createdAt
+          text: item.association.createdAt && item.household?.country_id
             ? formatDate(
                 item.association.createdAt,
                 'short-month-day-year',
-                (item.household?.country_id || 'us') as (typeof countryIds)[number],
+                item.household.country_id as (typeof countryIds)[number],
                 true
               )
             : '',
@@ -244,11 +244,11 @@ export default function PopulationsPage() {
           text: association.label,
         } as TextValue,
         dateCreated: {
-          text: association.createdAt
+          text: association.createdAt && association.countryId
             ? formatDate(
                 association.createdAt,
                 'short-month-day-year',
-                (association?.countryId || 'us') as (typeof countryIds)[number],
+                association.countryId as (typeof countryIds)[number],
                 true
               )
             : '',

@@ -29,7 +29,7 @@ vi.mock('react-redux', async () => {
   return {
     ...actual,
     useDispatch: () => mockDispatch,
-    useSelector: (selector: any) => selector({}),
+    useSelector: (selector: any) => selector({ metadata: { currentCountry: 'us' } }),
   };
 });
 

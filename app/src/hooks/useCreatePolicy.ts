@@ -8,7 +8,7 @@ import { useCreatePolicyAssociation } from './useUserPolicy';
 
 export function useCreatePolicy(policyLabel?: string) {
   const queryClient = useQueryClient();
-  const country = useSelector(selectCurrentCountry) || 'us';
+  const country = useSelector(selectCurrentCountry)!;
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreatePolicyAssociation();
 

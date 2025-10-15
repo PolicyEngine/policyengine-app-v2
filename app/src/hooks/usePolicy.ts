@@ -5,9 +5,9 @@ import { selectCurrentCountry } from '@/reducers/metadataReducer';
 
 /* TODO Integrate hook for get user policies api */
 export function usePolicy(country?: string, policyId = '88713') {
-  // Get country from metadata state, fallback to 'us' if not provided
+  // Get country from metadata state
   const metadataCountry = useSelector(selectCurrentCountry);
-  const resolvedCountry = country || metadataCountry || 'us';
+  const resolvedCountry = country || metadataCountry!;
   // hardcoded a default value until user policies integrated
   return useQuery({
     queryKey: ['policy', resolvedCountry, policyId],

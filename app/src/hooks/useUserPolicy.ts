@@ -143,8 +143,8 @@ export function isPolicyMetadataWithAssociation(
 }
 
 export const useUserPolicies = (userId: string) => {
-  // Get country from metadata state, fallback to 'us' if not available
-  const country = useSelector(selectCurrentCountry) || 'us';
+  // Get country from metadata state
+  const country = useSelector(selectCurrentCountry)!;
 
   // First, get the associations
   const {

@@ -108,11 +108,11 @@ export default function SimulationsPage() {
         text: item.userSimulation.label || `Simulation #${item.userSimulation.simulationId}`,
       } as TextValue,
       dateCreated: {
-        text: item.userSimulation.createdAt
+        text: item.userSimulation.createdAt && item.simulation?.countryId
           ? formatDate(
               item.userSimulation.createdAt,
               'short-month-day-year',
-              (item.simulation?.countryId || 'us') as (typeof countryIds)[number],
+              item.simulation.countryId as (typeof countryIds)[number],
               true
             )
           : '',

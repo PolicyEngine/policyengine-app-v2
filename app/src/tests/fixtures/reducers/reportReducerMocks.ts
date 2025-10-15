@@ -202,7 +202,7 @@ export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
 export const EXPECTED_INITIAL_STATE = {
   id: '',
   label: null,
-  countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
+  countryId: null,
   apiVersion: null,
   simulationIds: [],
   status: 'pending' as const,

@@ -66,7 +66,7 @@ interface EnhancedUserReport {
  * For simple lists or counts, use useReportAssociationsByUser instead
  */
 export const useUserReports = (userId: string) => {
-  const country = useSelector(selectCurrentCountry) || 'us';
+  const country = useSelector(selectCurrentCountry)!;
   const queryNormalizer = useQueryNormalizer();
 
   // Get geography data from metadata
@@ -363,7 +363,7 @@ export const useUserReports = (userId: string) => {
  * @returns Complete report data including UserReport, base Report, and all related entities
  */
 export const useUserReportById = (userReportId: string) => {
-  const country = useSelector(selectCurrentCountry) || 'us';
+  const country = useSelector(selectCurrentCountry)!;
   const queryNormalizer = useQueryNormalizer();
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId

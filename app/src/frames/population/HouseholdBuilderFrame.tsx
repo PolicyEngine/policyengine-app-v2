@@ -23,6 +23,7 @@ import {
   isDropdownField,
 } from '@/libs/metadataUtils';
 import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
+import { selectCurrentCountry } from '@/reducers/metadataReducer';
 import {
   initializeHouseholdAtPosition,
   setHouseholdAtPosition,
@@ -46,7 +47,7 @@ export default function HouseholdBuilderFrame({
   const populationState = useSelector((state: RootState) => selectActivePopulation(state));
   const { createHousehold, isPending } = useCreateHousehold(populationState?.label || '');
   const { resetIngredient } = useIngredientReset();
-  const countryId = 'us'; // TODO: Get from application state when available
+  const countryId = useSelector(selectCurrentCountry)!;
 
   // Initialize with empty household if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {

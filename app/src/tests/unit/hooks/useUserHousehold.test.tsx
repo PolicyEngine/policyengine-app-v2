@@ -418,33 +418,6 @@ describe('useUserHousehold hooks', () => {
       expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_UK, expect.any(String));
     });
 
-    test('given no country in metadata then defaults to us', async () => {
-      // Given
-      store = configureStore({
-        reducer: {
-          metadata: () => ({ currentCountry: null }),
-        },
-      });
-
-      const customWrapper = ({ children }: { children: React.ReactNode }) => (
-        <Provider store={store}>
-          <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-        </Provider>
-      );
-
-      // When
-      const { result } = renderHook(() => useUserHouseholds(TEST_IDS.USER_ID), {
-        wrapper: customWrapper,
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(result.current.isLoading).toBe(false);
-      });
-
-      expect(fetchHouseholdById).toHaveBeenCalledWith(GEO_CONSTANTS.COUNTRY_US, expect.any(String));
-    });
-
     test('given associations without household IDs then includes them in results', async () => {
       // Given
       const associationsWithNullId = [

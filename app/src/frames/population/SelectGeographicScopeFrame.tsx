@@ -106,7 +106,7 @@ export default function SelectGeographicScopeFrame({
 
   // Get current country and region options from metadata state
   const currentCountry: string =
-    useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+    useSelector((state: RootState) => state.metadata.currentCountry)!;
   const regionOptions = useSelector(
     (state: RootState) => state.metadata.economyOptions?.region || []
   );

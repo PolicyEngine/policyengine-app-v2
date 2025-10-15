@@ -8,7 +8,7 @@ import { useCreateHouseholdAssociation } from './useUserHousehold';
 
 export function useCreateHousehold(householdLabel?: string) {
   const queryClient = useQueryClient();
-  const country = useSelector(selectCurrentCountry) || 'us';
+  const country = useSelector(selectCurrentCountry)!;
   // const user = MOCK_USER_ID; // TODO: Replace with actual user context or auth hook in future
   const createAssociation = useCreateHouseholdAssociation();
 
