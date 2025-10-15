@@ -328,8 +328,13 @@ function getTabsForOutputType(
     ];
 
     // Add Geographic Impact tab for UK economy reports
+    // This is a temp component for debug purposes and will be removed
     if (output && isUKEconomyOutput(output)) {
-      baseTabs.splice(1, 0, { value: 'geographic-impact', label: 'Geographic Impact' });
+      return [
+        baseTabs[0],
+        { value: 'geographic-impact', label: 'Geographic Impact' },
+        ...baseTabs.slice(1),
+      ];
     }
 
     return baseTabs;
