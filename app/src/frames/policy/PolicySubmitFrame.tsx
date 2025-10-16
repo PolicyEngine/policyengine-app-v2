@@ -70,9 +70,7 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
   const formatDateRange = (startDate: string, endDate: string): string => {
     const start = formatDate(startDate, 'short-month-day-year', countryId);
     const end =
-      endDate === '9999-12-31'
-        ? 'Ongoing'
-        : formatDate(endDate, 'short-month-day-year', countryId);
+      endDate === '9999-12-31' ? 'Ongoing' : formatDate(endDate, 'short-month-day-year', countryId);
     return `${start} - ${end}`;
   };
 

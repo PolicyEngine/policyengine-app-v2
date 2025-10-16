@@ -14,7 +14,6 @@ import {
 import { UserReport } from '@/types/ingredients/UserReport';
 
 describe('UserReportAdapter', () => {
-
   describe('toCreationPayload', () => {
     test('given UserReport with all fields then creates proper payload', () => {
       // Given
