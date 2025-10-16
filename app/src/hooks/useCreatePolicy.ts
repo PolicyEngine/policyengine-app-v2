@@ -24,6 +24,7 @@ export function useCreatePolicy(policyLabel?: string) {
         await createAssociation.mutateAsync({
           userId,
           policyId: data.result.policy_id, // This is from the API response structure; may be modified in API v2
+          countryId,
           label: policyLabel,
           isCreated: true,
         });

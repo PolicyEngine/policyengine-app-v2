@@ -115,6 +115,7 @@ export const mockUserReport: UserReport = {
   id: 'user-report-1',
   userId: TEST_USER_ID,
   reportId: TEST_REPORT_ID,
+  countryId: 'us',
   label: TEST_LABEL,
   createdAt: TEST_TIMESTAMP,
   updatedAt: TEST_TIMESTAMP,
@@ -129,19 +130,21 @@ export const mockUserReportList: UserReport[] = [
   {
     id: 'user-report-2',
     userId: TEST_USER_ID,
-    reportId: '2', // Matches adapted report ID from metadata
-    label: 'Test Report 2',
-    createdAt: TEST_TIMESTAMP,
-    updatedAt: TEST_TIMESTAMP,
+    reportId: 'report-1',
+    countryId: 'us',
+    label: 'First Report',
+    createdAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     isCreated: true,
   },
   {
     id: 'user-report-3',
     userId: TEST_USER_ID,
-    reportId: '1', // Third report for testing helper functions
-    label: 'Test Report 3',
-    createdAt: TEST_TIMESTAMP,
-    updatedAt: TEST_TIMESTAMP,
+    reportId: 'report-2',
+    countryId: 'us',
+    label: 'Second Report',
+    createdAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     isCreated: true,
   },
 ];

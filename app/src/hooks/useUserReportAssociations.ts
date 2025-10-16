@@ -1,5 +1,6 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { ApiReportStore, LocalStorageReportStore } from '../api/reportAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { reportAssociationKeys } from '../libs/queryKeys';
@@ -25,13 +26,14 @@ export const useUserReportStore = () => {
  */
 export const useReportAssociationsByUser = (userId: string) => {
   const store = useUserReportStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: reportAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: reportAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };

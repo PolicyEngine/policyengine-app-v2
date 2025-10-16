@@ -139,7 +139,8 @@ export async function createReportAndAssociateWithUser(
   // 4. Create UserReport association
   const userReport = await reportStore.create({
     userId: String(params.userId),
-    reportId: report.id!, // Already a string from adapter
+    reportId: String(report.id),
+    countryId: params.countryId,
     label: params.label,
     isCreated: true,
   });

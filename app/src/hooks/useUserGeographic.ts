@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
@@ -19,12 +20,13 @@ export const useUserGeographicStore = () => {
 // This fetches only the user-geographic associations
 export const useGeographicAssociationsByUser = (userId: string) => {
   const store = useUserGeographicStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: geographicAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: geographicAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
