@@ -5,8 +5,8 @@ import * as useReportDataModule from '@/hooks/useReportData';
 import { NormalizedReportData } from '@/hooks/useReportData';
 import { mockUSReportOutput } from '@/tests/fixtures/api/economyMocks';
 import { mockBaselinePolicy, mockReformPolicy, mockCurrentLawPolicy } from '@/tests/fixtures/pages/report-output/PolicySubPage';
-import { mockBaselineSimulation, mockReformSimulation, mockHousehold, mockUserBaselineSimulation, mockUserReformSimulation } from '@/tests/fixtures/pages/report-output/SimulationSubPage';
-import { mockUserHousehold } from '@/tests/fixtures/pages/report-output/PopulationSubPage';
+import { mockBaselineSimulation, mockReformSimulation } from '@/tests/fixtures/pages/report-output/PopulationSubPage';
+import { mockHousehold, mockUserHousehold } from '@/tests/fixtures/pages/report-output/PopulationSubPage';
 
 // Mock the sub-page components
 vi.mock('@/pages/report-output/PolicySubPage', () => ({
@@ -20,27 +20,23 @@ vi.mock('@/pages/report-output/PolicySubPage', () => ({
   )),
 }));
 
-vi.mock('@/pages/report-output/SimulationSubPage', () => ({
-  default: vi.fn(({ simulations, policies, households, geographies, userSimulations }) => (
-    <div data-testid="simulation-subpage">
-      <div>Simulation SubPage Mock</div>
-      <div>Simulations: {simulations?.length || 0}</div>
-      <div>Policies: {policies?.length || 0}</div>
-      <div>Households: {households?.length || 0}</div>
-      <div>Geographies: {geographies?.length || 0}</div>
-      <div>User Simulations: {userSimulations?.length || 0}</div>
+vi.mock('@/pages/report-output/DynamicsSubPage', () => ({
+  default: vi.fn(() => (
+    <div data-testid="dynamics-subpage">
+      <div>Dynamics SubPage Mock</div>
     </div>
   )),
 }));
 
 vi.mock('@/pages/report-output/PopulationSubPage', () => ({
-  default: vi.fn(({ households, geographies, userHouseholds, populationType }) => (
+  default: vi.fn(({ baselineSimulation, reformSimulation, households, geographies, userHouseholds }) => (
     <div data-testid="population-subpage">
       <div>Population SubPage Mock</div>
+      <div>Baseline Simulation: {baselineSimulation?.id || 'none'}</div>
+      <div>Reform Simulation: {reformSimulation?.id || 'none'}</div>
       <div>Households: {households?.length || 0}</div>
       <div>Geographies: {geographies?.length || 0}</div>
       <div>User Households: {userHouseholds?.length || 0}</div>
-      <div>Population Type: {populationType}</div>
     </div>
   )),
 }));
@@ -78,7 +74,7 @@ const mockNormalizedReportWithIngredients: NormalizedReportData = {
   policies: [mockBaselinePolicy, mockReformPolicy, mockCurrentLawPolicy],
   households: [mockHousehold],
   geographies: [],
-  userSimulations: [mockUserBaselineSimulation, mockUserReformSimulation],
+  userSimulations: [],
   userPolicies: [],
   userHouseholds: [mockUserHousehold],
   isLoading: false,
@@ -90,7 +86,7 @@ describe('ReportOutputPage - Ingredient Tabs', () => {
     vi.clearAllMocks();
   });
 
-  test('given complete economy report then includes policy simulation and population tabs', () => {
+  test('given complete economy report then includes policy dynamics and population tabs', () => {
     // Given
     vi.spyOn(useReportDataModule, 'useReportData').mockReturnValue({
       status: 'complete',
@@ -110,11 +106,11 @@ describe('ReportOutputPage - Ingredient Tabs', () => {
 
     // Then
     expect(screen.getByText('Policy')).toBeInTheDocument();
-    expect(screen.getByText('Simulation')).toBeInTheDocument();
+    expect(screen.getByText('Dynamics')).toBeInTheDocument();
     expect(screen.getByText('Population')).toBeInTheDocument();
   });
 
-  test('given complete household report then includes policy simulation and population tabs', () => {
+  test('given complete household report then includes policy and population tabs', () => {
     // Given
     vi.spyOn(useReportDataModule, 'useReportData').mockReturnValue({
       status: 'complete',
@@ -134,11 +130,10 @@ describe('ReportOutputPage - Ingredient Tabs', () => {
 
     // Then
     expect(screen.getByText('Policy')).toBeInTheDocument();
-    expect(screen.getByText('Simulation')).toBeInTheDocument();
     expect(screen.getByText('Population')).toBeInTheDocument();
   });
 
-  test('given economy report then does not include old parameters tab', () => {
+  test('given economy report then does not include simulation tab', () => {
     // Given
     vi.spyOn(useReportDataModule, 'useReportData').mockReturnValue({
       status: 'complete',
@@ -157,6 +152,6 @@ describe('ReportOutputPage - Ingredient Tabs', () => {
     render(<ReportOutputPage />);
 
     // Then
-    expect(screen.queryByText('Parameters')).not.toBeInTheDocument();
+    expect(screen.queryByText('Simulation')).not.toBeInTheDocument();
   });
 });
