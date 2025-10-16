@@ -1,5 +1,21 @@
 import Plot from 'react-plotly.js';
-import { Stack, Text } from '@mantine/core';
+import { Stack, Text, useMantineTheme } from '@mantine/core';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
+import {
+  formatParameterValue,
+  getPlotlyAxisFormat,
+  extendDataToFuture,
+  buildXAxisValues,
+  buildYAxisValues,
+  calculateChartHeight,
+} from '@/libs/chartUtils';
+import {
+  DEFAULT_CHART_START_DATE,
+  DEFAULT_CHART_END_DATE,
+  CHART_COLORS,
+  CHART_DIMENSIONS,
+  CHART_MARGINS,
+} from '@/constants/chart';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
@@ -33,165 +49,130 @@ export default function PolicyParameterSelectorHistoricalValues(
   );
 }
 
-/*
-import { ChartLogo } from "../../../api/charts";
-import {
-  getPlotlyAxisFormat,
-  formatVariableValue,
-} from "../../../api/variables";
-import useMobile from "../../../layout/Responsive";
-import style from "../../../style";
-import { plotLayoutFont } from "pages/policy/output/utils";
-import { localeCode } from "lang/format";
-import { defaultPOTEndDate, defaultStartDate } from "../../../data/constants";
-import { useWindowHeight } from "../../../hooks/useWindow";
-import { useContext } from "react";
-import { ParamChartWidthContext } from "./ParameterEditor";
-*/
-
-/**
- *
- * @param {object} policy the policy object
- * @returns the reform policy label
- */
-/*
-function getReformPolicyLabel(policy) {
-  if (policy.reform.label) return policy.reform.label;
-  const urlParams = new URLSearchParams(window.location.search);
-  const reformPolicyId = urlParams.get("reform");
-  return reformPolicyId ? `Policy #${reformPolicyId}` : "reform";
-}
-  */
-
 export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
-  const { baseValuesCollection, reformValuesCollection } = props;
-  // const { baseMap, reformMap, parameter, policy, metadata } = props;
-  // const mobile = useMobile();
-  // const windowHeight = useWindowHeight();
+  const { param, baseValuesCollection, reformValuesCollection } = props;
+  const theme = useMantineTheme();
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const { height: viewportHeight } = useViewportSize();
 
-  // const paramChartWidth = useContext(ParamChartWidthContext);
-
-  // Extend the last value to 2099 so that the line appears to extend to +inf in
-  // the chart
-  const extendForDisplay = (x: any[], y: any[]) => {
-    x.push('2099-12-31');
-    y.push(y[y.length - 1]);
-  };
-
+  // Get data from collections
   const x = baseValuesCollection.getAllStartDates();
   const y = baseValuesCollection.getAllValues();
-  extendForDisplay(x, y);
+  extendDataToFuture(x, y);
 
   const reformedX = reformValuesCollection ? reformValuesCollection.getAllStartDates() : [];
   const reformedY = reformValuesCollection ? reformValuesCollection.getAllValues() : [];
   if (reformValuesCollection) {
-    extendForDisplay(reformedX, reformedY);
+    extendDataToFuture(reformedX, reformedY);
   }
 
-  // let xaxisValues = reformedX ? x.concat(reformedX) : x;
-  // xaxisValues = xaxisValues.filter((e) => e !== '0000-01-01' && e < '2099-12-31');
+  // Build axis values for proper range
+  const xaxisValues = buildXAxisValues(x, reformedX);
+  const yaxisValues = buildYAxisValues(y, reformedY);
 
-  // xaxisValues.push(defaultStartDate);
-  // This value is used for preventing the chart from expanding
-  // beyond 10 years past the current date for policy changes
-  // defined until "forever" (i.e., 2100-12-31)
-  // xaxisValues.push(defaultPOTEndDate);
-  // const yaxisValues = reformedY ? y.concat(reformedY) : y;
-  // const xaxisFormat = getPlotlyAxisFormat("date", xaxisValues);
-  // const yaxisFormat = getPlotlyAxisFormat(param.unit, yaxisValues);
+  // Get axis formatting
+  const xaxisFormat = getPlotlyAxisFormat('date', xaxisValues);
+  const yaxisFormat = getPlotlyAxisFormat(param.unit || '', yaxisValues);
 
-  // const customData = y.map((value) => formatVariableValue(param, value, 2));
-  /*
-  const reformedCustomData = reformedY.map((value) =>
-    formatVariableValue(param, value, 2),
+  // Format custom data for hover tooltips
+  const customData = y.map((value) => formatParameterValue(param, value, 2));
+  const reformedCustomData = reformedY.map((value) => formatParameterValue(param, value, 2));
+
+  // Calculate responsive dimensions
+  const chartHeight = calculateChartHeight(
+    isMobile,
+    viewportHeight,
+    CHART_DIMENSIONS.MOBILE_HEIGHT_RATIO,
+    CHART_DIMENSIONS.DESKTOP_HEIGHT,
+    CHART_DIMENSIONS.MIN_HEIGHT
   );
-  */
+  const margins = isMobile ? CHART_MARGINS.MOBILE : CHART_MARGINS.DESKTOP;
 
-  // TODO: Typing on Plotly is not good; improve the typing here
   return (
-    <>
-      <Plot
-        data={[
-          ...(reformValuesCollection
-            ? [
-                {
-                  x: reformedX,
-                  y: reformedY.map((y) => +y),
-                  type: 'line' as any,
-                  mode: 'lines+markers' as any,
-                  line: {
-                    shape: 'hv' as any,
-                    dash: 'dot' as any,
-                  },
-                  /*
-            marker: {
-              color: style.colors.BLUE,
-            },
-            */
-                  // name: getReformPolicyLabel(policy),
-                  // customdata: reformedCustomData,
-                  hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
+    <Plot
+      data={[
+        ...(reformValuesCollection
+          ? [
+              {
+                x: reformedX,
+                y: reformedY.map((y) => +y),
+                type: 'scatter' as const,
+                mode: 'lines+markers' as const,
+                line: {
+                  shape: 'hv' as const,
+                  dash: 'dot' as const,
+                  color: CHART_COLORS.REFORM,
                 },
-              ]
-            : []),
-          {
-            x,
-            y: y.map((y) => +y),
-            type: 'line' as any,
-            mode: 'lines+markers' as any,
-            line: {
-              shape: 'hv' as any,
-            },
-            /*
-            marker: {
-              color: !reformValuesCollection
-                ? style.colors.DARK_GRAY
-                : style.colors.MEDIUM_LIGHT_GRAY,
-            },
-            */
-            name: 'Current law',
-            // customdata: customData,
-            hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
+                marker: {
+                  color: CHART_COLORS.REFORM,
+                },
+                name: 'Reform',
+                customdata: reformedCustomData,
+                hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
+              },
+            ]
+          : []),
+        {
+          x,
+          y: y.map((y) => +y),
+          type: 'scatter' as const,
+          mode: 'lines+markers' as const,
+          line: {
+            shape: 'hv' as const,
+            color: reformValuesCollection
+              ? CHART_COLORS.BASELINE_WITH_REFORM
+              : CHART_COLORS.BASELINE_NO_REFORM,
           },
-        ].filter((x) => x)}
-        layout={{
-          // xaxis: { ...xaxisFormat },
-          // yaxis: { ...yaxisFormat },
-          legend: {
-            // Position above the plot
-            y: 1.2,
-            orientation: 'h',
+          marker: {
+            color: reformValuesCollection
+              ? CHART_COLORS.BASELINE_WITH_REFORM
+              : CHART_COLORS.BASELINE_NO_REFORM,
           },
-          // ...ChartLogo,
-          /*
-          margin: {
-            t: mobile && 80,
-            r: mobile && 50,
-            l: mobile && 50,
-            b: mobile && 30,
+          name: 'Current law',
+          customdata: customData,
+          hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
+        },
+      ]}
+      layout={{
+        xaxis: { ...xaxisFormat },
+        yaxis: { ...yaxisFormat },
+        legend: {
+          y: 1.15,
+          orientation: 'h' as const,
+          xanchor: 'left' as const,
+          x: 0,
+        },
+        margin: {
+          t: margins.top,
+          r: margins.right,
+          l: margins.left,
+          b: margins.bottom,
+        },
+        plot_bgcolor: CHART_COLORS.PLOT_BACKGROUND,
+        paper_bgcolor: 'transparent',
+        font: {
+          family: theme.fontFamily,
+          size: 12,
+        },
+        title: {
+          text: `${param.label} over time`,
+          xanchor: 'left' as const,
+          x: 0.04,
+          font: {
+            size: 14,
           },
-          */
-          // ...plotLayoutFont,
-          title: {
-            // text: `${parameter.label} over time`,
-            xanchor: 'left',
-            // x: mobile ? 0.05 : 0.04,
-          },
-          // dragmode: mobile ? false : "zoom",
-          // width: paramChartWidth,
-        }}
-        // Note that plotly does not dynamically resize inside flexbox
-        /*
-        style={{
-          height: mobile ? 0.5 * windowHeight : 400,
-        }}
-          */
-        config={{
-          displayModeBar: false,
-          responsive: true,
-          // locale: localeCode(metadata.countryId),
-        }}
-      />
-    </>
+        },
+        dragmode: isMobile ? false : ('zoom' as const),
+        autosize: true,
+      }}
+      style={{
+        width: '100%',
+        height: chartHeight,
+      }}
+      config={{
+        displayModeBar: false,
+        responsive: true,
+      }}
+    />
   );
 }

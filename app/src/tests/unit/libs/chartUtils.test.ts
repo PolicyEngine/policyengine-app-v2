@@ -1,5 +1,12 @@
 import { describe, expect, test } from 'vitest';
-import { formatParameterValue, getPlotlyAxisFormat } from '@/libs/chartUtils';
+import {
+  formatParameterValue,
+  getPlotlyAxisFormat,
+  extendDataToFuture,
+  buildXAxisValues,
+  buildYAxisValues,
+  calculateChartHeight,
+} from '@/libs/chartUtils';
 import {
   PARAM_USD,
   PARAM_GBP,
@@ -567,5 +574,229 @@ describe('getPlotlyAxisFormat', () => {
       // Then
       expectAxisFormatToMatch(result, EXPECTED_AXIS_FORMAT_BOOLEAN);
     });
+  });
+});
+
+describe('extendDataToFuture', () => {
+  test('given dates and values then extends to 2099-12-31', () => {
+    // Given
+    const dates = ['2020-01-01', '2021-01-01', '2022-01-01'];
+    const values = [100, 200, 300];
+
+    // When
+    extendDataToFuture(dates, values);
+
+    // Then
+    expect(dates).toHaveLength(4);
+    expect(dates[3]).toBe('2099-12-31');
+    expect(values).toHaveLength(4);
+    expect(values[3]).toBe(300);
+  });
+
+  test('given empty arrays then adds 2099-12-31 with undefined', () => {
+    // Given
+    const dates: string[] = [];
+    const values: any[] = [];
+
+    // When
+    extendDataToFuture(dates, values);
+
+    // Then
+    expect(dates).toHaveLength(1);
+    expect(dates[0]).toBe('2099-12-31');
+    expect(values).toHaveLength(1);
+    expect(values[0]).toBeUndefined();
+  });
+
+  test('given single value then duplicates last value', () => {
+    // Given
+    const dates = ['2020-01-01'];
+    const values = [500];
+
+    // When
+    extendDataToFuture(dates, values);
+
+    // Then
+    expect(dates).toHaveLength(2);
+    expect(values[1]).toBe(500);
+  });
+});
+
+describe('buildXAxisValues', () => {
+  test('given base dates only then filters and adds boundaries', () => {
+    // Given
+    const baseDates = ['2020-01-01', '2021-01-01', '2022-01-01'];
+
+    // When
+    const result = buildXAxisValues(baseDates);
+
+    // Then
+    expect(result).toContain('2020-01-01');
+    expect(result).toContain('2021-01-01');
+    expect(result).toContain('2022-01-01');
+    expect(result).toContain('1900-01-01'); // DEFAULT_CHART_START_DATE
+    expect(result).toContain('2035-12-31'); // DEFAULT_CHART_END_DATE
+  });
+
+  test('given base and reform dates then combines them', () => {
+    // Given
+    const baseDates = ['2020-01-01', '2021-01-01'];
+    const reformDates = ['2023-01-01', '2024-01-01'];
+
+    // When
+    const result = buildXAxisValues(baseDates, reformDates);
+
+    // Then
+    expect(result).toContain('2020-01-01');
+    expect(result).toContain('2021-01-01');
+    expect(result).toContain('2023-01-01');
+    expect(result).toContain('2024-01-01');
+  });
+
+  test('given placeholder date 0000-01-01 then filters it out', () => {
+    // Given
+    const baseDates = ['0000-01-01', '2020-01-01', '2021-01-01'];
+
+    // When
+    const result = buildXAxisValues(baseDates);
+
+    // Then
+    expect(result).not.toContain('0000-01-01');
+    expect(result).toContain('2020-01-01');
+  });
+
+  test('given 2099-12-31 then filters it out', () => {
+    // Given
+    const baseDates = ['2020-01-01', '2099-12-31'];
+
+    // When
+    const result = buildXAxisValues(baseDates);
+
+    // Then
+    expect(result).not.toContain('2099-12-31');
+    expect(result).toContain('2020-01-01');
+  });
+});
+
+describe('buildYAxisValues', () => {
+  test('given base values only then returns base values', () => {
+    // Given
+    const baseValues = [100, 200, 300];
+
+    // When
+    const result = buildYAxisValues(baseValues);
+
+    // Then
+    expect(result).toEqual([100, 200, 300]);
+  });
+
+  test('given base and reform values then combines them', () => {
+    // Given
+    const baseValues = [100, 200, 300];
+    const reformValues = [150, 250];
+
+    // When
+    const result = buildYAxisValues(baseValues, reformValues);
+
+    // Then
+    expect(result).toEqual([100, 200, 300, 150, 250]);
+  });
+
+  test('given empty reform values then returns base values', () => {
+    // Given
+    const baseValues = [100, 200];
+    const reformValues: any[] = [];
+
+    // When
+    const result = buildYAxisValues(baseValues, reformValues);
+
+    // Then
+    expect(result).toEqual([100, 200]);
+  });
+});
+
+describe('calculateChartHeight', () => {
+  test('given mobile then uses viewport ratio with minimum constraint', () => {
+    // Given
+    const isMobile = true;
+    const viewportHeight = 800;
+    const mobileRatio = 0.5;
+    const desktopHeight = 400;
+    const minHeight = 300;
+
+    // When
+    const result = calculateChartHeight(
+      isMobile,
+      viewportHeight,
+      mobileRatio,
+      desktopHeight,
+      minHeight
+    );
+
+    // Then
+    expect(result).toBe(400); // 800 * 0.5
+  });
+
+  test('given mobile with small viewport then uses minimum height', () => {
+    // Given
+    const isMobile = true;
+    const viewportHeight = 500;
+    const mobileRatio = 0.5;
+    const desktopHeight = 400;
+    const minHeight = 300;
+
+    // When
+    const result = calculateChartHeight(
+      isMobile,
+      viewportHeight,
+      mobileRatio,
+      desktopHeight,
+      minHeight
+    );
+
+    // Then
+    expect(result).toBe(300); // max(500 * 0.5, 300) = 300
+  });
+
+  test('given desktop then uses fixed desktop height', () => {
+    // Given
+    const isMobile = false;
+    const viewportHeight = 1200;
+    const mobileRatio = 0.5;
+    const desktopHeight = 400;
+    const minHeight = 300;
+
+    // When
+    const result = calculateChartHeight(
+      isMobile,
+      viewportHeight,
+      mobileRatio,
+      desktopHeight,
+      minHeight
+    );
+
+    // Then
+    expect(result).toBe(400);
+  });
+
+  test('given desktop then ignores viewport height', () => {
+    // Given
+    const isMobile = false;
+    const viewportHeight = 200; // Very small
+    const mobileRatio = 0.5;
+    const desktopHeight = 400;
+    const minHeight = 300;
+
+    // When
+    const result = calculateChartHeight(
+      isMobile,
+      viewportHeight,
+      mobileRatio,
+      desktopHeight,
+      minHeight
+    );
+
+    // Then
+    expect(result).toBe(400); // Still uses desktop height
   });
 });

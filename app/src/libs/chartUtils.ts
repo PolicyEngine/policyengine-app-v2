@@ -1,5 +1,6 @@
 import type { Layout } from 'plotly.js';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { DEFAULT_CHART_START_DATE, DEFAULT_CHART_END_DATE } from '@/constants/chart';
 
 /**
  * Formats a parameter value for display based on its unit type
@@ -182,4 +183,69 @@ export function getPlotlyAxisFormat(
     tickformat,
     title: { text: '' },
   };
+}
+
+/**
+ * Extends date and value arrays to 2099 for visual continuity in charts
+ * This makes the line appear to extend indefinitely into the future
+ * @param dates - Array of date strings to extend
+ * @param values - Array of values to extend
+ */
+export function extendDataToFuture(dates: string[], values: any[]): void {
+  const extendDate = '2099-12-31';
+  dates.push(extendDate);
+  values.push(values[values.length - 1]);
+}
+
+/**
+ * Builds combined axis values from base and reform data for proper chart range
+ * Filters out placeholder dates and adds chart boundaries
+ * @param baseDates - Base policy dates
+ * @param reformDates - Reform policy dates (optional)
+ * @returns Combined and filtered date array for x-axis range
+ */
+export function buildXAxisValues(baseDates: string[], reformDates: string[] = []): string[] {
+  // Combine dates
+  let xaxisValues = reformDates.length > 0 ? [...baseDates, ...reformDates] : baseDates;
+
+  // Filter out placeholder dates and future extension
+  xaxisValues = xaxisValues.filter((date) => date !== '0000-01-01' && date < '2099-12-31');
+
+  // Add chart boundaries
+  xaxisValues.push(DEFAULT_CHART_START_DATE);
+  xaxisValues.push(DEFAULT_CHART_END_DATE);
+
+  return xaxisValues;
+}
+
+/**
+ * Builds combined y-axis values from base and reform data for proper chart range
+ * @param baseValues - Base policy values
+ * @param reformValues - Reform policy values (optional)
+ * @returns Combined value array for y-axis range
+ */
+export function buildYAxisValues(baseValues: any[], reformValues: any[] = []): any[] {
+  return reformValues.length > 0 ? [...baseValues, ...reformValues] : baseValues;
+}
+
+/**
+ * Calculates chart height based on viewport and responsive settings
+ * @param isMobile - Whether the viewport is mobile size
+ * @param viewportHeight - Current viewport height in pixels
+ * @param mobileHeightRatio - Ratio of viewport height to use on mobile
+ * @param desktopHeight - Fixed height for desktop in pixels
+ * @param minHeight - Minimum height constraint in pixels
+ * @returns Calculated chart height in pixels
+ */
+export function calculateChartHeight(
+  isMobile: boolean,
+  viewportHeight: number,
+  mobileHeightRatio: number,
+  desktopHeight: number,
+  minHeight: number
+): number {
+  if (isMobile) {
+    return Math.max(viewportHeight * mobileHeightRatio, minHeight);
+  }
+  return desktopHeight;
 }
