@@ -134,3 +134,8 @@ export const mockErrorCalcStatus = (overrides?: Partial<CalcStatus>): CalcStatus
   metadata: mockCalcMetadata(),
   ...overrides,
 });
+
+// Aliases for consistency with test naming
+export const mockCalcStatusComputing = mockComputingCalcStatus;
+export const mockCalcStatusComplete = mockCompleteCalcStatus;
+export const mockCalcStatusError = mockErrorCalcStatus;
