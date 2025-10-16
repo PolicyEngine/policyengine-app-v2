@@ -61,7 +61,10 @@ export function extractRegionApiValue(
   fullValue: string,
   countryId: (typeof countryIds)[number]
 ): string {
-  if (countryId === 'uk' && (fullValue.startsWith('country/') || fullValue.startsWith('constituency/'))) {
+  if (
+    countryId === 'uk' &&
+    (fullValue.startsWith('country/') || fullValue.startsWith('constituency/'))
+  ) {
     return fullValue.split('/').pop() || fullValue;
   }
   return fullValue;
