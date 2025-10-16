@@ -7,10 +7,16 @@ import {
   ACTION_TYPES,
   createMockDispatch,
   createMockStore,
+  TEST_COUNTRY_ID,
   TEST_INGREDIENTS,
   TEST_MODES,
   TEST_POSITIONS,
 } from '@/tests/fixtures/hooks/useIngredientResetMocks';
+
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
 
 // Mock the reducers - mocks must be defined inline due to hoisting
 vi.mock('@/reducers/policyReducer', () => ({
@@ -22,7 +28,7 @@ vi.mock('@/reducers/populationReducer', () => ({
 }));
 
 vi.mock('@/reducers/reportReducer', () => ({
-  clearReport: vi.fn(() => ({ type: 'report/clearReport' })),
+  clearReport: vi.fn((countryId: string) => ({ type: 'report/clearReport', payload: countryId })),
   setMode: vi.fn((mode: string) => ({ type: 'report/setMode', payload: mode })),
   setActiveSimulationPosition: vi.fn((position: number) => ({
     type: 'report/setActiveSimulationPosition',
@@ -115,7 +121,10 @@ describe('useIngredientReset', () => {
     result.current.resetIngredient(TEST_INGREDIENTS.REPORT);
 
     // Then
-    expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_REPORT });
+    expect(dispatch).toHaveBeenCalledWith({
+      type: ACTION_TYPES.CLEAR_REPORT,
+      payload: TEST_COUNTRY_ID,
+    });
     expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_ALL_SIMULATIONS });
     expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_ALL_POLICIES });
     expect(dispatch).toHaveBeenCalledWith({ type: ACTION_TYPES.CLEAR_ALL_POPULATIONS });

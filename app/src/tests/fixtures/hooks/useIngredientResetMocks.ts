@@ -13,6 +13,8 @@ export const createMockStore = (dispatch: ReturnType<typeof vi.fn>) => ({
 });
 
 // Test constants
+export const TEST_COUNTRY_ID = 'us';
+
 export const TEST_MODES = {
   STANDALONE: 'standalone',
   REPORT: 'report',

@@ -1,4 +1,5 @@
 import { useDispatch } from 'react-redux';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { clearAllPolicies } from '@/reducers/policyReducer';
 import { clearAllPopulations } from '@/reducers/populationReducer';
 import { clearReport, setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
@@ -9,6 +10,7 @@ export const ingredients = ['policy', 'simulation', 'population', 'report'];
 
 export const useIngredientReset = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const countryId = useCurrentCountry();
 
   const resetIngredient = (ingredientName: (typeof ingredients)[number]) => {
     switch (ingredientName) {
@@ -33,7 +35,7 @@ export const useIngredientReset = () => {
         dispatch(setActiveSimulationPosition(0));
         break;
       case 'report':
-        dispatch(clearReport());
+        dispatch(clearReport(countryId));
         dispatch(clearAllSimulations());
         dispatch(clearAllPolicies());
         dispatch(clearAllPopulations());

@@ -26,17 +26,16 @@ const initialState: ReportState = {
 };
 
 /**
- * Thunk to clear report and initialize with current country from metadata state
- * This automatically reads the country that was synced by CountryGuard
- * Falls back to DEFAULT_COUNTRY if metadata hasn't loaded yet (shouldn't happen in normal flow)
+ * Thunk to clear report and initialize with country from URL
+ * Accepts countryId directly from route parameters to avoid race conditions
+ * with metadata state synchronization
  */
 export const clearReport = createAsyncThunk<
   (typeof countryIds)[number],
-  void,
+  (typeof countryIds)[number], // Accept countryId as parameter
   { state: RootState }
->('report/clearReport', async (_, { getState }) => {
-  const state = getState();
-  return (state.metadata.currentCountry || DEFAULT_COUNTRY) as (typeof countryIds)[number];
+>('report/clearReport', async (countryId) => {
+  return countryId;
 });
 
 export const reportSlice = createSlice({
