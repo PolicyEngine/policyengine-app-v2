@@ -76,3 +76,41 @@ export async function createSimulation(
     },
   };
 }
+
+/**
+ * Update simulation output after calculation completes
+ */
+export async function updateSimulationOutput(
+  countryId: (typeof countryIds)[number],
+  simulationId: string,
+  // Note: This type should be updated once changes to API v1 are in
+  output: unknown
+): Promise<SimulationMetadata> {
+  const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      output,
+      status: 'complete',
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to update simulation ${simulationId}: ${response.status} ${response.statusText}`
+    );
+  }
+
+  const json = await response.json();
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to update simulation ${simulationId}`);
+  }
+
+  return json.result;
+}
