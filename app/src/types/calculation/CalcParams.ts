@@ -39,4 +39,10 @@ export interface CalcParams {
    * Used for subnational economy calculations
    */
   region?: string;
+
+  /**
+   * Calculation ID for tracking
+   * Used to correlate calculation with report/simulation
+   */
+  calcId: string;
 }

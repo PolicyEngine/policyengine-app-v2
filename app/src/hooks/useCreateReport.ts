@@ -93,29 +93,63 @@ export function useCreateReport(reportLabel?: string) {
           return;
         }
 
-        // Determine target type based on population type
-        const targetType: 'report' | 'simulation' =
-          simulation1.populationType === 'household' ? 'simulation' : 'report';
+        const isHouseholdReport = simulation1.populationType === 'household';
 
-        // Build calculation config
-        const calcConfig: CalcStartConfig = {
-          calcId: reportIdStr,
-          targetType,
-          countryId: report.country_id,
-          simulations: {
-            simulation1,
-            simulation2: simulation2 || null,
-          },
-          populations: {
-            household1: household || null,
-            household2: null,
-            geography1: geography || null,
-            geography2: null,
-          },
-        };
+        if (isHouseholdReport) {
+          // Household reports: Start separate calculation for EACH simulation
+          // WHY: Each simulation needs its own API call to calculate household results
+          // for a specific policy. A report with N simulations = N calculations.
+          // Results are stored at simulation level and compared in the UI.
+          console.log('[useCreateReport] Starting household calculations for each simulation');
 
-        // Start calculation using new orchestrator
-        await orchestrator.startCalculation(calcConfig);
+          const allSimulations = [simulation1, simulation2].filter(
+            (sim): sim is Simulation => sim !== null && sim !== undefined
+          );
+
+          for (const sim of allSimulations) {
+            if (!sim.id) {
+              console.warn('[useCreateReport] Simulation missing ID, skipping');
+              continue;
+            }
+
+            await orchestrator.startCalculation({
+              calcId: sim.id,                     // Each simulation uses its own ID
+              targetType: 'simulation',           // Simulation-level calculation
+              countryId: report.country_id,
+              simulations: {
+                simulation1: sim,                 // Only this specific simulation
+                simulation2: null,
+              },
+              populations: {
+                household1: household || null,
+                household2: null,
+                geography1: null,
+                geography2: null,
+              },
+            });
+          }
+        } else {
+          // Economy reports: Single calculation at report level
+          // WHY: Economy calculations operate on the entire geography and compare
+          // all policies in a single API call. Results stored at report level.
+          console.log('[useCreateReport] Starting economy calculation at report level');
+
+          await orchestrator.startCalculation({
+            calcId: reportIdStr,
+            targetType: 'report',
+            countryId: report.country_id,
+            simulations: {
+              simulation1,
+              simulation2: simulation2 || null,
+            },
+            populations: {
+              household1: null,
+              household2: null,
+              geography1: geography || null,
+              geography2: null,
+            },
+          });
+        }
       } catch (error) {
         console.error('Post-creation tasks failed:', error);
       }

@@ -74,15 +74,26 @@ export default function ReportOutputPage() {
   const { userReport, report, simulations, isLoading: dataLoading, error: dataError } =
     useUserReportById(userReportId);
 
-  // Get calculation status
-  const calcStatus = useCalculationStatus(report?.id || '', 'report');
-
-  // Derive output type from simulation
+  // Derive output type from simulation (needed for target type determination)
   const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
     ? 'household'
     : simulations?.[0]?.populationType === 'geography'
     ? 'economy'
     : undefined;
+
+  // Get calculation status
+  // WHY: Unified hook handles both single and multiple calculations internally.
+  // - Household reports: Pass array of simulation IDs → aggregates N simulations
+  // - Economy reports: Pass single report ID → reads single calculation
+  const isHouseholdReport = outputType === 'household';
+
+  const calcIds = isHouseholdReport
+    ? simulations?.map(s => s.id).filter((id): id is string => !!id) || []
+    : report?.id || '';
+
+  const targetType = isHouseholdReport ? 'simulation' : 'report';
+
+  const calcStatus = useCalculationStatus(calcIds, targetType);
 
   // Prepare output data - wrap household data if needed
   let output: EconomyReportOutput | Household | null | undefined = undefined;

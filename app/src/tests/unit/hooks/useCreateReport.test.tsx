@@ -189,23 +189,47 @@ describe('useCreateReport', () => {
         payload: mockReportCreationPayload,
         simulations: {
           simulation1: mockHouseholdSimulation,
-          simulation2: { ...mockHouseholdSimulation, policyId: 'policy-2' },
+          simulation2: { ...mockHouseholdSimulation, policyId: 'policy-2', id: 'sim-2' },
         },
         populations: {
           household1: mockHousehold,
         },
       });
 
-      // Then
+      // Then - Should start TWO calculations (one per simulation)
       await waitFor(() => {
-        expect(mockStartCalculation).toHaveBeenCalledWith(
+        expect(mockStartCalculation).toHaveBeenCalledTimes(2);
+
+        // First call: simulation1
+        expect(mockStartCalculation).toHaveBeenNthCalledWith(
+          1,
           expect.objectContaining({
-            calcId: TEST_REPORT_ID_STRING,
+            calcId: mockHouseholdSimulation.id,  // Uses simulation's own ID
             targetType: 'simulation',
             countryId: TEST_COUNTRY_ID,
             simulations: {
               simulation1: mockHouseholdSimulation,
-              simulation2: expect.objectContaining({ policyId: 'policy-2' }),
+              simulation2: null,  // Each calculation is independent
+            },
+            populations: {
+              household1: mockHousehold,
+              household2: null,
+              geography1: null,
+              geography2: null,
+            },
+          })
+        );
+
+        // Second call: simulation2
+        expect(mockStartCalculation).toHaveBeenNthCalledWith(
+          2,
+          expect.objectContaining({
+            calcId: 'sim-2',  // Uses simulation2's ID
+            targetType: 'simulation',
+            countryId: TEST_COUNTRY_ID,
+            simulations: {
+              simulation1: expect.objectContaining({ policyId: 'policy-2' }),
+              simulation2: null,  // Each calculation is independent
             },
             populations: {
               household1: mockHousehold,

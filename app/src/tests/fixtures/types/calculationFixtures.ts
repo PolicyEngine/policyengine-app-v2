@@ -35,6 +35,7 @@ export const mockEconomyCalcParams = (overrides?: Partial<CalcParams>): CalcPara
   },
   populationId: 'us',
   region: 'us',
+  calcId: 'test-calc-id',
   ...overrides,
 });
 
@@ -48,6 +49,7 @@ export const mockHouseholdCalcParams = (overrides?: Partial<CalcParams>): CalcPa
     baseline: '1',
   },
   populationId: 'test-household-id',
+  calcId: 'test-calc-id',
   ...overrides,
 });
 

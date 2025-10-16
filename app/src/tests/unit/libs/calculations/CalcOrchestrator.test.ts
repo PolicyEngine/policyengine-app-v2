@@ -213,5 +213,91 @@ describe('CalcOrchestrator', () => {
         expect(metadata.startedAt).toBeLessThanOrEqual(afterTime);
       });
     });
+
+    describe('params building - Phase 1', () => {
+      it('given report config then includes calcId in params', async () => {
+        // Given
+        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
+        const config = mockReportCalcStartConfig();
+
+        // When
+        await orchestrator.startCalculation(config);
+
+        // Then
+        expect(calculationQueries.forReport).toHaveBeenCalledWith(
+          ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
+          expect.any(Object),
+          expect.objectContaining({
+            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
+          })
+        );
+      });
+
+      it('given simulation config then includes calcId in params', async () => {
+        // Given
+        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
+        const config = mockSimulationCalcStartConfig();
+
+        // When
+        await orchestrator.startCalculation(config);
+
+        // Then
+        expect(calculationQueries.forSimulation).toHaveBeenCalledWith(
+          ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
+          expect.any(Object),
+          expect.objectContaining({
+            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
+          })
+        );
+      });
+
+      it('given household config then params includes calcId and household populationId', async () => {
+        // Given
+        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
+        const config = mockReportCalcStartConfig({
+          simulations: {
+            simulation1: {
+              ...mockReportCalcStartConfig().simulations.simulation1,
+              populationType: 'household',
+            },
+            simulation2: null,
+          },
+        });
+
+        // When
+        await orchestrator.startCalculation(config);
+
+        // Then
+        expect(calculationQueries.forReport).toHaveBeenCalledWith(
+          ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
+          expect.any(Object),
+          expect.objectContaining({
+            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
+            calcType: 'household',
+            populationId: ORCHESTRATION_TEST_CONSTANTS.TEST_HOUSEHOLD_ID,
+          })
+        );
+      });
+
+      it('given economy config then params includes calcId and region', async () => {
+        // Given
+        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
+        const config = mockSimulationCalcStartConfig();
+
+        // When
+        await orchestrator.startCalculation(config);
+
+        // Then
+        expect(calculationQueries.forSimulation).toHaveBeenCalledWith(
+          ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
+          expect.any(Object),
+          expect.objectContaining({
+            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
+            calcType: 'economy',
+            region: ORCHESTRATION_TEST_CONSTANTS.TEST_GEOGRAPHY_ID,
+          })
+        );
+      });
+    });
   });
 });

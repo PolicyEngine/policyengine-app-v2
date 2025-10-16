@@ -146,6 +146,7 @@ export class CalcOrchestrator {
       },
       populationId,
       region,
+      calcId: config.calcId,
     };
   }
 }
