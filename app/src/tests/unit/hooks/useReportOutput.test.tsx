@@ -1,5 +1,3 @@
-// Import after mocking to get the mocked version
-import { useQuery } from '@tanstack/react-query';
 import { renderHook } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useReportOutput } from '@/hooks/useReportOutput';
@@ -14,31 +12,10 @@ import {
   MOCK_REPORT_ID,
 } from '@/tests/fixtures/hooks/useReportOutputMocks';
 
-// Mock dependencies
-vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual('@tanstack/react-query');
-  return {
-    ...actual,
-    useQuery: vi.fn(),
-    useQueryClient: () => new (actual as any).QueryClient(),
-  };
-});
-
-// Mock the calculation queries
-vi.mock('@/libs/queryOptions/calculations', () => ({
-  calculationQueries: {
-    forReport: vi.fn((reportId, _meta, _queryClient, _countryId) => ({
-      queryKey: ['calculation', reportId],
-      queryFn: vi.fn(),
-      refetchInterval: vi.fn(),
-      staleTime: Infinity,
-    })),
-  },
-}));
-
-// Mock useCurrentCountry
-vi.mock('@/hooks/useCurrentCountry', () => ({
-  useCurrentCountry: vi.fn(() => 'us'),
+// Mock useCalculationStatus
+const mockUseCalculationStatus = vi.fn();
+vi.mock('@/hooks/useCalculationStatus', () => ({
+  useCalculationStatus: mockUseCalculationStatus,
 }));
 
 describe('useReportOutput', () => {
@@ -52,10 +29,16 @@ describe('useReportOutput', () => {
   describe('unified status handling', () => {
     test('given calculation with computing status then returns pending result', () => {
       // Given
-      (useQuery as any).mockReturnValue({
-        data: MOCK_COMPUTING_RESPONSE,
-        error: null,
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'computing',
+        isComputing: true,
+        isComplete: false,
+        isError: false,
         isLoading: false,
+        progress: MOCK_COMPUTING_RESPONSE.progress,
+        message: MOCK_COMPUTING_RESPONSE.message,
+        queuePosition: MOCK_COMPUTING_RESPONSE.queuePosition,
+        estimatedTimeRemaining: MOCK_COMPUTING_RESPONSE.estimatedTimeRemaining,
       });
 
       // When
@@ -78,10 +61,13 @@ describe('useReportOutput', () => {
 
     test('given calculation with ok status then returns complete result', () => {
       // Given
-      (useQuery as any).mockReturnValue({
-        data: MOCK_HOUSEHOLD_CALCULATION_RESPONSE,
-        error: null,
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'complete',
+        isComputing: false,
+        isComplete: true,
+        isError: false,
         isLoading: false,
+        result: MOCK_HOUSEHOLD_CALCULATION_RESPONSE.result,
       });
 
       // When
@@ -100,10 +86,13 @@ describe('useReportOutput', () => {
 
     test('given calculation with error status then returns error result', () => {
       // Given
-      (useQuery as any).mockReturnValue({
-        data: MOCK_ERROR_RESPONSE,
-        error: null,
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'error',
+        isComputing: false,
+        isComplete: false,
+        isError: true,
         isLoading: false,
+        error: MOCK_ERROR_RESPONSE.error,
       });
 
       // When
@@ -123,10 +112,13 @@ describe('useReportOutput', () => {
     test('given query error then returns error result', () => {
       // Given
       const queryError = new Error('Network error');
-      (useQuery as any).mockReturnValue({
-        data: null,
-        error: queryError,
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'error',
+        isComputing: false,
+        isComplete: false,
+        isError: true,
         isLoading: false,
+        error: queryError,
       });
 
       // When
@@ -145,9 +137,11 @@ describe('useReportOutput', () => {
 
     test('given loading state then returns pending result', () => {
       // Given
-      (useQuery as any).mockReturnValue({
-        data: null,
-        error: null,
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'idle',
+        isComputing: false,
+        isComplete: false,
+        isError: false,
         isLoading: true,
       });
 
@@ -167,9 +161,11 @@ describe('useReportOutput', () => {
 
     test('given no data and no loading then returns fallback error', () => {
       // Given
-      (useQuery as any).mockReturnValue({
-        data: null,
-        error: null,
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'idle',
+        isComputing: false,
+        isComplete: false,
+        isError: false,
         isLoading: false,
       });
 
@@ -180,10 +176,10 @@ describe('useReportOutput', () => {
 
       // Then
       expect(result.current).toEqual({
-        status: 'error',
+        status: 'pending',
         data: null,
-        isPending: false,
-        error: 'Unable to fetch calculation',
+        isPending: true,
+        error: null,
       });
     });
   });
@@ -191,7 +187,7 @@ describe('useReportOutput', () => {
   describe('economy calculation results', () => {
     test('given economy calculation with ok status then extracts result data', () => {
       // Given
-      (useQuery as any).mockReturnValue({
+      mockUseCalculationStatus.mockReturnValue({
         data: MOCK_ECONOMY_CALCULATION_RESPONSE,
         error: null,
         isLoading: false,
@@ -217,7 +213,7 @@ describe('useReportOutput', () => {
         queuePosition: 3,
         estimatedTimeRemaining: 45000,
       };
-      (useQuery as any).mockReturnValue({
+      mockUseCalculationStatus.mockReturnValue({
         data: computingWithQueuePosition,
         error: null,
         isLoading: false,
@@ -249,7 +245,7 @@ describe('useReportOutput', () => {
           net_income_change: 5000,
         },
       };
-      (useQuery as any).mockReturnValue({
+      mockUseCalculationStatus.mockReturnValue({
         data: householdResult,
         error: null,
         isLoading: false,
@@ -274,7 +270,7 @@ describe('useReportOutput', () => {
         message: 'Processing household calculation...',
         estimatedTimeRemaining: 5000,
       };
-      (useQuery as any).mockReturnValue({
+      mockUseCalculationStatus.mockReturnValue({
         data: householdComputing,
         error: null,
         isLoading: false,
@@ -294,56 +290,50 @@ describe('useReportOutput', () => {
   });
 
   describe('query configuration', () => {
-    test('given different country in Redux then uses correct country ID', () => {
+    test('given report ID then calls useCalculationStatus with correct params', () => {
       // Given
-      const { createWrapper: createUKWrapper } = createQueryClientWrapper('uk');
-      (useQuery as any).mockReturnValue({
-        data: MOCK_HOUSEHOLD_CALCULATION_RESPONSE,
-        error: null,
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'complete',
+        isComputing: false,
+        isComplete: true,
+        isError: false,
         isLoading: false,
+        result: MOCK_HOUSEHOLD_CALCULATION_RESPONSE.result,
       });
 
       // When
       renderHook(() => useReportOutput({ reportId: mockReportId }), {
-        wrapper: createUKWrapper(),
-      });
-
-      // Then
-      expect(useQuery).toHaveBeenCalledWith(
-        expect.objectContaining({
-          queryKey: ['calculation', mockReportId],
-          enabled: true,
-        })
-      );
-    });
-
-    test('given report ID as number then converts to string', () => {
-      // Given
-      const numericReportId = '456';
-      (useQuery as any).mockReturnValue({
-        data: MOCK_HOUSEHOLD_CALCULATION_RESPONSE,
-        error: null,
-        isLoading: false,
-      });
-
-      // When
-      renderHook(() => useReportOutput({ reportId: numericReportId }), {
         wrapper: createWrapper(),
       });
 
       // Then
-      expect(useQuery).toHaveBeenCalledWith(
-        expect.objectContaining({
-          queryKey: ['calculation', numericReportId],
-        })
-      );
+      expect(mockUseCalculationStatus).toHaveBeenCalledWith(mockReportId, 'report');
+    });
+
+    test('given enabled false then passes empty string to useCalculationStatus', () => {
+      // Given
+      mockUseCalculationStatus.mockReturnValue({
+        status: 'idle',
+        isComputing: false,
+        isComplete: false,
+        isError: false,
+        isLoading: false,
+      });
+
+      // When
+      renderHook(() => useReportOutput({ reportId: mockReportId, enabled: false }), {
+        wrapper: createWrapper(),
+      });
+
+      // Then
+      expect(mockUseCalculationStatus).toHaveBeenCalledWith('', 'report');
     });
   });
 
   describe('edge cases', () => {
     test('given undefined data with no error or loading then returns fallback', () => {
       // Given
-      (useQuery as any).mockReturnValue({
+      mockUseCalculationStatus.mockReturnValue({
         data: undefined,
         error: null,
         isLoading: false,
@@ -369,7 +359,7 @@ describe('useReportOutput', () => {
         status: 'unknown',
         someData: 'test',
       };
-      (useQuery as any).mockReturnValue({
+      mockUseCalculationStatus.mockReturnValue({
         data: unknownStatus,
         error: null,
         isLoading: false,
@@ -396,7 +386,7 @@ describe('useReportOutput', () => {
         progress: 0.5,
         // Missing other fields
       };
-      (useQuery as any).mockReturnValue({
+      mockUseCalculationStatus.mockReturnValue({
         data: partialProgress,
         error: null,
         isLoading: false,

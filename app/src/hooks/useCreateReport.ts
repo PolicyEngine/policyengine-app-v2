@@ -1,13 +1,15 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
 import { MOCK_USER_ID } from '@/constants';
-import { getCalculationManager } from '@/libs/calculations';
+import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
+import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { countryIds } from '@/libs/countries';
 import { reportKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
+import { CalcStartConfig } from '@/types/calculation';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: (typeof countryIds)[number];
@@ -43,7 +45,7 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
 // with the creation of API v2, where we can merely pass simulation IDs to create a report.
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
-  const manager = getCalculationManager(queryClient);
+  const orchestrator = new CalcOrchestrator(queryClient, new ResultPersister(queryClient));
   const userId = MOCK_USER_ID;
 
   const mutation = useMutation({
@@ -80,30 +82,40 @@ export function useCreateReport(reportLabel?: string) {
         // Cache the report data
         queryClient.setQueryData(['report', reportIdStr], report);
 
-        // Build metadata
-        const calculationMeta = manager.buildMetadata({
-          simulation1: simulations?.simulation1 || null,
-          simulation2: simulations?.simulation2 || null,
-          household: populations?.household1,
-          geography: populations?.geography1,
-          countryId: report.country_id,
-        });
+        // Determine calculation type from simulation
+        const simulation1 = simulations?.simulation1;
+        const simulation2 = simulations?.simulation2;
+        const household = populations?.household1;
+        const geography = populations?.geography1;
 
-        // Store metadata; we need to do this because API v1 doesn't run report by
-        // report ID, but rather by simulation + population; should not be necessary in
-        // API v2
-        queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
-
-        // Get query configuration from manager
-        const queryOptions = manager.getQueryOptions(reportIdStr, calculationMeta);
-
-        // Start calculation via TanStack Query
-        await queryClient.prefetchQuery(queryOptions);
-
-        // For household, start progress updates
-        if (calculationMeta.type === 'household') {
-          await manager.startCalculation(reportIdStr, calculationMeta);
+        if (!simulation1) {
+          console.warn('[useCreateReport] No simulation1 provided, cannot start calculation');
+          return;
         }
+
+        // Determine target type based on population type
+        const targetType: 'report' | 'simulation' =
+          simulation1.populationType === 'household' ? 'simulation' : 'report';
+
+        // Build calculation config
+        const calcConfig: CalcStartConfig = {
+          calcId: reportIdStr,
+          targetType,
+          countryId: report.country_id,
+          simulations: {
+            simulation1,
+            simulation2: simulation2 || null,
+          },
+          populations: {
+            household1: household || null,
+            household2: null,
+            geography1: geography || null,
+            geography2: null,
+          },
+        };
+
+        // Start calculation using new orchestrator
+        await orchestrator.startCalculation(calcConfig);
       } catch (error) {
         console.error('Post-creation tasks failed:', error);
       }

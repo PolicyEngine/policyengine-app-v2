@@ -1,6 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { calculationQueries } from '@/libs/queryOptions/calculations';
+import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 
 export interface UseReportOutputParams {
   reportId: string;
@@ -36,65 +34,49 @@ export type UseReportOutputResult = PendingResult | CompleteResult | ErrorResult
 
 /**
  * Hook to get report calculation results.
- * Uses the unified calculation system that works for both household and economy calculations.
+ * Uses the new calculation status system via useCalculationStatus.
  */
 export function useReportOutput({
   reportId,
   enabled = true,
 }: UseReportOutputParams): UseReportOutputResult {
-  const queryClient = useQueryClient();
-  const countryId = useCurrentCountry();
+  // Use new calculation status hook for reports
+  const calcStatus = useCalculationStatus(enabled ? reportId : '', 'report');
 
-  // Use unified query that works for both calculation types
-  const { data, error, isLoading } = useQuery({
-    ...calculationQueries.forReport(reportId, undefined, queryClient, countryId),
-    enabled,
-  });
-
-  // Simplified status handling - both types return same format
-  if (data) {
-    if (data.status === 'computing') {
-      return {
-        status: 'pending',
-        data: null,
-        isPending: true,
-        error: null,
-        progress: data.progress,
-        message: data.message,
-        queuePosition: data.queuePosition,
-        estimatedTimeRemaining: data.estimatedTimeRemaining,
-      };
-    }
-
-    if (data.status === 'ok') {
-      return {
-        status: 'complete',
-        data: data.result,
-        isPending: false,
-        error: null,
-      };
-    }
-
-    if (data.status === 'error') {
-      return {
-        status: 'error',
-        data: null,
-        isPending: false,
-        error: data.error,
-      };
-    }
+  // Map to old interface for backward compatibility
+  if (calcStatus.isComputing) {
+    return {
+      status: 'pending',
+      data: null,
+      isPending: true,
+      error: null,
+      progress: calcStatus.progress,
+      message: calcStatus.message,
+      queuePosition: calcStatus.queuePosition,
+      estimatedTimeRemaining: calcStatus.estimatedTimeRemaining,
+    };
   }
 
-  if (error) {
+  if (calcStatus.isComplete) {
+    return {
+      status: 'complete',
+      data: calcStatus.result,
+      isPending: false,
+      error: null,
+    };
+  }
+
+  if (calcStatus.isError) {
     return {
       status: 'error',
       data: null,
       isPending: false,
-      error,
+      error: calcStatus.error,
     };
   }
 
-  if (isLoading) {
+  // Idle or loading state
+  if (calcStatus.isLoading || calcStatus.status === 'idle') {
     return {
       status: 'pending',
       data: null,

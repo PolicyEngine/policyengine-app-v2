@@ -41,28 +41,19 @@ vi.mock('@/libs/queryKeys', () => ({
   },
 }));
 
-// Mock the calculation manager
-const mockManager = createMockCalculationManager();
-vi.mock('@/libs/calculations', () => ({
-  getCalculationManager: vi.fn(() => mockManager),
-  determineCalculationType: vi.fn((sim) => {
-    if (!sim) {
-      return 'economy';
-    }
-    return sim.populationType === 'household' ? 'household' : 'economy';
-  }),
-  extractPopulationId: vi.fn((type, household, geography) => {
-    if (type === 'household') {
-      return household?.id || '';
-    }
-    return geography?.id || geography?.geographyId || 'us';
-  }),
-  extractRegion: vi.fn((geography) => {
-    if (geography?.scope === 'subnational' && geography?.geographyId) {
-      return geography.geographyId;
-    }
-    return undefined;
-  }),
+// Mock CalcOrchestrator
+const mockStartCalculation = vi.fn().mockResolvedValue(undefined);
+vi.mock('@/libs/calculations/CalcOrchestrator', () => ({
+  CalcOrchestrator: vi.fn().mockImplementation(() => ({
+    startCalculation: mockStartCalculation,
+  })),
+}));
+
+// Mock ResultPersister
+vi.mock('@/libs/calculations/ResultPersister', () => ({
+  ResultPersister: vi.fn().mockImplementation(() => ({
+    persist: vi.fn().mockResolvedValue(undefined),
+  })),
 }));
 
 describe('useCreateReport', () => {
@@ -85,9 +76,8 @@ describe('useCreateReport', () => {
       },
     });
 
-    // Reset manager mocks
-    mockManager.startCalculation.mockReset().mockResolvedValue(undefined);
-    mockManager.fetchCalculation.mockReset();
+    // Reset orchestrator mocks
+    mockStartCalculation.mockReset().mockResolvedValue(undefined);
   });
 
   afterEach(() => {
@@ -157,7 +147,7 @@ describe('useCreateReport', () => {
       });
     });
 
-    test('given successful creation then stores calculation metadata', async () => {
+    test('given successful creation then caches report data', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 
@@ -168,11 +158,9 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        const cachedMeta = queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING]);
-        expect(cachedMeta).toBeDefined();
-        // Verify basic structure - exact type depends on simulation setup
-        expect(cachedMeta).toHaveProperty('type');
-        expect(cachedMeta).toHaveProperty('countryId', TEST_COUNTRY_ID);
+        const cachedReport = queryClient.getQueryData(['report', TEST_REPORT_ID_STRING]);
+        expect(cachedReport).toBeDefined();
+        expect(cachedReport).toEqual(mockReportMetadata);
       });
     });
   });
@@ -196,11 +184,8 @@ describe('useCreateReport', () => {
     });
   });
 
-  describe('calculation triggering with manager', () => {
-    test('given household simulation when creating report then starts calculation via manager', async () => {
-      // Given
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
-
+  describe('calculation triggering with orchestrator', () => {
+    test('given household simulation when creating report then starts calculation via orchestrator', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 
@@ -218,33 +203,27 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Check if there were any errors logged
-        if (consoleMocks.errorSpy.mock.calls.length > 0) {
-          console.log('Errors logged:', consoleMocks.errorSpy.mock.calls);
-        }
-
-        // Should trigger prefetch with calculation query
-        // startCalculation is called inside the queryFn, not directly
-        expect(prefetchSpy).toHaveBeenCalledWith(
+        expect(mockStartCalculation).toHaveBeenCalledWith(
           expect.objectContaining({
-            queryKey: ['calculation', TEST_REPORT_ID_STRING],
-            queryFn: expect.any(Function),
-            refetchInterval: expect.any(Function),
-            staleTime: Infinity,
+            calcId: TEST_REPORT_ID_STRING,
+            targetType: 'simulation',
+            countryId: TEST_COUNTRY_ID,
+            simulations: {
+              simulation1: mockHouseholdSimulation,
+              simulation2: expect.objectContaining({ policyId: 'policy-2' }),
+            },
+            populations: {
+              household1: mockHousehold,
+              household2: null,
+              geography1: null,
+              geography2: null,
+            },
           })
         );
       });
-
-      // Verify metadata was stored
-      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
-        MOCK_HOUSEHOLD_META
-      );
     });
 
-    test('given economy simulation with national scope then starts calculation without region', async () => {
-      // Given
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
-
+    test('given economy simulation with national scope then starts calculation via orchestrator', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 
@@ -262,28 +241,27 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should trigger prefetch with calculation query
-        // Note: startCalculation is not called for economy calculations
-        expect(prefetchSpy).toHaveBeenCalledWith(
+        expect(mockStartCalculation).toHaveBeenCalledWith(
           expect.objectContaining({
-            queryKey: ['calculation', TEST_REPORT_ID_STRING],
-            queryFn: expect.any(Function),
-            refetchInterval: expect.any(Function),
-            staleTime: Infinity,
+            calcId: TEST_REPORT_ID_STRING,
+            targetType: 'report',
+            countryId: TEST_COUNTRY_ID,
+            simulations: {
+              simulation1: mockEconomySimulation,
+              simulation2: expect.objectContaining({ policyId: 'policy-3' }),
+            },
+            populations: {
+              household1: null,
+              household2: null,
+              geography1: mockNationalGeography,
+              geography2: null,
+            },
           })
         );
       });
-
-      // Verify metadata was stored without region
-      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
-        MOCK_ECONOMY_META_NATIONAL
-      );
     });
 
-    test('given economy simulation with subnational scope then starts calculation with region', async () => {
-      // Given
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
-
+    test('given economy simulation with subnational scope then starts calculation via orchestrator', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 
@@ -301,38 +279,34 @@ describe('useCreateReport', () => {
 
       // Then
       await waitFor(() => {
-        // Should trigger prefetch with calculation query
-        // Note: startCalculation is not called for economy calculations
-        expect(prefetchSpy).toHaveBeenCalledWith(
+        expect(mockStartCalculation).toHaveBeenCalledWith(
           expect.objectContaining({
-            queryKey: ['calculation', TEST_REPORT_ID_STRING],
-            queryFn: expect.any(Function),
-            refetchInterval: expect.any(Function),
-            staleTime: Infinity,
+            calcId: TEST_REPORT_ID_STRING,
+            targetType: 'report',
+            countryId: TEST_COUNTRY_ID,
+            simulations: {
+              simulation1: mockEconomySimulation,
+              simulation2: expect.objectContaining({ policyId: 'policy-3' }),
+            },
+            populations: {
+              household1: null,
+              household2: null,
+              geography1: mockSubnationalGeography,
+              geography2: null,
+            },
           })
         );
       });
-
-      // Verify metadata was stored with region
-      expect(queryClient.getQueryData(['calculation-meta', TEST_REPORT_ID_STRING])).toEqual(
-        MOCK_ECONOMY_META_SUBNATIONAL
-      );
     });
 
-    test('given no populations data then still creates report but does not start calculations', async () => {
-      // Given
-      const prefetchSpy = vi.spyOn(queryClient, 'prefetchQuery');
-
+    test('given no simulation1 data then still creates report but does not start calculations', async () => {
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });
 
       await result.current.createReport({
         countryId: TEST_COUNTRY_ID,
         payload: mockReportCreationPayload,
-        simulations: {
-          simulation1: mockEconomySimulation,
-        },
-        // No populations provided
+        // No simulations provided
       });
 
       // Then
@@ -340,14 +314,14 @@ describe('useCreateReport', () => {
         // Should still create report via combined function
         expect(createReportAndAssociateWithUser).toHaveBeenCalled();
 
-        // Should still prefetch the calculation query
-        expect(prefetchSpy).toHaveBeenCalled();
+        // Should not start calculation
+        expect(mockStartCalculation).not.toHaveBeenCalled();
       });
     });
 
     test('given calculation start fails then still creates report successfully', async () => {
-      // Given - make prefetchQuery reject to simulate failure
-      vi.spyOn(queryClient, 'prefetchQuery').mockRejectedValueOnce(new Error('Prefetch failed'));
+      // Given - make startCalculation reject to simulate failure
+      mockStartCalculation.mockRejectedValueOnce(new Error('Calculation start failed'));
 
       // When
       const { result } = renderHook(() => useCreateReport(TEST_LABEL), { wrapper });

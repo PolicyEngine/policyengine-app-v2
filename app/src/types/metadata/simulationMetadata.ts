@@ -7,4 +7,6 @@ export interface SimulationMetadata {
   population_id: string;
   population_type: 'household' | 'geography';
   policy_id: string;
+  output?: unknown | null;
+  status?: 'complete' | 'error' | 'computing';
 }

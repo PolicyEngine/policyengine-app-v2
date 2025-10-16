@@ -21,11 +21,18 @@ import {
 } from '@mantine/core';
 import { EconomyReportOutput } from '@/api/economy';
 import { colors, spacing, typography } from '@/designTokens';
-import { ReportOutputType, useReportData } from '@/hooks/useReportData';
+import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useUserReportById } from '@/hooks/useUserReports';
+import { Household, HouseholdData } from '@/types/ingredients/Household';
 import ErrorPage from './report-output/ErrorPage';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
+
+/**
+ * Type discriminator for output types
+ */
+export type ReportOutputType = 'household' | 'economy';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -63,17 +70,33 @@ export default function ReportOutputPage() {
     );
   }
 
-  const {
-    status,
-    output,
-    outputType,
-    error,
-    userReport,
-    progress,
-    message,
-    queuePosition,
-    estimatedTimeRemaining,
-  } = useReportData(userReportId);
+  // Fetch report structure and metadata
+  const { userReport, report, simulations, isLoading: dataLoading, error: dataError } =
+    useUserReportById(userReportId);
+
+  // Get calculation status
+  const calcStatus = useCalculationStatus(report?.id || '', 'report');
+
+  // Derive output type from simulation
+  const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
+    ? 'household'
+    : simulations?.[0]?.populationType === 'geography'
+    ? 'economy'
+    : undefined;
+
+  // Prepare output data - wrap household data if needed
+  let output: EconomyReportOutput | Household | null | undefined = undefined;
+
+  if (outputType === 'household' && calcStatus.result && report?.countryId) {
+    const wrappedOutput: Household = {
+      id: report.id,
+      countryId: report.countryId,
+      householdData: calcStatus.result as HouseholdData,
+    };
+    output = wrappedOutput;
+  } else if (outputType === 'economy' && calcStatus.result) {
+    output = calcStatus.result as EconomyReportOutput;
+  }
 
   const DEFAULT_PAGE = 'overview';
 
@@ -82,10 +105,10 @@ export default function ReportOutputPage() {
 
   // Redirect to overview if no subpage is specified and data is ready
   useEffect(() => {
-    if (!subpage && status === 'complete' && output) {
+    if (!subpage && calcStatus.isComplete && output) {
       navigate(DEFAULT_PAGE, { replace: true });
     }
-  }, [subpage, navigate, output, status]);
+  }, [subpage, navigate, output, calcStatus.isComplete]);
 
   // Determine which tabs to show based on output type
   const tabs = output && outputType ? getTabsForOutputType(outputType) : [];
@@ -100,21 +123,31 @@ export default function ReportOutputPage() {
 
   // Render the appropriate sub-page based on status and URL param
   const renderSubPage = () => {
-    // Show loading page if still pending
-    if (status === 'pending') {
+    // Show loading if data is still being fetched
+    if (dataLoading) {
+      return <LoadingPage message="Loading report..." />;
+    }
+
+    // Show error if report data failed to load
+    if (dataError || !report) {
+      return <ErrorPage error={dataError || new Error('Report not found')} />;
+    }
+
+    // Show loading page if calculation is still running
+    if (calcStatus.isComputing) {
       return (
         <LoadingPage
-          progress={progress}
-          message={message}
-          queuePosition={queuePosition}
-          estimatedTimeRemaining={estimatedTimeRemaining}
+          progress={calcStatus.progress}
+          message={calcStatus.message}
+          queuePosition={calcStatus.queuePosition}
+          estimatedTimeRemaining={calcStatus.estimatedTimeRemaining}
         />
       );
     }
 
-    // Show error page if there's an error
-    if (status === 'error') {
-      return <ErrorPage error={error} />;
+    // Show error page if calculation failed
+    if (calcStatus.isError) {
+      return <ErrorPage error={calcStatus.error || new Error('Calculation failed')} />;
     }
 
     // Show not found if invalid subpage
@@ -133,14 +166,14 @@ export default function ReportOutputPage() {
       case 'loading':
         return (
           <LoadingPage
-            progress={progress}
-            message={message}
-            queuePosition={queuePosition}
-            estimatedTimeRemaining={estimatedTimeRemaining}
+            progress={calcStatus.progress}
+            message={calcStatus.message}
+            queuePosition={calcStatus.queuePosition}
+            estimatedTimeRemaining={calcStatus.estimatedTimeRemaining}
           />
         );
       case 'error':
-        return <ErrorPage error={error} />;
+        return <ErrorPage error={calcStatus.error || new Error('Calculation error')} />;
       default:
         return <NotFoundSubPage />;
     }
