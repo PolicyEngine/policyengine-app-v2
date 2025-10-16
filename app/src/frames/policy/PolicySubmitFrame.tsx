@@ -6,6 +6,7 @@ import IngredientSubmissionView, {
   TextListSubItem,
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { selectActivePolicy, selectCurrentPosition } from '@/reducers/activeSelectors';
 import { clearPolicyAtPosition, updatePolicyAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
@@ -16,6 +17,7 @@ import { formatDate } from '@/utils/dateUtils';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
   const dispatch = useDispatch();
+  const countryId = useCurrentCountry();
 
   // Read position from report reducer via cross-cutting selector
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
@@ -66,8 +68,11 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
 
   // Helper function to format date range string (UTC timezone-agnostic)
   const formatDateRange = (startDate: string, endDate: string): string => {
-    const start = formatDate(startDate, 'short-month-day-year');
-    const end = endDate === '9999-12-31' ? 'Ongoing' : formatDate(endDate, 'short-month-day-year');
+    const start = formatDate(startDate, 'short-month-day-year', countryId);
+    const end =
+      endDate === '9999-12-31'
+        ? 'Ongoing'
+        : formatDate(endDate, 'short-month-day-year', countryId);
     return `${start} - ${end}`;
   };
 

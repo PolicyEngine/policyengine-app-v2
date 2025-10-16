@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { countryIds } from '@/libs/countries';
+import { countryIds, DEFAULT_COUNTRY } from '@/libs/countries';
 import { RootState } from '@/store';
 import { Report, ReportOutput } from '@/types/ingredients/Report';
 
@@ -14,7 +14,7 @@ interface ReportState extends Report {
 const initialState: ReportState = {
   id: '',
   label: null,
-  countryId: 'us', // Will be overwritten by clearReport thunk on initialization
+  countryId: DEFAULT_COUNTRY, // Fallback until clearReport thunk sets actual country from URL
   simulationIds: [],
   apiVersion: null,
   status: 'pending',
@@ -28,6 +28,7 @@ const initialState: ReportState = {
 /**
  * Thunk to clear report and initialize with current country from metadata state
  * This automatically reads the country that was synced by CountryGuard
+ * Falls back to DEFAULT_COUNTRY if metadata hasn't loaded yet (shouldn't happen in normal flow)
  */
 export const clearReport = createAsyncThunk<
   (typeof countryIds)[number],
@@ -35,7 +36,7 @@ export const clearReport = createAsyncThunk<
   { state: RootState }
 >('report/clearReport', async (_, { getState }) => {
   const state = getState();
-  return (state.metadata.currentCountry || 'us') as (typeof countryIds)[number];
+  return (state.metadata.currentCountry || DEFAULT_COUNTRY) as (typeof countryIds)[number];
 });
 
 export const reportSlice = createSlice({
