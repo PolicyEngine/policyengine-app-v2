@@ -92,7 +92,7 @@ export default function BenefitAccessPage() {
             tags: ['National (US)'],
           },
         ]}
-        containerTitle={''}
+        containerTitle=""
       />
       <Divider orientation="horizontal" size="xs" color={colors.border.dark} mt={60} mb={40} />
       <TitleCardWithHeader
