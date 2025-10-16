@@ -19,6 +19,11 @@ import {
   TEST_USER_ID,
 } from '@/tests/fixtures/api/reportAssociationMocks';
 
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock the stores first
 vi.mock('@/api/reportAssociation', () => {
   const mockStore = {
@@ -110,7 +115,7 @@ describe('useUserReportAssociations hooks', () => {
       });
 
       expect(result.current.data).toEqual(mockUserReportList);
-      expect(mockStore.findByUser).toHaveBeenCalledWith(userId);
+      expect(mockStore.findByUser).toHaveBeenCalledWith(userId, 'us');
     });
 
     test('given fetch error then returns error state', async () => {

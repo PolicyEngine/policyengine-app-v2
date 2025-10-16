@@ -332,6 +332,7 @@ export const createMockUserReport = (reportId: string, userId: string, label?: s
   createdAt: '2025-01-01T00:00:00Z',
   updatedAt: '2025-01-01T00:00:00Z',
   countryId: 'us' as const,
+  type: 'report' as const,
 });
 
 export const createMockReportWithAssociationResult = (
