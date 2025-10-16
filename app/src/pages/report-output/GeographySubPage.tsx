@@ -1,80 +1,184 @@
-import { useState } from 'react';
+import { Box, Table, Text } from '@mantine/core';
 import { Geography } from '@/types/ingredients/Geography';
+import { colors, spacing, typography } from '@/designTokens';
 
 interface GeographySubPageProps {
-  geographies: Geography[];
+  baselineGeography?: Geography;
+  reformGeography?: Geography;
 }
 
 /**
- * GeographySubPage - Displays geography population information
+ * GeographySubPage - Displays geography population information in Design 4 table format
  *
- * Shows detailed geography information including name, scope, and geographic identifiers.
+ * Shows baseline and reform geographies side-by-side in a comparison table.
+ * Collapses columns when both simulations use the same geography.
  */
-export default function GeographySubPage({ geographies }: GeographySubPageProps) {
-  const [selectedGeographyId, setSelectedGeographyId] = useState<string | null>(null);
+export default function GeographySubPage({
+  baselineGeography,
+  reformGeography,
+}: GeographySubPageProps) {
+  if (!baselineGeography && !reformGeography) {
+    return <div>No geography data available</div>;
+  }
 
-  // Auto-select first geography
-  const selectedGeography =
-    geographies.find((g) => g.id === selectedGeographyId) || geographies[0];
+  // Check if geographies are the same
+  const geographiesAreSame = baselineGeography?.id === reformGeography?.id;
+
+  // Define table rows
+  const rows = [
+    {
+      label: 'Geography ID',
+      baselineValue: baselineGeography?.geographyId || '—',
+      reformValue: reformGeography?.geographyId || '—',
+    },
+    {
+      label: 'Name',
+      baselineValue: baselineGeography?.name || '—',
+      reformValue: reformGeography?.name || '—',
+    },
+    {
+      label: 'Country',
+      baselineValue: baselineGeography?.countryId || '—',
+      reformValue: reformGeography?.countryId || '—',
+    },
+    {
+      label: 'Scope',
+      baselineValue: baselineGeography?.scope || '—',
+      reformValue: reformGeography?.scope || '—',
+    },
+  ];
+
+  // Calculate column widths
+  const labelColumnWidth = 45;
+  const valueColumnWidth = geographiesAreSame ? 55 : 27.5;
 
   return (
     <div>
       <h2>Population Information</h2>
-      <p>
-        <strong>Type:</strong> Geography
-      </p>
 
-      {/* Geography Navigation */}
-      {geographies.length > 1 && (
-        <div style={{ marginBottom: '24px' }}>
-          <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>Select Geography:</p>
-          {geographies.map((geography) => (
-            <button
-              key={geography.id}
-              type="button"
-              onClick={() => setSelectedGeographyId(geography.id || null)}
-              style={{
-                marginRight: '8px',
-                padding: '8px 16px',
-                backgroundColor:
-                  selectedGeography?.id === geography.id ? '#e0e0e0' : 'transparent',
-                border: '1px solid #ccc',
-                cursor: 'pointer',
-                borderRadius: '4px',
-              }}
-            >
-              {geography.name || geography.geographyId || geography.id}
-            </button>
-          ))}
-        </div>
-      )}
+      <Box
+        style={{
+          border: `1px solid ${colors.border.light}`,
+          borderRadius: spacing.radius.lg,
+          overflow: 'hidden',
+          backgroundColor: colors.white,
+          marginTop: spacing.xl,
+        }}
+      >
+        <Table>
+          <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
+            <Table.Tr>
+              <Table.Th
+                style={{
+                  width: `${labelColumnWidth}%`,
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.text.secondary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  padding: `${spacing.md} ${spacing.lg}`,
+                }}
+              >
+                Property
+              </Table.Th>
+              {geographiesAreSame ? (
+                <Table.Th
+                  style={{
+                    width: `${valueColumnWidth}%`,
+                    textAlign: 'right',
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.secondary,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: `${spacing.md} ${spacing.lg}`,
+                  }}
+                >
+                  Baseline / Reform
+                </Table.Th>
+              ) : (
+                <>
+                  <Table.Th
+                    style={{
+                      width: `${valueColumnWidth}%`,
+                      textAlign: 'right',
+                      fontSize: typography.fontSize.xs,
+                      fontWeight: typography.fontWeight.medium,
+                      color: colors.text.secondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: `${spacing.md} ${spacing.lg}`,
+                    }}
+                  >
+                    Baseline
+                  </Table.Th>
+                  <Table.Th
+                    style={{
+                      width: `${valueColumnWidth}%`,
+                      textAlign: 'right',
+                      fontSize: typography.fontSize.xs,
+                      fontWeight: typography.fontWeight.medium,
+                      color: colors.text.secondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: `${spacing.md} ${spacing.lg}`,
+                    }}
+                  >
+                    Reform
+                  </Table.Th>
+                </>
+              )}
+            </Table.Tr>
+          </Table.Thead>
 
-      {/* Geography Details */}
-      {selectedGeography && (
-        <div>
-          <div style={{ marginBottom: '24px' }}>
-            <h3>Geography Details</h3>
-
-            <div style={{ marginTop: '16px' }}>
-              <p>
-                <strong>ID:</strong> {selectedGeography.id || 'N/A'}
-              </p>
-              <p>
-                <strong>Name:</strong> {selectedGeography.name || 'N/A'}
-              </p>
-              <p>
-                <strong>Geography ID:</strong> {selectedGeography.geographyId || 'N/A'}
-              </p>
-              <p>
-                <strong>Country:</strong> {selectedGeography.countryId || 'N/A'}
-              </p>
-              <p>
-                <strong>Scope:</strong> {selectedGeography.scope || 'N/A'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+          <Table.Tbody>
+            {rows.map((row) => (
+              <Table.Tr key={row.label}>
+                <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                  <Text size="sm" fw={typography.fontWeight.medium}>
+                    {row.label}
+                  </Text>
+                </Table.Td>
+                {geographiesAreSame ? (
+                  <Table.Td
+                    style={{
+                      textAlign: 'right',
+                      padding: `${spacing.md} ${spacing.lg}`,
+                    }}
+                  >
+                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                      {row.baselineValue}
+                    </Text>
+                  </Table.Td>
+                ) : (
+                  <>
+                    <Table.Td
+                      style={{
+                        textAlign: 'right',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                        {row.baselineValue}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td
+                      style={{
+                        textAlign: 'right',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                        {row.reformValue}
+                      </Text>
+                    </Table.Td>
+                  </>
+                )}
+              </Table.Tr>
+            ))}
+          </Table.Tbody>
+        </Table>
+      </Box>
     </div>
   );
 }

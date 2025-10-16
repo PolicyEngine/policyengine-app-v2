@@ -28,7 +28,7 @@ import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
 import PolicySubPage from './report-output/PolicySubPage';
 import PopulationSubPage from './report-output/PopulationSubPage';
-import SimulationSubPage from './report-output/SimulationSubPage';
+import DynamicsSubPage from './report-output/DynamicsSubPage';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -44,7 +44,7 @@ import SimulationSubPage from './report-output/SimulationSubPage';
  */
 
 // Valid sub-pages registry
-const VALID_SUBPAGES = ['overview', 'policy', 'simulation', 'population', 'loading', 'error'] as const;
+const VALID_SUBPAGES = ['overview', 'policy', 'dynamics', 'population', 'loading', 'error'] as const;
 type ValidSubPage = (typeof VALID_SUBPAGES)[number];
 
 function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
@@ -142,24 +142,17 @@ export default function ReportOutputPage() {
             reportType={outputType || 'economy'}
           />
         );
-      case 'simulation':
-        return (
-          <SimulationSubPage
-            simulations={normalizedReport.simulations}
-            policies={normalizedReport.policies}
-            households={normalizedReport.households}
-            geographies={normalizedReport.geographies}
-            userSimulations={normalizedReport.userSimulations}
-          />
-        );
+      case 'dynamics':
+        return <DynamicsSubPage />;
       case 'population': {
-        const populationType = normalizedReport.simulations?.[0]?.populationType || 'household';
+        const [baselineSimulation, reformSimulation] = normalizedReport.simulations || [];
         return (
           <PopulationSubPage
+            baselineSimulation={baselineSimulation}
+            reformSimulation={reformSimulation}
             households={normalizedReport.households}
             geographies={normalizedReport.geographies}
             userHouseholds={normalizedReport.userHouseholds}
-            populationType={populationType}
           />
         );
       }
@@ -345,7 +338,6 @@ function getTabsForOutputType(
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'dynamics', label: 'Dynamics' },
       { value: 'policy', label: 'Policy' },
-      { value: 'simulation', label: 'Simulation' },
       { value: 'population', label: 'Population' },
     ];
 
@@ -358,7 +350,6 @@ function getTabsForOutputType(
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'policy', label: 'Policy' },
-      { value: 'simulation', label: 'Simulation' },
       { value: 'population', label: 'Population' },
     ];
   }

@@ -1,44 +1,74 @@
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import HouseholdSubPage from './HouseholdSubPage';
 import GeographySubPage from './GeographySubPage';
 
 interface PopulationSubPageProps {
+  baselineSimulation?: Simulation;
+  reformSimulation?: Simulation;
   households?: Household[];
   geographies?: Geography[];
   userHouseholds?: UserHouseholdPopulation[];
-  populationType: 'household' | 'geography';
 }
 
 /**
  * PopulationSubPage - Routes to the appropriate population component
  *
- * This component determines the population type and renders either
- * HouseholdSubPage or GeographySubPage accordingly.
+ * Receives baseline and reform simulations, extracts the population type and IDs,
+ * then routes to either HouseholdSubPage or GeographySubPage with the appropriate data.
  */
 export default function PopulationSubPage({
+  baselineSimulation,
+  reformSimulation,
   households,
   geographies,
   userHouseholds,
-  populationType,
 }: PopulationSubPageProps) {
+  // Determine population type from simulations
+  const populationType =
+    baselineSimulation?.populationType || reformSimulation?.populationType;
+
+  if (!populationType) {
+    return <div>No population data available</div>;
+  }
+
   // Handle household population type
   if (populationType === 'household') {
-    if (!households || households.length === 0) {
-      return <div>No household data available</div>;
-    }
+    // Extract household IDs from simulations
+    const baselineHouseholdId = baselineSimulation?.populationId;
+    const reformHouseholdId = reformSimulation?.populationId;
 
-    return <HouseholdSubPage households={households} userHouseholds={userHouseholds} />;
+    // Find the households
+    const baselineHousehold = households?.find((h) => h.id === baselineHouseholdId);
+    const reformHousehold = households?.find((h) => h.id === reformHouseholdId);
+
+    return (
+      <HouseholdSubPage
+        baselineHousehold={baselineHousehold}
+        reformHousehold={reformHousehold}
+        userHouseholds={userHouseholds}
+      />
+    );
   }
 
   // Handle geography population type
   if (populationType === 'geography') {
-    if (!geographies || geographies.length === 0) {
-      return <div>No geography data available</div>;
-    }
+    // Extract geography IDs from simulations
+    const baselineGeographyId = baselineSimulation?.populationId;
+    const reformGeographyId = reformSimulation?.populationId;
 
-    return <GeographySubPage geographies={geographies} />;
+    // Find the geographies
+    const baselineGeography = geographies?.find((g) => g.id === baselineGeographyId);
+    const reformGeography = geographies?.find((g) => g.id === reformGeographyId);
+
+    return (
+      <GeographySubPage
+        baselineGeography={baselineGeography}
+        reformGeography={reformGeography}
+      />
+    );
   }
 
   return <div>Invalid population type</div>;
