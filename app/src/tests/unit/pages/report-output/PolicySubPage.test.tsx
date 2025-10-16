@@ -1,18 +1,17 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { describe, test, expect, beforeEach } from 'vitest';
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen, within } from '@test-utils';
 import { Provider } from 'react-redux';
 import PolicySubPage from '@/pages/report-output/PolicySubPage';
 import {
   mockBaselinePolicy,
-  mockCurrentLawPolicy,
-  mockUserBaselinePolicy,
+  mockReformPolicy,
   mockParameterMetadata,
   createPolicySubPageProps,
   TEST_PARAMETER_NAMES,
 } from '@/tests/fixtures/pages/report-output/PolicySubPage';
 
-describe('PolicySubPage', () => {
+describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
   let store: any;
 
   beforeEach(() => {
@@ -45,219 +44,212 @@ describe('PolicySubPage', () => {
     return render(<Provider store={store}>{ui}</Provider>);
   };
 
-  test('given no policies then displays no data message', () => {
-    // Given
-    const props = createPolicySubPageProps.empty();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/no policy data available/i)).toBeInTheDocument();
-  });
-
-  test('given undefined policies then displays no data message', () => {
-    // Given
-    const props = createPolicySubPageProps.undefined();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/no policy data available/i)).toBeInTheDocument();
-  });
-
-  test('given single policy then displays policy information', () => {
-    // Given
-    const props = createPolicySubPageProps.singlePolicy();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/policy information/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: /baseline policy/i })).toBeInTheDocument();
-    expect(screen.getByText(mockBaselinePolicy.id!)).toBeInTheDocument();
-    expect(screen.getByText(mockBaselinePolicy.countryId!)).toBeInTheDocument();
-  });
-
-  test('given baseline only then displays single policy', () => {
-    // Given
-    const props = createPolicySubPageProps.baselineOnly();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/policy information/i)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 3, name: /baseline policy/i })).toBeInTheDocument();
-    expect(screen.queryByText(/select policy/i)).not.toBeInTheDocument();
-  });
-
-  test('given policy with parameters then displays parameter details', () => {
-    // Given
-    const props = createPolicySubPageProps.singlePolicy();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByRole('heading', { level: 3, name: /parameters/i })).toBeInTheDocument();
-    expect(screen.getByText(TEST_PARAMETER_NAMES.EITC_MAX)).toBeInTheDocument();
-    // Use getAllByText for text that appears multiple times (label and hierarchical labels)
-    const eitcLabels = screen.getAllByText(/maximum eitc for 0 children/i);
-    expect(eitcLabels.length).toBeGreaterThan(0);
-    expect(screen.getByText(/\$1,000/)).toBeInTheDocument();
-  });
-
-  test('given user policy association then displays user info', () => {
-    // Given
-    const props = createPolicySubPageProps.singlePolicy();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/user association/i)).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(mockUserBaselinePolicy.userId))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(mockUserBaselinePolicy.label!))).toBeInTheDocument();
-  });
-
-  test('given multiple policies then displays policy selection buttons', () => {
-    // Given
-    const props = createPolicySubPageProps.baselineAndReform();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/select policy/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /baseline policy/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /reform policy/i })).toBeInTheDocument();
-  });
-
-  test('given user clicks policy button then switches displayed policy', async () => {
-    // Given
-    const user = userEvent.setup();
-    const props = createPolicySubPageProps.baselineAndReform();
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // When - initially shows baseline
-    expect(screen.getByText(/\$1,000/)).toBeInTheDocument();
-
-    // When - click reform button
-    await user.click(screen.getByRole('button', { name: /reform policy/i }));
-
-    // Then - shows reform value
-    expect(screen.getByText(/\$1,500/)).toBeInTheDocument();
-  });
-
-  test('given economy report type then includes current law in policy types', () => {
-    // Given
-    const props = createPolicySubPageProps.economyWithCurrentLaw();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByRole('button', { name: /current law/i })).toBeInTheDocument();
-  });
-
-  test('given household report type then excludes current law', () => {
-    // Given
-    const props = createPolicySubPageProps.baselineAndReform();
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.queryByRole('button', { name: /current law/i })).not.toBeInTheDocument();
-  });
-
-  test('given policy without parameters then displays no parameters message', () => {
-    // Given
-    const props = {
-      policies: [mockCurrentLawPolicy],
-      userPolicies: [],
-      reportType: 'economy' as const,
-    };
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/no parameters modified/i)).toBeInTheDocument();
-  });
-
-  test('given parameter with percentage unit then formats value correctly', () => {
-    // Given
-    const policyWithPercentage = {
-      ...mockBaselinePolicy,
-      parameters: [
-        {
-          name: TEST_PARAMETER_NAMES.TEST_RATE,
-          values: [
-            {
-              startDate: '2024-01-01',
-              endDate: '2024-12-31',
-              value: 0.25,
-            },
-          ],
-        },
-      ],
-    };
-
-    const props = {
-      policies: [policyWithPercentage],
-      userPolicies: [],
-      reportType: 'economy' as const,
-    };
-
-    // When
-    renderWithStore(<PolicySubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/25\.0%/)).toBeInTheDocument();
-  });
-
-  test('given parameter without metadata then uses parameter name as label', () => {
-    // Given
-    // Create store with empty parameters
-    const storeWithoutMetadata = configureStore({
-      reducer: {
-        metadata: (
-          state = {
-            parameters: {},
-            loading: false,
-            error: null,
-            currentCountry: 'us',
-            variables: {},
-            entities: {},
-            variableModules: {},
-            economyOptions: { region: [], time_period: [], datasets: [] },
-            currentLawId: 0,
-            basicInputs: [],
-            modelledPolicies: { core: {}, filtered: {} },
-            version: null,
-            parameterTree: null,
-          },
-          _action: any
-        ) => state,
-      },
+  describe('Empty and error states', () => {
+    test('given no policies then displays no data message', () => {
+      const props = createPolicySubPageProps.empty();
+      renderWithStore(<PolicySubPage {...props} />);
+      expect(screen.getByText(/no policy data available/i)).toBeInTheDocument();
     });
 
-    const props = createPolicySubPageProps.baselineOnly();
+    test('given undefined policies then displays no data message', () => {
+      const props = createPolicySubPageProps.undefined();
+      renderWithStore(<PolicySubPage {...props} />);
+      expect(screen.getByText(/no policy data available/i)).toBeInTheDocument();
+    });
+  });
 
-    // When
-    render(
-      <Provider store={storeWithoutMetadata}>
-        <PolicySubPage {...props} />
-      </Provider>
-    );
+  describe('Table structure', () => {
+    test('given policies then displays table with proper structure', () => {
+      const props = createPolicySubPageProps.baselineAndReform();
+      renderWithStore(<PolicySubPage {...props} />);
 
-    // Then
-    // Parameter name should appear twice: once as "Parameter: name" and once as "Label: name"
-    const parameterNameElements = screen.getAllByText(new RegExp(TEST_PARAMETER_NAMES.EITC_MAX.replace(/[[\]]/g, '\\$&')));
-    expect(parameterNameElements.length).toBeGreaterThan(0);
+      // Should have a table
+      const table = screen.getByRole('table');
+      expect(table).toBeInTheDocument();
+
+      // Should have table headers
+      expect(screen.getByRole('columnheader', { name: /parameter/i })).toBeInTheDocument();
+    });
+
+    test('given policies then displays policy titles in header', () => {
+      const props = createPolicySubPageProps.baselineAndReform();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      // Policy labels should appear in the table header
+      expect(screen.getByText(mockBaselinePolicy.label!)).toBeInTheDocument();
+      expect(screen.getByText(mockReformPolicy.label!)).toBeInTheDocument();
+    });
+
+    test('given policies with parameters then displays parameter rows', () => {
+      const props = createPolicySubPageProps.baselineAndReform();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      // Should display parameter name
+      expect(screen.getByText(TEST_PARAMETER_NAMES.EITC_MAX)).toBeInTheDocument();
+
+      // Should display parameter label
+      expect(screen.getByText(/maximum eitc for 0 children/i)).toBeInTheDocument();
+
+      // Should display values
+      expect(screen.getByText('$1,000')).toBeInTheDocument();
+      expect(screen.getByText('$1,500')).toBeInTheDocument();
+    });
+  });
+
+  describe('Column collapsing - Two policies only', () => {
+    test('given baseline and reform different then displays two columns', () => {
+      const props = createPolicySubPageProps.baselineAndReformDifferent();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      const baselineHeaders = screen.getAllByRole('columnheader', { name: /baseline/i });
+      expect(baselineHeaders.length).toBeGreaterThanOrEqual(1);
+
+      const reformHeaders = screen.getAllByRole('columnheader', { name: /reform/i });
+      expect(reformHeaders.length).toBeGreaterThanOrEqual(1);
+
+      // Should have two different values
+      expect(screen.getByText('$1,000')).toBeInTheDocument(); // Baseline
+      expect(screen.getByText('$1,500')).toBeInTheDocument(); // Reform
+    });
+
+    test('given baseline equals reform then displays single merged column', () => {
+      const props = createPolicySubPageProps.baselineEqualsReform();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      const mergedHeaders = screen.getAllByRole('columnheader', {
+        name: /baseline \/ reform/i,
+      });
+      expect(mergedHeaders.length).toBeGreaterThanOrEqual(1);
+
+      // Should only show value once per row
+      expect(screen.getAllByText('$1,000').length).toBe(1);
+    });
+  });
+
+  describe('Value formatting', () => {
+    test('given currency parameter then formats with dollar sign', () => {
+      const props = createPolicySubPageProps.baselineOnly();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      expect(screen.getByText('$1,000')).toBeInTheDocument();
+    });
+
+    test('given percentage parameter then formats with percent sign', () => {
+      const props = createPolicySubPageProps.multipleParameters();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      expect(screen.getByText('15.0%')).toBeInTheDocument();
+    });
+
+    test('given missing value then displays em dash', () => {
+      const props = createPolicySubPageProps.policyWithMissingParameter();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      // Reform column should show em dash for missing parameter
+      const table = screen.getByRole('table');
+      expect(within(table).getByText('—')).toBeInTheDocument();
+    });
+  });
+
+  describe('Multiple parameters', () => {
+    test('given multiple parameters then displays all in separate rows', () => {
+      const props = createPolicySubPageProps.multipleParameters();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      // Should display both parameters
+      expect(screen.getByText(TEST_PARAMETER_NAMES.EITC_MAX)).toBeInTheDocument();
+      expect(screen.getByText(TEST_PARAMETER_NAMES.TEST_RATE)).toBeInTheDocument();
+
+      // Should display both labels
+      expect(screen.getByText(/maximum eitc for 0 children/i)).toBeInTheDocument();
+      expect(screen.getByText(/test rate/i)).toBeInTheDocument();
+    });
+
+    test('given parameters across different policies then displays union of all parameters', () => {
+      const propsWithDifferentParams = {
+        policies: [
+          mockBaselinePolicy, // Has EITC_MAX
+          {
+            ...mockReformPolicy,
+            parameters: [
+              {
+                name: TEST_PARAMETER_NAMES.TEST_RATE,
+                values: [
+                  {
+                    startDate: '2024-01-01',
+                    endDate: '2024-12-31',
+                    value: 0.2,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        reportType: 'household' as const,
+      };
+
+      renderWithStore(<PolicySubPage {...propsWithDifferentParams} />);
+
+      // Both parameters should appear even though they're in different policies
+      expect(screen.getByText(TEST_PARAMETER_NAMES.EITC_MAX)).toBeInTheDocument();
+      expect(screen.getByText(TEST_PARAMETER_NAMES.TEST_RATE)).toBeInTheDocument();
+    });
+  });
+
+  describe('Parameter metadata', () => {
+    test('given parameter without metadata then uses parameter name as label', () => {
+      const storeWithoutMetadata = configureStore({
+        reducer: {
+          metadata: (
+            state = {
+              parameters: {},
+              loading: false,
+              error: null,
+              currentCountry: 'us',
+              variables: {},
+              entities: {},
+              variableModules: {},
+              economyOptions: { region: [], time_period: [], datasets: [] },
+              currentLawId: 0,
+              basicInputs: [],
+              modelledPolicies: { core: {}, filtered: {} },
+              version: null,
+              parameterTree: null,
+            },
+            _action: any
+          ) => state,
+        },
+      });
+
+      const props = createPolicySubPageProps.baselineOnly();
+
+      render(
+        <Provider store={storeWithoutMetadata}>
+          <PolicySubPage {...props} />
+        </Provider>
+      );
+
+      // Parameter name should be used as fallback label (appears twice: as label and as name)
+      const paramElements = screen.getAllByText(TEST_PARAMETER_NAMES.EITC_MAX);
+      expect(paramElements.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe('Design 4 styling', () => {
+    test('given table then has proper semantic structure', () => {
+      const props = createPolicySubPageProps.baselineAndReform();
+      renderWithStore(<PolicySubPage {...props} />);
+
+      const table = screen.getByRole('table');
+      expect(table).toBeInTheDocument();
+
+      // Should have thead and tbody (multiple rowgroups)
+      const rowgroups = within(table).getAllByRole('rowgroup');
+      expect(rowgroups.length).toBeGreaterThanOrEqual(2); // thead + tbody
+
+      // Should have multiple rows (header + policy titles + parameter rows)
+      const rows = within(table).getAllByRole('row');
+      expect(rows.length).toBeGreaterThan(2);
+    });
   });
 });

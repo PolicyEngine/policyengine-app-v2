@@ -81,7 +81,70 @@ export const mockCurrentLawPolicy: Policy = {
   countryId: 'us',
   apiVersion: '1.0',
   label: 'Current Law',
-  parameters: [],
+  parameters: [
+    {
+      name: TEST_PARAMETER_NAMES.EITC_MAX,
+      values: [
+        {
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
+          value: 800,
+        },
+      ],
+    },
+  ],
+  isCreated: true,
+};
+
+// Policy identical to baseline (for column collapsing tests)
+export const mockBaselinePolicyClone: Policy = {
+  id: 'pol-baseline-clone-999',
+  countryId: 'us',
+  apiVersion: '1.0',
+  label: 'Baseline Clone',
+  parameters: [
+    {
+      name: TEST_PARAMETER_NAMES.EITC_MAX,
+      values: [
+        {
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
+          value: 1000,
+        },
+      ],
+    },
+  ],
+  isCreated: true,
+};
+
+// Policy with multiple parameters for testing
+export const mockPolicyWithMultipleParams: Policy = {
+  id: 'pol-multi-params',
+  countryId: 'us',
+  apiVersion: '1.0',
+  label: 'Multi-Parameter Policy',
+  parameters: [
+    {
+      name: TEST_PARAMETER_NAMES.EITC_MAX,
+      values: [
+        {
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
+          value: 1000,
+        },
+      ],
+    },
+    {
+      name: TEST_PARAMETER_NAMES.TEST_RATE,
+      values: [
+        {
+          startDate: '2024-01-01',
+          endDate: '2024-12-31',
+          value: 0.15,
+        },
+      ],
+    },
+  ],
   isCreated: true,
 };
 
@@ -106,32 +169,38 @@ export const mockUserReformPolicy: UserPolicy = {
 export const createPolicySubPageProps = {
   empty: () => ({
     policies: [],
-    userPolicies: [],
     reportType: 'economy' as const,
   }),
   undefined: () => ({
     policies: undefined,
-    userPolicies: undefined,
     reportType: 'economy' as const,
   }),
   singlePolicy: () => ({
     policies: [mockBaselinePolicy],
-    userPolicies: [mockUserBaselinePolicy],
     reportType: 'economy' as const,
   }),
   baselineOnly: () => ({
     policies: [mockBaselinePolicy],
-    userPolicies: [],
     reportType: 'household' as const,
   }),
   baselineAndReform: () => ({
     policies: [mockBaselinePolicy, mockReformPolicy],
-    userPolicies: [],
     reportType: 'household' as const,
   }),
-  economyWithCurrentLaw: () => ({
-    policies: [mockCurrentLawPolicy, mockBaselinePolicy, mockReformPolicy],
-    userPolicies: [],
+  baselineAndReformDifferent: () => ({
+    policies: [mockBaselinePolicy, mockReformPolicy],
+    reportType: 'economy' as const,
+  }),
+  baselineEqualsReform: () => ({
+    policies: [mockBaselinePolicy, mockBaselinePolicyClone],
+    reportType: 'economy' as const,
+  }),
+  multipleParameters: () => ({
+    policies: [mockPolicyWithMultipleParams, mockReformPolicy],
+    reportType: 'household' as const,
+  }),
+  policyWithMissingParameter: () => ({
+    policies: [mockBaselinePolicy, { ...mockReformPolicy, parameters: [] }],
     reportType: 'economy' as const,
   }),
 };
