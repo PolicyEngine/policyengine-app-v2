@@ -4,12 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createReportAndAssociateWithUser } from '@/api/report';
 import { useCreateReport } from '@/hooks/useCreateReport';
-import {
-  createMockCalculationManager,
-  MOCK_ECONOMY_META_NATIONAL,
-  MOCK_ECONOMY_META_SUBNATIONAL,
-  MOCK_HOUSEHOLD_META,
-} from '@/tests/fixtures/hooks/calculationManagerMocks';
+// Removed - old calculation manager mocks no longer needed
 import {
   createMockQueryClient,
   ERROR_MESSAGES,
