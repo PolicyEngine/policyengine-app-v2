@@ -31,9 +31,8 @@ export class ReportAdapter {
    */
   static fromMetadata(metadata: ReportMetadata): Report {
     // Convert simulation IDs from individual fields to array
-    const simulationIds = metadata.simulation_2_id
-      ? [metadata.simulation_1_id, metadata.simulation_2_id]
-      : [metadata.simulation_1_id];
+    const simulationIds = [metadata.simulation_1_id, metadata.simulation_2_id]
+      .map((id) => String(id));
 
     return {
       id: String(metadata.id),

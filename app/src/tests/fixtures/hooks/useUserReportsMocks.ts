@@ -205,7 +205,10 @@ export const createNormalizedCacheMock = () => ({
   getObjectById: vi.fn((id: string) => {
     // Return mocked normalized data based on ID
     if (id === mockReport.id) {
-      return mockReport;
+      return {
+        ...mockReport,
+        simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
+      };
     }
     if (id === 'report-1') {
       return {
