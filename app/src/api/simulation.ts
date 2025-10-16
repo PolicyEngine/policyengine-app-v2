@@ -114,3 +114,51 @@ export async function updateSimulationOutput(
 
   return json.result;
 }
+
+/**
+ * Mark a simulation as completed with its output
+ * Convenience wrapper around updateSimulationOutput
+ */
+export async function markSimulationCompleted(
+  countryId: (typeof countryIds)[number],
+  simulationId: string,
+  output: unknown
+): Promise<SimulationMetadata> {
+  return updateSimulationOutput(countryId, simulationId, output);
+}
+
+/**
+ * Mark a simulation as errored
+ */
+export async function markSimulationError(
+  countryId: (typeof countryIds)[number],
+  simulationId: string
+): Promise<SimulationMetadata> {
+  const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
+
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      output: null,
+      status: 'error',
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to mark simulation ${simulationId} as error: ${response.status} ${response.statusText}`
+    );
+  }
+
+  const json = await response.json();
+
+  if (json.status !== 'ok') {
+    throw new Error(json.message || `Failed to mark simulation ${simulationId} as error`);
+  }
+
+  return json.result;
+}
