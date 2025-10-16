@@ -110,7 +110,7 @@ describe('ReportOutputPage - Ingredient Tabs', () => {
     expect(screen.getByText('Population')).toBeInTheDocument();
   });
 
-  test('given complete household report then includes policy and population tabs', () => {
+  test('given complete household report then includes dynamics policy and population tabs', () => {
     // Given
     vi.spyOn(useReportDataModule, 'useReportData').mockReturnValue({
       status: 'complete',
@@ -129,6 +129,7 @@ describe('ReportOutputPage - Ingredient Tabs', () => {
     render(<ReportOutputPage />);
 
     // Then
+    expect(screen.getByText('Dynamics')).toBeInTheDocument();
     expect(screen.getByText('Policy')).toBeInTheDocument();
     expect(screen.getByText('Population')).toBeInTheDocument();
   });

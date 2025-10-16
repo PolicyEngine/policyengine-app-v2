@@ -79,6 +79,17 @@ export default function ReportOutputPage() {
     estimatedTimeRemaining,
   } = useReportData(userReportId);
 
+  // Debug logging for household reports
+  if (outputType === 'household' && status === 'complete') {
+    console.log('Household Report Data:', {
+      outputType,
+      normalizedReport,
+      policies: normalizedReport.policies,
+      simulations: normalizedReport.simulations,
+      households: normalizedReport.households,
+    });
+  }
+
   const DEFAULT_PAGE = 'overview';
 
   // Use URL param for active tab, default to 'overview'
@@ -349,6 +360,7 @@ function getTabsForOutputType(
       { value: 'overview', label: 'Overview' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
+      { value: 'dynamics', label: 'Dynamics' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
     ];
