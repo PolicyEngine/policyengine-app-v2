@@ -212,7 +212,7 @@ describe('reportReducer', () => {
         mode: 'report' as 'standalone' | 'report',
       };
       vi.advanceTimersByTime(1000);
-      const action = clearReport.fulfilled('uk', '', undefined);
+      const action = clearReport.fulfilled('uk', '', 'uk');
 
       // When
       const state = reportReducer(initialState, action);
@@ -237,7 +237,7 @@ describe('reportReducer', () => {
         activeSimulationPosition: 1 as 0 | 1,
         mode: 'report' as 'standalone' | 'report',
       };
-      const action = clearReport.fulfilled('us', '', undefined);
+      const action = clearReport.fulfilled('us', '', 'us');
 
       // When
       const state = reportReducer(initialState, action);
@@ -604,7 +604,7 @@ describe('reportReducer', () => {
       expectStatus(state, 'error');
 
       // When & Then - Clear report
-      state = reportReducer(state as any, clearReport.fulfilled('us', '', undefined));
+      state = reportReducer(state as any, clearReport.fulfilled('us', '', 'us'));
       expectReportId(state, '');
       expectSimulationIds(state, []);
       expectStatus(state, 'pending');

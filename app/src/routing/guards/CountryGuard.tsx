@@ -42,7 +42,8 @@ export function CountryGuard() {
     if (isValid && countryId) {
       dispatch(setCurrentCountry(countryId));
       // Clear all ingredient state when country changes
-      dispatch(clearReport());
+      // Pass countryId directly from URL to avoid race conditions
+      dispatch(clearReport(countryId as (typeof countryIds)[number]));
       dispatch(clearAllPolicies());
       dispatch(clearAllSimulations());
       dispatch(clearAllPopulations());
