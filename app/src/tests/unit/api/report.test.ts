@@ -234,6 +234,7 @@ describe('report API', () => {
         reportId: String(mockReportMetadata.id),
         label,
         isCreated: true,
+        countryId: 'us',
       });
 
       const expectedResult = createMockReportWithAssociationResult(
