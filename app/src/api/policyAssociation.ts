@@ -125,9 +125,7 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
 
   async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
     const policies = this.getStoredPolicies();
-    return policies.filter(
-      (p) => p.userId === userId && (!countryId || p.countryId === countryId)
-    );
+    return policies.filter((p) => p.userId === userId && (!countryId || p.countryId === countryId));
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {

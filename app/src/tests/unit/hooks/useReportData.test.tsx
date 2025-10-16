@@ -1,7 +1,6 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportData } from '@/hooks/useReportData';
 import { useReportOutput } from '@/hooks/useReportOutput';
 import { useUserReportById } from '@/hooks/useUserReports';
