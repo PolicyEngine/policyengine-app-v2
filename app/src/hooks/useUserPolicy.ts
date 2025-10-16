@@ -20,13 +20,14 @@ export const useUserPolicyStore = () => {
 // 'useUserPolicies' below to also fetch full policy details
 export const usePolicyAssociationsByUser = (userId: string) => {
   const store = useUserPolicyStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: policyAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: policyAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
@@ -143,7 +144,7 @@ export function isPolicyMetadataWithAssociation(
 export const useUserPolicies = (userId: string) => {
   const country = useCurrentCountry();
 
-  // First, get the associations
+  // First, get the associations (filtered by current country)
   const {
     data: associations,
     isLoading: associationsLoading,

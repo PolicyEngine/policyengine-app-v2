@@ -21,6 +21,11 @@ import {
 } from '@/tests/fixtures/hooks/useReportDataMocks';
 
 // Mock the dependent hooks
+const mockUseCurrentCountry = vi.fn(() => 'us');
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: () => mockUseCurrentCountry(),
+}));
+
 vi.mock('@/hooks/useReportOutput', () => ({
   useReportOutput: vi.fn(),
 }));
@@ -40,6 +45,9 @@ describe('useReportData', () => {
         mutations: { retry: false },
       },
     });
+
+    // Reset mock to default
+    mockUseCurrentCountry.mockReturnValue('us');
 
     // Default successful mocks
     // useUserReportById now returns userReport as part of its structure
@@ -205,6 +213,7 @@ describe('useReportData', () => {
 
   test('given household output type with UK country when fetching then uses correct countryId', async () => {
     // Given
+    mockUseCurrentCountry.mockReturnValue('uk');
     (useReportOutput as any).mockReturnValue(mockReportOutputHousehold);
     queryClient.setQueryData(['calculation-meta', BASE_REPORT_ID], mockHouseholdMetadataUK);
 
@@ -297,8 +306,12 @@ describe('useReportData', () => {
 
     // Then
     await waitFor(() => {
-      // Without countryId, output is not wrapped in Household structure
-      expect(result.current.output).toEqual(mockHouseholdData);
+      // Even without countryId in metadata, output is wrapped with current country from URL
+      expect(result.current.output).toEqual({
+        id: BASE_REPORT_ID,
+        countryId: 'us',
+        householdData: mockHouseholdData,
+      });
     });
   });
 });

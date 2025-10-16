@@ -42,6 +42,7 @@ export const mockUserReportAssociation: UserReport = {
   id: `sur-${TEST_REPORT_ID_STRING}`,
   createdAt: TEST_TIMESTAMP,
   updatedAt: TEST_TIMESTAMP,
+  countryId: 'us',
 };
 
 // Constant for UserReport ID

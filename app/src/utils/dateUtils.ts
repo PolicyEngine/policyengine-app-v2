@@ -14,15 +14,14 @@ export type DateFormatType =
  * Formats a date string using Intl.DateTimeFormat with UTC timezone
  * @param dateStr - ISO date string (e.g., "2023-01-01")
  * @param formatType - The desired format type
- * @param countryId - Country ID for locale formatting (defaults to 'us' for backward compatibility)
+ * @param countryId - Country ID for locale formatting (must be explicitly provided)
  * @param stripTime - Whether to strip time component
  * @returns Formatted date string
- * @deprecated Callers should explicitly pass countryId from useCurrentCountry() instead of relying on default
  */
 export function formatDate(
   dateStr: string,
   formatType: DateFormatType,
-  countryId: (typeof countryIds)[number] = 'us',
+  countryId: (typeof countryIds)[number],
   stripTime: boolean = false
 ): string {
   console.log('Formatting date:', dateStr, 'with format type:', formatType);

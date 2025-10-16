@@ -4,7 +4,7 @@ import { UserReport } from '../types/ingredients/UserReport';
 
 export interface UserReportStore {
   create: (report: Omit<UserReport, 'id' | 'createdAt'>) => Promise<UserReport>;
-  findByUser: (userId: string) => Promise<UserReport[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserReport[]>;
   findById: (userId: string, reportId: string) => Promise<UserReport | null>;
   findByUserReportId: (userReportId: string) => Promise<UserReport | null>;
   // The below are not yet implemented, but keeping for future use
@@ -33,7 +33,7 @@ export class ApiReportStore implements UserReportStore {
     return UserReportAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserReport[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserReport[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -43,8 +43,9 @@ export class ApiReportStore implements UserReportStore {
 
     const apiResponses = await response.json();
 
-    // Convert each API response to UserReport
-    return apiResponses.map((apiData: any) => UserReportAdapter.fromApiResponse(apiData));
+    // Convert each API response to UserReport and filter by country if specified
+    const reports = apiResponses.map((apiData: any) => UserReportAdapter.fromApiResponse(apiData));
+    return countryId ? reports.filter((r: UserReport) => r.countryId === countryId) : reports;
   }
 
   async findById(userId: string, reportId: string): Promise<UserReport | null> {
@@ -148,9 +149,9 @@ export class LocalStorageReportStore implements UserReportStore {
     return newReport;
   }
 
-  async findByUser(userId: string): Promise<UserReport[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserReport[]> {
     const reports = this.getStoredReports();
-    return reports.filter((r) => r.userId === userId);
+    return reports.filter((r) => r.userId === userId && (!countryId || r.countryId === countryId));
   }
 
   async findById(userId: string, reportId: string): Promise<UserReport | null> {

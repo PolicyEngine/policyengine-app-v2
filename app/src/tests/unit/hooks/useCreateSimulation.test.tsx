@@ -116,6 +116,7 @@ describe('useCreateSimulation', () => {
         simulationId: SIMULATION_IDS.NEW,
         label: TEST_LABELS.SIMULATION,
         isCreated: true,
+        countryId: 'us',
       });
       expect(response).toEqual({
         result: {
@@ -159,6 +160,7 @@ describe('useCreateSimulation', () => {
         simulationId: SIMULATION_IDS.NEW,
         label: undefined,
         isCreated: true,
+        countryId: 'us',
       });
       expect(consoleSpies.logSpy).toHaveBeenCalledWith(CONSOLE_MESSAGES.LABEL_LOG, undefined);
     });
@@ -176,6 +178,7 @@ describe('useCreateSimulation', () => {
         simulationId: SIMULATION_IDS.NEW,
         label: TEST_LABELS.CUSTOM,
         isCreated: true,
+        countryId: 'us',
       });
     });
   });
@@ -403,6 +406,7 @@ describe('useCreateSimulation', () => {
         simulationId: undefined,
         label: TEST_LABELS.SIMULATION,
         isCreated: true,
+        countryId: 'us',
       });
     });
 

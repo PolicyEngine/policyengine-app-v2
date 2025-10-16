@@ -4,7 +4,7 @@ import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
-  findByUser: (userId: string) => Promise<UserPolicy[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserPolicy[]>;
   findById: (userId: string, policyId: string) => Promise<UserPolicy | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy>;
@@ -32,7 +32,7 @@ export class ApiPolicyStore implements UserPolicyStore {
     return UserPolicyAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserPolicy[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -42,8 +42,9 @@ export class ApiPolicyStore implements UserPolicyStore {
 
     const apiResponses = await response.json();
 
-    // Convert each API response to UserPolicy
-    return apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
+    // Convert each API response to UserPolicy and filter by country if specified
+    const policies = apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
+    return countryId ? policies.filter((p: UserPolicy) => p.countryId === countryId) : policies;
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
@@ -122,9 +123,9 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
     return newPolicy;
   }
 
-  async findByUser(userId: string): Promise<UserPolicy[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
     const policies = this.getStoredPolicies();
-    return policies.filter((p) => p.userId === userId);
+    return policies.filter((p) => p.userId === userId && (!countryId || p.countryId === countryId));
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {

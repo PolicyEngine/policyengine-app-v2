@@ -2,18 +2,20 @@ import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { clearReport, updateLabel } from '@/reducers/reportReducer';
 import { AppDispatch } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch<AppDispatch>();
+  const countryId = useCurrentCountry();
   const [localLabel, setLocalLabel] = useState('');
 
   // Clear any existing report data when mounting
   useEffect(() => {
-    dispatch(clearReport());
-  }, [dispatch]);
+    dispatch(clearReport(countryId));
+  }, [dispatch, countryId]);
 
   function handleLocalLabelChange(value: string) {
     setLocalLabel(value);

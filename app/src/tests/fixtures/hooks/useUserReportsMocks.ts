@@ -83,6 +83,7 @@ export const mockUserSimulations: UserSimulation[] = [
     simulationId: TEST_SIMULATION_ID_1,
     label: 'My Simulation 1',
     createdAt: '2025-01-01T10:00:00Z',
+    countryId: 'us',
   },
   {
     id: 'user-sim-2',
@@ -90,6 +91,7 @@ export const mockUserSimulations: UserSimulation[] = [
     simulationId: TEST_SIMULATION_ID_2,
     label: 'My Simulation 2',
     createdAt: '2025-01-02T10:00:00Z',
+    countryId: 'us',
   },
 ];
 
@@ -100,6 +102,7 @@ export const mockUserPolicies: UserPolicy[] = [
     policyId: TEST_POLICY_ID_1,
     label: 'My Policy 1',
     createdAt: '2025-01-01T09:00:00Z',
+    countryId: 'us',
   },
   {
     id: 'user-pol-2',
@@ -107,6 +110,7 @@ export const mockUserPolicies: UserPolicy[] = [
     policyId: TEST_POLICY_ID_2,
     label: 'My Policy 2',
     createdAt: '2025-01-02T09:00:00Z',
+    countryId: 'us',
   },
 ];
 

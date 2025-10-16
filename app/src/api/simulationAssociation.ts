@@ -4,7 +4,7 @@ import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
   create: (simulation: Omit<UserSimulation, 'id' | 'createdAt'>) => Promise<UserSimulation>;
-  findByUser: (userId: string) => Promise<UserSimulation[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserSimulation[]>;
   findById: (userId: string, simulationId: string) => Promise<UserSimulation | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation>;
@@ -33,7 +33,7 @@ export class ApiSimulationStore implements UserSimulationStore {
     return UserSimulationAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserSimulation[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -43,8 +43,13 @@ export class ApiSimulationStore implements UserSimulationStore {
 
     const apiResponses = await response.json();
 
-    // Convert each API response to UserSimulation
-    return apiResponses.map((apiData: any) => UserSimulationAdapter.fromApiResponse(apiData));
+    // Convert each API response to UserSimulation and filter by country if specified
+    const simulations = apiResponses.map((apiData: any) =>
+      UserSimulationAdapter.fromApiResponse(apiData)
+    );
+    return countryId
+      ? simulations.filter((s: UserSimulation) => s.countryId === countryId)
+      : simulations;
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
@@ -130,9 +135,11 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
     return newSimulation;
   }
 
-  async findByUser(userId: string): Promise<UserSimulation[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
     const simulations = this.getStoredSimulations();
-    return simulations.filter((s) => s.userId === userId);
+    return simulations.filter(
+      (s) => s.userId === userId && (!countryId || s.countryId === countryId)
+    );
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {

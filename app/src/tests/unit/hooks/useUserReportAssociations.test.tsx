@@ -19,6 +19,11 @@ import {
   TEST_USER_ID,
 } from '@/tests/fixtures/api/reportAssociationMocks';
 
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock the stores first
 vi.mock('@/api/reportAssociation', () => {
   const mockStore = {
@@ -110,7 +115,7 @@ describe('useUserReportAssociations hooks', () => {
       });
 
       expect(result.current.data).toEqual(mockUserReportList);
-      expect(mockStore.findByUser).toHaveBeenCalledWith(userId);
+      expect(mockStore.findByUser).toHaveBeenCalledWith(userId, 'us');
     });
 
     test('given fetch error then returns error state', async () => {
@@ -244,6 +249,7 @@ describe('useUserReportAssociations hooks', () => {
         reportId: TEST_REPORT_ID,
         label: 'New Report',
         isCreated: true,
+        countryId: 'us' as const,
       };
 
       // When
@@ -268,6 +274,7 @@ describe('useUserReportAssociations hooks', () => {
         reportId: TEST_REPORT_ID,
         label: 'New Report',
         isCreated: true,
+        countryId: 'us' as const,
       };
       const error = new Error(ERROR_MESSAGES.CREATE_ASSOCIATION_FAILED);
       mockStore.create.mockRejectedValue(error);
@@ -288,6 +295,7 @@ describe('useUserReportAssociations hooks', () => {
         reportId: TEST_REPORT_ID,
         label: 'New Report',
         isCreated: true,
+        countryId: 'us' as const,
       };
       const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
@@ -313,6 +321,7 @@ describe('useUserReportAssociations hooks', () => {
         reportId: TEST_REPORT_ID,
         label: 'New Report',
         isCreated: true,
+        countryId: 'us' as const,
       };
       const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData');
 

@@ -1,5 +1,6 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { ApiSimulationStore, LocalStorageSimulationStore } from '../api/simulationAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { simulationAssociationKeys } from '../libs/queryKeys';
@@ -25,13 +26,14 @@ export const useUserSimulationStore = () => {
  */
 export const useSimulationAssociationsByUser = (userId: string) => {
   const store = useUserSimulationStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: simulationAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: simulationAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };

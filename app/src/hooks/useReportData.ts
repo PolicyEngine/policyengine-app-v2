@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { EconomyReportOutput } from '@/api/economy';
 import { CalculationMeta } from '@/api/reportCalculations';
 import { Household, HouseholdData } from '@/types/ingredients/Household';
+import { useCurrentCountry } from './useCurrentCountry';
 import { useReportOutput } from './useReportOutput';
 import { useUserReportById } from './useUserReports';
 
@@ -86,6 +87,7 @@ function getProgressInfo(result: any): ProgressInfo {
  */
 export function useReportData(userReportId: string): ReportDataResult {
   const queryClient = useQueryClient();
+  const countryId = useCurrentCountry();
 
   // Step 1: Fetch complete normalized report structure (includes UserReport, base Report, etc.)
   const normalizedReport = useUserReportById(userReportId);
@@ -140,10 +142,10 @@ export function useReportData(userReportId: string): ReportDataResult {
   // The API returns raw HouseholdData, but components expect the Household wrapper
   let output: EconomyReportOutput | Household | null | undefined = data;
 
-  if (outputType === 'household' && data && metadata?.countryId) {
+  if (outputType === 'household' && data) {
     const wrappedOutput: Household = {
       id: baseReportId,
-      countryId: metadata.countryId,
+      countryId, // Use current country from URL
       householdData: data as HouseholdData,
     };
     output = wrappedOutput;
