@@ -54,6 +54,9 @@ storybook-static/
 .temp
 .tmp
 
+# Claude plans
+.claude-plans/
+
 # Archived approaches (kept for reference)
 app/src/_archived/
 
