@@ -1,9 +1,12 @@
+import { countryIds } from '@/libs/countries';
+
 /**
  * Payload format for creating a user-report association via the API
  */
 export interface UserReportCreationPayload {
   userId: string;
   reportId: string;
+  countryId: (typeof countryIds)[number];
   label?: string;
   updatedAt?: string;
 }

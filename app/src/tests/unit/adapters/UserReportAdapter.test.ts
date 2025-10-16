@@ -1,24 +1,29 @@
 import { describe, expect, test } from 'vitest';
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
-import { CURRENT_YEAR } from '@/constants';
+import {
+  mockUserReportApiResponse,
+  mockUserReportCreationPayload,
+  mockUserReportUS,
+  mockUserReportWithoutOptionalFields,
+  TEST_COUNTRIES,
+  TEST_LABELS,
+  TEST_REPORT_IDS,
+  TEST_TIMESTAMPS,
+  TEST_USER_IDS,
+} from '@/tests/fixtures';
 import { UserReport } from '@/types/ingredients/UserReport';
-import { UserReportCreationPayload } from '@/types/payloads';
 
 describe('UserReportAdapter', () => {
-  // Test constants
-  const TEST_USER_ID = 'user-123';
-  const TEST_REPORT_ID = 'report-456';
-  const TEST_LABEL = 'My Test Report';
-  const TEST_TIMESTAMP = `${CURRENT_YEAR}-01-15T10:00:00Z`;
 
   describe('toCreationPayload', () => {
     test('given UserReport with all fields then creates proper payload', () => {
       // Given
       const userReport: Omit<UserReport, 'id' | 'createdAt'> = {
-        userId: TEST_USER_ID,
-        reportId: TEST_REPORT_ID,
-        label: TEST_LABEL,
-        updatedAt: TEST_TIMESTAMP,
+        userId: TEST_USER_IDS.USER_123,
+        reportId: TEST_REPORT_IDS.REPORT_JKL,
+        countryId: TEST_COUNTRIES.US,
+        label: TEST_LABELS.MY_REPORT,
+        updatedAt: TEST_TIMESTAMPS.UPDATED_AT,
         isCreated: true,
       };
 
@@ -26,21 +31,16 @@ describe('UserReportAdapter', () => {
       const result = UserReportAdapter.toCreationPayload(userReport);
 
       // Then
-      const expected: UserReportCreationPayload = {
-        userId: TEST_USER_ID,
-        reportId: TEST_REPORT_ID,
-        label: TEST_LABEL,
-        updatedAt: TEST_TIMESTAMP,
-      };
-      expect(result).toEqual(expected);
+      expect(result).toEqual(mockUserReportCreationPayload);
     });
 
     test('given UserReport without updatedAt then generates timestamp', () => {
       // Given
       const userReport: Omit<UserReport, 'id' | 'createdAt'> = {
-        userId: TEST_USER_ID,
-        reportId: TEST_REPORT_ID,
-        label: TEST_LABEL,
+        userId: TEST_USER_IDS.USER_123,
+        reportId: TEST_REPORT_IDS.REPORT_JKL,
+        countryId: TEST_COUNTRIES.US,
+        label: TEST_LABELS.MY_REPORT,
         isCreated: true,
       };
 
@@ -48,9 +48,10 @@ describe('UserReportAdapter', () => {
       const result = UserReportAdapter.toCreationPayload(userReport);
 
       // Then
-      expect(result.userId).toBe(TEST_USER_ID);
-      expect(result.reportId).toBe(TEST_REPORT_ID);
-      expect(result.label).toBe(TEST_LABEL);
+      expect(result.userId).toBe(TEST_USER_IDS.USER_123);
+      expect(result.reportId).toBe(TEST_REPORT_IDS.REPORT_JKL);
+      expect(result.countryId).toBe(TEST_COUNTRIES.US);
+      expect(result.label).toBe(TEST_LABELS.MY_REPORT);
       expect(result.updatedAt).toBeDefined();
       expect(new Date(result.updatedAt as string).toISOString()).toBe(result.updatedAt);
     });
@@ -60,7 +61,8 @@ describe('UserReportAdapter', () => {
       const userReport: Omit<UserReport, 'id' | 'createdAt'> = {
         userId: 123 as any,
         reportId: 456 as any,
-        label: TEST_LABEL,
+        countryId: TEST_COUNTRIES.US,
+        label: TEST_LABELS.MY_REPORT,
         isCreated: true,
       };
 
@@ -70,13 +72,28 @@ describe('UserReportAdapter', () => {
       // Then
       expect(result.userId).toBe('123');
       expect(result.reportId).toBe('456');
+      expect(result.countryId).toBe(TEST_COUNTRIES.US);
     });
 
     test('given UserReport without label then includes undefined label', () => {
       // Given
+      const userReport = mockUserReportWithoutOptionalFields;
+
+      // When
+      const result = UserReportAdapter.toCreationPayload(userReport);
+
+      // Then
+      expect(result.label).toBeUndefined();
+      expect(result.countryId).toBe(TEST_COUNTRIES.US);
+    });
+
+    test('given UserReport with UK country then preserves country ID', () => {
+      // Given
       const userReport: Omit<UserReport, 'id' | 'createdAt'> = {
-        userId: TEST_USER_ID,
-        reportId: TEST_REPORT_ID,
+        userId: TEST_USER_IDS.USER_123,
+        reportId: TEST_REPORT_IDS.REPORT_MNO,
+        countryId: TEST_COUNTRIES.UK,
+        label: TEST_LABELS.MY_REPORT,
         isCreated: true,
       };
 
@@ -84,53 +101,39 @@ describe('UserReportAdapter', () => {
       const result = UserReportAdapter.toCreationPayload(userReport);
 
       // Then
-      expect(result.label).toBeUndefined();
+      expect(result.countryId).toBe(TEST_COUNTRIES.UK);
     });
   });
 
   describe('fromApiResponse', () => {
     test('given API response with all fields then creates UserReport', () => {
       // Given
-      const apiData = {
-        id: `ur-${TEST_REPORT_ID}`, // UserReport has its own ID
-        reportId: TEST_REPORT_ID,
-        userId: TEST_USER_ID,
-        label: TEST_LABEL,
-        createdAt: TEST_TIMESTAMP,
-        updatedAt: TEST_TIMESTAMP,
-      };
+      const apiData = mockUserReportApiResponse;
 
       // When
       const result = UserReportAdapter.fromApiResponse(apiData);
 
       // Then
-      const expected: UserReport = {
-        id: `ur-${TEST_REPORT_ID}`,
-        userId: TEST_USER_ID,
-        reportId: TEST_REPORT_ID,
-        label: TEST_LABEL,
-        createdAt: TEST_TIMESTAMP,
-        updatedAt: TEST_TIMESTAMP,
-        isCreated: true,
-      };
-      expect(result).toEqual(expected);
+      expect(result).toEqual(mockUserReportUS);
     });
 
     test('given API response without optional fields then creates UserReport with defaults', () => {
       // Given
       const apiData = {
-        id: `ur-${TEST_REPORT_ID}`, // UserReport has its own ID
-        reportId: TEST_REPORT_ID,
-        userId: TEST_USER_ID,
+        id: 'ur-report-jkl',
+        reportId: TEST_REPORT_IDS.REPORT_JKL,
+        userId: TEST_USER_IDS.USER_123,
+        countryId: TEST_COUNTRIES.US,
       };
 
       // When
       const result = UserReportAdapter.fromApiResponse(apiData);
 
       // Then
-      expect(result.id).toBe(`ur-${TEST_REPORT_ID}`);
-      expect(result.userId).toBe(TEST_USER_ID);
-      expect(result.reportId).toBe(TEST_REPORT_ID);
+      expect(result.id).toBe('ur-report-jkl');
+      expect(result.userId).toBe(TEST_USER_IDS.USER_123);
+      expect(result.reportId).toBe(TEST_REPORT_IDS.REPORT_JKL);
+      expect(result.countryId).toBe(TEST_COUNTRIES.US);
       expect(result.label).toBeUndefined();
       expect(result.createdAt).toBeUndefined();
       expect(result.updatedAt).toBeUndefined();
@@ -140,12 +143,13 @@ describe('UserReportAdapter', () => {
     test('given API response with null label then preserves null', () => {
       // Given
       const apiData = {
-        id: `ur-${TEST_REPORT_ID}`, // UserReport has its own ID
-        reportId: TEST_REPORT_ID,
-        userId: TEST_USER_ID,
+        id: 'ur-report-jkl',
+        reportId: TEST_REPORT_IDS.REPORT_JKL,
+        userId: TEST_USER_IDS.USER_123,
+        countryId: TEST_COUNTRIES.US,
         label: null,
-        createdAt: TEST_TIMESTAMP,
-        updatedAt: TEST_TIMESTAMP,
+        createdAt: TEST_TIMESTAMPS.CREATED_AT,
+        updatedAt: TEST_TIMESTAMPS.UPDATED_AT,
       };
 
       // When
@@ -153,6 +157,7 @@ describe('UserReportAdapter', () => {
 
       // Then
       expect(result.label).toBeNull();
+      expect(result.countryId).toBe(TEST_COUNTRIES.US);
     });
 
     test('given API response with numeric IDs then preserves as numbers', () => {
@@ -161,7 +166,8 @@ describe('UserReportAdapter', () => {
         id: 789, // UserReport's own numeric ID
         reportId: 123,
         userId: 456,
-        label: TEST_LABEL,
+        countryId: TEST_COUNTRIES.UK,
+        label: TEST_LABELS.MY_REPORT,
       };
 
       // When
@@ -171,6 +177,21 @@ describe('UserReportAdapter', () => {
       expect(result.id).toBe(789);
       expect(result.userId).toBe(456);
       expect(result.reportId).toBe(123);
+      expect(result.countryId).toBe(TEST_COUNTRIES.UK);
+    });
+
+    test('given API response with UK country then preserves country ID', () => {
+      // Given
+      const apiData = {
+        ...mockUserReportApiResponse,
+        countryId: TEST_COUNTRIES.UK,
+      };
+
+      // When
+      const result = UserReportAdapter.fromApiResponse(apiData);
+
+      // Then
+      expect(result.countryId).toBe(TEST_COUNTRIES.UK);
     });
   });
 });
