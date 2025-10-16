@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import Layout from './components/Layout';
 import HomePage from './pages/Home.page';
+import LearnAiMlPage from './pages/Learn-ai-ml.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -97,6 +98,10 @@ const router = createBrowserRouter(
         {
           path: 'support',
           element: <div>Support page</div>,
+        },
+        {
+          path: 'learn-ai-ml',
+          element: <LearnAiMlPage />,
         },
       ],
     },
