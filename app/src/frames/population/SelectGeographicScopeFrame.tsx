@@ -90,22 +90,20 @@ export default function SelectGeographicScopeFrame({
 
   const formInputs = (
     <Stack>
-      {currentCountry === 'us' && (
-        <USGeographicOptions
-          scope={scope as 'national' | 'state' | 'household'}
-          selectedRegion={selectedRegion}
-          stateOptions={usStates}
-          onScopeChange={(newScope) => handleScopeChange(newScope)}
-          onRegionChange={setSelectedRegion}
-        />
-      )}
-
-      {currentCountry === 'uk' && (
+      {currentCountry === 'uk' ? (
         <UKGeographicOptions
           scope={scope as 'national' | 'country' | 'constituency' | 'household'}
           selectedRegion={selectedRegion}
           countryOptions={ukCountries}
           constituencyOptions={ukConstituencies}
+          onScopeChange={(newScope) => handleScopeChange(newScope)}
+          onRegionChange={setSelectedRegion}
+        />
+      ) : (
+        <USGeographicOptions
+          scope={scope as 'national' | 'state' | 'household'}
+          selectedRegion={selectedRegion}
+          stateOptions={usStates}
           onScopeChange={(newScope) => handleScopeChange(newScope)}
           onRegionChange={setSelectedRegion}
         />
