@@ -1,172 +1,209 @@
-import { useState } from 'react';
+import { Box, Table, Text } from '@mantine/core';
 import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import { extractHouseholdInputs, householdsAreEqual } from '@/utils/householdTableData';
+import { colors, spacing, typography } from '@/designTokens';
 
 interface HouseholdSubPageProps {
-  households: Household[];
+  baselineHousehold?: Household;
+  reformHousehold?: Household;
   userHouseholds?: UserHouseholdPopulation[];
 }
 
 /**
- * HouseholdSubPage - Displays household population information
+ * HouseholdSubPage - Displays household population information in Design 4 table format
  *
- * Shows detailed household structure including people, families, and tax units,
- * along with user associations.
+ * Shows baseline and reform households side-by-side in a comparison table.
+ * Displays all configured input values extracted from householdData.
+ * Collapses columns when both simulations use the same household.
  */
 export default function HouseholdSubPage({
-  households,
+  baselineHousehold,
+  reformHousehold,
   userHouseholds,
 }: HouseholdSubPageProps) {
-  const [selectedHouseholdId, setSelectedHouseholdId] = useState<string | null>(null);
+  if (!baselineHousehold && !reformHousehold) {
+    return <div>No household data available</div>;
+  }
 
-  // Auto-select first household
-  const selectedHousehold =
-    households.find((h) => h.id === selectedHouseholdId) || households[0];
+  // Check if households are the same
+  const householdsSame = householdsAreEqual(baselineHousehold, reformHousehold);
 
-  // Find user household association
-  const userHousehold = userHouseholds?.find((uh) => uh.householdId === selectedHousehold?.id);
+  // Extract inputs from both households
+  const baselineInputs = baselineHousehold ? extractHouseholdInputs(baselineHousehold) : [];
+  const reformInputs = reformHousehold ? extractHouseholdInputs(reformHousehold) : [];
+
+  // Collect all unique input keys (category + paramName)
+  const allInputKeys = new Set<string>();
+  baselineInputs.forEach((input) => allInputKeys.add(`${input.category}::${input.paramName}`));
+  reformInputs.forEach((input) => allInputKeys.add(`${input.category}::${input.paramName}`));
+
+  // Convert to sorted array for consistent ordering
+  const sortedInputKeys = Array.from(allInputKeys).sort();
+
+  // Helper to find input value
+  const findInputValue = (
+    inputs: ReturnType<typeof extractHouseholdInputs>,
+    category: string,
+    paramName: string
+  ): string => {
+    const input = inputs.find((i) => i.category === category && i.paramName === paramName);
+    if (!input) return '—';
+
+    // Format the value
+    if (typeof input.value === 'number') {
+      return input.value.toLocaleString();
+    }
+    return String(input.value);
+  };
+
+  // Calculate column widths
+  const labelColumnWidth = 45;
+  const valueColumnWidth = householdsSame ? 55 : 27.5;
 
   return (
     <div>
       <h2>Population Information</h2>
-      <p>
-        <strong>Type:</strong> Household
-      </p>
 
-      {/* Household Navigation */}
-      {households.length > 1 && (
-        <div style={{ marginBottom: '24px' }}>
-          <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>Select Household:</p>
-          {households.map((household, index) => (
-            <button
-              key={household.id || index}
-              type="button"
-              onClick={() => setSelectedHouseholdId(household.id || null)}
-              style={{
-                marginRight: '8px',
-                padding: '8px 16px',
-                backgroundColor:
-                  selectedHousehold?.id === household.id ? '#e0e0e0' : 'transparent',
-                border: '1px solid #ccc',
-                cursor: 'pointer',
-                borderRadius: '4px',
-              }}
-            >
-              Household {index + 1}
-            </button>
-          ))}
-        </div>
-      )}
+      <Box
+        style={{
+          border: `1px solid ${colors.border.light}`,
+          borderRadius: spacing.radius.lg,
+          overflow: 'hidden',
+          backgroundColor: colors.white,
+          marginTop: spacing.xl,
+        }}
+      >
+        <Table>
+          <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
+            <Table.Tr>
+              <Table.Th
+                style={{
+                  width: `${labelColumnWidth}%`,
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.text.secondary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  padding: `${spacing.md} ${spacing.lg}`,
+                }}
+              >
+                Input Variable
+              </Table.Th>
+              {householdsSame ? (
+                <Table.Th
+                  style={{
+                    width: `${valueColumnWidth}%`,
+                    textAlign: 'right',
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.secondary,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: `${spacing.md} ${spacing.lg}`,
+                  }}
+                >
+                  Baseline / Reform
+                </Table.Th>
+              ) : (
+                <>
+                  <Table.Th
+                    style={{
+                      width: `${valueColumnWidth}%`,
+                      textAlign: 'right',
+                      fontSize: typography.fontSize.xs,
+                      fontWeight: typography.fontWeight.medium,
+                      color: colors.text.secondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: `${spacing.md} ${spacing.lg}`,
+                    }}
+                  >
+                    Baseline
+                  </Table.Th>
+                  <Table.Th
+                    style={{
+                      width: `${valueColumnWidth}%`,
+                      textAlign: 'right',
+                      fontSize: typography.fontSize.xs,
+                      fontWeight: typography.fontWeight.medium,
+                      color: colors.text.secondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: `${spacing.md} ${spacing.lg}`,
+                    }}
+                  >
+                    Reform
+                  </Table.Th>
+                </>
+              )}
+            </Table.Tr>
+          </Table.Thead>
 
-      {/* Household Details */}
-      {selectedHousehold && (
-        <div>
-          <div style={{ marginBottom: '24px' }}>
-            <h3>Household Details</h3>
+          <Table.Tbody>
+            {sortedInputKeys.map((key) => {
+              const [category, paramName] = key.split('::');
 
-            <div style={{ marginTop: '16px' }}>
-              <p>
-                <strong>ID:</strong> {selectedHousehold.id || 'N/A'}
-              </p>
-              <p>
-                <strong>Country:</strong> {selectedHousehold.countryId || 'N/A'}
-              </p>
-            </div>
+              // Get label from either baseline or reform inputs
+              const baselineInput = baselineInputs.find(
+                (i) => i.category === category && i.paramName === paramName
+              );
+              const reformInput = reformInputs.find(
+                (i) => i.category === category && i.paramName === paramName
+              );
+              const label = baselineInput?.label || reformInput?.label || paramName;
 
-            {/* User Association Info */}
-            {userHousehold && (
-              <div style={{ marginTop: '16px' }}>
-                <p>
-                  <strong>User Association:</strong>
-                </p>
-                <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
-                  <li>User ID: {userHousehold.userId}</li>
-                  <li>Created: {userHousehold.createdAt || 'N/A'}</li>
-                  {userHousehold.label && <li>Custom Label: {userHousehold.label}</li>}
-                </ul>
-              </div>
-            )}
-          </div>
+              const baselineValue = findInputValue(baselineInputs, category, paramName);
+              const reformValue = findInputValue(reformInputs, category, paramName);
 
-          {/* Household Structure */}
-          <div style={{ marginBottom: '24px' }}>
-            <h3>Household Structure</h3>
-
-            {selectedHousehold.householdData && (
-              <div style={{ marginTop: '16px' }}>
-                {/* People Section */}
-                {selectedHousehold.householdData.people && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <p>
-                      <strong>People:</strong>{' '}
-                      {Object.keys(selectedHousehold.householdData.people).length}
-                    </p>
-                    <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
-                      {Object.entries(selectedHousehold.householdData.people).map(
-                        ([personId, personData]) => (
-                          <li key={personId}>
-                            {personId}
-                            {personData.age && Object.values(personData.age).length > 0 && (
-                              <span>
-                                {' '}
-                                - Age: {String(Object.values(personData.age)[0]) || 'N/A'}
-                              </span>
-                            )}
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Families Section */}
-                {selectedHousehold.householdData.families && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <p>
-                      <strong>Families:</strong>{' '}
-                      {Object.keys(selectedHousehold.householdData.families).length}
-                    </p>
-                    <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
-                      {Object.entries(selectedHousehold.householdData.families).map(
-                        ([familyId, familyData]) => (
-                          <li key={familyId}>
-                            {familyId}
-                            {familyData.members && (
-                              <span> - Members: {familyData.members.join(', ')}</span>
-                            )}
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-
-                {/* Tax Units Section */}
-                {selectedHousehold.householdData.taxUnits && (
-                  <div style={{ marginBottom: '16px' }}>
-                    <p>
-                      <strong>Tax Units:</strong>{' '}
-                      {Object.keys(selectedHousehold.householdData.taxUnits).length}
-                    </p>
-                    <ul style={{ marginLeft: '20px', marginTop: '8px' }}>
-                      {Object.entries(selectedHousehold.householdData.taxUnits).map(
-                        ([taxUnitId, taxUnitData]) => (
-                          <li key={taxUnitId}>
-                            {taxUnitId}
-                            {taxUnitData.members && (
-                              <span> - Members: {taxUnitData.members.join(', ')}</span>
-                            )}
-                          </li>
-                        )
-                      )}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+              return (
+                <Table.Tr key={key}>
+                  <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                    <Text size="sm" fw={typography.fontWeight.medium}>
+                      {category} - {label}
+                    </Text>
+                  </Table.Td>
+                  {householdsSame ? (
+                    <Table.Td
+                      style={{
+                        textAlign: 'right',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                        {baselineValue}
+                      </Text>
+                    </Table.Td>
+                  ) : (
+                    <>
+                      <Table.Td
+                        style={{
+                          textAlign: 'right',
+                          padding: `${spacing.md} ${spacing.lg}`,
+                        }}
+                      >
+                        <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                          {baselineValue}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td
+                        style={{
+                          textAlign: 'right',
+                          padding: `${spacing.md} ${spacing.lg}`,
+                        }}
+                      >
+                        <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                          {reformValue}
+                        </Text>
+                      </Table.Td>
+                    </>
+                  )}
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Box>
     </div>
   );
 }

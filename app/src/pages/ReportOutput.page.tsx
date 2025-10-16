@@ -31,7 +31,7 @@ import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput
 export type ReportOutputType = 'household' | 'societyWide';
 import PolicySubPage from './report-output/PolicySubPage';
 import PopulationSubPage from './report-output/PopulationSubPage';
-import SimulationSubPage from './report-output/SimulationSubPage';
+import DynamicsSubPage from './report-output/DynamicsSubPage';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -47,7 +47,7 @@ import SimulationSubPage from './report-output/SimulationSubPage';
  */
 
 // Valid sub-pages registry
-const VALID_SUBPAGES = ['overview', 'policy', 'simulation', 'population', 'loading', 'error'] as const;
+const VALID_SUBPAGES = ['overview', 'policy', 'dynamics', 'population', 'loading', 'error'] as const;
 type ValidSubPage = (typeof VALID_SUBPAGES)[number];
 
 function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
@@ -313,7 +313,6 @@ function getTabsForOutputType(
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'dynamics', label: 'Dynamics' },
       { value: 'policy', label: 'Policy' },
-      { value: 'simulation', label: 'Simulation' },
       { value: 'population', label: 'Population' },
     ];
   }
@@ -324,7 +323,6 @@ function getTabsForOutputType(
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'policy', label: 'Policy' },
-      { value: 'simulation', label: 'Simulation' },
       { value: 'population', label: 'Population' },
     ];
   }

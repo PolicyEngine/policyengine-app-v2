@@ -1,244 +1,103 @@
 import { describe, test, expect } from 'vitest';
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen } from '@test-utils';
 import PopulationSubPage from '@/pages/report-output/PopulationSubPage';
-import {
-  mockHousehold,
-  mockGeography,
-  mockUserHousehold,
-  createPopulationSubPageProps,
-} from '@/tests/fixtures/pages/report-output/PopulationSubPage';
+import { createPopulationSubPageProps } from '@/tests/fixtures/pages/report-output/PopulationSubPage';
 
-describe('PopulationSubPage', () => {
-  test('given household type with no households then displays no data message', () => {
-    // Given
-    const props = createPopulationSubPageProps.emptyHousehold();
+describe('PopulationSubPage - Design 4 Router', () => {
+  describe('Routing logic', () => {
+    test('given household simulations then routes to HouseholdSubPage', () => {
+      const props = createPopulationSubPageProps.householdDifferent();
+      render(<PopulationSubPage {...props} />);
 
-    // When
-    render(<PopulationSubPage {...props} />);
+      // Should render household table (check for household-specific content)
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /input variable/i })).toBeInTheDocument();
+    });
 
-    // Then
-    expect(screen.getByText(/no household data available/i)).toBeInTheDocument();
+    test('given geography simulations then routes to GeographySubPage', () => {
+      const props = createPopulationSubPageProps.geographyDifferent();
+      render(<PopulationSubPage {...props} />);
+
+      // Should render geography table (check for geography-specific content)
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      expect(screen.getByRole('columnheader', { name: /property/i })).toBeInTheDocument();
+    });
+
+    test('given no simulations then displays error message', () => {
+      const props = createPopulationSubPageProps.noSimulations();
+      render(<PopulationSubPage {...props} />);
+
+      expect(screen.getByText(/no population data available/i)).toBeInTheDocument();
+    });
   });
 
-  test('given household type with undefined households then displays no data message', () => {
-    // Given
-    const props = createPopulationSubPageProps.undefinedHousehold();
+  describe('Data extraction and passing', () => {
+    test('given household simulations then extracts correct households', () => {
+      const props = createPopulationSubPageProps.householdDifferent();
+      render(<PopulationSubPage {...props} />);
 
-    // When
-    render(<PopulationSubPage {...props} />);
+      // Should display data from baseline household (Family of Four)
+      const person1Matches = screen.getAllByText(/person1/i);
+      expect(person1Matches.length).toBeGreaterThan(0);
 
-    // Then
-    expect(screen.getByText(/no household data available/i)).toBeInTheDocument();
+      const person2Matches = screen.getAllByText(/person2/i);
+      expect(person2Matches.length).toBeGreaterThan(0);
+
+      expect(screen.getByText('35')).toBeInTheDocument(); // Age from baseline
+
+      // Should display data from reform household (Single Person)
+      expect(screen.getByText('28')).toBeInTheDocument(); // Age from reform
+    });
+
+    test('given geography simulations then extracts correct geographies', () => {
+      const props = createPopulationSubPageProps.geographyDifferent();
+      render(<PopulationSubPage {...props} />);
+
+      // Should display California (baseline)
+      expect(screen.getByText('California')).toBeInTheDocument();
+      expect(screen.getByText('ca')).toBeInTheDocument();
+
+      // Should display New York (reform)
+      expect(screen.getByText('New York')).toBeInTheDocument();
+      expect(screen.getByText('ny')).toBeInTheDocument();
+    });
+
+    test('given missing household data then displays error in HouseholdSubPage', () => {
+      const props = createPopulationSubPageProps.householdMissingData();
+      render(<PopulationSubPage {...props} />);
+
+      expect(screen.getByText(/no household data available/i)).toBeInTheDocument();
+    });
+
+    test('given missing geography data then displays error in GeographySubPage', () => {
+      const props = createPopulationSubPageProps.geographyMissingData();
+      render(<PopulationSubPage {...props} />);
+
+      expect(screen.getByText(/no geography data available/i)).toBeInTheDocument();
+    });
   });
 
-  test('given geography type with no geographies then displays no data message', () => {
-    // Given
-    const props = createPopulationSubPageProps.emptyGeography();
+  describe('Column collapsing scenarios', () => {
+    test('given same household in both simulations then passes to HouseholdSubPage', () => {
+      const props = createPopulationSubPageProps.householdSame();
+      render(<PopulationSubPage {...props} />);
 
-    // When
-    render(<PopulationSubPage {...props} />);
+      // Should show merged column header
+      const mergedHeaders = screen.getAllByRole('columnheader', {
+        name: /baseline \/ reform/i,
+      });
+      expect(mergedHeaders.length).toBeGreaterThanOrEqual(1);
+    });
 
-    // Then
-    expect(screen.getByText(/no geography data available/i)).toBeInTheDocument();
-  });
+    test('given same geography in both simulations then passes to GeographySubPage', () => {
+      const props = createPopulationSubPageProps.geographySame();
+      render(<PopulationSubPage {...props} />);
 
-  test('given geography type with undefined geographies then displays no data message', () => {
-    // Given
-    const props = createPopulationSubPageProps.undefinedGeography();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/no geography data available/i)).toBeInTheDocument();
-  });
-
-  test('given household type with household then displays household information', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleHousehold();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByRole('heading', { level: 2, name: /population information/i })).toBeInTheDocument();
-    expect(screen.getByText(/type:/i)).toBeInTheDocument();
-    const householdText = screen.getAllByText(/household/i);
-    expect(householdText.length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { level: 3, name: /household details/i })).toBeInTheDocument();
-    expect(screen.getByText(mockHousehold.id!)).toBeInTheDocument();
-  });
-
-  test('given household with user association then displays user info', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleHousehold();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/user association:/i)).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(mockUserHousehold.userId))).toBeInTheDocument();
-    expect(screen.getByText(new RegExp(mockUserHousehold.label!))).toBeInTheDocument();
-  });
-
-  test('given household with people then displays people count and details', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleHousehold();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/people:/i)).toBeInTheDocument();
-    const peopleCount = screen.getAllByText(/2/);
-    expect(peopleCount.length).toBeGreaterThan(0);
-    const person1Elements = screen.getAllByText(/person1/);
-    expect(person1Elements.length).toBeGreaterThan(0);
-    const person2Elements = screen.getAllByText(/person2/);
-    expect(person2Elements.length).toBeGreaterThan(0);
-  });
-
-  test('given household with families then displays family structure', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleHousehold();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/families:/i)).toBeInTheDocument();
-    const family1Elements = screen.getAllByText(/family1/);
-    expect(family1Elements.length).toBeGreaterThan(0);
-    const membersElements = screen.getAllByText(/Members: person1, person2/i);
-    expect(membersElements.length).toBeGreaterThan(0);
-  });
-
-  test('given household with tax units then displays tax unit structure', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleHousehold();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/tax units:/i)).toBeInTheDocument();
-    expect(screen.getByText(/taxUnit1/)).toBeInTheDocument();
-  });
-
-  test('given multiple households then displays household selection buttons', () => {
-    // Given
-    const props = createPopulationSubPageProps.multipleHouseholds();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/select household:/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /household 1/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /household 2/i })).toBeInTheDocument();
-  });
-
-  test('given user clicks household button then switches displayed household', async () => {
-    // Given
-    const user = userEvent.setup();
-    const props = createPopulationSubPageProps.multipleHouseholds();
-    render(<PopulationSubPage {...props} />);
-
-    // When - initially shows first household
-    expect(screen.getByText(mockHousehold.id!)).toBeInTheDocument();
-
-    // When - click second household button
-    await user.click(screen.getByRole('button', { name: /household 2/i }));
-
-    // Then - shows second household ID
-    expect(screen.getByText('hh-single-person-456')).toBeInTheDocument();
-  });
-
-  test('given single household then does not show selection buttons', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleHousehold();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.queryByText(/select household:/i)).not.toBeInTheDocument();
-  });
-
-  test('given geography type with geography then displays geography information', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleGeography();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByRole('heading', { level: 2, name: /population information/i })).toBeInTheDocument();
-    expect(screen.getByText(/type:/i)).toBeInTheDocument();
-    const geographyText = screen.getAllByText(/geography/i);
-    expect(geographyText.length).toBeGreaterThan(0);
-    expect(screen.getByRole('heading', { level: 3, name: /geography details/i })).toBeInTheDocument();
-    expect(screen.getByText(mockGeography.name!)).toBeInTheDocument();
-  });
-
-  test('given geography then displays all geography properties', () => {
-    // Given
-    const props = createPopulationSubPageProps.singleGeography();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/scope:/i)).toBeInTheDocument();
-    expect(screen.getByText(/subnational/i)).toBeInTheDocument();
-    expect(screen.getByText(mockGeography.geographyId!)).toBeInTheDocument();
-  });
-
-  test('given multiple geographies then displays geography selection buttons', () => {
-    // Given
-    const props = createPopulationSubPageProps.multipleGeographies();
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.getByText(/select geography:/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /california/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /new york/i })).toBeInTheDocument();
-  });
-
-  test('given user clicks geography button then switches displayed geography', async () => {
-    // Given
-    const user = userEvent.setup();
-    const props = createPopulationSubPageProps.multipleGeographies();
-    render(<PopulationSubPage {...props} />);
-
-    // When - initially shows first geography
-    const californiaElements = screen.getAllByText(/California/);
-    expect(californiaElements.length).toBeGreaterThan(0);
-
-    // When - click second geography button
-    await user.click(screen.getByRole('button', { name: /new york/i }));
-
-    // Then - shows second geography
-    const newYorkElements = screen.getAllByText(/New York/);
-    expect(newYorkElements.length).toBeGreaterThan(0);
-  });
-
-  test('given household without user association then does not show user info', () => {
-    // Given
-    const props = {
-      households: [mockHousehold],
-      geographies: [],
-      userHouseholds: [],
-      populationType: 'household' as const,
-    };
-
-    // When
-    render(<PopulationSubPage {...props} />);
-
-    // Then
-    expect(screen.queryByText(/user association:/i)).not.toBeInTheDocument();
+      // Should show merged column header
+      const mergedHeaders = screen.getAllByRole('columnheader', {
+        name: /baseline \/ reform/i,
+      });
+      expect(mergedHeaders.length).toBeGreaterThanOrEqual(1);
+    });
   });
 });

@@ -1,9 +1,11 @@
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 /**
- * Mock data for PopulationSubPage tests
+ * Mock data for PopulationSubPage tests (Design 4 format)
+ * Now uses baseline/reform simulations to determine populations
  */
 
 // Test IDs
@@ -17,10 +19,15 @@ export const TEST_GEOGRAPHY_IDS = {
   NEW_YORK: 'geo-us-ny',
 } as const;
 
+export const TEST_SIMULATION_IDS = {
+  BASELINE: 'sim-baseline-123',
+  REFORM: 'sim-reform-456',
+} as const;
+
 export const TEST_USER_ID = 'user-xyz-789';
 
-// Mock Household
-export const mockHousehold: Household = {
+// Mock Households
+export const mockHouseholdFamilyOfFour: Household = {
   id: TEST_HOUSEHOLD_IDS.FAMILY_OF_FOUR,
   countryId: 'us',
   householdData: {
@@ -42,13 +49,17 @@ export const mockHousehold: Household = {
     taxUnits: {
       taxUnit1: {
         members: ['person1', 'person2'],
-        state: { '2024': 'CA' },
+      },
+    },
+    households: {
+      'household-1': {
+        members: ['person1', 'person2'],
+        state_name: { '2024': 'CA' },
       },
     },
   },
 };
 
-// Mock second household for multiple household tests
 export const mockHouseholdSinglePerson: Household = {
   id: TEST_HOUSEHOLD_IDS.SINGLE_PERSON,
   countryId: 'us',
@@ -67,10 +78,84 @@ export const mockHouseholdSinglePerson: Household = {
     taxUnits: {
       taxUnit1: {
         members: ['person1'],
-        state: { '2024': 'NY' },
+      },
+    },
+    households: {
+      'household-1': {
+        members: ['person1'],
+        state_name: { '2024': 'NY' },
       },
     },
   },
+};
+
+// Mock Geographies
+export const mockGeographyCalifornia: Geography = {
+  id: TEST_GEOGRAPHY_IDS.CALIFORNIA,
+  countryId: 'us',
+  scope: 'subnational',
+  geographyId: 'ca',
+  name: 'California',
+};
+
+export const mockGeographyNewYork: Geography = {
+  id: TEST_GEOGRAPHY_IDS.NEW_YORK,
+  countryId: 'us',
+  scope: 'subnational',
+  geographyId: 'ny',
+  name: 'New York',
+};
+
+// Mock Simulations
+export const mockSimulationBaselineHousehold: Simulation = {
+  id: TEST_SIMULATION_IDS.BASELINE,
+  countryId: 'us',
+  policyId: 'policy-baseline',
+  populationId: TEST_HOUSEHOLD_IDS.FAMILY_OF_FOUR,
+  populationType: 'household',
+  label: 'Baseline Simulation',
+  isCreated: true,
+};
+
+export const mockSimulationReformHousehold: Simulation = {
+  id: TEST_SIMULATION_IDS.REFORM,
+  countryId: 'us',
+  policyId: 'policy-reform',
+  populationId: TEST_HOUSEHOLD_IDS.SINGLE_PERSON,
+  populationType: 'household',
+  label: 'Reform Simulation',
+  isCreated: true,
+};
+
+export const mockSimulationBaselineGeography: Simulation = {
+  id: TEST_SIMULATION_IDS.BASELINE,
+  countryId: 'us',
+  policyId: 'policy-baseline',
+  populationId: TEST_GEOGRAPHY_IDS.CALIFORNIA,
+  populationType: 'geography',
+  label: 'Baseline Simulation',
+  isCreated: true,
+};
+
+export const mockSimulationReformGeography: Simulation = {
+  id: TEST_SIMULATION_IDS.REFORM,
+  countryId: 'us',
+  policyId: 'policy-reform',
+  populationId: TEST_GEOGRAPHY_IDS.NEW_YORK,
+  populationType: 'geography',
+  label: 'Reform Simulation',
+  isCreated: true,
+};
+
+// Simulations with same population (for column collapsing tests)
+export const mockSimulationReformSameHousehold: Simulation = {
+  ...mockSimulationReformHousehold,
+  populationId: TEST_HOUSEHOLD_IDS.FAMILY_OF_FOUR, // Same as baseline
+};
+
+export const mockSimulationReformSameGeography: Simulation = {
+  ...mockSimulationReformGeography,
+  populationId: TEST_GEOGRAPHY_IDS.CALIFORNIA, // Same as baseline
 };
 
 // Mock User Household
@@ -83,72 +168,60 @@ export const mockUserHousehold: UserHouseholdPopulation = {
   createdAt: '2025-01-15T14:00:00Z',
 };
 
-// Mock Geography
-export const mockGeography: Geography = {
-  id: TEST_GEOGRAPHY_IDS.CALIFORNIA,
-  countryId: 'us',
-  scope: 'subnational',
-  geographyId: 'ca',
-  name: 'California',
-};
-
-// Mock second geography for multiple geography tests
-export const mockGeographyNewYork: Geography = {
-  id: TEST_GEOGRAPHY_IDS.NEW_YORK,
-  countryId: 'us',
-  scope: 'subnational',
-  geographyId: 'ny',
-  name: 'New York',
-};
-
-// Test prop configurations (helpers for common test scenarios)
+// Test prop configurations for Design 4 format
 export const createPopulationSubPageProps = {
-  emptyHousehold: () => ({
-    households: [],
-    geographies: [],
-    userHouseholds: [],
-    populationType: 'household' as const,
-  }),
-  undefinedHousehold: () => ({
-    households: undefined,
-    geographies: undefined,
-    userHouseholds: undefined,
-    populationType: 'household' as const,
-  }),
-  emptyGeography: () => ({
-    households: [],
-    geographies: [],
-    userHouseholds: [],
-    populationType: 'geography' as const,
-  }),
-  undefinedGeography: () => ({
-    households: undefined,
-    geographies: undefined,
-    userHouseholds: undefined,
-    populationType: 'geography' as const,
-  }),
-  singleHousehold: () => ({
-    households: [mockHousehold],
+  // Household scenarios
+  householdDifferent: () => ({
+    baselineSimulation: mockSimulationBaselineHousehold,
+    reformSimulation: mockSimulationReformHousehold,
+    households: [mockHouseholdFamilyOfFour, mockHouseholdSinglePerson],
     geographies: [],
     userHouseholds: [mockUserHousehold],
-    populationType: 'household' as const,
   }),
-  multipleHouseholds: () => ({
-    households: [mockHousehold, mockHouseholdSinglePerson],
+  householdSame: () => ({
+    baselineSimulation: mockSimulationBaselineHousehold,
+    reformSimulation: mockSimulationReformSameHousehold,
+    households: [mockHouseholdFamilyOfFour],
     geographies: [],
     userHouseholds: [mockUserHousehold],
-    populationType: 'household' as const,
   }),
-  singleGeography: () => ({
-    households: [],
-    geographies: [mockGeography],
+  householdMissingData: () => ({
+    baselineSimulation: mockSimulationBaselineHousehold,
+    reformSimulation: mockSimulationReformHousehold,
+    households: [], // No households available
+    geographies: [],
     userHouseholds: [],
-    populationType: 'geography' as const,
   }),
-  multipleGeographies: () => ({
+
+  // Geography scenarios
+  geographyDifferent: () => ({
+    baselineSimulation: mockSimulationBaselineGeography,
+    reformSimulation: mockSimulationReformGeography,
     households: [],
-    geographies: [mockGeography, mockGeographyNewYork],
+    geographies: [mockGeographyCalifornia, mockGeographyNewYork],
     userHouseholds: [],
-    populationType: 'geography' as const,
+  }),
+  geographySame: () => ({
+    baselineSimulation: mockSimulationBaselineGeography,
+    reformSimulation: mockSimulationReformSameGeography,
+    households: [],
+    geographies: [mockGeographyCalifornia],
+    userHouseholds: [],
+  }),
+  geographyMissingData: () => ({
+    baselineSimulation: mockSimulationBaselineGeography,
+    reformSimulation: mockSimulationReformGeography,
+    households: [],
+    geographies: [], // No geographies available
+    userHouseholds: [],
+  }),
+
+  // Missing simulation scenarios
+  noSimulations: () => ({
+    baselineSimulation: undefined,
+    reformSimulation: undefined,
+    households: [],
+    geographies: [],
+    userHouseholds: [],
   }),
 };
