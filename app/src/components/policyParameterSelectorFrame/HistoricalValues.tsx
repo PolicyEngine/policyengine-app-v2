@@ -2,6 +2,7 @@ import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { CHART_COLORS } from '@/constants/chartColors';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
@@ -122,13 +123,13 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
                   line: {
                     shape: 'hv' as any,
                     dash: 'dot' as any,
+                    color: CHART_COLORS.REFORM_LINE,
                   },
-                  /*
-            marker: {
-              color: style.colors.BLUE,
-            },
-            */
-                  // name: getReformPolicyLabel(policy),
+                  marker: {
+                    color: CHART_COLORS.REFORM_LINE,
+                    size: CHART_COLORS.MARKER_SIZE,
+                  },
+                  name: 'Reform',
                   // customdata: reformedCustomData,
                   hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
                 },
@@ -141,14 +142,16 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
             mode: 'lines+markers' as any,
             line: {
               shape: 'hv' as any,
+              color: reformValuesCollection
+                ? CHART_COLORS.BASE_LINE_WITH_REFORM
+                : CHART_COLORS.BASE_LINE_ALONE,
             },
-            /*
             marker: {
-              color: !reformValuesCollection
-                ? style.colors.DARK_GRAY
-                : style.colors.MEDIUM_LIGHT_GRAY,
+              color: reformValuesCollection
+                ? CHART_COLORS.BASE_LINE_WITH_REFORM
+                : CHART_COLORS.BASE_LINE_ALONE,
+              size: CHART_COLORS.MARKER_SIZE,
             },
-            */
             name: 'Current law',
             // customdata: customData,
             hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
