@@ -267,11 +267,6 @@ export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props
             l: isMobile ? 50 : 60,
             b: isMobile ? 30 : 50,
           },
-          title: {
-            text: `${param.label} over time`,
-            xanchor: 'left' as any,
-            x: isMobile ? 0.05 : 0.04,
-          },
           dragmode: isMobile ? (false as any) : ('zoom' as any),
           width: chartWidth || undefined,
         }}
