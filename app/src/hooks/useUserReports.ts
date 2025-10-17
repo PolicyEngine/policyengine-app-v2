@@ -30,8 +30,9 @@ import {
 
 /**
  * Enhanced result type that includes all relationships
+ * Exported for use in other hooks that build on this data
  */
-interface EnhancedUserReport {
+export interface EnhancedUserReport {
   // Core associations
   userReport: UserReport;
   report?: Report;

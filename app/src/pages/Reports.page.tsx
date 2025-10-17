@@ -12,14 +12,14 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUserReports } from '@/hooks/useUserReports';
+import { useReportsWithLiveStatus } from '@/hooks/useReportsWithLiveStatus';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
-  const { data, isLoading, isError, error } = useUserReports(userId);
+  const { data, isLoading, isError, error } = useReportsWithLiveStatus(userId);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
@@ -145,7 +145,7 @@ export default function ReportsPage() {
           : '',
       } as TextValue,
       status: {
-        text: formatStatus(item.report?.status || 'pending'),
+        text: formatStatus(item.liveStatus),
       } as TextValue,
       simulations: {
         items: item.simulations?.map((sim, index) => ({
@@ -157,7 +157,11 @@ export default function ReportsPage() {
         ],
       } as BulletsValue,
       outputType: {
-        text: item.report?.output ? 'Society-wide' : 'Not generated',
+        text: item.isCalculating
+          ? `Computing... ${item.progress ? `${Math.round(item.progress)}%` : ''}`
+          : item.report?.output
+          ? 'Society-wide'
+          : 'Not generated',
       } as TextValue,
     })) || [];
 

@@ -1,6 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { markReportCompleted } from '@/api/report';
 import { updateSimulationOutput } from '@/api/simulation';
+import { reportKeys, simulationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import type { Report } from '@/types/ingredients/Report';
 
@@ -74,12 +75,15 @@ export class ResultPersister {
     // Use existing markReportCompleted API
     await markReportCompleted(countryId as any, reportId, report);
 
-    // DO NOT invalidate cache - CalcOrchestrator has already updated it correctly.
-    // Invalidation would cause an unnecessary refetch that could race with the
-    // persisted data and overwrite correct cache state.
-    console.log(
-      `[ResultPersister] ✓ Persisted to database, cache already up-to-date from orchestrator`
-    );
+    // Invalidate report metadata cache so Reports page shows updated status
+    // WHY: Reports page reads from reportKeys.byId(), not calculation cache.
+    // After persisting to database, we need to invalidate so next fetch gets fresh data.
+    // This is safe because database persistence is complete at this point.
+    console.log(`[ResultPersister] → Invalidating report cache for ${reportId}`);
+    this.queryClient.invalidateQueries({
+      queryKey: reportKeys.byId(reportId),
+    });
+    console.log(`[ResultPersister] ✓ Report cache invalidated, Reports page will show updated status`);
   }
 
   /**
@@ -93,12 +97,14 @@ export class ResultPersister {
     // Use new updateSimulationOutput API
     await updateSimulationOutput(countryId as any, simulationId, result);
 
-    // DO NOT invalidate cache - CalcOrchestrator has already updated it correctly.
-    // Invalidation would cause an unnecessary refetch that could race with the
-    // persisted data and overwrite correct cache state.
-    console.log(
-      `[ResultPersister] ✓ Persisted to database, cache already up-to-date from orchestrator`
-    );
+    // Invalidate simulation metadata cache so Reports page shows updated status
+    // WHY: Reports page may display simulation info, and we need fresh data after persistence.
+    // This is safe because database persistence is complete at this point.
+    console.log(`[ResultPersister] → Invalidating simulation cache for ${simulationId}`);
+    this.queryClient.invalidateQueries({
+      queryKey: simulationKeys.byId(simulationId),
+    });
+    console.log(`[ResultPersister] ✓ Simulation cache invalidated`);
   }
 
   /**
