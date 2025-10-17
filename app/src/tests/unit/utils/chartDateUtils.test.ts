@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  extendForDisplay,
-  filterValidChartDates,
-  getAllChartDates,
-  getChartBoundaryDates,
-} from '@/utils/chartDateUtils';
+import { CHART_DISPLAY_EXTENSION_DATE } from '@/constants/chartConstants';
 import {
   emptyDates,
   emptyValues,
@@ -18,7 +13,12 @@ import {
   sampleSingleValue,
   sampleValues,
 } from '@/tests/fixtures/utils/chartDateUtilsMocks';
-import { CHART_DISPLAY_EXTENSION_DATE } from '@/constants/chartConstants';
+import {
+  extendForDisplay,
+  filterValidChartDates,
+  getAllChartDates,
+  getChartBoundaryDates,
+} from '@/utils/chartDateUtils';
 
 describe('chartDateUtils', () => {
   describe('filterValidChartDates', () => {
@@ -60,10 +60,7 @@ describe('chartDateUtils', () => {
     it('should remove duplicate dates', () => {
       const result = getAllChartDates(overlappingDates.base, overlappingDates.reform);
       // Should have unique dates only
-      const uniqueCount = new Set([
-        ...overlappingDates.base,
-        ...overlappingDates.reform,
-      ]).size;
+      const uniqueCount = new Set([...overlappingDates.base, ...overlappingDates.reform]).size;
       expect(result.length).toBe(uniqueCount);
     });
 

@@ -1,8 +1,8 @@
-import { describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@test-utils';
-import PolicyParameterSelectorMain from '@/components/policyParameterSelectorFrame/Main';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { render, screen } from '@test-utils';
+import { Provider } from 'react-redux';
+import { describe, expect, it, vi } from 'vitest';
+import PolicyParameterSelectorMain from '@/components/policyParameterSelectorFrame/Main';
 import { policySlice } from '@/reducers/policyReducer';
 import { reportSlice } from '@/reducers/reportReducer';
 
@@ -77,10 +77,7 @@ describe('PolicyParameterSelectorMain', () => {
       // Given
       const store = createTestStore({
         policy: {
-          policies: [
-            { id: '123', label: 'Test Policy', parameters: [], isCreated: true },
-            null,
-          ],
+          policies: [{ id: '123', label: 'Test Policy', parameters: [], isCreated: true }, null],
         },
         report: { mode: 'standalone', activeSimulationPosition: 0 },
       });
@@ -108,9 +105,7 @@ describe('PolicyParameterSelectorMain', () => {
               parameters: [
                 {
                   name: 'gov.test.parameter',
-                  values: [
-                    { startDate: '2023-01-01', endDate: '2100-12-31', value: 2000 },
-                  ],
+                  values: [{ startDate: '2023-01-01', endDate: '2100-12-31', value: 2000 }],
                 },
               ],
               isCreated: true,
@@ -138,8 +133,7 @@ describe('PolicyParameterSelectorMain', () => {
         (interval: any) => interval.startDate < '2023-01-01'
       );
       const has2023Interval = reformIntervals.some(
-        (interval: any) =>
-          interval.startDate === '2023-01-01' && interval.value === 2000
+        (interval: any) => interval.startDate === '2023-01-01' && interval.value === 2000
       );
 
       expect(hasPre2023Interval).toBe(true); // Base value before 2023

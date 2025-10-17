@@ -10,9 +10,7 @@ import {
  * @returns Filtered array of valid dates
  */
 export function filterValidChartDates(dates: string[]): string[] {
-  return dates.filter(
-    (date) => date !== '0000-01-01' && date < CHART_DISPLAY_EXTENSION_DATE
-  );
+  return dates.filter((date) => date !== '0000-01-01' && date < CHART_DISPLAY_EXTENSION_DATE);
 }
 
 /**

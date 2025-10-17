@@ -1,15 +1,12 @@
-import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
+import { createRef } from 'react';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
+import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import {
-  useChartWidth,
-  useIsMobile,
-  useWindowHeight,
-} from '@/hooks/useChartDimensions';
-import {
-  EXPECTED_MOBILE_AT_1920,
   EXPECTED_MOBILE_AT_375,
   EXPECTED_MOBILE_AT_768,
+  EXPECTED_MOBILE_AT_1920,
   MOCK_CONTAINER_WIDTH_LARGE,
   MOCK_CONTAINER_WIDTH_MEDIUM,
   MOCK_CONTAINER_WIDTH_SMALL,
@@ -19,7 +16,6 @@ import {
   MOCK_MOBILE_WIDTH,
   MOCK_TABLET_WIDTH,
 } from '@/tests/fixtures/hooks/useChartDimensionsMocks';
-import { createRef } from 'react';
 
 // Mock ResizeObserver
 class MockResizeObserver {
@@ -55,7 +51,16 @@ class MockResizeObserver {
         bottom: height,
         x: 0,
         y: 0,
-        toJSON: () => ({ width, height, top: 0, left: 0, right: width, bottom: height, x: 0, y: 0 }),
+        toJSON: () => ({
+          width,
+          height,
+          top: 0,
+          left: 0,
+          right: width,
+          bottom: height,
+          x: 0,
+          y: 0,
+        }),
       },
       borderBoxSize: [] as any,
       contentBoxSize: [] as any,
