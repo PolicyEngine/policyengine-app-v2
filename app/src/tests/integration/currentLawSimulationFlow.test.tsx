@@ -15,7 +15,6 @@ import simulationsReducer from '@/reducers/simulationsReducer';
 import { CountryGuard } from '@/routing/guards/CountryGuard';
 import {
   createMetadataFetchMock,
-  expectedCurrentLawPolicyUS,
   INTEGRATION_TEST_COUNTRIES,
   INTEGRATION_TEST_CURRENT_LAW_IDS,
 } from '@/tests/fixtures/integration/currentLawFlowMocks';
