@@ -3,7 +3,7 @@ import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } f
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
-import { reportKeys } from '@/libs/queryKeys';
+import { reportKeys, reportAssociationKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -90,12 +90,17 @@ export function useCreateReport(reportLabel?: string) {
         console.log(`[useCreateReport][${timestamp}] Report.country_id:`, (report as any).country_id);
 
         // Invalidate queries
+        // WHY: We need to invalidate BOTH reports AND report associations
+        // - reportKeys.all: Invalidates individual report queries
+        // - reportAssociationKeys.all: Invalidates user→report mappings (critical for Reports page)
         console.log(`[useCreateReport][${timestamp}] Invalidating report queries...`);
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
+        console.log(`[useCreateReport][${timestamp}] Invalidating report association queries...`);
+        queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
-        // Cache the report data
-        console.log(`[useCreateReport][${timestamp}] Caching report data with key: ['report', '${reportIdStr}']`);
-        queryClient.setQueryData(['report', reportIdStr], report);
+        // Cache the report data using consistent key structure
+        console.log(`[useCreateReport][${timestamp}] Caching report data with key:`, reportKeys.byId(reportIdStr));
+        queryClient.setQueryData(reportKeys.byId(reportIdStr), report);
 
         // Determine calculation type from simulation
         const simulation1 = simulations?.simulation1;
