@@ -56,6 +56,12 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
 
   const buttonPanelCards = [
     {
+      title: 'Current Law',
+      description: 'Use the baseline tax-benefit system with no reforms',
+      onClick: handleClickCurrentLaw,
+      isSelected: selectedAction === 'selectCurrentLaw',
+    },
+    {
       title: 'Load Existing Policy',
       description: 'Use a policy you have already created',
       onClick: handleClickExisting,
@@ -66,12 +72,6 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
       description: 'Build a new policy',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
-    },
-    {
-      title: 'Current Law',
-      description: 'Use the baseline tax-benefit system with no reforms',
-      onClick: handleClickCurrentLaw,
-      isSelected: selectedAction === 'selectCurrentLaw',
     },
   ];
 
