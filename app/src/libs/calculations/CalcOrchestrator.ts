@@ -2,95 +2,171 @@ import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import { ResultPersister } from './ResultPersister';
 import type { CalcStartConfig, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
+import type { CalcOrchestratorManager } from './CalcOrchestratorManager';
 
 /**
- * Orchestrates calculation lifecycle
- * - Builds metadata and parameters from config
- * - Starts calculation query
- * - Watches for completion
- * - Auto-persists results when complete
+ * Orchestrates a single calculation lifecycle
+ *
+ * RESPONSIBILITY:
+ * - Execute calculation query
+ * - For household: Await result (no polling)
+ * - For economy: Start polling for progress
+ * - Persist result when complete
+ * - Notify manager when done
+ *
+ * LIFECYCLE:
+ * Created by CalcOrchestratorManager, cleaned up when calculation completes/errors
  */
 export class CalcOrchestrator {
   private currentUnsubscribe: (() => void) | null = null;
+  private queryClient: QueryClient;
+  private resultPersister: ResultPersister;
+  private manager: CalcOrchestratorManager | undefined;
 
   constructor(
-    private queryClient: QueryClient,
-    private resultPersister: ResultPersister
-  ) {}
+    queryClient: QueryClient,
+    resultPersister: ResultPersister,
+    manager?: CalcOrchestratorManager  // Optional for backwards compatibility during migration
+  ) {
+    this.queryClient = queryClient;
+    this.resultPersister = resultPersister;
+    this.manager = manager;
+  }
 
   /**
-   * Start a calculation and watch for completion
-   * @param config - Configuration containing all necessary information
+   * Start a calculation
+   *
+   * CRITICAL FLOW DIFFERENCE:
+   *
+   * HOUSEHOLD (synchronous):
+   *   1. Execute queryFn() → BLOCKS for 30-45s
+   *   2. Returns status='complete' immediately
+   *   3. Set in cache
+   *   4. Persist result
+   *   5. Cleanup (no polling needed)
+   *
+   * ECONOMY (asynchronous):
+   *   1. Execute queryFn() → Returns immediately
+   *   2. Returns status='computing'
+   *   3. Set in cache
+   *   4. Start polling (QueryObserver)
+   *   5. Poll every 2s until complete
+   *   6. Persist result
+   *   7. Cleanup
    */
   async startCalculation(config: CalcStartConfig): Promise<void> {
     const timestamp = Date.now();
     console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
-    console.log(`[CalcOrchestrator][${timestamp}] START: calcId="${config.calcId}" targetType="${config.targetType}"`);
+    console.log(`[CalcOrchestrator][${timestamp}] startCalculation() called`);
+    console.log(`[CalcOrchestrator][${timestamp}]   calcId: "${config.calcId}"`);
+    console.log(`[CalcOrchestrator][${timestamp}]   targetType: "${config.targetType}"`);
+    console.log(`[CalcOrchestrator][${timestamp}]   countryId: "${config.countryId}"`);
 
-    // Build metadata and params from config
+    // Build metadata and params
     const metadata = this.buildMetadata(config);
     const params = this.buildParams(config);
 
-    console.log(`[CalcOrchestrator][${timestamp}] Metadata:`, JSON.stringify(metadata, null, 2));
-    console.log(`[CalcOrchestrator][${timestamp}] Params calcType:`, params.calcType);
+    console.log(`[CalcOrchestrator][${timestamp}]   calcType: "${metadata.calcType}"`);
+    console.log(`[CalcOrchestrator][${timestamp}]   populationId: "${params.populationId}"`);
 
-    // Create query options based on target type
+    // Create query options (includes refetchInterval from strategy)
     const queryOptions = config.targetType === 'report'
       ? calculationQueries.forReport(config.calcId, metadata, params)
       : calculationQueries.forSimulation(config.calcId, metadata, params);
 
-    console.log(`[CalcOrchestrator][${timestamp}] Query key:`, JSON.stringify(queryOptions.queryKey));
-    console.log(`[CalcOrchestrator][${timestamp}] Has queryFn?`, typeof queryOptions.queryFn === 'function');
+    console.log(`[CalcOrchestrator][${timestamp}]   queryKey:`, JSON.stringify(queryOptions.queryKey));
+    console.log(`[CalcOrchestrator][${timestamp}]   refetchInterval:`, queryOptions.refetchInterval);
 
-    // Execute the initial query to get status
-    console.log(`[CalcOrchestrator][${timestamp}] BEFORE initial fetch: ${Date.now()}`);
+    // Execute initial queryFn
+    console.log(`[CalcOrchestrator][${timestamp}] → Executing queryFn()...`);
+    const startTime = Date.now();
     const initialStatus = await queryOptions.queryFn();
-    console.log(`[CalcOrchestrator][${timestamp}] AFTER initial fetch: ${Date.now()}`);
+    const duration = Date.now() - startTime;
+    console.log(`[CalcOrchestrator][${timestamp}] ✓ queryFn() completed in ${duration}ms`);
+    console.log(`[CalcOrchestrator][${timestamp}]   Initial status: "${initialStatus.status}"`);
 
-    // Directly set the status in cache
+    // Set result in cache
     this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);
-    console.log(`[CalcOrchestrator][${timestamp}] Set initial status in cache`);
+    console.log(`[CalcOrchestrator][${timestamp}] ✓ Status cached`);
 
-    // Check if query was registered
-    const queryState = this.queryClient.getQueryState(queryOptions.queryKey);
-    console.log(`[CalcOrchestrator][${timestamp}] Query exists after cache set?`, !!queryState);
-    console.log(`[CalcOrchestrator][${timestamp}] Query status:`, queryState?.status);
-    console.log(`[CalcOrchestrator][${timestamp}] Query data:`, queryState?.data);
+    // CRITICAL DECISION POINT: Household vs Economy
+    if (initialStatus.status === 'complete') {
+      // HOUSEHOLD CASE: Calculation completed synchronously
+      console.log(`[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Calculation completed immediately (no polling needed)`);
+      console.log(`[CalcOrchestrator][${timestamp}]   Duration: ${duration}ms`);
+      console.log(`[CalcOrchestrator][${timestamp}] → Persisting result...`);
 
-    // Log all queries in cache
-    const allQueries = this.queryClient.getQueryCache().getAll();
-    console.log(`[CalcOrchestrator][${timestamp}] Total queries in cache:`, allQueries.length);
-    console.log(`[CalcOrchestrator][${timestamp}] All query keys:`, allQueries.map(q => JSON.stringify(q.queryKey)));
+      await this.resultPersister.persist(initialStatus, config.countryId);
+      console.log(`[CalcOrchestrator][${timestamp}] ✓ Result persisted`);
 
-    // Start polling and subscribe to completion
-    this.startPolling(queryOptions, metadata, config.countryId);
+      // Notify manager to cleanup this orchestrator
+      if (this.manager) {
+        console.log(`[CalcOrchestrator][${timestamp}] → Notifying manager to cleanup`);
+        this.manager.cleanup(config.calcId);
+      }
 
-    console.log(`[CalcOrchestrator][${timestamp}] END startCalculation`);
+      console.log(`[CalcOrchestrator][${timestamp}] ✓ Household calculation complete`);
+      console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
+      return;
+    }
+
+    // ECONOMY CASE: Start polling for progress
+    console.log(`[CalcOrchestrator][${timestamp}] 🌍 ECONOMY: Starting polling (async calculation)`);
+    this.startPolling(queryOptions, metadata, config.countryId, config.calcId);
+
+    console.log(`[CalcOrchestrator][${timestamp}] ✓ Polling started`);
     console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
   }
 
   /**
-   * Start polling for calculation updates using QueryObserver
-   * Manages its own polling lifecycle and updates cache
+   * Start polling for calculation updates
+   *
+   * ⚠️  ONLY FOR ECONOMY CALCULATIONS
+   * Household calculations never reach this method because they return 'complete' immediately.
+   *
+   * @param queryOptions - Query configuration with refetchInterval
+   * @param metadata - Calculation metadata
+   * @param countryId - Country ID for persistence
+   * @param calcId - Calculation ID for cleanup
    */
   private startPolling(
     queryOptions: ReturnType<typeof calculationQueries.forReport | typeof calculationQueries.forSimulation>,
     metadata: CalcMetadata,
-    countryId: string
+    countryId: string,
+    calcId: string
   ): void {
     const { queryKey, queryFn, refetchInterval } = queryOptions;
+    const timestamp = Date.now();
 
-    console.log(`[CalcOrchestrator] Starting polling for ${metadata.calcId}`);
+    console.log(`[CalcOrchestrator][${timestamp}] startPolling() called for ${calcId}`);
+    console.log(`[CalcOrchestrator][${timestamp}]   refetchInterval: ${refetchInterval}`);
 
-    // Create observer with queryFn and refetch config
+    // SAFETY CHECK: Should never happen since household returns 'complete' immediately
+    if (refetchInterval === false) {
+      console.error(`[CalcOrchestrator][${timestamp}] ❌ UNEXPECTED: startPolling() called with refetchInterval=false`);
+      console.error(`[CalcOrchestrator][${timestamp}]    This should never happen! Household calculations should return 'complete' immediately.`);
+      console.error(`[CalcOrchestrator][${timestamp}]    Cleaning up and returning.`);
+
+      if (this.manager) {
+        this.manager.cleanup(calcId);
+      }
+      return;
+    }
+
+    console.log(`[CalcOrchestrator][${timestamp}] ✓ Creating QueryObserver with polling`);
+
+    // Create observer with polling
     const observer = new QueryObserver(this.queryClient, {
       queryKey,
       queryFn,
       refetchInterval: (typeof refetchInterval === 'function'
         ? refetchInterval
-        : refetchInterval || 2000) as any,
+        : refetchInterval) as any, // Type assertion needed for QueryObserver
     });
 
+    console.log(`[CalcOrchestrator][${timestamp}] ✓ Observer created, subscribing...`);
+
+    // Subscribe to updates
     const unsubscribe = observer.subscribe((result) => {
       const status = result.data as CalcStatus | undefined;
 
@@ -98,50 +174,72 @@ export class CalcOrchestrator {
         return;
       }
 
-      console.log(
-        `[CalcOrchestrator] Status update for ${metadata.calcId}: ${status.status} (progress: ${status.progress ?? 'N/A'}%)`
-      );
+      const progress = status.progress !== undefined ? `${status.progress}%` : 'N/A';
+      console.log(`[CalcOrchestrator] 🔄 Poll update for ${calcId}: status="${status.status}" progress=${progress}`);
 
       // Handle completion
       if (status.status === 'complete' && status.result) {
-        console.log(`[CalcOrchestrator] Calculation complete, persisting result...`);
+        const completionTime = Date.now();
+        console.log(`[CalcOrchestrator][${completionTime}] ✅ COMPLETE: ${calcId}`);
+        console.log(`[CalcOrchestrator][${completionTime}] → Persisting result...`);
+
         this.resultPersister
           .persist(status, countryId)
           .then(() => {
-            console.log(`[CalcOrchestrator] Result persisted successfully`);
+            console.log(`[CalcOrchestrator][${completionTime}] ✓ Result persisted for ${calcId}`);
           })
           .catch((error) => {
-            console.error(`[CalcOrchestrator] Failed to persist result:`, error);
+            console.error(`[CalcOrchestrator][${completionTime}] ❌ Failed to persist ${calcId}:`, error);
           })
           .finally(() => {
+            console.log(`[CalcOrchestrator][${completionTime}] → Stopping polling and cleaning up`);
             unsubscribe();
             this.currentUnsubscribe = null;
+
+            // Notify manager to remove this orchestrator
+            if (this.manager) {
+              this.manager.cleanup(calcId);
+            }
           });
+
         return;
       }
 
       // Handle error
       if (status.status === 'error') {
-        console.error(`[CalcOrchestrator] Calculation error:`, status.error);
+        const errorTime = Date.now();
+        console.error(`[CalcOrchestrator][${errorTime}] ❌ ERROR: ${calcId}`);
+        console.error(`[CalcOrchestrator][${errorTime}]    Error:`, status.error);
+        console.log(`[CalcOrchestrator][${errorTime}] → Stopping polling and cleaning up`);
+
         unsubscribe();
         this.currentUnsubscribe = null;
+
+        // Notify manager to remove this orchestrator
+        if (this.manager) {
+          this.manager.cleanup(calcId);
+        }
+
         return;
       }
     });
 
-    // Store unsubscribe function for external cleanup
+    // Store unsubscribe function for manual cleanup
     this.currentUnsubscribe = unsubscribe;
+    console.log(`[CalcOrchestrator][${timestamp}] ✓ Subscribed to polling updates`);
   }
 
   /**
-   * Clean up any active subscriptions
-   * Call this when the orchestrator is no longer needed (e.g., component unmount)
+   * Clean up active polling subscription
+   * Called by manager when orchestrator is removed from registry
    */
   cleanup(): void {
     if (this.currentUnsubscribe) {
-      console.log('[CalcOrchestrator] Cleaning up active subscription');
+      console.log('[CalcOrchestrator] cleanup() → Stopping polling');
       this.currentUnsubscribe();
       this.currentUnsubscribe = null;
+    } else {
+      console.log('[CalcOrchestrator] cleanup() → No active polling to stop');
     }
   }
 
@@ -149,9 +247,6 @@ export class CalcOrchestrator {
    * Build CalcMetadata from config
    */
   private buildMetadata(config: CalcStartConfig): CalcMetadata {
-    // Determine calcType from simulation populationType
-    // 'geography' populationType -> 'economy' calcType
-    // 'household' populationType -> 'household' calcType
     const populationType = config.simulations.simulation1.populationType || 'geography';
     const calcType = populationType === 'household' ? 'household' : 'economy';
 
@@ -165,13 +260,11 @@ export class CalcOrchestrator {
 
   /**
    * Build CalcParams from config
-   * Extracts API parameters from simulations and populations
    */
   private buildParams(config: CalcStartConfig): CalcParams {
     const sim1 = config.simulations.simulation1;
     const sim2 = config.simulations.simulation2;
 
-    // Determine which population to use
     let populationId: string;
     let region: string | undefined;
 
@@ -180,13 +273,11 @@ export class CalcOrchestrator {
     if (populationType === 'household') {
       populationId = config.populations.household1?.id || sim1.populationId || '';
     } else {
-      // Geography type
       const geography = config.populations.geography1;
       populationId = geography?.geographyId || sim1.populationId || config.countryId;
       region = geography?.geographyId || config.countryId;
     }
 
-    // Map populationType to calcType
     const calcType = populationType === 'household' ? 'household' : 'economy';
 
     return {
