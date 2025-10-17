@@ -214,5 +214,4 @@ describe('Current Law Simulation Flow Integration', () => {
       expect(policy?.parameters?.length).toBe(0);
     });
   });
-
 });
