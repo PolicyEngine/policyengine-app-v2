@@ -1156,4 +1156,123 @@ describe('HistoricalValues', () => {
       expect(firstProps.data[0].y).toEqual(secondProps.data[0].y);
     });
   });
+
+  describe('ParameterOverTimeChart axis buffer space', () => {
+    it('given chart then x-axis range extends 5 years before earliest date', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.xaxis.range).toBeDefined();
+      expect(props.layout.xaxis.range).toHaveLength(2);
+
+      const rangeStart = new Date(props.layout.xaxis.range[0]);
+
+      // The earliest date in the filtered dates (after applying DEFAULT_CHART_START_DATE filter)
+      // is 2015-01-01, so 5 years before that is 2010
+      expect(rangeStart.getFullYear()).toBe(2010);
+    });
+
+    it('given chart then y-axis range includes 10% buffer above max value', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Buffer is calculated after extending data, so includes extended points
+      expect(props.layout.yaxis.range).toBeDefined();
+      expect(props.layout.yaxis.range).toHaveLength(2);
+
+      // The actual range includes the extension point at 2099, creating a range
+      const actualMax = props.layout.yaxis.range[1];
+      const actualMin = props.layout.yaxis.range[0];
+
+      // Verify there is buffer space (range is larger than data)
+      expect(actualMax).toBeGreaterThan(12500); // Max data value
+      expect(actualMin).toBeLessThan(12000); // Min data value
+    });
+
+    it('given chart then y-axis range includes 10% buffer below min value', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Verify buffer exists below minimum
+      const actualMin = props.layout.yaxis.range[0];
+      expect(actualMin).toBeLessThan(12000); // Min data value from SAMPLE_BASE_VALUES_SIMPLE
+    });
+
+    it('given chart with multiple values then buffer calculated from range', () => {
+      // Given - SAMPLE_BASE_VALUES_COMPLEX uses percentage values (0.15, 0.20, 0.22)
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={PERCENTAGE_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_COMPLEX}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Verify buffer exists on both sides
+      expect(props.layout.yaxis.range).toBeDefined();
+
+      const actualMin = props.layout.yaxis.range[0];
+      const actualMax = props.layout.yaxis.range[1];
+
+      // Min/max from SAMPLE_BASE_VALUES_COMPLEX (percentages: 0.15 min, 0.22 max)
+      expect(actualMin).toBeLessThan(0.15); // Buffer below minimum
+      expect(actualMax).toBeGreaterThan(0.22); // Buffer above maximum
+    });
+
+    it('given chart with base and reform then buffer includes both datasets', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Buffer should account for both datasets
+      expect(props.layout.yaxis.range).toBeDefined();
+
+      const actualMin = props.layout.yaxis.range[0];
+      const actualMax = props.layout.yaxis.range[1];
+
+      // Combined data: base has 12000-12500, reform has 15000
+      expect(actualMin).toBeLessThan(12000); // Buffer below base minimum
+      expect(actualMax).toBeGreaterThan(15000); // Buffer above reform maximum
+    });
+  });
 });
