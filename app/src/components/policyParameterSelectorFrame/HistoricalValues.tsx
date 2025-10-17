@@ -118,7 +118,7 @@ export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props
     }
   }, [reformValuesCollection]);
 
-  // Memoize axis calculations
+  // Memoize axis calculations with buffer space
   const { xaxisFormat, yaxisFormat } = useMemo(() => {
     try {
       let xaxisValues = getAllChartDates(x, reformedX);
@@ -130,9 +130,32 @@ export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props
 
       const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
 
+      // Calculate x-axis range with 5 years before earliest date
+      const allDates = [...xaxisValues].sort();
+      const earliestDate = allDates[0] ? new Date(allDates[0]) : new Date();
+      const fiveYearsBefore = new Date(earliestDate);
+      fiveYearsBefore.setFullYear(fiveYearsBefore.getFullYear() - 5);
+
+      // Calculate y-axis range with 10% buffer above and below
+      const numericYValues = yaxisValues.map((v) => Number(v)).filter((v) => !isNaN(v));
+      const minY = Math.min(...numericYValues);
+      const maxY = Math.max(...numericYValues);
+      const yRange = maxY - minY;
+      const yBuffer = yRange * 0.1;
+
+      const xaxisFormatWithRange = {
+        ...getPlotlyAxisFormat('date', xaxisValues),
+        range: [fiveYearsBefore.toISOString().split('T')[0], maxDate],
+      };
+
+      const yaxisFormatWithRange = {
+        ...getPlotlyAxisFormat(param.unit || '', yaxisValues),
+        range: [minY - yBuffer, maxY + yBuffer],
+      };
+
       return {
-        xaxisFormat: getPlotlyAxisFormat('date', xaxisValues),
-        yaxisFormat: getPlotlyAxisFormat(param.unit || '', yaxisValues),
+        xaxisFormat: xaxisFormatWithRange,
+        yaxisFormat: yaxisFormatWithRange,
       };
     } catch (error) {
       console.error('ParameterOverTimeChart: Error calculating axis formats', error);
