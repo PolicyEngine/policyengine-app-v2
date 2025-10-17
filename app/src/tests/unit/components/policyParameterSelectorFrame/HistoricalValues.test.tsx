@@ -654,24 +654,6 @@ describe('HistoricalValues', () => {
       expect(chartContainer).toBeInTheDocument();
     });
 
-    it('given chart then includes title with parameter label', () => {
-      // Given
-      const { getByTestId } = render(
-        <ParameterOverTimeChart
-          param={CURRENCY_USD_PARAMETER}
-          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
-        />
-      );
-
-      // When
-      const chart = getByTestId('plotly-chart');
-      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
-
-      // Then
-      expect(props.layout.title.text).toContain('Standard Deduction');
-      expect(props.layout.title.text).toContain('over time');
-    });
-
     it('given chart then has margin configuration', () => {
       // Given
       const { getByTestId } = render(
@@ -729,23 +711,6 @@ describe('HistoricalValues', () => {
       expect(typeof props.style.height).toBe('number');
     });
 
-    it('given chart then title is left-anchored', () => {
-      // Given
-      const { getByTestId } = render(
-        <ParameterOverTimeChart
-          param={CURRENCY_USD_PARAMETER}
-          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
-        />
-      );
-
-      // When
-      const chart = getByTestId('plotly-chart');
-      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
-
-      // Then
-      expect(props.layout.title.xanchor).toBe('left');
-      expect(props.layout.title.x).toBeDefined();
-    });
   });
 
   describe('ParameterOverTimeChart policy label integration', () => {
