@@ -1,19 +1,23 @@
 import { describe, expect, it, vi } from 'vitest';
-import { render } from '@test-utils';
+import { render, screen } from '@test-utils';
 import PolicyParameterSelectorHistoricalValues, {
   ParameterOverTimeChart,
 } from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import {
   BOOLEAN_PARAMETER,
   CURRENCY_USD_PARAMETER,
+  EMPTY_VALUES_COLLECTION,
   EXPECTED_BASE_TRACE,
   EXPECTED_EXTENDED_BASE_DATES,
+  EXPECTED_NO_DATA_MESSAGE,
   EXPECTED_REFORM_NAME_DEFAULT,
   EXPECTED_REFORM_NAME_WITH_ID,
   EXPECTED_REFORM_NAME_WITH_LABEL,
   EXPECTED_REFORM_NAME_WITH_SHORT_LABEL,
   EXPECTED_REFORM_NAME_WITH_SMALL_ID,
   EXPECTED_REFORM_TRACE,
+  MockErrorThrowingCollection,
+  MockMismatchedValueCollection,
   PERCENTAGE_PARAMETER,
   SAMPLE_BASE_VALUES_COMPLEX,
   SAMPLE_BASE_VALUES_SIMPLE,
@@ -967,6 +971,189 @@ describe('HistoricalValues', () => {
 
       // Then
       expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_ID);
+    });
+  });
+
+  describe('ParameterOverTimeChart error handling', () => {
+    it('given empty values collection then displays no data message', () => {
+      // Given/When
+      render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={EMPTY_VALUES_COLLECTION}
+        />
+      );
+
+      // Then
+      expect(screen.getByText(EXPECTED_NO_DATA_MESSAGE)).toBeInTheDocument();
+    });
+
+    it('given empty values then does not render chart', () => {
+      // Given/When
+      const { queryByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={EMPTY_VALUES_COLLECTION}
+        />
+      );
+
+      // Then
+      expect(queryByTestId('plotly-chart')).not.toBeInTheDocument();
+    });
+
+    it('given mismatched dates and values then handles gracefully', () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const mismatchedCollection = new MockMismatchedValueCollection([]);
+
+      // When
+      render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={mismatchedCollection}
+        />
+      );
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'ParameterOverTimeChart: Mismatched dates and values length'
+      );
+      expect(screen.getByText(EXPECTED_NO_DATA_MESSAGE)).toBeInTheDocument();
+
+      // Cleanup
+      consoleWarnSpy.mockRestore();
+    });
+
+    it('given error in data processing then handles gracefully', () => {
+      // Given
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const errorCollection = new MockErrorThrowingCollection([]);
+
+      // When
+      render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={errorCollection}
+        />
+      );
+
+      // Then
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      expect(screen.getByText(EXPECTED_NO_DATA_MESSAGE)).toBeInTheDocument();
+
+      // Cleanup
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('given error in reform data processing then still renders base data', () => {
+      // Given
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      const errorCollection = new MockErrorThrowingCollection([]);
+
+      // When
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={errorCollection}
+        />
+      );
+
+      // Then
+      expect(consoleErrorSpy).toHaveBeenCalled();
+      const chart = getByTestId('plotly-chart');
+      expect(chart).toBeInTheDocument();
+
+      // Should only have base trace, no reform trace
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      expect(props.data.length).toBe(1);
+      expect(props.data[0].name).toBe('Current law');
+
+      // Cleanup
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('given empty reform values then only renders base trace', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={EMPTY_VALUES_COLLECTION}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.data.length).toBe(1);
+      expect(props.data[0].name).toBe('Current law');
+    });
+
+    it('given mismatched reform data then shows warning and skips reform', () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const mismatchedCollection = new MockMismatchedValueCollection([]);
+
+      // When
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={mismatchedCollection}
+        />
+      );
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        'ParameterOverTimeChart: Mismatched reform dates and values length'
+      );
+
+      // Should still render base trace
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      expect(props.data.length).toBe(1);
+      expect(props.data[0].name).toBe('Current law');
+
+      // Cleanup
+      consoleWarnSpy.mockRestore();
+    });
+  });
+
+  describe('ParameterOverTimeChart memoization', () => {
+    it('given component re-renders with same props then uses memoized values', () => {
+      // Given
+      const { rerender, getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel={SAMPLE_POLICY_LABEL_CUSTOM}
+        />
+      );
+
+      const firstChart = getByTestId('plotly-chart');
+      const firstProps = JSON.parse(firstChart.getAttribute('data-plotly-props') || '{}');
+
+      // When - Re-render with same props
+      rerender(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel={SAMPLE_POLICY_LABEL_CUSTOM}
+        />
+      );
+
+      // Then - Should have same data (memoization working)
+      const secondChart = getByTestId('plotly-chart');
+      const secondProps = JSON.parse(secondChart.getAttribute('data-plotly-props') || '{}');
+
+      expect(firstProps.data[0].name).toBe(secondProps.data[0].name);
+      expect(firstProps.data[0].x).toEqual(secondProps.data[0].x);
+      expect(firstProps.data[0].y).toEqual(secondProps.data[0].y);
     });
   });
 });

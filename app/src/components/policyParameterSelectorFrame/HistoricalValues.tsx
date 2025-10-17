@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useMemo, memo } from 'react';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -57,37 +57,7 @@ export default function PolicyParameterSelectorHistoricalValues(
   );
 }
 
-/*
-import { ChartLogo } from "../../../api/charts";
-import {
-  getPlotlyAxisFormat,
-  formatVariableValue,
-} from "../../../api/variables";
-import useMobile from "../../../layout/Responsive";
-import style from "../../../style";
-import { plotLayoutFont } from "pages/policy/output/utils";
-import { localeCode } from "lang/format";
-import { defaultPOTEndDate, defaultStartDate } from "../../../data/constants";
-import { useWindowHeight } from "../../../hooks/useWindow";
-import { useContext } from "react";
-import { ParamChartWidthContext } from "./ParameterEditor";
-*/
-
-/**
- *
- * @param {object} policy the policy object
- * @returns the reform policy label
- */
-/*
-function getReformPolicyLabel(policy) {
-  if (policy.reform.label) return policy.reform.label;
-  const urlParams = new URLSearchParams(window.location.search);
-  const reformPolicyId = urlParams.get("reform");
-  return reformPolicyId ? `Policy #${reformPolicyId}` : "reform";
-}
-  */
-
-export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
+export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
   const { param, baseValuesCollection, reformValuesCollection, policyLabel, policyId } = props;
 
   // Responsive state
@@ -96,61 +66,127 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
   const isMobile = useIsMobile();
   const windowHeight = useWindowHeight();
 
-  // Step 1: Get base data and make a copy to avoid mutations
-  const x = [...baseValuesCollection.getAllStartDates()];
-  const y = [...baseValuesCollection.getAllValues()];
+  // Memoize base data processing
+  const { x, y } = useMemo(() => {
+    try {
+      const dates = [...baseValuesCollection.getAllStartDates()];
+      const values = [...baseValuesCollection.getAllValues()];
 
-  // Step 2: Extend for display (adds 2099-12-31 to show visual infinity)
-  extendForDisplay(x, y);
+      // Validate data
+      if (dates.length === 0 || values.length === 0) {
+        return { x: [], y: [] };
+      }
 
-  // Step 3: Get reform data (if exists) and make a copy
-  const reformedX = reformValuesCollection
-    ? [...reformValuesCollection.getAllStartDates()]
-    : [];
-  const reformedY = reformValuesCollection
-    ? [...reformValuesCollection.getAllValues()]
-    : [];
+      if (dates.length !== values.length) {
+        console.warn('ParameterOverTimeChart: Mismatched dates and values length');
+        return { x: [], y: [] };
+      }
 
-  if (reformValuesCollection) {
-    extendForDisplay(reformedX, reformedY);
+      extendForDisplay(dates, values);
+      return { x: dates, y: values };
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error processing base data', error);
+      return { x: [], y: [] };
+    }
+  }, [baseValuesCollection]);
+
+  // Memoize reform data processing
+  const { reformedX, reformedY } = useMemo(() => {
+    if (!reformValuesCollection) {
+      return { reformedX: [], reformedY: [] };
+    }
+
+    try {
+      const dates = [...reformValuesCollection.getAllStartDates()];
+      const values = [...reformValuesCollection.getAllValues()];
+
+      // Validate data
+      if (dates.length === 0 || values.length === 0) {
+        return { reformedX: [], reformedY: [] };
+      }
+
+      if (dates.length !== values.length) {
+        console.warn('ParameterOverTimeChart: Mismatched reform dates and values length');
+        return { reformedX: [], reformedY: [] };
+      }
+
+      extendForDisplay(dates, values);
+      return { reformedX: dates, reformedY: values };
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error processing reform data', error);
+      return { reformedX: [], reformedY: [] };
+    }
+  }, [reformValuesCollection]);
+
+  // Memoize axis calculations
+  const { xaxisFormat, yaxisFormat } = useMemo(() => {
+    try {
+      let xaxisValues = getAllChartDates(x, reformedX);
+      xaxisValues = filterValidChartDates(xaxisValues);
+
+      const { minDate, maxDate } = getChartBoundaryDates();
+      xaxisValues.push(minDate);
+      xaxisValues.push(maxDate);
+
+      const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
+
+      return {
+        xaxisFormat: getPlotlyAxisFormat('date', xaxisValues),
+        yaxisFormat: getPlotlyAxisFormat(param.unit || '', yaxisValues),
+      };
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error calculating axis formats', error);
+      return {
+        xaxisFormat: { type: 'date' as const },
+        yaxisFormat: {},
+      };
+    }
+  }, [x, y, reformedX, reformedY, reformValuesCollection, param.unit]);
+
+  // Memoize custom data for hover tooltips
+  const customData = useMemo(() => {
+    try {
+      return y.map((value) =>
+        formatParameterValue(value, param.unit, { decimalPlaces: 2 })
+      );
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error formatting custom data', error);
+      return [];
+    }
+  }, [y, param.unit]);
+
+  const reformedCustomData = useMemo(() => {
+    try {
+      return reformedY.map((value) =>
+        formatParameterValue(value, param.unit, { decimalPlaces: 2 })
+      );
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error formatting reform custom data', error);
+      return [];
+    }
+  }, [reformedY, param.unit]);
+
+  // Memoize reform label
+  const reformLabel = useMemo(() => {
+    return getReformPolicyLabel(policyLabel, policyId ? parseInt(policyId, 10) : null);
+  }, [policyLabel, policyId]);
+
+  // Early return if no valid data
+  if (x.length === 0 || y.length === 0) {
+    return (
+      <div ref={chartContainerRef}>
+        <Text c="dimmed" ta="center" py="xl">
+          No data available to display
+        </Text>
+      </div>
+    );
   }
 
-  // Step 4: Calculate x-axis values for formatting
-  let xaxisValues = getAllChartDates(x, reformedX);
-  xaxisValues = filterValidChartDates(xaxisValues);
-
-  // Step 5: Add boundary dates to control chart window
-  const { minDate, maxDate } = getChartBoundaryDates();
-  xaxisValues.push(minDate);
-  xaxisValues.push(maxDate);
-
-  // Step 6: Calculate y-axis values
-  const yaxisValues = reformValuesCollection
-    ? [...y, ...reformedY]
-    : y;
-
-  // Step 7: Calculate axis formats
-  const xaxisFormat = getPlotlyAxisFormat('date', xaxisValues);
-  const yaxisFormat = getPlotlyAxisFormat(param.unit || '', yaxisValues);
-
-  // Step 8: Format custom data for hover tooltips
-  const customData = y.map((value) =>
-    formatParameterValue(value, param.unit, { decimalPlaces: 2 })
-  );
-
-  const reformedCustomData = reformedY.map((value) =>
-    formatParameterValue(value, param.unit, { decimalPlaces: 2 })
-  );
-
-  // Get reform label using policy data if available
-  const reformLabel = getReformPolicyLabel(policyLabel, policyId ? parseInt(policyId, 10) : null);
-
-  // TODO: Typing on Plotly is not good; improve the typing here
   return (
     <div ref={chartContainerRef}>
       <Plot
         data={[
-          ...(reformValuesCollection
+          ...(reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
             ? [
                 {
                   x: reformedX,
@@ -179,12 +215,12 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
             mode: 'lines+markers' as any,
             line: {
               shape: 'hv' as any,
-              color: reformValuesCollection
+              color: (reformValuesCollection && reformedX.length > 0 && reformedY.length > 0)
                 ? CHART_COLORS.BASE_LINE_WITH_REFORM
                 : CHART_COLORS.BASE_LINE_ALONE,
             },
             marker: {
-              color: reformValuesCollection
+              color: (reformValuesCollection && reformedX.length > 0 && reformedY.length > 0)
                 ? CHART_COLORS.BASE_LINE_WITH_REFORM
                 : CHART_COLORS.BASE_LINE_ALONE,
               size: CHART_COLORS.MARKER_SIZE,
@@ -226,4 +262,4 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
       />
     </div>
   );
-}
+});
