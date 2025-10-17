@@ -1,4 +1,5 @@
-import { useQueries, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, QueryObserver } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import { useSyntheticProgress } from './useSyntheticProgress';
@@ -145,6 +146,15 @@ export interface AggregatedCalcStatus {
  * This hook reads all N queries and aggregates them into a single status view
  * for the UI to consume.
  *
+ * NOTE: This hook subscribes to cache updates from CalcOrchestrator via QueryObserver.
+ * It does NOT poll the API - it only reacts to cache changes.
+ *
+ * HOW IT WORKS:
+ * 1. CalcOrchestrator has N QueryObservers that poll the API and update cache
+ * 2. This hook has N QueryObservers that watch the cache for those same query keys
+ * 3. When CalcOrchestrator updates cache → this hook's observers fire → component re-renders
+ * 4. No API polling here - just cache subscription
+ *
  * @param calcIds - Array of calculation IDs to monitor
  * @param targetType - Type of calculations ('simulation' or 'report')
  * @returns Aggregated status across all calculations
@@ -155,46 +165,92 @@ export function useAggregatedCalculationStatus(
 ): AggregatedCalcStatus {
   const queryClient = useQueryClient();
 
-  // Read status from all calculation queries
-  const results = useQueries({
-    queries: calcIds.map((calcId) => ({
-      queryKey:
+  console.log(`[useAggregatedCalculationStatus] Called with ${calcIds.length} calcIds:`, calcIds);
+
+  // Initialize state with current cache values or initializing
+  const [calculations, setCalculations] = useState<CalcStatus[]>(() => {
+    return calcIds.map((calcId) => {
+      const queryKey =
         targetType === 'report'
-          ? calculationKeys.byReportId(calcId)
-          : calculationKeys.bySimulationId(calcId),
-      queryFn: () => {
-        const queryKey = targetType === 'report'
           ? calculationKeys.byReportId(calcId)
           : calculationKeys.bySimulationId(calcId);
 
-        // Read from cache - CalcOrchestrator updates it
-        const cached = queryClient.getQueryData<CalcStatus>(queryKey);
-        if (cached) return cached;
+      const cached = queryClient.getQueryData<CalcStatus>(queryKey);
+      if (cached) {
+        console.log(`[useAggregatedCalculationStatus] Initial cache hit for ${calcId}:`, cached.status);
+        return cached;
+      }
 
-        // Return initializing state when no cache exists yet
-        return {
-          status: 'initializing' as const,
-          metadata: {
-            calcId,
-            targetType,
-            calcType: 'household' as const, // Aggregated status is typically for household
-            startedAt: Date.now(),
-          },
-        };
-      },
-      enabled: !!calcId,
-      refetchInterval: false as const, // CalcOrchestrator manages polling
-      staleTime: Infinity,
-    })),
+      console.log(`[useAggregatedCalculationStatus] No initial cache for ${calcId}, returning initializing`);
+      return {
+        status: 'initializing' as const,
+        metadata: {
+          calcId,
+          targetType,
+          calcType: 'household' as const,
+          startedAt: Date.now(),
+        },
+      };
+    });
   });
 
-  // Extract all CalcStatus objects
-  const calculations: CalcStatus[] = results
-    .map((result) => result.data as CalcStatus | undefined)
-    .filter((status): status is CalcStatus => status !== undefined);
+  const [anyLoading, setAnyLoading] = useState(false);
 
-  // Check if any queries are loading (for household calculations that are pending)
-  const anyLoading = results.some((result) => result.isLoading);
+  // Subscribe to cache updates for all calculations via QueryObserver
+  useEffect(() => {
+    if (calcIds.length === 0) return;
+
+    console.log(`[useAggregatedCalculationStatus] Creating ${calcIds.length} QueryObservers`);
+
+    // Create an observer for each calculation
+    const observers = calcIds.map((calcId) => {
+      const queryKey =
+        targetType === 'report'
+          ? calculationKeys.byReportId(calcId)
+          : calculationKeys.bySimulationId(calcId);
+
+      return new QueryObserver<CalcStatus>(queryClient, {
+        queryKey,
+      });
+    });
+
+    // Subscribe to all observers
+    const unsubscribers = observers.map((observer, index) => {
+      return observer.subscribe((result) => {
+        console.log(`[useAggregatedCalculationStatus] Observer update for ${calcIds[index]}:`, result.data?.status);
+
+        setCalculations((prev) => {
+          const next = [...prev];
+          if (result.data) {
+            next[index] = result.data;
+          }
+          return next;
+        });
+
+        // Update anyLoading based on any observer's isLoading status
+        setAnyLoading((prevLoading) => prevLoading || result.isLoading);
+      });
+    });
+
+    // Get current values immediately in case they were set while component was rendering
+    const currentValues = calcIds.map((calcId) => {
+      const queryKey =
+        targetType === 'report'
+          ? calculationKeys.byReportId(calcId)
+          : calculationKeys.bySimulationId(calcId);
+
+      return queryClient.getQueryData<CalcStatus>(queryKey);
+    });
+
+    setCalculations((prev) => {
+      return prev.map((calc, index) => currentValues[index] || calc);
+    });
+
+    return () => {
+      console.log(`[useAggregatedCalculationStatus] Unsubscribing ${calcIds.length} observers`);
+      unsubscribers.forEach((unsubscribe) => unsubscribe());
+    };
+  }, [queryClient, calcIds, targetType]);
 
   // Determine calculation type from first available metadata
   const calcType = calculations.length > 0

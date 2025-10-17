@@ -282,20 +282,20 @@ describe('useCalculationStatus', () => {
   });
 
   describe('synthetic progress - Phase 2', () => {
-    test('given query is loading then shows synthetic progress', async () => {
-      // Given - Query is loading (no data in cache), simulating pending household calculation
+    test('given no cache data then shows initializing (not synthetic progress)', async () => {
+      // Given - No data in cache (CalcOrchestrator hasn't populated cache yet)
       // When
       const { result } = renderHook(
         () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_SIMULATION_ID, 'simulation'),
         { wrapper }
       );
 
-      // Then - isLoading true, treated as computing with synthetic progress
+      // Then - shows initializing state (not computing with synthetic progress)
+      // Synthetic progress only shows when status in cache is 'computing'
       await waitFor(() => {
-        expect(result.current.isLoading).toBe(true);
-        expect(result.current.isComputing).toBe(true); // isPending treated as computing
-        expect(result.current.progress).toBe(45); // Mocked synthetic progress
-        expect(result.current.message).toBe('Running policy simulation...'); // Mocked synthetic message
+        expect(result.current.status).toBe('initializing');
+        expect(result.current.isInitializing).toBe(true);
+        expect(result.current.isComputing).toBe(false);
       });
     });
 

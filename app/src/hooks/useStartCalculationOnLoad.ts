@@ -27,20 +27,27 @@ interface UseStartCalculationOnLoadParams {
 }
 
 /**
- * Hook to automatically start calculation when loading a report
+ * Hook to automatically start/resume calculation when loading a report
  *
  * WHY THIS EXISTS:
- * Used for direct URL loads where calculation hasn't been started yet.
+ * Used for direct URL loads where calculation orchestrator isn't running.
  * Without this, users who directly access /report-output/{id} would see
- * "idle" status forever with no way to start the calculation.
+ * status forever with no polling to update it.
  *
  * This hook detects when:
  * 1. Report data is loaded
  * 2. Calculation is NOT complete
- * 3. Calculation is NOT already running
- * 4. No calculation has been started yet
+ * 3. No orchestrator is running yet (either idle OR computing)
  *
- * And then starts the calculation automatically.
+ * And then starts/resumes the calculation orchestrator.
+ *
+ * IMPORTANT: This hook handles TWO scenarios:
+ * - **Fresh start**: Cache shows 'idle' → Start new calculation
+ * - **Resume**: Cache shows 'computing' → Resume polling for existing calculation
+ *
+ * The second scenario is critical: when you load a page showing a computing
+ * calculation, the cache has status='computing' but NO orchestrator is polling
+ * the API to update that status. This hook creates an orchestrator to resume polling.
  *
  * SAFETY: Only starts once per mount and includes multiple guards to prevent
  * duplicate starts.
@@ -69,12 +76,16 @@ export function useStartCalculationOnLoad({
     // - Already started
     // - No config
     // - Already complete
-    // - Already computing
-    if (!enabled || startedRef.current || !config || isComplete || isComputing) {
+    if (!enabled || startedRef.current || !config || isComplete) {
       return;
     }
 
-    console.log('[useStartCalculationOnLoad] Starting calculation for:', config.calcId);
+    // Start/resume orchestrator for both idle and computing states
+    if (isComputing) {
+      console.log('[useStartCalculationOnLoad] Resuming polling for computing calculation:', config.calcId);
+    } else {
+      console.log('[useStartCalculationOnLoad] Starting fresh calculation for:', config.calcId);
+    }
 
     startedRef.current = true;
 

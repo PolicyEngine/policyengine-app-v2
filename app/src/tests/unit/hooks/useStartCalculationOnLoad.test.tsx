@@ -141,7 +141,9 @@ describe('useStartCalculationOnLoad', () => {
     expect(mockStartCalculation).not.toHaveBeenCalled();
   });
 
-  it('should not start calculation when already computing', async () => {
+  it('should resume orchestrator when already computing (to poll API)', async () => {
+    // When loading a page with a computing calculation, we need to resume
+    // the orchestrator so it polls the API and updates cache
     const config = createMockConfig();
 
     renderHook(
@@ -157,7 +159,8 @@ describe('useStartCalculationOnLoad', () => {
 
     await new Promise(resolve => setTimeout(resolve, 100));
 
-    expect(mockStartCalculation).not.toHaveBeenCalled();
+    // Should start orchestrator to resume polling
+    expect(mockStartCalculation).toHaveBeenCalledWith(config);
   });
 
   it('should only start calculation once even with re-renders', async () => {
@@ -205,7 +208,7 @@ describe('useStartCalculationOnLoad', () => {
 
     await waitFor(() => {
       expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[useStartCalculationOnLoad] Starting calculation for:',
+        '[useStartCalculationOnLoad] Starting fresh calculation for:',
         config.calcId
       );
     });
@@ -292,10 +295,11 @@ describe('useStartCalculationOnLoad', () => {
     expect(consoleErrorSpy).not.toHaveBeenCalled();
   });
 
-  it('should not start if status changes to computing after mount', async () => {
+  it('should start immediately when initially computing (resume polling)', async () => {
+    // New behavior: start orchestrator even when computing (to resume polling)
     const config = createMockConfig();
 
-    const { rerender } = renderHook(
+    renderHook(
       ({ isComputing }) =>
         useStartCalculationOnLoad({
           enabled: true,
@@ -306,16 +310,7 @@ describe('useStartCalculationOnLoad', () => {
       { wrapper, initialProps: { isComputing: true } }
     );
 
-    // Wait a bit
-    await new Promise(resolve => setTimeout(resolve, 100));
-
-    // Should not start while computing
-    expect(mockStartCalculation).not.toHaveBeenCalled();
-
-    // Change to not computing
-    rerender({ isComputing: false });
-
-    // Should start now
+    // Should start immediately to resume polling
     await waitFor(() => {
       expect(mockStartCalculation).toHaveBeenCalledTimes(1);
     });

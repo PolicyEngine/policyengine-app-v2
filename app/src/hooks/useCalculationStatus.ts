@@ -1,16 +1,22 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, QueryObserver } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { calculationKeys } from '@/libs/queryKeys';
-import { calculationQueries } from '@/libs/queries/calculationQueries';
 import type { CalcStatus } from '@/types/calculation';
 import { useAggregatedCalculationStatus, type AggregatedCalcStatus } from './useAggregatedCalculationStatus';
 import { useSyntheticProgress } from './useSyntheticProgress';
 
 /**
  * Internal hook to read single calculation status from cache
- * Subscribes to calculation query updates
+ * Subscribes to calculation query updates via QueryObserver
  *
- * NOTE: This hook reads from queries started by CalcOrchestrator.
- * It reuses the existing query data without starting a new calculation.
+ * NOTE: This hook subscribes to cache updates from CalcOrchestrator.
+ * It does NOT poll the API - it only reacts to cache changes.
+ *
+ * HOW IT WORKS:
+ * 1. CalcOrchestrator has a QueryObserver that polls the API and updates cache
+ * 2. This hook has a QueryObserver that watches the cache for that same query key
+ * 3. When CalcOrchestrator updates cache → this hook's observer fires → component re-renders
+ * 4. No API polling here - just cache subscription
  *
  * Enhances status with client-side synthetic progress for better UX:
  * - Household: Shows smooth progress during 30-45s API call
@@ -28,51 +34,63 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   console.log(`[useCalculationStatus][${timestamp}] CALLED: calcId="${calcId}" targetType="${targetType}"`);
   console.log(`[useCalculationStatus][${timestamp}] Query key:`, JSON.stringify(queryKey));
 
-  // Check if query exists BEFORE calling useQuery
-  const queryState = queryClient.getQueryState(queryKey);
-  const allQueries = queryClient.getQueryCache().getAll();
+  // Initialize state with current cache value or initializing
+  const [status, setStatus] = useState<CalcStatus | undefined>(() => {
+    const cached = queryClient.getQueryData<CalcStatus>(queryKey);
+    if (cached) {
+      console.log(`[useCalculationStatus][${timestamp}] Initial cache hit:`, cached.status);
+      return cached;
+    }
 
-  console.log(`[useCalculationStatus][${timestamp}] Query exists in cache?`, !!queryState);
-  console.log(`[useCalculationStatus][${timestamp}] Query status:`, queryState?.status);
-  console.log(`[useCalculationStatus][${timestamp}] Query fetchStatus:`, queryState?.fetchStatus);
-  console.log(`[useCalculationStatus][${timestamp}] Total queries in cache:`, allQueries.length);
-  console.log(`[useCalculationStatus][${timestamp}] All query keys:`, allQueries.map(q => JSON.stringify(q.queryKey)));
-
-  // Check specifically for calculation queries
-  const calcQueries = allQueries.filter(q =>
-    Array.isArray(q.queryKey) && q.queryKey[0] === 'calculations'
-  );
-  console.log(`[useCalculationStatus][${timestamp}] Calculation queries in cache:`, calcQueries.length);
-  console.log(`[useCalculationStatus][${timestamp}] Calculation query keys:`, calcQueries.map(q => JSON.stringify(q.queryKey)));
-
-  // Provide a queryFn that reads from cache as fallback
-  // This prevents "No queryFn" errors while still allowing CalcOrchestrator to update the cache
-  const { data: status, isLoading } = useQuery<CalcStatus>({
-    queryKey,
-    queryFn: () => {
-      // Read from cache - CalcOrchestrator updates it
-      const cached = queryClient.getQueryData<CalcStatus>(queryKey);
-      if (cached) return cached;
-
-      // Return initializing state when no cache exists yet
-      // This prevents "No output found" from showing during initial page load
-      // while cache hydration or data fetching is in progress
-      return {
-        status: 'initializing' as const,
-        metadata: {
-          calcId,
-          targetType,
-          calcType: 'economy' as const,
-          startedAt: Date.now(),
-        },
-      };
-    },
-    enabled: !!calcId,
-    refetchInterval: false, // CalcOrchestrator manages polling, not this hook
+    console.log(`[useCalculationStatus][${timestamp}] No initial cache, returning initializing`);
+    return {
+      status: 'initializing' as const,
+      metadata: {
+        calcId,
+        targetType,
+        calcType: 'economy' as const,
+        startedAt: Date.now(),
+      },
+    };
   });
 
-  console.log(`[useCalculationStatus][${timestamp}] useQuery returned - isLoading:`, isLoading);
-  console.log(`[useCalculationStatus][${timestamp}] useQuery returned - status:`, status?.status);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Subscribe to cache updates via QueryObserver
+  useEffect(() => {
+    if (!calcId) return;
+
+    console.log(`[useCalculationStatus] Creating QueryObserver for ${calcId}`);
+
+    // Create observer that watches this query key
+    const observer = new QueryObserver<CalcStatus>(queryClient, {
+      queryKey,
+    });
+
+    // Subscribe to cache updates
+    const unsubscribe = observer.subscribe((result) => {
+      console.log(`[useCalculationStatus] Observer update for ${calcId}:`, result.data?.status);
+
+      if (result.data) {
+        setStatus(result.data);
+      }
+      setIsLoading(result.isLoading);
+    });
+
+    // Get current value immediately in case it was set while component was rendering
+    const current = queryClient.getQueryData<CalcStatus>(queryKey);
+    if (current) {
+      console.log(`[useCalculationStatus] Immediate cache value for ${calcId}:`, current.status);
+      setStatus(current);
+    }
+
+    return () => {
+      console.log(`[useCalculationStatus] Unsubscribing observer for ${calcId}`);
+      unsubscribe();
+    };
+  }, [queryClient, queryKey, calcId]);
+
+  console.log(`[useCalculationStatus][${timestamp}] Current status:`, status?.status);
   console.log(`[useCalculationStatus][${timestamp}] ========================================`);
 
   // Determine calculation type from metadata
