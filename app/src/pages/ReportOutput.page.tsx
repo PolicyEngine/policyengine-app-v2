@@ -219,6 +219,11 @@ export default function ReportOutputPage() {
       return <ErrorPage error={dataError || new Error('Report not found')} />;
     }
 
+    // Show loading if calculation status is still initializing (waiting for cache/data)
+    if (calcStatus.isInitializing) {
+      return <LoadingPage message="Loading calculation status..." />;
+    }
+
     // Show loading page if calculation is still running
     if (calcStatus.isComputing) {
       return (

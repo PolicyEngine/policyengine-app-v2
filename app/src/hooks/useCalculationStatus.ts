@@ -54,9 +54,11 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
       const cached = queryClient.getQueryData<CalcStatus>(queryKey);
       if (cached) return cached;
 
-      // Return idle state if no calculation has started yet
+      // Return initializing state when no cache exists yet
+      // This prevents "No output found" from showing during initial page load
+      // while cache hydration or data fetching is in progress
       return {
-        status: 'idle' as const,
+        status: 'initializing' as const,
         metadata: {
           calcId,
           targetType,
@@ -91,12 +93,17 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
     }
   );
 
+  const currentStatus = status?.status || 'initializing';
+
   return {
-    status: status?.status || 'idle',
-    // Treat isPending as "computing" for UX purposes
-    isComputing: status?.status === 'computing' || isLoading,
-    isComplete: status?.status === 'complete',
-    isError: status?.status === 'error',
+    status: currentStatus,
+
+    // State flags for common UI patterns
+    isInitializing: currentStatus === 'initializing' || isLoading,
+    isIdle: currentStatus === 'idle',
+    isComputing: currentStatus === 'computing' || isLoading,
+    isComplete: currentStatus === 'complete',
+    isError: currentStatus === 'error',
 
     // Use synthetic progress when available, otherwise use server data
     progress: needsSyntheticProgress ? synthetic.progress : status?.progress,

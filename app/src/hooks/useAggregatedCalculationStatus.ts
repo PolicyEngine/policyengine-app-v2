@@ -1,75 +1,138 @@
-import { useQueries } from '@tanstack/react-query';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import { useSyntheticProgress } from './useSyntheticProgress';
 
 /**
  * Aggregated status result for multiple calculations
- * Combines the status of N independent calculations into a single view
+ *
+ * WHY THIS EXISTS: Household reports run N separate calculations (one per simulation).
+ * For example, a report comparing 3 policies = 3 independent calculations.
+ * This interface combines their statuses into a single view for the UI.
+ *
+ * AGGREGATION RULES:
+ * - If ANY calc is in a "bad" state → overall is "bad" (error > computing > initializing)
+ * - If ALL calcs are complete → overall is complete
+ * - Otherwise → overall is idle
  */
 export interface AggregatedCalcStatus {
   /**
-   * Aggregated status:
-   * - 'computing': if ANY calculation is computing
-   * - 'complete': if ALL calculations are complete
-   * - 'error': if ANY calculation has error
-   * - 'idle': if all are idle or no calculations
+   * Overall status across all calculations (prioritizes problems):
+   *
+   * - 'initializing': At least one calculation is still initializing (don't show "No output found" yet)
+   * - 'computing': At least one calculation is running (show progress indicator)
+   * - 'complete': ALL calculations finished successfully (show all results)
+   * - 'error': At least one calculation failed (show error state)
+   * - 'idle': All calculations have loaded their state and none have started (show "No output found")
+   *
+   * Example: [initializing, complete, complete] → 'initializing' (wait for first to load)
+   * Example: [computing, complete, complete] → 'computing' (one still running)
+   * Example: [complete, complete, complete] → 'complete' (all done)
+   * Example: [idle, idle, idle] → 'idle' (none started)
    */
-  status: 'idle' | 'computing' | 'complete' | 'error';
+  status: 'initializing' | 'idle' | 'computing' | 'complete' | 'error';
 
   /**
-   * Individual calculation statuses
+   * Raw status objects for each individual calculation
+   *
+   * Example: For 3 simulations, this array has 3 CalcStatus objects.
+   * Useful for showing per-simulation progress or debugging.
    */
   calculations: CalcStatus[];
 
   /**
-   * Overall progress (average of all calculations)
+   * Average progress across all computing calculations (0-100)
+   *
+   * Example: [50%, 75%, 100%] → 75% overall
+   * Undefined if no calculations are reporting progress.
    */
   progress?: number;
 
   /**
-   * Whether any calculation is currently computing
+   * True if ANY calculation doesn't know its state yet
+   *
+   * Use this to show "Loading..." instead of "No output found"
+   * while waiting for cache hydration or initial data fetch.
+   */
+  isInitializing: boolean;
+
+  /**
+   * True if ALL calculations have confirmed they haven't started
+   *
+   * Only true after data loads and we KNOW nothing has been initiated.
+   * Use this to show "No output found" or "Start calculation" button.
+   */
+  isIdle: boolean;
+
+  /**
+   * True if ANY calculation is currently running
+   *
+   * Use this to show progress indicators, disable "Start" button,
+   * or prevent navigation away from the page.
    */
   isComputing: boolean;
 
   /**
-   * Whether all calculations are complete
+   * True if ALL calculations finished successfully
+   *
+   * Only true when every single calculation has completed.
+   * Use this to show final results and enable export/sharing.
    */
   isComplete: boolean;
 
   /**
-   * Whether any calculation has error
+   * True if ANY calculation failed
+   *
+   * Use this to show error UI and offer retry option.
    */
   isError: boolean;
 
   /**
-   * Error from first calculation that failed (if any)
+   * Error details from the first calculation that failed
+   *
+   * Contains error code, message, and whether retry is possible.
+   * Undefined if no calculations have errored.
    */
   error?: CalcStatus['error'];
 
   /**
-   * Combined message from all calculations
+   * Human-readable status message (combined from all calculations)
+   *
+   * Example: "Processing simulation 1; Simulation 2 queued (position 3)"
+   * Useful for showing detailed progress to users.
    */
   message?: string;
 
   /**
-   * Combined result from first complete calculation
-   * For household reports with multiple simulations, this returns the first result
+   * Result data from the first complete calculation
+   *
+   * NOTE: For household reports, each simulation has its own result.
+   * This returns just the first one - access `calculations` array
+   * directly if you need all results.
    */
   result?: any;
 
   /**
-   * Queue position (from first computing calculation)
+   * Queue position from the first queued calculation
+   *
+   * Example: If simulation 1 is at position 5 in queue, this is 5.
+   * Undefined if no calculations are queued.
    */
   queuePosition?: number;
 
   /**
-   * Estimated time remaining (from first computing calculation)
+   * Estimated seconds remaining from the first computing calculation
+   *
+   * Example: 45000 (45 seconds until completion)
+   * Undefined if no calculations report an estimate.
    */
   estimatedTimeRemaining?: number;
 
   /**
-   * Whether data is loading (always false for aggregated - data comes from cache)
+   * True if any underlying query is actively fetching data
+   *
+   * Usually false since calculations read from cache.
+   * True during initial fetch or manual refetch.
    */
   isLoading: boolean;
 }
@@ -90,6 +153,8 @@ export function useAggregatedCalculationStatus(
   calcIds: string[],
   targetType: 'report' | 'simulation'
 ): AggregatedCalcStatus {
+  const queryClient = useQueryClient();
+
   // Read status from all calculation queries
   const results = useQueries({
     queries: calcIds.map((calcId) => ({
@@ -97,9 +162,28 @@ export function useAggregatedCalculationStatus(
         targetType === 'report'
           ? calculationKeys.byReportId(calcId)
           : calculationKeys.bySimulationId(calcId),
+      queryFn: () => {
+        const queryKey = targetType === 'report'
+          ? calculationKeys.byReportId(calcId)
+          : calculationKeys.bySimulationId(calcId);
+
+        // Read from cache - CalcOrchestrator updates it
+        const cached = queryClient.getQueryData<CalcStatus>(queryKey);
+        if (cached) return cached;
+
+        // Return initializing state when no cache exists yet
+        return {
+          status: 'initializing' as const,
+          metadata: {
+            calcId,
+            targetType,
+            calcType: 'household' as const, // Aggregated status is typically for household
+            startedAt: Date.now(),
+          },
+        };
+      },
       enabled: !!calcId,
-      // Cache-only query - no queryFn
-      // Data is populated by CalcOrchestrator/Strategies
+      refetchInterval: false as const, // CalcOrchestrator manages polling
       staleTime: Infinity,
     })),
   });
@@ -130,17 +214,20 @@ export function useAggregatedCalculationStatus(
     }
   );
 
-  // If no calculations loaded yet, but queries are loading, show computing with synthetic progress
-  if (calculations.length === 0 && anyLoading) {
+  // Check if any are initializing
+  const hasInitializing = calculations.some((calc) => calc.status === 'initializing') ||
+    (calculations.length === 0 && anyLoading);
+
+  if (hasInitializing) {
     return {
-      status: 'computing',
-      calculations: [],
-      progress: synthetic.progress,
-      message: synthetic.message,
-      isComputing: true,
+      status: 'initializing',
+      calculations,
+      isInitializing: true,
+      isIdle: false,
+      isComputing: false,
       isComplete: false,
       isError: false,
-      isLoading: true,
+      isLoading: anyLoading,
     };
   }
 
@@ -149,6 +236,8 @@ export function useAggregatedCalculationStatus(
     return {
       status: 'idle',
       calculations: [],
+      isInitializing: false,
+      isIdle: true,
       isComputing: false,
       isComplete: false,
       isError: false,
@@ -163,6 +252,8 @@ export function useAggregatedCalculationStatus(
     return {
       status: 'error',
       calculations,
+      isInitializing: false,
+      isIdle: false,
       isComputing: false,
       isComplete: false,
       isError: true,
@@ -203,6 +294,8 @@ export function useAggregatedCalculationStatus(
       status: 'computing',
       calculations,
       progress,
+      isInitializing: false,
+      isIdle: false,
       isComputing: true,
       isComplete: false,
       isError: false,
@@ -222,6 +315,8 @@ export function useAggregatedCalculationStatus(
     return {
       status: 'complete',
       calculations,
+      isInitializing: false,
+      isIdle: false,
       isComputing: false,
       isComplete: true,
       isError: false,
@@ -234,6 +329,8 @@ export function useAggregatedCalculationStatus(
   return {
     status: 'idle',
     calculations,
+    isInitializing: false,
+    isIdle: true,
     isComputing: false,
     isComplete: false,
     isError: false,

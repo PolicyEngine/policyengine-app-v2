@@ -9,18 +9,58 @@ import { CalcMetadata } from './CalcMetadata';
 export type CalcResult = EconomyReportOutput | HouseholdData;
 
 /**
+ * Calculation status values
+ *
+ * State lifecycle and purposes:
+ *
+ * 1. **initializing**: We don't know the calculation state yet
+ *    - Purpose: Prevent premature "No output found" UI while determining actual state
+ *    - When: Cache hasn't hydrated yet, or query is fetching for the first time
+ *    - Why needed: Avoids race condition where hook renders before cache hydration completes,
+ *      which would incorrectly show "No output found" for completed reports
+ *    - UI: Show loading spinner (not "No output found")
+ *    - Transitions to: Any other state once data is available
+ *    - Example: User loads /report/123/overview → hook renders → cache hydrates → transitions to 'complete'
+ *
+ * 2. **idle**: We know for certain that no calculation has been started
+ *    - Purpose: Indicate a calculation truly hasn't been initiated (not just "we don't know yet")
+ *    - When: Page has loaded, data is available, but CalcOrchestrator was never called
+ *    - Why different from initializing: This is a KNOWN state (we checked and found nothing),
+ *      whereas initializing means we haven't checked yet
+ *    - UI: Show "No output found" or "Start calculation" button
+ *    - Transitions to: computing (when calculation starts)
+ *    - Example: User creates a new report but doesn't trigger calculation yet
+ *
+ * 3. **computing**: Calculation is actively running or queued
+ *    - Purpose: Show progress and prevent duplicate calculation requests
+ *    - When: API is processing the calculation
+ *    - UI: Show progress bar, queue position, estimated time
+ *    - Transitions to: complete, error
+ *
+ * 4. **complete**: Calculation finished successfully
+ *    - Purpose: Display results to user
+ *    - When: API returns results, or results are loaded from cache
+ *    - UI: Show charts, tables, analysis
+ *    - Transitions to: (terminal state - no further transitions)
+ *
+ * 5. **error**: Calculation failed
+ *    - Purpose: Show error message and allow retry
+ *    - When: API returns error, network failure, validation error
+ *    - UI: Show error message, retry button
+ *    - Transitions to: computing (on retry)
+ */
+export type CalcStatusValue = 'initializing' | 'idle' | 'computing' | 'complete' | 'error';
+
+/**
  * Unified calculation status interface
  * Works for both economy and household calculations
  */
 export interface CalcStatus {
   /**
    * Current status of the calculation
-   * - idle: Not yet started
-   * - computing: In progress
-   * - complete: Successfully finished
-   * - error: Failed
+   * See CalcStatusValue type documentation for detailed state descriptions
    */
-  status: 'idle' | 'computing' | 'complete' | 'error';
+  status: CalcStatusValue;
 
   /**
    * Progress percentage (0-100)

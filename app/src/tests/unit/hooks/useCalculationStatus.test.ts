@@ -25,16 +25,17 @@ describe('useCalculationStatus', () => {
   });
 
   describe('given no cached status', () => {
-    it('then returns idle state', async () => {
+    it('then returns initializing state', async () => {
       // When
       const { result } = renderHook(
         () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
         { wrapper }
       );
 
-      // Then - queryFn returns idle synchronously when no cache exists
+      // Then - queryFn returns initializing when no cache exists (prevents "No output found")
       await waitFor(() => {
-        expect(result.current.status).toBe('idle');
+        expect(result.current.status).toBe('initializing');
+        expect(result.current.isInitializing).toBe(true);
         expect(result.current.isComputing).toBe(false);
         expect(result.current.isComplete).toBe(false);
         expect(result.current.isError).toBe(false);
@@ -186,12 +187,13 @@ describe('useCalculationStatus', () => {
   });
 
   describe('given empty calcId', () => {
-    it('then disables query', () => {
+    it('then disables query and returns initializing', () => {
       // When
       const { result } = renderHook(() => useCalculationStatus('', 'report'), { wrapper });
 
-      // Then
-      expect(result.current.status).toBe('idle');
+      // Then - empty calcId disables query, fallback returns initializing
+      expect(result.current.status).toBe('initializing');
+      expect(result.current.isInitializing).toBe(true);
       expect(result.current.isLoading).toBe(false);
     });
   });

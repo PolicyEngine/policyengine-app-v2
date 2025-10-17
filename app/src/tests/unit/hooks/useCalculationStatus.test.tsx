@@ -60,10 +60,9 @@ describe('useCalculationStatus', () => {
         { wrapper }
       );
 
-      // Then
-      // Note: isLoading will be true initially (query is fetching with no data)
-      // which triggers synthetic progress and isComputing=true
-      expect(result.current.status).toBe('idle');
+      // Then - returns initializing when no cache exists
+      expect(result.current.status).toBe('initializing');
+      expect(result.current.isInitializing).toBe(true);
       expect(result.current.isComplete).toBe(false);
       expect(result.current.isError).toBe(false);
     });
@@ -272,12 +271,13 @@ describe('useCalculationStatus', () => {
   });
 
   describe('edge cases', () => {
-    test('given empty calcId then query is disabled', () => {
+    test('given empty calcId then query is disabled and returns initializing', () => {
       // When
       const { result } = renderHook(() => useCalculationStatus('', 'report'), { wrapper });
 
-      // Then
-      expect(result.current.status).toBe('idle');
+      // Then - returns initializing even when disabled
+      expect(result.current.status).toBe('initializing');
+      expect(result.current.isInitializing).toBe(true);
     });
   });
 
