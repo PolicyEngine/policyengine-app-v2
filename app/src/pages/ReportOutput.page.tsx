@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   IconChevronLeft,
   IconClock,
@@ -22,8 +22,11 @@ import {
 import { EconomyReportOutput } from '@/api/economy';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
+import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { Household, HouseholdData } from '@/types/ingredients/Household';
+import { CalcStartConfig } from '@/types/calculation';
 import ErrorPage from './report-output/ErrorPage';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
@@ -93,7 +96,67 @@ export default function ReportOutputPage() {
 
   const targetType = isHouseholdReport ? 'simulation' : 'report';
 
+  // Phase 4: Hydrate cache from persisted results first
+  // This prevents unnecessary recalculation for completed reports
+  useHydrateCalculationCache({
+    report,
+    outputType,
+  });
+
   const calcStatus = useCalculationStatus(calcIds, targetType);
+
+  // Phase 4: Build calculation config for auto-start
+  const calcConfig = useMemo(() => {
+    if (!report || !simulations?.[0]) {
+      return null;
+    }
+
+    const simulation1 = simulations[0];
+    const simulation2 = simulations[1] || null;
+
+    // Ensure report.id exists
+    if (!report.id) {
+      return null;
+    }
+
+    // Determine population based on type
+    const household = simulation1.populationType === 'household'
+      ? { id: simulation1.populationId, countryId: report.countryId, householdData: {} as any }
+      : null;
+
+    const geography = simulation1.populationType === 'geography'
+      ? {
+          id: `${report.countryId}-${simulation1.populationId}`,
+          countryId: report.countryId,
+          scope: 'national' as const,
+          geographyId: simulation1.populationId || '',
+        }
+      : null;
+
+    return {
+      calcId: report.id,
+      targetType: 'report' as const,
+      countryId: report.countryId,
+      simulations: {
+        simulation1: simulation1,
+        simulation2: simulation2,
+      },
+      populations: {
+        household1: household,
+        household2: null,
+        geography1: geography,
+        geography2: null,
+      },
+    } satisfies CalcStartConfig;
+  }, [report, simulations]);
+
+  // Phase 4: Auto-start calculation if needed (direct URL loads)
+  useStartCalculationOnLoad({
+    enabled: !!report && !!calcConfig,
+    config: calcConfig,
+    isComplete: calcStatus.isComplete,
+    isComputing: calcStatus.isComputing,
+  });
 
   // Prepare output data - wrap household data if needed
   let output: EconomyReportOutput | Household | null | undefined = undefined;
