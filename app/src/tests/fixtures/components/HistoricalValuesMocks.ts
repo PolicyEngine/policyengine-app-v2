@@ -183,3 +183,31 @@ export const EXPECTED_REFORM_NAME_WITH_LABEL = SAMPLE_POLICY_LABEL_CUSTOM;
 export const EXPECTED_REFORM_NAME_WITH_SHORT_LABEL = SAMPLE_POLICY_LABEL_SHORT;
 export const EXPECTED_REFORM_NAME_WITH_ID = `Policy #${SAMPLE_POLICY_ID_NUMERIC}`;
 export const EXPECTED_REFORM_NAME_WITH_SMALL_ID = `Policy #${SAMPLE_POLICY_ID_SMALL}`;
+
+// Error and edge case test data
+export const EMPTY_VALUES_COLLECTION = new ValueIntervalCollection([]);
+
+// Mock ValueIntervalCollection with mismatched data for error testing
+export class MockMismatchedValueCollection extends ValueIntervalCollection {
+  getAllStartDates(): string[] {
+    return ['2020-01-01', '2024-01-01'];
+  }
+
+  getAllValues(): (string | number | boolean)[] {
+    return [12000]; // Only one value when there are two dates
+  }
+}
+
+// Mock ValueIntervalCollection that throws errors
+export class MockErrorThrowingCollection extends ValueIntervalCollection {
+  getAllStartDates(): string[] {
+    throw new Error('Test error in getAllStartDates');
+  }
+
+  getAllValues(): (string | number | boolean)[] {
+    throw new Error('Test error in getAllValues');
+  }
+}
+
+// Expected error messages
+export const EXPECTED_NO_DATA_MESSAGE = 'No data available to display';
