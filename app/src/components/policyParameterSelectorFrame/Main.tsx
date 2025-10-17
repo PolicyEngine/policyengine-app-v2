@@ -2,6 +2,7 @@ import { useSelector } from 'react-redux';
 import { Container, Text, Title } from '@mantine/core';
 import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
 import ValueSetter from '@/components/policyParameterSelectorFrame/ValueSetter';
+import { selectActivePolicy } from '@/reducers/activeSelectors';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
@@ -20,21 +21,33 @@ interface PolicyParameterSelectorMainProps {
 
 export default function PolicyParameterSelectorMain(props: PolicyParameterSelectorMainProps) {
   const { param } = props;
-  const userDefinedPolicy = useSelector((state: any) => state.policy);
+  const activePolicy = useSelector(selectActivePolicy);
 
   const baseValues = new ValueIntervalCollection(param.values as ValuesList);
-  let reformValues = null;
+
+  // Always start reform with a copy of base values (reform line matches current law initially)
+  let reformValues = new ValueIntervalCollection(baseValues);
   let policyLabel = null;
   let policyId = null;
 
-  if (userDefinedPolicy && userDefinedPolicy.params) {
-    const paramToChart = getParameterByName(userDefinedPolicy, param.parameter);
-    reformValues = new ValueIntervalCollection(paramToChart?.values as ValuesList);
-    // Get policy metadata for chart labeling
-    policyLabel = userDefinedPolicy.label;
-    policyId = userDefinedPolicy.id;
-  } else {
-    reformValues = new ValueIntervalCollection(baseValues);
+  // If a policy exists, get metadata and check for user-defined parameter values
+  if (activePolicy) {
+    policyLabel = activePolicy.label;
+    policyId = activePolicy.id;
+
+    // Check if this specific parameter has been modified by the user
+    const paramToChart = getParameterByName(activePolicy, param.parameter);
+    if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
+      // Don't replace - instead, overlay user intervals on top of base values
+      const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
+
+      // Add each user interval to the reform (which already contains base values)
+      // addInterval() will properly handle overlaps and merge/split intervals as needed
+      for (const interval of userIntervals.getIntervals()) {
+        reformValues.addInterval(interval);
+      }
+    }
+    // If no values for this parameter yet, reformValues stays as baseValues (set above)
   }
 
   return (
