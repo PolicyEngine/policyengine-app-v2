@@ -113,7 +113,6 @@ export default function PolicyParameterSelectorValueSetterContainer(
         <Group align="flex-end" w="100%">
           <ValueSetterToRender {...valueSetterProps} />
           <ModeSelectorButton setMode={handleModeChange} />
-          <Text>TODO: Reset button</Text>
           <Button onClick={handleSubmit}>Add</Button>
         </Group>
       </Stack>
