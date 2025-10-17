@@ -1,11 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { HouseholdCalcStrategy } from '@/libs/calculations/strategies/HouseholdCalcStrategy';
-import { ProgressTracker } from '@/libs/calculations/ProgressTracker';
 import { mockHouseholdCalcParams } from '@/tests/fixtures/types/calculationFixtures';
 import {
   mockHouseholdSuccessResponse,
-  createMockProgressTracker,
-  STRATEGY_TEST_CONSTANTS,
 } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 
 // Mock the household API
@@ -15,12 +12,10 @@ vi.mock('@/api/householdCalculation', () => ({
 
 describe('HouseholdCalcStrategy', () => {
   let strategy: HouseholdCalcStrategy;
-  let mockProgressTracker: ReturnType<typeof createMockProgressTracker>;
   let mockFetchHouseholdCalculation: any;
 
   beforeEach(async () => {
-    mockProgressTracker = createMockProgressTracker();
-    strategy = new HouseholdCalcStrategy(mockProgressTracker as any);
+    strategy = new HouseholdCalcStrategy();
 
     const householdModule = await import('@/api/householdCalculation');
     mockFetchHouseholdCalculation = householdModule.fetchHouseholdCalculation as any;
@@ -45,51 +40,39 @@ describe('HouseholdCalcStrategy', () => {
       );
     });
 
-    it('given new calculation then registers with progress tracker', async () => {
+    it('given successful API call then returns complete status with result', async () => {
       // Given
       const params = mockHouseholdCalcParams();
-      mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
-
-      // When
-      await strategy.execute(params);
-
-      // Then
-      expect(mockProgressTracker.register).toHaveBeenCalled();
-    });
-
-    it('given new calculation then returns initial computing status', async () => {
-      // Given
-      const params = mockHouseholdCalcParams();
-      mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
+      const mockResult = mockHouseholdSuccessResponse();
+      mockFetchHouseholdCalculation.mockResolvedValue(mockResult);
 
       // When
       const result = await strategy.execute(params);
 
       // Then
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(0);
-      expect(result.message).toContain('Initializing');
-      expect(result.estimatedTimeRemaining).toBe(STRATEGY_TEST_CONSTANTS.HOUSEHOLD_ESTIMATED_DURATION_MS);
+      expect(result.status).toBe('complete');
+      expect(result.result).toEqual(mockResult);
+      expect(result.metadata.calcType).toBe('household');
+      expect(result.metadata.targetType).toBe('simulation');
     });
 
-    it('given active calculation then returns progress from tracker', async () => {
+    it('given API error then returns error status', async () => {
       // Given
       const params = mockHouseholdCalcParams();
-      mockProgressTracker.isActive.mockReturnValue(true);
-      mockProgressTracker.getProgress.mockReturnValue({
-        progress: 45,
-        message: 'Running policy simulation...',
-        estimatedTimeRemaining: STRATEGY_TEST_CONSTANTS.TEST_PROGRESS_TIME_MS,
+      const mockError = new Error('API request failed');
+      mockFetchHouseholdCalculation.mockRejectedValue(mockError);
+
+      // When
+      const result = await strategy.execute(params);
+
+      // Then
+      expect(result.status).toBe('error');
+      expect(result.error).toEqual({
+        code: 'HOUSEHOLD_CALC_FAILED',
+        message: 'API request failed',
+        retryable: true,
       });
-
-      // When
-      const result = await strategy.execute(params);
-
-      // Then
-      expect(result.status).toBe('computing');
-      expect(result.progress).toBe(45);
-      expect(result.message).toBe('Running policy simulation...');
-      expect(mockFetchHouseholdCalculation).not.toHaveBeenCalled();
+      expect(result.metadata.calcType).toBe('household');
     });
 
     it('given reform policy then uses it over baseline', async () => {
@@ -109,15 +92,32 @@ describe('HouseholdCalcStrategy', () => {
         '2' // reform policy
       );
     });
+
+    it('given non-Error rejection then wraps in CalcError', async () => {
+      // Given
+      const params = mockHouseholdCalcParams();
+      mockFetchHouseholdCalculation.mockRejectedValue('String error');
+
+      // When
+      const result = await strategy.execute(params);
+
+      // Then
+      expect(result.status).toBe('error');
+      expect(result.error).toEqual({
+        code: 'HOUSEHOLD_CALC_FAILED',
+        message: 'Household calculation failed',
+        retryable: true,
+      });
+    });
   });
 
   describe('getRefetchConfig', () => {
-    it('given config requested then returns 500ms refetch interval', () => {
+    it('given config requested then returns no refetch with infinite stale time', () => {
       // When
       const config = strategy.getRefetchConfig();
 
       // Then
-      expect(config.refetchInterval).toBe(STRATEGY_TEST_CONSTANTS.HOUSEHOLD_REFETCH_INTERVAL_MS);
+      expect(config.refetchInterval).toBe(false);
       expect(config.staleTime).toBe(Infinity);
     });
   });
@@ -134,27 +134,7 @@ describe('HouseholdCalcStrategy', () => {
       expect(result.status).toBe('complete');
       expect(result.result).toEqual(householdData);
       expect(result.metadata.calcType).toBe('household');
-    });
-  });
-
-  describe('getProgressTracker', () => {
-    it('given strategy instance then returns progress tracker', () => {
-      // When
-      const tracker = strategy.getProgressTracker();
-
-      // Then
-      expect(tracker).toBe(mockProgressTracker);
-    });
-  });
-
-  describe('constructor', () => {
-    it('given no tracker then creates default tracker', () => {
-      // When
-      const strategyWithDefaultTracker = new HouseholdCalcStrategy();
-
-      // Then
-      const tracker = strategyWithDefaultTracker.getProgressTracker();
-      expect(tracker).toBeInstanceOf(ProgressTracker);
+      expect(result.metadata.targetType).toBe('simulation');
     });
   });
 });

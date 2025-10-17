@@ -1,113 +1,104 @@
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { CalcParams, CalcStatus } from '@/types/calculation';
-import { ProgressTracker } from '../ProgressTracker';
 import { CalcExecutionStrategy, RefetchConfig } from './types';
 
 /**
  * Strategy for executing household calculations
- * Uses synthetic progress tracking for long-running operations
+ *
+ * WHY NO POLLING:
+ * Unlike economy calculations which have server-side queuing, household calculations
+ * execute synchronously and return the final result immediately. There's no need to
+ * poll for progress - we simply await the API call and return the complete result.
+ *
+ * This prevents unnecessary API hammering (previously polling every 500ms) and
+ * simplifies the flow: execute() → await API → return complete result → cache forever.
  */
 export class HouseholdCalcStrategy implements CalcExecutionStrategy {
-  private progressTracker: ProgressTracker;
-
-  constructor(progressTracker?: ProgressTracker) {
-    this.progressTracker = progressTracker || new ProgressTracker();
-  }
-
   /**
    * Execute a household calculation
-   * Returns immediately with computing status, tracks progress synthetically
+   * Calls API once, awaits result, returns complete status
+   *
+   * WHY AWAIT: Household API returns results synchronously (no queuing).
+   * We await the full calculation and return the final result immediately.
    */
   async execute(params: CalcParams): Promise<CalcStatus> {
-    console.log('[HouseholdCalcStrategy.execute] Starting with params:', params);
+    console.log('[HouseholdCalcStrategy.execute] Starting calculation with params:', params);
 
-    // Use calcId from params if available (will be set by orchestrator)
-    const calcId = (params as any).calcId || 'temp-household-calc';
-
-    // Check if already active
-    if (this.progressTracker.isActive(calcId)) {
-      console.log('[HouseholdCalcStrategy.execute] Calculation already active, returning progress');
-      const progress = this.progressTracker.getProgress(calcId);
-
-      if (progress) {
-        return {
-          status: 'computing',
-          progress: progress.progress,
-          message: progress.message,
-          estimatedTimeRemaining: progress.estimatedTimeRemaining,
-          metadata: {
-            calcId,
-            calcType: 'household',
-            targetType: 'report',
-            startedAt: Date.now(),
-          },
-        };
-      }
-    }
-
-    // Start new calculation
-    console.log('[HouseholdCalcStrategy.execute] Starting new calculation');
-
+    const calcId = params.calcId;
     const policyId = params.policyIds.reform || params.policyIds.baseline;
-    const promise = fetchHouseholdCalculation(
-      params.countryId,
-      params.populationId,
-      policyId
-    );
 
-    // Register with progress tracker
-    this.progressTracker.register(calcId, promise, 60000); // 60 second estimate
+    try {
+      // Call API once and await the full result
+      const result = await fetchHouseholdCalculation(
+        params.countryId,
+        params.populationId,
+        policyId
+      );
 
-    // Return initial computing status
-    return {
-      status: 'computing',
-      progress: 0,
-      message: 'Initializing calculation...',
-      estimatedTimeRemaining: 60000,
-      metadata: {
-        calcId,
-        calcType: 'household',
-        targetType: 'report',
-        startedAt: Date.now(),
-      },
-    };
+      console.log('[HouseholdCalcStrategy.execute] Calculation completed successfully');
+
+      // Return complete status with result
+      return {
+        status: 'complete',
+        result,
+        metadata: {
+          calcId,
+          calcType: 'household',
+          targetType: 'simulation', // Household calcs are simulation-level
+          startedAt: Date.now(),
+        },
+      };
+    } catch (error) {
+      console.error('[HouseholdCalcStrategy.execute] Calculation failed:', error);
+
+      // Return error status with proper CalcError
+      const errorMessage = error instanceof Error ? error.message : 'Household calculation failed';
+      return {
+        status: 'error',
+        error: {
+          code: 'HOUSEHOLD_CALC_FAILED',
+          message: errorMessage,
+          retryable: true, // Household calculations can be retried
+        },
+        metadata: {
+          calcId,
+          calcType: 'household',
+          targetType: 'simulation',
+          startedAt: Date.now(),
+        },
+      };
+    }
   }
 
   /**
    * Get refetch configuration for household calculations
-   * Refetches every 500ms to update synthetic progress
+   *
+   * WHY NO REFETCHING:
+   * Since execute() returns the complete result immediately, there's no need
+   * to refetch. We cache the result forever and never refetch unless explicitly
+   * invalidated by the user (e.g., "Run Again" button).
    */
   getRefetchConfig(): RefetchConfig {
     return {
-      refetchInterval: 500, // Update progress every 500ms
-      staleTime: Infinity,
+      refetchInterval: false, // Never refetch - result is final
+      staleTime: Infinity,     // Cache forever
     };
   }
 
   /**
    * Transform household API response to unified CalcStatus
-   * Note: Household calculations return data directly, not a status object
+   * Note: This is now handled directly in execute(), but kept for compatibility
    */
   transformResponse(apiResponse: unknown): CalcStatus {
-    // Household API returns HouseholdData directly on success
-    // This method is used when we need to wrap a completed result
     return {
       status: 'complete',
-      result: apiResponse as any, // HouseholdData type
+      result: apiResponse as any,
       metadata: {
         calcId: '',
         calcType: 'household',
-        targetType: 'report',
+        targetType: 'simulation',
         startedAt: Date.now(),
       },
     };
-  }
-
-  /**
-   * Get the progress tracker instance
-   * Useful for testing and external progress monitoring
-   */
-  getProgressTracker(): ProgressTracker {
-    return this.progressTracker;
   }
 }
