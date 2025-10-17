@@ -3,6 +3,12 @@ import { Stack, Text } from '@mantine/core';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { CHART_COLORS } from '@/constants/chartColors';
+import {
+  extendForDisplay,
+  filterValidChartDates,
+  getAllChartDates,
+  getChartBoundaryDates,
+} from '@/utils/chartDateUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
@@ -65,48 +71,40 @@ function getReformPolicyLabel(policy) {
   */
 
 export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
-  const { baseValuesCollection, reformValuesCollection } = props;
-  // const { baseMap, reformMap, parameter, policy, metadata } = props;
-  // const mobile = useMobile();
-  // const windowHeight = useWindowHeight();
+  const { param, baseValuesCollection, reformValuesCollection } = props;
 
-  // const paramChartWidth = useContext(ParamChartWidthContext);
+  // Step 1: Get base data and make a copy to avoid mutations
+  const x = [...baseValuesCollection.getAllStartDates()];
+  const y = [...baseValuesCollection.getAllValues()];
 
-  // Extend the last value to 2099 so that the line appears to extend to +inf in
-  // the chart
-  const extendForDisplay = (x: any[], y: any[]) => {
-    x.push('2099-12-31');
-    y.push(y[y.length - 1]);
-  };
-
-  const x = baseValuesCollection.getAllStartDates();
-  const y = baseValuesCollection.getAllValues();
+  // Step 2: Extend for display (adds 2099-12-31 to show visual infinity)
   extendForDisplay(x, y);
 
-  const reformedX = reformValuesCollection ? reformValuesCollection.getAllStartDates() : [];
-  const reformedY = reformValuesCollection ? reformValuesCollection.getAllValues() : [];
+  // Step 3: Get reform data (if exists) and make a copy
+  const reformedX = reformValuesCollection
+    ? [...reformValuesCollection.getAllStartDates()]
+    : [];
+  const reformedY = reformValuesCollection
+    ? [...reformValuesCollection.getAllValues()]
+    : [];
+
   if (reformValuesCollection) {
     extendForDisplay(reformedX, reformedY);
   }
 
-  // let xaxisValues = reformedX ? x.concat(reformedX) : x;
-  // xaxisValues = xaxisValues.filter((e) => e !== '0000-01-01' && e < '2099-12-31');
+  // Step 4: Calculate x-axis values for formatting
+  let xaxisValues = getAllChartDates(x, reformedX);
+  xaxisValues = filterValidChartDates(xaxisValues);
 
-  // xaxisValues.push(defaultStartDate);
-  // This value is used for preventing the chart from expanding
-  // beyond 10 years past the current date for policy changes
-  // defined until "forever" (i.e., 2100-12-31)
-  // xaxisValues.push(defaultPOTEndDate);
-  // const yaxisValues = reformedY ? y.concat(reformedY) : y;
-  // const xaxisFormat = getPlotlyAxisFormat("date", xaxisValues);
-  // const yaxisFormat = getPlotlyAxisFormat(param.unit, yaxisValues);
+  // Step 5: Add boundary dates to control chart window
+  const { minDate, maxDate } = getChartBoundaryDates();
+  xaxisValues.push(minDate);
+  xaxisValues.push(maxDate);
 
-  // const customData = y.map((value) => formatVariableValue(param, value, 2));
-  /*
-  const reformedCustomData = reformedY.map((value) =>
-    formatVariableValue(param, value, 2),
-  );
-  */
+  // Step 6: Calculate y-axis values
+  const yaxisValues = reformValuesCollection
+    ? [...y, ...reformedY]
+    : y;
 
   // TODO: Typing on Plotly is not good; improve the typing here
   return (
