@@ -56,7 +56,7 @@ async function updateReport(
   reportId: string,
   data: ReportSetOutputPayload
 ): Promise<ReportMetadata> {
-  const url = `${BASE_URL}/${countryId}/report`;
+  const url = `${BASE_URL}/${countryId}/report/${reportId}`;
 
   const res = await fetch(url, {
     method: 'PATCH',

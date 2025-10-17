@@ -1,53 +1,93 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
-import { selectAllSimulations } from '@/reducers/simulationsReducer';
+import { MOCK_USER_ID } from '@/constants';
+import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
+import { selectActiveSimulationPosition } from '@/reducers/reportReducer';
+import { updateSimulationAtPosition } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-import { Simulation } from '@/types/ingredients/Simulation';
 
 export default function ReportSelectExistingSimulationFrame({ onNavigate }: FlowComponentProps) {
-  const [selectedSimulation, setSelectedSimulation] = useState<Simulation | null>(null);
+  const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
+  const dispatch = useDispatch();
 
-  // TODO: This component should fetch the user's saved simulations from an API or session storage,
-  // not from the active simulations in the Redux store. The current implementation is a placeholder
-  // that incorrectly uses the 2 working simulations from the store.
-  //
-  // Proper implementation should:
-  // 1. Fetch list of user's saved simulations from API/storage on mount
-  // 2. Display those saved simulations in the list
-  // 3. When selected, copy the saved simulation's configuration to the active position
-  // 4. Use selectActiveSimulationPosition from reportReducer to know which position to update
-  // 5. Use updateSimulationAtPosition or createSimulationAtPosition to set the selected simulation
+  // Get the active simulation position from report reducer
+  const activeSimulationPosition = useSelector((state: RootState) =>
+    selectActiveSimulationPosition(state)
+  );
 
-  // TEMPORARY: Get all simulations from the store (should be from API)
-  const simulations = useSelector((state: RootState) => selectAllSimulations(state));
+  const { data, isLoading, isError, error } = useUserSimulations(userId);
+  const [localSimulation, setLocalSimulation] = useState<EnhancedUserSimulation | null>(null);
 
-  // Filter to only show fully configured simulations
-  const configuredSimulations = simulations.filter((sim) => sim.policyId && sim.populationId);
+  console.log('Simulation Data:', data);
+  console.log('Simulation Loading:', isLoading);
+  console.log('Simulation Error:', isError);
+  console.log('Simulation Error Message:', error);
 
   function canProceed() {
-    return selectedSimulation !== null;
+    if (!localSimulation) {
+      return false;
+    }
+    return localSimulation.simulation?.id !== null && localSimulation.simulation?.id !== undefined;
   }
 
-  function handleSimulationSelect(simulation: Simulation) {
-    setSelectedSimulation(simulation);
-  }
-
-  function handleSubmit() {
-    if (!selectedSimulation) {
+  function handleSimulationSelect(enhancedSimulation: EnhancedUserSimulation) {
+    if (!enhancedSimulation) {
       return;
     }
 
-    // TODO: Store the selected simulation for the report
-    // This should update the simulation at the active position from reportReducer
-    console.log('Selected simulation:', selectedSimulation);
+    setLocalSimulation(enhancedSimulation);
+  }
+
+  function handleSubmit() {
+    if (!localSimulation || !localSimulation.simulation) {
+      return;
+    }
+
+    console.log('Submitting Simulation in handleSubmit:', localSimulation);
+
+    // Update the simulation at the active position from report reducer
+    dispatch(
+      updateSimulationAtPosition({
+        position: activeSimulationPosition,
+        updates: {
+          ...localSimulation.simulation,
+          label: localSimulation.userSimulation?.label || localSimulation.simulation.label || '',
+        },
+      })
+    );
 
     onNavigate('next');
   }
 
-  if (configuredSimulations.length === 0) {
+  const userSimulations = data || [];
+
+  console.log('User Simulations:', userSimulations);
+
+  // TODO: For all of these, refactor into something more reusable
+  if (isLoading) {
+    return (
+      <FlowView
+        title="Select an Existing Simulation"
+        content={<Text>Loading simulations...</Text>}
+        buttonPreset="none"
+      />
+    );
+  }
+
+  if (isError) {
+    return (
+      <FlowView
+        title="Select an Existing Simulation"
+        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        buttonPreset="none"
+      />
+    );
+  }
+
+  if (userSimulations.length === 0) {
     return (
       <FlowView
         title="Select an Existing Simulation"
@@ -57,29 +97,40 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     );
   }
 
-  // Build card list items from simulations
-  const simulationCardItems = configuredSimulations
-    .slice(0, 10) // Display only the first 10 simulations
-    .map((simulation) => {
+  // Build card list items from user simulations
+  const simulationCardItems = userSimulations
+    .filter((enhancedSim) => enhancedSim.simulation?.id) // Only include simulations with loaded data
+    .slice(0, 5) // Display only the first 5 simulations
+    .map((enhancedSim) => {
+      const simulation = enhancedSim.simulation!;
       let title = '';
       let subtitle = '';
 
-      if (simulation.label) {
-        title = simulation.label;
-        subtitle = `Policy #${simulation.policyId} • Population #${simulation.populationId}`;
-      } else if (simulation.id) {
-        title = `Simulation #${simulation.id}`;
-        subtitle = `Policy #${simulation.policyId} • Population #${simulation.populationId}`;
+      if (enhancedSim.userSimulation?.label) {
+        title = enhancedSim.userSimulation.label;
+        subtitle = `Simulation #${simulation.id}`;
       } else {
-        title = 'Unnamed Simulation';
-        subtitle = `Policy #${simulation.policyId} • Population #${simulation.populationId}`;
+        title = `Simulation #${simulation.id}`;
+      }
+
+      // Add policy and population info to subtitle if available
+      const policyLabel = enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
+      const populationLabel =
+        enhancedSim.userHousehold?.label ||
+        enhancedSim.geography?.name ||
+        simulation.populationId;
+
+      if (policyLabel && populationLabel) {
+        subtitle = subtitle
+          ? `${subtitle} • Policy: ${policyLabel} • Population: ${populationLabel}`
+          : `Policy: ${policyLabel} • Population: ${populationLabel}`;
       }
 
       return {
         title,
         subtitle,
-        onClick: () => handleSimulationSelect(simulation),
-        isSelected: selectedSimulation?.id === simulation.id,
+        onClick: () => handleSimulationSelect(enhancedSim),
+        isSelected: localSimulation?.simulation?.id === simulation.id,
       };
     });
 
