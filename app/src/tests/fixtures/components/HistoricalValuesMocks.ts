@@ -170,3 +170,16 @@ export const EXPECTED_BASE_TRACE = {
   mode: 'lines+markers',
   lineShape: 'hv',
 };
+
+// Policy label test data
+export const SAMPLE_POLICY_LABEL_CUSTOM = 'Universal Basic Income';
+export const SAMPLE_POLICY_LABEL_SHORT = 'UBI';
+export const SAMPLE_POLICY_ID_NUMERIC = 12345;
+export const SAMPLE_POLICY_ID_SMALL = 7;
+
+// Expected reform trace names based on policy data
+export const EXPECTED_REFORM_NAME_DEFAULT = 'Reform';
+export const EXPECTED_REFORM_NAME_WITH_LABEL = SAMPLE_POLICY_LABEL_CUSTOM;
+export const EXPECTED_REFORM_NAME_WITH_SHORT_LABEL = SAMPLE_POLICY_LABEL_SHORT;
+export const EXPECTED_REFORM_NAME_WITH_ID = `Policy #${SAMPLE_POLICY_ID_NUMERIC}`;
+export const EXPECTED_REFORM_NAME_WITH_SMALL_ID = `Policy #${SAMPLE_POLICY_ID_SMALL}`;
