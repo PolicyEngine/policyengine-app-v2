@@ -2,11 +2,16 @@ import { useQuery } from '@tanstack/react-query';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import { useAggregatedCalculationStatus, type AggregatedCalcStatus } from './useAggregatedCalculationStatus';
+import { useSyntheticProgress } from './useSyntheticProgress';
 
 /**
  * Internal hook to read single calculation status from cache
  * Does not fetch - only reads existing status from cache
  * Auto-subscribes to cache updates from background calculation queries
+ *
+ * Enhances status with client-side synthetic progress for better UX:
+ * - Household: Shows smooth progress during 30-45s API call
+ * - Economy: Blends server progress with synthetic smoothing
  */
 function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simulation') {
   const queryKey =
@@ -22,13 +27,36 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
     enabled: !!calcId,
   });
 
+  // Determine calculation type from metadata
+  const calcType = status?.metadata?.calcType || 'household';
+
+  // Activate synthetic progress when:
+  // - Query is loading (isPending for household - long-running API call)
+  // - OR status is computing (for economy - queued/processing)
+  const needsSyntheticProgress = isLoading || status?.status === 'computing';
+
+  // Generate synthetic progress
+  const synthetic = useSyntheticProgress(
+    needsSyntheticProgress,
+    calcType,
+    {
+      queuePosition: status?.queuePosition,
+      estimatedTimeRemaining: status?.estimatedTimeRemaining,
+    }
+  );
+
   return {
     status: status?.status || 'idle',
-    isComputing: status?.status === 'computing',
+    // Treat isPending as "computing" for UX purposes
+    isComputing: status?.status === 'computing' || isLoading,
     isComplete: status?.status === 'complete',
     isError: status?.status === 'error',
-    progress: status?.progress,
-    message: status?.message,
+
+    // Use synthetic progress when available, otherwise use server data
+    progress: needsSyntheticProgress ? synthetic.progress : status?.progress,
+    message: needsSyntheticProgress ? synthetic.message : status?.message,
+
+    // Keep server data available
     queuePosition: status?.queuePosition,
     estimatedTimeRemaining: status?.estimatedTimeRemaining,
     result: status?.result,

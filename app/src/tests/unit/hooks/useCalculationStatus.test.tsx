@@ -1,7 +1,7 @@
 import React from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
@@ -14,6 +14,28 @@ import {
   mockCalcStatusComplete,
   mockCalcStatusError,
 } from '@/tests/fixtures/types/calculationFixtures';
+
+// Mock the synthetic progress hook
+vi.mock('@/hooks/useSyntheticProgress', () => ({
+  useSyntheticProgress: vi.fn((isActive, calcType) => {
+    if (!isActive) {
+      return { progress: 0, message: '' };
+    }
+    return {
+      progress: calcType === 'household' ? 45 : 12,
+      message: calcType === 'household' ? 'Running policy simulation...' : 'Loading population data...',
+    };
+  }),
+  getProgressMessage: vi.fn(),
+  SYNTHETIC_PROGRESS_CONFIG: {
+    HOUSEHOLD_DURATION_MS: 45000,
+    ECONOMY_DURATION_MS: 720000,
+    UPDATE_INTERVAL_MS: 500,
+    MAX_PROGRESS: 95,
+    SERVER_WEIGHT: 0.7,
+    SYNTHETIC_WEIGHT: 0.3,
+  },
+}));
 
 describe('useCalculationStatus', () => {
   let queryClient: ReturnType<typeof createTestQueryClient>;
@@ -39,8 +61,9 @@ describe('useCalculationStatus', () => {
       );
 
       // Then
+      // Note: isLoading will be true initially (query is fetching with no data)
+      // which triggers synthetic progress and isComputing=true
       expect(result.current.status).toBe('idle');
-      expect(result.current.isComputing).toBe(false);
       expect(result.current.isComplete).toBe(false);
       expect(result.current.isError).toBe(false);
     });
@@ -72,8 +95,10 @@ describe('useCalculationStatus', () => {
         expect(result.current.isComputing).toBe(true);
         expect(result.current.isComplete).toBe(false);
         expect(result.current.isError).toBe(false);
-        expect(result.current.progress).toBe(calcStatus.progress);
-        expect(result.current.message).toBe(calcStatus.message);
+        // Synthetic progress overrides server progress (mocked to return 12 for economy)
+        expect(result.current.progress).toBe(12);
+        expect(result.current.message).toBe('Loading population data...');
+        // Server data still available
         expect(result.current.queuePosition).toBe(calcStatus.queuePosition);
         expect(result.current.estimatedTimeRemaining).toBe(calcStatus.estimatedTimeRemaining);
       });
@@ -253,6 +278,115 @@ describe('useCalculationStatus', () => {
 
       // Then
       expect(result.current.status).toBe('idle');
+    });
+  });
+
+  describe('synthetic progress - Phase 2', () => {
+    test('given query is loading then shows synthetic progress', async () => {
+      // Given - Query is loading (no data in cache), simulating pending household calculation
+      // When
+      const { result } = renderHook(
+        () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_SIMULATION_ID, 'simulation'),
+        { wrapper }
+      );
+
+      // Then - isLoading true, treated as computing with synthetic progress
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(true);
+        expect(result.current.isComputing).toBe(true); // isPending treated as computing
+        expect(result.current.progress).toBe(45); // Mocked synthetic progress
+        expect(result.current.message).toBe('Running policy simulation...'); // Mocked synthetic message
+      });
+    });
+
+    test('given economy computing status then uses synthetic progress', async () => {
+      // Given
+      const calcStatus = mockCalcStatusComputing({
+        metadata: {
+          calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
+          calcType: 'economy',
+          targetType: 'report',
+          startedAt: Date.now(),
+        },
+        queuePosition: 3,
+      });
+      queryClient.setQueryData<CalcStatus>(
+        calculationKeys.byReportId(HOOK_TEST_CONSTANTS.TEST_REPORT_ID),
+        calcStatus
+      );
+
+      // When
+      const { result } = renderHook(
+        () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
+        { wrapper }
+      );
+
+      // Then - synthetic progress overrides server progress
+      await waitFor(() => {
+        expect(result.current.isComputing).toBe(true);
+        expect(result.current.progress).toBe(12); // Mocked synthetic progress for economy
+        expect(result.current.message).toBe('Loading population data...'); // Mocked synthetic message
+        // Server data still available
+        expect(result.current.queuePosition).toBe(3);
+      });
+    });
+
+    test('given household computing status then uses synthetic progress', async () => {
+      // Given
+      const calcStatus = mockCalcStatusComputing({
+        metadata: {
+          calcId: HOOK_TEST_CONSTANTS.TEST_SIMULATION_ID,
+          calcType: 'household',
+          targetType: 'simulation',
+          startedAt: Date.now(),
+        },
+      });
+      queryClient.setQueryData<CalcStatus>(
+        calculationKeys.bySimulationId(HOOK_TEST_CONSTANTS.TEST_SIMULATION_ID),
+        calcStatus
+      );
+
+      // When
+      const { result } = renderHook(
+        () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_SIMULATION_ID, 'simulation'),
+        { wrapper }
+      );
+
+      // Then
+      await waitFor(() => {
+        expect(result.current.isComputing).toBe(true);
+        expect(result.current.progress).toBe(45); // Mocked synthetic progress for household
+        expect(result.current.message).toBe('Running policy simulation...');
+      });
+    });
+
+    test('given complete status then does not use synthetic progress', async () => {
+      // Given
+      const calcStatus = mockCalcStatusComplete({
+        metadata: {
+          calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
+          calcType: 'economy',
+          targetType: 'report',
+          startedAt: Date.now(),
+        },
+      });
+      queryClient.setQueryData<CalcStatus>(
+        calculationKeys.byReportId(HOOK_TEST_CONSTANTS.TEST_REPORT_ID),
+        calcStatus
+      );
+
+      // When
+      const { result } = renderHook(
+        () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
+        { wrapper }
+      );
+
+      // Then - no synthetic progress (would be 0 from mock when inactive)
+      await waitFor(() => {
+        expect(result.current.isComplete).toBe(true);
+        expect(result.current.progress).toBeUndefined(); // No synthetic progress
+        expect(result.current.message).toBeUndefined();
+      });
     });
   });
 });

@@ -1,6 +1,7 @@
 import { useQueries } from '@tanstack/react-query';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
+import { useSyntheticProgress } from './useSyntheticProgress';
 
 /**
  * Aggregated status result for multiple calculations
@@ -108,7 +109,42 @@ export function useAggregatedCalculationStatus(
     .map((result) => result.data as CalcStatus | undefined)
     .filter((status): status is CalcStatus => status !== undefined);
 
-  // If no calculations, return idle
+  // Check if any queries are loading (for household calculations that are pending)
+  const anyLoading = results.some((result) => result.isLoading);
+
+  // Determine calculation type from first available metadata
+  const calcType = calculations.length > 0
+    ? calculations[0]?.metadata?.calcType || 'household'
+    : 'household';
+
+  // Activate synthetic progress when any query is loading or any status is computing
+  const needsSyntheticProgress = anyLoading || calculations.some((calc) => calc.status === 'computing');
+
+  // Generate synthetic progress
+  const synthetic = useSyntheticProgress(
+    needsSyntheticProgress,
+    calcType,
+    {
+      queuePosition: calculations.find((calc) => calc.queuePosition)?.queuePosition,
+      estimatedTimeRemaining: calculations.find((calc) => calc.estimatedTimeRemaining)?.estimatedTimeRemaining,
+    }
+  );
+
+  // If no calculations loaded yet, but queries are loading, show computing with synthetic progress
+  if (calculations.length === 0 && anyLoading) {
+    return {
+      status: 'computing',
+      calculations: [],
+      progress: synthetic.progress,
+      message: synthetic.message,
+      isComputing: true,
+      isComplete: false,
+      isError: false,
+      isLoading: true,
+    };
+  }
+
+  // If no calculations and not loading, return idle
   if (calculations.length === 0) {
     return {
       status: 'idle',
@@ -135,23 +171,30 @@ export function useAggregatedCalculationStatus(
     };
   }
 
-  // Check if any are computing
-  const hasComputing = calculations.some((calc) => calc.status === 'computing');
+  // Check if any are computing or loading
+  const hasComputing = calculations.some((calc) => calc.status === 'computing') || anyLoading;
   if (hasComputing) {
-    // Calculate average progress
-    const progressValues = calculations
-      .filter((calc) => calc.status === 'computing' && calc.progress !== undefined)
-      .map((calc) => calc.progress!);
+    // Use synthetic progress when needed, otherwise calculate average from server data
+    const progress = needsSyntheticProgress
+      ? synthetic.progress
+      : (() => {
+          const progressValues = calculations
+            .filter((calc) => calc.status === 'computing' && calc.progress !== undefined)
+            .map((calc) => calc.progress!);
+          return progressValues.length > 0
+            ? progressValues.reduce((sum, p) => sum + p, 0) / progressValues.length
+            : undefined;
+        })();
 
-    const avgProgress =
-      progressValues.length > 0
-        ? progressValues.reduce((sum, p) => sum + p, 0) / progressValues.length
-        : undefined;
-
-    // Combine messages
-    const messages = calculations
-      .filter((calc) => calc.status === 'computing' && calc.message)
-      .map((calc) => calc.message!);
+    // Use synthetic message when needed, otherwise combine server messages
+    const message = needsSyntheticProgress
+      ? synthetic.message
+      : (() => {
+          const messages = calculations
+            .filter((calc) => calc.status === 'computing' && calc.message)
+            .map((calc) => calc.message!);
+          return messages.length > 0 ? messages.join('; ') : undefined;
+        })();
 
     // Get queue position and estimated time from first computing calculation
     const firstComputing = calculations.find((calc) => calc.status === 'computing');
@@ -159,14 +202,14 @@ export function useAggregatedCalculationStatus(
     return {
       status: 'computing',
       calculations,
-      progress: avgProgress,
+      progress,
       isComputing: true,
       isComplete: false,
       isError: false,
-      message: messages.length > 0 ? messages.join('; ') : undefined,
+      message,
       queuePosition: firstComputing?.queuePosition,
       estimatedTimeRemaining: firstComputing?.estimatedTimeRemaining,
-      isLoading: false,
+      isLoading: anyLoading,
     };
   }
 
