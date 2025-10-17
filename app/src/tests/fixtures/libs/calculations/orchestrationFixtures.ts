@@ -118,10 +118,12 @@ export const createMockQueryClient = (): QueryClient => {
     invalidateQueries: vi.fn(),
     getQueryData: vi.fn(),
     setQueryData: vi.fn(),
+    getQueryState: vi.fn(),
     defaultQueryOptions: vi.fn().mockReturnValue({}),
     getQueryCache: vi.fn().mockReturnValue({
       find: vi.fn(),
       findAll: vi.fn(),
+      getAll: vi.fn().mockReturnValue([]),
     }),
     getMutationCache: vi.fn().mockReturnValue({
       find: vi.fn(),

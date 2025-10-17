@@ -35,79 +35,60 @@ export class CalcOrchestrator {
     console.log(`[CalcOrchestrator][${timestamp}] Params calcType:`, params.calcType);
 
     // Create query options based on target type
-    // Register query defaults so useQuery can pick up the configuration
-    if (config.targetType === 'report') {
-      const queryOptions = calculationQueries.forReport(config.calcId, metadata, params);
-      console.log(`[CalcOrchestrator][${timestamp}] Query key:`, JSON.stringify(queryOptions.queryKey));
-      console.log(`[CalcOrchestrator][${timestamp}] Has queryFn?`, typeof queryOptions.queryFn === 'function');
+    const queryOptions = config.targetType === 'report'
+      ? calculationQueries.forReport(config.calcId, metadata, params)
+      : calculationQueries.forSimulation(config.calcId, metadata, params);
 
-      // Register the query defaults so any useQuery with this key gets the queryFn and refetch config
-      this.queryClient.setQueryDefaults(queryOptions.queryKey, {
-        queryFn: queryOptions.queryFn,
-        refetchInterval: queryOptions.refetchInterval,
-        staleTime: queryOptions.staleTime,
-      // Use "as any" to bypass QueryOptions typing issues
-      } as any);
+    console.log(`[CalcOrchestrator][${timestamp}] Query key:`, JSON.stringify(queryOptions.queryKey));
+    console.log(`[CalcOrchestrator][${timestamp}] Has queryFn?`, typeof queryOptions.queryFn === 'function');
 
-      console.log(`[CalcOrchestrator][${timestamp}] BEFORE fetchQuery: ${Date.now()}`);
-      await this.queryClient.fetchQuery(queryOptions);
-      console.log(`[CalcOrchestrator][${timestamp}] AFTER fetchQuery: ${Date.now()}`);
+    // Execute the initial query to get status
+    console.log(`[CalcOrchestrator][${timestamp}] BEFORE initial fetch: ${Date.now()}`);
+    const initialStatus = await queryOptions.queryFn();
+    console.log(`[CalcOrchestrator][${timestamp}] AFTER initial fetch: ${Date.now()}`);
 
-      // Check if query was registered
-      const queryState = this.queryClient.getQueryState(queryOptions.queryKey);
-      console.log(`[CalcOrchestrator][${timestamp}] Query exists after prefetch?`, !!queryState);
-      console.log(`[CalcOrchestrator][${timestamp}] Query status:`, queryState?.status);
-      console.log(`[CalcOrchestrator][${timestamp}] Query fetchStatus:`, queryState?.fetchStatus);
-    } else {
-      const queryOptions = calculationQueries.forSimulation(config.calcId, metadata, params);
-      console.log(`[CalcOrchestrator][${timestamp}] Query key:`, JSON.stringify(queryOptions.queryKey));
-      console.log(`[CalcOrchestrator][${timestamp}] Has queryFn?`, typeof queryOptions.queryFn === 'function');
+    // Directly set the status in cache
+    this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);
+    console.log(`[CalcOrchestrator][${timestamp}] Set initial status in cache`);
 
-      // Register the query defaults so any useQuery with this key gets the queryFn and refetch config
-      this.queryClient.setQueryDefaults(queryOptions.queryKey, {
-        queryFn: queryOptions.queryFn,
-        refetchInterval: queryOptions.refetchInterval,
-        staleTime: queryOptions.staleTime,
-      } as any);
-
-      console.log(`[CalcOrchestrator][${timestamp}] BEFORE fetchQuery: ${Date.now()}`);
-      await this.queryClient.fetchQuery(queryOptions);
-      console.log(`[CalcOrchestrator][${timestamp}] AFTER fetchQuery: ${Date.now()}`);
-
-      // Check if query was registered
-      const queryState = this.queryClient.getQueryState(queryOptions.queryKey);
-      console.log(`[CalcOrchestrator][${timestamp}] Query exists after prefetch?`, !!queryState);
-      console.log(`[CalcOrchestrator][${timestamp}] Query status:`, queryState?.status);
-      console.log(`[CalcOrchestrator][${timestamp}] Query fetchStatus:`, queryState?.fetchStatus);
-    }
+    // Check if query was registered
+    const queryState = this.queryClient.getQueryState(queryOptions.queryKey);
+    console.log(`[CalcOrchestrator][${timestamp}] Query exists after cache set?`, !!queryState);
+    console.log(`[CalcOrchestrator][${timestamp}] Query status:`, queryState?.status);
+    console.log(`[CalcOrchestrator][${timestamp}] Query data:`, queryState?.data);
 
     // Log all queries in cache
     const allQueries = this.queryClient.getQueryCache().getAll();
     console.log(`[CalcOrchestrator][${timestamp}] Total queries in cache:`, allQueries.length);
     console.log(`[CalcOrchestrator][${timestamp}] All query keys:`, allQueries.map(q => JSON.stringify(q.queryKey)));
 
-    // Subscribe to completion
-    this.subscribeToCompletion(config.calcId, metadata, config.countryId);
+    // Start polling and subscribe to completion
+    this.startPolling(queryOptions, metadata, config.countryId);
 
     console.log(`[CalcOrchestrator][${timestamp}] END startCalculation`);
     console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
   }
 
   /**
-   * Subscribe to query updates and persist when complete
+   * Start polling for calculation updates using QueryObserver
+   * Manages its own polling lifecycle and updates cache
    */
-  private subscribeToCompletion(
-    calcId: string,
+  private startPolling(
+    queryOptions: ReturnType<typeof calculationQueries.forReport | typeof calculationQueries.forSimulation>,
     metadata: CalcMetadata,
     countryId: string
   ): void {
-    const queryKey =
-      metadata.targetType === 'report'
-        ? calculationQueries.forReport(calcId, metadata, {} as any).queryKey
-        : calculationQueries.forSimulation(calcId, metadata, {} as any).queryKey;
+    const { queryKey, queryFn, refetchInterval } = queryOptions;
 
+    console.log(`[CalcOrchestrator] Starting polling for ${metadata.calcId}`);
+
+    // Create observer with queryFn and refetch config
     const observer = new QueryObserver(this.queryClient, {
       queryKey,
+      queryFn,
+      refetchInterval: (typeof refetchInterval === 'function'
+        ? refetchInterval
+        : refetchInterval || 2000) as any,
     });
 
     const unsubscribe = observer.subscribe((result) => {
@@ -118,7 +99,7 @@ export class CalcOrchestrator {
       }
 
       console.log(
-        `[CalcOrchestrator] Status update for ${calcId}: ${status.status} (progress: ${status.progress ?? 'N/A'}%)`
+        `[CalcOrchestrator] Status update for ${metadata.calcId}: ${status.status} (progress: ${status.progress ?? 'N/A'}%)`
       );
 
       // Handle completion

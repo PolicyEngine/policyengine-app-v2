@@ -90,9 +90,13 @@ export default function ReportOutputPage() {
   // - Economy reports: Pass single report ID → reads single calculation
   const isHouseholdReport = outputType === 'household';
 
-  const calcIds = isHouseholdReport
-    ? simulations?.map(s => s.id).filter((id): id is string => !!id) || []
-    : report?.id ? String(report.id) : '';
+  const calcIds = useMemo(() => {
+    if (isHouseholdReport) {
+      return simulations?.map(s => s.id).filter((id): id is string => !!id) || [];
+    }
+    // Return null instead of empty string to prevent invalid queries
+    return report?.id ? String(report.id) : null;
+  }, [isHouseholdReport, simulations, report?.id]);
 
   const targetType = isHouseholdReport ? 'simulation' : 'report';
 
@@ -103,7 +107,15 @@ export default function ReportOutputPage() {
     outputType,
   });
 
-  const calcStatus = useCalculationStatus(calcIds, targetType);
+  // Only call hook when we have valid calcIds
+  const shouldFetchCalcStatus = isHouseholdReport
+    ? (calcIds as string[]).length > 0
+    : calcIds !== null;
+
+  const calcStatus = useCalculationStatus(
+    shouldFetchCalcStatus ? calcIds! : (isHouseholdReport ? [] : ''),
+    targetType
+  );
 
   // Phase 4: Build calculation config for auto-start
   const calcConfig = useMemo(() => {

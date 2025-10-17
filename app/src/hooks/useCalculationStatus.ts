@@ -45,12 +45,28 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   console.log(`[useCalculationStatus][${timestamp}] Calculation queries in cache:`, calcQueries.length);
   console.log(`[useCalculationStatus][${timestamp}] Calculation query keys:`, calcQueries.map(q => JSON.stringify(q.queryKey)));
 
-  // IMPORTANT: queryFn and refetch config come from setQueryDefaults in CalcOrchestrator
-  // This hook subscribes to the query and will pick up polling automatically
+  // Provide a queryFn that reads from cache as fallback
+  // This prevents "No queryFn" errors while still allowing CalcOrchestrator to update the cache
   const { data: status, isLoading } = useQuery<CalcStatus>({
     queryKey,
+    queryFn: () => {
+      // Read from cache - CalcOrchestrator updates it
+      const cached = queryClient.getQueryData<CalcStatus>(queryKey);
+      if (cached) return cached;
+
+      // Return idle state if no calculation has started yet
+      return {
+        status: 'idle' as const,
+        metadata: {
+          calcId,
+          targetType,
+          calcType: 'economy' as const,
+          startedAt: Date.now(),
+        },
+      };
+    },
     enabled: !!calcId,
-    // All other options (queryFn, refetchInterval, etc.) come from query defaults
+    refetchInterval: false, // CalcOrchestrator manages polling, not this hook
   });
 
   console.log(`[useCalculationStatus][${timestamp}] useQuery returned - isLoading:`, isLoading);

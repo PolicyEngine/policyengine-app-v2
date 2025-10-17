@@ -24,14 +24,22 @@ vi.mock('@/libs/queries/calculationQueries', () => ({
   calculationQueries: {
     forReport: vi.fn((reportId, metadata, params) => ({
       queryKey: ['calculations', 'report', reportId],
-      queryFn: vi.fn(),
+      queryFn: vi.fn().mockResolvedValue({
+        status: 'computing',
+        metadata,
+        progress: 0,
+      }),
       refetchInterval: 1000,
       staleTime: Infinity,
       meta: { calcMetadata: metadata },
     })),
     forSimulation: vi.fn((simulationId, metadata, params) => ({
       queryKey: ['calculations', 'simulation', simulationId],
-      queryFn: vi.fn(),
+      queryFn: vi.fn().mockResolvedValue({
+        status: 'computing',
+        metadata,
+        progress: 0,
+      }),
       refetchInterval: 500,
       staleTime: Infinity,
       meta: { calcMetadata: metadata },
@@ -54,17 +62,30 @@ describe('CalcOrchestrator', () => {
 
   describe('startCalculation', () => {
     describe('report calculations', () => {
-      it('given report config then prefetches report query', async () => {
+      it('given report config then executes queryFn and sets data in cache', async () => {
         // Given
-        const config = mockReportCalcStartConfig();
+        const config = mockReportCalcStartConfig({
+          simulations: {
+            simulation1: {
+              ...mockReportCalcStartConfig().simulations.simulation1,
+              populationType: 'geography',
+            },
+            simulation2: mockReportCalcStartConfig().simulations.simulation2,
+          },
+        });
 
         // When
         await orchestrator.startCalculation(config);
 
-        // Then
-        expect(mockQueryClient.prefetchQuery).toHaveBeenCalledWith(
+        // Then - Should set initial status in cache
+        expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
+          ['calculations', 'report', ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID],
           expect.objectContaining({
-            queryKey: ['calculations', 'report', ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID],
+            status: 'computing',
+            metadata: expect.objectContaining({
+              calcType: 'economy',
+              targetType: 'report',
+            }),
           })
         );
       });
@@ -134,17 +155,18 @@ describe('CalcOrchestrator', () => {
     });
 
     describe('simulation calculations', () => {
-      it('given simulation config then prefetches simulation query', async () => {
+      it('given simulation config then executes queryFn and sets data in cache', async () => {
         // Given
         const config = mockSimulationCalcStartConfig();
 
         // When
         await orchestrator.startCalculation(config);
 
-        // Then
-        expect(mockQueryClient.prefetchQuery).toHaveBeenCalledWith(
+        // Then - Should set initial status in cache
+        expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
+          ['calculations', 'simulation', ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID],
           expect.objectContaining({
-            queryKey: ['calculations', 'simulation', ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID],
+            status: 'computing',
           })
         );
       });
