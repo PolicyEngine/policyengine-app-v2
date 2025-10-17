@@ -24,9 +24,15 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
 
   const baseValues = new ValueIntervalCollection(param.values as ValuesList);
   let reformValues = null;
+  let policyLabel = null;
+  let policyId = null;
+
   if (userDefinedPolicy && userDefinedPolicy.params) {
     const paramToChart = getParameterByName(userDefinedPolicy, param.parameter);
     reformValues = new ValueIntervalCollection(paramToChart?.values as ValuesList);
+    // Get policy metadata for chart labeling
+    policyLabel = userDefinedPolicy.label;
+    policyId = userDefinedPolicy.id;
   } else {
     reformValues = new ValueIntervalCollection(baseValues);
   }
@@ -46,7 +52,13 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
         </>
       )}
       <ValueSetter param={param} />
-      <HistoricalValues param={param} baseValues={baseValues} reformValues={reformValues} />
+      <HistoricalValues
+        param={param}
+        baseValues={baseValues}
+        reformValues={reformValues}
+        policyLabel={policyLabel}
+        policyId={policyId}
+      />
     </Container>
   );
 }

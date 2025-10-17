@@ -8,11 +8,20 @@ import {
   CURRENCY_USD_PARAMETER,
   EXPECTED_BASE_TRACE,
   EXPECTED_EXTENDED_BASE_DATES,
+  EXPECTED_REFORM_NAME_DEFAULT,
+  EXPECTED_REFORM_NAME_WITH_ID,
+  EXPECTED_REFORM_NAME_WITH_LABEL,
+  EXPECTED_REFORM_NAME_WITH_SHORT_LABEL,
+  EXPECTED_REFORM_NAME_WITH_SMALL_ID,
   EXPECTED_REFORM_TRACE,
   PERCENTAGE_PARAMETER,
   SAMPLE_BASE_VALUES_COMPLEX,
   SAMPLE_BASE_VALUES_SIMPLE,
   SAMPLE_BASE_VALUES_WITH_INVALID_DATES,
+  SAMPLE_POLICY_ID_NUMERIC,
+  SAMPLE_POLICY_ID_SMALL,
+  SAMPLE_POLICY_LABEL_CUSTOM,
+  SAMPLE_POLICY_LABEL_SHORT,
   SAMPLE_REFORM_VALUES_COMPLEX,
   SAMPLE_REFORM_VALUES_SIMPLE,
 } from '@/tests/fixtures/components/HistoricalValuesMocks';
@@ -302,7 +311,7 @@ describe('HistoricalValues', () => {
       expect(baseTrace.name).toBe(EXPECTED_BASE_TRACE.name);
     });
 
-    it('given reform then names reform trace "Reform"', () => {
+    it('given reform then uses reform label from utility', () => {
       // Given
       const { getByTestId } = render(
         <ParameterOverTimeChart
@@ -318,7 +327,9 @@ describe('HistoricalValues', () => {
       const reformTrace = props.data[0];
 
       // Then
-      expect(reformTrace.name).toBe(EXPECTED_REFORM_TRACE.name);
+      // Reform label uses getReformPolicyLabel() which defaults to "Reform"
+      expect(reformTrace.name).toBe('Reform');
+      expect(reformTrace.name).toBeDefined();
     });
   });
 
@@ -730,6 +741,232 @@ describe('HistoricalValues', () => {
       // Then
       expect(props.layout.title.xanchor).toBe('left');
       expect(props.layout.title.x).toBeDefined();
+    });
+  });
+
+  describe('ParameterOverTimeChart policy label integration', () => {
+    it('given no policy data then reform trace uses default label', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_DEFAULT);
+    });
+
+    it('given custom policy label then reform trace uses label', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel={SAMPLE_POLICY_LABEL_CUSTOM}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_LABEL);
+    });
+
+    it('given short policy label then reform trace uses short label', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel={SAMPLE_POLICY_LABEL_SHORT}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_SHORT_LABEL);
+    });
+
+    it('given policy ID without label then reform trace formats ID', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyId={SAMPLE_POLICY_ID_NUMERIC.toString()}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_ID);
+    });
+
+    it('given small policy ID then formats correctly', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyId={SAMPLE_POLICY_ID_SMALL.toString()}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_SMALL_ID);
+    });
+
+    it('given policy label and ID then prioritizes label', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel={SAMPLE_POLICY_LABEL_CUSTOM}
+          policyId={SAMPLE_POLICY_ID_NUMERIC.toString()}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_LABEL);
+      expect(reformTrace.name).not.toBe(EXPECTED_REFORM_NAME_WITH_ID);
+    });
+
+    it('given empty string label then falls back to policy ID', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel=""
+          policyId={SAMPLE_POLICY_ID_NUMERIC.toString()}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_ID);
+    });
+
+    it('given null label then falls back to policy ID', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel={null}
+          policyId={SAMPLE_POLICY_ID_NUMERIC.toString()}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_ID);
+    });
+
+    it('given empty string label and null ID then uses default', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel=""
+          policyId={null}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_DEFAULT);
+    });
+
+    it('given wrapper component with policy label then passes to chart', () => {
+      // Given
+      const { getByTestId } = render(
+        <PolicyParameterSelectorHistoricalValues
+          param={CURRENCY_USD_PARAMETER}
+          baseValues={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValues={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyLabel={SAMPLE_POLICY_LABEL_CUSTOM}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_LABEL);
+    });
+
+    it('given wrapper component with policy ID then passes to chart', () => {
+      // Given
+      const { getByTestId } = render(
+        <PolicyParameterSelectorHistoricalValues
+          param={CURRENCY_USD_PARAMETER}
+          baseValues={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValues={SAMPLE_REFORM_VALUES_SIMPLE}
+          policyId={SAMPLE_POLICY_ID_NUMERIC.toString()}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.name).toBe(EXPECTED_REFORM_NAME_WITH_ID);
     });
   });
 });

@@ -19,23 +19,28 @@ import {
   useIsMobile,
   useWindowHeight,
 } from '@/hooks/useChartDimensions';
+import { getReformPolicyLabel } from '@/utils/chartUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
   baseValues: ValueIntervalCollection;
   reformValues?: ValueIntervalCollection;
+  policyLabel?: string | null;
+  policyId?: string | null;
 }
 
 interface ParameterOverTimeChartProps {
   param: ParameterMetadata;
   baseValuesCollection: ValueIntervalCollection;
   reformValuesCollection?: ValueIntervalCollection;
+  policyLabel?: string | null;
+  policyId?: string | null;
 }
 
 export default function PolicyParameterSelectorHistoricalValues(
   props: PolicyParameterSelectorHistoricalValuesProps
 ) {
-  const { param, baseValues = new ValueIntervalCollection(), reformValues } = props;
+  const { param, baseValues = new ValueIntervalCollection(), reformValues, policyLabel, policyId } = props;
 
   return (
     <Stack>
@@ -45,6 +50,8 @@ export default function PolicyParameterSelectorHistoricalValues(
         param={param}
         baseValuesCollection={baseValues}
         reformValuesCollection={reformValues}
+        policyLabel={policyLabel}
+        policyId={policyId}
       />
     </Stack>
   );
@@ -81,7 +88,7 @@ function getReformPolicyLabel(policy) {
   */
 
 export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
-  const { param, baseValuesCollection, reformValuesCollection } = props;
+  const { param, baseValuesCollection, reformValuesCollection, policyLabel, policyId } = props;
 
   // Responsive state
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -135,6 +142,9 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
     formatParameterValue(value, param.unit, { decimalPlaces: 2 })
   );
 
+  // Get reform label using policy data if available
+  const reformLabel = getReformPolicyLabel(policyLabel, policyId ? parseInt(policyId, 10) : null);
+
   // TODO: Typing on Plotly is not good; improve the typing here
   return (
     <div ref={chartContainerRef}>
@@ -156,7 +166,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
                     color: CHART_COLORS.REFORM_LINE,
                     size: CHART_COLORS.MARKER_SIZE,
                   },
-                  name: 'Reform',
+                  name: reformLabel,
                   customdata: reformedCustomData,
                   hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
                 },
