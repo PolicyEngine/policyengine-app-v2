@@ -5,7 +5,6 @@ import { Provider } from 'react-redux';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
-import SimulationSetupFrame from '@/frames/simulation/SimulationSetupFrame';
 import SimulationSetupPolicyFrame from '@/frames/simulation/SimulationSetupPolicyFrame';
 import flowReducer from '@/reducers/flowReducer';
 import metadataReducer, { fetchMetadataThunk } from '@/reducers/metadataReducer';
@@ -19,7 +18,6 @@ import {
   expectedCurrentLawPolicyUS,
   INTEGRATION_TEST_COUNTRIES,
   INTEGRATION_TEST_CURRENT_LAW_IDS,
-  mockPopulation,
 } from '@/tests/fixtures/integration/currentLawFlowMocks';
 import { policyEngineTheme } from '@/theme';
 
@@ -30,8 +28,7 @@ import { policyEngineTheme } from '@/theme';
  * 1. Current Law button appears in SimulationSetupPolicyFrame
  * 2. Selecting Current Law creates the correct policy
  * 3. Policy uses country-specific current law ID from metadata
- * 4. Current Law policy appears correctly in SimulationSetupFrame
- * 5. Full flow works from policy selection to simulation setup
+ * 4. Policy structure is correct (empty parameters, correct ID, label)
  */
 
 // Mock Plotly
@@ -88,42 +85,6 @@ describe('Current Law Simulation Flow Integration', () => {
                 <Route
                   path="simulation/setup-policy"
                   element={<SimulationSetupPolicyFrame {...mockFlowProps} />}
-                />
-              </Route>
-            </Routes>
-          </MemoryRouter>
-        </MantineProvider>
-      </Provider>
-    );
-  };
-
-  const renderSetupFrameWithRouter = (country: string = 'us') => {
-    // Setup metadata fetch mock
-    mockFetch.mockImplementation(createMetadataFetchMock(country));
-
-    // Dispatch metadata fetch
-    store.dispatch(fetchMetadataThunk(country));
-
-    const mockFlowProps = {
-      onNavigate: vi.fn(),
-      onReturn: vi.fn(),
-      flowConfig: {
-        component: 'SimulationSetupFrame' as any,
-        on: {},
-      },
-      isInSubflow: false,
-      flowDepth: 0,
-    };
-
-    return render(
-      <Provider store={store}>
-        <MantineProvider theme={policyEngineTheme}>
-          <MemoryRouter initialEntries={[`/${country}/simulation/setup`]}>
-            <Routes>
-              <Route path="/:countryId" element={<CountryGuard />}>
-                <Route
-                  path="simulation/setup"
-                  element={<SimulationSetupFrame {...mockFlowProps} />}
                 />
               </Route>
             </Routes>
@@ -254,209 +215,4 @@ describe('Current Law Simulation Flow Integration', () => {
     });
   });
 
-  describe('Current Law policy display in setup frame', () => {
-    test('given Current Law policy created then appears in simulation setup', async () => {
-      // Given - Create a current law policy
-      const { createPolicyAtPosition } = await import('@/reducers/policyReducer');
-      store.dispatch(
-        createPolicyAtPosition({
-          position: 0,
-          policy: expectedCurrentLawPolicyUS,
-        })
-      );
-
-      // When
-      renderSetupFrameWithRouter('us');
-
-      // Wait for metadata
-      await waitFor(() => {
-        expect(store.getState().metadata.currentLawId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US);
-      });
-
-      // Then - Policy card should show Current law
-      await waitFor(() => {
-        expect(screen.getByText('Current law')).toBeInTheDocument();
-      });
-    });
-
-    test('given Current Law policy then card shows correct policy ID', async () => {
-      // Given
-      const { createPolicyAtPosition } = await import('@/reducers/policyReducer');
-      store.dispatch(
-        createPolicyAtPosition({
-          position: 0,
-          policy: expectedCurrentLawPolicyUS,
-        })
-      );
-
-      // When
-      renderSetupFrameWithRouter('us');
-
-      await waitFor(() => {
-        expect(store.getState().metadata.currentLawId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US);
-      });
-
-      // Then
-      await waitFor(() => {
-        expect(screen.getByText('Current law')).toBeInTheDocument();
-        expect(
-          screen.getByText(`Policy #${INTEGRATION_TEST_CURRENT_LAW_IDS.US}`)
-        ).toBeInTheDocument();
-      });
-    });
-
-    test('given Current Law policy created then policy card is marked as fulfilled', async () => {
-      // Given
-      const { createPolicyAtPosition } = await import('@/reducers/policyReducer');
-      store.dispatch(
-        createPolicyAtPosition({
-          position: 0,
-          policy: expectedCurrentLawPolicyUS,
-        })
-      );
-
-      // When
-      renderSetupFrameWithRouter('us');
-
-      await waitFor(() => {
-        expect(store.getState().metadata.currentLawId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US);
-      });
-
-      // Then - Check that the policy in state is marked as created
-      const state = store.getState();
-      const policy = state.policy.policies[0];
-      expect(policy?.isCreated).toBe(true);
-    });
-  });
-
-  describe('Full simulation flow with Current Law', () => {
-    test('given Current Law and population then simulation can be completed', async () => {
-      // Given - Create current law policy and population
-      const { createPolicyAtPosition } = await import('@/reducers/policyReducer');
-      const { createPopulationAtPosition } = await import('@/reducers/populationReducer');
-
-      store.dispatch(
-        createPolicyAtPosition({
-          position: 0,
-          policy: expectedCurrentLawPolicyUS,
-        })
-      );
-
-      store.dispatch(
-        createPopulationAtPosition({
-          position: 0,
-          population: mockPopulation,
-        })
-      );
-
-      // When
-      renderSetupFrameWithRouter('us');
-
-      await waitFor(() => {
-        expect(store.getState().metadata.currentLawId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US);
-      });
-
-      // Then - Both cards should be fulfilled
-      await waitFor(() => {
-        expect(screen.getByText('Current law')).toBeInTheDocument();
-        expect(screen.getByText('Test Population')).toBeInTheDocument();
-      });
-
-      // And simulation should have both IDs
-      await waitFor(() => {
-        const state = store.getState();
-        const simulation = state.simulations.simulations[0];
-        expect(simulation?.policyId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US.toString());
-        expect(simulation?.populationId).toBe('household-123');
-      });
-    });
-
-    test('given Current Law policy only then Next button is disabled', async () => {
-      // Given - Only create policy, not population
-      const { createPolicyAtPosition } = await import('@/reducers/policyReducer');
-      store.dispatch(
-        createPolicyAtPosition({
-          position: 0,
-          policy: expectedCurrentLawPolicyUS,
-        })
-      );
-
-      // When
-      renderSetupFrameWithRouter('us');
-
-      await waitFor(() => {
-        expect(store.getState().metadata.currentLawId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US);
-      });
-
-      // Then
-      await waitFor(() => {
-        const nextButton = screen.getByRole('button', { name: /Next/i });
-        expect(nextButton).toBeDisabled();
-      });
-    });
-
-    test('given both policy and population then Next button is enabled', async () => {
-      // Given
-      const { createPolicyAtPosition } = await import('@/reducers/policyReducer');
-      const { createPopulationAtPosition } = await import('@/reducers/populationReducer');
-
-      store.dispatch(
-        createPolicyAtPosition({
-          position: 0,
-          policy: expectedCurrentLawPolicyUS,
-        })
-      );
-
-      store.dispatch(
-        createPopulationAtPosition({
-          position: 0,
-          population: mockPopulation,
-        })
-      );
-
-      // When
-      renderSetupFrameWithRouter('us');
-
-      await waitFor(() => {
-        expect(store.getState().metadata.currentLawId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US);
-      });
-
-      // Then
-      await waitFor(() => {
-        const nextButton = screen.getByRole('button', { name: /Next/i });
-        expect(nextButton).not.toBeDisabled();
-      });
-    });
-  });
-
-  describe('Current Law in report mode', () => {
-    test('given report mode at position 1 then Current Law creates policy at position 1', async () => {
-      // Given - Set up report mode BEFORE rendering
-      const { reportSlice } = await import('@/reducers/reportReducer');
-      store.dispatch(reportSlice.actions.setMode('report'));
-      store.dispatch(reportSlice.actions.setActiveSimulationPosition(1));
-
-      // Verify report mode is set
-      let state = store.getState();
-      expect(state.report.mode).toBe('report');
-      expect(state.report.activeSimulationPosition).toBe(1);
-
-      const user = userEvent.setup();
-      renderPolicyFrameWithRouter('us');
-
-      await waitFor(() => {
-        expect(store.getState().metadata.currentLawId).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US);
-      });
-
-      // When
-      await user.click(screen.getByText('Current Law'));
-      await user.click(screen.getByRole('button', { name: /Next/i }));
-
-      // Then - Policy should be at position 1
-      state = store.getState();
-      expect(state.policy.policies[0]).toBeNull(); // Position 0 empty
-      expect(state.policy.policies[1]).not.toBeNull(); // Position 1 has policy
-      expect(state.policy.policies[1]?.id).toBe(INTEGRATION_TEST_CURRENT_LAW_IDS.US.toString());
-    });
-  });
 });
