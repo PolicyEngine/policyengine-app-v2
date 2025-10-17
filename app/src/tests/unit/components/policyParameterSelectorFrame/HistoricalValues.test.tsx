@@ -623,4 +623,113 @@ describe('HistoricalValues', () => {
       expect(baseTrace.hovertemplate).toContain('%{customdata}');
     });
   });
+
+  describe('ParameterOverTimeChart responsive behavior', () => {
+    it('given chart renders then includes container ref', () => {
+      // Given/When
+      const { container } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // Then
+      const chartContainer = container.querySelector('div');
+      expect(chartContainer).toBeInTheDocument();
+    });
+
+    it('given chart then includes title with parameter label', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.title.text).toContain('Standard Deduction');
+      expect(props.layout.title.text).toContain('over time');
+    });
+
+    it('given chart then has margin configuration', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.margin).toBeDefined();
+      expect(props.layout.margin.t).toBeDefined();
+      expect(props.layout.margin.r).toBeDefined();
+      expect(props.layout.margin.l).toBeDefined();
+      expect(props.layout.margin.b).toBeDefined();
+    });
+
+    it('given chart then has dragmode configuration', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.dragmode).toBeDefined();
+    });
+
+    it('given chart then has style with height', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.style).toBeDefined();
+      expect(props.style.height).toBeDefined();
+      expect(typeof props.style.height).toBe('number');
+    });
+
+    it('given chart then title is left-anchored', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.title.xanchor).toBe('left');
+      expect(props.layout.title.x).toBeDefined();
+    });
+  });
 });
