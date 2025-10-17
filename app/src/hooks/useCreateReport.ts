@@ -86,14 +86,27 @@ export function useCreateReport(reportLabel?: string) {
     },
 
     onSuccess: async (result) => {
+      const timestamp = Date.now();
+      console.log(`[useCreateReport][${timestamp}] ========================================`);
+      console.log(`[useCreateReport][${timestamp}] onSuccess triggered`);
+
       try {
         const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
 
+        console.log(`[useCreateReport][${timestamp}] Report ID (raw):`, report.id);
+        console.log(`[useCreateReport][${timestamp}] Report ID (string):`, reportIdStr);
+        console.log(`[useCreateReport][${timestamp}] Report type:`, typeof report.id);
+        console.log(`[useCreateReport][${timestamp}] Report object:`, report);
+        console.log(`[useCreateReport][${timestamp}] Report.countryId:`, report.countryId);
+        console.log(`[useCreateReport][${timestamp}] Report.country_id:`, (report as any).country_id);
+
         // Invalidate queries
+        console.log(`[useCreateReport][${timestamp}] Invalidating report queries...`);
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
 
         // Cache the report data
+        console.log(`[useCreateReport][${timestamp}] Caching report data with key: ['report', '${reportIdStr}']`);
         queryClient.setQueryData(['report', reportIdStr], report);
 
         // Determine calculation type from simulation
@@ -129,7 +142,7 @@ export function useCreateReport(reportLabel?: string) {
             await orchestrator.startCalculation({
               calcId: sim.id,                     // Each simulation uses its own ID
               targetType: 'simulation',           // Simulation-level calculation
-              countryId: report.country_id,
+              countryId: report.countryId,
               simulations: {
                 simulation1: sim,                 // Only this specific simulation
                 simulation2: null,
@@ -147,11 +160,14 @@ export function useCreateReport(reportLabel?: string) {
           // WHY: Economy calculations operate on the entire geography and compare
           // all policies in a single API call. Results stored at report level.
           console.log('[useCreateReport] Starting economy calculation at report level');
+          console.log(`[useCreateReport][${timestamp}] About to call orchestrator.startCalculation`);
+          console.log(`[useCreateReport][${timestamp}] calcId:`, reportIdStr);
+          console.log(`[useCreateReport][${timestamp}] targetType: report`);
 
           await orchestrator.startCalculation({
             calcId: reportIdStr,
             targetType: 'report',
-            countryId: report.country_id,
+            countryId: report.countryId,
             simulations: {
               simulation1,
               simulation2: simulation2 || null,
@@ -163,9 +179,15 @@ export function useCreateReport(reportLabel?: string) {
               geography2: null,
             },
           });
+
+          console.log(`[useCreateReport][${timestamp}] orchestrator.startCalculation COMPLETED`);
         }
+
+        console.log(`[useCreateReport][${timestamp}] onSuccess COMPLETED successfully`);
+        console.log(`[useCreateReport][${timestamp}] ========================================`);
       } catch (error) {
-        console.error('Post-creation tasks failed:', error);
+        console.error(`[useCreateReport][${timestamp}] Post-creation tasks failed:`, error);
+        console.log(`[useCreateReport][${timestamp}] ========================================`);
       }
     },
   });

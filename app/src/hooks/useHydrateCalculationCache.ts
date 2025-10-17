@@ -46,8 +46,36 @@ export function useHydrateCalculationCache({
   const hydratedRef = useRef(false);
 
   useEffect(() => {
+    const timestamp = Date.now();
+    console.log(`[useHydrateCache][${timestamp}] ========================================`);
+    console.log(`[useHydrateCache][${timestamp}] Effect triggered`);
+    console.log(`[useHydrateCache][${timestamp}] report.id:`, report?.id);
+    console.log(`[useHydrateCache][${timestamp}] report.output exists?`, !!report?.output);
+    console.log(`[useHydrateCache][${timestamp}] outputType:`, outputType);
+    console.log(`[useHydrateCache][${timestamp}] hydratedRef.current:`, hydratedRef.current);
+
     // Only hydrate once
-    if (hydratedRef.current || !report?.output || !outputType || !report.id) {
+    if (hydratedRef.current) {
+      console.log(`[useHydrateCache][${timestamp}] SKIP: Already hydrated`);
+      console.log(`[useHydrateCache][${timestamp}] ========================================`);
+      return;
+    }
+
+    if (!report?.output) {
+      console.log(`[useHydrateCache][${timestamp}] SKIP: No report.output`);
+      console.log(`[useHydrateCache][${timestamp}] ========================================`);
+      return;
+    }
+
+    if (!outputType) {
+      console.log(`[useHydrateCache][${timestamp}] SKIP: No outputType`);
+      console.log(`[useHydrateCache][${timestamp}] ========================================`);
+      return;
+    }
+
+    if (!report.id) {
+      console.log(`[useHydrateCache][${timestamp}] SKIP: No report.id`);
+      console.log(`[useHydrateCache][${timestamp}] ========================================`);
       return;
     }
 
@@ -57,12 +85,17 @@ export function useHydrateCalculationCache({
     const queryKey = calculationKeys.byReportId(report.id);
     const existing = queryClient.getQueryData<CalcStatus>(queryKey);
 
+    console.log(`[useHydrateCache][${timestamp}] Query key:`, JSON.stringify(queryKey));
+    console.log(`[useHydrateCache][${timestamp}] Existing cache entry?`, !!existing);
+    console.log(`[useHydrateCache][${timestamp}] Existing status:`, existing?.status);
+
     if (existing) {
-      console.log('[useHydrateCalculationCache] Cache already populated, skipping hydration');
+      console.log('[useHydrateCache] Cache already populated, skipping hydration');
+      console.log(`[useHydrateCache][${timestamp}] ========================================`);
       return; // Already in cache (might be computing)
     }
 
-    console.log('[useHydrateCalculationCache] Hydrating cache with persisted result');
+    console.log('[useHydrateCache] Hydrating cache with persisted result');
 
     // Report.output is already parsed (ReportOutput type), not JSON string
     // Populate cache with complete status from persisted output
@@ -77,6 +110,12 @@ export function useHydrateCalculationCache({
       },
     };
 
+    console.log(`[useHydrateCache][${timestamp}] Setting cache with status:`, completeStatus.status);
     queryClient.setQueryData(queryKey, completeStatus);
+
+    // Verify it was set
+    const afterSet = queryClient.getQueryData<CalcStatus>(queryKey);
+    console.log(`[useHydrateCache][${timestamp}] Cache entry exists after set?`, !!afterSet);
+    console.log(`[useHydrateCache][${timestamp}] ========================================`);
   }, [report, outputType, queryClient]);
 }

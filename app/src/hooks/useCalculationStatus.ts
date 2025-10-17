@@ -1,31 +1,61 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { calculationKeys } from '@/libs/queryKeys';
+import { calculationQueries } from '@/libs/queries/calculationQueries';
 import type { CalcStatus } from '@/types/calculation';
 import { useAggregatedCalculationStatus, type AggregatedCalcStatus } from './useAggregatedCalculationStatus';
 import { useSyntheticProgress } from './useSyntheticProgress';
 
 /**
  * Internal hook to read single calculation status from cache
- * Does not fetch - only reads existing status from cache
- * Auto-subscribes to cache updates from background calculation queries
+ * Subscribes to calculation query updates
+ *
+ * NOTE: This hook reads from queries started by CalcOrchestrator.
+ * It reuses the existing query data without starting a new calculation.
  *
  * Enhances status with client-side synthetic progress for better UX:
  * - Household: Shows smooth progress during 30-45s API call
  * - Economy: Blends server progress with synthetic smoothing
  */
 function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simulation') {
+  const queryClient = useQueryClient();
   const queryKey =
     targetType === 'report'
       ? calculationKeys.byReportId(calcId)
       : calculationKeys.bySimulationId(calcId);
 
+  const timestamp = Date.now();
+  console.log(`[useCalculationStatus][${timestamp}] ========================================`);
+  console.log(`[useCalculationStatus][${timestamp}] CALLED: calcId="${calcId}" targetType="${targetType}"`);
+  console.log(`[useCalculationStatus][${timestamp}] Query key:`, JSON.stringify(queryKey));
+
+  // Check if query exists BEFORE calling useQuery
+  const queryState = queryClient.getQueryState(queryKey);
+  const allQueries = queryClient.getQueryCache().getAll();
+
+  console.log(`[useCalculationStatus][${timestamp}] Query exists in cache?`, !!queryState);
+  console.log(`[useCalculationStatus][${timestamp}] Query status:`, queryState?.status);
+  console.log(`[useCalculationStatus][${timestamp}] Query fetchStatus:`, queryState?.fetchStatus);
+  console.log(`[useCalculationStatus][${timestamp}] Total queries in cache:`, allQueries.length);
+  console.log(`[useCalculationStatus][${timestamp}] All query keys:`, allQueries.map(q => JSON.stringify(q.queryKey)));
+
+  // Check specifically for calculation queries
+  const calcQueries = allQueries.filter(q =>
+    Array.isArray(q.queryKey) && q.queryKey[0] === 'calculations'
+  );
+  console.log(`[useCalculationStatus][${timestamp}] Calculation queries in cache:`, calcQueries.length);
+  console.log(`[useCalculationStatus][${timestamp}] Calculation query keys:`, calcQueries.map(q => JSON.stringify(q.queryKey)));
+
+  // IMPORTANT: queryFn and refetch config come from setQueryDefaults in CalcOrchestrator
+  // This hook subscribes to the query and will pick up polling automatically
   const { data: status, isLoading } = useQuery<CalcStatus>({
     queryKey,
-    staleTime: Infinity,
-    // No queryFn - this is a cache-only query
-    // The query is populated by CalcOrchestrator via prefetchQuery
     enabled: !!calcId,
+    // All other options (queryFn, refetchInterval, etc.) come from query defaults
   });
+
+  console.log(`[useCalculationStatus][${timestamp}] useQuery returned - isLoading:`, isLoading);
+  console.log(`[useCalculationStatus][${timestamp}] useQuery returned - status:`, status?.status);
+  console.log(`[useCalculationStatus][${timestamp}] ========================================`);
 
   // Determine calculation type from metadata
   const calcType = status?.metadata?.calcType || 'household';

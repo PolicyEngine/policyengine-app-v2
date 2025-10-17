@@ -23,24 +23,74 @@ export class CalcOrchestrator {
    * @param config - Configuration containing all necessary information
    */
   async startCalculation(config: CalcStartConfig): Promise<void> {
-    console.log(`[CalcOrchestrator] Starting calculation for: ${config.calcId}`);
+    const timestamp = Date.now();
+    console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
+    console.log(`[CalcOrchestrator][${timestamp}] START: calcId="${config.calcId}" targetType="${config.targetType}"`);
 
     // Build metadata and params from config
     const metadata = this.buildMetadata(config);
     const params = this.buildParams(config);
 
+    console.log(`[CalcOrchestrator][${timestamp}] Metadata:`, JSON.stringify(metadata, null, 2));
+    console.log(`[CalcOrchestrator][${timestamp}] Params calcType:`, params.calcType);
+
     // Create query options based on target type
-    // Start the query (this will trigger the calculation)
+    // Register query defaults so useQuery can pick up the configuration
     if (config.targetType === 'report') {
       const queryOptions = calculationQueries.forReport(config.calcId, metadata, params);
-      this.queryClient.prefetchQuery(queryOptions);
+      console.log(`[CalcOrchestrator][${timestamp}] Query key:`, JSON.stringify(queryOptions.queryKey));
+      console.log(`[CalcOrchestrator][${timestamp}] Has queryFn?`, typeof queryOptions.queryFn === 'function');
+
+      // Register the query defaults so any useQuery with this key gets the queryFn and refetch config
+      this.queryClient.setQueryDefaults(queryOptions.queryKey, {
+        queryFn: queryOptions.queryFn,
+        refetchInterval: queryOptions.refetchInterval,
+        staleTime: queryOptions.staleTime,
+      // Use "as any" to bypass QueryOptions typing issues
+      } as any);
+
+      console.log(`[CalcOrchestrator][${timestamp}] BEFORE fetchQuery: ${Date.now()}`);
+      await this.queryClient.fetchQuery(queryOptions);
+      console.log(`[CalcOrchestrator][${timestamp}] AFTER fetchQuery: ${Date.now()}`);
+
+      // Check if query was registered
+      const queryState = this.queryClient.getQueryState(queryOptions.queryKey);
+      console.log(`[CalcOrchestrator][${timestamp}] Query exists after prefetch?`, !!queryState);
+      console.log(`[CalcOrchestrator][${timestamp}] Query status:`, queryState?.status);
+      console.log(`[CalcOrchestrator][${timestamp}] Query fetchStatus:`, queryState?.fetchStatus);
     } else {
       const queryOptions = calculationQueries.forSimulation(config.calcId, metadata, params);
-      this.queryClient.prefetchQuery(queryOptions);
+      console.log(`[CalcOrchestrator][${timestamp}] Query key:`, JSON.stringify(queryOptions.queryKey));
+      console.log(`[CalcOrchestrator][${timestamp}] Has queryFn?`, typeof queryOptions.queryFn === 'function');
+
+      // Register the query defaults so any useQuery with this key gets the queryFn and refetch config
+      this.queryClient.setQueryDefaults(queryOptions.queryKey, {
+        queryFn: queryOptions.queryFn,
+        refetchInterval: queryOptions.refetchInterval,
+        staleTime: queryOptions.staleTime,
+      } as any);
+
+      console.log(`[CalcOrchestrator][${timestamp}] BEFORE fetchQuery: ${Date.now()}`);
+      await this.queryClient.fetchQuery(queryOptions);
+      console.log(`[CalcOrchestrator][${timestamp}] AFTER fetchQuery: ${Date.now()}`);
+
+      // Check if query was registered
+      const queryState = this.queryClient.getQueryState(queryOptions.queryKey);
+      console.log(`[CalcOrchestrator][${timestamp}] Query exists after prefetch?`, !!queryState);
+      console.log(`[CalcOrchestrator][${timestamp}] Query status:`, queryState?.status);
+      console.log(`[CalcOrchestrator][${timestamp}] Query fetchStatus:`, queryState?.fetchStatus);
     }
+
+    // Log all queries in cache
+    const allQueries = this.queryClient.getQueryCache().getAll();
+    console.log(`[CalcOrchestrator][${timestamp}] Total queries in cache:`, allQueries.length);
+    console.log(`[CalcOrchestrator][${timestamp}] All query keys:`, allQueries.map(q => JSON.stringify(q.queryKey)));
 
     // Subscribe to completion
     this.subscribeToCompletion(config.calcId, metadata, config.countryId);
+
+    console.log(`[CalcOrchestrator][${timestamp}] END startCalculation`);
+    console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
   }
 
   /**

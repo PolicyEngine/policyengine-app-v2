@@ -92,7 +92,7 @@ export default function ReportOutputPage() {
 
   const calcIds = isHouseholdReport
     ? simulations?.map(s => s.id).filter((id): id is string => !!id) || []
-    : report?.id || '';
+    : report?.id ? String(report.id) : '';
 
   const targetType = isHouseholdReport ? 'simulation' : 'report';
 

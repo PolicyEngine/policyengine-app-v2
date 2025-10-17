@@ -387,6 +387,24 @@ useStartCalculationOnLoad({
 
 ## Troubleshooting
 
+### Issue: "No queryFn was passed" Error (FIXED - Phase 9)
+
+**Cause:** `useCalculationStatus` called before CalcOrchestrator registers the query.
+
+**Symptoms:**
+```
+No queryFn was passed as an option, and no default queryFn was found.
+Query key: ["calculations","report",48]
+```
+
+**Fix (Phase 9):** Added no-op queryFn that returns a never-resolving Promise. This satisfies TanStack Query requirements while maintaining cache-first behavior. The hook returns idle state until CalcOrchestrator populates the cache with real data.
+
+**Technical Details:**
+- `queryFn: () => new Promise(() => {})` - Prevents TanStack Query error
+- `isComputing` only true when `status === 'computing'` (not on `isLoading`)
+- Synthetic progress disabled for no-op loading state
+- Cache updates from CalcOrchestrator automatically trigger re-renders
+
 ### Issue: Calculation Stuck in "Idle"
 
 **Cause:** Auto-start hook not triggering.
