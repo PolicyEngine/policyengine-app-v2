@@ -6,10 +6,8 @@ import PolicyParameterSelectorHistoricalValues, {
 import {
   BOOLEAN_PARAMETER,
   CURRENCY_USD_PARAMETER,
-  EMPTY_VALUES,
   EXPECTED_BASE_TRACE,
   EXPECTED_EXTENDED_BASE_DATES,
-  EXPECTED_EXTENDED_BASE_VALUES,
   EXPECTED_REFORM_TRACE,
   PERCENTAGE_PARAMETER,
   SAMPLE_BASE_VALUES_COMPLEX,
@@ -456,6 +454,173 @@ describe('HistoricalValues', () => {
 
       // Then
       expect(props.config.responsive).toBe(true);
+    });
+  });
+
+  describe('ParameterOverTimeChart axis formatting', () => {
+    it('given chart then includes x-axis format', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.xaxis).toBeDefined();
+      expect(props.layout.xaxis.type).toBe('date');
+    });
+
+    it('given chart then includes y-axis format', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.yaxis).toBeDefined();
+    });
+
+    it('given currency parameter then y-axis has dollar prefix', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.yaxis.tickprefix).toBe('$');
+    });
+
+    it('given percentage parameter then y-axis has percentage format', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={PERCENTAGE_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_COMPLEX}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.yaxis.tickformat).toBe('.1%');
+    });
+
+    it('given boolean parameter then y-axis has True/False labels', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={BOOLEAN_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then
+      expect(props.layout.yaxis.tickvals).toEqual([0, 1]);
+      expect(props.layout.yaxis.ticktext).toEqual(['False', 'True']);
+    });
+  });
+
+  describe('ParameterOverTimeChart hover tooltips', () => {
+    it('given base trace then includes custom data for hover', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const baseTrace = props.data[0];
+
+      // Then
+      expect(baseTrace.customdata).toBeDefined();
+      expect(Array.isArray(baseTrace.customdata)).toBe(true);
+    });
+
+    it('given reform trace then includes custom data for hover', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0];
+
+      // Then
+      expect(reformTrace.customdata).toBeDefined();
+      expect(Array.isArray(reformTrace.customdata)).toBe(true);
+    });
+
+    it('given currency values then formats hover data with dollar sign', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const baseTrace = props.data[0];
+
+      // Then
+      expect(baseTrace.customdata[0]).toContain('$');
+    });
+
+    it('given trace then uses date and value hover template', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const baseTrace = props.data[0];
+
+      // Then
+      expect(baseTrace.hovertemplate).toContain('%{x|%b, %Y}');
+      expect(baseTrace.hovertemplate).toContain('%{customdata}');
     });
   });
 });

@@ -9,6 +9,10 @@ import {
   getAllChartDates,
   getChartBoundaryDates,
 } from '@/utils/chartDateUtils';
+import {
+  formatParameterValue,
+  getPlotlyAxisFormat,
+} from '@/utils/chartValueUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
@@ -106,6 +110,19 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
     ? [...y, ...reformedY]
     : y;
 
+  // Step 7: Calculate axis formats
+  const xaxisFormat = getPlotlyAxisFormat('date', xaxisValues);
+  const yaxisFormat = getPlotlyAxisFormat(param.unit || '', yaxisValues);
+
+  // Step 8: Format custom data for hover tooltips
+  const customData = y.map((value) =>
+    formatParameterValue(value, param.unit, { decimalPlaces: 2 })
+  );
+
+  const reformedCustomData = reformedY.map((value) =>
+    formatParameterValue(value, param.unit, { decimalPlaces: 2 })
+  );
+
   // TODO: Typing on Plotly is not good; improve the typing here
   return (
     <>
@@ -128,7 +145,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
                     size: CHART_COLORS.MARKER_SIZE,
                   },
                   name: 'Reform',
-                  // customdata: reformedCustomData,
+                  customdata: reformedCustomData,
                   hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
                 },
               ]
@@ -151,17 +168,17 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
               size: CHART_COLORS.MARKER_SIZE,
             },
             name: 'Current law',
-            // customdata: customData,
+            customdata: customData,
             hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
           },
         ].filter((x) => x)}
         layout={{
-          // xaxis: { ...xaxisFormat },
-          // yaxis: { ...yaxisFormat },
+          xaxis: xaxisFormat,
+          yaxis: yaxisFormat,
           legend: {
             // Position above the plot
             y: 1.2,
-            orientation: 'h',
+            orientation: 'h' as any,
           },
           // ...ChartLogo,
           /*
