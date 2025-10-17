@@ -1,7 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
-import { ResultPersister } from '@/libs/calculations/ResultPersister';
+import { useEffect } from 'react';
+import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { CalcStartConfig } from '@/types/calculation';
 
 interface UseStartCalculationOnLoadParams {
@@ -19,38 +17,31 @@ interface UseStartCalculationOnLoadParams {
    * Whether calculation is already complete
    */
   isComplete: boolean;
-
-  /**
-   * Whether calculation is already running
-   */
-  isComputing: boolean;
 }
 
 /**
- * Hook to automatically start/resume calculation when loading a report
+ * Hook to automatically ensure calculation is started when loading a report
  *
  * WHY THIS EXISTS:
- * Used for direct URL loads where calculation orchestrator isn't running.
- * Without this, users who directly access /report-output/{id} would see
- * status forever with no polling to update it.
+ * For direct URL access, we need to ensure calculation orchestrator is running.
+ * The manager handles idempotency - if calculation is already running, it does nothing.
+ * If not running but should be, it starts it.
  *
- * This hook detects when:
- * 1. Report data is loaded
- * 2. Calculation is NOT complete
- * 3. No orchestrator is running yet (either idle OR computing)
+ * SCENARIOS:
+ * 1. Create report → navigate immediately → calculation already started by useCreateReport
+ *    → manager.startCalculation() sees it's already running → does nothing ✓
  *
- * And then starts/resumes the calculation orchestrator.
+ * 2. Direct URL to computing report → no orchestrator running
+ *    → manager.startCalculation() starts orchestrator to resume polling ✓
  *
- * IMPORTANT: This hook handles TWO scenarios:
- * - **Fresh start**: Cache shows 'idle' → Start new calculation
- * - **Resume**: Cache shows 'computing' → Resume polling for existing calculation
+ * 3. Direct URL to idle report → need to start calculation
+ *    → manager.startCalculation() starts orchestrator ✓
  *
- * The second scenario is critical: when you load a page showing a computing
- * calculation, the cache has status='computing' but NO orchestrator is polling
- * the API to update that status. This hook creates an orchestrator to resume polling.
+ * 4. Direct URL to completed report → isComplete = true
+ *    → Early return, don't start ✓
  *
- * SAFETY: Only starts once per mount and includes multiple guards to prevent
- * duplicate starts.
+ * NOTE: We don't need isComputing parameter anymore because the manager
+ * handles idempotency. Calling startCalculation() multiple times is safe.
  *
  * @example
  * // In ReportOutput.page:
@@ -58,45 +49,38 @@ interface UseStartCalculationOnLoadParams {
  *   enabled: !!report && !!calcConfig,
  *   config: calcConfig,
  *   isComplete: calcStatus.isComplete,
- *   isComputing: calcStatus.isComputing,
  * });
  */
 export function useStartCalculationOnLoad({
   enabled,
   config,
   isComplete,
-  isComputing,
 }: UseStartCalculationOnLoadParams): void {
-  const queryClient = useQueryClient();
-  const startedRef = useRef(false);
+  const manager = useCalcOrchestratorManager();
 
   useEffect(() => {
-    // Don't start if:
-    // - Not enabled
-    // - Already started
-    // - No config
-    // - Already complete
-    if (!enabled || startedRef.current || !config || isComplete) {
+    // Don't start if disabled, no config, or already complete
+    if (!enabled || !config || isComplete) {
       return;
     }
 
-    // Start/resume orchestrator for both idle and computing states
-    if (isComputing) {
-      console.log('[useStartCalculationOnLoad] Resuming polling for computing calculation:', config.calcId);
-    } else {
-      console.log('[useStartCalculationOnLoad] Starting fresh calculation for:', config.calcId);
-    }
+    const timestamp = Date.now();
+    console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}] Ensuring calculation started`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}]   calcId: "${config.calcId}"`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}]   targetType: "${config.targetType}"`);
 
-    startedRef.current = true;
+    // Manager handles idempotency - won't start if already running
+    console.log(`[useStartCalculationOnLoad][${timestamp}] → Calling manager.startCalculation()`);
 
-    const orchestrator = new CalcOrchestrator(
-      queryClient,
-      new ResultPersister(queryClient)
-    );
-
-    orchestrator.startCalculation(config).catch((error) => {
-      console.error('[useStartCalculationOnLoad] Failed to start calculation:', error);
-      startedRef.current = false; // Allow retry
-    });
-  }, [enabled, config, isComplete, isComputing, queryClient]);
+    manager.startCalculation(config)
+      .then(() => {
+        console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ manager.startCalculation() completed`);
+        console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
+      })
+      .catch((error) => {
+        console.error(`[useStartCalculationOnLoad][${timestamp}] ❌ Failed to start:`, error);
+        console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
+      });
+  }, [enabled, config, isComplete, manager]);
 }

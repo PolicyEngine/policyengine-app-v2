@@ -77,6 +77,21 @@ export class CalcOrchestrator {
     console.log(`[CalcOrchestrator][${timestamp}]   queryKey:`, JSON.stringify(queryOptions.queryKey));
     console.log(`[CalcOrchestrator][${timestamp}]   refetchInterval:`, queryOptions.refetchInterval);
 
+    // For household calculations: Set 'computing' status BEFORE API call
+    // WHY: Household API calls take 30-45s. By setting 'computing' status in cache
+    // immediately, the UI can show synthetic progress during the long-running call.
+    if (metadata.calcType === 'household') {
+      console.log(`[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Setting 'computing' status before API call...`);
+      const computingStatus: CalcStatus = {
+        status: 'computing',
+        progress: 0,
+        message: 'Initializing calculation...',
+        metadata,
+      };
+      this.queryClient.setQueryData(queryOptions.queryKey, computingStatus);
+      console.log(`[CalcOrchestrator][${timestamp}] ✓ Computing status cached, UI will show synthetic progress`);
+    }
+
     // Execute initial queryFn
     console.log(`[CalcOrchestrator][${timestamp}] → Executing queryFn()...`);
     const startTime = Date.now();

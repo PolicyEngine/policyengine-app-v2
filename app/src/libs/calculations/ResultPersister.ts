@@ -1,8 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { markReportCompleted } from '@/api/report';
 import { updateSimulationOutput } from '@/api/simulation';
-import { reportKeys, simulationKeys } from '@/libs/queryKeys';
-import { ReportAdapter } from '@/adapters/ReportAdapter';
 import type { CalcStatus } from '@/types/calculation';
 import type { Report } from '@/types/ingredients/Report';
 
@@ -76,10 +74,12 @@ export class ResultPersister {
     // Use existing markReportCompleted API
     await markReportCompleted(countryId as any, reportId, report);
 
-    // Invalidate report cache
-    this.queryClient.invalidateQueries({
-      queryKey: reportKeys.byId(reportId),
-    });
+    // DO NOT invalidate cache - CalcOrchestrator has already updated it correctly.
+    // Invalidation would cause an unnecessary refetch that could race with the
+    // persisted data and overwrite correct cache state.
+    console.log(
+      `[ResultPersister] ✓ Persisted to database, cache already up-to-date from orchestrator`
+    );
   }
 
   /**
@@ -93,10 +93,12 @@ export class ResultPersister {
     // Use new updateSimulationOutput API
     await updateSimulationOutput(countryId as any, simulationId, result);
 
-    // Invalidate simulation cache
-    this.queryClient.invalidateQueries({
-      queryKey: simulationKeys.byId(simulationId),
-    });
+    // DO NOT invalidate cache - CalcOrchestrator has already updated it correctly.
+    // Invalidation would cause an unnecessary refetch that could race with the
+    // persisted data and overwrite correct cache state.
+    console.log(
+      `[ResultPersister] ✓ Persisted to database, cache already up-to-date from orchestrator`
+    );
   }
 
   /**

@@ -163,11 +163,11 @@ export default function ReportOutputPage() {
   }, [report, simulations]);
 
   // Phase 4: Auto-start calculation if needed (direct URL loads)
+  // Manager handles idempotency - won't duplicate if already running
   useStartCalculationOnLoad({
     enabled: !!report && !!calcConfig,
     config: calcConfig,
     isComplete: calcStatus.isComplete,
-    isComputing: calcStatus.isComputing,
   });
 
   // Prepare output data - wrap household data if needed

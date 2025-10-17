@@ -1,9 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useMemo, useEffect } from 'react';
 import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
 import { MOCK_USER_ID } from '@/constants';
-import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
-import { ResultPersister } from '@/libs/calculations/ResultPersister';
+import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
 import { reportKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
@@ -46,21 +44,11 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
 // with the creation of API v2, where we can merely pass simulation IDs to create a report.
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
-
-  // Memoize orchestrator to prevent recreation on every render
-  const orchestrator = useMemo(
-    () => new CalcOrchestrator(queryClient, new ResultPersister(queryClient)),
-    [queryClient]
-  );
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      orchestrator.cleanup();
-    };
-  }, [orchestrator]);
+  const manager = useCalcOrchestratorManager();
 
   const userId = MOCK_USER_ID;
+
+  console.log('[useCreateReport] Hook initialized, manager available:', !!manager);
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -139,7 +127,8 @@ export function useCreateReport(reportLabel?: string) {
               continue;
             }
 
-            await orchestrator.startCalculation({
+            console.log(`[useCreateReport] → Starting calculation for simulation ${sim.id}`);
+            await manager.startCalculation({
               calcId: sim.id,                     // Each simulation uses its own ID
               targetType: 'simulation',           // Simulation-level calculation
               countryId: report.countryId,
@@ -154,17 +143,18 @@ export function useCreateReport(reportLabel?: string) {
                 geography2: null,
               },
             });
+            console.log(`[useCreateReport] ✓ Calculation started for simulation ${sim.id}`);
           }
         } else {
           // Economy reports: Single calculation at report level
           // WHY: Economy calculations operate on the entire geography and compare
           // all policies in a single API call. Results stored at report level.
           console.log('[useCreateReport] Starting economy calculation at report level');
-          console.log(`[useCreateReport][${timestamp}] About to call orchestrator.startCalculation`);
-          console.log(`[useCreateReport][${timestamp}] calcId:`, reportIdStr);
-          console.log(`[useCreateReport][${timestamp}] targetType: report`);
+          console.log(`[useCreateReport][${timestamp}] → Calling manager.startCalculation`);
+          console.log(`[useCreateReport][${timestamp}]   calcId: ${reportIdStr}`);
+          console.log(`[useCreateReport][${timestamp}]   targetType: report`);
 
-          await orchestrator.startCalculation({
+          await manager.startCalculation({
             calcId: reportIdStr,
             targetType: 'report',
             countryId: report.countryId,
@@ -180,7 +170,7 @@ export function useCreateReport(reportLabel?: string) {
             },
           });
 
-          console.log(`[useCreateReport][${timestamp}] orchestrator.startCalculation COMPLETED`);
+          console.log(`[useCreateReport][${timestamp}] ✓ manager.startCalculation completed`);
         }
 
         console.log(`[useCreateReport][${timestamp}] onSuccess COMPLETED successfully`);

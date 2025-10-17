@@ -4,6 +4,7 @@ import { ReactNode } from 'react';
 import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
+import { CalcOrchestratorProvider } from '@/contexts/CalcOrchestratorContext';
 import { CalcStartConfig } from '@/types/calculation';
 import { CACHE_HYDRATION_TEST_CONSTANTS } from '@/tests/fixtures/hooks/cacheHydrationFixtures';
 
@@ -35,7 +36,9 @@ describe('useStartCalculationOnLoad', () => {
   });
 
   const wrapper = ({ children }: { children: ReactNode }) => (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <CalcOrchestratorProvider>{children}</CalcOrchestratorProvider>
+    </QueryClientProvider>
   );
 
   const createMockConfig = (overrides?: Partial<CalcStartConfig>): CalcStartConfig => ({
@@ -75,7 +78,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
@@ -94,7 +96,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: false,
           config,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
@@ -112,7 +113,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config: null,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
@@ -131,7 +131,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: true,
-          isComputing: false,
         }),
       { wrapper }
     );
@@ -152,7 +151,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: true,
         }),
       { wrapper }
     );
@@ -172,7 +170,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
@@ -201,16 +198,15 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
 
     await waitFor(() => {
-      expect(consoleLogSpy).toHaveBeenCalledWith(
-        '[useStartCalculationOnLoad] Starting fresh calculation for:',
-        config.calcId
-      );
+      // Check that logs include the calcId (log format changed to use timestamps)
+      const logCalls = consoleLogSpy.mock.calls.map(call => call.join(' '));
+      const hasCalcId = logCalls.some(log => log.includes(config.calcId));
+      expect(hasCalcId).toBe(true);
     });
   });
 
@@ -227,14 +223,14 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
 
     await waitFor(() => {
+      // Check that error was logged with the error object
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        '[useStartCalculationOnLoad] Failed to start calculation:',
+        expect.stringContaining('Failed to start'),
         testError
       );
     });
@@ -255,7 +251,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
@@ -281,7 +276,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: false,
         }),
       { wrapper }
     );
@@ -300,14 +294,13 @@ describe('useStartCalculationOnLoad', () => {
     const config = createMockConfig();
 
     renderHook(
-      ({ isComputing }) =>
+      () =>
         useStartCalculationOnLoad({
           enabled: true,
           config,
           isComplete: false,
-          isComputing,
         }),
-      { wrapper, initialProps: { isComputing: true } }
+      { wrapper }
     );
 
     // Should start immediately to resume polling
@@ -325,7 +318,6 @@ describe('useStartCalculationOnLoad', () => {
           enabled: true,
           config,
           isComplete,
-          isComputing: false,
         }),
       { wrapper, initialProps: { isComplete: true } }
     );
@@ -345,25 +337,4 @@ describe('useStartCalculationOnLoad', () => {
     });
   });
 
-  it('should create CalcOrchestrator with correct dependencies', async () => {
-    const config = createMockConfig();
-
-    renderHook(
-      () =>
-        useStartCalculationOnLoad({
-          enabled: true,
-          config,
-          isComplete: false,
-          isComputing: false,
-        }),
-      { wrapper }
-    );
-
-    await waitFor(() => {
-      expect(CalcOrchestrator).toHaveBeenCalledWith(
-        queryClient,
-        expect.any(Object) // ResultPersister
-      );
-    });
-  });
 });

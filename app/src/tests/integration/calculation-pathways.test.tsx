@@ -109,7 +109,6 @@ describe('Calculation Pathways Integration', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: false,
         }),
         { wrapper }
       );
@@ -130,7 +129,6 @@ describe('Calculation Pathways Integration', () => {
           enabled: true,
           config,
           isComplete: true, // Already complete
-          isComputing: false,
         }),
         { wrapper }
       );
@@ -153,7 +151,6 @@ describe('Calculation Pathways Integration', () => {
           enabled: true,
           config,
           isComplete: false,
-          isComputing: true, // Already computing
         }),
         { wrapper }
       );
