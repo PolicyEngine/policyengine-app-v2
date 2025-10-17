@@ -134,11 +134,16 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   }
 
   if (userPolicies.length === 0) {
+    const cancelAction = {
+      ingredientType: 'simulation' as const,
+    };
+
     return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text>No policies available. Please create a new policy.</Text>}
         buttonPreset="cancel-only"
+        cancelAction={cancelAction}
       />
     );
   }
@@ -184,6 +189,10 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     isDisabled: !canProceed(),
   };
 
+  const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
   return (
     <FlowView
       title="Select an Existing Policy"
@@ -191,6 +200,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       content={content}
       cardListItems={policyCardItems}
       primaryAction={primaryAction}
+      cancelAction={cancelAction}
     />
   );
 }

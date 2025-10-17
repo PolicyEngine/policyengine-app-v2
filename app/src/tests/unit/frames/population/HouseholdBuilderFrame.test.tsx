@@ -105,10 +105,23 @@ vi.mock('@/libs/metadataUtils', () => ({
   getFieldOptions: () => mockFieldOptions,
 }));
 
+// Mock useBackButton hook
+const mockHandleBack = vi.fn();
+vi.mock('@/hooks/useBackButton', () => ({
+  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
+}));
+
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('HouseholdBuilderFrame', () => {
   let store: any;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockCreateHousehold.mockReset();
     mockResetIngredient.mockReset();

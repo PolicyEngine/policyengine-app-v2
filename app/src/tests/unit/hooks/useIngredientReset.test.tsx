@@ -9,7 +9,6 @@ import {
   createMockStore,
   TEST_INGREDIENTS,
   TEST_MODES,
-  TEST_POSITIONS,
 } from '@/tests/fixtures/hooks/useIngredientResetMocks';
 
 // Mock the reducers - mocks must be defined inline due to hoisting
@@ -63,7 +62,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST,
+      payload: 0,
     });
   });
 
@@ -82,7 +81,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST,
+      payload: 0,
     });
   });
 
@@ -103,7 +102,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST,
+      payload: 0,
     });
   });
 
@@ -125,7 +124,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: TEST_POSITIONS.FIRST,
+      payload: 0,
     });
   });
 

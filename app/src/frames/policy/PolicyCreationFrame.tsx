@@ -56,5 +56,16 @@ export default function PolicyCreationFrame({ onNavigate, isInSubflow }: FlowCom
     onClick: submissionHandler,
   };
 
-  return <FlowView title="Create a policy" content={formInputs} primaryAction={primaryAction} />;
+  const cancelAction = {
+    ingredientType: 'policy' as const,
+  };
+
+  return (
+    <FlowView
+      title="Create a policy"
+      content={formInputs}
+      primaryAction={primaryAction}
+      cancelAction={cancelAction}
+    />
+  );
 }
