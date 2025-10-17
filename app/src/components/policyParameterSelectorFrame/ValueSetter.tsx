@@ -386,6 +386,8 @@ export function ValueInputBox(props: ValueInputBoxProps) {
       ? '£'
       : '';
 
+  const isPercentage = param.unit === '/1';
+
   if (param.type !== 'parameter') {
     console.error("ValueInputBox expects a parameter type of 'parameter', got:", param.type);
     return <NumberInput disabled value={0} />;
@@ -393,9 +395,14 @@ export function ValueInputBox(props: ValueInputBoxProps) {
 
   const handleChange = (newValue: any) => {
     if (onChange) {
-      onChange(newValue);
+      // Convert percentage display value (0-100) to decimal (0-1) for storage
+      const valueToStore = isPercentage ? newValue / 100 : newValue;
+      onChange(valueToStore);
     }
   };
+
+  // Convert decimal value (0-1) to percentage display value (0-100)
+  const displayValue = isPercentage ? (value !== undefined ? value * 100 : 0) : (value !== undefined ? value : 0);
 
   return param.unit === 'bool' ? (
     <Text>TODO: Switch for boolean value</Text>
@@ -405,8 +412,8 @@ export function ValueInputBox(props: ValueInputBoxProps) {
       placeholder="Enter value"
       min={0}
       prefix={prefix}
-      suffix={param.unit === '/1' ? '%' : ''}
-      value={value !== undefined ? value : 0}
+      suffix={isPercentage ? '%' : ''}
+      value={displayValue}
       onChange={handleChange}
       thousandSeparator=","
       style={{ flex: 1 }}
