@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
@@ -13,6 +14,11 @@ import {
   formatParameterValue,
   getPlotlyAxisFormat,
 } from '@/utils/chartValueUtils';
+import {
+  useChartWidth,
+  useIsMobile,
+  useWindowHeight,
+} from '@/hooks/useChartDimensions';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
@@ -77,6 +83,12 @@ function getReformPolicyLabel(policy) {
 export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
   const { param, baseValuesCollection, reformValuesCollection } = props;
 
+  // Responsive state
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartWidth = useChartWidth(chartContainerRef);
+  const isMobile = useIsMobile();
+  const windowHeight = useWindowHeight();
+
   // Step 1: Get base data and make a copy to avoid mutations
   const x = [...baseValuesCollection.getAllStartDates()];
   const y = [...baseValuesCollection.getAllValues()];
@@ -125,7 +137,7 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
 
   // TODO: Typing on Plotly is not good; improve the typing here
   return (
-    <>
+    <div ref={chartContainerRef}>
       <Plot
         data={[
           ...(reformValuesCollection
@@ -180,36 +192,28 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
             y: 1.2,
             orientation: 'h' as any,
           },
-          // ...ChartLogo,
-          /*
           margin: {
-            t: mobile && 80,
-            r: mobile && 50,
-            l: mobile && 50,
-            b: mobile && 30,
+            t: isMobile ? 80 : 60,
+            r: isMobile ? 50 : 40,
+            l: isMobile ? 50 : 60,
+            b: isMobile ? 30 : 50,
           },
-          */
-          // ...plotLayoutFont,
           title: {
-            // text: `${parameter.label} over time`,
-            xanchor: 'left',
-            // x: mobile ? 0.05 : 0.04,
+            text: `${param.label} over time`,
+            xanchor: 'left' as any,
+            x: isMobile ? 0.05 : 0.04,
           },
-          // dragmode: mobile ? false : "zoom",
-          // width: paramChartWidth,
+          dragmode: isMobile ? (false as any) : ('zoom' as any),
+          width: chartWidth || undefined,
         }}
-        // Note that plotly does not dynamically resize inside flexbox
-        /*
         style={{
-          height: mobile ? 0.5 * windowHeight : 400,
+          height: isMobile ? windowHeight * 0.5 : 400,
         }}
-          */
         config={{
           displayModeBar: false,
           responsive: true,
-          // locale: localeCode(metadata.countryId),
         }}
       />
-    </>
+    </div>
   );
 }
