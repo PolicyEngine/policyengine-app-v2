@@ -402,7 +402,13 @@ export function ValueInputBox(props: ValueInputBoxProps) {
   };
 
   // Convert decimal value (0-1) to percentage display value (0-100)
-  const displayValue = isPercentage ? (value !== undefined ? value * 100 : 0) : (value !== undefined ? value : 0);
+  const displayValue = isPercentage
+    ? value !== undefined
+      ? value * 100
+      : 0
+    : value !== undefined
+      ? value
+      : 0;
 
   return param.unit === 'bool' ? (
     <Text>TODO: Switch for boolean value</Text>

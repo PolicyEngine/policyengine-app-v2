@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { getReformPolicyLabel } from '@/utils/chartUtils';
 import {
   EXPECTED_LABEL_DEFAULT,
   EXPECTED_LABEL_WITH_DESCRIPTIVE,
   EXPECTED_LABEL_WITH_ID_0,
-  EXPECTED_LABEL_WITH_ID_12345,
   EXPECTED_LABEL_WITH_ID_7,
+  EXPECTED_LABEL_WITH_ID_12345,
   EXPECTED_LABEL_WITH_SHORT,
+  SAMPLE_POLICY_ID_NULL,
   SAMPLE_POLICY_ID_POSITIVE,
   SAMPLE_POLICY_ID_SINGLE_DIGIT,
-  SAMPLE_POLICY_ID_ZERO,
-  SAMPLE_POLICY_ID_NULL,
   SAMPLE_POLICY_ID_UNDEFINED,
+  SAMPLE_POLICY_ID_ZERO,
   SAMPLE_POLICY_LABEL_DESCRIPTIVE,
   SAMPLE_POLICY_LABEL_EMPTY_STRING,
   SAMPLE_POLICY_LABEL_SHORT,
 } from '@/tests/fixtures/utils/chartUtilsMocks';
+import { getReformPolicyLabel } from '@/utils/chartUtils';
 
 describe('chartUtils', () => {
   describe('getReformPolicyLabel', () => {
@@ -104,10 +104,7 @@ describe('chartUtils', () => {
 
       it('given undefined label and undefined ID then returns default', () => {
         // Given/When
-        const result = getReformPolicyLabel(
-          SAMPLE_POLICY_ID_UNDEFINED,
-          SAMPLE_POLICY_ID_UNDEFINED
-        );
+        const result = getReformPolicyLabel(SAMPLE_POLICY_ID_UNDEFINED, SAMPLE_POLICY_ID_UNDEFINED);
 
         // Then
         expect(result).toBe(EXPECTED_LABEL_DEFAULT);
@@ -115,10 +112,7 @@ describe('chartUtils', () => {
 
       it('given null label and null ID then returns default', () => {
         // Given/When
-        const result = getReformPolicyLabel(
-          SAMPLE_POLICY_ID_NULL,
-          SAMPLE_POLICY_ID_NULL
-        );
+        const result = getReformPolicyLabel(SAMPLE_POLICY_ID_NULL, SAMPLE_POLICY_ID_NULL);
 
         // Then
         expect(result).toBe(EXPECTED_LABEL_DEFAULT);

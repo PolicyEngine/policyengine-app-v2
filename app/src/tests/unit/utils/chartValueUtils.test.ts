@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  formatParameterValue,
-  getPlotlyAxisFormat,
-} from '@/utils/chartValueUtils';
-import {
   BOOLEAN_FALSE_VALUE,
   BOOLEAN_TRUE_VALUE,
   CURRENCY_GBP_VALUE,
@@ -30,6 +26,7 @@ import {
   UNITS,
   ZERO_VALUE,
 } from '@/tests/fixtures/utils/chartValueUtilsMocks';
+import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
 
 describe('chartValueUtils', () => {
   describe('formatParameterValue', () => {
@@ -57,10 +54,7 @@ describe('chartValueUtils', () => {
       });
 
       it('should format currency_USD variant', () => {
-        const result = formatParameterValue(
-          CURRENCY_USD_VALUE,
-          UNITS.USD_UNDERSCORE
-        );
+        const result = formatParameterValue(CURRENCY_USD_VALUE, UNITS.USD_UNDERSCORE);
         expect(result).toBe(EXPECTED_FORMATS.USD_WITH_SYMBOL);
       });
 
@@ -101,10 +95,7 @@ describe('chartValueUtils', () => {
       });
 
       it('should format currency_GBP variant', () => {
-        const result = formatParameterValue(
-          CURRENCY_GBP_VALUE,
-          UNITS.GBP_UNDERSCORE
-        );
+        const result = formatParameterValue(CURRENCY_GBP_VALUE, UNITS.GBP_UNDERSCORE);
         expect(result).toBe(EXPECTED_FORMATS.GBP_WITH_SYMBOL);
       });
 
@@ -154,18 +145,12 @@ describe('chartValueUtils', () => {
       });
 
       it('should format true as "True" for abolition unit', () => {
-        const result = formatParameterValue(
-          BOOLEAN_TRUE_VALUE,
-          UNITS.ABOLITION
-        );
+        const result = formatParameterValue(BOOLEAN_TRUE_VALUE, UNITS.ABOLITION);
         expect(result).toBe(EXPECTED_FORMATS.BOOLEAN_TRUE);
       });
 
       it('should format false as "False" for abolition unit', () => {
-        const result = formatParameterValue(
-          BOOLEAN_FALSE_VALUE,
-          UNITS.ABOLITION
-        );
+        const result = formatParameterValue(BOOLEAN_FALSE_VALUE, UNITS.ABOLITION);
         expect(result).toBe(EXPECTED_FORMATS.BOOLEAN_FALSE);
       });
     });
@@ -231,19 +216,13 @@ describe('chartValueUtils', () => {
 
     describe('percentage axis', () => {
       it('should return percentage axis format', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.PERCENTAGE,
-          SAMPLE_PERCENTAGE_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.PERCENTAGE, SAMPLE_PERCENTAGE_VALUES);
         const expected = getExpectedPercentageAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should include correct tick format and range', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.PERCENTAGE,
-          SAMPLE_PERCENTAGE_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.PERCENTAGE, SAMPLE_PERCENTAGE_VALUES);
         expect(result.tickformat).toBe('.1%');
         expect(result.range).toEqual([0.1, 1.0]);
       });
@@ -251,37 +230,25 @@ describe('chartValueUtils', () => {
 
     describe('currency axis (USD)', () => {
       it('should return USD axis format with currency-USD', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.USD,
-          SAMPLE_CURRENCY_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.USD, SAMPLE_CURRENCY_VALUES);
         const expected = getExpectedUSDAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should return USD axis format with currency_USD', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.USD_UNDERSCORE,
-          SAMPLE_CURRENCY_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.USD_UNDERSCORE, SAMPLE_CURRENCY_VALUES);
         const expected = getExpectedUSDAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should return USD axis format with USD short', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.USD_SHORT,
-          SAMPLE_CURRENCY_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.USD_SHORT, SAMPLE_CURRENCY_VALUES);
         const expected = getExpectedUSDAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should include $ prefix and comma formatting', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.USD,
-          SAMPLE_CURRENCY_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.USD, SAMPLE_CURRENCY_VALUES);
         expect(result.tickprefix).toBe('$');
         expect(result.tickformat).toBe(',.0f');
       });
@@ -289,28 +256,19 @@ describe('chartValueUtils', () => {
 
     describe('currency axis (GBP)', () => {
       it('should return GBP axis format with currency-GBP', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.GBP,
-          SAMPLE_CURRENCY_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.GBP, SAMPLE_CURRENCY_VALUES);
         const expected = getExpectedGBPAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should return GBP axis format with currency_GBP', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.GBP_UNDERSCORE,
-          SAMPLE_CURRENCY_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.GBP_UNDERSCORE, SAMPLE_CURRENCY_VALUES);
         const expected = getExpectedGBPAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should include £ prefix and comma formatting', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.GBP,
-          SAMPLE_CURRENCY_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.GBP, SAMPLE_CURRENCY_VALUES);
         expect(result.tickprefix).toBe('£');
         expect(result.tickformat).toBe(',.0f');
       });
@@ -318,28 +276,19 @@ describe('chartValueUtils', () => {
 
     describe('boolean axis', () => {
       it('should return boolean axis format for bool unit', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.BOOLEAN,
-          SAMPLE_BOOLEAN_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.BOOLEAN, SAMPLE_BOOLEAN_VALUES);
         const expected = getExpectedBooleanAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should return boolean axis format for abolition unit', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.ABOLITION,
-          SAMPLE_BOOLEAN_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.ABOLITION, SAMPLE_BOOLEAN_VALUES);
         const expected = getExpectedBooleanAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should include custom tick values and text', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.BOOLEAN,
-          SAMPLE_BOOLEAN_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.BOOLEAN, SAMPLE_BOOLEAN_VALUES);
         expect(result.tickvals).toEqual([0, 1]);
         expect(result.ticktext).toEqual(['False', 'True']);
         expect(result.range).toEqual([-0.1, 1.1]);
@@ -348,19 +297,13 @@ describe('chartValueUtils', () => {
 
     describe('numeric axis', () => {
       it('should return numeric axis format', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.NUMERIC,
-          SAMPLE_NUMERIC_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.NUMERIC, SAMPLE_NUMERIC_VALUES);
         const expected = getExpectedNumericAxisFormat();
         expect(result).toEqual(expected);
       });
 
       it('should include correct tick format and range', () => {
-        const result = getPlotlyAxisFormat(
-          UNITS.NUMERIC,
-          SAMPLE_NUMERIC_VALUES
-        );
+        const result = getPlotlyAxisFormat(UNITS.NUMERIC, SAMPLE_NUMERIC_VALUES);
         expect(result.tickformat).toBe(',.2f');
         expect(result.range).toEqual([100, 500]);
       });

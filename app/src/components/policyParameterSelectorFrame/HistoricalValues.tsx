@@ -1,25 +1,18 @@
-import { useRef, useMemo, memo } from 'react';
+import { memo, useMemo, useRef } from 'react';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
+import { CHART_COLORS } from '@/constants/chartColors';
+import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
-import { CHART_COLORS } from '@/constants/chartColors';
 import {
   extendForDisplay,
   filterValidChartDates,
   getAllChartDates,
   getChartBoundaryDates,
 } from '@/utils/chartDateUtils';
-import {
-  formatParameterValue,
-  getPlotlyAxisFormat,
-} from '@/utils/chartValueUtils';
-import {
-  useChartWidth,
-  useIsMobile,
-  useWindowHeight,
-} from '@/hooks/useChartDimensions';
 import { getReformPolicyLabel } from '@/utils/chartUtils';
+import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
@@ -40,7 +33,13 @@ interface ParameterOverTimeChartProps {
 export default function PolicyParameterSelectorHistoricalValues(
   props: PolicyParameterSelectorHistoricalValuesProps
 ) {
-  const { param, baseValues = new ValueIntervalCollection(), reformValues, policyLabel, policyId } = props;
+  const {
+    param,
+    baseValues = new ValueIntervalCollection(),
+    reformValues,
+    policyLabel,
+    policyId,
+  } = props;
 
   return (
     <Stack mt="xl">
@@ -57,7 +56,7 @@ export default function PolicyParameterSelectorHistoricalValues(
   );
 }
 
-export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
+export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) => {
   const { param, baseValuesCollection, reformValuesCollection, policyLabel, policyId } = props;
 
   // Responsive state
@@ -169,9 +168,7 @@ export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props
   // Memoize custom data for hover tooltips
   const customData = useMemo(() => {
     try {
-      return y.map((value) =>
-        formatParameterValue(value, param.unit, { decimalPlaces: 2 })
-      );
+      return y.map((value) => formatParameterValue(value, param.unit, { decimalPlaces: 2 }));
     } catch (error) {
       console.error('ParameterOverTimeChart: Error formatting custom data', error);
       return [];
@@ -238,14 +235,16 @@ export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props
             mode: 'lines+markers' as any,
             line: {
               shape: 'hv' as any,
-              color: (reformValuesCollection && reformedX.length > 0 && reformedY.length > 0)
-                ? CHART_COLORS.BASE_LINE_WITH_REFORM
-                : CHART_COLORS.BASE_LINE_ALONE,
+              color:
+                reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
+                  ? CHART_COLORS.BASE_LINE_WITH_REFORM
+                  : CHART_COLORS.BASE_LINE_ALONE,
             },
             marker: {
-              color: (reformValuesCollection && reformedX.length > 0 && reformedY.length > 0)
-                ? CHART_COLORS.BASE_LINE_WITH_REFORM
-                : CHART_COLORS.BASE_LINE_ALONE,
+              color:
+                reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
+                  ? CHART_COLORS.BASE_LINE_WITH_REFORM
+                  : CHART_COLORS.BASE_LINE_ALONE,
               size: CHART_COLORS.MARKER_SIZE,
             },
             name: 'Current law',

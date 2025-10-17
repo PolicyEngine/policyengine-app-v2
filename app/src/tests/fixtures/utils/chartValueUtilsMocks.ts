@@ -52,11 +52,7 @@ export const EXPECTED_FORMATS = {
 } as const;
 
 // Sample data arrays for axis formatting
-export const SAMPLE_DATE_VALUES = [
-  '2020-01-01',
-  '2023-06-15',
-  '2025-12-31',
-];
+export const SAMPLE_DATE_VALUES = ['2020-01-01', '2023-06-15', '2025-12-31'];
 
 export const SAMPLE_NUMERIC_VALUES = [100, 200, 300, 400, 500];
 

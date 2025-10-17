@@ -90,7 +90,7 @@ export const SAMPLE_BASE_VALUES_COMPLEX = new ValueIntervalCollection([
     parameter: 'tax.income.rate',
     startDate: '2023-01-01',
     endDate: '2025-12-31',
-    value: 0.20,
+    value: 0.2,
   },
   {
     parameter: 'tax.income.rate',
@@ -121,7 +121,7 @@ export const SAMPLE_REFORM_VALUES_COMPLEX = new ValueIntervalCollection([
     parameter: 'tax.income.rate',
     startDate: '2026-01-01',
     endDate: '2100-12-31',
-    value: 0.30,
+    value: 0.3,
   },
 ]);
 
@@ -133,11 +133,7 @@ export const EXPECTED_BASE_START_DATES = ['2020-01-01', '2024-01-01'];
 export const EXPECTED_BASE_VALUES = [12000, 13500];
 
 // Expected after extending for display
-export const EXPECTED_EXTENDED_BASE_DATES = [
-  '2020-01-01',
-  '2024-01-01',
-  '2099-12-31',
-];
+export const EXPECTED_EXTENDED_BASE_DATES = ['2020-01-01', '2024-01-01', '2099-12-31'];
 export const EXPECTED_EXTENDED_BASE_VALUES = [12000, 13500, 13500]; // Last value repeated
 
 // Expected filtered dates (should exclude 0000-01-01 and dates >= 2099-12-31)

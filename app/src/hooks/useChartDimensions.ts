@@ -14,7 +14,9 @@ export function useChartWidth(containerRef: React.RefObject<HTMLDivElement | nul
   const [width, setWidth] = useState(0);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current) {
+      return;
+    }
 
     const observer = new ResizeObserver((entries) => {
       if (entries[0]) {
@@ -60,9 +62,7 @@ export function useIsMobile(): boolean {
  * @returns Current window height in pixels
  */
 export function useWindowHeight(): number {
-  const [height, setHeight] = useState(
-    typeof window !== 'undefined' ? window.innerHeight : 0
-  );
+  const [height, setHeight] = useState(typeof window !== 'undefined' ? window.innerHeight : 0);
 
   useEffect(() => {
     const handleResize = () => setHeight(window.innerHeight);

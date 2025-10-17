@@ -1,8 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, it, vi } from 'vitest';
 import PolicyParameterSelectorHistoricalValues, {
   ParameterOverTimeChart,
 } from '@/components/policyParameterSelectorFrame/HistoricalValues';
+import { CHART_COLORS } from '@/constants/chartColors';
+import { CHART_DISPLAY_EXTENSION_DATE } from '@/constants/chartConstants';
 import {
   BOOLEAN_PARAMETER,
   CURRENCY_USD_PARAMETER,
@@ -29,8 +31,6 @@ import {
   SAMPLE_REFORM_VALUES_COMPLEX,
   SAMPLE_REFORM_VALUES_SIMPLE,
 } from '@/tests/fixtures/components/HistoricalValuesMocks';
-import { CHART_COLORS } from '@/constants/chartColors';
-import { CHART_DISPLAY_EXTENSION_DATE } from '@/constants/chartConstants';
 
 // Mock Plotly to avoid rendering issues in tests
 vi.mock('react-plotly.js', () => ({
@@ -710,7 +710,6 @@ describe('HistoricalValues', () => {
       expect(props.style.height).toBeDefined();
       expect(typeof props.style.height).toBe('number');
     });
-
   });
 
   describe('ParameterOverTimeChart policy label integration', () => {

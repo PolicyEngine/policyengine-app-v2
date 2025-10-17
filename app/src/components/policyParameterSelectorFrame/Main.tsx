@@ -26,7 +26,7 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
   const baseValues = new ValueIntervalCollection(param.values as ValuesList);
 
   // Always start reform with a copy of base values (reform line matches current law initially)
-  let reformValues = new ValueIntervalCollection(baseValues);
+  const reformValues = new ValueIntervalCollection(baseValues);
   let policyLabel = null;
   let policyId = null;
 
