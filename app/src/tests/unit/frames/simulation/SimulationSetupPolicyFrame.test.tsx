@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSetupPolicyFrame from '@/frames/simulation/SimulationSetupPolicyFrame';
 import { createPolicyAtPosition } from '@/reducers/policyReducer';
 import {
+  BUTTON_ORDER,
+  BUTTON_TEXT,
   createMockSimulationSetupPolicyState,
   expectedCurrentLawPolicyUK,
   expectedCurrentLawPolicyUS,
@@ -81,6 +83,40 @@ describe('SimulationSetupPolicyFrame', () => {
       expect(
         screen.getByText('Use the baseline tax-benefit system with no reforms')
       ).toBeInTheDocument();
+    });
+
+    test('given frame loads then Current Law appears first in button order', () => {
+      // Given
+      const mockState = createMockSimulationSetupPolicyState();
+      mockUseSelector.mockImplementation((selector: any) => selector(mockState));
+      mockUseCurrentCountry.mockReturnValue(TEST_COUNTRIES.US);
+
+      // When
+      const { container } = render(<SimulationSetupPolicyFrame {...mockFlowProps} />);
+
+      // Then
+      const buttons = container.querySelectorAll('button[class*="Card"]');
+      expect(buttons.length).toBe(3);
+
+      // First button should be Current Law
+      expect(buttons[BUTTON_ORDER.CURRENT_LAW]).toHaveTextContent(BUTTON_TEXT.CURRENT_LAW.title);
+      expect(buttons[BUTTON_ORDER.CURRENT_LAW]).toHaveTextContent(
+        BUTTON_TEXT.CURRENT_LAW.description
+      );
+
+      // Second button should be Load Existing Policy
+      expect(buttons[BUTTON_ORDER.LOAD_EXISTING]).toHaveTextContent(
+        BUTTON_TEXT.LOAD_EXISTING.title
+      );
+      expect(buttons[BUTTON_ORDER.LOAD_EXISTING]).toHaveTextContent(
+        BUTTON_TEXT.LOAD_EXISTING.description
+      );
+
+      // Third button should be Create New Policy
+      expect(buttons[BUTTON_ORDER.CREATE_NEW]).toHaveTextContent(BUTTON_TEXT.CREATE_NEW.title);
+      expect(buttons[BUTTON_ORDER.CREATE_NEW]).toHaveTextContent(
+        BUTTON_TEXT.CREATE_NEW.description
+      );
     });
   });
 

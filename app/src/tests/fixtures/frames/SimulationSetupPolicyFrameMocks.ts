@@ -12,6 +12,28 @@ export const TEST_COUNTRIES = {
   UK: 'uk',
 } as const;
 
+// Button order constants for testing
+export const BUTTON_ORDER = {
+  CURRENT_LAW: 0,
+  LOAD_EXISTING: 1,
+  CREATE_NEW: 2,
+} as const;
+
+export const BUTTON_TEXT = {
+  CURRENT_LAW: {
+    title: 'Current Law',
+    description: 'Use the baseline tax-benefit system with no reforms',
+  },
+  LOAD_EXISTING: {
+    title: 'Load Existing Policy',
+    description: 'Use a policy you have already created',
+  },
+  CREATE_NEW: {
+    title: 'Create New Policy',
+    description: 'Build a new policy',
+  },
+} as const;
+
 // Mock navigation function
 export const mockOnNavigate = vi.fn();
 
@@ -49,15 +71,15 @@ export const createMockSimulationSetupPolicyState = (overrides?: {
       parameterTree: null,
     },
     report: {
-      reportId: undefined,
+      id: '',
       label: null,
       countryId: countryId as any,
       apiVersion: null,
       simulationIds: [],
       status: 'pending',
       output: null,
-      createdAt: null,
-      updatedAt: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       activeSimulationPosition,
       mode,
     },
