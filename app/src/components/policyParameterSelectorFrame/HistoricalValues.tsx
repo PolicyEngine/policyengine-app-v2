@@ -43,7 +43,7 @@ export default function PolicyParameterSelectorHistoricalValues(
   const { param, baseValues = new ValueIntervalCollection(), reformValues, policyLabel, policyId } = props;
 
   return (
-    <Stack>
+    <Stack mt="xl">
       <Text fw={700}>Historical values</Text>
       <Text>{param.label} over time</Text>
       <ParameterOverTimeChart
@@ -254,12 +254,23 @@ export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props
           },
         ].filter((x) => x)}
         layout={{
-          xaxis: xaxisFormat,
-          yaxis: yaxisFormat,
+          xaxis: {
+            ...xaxisFormat,
+            color: CHART_COLORS.CHART_TEXT,
+            gridcolor: '#E5E7EB',
+          },
+          yaxis: {
+            ...yaxisFormat,
+            color: CHART_COLORS.CHART_TEXT,
+            gridcolor: '#E5E7EB',
+          },
           legend: {
             // Position above the plot
             y: 1.2,
             orientation: 'h' as any,
+            font: {
+              color: CHART_COLORS.CHART_TEXT,
+            },
           },
           margin: {
             t: isMobile ? 80 : 60,
@@ -269,6 +280,8 @@ export const ParameterOverTimeChart = memo(function ParameterOverTimeChart(props
           },
           dragmode: isMobile ? (false as any) : ('zoom' as any),
           width: chartWidth || undefined,
+          paper_bgcolor: CHART_COLORS.CHART_BACKGROUND,
+          plot_bgcolor: CHART_COLORS.PLOT_BACKGROUND,
         }}
         style={{
           height: isMobile ? windowHeight * 0.5 : 400,
