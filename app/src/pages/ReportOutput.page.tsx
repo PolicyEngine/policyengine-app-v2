@@ -118,7 +118,9 @@ export default function ReportOutputPage() {
   );
 
   // Phase 4: Build calculation config for auto-start
-  const calcConfig = useMemo(() => {
+  // For household reports: Build configs for each simulation (NOT report-level)
+  // For economy reports: Build single config at report level
+  const calcConfigs = useMemo(() => {
     if (!report || !simulations?.[0]) {
       return null;
     }
@@ -131,55 +133,121 @@ export default function ReportOutputPage() {
       return null;
     }
 
-    // Determine population based on type
-    const household = simulation1.populationType === 'household'
-      ? { id: simulation1.populationId, countryId: report.countryId, householdData: {} as any }
-      : null;
+    const isHousehold = simulation1.populationType === 'household';
 
-    const geography = simulation1.populationType === 'geography'
-      ? {
-          id: `${report.countryId}-${simulation1.populationId}`,
+    if (isHousehold) {
+      // HOUSEHOLD: Return array of configs, one per simulation
+      // Each simulation needs its own calculation at simulation level
+      const household = { id: simulation1.populationId, countryId: report.countryId, householdData: {} as any };
+
+      const configs: CalcStartConfig[] = [];
+
+      // Config for simulation1
+      if (simulation1.id) {
+        configs.push({
+          calcId: simulation1.id,
+          targetType: 'simulation' as const,
           countryId: report.countryId,
-          scope: 'national' as const,
-          geographyId: simulation1.populationId || '',
-        }
-      : null;
+          simulations: {
+            simulation1: simulation1,
+            simulation2: null,
+          },
+          populations: {
+            household1: household,
+            household2: null,
+            geography1: null,
+            geography2: null,
+          },
+        });
+      }
 
-    return {
-      calcId: report.id,
-      targetType: 'report' as const,
-      countryId: report.countryId,
-      simulations: {
-        simulation1: simulation1,
-        simulation2: simulation2,
-      },
-      populations: {
-        household1: household,
-        household2: null,
-        geography1: geography,
-        geography2: null,
-      },
-    } satisfies CalcStartConfig;
+      // Config for simulation2 (if exists)
+      if (simulation2?.id) {
+        configs.push({
+          calcId: simulation2.id,
+          targetType: 'simulation' as const,
+          countryId: report.countryId,
+          simulations: {
+            simulation1: simulation2,
+            simulation2: null,
+          },
+          populations: {
+            household1: household,
+            household2: null,
+            geography1: null,
+            geography2: null,
+          },
+        });
+      }
+
+      return configs;
+    } else {
+      // ECONOMY: Return single config at report level
+      const geography = {
+        id: `${report.countryId}-${simulation1.populationId}`,
+        countryId: report.countryId,
+        scope: 'national' as const,
+        geographyId: simulation1.populationId || '',
+      };
+
+      return [{
+        calcId: report.id,
+        targetType: 'report' as const,
+        countryId: report.countryId,
+        simulations: {
+          simulation1: simulation1,
+          simulation2: simulation2,
+        },
+        populations: {
+          household1: null,
+          household2: null,
+          geography1: geography,
+          geography2: null,
+        },
+      }];
+    }
   }, [report, simulations]);
 
   // Phase 4: Auto-start calculation if needed (direct URL loads)
   // Manager handles idempotency - won't duplicate if already running
+  // For household: Start multiple calculations (one per simulation)
+  // For economy: Start single calculation at report level
   useStartCalculationOnLoad({
-    enabled: !!report && !!calcConfig,
-    config: calcConfig,
+    enabled: !!report && !!calcConfigs,
+    configs: calcConfigs || [],
     isComplete: calcStatus.isComplete,
   });
 
   // Prepare output data - wrap household data if needed
-  let output: EconomyReportOutput | Household | null | undefined = undefined;
+  let output: EconomyReportOutput | Household | Household[] | null | undefined = undefined;
 
   if (outputType === 'household' && calcStatus.result && report?.countryId) {
-    const wrappedOutput: Household = {
-      id: report.id,
-      countryId: report.countryId,
-      householdData: calcStatus.result as HouseholdData,
-    };
-    output = wrappedOutput;
+    // For household reports, we may have multiple simulations
+    // Get all calculation results (one per simulation)
+    const householdOutputs: Household[] = [];
+
+    if ('calculations' in calcStatus && Array.isArray(calcStatus.calculations)) {
+      // Multiple simulations - wrap each result
+      calcStatus.calculations.forEach((calc, index) => {
+        if (calc.result) {
+          householdOutputs.push({
+            id: `${report.id}-sim${index + 1}`,
+            countryId: report.countryId,
+            householdData: calc.result as HouseholdData,
+          });
+        }
+      });
+    } else if (calcStatus.result) {
+      // Single simulation - wrap the result
+      householdOutputs.push({
+        id: report.id,
+        countryId: report.countryId,
+        householdData: calcStatus.result as HouseholdData,
+      });
+    }
+
+    // Pass array if multiple simulations, single if only one
+    output = householdOutputs.length > 1 ? householdOutputs : householdOutputs[0];
   } else if (outputType === 'economy' && calcStatus.result) {
     output = calcStatus.result as EconomyReportOutput;
   }

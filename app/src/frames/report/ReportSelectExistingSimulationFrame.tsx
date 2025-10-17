@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
+import { Stack, Text, Group, ActionIcon } from '@mantine/core';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
@@ -8,6 +9,8 @@ import { selectActiveSimulationPosition } from '@/reducers/reportReducer';
 import { updateSimulationAtPosition } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+
+const ITEMS_PER_PAGE = 5;
 
 export default function ReportSelectExistingSimulationFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -20,6 +23,7 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
 
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const [localSimulation, setLocalSimulation] = useState<EnhancedUserSimulation | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   console.log('Simulation Data:', data);
   console.log('Simulation Loading:', isLoading);
@@ -97,51 +101,93 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     );
   }
 
-  // Build card list items from user simulations
-  const simulationCardItems = userSimulations
-    .filter((enhancedSim) => enhancedSim.simulation?.id) // Only include simulations with loaded data
-    .slice(0, 5) // Display only the first 5 simulations
-    .map((enhancedSim) => {
-      const simulation = enhancedSim.simulation!;
-      let title = '';
-      let subtitle = '';
+  // Filter simulations with loaded data
+  const filteredSimulations = userSimulations.filter((enhancedSim) => enhancedSim.simulation?.id);
 
-      if (enhancedSim.userSimulation?.label) {
-        title = enhancedSim.userSimulation.label;
-        subtitle = `Simulation #${simulation.id}`;
-      } else {
-        title = `Simulation #${simulation.id}`;
-      }
+  console.log('[Pagination Debug] Total simulations:', userSimulations.length);
+  console.log('[Pagination Debug] Filtered simulations:', filteredSimulations.length);
+  console.log('[Pagination Debug] Current page:', currentPage);
 
-      // Add policy and population info to subtitle if available
-      const policyLabel = enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
-      const populationLabel =
-        enhancedSim.userHousehold?.label ||
-        enhancedSim.geography?.name ||
-        simulation.populationId;
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredSimulations.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedSimulations = filteredSimulations.slice(startIndex, endIndex);
 
-      if (policyLabel && populationLabel) {
-        subtitle = subtitle
-          ? `${subtitle} • Policy: ${policyLabel} • Population: ${populationLabel}`
-          : `Policy: ${policyLabel} • Population: ${populationLabel}`;
-      }
+  console.log('[Pagination Debug] Total pages:', totalPages);
+  console.log('[Pagination Debug] Start index:', startIndex);
+  console.log('[Pagination Debug] End index:', endIndex);
+  console.log('[Pagination Debug] Paginated simulations:', paginatedSimulations.length);
 
-      return {
-        title,
-        subtitle,
-        onClick: () => handleSimulationSelect(enhancedSim),
-        isSelected: localSimulation?.simulation?.id === simulation.id,
-      };
-    });
+  // Build card list items from paginated simulations
+  const simulationCardItems = paginatedSimulations.map((enhancedSim) => {
+    const simulation = enhancedSim.simulation!;
+    let title = '';
+    let subtitle = '';
+
+    if (enhancedSim.userSimulation?.label) {
+      title = enhancedSim.userSimulation.label;
+      subtitle = `Simulation #${simulation.id}`;
+    } else {
+      title = `Simulation #${simulation.id}`;
+    }
+
+    // Add policy and population info to subtitle if available
+    const policyLabel = enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
+    const populationLabel =
+      enhancedSim.userHousehold?.label ||
+      enhancedSim.geography?.name ||
+      simulation.populationId;
+
+    if (policyLabel && populationLabel) {
+      subtitle = subtitle
+        ? `${subtitle} • Policy: ${policyLabel} • Population: ${populationLabel}`
+        : `Policy: ${policyLabel} • Population: ${populationLabel}`;
+    }
+
+    return {
+      title,
+      subtitle,
+      onClick: () => handleSimulationSelect(enhancedSim),
+      isSelected: localSimulation?.simulation?.id === simulation.id,
+    };
+  });
 
   const content = (
     <Stack>
       <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
-      <Text fw={700}>Your Simulations</Text>
-      <Text size="sm" c="dimmed">
-        Showing {simulationCardItems.length} simulations
-      </Text>
+      <Group justify="space-between" align="center">
+        <div>
+          <Text fw={700}>Your Simulations</Text>
+          <Text size="sm" c="dimmed">
+            Showing {startIndex + 1}-{Math.min(endIndex, filteredSimulations.length)} of {filteredSimulations.length}
+          </Text>
+        </div>
+        {totalPages > 1 && (
+          <Group gap="xs">
+            <ActionIcon
+              variant="default"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+            >
+              <IconChevronLeft size={18} />
+            </ActionIcon>
+            <Text size="sm">
+              Page {currentPage} of {totalPages}
+            </Text>
+            <ActionIcon
+              variant="default"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+            >
+              <IconChevronRight size={18} />
+            </ActionIcon>
+          </Group>
+        )}
+      </Group>
     </Stack>
   );
 

@@ -76,7 +76,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -94,7 +94,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: false,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -111,7 +111,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config: null,
+          configs: [],
           isComplete: false,
         }),
       { wrapper }
@@ -129,7 +129,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: true,
         }),
       { wrapper }
@@ -149,7 +149,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -168,7 +168,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -196,7 +196,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -221,7 +221,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -249,7 +249,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -274,7 +274,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -297,7 +297,7 @@ describe('useStartCalculationOnLoad', () => {
       () =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
       { wrapper }
@@ -316,7 +316,7 @@ describe('useStartCalculationOnLoad', () => {
       ({ isComplete }) =>
         useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete,
         }),
       { wrapper, initialProps: { isComplete: true } }

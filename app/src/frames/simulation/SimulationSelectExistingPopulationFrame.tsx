@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
+import { Stack, Text, Group, ActionIcon } from '@mantine/core';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { HouseholdAdapter } from '@/adapters';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
+
+const ITEMS_PER_PAGE = 5;
 import {
   isGeographicMetadataWithAssociation,
   UserGeographicMetadataWithAssociation,
@@ -64,6 +67,7 @@ export default function SimulationSelectExistingPopulationFrame({
   const [localPopulation, setLocalPopulation] = useState<
     UserHouseholdMetadataWithAssociation | UserGeographicMetadataWithAssociation | null
   >(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
@@ -216,10 +220,21 @@ export default function SimulationSelectExistingPopulationFrame({
     );
   }
 
-  // Build card list items from household populations
-  const householdCardItems = householdPopulations
-    .filter((association) => isHouseholdMetadataWithAssociation(association)) // Only include associations with loaded households
-    .slice(0, 5) // Display only the first 5 populations
+  // Filter and paginate household populations
+  const filteredHouseholds = householdPopulations.filter((association) =>
+    isHouseholdMetadataWithAssociation(association)
+  );
+
+  // Calculate pagination for combined populations
+  const allPopulations = [...filteredHouseholds, ...geographicPopulations];
+  const totalPages = Math.ceil(allPopulations.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPopulations = allPopulations.slice(startIndex, endIndex);
+
+  // Build card list items from paginated household populations
+  const householdCardItems = paginatedPopulations
+    .filter((association) => isHouseholdMetadataWithAssociation(association))
     .map((association) => {
       let title = '';
       let subtitle = '';
@@ -258,10 +273,9 @@ export default function SimulationSelectExistingPopulationFrame({
     return geography.name || geography.geographyId;
   };
 
-  // Build card list items from geographic populations
-  const geographicCardItems = geographicPopulations
-    .filter((association) => isGeographicMetadataWithAssociation(association)) // Only include valid associations
-    .slice(0, 5) // Display only the first 5 populations
+  // Build card list items from paginated geographic populations
+  const geographicCardItems = paginatedPopulations
+    .filter((association) => isGeographicMetadataWithAssociation(association))
     .map((association) => {
       let title = '';
       let subtitle = '';
@@ -298,11 +312,37 @@ export default function SimulationSelectExistingPopulationFrame({
     <Stack>
       <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
-      <Text fw={700}>Your Populations</Text>
-      <Text size="sm" c="dimmed">
-        Showing {householdCardItems.length} household and {geographicCardItems.length} geographic
-        populations
-      </Text>
+      <Group justify="space-between" align="center">
+        <div>
+          <Text fw={700}>Your Populations</Text>
+          <Text size="sm" c="dimmed">
+            Showing {startIndex + 1}-{Math.min(endIndex, allPopulations.length)} of {allPopulations.length}
+          </Text>
+        </div>
+        {totalPages > 1 && (
+          <Group gap="xs">
+            <ActionIcon
+              variant="default"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+            >
+              <IconChevronLeft size={18} />
+            </ActionIcon>
+            <Text size="sm">
+              Page {currentPage} of {totalPages}
+            </Text>
+            <ActionIcon
+              variant="default"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+            >
+              <IconChevronRight size={18} />
+            </ActionIcon>
+          </Group>
+        )}
+      </Group>
     </Stack>
   );
 

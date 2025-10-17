@@ -88,6 +88,9 @@ export class ResultPersister {
 
   /**
    * Persist result to a simulation
+   *
+   * For household reports: After persisting simulation, check if all simulations
+   * for the parent report are complete. If yes, mark the report as complete.
    */
   private async persistToSimulation(
     simulationId: string,
@@ -105,6 +108,19 @@ export class ResultPersister {
       queryKey: simulationKeys.byId(simulationId),
     });
     console.log(`[ResultPersister] ✓ Simulation cache invalidated`);
+
+    // TODO: Check if all simulations for parent report are complete
+    // If yes, mark the report record as complete
+    // This requires:
+    // 1. Finding the parent report ID from the simulation
+    // 2. Getting all simulation IDs for that report
+    // 3. Checking if all are complete
+    // 4. Calling markReportCompleted if all complete
+    //
+    // For now, household reports will show status based on simulation-level
+    // calculations, and the report record will remain in 'pending' status.
+    // The UI will use useReportsWithLiveStatus to show correct status from
+    // calculation cache, not from database report status.
   }
 
   /**

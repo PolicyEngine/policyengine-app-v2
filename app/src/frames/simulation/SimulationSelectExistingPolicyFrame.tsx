@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
+import { Stack, Text, Group, ActionIcon } from '@mantine/core';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import {
@@ -14,6 +15,8 @@ import { addPolicyParamAtPosition, createPolicyAtPosition } from '@/reducers/pol
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
+const ITEMS_PER_PAGE = 5;
+
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const dispatch = useDispatch();
@@ -23,6 +26,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicy, setLocalPolicy] = useState<UserPolicyMetadataWithAssociation | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   console.log('Policy Data:', data);
   console.log('Policy Loading:', isLoading);
@@ -143,38 +147,73 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     );
   }
 
-  // Build card list items from user policies
-  const policyCardItems = userPolicies
-    .filter((association) => isPolicyMetadataWithAssociation(association)) // Only include associations with loaded policies
-    .slice(0, 5) // Display only the first 5 policies
-    .map((association) => {
-      let title = '';
-      let subtitle = '';
-      if ('label' in association.association && association.association.label) {
-        title = association.association.label;
-        subtitle = `Policy #${association.policy!.id}`;
-      } else {
-        title = `Policy #${association.policy!.id}`;
-      }
+  // Filter policies with loaded data
+  const filteredPolicies = userPolicies.filter((association) =>
+    isPolicyMetadataWithAssociation(association)
+  );
 
-      return {
-        title,
-        subtitle,
-        onClick: () => handlePolicySelect(association),
-        isSelected:
-          isPolicyMetadataWithAssociation(localPolicy) &&
-          localPolicy.policy?.id === association.policy!.id,
-      };
-    });
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPolicies.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const paginatedPolicies = filteredPolicies.slice(startIndex, endIndex);
+
+  // Build card list items from paginated policies
+  const policyCardItems = paginatedPolicies.map((association) => {
+    let title = '';
+    let subtitle = '';
+    if ('label' in association.association && association.association.label) {
+      title = association.association.label;
+      subtitle = `Policy #${association.policy!.id}`;
+    } else {
+      title = `Policy #${association.policy!.id}`;
+    }
+
+    return {
+      title,
+      subtitle,
+      onClick: () => handlePolicySelect(association),
+      isSelected:
+        isPolicyMetadataWithAssociation(localPolicy) &&
+        localPolicy.policy?.id === association.policy!.id,
+    };
+  });
 
   const content = (
     <Stack>
       <Text size="sm">Search</Text>
       <Text fw={700}>TODO: Search</Text>
-      <Text fw={700}>Your Policies</Text>
-      <Text size="sm" c="dimmed">
-        Showing {policyCardItems.length} policies
-      </Text>
+      <Group justify="space-between" align="center">
+        <div>
+          <Text fw={700}>Your Policies</Text>
+          <Text size="sm" c="dimmed">
+            Showing {startIndex + 1}-{Math.min(endIndex, filteredPolicies.length)} of {filteredPolicies.length}
+          </Text>
+        </div>
+        {totalPages > 1 && (
+          <Group gap="xs">
+            <ActionIcon
+              variant="default"
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              aria-label="Previous page"
+            >
+              <IconChevronLeft size={18} />
+            </ActionIcon>
+            <Text size="sm">
+              Page {currentPage} of {totalPages}
+            </Text>
+            <ActionIcon
+              variant="default"
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              aria-label="Next page"
+            >
+              <IconChevronRight size={18} />
+            </ActionIcon>
+          </Group>
+        )}
+      </Group>
     </Stack>
   );
 

@@ -9,9 +9,9 @@ interface UseStartCalculationOnLoadParams {
   enabled: boolean;
 
   /**
-   * Calculation configuration
+   * Calculation configurations (array for household reports with multiple simulations)
    */
-  config: CalcStartConfig | null;
+  configs: CalcStartConfig[];
 
   /**
    * Whether calculation is already complete
@@ -43,44 +43,55 @@ interface UseStartCalculationOnLoadParams {
  * NOTE: We don't need isComputing parameter anymore because the manager
  * handles idempotency. Calling startCalculation() multiple times is safe.
  *
+ * CRITICAL FOR HOUSEHOLD: We do NOT await startCalculation() calls because
+ * household API calls take 30-60s each. We fire them and let TanStack Query
+ * handle waiting in the background while the UI shows progress.
+ *
  * @example
  * // In ReportOutput.page:
  * useStartCalculationOnLoad({
- *   enabled: !!report && !!calcConfig,
- *   config: calcConfig,
+ *   enabled: !!report && !!calcConfigs,
+ *   configs: calcConfigs || [],
  *   isComplete: calcStatus.isComplete,
  * });
  */
 export function useStartCalculationOnLoad({
   enabled,
-  config,
+  configs,
   isComplete,
 }: UseStartCalculationOnLoadParams): void {
   const manager = useCalcOrchestratorManager();
 
   useEffect(() => {
-    // Don't start if disabled, no config, or already complete
-    if (!enabled || !config || isComplete) {
+    // Don't start if disabled, no configs, or already complete
+    if (!enabled || configs.length === 0 || isComplete) {
       return;
     }
 
     const timestamp = Date.now();
     console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
-    console.log(`[useStartCalculationOnLoad][${timestamp}] Ensuring calculation started`);
-    console.log(`[useStartCalculationOnLoad][${timestamp}]   calcId: "${config.calcId}"`);
-    console.log(`[useStartCalculationOnLoad][${timestamp}]   targetType: "${config.targetType}"`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}] Ensuring ${configs.length} calculation(s) started`);
 
-    // Manager handles idempotency - won't start if already running
-    console.log(`[useStartCalculationOnLoad][${timestamp}] → Calling manager.startCalculation()`);
+    // Start all calculations (household reports have multiple, economy has one)
+    // CRITICAL: Do NOT await - let TanStack Query handle waiting in background
+    for (const config of configs) {
+      console.log(`[useStartCalculationOnLoad][${timestamp}]   calcId: "${config.calcId}"`);
+      console.log(`[useStartCalculationOnLoad][${timestamp}]   targetType: "${config.targetType}"`);
 
-    manager.startCalculation(config)
-      .then(() => {
-        console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ manager.startCalculation() completed`);
-        console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
-      })
-      .catch((error) => {
-        console.error(`[useStartCalculationOnLoad][${timestamp}] ❌ Failed to start:`, error);
-        console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
-      });
-  }, [enabled, config, isComplete, manager]);
+      // Manager handles idempotency - won't start if already running
+      console.log(`[useStartCalculationOnLoad][${timestamp}] → Calling manager.startCalculation() (fire and forget)`);
+
+      // Fire and forget - don't await, especially critical for household (30-60s API calls)
+      manager.startCalculation(config)
+        .then(() => {
+          console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ manager.startCalculation() completed for ${config.calcId}`);
+        })
+        .catch((error) => {
+          console.error(`[useStartCalculationOnLoad][${timestamp}] ❌ Failed to start ${config.calcId}:`, error);
+        });
+    }
+
+    console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ All calculation requests fired`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
+  }, [enabled, configs, isComplete, manager]);
 }

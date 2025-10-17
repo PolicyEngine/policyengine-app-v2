@@ -14,7 +14,7 @@ import {
 } from '@/utils/householdValues';
 
 interface HouseholdOverviewProps {
-  output: Household;
+  outputs: Household[];
 }
 
 /**
@@ -26,11 +26,24 @@ interface HouseholdOverviewProps {
  * - Recursive breakdown of income components
  * - Each component can expand to show its children
  * - Up arrows (blue) for additions, down arrows (gray) for subtractions
+ *
+ * For reports with multiple simulations (comparing policies):
+ * - outputs array contains one Household per simulation
+ * - outputs[0] = baseline/first simulation
+ * - outputs[1] = reform/second simulation (if exists)
  */
-export default function HouseholdOverview({ output }: HouseholdOverviewProps) {
+export default function HouseholdOverview({ outputs }: HouseholdOverviewProps) {
   const metadata = useSelector((state: RootState) => state.metadata);
 
-  console.log(metadata);
+  console.log('[HouseholdOverview] Received outputs:', outputs.length);
+  console.log('[HouseholdOverview] Output 0:', outputs[0]);
+  if (outputs[1]) {
+    console.log('[HouseholdOverview] Output 1:', outputs[1]);
+  }
+
+  // For now, just display the first simulation's data
+  // TODO: Add comparison view when outputs.length > 1
+  const output = outputs[0];
 
   // Get the root variable (household_net_income)
   const rootVariable = metadata.variables.household_net_income;

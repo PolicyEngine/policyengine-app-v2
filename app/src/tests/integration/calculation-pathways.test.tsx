@@ -107,7 +107,7 @@ describe('Calculation Pathways Integration', () => {
       const { result } = renderHook(
         () => useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
         { wrapper }
@@ -127,7 +127,7 @@ describe('Calculation Pathways Integration', () => {
       renderHook(
         () => useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: true, // Already complete
         }),
         { wrapper }
@@ -149,7 +149,7 @@ describe('Calculation Pathways Integration', () => {
       renderHook(
         () => useStartCalculationOnLoad({
           enabled: true,
-          config,
+          configs: [config],
           isComplete: false,
         }),
         { wrapper }

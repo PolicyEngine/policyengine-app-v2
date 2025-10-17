@@ -120,7 +120,11 @@ export function useCreateReport(reportLabel?: string) {
           // WHY: Each simulation needs its own API call to calculate household results
           // for a specific policy. A report with N simulations = N calculations.
           // Results are stored at simulation level and compared in the UI.
-          console.log('[useCreateReport] Starting household calculations for each simulation');
+          //
+          // CRITICAL: We do NOT await these calls. The household API takes 30-60s per
+          // simulation, but we want the UI to navigate immediately and show progress.
+          // TanStack Query will handle waiting for the response in the background.
+          console.log('[useCreateReport] Starting household calculations for each simulation (non-blocking)');
 
           const allSimulations = [simulation1, simulation2].filter(
             (sim): sim is Simulation => sim !== null && sim !== undefined
@@ -132,8 +136,9 @@ export function useCreateReport(reportLabel?: string) {
               continue;
             }
 
-            console.log(`[useCreateReport] → Starting calculation for simulation ${sim.id}`);
-            await manager.startCalculation({
+            console.log(`[useCreateReport] → Starting calculation for simulation ${sim.id} (fire and forget)`);
+            // Fire and forget - don't await, let TanStack Query handle the waiting
+            manager.startCalculation({
               calcId: sim.id,                     // Each simulation uses its own ID
               targetType: 'simulation',           // Simulation-level calculation
               countryId: report.countryId,
@@ -147,8 +152,11 @@ export function useCreateReport(reportLabel?: string) {
                 geography1: null,
                 geography2: null,
               },
+            }).catch((error) => {
+              // Log errors but don't block the flow
+              console.error(`[useCreateReport] Failed to start calculation for simulation ${sim.id}:`, error);
             });
-            console.log(`[useCreateReport] ✓ Calculation started for simulation ${sim.id}`);
+            console.log(`[useCreateReport] ✓ Calculation request fired for simulation ${sim.id}`);
           }
         } else {
           // Economy reports: Single calculation at report level
