@@ -11,6 +11,8 @@ import type { CalcStartConfig, CalcMetadata, CalcParams, CalcStatus } from '@/ty
  * - Auto-persists results when complete
  */
 export class CalcOrchestrator {
+  private currentUnsubscribe: (() => void) | null = null;
+
   constructor(
     private queryClient: QueryClient,
     private resultPersister: ResultPersister
@@ -82,15 +84,34 @@ export class CalcOrchestrator {
           })
           .finally(() => {
             unsubscribe();
+            this.currentUnsubscribe = null;
           });
+        return;
       }
 
       // Handle error
       if (status.status === 'error') {
         console.error(`[CalcOrchestrator] Calculation error:`, status.error);
         unsubscribe();
+        this.currentUnsubscribe = null;
+        return;
       }
     });
+
+    // Store unsubscribe function for external cleanup
+    this.currentUnsubscribe = unsubscribe;
+  }
+
+  /**
+   * Clean up any active subscriptions
+   * Call this when the orchestrator is no longer needed (e.g., component unmount)
+   */
+  cleanup(): void {
+    if (this.currentUnsubscribe) {
+      console.log('[CalcOrchestrator] Cleaning up active subscription');
+      this.currentUnsubscribe();
+      this.currentUnsubscribe = null;
+    }
   }
 
   /**

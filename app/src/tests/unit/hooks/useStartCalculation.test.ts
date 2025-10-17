@@ -13,6 +13,7 @@ import {
 vi.mock('@/libs/calculations/CalcOrchestrator', () => ({
   CalcOrchestrator: vi.fn().mockImplementation(() => ({
     startCalculation: vi.fn().mockResolvedValue(undefined),
+    cleanup: vi.fn(),
   })),
 }));
 
@@ -83,6 +84,7 @@ describe('useStartCalculation', () => {
     const { CalcOrchestrator } = await import('@/libs/calculations/CalcOrchestrator');
     vi.mocked(CalcOrchestrator).mockImplementationOnce(() => ({
       startCalculation: vi.fn().mockRejectedValue(testError),
+      cleanup: vi.fn(),
     }) as any);
 
     const config = mockHookCalcStartConfig();
@@ -129,6 +131,7 @@ describe('useStartCalculation', () => {
     const { CalcOrchestrator } = await import('@/libs/calculations/CalcOrchestrator');
     vi.mocked(CalcOrchestrator).mockImplementationOnce(() => ({
       startCalculation: vi.fn().mockReturnValue(promise),
+      cleanup: vi.fn(),
     }) as any);
 
     const config = mockHookCalcStartConfig();

@@ -14,6 +14,7 @@ const mockStartCalculation = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/libs/calculations/CalcOrchestrator', () => ({
   CalcOrchestrator: vi.fn().mockImplementation(() => ({
     startCalculation: mockStartCalculation,
+    cleanup: vi.fn(),
   })),
 }));
 

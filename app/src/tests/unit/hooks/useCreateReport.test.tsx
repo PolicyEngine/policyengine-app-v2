@@ -38,9 +38,11 @@ vi.mock('@/libs/queryKeys', () => ({
 
 // Mock CalcOrchestrator
 const mockStartCalculation = vi.fn().mockResolvedValue(undefined);
+const mockCleanup = vi.fn();
 vi.mock('@/libs/calculations/CalcOrchestrator', () => ({
   CalcOrchestrator: vi.fn().mockImplementation(() => ({
     startCalculation: mockStartCalculation,
+    cleanup: mockCleanup,
   })),
 }));
 

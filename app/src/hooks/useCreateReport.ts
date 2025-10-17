@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMemo, useEffect } from 'react';
 import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
 import { MOCK_USER_ID } from '@/constants';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
@@ -45,7 +46,20 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
 // with the creation of API v2, where we can merely pass simulation IDs to create a report.
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
-  const orchestrator = new CalcOrchestrator(queryClient, new ResultPersister(queryClient));
+
+  // Memoize orchestrator to prevent recreation on every render
+  const orchestrator = useMemo(
+    () => new CalcOrchestrator(queryClient, new ResultPersister(queryClient)),
+    [queryClient]
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      orchestrator.cleanup();
+    };
+  }, [orchestrator]);
+
   const userId = MOCK_USER_ID;
 
   const mutation = useMutation({

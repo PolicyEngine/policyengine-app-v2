@@ -30,6 +30,7 @@ describe('useStartCalculationOnLoad', () => {
     mockStartCalculation = vi.fn().mockResolvedValue(undefined);
     (CalcOrchestrator as unknown as Mock).mockImplementation(() => ({
       startCalculation: mockStartCalculation,
+      cleanup: vi.fn(),
     }));
   });
 

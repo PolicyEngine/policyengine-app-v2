@@ -300,4 +300,126 @@ describe('CalcOrchestrator', () => {
       });
     });
   });
+
+  describe('cleanup - Phase 5', () => {
+    it('given active subscription then cleanup unsubscribes', async () => {
+      // Given
+      const { QueryObserver } = await import('@tanstack/react-query');
+      const mockUnsubscribe = vi.fn();
+      (QueryObserver as any).mockImplementation(() => ({
+        subscribe: vi.fn().mockReturnValue(mockUnsubscribe),
+      }));
+
+      const config = mockReportCalcStartConfig();
+
+      // When - start calculation (creates subscription)
+      await orchestrator.startCalculation(config);
+
+      // Then - cleanup should call unsubscribe
+      orchestrator.cleanup();
+      expect(mockUnsubscribe).toHaveBeenCalled();
+    });
+
+    it('given no active subscription then cleanup does nothing', () => {
+      // Given - fresh orchestrator with no calculation started
+
+      // When/Then - should not throw
+      expect(() => orchestrator.cleanup()).not.toThrow();
+    });
+
+    it('given already cleaned up then second cleanup is safe', async () => {
+      // Given
+      const { QueryObserver } = await import('@tanstack/react-query');
+      const mockUnsubscribe = vi.fn();
+      (QueryObserver as any).mockImplementation(() => ({
+        subscribe: vi.fn().mockReturnValue(mockUnsubscribe),
+      }));
+
+      const config = mockReportCalcStartConfig();
+      await orchestrator.startCalculation(config);
+
+      // When - cleanup twice
+      orchestrator.cleanup();
+      orchestrator.cleanup();
+
+      // Then - unsubscribe only called once
+      expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+    });
+
+    it('given calculation completes then auto-cleans up subscription', async () => {
+      // Given
+      const { QueryObserver } = await import('@tanstack/react-query');
+      const mockUnsubscribe = vi.fn();
+      let subscribeCallback: any;
+
+      (QueryObserver as any).mockImplementation(() => ({
+        subscribe: vi.fn().mockImplementation((callback) => {
+          subscribeCallback = callback;
+          return mockUnsubscribe;
+        }),
+      }));
+
+      const config = mockReportCalcStartConfig();
+      await orchestrator.startCalculation(config);
+
+      // When - simulate completion callback
+      subscribeCallback({
+        data: {
+          status: 'complete',
+          result: { budget: { budgetary_impact: 1000 } },
+          metadata: {
+            calcId: config.calcId,
+            calcType: 'economy',
+            targetType: 'report',
+            startedAt: Date.now(),
+          },
+        },
+      });
+
+      // Wait for persistence to complete
+      await vi.waitFor(() => {
+        expect(mockUnsubscribe).toHaveBeenCalled();
+      });
+
+      // Then - external cleanup should be safe (no-op)
+      expect(() => orchestrator.cleanup()).not.toThrow();
+    });
+
+    it('given calculation errors then auto-cleans up subscription', async () => {
+      // Given
+      const { QueryObserver } = await import('@tanstack/react-query');
+      const mockUnsubscribe = vi.fn();
+      let subscribeCallback: any;
+
+      (QueryObserver as any).mockImplementation(() => ({
+        subscribe: vi.fn().mockImplementation((callback) => {
+          subscribeCallback = callback;
+          return mockUnsubscribe;
+        }),
+      }));
+
+      const config = mockReportCalcStartConfig();
+      await orchestrator.startCalculation(config);
+
+      // When - simulate error callback
+      subscribeCallback({
+        data: {
+          status: 'error',
+          error: new Error('Test error'),
+          metadata: {
+            calcId: config.calcId,
+            calcType: 'economy',
+            targetType: 'report',
+            startedAt: Date.now(),
+          },
+        },
+      });
+
+      // Then - subscription should be cleaned up immediately
+      expect(mockUnsubscribe).toHaveBeenCalled();
+
+      // External cleanup should be safe (no-op)
+      expect(() => orchestrator.cleanup()).not.toThrow();
+    });
+  });
 });
