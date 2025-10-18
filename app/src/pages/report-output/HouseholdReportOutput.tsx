@@ -31,9 +31,9 @@ export function HouseholdReportOutput() {
     error: dataError,
   } = useUserReportById(reportId!);
 
-  // Subscribe to household report progress
+  // Subscribe to household report progress (use base Report ID, not UserReport ID)
   const { progress, overallProgress, isComputing, isComplete, isError } =
-    useHouseholdReportProgress(reportId!);
+    useHouseholdReportProgress(report?.id!);
 
   // Create stable key from simulation IDs to prevent infinite loops from array reference changes
   const simulationIdsKey = useMemo(() => {
@@ -47,8 +47,8 @@ export function HouseholdReportOutput() {
     // Check if any simulation needs calculation
     const needsCalc = simulations.some((sim) => !sim.output || sim.status !== 'complete');
 
-    if (needsCalc && !orchestrator.isCalculating(reportId!)) {
-      console.log('[HouseholdReportOutput] Starting calculations for report', reportId);
+    if (needsCalc && !orchestrator.isCalculating(report.id!)) {
+      console.log('[HouseholdReportOutput] Starting calculations for report', report.id);
 
       // Build configs for each simulation
       const configs = simulations
@@ -60,7 +60,7 @@ export function HouseholdReportOutput() {
         }));
 
       const config: HouseholdReportConfig = {
-        reportId: reportId!,
+        reportId: report.id!, // Use base Report ID, not UserReport ID from URL
         simulationConfigs: configs,
         countryId: report.countryId,
       };
@@ -68,7 +68,7 @@ export function HouseholdReportOutput() {
       // Start calculations
       orchestrator.startReport(config);
     }
-  }, [report, simulationIdsKey, orchestrator, reportId, simulations]);
+  }, [report, simulationIdsKey, orchestrator, simulations]);
   // Use simulationIdsKey for stability, keep simulations for the loop above
 
   // Show loading state while fetching data
