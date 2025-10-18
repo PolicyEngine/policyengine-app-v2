@@ -30,7 +30,7 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
 
       // When
-      await strategy.execute(params);
+      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith(
@@ -47,7 +47,7 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockResolvedValue(mockResult);
 
       // When
-      const result = await strategy.execute(params);
+      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(result.status).toBe('complete');
@@ -63,7 +63,7 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockRejectedValue(mockError);
 
       // When
-      const result = await strategy.execute(params);
+      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(result.status).toBe('error');
@@ -83,7 +83,7 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
 
       // When
-      await strategy.execute(params);
+      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith(
@@ -99,7 +99,7 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockRejectedValue('String error');
 
       // When
-      const result = await strategy.execute(params);
+      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(result.status).toBe('error');

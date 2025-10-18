@@ -22,4 +22,10 @@ export interface CalcMetadata {
    * Timestamp when calculation started (milliseconds since epoch)
    */
   startedAt: number;
+
+  /**
+   * Parent report ID (only for household simulation-level calculations)
+   * Used to mark the parent report as complete after all simulations finish
+   */
+  reportId?: string;
 }

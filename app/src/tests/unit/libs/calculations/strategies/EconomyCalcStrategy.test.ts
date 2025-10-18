@@ -37,7 +37,7 @@ describe('EconomyCalcStrategy', () => {
       mockFetchEconomyCalculation.mockResolvedValue(mockEconomyComputingResponse());
 
       // When
-      await strategy.execute(params);
+      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(mockFetchEconomyCalculation).toHaveBeenCalledWith(
@@ -58,7 +58,7 @@ describe('EconomyCalcStrategy', () => {
       mockFetchEconomyCalculation.mockResolvedValue(apiResponse);
 
       // When
-      const result = await strategy.execute(params);
+      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(result.status).toBe('computing');
@@ -74,7 +74,7 @@ describe('EconomyCalcStrategy', () => {
       mockFetchEconomyCalculation.mockResolvedValue(apiResponse);
 
       // When
-      const result = await strategy.execute(params);
+      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(result.status).toBe('complete');
@@ -89,7 +89,7 @@ describe('EconomyCalcStrategy', () => {
       mockFetchEconomyCalculation.mockResolvedValue(apiResponse);
 
       // When
-      const result = await strategy.execute(params);
+      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(result.status).toBe('error');
@@ -104,7 +104,7 @@ describe('EconomyCalcStrategy', () => {
       mockFetchEconomyCalculation.mockResolvedValue(mockEconomyComputingResponse());
 
       // When
-      await strategy.execute(params);
+      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
       expect(mockFetchEconomyCalculation).toHaveBeenCalledWith(

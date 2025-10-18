@@ -3,7 +3,7 @@ import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyW
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { Household } from './Household';
 
-export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK | Household;
+export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK | Household | Household[];
 
 /**
  * Base Report type

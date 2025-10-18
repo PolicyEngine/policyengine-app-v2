@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { calculationKeys } from '@/libs/queryKeys';
@@ -65,26 +65,34 @@ export function useStartCalculationOnLoad({
   const manager = useCalcOrchestratorManager();
   const queryClient = useQueryClient();
 
-  // Create a stable string key from config IDs to prevent re-runs on object reference changes
-  // This ensures we only re-run when the actual calcIds change, not when the config objects are recreated
+  // Create a stable reference to configs to prevent re-runs on object reference changes
+  // This ensures we only re-run when the actual config data changes, not when the array is recreated
+  const configsRef = useRef<CalcStartConfig[]>([]);
   const configKey = useMemo(() => {
     return configs.map(c => `${c.calcId}:${c.targetType}`).join('|');
   }, [configs]);
 
+  // Update ref when configKey changes (meaning actual IDs changed)
   useEffect(() => {
+    configsRef.current = configs;
+  }, [configKey, configs]);
+
+  useEffect(() => {
+    const currentConfigs = configsRef.current;
+
     // Don't start if disabled, no configs, or already complete
-    if (!enabled || configs.length === 0 || isComplete) {
+    if (!enabled || currentConfigs.length === 0 || isComplete) {
       return;
     }
 
     const timestamp = Date.now();
     console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
-    console.log(`[useStartCalculationOnLoad][${timestamp}] Ensuring ${configs.length} calculation(s) started`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}] Ensuring ${currentConfigs.length} calculation(s) started`);
     console.log(`[useStartCalculationOnLoad][${timestamp}] Config key: ${configKey}`);
 
     // Start all calculations (household reports have multiple, economy has one)
     // CRITICAL: Do NOT await - let TanStack Query handle waiting in background
-    for (const config of configs) {
+    for (const config of currentConfigs) {
       // Check if calculation already exists in cache and is complete
       const queryKey = config.targetType === 'report'
         ? calculationKeys.byReportId(config.calcId)
@@ -122,5 +130,7 @@ export function useStartCalculationOnLoad({
 
     console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ All calculation requests processed`);
     console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
-  }, [enabled, configKey, isComplete, manager, configs, queryClient]);
+  }, [enabled, configKey, isComplete, manager, queryClient]);
+  // NOTE: Using configKey instead of configs to prevent infinite loop
+  // configKey is a stable string that only changes when calcIds change
 }

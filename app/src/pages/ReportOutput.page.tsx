@@ -31,6 +31,7 @@ import ErrorPage from './report-output/ErrorPage';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
+import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 
 /**
  * Type discriminator for output types
@@ -84,11 +85,14 @@ export default function ReportOutputPage() {
     ? 'economy'
     : undefined;
 
-  // Get calculation status
-  // WHY: Unified hook handles both single and multiple calculations internally.
-  // - Household reports: Pass array of simulation IDs → aggregates N simulations
-  // - Economy reports: Pass single report ID → reads single calculation
-  const isHouseholdReport = outputType === 'household';
+  // ROUTER: Redirect household reports to new household-specific page
+  if (outputType === 'household') {
+    return <HouseholdReportOutput />;
+  }
+
+  // At this point, outputType can only be 'economy' or undefined
+  // (household was redirected above)
+  const isHouseholdReport = false; // Always false here
 
   const calcIds = useMemo(() => {
     if (isHouseholdReport) {
@@ -148,6 +152,7 @@ export default function ReportOutputPage() {
           calcId: simulation1.id,
           targetType: 'simulation' as const,
           countryId: report.countryId,
+          reportId: report.id, // Parent report ID for marking report complete after all sims finish
           simulations: {
             simulation1: simulation1,
             simulation2: null,
@@ -167,6 +172,7 @@ export default function ReportOutputPage() {
           calcId: simulation2.id,
           targetType: 'simulation' as const,
           countryId: report.countryId,
+          reportId: report.id, // Parent report ID for marking report complete after all sims finish
           simulations: {
             simulation1: simulation2,
             simulation2: null,
@@ -218,37 +224,11 @@ export default function ReportOutputPage() {
     isComplete: calcStatus.isComplete,
   });
 
-  // Prepare output data - wrap household data if needed
-  let output: EconomyReportOutput | Household | Household[] | null | undefined = undefined;
+  // Prepare output data - economy only at this point
+  // (household was redirected to HouseholdReportOutput above)
+  let output: EconomyReportOutput | null | undefined = undefined;
 
-  if (outputType === 'household' && calcStatus.result && report?.countryId) {
-    // For household reports, we may have multiple simulations
-    // Get all calculation results (one per simulation)
-    const householdOutputs: Household[] = [];
-
-    if ('calculations' in calcStatus && Array.isArray(calcStatus.calculations)) {
-      // Multiple simulations - wrap each result
-      calcStatus.calculations.forEach((calc, index) => {
-        if (calc.result) {
-          householdOutputs.push({
-            id: `${report.id}-sim${index + 1}`,
-            countryId: report.countryId,
-            householdData: calc.result as HouseholdData,
-          });
-        }
-      });
-    } else if (calcStatus.result) {
-      // Single simulation - wrap the result
-      householdOutputs.push({
-        id: report.id,
-        countryId: report.countryId,
-        householdData: calcStatus.result as HouseholdData,
-      });
-    }
-
-    // Pass array if multiple simulations, single if only one
-    output = householdOutputs.length > 1 ? householdOutputs : householdOutputs[0];
-  } else if (outputType === 'economy' && calcStatus.result) {
+  if (calcStatus.result) {
     output = calcStatus.result as EconomyReportOutput;
   }
 

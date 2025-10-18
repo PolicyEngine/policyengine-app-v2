@@ -1,5 +1,5 @@
 import { Query } from '@tanstack/react-query';
-import { CalcParams, CalcStatus } from '@/types/calculation';
+import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 
 /**
  * Configuration for TanStack Query refetch behavior
@@ -47,9 +47,10 @@ export interface CalcExecutionStrategy {
   /**
    * Execute a calculation with the given parameters
    * @param params - Calculation parameters
+   * @param metadata - Calculation metadata (includes reportId for household sim-level calcs)
    * @returns Promise resolving to calculation status
    */
-  execute(params: CalcParams): Promise<CalcStatus>;
+  execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus>;
 
   /**
    * Get the refetch configuration for this strategy

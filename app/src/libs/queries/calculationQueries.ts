@@ -18,7 +18,7 @@ export const calculationQueries = {
       queryKey: calculationKeys.byReportId(reportId),
       queryFn: async () => {
         console.log(`[calculationQueries.forReport] Executing ${metadata.calcType} calculation for report: ${reportId}`);
-        return strategy.execute(params);
+        return strategy.execute(params, metadata);
       },
       ...strategy.getRefetchConfig(),
       meta: { calcMetadata: metadata },
@@ -35,7 +35,8 @@ export const calculationQueries = {
       queryKey: calculationKeys.bySimulationId(simulationId),
       queryFn: async () => {
         console.log(`[calculationQueries.forSimulation] Executing ${metadata.calcType} calculation for simulation: ${simulationId}`);
-        return strategy.execute(params);
+        console.log(`[calculationQueries.forSimulation] Metadata:`, metadata);
+        return strategy.execute(params, metadata);
       },
       ...strategy.getRefetchConfig(),
       meta: { calcMetadata: metadata },

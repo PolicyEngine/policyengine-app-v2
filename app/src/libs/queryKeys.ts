@@ -73,3 +73,8 @@ export const calculationKeys = {
   byReportId: (reportId: string) => ['calculations', 'report', reportId] as const,
   bySimulationId: (simId: string) => ['calculations', 'simulation', simId] as const,
 };
+
+export const householdReportProgressKeys = {
+  all: ['household-report-progress'] as const,
+  byId: (reportId: string) => [...householdReportProgressKeys.all, reportId] as const,
+};

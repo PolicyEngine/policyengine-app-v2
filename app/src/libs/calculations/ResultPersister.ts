@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { markReportCompleted } from '@/api/report';
 import { updateSimulationOutput } from '@/api/simulation';
-import { reportKeys, simulationKeys } from '@/libs/queryKeys';
+import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import type { Report } from '@/types/ingredients/Report';
 
@@ -19,11 +19,17 @@ export class ResultPersister {
    * @throws Error if persistence fails after retry
    */
   async persist(status: CalcStatus, countryId: string): Promise<void> {
-    console.log(
-      `[ResultPersister] Persisting ${status.metadata.targetType} result for: ${status.metadata.calcId}`
-    );
+    const timestamp = Date.now();
+    console.log(`[ResultPersister][${timestamp}] ========================================`);
+    console.log(`[ResultPersister][${timestamp}] ⚠️  PERSIST CALLED ⚠️`);
+    console.log(`[ResultPersister][${timestamp}] targetType: ${status.metadata.targetType}`);
+    console.log(`[ResultPersister][${timestamp}] calcId: ${status.metadata.calcId}`);
+    console.log(`[ResultPersister][${timestamp}] reportId: ${status.metadata.reportId || 'NONE'}`);
+    console.log(`[ResultPersister][${timestamp}] status: ${status.status}`);
+    console.log(`[ResultPersister][${timestamp}] has result? ${!!status.result}`);
 
     if (!status.result) {
+      console.error(`[ResultPersister][${timestamp}] ❌ ERROR: No result to persist!`);
       throw new Error('Cannot persist: result is missing from CalcStatus');
     }
 
@@ -31,7 +37,12 @@ export class ResultPersister {
       if (status.metadata.targetType === 'report') {
         await this.persistToReport(status.metadata.calcId, status.result, countryId);
       } else {
-        await this.persistToSimulation(status.metadata.calcId, status.result, countryId);
+        await this.persistToSimulation(
+          status.metadata.calcId,
+          status.result,
+          countryId,
+          status.metadata.reportId // Pass parent reportId for household sim-level calcs
+        );
       }
       console.log(`[ResultPersister] Successfully persisted to ${status.metadata.targetType}`);
     } catch (error) {
@@ -42,7 +53,12 @@ export class ResultPersister {
         if (status.metadata.targetType === 'report') {
           await this.persistToReport(status.metadata.calcId, status.result, countryId);
         } else {
-          await this.persistToSimulation(status.metadata.calcId, status.result, countryId);
+          await this.persistToSimulation(
+            status.metadata.calcId,
+            status.result,
+            countryId,
+            status.metadata.reportId // Pass parent reportId for household sim-level calcs
+          );
         }
         console.log(`[ResultPersister] Retry successful`);
       } catch (retryError) {
@@ -95,32 +111,111 @@ export class ResultPersister {
   private async persistToSimulation(
     simulationId: string,
     result: any,
-    countryId: string
+    countryId: string,
+    reportId?: string
   ): Promise<void> {
+    const timestamp = Date.now();
+    console.log(`[ResultPersister][${timestamp}] ========================================`);
+    console.log(`[ResultPersister][${timestamp}] persistToSimulation() called`);
+    console.log(`[ResultPersister][${timestamp}]   simulationId: ${simulationId}`);
+    console.log(`[ResultPersister][${timestamp}]   countryId: ${countryId}`);
+    console.log(`[ResultPersister][${timestamp}]   reportId: ${reportId || 'none'}`);
+
     // Use new updateSimulationOutput API
+    console.log(`[ResultPersister][${timestamp}] → Calling updateSimulationOutput API...`);
     await updateSimulationOutput(countryId as any, simulationId, result);
+    console.log(`[ResultPersister][${timestamp}] ✓ updateSimulationOutput API completed`);
 
     // Invalidate simulation metadata cache so Reports page shows updated status
     // WHY: Reports page may display simulation info, and we need fresh data after persistence.
     // This is safe because database persistence is complete at this point.
-    console.log(`[ResultPersister] → Invalidating simulation cache for ${simulationId}`);
+    console.log(`[ResultPersister][${timestamp}] → Invalidating simulation cache for ${simulationId}`);
     this.queryClient.invalidateQueries({
       queryKey: simulationKeys.byId(simulationId),
     });
-    console.log(`[ResultPersister] ✓ Simulation cache invalidated`);
+    console.log(`[ResultPersister][${timestamp}] ✓ Simulation cache invalidated`);
 
-    // TODO: Check if all simulations for parent report are complete
-    // If yes, mark the report record as complete
-    // This requires:
-    // 1. Finding the parent report ID from the simulation
-    // 2. Getting all simulation IDs for that report
-    // 3. Checking if all are complete
-    // 4. Calling markReportCompleted if all complete
-    //
-    // For now, household reports will show status based on simulation-level
-    // calculations, and the report record will remain in 'pending' status.
-    // The UI will use useReportsWithLiveStatus to show correct status from
-    // calculation cache, not from database report status.
+    // For household reports: Check if all simulations are complete
+    if (reportId) {
+      console.log(`[ResultPersister][${timestamp}] Checking if all simulations complete for report ${reportId}...`);
+      const allSimsComplete = await this.checkAllSimulationsComplete(reportId);
+
+      if (allSimsComplete) {
+        console.log(`[ResultPersister][${timestamp}] ✓ All simulations complete! Marking report as complete...`);
+
+        // Aggregate outputs from all simulations
+        const aggregatedOutput = await this.aggregateSimulationOutputs(reportId);
+
+        // Mark report as complete with aggregated output
+        await this.persistToReport(reportId, aggregatedOutput, countryId);
+
+        console.log(`[ResultPersister][${timestamp}] ✓ Report ${reportId} marked as complete`);
+      } else {
+        console.log(`[ResultPersister][${timestamp}] ⏳ Not all simulations complete yet for report ${reportId}`);
+      }
+    }
+
+    console.log(`[ResultPersister][${timestamp}] ========================================`);
+  }
+
+  /**
+   * Check if all simulations for a report are complete
+   * @param reportId - Parent report ID
+   * @returns true if all simulations have status='complete' in calculation cache
+   */
+  private async checkAllSimulationsComplete(reportId: string): Promise<boolean> {
+    // Get report to find simulation IDs
+    const report = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
+    if (!report) {
+      console.log(`[ResultPersister] Report ${reportId} not found in cache`);
+      return false;
+    }
+
+    console.log(`[ResultPersister] Checking ${report.simulationIds.length} simulations for report ${reportId}`);
+
+    // Check each simulation's calculation cache
+    for (const simId of report.simulationIds) {
+      const simStatus = this.queryClient.getQueryData<CalcStatus>(
+        calculationKeys.bySimulationId(simId)
+      );
+
+      console.log(`[ResultPersister]   Simulation ${simId}: status=${simStatus?.status || 'not in cache'}`);
+
+      if (simStatus?.status !== 'complete') {
+        return false;
+      }
+    }
+
+    console.log(`[ResultPersister] ✓ All simulations complete for report ${reportId}`);
+    return true;
+  }
+
+  /**
+   * Aggregate simulation outputs for a household report
+   * @param reportId - Parent report ID
+   * @returns Array of household outputs (one per simulation)
+   */
+  private async aggregateSimulationOutputs(reportId: string): Promise<any> {
+    const report = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
+    if (!report) {
+      throw new Error(`Report ${reportId} not found in cache during aggregation`);
+    }
+
+    console.log(`[ResultPersister] Aggregating outputs from ${report.simulationIds.length} simulations`);
+
+    // Get all simulation outputs from calculation cache
+    const outputs = report.simulationIds.map(simId => {
+      const simStatus = this.queryClient.getQueryData<CalcStatus>(
+        calculationKeys.bySimulationId(simId)
+      );
+      return simStatus?.result;
+    }).filter(output => output !== undefined);
+
+    console.log(`[ResultPersister] Aggregated ${outputs.length} outputs`);
+
+    // For household reports, return array of household outputs
+    // This matches what HouseholdOverview expects
+    return outputs;
   }
 
   /**

@@ -1,5 +1,5 @@
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
-import { CalcParams, CalcStatus } from '@/types/calculation';
+import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from './types';
 
 /**
@@ -21,10 +21,11 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
    * WHY AWAIT: Household API returns results synchronously (no queuing).
    * We await the full calculation and return the final result immediately.
    */
-  async execute(params: CalcParams): Promise<CalcStatus> {
-    console.log('[HouseholdCalcStrategy.execute] Starting calculation with params:', params);
+  async execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
+    console.log('[HouseholdCalcStrategy.execute] Starting calculation');
+    console.log('[HouseholdCalcStrategy.execute] params:', params);
+    console.log('[HouseholdCalcStrategy.execute] metadata:', metadata);
 
-    const calcId = params.calcId;
     const policyId = params.policyIds.reform || params.policyIds.baseline;
 
     try {
@@ -36,17 +37,13 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
       );
 
       console.log('[HouseholdCalcStrategy.execute] Calculation completed successfully');
+      console.log('[HouseholdCalcStrategy.execute] Using metadata with reportId:', metadata.reportId);
 
-      // Return complete status with result
+      // Return complete status with result and PROVIDED metadata (includes reportId!)
       return {
         status: 'complete',
         result,
-        metadata: {
-          calcId,
-          calcType: 'household',
-          targetType: 'simulation', // Household calcs are simulation-level
-          startedAt: Date.now(),
-        },
+        metadata, // Use the metadata passed in, which has reportId for household sim-level calcs
       };
     } catch (error) {
       console.error('[HouseholdCalcStrategy.execute] Calculation failed:', error);
@@ -60,12 +57,7 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
           message: errorMessage,
           retryable: true, // Household calculations can be retried
         },
-        metadata: {
-          calcId,
-          calcType: 'household',
-          targetType: 'simulation',
-          startedAt: Date.now(),
-        },
+        metadata, // Use provided metadata even for errors
       };
     }
   }

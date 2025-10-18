@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { calculationKeys } from '@/libs/queryKeys';
+import { calculationKeys, simulationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 interface UseHydrateCalculationCacheParams {
   /**
@@ -43,79 +44,123 @@ export function useHydrateCalculationCache({
   outputType,
 }: UseHydrateCalculationCacheParams): void {
   const queryClient = useQueryClient();
-  const hydratedRef = useRef(false);
+  const hydratedRef = useRef<string>(''); // Track which report we've hydrated
 
   useEffect(() => {
     const timestamp = Date.now();
+    const currentReportId = report?.id || '';
+
     console.log(`[useHydrateCache][${timestamp}] ========================================`);
     console.log(`[useHydrateCache][${timestamp}] Effect triggered`);
-    console.log(`[useHydrateCache][${timestamp}] report.id:`, report?.id);
-    console.log(`[useHydrateCache][${timestamp}] report.output exists?`, !!report?.output);
+    console.log(`[useHydrateCache][${timestamp}] report.id:`, currentReportId);
     console.log(`[useHydrateCache][${timestamp}] outputType:`, outputType);
-    console.log(`[useHydrateCache][${timestamp}] hydratedRef.current:`, hydratedRef.current);
+    console.log(`[useHydrateCache][${timestamp}] hydratedRef:`, hydratedRef.current);
 
-    // Only hydrate once
-    if (hydratedRef.current) {
-      console.log(`[useHydrateCache][${timestamp}] SKIP: Already hydrated`);
+    // Only hydrate once per report ID
+    if (hydratedRef.current === currentReportId && currentReportId) {
+      console.log(`[useHydrateCache][${timestamp}] SKIP: Already hydrated report ${currentReportId}`);
       console.log(`[useHydrateCache][${timestamp}] ========================================`);
       return;
     }
 
-    if (!report?.output) {
-      console.log(`[useHydrateCache][${timestamp}] SKIP: No report.output`);
+    if (!outputType || !currentReportId) {
+      console.log(`[useHydrateCache][${timestamp}] SKIP: Missing outputType or report.id`);
       console.log(`[useHydrateCache][${timestamp}] ========================================`);
       return;
     }
 
-    if (!outputType) {
-      console.log(`[useHydrateCache][${timestamp}] SKIP: No outputType`);
-      console.log(`[useHydrateCache][${timestamp}] ========================================`);
-      return;
+    // Mark this report as hydrated
+    hydratedRef.current = currentReportId;
+
+    // HOUSEHOLD vs ECONOMY: Different hydration strategies
+    if (outputType === 'household') {
+      console.log('[useHydrateCache] HOUSEHOLD: Hydrating simulation-level caches');
+
+      // Read simulations from cache (already fetched by useUserReportById)
+      const simulationIds = report?.simulationIds || [];
+      const simulations = simulationIds
+        .map(id => queryClient.getQueryData<Simulation>(simulationKeys.byId(id)))
+        .filter((s): s is Simulation => !!s);
+
+      console.log(`[useHydrateCache][${timestamp}] Found ${simulations.length} simulations in cache`);
+
+      // Hydrate each simulation individually
+      for (const simulation of simulations) {
+        if (!simulation || !simulation.id) continue;
+
+        console.log(`[useHydrateCache][${timestamp}]   Simulation ${simulation.id}:`);
+        console.log(`[useHydrateCache][${timestamp}]     status: ${simulation.status}`);
+        console.log(`[useHydrateCache][${timestamp}]     Has output? ${!!simulation.output}`);
+
+        // Check if calculation cache already has this simulation
+        const calcQueryKey = calculationKeys.bySimulationId(simulation.id);
+        const existing = queryClient.getQueryData<CalcStatus>(calcQueryKey);
+
+        if (existing) {
+          console.log(`[useHydrateCache][${timestamp}]     ⏭️  SKIP: Already in calculation cache (${existing.status})`);
+          continue;
+        }
+
+        // Only hydrate if simulation has output and is complete
+        if (simulation.output && simulation.status === 'complete') {
+          console.log(`[useHydrateCache][${timestamp}]     → Hydrating calculation cache`);
+
+          const completeStatus: CalcStatus = {
+            status: 'complete',
+            result: simulation.output as any,
+            metadata: {
+              calcId: simulation.id,
+              calcType: 'household',
+              targetType: 'simulation',
+              startedAt: Date.now(),
+              reportId: currentReportId,
+            },
+          };
+
+          queryClient.setQueryData(calcQueryKey, completeStatus);
+          console.log(`[useHydrateCache][${timestamp}]     ✓ Hydrated`);
+        } else {
+          console.log(`[useHydrateCache][${timestamp}]     ⏭️  SKIP: No output or not complete`);
+        }
+      }
+
+      console.log(`[useHydrateCache][${timestamp}] ✓ Household simulation caches hydrated`);
+    } else {
+      // ECONOMY: Hydrate report-level cache (existing behavior)
+      console.log('[useHydrateCache] ECONOMY: Hydrating report-level cache');
+
+      if (!report?.output) {
+        console.log(`[useHydrateCache][${timestamp}] SKIP: No report.output`);
+        console.log(`[useHydrateCache][${timestamp}] ========================================`);
+        return;
+      }
+
+      const queryKey = calculationKeys.byReportId(currentReportId);
+      const existing = queryClient.getQueryData<CalcStatus>(queryKey);
+
+      if (existing) {
+        console.log(`[useHydrateCache][${timestamp}] SKIP: Already in cache (${existing.status})`);
+        console.log(`[useHydrateCache][${timestamp}] ========================================`);
+        return;
+      }
+
+      console.log('[useHydrateCache] Hydrating cache with persisted result');
+
+      const completeStatus: CalcStatus = {
+        status: 'complete',
+        result: report.output as any,
+        metadata: {
+          calcId: currentReportId,
+          calcType: 'economy',
+          targetType: 'report',
+          startedAt: Date.now(),
+        },
+      };
+
+      queryClient.setQueryData(queryKey, completeStatus);
+      console.log(`[useHydrateCache][${timestamp}] ✓ Hydrated`);
     }
 
-    if (!report.id) {
-      console.log(`[useHydrateCache][${timestamp}] SKIP: No report.id`);
-      console.log(`[useHydrateCache][${timestamp}] ========================================`);
-      return;
-    }
-
-    hydratedRef.current = true;
-
-    // Check if cache already has status (calculation might be running)
-    const queryKey = calculationKeys.byReportId(report.id);
-    const existing = queryClient.getQueryData<CalcStatus>(queryKey);
-
-    console.log(`[useHydrateCache][${timestamp}] Query key:`, JSON.stringify(queryKey));
-    console.log(`[useHydrateCache][${timestamp}] Existing cache entry?`, !!existing);
-    console.log(`[useHydrateCache][${timestamp}] Existing status:`, existing?.status);
-
-    if (existing) {
-      console.log('[useHydrateCache] Cache already populated, skipping hydration');
-      console.log(`[useHydrateCache][${timestamp}] ========================================`);
-      return; // Already in cache (might be computing)
-    }
-
-    console.log('[useHydrateCache] Hydrating cache with persisted result');
-
-    // Report.output is already parsed (ReportOutput type), not JSON string
-    // Populate cache with complete status from persisted output
-    const completeStatus: CalcStatus = {
-      status: 'complete',
-      result: report.output as any, // Cast to any since CalcResult is a union type
-      metadata: {
-        calcId: report.id,
-        calcType: outputType === 'household' ? 'household' : 'economy',
-        targetType: 'report',
-        startedAt: Date.now(),
-      },
-    };
-
-    console.log(`[useHydrateCache][${timestamp}] Setting cache with status:`, completeStatus.status);
-    queryClient.setQueryData(queryKey, completeStatus);
-
-    // Verify it was set
-    const afterSet = queryClient.getQueryData<CalcStatus>(queryKey);
-    console.log(`[useHydrateCache][${timestamp}] Cache entry exists after set?`, !!afterSet);
     console.log(`[useHydrateCache][${timestamp}] ========================================`);
-  }, [report, outputType, queryClient]);
+  }, [report?.id, outputType, queryClient]);
 }

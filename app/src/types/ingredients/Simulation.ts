@@ -15,4 +15,6 @@ export interface Simulation {
   populationType?: 'household' | 'geography'; // Indicates the type of populationId
   label: string | null; // Always present, even if null
   isCreated: boolean; // Always present, defaults to false
+  output?: unknown | null; // Calculation result (for household simulations)
+  status?: 'complete' | 'error' | 'computing'; // Calculation status
 }

@@ -33,6 +33,8 @@ export class SimulationAdapter {
       populationType,
       label: null,
       isCreated: true,
+      output: metadata.output,
+      status: metadata.status,
     };
   }
 

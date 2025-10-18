@@ -270,6 +270,7 @@ export class CalcOrchestrator {
       calcType,
       targetType: config.targetType,
       startedAt: Date.now(),
+      reportId: config.reportId, // Pass through parent report ID for household sim-level calcs
     };
   }
 

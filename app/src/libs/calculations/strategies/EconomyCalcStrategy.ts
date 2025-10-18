@@ -1,7 +1,7 @@
 import { Query } from '@tanstack/react-query';
 import { EconomyCalculationParams, EconomyCalculationResponse, fetchEconomyCalculation } from '@/api/economy';
 import { CURRENT_YEAR } from '@/constants';
-import { CalcParams, CalcStatus } from '@/types/calculation';
+import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from './types';
 
 /**
@@ -13,8 +13,9 @@ export class EconomyCalcStrategy implements CalcExecutionStrategy {
    * Execute an economy calculation
    * Makes direct API call - server manages state and queuing
    */
-  async execute(params: CalcParams): Promise<CalcStatus> {
+  async execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
     console.log('[EconomyCalcStrategy.execute] Starting with params:', params);
+    console.log('[EconomyCalcStrategy.execute] metadata:', metadata);
 
     // Build API parameters
     const apiParams: EconomyCalculationParams = {
@@ -32,8 +33,8 @@ export class EconomyCalcStrategy implements CalcExecutionStrategy {
 
     console.log('[EconomyCalcStrategy.execute] API response:', response.status);
 
-    // Transform to unified status
-    return this.transformResponse(response);
+    // Transform to unified status with provided metadata
+    return this.transformResponseWithMetadata(response, metadata);
   }
 
   /**
@@ -53,18 +54,10 @@ export class EconomyCalcStrategy implements CalcExecutionStrategy {
   }
 
   /**
-   * Transform economy API response to unified CalcStatus
+   * Transform economy API response with provided metadata
    */
-  transformResponse(apiResponse: unknown): CalcStatus {
+  transformResponseWithMetadata(apiResponse: unknown, metadata: CalcMetadata): CalcStatus {
     const response = apiResponse as EconomyCalculationResponse;
-
-    // Create metadata (will be enriched by orchestrator)
-    const metadata = {
-      calcId: '', // Set by orchestrator
-      calcType: 'economy' as const,
-      targetType: 'report' as const, // Set by orchestrator
-      startedAt: Date.now(),
-    };
 
     // Map computing status
     if (response.status === 'computing') {
@@ -96,6 +89,19 @@ export class EconomyCalcStrategy implements CalcExecutionStrategy {
       },
       metadata,
     };
+  }
+
+  /**
+   * Transform economy API response to unified CalcStatus (legacy - uses default metadata)
+   */
+  transformResponse(apiResponse: unknown): CalcStatus {
+    const metadata: CalcMetadata = {
+      calcId: '',
+      calcType: 'economy' as const,
+      targetType: 'report' as const,
+      startedAt: Date.now(),
+    };
+    return this.transformResponseWithMetadata(apiResponse, metadata);
   }
 
   /**
