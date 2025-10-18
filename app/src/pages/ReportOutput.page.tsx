@@ -19,7 +19,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { EconomyReportOutput } from '@/api/economy';
+import { EconomyReportOutput as EconomyOutput } from '@/api/economy';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
@@ -32,6 +32,7 @@ import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
+import { EconomyReportOutput } from './report-output/EconomyReportOutput';
 
 /**
  * Type discriminator for output types
@@ -85,13 +86,57 @@ export default function ReportOutputPage() {
     ? 'economy'
     : undefined;
 
-  // ROUTER: Redirect household reports to new household-specific page
+  // ROUTER: Redirect to type-specific pages
   if (outputType === 'household') {
     return <HouseholdReportOutput />;
   }
 
+  if (outputType === 'economy') {
+    return <EconomyReportOutput />;
+  }
+
+  // Unknown output type - show loading or error
+  if (dataLoading) {
+    return (
+      <Container size="xl" px={spacing.xl}>
+        <Stack gap={spacing.xl}>
+          <Text>Loading report...</Text>
+        </Stack>
+      </Container>
+    );
+  }
+
+  return (
+    <Container size="xl" px={spacing.xl}>
+      <Stack gap={spacing.xl}>
+        <Text c="red">Unknown report type</Text>
+      </Stack>
+    </Container>
+  );
+}
+
+// Everything below this is now dead code - economy and household both route to their own pages above
+// Keeping for now to avoid breaking changes, will be deleted in cleanup phase
+
+function LegacyReportOutput() {
+  const navigate = useNavigate();
+  const { reportId: userReportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
+
+  if (!userReportId) {
+    return null;
+  }
+
+  const { userReport, report, simulations, isLoading: dataLoading, error: dataError } =
+    useUserReportById(userReportId);
+
+  const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
+    ? 'household'
+    : simulations?.[0]?.populationType === 'geography'
+    ? 'economy'
+    : undefined;
+
   // At this point, outputType can only be 'economy' or undefined
-  // (household was redirected above)
+  // (household and economy both routed above)
   const isHouseholdReport = false; // Always false here
 
   const calcIds = useMemo(() => {
@@ -226,10 +271,10 @@ export default function ReportOutputPage() {
 
   // Prepare output data - economy only at this point
   // (household was redirected to HouseholdReportOutput above)
-  let output: EconomyReportOutput | null | undefined = undefined;
+  let output: EconomyOutput | null | undefined = undefined;
 
   if (calcStatus.result) {
-    output = calcStatus.result as EconomyReportOutput;
+    output = calcStatus.result as EconomyOutput;
   }
 
   const DEFAULT_PAGE = 'overview';
@@ -458,14 +503,14 @@ export default function ReportOutputPage() {
 /**
  * Type guard to check if economy output is US-specific
  */
-export function isUSEconomyOutput(output: EconomyReportOutput): boolean {
+export function isUSEconomyOutput(output: EconomyOutput): boolean {
   return 'poverty_by_race' in output && output.poverty_by_race !== null;
 }
 
 /**
  * Type guard to check if economy output is UK-specific
  */
-export function isUKEconomyOutput(output: EconomyReportOutput): boolean {
+export function isUKEconomyOutput(output: EconomyOutput): boolean {
   return 'constituency_impact' in output && output.constituency_impact !== null;
 }
 
