@@ -1,7 +1,8 @@
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
-import { SimulationCreationPayload } from '@/types/payloads';
+import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/payloads';
+import { SimulationAdapter } from '@/adapters/SimulationAdapter';
 
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
@@ -79,14 +80,16 @@ export async function createSimulation(
 
 /**
  * Update simulation output after calculation completes
+ * Note: Simulation PATCH includes id in body (unlike reports)
  */
 export async function updateSimulationOutput(
   countryId: (typeof countryIds)[number],
   simulationId: string,
-  // Note: This type should be updated once changes to API v1 are in
   output: unknown
 ): Promise<SimulationMetadata> {
-  const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
+  const url = `${BASE_URL}/${countryId}/simulation`;
+
+  const payload = SimulationAdapter.toCompletedPayload(simulationId, output);
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -94,10 +97,7 @@ export async function updateSimulationOutput(
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify({
-      output,
-      status: 'complete',
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -129,12 +129,15 @@ export async function markSimulationCompleted(
 
 /**
  * Mark a simulation as errored
+ * Note: Simulation PATCH includes id in body (unlike reports)
  */
 export async function markSimulationError(
   countryId: (typeof countryIds)[number],
   simulationId: string
 ): Promise<SimulationMetadata> {
-  const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
+  const url = `${BASE_URL}/${countryId}/simulation`;
+
+  const payload = SimulationAdapter.toErrorPayload(simulationId);
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -142,10 +145,7 @@ export async function markSimulationError(
       'Content-Type': 'application/json',
       Accept: 'application/json',
     },
-    body: JSON.stringify({
-      output: null,
-      status: 'error',
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {

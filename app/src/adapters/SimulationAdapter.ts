@@ -1,6 +1,6 @@
 import { Simulation } from '@/types/ingredients/Simulation';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
-import { SimulationCreationPayload } from '@/types/payloads';
+import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/payloads';
 
 /**
  * Adapter for converting between Simulation and API formats
@@ -59,5 +59,34 @@ export class SimulationAdapter {
       population_type: simulation.populationType,
       policy_id: parseInt(simulation.policyId, 10),
     };
+  }
+
+  /**
+   * Creates payload for updating a simulation's output (PATCH request)
+   * Note: Unlike reports, simulation PATCH includes id in body
+   * Note: Uses output_json (stringified) not output, and doesn't accept status
+   */
+  static toUpdatePayload(
+    simulationId: string,
+    output: unknown
+  ): SimulationSetOutputPayload {
+    return {
+      id: parseInt(simulationId, 10),
+      output_json: JSON.stringify(output),
+    };
+  }
+
+  /**
+   * Creates payload for marking a simulation as completed with output
+   */
+  static toCompletedPayload(simulationId: string, output: unknown): SimulationSetOutputPayload {
+    return this.toUpdatePayload(simulationId, output);
+  }
+
+  /**
+   * Creates payload for marking a simulation as errored
+   */
+  static toErrorPayload(simulationId: string): SimulationSetOutputPayload {
+    return this.toUpdatePayload(simulationId, null);
   }
 }
