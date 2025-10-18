@@ -76,7 +76,7 @@ export class ReportAdapter {
   /**
    * Creates payload for marking a report as errored
    */
-  static toErrorReportPayload(report: Report): ReportSetOutputPayload {
+  static toErrorReportPayload(report: Report, errorMessage?: string): ReportSetOutputPayload {
     if (!report.id) {
       throw new Error('Report ID is required to create error report payload');
     }
@@ -84,6 +84,7 @@ export class ReportAdapter {
       id: parseInt(report.id, 10),
       status: 'error',
       output: null,
+      error_message: errorMessage || null,
     };
   }
 }

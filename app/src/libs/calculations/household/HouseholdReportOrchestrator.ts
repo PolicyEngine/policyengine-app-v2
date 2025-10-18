@@ -244,26 +244,17 @@ export class HouseholdReportOrchestrator {
       return;
     }
 
-    console.log(`[HouseholdReportOrchestrator][${timestamp}] All simulations complete, aggregating outputs`);
+    console.log(`[HouseholdReportOrchestrator][${timestamp}] All simulations complete, marking report as complete`);
 
-    // Aggregate outputs from all simulations
-    const outputs = progress.simulationIds
-      .map((simId) => {
-        const sim = this.queryClient.getQueryData<Simulation>(simulationKeys.byId(simId));
-        return sim?.output;
-      })
-      .filter(Boolean);
-
-    console.log(`[HouseholdReportOrchestrator][${timestamp}] Aggregated ${outputs.length} outputs`);
-
-    // Mark report complete with aggregated output
+    // For household reports, individual simulations already have their outputs persisted
+    // The report just tracks completion status, not aggregated output
     const report: Report = {
       id: reportId,
       countryId: countryId as any,
       apiVersion: null,
       simulationIds: progress.simulationIds,
       status: 'complete',
-      output: outputs as any,
+      output: null, // Household reports don't have report-level output
     };
 
     try {

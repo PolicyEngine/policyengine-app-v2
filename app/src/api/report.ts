@@ -53,10 +53,9 @@ export async function createReport(
 
 async function updateReport(
   countryId: (typeof countryIds)[number],
-  reportId: string,
   data: ReportSetOutputPayload
 ): Promise<ReportMetadata> {
-  const url = `${BASE_URL}/${countryId}/report/${reportId}`;
+  const url = `${BASE_URL}/${countryId}/report`;
 
   const res = await fetch(url, {
     method: 'PATCH',
@@ -65,7 +64,7 @@ async function updateReport(
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to update report ${reportId}`);
+    throw new Error(`Failed to update report ${data.id}`);
   }
 
   const json = await res.json();
@@ -78,16 +77,17 @@ export async function markReportCompleted(
   report: Report
 ): Promise<ReportMetadata> {
   const data = ReportAdapter.toCompletedReportPayload(report);
-  return updateReport(countryId, reportId, data);
+  return updateReport(countryId, data);
 }
 
 export async function markReportError(
   countryId: (typeof countryIds)[number],
   reportId: string,
-  report: Report
+  report: Report,
+  errorMessage?: string
 ): Promise<ReportMetadata> {
-  const data = ReportAdapter.toErrorReportPayload(report);
-  return updateReport(countryId, reportId, data);
+  const data = ReportAdapter.toErrorReportPayload(report, errorMessage);
+  return updateReport(countryId, data);
 }
 
 /**
