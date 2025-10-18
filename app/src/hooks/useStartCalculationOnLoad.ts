@@ -1,6 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
-import { CalcStartConfig } from '@/types/calculation';
+import { calculationKeys } from '@/libs/queryKeys';
+import { CalcStartConfig, CalcStatus } from '@/types/calculation';
 
 interface UseStartCalculationOnLoadParams {
   /**
@@ -61,6 +63,13 @@ export function useStartCalculationOnLoad({
   isComplete,
 }: UseStartCalculationOnLoadParams): void {
   const manager = useCalcOrchestratorManager();
+  const queryClient = useQueryClient();
+
+  // Create a stable string key from config IDs to prevent re-runs on object reference changes
+  // This ensures we only re-run when the actual calcIds change, not when the config objects are recreated
+  const configKey = useMemo(() => {
+    return configs.map(c => `${c.calcId}:${c.targetType}`).join('|');
+  }, [configs]);
 
   useEffect(() => {
     // Don't start if disabled, no configs, or already complete
@@ -71,12 +80,32 @@ export function useStartCalculationOnLoad({
     const timestamp = Date.now();
     console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
     console.log(`[useStartCalculationOnLoad][${timestamp}] Ensuring ${configs.length} calculation(s) started`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}] Config key: ${configKey}`);
 
     // Start all calculations (household reports have multiple, economy has one)
     // CRITICAL: Do NOT await - let TanStack Query handle waiting in background
     for (const config of configs) {
+      // Check if calculation already exists in cache and is complete
+      const queryKey = config.targetType === 'report'
+        ? calculationKeys.byReportId(config.calcId)
+        : calculationKeys.bySimulationId(config.calcId);
+
+      const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
+
+      if (cachedStatus?.status === 'complete') {
+        console.log(`[useStartCalculationOnLoad][${timestamp}] ⏭️  SKIP: ${config.calcId} already complete in cache`);
+        continue;
+      }
+
+      // Check if orchestrator is already running for this calcId
+      if (manager.isRunning(config.calcId)) {
+        console.log(`[useStartCalculationOnLoad][${timestamp}] ⏭️  SKIP: ${config.calcId} orchestrator already running`);
+        continue;
+      }
+
       console.log(`[useStartCalculationOnLoad][${timestamp}]   calcId: "${config.calcId}"`);
       console.log(`[useStartCalculationOnLoad][${timestamp}]   targetType: "${config.targetType}"`);
+      console.log(`[useStartCalculationOnLoad][${timestamp}]   cachedStatus: ${cachedStatus?.status || 'none'}`);
 
       // Manager handles idempotency - won't start if already running
       console.log(`[useStartCalculationOnLoad][${timestamp}] → Calling manager.startCalculation() (fire and forget)`);
@@ -91,7 +120,7 @@ export function useStartCalculationOnLoad({
         });
     }
 
-    console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ All calculation requests fired`);
+    console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ All calculation requests processed`);
     console.log(`[useStartCalculationOnLoad][${timestamp}] ========================================`);
-  }, [enabled, configs, isComplete, manager]);
+  }, [enabled, configKey, isComplete, manager, configs, queryClient]);
 }
