@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { useHouseholdReportProgress, useHouseholdReportOrchestrator } from '@/hooks/household';
@@ -35,6 +35,11 @@ export function HouseholdReportOutput() {
   const { progress, overallProgress, isComputing, isComplete, isError } =
     useHouseholdReportProgress(reportId!);
 
+  // Create stable key from simulation IDs to prevent infinite loops from array reference changes
+  const simulationIdsKey = useMemo(() => {
+    return simulations?.map((s) => s.id).join('|') || '';
+  }, [simulations]);
+
   // Start calculations if needed
   useEffect(() => {
     if (!report || !simulations || simulations.length === 0) return;
@@ -63,7 +68,8 @@ export function HouseholdReportOutput() {
       // Start calculations
       orchestrator.startReport(config);
     }
-  }, [report, simulations, orchestrator, reportId]);
+  }, [report, simulationIdsKey, orchestrator, reportId, simulations]);
+  // Use simulationIdsKey for stability, keep simulations for the loop above
 
   // Show loading state while fetching data
   if (dataLoading) {

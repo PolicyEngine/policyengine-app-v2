@@ -65,7 +65,7 @@ export function useHouseholdReportProgress(reportId: string) {
     if (simProgresses.length === 0) return 0;
 
     return simProgresses.reduce((sum, p) => sum + p, 0) / simProgresses.length;
-  }, [progress, queryClient]);
+  }, [progress]); // queryClient is stable, doesn't need to be in dependencies
 
   return {
     progress,

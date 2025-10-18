@@ -55,6 +55,12 @@ export class HouseholdReportOrchestrator {
     const { reportId, simulationConfigs, countryId } = config;
     const timestamp = Date.now();
 
+    // Check if already started - prevent duplicate starts
+    if (this.activeReports.has(reportId)) {
+      console.log(`[HouseholdReportOrchestrator] Report ${reportId} already calculating, ignoring duplicate start request`);
+      return;
+    }
+
     console.log(`[HouseholdReportOrchestrator][${timestamp}] ========================================`);
     console.log(`[HouseholdReportOrchestrator][${timestamp}] Starting report ${reportId}`);
     console.log(`[HouseholdReportOrchestrator][${timestamp}] ${simulationConfigs.length} simulations to calculate`);
