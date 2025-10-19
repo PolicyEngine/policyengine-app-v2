@@ -62,6 +62,9 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
     return simulations.some((sim) => !sim.output || sim.status !== 'complete');
   }, [simulations]);
 
+  console.log('[HouseholdReportOutput] needsCalc:', needsCalc);
+  console.log('[HouseholdReportOutput] simulations:', simulations);
+
   // Start calculations if needed
   useEffect(() => {
     if (!report?.id || !simulations || simulations.length === 0) return;

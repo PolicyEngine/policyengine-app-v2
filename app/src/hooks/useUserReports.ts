@@ -383,7 +383,7 @@ export const useUserReportById = (userReportId: string) => {
     ? (queryNormalizer.getObjectById(baseReportId) as Report | undefined)
     : undefined;
 
-  // Step 2: Fetch base report if not in cache
+  // Step 2: Fetch base report (query always enabled to allow invalidation)
   const {
     data: report,
     isLoading: repLoading,
@@ -394,7 +394,7 @@ export const useUserReportById = (userReportId: string) => {
       const metadata = await fetchReportById(country, baseReportId!);
       return ReportAdapter.fromMetadata(metadata);
     },
-    enabled: !!baseReportId && !cachedReport,
+    enabled: !!baseReportId, // Removed && !cachedReport to allow invalidation
     staleTime: 5 * 60 * 1000,
   });
 
