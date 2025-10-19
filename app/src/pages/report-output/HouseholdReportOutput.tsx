@@ -2,7 +2,6 @@ import { useEffect, useMemo } from 'react';
 import {
   useHouseholdReportOrchestrator,
   useSimulationProgress,
-  useHouseholdReportCompletion,
 } from '@/hooks/household';
 import type { HouseholdReportConfig } from '@/types/calculation/household';
 import type { Household, HouseholdData } from '@/types/ingredients/Household';
@@ -53,10 +52,6 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
     "isError": isError,
   });
 
-  // Reactively mark report complete when all simulations are done
-  // TODO: Why not just do this upon calculation completion in orchestrator?
-  useHouseholdReportCompletion(report, simulations);
-
   // TODO: Check if this can go
   // Create stable key from simulation IDs to prevent infinite loops
   const simulationIdsKey = simulationIds.join('|');
@@ -89,6 +84,7 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
 
         const config: HouseholdReportConfig = {
           reportId: report.id,
+          report: report,
           simulationConfigs: configs,
           countryId: report.countryId,
         };

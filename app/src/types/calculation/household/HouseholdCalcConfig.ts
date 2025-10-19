@@ -1,3 +1,5 @@
+import type { Report } from '@/types/ingredients/Report';
+
 /**
  * Configuration for a single simulation calculation
  */
@@ -14,5 +16,6 @@ export interface SimulationConfig {
 export interface HouseholdReportConfig {
   reportId: string;
   countryId: string;
+  report: Report; // Full report object for marking complete when done
   simulationConfigs: SimulationConfig[];
 }
