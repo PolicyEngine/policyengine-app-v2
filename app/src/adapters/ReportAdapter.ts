@@ -41,7 +41,7 @@ export class ReportAdapter {
       apiVersion: metadata.api_version,
       simulationIds,
       status: this.mapApiStatusToReportStatus(metadata.status),
-      output: convertJsonToReportOutput(metadata.output),
+      output: convertJsonToReportOutput(metadata.output) as any, // Can be economy or household output
     };
   }
 
@@ -69,7 +69,7 @@ export class ReportAdapter {
     return {
       id: parseInt(report.id, 10),
       status: 'complete',
-      output: convertReportOutputToJson(report.output),
+      output: report.output ? convertReportOutputToJson(report.output as any) : null,
     };
   }
 

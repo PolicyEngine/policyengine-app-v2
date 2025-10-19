@@ -1,23 +1,27 @@
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useUserReportById } from '@/hooks/useUserReports';
-import { useHouseholdReportProgress, useHouseholdReportOrchestrator } from '@/hooks/household';
+import {
+  useHouseholdReportOrchestrator,
+  useSimulationProgress,
+  useHouseholdReportCompletion,
+} from '@/hooks/household';
 import type { HouseholdReportConfig } from '@/types/calculation/household';
 import type { Household, HouseholdData } from '@/types/ingredients/Household';
 import LoadingPage from '../report-output/LoadingPage';
 import ErrorPage from '../report-output/ErrorPage';
 import NotFoundSubPage from '../report-output/NotFoundSubPage';
 import OverviewSubPage from '../report-output/OverviewSubPage';
+import { isFileLoadingAllowed } from 'vite';
 
 /**
  * Household report output page
- * Uses new household-specific orchestration infrastructure
  *
- * KEY DIFFERENCES FROM ECONOMY:
- * - Uses HouseholdReportOrchestrator (not CalcOrchestrator)
- * - Tracks N independent simulation calculations
- * - Shows aggregated progress across all simulations
- * - Results stored in simulation.output (not report.output)
+ * SIMPLIFIED ARCHITECTURE:
+ * - No HouseholdReportProgress tracking
+ * - Subscribes to individual simulation CalcStatus
+ * - Reactively marks report complete when all sims done
+ * - Results live on simulations (not report)
  */
 export function HouseholdReportOutput() {
   const { reportId } = useParams<{ reportId: string }>();
@@ -31,45 +35,71 @@ export function HouseholdReportOutput() {
     error: dataError,
   } = useUserReportById(reportId!);
 
-  // Subscribe to household report progress (use base Report ID, not UserReport ID)
-  const { progress, overallProgress, isComputing, isComplete, isError } =
-    useHouseholdReportProgress(report?.id!);
+  // Get simulation IDs
+  const simulationIds = useMemo(() => {
+    return simulations?.map((s) => s.id).filter((id): id is string => !!id) || [];
+  }, [simulations]);
 
-  // Create stable key from simulation IDs to prevent infinite loops from array reference changes
-  const simulationIdsKey = useMemo(() => {
-    return simulations?.map((s) => s.id).join('|') || '';
+  // Subscribe to simulation progress (reads from CalcStatus cache)
+  const { overallProgress, isComputing, isComplete, isError } = useSimulationProgress(simulationIds);
+
+  console.log('[HouseholdReportOutput] Render:', {
+    "reportId": reportId,
+    "report": report,
+    "simulations": simulations,
+    "dataLoading": dataLoading,
+    "dataError": dataError,
+    "overallProgress": overallProgress,
+    "isComputing": isComputing,
+    "isComplete": isComplete,
+    "isError": isError,
+  });
+
+  // Reactively mark report complete when all simulations are done
+  // TODO: Why not just do this upon calculation completion in orchestrator?
+  useHouseholdReportCompletion(report, simulations);
+
+  // TODO: Check if this can go
+  // Create stable key from simulation IDs to prevent infinite loops
+  const simulationIdsKey = simulationIds.join('|');
+
+  // Check if simulations need to be calculated
+  const needsCalc = useMemo(() => {
+    if (!simulations || simulations.length === 0) return false;
+    return simulations.some((sim) => !sim.output || sim.status !== 'complete');
   }, [simulations]);
 
   // Start calculations if needed
   useEffect(() => {
-    if (!report || !simulations || simulations.length === 0) return;
+    if (!report?.id || !simulations || simulations.length === 0) return;
 
-    // Check if any simulation needs calculation
-    const needsCalc = simulations.some((sim) => !sim.output || sim.status !== 'complete');
+    if (needsCalc) {
+      // Check if any simulation is already calculating
+      const alreadyCalculating = simulations.some((sim) => orchestrator.isCalculating(sim.id!));
 
-    if (needsCalc && !orchestrator.isCalculating(report.id!)) {
-      console.log('[HouseholdReportOutput] Starting calculations for report', report.id);
+      if (!alreadyCalculating) {
+        console.log('[HouseholdReportOutput] Starting calculations for report', report.id);
 
-      // Build configs for each simulation
-      const configs = simulations
-        .filter((sim) => sim.id && sim.populationId && sim.policyId)
-        .map((sim) => ({
-          simulationId: sim.id!,
-          populationId: sim.populationId!,
-          policyId: sim.policyId!,
-        }));
+        // Build configs for each simulation
+        const configs = simulations
+          .filter((sim) => sim.id && sim.populationId && sim.policyId)
+          .map((sim) => ({
+            simulationId: sim.id!,
+            populationId: sim.populationId!,
+            policyId: sim.policyId!,
+          }));
 
-      const config: HouseholdReportConfig = {
-        reportId: report.id!, // Use base Report ID, not UserReport ID from URL
-        simulationConfigs: configs,
-        countryId: report.countryId,
-      };
+        const config: HouseholdReportConfig = {
+          reportId: report.id,
+          simulationConfigs: configs,
+          countryId: report.countryId,
+        };
 
-      // Start calculations
-      orchestrator.startReport(config);
+        // Start calculations (orchestrator manages blocking calls)
+        orchestrator.startReport(config);
+      }
     }
-  }, [report, simulationIdsKey, orchestrator, simulations]);
-  // Use simulationIdsKey for stability, keep simulations for the loop above
+  }, [report?.id, simulationIdsKey, orchestrator, simulations, needsCalc]);
 
   // Show loading state while fetching data
   if (dataLoading) {
@@ -81,8 +111,8 @@ export function HouseholdReportOutput() {
     return <ErrorPage error={dataError || new Error('Report not found')} />;
   }
 
-  // Show loading during calculations
-  if (isComputing) {
+  // Show loading during calculations OR if calculations haven't started yet
+  if (isComputing || needsCalc) {
     return (
       <LoadingPage
         message={`Calculating household simulations... ${Math.round(overallProgress)}%`}
@@ -93,23 +123,17 @@ export function HouseholdReportOutput() {
 
   // Show error if calculations failed
   if (isError) {
+    const errorSims = simulations?.filter((s) => s.status === 'error') || [];
     const errorMessage =
-      progress?.simulationIds
-        .map((simId) => {
-          const simStatus = progress.simulations[simId];
-          if (simStatus.status === 'error') {
-            return `Simulation ${simId}: ${simStatus.error?.message || 'Unknown error'}`;
-          }
-          return null;
-        })
-        .filter(Boolean)
-        .join('\n') || 'Calculation failed';
+      errorSims.length > 0
+        ? errorSims.map((s) => `Simulation ${s.id}: Failed to calculate`).join('\n')
+        : 'Calculation failed';
 
     return <ErrorPage error={new Error(errorMessage)} />;
   }
 
   // Show results if complete
-  if (isComplete || simulations.every((s) => s.output && s.status === 'complete')) {
+  if (isComplete || simulations?.every((s) => s.output && s.status === 'complete')) {
     // Collect all simulation outputs
     const householdOutputs: Household[] = simulations
       .filter((sim) => sim.output)

@@ -86,7 +86,7 @@ export const reportSlice = createSlice({
 
     // Update report output
     updateReportOutput: (state, action: PayloadAction<ReportOutput | null>) => {
-      state.output = action.payload;
+      state.output = action.payload as any; // Can be economy or household output
       state.updatedAt = new Date().toISOString();
     },
 

@@ -3,10 +3,13 @@ import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyW
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { Household } from './Household';
 
-export type ReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK | Household | Household[];
+export type EconomyOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
+export type HouseholdOutput = Household | Household[];
 
 /**
  * Base Report type
+ * For household reports: output lives on individual simulations, not the report
+ * For economy reports: output is aggregated at the report level
  */
 export interface Report {
   id?: string; // Optional - populated after creation like Policy
@@ -15,5 +18,9 @@ export interface Report {
   apiVersion: string | null;
   simulationIds: string[];
   status: 'pending' | 'complete' | 'error';
-  output: ReportOutput | null; // Parsed API response or null
+  outputType?: 'household' | 'economy'; // Discriminator for output location
+  output?: EconomyOutput | null; // Only for economy reports - household outputs live on simulations
 }
+
+// Legacy export for backward compatibility
+export type ReportOutput = EconomyOutput | HouseholdOutput;
