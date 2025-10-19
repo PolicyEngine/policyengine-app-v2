@@ -1,6 +1,4 @@
 import { useEffect, useMemo } from 'react';
-import { useParams } from 'react-router-dom';
-import { useUserReportById } from '@/hooks/useUserReports';
 import {
   useHouseholdReportOrchestrator,
   useSimulationProgress,
@@ -8,11 +6,20 @@ import {
 } from '@/hooks/household';
 import type { HouseholdReportConfig } from '@/types/calculation/household';
 import type { Household, HouseholdData } from '@/types/ingredients/Household';
+import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
 import LoadingPage from '../report-output/LoadingPage';
 import ErrorPage from '../report-output/ErrorPage';
 import NotFoundSubPage from '../report-output/NotFoundSubPage';
 import OverviewSubPage from '../report-output/OverviewSubPage';
-import { isFileLoadingAllowed } from 'vite';
+
+interface HouseholdReportOutputProps {
+  reportId: string;
+  report: Report | undefined;
+  simulations: Simulation[] | undefined;
+  isLoading: boolean;
+  error: Error | null;
+}
 
 /**
  * Household report output page
@@ -23,17 +30,8 @@ import { isFileLoadingAllowed } from 'vite';
  * - Reactively marks report complete when all sims done
  * - Results live on simulations (not report)
  */
-export function HouseholdReportOutput() {
-  const { reportId } = useParams<{ reportId: string }>();
+export function HouseholdReportOutput({ reportId, report, simulations, isLoading: dataLoading, error: dataError }: HouseholdReportOutputProps) {
   const orchestrator = useHouseholdReportOrchestrator();
-
-  // Fetch report and simulations
-  const {
-    report,
-    simulations,
-    isLoading: dataLoading,
-    error: dataError,
-  } = useUserReportById(reportId!);
 
   // Get simulation IDs
   const simulationIds = useMemo(() => {
@@ -56,10 +54,8 @@ export function HouseholdReportOutput() {
   });
 
   // Reactively mark report complete when all simulations are done
-  // TODO: Why not just do this upon calculation completion in orchestrator?
   useHouseholdReportCompletion(report, simulations);
 
-  // TODO: Check if this can go
   // Create stable key from simulation IDs to prevent infinite loops
   const simulationIdsKey = simulationIds.join('|');
 

@@ -88,7 +88,15 @@ export default function ReportOutputPage() {
 
   // ROUTER: Redirect to type-specific pages
   if (outputType === 'household') {
-    return <HouseholdReportOutput />;
+    return (
+      <HouseholdReportOutput
+        reportId={userReportId}
+        report={report}
+        simulations={simulations}
+        isLoading={dataLoading}
+        error={dataError}
+      />
+    );
   }
 
   if (outputType === 'economy') {
