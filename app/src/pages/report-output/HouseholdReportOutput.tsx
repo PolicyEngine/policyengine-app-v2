@@ -54,8 +54,10 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
   });
 
   // Reactively mark report complete when all simulations are done
+  // TODO: Why not just do this upon calculation completion in orchestrator?
   useHouseholdReportCompletion(report, simulations);
 
+  // TODO: Check if this can go
   // Create stable key from simulation IDs to prevent infinite loops
   const simulationIdsKey = simulationIds.join('|');
 
