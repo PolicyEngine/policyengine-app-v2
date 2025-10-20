@@ -22,6 +22,7 @@ import {
 import { EconomyReportOutput } from '@/api/economy';
 import { colors, spacing, typography } from '@/designTokens';
 import { ReportOutputType, useReportData } from '@/hooks/useReportData';
+import BudgetaryImpactSubPage from './report-output/budgetary-impact/BudgetaryImpactSubPage';
 import ErrorPage from './report-output/ErrorPage';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
@@ -41,7 +42,7 @@ import OverviewSubPage from './report-output/OverviewSubPage';
  */
 
 // Valid sub-pages registry
-const VALID_SUBPAGES = ['overview', 'loading', 'error'] as const;
+const VALID_SUBPAGES = ['overview', 'budgetary-impact', 'loading', 'error'] as const;
 type ValidSubPage = (typeof VALID_SUBPAGES)[number];
 
 function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
@@ -127,6 +128,12 @@ export default function ReportOutputPage() {
       case 'overview':
         return output && outputType ? (
           <OverviewSubPage output={output} outputType={outputType} />
+        ) : (
+          <NotFoundSubPage />
+        );
+      case 'budgetary-impact':
+        return output && outputType === 'economy' ? (
+          <BudgetaryImpactSubPage output={output as EconomyReportOutput} />
         ) : (
           <NotFoundSubPage />
         );
@@ -308,6 +315,7 @@ function getTabsForOutputType(
     // Economy report tabs matching the design
     const baseTabs = [
       { value: 'overview', label: 'Overview' },
+      { value: 'budgetary-impact', label: 'Budgetary Impact' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'dynamics', label: 'Dynamics' },
