@@ -63,16 +63,18 @@ export class SimulationAdapter {
 
   /**
    * Creates payload for updating a simulation's output (PATCH request)
-   * Note: Unlike reports, simulation PATCH includes id in body
-   * Note: Uses output_json (stringified) not output, and doesn't accept status
+   * Note: Simulation PATCH includes id in body
+   * Note: Now accepts status field (matching report PATCH format)
    */
   static toUpdatePayload(
     simulationId: string,
-    output: unknown
+    output: unknown,
+    status: 'pending' | 'complete' | 'error'
   ): SimulationSetOutputPayload {
     return {
       id: parseInt(simulationId, 10),
-      output_json: JSON.stringify(output),
+      status,
+      output: output ? JSON.stringify(output) : null,
     };
   }
 
@@ -80,13 +82,22 @@ export class SimulationAdapter {
    * Creates payload for marking a simulation as completed with output
    */
   static toCompletedPayload(simulationId: string, output: unknown): SimulationSetOutputPayload {
-    return this.toUpdatePayload(simulationId, output);
+    return {
+      id: parseInt(simulationId, 10),
+      status: 'complete',
+      output: JSON.stringify(output),
+    };
   }
 
   /**
    * Creates payload for marking a simulation as errored
    */
-  static toErrorPayload(simulationId: string): SimulationSetOutputPayload {
-    return this.toUpdatePayload(simulationId, null);
+  static toErrorPayload(simulationId: string, errorMessage?: string): SimulationSetOutputPayload {
+    return {
+      id: parseInt(simulationId, 10),
+      status: 'error',
+      output: null,
+      error_message: errorMessage || null,
+    };
   }
 }

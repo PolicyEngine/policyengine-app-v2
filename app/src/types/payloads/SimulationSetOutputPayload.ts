@@ -1,9 +1,11 @@
 /**
  * Payload format for updating a simulation's output via the API
- * Note: Unlike reports, simulation PATCH takes id in body, not URL
- * Note: Uses output_json (string) not output, and doesn't accept status
+ * Note: Simulation PATCH takes id in body, not URL
+ * Note: Now accepts status field (matching report PATCH format)
  */
 export interface SimulationSetOutputPayload {
   id: number;
-  output_json: string; // JSON-stringified output or "null"
+  status: 'pending' | 'complete' | 'error';
+  output?: string | null; // JSON-stringified output or null
+  error_message?: string | null; // Optional error message for error status
 }
