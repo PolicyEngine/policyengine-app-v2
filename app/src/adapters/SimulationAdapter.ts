@@ -108,4 +108,18 @@ export class SimulationAdapter {
       error_message: errorMessage || null,
     };
   }
+
+  /**
+   * Creates payload for marking an economy simulation as complete with placeholder output
+   * Economy simulations don't store individual outputs (only the report has aggregated output)
+   */
+  static toEconomyPlaceholderPayload(simulationId: string): SimulationSetOutputPayload {
+    return {
+      id: parseInt(simulationId, 10),
+      status: 'complete',
+      output: JSON.stringify({
+        message: "Economy-wide reports do not save simulation-level results at this time"
+      }),
+    };
+  }
 }

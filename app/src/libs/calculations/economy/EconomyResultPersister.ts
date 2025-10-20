@@ -1,6 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
 import { markReportCompleted } from '@/api/report';
-import { reportKeys } from '@/libs/queryKeys';
+import { reportKeys, simulationKeys } from '@/libs/queryKeys';
+import { SimulationAdapter } from '@/adapters/SimulationAdapter';
+import { BASE_URL } from '@/constants';
 import type { CalcStatus } from '@/types/calculation';
 import type { Report } from '@/types/ingredients/Report';
 
@@ -63,12 +65,19 @@ export class EconomyResultPersister {
     result: any,
     countryId: string
   ): Promise<void> {
+    const timestamp = Date.now();
+
+    // Get report from cache to access simulation IDs
+    const reportData = this.queryClient.getQueryData<Report>(
+      reportKeys.byId(reportId)
+    );
+
     // Create a Report object with the result
     const report: Report = {
       id: reportId,
       countryId: countryId as any,
       apiVersion: null,
-      simulationIds: [],
+      simulationIds: reportData?.simulationIds || [],
       status: 'complete',
       output: result,
     };
@@ -76,12 +85,58 @@ export class EconomyResultPersister {
     // Use existing markReportCompleted API
     await markReportCompleted(countryId as any, reportId, report);
 
+    // Mark all simulations complete with placeholder output
+    if (report.simulationIds && report.simulationIds.length > 0) {
+      console.log(`[EconomyResultPersister][${timestamp}] Marking ${report.simulationIds.length} simulations as complete`);
+      await Promise.all(
+        report.simulationIds.map(simId =>
+          this.markSimulationComplete(countryId, simId)
+        )
+      );
+      console.log(`[EconomyResultPersister][${timestamp}] ✓ All simulations marked complete`);
+    }
+
     // Invalidate report metadata cache so Reports page shows updated status
     console.log(`[EconomyResultPersister] → Invalidating report cache for ${reportId}`);
     this.queryClient.invalidateQueries({
       queryKey: reportKeys.byId(reportId),
     });
     console.log(`[EconomyResultPersister] ✓ Report cache invalidated`);
+  }
+
+  /**
+   * Mark an economy simulation as complete with placeholder output
+   * Economy simulations don't store individual outputs (only the report has aggregated output)
+   */
+  private async markSimulationComplete(countryId: string, simulationId: string): Promise<void> {
+    const timestamp = Date.now();
+    try {
+      const payload = SimulationAdapter.toEconomyPlaceholderPayload(simulationId);
+      const url = `${BASE_URL}/${countryId}/simulation`;
+
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to PATCH simulation ${simulationId}: ${response.status} ${response.statusText}`);
+      }
+
+      // Invalidate simulation cache
+      this.queryClient.invalidateQueries({
+        queryKey: simulationKeys.byId(simulationId),
+      });
+
+      console.log(`[EconomyResultPersister][${timestamp}] ✓ Simulation ${simulationId} marked complete`);
+    } catch (error) {
+      console.error(`[EconomyResultPersister][${timestamp}] Failed to mark simulation ${simulationId} complete:`, error);
+      // Don't throw - economy report already succeeded, simulation status is secondary
+    }
   }
 
   private sleep(ms: number): Promise<void> {
