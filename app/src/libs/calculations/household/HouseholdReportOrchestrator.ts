@@ -2,7 +2,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { HouseholdSimCalculator } from './HouseholdSimCalculator';
 import { buildHouseholdReportOutput } from './householdReportUtils';
 import { simulationKeys, reportKeys } from '@/libs/queryKeys';
-import { updateSimulationOutput } from '@/api/simulation';
+import { updateSimulationOutput, markSimulationError } from '@/api/simulation';
 import { markReportCompleted } from '@/api/report';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
 import type { Report } from '@/types/ingredients/Report';
@@ -134,8 +134,21 @@ export class HouseholdReportOrchestrator {
       console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} persisted to database`);
     } catch (error) {
       console.error(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} failed:`, error);
-      // Error is already reflected in CalcStatus by HouseholdSimCalculator
-      // UI layer will see the error status
+
+      // Mark simulation as error in database (persistent status)
+      try {
+        await markSimulationError(countryId as any, simulationId);
+
+        // Invalidate to trigger refetch with error status
+        this.queryClient.invalidateQueries({
+          queryKey: simulationKeys.byId(simulationId),
+        });
+
+        console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} marked as error`);
+      } catch (patchError) {
+        console.error(`[HouseholdReportOrchestrator][${timestamp}] Failed to mark simulation as error:`, patchError);
+      }
+
       throw error; // Re-throw to trigger Promise.all catch
     } finally {
       this.activeCalculations.delete(simulationId);

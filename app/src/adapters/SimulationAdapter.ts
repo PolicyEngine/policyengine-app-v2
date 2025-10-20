@@ -5,6 +5,14 @@ import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/p
 /**
  * Adapter for converting between Simulation and API formats
  * Agnostic to whether populationId refers to household or geography
+ *
+ * STATUS VALUES (matches API):
+ * - 'pending': Not yet calculated OR currently calculating
+ * - 'complete': Calculation finished and persisted
+ * - 'error': Calculation failed
+ *
+ * Note: Frontend uses CalcStatus.status='computing' for ephemeral real-time tracking,
+ * but Simulation.status uses 'pending' for the persistent database state.
  */
 export class SimulationAdapter {
   /**

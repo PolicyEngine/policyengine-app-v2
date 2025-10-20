@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import {
   useHouseholdReportOrchestrator,
-  useSimulationProgress,
+  useSimulationProgressDisplay,
 } from '@/hooks/household';
 import type { HouseholdReportConfig } from '@/types/calculation/household';
 import type { Household, HouseholdData } from '@/types/ingredients/Household';
@@ -37,8 +37,26 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
     return simulations?.map((s) => s.id).filter((id): id is string => !!id) || [];
   }, [simulations]);
 
-  // Subscribe to simulation progress (reads from CalcStatus cache)
-  const { overallProgress, isComputing, isComplete, isError } = useSimulationProgress(simulationIds);
+  // Get real-time progress from CalcStatus (for display only)
+  const { displayProgress, hasCalcStatus } = useSimulationProgressDisplay(simulationIds);
+
+  // Derive state from Simulation.status (SOURCE OF TRUTH)
+  // Note: API uses 'pending' for "not complete yet" (includes actively calculating)
+  const simulationStates = useMemo(() => {
+    if (!simulations || simulations.length === 0) {
+      return { isPending: false, isComplete: false, isError: false };
+    }
+
+    return {
+      // 'pending' means: needs calculation OR currently calculating
+      // Also check for undefined/null status (defensive)
+      isPending: simulations.some(s => !s.status || s.status === 'pending'),
+      isComplete: simulations.every(s => s.status === 'complete'),
+      isError: simulations.some(s => s.status === 'error'),
+    };
+  }, [simulations]);
+
+  const { isPending, isComplete, isError } = simulationStates;
 
   console.log('[HouseholdReportOutput] Render:', {
     "reportId": reportId,
@@ -46,8 +64,9 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
     "simulations": simulations,
     "dataLoading": dataLoading,
     "dataError": dataError,
-    "overallProgress": overallProgress,
-    "isComputing": isComputing,
+    "displayProgress": displayProgress,
+    "hasCalcStatus": hasCalcStatus,
+    "isPending": isPending,
     "isComplete": isComplete,
     "isError": isError,
   });
@@ -56,20 +75,11 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
   // Create stable key from simulation IDs to prevent infinite loops
   const simulationIdsKey = simulationIds.join('|');
 
-  // Check if simulations need to be calculated
-  const needsCalc = useMemo(() => {
-    if (!simulations || simulations.length === 0) return false;
-    return simulations.some((sim) => !sim.output || sim.status !== 'complete');
-  }, [simulations]);
-
-  console.log('[HouseholdReportOutput] needsCalc:', needsCalc);
-  console.log('[HouseholdReportOutput] simulations:', simulations);
-
-  // Start calculations if needed
+  // Start calculations if needed (decision based on Simulation.status)
   useEffect(() => {
     if (!report?.id || !simulations || simulations.length === 0) return;
 
-    if (needsCalc) {
+    if (isPending) {
       // Check if any simulation is already calculating
       const alreadyCalculating = simulations.some((sim) => orchestrator.isCalculating(sim.id!));
 
@@ -96,7 +106,10 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
         orchestrator.startReport(config);
       }
     }
-  }, [report?.id, simulationIdsKey, orchestrator, simulations, needsCalc]);
+  }, [report?.id, isPending, simulations, orchestrator]);
+
+  // RENDER DECISIONS: Based on persistent Simulation.status
+  // PROGRESS DISPLAY: Enhanced with ephemeral CalcStatus when available
 
   // Show loading state while fetching data
   if (dataLoading) {
@@ -108,17 +121,7 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
     return <ErrorPage error={dataError || new Error('Report not found')} />;
   }
 
-  // Show loading during calculations OR if calculations haven't started yet
-  if (isComputing || needsCalc) {
-    return (
-      <LoadingPage
-        message={`Calculating household simulations... ${Math.round(overallProgress)}%`}
-        progress={overallProgress}
-      />
-    );
-  }
-
-  // Show error if calculations failed
+  // Show error if any simulation has error status (persistent)
   if (isError) {
     const errorSims = simulations?.filter((s) => s.status === 'error') || [];
     const errorMessage =
@@ -129,10 +132,25 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
     return <ErrorPage error={new Error(errorMessage)} />;
   }
 
-  // Show results if complete
-  if (isComplete || simulations?.every((s) => s.output && s.status === 'complete')) {
+  // Show loading if pending (needs calculation OR currently calculating)
+  // CalcStatus provides progress display if available (same session)
+  if (isPending) {
+    const message = hasCalcStatus
+      ? `Calculating household simulations... ${Math.round(displayProgress)}%`
+      : 'Calculating household simulations...';
+
+    return (
+      <LoadingPage
+        message={message}
+        progress={hasCalcStatus ? displayProgress : undefined}
+      />
+    );
+  }
+
+  // Show results if all simulations complete (persistent status)
+  if (isComplete) {
     // Collect all simulation outputs
-    const householdOutputs: Household[] = simulations
+    const householdOutputs: Household[] = (simulations || [])
       .filter((sim) => sim.output)
       .map((sim, index) => ({
         id: `${report.id}-sim${index + 1}`,
