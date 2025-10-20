@@ -8,7 +8,6 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv } from '@/utils/chartUtils';
-import { formatBillions } from '@/utils/formatPowers';
 import { formatCurrencyAbbr, localeCode } from '@/utils/formatters';
 
 interface Props {
@@ -43,10 +42,10 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
 
   // Values in billions
   const valuesBeforeFilter = [
-    parseFloat(formatBillions(taxImpact)),
-    parseFloat(formatBillions(stateTaxImpact)),
-    parseFloat(formatBillions(-spendingImpact)),
-    parseFloat(formatBillions(budgetaryImpact)),
+    taxImpact / 1e9,
+    stateTaxImpact / 1e9,
+    -spendingImpact / 1e9,
+    budgetaryImpact / 1e9,
   ];
 
   // Filter out zero values

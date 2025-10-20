@@ -37,13 +37,3 @@ export function formatBudgetaryImpact(value: number): { display: string; label: 
     label,
   };
 }
-
-/**
- * Format a value in billions (for chart display)
- * @param value The value to format
- * @returns The value divided by 1 billion, formatted to 1 decimal place
- */
-export function formatBillions(value: number): string {
-  const billions = value / 1e9;
-  return billions.toFixed(1);
-}

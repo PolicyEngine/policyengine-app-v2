@@ -3,30 +3,13 @@
  * Original: policyengine-app/src/pages/policy/output/ImpactChart.jsx
  */
 
+import wordwrap from 'wordwrapjs';
+
 /**
  * Wrap text to a specified width, replacing newlines with <br> tags
  */
 function wordWrap(text: string, width: number = 50): string {
-  const words = text.split(' ');
-  const lines: string[] = [];
-  let currentLine = '';
-
-  for (const word of words) {
-    const testLine = currentLine ? `${currentLine} ${word}` : word;
-    if (testLine.length <= width) {
-      currentLine = testLine;
-    } else {
-      if (currentLine) {
-        lines.push(currentLine);
-      }
-      currentLine = word;
-    }
-  }
-
-  if (currentLine) {
-    lines.push(currentLine);
-  }
-  return lines.join('<br>');
+  return wordwrap.wrap(text, { width }).replaceAll('\n', '<br>');
 }
 
 /**
