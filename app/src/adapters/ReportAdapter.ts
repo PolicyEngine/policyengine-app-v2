@@ -31,9 +31,10 @@ export class ReportAdapter {
    */
   static fromMetadata(metadata: ReportMetadata): Report {
     // Convert simulation IDs from individual fields to array
+    // Use String() to ensure IDs are strings, regardless of API response type
     const simulationIds = metadata.simulation_2_id
-      ? [metadata.simulation_1_id, metadata.simulation_2_id]
-      : [metadata.simulation_1_id];
+      ? [String(metadata.simulation_1_id), String(metadata.simulation_2_id)]
+      : [String(metadata.simulation_1_id)];
 
     return {
       id: String(metadata.id),

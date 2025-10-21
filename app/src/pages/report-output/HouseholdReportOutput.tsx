@@ -8,6 +8,8 @@ import type { HouseholdReportConfig } from '@/types/calculation/household';
 import type { Household, HouseholdData } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
+import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import LoadingPage from '../report-output/LoadingPage';
 import ErrorPage from '../report-output/ErrorPage';
 import NotFoundSubPage from '../report-output/NotFoundSubPage';
@@ -17,6 +19,8 @@ interface HouseholdReportOutputProps {
   reportId: string;
   report: Report | undefined;
   simulations: Simulation[] | undefined;
+  userSimulations?: UserSimulation[];
+  userPolicies?: UserPolicy[];
   isLoading: boolean;
   error: Error | null;
 }
@@ -30,7 +34,7 @@ interface HouseholdReportOutputProps {
  * - Reactively marks report complete when all sims done
  * - Results live on simulations (not report)
  */
-export function HouseholdReportOutput({ reportId, report, simulations, isLoading: dataLoading, error: dataError }: HouseholdReportOutputProps) {
+export function HouseholdReportOutput({ reportId, report, simulations, userSimulations, userPolicies, isLoading: dataLoading, error: dataError }: HouseholdReportOutputProps) {
   const orchestrator = useHouseholdReportOrchestrator();
 
   // Get simulation IDs
@@ -169,7 +173,7 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
         });
 
         return {
-          id: `${report.id}-sim${index + 1}`,
+          id: sim.id, // Use actual simulation ID, not generated
           countryId: report.countryId,
           householdData: sim.output as HouseholdData,
         };
@@ -189,10 +193,23 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
     // Pass array of household outputs to overview page
     const output = householdOutputs.length > 1 ? householdOutputs : householdOutputs[0];
 
+    // Extract policy labels from UserPolicy records (matched via simulation.policyId)
+    const policyLabels = simulations
+      ?.filter((sim) => sim.output)
+      .map((sim) => {
+        // Find corresponding UserPolicy to get label
+        const userPolicy = userPolicies?.find((up) => up.policyId === sim.policyId);
+        console.log('[HouseholdReportOutput] userPolicy for simulation', sim.id, '(policyId:', sim.policyId, '):', userPolicy);
+        return userPolicy?.label || `Policy ${sim.policyId}`;
+      }) || [];
+
+    console.log('[HouseholdReportOutput] Policy labels for title:', policyLabels);
+
     return (
       <OverviewSubPage
         output={output}
         outputType="household"
+        policyLabels={policyLabels}
       />
     );
   }

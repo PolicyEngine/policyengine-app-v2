@@ -76,8 +76,17 @@ export default function ReportOutputPage() {
   }
 
   // Fetch report structure and metadata
-  const { userReport, report, simulations, isLoading: dataLoading, error: dataError } =
+  const { userReport, report, simulations, userSimulations, userPolicies, isLoading: dataLoading, error: dataError } =
     useUserReportById(userReportId);
+
+  console.log('[ReportOutputPage] Fetched user report and simulations:', {
+    userReport,
+    report,
+    simulations,
+    userSimulations,
+    dataLoading,
+    dataError,
+  });
 
   // Derive output type from simulation (needed for target type determination)
   const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
@@ -93,6 +102,8 @@ export default function ReportOutputPage() {
         reportId={userReportId}
         report={report}
         simulations={simulations}
+        userSimulations={userSimulations}
+        userPolicies={userPolicies}
         isLoading={dataLoading}
         error={dataError}
       />

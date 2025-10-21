@@ -7,13 +7,14 @@ import HouseholdOverview from './HouseholdOverview';
 interface OverviewSubPageProps {
   output: EconomyReportOutput | Household | Household[];
   outputType: ReportOutputType;
+  policyLabels?: string[];
 }
 
 /**
  * Overview sub-page - displays high-level summary of report results
  * Routes to the appropriate overview component based on output type
  */
-export default function OverviewSubPage({ output, outputType }: OverviewSubPageProps) {
+export default function OverviewSubPage({ output, outputType, policyLabels }: OverviewSubPageProps) {
   if (outputType === 'economy') {
     return <EconomyOverview output={output as EconomyReportOutput} />;
   }
@@ -21,5 +22,5 @@ export default function OverviewSubPage({ output, outputType }: OverviewSubPageP
   // Household output can be single or array (for multiple simulations)
   const householdOutputs = Array.isArray(output) ? output : [output as Household];
 
-  return <HouseholdOverview outputs={householdOutputs} />;
+  return <HouseholdOverview outputs={householdOutputs} policyLabels={policyLabels} />;
 }

@@ -513,12 +513,22 @@ export const useUserReportById = (userReportId: string) => {
 
   // Step 5: Get user associations (only if we have userId)
   const { data: simulationAssociations } = useSimulationAssociationsByUser(userId || '');
+
+  console.log('[useUserReportById] simulationAssociations', simulationAssociations);
+
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
+
+  console.log('[useUserReportById] finalReport', finalReport);
+
+  console.log('[useUserReportById] type of each member of finalReport.simulationIds', finalReport?.simulationIds?.map(id => typeof id));
+  console.log('[useUserReportById] type of simulationAssociations.simulationId', simulationAssociations?.map(sa => ({id: sa.simulationId, type: typeof sa.simulationId})));
 
   const userSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
   );
+
+  console.log('[useUserReportById] userSimulations after filter', userSimulations);
 
   const userPolicies = policyAssociations?.filter((pa) =>
     simulations.some((s) => s.policyId === pa.policyId)
