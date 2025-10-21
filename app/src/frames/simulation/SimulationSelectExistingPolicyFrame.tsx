@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text, Group, ActionIcon } from '@mantine/core';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import {
@@ -15,8 +13,6 @@ import { addPolicyParamAtPosition, createPolicyAtPosition } from '@/reducers/pol
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
-const ITEMS_PER_PAGE = 5;
-
 export default function SimulationSelectExistingPolicyFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const dispatch = useDispatch();
@@ -26,12 +22,13 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicy, setLocalPolicy] = useState<UserPolicyMetadataWithAssociation | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
 
-  console.log('Policy Data:', data);
-  console.log('Policy Loading:', isLoading);
-  console.log('Policy Error:', isError);
-  console.log('Policy Error Message:', error);
+  console.log('[SimulationSelectExistingPolicyFrame] ========== DATA FETCH ==========');
+  console.log('[SimulationSelectExistingPolicyFrame] Raw data:', data);
+  console.log('[SimulationSelectExistingPolicyFrame] Raw data length:', data?.length);
+  console.log('[SimulationSelectExistingPolicyFrame] isLoading:', isLoading);
+  console.log('[SimulationSelectExistingPolicyFrame] isError:', isError);
+  console.log('[SimulationSelectExistingPolicyFrame] Error:', error);
 
   function canProceed() {
     if (!localPolicy) {
@@ -114,7 +111,9 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   const userPolicies = data || [];
 
-  console.log('User Policies:', userPolicies);
+  console.log('[SimulationSelectExistingPolicyFrame] ========== BEFORE FILTERING ==========');
+  console.log('[SimulationSelectExistingPolicyFrame] User policies count:', userPolicies.length);
+  console.log('[SimulationSelectExistingPolicyFrame] User policies:', userPolicies);
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -152,14 +151,13 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     isPolicyMetadataWithAssociation(association)
   );
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredPolicies.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedPolicies = filteredPolicies.slice(startIndex, endIndex);
+  console.log('[SimulationSelectExistingPolicyFrame] ========== AFTER FILTERING ==========');
+  console.log('[SimulationSelectExistingPolicyFrame] Filtered policies count:', filteredPolicies.length);
+  console.log('[SimulationSelectExistingPolicyFrame] Filter criteria: isPolicyMetadataWithAssociation(association)');
+  console.log('[SimulationSelectExistingPolicyFrame] Filtered policies:', filteredPolicies);
 
-  // Build card list items from paginated policies
-  const policyCardItems = paginatedPolicies.map((association) => {
+  // Build card list items from ALL filtered policies (pagination handled by FlowView)
+  const policyCardItems = filteredPolicies.map((association) => {
     let title = '';
     let subtitle = '';
     if ('label' in association.association && association.association.label) {
@@ -179,44 +177,6 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     };
   });
 
-  const content = (
-    <Stack>
-      <Text size="sm">Search</Text>
-      <Text fw={700}>TODO: Search</Text>
-      <Group justify="space-between" align="center">
-        <div>
-          <Text fw={700}>Your Policies</Text>
-          <Text size="sm" c="dimmed">
-            Showing {startIndex + 1}-{Math.min(endIndex, filteredPolicies.length)} of {filteredPolicies.length}
-          </Text>
-        </div>
-        {totalPages > 1 && (
-          <Group gap="xs">
-            <ActionIcon
-              variant="default"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              aria-label="Previous page"
-            >
-              <IconChevronLeft size={18} />
-            </ActionIcon>
-            <Text size="sm">
-              Page {currentPage} of {totalPages}
-            </Text>
-            <ActionIcon
-              variant="default"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              aria-label="Next page"
-            >
-              <IconChevronRight size={18} />
-            </ActionIcon>
-          </Group>
-        )}
-      </Group>
-    </Stack>
-  );
-
   const primaryAction = {
     label: 'Next',
     onClick: handleSubmit,
@@ -227,9 +187,9 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     <FlowView
       title="Select an Existing Policy"
       variant="cardList"
-      content={content}
       cardListItems={policyCardItems}
       primaryAction={primaryAction}
+      itemsPerPage={5}
     />
   );
 }

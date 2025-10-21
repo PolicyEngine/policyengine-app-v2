@@ -19,6 +19,13 @@ export class SimulationAdapter {
    * Converts SimulationMetadata from API GET response to Simulation type
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
+    console.log('[SimulationAdapter.fromMetadata] RAW API METADATA:', {
+      id: metadata.id,
+      status: metadata.status,
+      hasOutput: !!metadata.output,
+      metadataKeys: Object.keys(metadata),
+    });
+
     if (!metadata.population_id) {
       throw new Error('Simulation metadata missing population_id');
     }
@@ -32,7 +39,7 @@ export class SimulationAdapter {
       throw new Error('Simulation metadata missing population_type');
     }
 
-    return {
+    const simulation = {
       id: String(metadata.id),
       countryId: metadata.country_id,
       apiVersion: metadata.api_version,
@@ -44,6 +51,15 @@ export class SimulationAdapter {
       output: metadata.output,
       status: metadata.status,
     };
+
+    console.log('[SimulationAdapter.fromMetadata] TRANSFORMED SIMULATION:', {
+      id: simulation.id,
+      status: simulation.status,
+      hasOutput: !!simulation.output,
+      simulationKeys: Object.keys(simulation),
+    });
+
+    return simulation;
   }
 
   /**

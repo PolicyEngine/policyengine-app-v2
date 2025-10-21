@@ -48,11 +48,23 @@ export function useParallelQueries<T>(
       queryFn: async () => {
         // Check cache first
         const cached = queryClient.getQueryData(config.queryKey(id));
+
+        console.log(`[useParallelQueries] queryFn called for ID: ${id}`);
+        console.log(`[useParallelQueries] Cache check result:`, {
+          hasCached: !!cached,
+          cachedValue: cached,
+        });
+
         if (cached) {
+          console.log(`[useParallelQueries] Returning cached data for ${id} (NOT fetching from API)`);
           return cached as T;
         }
+
+        console.log(`[useParallelQueries] No cache found, calling config.queryFn for ${id}`);
         // Fetch from API
-        return config.queryFn(id);
+        const freshData = await config.queryFn(id);
+        console.log(`[useParallelQueries] Fresh data fetched for ${id}:`, freshData);
+        return freshData;
       },
       enabled: config.enabled !== false,
       staleTime: config.staleTime || 5 * 60 * 1000, // Default 5 minutes

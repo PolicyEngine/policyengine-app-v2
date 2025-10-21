@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text, Group, ActionIcon } from '@mantine/core';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
@@ -9,8 +7,6 @@ import { selectActiveSimulationPosition } from '@/reducers/reportReducer';
 import { updateSimulationAtPosition } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
-
-const ITEMS_PER_PAGE = 5;
 
 export default function ReportSelectExistingSimulationFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -23,12 +19,13 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
 
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const [localSimulation, setLocalSimulation] = useState<EnhancedUserSimulation | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
 
-  console.log('Simulation Data:', data);
-  console.log('Simulation Loading:', isLoading);
-  console.log('Simulation Error:', isError);
-  console.log('Simulation Error Message:', error);
+  console.log('[ReportSelectExistingSimulationFrame] ========== DATA FETCH ==========');
+  console.log('[ReportSelectExistingSimulationFrame] Raw data:', data);
+  console.log('[ReportSelectExistingSimulationFrame] Raw data length:', data?.length);
+  console.log('[ReportSelectExistingSimulationFrame] isLoading:', isLoading);
+  console.log('[ReportSelectExistingSimulationFrame] isError:', isError);
+  console.log('[ReportSelectExistingSimulationFrame] Error:', error);
 
   function canProceed() {
     if (!localSimulation) {
@@ -68,7 +65,9 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
 
   const userSimulations = data || [];
 
-  console.log('User Simulations:', userSimulations);
+  console.log('[ReportSelectExistingSimulationFrame] ========== BEFORE FILTERING ==========');
+  console.log('[ReportSelectExistingSimulationFrame] User simulations count:', userSimulations.length);
+  console.log('[ReportSelectExistingSimulationFrame] User simulations:', userSimulations);
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -104,23 +103,13 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   // Filter simulations with loaded data
   const filteredSimulations = userSimulations.filter((enhancedSim) => enhancedSim.simulation?.id);
 
-  console.log('[Pagination Debug] Total simulations:', userSimulations.length);
-  console.log('[Pagination Debug] Filtered simulations:', filteredSimulations.length);
-  console.log('[Pagination Debug] Current page:', currentPage);
+  console.log('[ReportSelectExistingSimulationFrame] ========== AFTER FILTERING ==========');
+  console.log('[ReportSelectExistingSimulationFrame] Filtered simulations count:', filteredSimulations.length);
+  console.log('[ReportSelectExistingSimulationFrame] Filter criteria: enhancedSim.simulation?.id exists');
+  console.log('[ReportSelectExistingSimulationFrame] Filtered simulations:', filteredSimulations);
 
-  // Calculate pagination
-  const totalPages = Math.ceil(filteredSimulations.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedSimulations = filteredSimulations.slice(startIndex, endIndex);
-
-  console.log('[Pagination Debug] Total pages:', totalPages);
-  console.log('[Pagination Debug] Start index:', startIndex);
-  console.log('[Pagination Debug] End index:', endIndex);
-  console.log('[Pagination Debug] Paginated simulations:', paginatedSimulations.length);
-
-  // Build card list items from paginated simulations
-  const simulationCardItems = paginatedSimulations.map((enhancedSim) => {
+  // Build card list items from ALL filtered simulations (pagination handled by FlowView)
+  const simulationCardItems = filteredSimulations.map((enhancedSim) => {
     const simulation = enhancedSim.simulation!;
     let title = '';
     let subtitle = '';
@@ -153,44 +142,6 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     };
   });
 
-  const content = (
-    <Stack>
-      <Text size="sm">Search</Text>
-      <Text fw={700}>TODO: Search</Text>
-      <Group justify="space-between" align="center">
-        <div>
-          <Text fw={700}>Your Simulations</Text>
-          <Text size="sm" c="dimmed">
-            Showing {startIndex + 1}-{Math.min(endIndex, filteredSimulations.length)} of {filteredSimulations.length}
-          </Text>
-        </div>
-        {totalPages > 1 && (
-          <Group gap="xs">
-            <ActionIcon
-              variant="default"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              aria-label="Previous page"
-            >
-              <IconChevronLeft size={18} />
-            </ActionIcon>
-            <Text size="sm">
-              Page {currentPage} of {totalPages}
-            </Text>
-            <ActionIcon
-              variant="default"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              aria-label="Next page"
-            >
-              <IconChevronRight size={18} />
-            </ActionIcon>
-          </Group>
-        )}
-      </Group>
-    </Stack>
-  );
-
   const primaryAction = {
     label: 'Next',
     onClick: handleSubmit,
@@ -201,9 +152,9 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     <FlowView
       title="Select an Existing Simulation"
       variant="cardList"
-      content={content}
       cardListItems={simulationCardItems}
       primaryAction={primaryAction}
+      itemsPerPage={5}
     />
   );
 }

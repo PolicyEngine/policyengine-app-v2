@@ -1,12 +1,8 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text, Group, ActionIcon } from '@mantine/core';
-import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import { HouseholdAdapter } from '@/adapters';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
-
-const ITEMS_PER_PAGE = 5;
 import {
   isGeographicMetadataWithAssociation,
   UserGeographicMetadataWithAssociation,
@@ -46,10 +42,12 @@ export default function SimulationSelectExistingPopulationFrame({
     error: householdError,
   } = useUserHouseholds(userId);
 
-  console.log('Household Data:', householdData);
-  console.log('Household Loading:', isHouseholdLoading);
-  console.log('Household Error:', isHouseholdError);
-  console.log('Household Error Message:', householdError);
+  console.log('[SimulationSelectExistingPopulationFrame] ========== HOUSEHOLD DATA FETCH ==========');
+  console.log('[SimulationSelectExistingPopulationFrame] Household raw data:', householdData);
+  console.log('[SimulationSelectExistingPopulationFrame] Household raw data length:', householdData?.length);
+  console.log('[SimulationSelectExistingPopulationFrame] Household isLoading:', isHouseholdLoading);
+  console.log('[SimulationSelectExistingPopulationFrame] Household isError:', isHouseholdError);
+  console.log('[SimulationSelectExistingPopulationFrame] Household error:', householdError);
 
   // Fetch geographic populations
   const {
@@ -59,15 +57,16 @@ export default function SimulationSelectExistingPopulationFrame({
     error: geographicError,
   } = useUserGeographics(userId);
 
-  console.log('Geographic Data:', geographicData);
-  console.log('Geographic Loading:', isGeographicLoading);
-  console.log('Geographic Error:', isGeographicError);
-  console.log('Geographic Error Message:', geographicError);
+  console.log('[SimulationSelectExistingPopulationFrame] ========== GEOGRAPHIC DATA FETCH ==========');
+  console.log('[SimulationSelectExistingPopulationFrame] Geographic raw data:', geographicData);
+  console.log('[SimulationSelectExistingPopulationFrame] Geographic raw data length:', geographicData?.length);
+  console.log('[SimulationSelectExistingPopulationFrame] Geographic isLoading:', isGeographicLoading);
+  console.log('[SimulationSelectExistingPopulationFrame] Geographic isError:', isGeographicError);
+  console.log('[SimulationSelectExistingPopulationFrame] Geographic error:', geographicError);
 
   const [localPopulation, setLocalPopulation] = useState<
     UserHouseholdMetadataWithAssociation | UserGeographicMetadataWithAssociation | null
   >(null);
-  const [currentPage, setCurrentPage] = useState(1);
 
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
@@ -186,8 +185,11 @@ export default function SimulationSelectExistingPopulationFrame({
   const householdPopulations = householdData || [];
   const geographicPopulations = geographicData || [];
 
-  console.log('Household Populations:', householdPopulations);
-  console.log('Geographic Populations:', geographicPopulations);
+  console.log('[SimulationSelectExistingPopulationFrame] ========== BEFORE FILTERING ==========');
+  console.log('[SimulationSelectExistingPopulationFrame] Household populations count:', householdPopulations.length);
+  console.log('[SimulationSelectExistingPopulationFrame] Household populations:', householdPopulations);
+  console.log('[SimulationSelectExistingPopulationFrame] Geographic populations count:', geographicPopulations.length);
+  console.log('[SimulationSelectExistingPopulationFrame] Geographic populations:', geographicPopulations);
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -220,20 +222,21 @@ export default function SimulationSelectExistingPopulationFrame({
     );
   }
 
-  // Filter and paginate household populations
+  // Filter household populations
   const filteredHouseholds = householdPopulations.filter((association) =>
     isHouseholdMetadataWithAssociation(association)
   );
 
-  // Calculate pagination for combined populations
-  const allPopulations = [...filteredHouseholds, ...geographicPopulations];
-  const totalPages = Math.ceil(allPopulations.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedPopulations = allPopulations.slice(startIndex, endIndex);
+  console.log('[SimulationSelectExistingPopulationFrame] ========== AFTER FILTERING ==========');
+  console.log('[SimulationSelectExistingPopulationFrame] Filtered households count:', filteredHouseholds.length);
+  console.log('[SimulationSelectExistingPopulationFrame] Filter criteria: isHouseholdMetadataWithAssociation(association)');
+  console.log('[SimulationSelectExistingPopulationFrame] Filtered households:', filteredHouseholds);
 
-  // Build card list items from paginated household populations
-  const householdCardItems = paginatedPopulations
+  // Combine all populations (pagination handled by FlowView)
+  const allPopulations = [...filteredHouseholds, ...geographicPopulations];
+
+  // Build card list items from ALL household populations
+  const householdCardItems = allPopulations
     .filter((association) => isHouseholdMetadataWithAssociation(association))
     .map((association) => {
       let title = '';
@@ -273,8 +276,8 @@ export default function SimulationSelectExistingPopulationFrame({
     return geography.name || geography.geographyId;
   };
 
-  // Build card list items from paginated geographic populations
-  const geographicCardItems = paginatedPopulations
+  // Build card list items from ALL geographic populations
+  const geographicCardItems = allPopulations
     .filter((association) => isGeographicMetadataWithAssociation(association))
     .map((association) => {
       let title = '';
@@ -308,44 +311,6 @@ export default function SimulationSelectExistingPopulationFrame({
   // Combine both types of populations
   const cardListItems = [...householdCardItems, ...geographicCardItems];
 
-  const content = (
-    <Stack>
-      <Text size="sm">Search</Text>
-      <Text fw={700}>TODO: Search</Text>
-      <Group justify="space-between" align="center">
-        <div>
-          <Text fw={700}>Your Populations</Text>
-          <Text size="sm" c="dimmed">
-            Showing {startIndex + 1}-{Math.min(endIndex, allPopulations.length)} of {allPopulations.length}
-          </Text>
-        </div>
-        {totalPages > 1 && (
-          <Group gap="xs">
-            <ActionIcon
-              variant="default"
-              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
-              aria-label="Previous page"
-            >
-              <IconChevronLeft size={18} />
-            </ActionIcon>
-            <Text size="sm">
-              Page {currentPage} of {totalPages}
-            </Text>
-            <ActionIcon
-              variant="default"
-              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
-              aria-label="Next page"
-            >
-              <IconChevronRight size={18} />
-            </ActionIcon>
-          </Group>
-        )}
-      </Group>
-    </Stack>
-  );
-
   const primaryAction = {
     label: 'Next',
     onClick: handleSubmit,
@@ -356,9 +321,9 @@ export default function SimulationSelectExistingPopulationFrame({
     <FlowView
       title="Select an Existing Population"
       variant="cardList"
-      content={content}
       cardListItems={cardListItems}
       primaryAction={primaryAction}
+      itemsPerPage={5}
     />
   );
 }

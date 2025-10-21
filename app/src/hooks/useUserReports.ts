@@ -138,13 +138,34 @@ export const useUserReports = (userId: string) => {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchSimulationById(country, id);
-      return SimulationAdapter.fromMetadata(metadata);
+      const transformed = SimulationAdapter.fromMetadata(metadata);
+
+      console.log('[useUserReports] BEFORE RETURNING TO REACT QUERY:', {
+        id,
+        transformedStatus: transformed.status,
+        transformedHasOutput: !!transformed.output,
+      });
+
+      return transformed;
     },
     enabled: simulationIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    // staleTime: 0 to ensure refetch after orchestrator invalidation
+    // Simulations get updated during calculation (status changes from 'pending' -> 'complete')
+    // High staleTime prevents refetch even after invalidateQueries(), causing components
+    // to show stale status and get stuck on loading screen at 100% progress
+    staleTime: 0,
   });
 
   console.log('simulationResults', simulationResults);
+  console.log('[useUserReports] simulationResults AFTER QUERY:',
+    simulationResults.queries.map(q => ({
+      id: q.data?.id,
+      status: q.data?.status,
+      hasOutput: !!q.data?.output,
+      isSuccess: q.isSuccess,
+      isFetching: q.isFetching,
+    }))
+  );
 
   // Step 6: Extract policy and household IDs from fetched simulations
   const simulations = simulationResults.queries
@@ -227,11 +248,26 @@ export const useUserReports = (userId: string) => {
         // Get related simulations
         const reportSimulations =
           report?.simulationIds
-            ?.map(
-              (simId) =>
-                (queryNormalizer.getObjectById(simId) as Simulation | undefined) ||
-                simulations.find((s) => s.id === simId)
-            )
+            ?.map((simId) => {
+              const fromNormy = queryNormalizer.getObjectById(simId) as Simulation | undefined;
+              const fromQuery = simulations.find((s) => s.id === simId);
+
+              console.log(`[useUserReports] SIMULATION ${simId} COMPARISON:`, {
+                'From Normy Cache': {
+                  exists: !!fromNormy,
+                  status: fromNormy?.status,
+                  hasOutput: !!fromNormy?.output,
+                },
+                'From React Query': {
+                  exists: !!fromQuery,
+                  status: fromQuery?.status,
+                  hasOutput: !!fromQuery?.output,
+                },
+                'Which will be used': fromNormy ? 'NORMY (stale?)' : 'QUERY (fresh)',
+              });
+
+              return fromNormy || fromQuery;
+            })
             .filter((s): s is Simulation => !!s) ?? [];
 
         // Get policies from simulations
@@ -398,6 +434,21 @@ export const useUserReportById = (userReportId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
+  console.log('[useUserReportById] REPORT CACHE COMPARISON:', {
+    reportId: baseReportId,
+    'From Normy': {
+      exists: !!cachedReport,
+      status: cachedReport?.status,
+      simulationIds: cachedReport?.simulationIds,
+    },
+    'From React Query': {
+      exists: !!report,
+      status: report?.status,
+      simulationIds: report?.simulationIds,
+    },
+    'Which will be used': cachedReport ? 'NORMY' : 'REACT QUERY',
+  });
+
   const finalReport = cachedReport || report;
 
   // Step 3: Fetch simulations for the report
@@ -407,15 +458,43 @@ export const useUserReportById = (userReportId: string) => {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchSimulationById(country, id);
-      return SimulationAdapter.fromMetadata(metadata);
+      const transformed = SimulationAdapter.fromMetadata(metadata);
+
+      console.log('[useUserReportById] BEFORE RETURNING TO REACT QUERY:', {
+        id,
+        transformedStatus: transformed.status,
+        transformedHasOutput: !!transformed.output,
+      });
+
+      return transformed;
     },
     enabled: simulationIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    // staleTime: 0 to ensure refetch after orchestrator invalidation
+    // Simulations get updated during calculation (status changes from 'pending' -> 'complete')
+    // High staleTime prevents refetch even after invalidateQueries(), causing components
+    // to show stale status and get stuck on loading screen at 100% progress
+    staleTime: 0,
   });
+
+  console.log('[useUserReportById] simulationResults AFTER QUERY:',
+    simulationResults.queries.map(q => ({
+      id: q.data?.id,
+      status: q.data?.status,
+      hasOutput: !!q.data?.output,
+      isSuccess: q.isSuccess,
+      isFetching: q.isFetching,
+    }))
+  );
 
   const simulations = simulationResults.queries
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
+
+  console.log('[useUserReportById] SIMULATIONS FROM REACT QUERY:', simulations.map(s => ({
+    id: s.id,
+    status: s.status,
+    hasOutput: !!s.output,
+  })));
 
   // Step 4: Extract policy IDs from simulations and fetch policies
   const policyIds = extractUniqueIds(simulations, 'policyId');

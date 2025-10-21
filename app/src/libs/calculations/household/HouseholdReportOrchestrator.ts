@@ -4,6 +4,7 @@ import { buildHouseholdReportOutput } from './householdReportUtils';
 import { simulationKeys, reportKeys } from '@/libs/queryKeys';
 import { updateSimulationOutput, markSimulationError } from '@/api/simulation';
 import { markReportCompleted } from '@/api/report';
+import { fetchSimulationById } from '@/api/simulation';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
 import type { Report } from '@/types/ingredients/Report';
 import type { HouseholdData } from '@/types/ingredients/Household';
@@ -168,12 +169,37 @@ export class HouseholdReportOrchestrator {
     console.log(`[HouseholdReportOrchestrator][${timestamp}] Persisting simulation ${simulationId}`);
 
     try {
-      await updateSimulationOutput(countryId as any, simulationId, result);
+      // DIAGNOSTIC: Capture PATCH response
+      const patchResponse = await updateSimulationOutput(countryId as any, simulationId, result);
+      const patchTimestamp = Date.now();
 
-      // Invalidate simulation cache to refetch with new output
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] ========== PATCH RESPONSE ==========`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH completed at: ${patchTimestamp}`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH response status: ${patchResponse.status}`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH response hasOutput: ${!!patchResponse.output}`);
+
+      // DIAGNOSTIC: Invalidate and immediately check what GET returns
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] Invalidating query...`);
       this.queryClient.invalidateQueries({
         queryKey: simulationKeys.byId(simulationId),
       });
+
+      // DIAGNOSTIC: Wait a moment and manually fetch to see what the API returns
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] Waiting 100ms before GET...`);
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const getTimestamp = Date.now();
+      const getFreshData = await fetchSimulationById(countryId as any, simulationId);
+
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] ========== GET RESPONSE (after 100ms) ==========`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] GET completed at: ${getTimestamp}`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] Time delta (GET - PATCH): ${getTimestamp - patchTimestamp}ms`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] GET response status: ${getFreshData.status}`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] GET response hasOutput: ${!!getFreshData.output}`);
+
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] ========== COMPARISON ==========`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH status: ${patchResponse.status} | GET status: ${getFreshData.status}`);
+      console.log(`[HouseholdReportOrchestrator][${timestamp}] Status match: ${patchResponse.status === getFreshData.status}`);
 
       console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} persisted successfully`);
     } catch (error) {
