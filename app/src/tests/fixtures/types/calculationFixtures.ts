@@ -110,7 +110,7 @@ export const mockIdleCalcStatus = (overrides?: Partial<CalcStatus>): CalcStatus 
  * Mock CalcStatus in computing state
  */
 export const mockComputingCalcStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
-  status: 'computing',
+  status: 'pending',
   progress: 50,
   message: 'Running policy simulation...',
   metadata: mockCalcMetadata(),

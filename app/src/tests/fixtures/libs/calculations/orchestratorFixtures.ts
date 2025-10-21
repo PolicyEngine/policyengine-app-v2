@@ -86,7 +86,7 @@ export const createMockErrorStatus = (calcId: string): CalcStatus => ({
  * Create mock computing CalcStatus
  */
 export const createMockComputingStatus = (calcId: string, progress: number = 50): CalcStatus => ({
-  status: 'computing',
+  status: 'pending',
   progress,
   message: 'Computing...',
   metadata: {

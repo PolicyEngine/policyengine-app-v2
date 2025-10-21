@@ -154,7 +154,7 @@ export const mockIntegrationComputingStatus = (
   calcId: string,
   progress: number = 50
 ): CalcStatus => ({
-  status: 'computing',
+  status: 'pending',
   progress,
   message: 'Computing...',
   queuePosition: 2,

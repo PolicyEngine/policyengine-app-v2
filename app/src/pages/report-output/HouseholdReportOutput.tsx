@@ -3,6 +3,7 @@ import {
   useHouseholdReportOrchestrator,
   useSimulationProgressDisplay,
 } from '@/hooks/household';
+import { getDisplayStatus } from '@/utils/statusMapping';
 import type { HouseholdReportConfig } from '@/types/calculation/household';
 import type { Household, HouseholdData } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
@@ -135,9 +136,10 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
   // Show loading if pending (needs calculation OR currently calculating)
   // CalcStatus provides progress display if available (same session)
   if (isPending) {
+    const displayStatusLabel = getDisplayStatus('pending');
     const message = hasCalcStatus
-      ? `Calculating household simulations... ${Math.round(displayProgress)}%`
-      : 'Calculating household simulations...';
+      ? `${displayStatusLabel} household simulations... ${Math.round(displayProgress)}%`
+      : `${displayStatusLabel} household simulations...`;
 
     return (
       <LoadingPage

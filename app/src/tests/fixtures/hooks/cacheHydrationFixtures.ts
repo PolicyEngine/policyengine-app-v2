@@ -75,7 +75,7 @@ export const createMockCalcStatusComplete = (overrides?: Partial<CalcStatus>): C
  * Create mock CalcStatus computing
  */
 export const createMockCalcStatusComputing = (overrides?: Partial<CalcStatus>): CalcStatus => ({
-  status: 'computing',
+  status: 'pending',
   progress: 50,
   message: 'Computing...',
   metadata: {

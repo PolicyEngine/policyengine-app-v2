@@ -47,7 +47,7 @@ export class EconomyCalcStrategy implements CalcExecutionStrategy {
         const data = query.state.data as CalcStatus | undefined;
 
         // Continue polling only if status is computing
-        return data?.status === 'computing' ? 1000 : false;
+        return data?.status === 'pending' ? 1000 : false;
       },
       staleTime: Infinity, // Results don't go stale
     };
@@ -59,10 +59,10 @@ export class EconomyCalcStrategy implements CalcExecutionStrategy {
   transformResponseWithMetadata(apiResponse: unknown, metadata: CalcMetadata): CalcStatus {
     const response = apiResponse as EconomyCalculationResponse;
 
-    // Map computing status
+    // Map computing status from API to pending status in CalcStatus
     if (response.status === 'computing') {
       return {
-        status: 'computing',
+        status: 'pending',
         queuePosition: response.queue_position,
         estimatedTimeRemaining: response.average_time ? response.average_time * 1000 : undefined,
         message: this.getComputingMessage(response.queue_position),

@@ -42,7 +42,7 @@ interface UseStartCalculationOnLoadParams {
  * 4. Direct URL to completed report → isComplete = true
  *    → Early return, don't start ✓
  *
- * NOTE: We don't need isComputing parameter anymore because the manager
+ * NOTE: We don't need isPending parameter anymore because the manager
  * handles idempotency. Calling startCalculation() multiple times is safe.
  *
  * CRITICAL FOR HOUSEHOLD: We do NOT await startCalculation() calls because

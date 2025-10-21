@@ -83,7 +83,7 @@ export class CalcOrchestrator {
     if (metadata.calcType === 'household') {
       console.log(`[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Setting 'computing' status before API call...`);
       const computingStatus: CalcStatus = {
-        status: 'computing',
+        status: 'pending',
         progress: 0,
         message: 'Initializing calculation...',
         metadata,

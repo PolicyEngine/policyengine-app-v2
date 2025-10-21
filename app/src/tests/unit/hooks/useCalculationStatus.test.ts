@@ -36,7 +36,7 @@ describe('useCalculationStatus', () => {
       await waitFor(() => {
         expect(result.current.status).toBe('initializing');
         expect(result.current.isInitializing).toBe(true);
-        expect(result.current.isComputing).toBe(false);
+        expect(result.current.isPending).toBe(false);
         expect(result.current.isComplete).toBe(false);
         expect(result.current.isError).toBe(false);
       });
@@ -68,7 +68,7 @@ describe('useCalculationStatus', () => {
       // Note: progress/message may be synthetic for better UX
       await waitFor(() => {
         expect(result.current.status).toBe('computing');
-        expect(result.current.isComputing).toBe(true);
+        expect(result.current.isPending).toBe(true);
         // Server data is available even if not displayed
         expect(result.current.queuePosition).toBe(3);
         expect(result.current.estimatedTimeRemaining).toBe(30000);
@@ -98,7 +98,7 @@ describe('useCalculationStatus', () => {
       await waitFor(() => {
         expect(result.current.status).toBe('complete');
         expect(result.current.isComplete).toBe(true);
-        expect(result.current.isComputing).toBe(false);
+        expect(result.current.isPending).toBe(false);
         expect(result.current.result).toBeDefined();
       });
     });
@@ -170,7 +170,7 @@ describe('useCalculationStatus', () => {
 
       // When - update cache
       await waitFor(() => {
-        expect(result.current.isComputing).toBe(true);
+        expect(result.current.isPending).toBe(true);
       });
 
       queryClient.setQueryData(
@@ -181,7 +181,7 @@ describe('useCalculationStatus', () => {
       // Then - hook automatically updates
       await waitFor(() => {
         expect(result.current.isComplete).toBe(true);
-        expect(result.current.isComputing).toBe(false);
+        expect(result.current.isPending).toBe(false);
       });
     });
   });

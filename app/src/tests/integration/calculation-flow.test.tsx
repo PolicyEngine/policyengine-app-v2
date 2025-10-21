@@ -94,7 +94,7 @@ describe('Calculation Flow Integration', () => {
       // Then - Status hook should reflect computing state
       await waitFor(() => {
         expect(statusResult.current.status).toBe('computing');
-        expect(statusResult.current.isComputing).toBe(true);
+        expect(statusResult.current.isPending).toBe(true);
         expect(statusResult.current.progress).toBe(25);
         expect(statusResult.current.queuePosition).toBe(3);
       });
@@ -334,7 +334,7 @@ describe('Calculation Flow Integration', () => {
       // Then - Status hook can read the computing status
       await waitFor(() => {
         expect(statusResult.current.status).toBe('computing');
-        expect(statusResult.current.isComputing).toBe(true);
+        expect(statusResult.current.isPending).toBe(true);
       });
     });
   });

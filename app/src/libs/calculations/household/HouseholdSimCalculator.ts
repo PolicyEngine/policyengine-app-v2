@@ -41,9 +41,9 @@ export class HouseholdSimCalculator {
 
     console.log(`[HouseholdSimCalculator][${timestamp}] Starting calculation for simulation ${this.simulationId}`);
 
-    // Set initial computing status
+    // Set initial pending status (matches API status value)
     const initialStatus: CalcStatus = {
-      status: 'computing',
+      status: 'pending',
       message: 'Starting household calculation...',
       progress: 0,
       metadata: {
@@ -56,7 +56,7 @@ export class HouseholdSimCalculator {
     };
 
     this.queryClient.setQueryData(calcKey, initialStatus);
-    console.log(`[HouseholdSimCalculator][${timestamp}] Set computing status in cache`);
+    console.log(`[HouseholdSimCalculator][${timestamp}] Set pending status in cache`);
 
     // Start simulated progress updates
     this.startProgressSimulation(calcKey);
@@ -141,7 +141,7 @@ export class HouseholdSimCalculator {
 
       const currentStatus = this.queryClient.getQueryData<CalcStatus>(calcKey);
 
-      if (currentStatus?.status === 'computing') {
+      if (currentStatus?.status === 'pending') {
         this.queryClient.setQueryData(calcKey, {
           ...currentStatus,
           progress,

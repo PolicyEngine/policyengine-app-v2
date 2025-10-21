@@ -326,7 +326,7 @@ function LegacyReportOutput() {
     }
 
     // Show loading page if calculation is still running
-    if (calcStatus.isComputing) {
+    if (calcStatus.isPending) {
       return (
         <LoadingPage
           progress={calcStatus.progress}

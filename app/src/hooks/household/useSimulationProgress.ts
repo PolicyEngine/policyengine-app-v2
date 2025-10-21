@@ -25,13 +25,13 @@ export function useSimulationProgress(simulationIds: string[]) {
   const statuses = queries.map((q) => q.data as CalcStatus | undefined);
 
   // Calculate derived state
-  const { overallProgress, isComputing, isComplete, isError } = useMemo(() => {
+  const { overallProgress, isPending, isComplete, isError } = useMemo(() => {
     const validStatuses = statuses.filter((s): s is CalcStatus => !!s);
 
     if (validStatuses.length === 0) {
       return {
         overallProgress: 0,
-        isComputing: false,
+        isPending: false,
         isComplete: false,
         isError: false,
       };
@@ -42,7 +42,7 @@ export function useSimulationProgress(simulationIds: string[]) {
 
     return {
       overallProgress: overall,
-      isComputing: validStatuses.some((s) => s.status === 'computing'),
+      isPending: validStatuses.some((s) => s.status === 'pending'),
       isComplete: validStatuses.every((s) => s.status === 'complete'),
       isError: validStatuses.some((s) => s.status === 'error'),
     };
@@ -50,7 +50,7 @@ export function useSimulationProgress(simulationIds: string[]) {
 
   return {
     overallProgress,
-    isComputing,
+    isPending,
     isComplete,
     isError,
     statuses,

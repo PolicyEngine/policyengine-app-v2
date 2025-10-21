@@ -28,14 +28,15 @@ export type CalcResult = EconomyReportOutput | HouseholdData;
  *    - Why different from initializing: This is a KNOWN state (we checked and found nothing),
  *      whereas initializing means we haven't checked yet
  *    - UI: Show "No output found" or "Start calculation" button
- *    - Transitions to: computing (when calculation starts)
+ *    - Transitions to: pending (when calculation starts)
  *    - Example: User creates a new report but doesn't trigger calculation yet
  *
- * 3. **computing**: Calculation is actively running or queued
+ * 3. **pending**: Calculation is actively running or queued
  *    - Purpose: Show progress and prevent duplicate calculation requests
  *    - When: API is processing the calculation
  *    - UI: Show progress bar, queue position, estimated time
  *    - Transitions to: complete, error
+ *    - Note: Matches Simulation.status='pending' and API status values
  *
  * 4. **complete**: Calculation finished successfully
  *    - Purpose: Display results to user
@@ -47,9 +48,9 @@ export type CalcResult = EconomyReportOutput | HouseholdData;
  *    - Purpose: Show error message and allow retry
  *    - When: API returns error, network failure, validation error
  *    - UI: Show error message, retry button
- *    - Transitions to: computing (on retry)
+ *    - Transitions to: pending (on retry)
  */
-export type CalcStatusValue = 'initializing' | 'idle' | 'computing' | 'complete' | 'error';
+export type CalcStatusValue = 'initializing' | 'idle' | 'pending' | 'complete' | 'error';
 
 /**
  * Unified calculation status interface

@@ -183,7 +183,7 @@ describe('Calculation Pathways Integration', () => {
       // Then - Hook should update to computing
       await waitFor(() => {
         expect(result.current.status).toBe('computing');
-        expect(result.current.isComputing).toBe(true);
+        expect(result.current.isPending).toBe(true);
         // Note: Progress might be different due to synthetic progress
         expect(result.current.progress).toBeGreaterThan(0);
       });
@@ -227,7 +227,7 @@ describe('Calculation Pathways Integration', () => {
       // Then - Should aggregate to computing status
       await waitFor(() => {
         expect(result.current.status).toBe('computing');
-        expect(result.current.isComputing).toBe(true);
+        expect(result.current.isPending).toBe(true);
         // Progress should be aggregated (but synthetic progress may adjust it)
         expect(result.current.progress).toBeGreaterThan(0);
         expect(result.current.progress).toBeLessThanOrEqual(100);

@@ -25,7 +25,7 @@ vi.mock('@/libs/queries/calculationQueries', () => ({
     forReport: vi.fn((reportId, metadata, params) => ({
       queryKey: ['calculations', 'report', reportId],
       queryFn: vi.fn().mockResolvedValue({
-        status: 'computing',
+        status: 'pending',
         metadata,
         progress: 0,
       }),
@@ -36,7 +36,7 @@ vi.mock('@/libs/queries/calculationQueries', () => ({
     forSimulation: vi.fn((simulationId, metadata, params) => ({
       queryKey: ['calculations', 'simulation', simulationId],
       queryFn: vi.fn().mockResolvedValue({
-        status: 'computing',
+        status: 'pending',
         metadata,
         progress: 0,
       }),
@@ -81,7 +81,7 @@ describe('CalcOrchestrator', () => {
         expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
           ['calculations', 'report', ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID],
           expect.objectContaining({
-            status: 'computing',
+            status: 'pending',
             metadata: expect.objectContaining({
               calcType: 'economy',
               targetType: 'report',
@@ -166,7 +166,7 @@ describe('CalcOrchestrator', () => {
         expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
           ['calculations', 'simulation', ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID],
           expect.objectContaining({
-            status: 'computing',
+            status: 'pending',
           })
         );
       });

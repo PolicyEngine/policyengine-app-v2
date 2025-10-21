@@ -12,7 +12,7 @@ export interface ReportWithLiveStatus extends EnhancedUserReport {
    * Live status from calculation cache (if calculation is active)
    * Falls back to persisted report status
    */
-  liveStatus: 'pending' | 'computing' | 'complete' | 'error';
+  liveStatus: 'initializing' | 'computing' | 'complete' | 'error';
 
   /**
    * Whether calculation is currently active
@@ -46,12 +46,12 @@ export interface ReportWithLiveStatus extends EnhancedUserReport {
  */
 function mapCalcStatusToReportStatus(
   calcStatus: CalcStatus['status']
-): 'pending' | 'computing' | 'complete' | 'error' {
+): 'initializing' | 'computing' | 'complete' | 'error' {
   switch (calcStatus) {
     case 'initializing':
     case 'idle':
-      return 'pending';
-    case 'computing':
+      return 'initializing';
+    case 'pending':
       return 'computing';
     case 'complete':
       return 'complete';
@@ -108,10 +108,10 @@ export function useReportsWithLiveStatus(userId: string) {
       const reportId = report.report?.id;
 
       if (!reportId) {
-        // No report ID, return as-is with pending status
+        // No report ID, return as-is with initializing status
         return {
           ...report,
-          liveStatus: 'pending' as const,
+          liveStatus: 'initializing' as const,
           isCalculating: false,
         };
       }
@@ -133,7 +133,7 @@ export function useReportsWithLiveStatus(userId: string) {
           const simCalcStatus = queryClient.getQueryData<CalcStatus>(
             calculationKeys.bySimulationId(simId!)
           );
-          return simCalcStatus?.status === 'computing';
+          return simCalcStatus?.status === 'pending';
         });
 
         if (calculatingSimulation) {
@@ -181,9 +181,9 @@ export function useReportsWithLiveStatus(userId: string) {
       // Prioritize live status if available and active
       const liveStatus = hasActiveLiveStatus && calcStatus
         ? mapCalcStatusToReportStatus(calcStatus.status)
-        : (report.report?.status as 'pending' | 'computing' | 'complete' | 'error') || 'pending';
+        : (report.report?.status as 'initializing' | 'computing' | 'complete' | 'error') || 'initializing';
 
-      const isCalculating = calcStatus?.status === 'computing';
+      const isCalculating = calcStatus?.status === 'pending';
 
       return {
         ...report,

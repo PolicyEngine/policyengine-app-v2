@@ -227,7 +227,7 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
   wealth_decile: null,
 };
 
-// Computing response (pending)
+// Computing response (API returns 'computing' for economy calculations)
 export const mockPendingResponse: EconomyCalculationResponse = {
   status: 'computing',
   queue_position: 5,

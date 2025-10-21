@@ -21,17 +21,17 @@ export interface AggregatedCalcStatus {
    * Overall status across all calculations (prioritizes problems):
    *
    * - 'initializing': At least one calculation is still initializing (don't show "No output found" yet)
-   * - 'computing': At least one calculation is running (show progress indicator)
+   * - 'pending': At least one calculation is running (show progress indicator)
    * - 'complete': ALL calculations finished successfully (show all results)
    * - 'error': At least one calculation failed (show error state)
    * - 'idle': All calculations have loaded their state and none have started (show "No output found")
    *
    * Example: [initializing, complete, complete] → 'initializing' (wait for first to load)
-   * Example: [computing, complete, complete] → 'computing' (one still running)
+   * Example: [pending, complete, complete] → 'pending' (one still running)
    * Example: [complete, complete, complete] → 'complete' (all done)
    * Example: [idle, idle, idle] → 'idle' (none started)
    */
-  status: 'initializing' | 'idle' | 'computing' | 'complete' | 'error';
+  status: 'initializing' | 'idle' | 'pending' | 'complete' | 'error';
 
   /**
    * Raw status objects for each individual calculation
@@ -71,7 +71,7 @@ export interface AggregatedCalcStatus {
    * Use this to show progress indicators, disable "Start" button,
    * or prevent navigation away from the page.
    */
-  isComputing: boolean;
+  isPending: boolean;
 
   /**
    * True if ALL calculations finished successfully
@@ -258,7 +258,7 @@ export function useAggregatedCalculationStatus(
     : 'household';
 
   // Activate synthetic progress when any query is loading or any status is computing
-  const needsSyntheticProgress = anyLoading || calculations.some((calc) => calc.status === 'computing');
+  const needsSyntheticProgress = anyLoading || calculations.some((calc) => calc.status === 'pending');
 
   // Generate synthetic progress
   const synthetic = useSyntheticProgress(
@@ -280,7 +280,7 @@ export function useAggregatedCalculationStatus(
       calculations,
       isInitializing: true,
       isIdle: false,
-      isComputing: false,
+      isPending: false,
       isComplete: false,
       isError: false,
       isLoading: anyLoading,
@@ -294,7 +294,7 @@ export function useAggregatedCalculationStatus(
       calculations: [],
       isInitializing: false,
       isIdle: true,
-      isComputing: false,
+      isPending: false,
       isComplete: false,
       isError: false,
       isLoading: false,
@@ -310,7 +310,7 @@ export function useAggregatedCalculationStatus(
       calculations,
       isInitializing: false,
       isIdle: false,
-      isComputing: false,
+      isPending: false,
       isComplete: false,
       isError: true,
       error: errorCalc?.error,
@@ -319,14 +319,14 @@ export function useAggregatedCalculationStatus(
   }
 
   // Check if any are computing or loading
-  const hasComputing = calculations.some((calc) => calc.status === 'computing') || anyLoading;
-  if (hasComputing) {
+  const hasPending = calculations.some((calc) => calc.status === 'pending') || anyLoading;
+  if (hasPending) {
     // Use synthetic progress when needed, otherwise calculate average from server data
     const progress = needsSyntheticProgress
       ? synthetic.progress
       : (() => {
           const progressValues = calculations
-            .filter((calc) => calc.status === 'computing' && calc.progress !== undefined)
+            .filter((calc) => calc.status === 'pending' && calc.progress !== undefined)
             .map((calc) => calc.progress!);
           return progressValues.length > 0
             ? progressValues.reduce((sum, p) => sum + p, 0) / progressValues.length
@@ -338,21 +338,21 @@ export function useAggregatedCalculationStatus(
       ? synthetic.message
       : (() => {
           const messages = calculations
-            .filter((calc) => calc.status === 'computing' && calc.message)
+            .filter((calc) => calc.status === 'pending' && calc.message)
             .map((calc) => calc.message!);
           return messages.length > 0 ? messages.join('; ') : undefined;
         })();
 
     // Get queue position and estimated time from first computing calculation
-    const firstComputing = calculations.find((calc) => calc.status === 'computing');
+    const firstComputing = calculations.find((calc) => calc.status === 'pending');
 
     return {
-      status: 'computing',
+      status: 'pending',
       calculations,
       progress,
       isInitializing: false,
       isIdle: false,
-      isComputing: true,
+      isPending: true,
       isComplete: false,
       isError: false,
       message,
@@ -373,7 +373,7 @@ export function useAggregatedCalculationStatus(
       calculations,
       isInitializing: false,
       isIdle: false,
-      isComputing: false,
+      isPending: false,
       isComplete: true,
       isError: false,
       result: firstComplete?.result,
@@ -387,7 +387,7 @@ export function useAggregatedCalculationStatus(
     calculations,
     isInitializing: false,
     isIdle: true,
-    isComputing: false,
+    isPending: false,
     isComplete: false,
     isError: false,
     isLoading: false,

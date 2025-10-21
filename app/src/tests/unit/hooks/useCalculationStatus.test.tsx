@@ -91,7 +91,7 @@ describe('useCalculationStatus', () => {
       // Then
       await waitFor(() => {
         expect(result.current.status).toBe('computing');
-        expect(result.current.isComputing).toBe(true);
+        expect(result.current.isPending).toBe(true);
         expect(result.current.isComplete).toBe(false);
         expect(result.current.isError).toBe(false);
         // Synthetic progress overrides server progress (mocked to return 12 for economy)
@@ -127,7 +127,7 @@ describe('useCalculationStatus', () => {
       // Then
       await waitFor(() => {
         expect(result.current.status).toBe('complete');
-        expect(result.current.isComputing).toBe(false);
+        expect(result.current.isPending).toBe(false);
         expect(result.current.isComplete).toBe(true);
         expect(result.current.isError).toBe(false);
         expect(result.current.result).toEqual(calcStatus.result);
@@ -158,7 +158,7 @@ describe('useCalculationStatus', () => {
       // Then
       await waitFor(() => {
         expect(result.current.status).toBe('error');
-        expect(result.current.isComputing).toBe(false);
+        expect(result.current.isPending).toBe(false);
         expect(result.current.isComplete).toBe(false);
         expect(result.current.isError).toBe(true);
         expect(result.current.error).toEqual(calcStatus.error);
@@ -295,7 +295,7 @@ describe('useCalculationStatus', () => {
       await waitFor(() => {
         expect(result.current.status).toBe('initializing');
         expect(result.current.isInitializing).toBe(true);
-        expect(result.current.isComputing).toBe(false);
+        expect(result.current.isPending).toBe(false);
       });
     });
 
@@ -323,7 +323,7 @@ describe('useCalculationStatus', () => {
 
       // Then - synthetic progress overrides server progress
       await waitFor(() => {
-        expect(result.current.isComputing).toBe(true);
+        expect(result.current.isPending).toBe(true);
         expect(result.current.progress).toBe(12); // Mocked synthetic progress for economy
         expect(result.current.message).toBe('Loading population data...'); // Mocked synthetic message
         // Server data still available
@@ -354,7 +354,7 @@ describe('useCalculationStatus', () => {
 
       // Then
       await waitFor(() => {
-        expect(result.current.isComputing).toBe(true);
+        expect(result.current.isPending).toBe(true);
         expect(result.current.progress).toBe(45); // Mocked synthetic progress for household
         expect(result.current.message).toBe('Running policy simulation...');
       });

@@ -80,7 +80,7 @@ function getProgressMessage(
  * @example
  * // Economy calculation (blended with server data)
  * const synthetic = useSyntheticProgress(
- *   isComputing,
+ *   isPending,
  *   'economy',
  *   { queuePosition: 3, estimatedTimeRemaining: 120000 }
  * );

@@ -9,7 +9,7 @@ import type { CalcStatus } from '@/types/calculation';
  * Shows progress across all simulations
  *
  * USAGE:
- * const { progress, overallProgress, isComputing } = useHouseholdReportProgress(reportId);
+ * const { progress, overallProgress, isPending } = useHouseholdReportProgress(reportId);
  *
  * WHY THIS EXISTS:
  * Household reports run N independent calculations.
@@ -70,7 +70,7 @@ export function useHouseholdReportProgress(reportId: string) {
   return {
     progress,
     overallProgress,
-    isComputing: progress?.overallStatus === 'computing',
+    isPending: progress?.overallStatus === 'pending',
     isComplete: progress?.overallStatus === 'complete',
     isError: progress?.overallStatus === 'error',
     simulationStatuses: progress?.simulations || {},

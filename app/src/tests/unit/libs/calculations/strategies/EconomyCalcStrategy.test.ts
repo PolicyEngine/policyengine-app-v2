@@ -134,7 +134,7 @@ describe('EconomyCalcStrategy', () => {
       const config = strategy.getRefetchConfig();
       const mockQuery = {
         state: {
-          data: { status: 'computing' },
+          data: { status: 'pending' },
         },
       } as any;
 

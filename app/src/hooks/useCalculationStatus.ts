@@ -99,7 +99,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   // Activate synthetic progress when:
   // - Query is loading (isPending for household - long-running API call)
   // - OR status is computing (for economy - queued/processing)
-  const needsSyntheticProgress = isLoading || status?.status === 'computing';
+  const needsSyntheticProgress = isLoading || status?.status === 'pending';
 
   // Generate synthetic progress
   const synthetic = useSyntheticProgress(
@@ -119,7 +119,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
     // State flags for common UI patterns
     isInitializing: currentStatus === 'initializing' || isLoading,
     isIdle: currentStatus === 'idle',
-    isComputing: currentStatus === 'computing' || isLoading,
+    isPending: currentStatus === 'pending' || isLoading,
     isComplete: currentStatus === 'complete',
     isError: currentStatus === 'error',
 
