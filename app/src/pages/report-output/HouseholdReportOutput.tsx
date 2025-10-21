@@ -44,6 +44,9 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
   // Derive state from Simulation.status (SOURCE OF TRUTH)
   // Note: API uses 'pending' for "not complete yet" (includes actively calculating)
   const simulationStates = useMemo(() => {
+    console.log('[HouseholdReportOutput] Deriving simulation states from persistent statuses');
+    console.log('[HouseholdReportOutput] Current simulations:', simulations);
+
     if (!simulations || simulations.length === 0) {
       return { isPending: false, isComplete: false, isError: false };
     }

@@ -46,24 +46,19 @@ export function useParallelQueries<T>(
     queries: ids.map((id) => ({
       queryKey: config.queryKey(id),
       queryFn: async () => {
-        // Check cache first
-        const cached = queryClient.getQueryData(config.queryKey(id));
+        console.log(`[useParallelQueries] ========== queryFn CALLED ==========`);
+        console.log(`[useParallelQueries] ID: ${id}`);
+        console.log(`[useParallelQueries] Timestamp: ${Date.now()}`);
+        console.log(`[useParallelQueries] Calling API directly (no manual cache check)`);
 
-        console.log(`[useParallelQueries] queryFn called for ID: ${id}`);
-        console.log(`[useParallelQueries] Cache check result:`, {
-          hasCached: !!cached,
-          cachedValue: cached,
-        });
-
-        if (cached) {
-          console.log(`[useParallelQueries] Returning cached data for ${id} (NOT fetching from API)`);
-          return cached as T;
-        }
-
-        console.log(`[useParallelQueries] No cache found, calling config.queryFn for ${id}`);
-        // Fetch from API
         const freshData = await config.queryFn(id);
-        console.log(`[useParallelQueries] Fresh data fetched for ${id}:`, freshData);
+
+        console.log(`[useParallelQueries] ========== API RESPONSE ==========`);
+        console.log(`[useParallelQueries] Fresh data for ID ${id}:`, freshData);
+        console.log(`[useParallelQueries] Status in fresh data:`, (freshData as any)?.status);
+        console.log(`[useParallelQueries] Has output:`, !!(freshData as any)?.output);
+        console.log(`[useParallelQueries] Timestamp: ${Date.now()}`);
+
         return freshData;
       },
       enabled: config.enabled !== false,
