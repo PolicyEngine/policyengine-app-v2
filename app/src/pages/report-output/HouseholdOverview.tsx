@@ -35,10 +35,15 @@ interface HouseholdOverviewProps {
 export default function HouseholdOverview({ outputs }: HouseholdOverviewProps) {
   const metadata = useSelector((state: RootState) => state.metadata);
 
-  console.log('[HouseholdOverview] Received outputs:', outputs.length);
-  console.log('[HouseholdOverview] Output 0:', outputs[0]);
+  console.log('[HouseholdOverview] ========== RECEIVED OUTPUTS ==========');
+  console.log('[HouseholdOverview] Total outputs:', outputs.length);
+  console.log('[HouseholdOverview] Baseline (outputs[0]):', outputs[0]);
+  console.log('[HouseholdOverview] Baseline household data:', outputs[0]?.householdData);
+  console.log('[HouseholdOverview] Baseline household data keys:', outputs[0]?.householdData ? Object.keys(outputs[0].householdData) : []);
   if (outputs[1]) {
-    console.log('[HouseholdOverview] Output 1:', outputs[1]);
+    console.log('[HouseholdOverview] Reform (outputs[1]):', outputs[1]);
+    console.log('[HouseholdOverview] Reform household data:', outputs[1]?.householdData);
+    console.log('[HouseholdOverview] Reform household data keys:', outputs[1]?.householdData ? Object.keys(outputs[1].householdData) : []);
   }
 
   // For now, just display the first simulation's data

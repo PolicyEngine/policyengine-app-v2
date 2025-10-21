@@ -23,6 +23,7 @@ export class SimulationAdapter {
       id: metadata.id,
       status: metadata.status,
       hasOutput: !!metadata.output,
+      outputType: typeof metadata.output,
       metadataKeys: Object.keys(metadata),
     });
 
@@ -39,6 +40,23 @@ export class SimulationAdapter {
       throw new Error('Simulation metadata missing population_type');
     }
 
+    // Parse output if it's a stringified JSON
+    let parsedOutput = metadata.output;
+    if (metadata.output && typeof metadata.output === 'string') {
+      try {
+        parsedOutput = JSON.parse(metadata.output);
+        console.log('[SimulationAdapter.fromMetadata] Parsed stringified output:', {
+          originalType: 'string',
+          parsedType: typeof parsedOutput,
+          parsedKeys: parsedOutput ? Object.keys(parsedOutput) : [],
+        });
+      } catch (error) {
+        console.error('[SimulationAdapter.fromMetadata] Failed to parse output:', error);
+        // Keep original value if parsing fails
+        parsedOutput = metadata.output;
+      }
+    }
+
     const simulation = {
       id: String(metadata.id),
       countryId: metadata.country_id,
@@ -48,7 +66,7 @@ export class SimulationAdapter {
       populationType,
       label: null,
       isCreated: true,
-      output: metadata.output,
+      output: parsedOutput,
       status: metadata.status,
     };
 
@@ -56,6 +74,7 @@ export class SimulationAdapter {
       id: simulation.id,
       status: simulation.status,
       hasOutput: !!simulation.output,
+      outputType: typeof simulation.output,
       simulationKeys: Object.keys(simulation),
     });
 

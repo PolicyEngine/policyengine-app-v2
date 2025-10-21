@@ -154,14 +154,33 @@ export function HouseholdReportOutput({ reportId, report, simulations, isLoading
 
   // Show results if all simulations complete (persistent status)
   if (isComplete) {
+    console.log('[HouseholdReportOutput] ========== PREPARING HOUSEHOLD OUTPUTS ==========');
+    console.log('[HouseholdReportOutput] Complete simulations:', simulations);
+    console.log('[HouseholdReportOutput] Simulation statuses:', simulations?.map(s => ({ id: s.id, status: s.status, hasOutput: !!s.output })));
+
     // Collect all simulation outputs
     const householdOutputs: Household[] = (simulations || [])
       .filter((sim) => sim.output)
-      .map((sim, index) => ({
-        id: `${report.id}-sim${index + 1}`,
-        countryId: report.countryId,
-        householdData: sim.output as HouseholdData,
-      }));
+      .map((sim, index) => {
+        console.log(`[HouseholdReportOutput] Mapping simulation ${index} (ID: ${sim.id}):`, {
+          simOutput: sim.output,
+          simOutputType: typeof sim.output,
+          simOutputKeys: sim.output ? Object.keys(sim.output) : [],
+        });
+
+        return {
+          id: `${report.id}-sim${index + 1}`,
+          countryId: report.countryId,
+          householdData: sim.output as HouseholdData,
+        };
+      });
+
+    console.log('[HouseholdReportOutput] Final householdOutputs array length:', householdOutputs.length);
+    console.log('[HouseholdReportOutput] Final householdOutputs:', householdOutputs);
+    console.log('[HouseholdReportOutput] Baseline (outputs[0]):', householdOutputs[0]);
+    if (householdOutputs[1]) {
+      console.log('[HouseholdReportOutput] Reform (outputs[1]):', householdOutputs[1]);
+    }
 
     if (householdOutputs.length === 0) {
       return <NotFoundSubPage />;
