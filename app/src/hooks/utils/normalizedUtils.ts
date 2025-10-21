@@ -67,7 +67,7 @@ export function useParallelQueries<T>(
         return freshData;
       },
       enabled: config.enabled !== false,
-      staleTime: config.staleTime || 5 * 60 * 1000, // Default 5 minutes
+      staleTime: config.staleTime ?? 5 * 60 * 1000, // Default 5 minutes (use ?? to allow 0)
     })),
   });
 

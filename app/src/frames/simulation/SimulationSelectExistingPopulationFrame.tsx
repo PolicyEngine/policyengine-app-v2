@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
