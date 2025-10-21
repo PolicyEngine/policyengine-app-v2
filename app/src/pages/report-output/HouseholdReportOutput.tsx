@@ -21,6 +21,7 @@ interface HouseholdReportOutputProps {
   simulations: Simulation[] | undefined;
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
+  activeTab?: string;
   isLoading: boolean;
   error: Error | null;
 }
@@ -34,7 +35,7 @@ interface HouseholdReportOutputProps {
  * - Reactively marks report complete when all sims done
  * - Results live on simulations (not report)
  */
-export function HouseholdReportOutput({ reportId, report, simulations, userSimulations, userPolicies, isLoading: dataLoading, error: dataError }: HouseholdReportOutputProps) {
+export function HouseholdReportOutput({ reportId, report, simulations, userSimulations, userPolicies, activeTab = 'overview', isLoading: dataLoading, error: dataError }: HouseholdReportOutputProps) {
   const orchestrator = useHouseholdReportOrchestrator();
 
   // Get simulation IDs
@@ -205,13 +206,31 @@ export function HouseholdReportOutput({ reportId, report, simulations, userSimul
 
     console.log('[HouseholdReportOutput] Policy labels for title:', policyLabels);
 
-    return (
-      <OverviewSubPage
-        output={output}
-        outputType="household"
-        policyLabels={policyLabels}
-      />
-    );
+    // Render different content based on active tab
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <OverviewSubPage
+            output={output}
+            outputType="household"
+            policyLabels={policyLabels}
+          />
+        );
+      case 'baseline-results':
+        // TODO: Implement baseline results view
+        return <NotFoundSubPage />;
+      case 'reform-results':
+        // TODO: Implement reform results view
+        return <NotFoundSubPage />;
+      case 'parameters':
+        // TODO: Implement parameters view
+        return <NotFoundSubPage />;
+      case 'population':
+        // TODO: Implement population view
+        return <NotFoundSubPage />;
+      default:
+        return <NotFoundSubPage />;
+    }
   }
 
   // No output yet
