@@ -33,22 +33,22 @@ interface OverallProgress {
  * Coordinates progress tracking across multiple parallel simulations
  *
  * ARCHITECTURE:
- * - Each simulation gets 45% of total progress (for 2-sim reports)
- * - Final 10% (90-100%) represents report persistence
- * - Linear progress based on elapsed time vs 50-second estimate
+ * - Each simulation gets 47.5% of total progress (for 2-sim reports)
+ * - Final 5% (95-100%) represents report persistence
+ * - Linear progress based on elapsed time vs 70-second estimate
  * - Both simulations run in parallel via Promise.all()
  *
  * PROGRESS MODEL:
- * - Two simulations: Sim1 (0-45%) + Sim2 (0-45%) + Report (90-100%)
- * - One simulation: Sim1 (0-90%) + Report (90-100%)
- * - Cap at 90% until all simulations complete
+ * - Two simulations: Sim1 (0-47.5%) + Sim2 (0-47.5%) + Report (95-100%)
+ * - One simulation: Sim1 (0-95%) + Report (95-100%)
+ * - Cap at 95% until all simulations complete
  * - Jump to 100% when report status updates to 'complete'
  */
 export class HouseholdProgressCoordinator {
   private simulations: Map<string, SimulationProgressState>;
   private reportId: string;
   private queryClient: QueryClient;
-  private estimatedDurationPerSim = 50000; // 50 seconds per simulation
+  private estimatedDurationPerSim = 70000; // 70 seconds (1 minute 10 seconds) per simulation
 
   constructor(
     queryClient: QueryClient,
@@ -115,10 +115,10 @@ export class HouseholdProgressCoordinator {
   private calculateOverallProgress(): OverallProgress {
     const totalSims = this.simulations.size;
 
-    // Each simulation gets an equal share of the 90% total
-    // For 2 sims: 45% each
-    // For 1 sim: 90%
-    const progressPerSim = 90 / totalSims;
+    // Each simulation gets an equal share of the 95% total
+    // For 2 sims: 47.5% each
+    // For 1 sim: 95%
+    const progressPerSim = 95 / totalSims;
 
     let totalProgress = 0;
     const simulationProgresses: { [simId: string]: number } = {};
@@ -135,8 +135,8 @@ export class HouseholdProgressCoordinator {
         const elapsed = Date.now() - sim.startTime;
         const rawProgress = (elapsed / this.estimatedDurationPerSim) * progressPerSim;
 
-        // Cap at progressPerSim - 0.5 (never show full segment until actually complete)
-        simProgress = Math.min(rawProgress, progressPerSim - 0.5);
+        // Cap at progressPerSim (if running longer than expected, sits at max per-sim progress)
+        simProgress = Math.min(rawProgress, progressPerSim);
       }
       // else status === 'initializing' or 'error': simProgress stays 0
 
@@ -149,10 +149,10 @@ export class HouseholdProgressCoordinator {
       (sim) => sim.status === 'complete'
     );
 
-    // If all simulations complete, cap at 90%
-    // The final 90→100% happens when report status updates to 'complete'
+    // If all simulations complete, cap at 95%
+    // The final 95→100% happens when report status updates to 'complete'
     if (allComplete) {
-      totalProgress = 90;
+      totalProgress = 95;
     }
 
     const message = this.getProgressMessage(totalProgress, this.simulations);
@@ -190,13 +190,14 @@ export class HouseholdProgressCoordinator {
     }
 
     // Progress-based messages (reflects parallel execution)
+    // Thresholds adjusted for 47.5% per sim, 95% total cap
     if (progress < 15) {
       return 'Starting household simulations...';
     }
-    if (progress < 45) {
+    if (progress < 47.5) {
       return 'Running simulations in parallel...';
     }
-    if (progress < 90) {
+    if (progress < 95) {
       return 'Completing simulations...';
     }
 

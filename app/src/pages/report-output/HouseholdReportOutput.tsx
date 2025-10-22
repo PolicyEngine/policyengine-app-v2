@@ -44,7 +44,7 @@ export function HouseholdReportOutput({ reportId, report, simulations, userSimul
   }, [simulations]);
 
   // Get real-time progress from CalcStatus (for display only)
-  const { displayProgress, hasCalcStatus } = useSimulationProgressDisplay(simulationIds);
+  const { displayProgress, hasCalcStatus, message: progressMessage } = useSimulationProgressDisplay(simulationIds);
 
   // Derive state from Simulation.status (SOURCE OF TRUTH)
   // Note: API uses 'pending' for "not complete yet" (includes actively calculating)
@@ -144,10 +144,9 @@ export function HouseholdReportOutput({ reportId, report, simulations, userSimul
   // Show loading if pending (needs calculation OR currently calculating)
   // CalcStatus provides progress display if available (same session)
   if (isPending) {
+    // Use message from ProgressCoordinator if available, otherwise use fallback
     const displayStatusLabel = getDisplayStatus('pending');
-    const message = hasCalcStatus
-      ? `${displayStatusLabel} household simulations... ${Math.round(displayProgress)}%`
-      : `${displayStatusLabel} household simulations...`;
+    const message = progressMessage || `${displayStatusLabel} household simulations...`;
 
     return (
       <LoadingPage

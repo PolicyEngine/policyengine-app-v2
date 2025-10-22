@@ -23,20 +23,21 @@ export function useSimulationProgressDisplay(simulationIds: string[]) {
 
   const statuses = queries.map((q) => q.data as CalcStatus | undefined);
 
-  const { displayProgress, hasCalcStatus } = useMemo(() => {
+  const { displayProgress, hasCalcStatus, message } = useMemo(() => {
     const validStatuses = statuses.filter((s): s is CalcStatus => !!s);
 
     if (validStatuses.length === 0) {
       // No CalcStatus available (e.g., after refresh)
-      return { displayProgress: 0, hasCalcStatus: false };
+      return { displayProgress: 0, hasCalcStatus: false, message: undefined };
     }
 
     // All simulations share the same overall progress (set by HouseholdProgressCoordinator)
-    // Just return the progress from the first valid status
+    // Just return the progress and message from the first valid status
     const progress = validStatuses[0]?.progress || 0;
+    const statusMessage = validStatuses[0]?.message;
 
-    return { displayProgress: progress, hasCalcStatus: true };
+    return { displayProgress: progress, hasCalcStatus: true, message: statusMessage };
   }, [statuses]);
 
-  return { displayProgress, hasCalcStatus };
+  return { displayProgress, hasCalcStatus, message };
 }
