@@ -203,7 +203,7 @@ class CacheMonitor {
   /**
    * Helper to convert query key array to readable string
    */
-  private getQueryKeyString(queryKey: any[]): string {
+  private getQueryKeyString(queryKey: readonly unknown[]): string {
     if (!Array.isArray(queryKey)) return String(queryKey);
 
     // Handle common patterns

@@ -1,7 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { Group, Loader, Text } from '@mantine/core';
 import {
   BulletsValue,
   ColumnConfig,
@@ -9,11 +8,12 @@ import {
   LinkValue,
   TextValue,
 } from '@/components/columns';
+import { OutputTypeCell } from '@/components/report/OutputTypeCell';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useReportsWithLiveStatus } from '@/hooks/useReportsWithLiveStatus';
+import { useUserReports } from '@/hooks/useUserReports';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
@@ -21,7 +21,7 @@ import { useCacheMonitor } from '@/utils/cacheMonitor';
 
 export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
-  const { data, isLoading, isError, error } = useReportsWithLiveStatus(userId);
+  const { data, isLoading, isError, error } = useUserReports(userId);
   const cacheMonitor = useCacheMonitor();
 
   // Log cache state when component mounts and when data changes
@@ -45,7 +45,8 @@ export default function ReportsPage() {
     console.log('More filters clicked');
   };
 
-  const handleMenuAction = (action: string, recordId: string) => {
+  // Memoize callback to prevent OutputTypeCell from re-rendering unnecessarily
+  const handleMenuAction = useCallback((action: string, recordId: string) => {
     switch (action) {
       case 'view-output':
         // recordId is now the UserReport.id
@@ -70,7 +71,7 @@ export default function ReportsPage() {
       default:
         console.log('Unknown action:', action);
     }
-  };
+  }, [navigate, countryId]);
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>
@@ -136,48 +137,54 @@ export default function ReportsPage() {
   console.log('User Reports Data:', data);
 
   // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.userReport.id,
-      report: {
-        text: item.userReport.label || `Report #${item.userReport.reportId}`,
-        url: `/${countryId}/report-output/${item.userReport.id}`,
-      } as LinkValue,
-      dateCreated: {
-        text: item.userReport.createdAt
-          ? formatDate(
-              item.userReport.createdAt,
-              'short-month-day-year',
-              (item.report?.countryId || countryId) as (typeof countryIds)[number],
-              true
-            )
-          : '',
-      } as TextValue,
-      status: {
-        text: formatStatus(item.liveStatus),
-      } as TextValue,
-      simulations: {
-        items: item.simulations?.map((sim, index) => ({
-          text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-        })) || [
-          {
-            text: 'No simulations',
-          },
-        ],
-      } as BulletsValue,
-      outputType: item.isCalculating
-        ? {
-            custom: (
-              <Group gap="xs">
-                <Loader size="sm" color="teal" />
-                <Text size="sm">{item.progress ? `${Math.round(item.progress)}%` : ''}</Text>
-              </Group>
-            ),
-          }
-        : {
-            text: item.report?.output ? 'Society-wide' : 'Not generated',
-          },
-    })) || [];
+  // Use useMemo to prevent unnecessary re-creation of data objects
+  const transformedData: IngredientRecord[] = useMemo(() =>
+    data?.map((item) => {
+      const simulationIds = item.simulations?.map(s => s.id).filter(Boolean) as string[] || [];
+      const isHouseholdReport = item.simulations?.[0]?.populationType === 'household';
+
+      return {
+        id: item.userReport.id,
+        report: {
+          text: item.userReport.label || `Report #${item.userReport.reportId}`,
+          url: `/${countryId}/report-output/${item.userReport.id}`,
+        } as LinkValue,
+        dateCreated: {
+          text: item.userReport.createdAt
+            ? formatDate(
+                item.userReport.createdAt,
+                'short-month-day-year',
+                (item.report?.countryId || countryId) as (typeof countryIds)[number],
+                true
+              )
+            : '',
+        } as TextValue,
+        status: {
+          text: formatStatus(item.report?.status || 'initializing'),
+        } as TextValue,
+        simulations: {
+          items: item.simulations?.map((sim, index) => ({
+            text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
+          })) || [
+            {
+              text: 'No simulations',
+            },
+          ],
+        } as BulletsValue,
+        // Use OutputTypeCell component with CalcStatus subscription
+        // This cell will re-render independently when its CalcStatus updates
+        outputType: {
+          custom: (
+            <OutputTypeCell
+              simulationIds={simulationIds}
+              isHouseholdReport={isHouseholdReport}
+              simulations={item.simulations}
+              report={item.report}
+            />
+          ),
+        },
+      };
+    }) || [], [data, countryId]);
 
   return (
     <IngredientReadView
