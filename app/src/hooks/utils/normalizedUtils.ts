@@ -20,6 +20,7 @@ export interface FetchConfig<T> {
   queryFn: (id: string) => Promise<T>;
   enabled?: boolean;
   staleTime?: number;
+  gcTime?: number;
 }
 
 /**
@@ -54,6 +55,7 @@ export function useParallelQueries<T>(
       queryFn: () => config.queryFn(id),
       enabled: config.enabled !== false,
       staleTime: config.staleTime ?? 5 * 60 * 1000, // Default 5 minutes (use ?? to allow 0)
+      gcTime: config.gcTime ?? 5 * 60 * 1000, // Default 5 minutes (use ?? to allow 0)
     })),
   });
 

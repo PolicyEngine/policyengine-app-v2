@@ -137,23 +137,28 @@ export const useUserReports = (userId: string) => {
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      console.log('[useUserReports] 🔄 FETCHING simulation from API:', id);
       const metadata = await fetchSimulationById(country, id);
       const transformed = SimulationAdapter.fromMetadata(metadata);
 
-      console.log('[useUserReports] BEFORE RETURNING TO REACT QUERY:', {
+      console.log('[useUserReports] ✅ FETCHED simulation:', {
         id,
-        transformedStatus: transformed.status,
-        transformedHasOutput: !!transformed.output,
+        status: transformed.status,
+        hasOutput: !!transformed.output,
       });
 
       return transformed;
     },
     enabled: simulationIds.length > 0,
-    // staleTime: 0 to ensure refetch after orchestrator invalidation
-    // Simulations get updated during calculation (status changes from 'pending' -> 'complete')
-    // High staleTime prevents refetch even after invalidateQueries(), causing components
-    // to show stale status and get stuck on loading screen at 100% progress
-    staleTime: 0,
+    // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
+    // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
+    // that specific simulation will be marked stale and refetch on next mount
+    // All other simulations remain fresh and use cached data (fast navigation)
+    staleTime: Infinity,
+    // gcTime: 0 - Delete from cache immediately when no components are using this data
+    // Prevents memory bloat from accumulating unused simulation data
+    // When navigating away from Reports page, unused simulations are garbage collected
+    gcTime: 0,
   });
 
   console.log('simulationResults', simulationResults);
@@ -457,23 +462,28 @@ export const useUserReportById = (userReportId: string) => {
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      console.log('[useUserReportById] 🔄 FETCHING simulation from API:', id);
       const metadata = await fetchSimulationById(country, id);
       const transformed = SimulationAdapter.fromMetadata(metadata);
 
-      console.log('[useUserReportById] BEFORE RETURNING TO REACT QUERY:', {
+      console.log('[useUserReportById] ✅ FETCHED simulation:', {
         id,
-        transformedStatus: transformed.status,
-        transformedHasOutput: !!transformed.output,
+        status: transformed.status,
+        hasOutput: !!transformed.output,
       });
 
       return transformed;
     },
     enabled: simulationIds.length > 0,
-    // staleTime: 0 to ensure refetch after orchestrator invalidation
-    // Simulations get updated during calculation (status changes from 'pending' -> 'complete')
-    // High staleTime prevents refetch even after invalidateQueries(), causing components
-    // to show stale status and get stuck on loading screen at 100% progress
-    staleTime: 0,
+    // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
+    // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
+    // that specific simulation will be marked stale and refetch on next mount
+    // All other simulations remain fresh and use cached data (fast navigation)
+    staleTime: Infinity,
+    // gcTime: 0 - Delete from cache immediately when no components are using this data
+    // Prevents memory bloat from accumulating unused simulation data
+    // When navigating away from report output, unused simulations are garbage collected
+    gcTime: 0,
   });
 
   console.log('[useUserReportById] simulationResults AFTER QUERY:',

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Group, Loader, Text } from '@mantine/core';
@@ -17,10 +17,18 @@ import { useReportsWithLiveStatus } from '@/hooks/useReportsWithLiveStatus';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
+import { useCacheMonitor } from '@/utils/cacheMonitor';
 
 export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useReportsWithLiveStatus(userId);
+  const cacheMonitor = useCacheMonitor();
+
+  // Log cache state when component mounts and when data changes
+  useEffect(() => {
+    console.log('📊 [ReportsPage] Component mounted/updated');
+    cacheMonitor.getStats();
+  }, [data]);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const countryId = useCurrentCountry();

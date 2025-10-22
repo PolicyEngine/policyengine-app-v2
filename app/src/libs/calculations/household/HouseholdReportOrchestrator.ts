@@ -9,6 +9,7 @@ import { fetchSimulationById } from '@/api/simulation';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
 import type { Report } from '@/types/ingredients/Report';
 import type { HouseholdData } from '@/types/ingredients/Household';
+import { cacheMonitor } from '@/utils/cacheMonitor';
 
 /**
  * Simplified orchestrator for household report calculations
@@ -165,6 +166,12 @@ export class HouseholdReportOrchestrator {
       try {
         await markSimulationError(countryId as any, simulationId);
 
+        // Log invalidation for cache monitoring
+        cacheMonitor.logInvalidation(simulationKeys.byId(simulationId), {
+          reason: 'Simulation failed',
+          simulationId,
+        });
+
         // Invalidate to trigger refetch with error status
         this.queryClient.invalidateQueries({
           queryKey: simulationKeys.byId(simulationId),
@@ -205,6 +212,13 @@ export class HouseholdReportOrchestrator {
 
       // DIAGNOSTIC: Invalidate and immediately check what GET returns
       console.log(`[HouseholdReportOrchestrator][${timestamp}] Invalidating query...`);
+
+      // Log invalidation for cache monitoring
+      cacheMonitor.logInvalidation(simulationKeys.byId(simulationId), {
+        reason: 'Simulation output persisted',
+        simulationId,
+      });
+
       this.queryClient.invalidateQueries({
         queryKey: simulationKeys.byId(simulationId),
       });

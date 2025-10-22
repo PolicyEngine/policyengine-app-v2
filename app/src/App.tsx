@@ -10,6 +10,7 @@ import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
 import { Router } from './Router';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
+import { cacheMonitor } from './utils/cacheMonitor';
 
 const queryClient = new QueryClient(
   // Temporarily set default staletime to Infinity for all queries;
@@ -22,6 +23,9 @@ const queryClient = new QueryClient(
     },
   }
 );
+
+// Initialize cache monitor
+cacheMonitor.init(queryClient);
 
 export default function App() {
   return (
