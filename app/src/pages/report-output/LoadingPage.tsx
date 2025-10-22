@@ -18,7 +18,8 @@ export default function LoadingPage({
   estimatedTimeRemaining,
 }: LoadingPageProps) {
   // Calculate progress value
-  const progressValue = progress ? progress * 100 : queuePosition ? 100 - queuePosition : 50;
+  // Note: progress is already 0-100, not 0-1, so don't multiply by 100
+  const progressValue = progress ?? (queuePosition ? 100 - queuePosition : 50);
 
   // Format estimated time
   const formatTime = (ms?: number) => {
