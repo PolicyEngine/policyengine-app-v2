@@ -4,9 +4,7 @@ import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReport
 import { useUserReportById } from '@/hooks/useUserReports';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
-import type { Report } from '@/types/ingredients/Report';
-import type { Simulation } from '@/types/ingredients/Simulation';
-import type { CalcStatus } from '@/types/calculation';
+import { mockSocietyWideReport, mockSocietyWideSimulation } from '@/tests/fixtures/pages/reportOutputMocks';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -31,27 +29,6 @@ const mockUseCalculationStatus = useCalculationStatus as ReturnType<typeof vi.fn
 const mockUseStartCalculationOnLoad = useStartCalculationOnLoad as ReturnType<typeof vi.fn>;
 
 describe('SocietyWideReportOutput', () => {
-  const mockReport: Report = {
-    id: 'test-report-123',
-    countryId: 'us',
-    label: 'Test Society-Wide Report',
-    simulationIds: ['sim-1'],
-    apiVersion: '1.0.0',
-    status: 'complete',
-    output: null,
-  };
-
-  const mockSimulation: Simulation = {
-    id: 'sim-1',
-    label: 'Test Simulation',
-    countryId: 'us',
-    populationType: 'geography',
-    populationId: 'us',
-    policyId: 'policy-1',
-    status: 'complete',
-    output: null,
-    isCreated: true,
-  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -108,8 +85,8 @@ describe('SocietyWideReportOutput', () => {
   test('given calculation initializing then shows loading status message', () => {
     // Given
     mockUseUserReportById.mockReturnValue({
-      report: mockReport,
-      simulations: [mockSimulation],
+      report: mockSocietyWideReport,
+      simulations: [mockSocietyWideSimulation],
       isLoading: false,
       error: null,
     });
@@ -131,8 +108,8 @@ describe('SocietyWideReportOutput', () => {
   test('given calculation pending then shows computing message with progress', () => {
     // Given
     mockUseUserReportById.mockReturnValue({
-      report: mockReport,
-      simulations: [mockSimulation],
+      report: mockSocietyWideReport,
+      simulations: [mockSocietyWideSimulation],
       isLoading: false,
       error: null,
     });
@@ -155,8 +132,8 @@ describe('SocietyWideReportOutput', () => {
   test('given calculation error then shows error message', () => {
     // Given
     mockUseUserReportById.mockReturnValue({
-      report: mockReport,
-      simulations: [mockSimulation],
+      report: mockSocietyWideReport,
+      simulations: [mockSocietyWideSimulation],
       isLoading: false,
       error: null,
     });
@@ -192,8 +169,8 @@ describe('SocietyWideReportOutput', () => {
     };
 
     mockUseUserReportById.mockReturnValue({
-      report: mockReport,
-      simulations: [mockSimulation],
+      report: mockSocietyWideReport,
+      simulations: [mockSocietyWideSimulation],
       isLoading: false,
       error: null,
     });
@@ -219,8 +196,8 @@ describe('SocietyWideReportOutput', () => {
   test('given no output yet then shows not found message', () => {
     // Given
     mockUseUserReportById.mockReturnValue({
-      report: mockReport,
-      simulations: [mockSimulation],
+      report: mockSocietyWideReport,
+      simulations: [mockSocietyWideSimulation],
       isLoading: false,
       error: null,
     });
@@ -243,8 +220,8 @@ describe('SocietyWideReportOutput', () => {
   test('given report loaded then starts calculation on load', () => {
     // Given
     mockUseUserReportById.mockReturnValue({
-      report: mockReport,
-      simulations: [mockSimulation],
+      report: mockSocietyWideReport,
+      simulations: [mockSocietyWideSimulation],
       isLoading: false,
       error: null,
     });

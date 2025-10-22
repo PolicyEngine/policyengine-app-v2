@@ -107,11 +107,11 @@ export const mockHouseholdSimulation: Simulation = {
   isCreated: true,
 };
 
-export const mockEconomySimulation: Simulation = {
+export const mockSocietyWideSimulation: Simulation = {
   id: 'sim-2',
   policyId: 'policy-2',
   populationType: 'geography',
-  label: 'Test Economy Sim',
+  label: 'Test Society-Wide Sim',
   isCreated: true,
 };
 

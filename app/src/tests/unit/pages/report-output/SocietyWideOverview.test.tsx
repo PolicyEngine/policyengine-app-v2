@@ -1,7 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
 import SocietyWideOverview from '@/pages/report-output/SocietyWideOverview';
-import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -22,35 +22,6 @@ vi.mock('@/utils/formatPowers', () => ({
 }));
 
 describe('SocietyWideOverview', () => {
-  const createMockOutput = (overrides?: Partial<SocietyWideReportOutput>): SocietyWideReportOutput => ({
-    budget: {
-      budgetary_impact: 1_000_000,
-      baseline_net_income: 5_000_000_000,
-      benefit_spending_impact: 500_000,
-      households: 10000,
-      state_tax_revenue_impact: 200_000,
-      tax_revenue_impact: 300_000,
-    },
-    poverty: {
-      baseline: {},
-      reform: {},
-      poverty: {
-        all: { baseline: 0.1, reform: 0.09 },
-      },
-    },
-    intra_decile: {
-      all: {
-        'Gain more than 5%': 0.2,
-        'Gain less than 5%': 0.1,
-        'Lose more than 5%': 0.05,
-        'Lose less than 5%': 0.05,
-        'No change': 0.6,
-      },
-    },
-    poverty_by_race: null,
-    data_version: '2024.1.0',
-    ...overrides,
-  } as any);
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -59,7 +30,7 @@ describe('SocietyWideOverview', () => {
   describe('budgetary impact metric', () => {
     test('given positive budgetary impact then displays cost with formatted value', () => {
       // Given
-      const output = createMockOutput({ budget: { budgetary_impact: 1_000_000 } as any });
+      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: 1_000_000 } as any });
 
       // When
       const { container } = render(<SocietyWideOverview output={output} />);
@@ -72,7 +43,7 @@ describe('SocietyWideOverview', () => {
 
     test('given zero budgetary impact then shows no budget impact message', () => {
       // Given
-      const output = createMockOutput({ budget: { budgetary_impact: 0 } as any });
+      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: 0 } as any });
 
       // When
       render(<SocietyWideOverview output={output} />);
@@ -83,7 +54,7 @@ describe('SocietyWideOverview', () => {
 
     test('given null budgetary impact then shows error message', () => {
       // Given
-      const output = createMockOutput({ budget: { budgetary_impact: null } as any });
+      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: null } as any });
 
       // When
       render(<SocietyWideOverview output={output} />);
@@ -94,7 +65,7 @@ describe('SocietyWideOverview', () => {
 
     test('given NaN budgetary impact then shows error message', () => {
       // Given
-      const output = createMockOutput({ budget: { budgetary_impact: NaN } as any });
+      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: NaN } as any });
 
       // When
       render(<SocietyWideOverview output={output} />);
@@ -107,7 +78,7 @@ describe('SocietyWideOverview', () => {
   describe('net income impact metric', () => {
     test('given both winners and losers then shows both statistics', () => {
       // Given
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         intra_decile: {
           all: {
             'Gain more than 5%': 0.2,
@@ -130,7 +101,7 @@ describe('SocietyWideOverview', () => {
 
     test('given only winners then shows only raises message', () => {
       // Given
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         intra_decile: {
           all: {
             'Gain more than 5%': 0.2,
@@ -151,7 +122,7 @@ describe('SocietyWideOverview', () => {
 
     test('given only losers then shows only lowers message', () => {
       // Given
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         intra_decile: {
           all: {
             'Gain more than 5%': 0,
@@ -172,7 +143,7 @@ describe('SocietyWideOverview', () => {
 
     test('given no impact then shows no impact message', () => {
       // Given
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         intra_decile: {
           all: {
             'Gain more than 5%': 0,
@@ -194,7 +165,7 @@ describe('SocietyWideOverview', () => {
   describe('poverty impact metric', () => {
     test('given poverty decrease then shows lowers message with percentage', () => {
       // Given
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         poverty: {
           poverty: {
             all: { baseline: 0.1, reform: 0.09 },
@@ -214,7 +185,7 @@ describe('SocietyWideOverview', () => {
 
     test('given poverty increase then shows raises message with percentage', () => {
       // Given
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         poverty: {
           poverty: {
             all: { baseline: 0.1, reform: 0.12 },
@@ -232,7 +203,7 @@ describe('SocietyWideOverview', () => {
 
     test('given no poverty change then shows no impact message', () => {
       // Given
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         poverty: {
           poverty: {
             all: { baseline: 0.1, reform: 0.1 },
@@ -250,7 +221,7 @@ describe('SocietyWideOverview', () => {
     test('given zero baseline poverty then shows error message', () => {
       // Given
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      const output = createMockOutput({
+      const output = createMockSocietyWideOutput({
         poverty: {
           poverty: {
             all: { baseline: 0, reform: 0.05 },
@@ -272,7 +243,7 @@ describe('SocietyWideOverview', () => {
 
   test('given complete output then renders all three metric sections', () => {
     // Given
-    const output = createMockOutput();
+    const output = createMockSocietyWideOutput();
 
     // When
     render(<SocietyWideOverview output={output} />);

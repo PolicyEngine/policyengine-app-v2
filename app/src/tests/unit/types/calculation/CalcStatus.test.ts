@@ -5,7 +5,7 @@ import {
   mockComputingCalcStatus,
   mockCompleteCalcStatus,
   mockErrorCalcStatus,
-  mockEconomyResult,
+  mockSocietyWideResult,
   mockHouseholdResult,
 } from '@/tests/fixtures/types/calculationFixtures';
 
@@ -36,7 +36,7 @@ describe('CalcStatus types', () => {
     });
 
     it('should accept complete status with result', () => {
-      const result = mockEconomyResult();
+      const result = mockSocietyWideResult();
       const status: CalcStatus = mockCompleteCalcStatus({ result });
 
       expect(status.status).toBe('complete');
@@ -63,7 +63,7 @@ describe('CalcStatus types', () => {
 
   describe('CalcResult type', () => {
     it('should accept economy output', () => {
-      const result: CalcResult = mockEconomyResult();
+      const result: CalcResult = mockSocietyWideResult();
 
       expect(result).toHaveProperty('budget');
       expect(result).toHaveProperty('decile');

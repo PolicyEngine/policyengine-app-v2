@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
 import { calculationKeys } from '@/libs/queryKeys';
-import { mockEconomyCalcParams, mockCalcMetadata } from '@/tests/fixtures/types/calculationFixtures';
+import { mockSocietyWideCalcParams, mockCalcMetadata } from '@/tests/fixtures/types/calculationFixtures';
 import { STRATEGY_TEST_CONSTANTS } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 
 // Mock the strategy factory
@@ -35,7 +35,7 @@ describe('calculationQueries', () => {
       // Given
       const reportId = 'report-123';
       const metadata = mockCalcMetadata({ calcType: 'societyWide' });
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
 
       // When
       const result = calculationQueries.forReport(reportId, metadata, params);
@@ -52,7 +52,7 @@ describe('calculationQueries', () => {
       const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
       const reportId = 'report-123';
       const metadata = mockCalcMetadata({ calcType: 'societyWide' });
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
 
       // When
       calculationQueries.forReport(reportId, metadata, params);
@@ -66,7 +66,7 @@ describe('calculationQueries', () => {
       const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
       const reportId = 'report-123';
       const metadata = mockCalcMetadata({ calcType: 'household' });
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
 
       // When
       calculationQueries.forReport(reportId, metadata, params);
@@ -79,7 +79,7 @@ describe('calculationQueries', () => {
       // Given
       const reportId = 'report-123';
       const metadata = mockCalcMetadata({ calcType: 'societyWide' });
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
       const queryOptions = calculationQueries.forReport(reportId, metadata, params);
 
       // When
@@ -95,7 +95,7 @@ describe('calculationQueries', () => {
       // Given
       const simulationId = 'sim-456';
       const metadata = mockCalcMetadata({ calcType: 'household', targetType: 'simulation' });
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
 
       // When
       const result = calculationQueries.forSimulation(simulationId, metadata, params);
@@ -112,7 +112,7 @@ describe('calculationQueries', () => {
       const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
       const simulationId = 'sim-456';
       const metadata = mockCalcMetadata({ calcType: 'societyWide', targetType: 'simulation' });
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
 
       // When
       calculationQueries.forSimulation(simulationId, metadata, params);
@@ -125,7 +125,7 @@ describe('calculationQueries', () => {
       // Given
       const simulationId = 'sim-456';
       const metadata = mockCalcMetadata({ calcType: 'household', targetType: 'simulation' });
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
       const queryOptions = calculationQueries.forSimulation(simulationId, metadata, params);
 
       // When

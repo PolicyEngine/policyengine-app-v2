@@ -23,8 +23,8 @@ export const mockReportData = {
   status: 'complete' as const,
 };
 
-// Mock economy output
-export const mockEconomyOutput = {
+// Mock society-wide output (base data)
+export const mockSocietyWideOutput = {
   budget: {
     baseline_net_income: 5000000000000,
     benefit_spending_impact: 15000000000,
@@ -57,6 +57,68 @@ export const mockEconomyOutput = {
 // Mock household data
 export const mockHouseholdData = {
   earnings: { 2025: 50000 },
+};
+
+/**
+ * Factory function for creating mock SocietyWideReportOutput with overrides
+ * Used by SocietyWideOverview tests
+ */
+export const createMockSocietyWideOutput = (overrides?: any) => ({
+  budget: {
+    budgetary_impact: 1_000_000,
+    baseline_net_income: 5_000_000_000,
+    benefit_spending_impact: 500_000,
+    households: 10000,
+    state_tax_revenue_impact: 200_000,
+    tax_revenue_impact: 300_000,
+  },
+  poverty: {
+    baseline: {},
+    reform: {},
+    poverty: {
+      all: { baseline: 0.1, reform: 0.09 },
+    },
+  },
+  intra_decile: {
+    all: {
+      'Gain more than 5%': 0.2,
+      'Gain less than 5%': 0.1,
+      'Lose more than 5%': 0.05,
+      'Lose less than 5%': 0.05,
+      'No change': 0.6,
+    },
+  },
+  poverty_by_race: null,
+  data_version: '2024.1.0',
+  ...overrides,
+});
+
+/**
+ * Mock Report for SocietyWideReportOutput tests
+ */
+export const mockSocietyWideReport = {
+  id: 'test-report-123',
+  countryId: 'us',
+  label: 'Test Society-Wide Report',
+  simulationIds: ['sim-1'],
+  apiVersion: '1.0.0',
+  status: 'complete' as const,
+  output: null,
+};
+
+/**
+ * Mock Simulation for SocietyWideReportOutput tests
+ */
+export const mockSocietyWideSimulation = {
+  id: 'sim-1',
+  label: 'Test Simulation',
+  countryId: 'us',
+  populationType: 'geography' as const,
+  populationId: 'us',
+  policyId: 'policy-1',
+  status: 'complete' as const,
+  output: null,
+  isCreated: true,
 };
 
 /**

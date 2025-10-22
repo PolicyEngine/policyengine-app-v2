@@ -8,7 +8,7 @@ import { useCreateReport } from '@/hooks/useCreateReport';
 import {
   createMockQueryClient,
   ERROR_MESSAGES,
-  mockEconomySimulation,
+  mockSocietyWideSimulation,
   mockHousehold,
   mockHouseholdSimulation,
   mockNationalGeography,
@@ -252,8 +252,8 @@ describe('useCreateReport', () => {
         countryId: TEST_COUNTRY_ID,
         payload: mockReportCreationPayload,
         simulations: {
-          simulation1: mockEconomySimulation,
-          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
+          simulation1: mockSocietyWideSimulation,
+          simulation2: { ...mockSocietyWideSimulation, policyId: 'policy-3' },
         },
         populations: {
           geography1: mockNationalGeography,
@@ -268,7 +268,7 @@ describe('useCreateReport', () => {
             targetType: 'report',
             countryId: TEST_COUNTRY_ID,
             simulations: {
-              simulation1: mockEconomySimulation,
+              simulation1: mockSocietyWideSimulation,
               simulation2: expect.objectContaining({ policyId: 'policy-3' }),
             },
             populations: {
@@ -290,8 +290,8 @@ describe('useCreateReport', () => {
         countryId: TEST_COUNTRY_ID,
         payload: mockReportCreationPayload,
         simulations: {
-          simulation1: mockEconomySimulation,
-          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
+          simulation1: mockSocietyWideSimulation,
+          simulation2: { ...mockSocietyWideSimulation, policyId: 'policy-3' },
         },
         populations: {
           geography1: mockSubnationalGeography,
@@ -306,7 +306,7 @@ describe('useCreateReport', () => {
             targetType: 'report',
             countryId: TEST_COUNTRY_ID,
             simulations: {
-              simulation1: mockEconomySimulation,
+              simulation1: mockSocietyWideSimulation,
               simulation2: expect.objectContaining({ policyId: 'policy-3' }),
             },
             populations: {
@@ -351,8 +351,8 @@ describe('useCreateReport', () => {
         countryId: TEST_COUNTRY_ID,
         payload: mockReportCreationPayload,
         simulations: {
-          simulation1: mockEconomySimulation,
-          simulation2: { ...mockEconomySimulation, policyId: 'policy-3' },
+          simulation1: mockSocietyWideSimulation,
+          simulation2: { ...mockSocietyWideSimulation, policyId: 'policy-3' },
         },
         populations: {
           geography1: mockNationalGeography,

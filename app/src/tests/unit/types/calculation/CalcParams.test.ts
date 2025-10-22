@@ -1,14 +1,14 @@
 import { describe, it, expect } from 'vitest';
 import { CalcParams } from '@/types/calculation';
 import {
-  mockEconomyCalcParams,
+  mockSocietyWideCalcParams,
   mockHouseholdCalcParams,
 } from '@/tests/fixtures/types/calculationFixtures';
 
 describe('CalcParams types', () => {
   describe('economy calculation params', () => {
     it('should include all required fields for economy calculation', () => {
-      const params: CalcParams = mockEconomyCalcParams();
+      const params: CalcParams = mockSocietyWideCalcParams();
 
       expect(params.countryId).toBe('us');
       expect(params.calcType).toBe('societyWide');
@@ -17,7 +17,7 @@ describe('CalcParams types', () => {
     });
 
     it('should support reform policy for comparison', () => {
-      const params = mockEconomyCalcParams({
+      const params = mockSocietyWideCalcParams({
         policyIds: {
           baseline: '1',
           reform: '2',
@@ -29,7 +29,7 @@ describe('CalcParams types', () => {
     });
 
     it('should support baseline-only calculation', () => {
-      const params = mockEconomyCalcParams({
+      const params = mockSocietyWideCalcParams({
         policyIds: {
           baseline: '1',
         },
@@ -40,7 +40,7 @@ describe('CalcParams types', () => {
     });
 
     it('should include region for subnational calculations', () => {
-      const params = mockEconomyCalcParams({
+      const params = mockSocietyWideCalcParams({
         region: 'ca',
         populationId: 'ca',
       });
@@ -49,7 +49,7 @@ describe('CalcParams types', () => {
     });
 
     it('should allow omitting region for national calculations', () => {
-      const params = mockEconomyCalcParams({
+      const params = mockSocietyWideCalcParams({
         region: undefined,
       });
 
@@ -96,8 +96,8 @@ describe('CalcParams types', () => {
 
   describe('country ID validation', () => {
     it('should accept valid country IDs', () => {
-      const usParams = mockEconomyCalcParams({ countryId: 'us' });
-      const ukParams = mockEconomyCalcParams({ countryId: 'uk' });
+      const usParams = mockSocietyWideCalcParams({ countryId: 'us' });
+      const ukParams = mockSocietyWideCalcParams({ countryId: 'uk' });
 
       expect(usParams.countryId).toBe('us');
       expect(ukParams.countryId).toBe('uk');
@@ -106,17 +106,17 @@ describe('CalcParams types', () => {
 
   describe('policy IDs structure', () => {
     it('should always have baseline policy', () => {
-      const params = mockEconomyCalcParams();
+      const params = mockSocietyWideCalcParams();
 
       expect(params.policyIds).toHaveProperty('baseline');
       expect(typeof params.policyIds.baseline).toBe('string');
     });
 
     it('should optionally have reform policy', () => {
-      const withReform = mockEconomyCalcParams({
+      const withReform = mockSocietyWideCalcParams({
         policyIds: { baseline: '1', reform: '2' },
       });
-      const withoutReform = mockEconomyCalcParams({
+      const withoutReform = mockSocietyWideCalcParams({
         policyIds: { baseline: '1' },
       });
 

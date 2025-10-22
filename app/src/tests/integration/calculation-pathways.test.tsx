@@ -11,9 +11,9 @@ import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import {
   mockHouseholdCalcConfig,
-  mockEconomyCalcConfig,
+  mockSocietyWideCalcConfig,
   mockHouseholdCalcResult,
-  mockEconomyCalcResult,
+  mockSocietyWideCalcResult,
   mockIntegrationComputingStatus,
   mockIntegrationCompleteStatus,
   INTEGRATION_TEST_CONSTANTS,
@@ -47,13 +47,13 @@ describe('Calculation Pathways Integration', () => {
     test('given report with output then hydrates cache and shows results immediately', () => {
       // Given - Report with completed output
       const mockReport = {
-        id: INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT,
+        id: INTEGRATION_TEST_CONSTANTS.CALC_IDS.SOCIETY_WIDE_REPORT,
         label: 'Test Economy Report',
         countryId: 'us' as const,
         apiVersion: '1.0.0',
         simulationIds: [INTEGRATION_TEST_CONSTANTS.CALC_IDS.SIMULATION_1],
         status: 'complete' as const,
-        output: mockEconomyCalcResult() as any, // Type cast for test simplicity
+        output: mockSocietyWideCalcResult() as any, // Type cast for test simplicity
       };
 
       // When - Hydrate cache
@@ -76,7 +76,7 @@ describe('Calculation Pathways Integration', () => {
     test('given report without output then does not hydrate cache', () => {
       // Given - Report without output
       const mockReport = {
-        id: INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT,
+        id: INTEGRATION_TEST_CONSTANTS.CALC_IDS.SOCIETY_WIDE_REPORT,
         label: 'Test Economy Report',
         countryId: 'us' as const,
         apiVersion: '1.0.0',
@@ -101,7 +101,7 @@ describe('Calculation Pathways Integration', () => {
   describe('Pathway 2: Auto-Start Calculation on URL Load', () => {
     test('given report without cache then starts calculation automatically', () => {
       // Given
-      const config = mockEconomyCalcConfig();
+      const config = mockSocietyWideCalcConfig();
 
       // When - Use auto-start hook
       const { result } = renderHook(
@@ -120,7 +120,7 @@ describe('Calculation Pathways Integration', () => {
 
     test('given already complete then does not start calculation', async () => {
       // Given
-      const config = mockEconomyCalcConfig();
+      const config = mockSocietyWideCalcConfig();
       const startCalculationSpy = vi.fn();
 
       // When - Try to start but already complete
@@ -142,7 +142,7 @@ describe('Calculation Pathways Integration', () => {
 
     test('given already computing then does not start calculation', async () => {
       // Given
-      const config = mockEconomyCalcConfig();
+      const config = mockSocietyWideCalcConfig();
       const startCalculationSpy = vi.fn();
 
       // When - Try to start but already computing
@@ -166,7 +166,7 @@ describe('Calculation Pathways Integration', () => {
   describe('Pathway 3: Status Hook Reactivity', () => {
     test('given status changes in cache then hook updates reactively', async () => {
       // Given
-      const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT;
+      const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.SOCIETY_WIDE_REPORT;
       const queryKey = calculationKeys.byReportId(calcId);
 
       const { result } = renderHook(
@@ -191,7 +191,7 @@ describe('Calculation Pathways Integration', () => {
       // When - Update to complete
       queryClient.setQueryData(
         queryKey,
-        mockIntegrationCompleteStatus(calcId, mockEconomyCalcResult())
+        mockIntegrationCompleteStatus(calcId, mockSocietyWideCalcResult())
       );
 
       // Then - Hook should update
@@ -238,7 +238,7 @@ describe('Calculation Pathways Integration', () => {
   describe('Pathway 4: Cache Hydration Priority', () => {
     test('given existing cache entry then does not overwrite with hydration', () => {
       // Given - Existing computing status in cache
-      const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT;
+      const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.SOCIETY_WIDE_REPORT;
       const computingStatus = mockIntegrationComputingStatus(calcId, 75);
       queryClient.setQueryData(calculationKeys.byReportId(calcId), computingStatus);
 
@@ -249,7 +249,7 @@ describe('Calculation Pathways Integration', () => {
         apiVersion: '1.0.0',
         simulationIds: [INTEGRATION_TEST_CONSTANTS.CALC_IDS.SIMULATION_1],
         status: 'complete' as const,
-        output: mockEconomyCalcResult() as any,
+        output: mockSocietyWideCalcResult() as any,
       };
 
       // When - Try to hydrate
@@ -271,7 +271,7 @@ describe('Calculation Pathways Integration', () => {
   describe('Pathway 5: Error Handling', () => {
     test('given calculation error then status hook shows error state', async () => {
       // Given
-      const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT;
+      const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.SOCIETY_WIDE_REPORT;
       const queryKey = calculationKeys.byReportId(calcId);
 
       const { result } = renderHook(
@@ -308,7 +308,7 @@ describe('Calculation Pathways Integration', () => {
     test('given orchestrator cleanup then no memory leaks', () => {
       // Given
       const orchestrator = new CalcOrchestrator(queryClient, new ResultPersister(queryClient));
-      const config = mockEconomyCalcConfig();
+      const config = mockSocietyWideCalcConfig();
 
       // When - Start and cleanup
       orchestrator.startCalculation(config);

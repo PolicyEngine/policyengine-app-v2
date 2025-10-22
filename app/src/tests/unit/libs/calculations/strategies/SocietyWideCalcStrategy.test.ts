@@ -61,7 +61,7 @@ describe('SocietyWideCalcStrategy', () => {
       const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
-      expect(result.status).toBe('computing');
+      expect(result.status).toBe('pending');
       expect(result.queuePosition).toBe(STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION);
       expect(result.estimatedTimeRemaining).toBe(STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_AVERAGE_TIME_MS);
       expect(result.message).toContain(`position ${STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION}`);
@@ -177,7 +177,7 @@ describe('SocietyWideCalcStrategy', () => {
       const result = strategy.transformResponse(apiResponse);
 
       // Then
-      expect(result.status).toBe('computing');
+      expect(result.status).toBe('pending');
       expect(result.queuePosition).toBe(apiResponse.queue_position);
       expect(result.metadata.calcType).toBe('societyWide');
     });

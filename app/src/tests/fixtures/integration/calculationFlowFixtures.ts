@@ -6,7 +6,7 @@ import { CalcStartConfig, CalcStatus } from '@/types/calculation';
 export const INTEGRATION_TEST_CONSTANTS = {
   CALC_IDS: {
     HOUSEHOLD_REPORT: 'test-household-report-123',
-    ECONOMY_REPORT: 'test-economy-report-456',
+    SOCIETY_WIDE_REPORT: 'test-society-wide-report-456',
     SIMULATION_1: 'test-sim-1',
     SIMULATION_2: 'test-sim-2',
   },
@@ -68,9 +68,9 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
 });
 
 /**
- * Create mock economy calculation config
+ * Create mock society-wide calculation config
  */
-export const mockEconomyCalcConfig = (overrides?: Partial<CalcStartConfig>): CalcStartConfig => ({
+export const mockSocietyWideCalcConfig = (overrides?: Partial<CalcStartConfig>): CalcStartConfig => ({
   calcId: INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT,
   targetType: 'report',
   countryId: 'us',
@@ -126,9 +126,9 @@ export const mockHouseholdCalcResult = () => ({
 });
 
 /**
- * Create mock economy calculation result
+ * Create mock society-wide calculation result
  */
-export const mockEconomyCalcResult = () => ({
+export const mockSocietyWideCalcResult = () => ({
   budget: {
     budgetary_impact: 1000000000,
     baseline_net_cost: 500000000,
@@ -203,9 +203,9 @@ export const mockIntegrationErrorStatus = (calcId: string): CalcStatus => ({
 });
 
 /**
- * Mock API response for economy calculation (computing)
+ * Mock API response for society-wide calculation (computing)
  */
-export const mockEconomyAPIComputingResponse = {
+export const mockSocietyWideAPIComputingResponse = {
   status: 'computing',
   queue_position: 2,
   progress: 0.5,
@@ -213,11 +213,11 @@ export const mockEconomyAPIComputingResponse = {
 };
 
 /**
- * Mock API response for economy calculation (complete)
+ * Mock API response for society-wide calculation (complete)
  */
-export const mockEconomyAPICompleteResponse = {
+export const mockSocietyWideAPICompleteResponse = {
   status: 'ok',
-  result: mockEconomyCalcResult(),
+  result: mockSocietyWideCalcResult(),
 };
 
 /**

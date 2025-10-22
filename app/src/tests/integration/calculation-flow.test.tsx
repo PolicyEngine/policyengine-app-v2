@@ -14,7 +14,7 @@ import {
 import {
   mockCalcStatusComputing,
   mockCalcStatusComplete,
-  mockEconomyResult,
+  mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
 import { mockReportMetadata } from '@/tests/fixtures/hooks/reportHooksMocks';
 import { markReportCompleted } from '@/api/report';
@@ -125,7 +125,7 @@ describe('Calculation Flow Integration', () => {
       });
 
       // When - Update to complete status (simulating calculation completion)
-      const result = mockEconomyResult();
+      const result = mockSocietyWideResult();
       const completeStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
@@ -159,7 +159,7 @@ describe('Calculation Flow Integration', () => {
       });
 
       // When - Simulate completion by setting complete status
-      const result = mockEconomyResult();
+      const result = mockSocietyWideResult();
       const completeStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
