@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Group, Loader, Text } from '@mantine/core';
 import {
   BulletsValue,
   ColumnConfig,
@@ -156,13 +157,18 @@ export default function ReportsPage() {
           },
         ],
       } as BulletsValue,
-      outputType: {
-        text: item.isCalculating
-          ? `Computing... ${item.progress ? `${Math.round(item.progress)}%` : ''}`
-          : item.report?.output
-          ? 'Society-wide'
-          : 'Not generated',
-      } as TextValue,
+      outputType: item.isCalculating
+        ? {
+            custom: (
+              <Group gap="xs">
+                <Loader size="sm" color="teal" />
+                <Text size="sm">{item.progress ? `${Math.round(item.progress)}%` : ''}</Text>
+              </Group>
+            ),
+          }
+        : {
+            text: item.report?.output ? 'Society-wide' : 'Not generated',
+          },
     })) || [];
 
   return (
