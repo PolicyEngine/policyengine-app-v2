@@ -13,11 +13,11 @@ import {
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
   TEST_REGIONS,
-} from '@/tests/fixtures/api/economyMocks';
+} from '@/tests/fixtures/api/societyWideMocks';
 
 global.fetch = vi.fn();
 
-describe('economy API', () => {
+describe('societyWide API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -27,7 +27,7 @@ describe('economy API', () => {
   });
 
   describe('fetchSocietyWideCalculation', () => {
-    test('given valid parameters then fetches economy calculation successfully', async () => {
+    test('given valid parameters then fetches society-wide calculation successfully', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;

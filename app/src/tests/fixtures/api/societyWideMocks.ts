@@ -29,9 +29,9 @@ export const HTTP_STATUS = {
 } as const;
 
 export const ERROR_MESSAGES = {
-  CALCULATION_FAILED: (statusText: string) => `Economy calculation failed: ${statusText}`,
+  CALCULATION_FAILED: (statusText: string) => `Society-wide calculation failed: ${statusText}`,
   TIMEOUT:
-    'Economy calculation timed out after 25 minutes, the max length for a Google Cloud economy-wide simulation Workflow',
+    'Society-wide calculation timed out after 25 minutes, the max length for a Google Cloud society-wide simulation Workflow',
   NETWORK_ERROR: 'Network error',
   FAILED_TO_FETCH: 'Failed to fetch',
 } as const;
@@ -227,7 +227,7 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
   wealth_decile: null,
 };
 
-// Computing response (API returns 'computing' for economy calculations)
+// Computing response (API returns 'computing' for society-wide calculations)
 export const mockPendingResponse: SocietyWideCalculationResponse = {
   status: 'computing',
   queue_position: 5,

@@ -24,9 +24,9 @@ export const mockCalcMetadata = (overrides?: Partial<CalcMetadata>): CalcMetadat
 });
 
 /**
- * Mock CalcParams for economy calculation
+ * Mock CalcParams for society-wide calculation
  */
-export const mockEconomyCalcParams = (overrides?: Partial<CalcParams>): CalcParams => ({
+export const mockSocietyWideCalcParams = (overrides?: Partial<CalcParams>): CalcParams => ({
   countryId: 'us',
   calcType: 'societyWide',
   policyIds: {
@@ -54,10 +54,10 @@ export const mockHouseholdCalcParams = (overrides?: Partial<CalcParams>): CalcPa
 });
 
 /**
- * Mock economy calculation result
+ * Mock society-wide calculation result
  * Note: This is a minimal mock for testing - not a complete SocietyWideReportOutput
  */
-export const mockEconomyResult = (): SocietyWideReportOutput =>
+export const mockSocietyWideResult = (): SocietyWideReportOutput =>
   ({
     budget: {
       baseline_net_income: 1000000,
@@ -122,7 +122,7 @@ export const mockComputingCalcStatus = (overrides?: Partial<CalcStatus>): CalcSt
  */
 export const mockCompleteCalcStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
   status: 'complete',
-  result: mockEconomyResult(),
+  result: mockSocietyWideResult(),
   metadata: mockCalcMetadata(),
   ...overrides,
 });

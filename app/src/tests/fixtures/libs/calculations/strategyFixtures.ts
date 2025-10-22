@@ -1,14 +1,14 @@
 import { vi } from 'vitest';
 import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
 import { HouseholdData } from '@/types/ingredients/Household';
-import { mockEconomyResult, mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
+import { mockSocietyWideResult, mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 
 /**
  * Test constants for strategy timing and progress
  */
 export const STRATEGY_TEST_CONSTANTS = {
   // Refetch intervals
-  ECONOMY_REFETCH_INTERVAL_MS: 1000,
+  SOCIETY_WIDE_REFETCH_INTERVAL_MS: 1000,
   HOUSEHOLD_REFETCH_INTERVAL_MS: 500,
 
   // Duration estimates
@@ -22,37 +22,37 @@ export const STRATEGY_TEST_CONSTANTS = {
 
   // Queue and timing
   TEST_QUEUE_POSITION: 3,
-  ECONOMY_AVERAGE_TIME_SECONDS: 45,
-  ECONOMY_AVERAGE_TIME_MS: 45000,
+  SOCIETY_WIDE_AVERAGE_TIME_SECONDS: 45,
+  SOCIETY_WIDE_AVERAGE_TIME_MS: 45000,
 
   // Test timing values
   TEST_PROGRESS_TIME_MS: 30000,
 } as const;
 
 /**
- * Mock economy API response - computing state
+ * Mock society-wide API response - computing state
  */
-export const mockEconomyComputingResponse = (): SocietyWideCalculationResponse => ({
+export const mockSocietyWideComputingResponse = (): SocietyWideCalculationResponse => ({
   status: 'computing',
   queue_position: STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION,
-  average_time: STRATEGY_TEST_CONSTANTS.ECONOMY_AVERAGE_TIME_SECONDS,
+  average_time: STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_AVERAGE_TIME_SECONDS,
   result: null,
 });
 
 /**
- * Mock economy API response - complete state
+ * Mock society-wide API response - complete state
  */
-export const mockEconomyCompleteResponse = (): SocietyWideCalculationResponse => ({
+export const mockSocietyWideCompleteResponse = (): SocietyWideCalculationResponse => ({
   status: 'ok',
-  result: mockEconomyResult(),
+  result: mockSocietyWideResult(),
   queue_position: undefined,
   average_time: undefined,
 });
 
 /**
- * Mock economy API response - error state
+ * Mock society-wide API response - error state
  */
-export const mockEconomyErrorResponse = (): SocietyWideCalculationResponse => ({
+export const mockSocietyWideErrorResponse = (): SocietyWideCalculationResponse => ({
   status: 'error',
   error: 'Calculation failed due to invalid parameters',
   result: null,
@@ -69,7 +69,7 @@ export const mockHouseholdSuccessResponse = (): HouseholdData => mockHouseholdRe
 /**
  * Mock fetch functions
  */
-export const createMockFetchEconomyCalculation = () => {
+export const createMockFetchSocietyWideCalculation = () => {
   return vi.fn();
 };
 

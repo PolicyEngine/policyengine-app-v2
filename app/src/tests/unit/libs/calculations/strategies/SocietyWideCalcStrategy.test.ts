@@ -1,28 +1,28 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
-import { mockEconomyCalcParams } from '@/tests/fixtures/types/calculationFixtures';
+import { mockSocietyWideCalcParams } from '@/tests/fixtures/types/calculationFixtures';
 import {
-  mockEconomyComputingResponse,
-  mockEconomyCompleteResponse,
-  mockEconomyErrorResponse,
+  mockSocietyWideComputingResponse,
+  mockSocietyWideCompleteResponse,
+  mockSocietyWideErrorResponse,
   STRATEGY_TEST_CONSTANTS,
 } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 
-// Mock the economy API
+// Mock the societyWide API
 vi.mock('@/api/societyWideCalculation', () => ({
   fetchSocietyWideCalculation: vi.fn(),
-  EconomyCalculationParams: {},
+  SocietyWideCalculationParams: {},
   SocietyWideCalculationResponse: {},
 }));
 
 describe('SocietyWideCalcStrategy', () => {
   let strategy: SocietyWideCalcStrategy;
-  let mockFetchEconomyCalculation: any;
+  let mockFetchSocietyWideCalculation: any;
 
   beforeEach(async () => {
     strategy = new SocietyWideCalcStrategy();
-    const economyModule = await import('@/api/societyWideCalculation');
-    mockFetchEconomyCalculation = economyModule.fetchSocietyWideCalculation as any;
+    const societyWideModule = await import('@/api/societyWideCalculation');
+    mockFetchSocietyWideCalculation = societyWideModule.fetchSocietyWideCalculation as any;
     vi.clearAllMocks();
   });
 
@@ -33,14 +33,14 @@ describe('SocietyWideCalcStrategy', () => {
   describe('execute', () => {
     it('given valid params then calls API with correct parameters', async () => {
       // Given
-      const params = mockEconomyCalcParams();
-      mockFetchEconomyCalculation.mockResolvedValue(mockEconomyComputingResponse());
+      const params = mockSocietyWideCalcParams();
+      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
 
       // When
       await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
-      expect(mockFetchEconomyCalculation).toHaveBeenCalledWith(
+      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
         params.countryId,
         params.policyIds.reform,
         params.policyIds.baseline,
@@ -53,9 +53,9 @@ describe('SocietyWideCalcStrategy', () => {
 
     it('given computing response then returns computing status', async () => {
       // Given
-      const params = mockEconomyCalcParams();
-      const apiResponse = mockEconomyComputingResponse();
-      mockFetchEconomyCalculation.mockResolvedValue(apiResponse);
+      const params = mockSocietyWideCalcParams();
+      const apiResponse = mockSocietyWideComputingResponse();
+      mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
 
       // When
       const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
@@ -63,15 +63,15 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('computing');
       expect(result.queuePosition).toBe(STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION);
-      expect(result.estimatedTimeRemaining).toBe(STRATEGY_TEST_CONSTANTS.ECONOMY_AVERAGE_TIME_MS);
+      expect(result.estimatedTimeRemaining).toBe(STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_AVERAGE_TIME_MS);
       expect(result.message).toContain(`position ${STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION}`);
     });
 
     it('given complete response then returns complete status', async () => {
       // Given
-      const params = mockEconomyCalcParams();
-      const apiResponse = mockEconomyCompleteResponse();
-      mockFetchEconomyCalculation.mockResolvedValue(apiResponse);
+      const params = mockSocietyWideCalcParams();
+      const apiResponse = mockSocietyWideCompleteResponse();
+      mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
 
       // When
       const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
@@ -84,9 +84,9 @@ describe('SocietyWideCalcStrategy', () => {
 
     it('given error response then returns error status', async () => {
       // Given
-      const params = mockEconomyCalcParams();
-      const apiResponse = mockEconomyErrorResponse();
-      mockFetchEconomyCalculation.mockResolvedValue(apiResponse);
+      const params = mockSocietyWideCalcParams();
+      const apiResponse = mockSocietyWideErrorResponse();
+      mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
 
       // When
       const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
@@ -94,20 +94,20 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('error');
       expect(result.error).toBeDefined();
-      expect(result.error?.code).toBe('ECONOMY_CALC_ERROR');
+      expect(result.error?.code).toBe('SOCIETY_WIDE_CALC_ERROR');
       expect(result.error?.retryable).toBe(true);
     });
 
     it('given no region then uses countryId as region', async () => {
       // Given
-      const params = mockEconomyCalcParams({ region: undefined });
-      mockFetchEconomyCalculation.mockResolvedValue(mockEconomyComputingResponse());
+      const params = mockSocietyWideCalcParams({ region: undefined });
+      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
 
       // When
       await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
 
       // Then
-      expect(mockFetchEconomyCalculation).toHaveBeenCalledWith(
+      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
         params.countryId,
         expect.any(String),
         expect.any(String),
@@ -145,7 +145,7 @@ describe('SocietyWideCalcStrategy', () => {
           : config.refetchInterval;
 
       // Then
-      expect(interval).toBe(STRATEGY_TEST_CONSTANTS.ECONOMY_REFETCH_INTERVAL_MS);
+      expect(interval).toBe(STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_REFETCH_INTERVAL_MS);
     });
 
     it('given complete status then refetch interval is false', () => {
@@ -171,7 +171,7 @@ describe('SocietyWideCalcStrategy', () => {
   describe('transformResponse', () => {
     it('given computing response then transforms to CalcStatus correctly', () => {
       // Given
-      const apiResponse = mockEconomyComputingResponse();
+      const apiResponse = mockSocietyWideComputingResponse();
 
       // When
       const result = strategy.transformResponse(apiResponse);
@@ -184,7 +184,7 @@ describe('SocietyWideCalcStrategy', () => {
 
     it('given complete response then transforms to CalcStatus correctly', () => {
       // Given
-      const apiResponse = mockEconomyCompleteResponse();
+      const apiResponse = mockSocietyWideCompleteResponse();
 
       // When
       const result = strategy.transformResponse(apiResponse);
@@ -196,7 +196,7 @@ describe('SocietyWideCalcStrategy', () => {
 
     it('given error response then transforms to CalcStatus correctly', () => {
       // Given
-      const apiResponse = mockEconomyErrorResponse();
+      const apiResponse = mockSocietyWideErrorResponse();
 
       // When
       const result = strategy.transformResponse(apiResponse);
