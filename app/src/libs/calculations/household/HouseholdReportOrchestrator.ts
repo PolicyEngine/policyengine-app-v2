@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 import { HouseholdSimCalculator } from './HouseholdSimCalculator';
+import { HouseholdProgressCoordinator } from './HouseholdProgressCoordinator';
 import { buildHouseholdReportOutput } from './householdReportUtils';
 import { simulationKeys, reportKeys } from '@/libs/queryKeys';
 import { updateSimulationOutput, markSimulationError } from '@/api/simulation';
@@ -30,11 +31,13 @@ export class HouseholdReportOrchestrator {
   private queryClient: QueryClient;
   private activeCalculations: Set<string>; // Track which simulations are running
   private simulationResults: Map<string, Map<string, HouseholdData>>; // reportId -> (simId -> result)
+  private progressCoordinators: Map<string, { coordinator: HouseholdProgressCoordinator; timer: NodeJS.Timeout }>; // reportId -> coordinator
 
   private constructor(queryClient: QueryClient) {
     this.queryClient = queryClient;
     this.activeCalculations = new Set();
     this.simulationResults = new Map();
+    this.progressCoordinators = new Map();
   }
 
   /**
@@ -62,9 +65,21 @@ export class HouseholdReportOrchestrator {
     // Initialize results map for this report
     this.simulationResults.set(reportId, new Map());
 
+    // Create progress coordinator for this report
+    const simulationIds = simulationConfigs.map(sc => sc.simulationId);
+    const progressCoordinator = new HouseholdProgressCoordinator(
+      this.queryClient,
+      reportId,
+      simulationIds
+    );
+
+    // Start progress timer
+    const progressTimer = progressCoordinator.startProgressTimer();
+    this.progressCoordinators.set(reportId, { coordinator: progressCoordinator, timer: progressTimer });
+
     // Start each simulation in parallel
     const promises = simulationConfigs.map((simConfig) =>
-      this.startSimulation(reportId, simConfig, countryId)
+      this.startSimulation(reportId, simConfig, countryId, progressCoordinator)
     );
 
     // Don't await - let them run in background
@@ -93,7 +108,8 @@ export class HouseholdReportOrchestrator {
   private async startSimulation(
     reportId: string,
     simConfig: SimulationConfig,
-    countryId: string
+    countryId: string,
+    progressCoordinator: HouseholdProgressCoordinator
   ): Promise<void> {
     const { simulationId, populationId, policyId } = simConfig;
     const timestamp = Date.now();
@@ -107,6 +123,9 @@ export class HouseholdReportOrchestrator {
     this.activeCalculations.add(simulationId);
 
     console.log(`[HouseholdReportOrchestrator][${timestamp}] Starting simulation ${simulationId}`);
+
+    // Notify progress coordinator that this simulation is starting
+    progressCoordinator.startSimulation(simulationId);
 
     // Create calculator for this simulation
     const calculator = new HouseholdSimCalculator(this.queryClient, simulationId, reportId);
@@ -129,12 +148,18 @@ export class HouseholdReportOrchestrator {
         reportResults.set(simulationId, result as HouseholdData);
       }
 
+      // Notify progress coordinator that this simulation completed
+      progressCoordinator.completeSimulation(simulationId);
+
       // Persist result to simulation.output
       await this.persistSimulation(countryId, simulationId, result);
 
       console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} persisted to database`);
     } catch (error) {
       console.error(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} failed:`, error);
+
+      // Notify progress coordinator that this simulation failed
+      progressCoordinator.failSimulation(simulationId);
 
       // Mark simulation as error in database (persistent status)
       try {
@@ -254,6 +279,13 @@ export class HouseholdReportOrchestrator {
 
       // Clean up stored results
       this.simulationResults.delete(reportId);
+
+      // Clean up progress coordinator
+      const coordinatorData = this.progressCoordinators.get(reportId);
+      if (coordinatorData) {
+        coordinatorData.coordinator.cleanup(coordinatorData.timer);
+        this.progressCoordinators.delete(reportId);
+      }
     } catch (error) {
       console.error(`[HouseholdReportOrchestrator][${timestamp}] Failed to mark report complete:`, error);
     }
@@ -283,6 +315,13 @@ export class HouseholdReportOrchestrator {
 
       // Clean up stored results
       this.simulationResults.delete(reportId);
+
+      // Clean up progress coordinator
+      const coordinatorData = this.progressCoordinators.get(reportId);
+      if (coordinatorData) {
+        coordinatorData.coordinator.cleanup(coordinatorData.timer);
+        this.progressCoordinators.delete(reportId);
+      }
     } catch (error) {
       console.error(`[HouseholdReportOrchestrator][${timestamp}] Failed to mark report error:`, error);
     }

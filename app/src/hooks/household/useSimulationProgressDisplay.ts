@@ -31,11 +31,11 @@ export function useSimulationProgressDisplay(simulationIds: string[]) {
       return { displayProgress: 0, hasCalcStatus: false };
     }
 
-    // Calculate average progress across all simulations
-    const progresses = validStatuses.map((s) => s.progress || 0);
-    const avgProgress = progresses.reduce((sum, p) => sum + p, 0) / progresses.length;
+    // All simulations share the same overall progress (set by HouseholdProgressCoordinator)
+    // Just return the progress from the first valid status
+    const progress = validStatuses[0]?.progress || 0;
 
-    return { displayProgress: avgProgress, hasCalcStatus: true };
+    return { displayProgress: progress, hasCalcStatus: true };
   }, [statuses]);
 
   return { displayProgress, hasCalcStatus };

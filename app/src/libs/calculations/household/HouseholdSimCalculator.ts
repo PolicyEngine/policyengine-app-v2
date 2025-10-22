@@ -5,22 +5,23 @@ import type { CalcStatus } from '@/types/calculation';
 
 /**
  * Executes a single household simulation calculation
- * Provides simulated front-end progress updates during long-running API call
  *
- * WHY THIS EXISTS:
- * Household calculations are synchronous 30-45s blocking API calls.
- * We can't actually poll for progress (no server-side queue).
- * Instead, we simulate smooth progress on the front-end to show users something is happening.
+ * SIMPLIFIED: No progress tracking logic
+ * Progress is handled by HouseholdProgressCoordinator at the report level
+ *
+ * This class only:
+ * - Makes the blocking API call
+ * - Updates CalcStatus with pending/complete/error states
+ * - Returns the result
  *
  * USAGE:
  * Created by HouseholdReportOrchestrator for each simulation in a report.
- * Runs independently in the background.
+ * Runs independently in parallel via Promise.all()
  */
 export class HouseholdSimCalculator {
   private queryClient: QueryClient;
   private simulationId: string;
   private reportId: string;
-  private progressTimer: NodeJS.Timeout | null = null;
 
   constructor(queryClient: QueryClient, simulationId: string, reportId: string) {
     this.queryClient = queryClient;
@@ -29,7 +30,8 @@ export class HouseholdSimCalculator {
   }
 
   /**
-   * Execute the calculation with simulated front-end progress
+   * Execute the calculation
+   * Progress tracking is handled by HouseholdProgressCoordinator
    */
   async execute(params: {
     countryId: string;
@@ -41,11 +43,10 @@ export class HouseholdSimCalculator {
 
     console.log(`[HouseholdSimCalculator][${timestamp}] Starting calculation for simulation ${this.simulationId}`);
 
-    // Set initial pending status (matches API status value)
+    // Set initial pending status (no progress field - coordinator handles it)
     const initialStatus: CalcStatus = {
       status: 'pending',
-      message: 'Starting household calculation...',
-      progress: 0,
+      message: 'Starting calculation...',
       metadata: {
         calcId: this.simulationId,
         calcType: 'household',
@@ -58,13 +59,10 @@ export class HouseholdSimCalculator {
     this.queryClient.setQueryData(calcKey, initialStatus);
     console.log(`[HouseholdSimCalculator][${timestamp}] Set pending status in cache`);
 
-    // Start simulated progress updates
-    this.startProgressSimulation(calcKey);
-
     try {
       console.log(`[HouseholdSimCalculator][${timestamp}] Calling fetchHouseholdCalculation API`);
 
-      // Execute the LONG-RUNNING API call (30-45s)
+      // Execute the LONG-RUNNING API call (30-50s)
       // This blocks but that's OK - runs in background Promise
       const result = await fetchHouseholdCalculation(
         params.countryId,
@@ -74,14 +72,11 @@ export class HouseholdSimCalculator {
 
       console.log(`[HouseholdSimCalculator][${timestamp}] API call completed successfully`);
 
-      // Stop progress simulation
-      this.stopProgressSimulation();
-
       // Set final complete status
       const completeStatus: CalcStatus = {
         status: 'complete',
         result,
-        progress: 100,
+        message: 'Complete',
         metadata: {
           calcId: this.simulationId,
           calcType: 'household',
@@ -98,10 +93,9 @@ export class HouseholdSimCalculator {
     } catch (error) {
       console.error(`[HouseholdSimCalculator][${timestamp}] API call failed:`, error);
 
-      this.stopProgressSimulation();
-
       const errorStatus: CalcStatus = {
         status: 'error',
+        message: 'Calculation failed',
         error: {
           code: 'HOUSEHOLD_CALC_FAILED',
           message: error instanceof Error ? error.message : 'Unknown error',
@@ -121,53 +115,5 @@ export class HouseholdSimCalculator {
 
       throw error;
     }
-  }
-
-  /**
-   * Simulate progress on the front-end during API call
-   * Creates smooth, believable progress bar
-   */
-  private startProgressSimulation(calcKey: readonly string[]): void {
-    const startTime = Date.now();
-    const estimatedDuration = 37500; // 37.5s average (30-45s range)
-
-    this.progressTimer = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-
-      // Asymptotic progress: fast at start, slower near end
-      // Never reaches 100% (that happens when API actually completes)
-      const rawProgress = (elapsed / estimatedDuration) * 100;
-      const progress = Math.min(95, rawProgress * (1 - rawProgress / 200));
-
-      const currentStatus = this.queryClient.getQueryData<CalcStatus>(calcKey);
-
-      if (currentStatus?.status === 'pending') {
-        this.queryClient.setQueryData(calcKey, {
-          ...currentStatus,
-          progress,
-          message: this.getProgressMessage(progress),
-        });
-      }
-    }, 100); // Update every 100ms for smooth animation
-  }
-
-  /**
-   * Stop progress simulation
-   */
-  private stopProgressSimulation(): void {
-    if (this.progressTimer) {
-      clearInterval(this.progressTimer);
-      this.progressTimer = null;
-    }
-  }
-
-  /**
-   * Get human-friendly message for current progress
-   */
-  private getProgressMessage(progress: number): string {
-    if (progress < 20) return 'Initializing calculation...';
-    if (progress < 50) return 'Running household simulation...';
-    if (progress < 80) return 'Computing policy impacts...';
-    return 'Finalizing results...';
   }
 }
