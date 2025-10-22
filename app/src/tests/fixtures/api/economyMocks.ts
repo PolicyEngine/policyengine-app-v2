@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { EconomyCalculationResponse } from '@/api/economy';
+import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
 // Test IDs and constants
@@ -228,7 +228,7 @@ export const mockUSReportOutput: ReportOutputSocietyWideUS = {
 };
 
 // Computing response (API returns 'computing' for economy calculations)
-export const mockPendingResponse: EconomyCalculationResponse = {
+export const mockPendingResponse: SocietyWideCalculationResponse = {
   status: 'computing',
   queue_position: 5,
   average_time: 120,
@@ -236,13 +236,13 @@ export const mockPendingResponse: EconomyCalculationResponse = {
 };
 
 // Completed response
-export const mockCompletedResponse: EconomyCalculationResponse = {
+export const mockCompletedResponse: SocietyWideCalculationResponse = {
   status: 'ok',
   result: mockUSReportOutput,
 };
 
 // Error response
-export const mockErrorCalculationResponse: EconomyCalculationResponse = {
+export const mockErrorCalculationResponse: SocietyWideCalculationResponse = {
   status: 'error',
   result: null,
   error: 'Calculation failed due to invalid parameters',

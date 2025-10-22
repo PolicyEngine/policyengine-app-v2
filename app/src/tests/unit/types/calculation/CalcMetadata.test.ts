@@ -12,10 +12,10 @@ describe('CalcMetadata types', () => {
   });
 
   it('should include calcType', () => {
-    const economyMeta = mockCalcMetadata({ calcType: 'economy' });
+    const economyMeta = mockCalcMetadata({ calcType: 'societyWide' });
     const householdMeta = mockCalcMetadata({ calcType: 'household' });
 
-    expect(economyMeta.calcType).toBe('economy');
+    expect(economyMeta.calcType).toBe('societyWide');
     expect(householdMeta.calcType).toBe('household');
   });
 
@@ -59,8 +59,8 @@ describe('CalcMetadata types', () => {
 
   describe('calcType field', () => {
     it('should distinguish economy calculations', () => {
-      const metadata = mockCalcMetadata({ calcType: 'economy' });
-      expect(metadata.calcType).toBe('economy');
+      const metadata = mockCalcMetadata({ calcType: 'societyWide' });
+      expect(metadata.calcType).toBe('societyWide');
     });
 
     it('should distinguish household calculations', () => {

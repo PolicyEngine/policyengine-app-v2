@@ -1,2 +1,1 @@
-export { EconomyResultPersister } from './EconomyResultPersister';
-export { EconomyCalcStrategy } from './EconomyCalcStrategy';
+export { SocietyWideCalcStrategy } from './SocietyWideCalcStrategy';

@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { countryIds } from '@/libs/countries';
-import { EconomyCalculationParams, fetchEconomyCalculation } from './economy';
+import { SocietyWideCalculationParams, fetchSocietyWideCalculation } from './societyWideCalculation';
 import { fetchHouseholdCalculation } from './householdCalculation';
 
 /**
@@ -46,25 +46,25 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
     console.log(
       `[fetchCalculationWithMeta] Temporarily using ${CURRENT_YEAR} as time_period for economy calculation`
     );
-    const params: EconomyCalculationParams = {
+    const params: SocietyWideCalculationParams = {
       region: meta.region || meta.countryId,
       time_period: CURRENT_YEAR,
     };
 
-    console.log('[fetchCalculationWithMeta] Economy calculation params:');
+    console.log('[fetchCalculationWithMeta] Society-wide calculation params:');
     console.log('  - countryId:', meta.countryId);
     console.log('  - reformPolicyId:', meta.policyIds.reform || meta.policyIds.baseline);
     console.log('  - baselinePolicyId:', meta.policyIds.baseline);
     console.log('  - params:', JSON.stringify(params, null, 2));
 
     try {
-      const result = await fetchEconomyCalculation(
+      const result = await fetchSocietyWideCalculation(
         meta.countryId,
         meta.policyIds.reform || meta.policyIds.baseline,
         meta.policyIds.baseline,
         params
       );
-      console.log('[fetchCalculationWithMeta] Economy calculation result:');
+      console.log('[fetchCalculationWithMeta] Society-wide calculation result:');
       console.log('  - status:', result?.status);
       console.log('  - has result?', !!result?.result);
       console.log('  - queue_position:', result?.queue_position);
@@ -73,7 +73,7 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
       console.log('  - full result:', result);
       return result;
     } catch (error) {
-      console.error('[fetchCalculationWithMeta] Economy calculation failed:', error);
+      console.error('[fetchCalculationWithMeta] Society-wide calculation failed:', error);
       throw error;
     }
   }

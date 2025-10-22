@@ -14,7 +14,7 @@ interface UseHydrateCalculationCacheParams {
   /**
    * The output type (determines calcType in metadata)
    */
-  outputType: 'economy' | 'household' | undefined;
+  outputType: 'societyWide' | 'household' | undefined;
 }
 
 /**
@@ -126,8 +126,8 @@ export function useHydrateCalculationCache({
 
       console.log(`[useHydrateCache][${timestamp}] ✓ Household simulation caches hydrated`);
     } else {
-      // ECONOMY: Hydrate report-level cache (existing behavior)
-      console.log('[useHydrateCache] ECONOMY: Hydrating report-level cache');
+      // SOCIETY-WIDE: Hydrate report-level cache (existing behavior)
+      console.log('[useHydrateCache] SOCIETY-WIDE: Hydrating report-level cache');
 
       if (!report?.output) {
         console.log(`[useHydrateCache][${timestamp}] SKIP: No report.output`);
@@ -151,7 +151,7 @@ export function useHydrateCalculationCache({
         result: report.output as any,
         metadata: {
           calcId: currentReportId,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },

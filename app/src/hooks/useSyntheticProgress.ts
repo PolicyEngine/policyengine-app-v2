@@ -20,12 +20,12 @@ interface SyntheticProgress {
  * Configuration constants for synthetic progress
  */
 const SYNTHETIC_PROGRESS_CONFIG = {
-  HOUSEHOLD_DURATION_MS: 45000, // 45 seconds
-  ECONOMY_DURATION_MS: 720000,  // 12 minutes
-  UPDATE_INTERVAL_MS: 500,      // Update every 500ms
-  MAX_PROGRESS: 95,             // Cap at 95% (never show 100% until actually complete)
-  SERVER_WEIGHT: 0.7,           // 70% server data when blending
-  SYNTHETIC_WEIGHT: 0.3,        // 30% synthetic when blending
+  HOUSEHOLD_DURATION_MS: 45000,     // 45 seconds
+  SOCIETY_WIDE_DURATION_MS: 720000, // 12 minutes
+  UPDATE_INTERVAL_MS: 500,          // Update every 500ms
+  MAX_PROGRESS: 95,                 // Cap at 95% (never show 100% until actually complete)
+  SERVER_WEIGHT: 0.7,               // 70% server data when blending
+  SYNTHETIC_WEIGHT: 0.3,            // 30% synthetic when blending
 } as const;
 
 /**
@@ -33,7 +33,7 @@ const SYNTHETIC_PROGRESS_CONFIG = {
  */
 function getProgressMessage(
   progress: number,
-  calcType: 'household' | 'economy',
+  calcType: 'household' | 'societyWide',
   serverProgress?: ServerProgress
 ): string {
   // If in queue, show queue message
@@ -50,13 +50,13 @@ function getProgressMessage(
     return 'Finalizing results...';
   }
 
-  // Economy-specific messages
-  if (progress < 10) return 'Initializing economy-wide calculation...';
+  // Society-wide specific messages
+  if (progress < 10) return 'Initializing society-wide calculation...';
   if (progress < 25) return 'Loading population data...';
   if (progress < 50) return 'Simulating baseline scenario...';
   if (progress < 75) return 'Simulating reform scenario...';
   if (progress < 90) return 'Computing distributional impacts...';
-  return 'Finalizing economy-wide results...';
+  return 'Finalizing society-wide results...';
 }
 
 /**
@@ -66,11 +66,11 @@ function getProgressMessage(
  * Provides smooth progress feedback without API polling.
  *
  * For household calculations: Pure time-based synthetic progress
- * For economy calculations: Blends server data with synthetic smoothing
+ * For society-wide calculations: Blends server data with synthetic smoothing
  *
  * @param isActive - Whether to run synthetic progress (true while loading/computing)
  * @param calcType - Type of calculation (affects duration estimate and messages)
- * @param serverProgress - Optional server-provided progress data (for economy calcs)
+ * @param serverProgress - Optional server-provided progress data (for society-wide calcs)
  * @returns Synthetic progress object with progress percentage and message
  *
  * @example
@@ -78,16 +78,16 @@ function getProgressMessage(
  * const synthetic = useSyntheticProgress(isLoading, 'household');
  *
  * @example
- * // Economy calculation (blended with server data)
+ * // Society-wide calculation (blended with server data)
  * const synthetic = useSyntheticProgress(
  *   isPending,
- *   'economy',
+ *   'societyWide',
  *   { queuePosition: 3, estimatedTimeRemaining: 120000 }
  * );
  */
 export function useSyntheticProgress(
   isActive: boolean,
-  calcType: 'household' | 'economy',
+  calcType: 'household' | 'societyWide',
   serverProgress?: ServerProgress
 ): SyntheticProgress {
   const [synthetic, setSynthetic] = useState<SyntheticProgress>({
@@ -104,7 +104,7 @@ export function useSyntheticProgress(
     const startTime = Date.now();
     const estimatedDuration = calcType === 'household'
       ? SYNTHETIC_PROGRESS_CONFIG.HOUSEHOLD_DURATION_MS
-      : SYNTHETIC_PROGRESS_CONFIG.ECONOMY_DURATION_MS;
+      : SYNTHETIC_PROGRESS_CONFIG.SOCIETY_WIDE_DURATION_MS;
 
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
@@ -119,7 +119,7 @@ export function useSyntheticProgress(
           SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
         );
       } else {
-        // For economy: blend server data with synthetic smoothing
+        // For society-wide: blend server data with synthetic smoothing
         if (serverProgress?.estimatedTimeRemaining) {
           // Use server's estimate, but smooth it with synthetic progress
           const serverProgressPct = 100 - ((serverProgress.estimatedTimeRemaining / estimatedDuration) * 100);

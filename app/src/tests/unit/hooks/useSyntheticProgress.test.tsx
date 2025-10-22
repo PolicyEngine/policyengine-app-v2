@@ -135,7 +135,7 @@ describe('useSyntheticProgress', () => {
     it('given no server data then uses pure synthetic progress', () => {
       // Given
       const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'economy')
+        useSyntheticProgress(true, 'societyWide')
       );
 
       // When - advance 2 minutes (16.67% of 12 minute duration)
@@ -157,7 +157,7 @@ describe('useSyntheticProgress', () => {
       const { result } = renderHook(() =>
         useSyntheticProgress(
           true,
-          'economy',
+          'societyWide',
           createServerProgress({ queuePosition: SYNTHETIC_PROGRESS_TEST_CONSTANTS.QUEUE.POSITION_3 })
         )
       );
@@ -184,7 +184,7 @@ describe('useSyntheticProgress', () => {
       const { result } = renderHook(() =>
         useSyntheticProgress(
           true,
-          'economy',
+          'societyWide',
           createServerProgress({
             estimatedTimeRemaining: SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.SERVER_ESTIMATE_6_MIN_REMAINING,
           })
@@ -210,7 +210,7 @@ describe('useSyntheticProgress', () => {
     it('given progress under 10% then shows initializing message', () => {
       // Given
       const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'economy')
+        useSyntheticProgress(true, 'societyWide')
       );
 
       // When - advance 30 seconds (0.69% of duration)
@@ -229,7 +229,7 @@ describe('useSyntheticProgress', () => {
       const { result } = renderHook(() =>
         useSyntheticProgress(
           true,
-          'economy',
+          'societyWide',
           createServerProgress({
             estimatedTimeRemaining: SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.SERVER_ESTIMATE_3_MIN_REMAINING,
           })
@@ -250,12 +250,12 @@ describe('useSyntheticProgress', () => {
     it('given full duration then caps at max progress', () => {
       // Given
       const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'economy')
+        useSyntheticProgress(true, 'societyWide')
       );
 
       // When - advance 12 minutes
       act(() => {
-        vi.advanceTimersByTime(SYNTHETIC_PROGRESS_TEST_CONSTANTS.CONFIG.ECONOMY_DURATION_MS);
+        vi.advanceTimersByTime(SYNTHETIC_PROGRESS_TEST_CONSTANTS.CONFIG.SOCIETY_WIDE_DURATION_MS);
       });
 
       // Then
@@ -294,7 +294,7 @@ describe('useSyntheticProgress', () => {
 
     it('given economy at 30% then returns baseline scenario message', () => {
       // When
-      const message = getProgressMessage(30, 'economy');
+      const message = getProgressMessage(30, 'societyWide');
 
       // Then
       expect(message).toBe(SYNTHETIC_PROGRESS_TEST_CONSTANTS.MESSAGES.ECONOMY.AT_30_PERCENT);
@@ -302,7 +302,7 @@ describe('useSyntheticProgress', () => {
 
     it('given economy at 85% then returns distributional impacts message', () => {
       // When
-      const message = getProgressMessage(85, 'economy');
+      const message = getProgressMessage(85, 'societyWide');
 
       // Then
       expect(message).toBe(SYNTHETIC_PROGRESS_TEST_CONSTANTS.MESSAGES.ECONOMY.AT_85_PERCENT);

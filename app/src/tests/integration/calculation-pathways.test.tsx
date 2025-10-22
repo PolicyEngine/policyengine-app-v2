@@ -58,7 +58,7 @@ describe('Calculation Pathways Integration', () => {
 
       // When - Hydrate cache
       renderHook(
-        () => useHydrateCalculationCache({ report: mockReport, outputType: 'economy' }),
+        () => useHydrateCalculationCache({ report: mockReport, outputType: 'societyWide' }),
         { wrapper }
       );
 
@@ -87,7 +87,7 @@ describe('Calculation Pathways Integration', () => {
 
       // When - Try to hydrate cache
       renderHook(
-        () => useHydrateCalculationCache({ report: mockReport, outputType: 'economy' }),
+        () => useHydrateCalculationCache({ report: mockReport, outputType: 'societyWide' }),
         { wrapper }
       );
 
@@ -254,7 +254,7 @@ describe('Calculation Pathways Integration', () => {
 
       // When - Try to hydrate
       renderHook(
-        () => useHydrateCalculationCache({ report: mockReport, outputType: 'economy' }),
+        () => useHydrateCalculationCache({ report: mockReport, outputType: 'societyWide' }),
         { wrapper }
       );
 
@@ -289,7 +289,7 @@ describe('Calculation Pathways Integration', () => {
         },
         metadata: {
           calcId,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },

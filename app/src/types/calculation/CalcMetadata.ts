@@ -11,7 +11,7 @@ export interface CalcMetadata {
   /**
    * The type of calculation being performed
    */
-  calcType: 'economy' | 'household';
+  calcType: 'societyWide' | 'household';
 
   /**
    * Where the calculation result should be saved

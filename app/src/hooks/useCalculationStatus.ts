@@ -48,7 +48,7 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
       metadata: {
         calcId,
         targetType,
-        calcType: 'economy' as const,
+        calcType: 'societyWide' as const,
         startedAt: Date.now(),
       },
     };

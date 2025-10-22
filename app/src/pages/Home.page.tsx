@@ -48,7 +48,7 @@ export default function HomePage() {
         Show Report View
       </Button>
       <Button variant="default" onClick={() => navigate('/us/report-output-demo')}>
-        View Economy Report Output (Demo)
+        View Society-Wide Report Output (Demo)
       </Button>
       <Button variant="default" onClick={() => navigate('/us/household-output-demo')}>
         View Household Report Output (Demo)

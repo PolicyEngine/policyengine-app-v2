@@ -29,7 +29,7 @@ vi.mock('@/hooks/useSyntheticProgress', () => ({
   getProgressMessage: vi.fn(),
   SYNTHETIC_PROGRESS_CONFIG: {
     HOUSEHOLD_DURATION_MS: 45000,
-    ECONOMY_DURATION_MS: 720000,
+    SOCIETY_WIDE_DURATION_MS: 720000,
     UPDATE_INTERVAL_MS: 500,
     MAX_PROGRESS: 95,
     SERVER_WEIGHT: 0.7,
@@ -72,7 +72,7 @@ describe('useCalculationStatus', () => {
       const calcStatus = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -108,7 +108,7 @@ describe('useCalculationStatus', () => {
       const calcStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -139,7 +139,7 @@ describe('useCalculationStatus', () => {
       const calcStatus = mockCalcStatusError({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -172,7 +172,7 @@ describe('useCalculationStatus', () => {
       const calcStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -228,7 +228,7 @@ describe('useCalculationStatus', () => {
       const computingStatus = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -251,7 +251,7 @@ describe('useCalculationStatus', () => {
       const completeStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -304,7 +304,7 @@ describe('useCalculationStatus', () => {
       const calcStatus = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -365,7 +365,7 @@ describe('useCalculationStatus', () => {
       const calcStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },

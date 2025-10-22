@@ -13,7 +13,7 @@ export interface CalcParams {
   /**
    * The type of calculation to perform
    */
-  calcType: 'economy' | 'household';
+  calcType: 'societyWide' | 'household';
 
   /**
    * Policy IDs for the calculation
@@ -35,8 +35,8 @@ export interface CalcParams {
   populationId: string;
 
   /**
-   * Region for economy calculations (optional)
-   * Used for subnational economy calculations
+   * Region for society-wide calculations (optional)
+   * Used for subnational society-wide calculations
    */
   region?: string;
 

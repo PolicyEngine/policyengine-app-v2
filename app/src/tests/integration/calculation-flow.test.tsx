@@ -30,8 +30,8 @@ vi.mock('@/api/simulation', () => ({
   markSimulationError: vi.fn(),
 }));
 
-vi.mock('@/api/economy', () => ({
-  fetchEconomyCalculation: vi.fn(),
+vi.mock('@/api/societyWideCalculation', () => ({
+  fetchSocietyWideCalculation: vi.fn(),
 }));
 
 /**
@@ -78,7 +78,7 @@ describe('Calculation Flow Integration', () => {
       const computingStatus = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -110,7 +110,7 @@ describe('Calculation Flow Integration', () => {
       const computingStatus = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -129,7 +129,7 @@ describe('Calculation Flow Integration', () => {
       const completeStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -163,7 +163,7 @@ describe('Calculation Flow Integration', () => {
       const completeStatus = mockCalcStatusComplete({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -203,7 +203,7 @@ describe('Calculation Flow Integration', () => {
       const computingStatus = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -239,7 +239,7 @@ describe('Calculation Flow Integration', () => {
         },
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -277,7 +277,7 @@ describe('Calculation Flow Integration', () => {
       const computing = mockCalcStatusComputing({
         metadata: {
           calcId: reportId1,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -321,7 +321,7 @@ describe('Calculation Flow Integration', () => {
       const computing = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },

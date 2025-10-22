@@ -263,7 +263,7 @@ export class CalcOrchestrator {
    */
   private buildMetadata(config: CalcStartConfig): CalcMetadata {
     const populationType = config.simulations.simulation1.populationType || 'geography';
-    const calcType = populationType === 'household' ? 'household' : 'economy';
+    const calcType = populationType === 'household' ? 'household' : 'societyWide';
 
     return {
       calcId: config.calcId,
@@ -294,7 +294,7 @@ export class CalcOrchestrator {
       region = geography?.geographyId || config.countryId;
     }
 
-    const calcType = populationType === 'household' ? 'household' : 'economy';
+    const calcType = populationType === 'household' ? 'household' : 'societyWide';
 
     return {
       countryId: config.countryId as any,

@@ -1,5 +1,5 @@
 import { CalcError, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
-import { EconomyReportOutput } from '@/api/economy';
+import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HouseholdData } from '@/types/ingredients/Household';
 
 /**
@@ -17,7 +17,7 @@ export const mockCalcError = (overrides?: Partial<CalcError>): CalcError => ({
  */
 export const mockCalcMetadata = (overrides?: Partial<CalcMetadata>): CalcMetadata => ({
   calcId: 'test-calc-id',
-  calcType: 'economy',
+  calcType: 'societyWide',
   targetType: 'report',
   startedAt: Date.now(),
   ...overrides,
@@ -28,7 +28,7 @@ export const mockCalcMetadata = (overrides?: Partial<CalcMetadata>): CalcMetadat
  */
 export const mockEconomyCalcParams = (overrides?: Partial<CalcParams>): CalcParams => ({
   countryId: 'us',
-  calcType: 'economy',
+  calcType: 'societyWide',
   policyIds: {
     baseline: '1',
     reform: '2',
@@ -55,9 +55,9 @@ export const mockHouseholdCalcParams = (overrides?: Partial<CalcParams>): CalcPa
 
 /**
  * Mock economy calculation result
- * Note: This is a minimal mock for testing - not a complete EconomyReportOutput
+ * Note: This is a minimal mock for testing - not a complete SocietyWideReportOutput
  */
-export const mockEconomyResult = (): EconomyReportOutput =>
+export const mockEconomyResult = (): SocietyWideReportOutput =>
   ({
     budget: {
       baseline_net_income: 1000000,
@@ -77,7 +77,7 @@ export const mockEconomyResult = (): EconomyReportOutput =>
     },
     poverty_by_race: null,
     data_version: '2024.1.0',
-  }) as any as EconomyReportOutput;
+  }) as any as SocietyWideReportOutput;
 
 /**
  * Mock household calculation result

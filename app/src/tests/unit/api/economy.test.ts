@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchEconomyCalculation } from '@/api/economy';
+import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   ERROR_MESSAGES,
@@ -26,7 +26,7 @@ describe('economy API', () => {
     vi.restoreAllMocks();
   });
 
-  describe('fetchEconomyCalculation', () => {
+  describe('fetchSocietyWideCalculation', () => {
     test('given valid parameters then fetches economy calculation successfully', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
@@ -37,7 +37,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(
+      const result = await fetchSocietyWideCalculation(
         countryId,
         reformPolicyId,
         baselinePolicyId,
@@ -66,7 +66,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await fetchEconomyCalculation(
+      const result = await fetchSocietyWideCalculation(
         countryId,
         reformPolicyId,
         baselinePolicyId,
@@ -95,7 +95,7 @@ describe('economy API', () => {
 
       // When
       const params = { region: 'us', time_period: CURRENT_YEAR };
-      const result = await fetchEconomyCalculation(
+      const result = await fetchSocietyWideCalculation(
         countryId,
         reformPolicyId,
         baselinePolicyId,
@@ -119,7 +119,7 @@ describe('economy API', () => {
 
       // When
       const params = { region: 'us', time_period: CURRENT_YEAR };
-      const result = await fetchEconomyCalculation(
+      const result = await fetchSocietyWideCalculation(
         countryId,
         reformPolicyId,
         baselinePolicyId,
@@ -142,7 +142,7 @@ describe('economy API', () => {
 
       // When
       const params = { region: 'us', time_period: CURRENT_YEAR };
-      const result = await fetchEconomyCalculation(
+      const result = await fetchSocietyWideCalculation(
         countryId,
         reformPolicyId,
         baselinePolicyId,
@@ -166,7 +166,7 @@ describe('economy API', () => {
       // When/Then
       const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
-        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
+        fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Not Found'));
     });
 
@@ -181,7 +181,7 @@ describe('economy API', () => {
       // When/Then
       const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
-        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
+        fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.CALCULATION_FAILED('Error'));
     });
 
@@ -195,7 +195,7 @@ describe('economy API', () => {
       // When/Then
       const params = { region: 'us', time_period: CURRENT_YEAR };
       await expect(
-        fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params)
+        fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params)
       ).rejects.toThrow(ERROR_MESSAGES.NETWORK_ERROR);
     });
 
@@ -209,7 +209,7 @@ describe('economy API', () => {
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      await fetchEconomyCalculation(countryId, reformPolicyId, baselinePolicyId, params);
+      await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(
@@ -233,7 +233,7 @@ describe('economy API', () => {
       // When
       const params = { region: 'us', time_period: CURRENT_YEAR };
       for (const country of countries) {
-        await fetchEconomyCalculation(country, reformPolicyId, baselinePolicyId, params);
+        await fetchSocietyWideCalculation(country, reformPolicyId, baselinePolicyId, params);
       }
 
       // Then

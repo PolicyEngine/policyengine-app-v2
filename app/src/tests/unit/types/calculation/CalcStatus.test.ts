@@ -83,7 +83,7 @@ describe('CalcStatus types', () => {
       const status = mockComputingCalcStatus({
         metadata: {
           calcId: 'report-123',
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -96,7 +96,7 @@ describe('CalcStatus types', () => {
       const economyStatus = mockComputingCalcStatus({
         metadata: {
           calcId: 'test',
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -111,7 +111,7 @@ describe('CalcStatus types', () => {
         },
       });
 
-      expect(economyStatus.metadata.calcType).toBe('economy');
+      expect(economyStatus.metadata.calcType).toBe('societyWide');
       expect(householdStatus.metadata.calcType).toBe('household');
     });
 
@@ -119,7 +119,7 @@ describe('CalcStatus types', () => {
       const reportStatus = mockComputingCalcStatus({
         metadata: {
           calcId: 'test',
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: Date.now(),
         },
@@ -128,7 +128,7 @@ describe('CalcStatus types', () => {
       const simStatus = mockComputingCalcStatus({
         metadata: {
           calcId: 'test',
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'simulation',
           startedAt: Date.now(),
         },
@@ -143,7 +143,7 @@ describe('CalcStatus types', () => {
       const status = mockComputingCalcStatus({
         metadata: {
           calcId: 'test',
-          calcType: 'economy',
+          calcType: 'societyWide',
           targetType: 'report',
           startedAt: now,
         },

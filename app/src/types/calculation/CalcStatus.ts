@@ -1,4 +1,4 @@
-import { EconomyReportOutput } from '@/api/economy';
+import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HouseholdData } from '@/types/ingredients/Household';
 import { CalcError } from './CalcError';
 import { CalcMetadata } from './CalcMetadata';
@@ -6,7 +6,7 @@ import { CalcMetadata } from './CalcMetadata';
 /**
  * Union type for all possible calculation results
  */
-export type CalcResult = EconomyReportOutput | HouseholdData;
+export type CalcResult = SocietyWideReportOutput | HouseholdData;
 
 /**
  * Calculation status values

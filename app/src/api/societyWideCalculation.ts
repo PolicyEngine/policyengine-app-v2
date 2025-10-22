@@ -2,29 +2,29 @@ import { BASE_URL } from '@/constants';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
-export type EconomyReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
+export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
 // NOTE: Need to add other params at later point
-export interface EconomyCalculationParams {
+export interface SocietyWideCalculationParams {
   region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
   time_period: string; // Four-digit year
 }
 
-export interface EconomyCalculationResponse {
+export interface SocietyWideCalculationResponse {
   status: 'computing' | 'ok' | 'error';
   queue_position?: number;
   average_time?: number;
-  result: EconomyReportOutput | null;
+  result: SocietyWideReportOutput | null;
   error?: string;
 }
 
-export async function fetchEconomyCalculation(
+export async function fetchSocietyWideCalculation(
   countryId: string,
   reformPolicyId: string,
   baselinePolicyId: string,
-  params: EconomyCalculationParams
-): Promise<EconomyCalculationResponse> {
-  console.log('[fetchEconomyCalculation] Called with:');
+  params: SocietyWideCalculationParams
+): Promise<SocietyWideCalculationResponse> {
+  console.log('[fetchSocietyWideCalculation] Called with:');
   console.log('  - countryId:', countryId);
   console.log('  - reformPolicyId:', reformPolicyId);
   console.log('  - baselinePolicyId:', baselinePolicyId);
@@ -40,26 +40,26 @@ export async function fetchEconomyCalculation(
 
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
-  console.log('[fetchEconomyCalculation] Fetching URL:', url);
+  console.log('[fetchSocietyWideCalculation] Fetching URL:', url);
 
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
     },
   });
-  console.log('[fetchEconomyCalculation] Response status:', response.status, response.statusText);
+  console.log('[fetchSocietyWideCalculation] Response status:', response.status, response.statusText);
 
   if (!response.ok) {
     console.error(
-      '[fetchEconomyCalculation] Failed with status:',
+      '[fetchSocietyWideCalculation] Failed with status:',
       response.status,
       response.statusText
     );
-    throw new Error(`Economy calculation failed: ${response.statusText}`);
+    throw new Error(`Society-wide calculation failed: ${response.statusText}`);
   }
 
   const data = await response.json();
-  console.log('[fetchEconomyCalculation] Response data:');
+  console.log('[fetchSocietyWideCalculation] Response data:');
   console.log('  - status:', data.status);
   console.log('  - has result?', !!data.result);
   console.log('  - queue_position:', data.queue_position);

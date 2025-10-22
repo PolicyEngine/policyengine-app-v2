@@ -64,7 +64,7 @@ export const createMockCalcStatusComplete = (overrides?: Partial<CalcStatus>): C
   } as any,
   metadata: {
     calcId: CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.WITH_OUTPUT,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now(),
   },
@@ -80,7 +80,7 @@ export const createMockCalcStatusComputing = (overrides?: Partial<CalcStatus>): 
   message: 'Computing...',
   metadata: {
     calcId: CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.COMPUTING,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now(),
   },

@@ -4,20 +4,20 @@ import { useUserReportById } from '@/hooks/useUserReports';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import type { CalcStartConfig } from '@/types/calculation';
-import type { EconomyReportOutput as EconomyOutput } from '@/api/economy';
+import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import LoadingPage from './LoadingPage';
 import ErrorPage from './ErrorPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
 
 /**
- * Economy report output page
- * Uses existing economy calculation infrastructure (unchanged)
+ * Society-wide report output page
+ * Uses existing society-wide calculation infrastructure (unchanged)
  *
- * This is the same as the economy branch of ReportOutput.page.tsx,
+ * This is the same as the societyWide branch of ReportOutput.page.tsx,
  * just isolated into its own component for clarity.
  */
-export function EconomyReportOutput() {
+export function SocietyWideReportOutput() {
   const { reportId } = useParams<{ reportId: string }>();
 
   // Fetch report and simulations
@@ -96,7 +96,7 @@ export function EconomyReportOutput() {
   if (calcStatus.isPending) {
     return (
       <LoadingPage
-        message="Computing economy impacts..."
+        message="Computing society-wide impacts..."
         progress={calcStatus.progress}
       />
     );
@@ -110,12 +110,12 @@ export function EconomyReportOutput() {
 
   // Show results if complete
   if (calcStatus.isComplete && calcStatus.result) {
-    const output = calcStatus.result as EconomyOutput;
+    const output = calcStatus.result as SocietyWideOutput;
 
     return (
       <OverviewSubPage
         output={output}
-        outputType="economy"
+        outputType="societyWide"
       />
     );
   }

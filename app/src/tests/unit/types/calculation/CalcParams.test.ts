@@ -11,7 +11,7 @@ describe('CalcParams types', () => {
       const params: CalcParams = mockEconomyCalcParams();
 
       expect(params.countryId).toBe('us');
-      expect(params.calcType).toBe('economy');
+      expect(params.calcType).toBe('societyWide');
       expect(params.policyIds.baseline).toBeDefined();
       expect(params.populationId).toBeDefined();
     });

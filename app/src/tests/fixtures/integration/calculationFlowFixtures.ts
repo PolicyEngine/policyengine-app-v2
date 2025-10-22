@@ -161,7 +161,7 @@ export const mockIntegrationComputingStatus = (
   estimatedTimeRemaining: 5000,
   metadata: {
     calcId,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now(),
   },
@@ -178,7 +178,7 @@ export const mockIntegrationCompleteStatus = (
   result,
   metadata: {
     calcId,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now() - 10000,
   },
@@ -196,7 +196,7 @@ export const mockIntegrationErrorStatus = (calcId: string): CalcStatus => ({
   },
   metadata: {
     calcId,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now() - 5000,
   },

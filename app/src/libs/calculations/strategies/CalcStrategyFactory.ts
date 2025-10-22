@@ -1,4 +1,4 @@
-import { EconomyCalcStrategy } from './EconomyCalcStrategy';
+import { SocietyWideCalcStrategy } from '../economy/SocietyWideCalcStrategy';
 import { HouseholdCalcStrategy } from './HouseholdCalcStrategy';
 import { CalcExecutionStrategy } from './types';
 
@@ -10,21 +10,21 @@ import { CalcExecutionStrategy } from './types';
  * Reusing instances improves performance and reduces memory overhead.
  */
 export class CalcStrategyFactory {
-  private static economyStrategy: EconomyCalcStrategy | null = null;
+  private static societyWideStrategy: SocietyWideCalcStrategy | null = null;
   private static householdStrategy: HouseholdCalcStrategy | null = null;
 
   /**
    * Get the appropriate strategy for a calculation type (singleton)
-   * @param type - The type of calculation ('economy' or 'household')
+   * @param type - The type of calculation ('societyWide' or 'household')
    * @returns Strategy instance for executing the calculation
    */
-  static getStrategy(type: 'economy' | 'household'): CalcExecutionStrategy {
+  static getStrategy(type: 'societyWide' | 'household'): CalcExecutionStrategy {
     switch (type) {
-      case 'economy':
-        if (!this.economyStrategy) {
-          this.economyStrategy = new EconomyCalcStrategy();
+      case 'societyWide':
+        if (!this.societyWideStrategy) {
+          this.societyWideStrategy = new SocietyWideCalcStrategy();
         }
-        return this.economyStrategy;
+        return this.societyWideStrategy;
       case 'household':
         if (!this.householdStrategy) {
           this.householdStrategy = new HouseholdCalcStrategy();
@@ -39,7 +39,7 @@ export class CalcStrategyFactory {
    * Reset strategies (useful for testing)
    */
   static reset(): void {
-    this.economyStrategy = null;
+    this.societyWideStrategy = null;
     this.householdStrategy = null;
   }
 }

@@ -1,18 +1,18 @@
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { EconomyReportOutput } from '@/api/economy';
+import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { colors, spacing } from '@/designTokens';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
 
-interface EconomyOverviewProps {
-  output: EconomyReportOutput;
+interface SocietyWideOverviewProps {
+  output: SocietyWideReportOutput;
 }
 
 /**
- * Overview sub-page for economy report outputs
+ * Overview sub-page for society-wide report outputs
  * Displays key metrics including budgetary impact, poverty rate change, and winners/losers
  * Follows the conditional display logic from the v1 PolicyBreakdown component
  */
-export default function EconomyOverview({ output }: EconomyOverviewProps) {
+export default function SocietyWideOverview({ output }: SocietyWideOverviewProps) {
   // Calculate budgetary impact
   const budgetaryImpact = output.budget.budgetary_impact;
 
@@ -20,7 +20,7 @@ export default function EconomyOverview({ output }: EconomyOverviewProps) {
   const povertyOverview = output.poverty.poverty.all;
   let povertyRateChange: number | null = null;
   if (povertyOverview.baseline === 0) {
-    console.error('EconomyOverview: baseline poverty rate reported as 0; API error likely');
+    console.error('SocietyWideOverview: baseline poverty rate reported as 0; API error likely');
     povertyRateChange = Infinity;
   } else {
     povertyRateChange =

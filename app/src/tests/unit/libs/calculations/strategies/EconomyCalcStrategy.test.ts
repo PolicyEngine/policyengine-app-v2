@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { EconomyCalcStrategy } from '@/libs/calculations/strategies/EconomyCalcStrategy';
+import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { mockEconomyCalcParams } from '@/tests/fixtures/types/calculationFixtures';
 import {
   mockEconomyComputingResponse,
@@ -9,20 +9,20 @@ import {
 } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 
 // Mock the economy API
-vi.mock('@/api/economy', () => ({
-  fetchEconomyCalculation: vi.fn(),
+vi.mock('@/api/societyWideCalculation', () => ({
+  fetchSocietyWideCalculation: vi.fn(),
   EconomyCalculationParams: {},
-  EconomyCalculationResponse: {},
+  SocietyWideCalculationResponse: {},
 }));
 
-describe('EconomyCalcStrategy', () => {
-  let strategy: EconomyCalcStrategy;
+describe('SocietyWideCalcStrategy', () => {
+  let strategy: SocietyWideCalcStrategy;
   let mockFetchEconomyCalculation: any;
 
   beforeEach(async () => {
-    strategy = new EconomyCalcStrategy();
-    const economyModule = await import('@/api/economy');
-    mockFetchEconomyCalculation = economyModule.fetchEconomyCalculation as any;
+    strategy = new SocietyWideCalcStrategy();
+    const economyModule = await import('@/api/societyWideCalculation');
+    mockFetchEconomyCalculation = economyModule.fetchSocietyWideCalculation as any;
     vi.clearAllMocks();
   });
 
@@ -179,7 +179,7 @@ describe('EconomyCalcStrategy', () => {
       // Then
       expect(result.status).toBe('computing');
       expect(result.queuePosition).toBe(apiResponse.queue_position);
-      expect(result.metadata.calcType).toBe('economy');
+      expect(result.metadata.calcType).toBe('societyWide');
     });
 
     it('given complete response then transforms to CalcStatus correctly', () => {

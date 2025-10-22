@@ -4,6 +4,6 @@
  */
 
 export { CalcStrategyFactory } from './CalcStrategyFactory';
-export { EconomyCalcStrategy } from './EconomyCalcStrategy';
+export { SocietyWideCalcStrategy } from '../economy/SocietyWideCalcStrategy';
 export { HouseholdCalcStrategy } from './HouseholdCalcStrategy';
 export type { CalcExecutionStrategy, RefetchConfig, ProgressInfo } from './types';

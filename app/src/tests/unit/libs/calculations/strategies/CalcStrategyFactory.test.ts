@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
-import { EconomyCalcStrategy } from '@/libs/calculations/strategies/EconomyCalcStrategy';
+import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
 import { HouseholdCalcStrategy } from '@/libs/calculations/strategies/HouseholdCalcStrategy';
 
 describe('CalcStrategyFactory', () => {
@@ -14,12 +14,12 @@ describe('CalcStrategyFactory', () => {
   });
 
   describe('getStrategy', () => {
-    it('given economy type then returns EconomyCalcStrategy instance', () => {
+    it('given economy type then returns SocietyWideCalcStrategy instance', () => {
       // When
-      const strategy = CalcStrategyFactory.getStrategy('economy');
+      const strategy = CalcStrategyFactory.getStrategy('societyWide');
 
       // Then
-      expect(strategy).toBeInstanceOf(EconomyCalcStrategy);
+      expect(strategy).toBeInstanceOf(SocietyWideCalcStrategy);
     });
 
     it('given household type then returns HouseholdCalcStrategy instance', () => {
@@ -41,8 +41,8 @@ describe('CalcStrategyFactory', () => {
   describe('singleton pattern - Phase 3', () => {
     it('given economy type then returns SAME instance each time', () => {
       // When
-      const strategy1 = CalcStrategyFactory.getStrategy('economy');
-      const strategy2 = CalcStrategyFactory.getStrategy('economy');
+      const strategy1 = CalcStrategyFactory.getStrategy('societyWide');
+      const strategy2 = CalcStrategyFactory.getStrategy('societyWide');
 
       // Then - same reference
       expect(strategy1).toBe(strategy2);
@@ -59,7 +59,7 @@ describe('CalcStrategyFactory', () => {
 
     it('given different types then returns different instances', () => {
       // When
-      const economyStrategy = CalcStrategyFactory.getStrategy('economy');
+      const economyStrategy = CalcStrategyFactory.getStrategy('societyWide');
       const householdStrategy = CalcStrategyFactory.getStrategy('household');
 
       // Then - different types have different instances
@@ -68,11 +68,11 @@ describe('CalcStrategyFactory', () => {
 
     it('given reset then creates new instances', () => {
       // Given
-      const strategy1 = CalcStrategyFactory.getStrategy('economy');
+      const strategy1 = CalcStrategyFactory.getStrategy('societyWide');
 
       // When
       CalcStrategyFactory.reset();
-      const strategy2 = CalcStrategyFactory.getStrategy('economy');
+      const strategy2 = CalcStrategyFactory.getStrategy('societyWide');
 
       // Then - new instance after reset
       expect(strategy1).not.toBe(strategy2);

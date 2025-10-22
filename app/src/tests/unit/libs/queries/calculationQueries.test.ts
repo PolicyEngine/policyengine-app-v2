@@ -34,7 +34,7 @@ describe('calculationQueries', () => {
     it('given report params then returns correct query options', () => {
       // Given
       const reportId = 'report-123';
-      const metadata = mockCalcMetadata({ calcType: 'economy' });
+      const metadata = mockCalcMetadata({ calcType: 'societyWide' });
       const params = mockEconomyCalcParams();
 
       // When
@@ -51,14 +51,14 @@ describe('calculationQueries', () => {
       // Given
       const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
       const reportId = 'report-123';
-      const metadata = mockCalcMetadata({ calcType: 'economy' });
+      const metadata = mockCalcMetadata({ calcType: 'societyWide' });
       const params = mockEconomyCalcParams();
 
       // When
       calculationQueries.forReport(reportId, metadata, params);
 
       // Then
-      expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('economy');
+      expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('societyWide');
     });
 
     it('given household type then uses household strategy', async () => {
@@ -78,7 +78,7 @@ describe('calculationQueries', () => {
     it('given queryFn called then executes strategy', async () => {
       // Given
       const reportId = 'report-123';
-      const metadata = mockCalcMetadata({ calcType: 'economy' });
+      const metadata = mockCalcMetadata({ calcType: 'societyWide' });
       const params = mockEconomyCalcParams();
       const queryOptions = calculationQueries.forReport(reportId, metadata, params);
 
@@ -111,14 +111,14 @@ describe('calculationQueries', () => {
       // Given
       const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
       const simulationId = 'sim-456';
-      const metadata = mockCalcMetadata({ calcType: 'economy', targetType: 'simulation' });
+      const metadata = mockCalcMetadata({ calcType: 'societyWide', targetType: 'simulation' });
       const params = mockEconomyCalcParams();
 
       // When
       calculationQueries.forSimulation(simulationId, metadata, params);
 
       // Then
-      expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('economy');
+      expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('societyWide');
     });
 
     it('given queryFn called then executes strategy', async () => {

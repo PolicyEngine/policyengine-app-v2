@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { EconomyCalculationResponse } from '@/api/economy';
+import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
 import { HouseholdData } from '@/types/ingredients/Household';
 import { mockEconomyResult, mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 
@@ -32,7 +32,7 @@ export const STRATEGY_TEST_CONSTANTS = {
 /**
  * Mock economy API response - computing state
  */
-export const mockEconomyComputingResponse = (): EconomyCalculationResponse => ({
+export const mockEconomyComputingResponse = (): SocietyWideCalculationResponse => ({
   status: 'computing',
   queue_position: STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION,
   average_time: STRATEGY_TEST_CONSTANTS.ECONOMY_AVERAGE_TIME_SECONDS,
@@ -42,7 +42,7 @@ export const mockEconomyComputingResponse = (): EconomyCalculationResponse => ({
 /**
  * Mock economy API response - complete state
  */
-export const mockEconomyCompleteResponse = (): EconomyCalculationResponse => ({
+export const mockEconomyCompleteResponse = (): SocietyWideCalculationResponse => ({
   status: 'ok',
   result: mockEconomyResult(),
   queue_position: undefined,
@@ -52,7 +52,7 @@ export const mockEconomyCompleteResponse = (): EconomyCalculationResponse => ({
 /**
  * Mock economy API response - error state
  */
-export const mockEconomyErrorResponse = (): EconomyCalculationResponse => ({
+export const mockEconomyErrorResponse = (): SocietyWideCalculationResponse => ({
   status: 'error',
   error: 'Calculation failed due to invalid parameters',
   result: null,

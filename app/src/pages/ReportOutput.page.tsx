@@ -19,7 +19,7 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { EconomyReportOutput as EconomyOutput } from '@/api/economy';
+import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
@@ -32,12 +32,12 @@ import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
-import { EconomyReportOutput } from './report-output/EconomyReportOutput';
+import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
 
 /**
  * Type discriminator for output types
  */
-export type ReportOutputType = 'household' | 'economy';
+export type ReportOutputType = 'household' | 'societyWide';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -92,7 +92,7 @@ export default function ReportOutputPage() {
   const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
     ? 'household'
     : simulations?.[0]?.populationType === 'geography'
-    ? 'economy'
+    ? 'societyWide'
     : undefined;
 
   const DEFAULT_PAGE = 'overview';
@@ -155,8 +155,8 @@ export default function ReportOutputPage() {
       );
     }
 
-    if (outputType === 'economy') {
-      return <EconomyReportOutput />;
+    if (outputType === 'societyWide') {
+      return <SocietyWideReportOutput />;
     }
 
     return <Text c="red">Unknown report type</Text>;
@@ -304,7 +304,7 @@ export default function ReportOutputPage() {
 function getTabsForOutputType(
   outputType: ReportOutputType
 ): Array<{ value: string; label: string }> {
-  if (outputType === 'economy') {
+  if (outputType === 'societyWide') {
     return [
       { value: 'overview', label: 'Overview' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
@@ -328,7 +328,7 @@ function getTabsForOutputType(
   return [{ value: 'overview', label: 'Overview' }];
 }
 
-// Everything below this is now dead code - economy and household both route to their own pages above
+// Everything below this is now dead code - societyWide and household both route to their own pages above
 // Keeping for now to avoid breaking changes, will be deleted in cleanup phase
 
 function LegacyReportOutput() {
@@ -345,11 +345,11 @@ function LegacyReportOutput() {
   const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
     ? 'household'
     : simulations?.[0]?.populationType === 'geography'
-    ? 'economy'
+    ? 'societyWide'
     : undefined;
 
-  // At this point, outputType can only be 'economy' or undefined
-  // (household and economy both routed above)
+  // At this point, outputType can only be 'societyWide' or undefined
+  // (household and society-wide both routed above)
   const isHouseholdReport = false; // Always false here
 
   const calcIds = useMemo(() => {
@@ -381,7 +381,7 @@ function LegacyReportOutput() {
 
   // Phase 4: Build calculation config for auto-start
   // For household reports: Build configs for each simulation (NOT report-level)
-  // For economy reports: Build single config at report level
+  // For society-wide reports: Build single config at report level
   const calcConfigs = useMemo(() => {
     if (!report || !simulations?.[0]) {
       return null;
@@ -475,19 +475,19 @@ function LegacyReportOutput() {
   // Phase 4: Auto-start calculation if needed (direct URL loads)
   // Manager handles idempotency - won't duplicate if already running
   // For household: Start multiple calculations (one per simulation)
-  // For economy: Start single calculation at report level
+  // For society-wide: Start single calculation at report level
   useStartCalculationOnLoad({
     enabled: !!report && !!calcConfigs,
     configs: calcConfigs || [],
     isComplete: calcStatus.isComplete,
   });
 
-  // Prepare output data - economy only at this point
+  // Prepare output data - society-wide only at this point
   // (household was redirected to HouseholdReportOutput above)
-  let output: EconomyOutput | null | undefined = undefined;
+  let output: SocietyWideOutput | null | undefined = undefined;
 
   if (calcStatus.result) {
-    output = calcStatus.result as EconomyOutput;
+    output = calcStatus.result as SocietyWideOutput;
   }
 
   const DEFAULT_PAGE = 'overview';
@@ -714,16 +714,16 @@ function LegacyReportOutput() {
 }
 
 /**
- * Type guard to check if economy output is US-specific
+ * Type guard to check if society-wide output is US-specific
  */
-export function isUSEconomyOutput(output: EconomyOutput): boolean {
+export function isUSSocietyWideOutput(output: SocietyWideOutput): boolean {
   return 'poverty_by_race' in output && output.poverty_by_race !== null;
 }
 
 /**
- * Type guard to check if economy output is UK-specific
+ * Type guard to check if society-wide output is UK-specific
  */
-export function isUKEconomyOutput(output: EconomyOutput): boolean {
+export function isUKSocietyWideOutput(output: SocietyWideOutput): boolean {
   return 'constituency_impact' in output && output.constituency_impact !== null;
 }
 

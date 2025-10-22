@@ -83,7 +83,7 @@ describe('CalcOrchestrator', () => {
           expect.objectContaining({
             status: 'pending',
             metadata: expect.objectContaining({
-              calcType: 'economy',
+              calcType: 'societyWide',
               targetType: 'report',
             }),
           })
@@ -144,7 +144,7 @@ describe('CalcOrchestrator', () => {
           expect.any(Object),
           expect.objectContaining({
             countryId: ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID,
-            calcType: 'economy', // geography maps to economy
+            calcType: 'societyWide', // geography maps to economy
             policyIds: {
               baseline: ORCHESTRATION_TEST_CONSTANTS.TEST_POLICY_ID_1,
               reform: ORCHESTRATION_TEST_CONSTANTS.TEST_POLICY_ID_2,
@@ -183,7 +183,7 @@ describe('CalcOrchestrator', () => {
         expect(calculationQueries.forSimulation).toHaveBeenCalledWith(
           ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
           expect.objectContaining({
-            calcType: 'economy', // geography maps to economy
+            calcType: 'societyWide', // geography maps to economy
             targetType: 'simulation',
           }),
           expect.any(Object)
@@ -315,7 +315,7 @@ describe('CalcOrchestrator', () => {
           expect.any(Object),
           expect.objectContaining({
             calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-            calcType: 'economy',
+            calcType: 'societyWide',
             region: ORCHESTRATION_TEST_CONSTANTS.TEST_GEOGRAPHY_ID,
           })
         );
@@ -391,7 +391,7 @@ describe('CalcOrchestrator', () => {
           result: { budget: { budgetary_impact: 1000 } },
           metadata: {
             calcId: config.calcId,
-            calcType: 'economy',
+            calcType: 'societyWide',
             targetType: 'report',
             startedAt: Date.now(),
           },
@@ -430,7 +430,7 @@ describe('CalcOrchestrator', () => {
           error: new Error('Test error'),
           metadata: {
             calcId: config.calcId,
-            calcType: 'economy',
+            calcType: 'societyWide',
             targetType: 'report',
             startedAt: Date.now(),
           },

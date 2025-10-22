@@ -47,7 +47,7 @@ describe('useHydrateCalculationCache', () => {
 
   it('should hydrate cache with persisted output for economy report', () => {
     const mockReport = createMockReport(true);
-    const outputType: 'economy' | 'household' = 'economy';
+    const outputType: 'societyWide' | 'household' = 'societyWide';
 
     renderHook(
       () => useHydrateCalculationCache({ report: mockReport, outputType }),
@@ -62,7 +62,7 @@ describe('useHydrateCalculationCache', () => {
     expect(cachedStatus?.result).toEqual(mockReport.output);
     expect(cachedStatus?.metadata).toEqual({
       calcId: mockReport.id,
-      calcType: 'economy',
+      calcType: 'societyWide',
       targetType: 'report',
       startedAt: expect.any(Number),
     });
@@ -70,7 +70,7 @@ describe('useHydrateCalculationCache', () => {
 
   it('should hydrate cache with persisted output for household report', () => {
     const mockReport = createMockReport(true);
-    const outputType: 'economy' | 'household' = 'household';
+    const outputType: 'societyWide' | 'household' = 'household';
 
     renderHook(
       () => useHydrateCalculationCache({ report: mockReport, outputType }),
@@ -93,7 +93,7 @@ describe('useHydrateCalculationCache', () => {
 
   it('should skip hydration if report has no output', () => {
     const mockReport = createMockReport(false);
-    const outputType: 'economy' | 'household' = 'economy';
+    const outputType: 'societyWide' | 'household' = 'societyWide';
 
     renderHook(
       () => useHydrateCalculationCache({ report: mockReport, outputType }),
@@ -110,7 +110,7 @@ describe('useHydrateCalculationCache', () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     renderHook(
-      () => useHydrateCalculationCache({ report: undefined, outputType: 'economy' }),
+      () => useHydrateCalculationCache({ report: undefined, outputType: 'societyWide' }),
       { wrapper }
     );
 
@@ -135,7 +135,7 @@ describe('useHydrateCalculationCache', () => {
 
   it('should skip hydration if cache already has data', () => {
     const mockReport = createMockReport(true);
-    const outputType: 'economy' | 'household' = 'economy';
+    const outputType: 'societyWide' | 'household' = 'societyWide';
 
     // Pre-populate cache
     const existingStatus = createMockCalcStatusComputing();
@@ -161,7 +161,7 @@ describe('useHydrateCalculationCache', () => {
 
   it('should only hydrate once even if hook re-renders', () => {
     const mockReport = createMockReport(true);
-    const outputType: 'economy' | 'household' = 'economy';
+    const outputType: 'societyWide' | 'household' = 'societyWide';
 
     const { rerender } = renderHook(
       () => useHydrateCalculationCache({ report: mockReport, outputType }),
@@ -182,7 +182,7 @@ describe('useHydrateCalculationCache', () => {
 
   it('should log hydration action', () => {
     const mockReport = createMockReport(true);
-    const outputType: 'economy' | 'household' = 'economy';
+    const outputType: 'societyWide' | 'household' = 'societyWide';
 
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
@@ -198,10 +198,10 @@ describe('useHydrateCalculationCache', () => {
 
   it('should handle report changing from undefined to defined', async () => {
     const mockReport = createMockReport(true);
-    const outputType: 'economy' | 'household' = 'economy';
+    const outputType: 'societyWide' | 'household' = 'societyWide';
 
     const { rerender } = renderHook(
-      (props: { report: Report | undefined, outputType: 'economy' | 'household' }) =>
+      (props: { report: Report | undefined, outputType: 'societyWide' | 'household' }) =>
         useHydrateCalculationCache(props),
       {
         wrapper,

@@ -58,7 +58,7 @@ export const createMockCompleteStatus = (calcId: string): CalcStatus => ({
   } as any,
   metadata: {
     calcId,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now(),
   },
@@ -76,7 +76,7 @@ export const createMockErrorStatus = (calcId: string): CalcStatus => ({
   },
   metadata: {
     calcId,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now(),
   },
@@ -91,7 +91,7 @@ export const createMockComputingStatus = (calcId: string, progress: number = 50)
   message: 'Computing...',
   metadata: {
     calcId,
-    calcType: 'economy',
+    calcType: 'societyWide',
     targetType: 'report',
     startedAt: Date.now(),
   },

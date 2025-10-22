@@ -55,7 +55,7 @@ describe('ResultPersister', () => {
         const status = mockCompleteCalcStatus({
           metadata: {
             calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'economy',
+            calcType: 'societyWide',
             targetType: 'report',
             startedAt: Date.now(),
           },
@@ -82,7 +82,7 @@ describe('ResultPersister', () => {
         const status = mockCompleteCalcStatus({
           metadata: {
             calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'economy',
+            calcType: 'societyWide',
             targetType: 'report',
             startedAt: Date.now(),
           },
@@ -103,7 +103,7 @@ describe('ResultPersister', () => {
         const status = mockCompleteCalcStatus({
           metadata: {
             calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'economy',
+            calcType: 'societyWide',
             targetType: 'report',
             startedAt: Date.now(),
           },
@@ -124,7 +124,7 @@ describe('ResultPersister', () => {
         const status = mockCompleteCalcStatus({
           metadata: {
             calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'economy',
+            calcType: 'societyWide',
             targetType: 'report',
             startedAt: Date.now(),
           },
