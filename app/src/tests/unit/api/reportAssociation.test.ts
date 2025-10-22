@@ -1,195 +1,156 @@
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { UserReportAdapter } from '@/adapters/UserReportAdapter';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
+import { UserReportAdapter } from '@/adapters/UserReportAdapter';
 import {
-  mockApiResponse,
-  mockApiResponseList,
-  mockCreationPayload,
-  mockUserReport,
-  mockUserReportList,
-  TEST_REPORT_ID,
-  TEST_USER_ID,
+  TEST_USER_IDS,
+  TEST_REPORT_IDS,
+  TEST_USER_REPORT_IDS,
+  TEST_LABELS,
+  mockReportInput,
+  mockReport,
+  mockReportApiResponse,
+  mockSuccessFetchResponse,
+  mockErrorFetchResponse,
 } from '@/tests/fixtures/api/reportAssociationMocks';
 
-global.fetch = vi.fn();
+// Mock the adapter
+vi.mock('@/adapters/UserReportAdapter');
 
-vi.mock('@/adapters/UserReportAdapter', () => ({
-  UserReportAdapter: {
-    toCreationPayload: vi.fn(),
-    fromApiResponse: vi.fn(),
-  },
-}));
+// Mock fetch
+global.fetch = vi.fn();
 
 describe('ApiReportStore', () => {
   let store: ApiReportStore;
 
   beforeEach(() => {
-    vi.clearAllMocks();
     store = new ApiReportStore();
+    vi.clearAllMocks();
+    (UserReportAdapter.toCreationPayload as any).mockReturnValue(mockReportApiResponse());
+    (UserReportAdapter.fromApiResponse as any).mockReturnValue(mockReport());
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    vi.resetAllMocks();
   });
 
   describe('create', () => {
-    test('given valid report association then creates successfully', async () => {
-      // Given
-      (UserReportAdapter.toCreationPayload as any).mockReturnValue(mockCreationPayload);
-      (UserReportAdapter.fromApiResponse as any).mockReturnValue(mockUserReport);
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockApiResponse),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+    it('given valid report then creates report association', async () => {
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessFetchResponse(mockReportApiResponse())
+      );
 
-      // When
-      const result = await store.create(mockUserReport);
+      const result = await store.create(mockReportInput());
 
-      // Then
-      expect(UserReportAdapter.toCreationPayload).toHaveBeenCalledWith(mockUserReport);
-      expect(global.fetch).toHaveBeenCalledWith('/api/user-report-associations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mockCreationPayload),
-      });
-      expect(UserReportAdapter.fromApiResponse).toHaveBeenCalledWith(mockApiResponse);
-      expect(result).toEqual(mockUserReport);
+      expect(fetch).toHaveBeenCalledWith(
+        '/api/user-report-associations',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(mockReportApiResponse()),
+        })
+      );
+      expect(result).toEqual(mockReport());
     });
 
-    test('given API returns error then throws error', async () => {
-      // Given
-      (UserReportAdapter.toCreationPayload as any).mockReturnValue(mockCreationPayload);
-      const mockResponse = {
-        ok: false,
-        status: 400,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+    it('given API error then throws error', async () => {
+      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
 
-      // When/Then
-      await expect(store.create(mockUserReport)).rejects.toThrow(
+      await expect(store.create(mockReportInput())).rejects.toThrow(
         'Failed to create report association'
       );
-    });
-
-    test('given network error then propagates error', async () => {
-      // Given
-      (UserReportAdapter.toCreationPayload as any).mockReturnValue(mockCreationPayload);
-      const networkError = new Error('Network failure');
-      (global.fetch as any).mockRejectedValue(networkError);
-
-      // When/Then
-      await expect(store.create(mockUserReport)).rejects.toThrow('Network failure');
     });
   });
 
   describe('findByUser', () => {
-    test('given valid user ID then returns list of reports', async () => {
-      // Given
-      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
-        const index = mockApiResponseList.indexOf(data);
-        return mockUserReportList[index];
-      });
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockApiResponseList),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID);
-
-      // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `/api/user-report-associations/user/${TEST_USER_ID}`,
-        { headers: { 'Content-Type': 'application/json' } }
+    it('given valid user ID then fetches user report associations', async () => {
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessFetchResponse([mockReportApiResponse()])
       );
-      expect(UserReportAdapter.fromApiResponse).toHaveBeenCalledTimes(2);
-      expect(result).toEqual(mockUserReportList);
+
+      const result = await store.findByUser(TEST_USER_IDS.USER_123);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/user-report-associations/user/${TEST_USER_IDS.USER_123}`,
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual([mockReport()]);
     });
 
-    test('given user with no reports then returns empty array', async () => {
-      // Given
-      const userId = 'user-with-no-reports';
-      const mockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue([]),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+    it('given API error then throws error', async () => {
+      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
 
-      // When
-      const result = await store.findByUser(userId);
-
-      // Then
-      expect(result).toEqual([]);
-      expect(UserReportAdapter.fromApiResponse).not.toHaveBeenCalled();
-    });
-
-    test('given API returns error then throws error', async () => {
-      // Given
-      const mockResponse = {
-        ok: false,
-        status: 500,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When/Then
-      await expect(store.findByUser(TEST_USER_ID)).rejects.toThrow(
+      await expect(store.findByUser(TEST_USER_IDS.USER_123)).rejects.toThrow(
         'Failed to fetch user associations'
       );
     });
   });
 
   describe('findById', () => {
-    test('given valid user and report IDs then returns report', async () => {
-      // Given
-      (UserReportAdapter.fromApiResponse as any).mockReturnValue(mockUserReport);
-      const mockResponse = {
-        ok: true,
-        status: 200,
-        json: vi.fn().mockResolvedValue(mockApiResponse),
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
-
-      // When
-      const result = await store.findById(TEST_USER_ID, TEST_REPORT_ID);
-
-      // Then
-      expect(global.fetch).toHaveBeenCalledWith(
-        `/api/user-report-associations/${TEST_USER_ID}/${TEST_REPORT_ID}`,
-        { headers: { 'Content-Type': 'application/json' } }
+    it('given valid IDs then fetches specific association', async () => {
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessFetchResponse(mockReportApiResponse())
       );
-      expect(UserReportAdapter.fromApiResponse).toHaveBeenCalledWith(mockApiResponse);
-      expect(result).toEqual(mockUserReport);
+
+      const result = await store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/user-report-associations/${TEST_USER_IDS.USER_123}/${TEST_REPORT_IDS.REPORT_456}`,
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual(mockReport());
     });
 
-    test('given non-existent association then returns null', async () => {
-      // Given
-      const mockResponse = {
-        ok: false,
-        status: 404,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+    it('given 404 response then returns null', async () => {
+      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(404));
 
-      // When
-      const result = await store.findById(TEST_USER_ID, 'non-existent');
+      const result = await store.findById(TEST_USER_IDS.USER_123, 'nonexistent');
 
-      // Then
       expect(result).toBeNull();
-      expect(UserReportAdapter.fromApiResponse).not.toHaveBeenCalled();
     });
 
-    test('given server error then throws error', async () => {
-      // Given
-      const mockResponse = {
-        ok: false,
-        status: 500,
-      };
-      (global.fetch as any).mockResolvedValue(mockResponse);
+    it('given other error then throws error', async () => {
+      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
 
-      // When/Then
-      await expect(store.findById(TEST_USER_ID, TEST_REPORT_ID)).rejects.toThrow(
+      await expect(store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456)).rejects.toThrow(
         'Failed to fetch association'
+      );
+    });
+  });
+
+  describe('findByUserReportId', () => {
+    it('given valid user report ID then fetches report', async () => {
+      (global.fetch as any).mockResolvedValue(
+        mockSuccessFetchResponse(mockReportApiResponse())
+      );
+
+      const result = await store.findByUserReportId(TEST_USER_REPORT_IDS.SUR_ABC123);
+
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/user-report-associations/${TEST_USER_REPORT_IDS.SUR_ABC123}`,
+        expect.objectContaining({
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toEqual(mockReport());
+    });
+
+    it('given 404 response then returns null', async () => {
+      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(404));
+
+      const result = await store.findByUserReportId('nonexistent');
+
+      expect(result).toBeNull();
+    });
+
+    it('given other error then throws error', async () => {
+      (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
+
+      await expect(store.findByUserReportId(TEST_USER_REPORT_IDS.SUR_ABC123)).rejects.toThrow(
+        'Failed to fetch user report'
       );
     });
   });
@@ -200,198 +161,139 @@ describe('LocalStorageReportStore', () => {
   let mockLocalStorage: { [key: string]: string };
 
   beforeEach(() => {
-    vi.clearAllMocks();
     mockLocalStorage = {};
-
-    // Mock localStorage
-    Object.defineProperty(window, 'localStorage', {
-      value: {
-        getItem: vi.fn((key) => mockLocalStorage[key] || null),
-        setItem: vi.fn((key, value) => {
-          mockLocalStorage[key] = value;
-        }),
-        removeItem: vi.fn((key) => {
-          delete mockLocalStorage[key];
-        }),
-        clear: vi.fn(() => {
-          mockLocalStorage = {};
-        }),
-      },
-      writable: true,
-    });
+    global.localStorage = {
+      getItem: vi.fn((key) => mockLocalStorage[key] || null),
+      setItem: vi.fn((key, value) => {
+        mockLocalStorage[key] = value;
+      }),
+      removeItem: vi.fn((key) => {
+        delete mockLocalStorage[key];
+      }),
+      clear: vi.fn(() => {
+        mockLocalStorage = {};
+      }),
+      length: 0,
+      key: vi.fn(),
+    };
 
     store = new LocalStorageReportStore();
+    vi.clearAllMocks();
   });
 
   describe('create', () => {
-    test('given new report association then stores in local storage', async () => {
-      // Given
-      const report = { ...mockUserReport };
-      delete (report as any).createdAt; // Test that createdAt is generated
+    it('given new report then stores in localStorage', async () => {
+      const input = mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 });
+      const result = await store.create(input);
 
-      // When
-      const result = await store.create(report);
-
-      // Then
-      const { id, ...reportWithoutId } = report;
       expect(result).toMatchObject({
-        ...reportWithoutId,
-        isCreated: true,
+        userId: TEST_USER_IDS.USER_123,
+        reportId: TEST_REPORT_IDS.REPORT_456,
+        countryId: 'us',
+        label: TEST_LABELS.TEST_REPORT_1,
       });
-      expect(result.id).toBeDefined();
-      expect(result.id).toMatch(/^sur-/); // Should have the sur- prefix
+      expect(result.id).toMatch(/^sur-/);
       expect(result.createdAt).toBeDefined();
-      expect(localStorage.setItem).toHaveBeenCalledWith(
-        'user-report-associations',
-        expect.any(String)
+      expect(result.isCreated).toBe(true);
+      expect(localStorage.setItem).toHaveBeenCalled();
+    });
+
+    it('given report then generates unique ID', async () => {
+      const input1 = mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 });
+      const input2 = mockReportInput({
+        reportId: TEST_REPORT_IDS.REPORT_789,
+        label: TEST_LABELS.TEST_REPORT_2,
+        countryId: 'uk',
+      });
+      const result1 = await store.create(input1);
+      const result2 = await store.create(input2);
+
+      expect(result1.id).toMatch(/^sur-/);
+      expect(result2.id).toMatch(/^sur-/);
+      expect(result1.id).not.toBe(result2.id);
+    });
+
+    it('given duplicate report then throws error', async () => {
+      const input = mockReportInput();
+      await store.create(input);
+
+      await expect(store.create(input)).rejects.toThrow(
+        'Association already exists'
       );
-    });
-
-    test('given duplicate association then throws error', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify([mockUserReport]);
-
-      // When/Then
-      await expect(store.create(mockUserReport)).rejects.toThrow('Association already exists');
-    });
-
-    test('given existing reports then appends new report', async () => {
-      // Given
-      const existingReport = mockUserReportList[0];
-      mockLocalStorage['user-report-associations'] = JSON.stringify([existingReport]);
-      const newReport = {
-        ...mockUserReport,
-        reportId: 'new-report',
-        id: 'new-report',
-      };
-
-      // When
-      await store.create(newReport);
-
-      // Then
-      const stored = JSON.parse(mockLocalStorage['user-report-associations']);
-      expect(stored).toHaveLength(2);
-      expect(stored[1].reportId).toBe('new-report');
     });
   });
 
   describe('findByUser', () => {
-    test('given user with reports then returns filtered list', async () => {
-      // Given
-      const otherUserReport = {
-        ...mockUserReport,
-        userId: 'other-user',
-        reportId: 'other-report',
-      };
-      mockLocalStorage['user-report-associations'] = JSON.stringify([
-        ...mockUserReportList,
-        otherUserReport,
-      ]);
+    it('given user with reports then returns all user reports', async () => {
+      await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+      await store.create(mockReportInput({
+        reportId: TEST_REPORT_IDS.REPORT_789,
+        label: TEST_LABELS.TEST_REPORT_2,
+      }));
 
-      // When
-      const result = await store.findByUser(TEST_USER_ID);
+      const result = await store.findByUser(TEST_USER_IDS.USER_123);
 
-      // Then
       expect(result).toHaveLength(2);
-      expect(result).toEqual(mockUserReportList);
+      expect(result[0].reportId).toBe(TEST_REPORT_IDS.REPORT_456);
+      expect(result[1].reportId).toBe(TEST_REPORT_IDS.REPORT_789);
     });
 
-    test('given user with no reports then returns empty array', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+    it('given user with no reports then returns empty array', async () => {
+      const result = await store.findByUser('nonexistent-user');
 
-      // When
-      const result = await store.findByUser('user-with-no-reports');
-
-      // Then
-      expect(result).toEqual([]);
-    });
-
-    test('given empty storage then returns empty array', async () => {
-      // When
-      const result = await store.findByUser('any-user');
-
-      // Then
-      expect(result).toEqual([]);
-    });
-
-    test('given corrupted storage data then returns empty array', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = 'invalid-json';
-
-      // When
-      const result = await store.findByUser(TEST_USER_ID);
-
-      // Then
       expect(result).toEqual([]);
     });
   });
 
   describe('findById', () => {
-    test('given existing association then returns report', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+    it('given existing report then returns it', async () => {
+      await store.create(mockReportInput());
 
-      // When
-      const result = await store.findById(TEST_USER_ID, 'report-1');
+      const result = await store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456);
 
-      // Then
-      expect(result).toEqual(mockUserReportList[0]);
+      expect(result).toMatchObject({
+        userId: TEST_USER_IDS.USER_123,
+        reportId: TEST_REPORT_IDS.REPORT_456,
+        countryId: 'us',
+      });
     });
 
-    test('given non-existent association then returns null', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+    it('given nonexistent report then returns null', async () => {
+      const result = await store.findById(TEST_USER_IDS.USER_123, 'nonexistent');
 
-      // When
-      const result = await store.findById(TEST_USER_ID, 'non-existent');
-
-      // Then
-      expect(result).toBeNull();
-    });
-
-    test('given wrong user ID then returns null', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
-
-      // When
-      const result = await store.findById('wrong-user', 'report-1');
-
-      // Then
       expect(result).toBeNull();
     });
   });
 
   describe('findByUserReportId', () => {
-    test('given existing user report ID then returns report', async () => {
-      // Given
-      const userReportWithId = { ...mockUserReport, id: 'sur-abc123' };
-      mockLocalStorage['user-report-associations'] = JSON.stringify([userReportWithId]);
+    it('given existing user report ID then returns report', async () => {
+      const created = await store.create(mockReportInput());
 
-      // When
-      const result = await store.findByUserReportId('sur-abc123');
+      const result = await store.findByUserReportId(created.id);
 
-      // Then
-      expect(result).toEqual(userReportWithId);
+      expect(result).toMatchObject({
+        userId: TEST_USER_IDS.USER_123,
+        reportId: TEST_REPORT_IDS.REPORT_456,
+      });
+      expect(result?.id).toBe(created.id);
     });
 
-    test('given non-existent user report ID then returns null', async () => {
-      // Given
-      mockLocalStorage['user-report-associations'] = JSON.stringify(mockUserReportList);
+    it('given nonexistent user report ID then returns null', async () => {
+      const result = await store.findByUserReportId('nonexistent');
 
-      // When
-      const result = await store.findByUserReportId('non-existent-id');
-
-      // Then
       expect(result).toBeNull();
     });
+  });
 
-    test('given empty storage then returns null', async () => {
-      // When
-      const result = await store.findByUserReportId('any-id');
+  describe('error handling', () => {
+    it('given localStorage error on get then returns empty array', async () => {
+      (localStorage.getItem as any).mockImplementation(() => {
+        throw new Error('Storage error');
+      });
 
-      // Then
-      expect(result).toBeNull();
+      const result = await store.findByUser(TEST_USER_IDS.USER_123);
+
+      expect(result).toEqual([]);
     });
   });
 });

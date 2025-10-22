@@ -1,224 +1,310 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ResultPersister } from '@/libs/calculations/ResultPersister';
-import { mockCompleteCalcStatus } from '@/tests/fixtures/types/calculationFixtures';
+import { markReportCompleted } from '@/api/report';
+import { updateSimulationOutput } from '@/api/simulation';
+import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
+import type { Report } from '@/types/ingredients/Report';
+import { mockHouseholdResult, mockSocietyWideResult } from '@/tests/fixtures/types/calculationFixtures';
 import {
-  createMockQueryClient,
-  ORCHESTRATION_TEST_CONSTANTS,
-} from '@/tests/fixtures/libs/calculations/orchestrationFixtures';
+  createTestQueryClient,
+  TEST_CALC_IDS,
+  TEST_COUNTRIES,
+  mockCompleteSocietyWideStatus,
+  mockCompleteHouseholdStatus,
+  mockCompleteHouseholdStatusWithReport,
+  mockPendingStatus,
+} from '@/tests/fixtures/libs/calculations/resultPersisterMocks';
 
-// Mock the API modules
-vi.mock('@/api/report', () => ({
-  markReportCompleted: vi.fn(),
-}));
-
-vi.mock('@/api/simulation', () => ({
-  updateSimulationOutput: vi.fn(),
-}));
-
-// Mock query keys
-vi.mock('@/libs/queryKeys', () => ({
-  reportKeys: {
-    byId: (id: string) => ['reports', 'report_id', id],
-  },
-  simulationKeys: {
-    byId: (id: string) => ['simulations', 'simulation_id', id],
-  },
-}));
+// Mock API functions
+vi.mock('@/api/report');
+vi.mock('@/api/simulation');
 
 describe('ResultPersister', () => {
   let persister: ResultPersister;
-  let mockQueryClient: any;
-  let mockMarkReportCompleted: any;
-  let mockUpdateSimulationOutput: any;
+  let queryClient: ReturnType<typeof createTestQueryClient>;
 
-  beforeEach(async () => {
-    mockQueryClient = createMockQueryClient();
-    persister = new ResultPersister(mockQueryClient);
-
-    const reportModule = await import('@/api/report');
-    const simulationModule = await import('@/api/simulation');
-
-    mockMarkReportCompleted = reportModule.markReportCompleted as any;
-    mockUpdateSimulationOutput = simulationModule.updateSimulationOutput as any;
-
+  beforeEach(() => {
+    queryClient = createTestQueryClient();
+    persister = new ResultPersister(queryClient);
     vi.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    queryClient.clear();
   });
 
-  describe('persist', () => {
-    describe('report target', () => {
-      it('given complete status for report then calls markReportCompleted', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          metadata: {
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'societyWide',
-            targetType: 'report',
-            startedAt: Date.now(),
-          },
-        });
-        mockMarkReportCompleted.mockResolvedValue({});
+  describe('persist to report', () => {
+    it('given complete report status then persists to report', async () => {
+      // Given
+      const status = mockCompleteSocietyWideStatus();
+      (markReportCompleted as any).mockResolvedValue(undefined);
 
-        // When
-        await persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID);
+      // When
+      await persister.persist(status, TEST_COUNTRIES.US);
 
-        // Then
-        expect(mockMarkReportCompleted).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID,
-          ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-          expect.objectContaining({
-            id: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            status: 'complete',
-            output: status.result,
-          })
-        );
-      });
+      // Then
+      expect(markReportCompleted).toHaveBeenCalledWith(
+        TEST_COUNTRIES.US,
+        TEST_CALC_IDS.REPORT_123,
+        expect.objectContaining({
+          id: TEST_CALC_IDS.REPORT_123,
+          status: 'complete',
+          output: status.result,
+        })
+      );
+    });
 
-      it('given report persist success then invalidates report cache', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          metadata: {
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'societyWide',
-            targetType: 'report',
-            startedAt: Date.now(),
-          },
-        });
-        mockMarkReportCompleted.mockResolvedValue({});
+    it('given report persistence then invalidates report cache', async () => {
+      // Given
+      const result = mockSocietyWideResult();
+      const status: CalcStatus = {
+        status: 'complete',
+        result,
+        metadata: {
+          calcId: TEST_CALC_IDS.REPORT_123,
+          targetType: 'report',
+          calcType: 'societyWide',
+          startedAt: Date.now(),
+        },
+      };
+      (markReportCompleted as any).mockResolvedValue(undefined);
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
-        // When
-        await persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID);
+      // When
+      await persister.persist(status, TEST_COUNTRIES.US);
 
-        // Then
-        expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-          queryKey: ['reports', 'report_id', ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID],
-        });
-      });
-
-      it('given report persist fails then retries once', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          metadata: {
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'societyWide',
-            targetType: 'report',
-            startedAt: Date.now(),
-          },
-        });
-        mockMarkReportCompleted
-          .mockRejectedValueOnce(new Error('Network error'))
-          .mockResolvedValueOnce({});
-
-        // When
-        await persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID);
-
-        // Then
-        expect(mockMarkReportCompleted).toHaveBeenCalledTimes(2);
-      });
-
-      it('given report persist fails twice then throws error', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          metadata: {
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'societyWide',
-            targetType: 'report',
-            startedAt: Date.now(),
-          },
-        });
-        mockMarkReportCompleted.mockRejectedValue(new Error('Network error'));
-
-        // When/Then
-        await expect(
-          persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID)
-        ).rejects.toThrow('Failed to persist report after retry');
-
-        expect(mockMarkReportCompleted).toHaveBeenCalledTimes(2);
+      // Then
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: reportKeys.byId(TEST_CALC_IDS.REPORT_123),
       });
     });
 
-    describe('simulation target', () => {
-      it('given complete status for simulation then calls updateSimulationOutput', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          metadata: {
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-            calcType: 'household',
-            targetType: 'simulation',
-            startedAt: Date.now(),
-          },
-        });
-        mockUpdateSimulationOutput.mockResolvedValue({});
+    it('given persistence fails then retries once', async () => {
+      // Given
+      const result = mockSocietyWideResult();
+      const status: CalcStatus = {
+        status: 'complete',
+        result,
+        metadata: {
+          calcId: TEST_CALC_IDS.REPORT_123,
+          targetType: 'report',
+          calcType: 'societyWide',
+          startedAt: Date.now(),
+        },
+      };
+      (markReportCompleted as any)
+        .mockRejectedValueOnce(new Error('Network error'))
+        .mockResolvedValueOnce(undefined);
 
-        // When
-        await persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID);
+      // When
+      await persister.persist(status, TEST_COUNTRIES.US);
 
-        // Then
-        expect(mockUpdateSimulationOutput).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID,
-          ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-          status.result
-        );
-      });
+      // Then
+      expect(markReportCompleted).toHaveBeenCalledTimes(2);
+    });
 
-      it('given simulation persist success then invalidates simulation cache', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          metadata: {
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-            calcType: 'household',
-            targetType: 'simulation',
-            startedAt: Date.now(),
-          },
-        });
-        mockUpdateSimulationOutput.mockResolvedValue({});
+    it('given retry fails then throws error', async () => {
+      // Given
+      const result = mockSocietyWideResult();
+      const status: CalcStatus = {
+        status: 'complete',
+        result,
+        metadata: {
+          calcId: TEST_CALC_IDS.REPORT_123,
+          targetType: 'report',
+          calcType: 'societyWide',
+          startedAt: Date.now(),
+        },
+      };
+      (markReportCompleted as any).mockRejectedValue(new Error('Network error'));
 
-        // When
-        await persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID);
+      // When/Then
+      await expect(persister.persist(status, TEST_COUNTRIES.US)).rejects.toThrow(
+        'Failed to persist report after retry'
+      );
+      expect(markReportCompleted).toHaveBeenCalledTimes(2);
+    });
+  });
 
-        // Then
-        expect(mockQueryClient.invalidateQueries).toHaveBeenCalledWith({
-          queryKey: ['simulations', 'simulation_id', ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID],
-        });
-      });
+  describe('persist to simulation', () => {
+    it('given complete simulation status then persists to simulation', async () => {
+      // Given
+      const result = mockHouseholdResult();
+      const status: CalcStatus = {
+        status: 'complete',
+        result,
+        metadata: {
+          calcId: 'sim-456',
+          targetType: 'simulation',
+          calcType: 'household',
+          startedAt: Date.now(),
+        },
+      };
+      (updateSimulationOutput as any).mockResolvedValue(undefined);
 
-      it('given simulation persist fails then retries once', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          metadata: {
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-            calcType: 'household',
-            targetType: 'simulation',
-            startedAt: Date.now(),
-          },
-        });
-        mockUpdateSimulationOutput
-          .mockRejectedValueOnce(new Error('Network error'))
-          .mockResolvedValueOnce({});
+      // When
+      await persister.persist(status, TEST_COUNTRIES.US);
 
-        // When
-        await persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID);
+      // Then
+      expect(updateSimulationOutput).toHaveBeenCalledWith(TEST_COUNTRIES.US, 'sim-456', result);
+    });
 
-        // Then
-        expect(mockUpdateSimulationOutput).toHaveBeenCalledTimes(2);
+    it('given simulation persistence then invalidates simulation cache', async () => {
+      // Given
+      const result = mockHouseholdResult();
+      const status: CalcStatus = {
+        status: 'complete',
+        result,
+        metadata: {
+          calcId: 'sim-456',
+          targetType: 'simulation',
+          calcType: 'household',
+          startedAt: Date.now(),
+        },
+      };
+      (updateSimulationOutput as any).mockResolvedValue(undefined);
+      const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+
+      // When
+      await persister.persist(status, TEST_COUNTRIES.US);
+
+      // Then
+      expect(invalidateSpy).toHaveBeenCalledWith({
+        queryKey: simulationKeys.byId('sim-456'),
       });
     });
 
-    describe('error handling', () => {
-      it('given status without result then throws error', async () => {
-        // Given
-        const status = mockCompleteCalcStatus({
-          result: undefined,
-        });
+    it('given simulation with reportId then checks if all simulations complete', async () => {
+      // Given
+      const result = mockHouseholdResult();
+      const status: CalcStatus = {
+        status: 'complete',
+        result,
+        metadata: {
+          calcId: TEST_CALC_IDS.SIM_1,
+          targetType: 'simulation',
+          calcType: 'household',
+          reportId: TEST_CALC_IDS.REPORT_123,
+          startedAt: Date.now(),
+        },
+      };
 
-        // When/Then
-        await expect(
-          persister.persist(status, ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID)
-        ).rejects.toThrow('Cannot persist: result is missing from CalcStatus');
-      });
+      const report: Report = {
+        id: TEST_CALC_IDS.REPORT_123,
+        countryId: TEST_COUNTRIES.US,
+        apiVersion: '1.0',
+        simulationIds: [TEST_CALC_IDS.SIM_1, TEST_CALC_IDS.SIM_2],
+        status: 'pending',
+      };
+
+      queryClient.setQueryData(reportKeys.byId(TEST_CALC_IDS.REPORT_123), report);
+      queryClient.setQueryData(
+        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1),
+        { status: 'complete', result: mockHouseholdResult(), metadata: status.metadata }
+      );
+      queryClient.setQueryData(
+        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_2),
+        { status: 'pending', metadata: { calcId: TEST_CALC_IDS.SIM_2, targetType: 'simulation', calcType: 'household', startedAt: Date.now() } }
+      );
+
+      (updateSimulationOutput as any).mockResolvedValue(undefined);
+
+      // When
+      await persister.persist(status, TEST_COUNTRIES.US);
+
+      // Then - Should not mark report complete yet since sim-2 is still pending
+      expect(markReportCompleted).not.toHaveBeenCalled();
+    });
+
+    it('given all simulations complete then marks report complete', async () => {
+      // Given
+      const result1 = mockHouseholdResult();
+      const result2 = mockHouseholdResult();
+      const status: CalcStatus = {
+        status: 'complete',
+        result: result2,
+        metadata: {
+          calcId: TEST_CALC_IDS.SIM_2,
+          targetType: 'simulation',
+          calcType: 'household',
+          reportId: TEST_CALC_IDS.REPORT_123,
+          startedAt: Date.now(),
+        },
+      };
+
+      const report: Report = {
+        id: TEST_CALC_IDS.REPORT_123,
+        countryId: TEST_COUNTRIES.US,
+        apiVersion: '1.0',
+        simulationIds: [TEST_CALC_IDS.SIM_1, TEST_CALC_IDS.SIM_2],
+        status: 'pending',
+      };
+
+      queryClient.setQueryData(reportKeys.byId(TEST_CALC_IDS.REPORT_123), report);
+      queryClient.setQueryData(
+        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1),
+        { status: 'complete', result: result1, metadata: { calcId: TEST_CALC_IDS.SIM_1, targetType: 'simulation', calcType: 'household', startedAt: Date.now() } }
+      );
+      queryClient.setQueryData(
+        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_2),
+        { status: 'complete', result: result2, metadata: status.metadata }
+      );
+
+      (updateSimulationOutput as any).mockResolvedValue(undefined);
+      (markReportCompleted as any).mockResolvedValue(undefined);
+
+      // When
+      await persister.persist(status, TEST_COUNTRIES.US);
+
+      // Then - Should mark report complete with aggregated outputs
+      expect(markReportCompleted).toHaveBeenCalledWith(
+        TEST_COUNTRIES.US,
+        TEST_CALC_IDS.REPORT_123,
+        expect.objectContaining({
+          id: TEST_CALC_IDS.REPORT_123,
+          status: 'complete',
+          output: [result1, result2],
+        })
+      );
+    });
+  });
+
+  describe('error handling', () => {
+    it('given missing result then throws error', async () => {
+      // Given
+      const status: CalcStatus = {
+        status: 'complete',
+        metadata: {
+          calcId: TEST_CALC_IDS.REPORT_123,
+          targetType: 'report',
+          calcType: 'societyWide',
+          startedAt: Date.now(),
+        },
+      };
+
+      // When/Then
+      await expect(persister.persist(status, TEST_COUNTRIES.US)).rejects.toThrow(
+        'Cannot persist: result is missing from CalcStatus'
+      );
+    });
+
+    it('given undefined result then throws error', async () => {
+      // Given
+      const status: CalcStatus = {
+        status: 'complete',
+        result: undefined,
+        metadata: {
+          calcId: TEST_CALC_IDS.REPORT_123,
+          targetType: 'report',
+          calcType: 'societyWide',
+          startedAt: Date.now(),
+        },
+      };
+
+      // When/Then
+      await expect(persister.persist(status, TEST_COUNTRIES.US)).rejects.toThrow(
+        'Cannot persist: result is missing from CalcStatus'
+      );
     });
   });
 });

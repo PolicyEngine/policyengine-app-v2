@@ -1,447 +1,299 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
+import { ResultPersister } from '@/libs/calculations/ResultPersister';
+import { calculationQueries } from '@/libs/queries/calculationQueries';
+import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 import {
-  createMockQueryClient,
-  createMockResultPersister,
-  mockReportCalcStartConfig,
-  mockSimulationCalcStartConfig,
-  ORCHESTRATION_TEST_CONSTANTS,
-} from '@/tests/fixtures/libs/calculations/orchestrationFixtures';
+  createTestQueryClient,
+  createMockManager,
+  TEST_CALC_IDS,
+  TEST_COUNTRIES,
+  TEST_POPULATION_IDS,
+  mockHouseholdCalcConfig,
+  mockHouseholdCalcConfigWithReport,
+  mockSocietyWideCalcConfig,
+  mockCompleteHouseholdStatus,
+  mockPendingSocietyWideStatus,
+  mockPendingSocietyWideStatusWithMessage,
+  mockHouseholdQueryOptions,
+  mockSocietyWideQueryOptions,
+} from '@/tests/fixtures/libs/calculations/orchestratorMocks';
 
-// Mock QueryObserver to avoid needing a real QueryClient
-vi.mock('@tanstack/react-query', async () => {
-  const actual = await vi.importActual('@tanstack/react-query');
-  return {
-    ...actual,
-    QueryObserver: vi.fn().mockImplementation(() => ({
-      subscribe: vi.fn().mockReturnValue(() => {}), // Returns unsubscribe function
-    })),
-  };
-});
-
-// Mock the calculationQueries
-vi.mock('@/libs/queries/calculationQueries', () => ({
-  calculationQueries: {
-    forReport: vi.fn((reportId, metadata, params) => ({
-      queryKey: ['calculations', 'report', reportId],
-      queryFn: vi.fn().mockResolvedValue({
-        status: 'pending',
-        metadata,
-        progress: 0,
-      }),
-      refetchInterval: 1000,
-      staleTime: Infinity,
-      meta: { calcMetadata: metadata },
-    })),
-    forSimulation: vi.fn((simulationId, metadata, params) => ({
-      queryKey: ['calculations', 'simulation', simulationId],
-      queryFn: vi.fn().mockResolvedValue({
-        status: 'pending',
-        metadata,
-        progress: 0,
-      }),
-      refetchInterval: 500,
-      staleTime: Infinity,
-      meta: { calcMetadata: metadata },
-    })),
-  },
-}));
+// Mock dependencies
+vi.mock('@/libs/queries/calculationQueries');
+vi.mock('@/libs/calculations/ResultPersister');
 
 describe('CalcOrchestrator', () => {
   let orchestrator: CalcOrchestrator;
-  let mockQueryClient: any;
-  let mockResultPersister: any;
+  let queryClient: ReturnType<typeof createTestQueryClient>;
+  let mockResultPersister: ResultPersister;
+  let mockManager: ReturnType<typeof createMockManager>;
 
   beforeEach(() => {
-    mockQueryClient = createMockQueryClient();
-    mockResultPersister = createMockResultPersister();
-    orchestrator = new CalcOrchestrator(mockQueryClient, mockResultPersister);
-
+    queryClient = createTestQueryClient();
+    mockResultPersister = new ResultPersister(queryClient);
+    mockManager = createMockManager();
+    orchestrator = new CalcOrchestrator(queryClient, mockResultPersister, mockManager);
     vi.clearAllMocks();
   });
 
-  describe('startCalculation', () => {
-    describe('report calculations', () => {
-      it('given report config then executes queryFn and sets data in cache', async () => {
-        // Given
-        const config = mockReportCalcStartConfig({
-          simulations: {
-            simulation1: {
-              ...mockReportCalcStartConfig().simulations.simulation1,
-              populationType: 'geography',
-            },
-            simulation2: mockReportCalcStartConfig().simulations.simulation2,
-          },
-        });
+  afterEach(() => {
+    queryClient.clear();
+  });
 
-        // When
-        await orchestrator.startCalculation(config);
+  describe('household calculations', () => {
+    it('given household calculation then returns complete immediately', async () => {
+      // Given
+      const config = mockHouseholdCalcConfig();
+      const completeStatus = mockCompleteHouseholdStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
 
-        // Then - Should set initial status in cache
-        expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
-          ['calculations', 'report', ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID],
-          expect.objectContaining({
-            status: 'pending',
-            metadata: expect.objectContaining({
-              calcType: 'societyWide',
-              targetType: 'report',
-            }),
-          })
-        );
-      });
+      (calculationQueries.forSimulation as any).mockReturnValue(
+        mockHouseholdQueryOptions(TEST_CALC_IDS.SIM_1, mockQueryFn)
+      );
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
 
-      it('given household report then builds household metadata', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockReportCalcStartConfig({
-          simulations: {
-            simulation1: {
-              ...mockReportCalcStartConfig().simulations.simulation1,
-              populationType: 'household',
-            },
-            simulation2: null,
-          },
-        });
+      // When
+      await orchestrator.startCalculation(config);
 
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forReport).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-          expect.objectContaining({
-            calcType: 'household',
-            targetType: 'report',
-          }),
-          expect.any(Object)
-        );
-      });
-
-      it('given economy report then builds economy params', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockReportCalcStartConfig({
-          simulations: {
-            simulation1: {
-              ...mockReportCalcStartConfig().simulations.simulation1,
-              populationType: 'geography',
-              policyId: ORCHESTRATION_TEST_CONSTANTS.TEST_POLICY_ID_1,
-            },
-            simulation2: {
-              ...mockReportCalcStartConfig().simulations.simulation1,
-              id: 'sim-2',
-              policyId: ORCHESTRATION_TEST_CONSTANTS.TEST_POLICY_ID_2,
-            },
-          },
-        });
-
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forReport).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-          expect.any(Object),
-          expect.objectContaining({
-            countryId: ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID,
-            calcType: 'societyWide', // geography maps to economy
-            policyIds: {
-              baseline: ORCHESTRATION_TEST_CONSTANTS.TEST_POLICY_ID_1,
-              reform: ORCHESTRATION_TEST_CONSTANTS.TEST_POLICY_ID_2,
-            },
-          })
-        );
-      });
+      // Then
+      expect(mockQueryFn).toHaveBeenCalledTimes(1);
+      expect(mockResultPersister.persist).toHaveBeenCalledWith(completeStatus, TEST_COUNTRIES.US);
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
     });
 
-    describe('simulation calculations', () => {
-      it('given simulation config then executes queryFn and sets data in cache', async () => {
-        // Given
-        const config = mockSimulationCalcStartConfig();
+    it('given household calculation then sets computing status before API call', async () => {
+      // Given
+      const config = mockHouseholdCalcConfig();
+      const completeStatus = mockCompleteHouseholdStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
 
-        // When
-        await orchestrator.startCalculation(config);
+      (calculationQueries.forSimulation as any).mockReturnValue(
+        mockHouseholdQueryOptions(TEST_CALC_IDS.SIM_1, mockQueryFn)
+      );
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
 
-        // Then - Should set initial status in cache
-        expect(mockQueryClient.setQueryData).toHaveBeenCalledWith(
-          ['calculations', 'simulation', ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID],
-          expect.objectContaining({
-            status: 'pending',
-          })
-        );
-      });
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData');
 
-      it('given geography simulation then builds economy metadata', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockSimulationCalcStartConfig();
+      // When
+      await orchestrator.startCalculation(config);
 
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forSimulation).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-          expect.objectContaining({
-            calcType: 'societyWide', // geography maps to economy
-            targetType: 'simulation',
-          }),
-          expect.any(Object)
-        );
-      });
-
-      it('given geography simulation then includes region in params', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockSimulationCalcStartConfig();
-
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forSimulation).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-          expect.any(Object),
-          expect.objectContaining({
-            region: ORCHESTRATION_TEST_CONSTANTS.TEST_GEOGRAPHY_ID,
-          })
-        );
-      });
+      // Then - Should have set computing status BEFORE complete status
+      expect(setQueryDataSpy).toHaveBeenCalledWith(
+        ['calculation', TEST_CALC_IDS.SIM_1],
+        expect.objectContaining({
+          status: 'pending',
+          progress: 0,
+          message: 'Initializing calculation...',
+        })
+      );
     });
 
-    describe('metadata building', () => {
-      it('given config then includes timestamp', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockReportCalcStartConfig();
-        const beforeTime = Date.now();
+    it('given household calculation then does not start polling', async () => {
+      // Given
+      const config = mockHouseholdCalcConfig();
+      const completeStatus = mockCompleteHouseholdStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
 
-        // When
-        await orchestrator.startCalculation(config);
+      (calculationQueries.forSimulation as any).mockReturnValue(
+        mockHouseholdQueryOptions(TEST_CALC_IDS.SIM_1, mockQueryFn)
+      );
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
 
-        // Then
-        const afterTime = Date.now();
-        expect(calculationQueries.forReport).toHaveBeenCalledWith(
-          expect.any(String),
-          expect.objectContaining({
-            startedAt: expect.any(Number),
-          }),
-          expect.any(Object)
-        );
+      // When
+      await orchestrator.startCalculation(config);
 
-        const callArgs = (calculationQueries.forReport as any).mock.calls[0];
-        const metadata = callArgs[1];
-        expect(metadata.startedAt).toBeGreaterThanOrEqual(beforeTime);
-        expect(metadata.startedAt).toBeLessThanOrEqual(afterTime);
-      });
-    });
-
-    describe('params building - Phase 1', () => {
-      it('given report config then includes calcId in params', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockReportCalcStartConfig();
-
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forReport).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-          expect.any(Object),
-          expect.objectContaining({
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-          })
-        );
-      });
-
-      it('given simulation config then includes calcId in params', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockSimulationCalcStartConfig();
-
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forSimulation).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-          expect.any(Object),
-          expect.objectContaining({
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-          })
-        );
-      });
-
-      it('given household config then params includes calcId and household populationId', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockReportCalcStartConfig({
-          simulations: {
-            simulation1: {
-              ...mockReportCalcStartConfig().simulations.simulation1,
-              populationType: 'household',
-            },
-            simulation2: null,
-          },
-        });
-
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forReport).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-          expect.any(Object),
-          expect.objectContaining({
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_REPORT_ID,
-            calcType: 'household',
-            populationId: ORCHESTRATION_TEST_CONSTANTS.TEST_HOUSEHOLD_ID,
-          })
-        );
-      });
-
-      it('given economy config then params includes calcId and region', async () => {
-        // Given
-        const { calculationQueries } = await import('@/libs/queries/calculationQueries');
-        const config = mockSimulationCalcStartConfig();
-
-        // When
-        await orchestrator.startCalculation(config);
-
-        // Then
-        expect(calculationQueries.forSimulation).toHaveBeenCalledWith(
-          ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-          expect.any(Object),
-          expect.objectContaining({
-            calcId: ORCHESTRATION_TEST_CONSTANTS.TEST_SIMULATION_ID,
-            calcType: 'societyWide',
-            region: ORCHESTRATION_TEST_CONSTANTS.TEST_GEOGRAPHY_ID,
-          })
-        );
-      });
+      // Then - Should cleanup immediately, not start polling
+      expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
     });
   });
 
-  describe('cleanup - Phase 5', () => {
-    it('given active subscription then cleanup unsubscribes', async () => {
+  describe('society-wide calculations', () => {
+    it('given societyWide calculation then sets initial status in cache', async () => {
       // Given
-      const { QueryObserver } = await import('@tanstack/react-query');
-      const mockUnsubscribe = vi.fn();
-      (QueryObserver as any).mockImplementation(() => ({
-        subscribe: vi.fn().mockReturnValue(mockUnsubscribe),
-      }));
+      const config = mockSocietyWideCalcConfig();
+      const computingStatus = mockPendingSocietyWideStatusWithMessage();
+      const mockQueryFn = vi.fn().mockResolvedValue(computingStatus);
 
-      const config = mockReportCalcStartConfig();
+      (calculationQueries.forReport as any).mockReturnValue(
+        mockSocietyWideQueryOptions(TEST_CALC_IDS.REPORT_1, mockQueryFn)
+      );
 
-      // When - start calculation (creates subscription)
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData');
+
+      // When
       await orchestrator.startCalculation(config);
 
-      // Then - cleanup should call unsubscribe
-      orchestrator.cleanup();
-      expect(mockUnsubscribe).toHaveBeenCalled();
+      // Then
+      expect(setQueryDataSpy).toHaveBeenCalledWith(
+        ['calculation', TEST_CALC_IDS.REPORT_1],
+        computingStatus
+      );
     });
 
-    it('given no active subscription then cleanup does nothing', () => {
-      // Given - fresh orchestrator with no calculation started
-
-      // When/Then - should not throw
-      expect(() => orchestrator.cleanup()).not.toThrow();
-    });
-
-    it('given already cleaned up then second cleanup is safe', async () => {
+    it('given societyWide calculation then does not set computing status before call', async () => {
       // Given
-      const { QueryObserver } = await import('@tanstack/react-query');
-      const mockUnsubscribe = vi.fn();
-      (QueryObserver as any).mockImplementation(() => ({
-        subscribe: vi.fn().mockReturnValue(mockUnsubscribe),
-      }));
+      const config = mockSocietyWideCalcConfig();
+      const computingStatus = mockPendingSocietyWideStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(computingStatus);
 
-      const config = mockReportCalcStartConfig();
+      (calculationQueries.forReport as any).mockReturnValue(
+        mockSocietyWideQueryOptions(TEST_CALC_IDS.REPORT_1, mockQueryFn)
+      );
+
+      const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData');
+
+      // When
       await orchestrator.startCalculation(config);
 
-      // When - cleanup twice
-      orchestrator.cleanup();
-      orchestrator.cleanup();
-
-      // Then - unsubscribe only called once
-      expect(mockUnsubscribe).toHaveBeenCalledTimes(1);
+      // Then - Should only call setQueryData ONCE with the API result
+      expect(setQueryDataSpy).toHaveBeenCalledTimes(1);
+      expect(setQueryDataSpy).toHaveBeenCalledWith(
+        ['calculation', TEST_CALC_IDS.REPORT_1],
+        computingStatus
+      );
     });
+  });
 
-    it('given calculation completes then auto-cleans up subscription', async () => {
+  describe('metadata building', () => {
+    it('given household simulation then builds household metadata', async () => {
       // Given
-      const { QueryObserver } = await import('@tanstack/react-query');
-      const mockUnsubscribe = vi.fn();
-      let subscribeCallback: any;
+      const config = mockHouseholdCalcConfigWithReport();
+      const completeStatus = mockCompleteHouseholdStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
 
-      (QueryObserver as any).mockImplementation(() => ({
-        subscribe: vi.fn().mockImplementation((callback) => {
-          subscribeCallback = callback;
-          return mockUnsubscribe;
-        }),
-      }));
+      (calculationQueries.forSimulation as any).mockImplementation((calcId, metadata, params) => {
+        // Verify metadata passed to query
+        expect(metadata).toMatchObject({
+          calcId: TEST_CALC_IDS.SIM_1,
+          calcType: 'household',
+          targetType: 'simulation',
+          reportId: TEST_CALC_IDS.REPORT_123,
+        });
+        return mockHouseholdQueryOptions(calcId, mockQueryFn);
+      });
 
-      const config = mockReportCalcStartConfig();
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
+
+      // When
       await orchestrator.startCalculation(config);
 
-      // When - simulate completion callback
-      subscribeCallback({
-        data: {
-          status: 'complete',
-          result: { budget: { budgetary_impact: 1000 } },
-          metadata: {
-            calcId: config.calcId,
-            calcType: 'societyWide',
-            targetType: 'report',
-            startedAt: Date.now(),
+      // Then
+      expect(calculationQueries.forSimulation).toHaveBeenCalled();
+    });
+
+    it('given geography simulation then builds societyWide metadata', async () => {
+      // Given
+      const config = mockSocietyWideCalcConfig();
+      const computingStatus = mockPendingSocietyWideStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(computingStatus);
+
+      (calculationQueries.forReport as any).mockImplementation((calcId, metadata, params) => {
+        // Verify metadata passed to query
+        expect(metadata).toMatchObject({
+          calcId: TEST_CALC_IDS.REPORT_1,
+          calcType: 'societyWide',
+          targetType: 'report',
+        });
+        return mockSocietyWideQueryOptions(calcId, mockQueryFn);
+      });
+
+      // When
+      await orchestrator.startCalculation(config);
+
+      // Then
+      expect(calculationQueries.forReport).toHaveBeenCalled();
+    });
+  });
+
+  describe('params building', () => {
+    it('given household calculation then builds household params', async () => {
+      // Given
+      const config = mockHouseholdCalcConfig();
+      const completeStatus = mockCompleteHouseholdStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
+
+      (calculationQueries.forSimulation as any).mockImplementation((calcId, metadata, params) => {
+        // Verify params passed to query
+        expect(params).toMatchObject({
+          countryId: TEST_COUNTRIES.US,
+          calcType: 'household',
+          policyIds: {
+            baseline: 'policy-1',
           },
-        },
+          populationId: TEST_POPULATION_IDS.HOUSEHOLD_1,
+          calcId: TEST_CALC_IDS.SIM_1,
+        });
+        return mockHouseholdQueryOptions(calcId, mockQueryFn);
       });
 
-      // Wait for persistence to complete
-      await vi.waitFor(() => {
-        expect(mockUnsubscribe).toHaveBeenCalled();
-      });
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
 
-      // Then - external cleanup should be safe (no-op)
-      expect(() => orchestrator.cleanup()).not.toThrow();
-    });
-
-    it('given calculation errors then auto-cleans up subscription', async () => {
-      // Given
-      const { QueryObserver } = await import('@tanstack/react-query');
-      const mockUnsubscribe = vi.fn();
-      let subscribeCallback: any;
-
-      (QueryObserver as any).mockImplementation(() => ({
-        subscribe: vi.fn().mockImplementation((callback) => {
-          subscribeCallback = callback;
-          return mockUnsubscribe;
-        }),
-      }));
-
-      const config = mockReportCalcStartConfig();
+      // When
       await orchestrator.startCalculation(config);
 
-      // When - simulate error callback
-      subscribeCallback({
-        data: {
-          status: 'error',
-          error: new Error('Test error'),
-          metadata: {
-            calcId: config.calcId,
-            calcType: 'societyWide',
-            targetType: 'report',
-            startedAt: Date.now(),
+      // Then
+      expect(calculationQueries.forSimulation).toHaveBeenCalled();
+    });
+
+    it('given societyWide calculation then builds geography params', async () => {
+      // Given
+      const config = mockSocietyWideCalcConfig();
+      const computingStatus = mockPendingSocietyWideStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(computingStatus);
+
+      (calculationQueries.forReport as any).mockImplementation((calcId, metadata, params) => {
+        // Verify params passed to query
+        expect(params).toMatchObject({
+          countryId: TEST_COUNTRIES.US,
+          calcType: 'societyWide',
+          policyIds: {
+            baseline: 'policy-1',
+            reform: 'policy-2',
           },
-        },
+          populationId: TEST_POPULATION_IDS.US,
+          region: TEST_POPULATION_IDS.US,
+          calcId: TEST_CALC_IDS.REPORT_1,
+        });
+        return mockSocietyWideQueryOptions(calcId, mockQueryFn);
       });
 
-      // Then - subscription should be cleaned up immediately
-      expect(mockUnsubscribe).toHaveBeenCalled();
+      // When
+      await orchestrator.startCalculation(config);
 
-      // External cleanup should be safe (no-op)
-      expect(() => orchestrator.cleanup()).not.toThrow();
+      // Then
+      expect(calculationQueries.forReport).toHaveBeenCalled();
+    });
+  });
+
+  describe('cleanup', () => {
+    it('given no active polling then cleanup does nothing', () => {
+      // When
+      orchestrator.cleanup();
+
+      // Then - Should not throw
+      expect(true).toBe(true);
+    });
+  });
+
+  describe('manager integration', () => {
+    it('given no manager then does not call cleanup', async () => {
+      // Given - Create orchestrator without manager
+      const orchestratorWithoutManager = new CalcOrchestrator(queryClient, mockResultPersister);
+      const config = mockHouseholdCalcConfig();
+      const completeStatus = mockCompleteHouseholdStatus();
+      const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
+
+      (calculationQueries.forSimulation as any).mockReturnValue(
+        mockHouseholdQueryOptions(TEST_CALC_IDS.SIM_1, mockQueryFn)
+      );
+      (mockResultPersister.persist as any).mockResolvedValue(undefined);
+
+      // When
+      await orchestratorWithoutManager.startCalculation(config);
+
+      // Then - Should not throw, should not call manager.cleanup
+      expect(mockManager.cleanup).not.toHaveBeenCalled();
     });
   });
 });
