@@ -535,9 +535,9 @@ export const useUserReportById = (userReportId: string) => {
   );
 
   // Step 6: Extract households from simulations and fetch them
-  const householdIds = simulations
-    .filter((s) => s.populationType === 'household' && s.populationId)
-    .map((s) => s.populationId as string);
+  // Filter for household simulations, then extract unique population IDs
+  const householdSimulations = simulations.filter(s => s.populationType === 'household');
+  const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
   const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,

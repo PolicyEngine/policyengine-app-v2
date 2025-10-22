@@ -1,5 +1,6 @@
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQueries, useQueryClient, UseQueryResult } from '@tanstack/react-query';
+import { useMemo } from 'react';
 
 /**
  * Generic interface for normalized data structure
@@ -42,34 +43,29 @@ export function useParallelQueries<T>(
 ): ParallelQueriesResult<T> {
   const queryClient = useQueryClient();
 
+  // Deduplicate IDs to prevent duplicate query keys (defense in depth)
+  // This prevents React Query's "Duplicate Queries" warning when the same ID appears multiple times
+  // (e.g., baseline and reform simulations sharing the same household/geography population)
+  const uniqueIds = useMemo(() => [...new Set(ids)], [ids]);
+
   const queries = useQueries({
-    queries: ids.map((id) => ({
+    queries: uniqueIds.map((id) => ({
       queryKey: config.queryKey(id),
-      queryFn: async () => {
-        console.log(`[useParallelQueries] ========== queryFn CALLED ==========`);
-        console.log(`[useParallelQueries] ID: ${id}`);
-        console.log(`[useParallelQueries] Timestamp: ${Date.now()}`);
-        console.log(`[useParallelQueries] Calling API directly (no manual cache check)`);
-
-        const freshData = await config.queryFn(id);
-
-        console.log(`[useParallelQueries] ========== API RESPONSE ==========`);
-        console.log(`[useParallelQueries] Fresh data for ID ${id}:`, freshData);
-        console.log(`[useParallelQueries] Status in fresh data:`, (freshData as any)?.status);
-        console.log(`[useParallelQueries] Has output:`, !!(freshData as any)?.output);
-        console.log(`[useParallelQueries] Timestamp: ${Date.now()}`);
-
-        return freshData;
-      },
+      queryFn: () => config.queryFn(id),
       enabled: config.enabled !== false,
       staleTime: config.staleTime ?? 5 * 60 * 1000, // Default 5 minutes (use ?? to allow 0)
     })),
   });
 
-  const isLoading = queries.some((q) => q.isLoading);
-  const error = queries.find((q) => q.error)?.error || null;
+  // Map results back to original order, duplicating as needed
+  // This ensures the returned array length matches the input array length
+  const resultsMap = new Map(uniqueIds.map((id, idx) => [id, queries[idx]]));
+  const orderedQueries = ids.map(id => resultsMap.get(id)!);
 
-  return { queries, isLoading, error };
+  const isLoading = orderedQueries.some((q) => q.isLoading);
+  const error = orderedQueries.find((q) => q.error)?.error || null;
+
+  return { queries: orderedQueries, isLoading, error };
 }
 
 /**
