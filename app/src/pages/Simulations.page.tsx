@@ -71,16 +71,6 @@ export default function SimulationsPage() {
       header: 'Population',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'Add to Report', action: 'add-to-report' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform the data to match the new structure

@@ -79,19 +79,6 @@ export default function PoliciesPage() {
       header: 'Parameter changes',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View details', action: 'view-policy' },
-        { label: 'Bookmark', action: 'bookmark' },
-        { label: 'Edit', action: 'edit' },
-        { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform the data to match the new structure

@@ -119,19 +119,6 @@ export default function ReportsPage() {
       header: 'Output Type',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View Output', action: 'view-output' },
-        { label: 'Export', action: 'export' },
-        { label: 'Share', action: 'share' },
-        { label: 'Duplicate', action: 'duplicate' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
   ];
 
   console.log('User Reports Data:', data);

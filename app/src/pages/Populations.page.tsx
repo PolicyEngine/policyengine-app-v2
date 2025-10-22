@@ -169,19 +169,6 @@ export default function PopulationsPage() {
         },
       ],
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View details', action: 'view-population' },
-        { label: 'Bookmark', action: 'bookmark' },
-        { label: 'Edit', action: 'edit' },
-        { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform household data
