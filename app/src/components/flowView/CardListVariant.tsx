@@ -43,7 +43,30 @@ export default function CardListVariant({
 
   return (
     <Stack gap={spacing.md}>
-      {/* Pagination header */}
+      {/* Card list */}
+      <Stack gap={spacing.sm}>
+        {paginatedItems.map((item: CardListItem, index: number) => (
+          <Card
+            key={index}
+            withBorder
+            component="button"
+            onClick={item.onClick}
+            disabled={item.isDisabled}
+            variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
+          >
+            <Stack gap={spacing.xs}>
+              <Text fw={600}>{item.title}</Text>
+              {item.subtitle && (
+                <Text size="sm" c="dimmed">
+                  {item.subtitle}
+                </Text>
+              )}
+            </Stack>
+          </Card>
+        ))}
+      </Stack>
+
+      {/* Pagination footer */}
       {shouldShowPagination && (
         <Group justify="space-between" align="center">
           <Text size="sm" c="dimmed">
@@ -72,29 +95,6 @@ export default function CardListVariant({
           </Group>
         </Group>
       )}
-
-      {/* Card list */}
-      <Stack gap={spacing.sm}>
-        {paginatedItems.map((item: CardListItem, index: number) => (
-          <Card
-            key={index}
-            withBorder
-            component="button"
-            onClick={item.onClick}
-            disabled={item.isDisabled}
-            variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
-          >
-            <Stack gap={spacing.xs}>
-              <Text fw={600}>{item.title}</Text>
-              {item.subtitle && (
-                <Text size="sm" c="dimmed">
-                  {item.subtitle}
-                </Text>
-              )}
-            </Stack>
-          </Card>
-        ))}
-      </Stack>
     </Stack>
   );
 }
