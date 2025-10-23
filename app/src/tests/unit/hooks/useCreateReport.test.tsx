@@ -4,6 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { createReportAndAssociateWithUser } from '@/api/report';
 import { useCreateReport } from '@/hooks/useCreateReport';
+import { mockReport } from '@/tests/fixtures/adapters/reportMocks';
 // Removed - old calculation manager mocks no longer needed
 import {
   createMockQueryClient,
@@ -13,7 +14,6 @@ import {
   mockHouseholdSimulation,
   mockNationalGeography,
   mockReportCreationPayload,
-  mockReportMetadata,
   mockSubnationalGeography,
   mockUserReportAssociation,
   setupConsoleMocks,
@@ -33,6 +33,10 @@ vi.mock('@/api/report', () => ({
 vi.mock('@/libs/queryKeys', () => ({
   reportKeys: {
     all: ['reports'],
+    byId: (id: string) => ['report', id],
+  },
+  reportAssociationKeys: {
+    all: ['report-associations'],
   },
 }));
 
@@ -53,6 +57,15 @@ vi.mock('@/libs/calculations/ResultPersister', () => ({
   })),
 }));
 
+// Mock CalcOrchestratorContext
+const mockOrchestrator = {
+  startCalculation: mockStartCalculation,
+  cleanup: mockCleanup,
+};
+vi.mock('@/contexts/CalcOrchestratorContext', () => ({
+  useCalcOrchestratorManager: vi.fn(() => mockOrchestrator),
+}));
+
 describe('useCreateReport', () => {
   let queryClient: ReturnType<typeof createMockQueryClient>;
   let consoleMocks: ReturnType<typeof setupConsoleMocks>;
@@ -64,7 +77,7 @@ describe('useCreateReport', () => {
 
     // Set default mock for createReportAndAssociateWithUser
     (createReportAndAssociateWithUser as any).mockResolvedValue({
-      report: mockReportMetadata,
+      report: mockReport,
       userReport: mockUserReportAssociation,
       metadata: {
         baseReportId: TEST_REPORT_ID_STRING,
@@ -157,7 +170,7 @@ describe('useCreateReport', () => {
       await waitFor(() => {
         const cachedReport = queryClient.getQueryData(['report', TEST_REPORT_ID_STRING]);
         expect(cachedReport).toBeDefined();
-        expect(cachedReport).toEqual(mockReportMetadata);
+        expect(cachedReport).toEqual(mockReport);
       });
     });
   });
@@ -363,11 +376,11 @@ describe('useCreateReport', () => {
       await waitFor(() => {
         // Should log error but still return result with report and userReport
         expect(consoleMocks.errorSpy).toHaveBeenCalledWith(
-          'Post-creation tasks failed:',
+          expect.stringContaining('Post-creation tasks failed:'),
           expect.any(Error)
         );
       });
-      expect(response.report).toEqual(mockReportMetadata);
+      expect(response.report).toEqual(mockReport);
       expect(response.userReport).toEqual(mockUserReportAssociation);
     });
   });
@@ -397,7 +410,7 @@ describe('useCreateReport', () => {
 
       // Resolve to clean up
       resolveFn({
-        report: mockReportMetadata,
+        report: mockReport,
         userReport: mockUserReportAssociation,
         metadata: {
           baseReportId: TEST_REPORT_ID_STRING,
