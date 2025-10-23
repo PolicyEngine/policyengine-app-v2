@@ -1,5 +1,6 @@
 import { ReactNode } from 'react';
-import { Modal, Stack, Box, Title, Text, Divider, Group, Button } from '@mantine/core';
+import { Modal, Stack, Box, Title, Text, Group, Button, Transition } from '@mantine/core';
+import { modalDesign } from '@/styles/modalDesign';
 
 interface BaseModalProps {
   opened: boolean;
@@ -31,9 +32,9 @@ export default function BaseModal({
   title,
   description,
   icon,
-  iconColor = '#666',
+  iconColor = modalDesign.colors.secondary,
   children,
-  size = 'sm',
+  size = 'md',
   footer,
   hideFooter = false,
   primaryButton,
@@ -42,7 +43,7 @@ export default function BaseModal({
   const defaultSecondaryButton = secondaryButton || {
     label: 'Cancel',
     onClick: onClose,
-    variant: 'outline' as const,
+    variant: 'subtle' as const,
   };
 
   return (
@@ -52,109 +53,145 @@ export default function BaseModal({
       centered
       size={size}
       padding={0}
-      radius="lg"
+      radius={modalDesign.radius.outer}
       withCloseButton={false}
+      transitionProps={{
+        duration: modalDesign.animation.duration,
+        transition: 'scale',
+      }}
       overlayProps={{
-        backgroundOpacity: 0.36,
-        blur: 2,
+        backgroundOpacity: 0.45,
+        blur: 3,
       }}
       styles={{
         body: { padding: 0 },
-        content: { overflow: 'hidden' }
+        content: {
+          overflow: 'hidden',
+          boxShadow: modalDesign.shadow,
+        },
       }}
     >
-      <Stack gap={0}>
-        {/* Header bar */}
-        {(title || description || icon) && (
-          <Box p="24px" style={{ borderBottom: '1px solid var(--mantine-color-gray-2)' }}>
-            <Stack gap="xs">
-              {icon && (
-                <Box
-                  style={{
-                    width: 32,
-                    height: 32,
-                    backgroundColor: 'rgba(179, 179, 179, 0.3)',
-                    borderRadius: 6,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {icon}
-                </Box>
-              )}
-              {(title || description) && (
-                <Stack gap={4}>
-                  <Title order={3} fw={700} size="20px">
-                    {title}
-                  </Title>
-                  {description && (
-                    <Text size="sm" c="dimmed">
-                      {description}
-                    </Text>
-                  )}
-                </Stack>
-              )}
-            </Stack>
-          </Box>
-        )}
-
-        {/* Content */}
-        <Box style={{ flex: 1, padding: '24px' }}>
-          {children}
-        </Box>
-
-        {/* Footer bar */}
-        {!hideFooter && (footer || primaryButton || secondaryButton) && (
-          <Box p="20px 24px" style={{ borderTop: '1px solid var(--mantine-color-gray-2)' }}>
-            <Group justify="flex-end" gap="xs">
-              {footer || (
-                <>
-                  <Button
-                    variant={defaultSecondaryButton.variant}
-                    color="teal"
-                    onClick={defaultSecondaryButton.onClick}
-                    styles={{
-                      root: {
-                        borderColor: '#319795',
-                        color: '#319795',
-                        '&:hover': {
-                          backgroundColor: 'rgba(49, 151, 149, 0.05)',
-                        },
-                      },
-                    }}
-                  >
-                    {defaultSecondaryButton.label}
-                  </Button>
-                  {primaryButton && (
-                    <Button
-                      variant="filled"
-                      color="teal"
-                      onClick={primaryButton.onClick}
-                      disabled={primaryButton.disabled}
-                      loading={primaryButton.loading}
-                      styles={{
-                        root: {
-                          backgroundColor: '#319795',
-                          '&:hover': {
-                            backgroundColor: '#2c8a88',
-                          },
-                          '&[data-disabled]': {
-                            backgroundColor: 'rgba(49, 151, 149, 0.3)',
-                            color: 'rgba(255, 255, 255, 0.6)',
-                          },
-                        },
+      <Transition
+        mounted={opened}
+        transition="fade"
+        duration={modalDesign.animation.duration}
+        timingFunction="ease"
+      >
+        {(styles) => (
+          <Stack gap={0} style={styles}>
+            {/* Header */}
+            {(title || description || icon) && (
+              <Box
+                p={modalDesign.spacing.header}
+                style={{
+                  borderBottom: `1px solid ${modalDesign.colors.border}`,
+                }}
+              >
+                <Stack gap="sm">
+                  {icon && (
+                    <Box
+                      style={{
+                        width: 40,
+                        height: 40,
+                        backgroundColor: modalDesign.colors.iconBackground,
+                        borderRadius: modalDesign.radius.inner,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: iconColor,
                       }}
                     >
-                      {primaryButton.label}
-                    </Button>
+                      {icon}
+                    </Box>
                   )}
-                </>
-              )}
-            </Group>
-          </Box>
+                  {(title || description) && (
+                    <Stack gap={6}>
+                      <Title order={3} fw={600} size="h3" lh={1.3}>
+                        {title}
+                      </Title>
+                      {description && (
+                        <Text size="sm" c="dimmed" lh={1.5}>
+                          {description}
+                        </Text>
+                      )}
+                    </Stack>
+                  )}
+                </Stack>
+              </Box>
+            )}
+
+            {/* Content */}
+            <Box
+              style={{
+                flex: 1,
+                padding: modalDesign.spacing.content,
+                minHeight: 100,
+              }}
+            >
+              {children}
+            </Box>
+
+            {/* Footer */}
+            {!hideFooter && (footer || primaryButton || secondaryButton) && (
+              <Box
+                p={`${modalDesign.spacing.footer}px ${modalDesign.spacing.header}px`}
+                style={{
+                  borderTop: `1px solid ${modalDesign.colors.border}`,
+                  backgroundColor: modalDesign.colors.divider,
+                }}
+              >
+                <Group justify="flex-end" gap="sm">
+                  {footer || (
+                    <>
+                      <Button
+                        variant={defaultSecondaryButton.variant}
+                        color="gray"
+                        onClick={defaultSecondaryButton.onClick}
+                        radius={modalDesign.radius.button}
+                        styles={{
+                          root: {
+                            transition: 'all 150ms ease',
+                          },
+                        }}
+                      >
+                        {defaultSecondaryButton.label}
+                      </Button>
+                      {primaryButton && (
+                        <Button
+                          variant="filled"
+                          onClick={primaryButton.onClick}
+                          disabled={primaryButton.disabled}
+                          loading={primaryButton.loading}
+                          radius={modalDesign.radius.button}
+                          styles={{
+                            root: {
+                              backgroundColor: modalDesign.colors.primary,
+                              transition: 'all 150ms ease',
+                              '&:hover': {
+                                backgroundColor: modalDesign.colors.primaryHover,
+                                transform: 'translateY(-1px)',
+                              },
+                              '&:active': {
+                                transform: 'translateY(0)',
+                              },
+                              '&[data-disabled]': {
+                                backgroundColor: 'rgba(49, 151, 149, 0.3)',
+                                color: 'rgba(255, 255, 255, 0.7)',
+                              },
+                            },
+                          }}
+                        >
+                          {primaryButton.label}
+                        </Button>
+                      )}
+                    </>
+                  )}
+                </Group>
+              </Box>
+            )}
+          </Stack>
         )}
-      </Stack>
+      </Transition>
     </Modal>
   );
 }

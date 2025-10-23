@@ -238,7 +238,7 @@ export default function HomePage() {
             >
               <Group justify="space-between">
                 <Box>
-                  <Text size="xs" c="dimmed" tt="uppercase" fw={700}>
+                  <Text size="xs" c="dimmed" fw={700}>
                     {stat.label}
                   </Text>
                   <Text size="xl" fw={700} mt={4}>

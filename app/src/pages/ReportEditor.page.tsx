@@ -39,10 +39,7 @@ import { userReportsAPI } from '@/api/v2/userReports';
 import { MOCK_USER_ID } from '@/constants';
 import ReportElementCell from '@/components/report/ReportElementCell';
 import DataAnalysisModal from '@/components/report/DataAnalysisModal';
-import ReportTemplatePickerModal from '@/components/report/ReportTemplatePickerModal';
-import TemplateSelectionModal from '@/components/report/TemplateSelectionModal';
 import AddToLibraryButton from '@/components/common/AddToLibraryButton';
-import type { ReportElementTemplate } from '@/api/v2/reportElementTemplates';
 
 export default function ReportEditorPage() {
   const { reportId } = useParams<{ reportId: string }>();
@@ -51,9 +48,6 @@ export default function ReportEditorPage() {
   const userId = import.meta.env.DEV ? MOCK_USER_ID : 'dev_test';
 
   const [dataModalOpened, setDataModalOpened] = useState(false);
-  const [templatePickerOpened, setTemplatePickerOpened] = useState(false);
-  const [templateSelectionOpened, setTemplateSelectionOpened] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<ReportElementTemplate | null>(null);
   const [isCreatingElement, setIsCreatingElement] = useState(false);
 
   // Fetch report details
@@ -271,84 +265,6 @@ export default function ReportEditorPage() {
     }
   };
 
-  // Handle template picker selection - opens the simulation selection modal
-  const handleTemplatePickerSelect = (template: ReportElementTemplate) => {
-    setSelectedTemplate(template);
-    setTemplatePickerOpened(false);
-    setTemplateSelectionOpened(true);
-  };
-
-  // Handle final template submission with simulation data
-  const handleTemplateSubmit = async (
-    aggregates: any[],
-    aggregateChanges: any[],
-    explanation: string
-  ) => {
-    setTemplateSelectionOpened(false);
-    setIsCreatingElement(true);
-
-    try {
-      // Find the maximum position and add 1
-      const maxPosition = sortedElements.reduce((max, el) => {
-        const pos = el.position ?? 0;
-        return Math.max(max, pos);
-      }, -1);
-      const position = maxPosition + 1;
-      const label = explanation;
-
-      // Determine data type based on which array has content
-      const isComparison = aggregateChanges.length > 0;
-      const dataType = isComparison ? 'AggregateChange' : 'Aggregate';
-      const data = isComparison ? aggregateChanges : aggregates;
-
-      console.log('Creating template element with:');
-      console.log('Data type:', dataType);
-      console.log('Number of items:', data.length);
-      console.log('Data:', data);
-      console.log('Template:', selectedTemplate?.id);
-
-      // Get model_version_id from the first simulation
-      let model_version_id: string | undefined;
-      const firstSimulationId = data[0]?.simulation_id || data[0]?.baseline_simulation_id;
-      if (firstSimulationId) {
-        try {
-          const simulation = await simulationsAPI.get(firstSimulationId);
-          model_version_id = simulation.model_version_id;
-        } catch (error) {
-          console.warn('Could not fetch simulation for model_version_id:', error);
-        }
-      }
-
-      // Create the report element
-      const elementPayload = {
-        label,
-        type: 'data',
-        data_type: dataType,
-        data: data,
-        data_table: isComparison ? 'aggregate_changes' : 'aggregates',
-        chart_type: 'table', // TODO: Use template's preferred chart type
-        x_axis_variable: null,
-        y_axis_variable: null,
-        model_version_id,
-        report_id: reportId!,
-        position,
-      };
-
-      console.log('Creating report element with payload:', elementPayload);
-      const response = await reportElementsAPI.create(elementPayload);
-      console.log('Report element created:', response);
-
-      // Refresh the report elements
-      await queryClient.invalidateQueries({ queryKey: ['reportElements', reportId] });
-      console.log('Queries invalidated');
-    } catch (error: any) {
-      console.error('Failed to create template element:', error);
-      showErrorNotification(error, 'Failed to create element');
-    } finally {
-      setIsCreatingElement(false);
-      setSelectedTemplate(null);
-    }
-  };
 
   const isLoading = reportLoading || elementsLoading;
 
@@ -402,7 +318,7 @@ export default function ReportEditorPage() {
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item onClick={() => setTemplatePickerOpened(true)} leftSection={<IconChartBar size={14} />}>
+                <Menu.Item onClick={() => setDataModalOpened(true)} leftSection={<IconChartBar size={14} />}>
                   Add data
                 </Menu.Item>
                 <Menu.Item onClick={handleAddMarkdownElement} leftSection={<IconMarkdown size={14} />}>
@@ -423,7 +339,7 @@ export default function ReportEditorPage() {
               Add your first element to get started
             </Text>
             <Group justify="center">
-              <Button onClick={() => setTemplatePickerOpened(true)} leftSection={<IconChartBar size={14} />}>
+              <Button onClick={() => setDataModalOpened(true)} leftSection={<IconChartBar size={14} />}>
                 Add data
               </Button>
               <Button variant="light" onClick={handleAddMarkdownElement} leftSection={<IconMarkdown size={14} />}>
@@ -466,7 +382,7 @@ export default function ReportEditorPage() {
             <Group>
               <Button
                 variant="subtle"
-                onClick={() => setTemplatePickerOpened(true)}
+                onClick={() => setDataModalOpened(true)}
                 leftSection={<IconChartBar size={14} />}
               >
                 Add data
@@ -483,26 +399,7 @@ export default function ReportEditorPage() {
         )}
       </Stack>
 
-      {/* Template Picker Modal - Browse templates */}
-      <ReportTemplatePickerModal
-        opened={templatePickerOpened}
-        onClose={() => setTemplatePickerOpened(false)}
-        onSelect={handleTemplatePickerSelect}
-        onCustomAnalysis={() => setDataModalOpened(true)}
-      />
-
-      {/* Template Selection Modal - Choose simulations for template */}
-      <TemplateSelectionModal
-        opened={templateSelectionOpened}
-        onClose={() => {
-          setTemplateSelectionOpened(false);
-          setSelectedTemplate(null);
-        }}
-        template={selectedTemplate}
-        onSubmit={handleTemplateSubmit}
-      />
-
-      {/* Data Analysis Modal - Custom AI analysis */}
+      {/* Data Analysis Modal - AI-powered data analysis */}
       <DataAnalysisModal
         opened={dataModalOpened}
         onClose={() => setDataModalOpened(false)}

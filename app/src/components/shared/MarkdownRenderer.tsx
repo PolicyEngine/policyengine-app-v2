@@ -90,7 +90,6 @@ export default function MarkdownRenderer({ content, className }: MarkdownRendere
                   fontSize: typography.fontSize.xs,
                   fontWeight: typography.fontWeight.medium,
                   color: colors.text.secondary,
-                  textTransform: 'uppercase',
                   letterSpacing: '0.05em',
                 }}
               >

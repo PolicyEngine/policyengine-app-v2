@@ -32,7 +32,7 @@ export const variablesAPI = {
   /**
    * List all variables
    */
-  async list(params?: { limit?: number; offset?: number }): Promise<Variable[]> {
+  async list(params?: { limit?: number; offset?: number; model_id?: string }): Promise<Variable[]> {
     return apiClient.get('/variables/', { params });
   },
 

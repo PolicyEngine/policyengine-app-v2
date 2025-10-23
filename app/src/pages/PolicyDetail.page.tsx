@@ -196,7 +196,6 @@ export default function PolicyDetailPage() {
                             fontSize: typography.fontSize.xs,
                             fontWeight: typography.fontWeight.medium,
                             color: colors.text.secondary,
-                            textTransform: 'uppercase',
                             letterSpacing: '0.05em',
                             padding: `${spacing.md} ${spacing.lg}`,
                           }}
@@ -208,7 +207,6 @@ export default function PolicyDetailPage() {
                             fontSize: typography.fontSize.xs,
                             fontWeight: typography.fontWeight.medium,
                             color: colors.text.secondary,
-                            textTransform: 'uppercase',
                             letterSpacing: '0.05em',
                             padding: `${spacing.md} ${spacing.lg}`,
                           }}
@@ -220,7 +218,6 @@ export default function PolicyDetailPage() {
                             fontSize: typography.fontSize.xs,
                             fontWeight: typography.fontWeight.medium,
                             color: colors.text.secondary,
-                            textTransform: 'uppercase',
                             letterSpacing: '0.05em',
                             padding: `${spacing.md} ${spacing.lg}`,
                           }}

@@ -1,5 +1,8 @@
 import { ReactNode, useState, useEffect } from 'react';
+import { Box, Transition } from '@mantine/core';
 import BaseModal from './BaseModal';
+import StepIndicator, { Step } from './StepIndicator';
+import { modalDesign } from '@/styles/modalDesign';
 
 export interface ModalStep {
   id: string;
@@ -30,6 +33,7 @@ interface MultiStepModalProps {
   currentStepId?: string;
   onStepChange?: (stepId: string) => void;
   onComplete?: () => void;
+  showStepIndicator?: boolean;
 }
 
 export default function MultiStepModal({
@@ -39,6 +43,7 @@ export default function MultiStepModal({
   currentStepId,
   onStepChange,
   onComplete,
+  showStepIndicator = true,
 }: MultiStepModalProps) {
   const [activeStepId, setActiveStepId] = useState(currentStepId || steps[0]?.id);
   const [isNavigating, setIsNavigating] = useState(false);
@@ -113,8 +118,14 @@ export default function MultiStepModal({
 
   const secondaryButton = currentStep.secondaryButton || {
     label: isFirstStep ? 'Cancel' : 'Back',
-    variant: 'outline' as const,
+    variant: 'subtle' as const,
   };
+
+  // Map steps for step indicator
+  const indicatorSteps: Step[] = steps.map(step => ({
+    id: step.id,
+    label: step.title,
+  }));
 
   return (
     <BaseModal
@@ -123,7 +134,7 @@ export default function MultiStepModal({
       title={currentStep.title}
       description={currentStep.description}
       icon={currentStep.icon}
-      size={currentStep.size || 'sm'}
+      size={currentStep.size || 'md'}
       hideFooter={currentStep.hideFooter}
       footer={currentStep.footer}
       primaryButton={{
@@ -136,7 +147,26 @@ export default function MultiStepModal({
         onClick: isFirstStep ? onClose : handleBack,
       }}
     >
-      {currentStep.content}
+      <Box>
+        {showStepIndicator && steps.length > 1 && (
+          <Box mb="xl">
+            <StepIndicator steps={indicatorSteps} currentStepIndex={currentStepIndex} />
+          </Box>
+        )}
+
+        <Transition
+          mounted={!!currentStep}
+          transition="fade"
+          duration={modalDesign.animation.duration}
+          timingFunction="ease"
+        >
+          {(styles) => (
+            <Box style={styles}>
+              {currentStep.content}
+            </Box>
+          )}
+        </Transition>
+      </Box>
     </BaseModal>
   );
 }
