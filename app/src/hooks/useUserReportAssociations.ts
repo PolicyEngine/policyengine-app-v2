@@ -71,7 +71,7 @@ export const useCreateReportAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: reportAssociationKeys.byUser(newAssociation.userId.toString()),
+        queryKey: reportAssociationKeys.byUser(newAssociation.userId.toString(), newAssociation.countryId),
       });
       queryClient.invalidateQueries({
         queryKey: reportAssociationKeys.byReport(newAssociation.reportId.toString()),
@@ -102,7 +102,7 @@ export const useUpdateReportAssociation = () => {
       updates: Partial<UserReport>;
     }) => store.update(userId, reportId, updates),
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(updatedAssociation.userId) });
+      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId) });
       queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byReport(updatedAssociation.reportId) });
 
       queryClient.setQueryData(
@@ -121,10 +121,10 @@ export const useDeleteReportAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, reportId }: { userId: string; reportId: string }) =>
+    mutationFn: ({ userId, reportId }: { userId: string; reportId: string; countryId?: string }) =>
       store.delete(userId, reportId),
-    onSuccess: (_, { userId, reportId }) => {
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(userId) });
+    onSuccess: (_, { userId, reportId, countryId }) => {
+      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(userId, countryId) });
       queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byReport(reportId) });
 
       queryClient.setQueryData(

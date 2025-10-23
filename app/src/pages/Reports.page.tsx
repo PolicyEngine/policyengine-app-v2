@@ -113,7 +113,7 @@ export default function ReportsPage() {
               ? formatDate(
                   item.userReport.createdAt,
                   'short-month-day-year',
-                  (item.report?.countryId || countryId) as (typeof countryIds)[number],
+                  item.userReport.countryId,
                   true
                 )
               : '',

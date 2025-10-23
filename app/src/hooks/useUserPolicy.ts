@@ -53,7 +53,7 @@ export const useCreatePolicyAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString()),
+        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString(), newAssociation.countryId),
       });
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),
@@ -84,7 +84,7 @@ export const useUpdateAssociation = () => {
       updates: Partial<UserPolicyAssociation>;
     }) => store.update(userId, policyId, updates),
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(updatedAssociation.userId) });
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId) });
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(updatedAssociation.policyId) });
 
       queryClient.setQueryData(
@@ -103,10 +103,10 @@ export const useDeleteAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, policyId }: { userId: string; policyId: string }) =>
+    mutationFn: ({ userId, policyId }: { userId: string; policyId: string; countryId?: string }) =>
       store.delete(userId, policyId),
-    onSuccess: (_, { userId, policyId }) => {
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId) });
+    onSuccess: (_, { userId, policyId, countryId }) => {
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId, countryId) });
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(policyId) });
 
       queryClient.setQueryData(

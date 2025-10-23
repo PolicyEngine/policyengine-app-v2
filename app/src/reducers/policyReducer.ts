@@ -38,6 +38,9 @@ export const policySlice = createSlice({
     ) => {
       const { position, policy } = action.payload;
 
+      console.log('[POLICY REDUCER] createPolicyAtPosition called:', { position, policy });
+      console.log('[POLICY REDUCER] Current policy at position:', state.policies[position]);
+
       // Only create if no policy exists at this position
       if (!state.policies[position]) {
         const newPolicy: Policy = {
@@ -47,9 +50,11 @@ export const policySlice = createSlice({
           isCreated: false,
           ...policy,
         };
+        console.log('[POLICY REDUCER] Creating new policy:', newPolicy);
         state.policies[position] = newPolicy;
+      } else {
+        console.log('[POLICY REDUCER] Policy already exists, preserving existing data');
       }
-      // If a policy already exists, do nothing - preserve existing data
     },
 
     // Update policy at position

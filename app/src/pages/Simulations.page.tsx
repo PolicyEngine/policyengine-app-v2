@@ -70,7 +70,7 @@ export default function SimulationsPage() {
           ? formatDate(
               item.userSimulation.createdAt,
               'short-month-day-year',
-              item.simulation?.countryId as (typeof countryIds)[number],
+              item.userSimulation.countryId,
               true
             )
           : '',

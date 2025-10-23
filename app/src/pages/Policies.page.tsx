@@ -68,7 +68,7 @@ export default function PoliciesPage() {
           ? formatDate(
               item.association.createdAt,
               'short-month-day-year',
-              item.policy?.country_id as (typeof countryIds)[number],
+              item.association.countryId,
               true
             )
           : '',

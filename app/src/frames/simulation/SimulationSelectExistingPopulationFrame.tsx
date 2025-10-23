@@ -139,12 +139,22 @@ export default function SimulationSelectExistingPopulationFrame({
       return;
     }
 
-    console.log('Local Population on Submit:', localPopulation);
+    console.log('[POPULATION SELECT] === SUBMIT START ===');
+    console.log('[POPULATION SELECT] Local Population on Submit:', localPopulation);
+    console.log('[POPULATION SELECT] Association:', localPopulation.association);
+    console.log('[POPULATION SELECT] Association countryId:', localPopulation.association?.countryId);
+    console.log('[POPULATION SELECT] Household metadata:', localPopulation.household);
 
-    const householdToSet = HouseholdAdapter.fromAPI(localPopulation.household!);
-    console.log('Setting household in population:', householdToSet);
+    const householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household!);
+    console.log('[POPULATION SELECT] Converted household:', householdToSet);
+    console.log('[POPULATION SELECT] Household ID:', householdToSet.id);
 
     // Create a new population at the current position
+    console.log('[POPULATION SELECT] Dispatching createPopulationAtPosition with:', {
+      position: currentPosition,
+      label: localPopulation.association?.label || '',
+      isCreated: true,
+    });
     dispatch(
       createPopulationAtPosition({
         position: currentPosition,
@@ -158,12 +168,14 @@ export default function SimulationSelectExistingPopulationFrame({
     );
 
     // Update with household data
+    console.log('[POPULATION SELECT] Dispatching setHouseholdAtPosition with household ID:', householdToSet.id);
     dispatch(
       setHouseholdAtPosition({
         position: currentPosition,
         household: householdToSet,
       })
     );
+    console.log('[POPULATION SELECT] === SUBMIT END ===');
   }
 
   function handleSubmitGeographicPopulation() {

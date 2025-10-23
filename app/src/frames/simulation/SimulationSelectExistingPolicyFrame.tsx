@@ -69,9 +69,21 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       return;
     }
 
-    console.log('Local Policy on Submit:', localPolicy);
+    console.log('[POLICY SELECT] === SUBMIT START ===');
+    console.log('[POLICY SELECT] Local Policy on Submit:', localPolicy);
+    console.log('[POLICY SELECT] Association:', localPolicy.association);
+    console.log('[POLICY SELECT] Association countryId:', localPolicy.association?.countryId);
+    console.log('[POLICY SELECT] Policy metadata:', localPolicy.policy);
+    console.log('[POLICY SELECT] Policy ID:', localPolicy.policy?.id);
 
     // Create a new policy at the current position
+    console.log('[POLICY SELECT] Dispatching createPolicyAtPosition with:', {
+      position: currentPosition,
+      id: localPolicy.policy?.id?.toString(),
+      label: localPolicy.association?.label || '',
+      isCreated: true,
+      countryId: localPolicy.policy?.country_id,
+    });
     dispatch(
       createPolicyAtPosition({
         position: currentPosition,
@@ -89,6 +101,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     // Parameters must be added one at a time with individual value intervals
     if (localPolicy.policy?.policy_json) {
       const policyJson = localPolicy.policy.policy_json;
+      console.log('[POLICY SELECT] Adding parameters from policy_json:', Object.keys(policyJson));
       Object.entries(policyJson).forEach(([paramName, valueIntervals]) => {
         if (Array.isArray(valueIntervals) && valueIntervals.length > 0) {
           // Add each value interval separately as required by PolicyParamAdditionPayload
@@ -108,6 +121,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
         }
       });
     }
+    console.log('[POLICY SELECT] === SUBMIT END ===');
   }
 
   const userPolicies = data || [];

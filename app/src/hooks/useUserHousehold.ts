@@ -68,7 +68,7 @@ export const useCreateHouseholdAssociation = () => {
 
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byUser(newAssociation.userId),
+        queryKey: householdAssociationKeys.byUser(newAssociation.userId, newAssociation.countryId),
       });
       queryClient.invalidateQueries({
         queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId),

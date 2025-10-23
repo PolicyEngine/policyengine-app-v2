@@ -53,7 +53,7 @@ export const useCreateGeographicAssociation = () => {
     onSuccess: (newPopulation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: geographicAssociationKeys.byUser(newPopulation.userId),
+        queryKey: geographicAssociationKeys.byUser(newPopulation.userId, newPopulation.countryId),
       });
       queryClient.invalidateQueries({
         queryKey: geographicAssociationKeys.byGeography(newPopulation.geographyId),

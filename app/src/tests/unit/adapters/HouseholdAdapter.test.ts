@@ -31,7 +31,7 @@ describe('HouseholdAdapter', () => {
 
   describe('fromAPI', () => {
     test('given valid household metadata from API then converts to internal Household format', () => {
-      const result = HouseholdAdapter.fromAPI(mockHouseholdMetadata);
+      const result = HouseholdAdapter.fromMetadata(mockHouseholdMetadata);
 
       expect(result).toEqual({
         id: '12345',
@@ -58,7 +58,7 @@ describe('HouseholdAdapter', () => {
         },
       };
 
-      const result = HouseholdAdapter.fromAPI(metadata as any);
+      const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result.householdData).toHaveProperty('taxUnits');
       expect(result.householdData).toHaveProperty('maritalUnits');
@@ -67,7 +67,7 @@ describe('HouseholdAdapter', () => {
     });
 
     test('given entity not in metadata then logs warning but includes it anyway', () => {
-      const result = HouseholdAdapter.fromAPI(mockHouseholdMetadataWithUnknownEntity);
+      const result = HouseholdAdapter.fromMetadata(mockHouseholdMetadataWithUnknownEntity);
 
       expect(console.warn).toHaveBeenCalledWith(
         'Entity "unknown_entity" not found in metadata, including anyway'
@@ -91,7 +91,7 @@ describe('HouseholdAdapter', () => {
         },
       };
 
-      const result = HouseholdAdapter.fromAPI(metadata as any);
+      const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result.householdData.people).toEqual(metadata.household_json.people);
       expect(console.warn).not.toHaveBeenCalled();
@@ -106,7 +106,7 @@ describe('HouseholdAdapter', () => {
         },
       };
 
-      const result = HouseholdAdapter.fromAPI(metadata as any);
+      const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result).toEqual({
         id: 789,
@@ -231,7 +231,7 @@ describe('HouseholdAdapter', () => {
         },
       };
 
-      const result = HouseholdAdapter.fromAPI(metadata as any);
+      const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result.householdData.people).toEqual(metadata.household_json.people);
     });
@@ -250,7 +250,7 @@ describe('HouseholdAdapter', () => {
         },
       };
 
-      const result = HouseholdAdapter.fromAPI(metadata as any);
+      const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result.householdData.people).toBeDefined();
       expect(console.warn).toHaveBeenCalled();
@@ -266,7 +266,7 @@ describe('HouseholdAdapter', () => {
         },
       };
 
-      const result = HouseholdAdapter.fromAPI(metadata as any);
+      const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result.householdData).toHaveProperty('veryLongEntityName');
       expect(result.householdData.veryLongEntityName).toEqual({ data: 'test' });

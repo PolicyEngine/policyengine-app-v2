@@ -29,6 +29,11 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const policy = useSelector((state: RootState) => selectActivePolicy(state));
   const population = useSelector((state: RootState) => selectActivePopulation(state));
 
+  console.log("[SimulationSetupFrame] currentPosition: ", currentPosition);
+  console.log("[SimulationSetupFrame] policy: ", policy);
+  console.log("[SimulationSetupFrame] population: ", population);
+
+
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
 
   // Ensure we have a simulation at the current position

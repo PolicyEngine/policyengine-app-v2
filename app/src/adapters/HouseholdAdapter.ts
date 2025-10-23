@@ -68,7 +68,7 @@ export class HouseholdAdapter {
    * Convert API response to internal Household format
    * Dynamically handles all entity types based on metadata
    */
-  static fromAPI(metadata: HouseholdMetadata): Household {
+  static fromMetadata(metadata: HouseholdMetadata): Household {
     const householdData: HouseholdData = {
       people: metadata.household_json.people as any,
     };
