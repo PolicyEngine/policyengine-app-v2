@@ -23,6 +23,9 @@ import {
  * Integration tests validating critical calculation pathways
  * These tests verify the end-to-end flow from user action to completed calculation
  */
+// TODO: These tests are temporarily skipped because they appear to contribute to
+// JavaScript heap out-of-memory errors when running the full test suite.
+// This needs to be investigated and resolved.
 describe.skip('Calculation Pathways Integration', () => {
   let queryClient: QueryClient;
 
