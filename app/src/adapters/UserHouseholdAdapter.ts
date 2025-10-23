@@ -13,6 +13,7 @@ export class UserHouseholdAdapter {
     return {
       userId: userHousehold.userId,
       householdId: userHousehold.householdId,
+      countryId: userHousehold.countryId,
       label: userHousehold.label,
       updatedAt: userHousehold.updatedAt || new Date().toISOString(),
     };
@@ -27,6 +28,7 @@ export class UserHouseholdAdapter {
       id: apiData.householdId,
       userId: apiData.userId,
       householdId: apiData.householdId,
+      countryId: apiData.countryId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,

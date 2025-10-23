@@ -11,7 +11,7 @@ export function useCreateHousehold(householdLabel?: string) {
 
   const mutation = useMutation({
     mutationFn: createHousehold,
-    onSuccess: async (data) => {
+    onSuccess: async (data, variables) => {
       try {
         queryClient.invalidateQueries({ queryKey: householdKeys.all });
 
@@ -20,6 +20,7 @@ export function useCreateHousehold(householdLabel?: string) {
         await createAssociation.mutateAsync({
           userId,
           householdId: data.result.household_id, // This is from the API response structure; may be modified in API v2
+          countryId: variables.country_id, // Use the country from the creation payload
           label: householdLabel,
         });
       } catch (error) {
