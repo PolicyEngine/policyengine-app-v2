@@ -1,3 +1,4 @@
+import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
 import type { UserReport } from '@/types/ingredients/UserReport';
 
@@ -108,18 +109,23 @@ export const TEST_LABEL = TEST_LABELS.TEST_REPORT_1;
 export const TEST_TIMESTAMP = '2025-01-01T00:00:00Z';
 
 /**
+ * Mock single UserReport for testing
+ */
+export const mockUserReport: UserReport = {
+  id: 'user-report-1',
+  userId: TEST_USER_ID,
+  reportId: TEST_REPORT_ID,
+  label: TEST_LABEL,
+  createdAt: TEST_TIMESTAMP,
+  updatedAt: TEST_TIMESTAMP,
+  isCreated: true,
+};
+
+/**
  * Mock list of UserReports for testing
  */
 export const mockUserReportList: UserReport[] = [
-  {
-    id: 'user-report-1',
-    userId: TEST_USER_ID,
-    reportId: 'report-1',
-    label: 'Test Report 1',
-    createdAt: TEST_TIMESTAMP,
-    updatedAt: TEST_TIMESTAMP,
-    isCreated: true,
-  },
+  mockUserReport,
   {
     id: 'user-report-2',
     userId: TEST_USER_ID,
@@ -130,3 +136,35 @@ export const mockUserReportList: UserReport[] = [
     isCreated: true,
   },
 ];
+
+/**
+ * Error messages for testing
+ */
+export const ERROR_MESSAGES = {
+  FETCH_REPORTS_FAILED: 'Failed to fetch user reports',
+  FETCH_REPORT_FAILED: 'Failed to fetch user report',
+  CREATE_ASSOCIATION_FAILED: 'Failed to create report association',
+  API_ERROR: 'API error occurred',
+} as const;
+
+/**
+ * Create a mock QueryClient for testing
+ */
+export function createMockQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+    logger: {
+      log: () => {},
+      warn: () => {},
+      error: () => {},
+    },
+  });
+}
