@@ -113,7 +113,7 @@ describe('useCreateReport', () => {
         expect(createReportAndAssociateWithUser).toHaveBeenCalledWith({
           countryId: TEST_COUNTRY_ID,
           payload: mockReportCreationPayload,
-          userId: TEST_USER_ID,
+          userId: 'anonymous',
           label: TEST_LABEL,
         });
       });
@@ -133,7 +133,7 @@ describe('useCreateReport', () => {
         expect(createReportAndAssociateWithUser).toHaveBeenCalledWith({
           countryId: TEST_COUNTRY_ID,
           payload: mockReportCreationPayload,
-          userId: TEST_USER_ID,
+          userId: 'anonymous',
           label: undefined,
         });
       });

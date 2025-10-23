@@ -390,7 +390,7 @@ describe('updateSimulationOutput', () => {
 
     // Then
     expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation/${SIMULATION_IDS.VALID}`,
+      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation`,
       {
         method: 'PATCH',
         headers: {
@@ -419,7 +419,7 @@ describe('updateSimulationOutput', () => {
 
     // Then
     expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation/${SIMULATION_IDS.VALID}`,
+      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation`,
       expect.any(Object)
     );
   });
@@ -506,7 +506,7 @@ describe('markSimulationCompleted', () => {
 
     // Then
     expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation/${SIMULATION_IDS.VALID}`,
+      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation`,
       {
         method: 'PATCH',
         headers: {
@@ -541,7 +541,7 @@ describe('markSimulationError', () => {
 
     // Then
     expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation/${SIMULATION_IDS.VALID}`,
+      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation`,
       {
         method: 'PATCH',
         headers: {
@@ -570,7 +570,7 @@ describe('markSimulationError', () => {
 
     // Then
     expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation/${SIMULATION_IDS.VALID}`,
+      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation`,
       expect.any(Object)
     );
   });
