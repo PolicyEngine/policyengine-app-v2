@@ -1,138 +1,113 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
+import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
 import { calculationKeys } from '@/libs/queryKeys';
-import { mockSocietyWideCalcParams, mockCalcMetadata } from '@/tests/fixtures/types/calculationFixtures';
-import { STRATEGY_TEST_CONSTANTS } from '@/tests/fixtures/libs/calculations/strategyFixtures';
+import {
+  createMockStrategy,
+  mockSocietyWideMetadata,
+  mockHouseholdMetadata,
+  mockSocietyWideParams,
+  mockHouseholdParams,
+  TEST_CALC_IDS,
+} from '@/tests/fixtures/libs/queries/calculationQueriesMocks';
 
 // Mock the strategy factory
-vi.mock('@/libs/calculations/strategies/CalcStrategyFactory', () => ({
-  CalcStrategyFactory: {
-    getStrategy: vi.fn(),
-  },
-}));
+vi.mock('@/libs/calculations/strategies/CalcStrategyFactory');
 
 describe('calculationQueries', () => {
-  let mockStrategy: any;
+  let mockStrategy: ReturnType<typeof createMockStrategy>;
 
-  beforeEach(async () => {
-    const module = await import('@/libs/calculations/strategies/CalcStrategyFactory');
-    const CalcStrategyFactory = module.CalcStrategyFactory;
-
-    mockStrategy = {
-      execute: vi.fn(),
-      getRefetchConfig: vi.fn().mockReturnValue({
-        refetchInterval: STRATEGY_TEST_CONSTANTS.ECONOMY_REFETCH_INTERVAL_MS,
-        staleTime: Infinity,
-      }),
-    };
-
-    CalcStrategyFactory.getStrategy = vi.fn().mockReturnValue(mockStrategy);
+  beforeEach(() => {
     vi.clearAllMocks();
+    mockStrategy = createMockStrategy();
+    (CalcStrategyFactory.getStrategy as any).mockReturnValue(mockStrategy);
   });
 
   describe('forReport', () => {
-    it('given report params then returns correct query options', () => {
+    it('given report metadata then creates query options', () => {
       // Given
-      const reportId = 'report-123';
-      const metadata = mockCalcMetadata({ calcType: 'societyWide' });
-      const params = mockSocietyWideCalcParams();
+      const metadata = mockSocietyWideMetadata();
+      const params = mockSocietyWideParams();
 
       // When
-      const result = calculationQueries.forReport(reportId, metadata, params);
-
-      // Then
-      expect(result.queryKey).toEqual(calculationKeys.byReportId(reportId));
-      expect(result.refetchInterval).toBe(STRATEGY_TEST_CONSTANTS.ECONOMY_REFETCH_INTERVAL_MS);
-      expect(result.staleTime).toBe(Infinity);
-      expect(result.meta).toEqual({ calcMetadata: metadata });
-    });
-
-    it('given economy type then uses economy strategy', async () => {
-      // Given
-      const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
-      const reportId = 'report-123';
-      const metadata = mockCalcMetadata({ calcType: 'societyWide' });
-      const params = mockSocietyWideCalcParams();
-
-      // When
-      calculationQueries.forReport(reportId, metadata, params);
+      const queryOptions = calculationQueries.forReport(TEST_CALC_IDS.REPORT_123, metadata, params);
 
       // Then
       expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('societyWide');
+      expect(queryOptions.queryKey).toEqual(calculationKeys.byReportId(TEST_CALC_IDS.REPORT_123));
+      expect(queryOptions.refetchInterval).toBe(2000);
+      expect(queryOptions.meta).toEqual({ calcMetadata: metadata });
     });
 
-    it('given household type then uses household strategy', async () => {
+    it('given household metadata then uses household strategy', () => {
       // Given
-      const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
-      const reportId = 'report-123';
-      const metadata = mockCalcMetadata({ calcType: 'household' });
-      const params = mockSocietyWideCalcParams();
+      const metadata = mockHouseholdMetadata(TEST_CALC_IDS.REPORT_456);
+      const params = mockHouseholdParams(TEST_CALC_IDS.REPORT_456);
+
+      mockStrategy = createMockStrategy(false);
+      (CalcStrategyFactory.getStrategy as any).mockReturnValue(mockStrategy);
 
       // When
-      calculationQueries.forReport(reportId, metadata, params);
+      const queryOptions = calculationQueries.forReport(TEST_CALC_IDS.REPORT_456, metadata, params);
 
       // Then
       expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('household');
+      expect(queryOptions.refetchInterval).toBe(false);
     });
 
-    it('given queryFn called then executes strategy', async () => {
+    it('given queryFn executed then calls strategy execute', async () => {
       // Given
-      const reportId = 'report-123';
-      const metadata = mockCalcMetadata({ calcType: 'societyWide' });
-      const params = mockSocietyWideCalcParams();
-      const queryOptions = calculationQueries.forReport(reportId, metadata, params);
+      const metadata = mockSocietyWideMetadata();
+      const params = mockSocietyWideParams();
+
+      const queryOptions = calculationQueries.forReport(TEST_CALC_IDS.REPORT_123, metadata, params);
 
       // When
-      await queryOptions.queryFn();
+      const result = await queryOptions.queryFn();
 
       // Then
-      expect(mockStrategy.execute).toHaveBeenCalledWith(params);
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata);
+      expect(result).toEqual({
+        status: 'complete',
+        result: { data: 'test' },
+      });
     });
   });
 
   describe('forSimulation', () => {
-    it('given simulation params then returns correct query options', () => {
+    it('given simulation metadata then creates query options', () => {
       // Given
-      const simulationId = 'sim-456';
-      const metadata = mockCalcMetadata({ calcType: 'household', targetType: 'simulation' });
-      const params = mockSocietyWideCalcParams();
+      const metadata = mockHouseholdMetadata(TEST_CALC_IDS.SIM_123);
+      const params = mockHouseholdParams(TEST_CALC_IDS.SIM_123);
+
+      mockStrategy.getRefetchConfig.mockReturnValue({ refetchInterval: false });
 
       // When
-      const result = calculationQueries.forSimulation(simulationId, metadata, params);
+      const queryOptions = calculationQueries.forSimulation(TEST_CALC_IDS.SIM_123, metadata, params);
 
       // Then
-      expect(result.queryKey).toEqual(calculationKeys.bySimulationId(simulationId));
-      expect(result.refetchInterval).toBe(STRATEGY_TEST_CONSTANTS.ECONOMY_REFETCH_INTERVAL_MS);
-      expect(result.staleTime).toBe(Infinity);
-      expect(result.meta).toEqual({ calcMetadata: metadata });
+      expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('household');
+      expect(queryOptions.queryKey).toEqual(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_123));
+      expect(queryOptions.refetchInterval).toBe(false);
+      expect(queryOptions.meta).toEqual({ calcMetadata: metadata });
     });
 
-    it('given economy type then uses economy strategy', async () => {
+    it('given queryFn executed then calls strategy execute', async () => {
       // Given
-      const { CalcStrategyFactory } = await import('@/libs/calculations/strategies/CalcStrategyFactory');
-      const simulationId = 'sim-456';
-      const metadata = mockCalcMetadata({ calcType: 'societyWide', targetType: 'simulation' });
-      const params = mockSocietyWideCalcParams();
+      const metadata = mockHouseholdMetadata(TEST_CALC_IDS.SIM_456);
+      const params = mockHouseholdParams(TEST_CALC_IDS.SIM_456);
+
+      const queryOptions = calculationQueries.forSimulation(TEST_CALC_IDS.SIM_456, metadata, params);
 
       // When
-      calculationQueries.forSimulation(simulationId, metadata, params);
+      const result = await queryOptions.queryFn();
 
       // Then
-      expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('societyWide');
-    });
-
-    it('given queryFn called then executes strategy', async () => {
-      // Given
-      const simulationId = 'sim-456';
-      const metadata = mockCalcMetadata({ calcType: 'household', targetType: 'simulation' });
-      const params = mockSocietyWideCalcParams();
-      const queryOptions = calculationQueries.forSimulation(simulationId, metadata, params);
-
-      // When
-      await queryOptions.queryFn();
-
-      // Then
-      expect(mockStrategy.execute).toHaveBeenCalledWith(params);
+      expect(mockStrategy.execute).toHaveBeenCalledWith(params, metadata);
+      expect(result).toEqual({
+        status: 'complete',
+        result: { data: 'test' },
+      });
     });
   });
 });
