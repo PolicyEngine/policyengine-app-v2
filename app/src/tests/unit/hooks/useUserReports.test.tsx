@@ -122,22 +122,22 @@ describe('useUserReports', () => {
 
     // Mock API calls
     vi.spyOn(reportApi, 'fetchReportById').mockImplementation((_country, id) => {
-      if (id === mockReport.id) {
+      if (id === mockReport.id || id === TEST_REPORT_ID) {
         return Promise.resolve(mockReportMetadata);
       }
-      if (id === 'report-1') {
+      if (id === 'report-1' || id === '1') {
         return Promise.resolve({
           ...mockReportMetadata,
           id: 1,
-          simulation_1_id: TEST_SIMULATION_ID_1,
-          simulation_2_id: TEST_SIMULATION_ID_2,
+          simulation_1_id: '456', // Match the numeric part of TEST_SIMULATION_ID_1
+          simulation_2_id: '789', // Match the numeric part of TEST_SIMULATION_ID_2
         });
       }
-      if (id === 'report-2') {
+      if (id === 'report-2' || id === '2') {
         return Promise.resolve({
           ...mockReportMetadata,
           id: 2,
-          simulation_1_id: TEST_SIMULATION_ID_1,
+          simulation_1_id: '456', // Match the numeric part of TEST_SIMULATION_ID_1
           simulation_2_id: null,
         });
       }
@@ -145,10 +145,10 @@ describe('useUserReports', () => {
     });
 
     vi.spyOn(simulationApi, 'fetchSimulationById').mockImplementation((_country, id) => {
-      if (id === TEST_SIMULATION_ID_1) {
+      if (id === TEST_SIMULATION_ID_1 || id === '456') {
         return Promise.resolve(mockSimulationMetadata1);
       }
-      if (id === TEST_SIMULATION_ID_2) {
+      if (id === TEST_SIMULATION_ID_2 || id === '789') {
         return Promise.resolve(mockSimulationMetadata2);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.SIMULATION_NOT_FOUND(id)));
@@ -197,7 +197,7 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.data).toHaveLength(2); // Based on mockUserReportList
+      expect(result.current.data).toHaveLength(3); // Based on mockUserReportList (now has 3 items)
       expect(result.current.isError).toBe(false);
     });
 
@@ -234,6 +234,22 @@ describe('useUserReports', () => {
       });
 
       const reports = result.current.data;
+      console.log('[HOUSEHOLD TEST] Total reports:', reports.length);
+      reports.forEach((r, i) => {
+        console.log(`[HOUSEHOLD TEST] Report ${i}:`, {
+          id: r.report?.id,
+          hasSimulations: !!r.simulations,
+          simulationCount: r.simulations?.length || 0,
+          simulationTypes: r.simulations?.map(s => s.populationType) || [],
+          simulations: r.simulations?.map(s => ({
+            id: s.id,
+            populationType: s.populationType,
+            policyId: s.policyId,
+            populationId: s.populationId
+          })) || []
+        });
+      });
+
       const reportWithHousehold = reports.find((r) =>
         r.simulations?.some((s) => s.populationType === 'household')
       );
@@ -367,11 +383,11 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      const report = result.current.getReportWithFullContext('report-1');
+      const report = result.current.getReportWithFullContext('1');
 
       // Then
       expect(report).toBeDefined();
-      expect(report?.userReport.reportId).toBe('report-1');
+      expect(report?.userReport.reportId).toBe('1');
     });
 
     test('given simulation ID when using getReportsBySimulation then returns matching reports', async () => {
@@ -385,7 +401,10 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      const reports = result.current.getReportsBySimulation(TEST_SIMULATION_ID_1);
+      // Use '456' instead of TEST_SIMULATION_ID_1 because simulations are adapted to have numeric string IDs
+      const reports = result.current.getReportsBySimulation('456');
+
+      console.error("[useUserReports.test.tsx] reports:", reports);
 
       // Then
       expect(reports).toBeDefined();
@@ -439,13 +458,13 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // TEST_REPORT_ID is 'report-123' but mockReport has reportId '123'
+      // TEST_REPORT_ID is '123' which matches mockReport.id after adaptation
       // We should check for the correct report ID that exists in our mocks
-      const cachedReport = result.current.getNormalizedReport('report-1');
+      const cachedReport = result.current.getNormalizedReport('1');
 
       // Then
       expect(cachedReport).toBeDefined();
-      expect(cachedReport?.id).toBe('report-1');
+      expect(cachedReport?.id).toBe('1');
     });
 
     test('given entity ID when using getNormalizedSimulation then returns cached simulation', async () => {
@@ -461,8 +480,11 @@ describe('useUserReports', () => {
 
       const cachedSimulation = result.current.getNormalizedSimulation(TEST_SIMULATION_ID_1);
 
-      // Then
-      expect(cachedSimulation).toEqual(mockSimulation1);
+      // Then - expect adapted format with numeric string ID
+      expect(cachedSimulation).toEqual({
+        ...mockSimulation1,
+        id: '456', // Adapted format uses numeric string ID
+      });
     });
 
     test('given entity ID when using getNormalizedPolicy then returns cached policy', async () => {
@@ -565,10 +587,10 @@ describe('useUserReportById', () => {
     // Setup API mocks
     vi.spyOn(reportApi, 'fetchReportById').mockResolvedValue(mockReportMetadata);
     vi.spyOn(simulationApi, 'fetchSimulationById').mockImplementation((_country, id) => {
-      if (id === TEST_SIMULATION_ID_1) {
+      if (id === TEST_SIMULATION_ID_1 || id === '456') {
         return Promise.resolve(mockSimulationMetadata1);
       }
-      if (id === TEST_SIMULATION_ID_2) {
+      if (id === TEST_SIMULATION_ID_2 || id === '789') {
         return Promise.resolve(mockSimulationMetadata2);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.SIMULATION_NOT_FOUND(id)));

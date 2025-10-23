@@ -104,7 +104,7 @@ export const mockErrorFetchResponse = (status: number) => ({
 
 // Convenience exports for common test values
 export const TEST_USER_ID = TEST_USER_IDS.USER_123;
-export const TEST_REPORT_ID = 'report-123'; // Used in useUserReports tests
+export const TEST_REPORT_ID = '123'; // Used in useUserReports tests - matches adapted report ID from metadata
 export const TEST_LABEL = TEST_LABELS.TEST_REPORT_1;
 export const TEST_TIMESTAMP = '2025-01-01T00:00:00Z';
 
@@ -129,8 +129,17 @@ export const mockUserReportList: UserReport[] = [
   {
     id: 'user-report-2',
     userId: TEST_USER_ID,
-    reportId: 'report-2',
+    reportId: '2', // Matches adapted report ID from metadata
     label: 'Test Report 2',
+    createdAt: TEST_TIMESTAMP,
+    updatedAt: TEST_TIMESTAMP,
+    isCreated: true,
+  },
+  {
+    id: 'user-report-3',
+    userId: TEST_USER_ID,
+    reportId: '1', // Third report for testing helper functions
+    label: 'Test Report 3',
     createdAt: TEST_TIMESTAMP,
     updatedAt: TEST_TIMESTAMP,
     isCreated: true,
