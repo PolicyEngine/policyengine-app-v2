@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/tests/fixtures/constants';
 import type { UserReport } from '@/types/ingredients/UserReport';
 
 /**
@@ -39,6 +40,7 @@ export const TEST_USER_REPORT_IDS = {
 export const TEST_COUNTRIES = {
   US: 'us',
   UK: 'uk',
+  CA: 'ca',
 } as const;
 
 /**
@@ -57,6 +59,7 @@ export const mockReportInput = (
 ): Omit<UserReport, 'id' | 'createdAt'> => ({
   userId: TEST_USER_IDS.USER_123,
   reportId: TEST_REPORT_IDS.REPORT_456,
+  countryId: TEST_COUNTRIES.US,
   label: TEST_LABELS.TEST_REPORT_1,
   isCreated: true,
   ...overrides,
@@ -115,6 +118,7 @@ export const mockUserReport: UserReport = {
   id: 'user-report-1',
   userId: TEST_USER_ID,
   reportId: TEST_REPORT_ID,
+  countryId: 'us',
   label: TEST_LABEL,
   createdAt: TEST_TIMESTAMP,
   updatedAt: TEST_TIMESTAMP,
@@ -129,22 +133,116 @@ export const mockUserReportList: UserReport[] = [
   {
     id: 'user-report-2',
     userId: TEST_USER_ID,
-    reportId: '2', // Matches adapted report ID from metadata
-    label: 'Test Report 2',
-    createdAt: TEST_TIMESTAMP,
-    updatedAt: TEST_TIMESTAMP,
+    reportId: 'report-1',
+    countryId: 'us',
+    label: 'First Report',
+    createdAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     isCreated: true,
   },
   {
     id: 'user-report-3',
     userId: TEST_USER_ID,
-    reportId: '1', // Third report for testing helper functions
-    label: 'Test Report 3',
-    createdAt: TEST_TIMESTAMP,
-    updatedAt: TEST_TIMESTAMP,
+    reportId: 'report-2',
+    countryId: 'us',
+    label: 'Second Report',
+    createdAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     isCreated: true,
   },
 ];
+
+// Multi-country mock data for testing country filtering
+export const mockMultiCountryReportList: UserReport[] = [
+  {
+    id: 'report-us-1',
+    userId: TEST_USER_ID,
+    reportId: 'report-us-1',
+    countryId: TEST_COUNTRIES.US,
+    label: 'US Report 1',
+    createdAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    isCreated: true,
+  },
+  {
+    id: 'report-us-2',
+    userId: TEST_USER_ID,
+    reportId: 'report-us-2',
+    countryId: TEST_COUNTRIES.US,
+    label: 'US Report 2',
+    createdAt: `${CURRENT_YEAR}-01-11T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-11T10:00:00Z`,
+    isCreated: true,
+  },
+  {
+    id: 'report-uk-1',
+    userId: TEST_USER_ID,
+    reportId: 'report-uk-1',
+    countryId: TEST_COUNTRIES.UK,
+    label: 'UK Report 1',
+    createdAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    isCreated: true,
+  },
+  {
+    id: 'report-ca-1',
+    userId: TEST_USER_ID,
+    reportId: 'report-ca-1',
+    countryId: TEST_COUNTRIES.CA,
+    label: 'CA Report 1',
+    createdAt: `${CURRENT_YEAR}-01-13T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-13T10:00:00Z`,
+    isCreated: true,
+  },
+];
+
+export const mockMultiCountryApiResponses = mockMultiCountryReportList.map((report) => ({
+  reportId: report.reportId,
+  userId: report.userId,
+  countryId: report.countryId,
+  label: report.label,
+  createdAt: report.createdAt,
+  updatedAt: report.updatedAt,
+}));
+
+export const mockApiResponse = {
+  reportId: TEST_REPORT_ID,
+  userId: TEST_USER_ID,
+  label: TEST_LABEL,
+  createdAt: TEST_TIMESTAMP,
+  updatedAt: TEST_TIMESTAMP,
+};
+
+export const mockApiResponseList = [
+  {
+    reportId: 'report-1',
+    userId: TEST_USER_ID,
+    label: 'First Report',
+    createdAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+  },
+  {
+    reportId: 'report-2',
+    userId: TEST_USER_ID,
+    label: 'Second Report',
+    createdAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+  },
+];
+
+export const mockCreationPayload = {
+  userId: TEST_USER_ID,
+  reportId: TEST_REPORT_ID,
+  label: TEST_LABEL,
+  updatedAt: TEST_TIMESTAMP,
+};
+
+// Helper function to create mock store
+export const createMockReportStore = () => ({
+  create: vi.fn(),
+  findByUser: vi.fn(),
+  findById: vi.fn(),
+});
 
 /**
  * Error messages for testing

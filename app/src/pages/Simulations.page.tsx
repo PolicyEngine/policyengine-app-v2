@@ -5,7 +5,6 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -70,7 +69,7 @@ export default function SimulationsPage() {
           ? formatDate(
               item.userSimulation.createdAt,
               'short-month-day-year',
-              item.simulation?.countryId as (typeof countryIds)[number],
+              item.userSimulation.countryId,
               true
             )
           : '',

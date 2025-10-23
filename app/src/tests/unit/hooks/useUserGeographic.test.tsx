@@ -19,6 +19,11 @@ import {
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
 
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock the stores first
 vi.mock('@/api/geographicAssociation', () => {
   const mockStore = {
@@ -108,7 +113,7 @@ describe('useUserGeographic hooks', () => {
 
       expect(result.current.data).toEqual(mockUserGeographicAssociationList);
       const mockStore = (LocalStorageGeographicStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith(userId);
+      expect(mockStore.findByUser).toHaveBeenCalledWith(userId, 'us');
     });
 
     test('given store throws error when fetching then returns error state', async () => {
@@ -140,7 +145,7 @@ describe('useUserGeographic hooks', () => {
       });
 
       const mockStore = (LocalStorageGeographicStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith('');
+      expect(mockStore.findByUser).toHaveBeenCalledWith('', 'us');
     });
 
     test('given user with no associations then returns empty array', async () => {

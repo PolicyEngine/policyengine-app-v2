@@ -209,7 +209,7 @@ export const useUserReports = (userId: string) => {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromAPI(metadata);
+      return HouseholdAdapter.fromMetadata(metadata);
     },
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -564,7 +564,7 @@ export const useUserReportById = (userReportId: string) => {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromAPI(metadata);
+      return HouseholdAdapter.fromMetadata(metadata);
     },
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,

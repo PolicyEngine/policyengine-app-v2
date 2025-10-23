@@ -103,6 +103,7 @@ export const mockUserHouseholdPop: UserHouseholdPopulation = {
   type: 'household',
   householdId: POPULATION_IDS.HOUSEHOLD_1,
   userId: POPULATION_IDS.USER_1,
+  countryId: 'us',
   label: POPULATION_LABELS.HOUSEHOLD_LABEL,
   isCreated: true,
 };
@@ -111,18 +112,21 @@ export const mockUserHouseholdPopNoLabel: UserHouseholdPopulation = {
   type: 'household',
   householdId: POPULATION_IDS.HOUSEHOLD_2,
   userId: POPULATION_IDS.USER_2,
+  countryId: 'us',
 };
 
 export const mockUserHouseholdPopInvalid: UserHouseholdPopulation = {
   type: 'household',
   householdId: POPULATION_IDS.HOUSEHOLD_EMPTY,
   userId: POPULATION_IDS.USER_1,
+  countryId: 'us',
 };
 
 export const mockUserHouseholdPopNoUser: UserHouseholdPopulation = {
   type: 'household',
   householdId: POPULATION_IDS.HOUSEHOLD_1,
   userId: '',
+  countryId: 'us',
 };
 
 // User geography populations
@@ -204,6 +208,7 @@ export const createUserHouseholdPop = (
   type: 'household',
   householdId,
   userId,
+  countryId: 'us',
   ...(label && { label }),
 });
 

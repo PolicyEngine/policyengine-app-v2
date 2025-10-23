@@ -94,6 +94,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
+        countryId: mockHouseholdCreationPayload.country_id,
         label: TEST_LABELS.HOUSEHOLD,
       });
 
@@ -117,6 +118,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
+        countryId: mockHouseholdCreationPayload.country_id,
         label: undefined,
       });
     });
@@ -133,6 +135,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
+        countryId: mockHouseholdCreationPayload.country_id,
         label: customLabel,
       });
     });
@@ -291,6 +294,7 @@ describe('useCreateHousehold', () => {
       expect(mockCreateHouseholdAssociationMutateAsync).toHaveBeenCalledWith({
         userId: TEST_IDS.USER_ID,
         householdId: undefined,
+        countryId: mockHouseholdCreationPayload.country_id,
         label: TEST_LABELS.HOUSEHOLD,
       });
     });

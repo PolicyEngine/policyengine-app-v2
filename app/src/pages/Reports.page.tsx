@@ -13,7 +13,6 @@ import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
-import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
@@ -113,7 +112,7 @@ export default function ReportsPage() {
               ? formatDate(
                   item.userReport.createdAt,
                   'short-month-day-year',
-                  (item.report?.countryId || countryId) as (typeof countryIds)[number],
+                  item.userReport.countryId,
                   true
                 )
               : '',

@@ -30,6 +30,11 @@ vi.mock('@/api/simulationAssociation', () => {
   };
 });
 
+// Mock useCurrentCountry
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock query config
 vi.mock('@/libs/queryConfig', () => ({
   queryConfig: {
@@ -179,6 +184,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 
@@ -201,6 +207,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 
@@ -225,6 +232,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 
@@ -250,6 +258,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 

@@ -20,6 +20,7 @@ export const useUserHouseholdStore = () => {
 // 'useUserHouseholds' below to also fetch full household details
 export const useHouseholdAssociationsByUser = (userId: string) => {
   const store = useUserHouseholdStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
@@ -29,12 +30,15 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   console.log('isLoggedIn', isLoggedIn);
   console.log('config', config);
 
-  console.log('householdAssociationKeys.byUser(userId)', householdAssociationKeys.byUser(userId));
-  console.log('store.findByUser(userId)', store.findByUser(userId));
+  console.log(
+    'householdAssociationKeys.byUser(userId, countryId)',
+    householdAssociationKeys.byUser(userId, countryId)
+  );
+  console.log('store.findByUser(userId, countryId)', store.findByUser(userId, countryId));
 
   return useQuery({
-    queryKey: householdAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: householdAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
@@ -67,7 +71,7 @@ export const useCreateHouseholdAssociation = () => {
 
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byUser(newAssociation.userId),
+        queryKey: householdAssociationKeys.byUser(newAssociation.userId, newAssociation.countryId),
       });
       queryClient.invalidateQueries({
         queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId),

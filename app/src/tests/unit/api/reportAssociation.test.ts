@@ -3,12 +3,17 @@ import { UserReportAdapter } from '@/adapters/UserReportAdapter';
 import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import {
   mockErrorFetchResponse,
+  mockMultiCountryApiResponses,
+  mockMultiCountryReportList,
   mockReport,
   mockReportApiResponse,
   mockReportInput,
   mockSuccessFetchResponse,
+  mockUserReport,
+  TEST_COUNTRIES,
   TEST_LABELS,
   TEST_REPORT_IDS,
+  TEST_USER_ID,
   TEST_USER_IDS,
   TEST_USER_REPORT_IDS,
 } from '@/tests/fixtures/api/reportAssociationMocks';
@@ -80,6 +85,152 @@ describe('ApiReportStore', () => {
       await expect(store.findByUser(TEST_USER_IDS.USER_123)).rejects.toThrow(
         'Failed to fetch user associations'
       );
+    });
+
+    test('given countryId filter then returns only matching reports', async () => {
+      // Given
+      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
+        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
+      });
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
+
+      // Then
+      expect(result).toHaveLength(2);
+      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
+      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
+    });
+
+    test('given countryId filter for UK then returns only UK reports', async () => {
+      // Given
+      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
+        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
+      });
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
+
+      // Then
+      expect(result).toHaveLength(1);
+      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
+      expect(result[0].label).toBe('UK Report 1');
+    });
+
+    test('given no countryId filter then returns all reports', async () => {
+      // Given
+      const mockResponse = {
+        ok: false,
+        status: 500,
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      await expect(store.findByUser(TEST_USER_IDS.USER_123)).rejects.toThrow(
+        'Failed to fetch user associations'
+      );
+    });
+
+    test('given countryId filter then returns only matching reports', async () => {
+      // Given
+      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
+        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
+      });
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
+
+      // Then
+      expect(result).toHaveLength(2);
+      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
+      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
+    });
+
+    test('given countryId filter for UK then returns only UK reports', async () => {
+      // Given
+      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
+        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
+      });
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
+
+      // Then
+      expect(result).toHaveLength(1);
+      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
+      expect(result[0].label).toBe('UK Report 1');
+    });
+
+    test('given no countryId filter then returns all reports', async () => {
+      // Given
+      (UserReportAdapter.fromApiResponse as any).mockImplementation((data: any) => {
+        return mockMultiCountryReportList.find((r) => r.reportId === data.reportId);
+      });
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID);
+
+      // Then
+      expect(result).toHaveLength(4);
+      expect(result.map((r) => r.countryId)).toEqual([
+        TEST_COUNTRIES.US,
+        TEST_COUNTRIES.US,
+        TEST_COUNTRIES.UK,
+        TEST_COUNTRIES.CA,
+      ]);
+    });
+  });
+
+  describe('findById', () => {
+    test('given valid user and report IDs then returns report', async () => {
+      // Given
+      // Mock the adapter to properly convert each API response
+      (UserReportAdapter.fromApiResponse as any).mockImplementation((apiResponse: any) => ({
+        ...mockUserReport,
+        countryId: apiResponse.countryId || apiResponse.country_id,
+        reportId: apiResponse.reportId || apiResponse.report_id,
+      }));
+      const mockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
+      };
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID);
+
+      // Then
+      expect(result).toHaveLength(4);
+      expect(result.map((r) => r.countryId)).toEqual([
+        TEST_COUNTRIES.US,
+        TEST_COUNTRIES.US,
+        TEST_COUNTRIES.UK,
+        TEST_COUNTRIES.CA,
+      ]);
     });
   });
 
@@ -232,6 +383,90 @@ describe('LocalStorageReportStore', () => {
       const result = await store.findByUser('nonexistent-user');
 
       expect(result).toEqual([]);
+    });
+
+    test('given countryId filter then returns only matching reports', async () => {
+      // Given
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
+
+      // Then
+      expect(result).toHaveLength(2);
+      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
+      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
+    });
+
+    test('given countryId filter for UK then returns only UK reports', async () => {
+      // Given
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
+
+      // Then
+      expect(result).toHaveLength(1);
+      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
+      expect(result[0].label).toBe('UK Report 1');
+    });
+
+    test('given no countryId filter then returns all user reports', async () => {
+      // Given
+      const otherUserReport = { ...mockMultiCountryReportList[0], userId: 'other-user' };
+      mockLocalStorage['user-report-associations'] = JSON.stringify([
+        ...mockMultiCountryReportList,
+        otherUserReport,
+      ]);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID);
+
+      // Then
+      expect(result).toHaveLength(4);
+      expect(result.every((r) => r.userId === TEST_USER_ID)).toBe(true);
+    });
+
+    test('given countryId filter then returns only matching reports', async () => {
+      // Given
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
+
+      // Then
+      expect(result).toHaveLength(2);
+      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
+      expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
+    });
+
+    test('given countryId filter for UK then returns only UK reports', async () => {
+      // Given
+      mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
+
+      // Then
+      expect(result).toHaveLength(1);
+      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
+      expect(result[0].label).toBe('UK Report 1');
+    });
+
+    test('given no countryId filter then returns all user reports', async () => {
+      // Given
+      const otherUserReport = { ...mockMultiCountryReportList[0], userId: 'other-user' };
+      mockLocalStorage['user-report-associations'] = JSON.stringify([
+        ...mockMultiCountryReportList,
+        otherUserReport,
+      ]);
+
+      // When
+      const result = await store.findByUser(TEST_USER_ID);
+
+      // Then
+      expect(result).toHaveLength(4);
+      expect(result.every((r) => r.userId === TEST_USER_ID)).toBe(true);
     });
   });
 

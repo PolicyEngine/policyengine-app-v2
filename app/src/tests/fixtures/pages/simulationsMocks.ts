@@ -10,7 +10,9 @@ export const mockSimulationData = [
       id: 'sim-assoc-1',
       userId: 1,
       simulationId: 1001,
+      countryId: 'us',
       label: 'Test Simulation 1',
+      isCreated: true,
       createdAt: '2024-01-15T10:00:00Z',
     },
     simulation: {
@@ -52,7 +54,9 @@ export const mockSimulationData = [
       id: 'sim-assoc-2',
       userId: 1,
       simulationId: 1002,
+      countryId: 'us',
       label: 'Test Simulation 2',
+      isCreated: true,
       createdAt: '2024-02-20T14:30:00Z',
     },
     simulation: {

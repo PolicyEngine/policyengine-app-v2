@@ -48,6 +48,7 @@ export const mockSimulationInput = (
 ): Omit<UserSimulation, 'id' | 'createdAt'> => ({
   userId: TEST_USER_IDS.USER_123,
   simulationId: TEST_SIM_IDS.SIM_456,
+  countryId: 'us',
   label: TEST_LABELS.TEST_SIMULATION_1,
   isCreated: true,
   ...overrides,

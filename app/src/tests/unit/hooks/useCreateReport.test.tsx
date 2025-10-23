@@ -20,7 +20,6 @@ import {
   TEST_COUNTRY_ID,
   TEST_LABEL,
   TEST_REPORT_ID_STRING,
-  TEST_USER_ID,
   TEST_USER_REPORT_ID,
 } from '@/tests/fixtures/hooks/reportHooksMocks';
 
@@ -113,7 +112,7 @@ describe('useCreateReport', () => {
         expect(createReportAndAssociateWithUser).toHaveBeenCalledWith({
           countryId: TEST_COUNTRY_ID,
           payload: mockReportCreationPayload,
-          userId: TEST_USER_ID,
+          userId: 'anonymous',
           label: TEST_LABEL,
         });
       });
@@ -133,7 +132,7 @@ describe('useCreateReport', () => {
         expect(createReportAndAssociateWithUser).toHaveBeenCalledWith({
           countryId: TEST_COUNTRY_ID,
           payload: mockReportCreationPayload,
-          userId: TEST_USER_ID,
+          userId: 'anonymous',
           label: undefined,
         });
       });

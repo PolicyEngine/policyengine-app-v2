@@ -384,11 +384,11 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      const report = result.current.getReportWithFullContext('1');
+      const report = result.current.getReportWithFullContext('report-1');
 
       // Then
       expect(report).toBeDefined();
-      expect(report?.userReport.reportId).toBe('1');
+      expect(report?.userReport.reportId).toBe('report-1');
     });
 
     test('given simulation ID when using getReportsBySimulation then returns matching reports', async () => {

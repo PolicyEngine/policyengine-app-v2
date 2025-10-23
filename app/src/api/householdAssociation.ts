@@ -3,7 +3,7 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserHouseholdStore {
   create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
-  findByUser: (userId: string) => Promise<UserHouseholdPopulation[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserHouseholdPopulation[]>;
   findById: (userId: string, householdId: string) => Promise<UserHouseholdPopulation | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, householdId: string, updates: Partial<UserHouseholdPopulation>): Promise<UserHouseholdPopulation>;
@@ -31,8 +31,12 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     return UserHouseholdAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserHouseholdPopulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+  async findByUser(userId: string, countryId?: string): Promise<UserHouseholdPopulation[]> {
+    const url = countryId
+      ? `${this.BASE_URL}/user/${userId}?country_id=${countryId}`
+      : `${this.BASE_URL}/user/${userId}`;
+
+    const response = await fetch(url, {
       headers: { 'Content-Type': 'application/json' },
     });
     if (!response.ok) {
@@ -120,9 +124,11 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
     return newHousehold;
   }
 
-  async findByUser(userId: string): Promise<UserHouseholdPopulation[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserHouseholdPopulation[]> {
     const households = this.getStoredHouseholds();
-    return households.filter((h) => h.userId === userId);
+    return households.filter(
+      (h) => h.userId === userId && (!countryId || h.countryId === countryId)
+    );
   }
 
   async findById(userId: string, householdId: string): Promise<UserHouseholdPopulation | null> {

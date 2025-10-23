@@ -15,6 +15,7 @@ describe('ApiPolicyStore', () => {
   const mockPolicyInput: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
+    countryId: 'us',
     label: 'Test Policy',
     isCreated: true,
   };
@@ -175,6 +176,7 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput1: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
+    countryId: 'us',
     label: 'Test Policy 1',
     isCreated: true,
   };
@@ -182,6 +184,7 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput2: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-789',
+    countryId: 'us',
     label: 'Test Policy 2',
     isCreated: true,
   };

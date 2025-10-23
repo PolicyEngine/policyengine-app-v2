@@ -389,21 +389,18 @@ describe('updateSimulationOutput', () => {
     );
 
     // Then
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation/${SIMULATION_IDS.VALID}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          id: parseInt(SIMULATION_IDS.VALID, 10),
-          output: JSON.stringify(mockSimulationOutput),
-          status: 'complete',
-        }),
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        id: parseInt(SIMULATION_IDS.VALID, 10),
+        output: JSON.stringify(mockSimulationOutput),
+        status: 'complete',
+      }),
+    });
     expect(result).toEqual(mockSimulationMetadataWithOutput);
   });
 
@@ -419,7 +416,7 @@ describe('updateSimulationOutput', () => {
 
     // Then
     expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation/${SIMULATION_IDS.VALID}`,
+      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation`,
       expect.any(Object)
     );
   });
@@ -505,21 +502,18 @@ describe('markSimulationCompleted', () => {
     );
 
     // Then
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation/${SIMULATION_IDS.VALID}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          id: parseInt(SIMULATION_IDS.VALID, 10),
-          output: JSON.stringify(mockSimulationOutput),
-          status: 'complete',
-        }),
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        id: parseInt(SIMULATION_IDS.VALID, 10),
+        output: JSON.stringify(mockSimulationOutput),
+        status: 'complete',
+      }),
+    });
     expect(result).toEqual(mockSimulationMetadataWithOutput);
   });
 });
@@ -540,21 +534,18 @@ describe('markSimulationError', () => {
     const result = await markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID);
 
     // Then
-    expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.US}/simulation/${SIMULATION_IDS.VALID}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          id: parseInt(SIMULATION_IDS.VALID, 10),
-          output: null,
-          status: 'error',
-        }),
-      }
-    );
+    expect(mockFetch).toHaveBeenCalledWith(`${BASE_URL}/${TEST_COUNTRIES.US}/simulation`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+      },
+      body: JSON.stringify({
+        id: parseInt(SIMULATION_IDS.VALID, 10),
+        output: null,
+        status: 'error',
+      }),
+    });
     expect(result).toEqual(mockSimulationMetadataError);
   });
 
@@ -570,7 +561,7 @@ describe('markSimulationError', () => {
 
     // Then
     expect(mockFetch).toHaveBeenCalledWith(
-      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation/${SIMULATION_IDS.VALID}`,
+      `${BASE_URL}/${TEST_COUNTRIES.UK}/simulation`,
       expect.any(Object)
     );
   });

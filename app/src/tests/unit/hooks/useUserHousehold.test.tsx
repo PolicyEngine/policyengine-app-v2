@@ -145,7 +145,7 @@ describe('useUserHousehold hooks', () => {
 
       expect(result.current.data).toEqual(mockUserHouseholdPopulationList);
       const mockStore = (LocalStorageHouseholdStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith(userId);
+      expect(mockStore.findByUser).toHaveBeenCalledWith(userId, 'us');
 
       // Verify console logs
       expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
@@ -168,7 +168,7 @@ describe('useUserHousehold hooks', () => {
       });
 
       const mockStore = (LocalStorageHouseholdStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith('');
+      expect(mockStore.findByUser).toHaveBeenCalledWith('', 'us');
     });
 
     test('given store error when fetching then returns error state', async () => {
@@ -239,6 +239,7 @@ describe('useUserHousehold hooks', () => {
         id: TEST_IDS.HOUSEHOLD_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
         userId: TEST_IDS.USER_ID,
+        countryId: 'us' as const,
         label: TEST_LABELS.HOUSEHOLD,
       };
 
@@ -294,6 +295,7 @@ describe('useUserHousehold hooks', () => {
           id: TEST_IDS.HOUSEHOLD_ID,
           householdId: TEST_IDS.HOUSEHOLD_ID,
           userId: TEST_IDS.USER_ID,
+          countryId: 'us' as const,
           label: TEST_LABELS.HOUSEHOLD,
         })
       ).rejects.toThrow('Creation failed');

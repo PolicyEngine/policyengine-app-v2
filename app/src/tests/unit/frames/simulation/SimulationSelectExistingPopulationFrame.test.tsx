@@ -59,6 +59,11 @@ vi.mock('@/adapters', () => ({
       countryId: household.country_id,
       householdData: household.household_json || {},
     }),
+    fromMetadata: (household: any) => ({
+      id: household.id,
+      countryId: household.country_id,
+      householdData: household.household_json || {},
+    }),
   },
 }));
 

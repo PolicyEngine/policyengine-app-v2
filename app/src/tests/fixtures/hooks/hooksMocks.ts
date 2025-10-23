@@ -127,6 +127,7 @@ export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
   id: TEST_IDS.HOUSEHOLD_ID,
   householdId: TEST_IDS.HOUSEHOLD_ID,
   userId: TEST_IDS.USER_ID,
+  countryId: 'us',
   label: TEST_LABELS.HOUSEHOLD,
   createdAt: TEST_IDS.TIMESTAMP,
   updatedAt: TEST_IDS.TIMESTAMP,

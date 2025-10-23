@@ -3,7 +3,7 @@ import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserGeographicStore {
   create: (population: UserGeographyPopulation) => Promise<UserGeographyPopulation>;
-  findByUser: (userId: string) => Promise<UserGeographyPopulation[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserGeographyPopulation[]>;
   findById: (userId: string, geographyId: string) => Promise<UserGeographyPopulation | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation>;
@@ -31,7 +31,7 @@ export class ApiGeographicStore implements UserGeographicStore {
     return UserGeographicAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserGeographyPopulation[]> {
     const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
       headers: { 'Content-Type': 'application/json' },
     });
@@ -40,7 +40,14 @@ export class ApiGeographicStore implements UserGeographicStore {
     }
 
     const apiResponses = await response.json();
-    return apiResponses.map((apiData: any) => UserGeographicAdapter.fromApiResponse(apiData));
+
+    // Convert each API response to UserGeographyPopulation and filter by country if specified
+    const geographies = apiResponses.map((apiData: any) =>
+      UserGeographicAdapter.fromApiResponse(apiData)
+    );
+    return countryId
+      ? geographies.filter((g: UserGeographyPopulation) => g.countryId === countryId)
+      : geographies;
   }
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
@@ -117,9 +124,11 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
     return newPopulation;
   }
 
-  async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserGeographyPopulation[]> {
     const populations = this.getStoredPopulations();
-    return populations.filter((p) => p.userId === userId);
+    return populations.filter(
+      (p) => p.userId === userId && (!countryId || p.countryId === countryId)
+    );
   }
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {

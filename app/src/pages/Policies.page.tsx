@@ -5,7 +5,6 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
 import { countParameterChanges } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
@@ -68,7 +67,7 @@ export default function PoliciesPage() {
           ? formatDate(
               item.association.createdAt,
               'short-month-day-year',
-              item.policy?.country_id as (typeof countryIds)[number],
+              item.association.countryId,
               true
             )
           : '',

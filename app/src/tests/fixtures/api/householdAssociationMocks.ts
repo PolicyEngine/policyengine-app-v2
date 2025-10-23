@@ -6,11 +6,12 @@ export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
   id: '123',
   householdId: '123',
   userId: 'user-456',
+  countryId: 'us',
   label: 'My Test Household',
   createdAt: `${CURRENT_YEAR}-01-15T10:00:00Z`,
   updatedAt: `${CURRENT_YEAR}-01-15T10:00:00Z`,
   isCreated: true,
-} as any;
+};
 
 export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
   {
@@ -18,21 +19,23 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
     id: '1',
     householdId: '1',
     userId: 'user-456',
+    countryId: 'us',
     label: 'First Household',
     createdAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     updatedAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     isCreated: true,
-  } as any,
+  },
   {
     type: 'household',
     id: '2',
     householdId: '2',
     userId: 'user-456',
+    countryId: 'uk',
     label: 'Second Household',
     createdAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     updatedAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     isCreated: true,
-  } as any,
+  },
 ];
 
 export const mockApiResponse = {

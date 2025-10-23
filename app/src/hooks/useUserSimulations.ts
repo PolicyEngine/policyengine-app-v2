@@ -148,7 +148,7 @@ export const useUserSimulations = (userId: string) => {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromAPI(metadata);
+      return HouseholdAdapter.fromMetadata(metadata);
     },
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -321,7 +321,9 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
     retry: 1, // Only retry once if it's not a household
   });
 
-  const household = householdMetadata ? HouseholdAdapter.fromAPI(householdMetadata) : undefined;
+  const household = householdMetadata
+    ? HouseholdAdapter.fromMetadata(householdMetadata)
+    : undefined;
 
   // Get user associations
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId);
