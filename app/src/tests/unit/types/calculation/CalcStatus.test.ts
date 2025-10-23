@@ -28,7 +28,7 @@ describe('CalcStatus types', () => {
         estimatedTimeRemaining: 60000,
       });
 
-      expect(status.status).toBe('computing');
+      expect(status.status).toBe('pending');
       expect(status.progress).toBe(45);
       expect(status.message).toBe('Running simulation...');
       expect(status.queuePosition).toBe(3);

@@ -32,7 +32,7 @@ export const SYNTHETIC_PROGRESS_TEST_CONSTANTS = {
 
     // 30 seconds is 0.69% of 12 minute duration
     TIME_30_SECONDS: 30000,
-    EXPECTED_MESSAGE_AT_30_SEC: 'Initializing economy-wide calculation...',
+    EXPECTED_MESSAGE_AT_30_SEC: 'Initializing society-wide calculation...',
 
     // 1 minute elapsed with 6 minutes remaining server estimate
     TIME_1_MINUTE: 60000,

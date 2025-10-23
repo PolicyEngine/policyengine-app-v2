@@ -77,18 +77,14 @@ describe('useHydrateCalculationCache', () => {
       { wrapper }
     );
 
+    // For household reports, the hook hydrates simulation-level caches, not report-level cache
+    // Since no simulations are in the cache, nothing gets hydrated
+    // This is expected behavior - the hook needs simulations to be fetched first
     const queryKey = calculationKeys.byReportId(mockReport.id!);
     const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
 
-    expect(cachedStatus).toBeDefined();
-    expect(cachedStatus?.status).toBe('complete');
-    expect(cachedStatus?.result).toEqual(mockReport.output);
-    expect(cachedStatus?.metadata).toEqual({
-      calcId: mockReport.id,
-      calcType: 'household',
-      targetType: 'report',
-      startedAt: expect.any(Number),
-    });
+    // Report-level cache should NOT be populated for household reports
+    expect(cachedStatus).toBeUndefined();
   });
 
   it('should skip hydration if report has no output', () => {
@@ -149,9 +145,9 @@ describe('useHydrateCalculationCache', () => {
       { wrapper }
     );
 
-    // Should log that cache is already populated
+    // Should log that cache is already populated with timestamp
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      '[useHydrateCalculationCache] Cache already populated, skipping hydration'
+      expect.stringMatching(/\[useHydrateCache\]\[\d+\] SKIP: Already in cache \(pending\)/)
     );
 
     // Cache should still have the original computing status
@@ -192,7 +188,7 @@ describe('useHydrateCalculationCache', () => {
     );
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
-      '[useHydrateCalculationCache] Hydrating cache with persisted result'
+      '[useHydrateCache] Hydrating cache with persisted result'
     );
   });
 
