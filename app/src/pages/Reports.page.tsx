@@ -1,6 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import {
   BulletsValue,
   ColumnConfig,
@@ -30,7 +28,6 @@ export default function ReportsPage() {
     cacheMonitor.getStats();
   }, [data]);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
@@ -44,37 +41,6 @@ export default function ReportsPage() {
     // TODO: Implement more filters modal/dropdown
     console.log('More filters clicked');
   };
-
-  // Memoize callback to prevent OutputTypeCell from re-rendering unnecessarily
-  const handleMenuAction = useCallback(
-    (action: string, recordId: string) => {
-      switch (action) {
-        case 'view-output':
-          // recordId is now the UserReport.id
-          navigate(`/${countryId}/report-output/${recordId}`);
-          break;
-        case 'export':
-          // TODO: Implement export functionality
-          console.log('Export report:', recordId);
-          break;
-        case 'share':
-          // TODO: Implement share functionality
-          console.log('Share report:', recordId);
-          break;
-        case 'duplicate':
-          // TODO: Implement duplicate functionality
-          console.log('Duplicate report:', recordId);
-          break;
-        case 'delete':
-          // TODO: Implement delete functionality
-          console.log('Delete report:', recordId);
-          break;
-        default:
-          console.log('Unknown action:', action);
-      }
-    },
-    [navigate, countryId]
-  );
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>

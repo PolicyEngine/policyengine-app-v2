@@ -1,5 +1,4 @@
 import { CalcStartConfig, CalcStatus } from '@/types/calculation';
-import { CalcError } from '@/types/calculation/CalcError';
 
 /**
  * Test constants for orchestrator cleanup tests

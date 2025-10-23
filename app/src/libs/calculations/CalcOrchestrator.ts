@@ -163,7 +163,7 @@ export class CalcOrchestrator {
     queryOptions: ReturnType<
       typeof calculationQueries.forReport | typeof calculationQueries.forSimulation
     >,
-    metadata: CalcMetadata,
+    _metadata: CalcMetadata,
     countryId: string,
     calcId: string
   ): void {

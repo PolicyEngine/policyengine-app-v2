@@ -1,9 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import {
-  mockHouseholdResult,
-  mockSocietyWideResult,
-} from '@/tests/fixtures/types/calculationFixtures';
+import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 import type { CalcStartConfig, CalcStatus } from '@/types/calculation';
 
 /**

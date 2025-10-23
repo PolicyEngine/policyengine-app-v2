@@ -7,7 +7,6 @@ import {
   type CardListItem,
   type SetupConditionCard,
 } from '@/components/flowView';
-import { spacing } from '@/designTokens';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
 interface FlowViewProps {

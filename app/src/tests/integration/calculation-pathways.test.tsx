@@ -10,8 +10,6 @@ import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { calculationKeys } from '@/libs/queryKeys';
 import {
   INTEGRATION_TEST_CONSTANTS,
-  mockHouseholdCalcConfig,
-  mockHouseholdCalcResult,
   mockIntegrationCompleteStatus,
   mockIntegrationComputingStatus,
   mockSocietyWideCalcConfig,

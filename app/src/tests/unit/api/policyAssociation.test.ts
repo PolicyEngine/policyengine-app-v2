@@ -217,7 +217,6 @@ describe('LocalStoragePolicyStore', () => {
       expect(result).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
-        countryId: 'us',
         label: 'Test Policy 1',
       });
       expect(result.id).toBe('policy-456');
@@ -271,7 +270,6 @@ describe('LocalStoragePolicyStore', () => {
       expect(result).toMatchObject({
         userId: 'user-123',
         policyId: 'policy-456',
-        countryId: 'us',
       });
     });
 

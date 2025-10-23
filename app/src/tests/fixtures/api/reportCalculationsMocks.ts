@@ -1,4 +1,3 @@
-import { vi } from 'vitest';
 import type { CalculationMeta } from '@/api/reportCalculations';
 
 export const TEST_CALC_IDS = {

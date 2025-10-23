@@ -1,5 +1,4 @@
 import { QueryClient } from '@tanstack/react-query';
-import { vi } from 'vitest';
 import {
   mockHouseholdResult,
   mockSocietyWideResult,

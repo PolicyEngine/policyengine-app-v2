@@ -26,21 +26,6 @@ export default function SimulationsPage() {
     console.log('More filters clicked');
   };
 
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'add-to-report':
-        // TODO: Implement add to report functionality
-        console.log('Add to report:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete simulation:', recordId);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
-  };
-
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>
       selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQueryNormalizer } from '@normy/react-query';
-import { useQueries, useQueryClient, UseQueryResult } from '@tanstack/react-query';
+import { useQueries, UseQueryResult } from '@tanstack/react-query';
 
 /**
  * Generic interface for normalized data structure
@@ -42,8 +42,6 @@ export function useParallelQueries<T>(
   ids: string[],
   config: FetchConfig<T>
 ): ParallelQueriesResult<T> {
-  const queryClient = useQueryClient();
-
   // Deduplicate IDs to prevent duplicate query keys (defense in depth)
   // This prevents React Query's "Duplicate Queries" warning when the same ID appears multiple times
   // (e.g., baseline and reform simulations sharing the same household/geography population)

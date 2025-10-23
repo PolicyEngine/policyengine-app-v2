@@ -181,7 +181,6 @@ describe('LocalStorageReportStore', () => {
       expect(result).toMatchObject({
         userId: TEST_USER_IDS.USER_123,
         reportId: TEST_REPORT_IDS.REPORT_456,
-        countryId: 'us',
         label: TEST_LABELS.TEST_REPORT_1,
       });
       expect(result.id).toMatch(/^sur-/);
@@ -245,7 +244,6 @@ describe('LocalStorageReportStore', () => {
       expect(result).toMatchObject({
         userId: TEST_USER_IDS.USER_123,
         reportId: TEST_REPORT_IDS.REPORT_456,
-        countryId: 'us',
       });
     });
 

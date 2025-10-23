@@ -1,4 +1,3 @@
-import { QueryClient } from '@tanstack/react-query';
 import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcMetadata, CalcParams } from '@/types/calculation';

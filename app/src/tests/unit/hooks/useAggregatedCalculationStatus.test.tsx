@@ -1,13 +1,12 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@test-utils';
+import { renderHook } from '@test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAggregatedCalculationStatus } from '@/hooks/useAggregatedCalculationStatus';
 import { calculationKeys } from '@/libs/queryKeys';
 import { createTestMetadata, TEST_SIM_IDS } from '@/tests/fixtures/hooks/aggregatedStatusMocks';
 import {
   mockCalcStatusComplete,
-  mockCalcStatusComputing,
   mockCalcStatusError,
   mockCalcStatusIdle,
   mockHouseholdResult,

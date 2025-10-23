@@ -398,7 +398,8 @@ describe('updateSimulationOutput', () => {
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          output: mockSimulationOutput,
+          id: parseInt(SIMULATION_IDS.VALID, 10),
+          output: JSON.stringify(mockSimulationOutput),
           status: 'complete',
         }),
       }
@@ -513,7 +514,8 @@ describe('markSimulationCompleted', () => {
           Accept: 'application/json',
         },
         body: JSON.stringify({
-          output: mockSimulationOutput,
+          id: parseInt(SIMULATION_IDS.VALID, 10),
+          output: JSON.stringify(mockSimulationOutput),
           status: 'complete',
         }),
       }
@@ -547,6 +549,7 @@ describe('markSimulationError', () => {
           Accept: 'application/json',
         },
         body: JSON.stringify({
+          id: parseInt(SIMULATION_IDS.VALID, 10),
           output: null,
           status: 'error',
         }),

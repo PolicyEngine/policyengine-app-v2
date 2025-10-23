@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';

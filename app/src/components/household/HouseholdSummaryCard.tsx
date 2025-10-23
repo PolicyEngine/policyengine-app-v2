@@ -4,7 +4,6 @@ import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
-import { getTitleText } from '@/utils/householdDisplayText';
 import { formatVariableValue } from '@/utils/householdValues';
 import HouseholdBreakdown from './HouseholdBreakdown';
 

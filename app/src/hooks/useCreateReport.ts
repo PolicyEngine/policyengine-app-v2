@@ -4,7 +4,6 @@ import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
 import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
-import { CalcStartConfig } from '@/types/calculation';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';

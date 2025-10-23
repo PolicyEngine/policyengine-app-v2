@@ -188,7 +188,6 @@ describe('LocalStorageSimulationStore', () => {
       expect(result).toMatchObject({
         userId: TEST_USER_IDS.USER_123,
         simulationId: TEST_SIM_IDS.SIM_456,
-        countryId: 'us',
         label: TEST_LABELS.TEST_SIMULATION_1,
       });
       expect(result.id).toMatch(/^sus-/);

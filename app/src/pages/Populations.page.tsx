@@ -53,33 +53,6 @@ export default function PopulationsPage() {
     console.log('More filters clicked');
   };
 
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-population':
-        // TODO: Implement view population functionality
-        console.log('View details:', recordId);
-        break;
-      case 'bookmark':
-        // TODO: Implement bookmark functionality
-        console.log('Bookmark population:', recordId);
-        break;
-      case 'edit':
-        // TODO: Implement edit functionality
-        console.log('Edit population:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share population:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete population:', recordId);
-        break;
-      default:
-        console.error('Unknown action:', action);
-    }
-  };
-
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>
       selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)

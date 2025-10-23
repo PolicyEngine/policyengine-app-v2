@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import {
-  mockParameters,
   mockPolicy,
   mockPolicyMetadata,
   mockPolicyMetadataMultipleParams,

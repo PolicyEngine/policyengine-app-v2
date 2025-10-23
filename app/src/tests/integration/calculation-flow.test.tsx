@@ -68,7 +68,7 @@ describe.skip('Calculation Flow Integration', () => {
   describe('economy calculation flow', () => {
     test('given economy calculation started then status hook reflects progress', async () => {
       // Given - Set up hooks
-      const { result: startResult } = renderHook(() => useStartCalculation(), { wrapper });
+      renderHook(() => useStartCalculation(), { wrapper });
       const { result: statusResult } = renderHook(
         () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
         { wrapper }
@@ -156,7 +156,7 @@ describe.skip('Calculation Flow Integration', () => {
       // The orchestrator watches for status changes and persists results
 
       // Given - Mock the orchestrator behavior
-      const config = mockHookCalcStartConfig({
+      mockHookCalcStartConfig({
         targetType: 'report',
         calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
       });
@@ -306,12 +306,12 @@ describe.skip('Calculation Flow Integration', () => {
   describe('hook coordination', () => {
     test('given start calculation then status hook can read result', async () => {
       // Given
-      const config = mockHookCalcStartConfig({
+      mockHookCalcStartConfig({
         calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
         targetType: 'report',
       });
 
-      const { result: startResult } = renderHook(() => useStartCalculation(), { wrapper });
+      renderHook(() => useStartCalculation(), { wrapper });
       const { result: statusResult } = renderHook(
         () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
         { wrapper }

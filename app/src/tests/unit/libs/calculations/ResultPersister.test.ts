@@ -5,10 +5,7 @@ import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
 import {
   createTestQueryClient,
-  mockCompleteHouseholdStatus,
-  mockCompleteHouseholdStatusWithReport,
   mockCompleteSocietyWideStatus,
-  mockPendingStatus,
   TEST_CALC_IDS,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/libs/calculations/resultPersisterMocks';
