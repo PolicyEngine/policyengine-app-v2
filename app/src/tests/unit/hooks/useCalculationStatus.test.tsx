@@ -67,7 +67,7 @@ describe('useCalculationStatus', () => {
       expect(result.current.isError).toBe(false);
     });
 
-    test('given computing data in cache then returns computing status', async () => {
+    test('given pending data in cache then returns pending status', async () => {
       // Given
       const calcStatus = mockCalcStatusComputing({
         metadata: {
@@ -90,7 +90,7 @@ describe('useCalculationStatus', () => {
 
       // Then
       await waitFor(() => {
-        expect(result.current.status).toBe('computing');
+        expect(result.current.status).toBe('pending');
         expect(result.current.isPending).toBe(true);
         expect(result.current.isComplete).toBe(false);
         expect(result.current.isError).toBe(false);
@@ -244,7 +244,7 @@ describe('useCalculationStatus', () => {
 
       // Verify initial state
       await waitFor(() => {
-        expect(result.current.status).toBe('computing');
+        expect(result.current.status).toBe('pending');
       });
 
       // When - update cache to complete
@@ -290,8 +290,8 @@ describe('useCalculationStatus', () => {
         { wrapper }
       );
 
-      // Then - shows initializing state (not computing with synthetic progress)
-      // Synthetic progress only shows when status in cache is 'computing'
+      // Then - shows initializing state (not pending with synthetic progress)
+      // Synthetic progress only shows when status in cache is 'pending'
       await waitFor(() => {
         expect(result.current.status).toBe('initializing');
         expect(result.current.isInitializing).toBe(true);
@@ -299,7 +299,7 @@ describe('useCalculationStatus', () => {
       });
     });
 
-    test('given economy computing status then uses synthetic progress', async () => {
+    test('given economy pending status then uses synthetic progress', async () => {
       // Given
       const calcStatus = mockCalcStatusComputing({
         metadata: {
@@ -331,7 +331,7 @@ describe('useCalculationStatus', () => {
       });
     });
 
-    test('given household computing status then uses synthetic progress', async () => {
+    test('given household pending status then uses synthetic progress', async () => {
       // Given
       const calcStatus = mockCalcStatusComputing({
         metadata: {

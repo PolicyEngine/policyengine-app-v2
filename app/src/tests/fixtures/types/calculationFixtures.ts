@@ -107,7 +107,8 @@ export const mockIdleCalcStatus = (overrides?: Partial<CalcStatus>): CalcStatus 
 });
 
 /**
- * Mock CalcStatus in computing state
+ * Mock CalcStatus in pending state (calculation actively running)
+ * Note: The status value is 'pending', not 'computing'
  */
 export const mockComputingCalcStatus = (overrides?: Partial<CalcStatus>): CalcStatus => ({
   status: 'pending',

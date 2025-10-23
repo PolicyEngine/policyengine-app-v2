@@ -43,8 +43,8 @@ describe('useCalculationStatus', () => {
     });
   });
 
-  describe('given computing status in cache', () => {
-    it('then returns computing state', async () => {
+  describe('given pending status in cache', () => {
+    it('then returns pending state', async () => {
       // Given
       const status = mockComputingCalcStatus({
         progress: 45,
@@ -64,10 +64,10 @@ describe('useCalculationStatus', () => {
         { wrapper }
       );
 
-      // Then - Status and flags reflect computing state
+      // Then - Status and flags reflect pending state
       // Note: progress/message may be synthetic for better UX
       await waitFor(() => {
-        expect(result.current.status).toBe('computing');
+        expect(result.current.status).toBe('pending');
         expect(result.current.isPending).toBe(true);
         // Server data is available even if not displayed
         expect(result.current.queuePosition).toBe(3);
@@ -147,7 +147,7 @@ describe('useCalculationStatus', () => {
 
       // Then
       await waitFor(() => {
-        expect(result.current.status).toBe('computing');
+        expect(result.current.status).toBe('pending');
       });
     });
   });

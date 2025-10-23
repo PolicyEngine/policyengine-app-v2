@@ -77,7 +77,7 @@ describe.skip('Calculation Flow Integration', () => {
       // Initial state - should be idle
       expect(statusResult.current.status).toBe('idle');
 
-      // When - Manually populate cache with computing status (simulating orchestrator behavior)
+      // When - Manually populate cache with pending status (simulating orchestrator behavior)
       const computingStatus = mockCalcStatusComputing({
         metadata: {
           calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
@@ -94,9 +94,9 @@ describe.skip('Calculation Flow Integration', () => {
         computingStatus
       );
 
-      // Then - Status hook should reflect computing state
+      // Then - Status hook should reflect pending state
       await waitFor(() => {
-        expect(statusResult.current.status).toBe('computing');
+        expect(statusResult.current.status).toBe('pending');
         expect(statusResult.current.isPending).toBe(true);
         expect(statusResult.current.progress).toBe(25);
         expect(statusResult.current.queuePosition).toBe(3);
@@ -104,7 +104,7 @@ describe.skip('Calculation Flow Integration', () => {
     });
 
     test('given calculation completes then status updates to complete', async () => {
-      // Given - Start with computing status
+      // Given - Start with pending status
       const { result: statusResult } = renderHook(
         () => useCalculationStatus(HOOK_TEST_CONSTANTS.TEST_REPORT_ID, 'report'),
         { wrapper }
@@ -124,7 +124,7 @@ describe.skip('Calculation Flow Integration', () => {
       );
 
       await waitFor(() => {
-        expect(statusResult.current.status).toBe('computing');
+        expect(statusResult.current.status).toBe('pending');
       });
 
       // When - Update to complete status (simulating calculation completion)
@@ -218,8 +218,8 @@ describe.skip('Calculation Flow Integration', () => {
 
       // Then - Both observers should see the update
       await waitFor(() => {
-        expect(status1.current.status).toBe('computing');
-        expect(status2.current.status).toBe('computing');
+        expect(status1.current.status).toBe('pending');
+        expect(status2.current.status).toBe('pending');
       });
     });
   });
@@ -299,7 +299,7 @@ describe.skip('Calculation Flow Integration', () => {
 
       // Then - Each maintains separate state
       await waitFor(() => {
-        expect(status1.current.status).toBe('computing');
+        expect(status1.current.status).toBe('pending');
         expect(status2.current.status).toBe('complete');
       });
     });
@@ -334,9 +334,9 @@ describe.skip('Calculation Flow Integration', () => {
         computing
       );
 
-      // Then - Status hook can read the computing status
+      // Then - Status hook can read the pending status
       await waitFor(() => {
-        expect(statusResult.current.status).toBe('computing');
+        expect(statusResult.current.status).toBe('pending');
         expect(statusResult.current.isPending).toBe(true);
       });
     });
