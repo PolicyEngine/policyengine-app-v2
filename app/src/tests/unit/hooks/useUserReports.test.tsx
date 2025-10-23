@@ -20,13 +20,13 @@ import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssoci
 import metadataReducer from '@/reducers/metadataReducer';
 import { mockReport, mockReportMetadata } from '@/tests/fixtures/adapters/reportMocks';
 import {
-  createMockQueryClient,
   mockUserReportList,
   TEST_LABEL,
   TEST_REPORT_ID,
   TEST_TIMESTAMP,
   TEST_USER_ID,
 } from '@/tests/fixtures/api/reportAssociationMocks';
+import { createMockQueryClient } from '@/tests/fixtures/hooks/hooksMocks';
 import {
   createNormalizedCacheMock,
   ERROR_MESSAGES,
@@ -55,6 +55,7 @@ vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 // Mock the normalizer
 vi.mock('@normy/react-query', () => ({
   useQueryNormalizer: () => createNormalizedCacheMock(),
+  QueryNormalizerProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock the association hooks
