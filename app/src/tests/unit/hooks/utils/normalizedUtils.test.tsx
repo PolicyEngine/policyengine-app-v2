@@ -154,7 +154,7 @@ describe('normalizedUtils', () => {
   describe('extractUniqueIds', () => {
     it('given array of objects then extracts unique IDs', () => {
       // Given
-      const items = TEST_ENTITIES.policiesWithDuplicates;
+      const items = [...TEST_ENTITIES.policiesWithDuplicates];
 
       // When
       const result = extractUniqueIds(items, 'id');
@@ -165,7 +165,7 @@ describe('normalizedUtils', () => {
 
     it('given nested field then extracts IDs', () => {
       // Given
-      const items = TEST_ENTITIES.simulationsWithPolicies;
+      const items = [...TEST_ENTITIES.simulationsWithPolicies];
 
       // When
       const result = extractUniqueIds(items, 'policyId');
@@ -176,7 +176,7 @@ describe('normalizedUtils', () => {
 
     it('given null/undefined values then filters them out', () => {
       // Given
-      const items = TEST_ENTITIES.itemsWithNulls;
+      const items = [...TEST_ENTITIES.itemsWithNulls];
 
       // When
       const result = extractUniqueIds(items, 'id');
@@ -195,7 +195,7 @@ describe('normalizedUtils', () => {
 
     it('given numeric IDs then converts to strings', () => {
       // Given
-      const items = TEST_ENTITIES.numericIds;
+      const items = [...TEST_ENTITIES.numericIds];
 
       // When
       const result = extractUniqueIds(items, 'id');
@@ -209,7 +209,7 @@ describe('normalizedUtils', () => {
   describe('createLookupMap', () => {
     it('given array of items then creates ID-keyed map', () => {
       // Given
-      const items = TEST_ENTITIES.policies;
+      const items = [...TEST_ENTITIES.policies];
 
       // When
       const result = createLookupMap(items);
@@ -221,7 +221,7 @@ describe('normalizedUtils', () => {
 
     it('given numeric IDs then uses string keys', () => {
       // Given
-      const items = TEST_ENTITIES.numericIds;
+      const items = [...TEST_ENTITIES.numericIds];
 
       // When
       const result = createLookupMap(items);
@@ -241,7 +241,7 @@ describe('normalizedUtils', () => {
 
     it('given items with null ID then skips them', () => {
       // Given
-      const items = TEST_ENTITIES.withNullId;
+      const items = [...TEST_ENTITIES.withNullId];
 
       // When
       const result = createLookupMap(items);

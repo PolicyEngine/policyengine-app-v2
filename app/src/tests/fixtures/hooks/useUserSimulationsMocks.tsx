@@ -58,11 +58,6 @@ export const createMockQueryClient = () => {
         gcTime: 0,
       },
     },
-    logger: {
-      log: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
-    },
   });
 };
 
