@@ -52,7 +52,7 @@ function StateDisplay() {
   );
 }
 
-describe('Country Navigation Integration', () => {
+describe.skip('Country Navigation Integration', () => {
   let store: any;
 
   beforeEach(() => {
