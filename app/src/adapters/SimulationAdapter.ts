@@ -106,7 +106,7 @@ export class SimulationAdapter {
 
   /**
    * Creates payload for updating a simulation's output (PATCH request)
-   * Note: ID is in URL path, not in body (consistent with report PATCH format)
+   * Note: ID is in body, not URL path (same as report PATCH format)
    * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
    */
   static toUpdatePayload(
