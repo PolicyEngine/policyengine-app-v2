@@ -53,7 +53,10 @@ export const useCreatePolicyAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString(), newAssociation.countryId),
+        queryKey: policyAssociationKeys.byUser(
+          newAssociation.userId.toString(),
+          newAssociation.countryId
+        ),
       });
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),

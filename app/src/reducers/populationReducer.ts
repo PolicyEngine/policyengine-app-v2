@@ -35,13 +35,25 @@ export const populationSlice = createSlice({
     ) => {
       const { position, population } = action.payload;
 
-      console.log('[POPULATION REDUCER] createPopulationAtPosition called:', { position, population });
+      console.log('[POPULATION REDUCER] createPopulationAtPosition called:', {
+        position,
+        population,
+      });
       console.log('[POPULATION REDUCER] state.populations[0]:', state.populations[0]);
       console.log('[POPULATION REDUCER] state.populations[1]:', state.populations[1]);
       console.log('[POPULATION REDUCER] state.populations[position]:', state.populations[position]);
-      console.log('[POPULATION REDUCER] Boolean check !state.populations[position]:', !state.populations[position]);
-      console.log('[POPULATION REDUCER] typeof state.populations[position]:', typeof state.populations[position]);
-      console.log('[POPULATION REDUCER] Current population at position:', state.populations[position]);
+      console.log(
+        '[POPULATION REDUCER] Boolean check !state.populations[position]:',
+        !state.populations[position]
+      );
+      console.log(
+        '[POPULATION REDUCER] typeof state.populations[position]:',
+        typeof state.populations[position]
+      );
+      console.log(
+        '[POPULATION REDUCER] Current population at position:',
+        state.populations[position]
+      );
 
       // Only create if no population exists at this position
       if (!state.populations[position]) {

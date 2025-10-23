@@ -5,6 +5,9 @@ import { CURRENT_YEAR } from '@/constants';
  * These constants provide consistent, descriptive values for testing
  */
 
+// Re-export CURRENT_YEAR for use in other test files
+export { CURRENT_YEAR };
+
 export const TEST_COUNTRIES = {
   US: 'us',
   UK: 'uk',

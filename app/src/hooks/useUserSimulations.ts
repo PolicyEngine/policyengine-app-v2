@@ -321,7 +321,9 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
     retry: 1, // Only retry once if it's not a household
   });
 
-  const household = householdMetadata ? HouseholdAdapter.fromMetadata(householdMetadata) : undefined;
+  const household = householdMetadata
+    ? HouseholdAdapter.fromMetadata(householdMetadata)
+    : undefined;
 
   // Get user associations
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId);

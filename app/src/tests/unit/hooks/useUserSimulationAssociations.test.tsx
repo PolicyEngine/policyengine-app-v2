@@ -184,6 +184,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 
@@ -206,6 +207,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 
@@ -230,6 +232,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 
@@ -255,6 +258,7 @@ describe('useUserSimulationAssociations', () => {
       const newAssociation = {
         userId: '1',
         simulationId: '100',
+        countryId: 'us' as const,
         label: 'New Simulation',
       };
 

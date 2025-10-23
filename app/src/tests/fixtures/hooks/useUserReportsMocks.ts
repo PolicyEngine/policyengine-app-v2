@@ -121,6 +121,7 @@ export const mockUserHouseholds: UserHouseholdPopulation[] = [
     id: 'user-hh-1',
     userId: TEST_USER_ID,
     householdId: TEST_HOUSEHOLD_ID,
+    countryId: 'us',
     label: 'My Household',
     type: 'household',
     createdAt: '2025-01-01T08:00:00Z',

@@ -71,7 +71,10 @@ export const useCreateReportAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: reportAssociationKeys.byUser(newAssociation.userId.toString(), newAssociation.countryId),
+        queryKey: reportAssociationKeys.byUser(
+          newAssociation.userId.toString(),
+          newAssociation.countryId
+        ),
       });
       queryClient.invalidateQueries({
         queryKey: reportAssociationKeys.byReport(newAssociation.reportId.toString()),

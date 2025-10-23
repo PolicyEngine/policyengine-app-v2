@@ -3,15 +3,15 @@ import { UserReportAdapter } from '@/adapters/UserReportAdapter';
 import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import {
   mockErrorFetchResponse,
-  mockReport,
-  mockReportApiResponse,
   mockMultiCountryApiResponses,
   mockMultiCountryReportList,
+  mockReport,
+  mockReportApiResponse,
   mockReportInput,
   mockSuccessFetchResponse,
   mockUserReport,
-  TEST_LABELS,
   TEST_COUNTRIES,
+  TEST_LABELS,
   TEST_REPORT_IDS,
   TEST_USER_ID,
   TEST_USER_IDS,
@@ -68,7 +68,7 @@ describe('ApiReportStore', () => {
     it('given valid user ID then fetches user report associations', async () => {
       (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse([mockReportApiResponse()]));
 
-      const result = await store.findByUser(TEST_USER_IDS.USER_123); 
+      const result = await store.findByUser(TEST_USER_IDS.USER_123);
 
       expect(fetch).toHaveBeenCalledWith(
         `/api/user-report-associations/user/${TEST_USER_IDS.USER_123}`,
@@ -101,7 +101,7 @@ describe('ApiReportStore', () => {
       // When
       const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
 
-      // Then 
+      // Then
       expect(result).toHaveLength(2);
       expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
       expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
@@ -130,7 +130,7 @@ describe('ApiReportStore', () => {
     test('given no countryId filter then returns all reports', async () => {
       // Given
       const mockResponse = {
-        ok: false, 
+        ok: false,
         status: 500,
       };
       (global.fetch as any).mockResolvedValue(mockResponse);
@@ -260,7 +260,7 @@ describe('ApiReportStore', () => {
     it('given other error then throws error', async () => {
       (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
 
-      await expect( 
+      await expect(
         store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456)
       ).rejects.toThrow('Failed to fetch association');
     });
@@ -365,7 +365,7 @@ describe('LocalStorageReportStore', () => {
   describe('findByUser', () => {
     it('given user with reports then returns all user reports', async () => {
       await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
-      await store.create( 
+      await store.create(
         mockReportInput({
           reportId: TEST_REPORT_IDS.REPORT_789,
           label: TEST_LABELS.TEST_REPORT_2,
@@ -389,12 +389,12 @@ describe('LocalStorageReportStore', () => {
       // Given
       mockLocalStorage['user-report-associations'] = JSON.stringify(mockMultiCountryReportList);
 
-      // When 
+      // When
       const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.US);
 
-      // Then 
+      // Then
       expect(result).toHaveLength(2);
-      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true); 
+      expect(result.every((r) => r.countryId === TEST_COUNTRIES.US)).toBe(true);
       expect(result.map((r) => r.label)).toEqual(['US Report 1', 'US Report 2']);
     });
 
@@ -406,8 +406,8 @@ describe('LocalStorageReportStore', () => {
       const result = await store.findByUser(TEST_USER_ID, TEST_COUNTRIES.UK);
 
       // Then
-      expect(result).toHaveLength(1); 
-      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK); 
+      expect(result).toHaveLength(1);
+      expect(result[0].countryId).toBe(TEST_COUNTRIES.UK);
       expect(result[0].label).toBe('UK Report 1');
     });
 

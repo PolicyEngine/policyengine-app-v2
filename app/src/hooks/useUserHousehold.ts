@@ -30,7 +30,10 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   console.log('isLoggedIn', isLoggedIn);
   console.log('config', config);
 
-  console.log('householdAssociationKeys.byUser(userId, countryId)', householdAssociationKeys.byUser(userId, countryId));
+  console.log(
+    'householdAssociationKeys.byUser(userId, countryId)',
+    householdAssociationKeys.byUser(userId, countryId)
+  );
   console.log('store.findByUser(userId, countryId)', store.findByUser(userId, countryId));
 
   return useQuery({

@@ -25,6 +25,7 @@ export const mockUserReportInput = (
 ): Omit<UserReport, 'id' | 'createdAt'> => ({
   userId: TEST_USER_IDS.USER_123,
   reportId: TEST_REPORT_IDS.REPORT_456,
+  countryId: 'us',
   label: TEST_LABELS.TEST_REPORT,
   updatedAt: '2025-01-15T12:00:00Z',
   isCreated: true,

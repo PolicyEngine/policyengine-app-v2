@@ -239,6 +239,7 @@ describe('useUserHousehold hooks', () => {
         id: TEST_IDS.HOUSEHOLD_ID,
         householdId: TEST_IDS.HOUSEHOLD_ID,
         userId: TEST_IDS.USER_ID,
+        countryId: 'us' as const,
         label: TEST_LABELS.HOUSEHOLD,
       };
 
@@ -294,6 +295,7 @@ describe('useUserHousehold hooks', () => {
           id: TEST_IDS.HOUSEHOLD_ID,
           householdId: TEST_IDS.HOUSEHOLD_ID,
           userId: TEST_IDS.USER_ID,
+          countryId: 'us' as const,
           label: TEST_LABELS.HOUSEHOLD,
         })
       ).rejects.toThrow('Creation failed');

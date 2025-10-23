@@ -20,7 +20,6 @@ import {
   TEST_COUNTRY_ID,
   TEST_LABEL,
   TEST_REPORT_ID_STRING,
-  TEST_USER_ID,
   TEST_USER_REPORT_ID,
 } from '@/tests/fixtures/hooks/reportHooksMocks';
 

@@ -19,6 +19,7 @@ export const mockUserSimulation: UserSimulation = {
   id: TEST_SIMULATION_IDS.SIM_1,
   userId: '1',
   simulationId: TEST_SIMULATION_IDS.SIM_1,
+  countryId: 'us',
   label: TEST_LABELS.SIM_1,
   createdAt: '2024-01-15T10:00:00Z',
 };
@@ -29,6 +30,7 @@ export const mockUserSimulationList: UserSimulation[] = [
     id: TEST_SIMULATION_IDS.SIM_2,
     userId: '1',
     simulationId: TEST_SIMULATION_IDS.SIM_2,
+    countryId: 'us',
     label: TEST_LABELS.SIM_2,
     createdAt: '2024-01-15T11:00:00Z',
   },

@@ -4,7 +4,6 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserReport } from '@/types/ingredients/UserReport';
-import { ReportCreationPayload } from '@/types/payloads/ReportCreationPayload';
 
 // Re-export from adapters/reportMocks
 export { mockReport, mockReportCreationPayload } from '@/tests/fixtures/adapters/reportMocks';

@@ -142,7 +142,10 @@ export default function SimulationSelectExistingPopulationFrame({
     console.log('[POPULATION SELECT] === SUBMIT START ===');
     console.log('[POPULATION SELECT] Local Population on Submit:', localPopulation);
     console.log('[POPULATION SELECT] Association:', localPopulation.association);
-    console.log('[POPULATION SELECT] Association countryId:', localPopulation.association?.countryId);
+    console.log(
+      '[POPULATION SELECT] Association countryId:',
+      localPopulation.association?.countryId
+    );
     console.log('[POPULATION SELECT] Household metadata:', localPopulation.household);
 
     const householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household!);
@@ -168,7 +171,10 @@ export default function SimulationSelectExistingPopulationFrame({
     );
 
     // Update with household data
-    console.log('[POPULATION SELECT] Dispatching setHouseholdAtPosition with household ID:', householdToSet.id);
+    console.log(
+      '[POPULATION SELECT] Dispatching setHouseholdAtPosition with household ID:',
+      householdToSet.id
+    );
     dispatch(
       setHouseholdAtPosition({
         position: currentPosition,

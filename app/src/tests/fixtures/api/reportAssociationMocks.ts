@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import type { UserReport } from '@/types/ingredients/UserReport';
 import { CURRENT_YEAR } from '@/tests/fixtures/constants';
+import type { UserReport } from '@/types/ingredients/UserReport';
 
 /**
  * Test constants for user IDs
