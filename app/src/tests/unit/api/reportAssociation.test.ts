@@ -9,9 +9,11 @@ import {
   mockMultiCountryReportList,
   mockReportInput,
   mockSuccessFetchResponse,
+  mockUserReport,
   TEST_LABELS,
   TEST_COUNTRIES,
   TEST_REPORT_IDS,
+  TEST_USER_ID,
   TEST_USER_IDS,
   TEST_USER_REPORT_IDS,
 } from '@/tests/fixtures/api/reportAssociationMocks';
@@ -206,21 +208,26 @@ describe('ApiReportStore', () => {
   describe('findById', () => {
     test('given valid user and report IDs then returns report', async () => {
       // Given
-      (UserReportAdapter.fromApiResponse as any).mockReturnValue(mockUserReport);
+      // Mock the adapter to properly convert each API response
+      (UserReportAdapter.fromApiResponse as any).mockImplementation((apiResponse: any) => ({
+        ...mockUserReport,
+        countryId: apiResponse.countryId || apiResponse.country_id,
+        reportId: apiResponse.reportId || apiResponse.report_id,
+      }));
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockMultiCountryApiResponses),
-      }; 
+      };
       (global.fetch as any).mockResolvedValue(mockResponse);
 
       // When
-      const result = await store.findByUser(TEST_USER_ID); 
+      const result = await store.findByUser(TEST_USER_ID);
 
       // Then
       expect(result).toHaveLength(4);
       expect(result.map((r) => r.countryId)).toEqual([
         TEST_COUNTRIES.US,
-        TEST_COUNTRIES.US, 
+        TEST_COUNTRIES.US,
         TEST_COUNTRIES.UK,
         TEST_COUNTRIES.CA,
       ]);

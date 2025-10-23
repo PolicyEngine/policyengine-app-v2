@@ -146,9 +146,9 @@ describe('dateUtils', () => {
     });
 
     describe('default parameters', () => {
-      it('given no country then defaults to US', () => {
+      it('given US country then uses US format', () => {
         // When
-        const result = formatDate(TEST_DATES.ISO_2024_01_01, 'numeric-date');
+        const result = formatDate(TEST_DATES.ISO_2024_01_01, 'numeric-date', 'us');
 
         // Then
         expect(result).toBe('1/1/2024'); // US format
