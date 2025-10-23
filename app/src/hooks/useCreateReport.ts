@@ -1,9 +1,9 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } from '@/api/report';
 import { MOCK_USER_ID } from '@/constants';
-import { getCalculationManager } from '@/libs/calculations';
+import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
-import { reportKeys } from '@/libs/queryKeys';
+import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
@@ -43,8 +43,11 @@ interface ExtendedCreateReportResult extends CreateReportWithAssociationResult {
 // with the creation of API v2, where we can merely pass simulation IDs to create a report.
 export function useCreateReport(reportLabel?: string) {
   const queryClient = useQueryClient();
-  const manager = getCalculationManager(queryClient);
+  const manager = useCalcOrchestratorManager();
+
   const userId = MOCK_USER_ID;
+
+  console.log('[useCreateReport] Hook initialized, manager available:', !!manager);
 
   const mutation = useMutation({
     mutationFn: async ({
@@ -70,42 +73,138 @@ export function useCreateReport(reportLabel?: string) {
     },
 
     onSuccess: async (result) => {
+      const timestamp = Date.now();
+      console.log(`[useCreateReport][${timestamp}] ========================================`);
+      console.log(`[useCreateReport][${timestamp}] onSuccess triggered`);
+
       try {
         const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
 
+        console.log(`[useCreateReport][${timestamp}] Report ID (raw):`, report.id);
+        console.log(`[useCreateReport][${timestamp}] Report ID (string):`, reportIdStr);
+        console.log(`[useCreateReport][${timestamp}] Report type:`, typeof report.id);
+        console.log(`[useCreateReport][${timestamp}] Report object:`, report);
+        console.log(`[useCreateReport][${timestamp}] Report.countryId:`, report.countryId);
+        console.log(
+          `[useCreateReport][${timestamp}] Report.country_id:`,
+          (report as any).country_id
+        );
+
         // Invalidate queries
+        // WHY: We need to invalidate BOTH reports AND report associations
+        // - reportKeys.all: Invalidates individual report queries
+        // - reportAssociationKeys.all: Invalidates user→report mappings (critical for Reports page)
+        console.log(`[useCreateReport][${timestamp}] Invalidating report queries...`);
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
+        console.log(`[useCreateReport][${timestamp}] Invalidating report association queries...`);
+        queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
-        // Cache the report data
-        queryClient.setQueryData(['report', reportIdStr], report);
+        // Cache the report data using consistent key structure
+        console.log(
+          `[useCreateReport][${timestamp}] Caching report data with key:`,
+          reportKeys.byId(reportIdStr)
+        );
+        queryClient.setQueryData(reportKeys.byId(reportIdStr), report);
 
-        // Build metadata
-        const calculationMeta = manager.buildMetadata({
-          simulation1: simulations?.simulation1 || null,
-          simulation2: simulations?.simulation2 || null,
-          household: populations?.household1,
-          geography: populations?.geography1,
-          countryId: report.country_id,
-        });
+        // Determine calculation type from simulation
+        const simulation1 = simulations?.simulation1;
+        const simulation2 = simulations?.simulation2;
+        const household = populations?.household1;
+        const geography = populations?.geography1;
 
-        // Store metadata; we need to do this because API v1 doesn't run report by
-        // report ID, but rather by simulation + population; should not be necessary in
-        // API v2
-        queryClient.setQueryData(['calculation-meta', reportIdStr], calculationMeta);
-
-        // Get query configuration from manager
-        const queryOptions = manager.getQueryOptions(reportIdStr, calculationMeta);
-
-        // Start calculation via TanStack Query
-        await queryClient.prefetchQuery(queryOptions);
-
-        // For household, start progress updates
-        if (calculationMeta.type === 'household') {
-          await manager.startCalculation(reportIdStr, calculationMeta);
+        if (!simulation1) {
+          console.warn('[useCreateReport] No simulation1 provided, cannot start calculation');
+          return;
         }
+
+        const isHouseholdReport = simulation1.populationType === 'household';
+
+        if (isHouseholdReport) {
+          // Household reports: Start separate calculation for EACH simulation
+          // WHY: Each simulation needs its own API call to calculate household results
+          // for a specific policy. A report with N simulations = N calculations.
+          // Results are stored at simulation level and compared in the UI.
+          //
+          // CRITICAL: We do NOT await these calls. The household API takes 30-60s per
+          // simulation, but we want the UI to navigate immediately and show progress.
+          // TanStack Query will handle waiting for the response in the background.
+          console.log(
+            '[useCreateReport] Starting household calculations for each simulation (non-blocking)'
+          );
+
+          const allSimulations = [simulation1, simulation2].filter(
+            (sim): sim is Simulation => sim !== null && sim !== undefined
+          );
+
+          for (const sim of allSimulations) {
+            if (!sim.id) {
+              console.warn('[useCreateReport] Simulation missing ID, skipping');
+              continue;
+            }
+
+            console.log(
+              `[useCreateReport] → Starting calculation for simulation ${sim.id} (fire and forget)`
+            );
+            // Fire and forget - don't await, let TanStack Query handle the waiting
+            manager
+              .startCalculation({
+                calcId: sim.id, // Each simulation uses its own ID
+                targetType: 'simulation', // Simulation-level calculation
+                countryId: report.countryId,
+                simulations: {
+                  simulation1: sim, // Only this specific simulation
+                  simulation2: null,
+                },
+                populations: {
+                  household1: household || null,
+                  household2: null,
+                  geography1: null,
+                  geography2: null,
+                },
+              })
+              .catch((error) => {
+                // Log errors but don't block the flow
+                console.error(
+                  `[useCreateReport] Failed to start calculation for simulation ${sim.id}:`,
+                  error
+                );
+              });
+            console.log(`[useCreateReport] ✓ Calculation request fired for simulation ${sim.id}`);
+          }
+        } else {
+          // Economy reports: Single calculation at report level
+          // WHY: Economy calculations operate on the entire geography and compare
+          // all policies in a single API call. Results stored at report level.
+          console.log('[useCreateReport] Starting economy calculation at report level');
+          console.log(`[useCreateReport][${timestamp}] → Calling manager.startCalculation`);
+          console.log(`[useCreateReport][${timestamp}]   calcId: ${reportIdStr}`);
+          console.log(`[useCreateReport][${timestamp}]   targetType: report`);
+
+          await manager.startCalculation({
+            calcId: reportIdStr,
+            targetType: 'report',
+            countryId: report.countryId,
+            simulations: {
+              simulation1,
+              simulation2: simulation2 || null,
+            },
+            populations: {
+              household1: null,
+              household2: null,
+              geography1: geography || null,
+              geography2: null,
+            },
+          });
+
+          console.log(`[useCreateReport][${timestamp}] ✓ manager.startCalculation completed`);
+        }
+
+        console.log(`[useCreateReport][${timestamp}] onSuccess COMPLETED successfully`);
+        console.log(`[useCreateReport][${timestamp}] ========================================`);
       } catch (error) {
-        console.error('Post-creation tasks failed:', error);
+        console.error(`[useCreateReport][${timestamp}] Post-creation tasks failed:`, error);
+        console.log(`[useCreateReport][${timestamp}] ========================================`);
       }
     },
   });

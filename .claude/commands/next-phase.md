@@ -2,7 +2,7 @@
 description: Move to and execute the next phase of the development plan
 ---
 
-Read the current plan from `.claude/.plan.md` and do the following:
+Read the current plan from `.claude-plans/calculation-system-refactor.md` and do the following:
 
 1. Identify the current phase and move to the next phase
 2. Execute all tasks in the next phase

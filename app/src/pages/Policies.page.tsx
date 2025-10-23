@@ -27,33 +27,6 @@ export default function PoliciesPage() {
     console.log('More filters clicked');
   };
 
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-policy':
-        // TODO: Implement view reform functionality
-        console.log('View details:', recordId);
-        break;
-      case 'bookmark':
-        // TODO: Implement bookmark functionality
-        console.log('Bookmark policy:', recordId);
-        break;
-      case 'edit':
-        // TODO: Implement edit functionality
-        console.log('Edit policy:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share policy:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete policy:', recordId);
-        break;
-      default:
-        console.error('Unknown action:', action);
-    }
-  };
-
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>
       selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
@@ -78,19 +51,6 @@ export default function PoliciesPage() {
       key: 'provisions',
       header: 'Parameter changes',
       type: 'text',
-    },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View details', action: 'view-policy' },
-        { label: 'Bookmark', action: 'bookmark' },
-        { label: 'Edit', action: 'edit' },
-        { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
     },
   ];
 

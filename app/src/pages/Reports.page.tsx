@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
 import {
   BulletsValue,
   ColumnConfig,
@@ -9,19 +8,27 @@ import {
   TextValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
+import { OutputTypeCell } from '@/components/report/OutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
+import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
+  const cacheMonitor = useCacheMonitor();
+
+  // Log cache state when component mounts and when data changes
+  useEffect(() => {
+    console.log('📊 [ReportsPage] Component mounted/updated');
+    cacheMonitor.getStats();
+  }, [data]);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
@@ -34,33 +41,6 @@ export default function ReportsPage() {
   const handleMoreFilters = () => {
     // TODO: Implement more filters modal/dropdown
     console.log('More filters clicked');
-  };
-
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-output':
-        // recordId is now the UserReport.id
-        navigate(`/${countryId}/report-output/${recordId}`);
-        break;
-      case 'export':
-        // TODO: Implement export functionality
-        console.log('Export report:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share report:', recordId);
-        break;
-      case 'duplicate':
-        // TODO: Implement duplicate functionality
-        console.log('Duplicate report:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete report:', recordId);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -109,57 +89,63 @@ export default function ReportsPage() {
       header: 'Output Type',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View Output', action: 'view-output' },
-        { label: 'Export', action: 'export' },
-        { label: 'Share', action: 'share' },
-        { label: 'Duplicate', action: 'duplicate' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
   ];
 
   console.log('User Reports Data:', data);
 
   // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.userReport.id,
-      report: {
-        text: item.userReport.label || `Report #${item.userReport.reportId}`,
-        url: `/${countryId}/report-output/${item.userReport.id}`,
-      } as LinkValue,
-      dateCreated: {
-        text: item.userReport.createdAt
-          ? formatDate(
-              item.userReport.createdAt,
-              'short-month-day-year',
-              (item.report?.countryId || countryId) as (typeof countryIds)[number],
-              true
-            )
-          : '',
-      } as TextValue,
-      status: {
-        text: formatStatus(item.report?.status || 'pending'),
-      } as TextValue,
-      simulations: {
-        items: item.simulations?.map((sim, index) => ({
-          text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-        })) || [
-          {
-            text: 'No simulations',
+  // Use useMemo to prevent unnecessary re-creation of data objects
+  const transformedData: IngredientRecord[] = useMemo(
+    () =>
+      data?.map((item) => {
+        const simulationIds =
+          (item.simulations?.map((s) => s.id).filter(Boolean) as string[]) || [];
+        const isHouseholdReport = item.simulations?.[0]?.populationType === 'household';
+
+        return {
+          id: item.userReport.id,
+          report: {
+            text: item.userReport.label || `Report #${item.userReport.reportId}`,
+            url: `/${countryId}/report-output/${item.userReport.id}`,
+          } as LinkValue,
+          dateCreated: {
+            text: item.userReport.createdAt
+              ? formatDate(
+                  item.userReport.createdAt,
+                  'short-month-day-year',
+                  (item.report?.countryId || countryId) as (typeof countryIds)[number],
+                  true
+                )
+              : '',
+          } as TextValue,
+          status: {
+            text: formatStatus(item.report?.status || 'initializing'),
+          } as TextValue,
+          simulations: {
+            items: item.simulations?.map((sim, index) => ({
+              text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
+            })) || [
+              {
+                text: 'No simulations',
+              },
+            ],
+          } as BulletsValue,
+          // Use OutputTypeCell component with CalcStatus subscription
+          // This cell will re-render independently when its CalcStatus updates
+          outputType: {
+            custom: (
+              <OutputTypeCell
+                simulationIds={simulationIds}
+                isHouseholdReport={isHouseholdReport}
+                simulations={item.simulations}
+                report={item.report}
+              />
+            ),
           },
-        ],
-      } as BulletsValue,
-      outputType: {
-        text: item.report?.output ? 'Society-wide' : 'Not generated',
-      } as TextValue,
-    })) || [];
+        };
+      }) || [],
+    [data, countryId]
+  );
 
   return (
     <IngredientReadView

@@ -84,9 +84,10 @@ export async function markReportCompleted(
 export async function markReportError(
   countryId: (typeof countryIds)[number],
   reportId: string,
-  report: Report
+  report: Report,
+  errorMessage?: string
 ): Promise<ReportMetadata> {
-  const data = ReportAdapter.toErrorReportPayload(report);
+  const data = ReportAdapter.toErrorReportPayload(report, errorMessage);
   return updateReport(countryId, reportId, data);
 }
 
@@ -105,7 +106,7 @@ export interface CreateReportWithAssociationParams {
  * Contains both the base report and the user association
  */
 export interface CreateReportWithAssociationResult {
-  report: ReportMetadata;
+  report: Report; // Domain model, not API metadata
   userReport: UserReport;
   metadata: {
     baseReportId: string;
@@ -125,27 +126,30 @@ export async function createReportAndAssociateWithUser(
   params: CreateReportWithAssociationParams
 ): Promise<CreateReportWithAssociationResult> {
   // 1. Create the base report via API
-  const report = await createReport(params.countryId, params.payload);
+  const reportMetadata = await createReport(params.countryId, params.payload);
 
-  // 2. Determine which store to use (localStorage vs API)
+  // 2. Convert to domain model (ensures id is string, proper field names)
+  const report = ReportAdapter.fromMetadata(reportMetadata);
+
+  // 3. Determine which store to use (localStorage vs API)
   // TODO: Get isLoggedIn from auth context
   const isLoggedIn = false;
   const reportStore = isLoggedIn ? new ApiReportStore() : new LocalStorageReportStore();
 
-  // 3. Create UserReport association
+  // 4. Create UserReport association
   const userReport = await reportStore.create({
     userId: String(params.userId),
-    reportId: String(report.id),
+    reportId: report.id!, // Already a string from adapter
     label: params.label,
     isCreated: true,
   });
 
-  // 4. Return combined result
+  // 5. Return combined result with domain model
   return {
     report,
     userReport,
     metadata: {
-      baseReportId: String(report.id),
+      baseReportId: report.id!,
       userReportId: userReport.id,
       countryId: params.countryId,
     },

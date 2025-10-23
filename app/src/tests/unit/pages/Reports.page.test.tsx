@@ -255,11 +255,14 @@ describe('ReportsPage', () => {
       </Provider>
     );
 
-    // When
-    await user.click(screen.getByTestId('view-output-button'));
+    // When - click the report link which navigates to output
+    await user.click(screen.getByTestId('report-link'));
 
-    // Then
-    expect(mockNavigate).toHaveBeenCalledWith('/us/report-output/report-1');
+    // Then - link href points to the correct output URL
+    // Note: React Router Link components don't trigger mockNavigate in this test setup,
+    // so we verify the href attribute instead
+    const reportLink = screen.getByTestId('report-link');
+    expect(reportLink).toHaveAttribute('href', '/us/report-output/report-1');
   });
 
   test('given reports data when rendering then report column displays as link with UserReport ID', () => {

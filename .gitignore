@@ -57,6 +57,10 @@ storybook-static/
 # Archived approaches (kept for reference)
 app/src/_archived/
 
+# Claude planning documents
+.claude-plans/
+.claude-plan/
+
 # Python
 __pycache__/
 *.py[cod]

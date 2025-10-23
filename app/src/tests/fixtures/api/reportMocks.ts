@@ -1,3 +1,4 @@
+import { ReportAdapter } from '@/adapters/ReportAdapter';
 import { Report } from '@/types/ingredients/Report';
 import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import type { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
@@ -337,12 +338,15 @@ export const createMockReportWithAssociationResult = (
   reportMetadata: ReportMetadata,
   userId: string,
   label?: string
-) => ({
-  report: reportMetadata,
-  userReport: createMockUserReport(String(reportMetadata.id), userId, label),
-  metadata: {
-    baseReportId: String(reportMetadata.id),
-    userReportId: MOCK_USER_REPORT_ID,
-    countryId: reportMetadata.country_id,
-  },
-});
+) => {
+  const report = ReportAdapter.fromMetadata(reportMetadata);
+  return {
+    report,
+    userReport: createMockUserReport(String(reportMetadata.id), userId, label),
+    metadata: {
+      baseReportId: String(reportMetadata.id),
+      userReportId: MOCK_USER_REPORT_ID,
+      countryId: reportMetadata.country_id,
+    },
+  };
+};

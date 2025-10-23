@@ -19,13 +19,16 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { EconomyReportOutput } from '@/api/economy';
+import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { colors, spacing, typography } from '@/designTokens';
-import { ReportOutputType, useReportData } from '@/hooks/useReportData';
-import ErrorPage from './report-output/ErrorPage';
-import LoadingPage from './report-output/LoadingPage';
-import NotFoundSubPage from './report-output/NotFoundSubPage';
-import OverviewSubPage from './report-output/OverviewSubPage';
+import { useUserReportById } from '@/hooks/useUserReports';
+import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
+import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
+
+/**
+ * Type discriminator for output types
+ */
+export type ReportOutputType = 'household' | 'societyWide';
 
 /**
  * ReportOutputPage - Structural page component that provides layout chrome
@@ -39,14 +42,6 @@ import OverviewSubPage from './report-output/OverviewSubPage';
  *
  * Sub-page components will be implemented separately and integrated here.
  */
-
-// Valid sub-pages registry
-const VALID_SUBPAGES = ['overview', 'loading', 'error'] as const;
-type ValidSubPage = (typeof VALID_SUBPAGES)[number];
-
-function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
-  return VALID_SUBPAGES.includes(subpage as ValidSubPage);
-}
 
 export default function ReportOutputPage() {
   const navigate = useNavigate();
@@ -63,87 +58,99 @@ export default function ReportOutputPage() {
     );
   }
 
+  // Fetch report structure and metadata
   const {
-    status,
-    output,
-    outputType,
-    error,
     userReport,
-    progress,
-    message,
-    queuePosition,
-    estimatedTimeRemaining,
-  } = useReportData(userReportId);
+    report,
+    simulations,
+    userSimulations,
+    userPolicies,
+    isLoading: dataLoading,
+    error: dataError,
+  } = useUserReportById(userReportId);
+
+  console.log('[ReportOutputPage] Fetched user report and simulations:', {
+    userReport,
+    report,
+    simulations,
+    userSimulations,
+    dataLoading,
+    dataError,
+  });
+
+  // Derive output type from simulation (needed for target type determination)
+  const outputType: ReportOutputType | undefined =
+    simulations?.[0]?.populationType === 'household'
+      ? 'household'
+      : simulations?.[0]?.populationType === 'geography'
+        ? 'societyWide'
+        : undefined;
 
   const DEFAULT_PAGE = 'overview';
-
-  // Use URL param for active tab, default to 'overview'
   const activeTab = subpage || DEFAULT_PAGE;
 
   // Redirect to overview if no subpage is specified and data is ready
   useEffect(() => {
-    if (!subpage && status === 'complete' && output) {
+    if (!subpage && report && simulations) {
       navigate(DEFAULT_PAGE, { replace: true });
     }
-  }, [subpage, navigate, output, status]);
+  }, [subpage, navigate, report, simulations]);
 
   // Determine which tabs to show based on output type
-  const tabs = output && outputType ? getTabsForOutputType(outputType) : [];
+  const tabs = outputType ? getTabsForOutputType(outputType) : [];
 
-  // Format timestamp (placeholder for now)
-  const timestamp = 'Ran today at 05:23:41';
-
-  // Handler for tab clicks - navigate to sibling route
+  // Handle tab navigation (relative navigation)
   const handleTabClick = (tabValue: string) => {
     navigate(tabValue);
   };
 
-  // Render the appropriate sub-page based on status and URL param
-  const renderSubPage = () => {
-    // Show loading page if still pending
-    if (status === 'pending') {
+  // Format timestamp (placeholder for now)
+  const timestamp = 'Ran today at 05:23:41';
+
+  // Show loading state while fetching data
+  if (dataLoading) {
+    return (
+      <Container size="xl" px={spacing.xl}>
+        <Stack gap={spacing.xl}>
+          <Text>Loading report...</Text>
+        </Stack>
+      </Container>
+    );
+  }
+
+  // Show error if data failed to load
+  if (dataError || !report) {
+    return (
+      <Container size="xl" px={spacing.xl}>
+        <Stack gap={spacing.xl}>
+          <Text c="red">Error loading report: {dataError?.message || 'Report not found'}</Text>
+        </Stack>
+      </Container>
+    );
+  }
+
+  // Render content based on active tab and output type
+  const renderContent = () => {
+    if (outputType === 'household') {
       return (
-        <LoadingPage
-          progress={progress}
-          message={message}
-          queuePosition={queuePosition}
-          estimatedTimeRemaining={estimatedTimeRemaining}
+        <HouseholdReportOutput
+          reportId={userReportId}
+          report={report}
+          simulations={simulations}
+          userSimulations={userSimulations}
+          userPolicies={userPolicies}
+          activeTab={activeTab}
+          isLoading={dataLoading}
+          error={dataError}
         />
       );
     }
 
-    // Show error page if there's an error
-    if (status === 'error') {
-      return <ErrorPage error={error} />;
+    if (outputType === 'societyWide') {
+      return <SocietyWideReportOutput />;
     }
 
-    // Show not found if invalid subpage
-    if (!isValidSubPage(activeTab)) {
-      return <NotFoundSubPage />;
-    }
-
-    // Map valid sub-pages to their components
-    switch (activeTab) {
-      case 'overview':
-        return output && outputType ? (
-          <OverviewSubPage output={output} outputType={outputType} />
-        ) : (
-          <NotFoundSubPage />
-        );
-      case 'loading':
-        return (
-          <LoadingPage
-            progress={progress}
-            message={message}
-            queuePosition={queuePosition}
-            estimatedTimeRemaining={estimatedTimeRemaining}
-          />
-        );
-      case 'error':
-        return <ErrorPage error={error} />;
-      default:
-        return <NotFoundSubPage />;
-    }
+    return <Text c="red">Unknown report type</Text>;
   };
 
   return (
@@ -265,48 +272,31 @@ export default function ReportOutputPage() {
                       bottom: 0,
                       left: 0,
                       right: 0,
-                      height: '3px',
-                      backgroundColor: colors.warning,
-                      zIndex: 1,
+                      height: '2px',
+                      backgroundColor: colors.primary[700],
                     }}
                   />
                 )}
               </Box>
             ))}
           </Box>
-
-          {/* Tab Panels */}
-          <Box pt={spacing.xl}>{renderSubPage()}</Box>
         </Box>
+
+        {/* Content Area */}
+        {renderContent()}
       </Stack>
     </Container>
   );
 }
 
 /**
- * Type guard to check if economy output is US-specific
- */
-export function isUSEconomyOutput(output: EconomyReportOutput): boolean {
-  return 'poverty_by_race' in output && output.poverty_by_race !== null;
-}
-
-/**
- * Type guard to check if economy output is UK-specific
- */
-export function isUKEconomyOutput(output: EconomyReportOutput): boolean {
-  return 'constituency_impact' in output && output.constituency_impact !== null;
-}
-
-/**
  * Determine which tabs to display based on output type and content
- * Note: The output type is determined from cached CalculationMeta, not from type guards
  */
 function getTabsForOutputType(
   outputType: ReportOutputType
 ): Array<{ value: string; label: string }> {
-  if (outputType === 'economy') {
-    // Economy report tabs matching the design
-    const baseTabs = [
+  if (outputType === 'societyWide') {
+    return [
       { value: 'overview', label: 'Overview' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
@@ -314,8 +304,6 @@ function getTabsForOutputType(
       { value: 'parameters', label: 'Parameters' },
       { value: 'population', label: 'Population' },
     ];
-
-    return baseTabs;
   }
 
   if (outputType === 'household') {
@@ -328,6 +316,21 @@ function getTabsForOutputType(
     ];
   }
 
-  // Fallback
   return [{ value: 'overview', label: 'Overview' }];
 }
+
+/**
+ * Type guard to check if society-wide output is US-specific
+ */
+export function isUSSocietyWideOutput(output: SocietyWideOutput): boolean {
+  return 'poverty_by_race' in output && output.poverty_by_race !== null;
+}
+
+/**
+ * Type guard to check if society-wide output is UK-specific
+ */
+export function isUKSocietyWideOutput(output: SocietyWideOutput): boolean {
+  return 'constituency_impact' in output && output.constituency_impact !== null;
+}
+
+// Duplicate getTabsForOutputType removed - using the one defined above at line 304

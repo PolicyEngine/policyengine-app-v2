@@ -31,9 +31,10 @@ export class ReportAdapter {
    */
   static fromMetadata(metadata: ReportMetadata): Report {
     // Convert simulation IDs from individual fields to array
+    // Use String() to ensure IDs are strings, regardless of API response type
     const simulationIds = metadata.simulation_2_id
-      ? [metadata.simulation_1_id, metadata.simulation_2_id]
-      : [metadata.simulation_1_id];
+      ? [String(metadata.simulation_1_id), String(metadata.simulation_2_id)]
+      : [String(metadata.simulation_1_id)];
 
     return {
       id: String(metadata.id),
@@ -41,7 +42,7 @@ export class ReportAdapter {
       apiVersion: metadata.api_version,
       simulationIds,
       status: this.mapApiStatusToReportStatus(metadata.status),
-      output: convertJsonToReportOutput(metadata.output),
+      output: convertJsonToReportOutput(metadata.output) as any, // Can be economy or household output
     };
   }
 
@@ -69,21 +70,25 @@ export class ReportAdapter {
     return {
       id: parseInt(report.id, 10),
       status: 'complete',
-      output: convertReportOutputToJson(report.output),
+      output: report.output ? convertReportOutputToJson(report.output as any) : null,
     };
   }
 
   /**
    * Creates payload for marking a report as errored
    */
-  static toErrorReportPayload(report: Report): ReportSetOutputPayload {
+  static toErrorReportPayload(report: Report, errorMessage?: string): ReportSetOutputPayload {
     if (!report.id) {
       throw new Error('Report ID is required to create error report payload');
     }
-    return {
+    const payload: ReportSetOutputPayload = {
       id: parseInt(report.id, 10),
       status: 'error',
       output: null,
     };
+    if (errorMessage) {
+      payload.error_message = errorMessage;
+    }
+    return payload;
   }
 }

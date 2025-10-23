@@ -137,6 +137,7 @@ export default function SelectGeographicScopeFrame({
                   setSelectedRegion(val || '');
                   // State will be handled in submissionHandler
                 }}
+                searchable
               />
             )}
 
@@ -153,6 +154,7 @@ export default function SelectGeographicScopeFrame({
                     setSelectedRegion('');
                     // Region cleared in local state above
                   }}
+                  searchable
                 />
                 {selectedCountry && (
                   <Select

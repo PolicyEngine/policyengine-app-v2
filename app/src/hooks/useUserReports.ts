@@ -30,8 +30,9 @@ import {
 
 /**
  * Enhanced result type that includes all relationships
+ * Exported for use in other hooks that build on this data
  */
-interface EnhancedUserReport {
+export interface EnhancedUserReport {
   // Core associations
   userReport: UserReport;
   report?: Report;
@@ -136,14 +137,41 @@ export const useUserReports = (userId: string) => {
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      console.log('[useUserReports] 🔄 FETCHING simulation from API:', id);
       const metadata = await fetchSimulationById(country, id);
-      return SimulationAdapter.fromMetadata(metadata);
+      const transformed = SimulationAdapter.fromMetadata(metadata);
+
+      console.log('[useUserReports] ✅ FETCHED simulation:', {
+        id,
+        status: transformed.status,
+        hasOutput: !!transformed.output,
+      });
+
+      return transformed;
     },
     enabled: simulationIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
+    // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
+    // that specific simulation will be marked stale and refetch on next mount
+    // All other simulations remain fresh and use cached data (fast navigation)
+    staleTime: Infinity,
+    // gcTime: 0 - Delete from cache immediately when no components are using this data
+    // Prevents memory bloat from accumulating unused simulation data
+    // When navigating away from Reports page, unused simulations are garbage collected
+    gcTime: 0,
   });
 
   console.log('simulationResults', simulationResults);
+  console.log(
+    '[useUserReports] simulationResults AFTER QUERY:',
+    simulationResults.queries.map((q) => ({
+      id: q.data?.id,
+      status: q.data?.status,
+      hasOutput: !!q.data?.output,
+      isSuccess: q.isSuccess,
+      isFetching: q.isFetching,
+    }))
+  );
 
   // Step 6: Extract policy and household IDs from fetched simulations
   const simulations = simulationResults.queries
@@ -226,11 +254,26 @@ export const useUserReports = (userId: string) => {
         // Get related simulations
         const reportSimulations =
           report?.simulationIds
-            ?.map(
-              (simId) =>
-                (queryNormalizer.getObjectById(simId) as Simulation | undefined) ||
-                simulations.find((s) => s.id === simId)
-            )
+            ?.map((simId) => {
+              const fromNormy = queryNormalizer.getObjectById(simId) as Simulation | undefined;
+              const fromQuery = simulations.find((s) => s.id === simId);
+
+              console.log(`[useUserReports] SIMULATION ${simId} COMPARISON:`, {
+                'From Normy Cache': {
+                  exists: !!fromNormy,
+                  status: fromNormy?.status,
+                  hasOutput: !!fromNormy?.output,
+                },
+                'From React Query': {
+                  exists: !!fromQuery,
+                  status: fromQuery?.status,
+                  hasOutput: !!fromQuery?.output,
+                },
+                'Which will be used': fromNormy ? 'NORMY (stale?)' : 'QUERY (fresh)',
+              });
+
+              return fromNormy || fromQuery;
+            })
             .filter((s): s is Simulation => !!s) ?? [];
 
         // Get policies from simulations
@@ -382,7 +425,7 @@ export const useUserReportById = (userReportId: string) => {
     ? (queryNormalizer.getObjectById(baseReportId) as Report | undefined)
     : undefined;
 
-  // Step 2: Fetch base report if not in cache
+  // Step 2: Fetch base report (query always enabled to allow invalidation)
   const {
     data: report,
     isLoading: repLoading,
@@ -393,8 +436,23 @@ export const useUserReportById = (userReportId: string) => {
       const metadata = await fetchReportById(country, baseReportId!);
       return ReportAdapter.fromMetadata(metadata);
     },
-    enabled: !!baseReportId && !cachedReport,
+    enabled: !!baseReportId, // Removed && !cachedReport to allow invalidation
     staleTime: 5 * 60 * 1000,
+  });
+
+  console.log('[useUserReportById] REPORT CACHE COMPARISON:', {
+    reportId: baseReportId,
+    'From Normy': {
+      exists: !!cachedReport,
+      status: cachedReport?.status,
+      simulationIds: cachedReport?.simulationIds,
+    },
+    'From React Query': {
+      exists: !!report,
+      status: report?.status,
+      simulationIds: report?.simulationIds,
+    },
+    'Which will be used': cachedReport ? 'NORMY' : 'REACT QUERY',
   });
 
   const finalReport = cachedReport || report;
@@ -405,16 +463,53 @@ export const useUserReportById = (userReportId: string) => {
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
     queryKey: simulationKeys.byId,
     queryFn: async (id) => {
+      console.log('[useUserReportById] 🔄 FETCHING simulation from API:', id);
       const metadata = await fetchSimulationById(country, id);
-      return SimulationAdapter.fromMetadata(metadata);
+      const transformed = SimulationAdapter.fromMetadata(metadata);
+
+      console.log('[useUserReportById] ✅ FETCHED simulation:', {
+        id,
+        status: transformed.status,
+        hasOutput: !!transformed.output,
+      });
+
+      return transformed;
     },
     enabled: simulationIds.length > 0,
-    staleTime: 5 * 60 * 1000,
+    // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
+    // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
+    // that specific simulation will be marked stale and refetch on next mount
+    // All other simulations remain fresh and use cached data (fast navigation)
+    staleTime: Infinity,
+    // gcTime: 0 - Delete from cache immediately when no components are using this data
+    // Prevents memory bloat from accumulating unused simulation data
+    // When navigating away from report output, unused simulations are garbage collected
+    gcTime: 0,
   });
+
+  console.log(
+    '[useUserReportById] simulationResults AFTER QUERY:',
+    simulationResults.queries.map((q) => ({
+      id: q.data?.id,
+      status: q.data?.status,
+      hasOutput: !!q.data?.output,
+      isSuccess: q.isSuccess,
+      isFetching: q.isFetching,
+    }))
+  );
 
   const simulations = simulationResults.queries
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
+
+  console.log(
+    '[useUserReportById] SIMULATIONS FROM REACT QUERY:',
+    simulations.map((s) => ({
+      id: s.id,
+      status: s.status,
+      hasOutput: !!s.output,
+    }))
+  );
 
   // Step 4: Extract policy IDs from simulations and fetch policies
   const policyIds = extractUniqueIds(simulations, 'policyId');
@@ -433,21 +528,37 @@ export const useUserReportById = (userReportId: string) => {
 
   // Step 5: Get user associations (only if we have userId)
   const { data: simulationAssociations } = useSimulationAssociationsByUser(userId || '');
+
+  console.log('[useUserReportById] simulationAssociations', simulationAssociations);
+
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
+
+  console.log('[useUserReportById] finalReport', finalReport);
+
+  console.log(
+    '[useUserReportById] type of each member of finalReport.simulationIds',
+    finalReport?.simulationIds?.map((id) => typeof id)
+  );
+  console.log(
+    '[useUserReportById] type of simulationAssociations.simulationId',
+    simulationAssociations?.map((sa) => ({ id: sa.simulationId, type: typeof sa.simulationId }))
+  );
 
   const userSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
   );
+
+  console.log('[useUserReportById] userSimulations after filter', userSimulations);
 
   const userPolicies = policyAssociations?.filter((pa) =>
     simulations.some((s) => s.policyId === pa.policyId)
   );
 
   // Step 6: Extract households from simulations and fetch them
-  const householdIds = simulations
-    .filter((s) => s.populationType === 'household' && s.populationId)
-    .map((s) => s.populationId as string);
+  // Filter for household simulations, then extract unique population IDs
+  const householdSimulations = simulations.filter((s) => s.populationType === 'household');
+  const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
   const householdResults = useParallelQueries<Household>(householdIds, {
     queryKey: householdKeys.byId,

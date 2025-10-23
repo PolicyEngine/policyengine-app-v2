@@ -1,13 +1,28 @@
+import { useEffect, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { AppShell } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
+import { cacheMonitor } from '@/utils/cacheMonitor';
 import HeaderBar from './shared/HeaderBar';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
   const { currentFrame } = useSelector((state: RootState) => state.flow);
+  const location = useLocation();
+  const previousLocation = useRef(location.pathname);
+
+  // Log navigation events for cache monitoring
+  useEffect(() => {
+    const from = previousLocation.current;
+    const to = location.pathname;
+
+    if (from !== to) {
+      cacheMonitor.logNavigation(from, to);
+      previousLocation.current = to;
+    }
+  }, [location.pathname]);
 
   // If PolicyParameterSelectorFrame is active, let it manage its own layout completely
   if (currentFrame === 'PolicyParameterSelectorFrame') {

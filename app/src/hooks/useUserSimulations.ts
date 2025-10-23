@@ -28,7 +28,7 @@ import {
 /**
  * Enhanced result type that includes all relationships
  */
-interface EnhancedUserSimulation {
+export interface EnhancedUserSimulation {
   // Core associations
   userSimulation: UserSimulation;
   simulation?: Simulation;

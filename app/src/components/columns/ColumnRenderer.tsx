@@ -10,6 +10,7 @@ import {
   BulletsValue,
   ColumnConfig,
   ColumnValue,
+  CustomValue,
   IngredientRecord,
   LinkColumnConfig,
   LinkValue,
@@ -33,6 +34,11 @@ export function ColumnRenderer({ config, record }: ColumnRendererProps) {
         —
       </Text>
     );
+  }
+
+  // Handle custom value type
+  if (value && typeof value === 'object' && 'custom' in value) {
+    return <>{(value as CustomValue).custom}</>;
   }
 
   switch (config.type) {
