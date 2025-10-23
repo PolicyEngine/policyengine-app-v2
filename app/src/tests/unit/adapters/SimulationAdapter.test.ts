@@ -166,37 +166,34 @@ describe('SimulationAdapter', () => {
       const output = mockSimulationOutput();
 
       // When
-      const payload = SimulationAdapter.toUpdatePayload(String(TEST_SIMULATION_IDS.SIM_123), output, 'complete');
+      const payload = SimulationAdapter.toUpdatePayload(output, 'complete');
 
       // Then
       expect(payload).toEqual({
-        id: 123,
+        output,
         status: 'complete',
-        output: JSON.stringify(output),
       });
     });
 
     it('given null output then includes null in payload', () => {
       // When
-      const payload = SimulationAdapter.toUpdatePayload(String(TEST_SIMULATION_IDS.SIM_456), null, 'pending');
+      const payload = SimulationAdapter.toUpdatePayload(null, 'pending');
 
       // Then
       expect(payload).toEqual({
-        id: 456,
-        status: 'pending',
         output: null,
+        status: 'pending',
       });
     });
 
     it('given error status then creates payload', () => {
       // When
-      const payload = SimulationAdapter.toUpdatePayload(String(TEST_SIMULATION_IDS.SIM_789), null, 'error');
+      const payload = SimulationAdapter.toUpdatePayload(null, 'error');
 
       // Then
       expect(payload).toEqual({
-        id: 789,
-        status: 'error',
         output: null,
+        status: 'error',
       });
     });
   });
@@ -207,13 +204,12 @@ describe('SimulationAdapter', () => {
       const output = mockSimulationOutput();
 
       // When
-      const payload = SimulationAdapter.toCompletedPayload(String(TEST_SIMULATION_IDS.SIM_123), output);
+      const payload = SimulationAdapter.toCompletedPayload(output);
 
       // Then
       expect(payload).toEqual({
-        id: 123,
+        output,
         status: 'complete',
-        output: JSON.stringify(output),
       });
     });
   });
@@ -224,43 +220,39 @@ describe('SimulationAdapter', () => {
       const errorMessage = mockErrorMessage();
 
       // When
-      const payload = SimulationAdapter.toErrorPayload(String(TEST_SIMULATION_IDS.SIM_123), errorMessage);
+      const payload = SimulationAdapter.toErrorPayload(errorMessage);
 
       // Then
       expect(payload).toEqual({
-        id: 123,
-        status: 'error',
         output: null,
+        status: 'error',
         error_message: errorMessage,
       });
     });
 
-    it('given no error message then uses null', () => {
+    it('given no error message then omits error_message field', () => {
       // When
-      const payload = SimulationAdapter.toErrorPayload(String(TEST_SIMULATION_IDS.SIM_456));
+      const payload = SimulationAdapter.toErrorPayload();
 
       // Then
       expect(payload).toEqual({
-        id: 456,
-        status: 'error',
         output: null,
-        error_message: null,
+        status: 'error',
       });
     });
   });
 
   describe('toEconomyPlaceholderPayload', () => {
-    it('given simulation ID then creates economy placeholder payload', () => {
+    it('given no params then creates economy placeholder payload', () => {
       // When
-      const payload = SimulationAdapter.toEconomyPlaceholderPayload(String(TEST_SIMULATION_IDS.SIM_123));
+      const payload = SimulationAdapter.toEconomyPlaceholderPayload();
 
       // Then
       expect(payload).toEqual({
-        id: 123,
-        status: 'complete',
-        output: JSON.stringify({
+        output: {
           message: "Economy-wide reports do not save simulation-level results at this time"
-        }),
+        },
+        status: 'complete',
       });
     });
   });

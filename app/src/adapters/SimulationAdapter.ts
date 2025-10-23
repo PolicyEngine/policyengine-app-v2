@@ -106,55 +106,54 @@ export class SimulationAdapter {
 
   /**
    * Creates payload for updating a simulation's output (PATCH request)
-   * Note: Simulation PATCH includes id in body
-   * Note: Now accepts status field (matching report PATCH format)
+   * Note: ID is in URL path, not in body (consistent with report PATCH format)
+   * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
    */
   static toUpdatePayload(
-    simulationId: string,
     output: unknown,
     status: 'pending' | 'complete' | 'error'
   ): SimulationSetOutputPayload {
     return {
-      id: parseInt(simulationId, 10),
+      output: output || null,
       status,
-      output: output ? JSON.stringify(output) : null,
     };
   }
 
   /**
    * Creates payload for marking a simulation as completed with output
+   * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
    */
-  static toCompletedPayload(simulationId: string, output: unknown): SimulationSetOutputPayload {
+  static toCompletedPayload(output: unknown): SimulationSetOutputPayload {
     return {
-      id: parseInt(simulationId, 10),
+      output,
       status: 'complete',
-      output: JSON.stringify(output),
     };
   }
 
   /**
    * Creates payload for marking a simulation as errored
    */
-  static toErrorPayload(simulationId: string, errorMessage?: string): SimulationSetOutputPayload {
-    return {
-      id: parseInt(simulationId, 10),
-      status: 'error',
+  static toErrorPayload(errorMessage?: string): SimulationSetOutputPayload {
+    const payload: SimulationSetOutputPayload = {
       output: null,
-      error_message: errorMessage || null,
+      status: 'error',
     };
+    if (errorMessage) {
+      payload.error_message = errorMessage;
+    }
+    return payload;
   }
 
   /**
    * Creates payload for marking an economy simulation as complete with placeholder output
    * Economy simulations don't store individual outputs (only the report has aggregated output)
    */
-  static toEconomyPlaceholderPayload(simulationId: string): SimulationSetOutputPayload {
+  static toEconomyPlaceholderPayload(): SimulationSetOutputPayload {
     return {
-      id: parseInt(simulationId, 10),
-      status: 'complete',
-      output: JSON.stringify({
+      output: {
         message: "Economy-wide reports do not save simulation-level results at this time"
-      }),
+      },
+      status: 'complete',
     };
   }
 }

@@ -81,11 +81,14 @@ export class ReportAdapter {
     if (!report.id) {
       throw new Error('Report ID is required to create error report payload');
     }
-    return {
+    const payload: ReportSetOutputPayload = {
       id: parseInt(report.id, 10),
       status: 'error',
       output: null,
-      error_message: errorMessage || null,
     };
+    if (errorMessage) {
+      payload.error_message = errorMessage;
+    }
+    return payload;
   }
 }

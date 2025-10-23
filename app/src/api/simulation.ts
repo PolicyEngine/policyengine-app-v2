@@ -80,16 +80,16 @@ export async function createSimulation(
 
 /**
  * Update simulation output after calculation completes
- * Note: Simulation PATCH includes id in body (unlike reports)
+ * Note: Simulation PATCH uses ID in URL, not in body (consistent with reports)
  */
 export async function updateSimulationOutput(
   countryId: (typeof countryIds)[number],
   simulationId: string,
   output: unknown
 ): Promise<SimulationMetadata> {
-  const url = `${BASE_URL}/${countryId}/simulation`;
+  const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
 
-  const payload = SimulationAdapter.toCompletedPayload(simulationId, output);
+  const payload = SimulationAdapter.toCompletedPayload(output);
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -129,15 +129,15 @@ export async function markSimulationCompleted(
 
 /**
  * Mark a simulation as errored
- * Note: Simulation PATCH includes id in body (unlike reports)
+ * Note: Simulation PATCH uses ID in URL, not in body (consistent with reports)
  */
 export async function markSimulationError(
   countryId: (typeof countryIds)[number],
   simulationId: string
 ): Promise<SimulationMetadata> {
-  const url = `${BASE_URL}/${countryId}/simulation`;
+  const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
 
-  const payload = SimulationAdapter.toErrorPayload(simulationId);
+  const payload = SimulationAdapter.toErrorPayload();
 
   const response = await fetch(url, {
     method: 'PATCH',
