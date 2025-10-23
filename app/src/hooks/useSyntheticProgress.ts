@@ -137,30 +137,27 @@ export function useSyntheticProgress(
           (elapsed / estimatedDuration) * 100,
           SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
         );
+      } else if (serverProgress?.estimatedTimeRemaining) {
+        // For society-wide: Use server's estimate, but smooth it with synthetic progress
+        const serverProgressPct =
+          100 - (serverProgress.estimatedTimeRemaining / estimatedDuration) * 100;
+        const syntheticProgressPct = Math.min(
+          (elapsed / estimatedDuration) * 100,
+          SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
+        );
+        // Weighted blend: keeps bar moving even if server estimate stalls
+        progress =
+          serverProgressPct * SYNTHETIC_PROGRESS_CONFIG.SERVER_WEIGHT +
+          syntheticProgressPct * SYNTHETIC_PROGRESS_CONFIG.SYNTHETIC_WEIGHT;
+      } else if (serverProgress?.queuePosition !== undefined) {
+        // For society-wide in queue: show minimal progress
+        progress = Math.max(5, 20 - serverProgress.queuePosition * 2);
       } else {
-        // For society-wide: blend server data with synthetic smoothing
-        if (serverProgress?.estimatedTimeRemaining) {
-          // Use server's estimate, but smooth it with synthetic progress
-          const serverProgressPct =
-            100 - (serverProgress.estimatedTimeRemaining / estimatedDuration) * 100;
-          const syntheticProgressPct = Math.min(
-            (elapsed / estimatedDuration) * 100,
-            SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
-          );
-          // Weighted blend: keeps bar moving even if server estimate stalls
-          progress =
-            serverProgressPct * SYNTHETIC_PROGRESS_CONFIG.SERVER_WEIGHT +
-            syntheticProgressPct * SYNTHETIC_PROGRESS_CONFIG.SYNTHETIC_WEIGHT;
-        } else if (serverProgress?.queuePosition !== undefined) {
-          // In queue: show minimal progress
-          progress = Math.max(5, 20 - serverProgress.queuePosition * 2);
-        } else {
-          // Fallback to pure synthetic
-          progress = Math.min(
-            (elapsed / estimatedDuration) * 100,
-            SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
-          );
-        }
+        // Fallback to pure synthetic for society-wide
+        progress = Math.min(
+          (elapsed / estimatedDuration) * 100,
+          SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
+        );
       }
 
       setSynthetic({
