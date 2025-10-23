@@ -11,10 +11,12 @@ import { useIngredientActions } from '@/hooks/useIngredientActions';
 import { useIngredientSelection } from '@/hooks/useIngredientSelection';
 import { notifications } from '@mantine/notifications';
 import { MOCK_USER_ID } from '@/constants';
+import HouseholdDatasetBuilderModal from '@/components/population/HouseholdDatasetBuilderModal';
 
 export default function DatasetsPage() {
   const [activeTab, setActiveTab] = useState<string | null>('my-datasets');
   const [searchValue, setSearchValue] = useState('');
+  const [builderModalOpened, setBuilderModalOpened] = useState(false);
   const navigate = useNavigate();
 
   const queryClient = useQueryClient();
@@ -52,15 +54,15 @@ export default function DatasetsPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['datasets'] });
       notifications.show({
-        title: 'Dataset deleted',
-        message: 'The dataset has been deleted successfully',
+        title: 'Population deleted',
+        message: 'The population has been deleted successfully',
         color: 'green',
       });
     },
     onError: () => {
       notifications.show({
         title: 'Error',
-        message: 'Failed to delete dataset',
+        message: 'Failed to delete population',
         color: 'red',
       });
     },
@@ -71,12 +73,11 @@ export default function DatasetsPage() {
   };
 
   const { handleMenuAction, getDefaultActions } = useIngredientActions({
-    ingredient: 'dataset',
+    ingredient: 'population',
   });
 
-  const handleBuildDataset = () => {
-    // TODO: Implement dataset creation flow
-    console.log('Build new dataset');
+  const handleBuildPopulation = () => {
+    setBuilderModalOpened(true);
   };
 
   const handleMoreFilters = () => {
@@ -100,11 +101,11 @@ export default function DatasetsPage() {
       dataset.description?.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  // Define column configurations for datasets
-  const datasetColumns: ColumnConfig[] = [
+  // Define column configurations for populations
+  const populationColumns: ColumnConfig[] = [
     {
-      key: 'datasetName',
-      header: 'Dataset name',
+      key: 'populationName',
+      header: 'Population name',
       type: 'text',
     },
     {
@@ -137,7 +138,7 @@ export default function DatasetsPage() {
 
       return {
         id: dataset.id,
-        datasetName: {
+        populationName: {
           text: displayName,
         } as TextValue,
         createdBy: {
@@ -153,17 +154,22 @@ export default function DatasetsPage() {
     }) || [];
 
   return (
-    <IngredientReadView
-      ingredient="dataset"
-      title="Datasets"
+    <>
+      <HouseholdDatasetBuilderModal
+        opened={builderModalOpened}
+        onClose={() => setBuilderModalOpened(false)}
+      />
+      <IngredientReadView
+      ingredient="population"
+      title="Populations"
       subtitle="Manage household, population, and economic datasets for your simulations."
-      onBuild={handleBuildDataset}
+      onBuild={handleBuildPopulation}
       onDelete={handleDeleteSelected}
       isLoading={isLoading}
       isError={!!error}
       error={error}
       data={transformedData}
-      columns={datasetColumns}
+      columns={populationColumns}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
       onMoreFilters={handleMoreFilters}
@@ -175,11 +181,12 @@ export default function DatasetsPage() {
       headerContent={
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>
-            <Tabs.Tab value="my-datasets">My datasets</Tabs.Tab>
-            <Tabs.Tab value="explore-datasets">Explore datasets</Tabs.Tab>
+            <Tabs.Tab value="my-datasets">My populations</Tabs.Tab>
+            <Tabs.Tab value="explore-datasets">Explore populations</Tabs.Tab>
           </Tabs.List>
         </Tabs>
       }
     />
+    </>
   );
 }

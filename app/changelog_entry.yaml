@@ -1,0 +1,8 @@
+- added:
+    - Renamed 'datasets' to 'populations' throughout the frontend for clarity
+    - Created custom household population builder modal with dynamic variable selection
+    - Support for creating populations using any variable from the current country model
+    - Auto-detection of current country model from global state
+    - Multi-select interface for choosing which variables to track per person
+    - Accordion-based household and person management with add/remove functionality
+    - Automatic saving of created populations to user's library

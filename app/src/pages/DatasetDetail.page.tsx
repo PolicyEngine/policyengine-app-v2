@@ -62,7 +62,7 @@ export default function DatasetDetailPage() {
   if (!datasetId) {
     return (
       <Container>
-        <Text>Invalid dataset ID</Text>
+        <Text>Invalid population ID</Text>
       </Container>
     );
   }
@@ -80,7 +80,7 @@ export default function DatasetDetailPage() {
   if (!dataset) {
     return (
       <Container>
-        <Text>Dataset not found</Text>
+        <Text>Population not found</Text>
       </Container>
     );
   }
@@ -145,7 +145,7 @@ export default function DatasetDetailPage() {
           <Stack gap="md">
             <div>
               <Text size="sm" fw={600} mb="xs">
-                Dataset ID
+                Population ID
               </Text>
               <Text size="sm" c="dimmed" style={{ fontFamily: 'monospace' }}>
                 {dataset.id}

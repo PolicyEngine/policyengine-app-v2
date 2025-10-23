@@ -45,7 +45,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const dataItems = [
     { label: 'Policies', icon: IconFileDescription, path: '/policies' },
     { label: 'Dynamics', icon: IconAdjustments, path: '/dynamics' },
-    { label: 'Datasets', icon: IconDatabase, path: '/datasets' },
+    { label: 'Populations', icon: IconDatabase, path: '/datasets' },
     { label: 'Simulations', icon: IconPlaystationSquare, path: '/simulations' },
     { label: 'Reports', icon: IconFileAnalytics, path: '/reports' },
   ];
