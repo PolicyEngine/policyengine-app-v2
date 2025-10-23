@@ -1,5 +1,5 @@
-import { vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
+import { vi } from 'vitest';
 import type { CalcStartConfig } from '@/types/calculation';
 import { mockReportCalcStartConfig } from '../libs/calculations/orchestrationFixtures';
 
@@ -47,9 +47,7 @@ export const createMockResultPersister = () => ({
 /**
  * Mock CalcStartConfig for hook tests
  */
-export const mockHookCalcStartConfig = (
-  overrides?: Partial<CalcStartConfig>
-): CalcStartConfig => ({
+export const mockHookCalcStartConfig = (overrides?: Partial<CalcStartConfig>): CalcStartConfig => ({
   ...mockReportCalcStartConfig(),
   calcId: HOOK_TEST_CONSTANTS.TEST_REPORT_ID,
   ...overrides,

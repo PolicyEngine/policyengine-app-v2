@@ -1,6 +1,6 @@
+import { useMemo } from 'react';
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQueries, useQueryClient, UseQueryResult } from '@tanstack/react-query';
-import { useMemo } from 'react';
 
 /**
  * Generic interface for normalized data structure
@@ -62,7 +62,7 @@ export function useParallelQueries<T>(
   // Map results back to original order, duplicating as needed
   // This ensures the returned array length matches the input array length
   const resultsMap = new Map(uniqueIds.map((id, idx) => [id, queries[idx]]));
-  const orderedQueries = ids.map(id => resultsMap.get(id)!);
+  const orderedQueries = ids.map((id) => resultsMap.get(id)!);
 
   const isLoading = orderedQueries.some((q) => q.isLoading);
   const error = orderedQueries.find((q) => q.error)?.error || null;

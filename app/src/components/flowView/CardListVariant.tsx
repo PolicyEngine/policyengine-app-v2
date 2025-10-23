@@ -24,7 +24,9 @@ export default function CardListVariant({
 }: CardListVariantProps) {
   const [currentPage, setCurrentPage] = useState(1);
 
-  if (!items) return null;
+  if (!items) {
+    return null;
+  }
 
   const allItems = items;
   const totalPages = Math.ceil(allItems.length / itemsPerPage);

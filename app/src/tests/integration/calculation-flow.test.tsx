@@ -2,22 +2,22 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { useStartCalculation } from '@/hooks/useStartCalculation';
+import { markReportCompleted } from '@/api/report';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useStartCalculation } from '@/hooks/useStartCalculation';
 import { calculationKeys } from '@/libs/queryKeys';
-import type { CalcStatus } from '@/types/calculation';
 import {
-  mockHookCalcStartConfig,
   createTestQueryClient,
   HOOK_TEST_CONSTANTS,
+  mockHookCalcStartConfig,
 } from '@/tests/fixtures/hooks/calculationHookFixtures';
+import { mockReportMetadata } from '@/tests/fixtures/hooks/reportHooksMocks';
 import {
-  mockCalcStatusComputing,
   mockCalcStatusComplete,
+  mockCalcStatusComputing,
   mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
-import { mockReportMetadata } from '@/tests/fixtures/hooks/reportHooksMocks';
-import { markReportCompleted } from '@/api/report';
+import type { CalcStatus } from '@/types/calculation';
 
 // Mock APIs
 vi.mock('@/api/report', () => ({
@@ -267,14 +267,12 @@ describe.skip('Calculation Flow Integration', () => {
       const reportId1 = HOOK_TEST_CONSTANTS.TEST_REPORT_ID;
       const reportId2 = HOOK_TEST_CONSTANTS.TEST_SIMULATION_ID;
 
-      const { result: status1 } = renderHook(
-        () => useCalculationStatus(reportId1, 'report'),
-        { wrapper }
-      );
-      const { result: status2 } = renderHook(
-        () => useCalculationStatus(reportId2, 'simulation'),
-        { wrapper }
-      );
+      const { result: status1 } = renderHook(() => useCalculationStatus(reportId1, 'report'), {
+        wrapper,
+      });
+      const { result: status2 } = renderHook(() => useCalculationStatus(reportId2, 'simulation'), {
+        wrapper,
+      });
 
       // When - Set different statuses
       const computing = mockCalcStatusComputing({

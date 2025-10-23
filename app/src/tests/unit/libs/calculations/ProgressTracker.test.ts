@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProgressTracker } from '@/libs/calculations/ProgressTracker';
-import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 import { STRATEGY_TEST_CONSTANTS } from '@/tests/fixtures/libs/calculations/strategyFixtures';
+import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 
 describe('ProgressTracker', () => {
   let tracker: ProgressTracker;
@@ -61,7 +61,9 @@ describe('ProgressTracker', () => {
       // Then
       expect(progress).not.toBeNull();
       expect(progress?.progress).toBeGreaterThanOrEqual(0);
-      expect(progress?.progress).toBeLessThanOrEqual(STRATEGY_TEST_CONSTANTS.MAX_SYNTHETIC_PROGRESS);
+      expect(progress?.progress).toBeLessThanOrEqual(
+        STRATEGY_TEST_CONSTANTS.MAX_SYNTHETIC_PROGRESS
+      );
       expect(progress?.message).toBeDefined();
       expect(progress?.estimatedTimeRemaining).toBeGreaterThanOrEqual(0);
     });

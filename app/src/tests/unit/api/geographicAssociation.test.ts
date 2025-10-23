@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
+import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 // Mock the adapter
@@ -17,6 +17,8 @@ describe('ApiGeographicStore', () => {
     geographyId: 'geo-456',
     countryId: 'us',
     label: 'Test Geography',
+    type: 'geography',
+    scope: 'subnational',
     createdAt: '2025-01-01T00:00:00Z',
   };
 
@@ -171,6 +173,8 @@ describe('LocalStorageGeographicStore', () => {
     geographyId: 'geo-456',
     countryId: 'us',
     label: 'Test Geography 1',
+    type: 'geography',
+    scope: 'subnational',
     createdAt: '2025-01-01T00:00:00Z',
   };
 
@@ -179,6 +183,8 @@ describe('LocalStorageGeographicStore', () => {
     geographyId: 'geo-789',
     countryId: 'uk',
     label: 'Test Geography 2',
+    type: 'geography',
+    scope: 'subnational',
     createdAt: '2025-01-02T00:00:00Z',
   };
 
@@ -294,7 +300,10 @@ describe('LocalStorageGeographicStore', () => {
   describe('utility methods', () => {
     it('given getAllPopulations then returns all stored populations', () => {
       // Given
-      mockLocalStorage['user-geographic-associations'] = JSON.stringify([mockPopulation1, mockPopulation2]);
+      mockLocalStorage['user-geographic-associations'] = JSON.stringify([
+        mockPopulation1,
+        mockPopulation2,
+      ]);
 
       // When
       const result = store.getAllPopulations();

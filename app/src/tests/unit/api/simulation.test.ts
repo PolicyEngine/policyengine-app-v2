@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   createSimulation,
   fetchSimulationById,
-  updateSimulationOutput,
   markSimulationCompleted,
   markSimulationError,
+  updateSimulationOutput,
 } from '@/api/simulation';
 import { BASE_URL } from '@/constants';
 import {
@@ -15,18 +15,18 @@ import {
   mockErrorResponse,
   mockFetchSimulationNotFoundResponse,
   mockFetchSimulationSuccessResponse,
+  mockMarkSimulationErrorSuccessResponse,
   mockNonJsonResponse,
   mockSimulationMetadata,
-  mockSimulationMetadataWithOutput,
   mockSimulationMetadataError,
+  mockSimulationMetadataWithOutput,
   mockSimulationOutput,
   mockSimulationPayload,
   mockSimulationPayloadGeography,
   mockSimulationPayloadMinimal,
   mockSuccessResponse,
-  mockUpdateSimulationOutputSuccessResponse,
-  mockMarkSimulationErrorSuccessResponse,
   mockUpdateSimulationOutputErrorResponse,
+  mockUpdateSimulationOutputSuccessResponse,
   SIMULATION_IDS,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/api/simulationMocks';
@@ -580,9 +580,7 @@ describe('markSimulationError', () => {
     );
 
     // When/Then
-    await expect(
-      markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)
-    ).rejects.toThrow(
+    await expect(markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
       ERROR_MESSAGES.MARK_ERROR_FAILED_WITH_STATUS(
         SIMULATION_IDS.VALID,
         HTTP_STATUS.INTERNAL_SERVER_ERROR,
@@ -602,9 +600,9 @@ describe('markSimulationError', () => {
     mockFetch.mockResolvedValueOnce(mockSuccessResponse(errorResponse) as any);
 
     // When/Then
-    await expect(
-      markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)
-    ).rejects.toThrow(errorResponse.message);
+    await expect(markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
+      errorResponse.message
+    );
   });
 
   test('given API returns error status without message then throws generic error', async () => {
@@ -618,9 +616,9 @@ describe('markSimulationError', () => {
     mockFetch.mockResolvedValueOnce(mockSuccessResponse(responseWithoutMessage) as any);
 
     // When/Then
-    await expect(
-      markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)
-    ).rejects.toThrow(ERROR_MESSAGES.MARK_ERROR_FAILED(SIMULATION_IDS.VALID));
+    await expect(markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
+      ERROR_MESSAGES.MARK_ERROR_FAILED(SIMULATION_IDS.VALID)
+    );
   });
 
   test('given network failure then throws error', async () => {
@@ -630,8 +628,8 @@ describe('markSimulationError', () => {
     mockFetch.mockRejectedValueOnce(networkError);
 
     // When/Then
-    await expect(
-      markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)
-    ).rejects.toThrow(networkError);
+    await expect(markSimulationError(TEST_COUNTRIES.US, SIMULATION_IDS.VALID)).rejects.toThrow(
+      networkError
+    );
   });
 });

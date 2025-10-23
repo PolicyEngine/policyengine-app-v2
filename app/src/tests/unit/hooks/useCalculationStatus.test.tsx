@@ -4,16 +4,16 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { calculationKeys } from '@/libs/queryKeys';
-import type { CalcStatus } from '@/types/calculation';
 import {
   createTestQueryClient,
   HOOK_TEST_CONSTANTS,
 } from '@/tests/fixtures/hooks/calculationHookFixtures';
 import {
-  mockCalcStatusComputing,
   mockCalcStatusComplete,
+  mockCalcStatusComputing,
   mockCalcStatusError,
 } from '@/tests/fixtures/types/calculationFixtures';
+import type { CalcStatus } from '@/types/calculation';
 
 // Mock the synthetic progress hook
 vi.mock('@/hooks/useSyntheticProgress', () => ({
@@ -23,7 +23,8 @@ vi.mock('@/hooks/useSyntheticProgress', () => ({
     }
     return {
       progress: calcType === 'household' ? 45 : 12,
-      message: calcType === 'household' ? 'Running policy simulation...' : 'Loading population data...',
+      message:
+        calcType === 'household' ? 'Running policy simulation...' : 'Loading population data...',
     };
   }),
   getProgressMessage: vi.fn(),

@@ -9,11 +9,11 @@ import { mockReport } from '@/tests/fixtures/adapters/reportMocks';
 import {
   createMockQueryClient,
   ERROR_MESSAGES,
-  mockSocietyWideSimulation,
   mockHousehold,
   mockHouseholdSimulation,
   mockNationalGeography,
   mockReportCreationPayload,
+  mockSocietyWideSimulation,
   mockSubnationalGeography,
   mockUserReportAssociation,
   setupConsoleMocks,
@@ -219,12 +219,12 @@ describe('useCreateReport', () => {
         expect(mockStartCalculation).toHaveBeenNthCalledWith(
           1,
           expect.objectContaining({
-            calcId: mockHouseholdSimulation.id,  // Uses simulation's own ID
+            calcId: mockHouseholdSimulation.id, // Uses simulation's own ID
             targetType: 'simulation',
             countryId: TEST_COUNTRY_ID,
             simulations: {
               simulation1: mockHouseholdSimulation,
-              simulation2: null,  // Each calculation is independent
+              simulation2: null, // Each calculation is independent
             },
             populations: {
               household1: mockHousehold,
@@ -239,12 +239,12 @@ describe('useCreateReport', () => {
         expect(mockStartCalculation).toHaveBeenNthCalledWith(
           2,
           expect.objectContaining({
-            calcId: 'sim-2',  // Uses simulation2's ID
+            calcId: 'sim-2', // Uses simulation2's ID
             targetType: 'simulation',
             countryId: TEST_COUNTRY_ID,
             simulations: {
               simulation1: expect.objectContaining({ policyId: 'policy-2' }),
-              simulation2: null,  // Each calculation is independent
+              simulation2: null, // Each calculation is independent
             },
             populations: {
               household1: mockHousehold,

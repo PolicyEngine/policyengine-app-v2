@@ -3,12 +3,12 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import {
+  createMockAssociationHooks,
   createMockQueryClient,
   createMockStore,
   createWrapper,
-  TEST_USER_ID,
   mockUseCurrentCountry,
-  createMockAssociationHooks,
+  TEST_USER_ID,
 } from '@/tests/fixtures/hooks/useUserSimulationsMocks';
 
 // Mock the association hooks

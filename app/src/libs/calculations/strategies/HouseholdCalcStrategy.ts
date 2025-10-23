@@ -37,7 +37,10 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
       );
 
       console.log('[HouseholdCalcStrategy.execute] Calculation completed successfully');
-      console.log('[HouseholdCalcStrategy.execute] Using metadata with reportId:', metadata.reportId);
+      console.log(
+        '[HouseholdCalcStrategy.execute] Using metadata with reportId:',
+        metadata.reportId
+      );
 
       // Return complete status with result and PROVIDED metadata (includes reportId!)
       return {
@@ -73,7 +76,7 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
   getRefetchConfig(): RefetchConfig {
     return {
       refetchInterval: false, // Never refetch - result is final
-      staleTime: Infinity,     // Cache forever
+      staleTime: Infinity, // Cache forever
     };
   }
 

@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
+import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 
 // Mock the adapter
@@ -15,7 +15,6 @@ describe('ApiPolicyStore', () => {
   const mockPolicyInput: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
-    countryId: 'us',
     label: 'Test Policy',
     isCreated: true,
   };
@@ -176,7 +175,6 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput1: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-456',
-    countryId: 'us',
     label: 'Test Policy 1',
     isCreated: true,
   };
@@ -184,7 +182,6 @@ describe('LocalStoragePolicyStore', () => {
   const mockPolicyInput2: Omit<UserPolicy, 'id' | 'createdAt'> = {
     userId: 'user-123',
     policyId: 'policy-789',
-    countryId: 'uk',
     label: 'Test Policy 2',
     isCreated: true,
   };
@@ -234,9 +231,7 @@ describe('LocalStoragePolicyStore', () => {
       await store.create(mockPolicyInput1);
 
       // When/Then
-      await expect(store.create(mockPolicyInput1)).rejects.toThrow(
-        'Association already exists'
-      );
+      await expect(store.create(mockPolicyInput1)).rejects.toThrow('Association already exists');
     });
   });
 

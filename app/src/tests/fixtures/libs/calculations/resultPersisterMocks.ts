@@ -1,7 +1,10 @@
-import { vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
+import { vi } from 'vitest';
+import {
+  mockHouseholdResult,
+  mockSocietyWideResult,
+} from '@/tests/fixtures/types/calculationFixtures';
 import type { CalcStatus } from '@/types/calculation';
-import { mockSocietyWideResult, mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 
 /**
  * Test constants for calc IDs
@@ -63,7 +66,10 @@ export const mockCompleteHouseholdStatus = (overrides?: Partial<CalcStatus>): Ca
 /**
  * Mock complete CalcStatus for household simulation with reportId
  */
-export const mockCompleteHouseholdStatusWithReport = (simId: string, overrides?: Partial<CalcStatus>): CalcStatus => ({
+export const mockCompleteHouseholdStatusWithReport = (
+  simId: string,
+  overrides?: Partial<CalcStatus>
+): CalcStatus => ({
   status: 'complete',
   result: mockHouseholdResult(),
   metadata: {

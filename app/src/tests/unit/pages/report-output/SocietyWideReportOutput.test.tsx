@@ -1,10 +1,13 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@test-utils';
-import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
-import { useUserReportById } from '@/hooks/useUserReports';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
-import { mockSocietyWideReport, mockSocietyWideSimulation } from '@/tests/fixtures/pages/reportOutputMocks';
+import { useUserReportById } from '@/hooks/useUserReports';
+import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
+import {
+  mockSocietyWideReport,
+  mockSocietyWideSimulation,
+} from '@/tests/fixtures/pages/reportOutputMocks';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', async (importOriginal) => {
@@ -29,7 +32,6 @@ const mockUseCalculationStatus = useCalculationStatus as ReturnType<typeof vi.fn
 const mockUseStartCalculationOnLoad = useStartCalculationOnLoad as ReturnType<typeof vi.fn>;
 
 describe('SocietyWideReportOutput', () => {
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseStartCalculationOnLoad.mockReturnValue(undefined);

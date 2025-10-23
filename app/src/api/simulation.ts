@@ -1,8 +1,8 @@
+import { SimulationAdapter } from '@/adapters/SimulationAdapter';
 import { BASE_URL } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
-import { SimulationCreationPayload, SimulationSetOutputPayload } from '@/types/payloads';
-import { SimulationAdapter } from '@/adapters/SimulationAdapter';
+import { SimulationCreationPayload } from '@/types/payloads';
 
 export async function fetchSimulationById(
   countryId: (typeof countryIds)[number],
@@ -89,7 +89,7 @@ export async function updateSimulationOutput(
 ): Promise<SimulationMetadata> {
   const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
 
-  const payload = SimulationAdapter.toCompletedPayload(output);
+  const payload = SimulationAdapter.toCompletedPayload(parseInt(simulationId, 10), output);
 
   const response = await fetch(url, {
     method: 'PATCH',
@@ -137,7 +137,7 @@ export async function markSimulationError(
 ): Promise<SimulationMetadata> {
   const url = `${BASE_URL}/${countryId}/simulation/${simulationId}`;
 
-  const payload = SimulationAdapter.toErrorPayload();
+  const payload = SimulationAdapter.toErrorPayload(parseInt(simulationId, 10));
 
   const response = await fetch(url, {
     method: 'PATCH',

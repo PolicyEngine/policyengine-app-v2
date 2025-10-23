@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook, act } from '@testing-library/react';
-import { useSyntheticProgress, getProgressMessage } from '@/hooks/useSyntheticProgress';
+import { act, renderHook } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getProgressMessage, useSyntheticProgress } from '@/hooks/useSyntheticProgress';
 import {
-  SYNTHETIC_PROGRESS_TEST_CONSTANTS,
   createServerProgress,
+  SYNTHETIC_PROGRESS_TEST_CONSTANTS,
 } from '@/tests/fixtures/hooks/syntheticProgressFixtures';
 
 describe('useSyntheticProgress', () => {
@@ -18,9 +18,7 @@ describe('useSyntheticProgress', () => {
   describe('household calculations', () => {
     it('given inactive then returns zero progress', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(false, 'household')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(false, 'household'));
 
       // Then
       expect(result.current.progress).toBe(0);
@@ -29,9 +27,7 @@ describe('useSyntheticProgress', () => {
 
     it('given active then starts at zero progress', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'household')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'household'));
 
       // Then
       expect(result.current.progress).toBe(0);
@@ -39,9 +35,7 @@ describe('useSyntheticProgress', () => {
 
     it('given time passes then progress increases', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'household')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'household'));
 
       // When - advance 10 seconds (22.2% of 45 second duration)
       act(() => {
@@ -59,9 +53,7 @@ describe('useSyntheticProgress', () => {
 
     it('given full duration passes then caps at max progress', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'household')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'household'));
 
       // When - advance full 45 second duration
       act(() => {
@@ -74,9 +66,7 @@ describe('useSyntheticProgress', () => {
 
     it('given progress under 10% then shows initializing message', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'household')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'household'));
 
       // When - advance 2 seconds (4.4% of duration)
       act(() => {
@@ -91,9 +81,7 @@ describe('useSyntheticProgress', () => {
 
     it('given progress 30-60% then shows running simulation message', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'household')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'household'));
 
       // When - advance 20 seconds (44.4% of duration)
       act(() => {
@@ -134,9 +122,7 @@ describe('useSyntheticProgress', () => {
   describe('economy calculations', () => {
     it('given no server data then uses pure synthetic progress', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'societyWide')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'societyWide'));
 
       // When - advance 2 minutes (16.67% of 12 minute duration)
       act(() => {
@@ -158,7 +144,9 @@ describe('useSyntheticProgress', () => {
         useSyntheticProgress(
           true,
           'societyWide',
-          createServerProgress({ queuePosition: SYNTHETIC_PROGRESS_TEST_CONSTANTS.QUEUE.POSITION_3 })
+          createServerProgress({
+            queuePosition: SYNTHETIC_PROGRESS_TEST_CONSTANTS.QUEUE.POSITION_3,
+          })
         )
       );
 
@@ -186,7 +174,8 @@ describe('useSyntheticProgress', () => {
           true,
           'societyWide',
           createServerProgress({
-            estimatedTimeRemaining: SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.SERVER_ESTIMATE_6_MIN_REMAINING,
+            estimatedTimeRemaining:
+              SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.SERVER_ESTIMATE_6_MIN_REMAINING,
           })
         )
       );
@@ -209,9 +198,7 @@ describe('useSyntheticProgress', () => {
 
     it('given progress under 10% then shows initializing message', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'societyWide')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'societyWide'));
 
       // When - advance 30 seconds (0.69% of duration)
       act(() => {
@@ -231,7 +218,8 @@ describe('useSyntheticProgress', () => {
           true,
           'societyWide',
           createServerProgress({
-            estimatedTimeRemaining: SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.SERVER_ESTIMATE_3_MIN_REMAINING,
+            estimatedTimeRemaining:
+              SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.SERVER_ESTIMATE_3_MIN_REMAINING,
           })
         )
       );
@@ -249,9 +237,7 @@ describe('useSyntheticProgress', () => {
 
     it('given full duration then caps at max progress', () => {
       // Given
-      const { result } = renderHook(() =>
-        useSyntheticProgress(true, 'societyWide')
-      );
+      const { result } = renderHook(() => useSyntheticProgress(true, 'societyWide'));
 
       // When - advance 12 minutes
       act(() => {

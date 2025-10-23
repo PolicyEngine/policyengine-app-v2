@@ -41,7 +41,9 @@ export class HouseholdSimCalculator {
     const calcKey = calculationKeys.bySimulationId(this.simulationId);
     const timestamp = Date.now();
 
-    console.log(`[HouseholdSimCalculator][${timestamp}] Starting calculation for simulation ${this.simulationId}`);
+    console.log(
+      `[HouseholdSimCalculator][${timestamp}] Starting calculation for simulation ${this.simulationId}`
+    );
 
     // Set initial pending status (no progress field - coordinator handles it)
     const initialStatus: CalcStatus = {

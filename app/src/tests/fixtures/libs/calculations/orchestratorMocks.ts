@@ -1,7 +1,10 @@
-import { vi } from 'vitest';
 import { QueryClient } from '@tanstack/react-query';
+import { vi } from 'vitest';
+import {
+  mockHouseholdResult,
+  mockSocietyWideResult,
+} from '@/tests/fixtures/types/calculationFixtures';
 import type { CalcStartConfig, CalcStatus } from '@/types/calculation';
-import { mockHouseholdResult, mockSocietyWideResult } from '@/tests/fixtures/types/calculationFixtures';
 
 /**
  * Create a test QueryClient with retry disabled
@@ -17,7 +20,12 @@ export const createTestQueryClient = () =>
  * Create a mock manager for CalcOrchestrator tests
  */
 export const createMockManager = () => ({
+  activeOrchestrators: new Map(),
+  queryClient: {} as any,
+  startCalculation: vi.fn(),
+  isRunning: vi.fn().mockReturnValue(false),
   cleanup: vi.fn(),
+  getOrchestrator: vi.fn(),
 });
 
 /**
@@ -56,10 +64,16 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
       policyId: TEST_POLICY_IDS.POLICY_1,
       populationType: 'household',
       populationId: TEST_POPULATION_IDS.HOUSEHOLD_1,
+      label: 'Test Household Simulation',
+      isCreated: true,
     },
   },
   populations: {
-    household1: { id: TEST_POPULATION_IDS.HOUSEHOLD_1 },
+    household1: {
+      id: TEST_POPULATION_IDS.HOUSEHOLD_1,
+      countryId: TEST_COUNTRIES.US,
+      householdData: {} as any,
+    },
   },
   ...overrides,
 });
@@ -67,7 +81,9 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
 /**
  * Mock CalcStartConfig for household simulation with reportId
  */
-export const mockHouseholdCalcConfigWithReport = (overrides?: Partial<CalcStartConfig>): CalcStartConfig => ({
+export const mockHouseholdCalcConfigWithReport = (
+  overrides?: Partial<CalcStartConfig>
+): CalcStartConfig => ({
   ...mockHouseholdCalcConfig(),
   reportId: TEST_CALC_IDS.REPORT_123,
   ...overrides,
@@ -76,7 +92,9 @@ export const mockHouseholdCalcConfigWithReport = (overrides?: Partial<CalcStartC
 /**
  * Mock CalcStartConfig for society-wide report
  */
-export const mockSocietyWideCalcConfig = (overrides?: Partial<CalcStartConfig>): CalcStartConfig => ({
+export const mockSocietyWideCalcConfig = (
+  overrides?: Partial<CalcStartConfig>
+): CalcStartConfig => ({
   calcId: TEST_CALC_IDS.REPORT_1,
   targetType: 'report',
   countryId: TEST_COUNTRIES.US,
@@ -85,15 +103,24 @@ export const mockSocietyWideCalcConfig = (overrides?: Partial<CalcStartConfig>):
       policyId: TEST_POLICY_IDS.POLICY_1,
       populationType: 'geography',
       populationId: TEST_POPULATION_IDS.US,
+      label: 'Baseline Geography Simulation',
+      isCreated: true,
     },
     simulation2: {
       policyId: TEST_POLICY_IDS.POLICY_2,
       populationType: 'geography',
       populationId: TEST_POPULATION_IDS.US,
+      label: 'Reform Geography Simulation',
+      isCreated: true,
     },
   },
   populations: {
-    geography1: { geographyId: TEST_POPULATION_IDS.US },
+    geography1: {
+      geographyId: TEST_POPULATION_IDS.US,
+      id: 'us-us',
+      countryId: TEST_COUNTRIES.US,
+      scope: 'national' as const,
+    },
   },
   ...overrides,
 });
@@ -131,7 +158,9 @@ export const mockPendingSocietyWideStatus = (overrides?: Partial<CalcStatus>): C
 /**
  * Mock CalcStatus for pending society-wide calculation with message
  */
-export const mockPendingSocietyWideStatusWithMessage = (overrides?: Partial<CalcStatus>): CalcStatus => ({
+export const mockPendingSocietyWideStatusWithMessage = (
+  overrides?: Partial<CalcStatus>
+): CalcStatus => ({
   ...mockPendingSocietyWideStatus(),
   message: 'Initializing...',
   ...overrides,

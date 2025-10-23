@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { getCountryLabel, getRegionLabel, getRegionType } from '@/utils/geographyUtils';
+import { describe, expect, it } from 'vitest';
 import {
-  TEST_COUNTRY_CODES,
   EXPECTED_COUNTRY_LABELS,
-  TEST_REGION_CODES,
-  mockMetadataWithRegions,
   mockMetadataEmptyRegions,
+  mockMetadataWithRegions,
+  TEST_COUNTRY_CODES,
+  TEST_REGION_CODES,
 } from '@/tests/fixtures/utils/geographyUtilsMocks';
+import { getCountryLabel, getRegionLabel, getRegionType } from '@/utils/geographyUtils';
 
 describe('geographyUtils', () => {
   describe('getCountryLabel', () => {

@@ -52,12 +52,12 @@ export const TEST_LABELS = {
 /**
  * Mock UserReport input (without id and createdAt)
  */
-export const mockReportInput = (overrides?: Partial<Omit<UserReport, 'id' | 'createdAt'>>): Omit<UserReport, 'id' | 'createdAt'> => ({
+export const mockReportInput = (
+  overrides?: Partial<Omit<UserReport, 'id' | 'createdAt'>>
+): Omit<UserReport, 'id' | 'createdAt'> => ({
   userId: TEST_USER_IDS.USER_123,
   reportId: TEST_REPORT_IDS.REPORT_456,
-  countryId: TEST_COUNTRIES.US,
   label: TEST_LABELS.TEST_REPORT_1,
-  simulationIds: [TEST_SIM_IDS.SIM_1, TEST_SIM_IDS.SIM_2],
   isCreated: true,
   ...overrides,
 });
@@ -169,11 +169,6 @@ export function createMockQueryClient() {
       mutations: {
         retry: false,
       },
-    },
-    logger: {
-      log: () => {},
-      warn: () => {},
-      error: () => {},
     },
   });
 }

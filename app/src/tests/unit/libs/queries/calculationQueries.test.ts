@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { calculationQueries } from '@/libs/queries/calculationQueries';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
+import { calculationQueries } from '@/libs/queries/calculationQueries';
 import { calculationKeys } from '@/libs/queryKeys';
 import {
   createMockStrategy,
-  mockSocietyWideMetadata,
   mockHouseholdMetadata,
-  mockSocietyWideParams,
   mockHouseholdParams,
+  mockSocietyWideMetadata,
+  mockSocietyWideParams,
   TEST_CALC_IDS,
 } from '@/tests/fixtures/libs/queries/calculationQueriesMocks';
 
@@ -83,7 +83,11 @@ describe('calculationQueries', () => {
       mockStrategy.getRefetchConfig.mockReturnValue({ refetchInterval: false });
 
       // When
-      const queryOptions = calculationQueries.forSimulation(TEST_CALC_IDS.SIM_123, metadata, params);
+      const queryOptions = calculationQueries.forSimulation(
+        TEST_CALC_IDS.SIM_123,
+        metadata,
+        params
+      );
 
       // Then
       expect(CalcStrategyFactory.getStrategy).toHaveBeenCalledWith('household');
@@ -97,7 +101,11 @@ describe('calculationQueries', () => {
       const metadata = mockHouseholdMetadata(TEST_CALC_IDS.SIM_456);
       const params = mockHouseholdParams(TEST_CALC_IDS.SIM_456);
 
-      const queryOptions = calculationQueries.forSimulation(TEST_CALC_IDS.SIM_456, metadata, params);
+      const queryOptions = calculationQueries.forSimulation(
+        TEST_CALC_IDS.SIM_456,
+        metadata,
+        params
+      );
 
       // When
       const result = await queryOptions.queryFn();

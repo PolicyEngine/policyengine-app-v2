@@ -1,23 +1,23 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { QueryClient } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  useParallelQueries,
   combineLoadingStates,
-  extractUniqueIds,
   createLookupMap,
+  extractUniqueIds,
+  useParallelQueries,
 } from '@/hooks/utils/normalizedUtils';
 import {
-  TEST_IDS,
+  createDisabledQueryConfig,
+  createErrorQueryConfig,
+  createMockQueryClient,
+  createMockQueryConfig,
+  createWrapper,
+  mockLoadingStates,
   TEST_ENTITIES,
   TEST_ERRORS,
-  mockLoadingStates,
-  createMockQueryClient,
-  createWrapper,
-  createMockQueryConfig,
-  createErrorQueryConfig,
-  createDisabledQueryConfig,
+  TEST_IDS,
 } from '@/tests/fixtures/hooks/utils/normalizedUtilsMocks';
-import { QueryClient } from '@tanstack/react-query';
 
 describe('normalizedUtils', () => {
   let queryClient: QueryClient;

@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
 import {
-  mockUserReportInput,
   mockApiResponse,
-  TEST_USER_IDS,
-  TEST_REPORT_IDS,
-  TEST_USER_REPORT_IDS,
+  mockUserReportInput,
   TEST_LABELS,
+  TEST_REPORT_IDS,
+  TEST_USER_IDS,
+  TEST_USER_REPORT_IDS,
 } from '@/tests/fixtures/adapters/UserReportAdapterMocks';
 
 describe('UserReportAdapter', () => {

@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { cacheMonitor } from '@/utils/cacheMonitor';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  createMockQueryClient,
   createMockQuery,
+  createMockQueryClient,
   TEST_QUERY_KEYS,
   TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/utils/cacheMonitorMocks';
+import { cacheMonitor } from '@/utils/cacheMonitor';
 
 describe('cacheMonitor', () => {
   beforeEach(() => {

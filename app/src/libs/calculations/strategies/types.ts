@@ -50,19 +50,19 @@ export interface CalcExecutionStrategy {
    * @param metadata - Calculation metadata (includes reportId for household sim-level calcs)
    * @returns Promise resolving to calculation status
    */
-  execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus>;
+  execute: (params: CalcParams, metadata: CalcMetadata) => Promise<CalcStatus>;
 
   /**
    * Get the refetch configuration for this strategy
    * Different strategies may poll at different intervals or not at all
    * @returns Refetch configuration for TanStack Query
    */
-  getRefetchConfig(): RefetchConfig;
+  getRefetchConfig: () => RefetchConfig;
 
   /**
    * Transform API-specific response to unified CalcStatus
    * @param apiResponse - Raw API response
    * @returns Unified calculation status
    */
-  transformResponse(apiResponse: unknown): CalcStatus;
+  transformResponse: (apiResponse: unknown) => CalcStatus;
 }

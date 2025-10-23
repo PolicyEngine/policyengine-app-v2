@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import {
+  mockParameters,
+  mockPolicy,
   mockPolicyMetadata,
   mockPolicyMetadataMultipleParams,
-  mockPolicy,
-  mockParameters,
-  TEST_POLICY_IDS,
   TEST_COUNTRIES,
   TEST_PARAMETER_NAMES,
+  TEST_POLICY_IDS,
 } from '@/tests/fixtures/adapters/PolicyAdapterMocks';
 
 describe('PolicyAdapter', () => {

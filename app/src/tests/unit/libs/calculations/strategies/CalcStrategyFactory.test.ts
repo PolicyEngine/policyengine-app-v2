@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
+import { CalcStrategyFactory } from '@/libs/calculations/strategies/CalcStrategyFactory';
 import { HouseholdCalcStrategy } from '@/libs/calculations/strategies/HouseholdCalcStrategy';
 
 describe('CalcStrategyFactory', () => {

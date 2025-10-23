@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { CalcMetadata } from '@/types/calculation';
+import { describe, expect, it } from 'vitest';
 import { mockCalcMetadata } from '@/tests/fixtures/types/calculationFixtures';
+import { CalcMetadata } from '@/types/calculation';
 
 describe('CalcMetadata types', () => {
   it('should include calcId', () => {

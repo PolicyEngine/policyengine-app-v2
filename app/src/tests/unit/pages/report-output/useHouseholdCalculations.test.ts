@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useHouseholdCalculations } from '@/pages/report-output/useHouseholdCalculations';
 import {
-  mockViewModelShouldStart,
-  mockViewModelShouldNotStart,
-  mockViewModelNoConfig,
-  mockOrchestrator,
   mockCalcConfig,
+  mockOrchestrator,
+  mockViewModelNoConfig,
+  mockViewModelShouldNotStart,
+  mockViewModelShouldStart,
 } from '@/tests/fixtures/pages/report-output/useHouseholdCalculationsMocks';
 
 // Mock the household orchestrator hook

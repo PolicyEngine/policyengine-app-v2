@@ -7,6 +7,7 @@ export const INTEGRATION_TEST_CONSTANTS = {
   CALC_IDS: {
     HOUSEHOLD_REPORT: 'test-household-report-123',
     SOCIETY_WIDE_REPORT: 'test-society-wide-report-456',
+    ECONOMY_REPORT: 'test-economy-report-789',
     SIMULATION_1: 'test-sim-1',
     SIMULATION_2: 'test-sim-2',
   },
@@ -70,7 +71,9 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
 /**
  * Create mock society-wide calculation config
  */
-export const mockSocietyWideCalcConfig = (overrides?: Partial<CalcStartConfig>): CalcStartConfig => ({
+export const mockSocietyWideCalcConfig = (
+  overrides?: Partial<CalcStartConfig>
+): CalcStartConfig => ({
   calcId: INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT,
   targetType: 'report',
   countryId: 'us',
@@ -142,7 +145,7 @@ export const mockSocietyWideCalcResult = () => ({
   poverty: {
     poverty_rate: {
       baseline: 0.12,
-      reform: 0.10,
+      reform: 0.1,
     },
   },
 });
@@ -170,10 +173,7 @@ export const mockIntegrationComputingStatus = (
 /**
  * Create mock complete CalcStatus for integration tests
  */
-export const mockIntegrationCompleteStatus = (
-  calcId: string,
-  result: any
-): CalcStatus => ({
+export const mockIntegrationCompleteStatus = (calcId: string, result: any): CalcStatus => ({
   status: 'complete',
   result,
   metadata: {

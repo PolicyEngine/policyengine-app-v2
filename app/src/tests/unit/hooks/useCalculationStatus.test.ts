@@ -1,18 +1,18 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@test-utils';
 import { createElement } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@test-utils';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { calculationKeys } from '@/libs/queryKeys';
-import {
-  mockComputingCalcStatus,
-  mockCompleteCalcStatus,
-  mockErrorCalcStatus,
-} from '@/tests/fixtures/types/calculationFixtures';
 import {
   createTestQueryClient,
   HOOK_TEST_CONSTANTS,
 } from '@/tests/fixtures/hooks/calculationHookFixtures';
+import {
+  mockCompleteCalcStatus,
+  mockComputingCalcStatus,
+  mockErrorCalcStatus,
+} from '@/tests/fixtures/types/calculationFixtures';
 
 describe('useCalculationStatus', () => {
   let queryClient: any;

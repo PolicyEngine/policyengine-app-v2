@@ -9,14 +9,20 @@ import type { CalcStatus } from '@/types/calculation';
  * @param simulationId - The simulation ID to subscribe to
  * @returns CalcStatus if available in cache, undefined otherwise
  */
-export function useCalcStatusSubscription(simulationId: string | undefined): CalcStatus | undefined {
+export function useCalcStatusSubscription(
+  simulationId: string | undefined
+): CalcStatus | undefined {
   const queries = useQueries({
-    queries: [{
-      queryKey: simulationId ? calculationKeys.bySimulationId(simulationId) : ['placeholder'] as const,
-      queryFn: async (): Promise<CalcStatus | undefined> => undefined,
-      enabled: false, // Cache-only subscription, don't fetch
-      staleTime: Infinity, // Never mark as stale
-    }],
+    queries: [
+      {
+        queryKey: simulationId
+          ? calculationKeys.bySimulationId(simulationId)
+          : (['placeholder'] as const),
+        queryFn: async (): Promise<CalcStatus | undefined> => undefined,
+        enabled: false, // Cache-only subscription, don't fetch
+        staleTime: Infinity, // Never mark as stale
+      },
+    ],
   });
 
   return queries[0]?.data as CalcStatus | undefined;
@@ -34,19 +40,22 @@ export function useCalcStatusSubscription(simulationId: string | undefined): Cal
  */
 export function useMultiSimulationCalcStatus(simulationIds: string[]) {
   // Ensure we always have at least one query to satisfy useQueries type requirements
-  const queryConfigs = simulationIds.length > 0
-    ? simulationIds.map(simId => ({
-        queryKey: calculationKeys.bySimulationId(simId) as readonly unknown[],
-        queryFn: async (): Promise<CalcStatus | undefined> => undefined,
-        enabled: false, // Cache-only subscription, don't fetch
-        staleTime: Infinity, // Never mark as stale
-      }))
-    : [{
-        queryKey: ['placeholder'] as const,
-        queryFn: async (): Promise<CalcStatus | undefined> => undefined,
-        enabled: false,
-        staleTime: Infinity,
-      }];
+  const queryConfigs =
+    simulationIds.length > 0
+      ? simulationIds.map((simId) => ({
+          queryKey: calculationKeys.bySimulationId(simId) as readonly unknown[],
+          queryFn: async (): Promise<CalcStatus | undefined> => undefined,
+          enabled: false, // Cache-only subscription, don't fetch
+          staleTime: Infinity, // Never mark as stale
+        }))
+      : [
+          {
+            queryKey: ['placeholder'] as const,
+            queryFn: async (): Promise<CalcStatus | undefined> => undefined,
+            enabled: false,
+            staleTime: Infinity,
+          },
+        ];
 
   const queries = useQueries({
     queries: queryConfigs,
@@ -63,7 +72,7 @@ export function useMultiSimulationCalcStatus(simulationIds: string[]) {
   }
 
   // Find first pending calculation
-  const activeCalc = queries.find(q => {
+  const activeCalc = queries.find((q) => {
     const data = q.data as CalcStatus | undefined;
     return data?.status === 'pending';
   })?.data as CalcStatus | undefined;

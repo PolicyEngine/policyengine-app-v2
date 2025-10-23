@@ -240,13 +240,14 @@ describe('useUserReports', () => {
           id: r.report?.id,
           hasSimulations: !!r.simulations,
           simulationCount: r.simulations?.length || 0,
-          simulationTypes: r.simulations?.map(s => s.populationType) || [],
-          simulations: r.simulations?.map(s => ({
-            id: s.id,
-            populationType: s.populationType,
-            policyId: s.policyId,
-            populationId: s.populationId
-          })) || []
+          simulationTypes: r.simulations?.map((s) => s.populationType) || [],
+          simulations:
+            r.simulations?.map((s) => ({
+              id: s.id,
+              populationType: s.populationType,
+              policyId: s.policyId,
+              populationId: s.populationId,
+            })) || [],
         });
       });
 
@@ -404,7 +405,7 @@ describe('useUserReports', () => {
       // Use '456' instead of TEST_SIMULATION_ID_1 because simulations are adapted to have numeric string IDs
       const reports = result.current.getReportsBySimulation('456');
 
-      console.error("[useUserReports.test.tsx] reports:", reports);
+      console.error('[useUserReports.test.tsx] reports:', reports);
 
       // Then
       expect(reports).toBeDefined();

@@ -58,7 +58,9 @@ export function useHydrateCalculationCache({
 
     // Only hydrate once per report ID
     if (hydratedRef.current === currentReportId && currentReportId) {
-      console.log(`[useHydrateCache][${timestamp}] SKIP: Already hydrated report ${currentReportId}`);
+      console.log(
+        `[useHydrateCache][${timestamp}] SKIP: Already hydrated report ${currentReportId}`
+      );
       console.log(`[useHydrateCache][${timestamp}] ========================================`);
       return;
     }
@@ -79,14 +81,18 @@ export function useHydrateCalculationCache({
       // Read simulations from cache (already fetched by useUserReportById)
       const simulationIds = report?.simulationIds || [];
       const simulations = simulationIds
-        .map(id => queryClient.getQueryData<Simulation>(simulationKeys.byId(id)))
+        .map((id) => queryClient.getQueryData<Simulation>(simulationKeys.byId(id)))
         .filter((s): s is Simulation => !!s);
 
-      console.log(`[useHydrateCache][${timestamp}] Found ${simulations.length} simulations in cache`);
+      console.log(
+        `[useHydrateCache][${timestamp}] Found ${simulations.length} simulations in cache`
+      );
 
       // Hydrate each simulation individually
       for (const simulation of simulations) {
-        if (!simulation || !simulation.id) continue;
+        if (!simulation || !simulation.id) {
+          continue;
+        }
 
         console.log(`[useHydrateCache][${timestamp}]   Simulation ${simulation.id}:`);
         console.log(`[useHydrateCache][${timestamp}]     status: ${simulation.status}`);
@@ -97,7 +103,9 @@ export function useHydrateCalculationCache({
         const existing = queryClient.getQueryData<CalcStatus>(calcQueryKey);
 
         if (existing) {
-          console.log(`[useHydrateCache][${timestamp}]     ⏭️  SKIP: Already in calculation cache (${existing.status})`);
+          console.log(
+            `[useHydrateCache][${timestamp}]     ⏭️  SKIP: Already in calculation cache (${existing.status})`
+          );
           continue;
         }
 

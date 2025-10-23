@@ -1,19 +1,23 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ResultPersister } from '@/libs/calculations/ResultPersister';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { markReportCompleted } from '@/api/report';
 import { updateSimulationOutput } from '@/api/simulation';
+import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { calculationKeys, reportKeys, simulationKeys } from '@/libs/queryKeys';
-import type { Report } from '@/types/ingredients/Report';
-import { mockHouseholdResult, mockSocietyWideResult } from '@/tests/fixtures/types/calculationFixtures';
 import {
   createTestQueryClient,
-  TEST_CALC_IDS,
-  TEST_COUNTRIES,
-  mockCompleteSocietyWideStatus,
   mockCompleteHouseholdStatus,
   mockCompleteHouseholdStatusWithReport,
+  mockCompleteSocietyWideStatus,
   mockPendingStatus,
+  TEST_CALC_IDS,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/libs/calculations/resultPersisterMocks';
+import {
+  mockHouseholdResult,
+  mockSocietyWideResult,
+} from '@/tests/fixtures/types/calculationFixtures';
+import type { CalcStatus } from '@/types/calculation';
+import type { Report } from '@/types/ingredients/Report';
 
 // Mock API functions
 vi.mock('@/api/report');
@@ -198,14 +202,20 @@ describe('ResultPersister', () => {
       };
 
       queryClient.setQueryData(reportKeys.byId(TEST_CALC_IDS.REPORT_123), report);
-      queryClient.setQueryData(
-        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1),
-        { status: 'complete', result: mockHouseholdResult(), metadata: status.metadata }
-      );
-      queryClient.setQueryData(
-        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_2),
-        { status: 'pending', metadata: { calcId: TEST_CALC_IDS.SIM_2, targetType: 'simulation', calcType: 'household', startedAt: Date.now() } }
-      );
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1), {
+        status: 'complete',
+        result: mockHouseholdResult(),
+        metadata: status.metadata,
+      });
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_2), {
+        status: 'pending',
+        metadata: {
+          calcId: TEST_CALC_IDS.SIM_2,
+          targetType: 'simulation',
+          calcType: 'household',
+          startedAt: Date.now(),
+        },
+      });
 
       (updateSimulationOutput as any).mockResolvedValue(undefined);
 
@@ -241,14 +251,21 @@ describe('ResultPersister', () => {
       };
 
       queryClient.setQueryData(reportKeys.byId(TEST_CALC_IDS.REPORT_123), report);
-      queryClient.setQueryData(
-        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1),
-        { status: 'complete', result: result1, metadata: { calcId: TEST_CALC_IDS.SIM_1, targetType: 'simulation', calcType: 'household', startedAt: Date.now() } }
-      );
-      queryClient.setQueryData(
-        calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_2),
-        { status: 'complete', result: result2, metadata: status.metadata }
-      );
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_1), {
+        status: 'complete',
+        result: result1,
+        metadata: {
+          calcId: TEST_CALC_IDS.SIM_1,
+          targetType: 'simulation',
+          calcType: 'household',
+          startedAt: Date.now(),
+        },
+      });
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_CALC_IDS.SIM_2), {
+        status: 'complete',
+        result: result2,
+        metadata: status.metadata,
+      });
 
       (updateSimulationOutput as any).mockResolvedValue(undefined);
       (markReportCompleted as any).mockResolvedValue(undefined);

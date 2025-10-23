@@ -1,14 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
+import { getFieldLabel, isDropdownField, transformMetadataPayload } from '@/libs/metadataUtils';
 import {
-  isDropdownField,
-  getFieldLabel,
-  transformMetadataPayload,
-} from '@/libs/metadataUtils';
-import {
+  EXPECTED_LABELS,
   mockMetadataPayload,
   mockMinimalPayload,
   TEST_FIELD_NAMES,
-  EXPECTED_LABELS,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
 
 describe('metadataUtils', () => {
@@ -56,7 +52,9 @@ describe('metadataUtils', () => {
     });
 
     it('given employment_income then returns Employment Income', () => {
-      expect(getFieldLabel(TEST_FIELD_NAMES.EMPLOYMENT_INCOME)).toBe(EXPECTED_LABELS.EMPLOYMENT_INCOME);
+      expect(getFieldLabel(TEST_FIELD_NAMES.EMPLOYMENT_INCOME)).toBe(
+        EXPECTED_LABELS.EMPLOYMENT_INCOME
+      );
     });
 
     it('given brma then returns Broad Rental Market Area', () => {
@@ -64,7 +62,9 @@ describe('metadataUtils', () => {
     });
 
     it('given unmapped field then title-cases it', () => {
-      expect(getFieldLabel(TEST_FIELD_NAMES.HOUSEHOLD_INCOME)).toBe(EXPECTED_LABELS.HOUSEHOLD_INCOME);
+      expect(getFieldLabel(TEST_FIELD_NAMES.HOUSEHOLD_INCOME)).toBe(
+        EXPECTED_LABELS.HOUSEHOLD_INCOME
+      );
     });
 
     it('given snake_case then converts to Title Case', () => {

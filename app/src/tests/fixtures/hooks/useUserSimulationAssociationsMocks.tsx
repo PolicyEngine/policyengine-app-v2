@@ -17,7 +17,7 @@ export const TEST_LABELS = {
 
 export const mockUserSimulation: UserSimulation = {
   id: TEST_SIMULATION_IDS.SIM_1,
-  userId: 1,
+  userId: '1',
   simulationId: TEST_SIMULATION_IDS.SIM_1,
   label: TEST_LABELS.SIM_1,
   createdAt: '2024-01-15T10:00:00Z',
@@ -27,7 +27,7 @@ export const mockUserSimulationList: UserSimulation[] = [
   mockUserSimulation,
   {
     id: TEST_SIMULATION_IDS.SIM_2,
-    userId: 1,
+    userId: '1',
     simulationId: TEST_SIMULATION_IDS.SIM_2,
     label: TEST_LABELS.SIM_2,
     createdAt: '2024-01-15T11:00:00Z',
@@ -44,7 +44,11 @@ export const createMockStore = () => ({
 // Setup mock store default behavior
 export const setupMockStore = (mockStore: ReturnType<typeof createMockStore>) => {
   mockStore.create.mockImplementation((input: any) =>
-    Promise.resolve({ ...input, id: TEST_SIMULATION_IDS.SIM_1, createdAt: new Date().toISOString() })
+    Promise.resolve({
+      ...input,
+      id: TEST_SIMULATION_IDS.SIM_1,
+      createdAt: new Date().toISOString(),
+    })
   );
   mockStore.findByUser.mockResolvedValue(mockUserSimulationList);
   mockStore.findById.mockResolvedValue(mockUserSimulation);
@@ -60,11 +64,6 @@ export const createMockQueryClient = () => {
       mutations: {
         retry: false,
       },
-    },
-    logger: {
-      log: vi.fn(),
-      warn: vi.fn(),
-      error: vi.fn(),
     },
   });
 };

@@ -1,6 +1,6 @@
-import type { Simulation } from '@/types/ingredients/Simulation';
-import type { Household } from '@/types/ingredients/Household';
 import type { Geography } from '@/types/ingredients/Geography';
+import type { Household } from '@/types/ingredients/Household';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 /**
  * Configuration for starting a calculation

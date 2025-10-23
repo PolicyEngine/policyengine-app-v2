@@ -1,8 +1,8 @@
 import React from 'react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { QueryNormalizerProvider } from '@normy/react-query';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Provider } from 'react-redux';
 import { vi } from 'vitest';
 
 export const TEST_USER_ID = 'test-user-123';
@@ -62,13 +62,14 @@ export const createMockQueryClient = () => {
 };
 
 // Test wrapper component
-export const createWrapper = (queryClient: QueryClient, store: ReturnType<typeof createMockStore>) => {
+export const createWrapper = (
+  queryClient: QueryClient,
+  store: ReturnType<typeof createMockStore>
+) => {
   return ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <QueryNormalizerProvider queryClient={queryClient}>
-          {children}
-        </QueryNormalizerProvider>
+        <QueryNormalizerProvider queryClient={queryClient}>{children}</QueryNormalizerProvider>
       </QueryClientProvider>
     </Provider>
   );

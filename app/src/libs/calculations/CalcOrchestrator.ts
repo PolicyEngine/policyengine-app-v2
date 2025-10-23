@@ -1,8 +1,8 @@
 import { QueryClient, QueryObserver } from '@tanstack/react-query';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
-import { ResultPersister } from './ResultPersister';
-import type { CalcStartConfig, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
+import type { CalcMetadata, CalcParams, CalcStartConfig, CalcStatus } from '@/types/calculation';
 import type { CalcOrchestratorManager } from './CalcOrchestratorManager';
+import { ResultPersister } from './ResultPersister';
 
 /**
  * Orchestrates a single calculation lifecycle
@@ -26,7 +26,7 @@ export class CalcOrchestrator {
   constructor(
     queryClient: QueryClient,
     resultPersister: ResultPersister,
-    manager?: CalcOrchestratorManager  // Optional for backwards compatibility during migration
+    manager?: CalcOrchestratorManager // Optional for backwards compatibility during migration
   ) {
     this.queryClient = queryClient;
     this.resultPersister = resultPersister;
@@ -70,18 +70,27 @@ export class CalcOrchestrator {
     console.log(`[CalcOrchestrator][${timestamp}]   populationId: "${params.populationId}"`);
 
     // Create query options (includes refetchInterval from strategy)
-    const queryOptions = config.targetType === 'report'
-      ? calculationQueries.forReport(config.calcId, metadata, params)
-      : calculationQueries.forSimulation(config.calcId, metadata, params);
+    const queryOptions =
+      config.targetType === 'report'
+        ? calculationQueries.forReport(config.calcId, metadata, params)
+        : calculationQueries.forSimulation(config.calcId, metadata, params);
 
-    console.log(`[CalcOrchestrator][${timestamp}]   queryKey:`, JSON.stringify(queryOptions.queryKey));
-    console.log(`[CalcOrchestrator][${timestamp}]   refetchInterval:`, queryOptions.refetchInterval);
+    console.log(
+      `[CalcOrchestrator][${timestamp}]   queryKey:`,
+      JSON.stringify(queryOptions.queryKey)
+    );
+    console.log(
+      `[CalcOrchestrator][${timestamp}]   refetchInterval:`,
+      queryOptions.refetchInterval
+    );
 
     // For household calculations: Set 'computing' status BEFORE API call
     // WHY: Household API calls take 30-45s. By setting 'computing' status in cache
     // immediately, the UI can show synthetic progress during the long-running call.
     if (metadata.calcType === 'household') {
-      console.log(`[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Setting 'computing' status before API call...`);
+      console.log(
+        `[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Setting 'computing' status before API call...`
+      );
       const computingStatus: CalcStatus = {
         status: 'pending',
         progress: 0,
@@ -89,7 +98,9 @@ export class CalcOrchestrator {
         metadata,
       };
       this.queryClient.setQueryData(queryOptions.queryKey, computingStatus);
-      console.log(`[CalcOrchestrator][${timestamp}] ✓ Computing status cached, UI will show synthetic progress`);
+      console.log(
+        `[CalcOrchestrator][${timestamp}] ✓ Computing status cached, UI will show synthetic progress`
+      );
     }
 
     // Execute initial queryFn
@@ -107,7 +118,9 @@ export class CalcOrchestrator {
     // CRITICAL DECISION POINT: Household vs Economy
     if (initialStatus.status === 'complete') {
       // HOUSEHOLD CASE: Calculation completed synchronously
-      console.log(`[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Calculation completed immediately (no polling needed)`);
+      console.log(
+        `[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Calculation completed immediately (no polling needed)`
+      );
       console.log(`[CalcOrchestrator][${timestamp}]   Duration: ${duration}ms`);
       console.log(`[CalcOrchestrator][${timestamp}] → Persisting result...`);
 
@@ -126,7 +139,9 @@ export class CalcOrchestrator {
     }
 
     // ECONOMY CASE: Start polling for progress
-    console.log(`[CalcOrchestrator][${timestamp}] 🌍 ECONOMY: Starting polling (async calculation)`);
+    console.log(
+      `[CalcOrchestrator][${timestamp}] 🌍 ECONOMY: Starting polling (async calculation)`
+    );
     this.startPolling(queryOptions, metadata, config.countryId, config.calcId);
 
     console.log(`[CalcOrchestrator][${timestamp}] ✓ Polling started`);
@@ -145,7 +160,9 @@ export class CalcOrchestrator {
    * @param calcId - Calculation ID for cleanup
    */
   private startPolling(
-    queryOptions: ReturnType<typeof calculationQueries.forReport | typeof calculationQueries.forSimulation>,
+    queryOptions: ReturnType<
+      typeof calculationQueries.forReport | typeof calculationQueries.forSimulation
+    >,
     metadata: CalcMetadata,
     countryId: string,
     calcId: string
@@ -158,8 +175,12 @@ export class CalcOrchestrator {
 
     // SAFETY CHECK: Should never happen since household returns 'complete' immediately
     if (refetchInterval === false) {
-      console.error(`[CalcOrchestrator][${timestamp}] ❌ UNEXPECTED: startPolling() called with refetchInterval=false`);
-      console.error(`[CalcOrchestrator][${timestamp}]    This should never happen! Household calculations should return 'complete' immediately.`);
+      console.error(
+        `[CalcOrchestrator][${timestamp}] ❌ UNEXPECTED: startPolling() called with refetchInterval=false`
+      );
+      console.error(
+        `[CalcOrchestrator][${timestamp}]    This should never happen! Household calculations should return 'complete' immediately.`
+      );
       console.error(`[CalcOrchestrator][${timestamp}]    Cleaning up and returning.`);
 
       if (this.manager) {
@@ -190,7 +211,9 @@ export class CalcOrchestrator {
       }
 
       const progress = status.progress !== undefined ? `${status.progress}%` : 'N/A';
-      console.log(`[CalcOrchestrator] 🔄 Poll update for ${calcId}: status="${status.status}" progress=${progress}`);
+      console.log(
+        `[CalcOrchestrator] 🔄 Poll update for ${calcId}: status="${status.status}" progress=${progress}`
+      );
 
       // Handle completion
       if (status.status === 'complete' && status.result) {
@@ -204,7 +227,10 @@ export class CalcOrchestrator {
             console.log(`[CalcOrchestrator][${completionTime}] ✓ Result persisted for ${calcId}`);
           })
           .catch((error) => {
-            console.error(`[CalcOrchestrator][${completionTime}] ❌ Failed to persist ${calcId}:`, error);
+            console.error(
+              `[CalcOrchestrator][${completionTime}] ❌ Failed to persist ${calcId}:`,
+              error
+            );
           })
           .finally(() => {
             console.log(`[CalcOrchestrator][${completionTime}] → Stopping polling and cleaning up`);
@@ -234,8 +260,6 @@ export class CalcOrchestrator {
         if (this.manager) {
           this.manager.cleanup(calcId);
         }
-
-        return;
       }
     });
 

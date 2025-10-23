@@ -1,5 +1,5 @@
-import { CalcError, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { CalcError, CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { HouseholdData } from '@/types/ingredients/Household';
 
 /**
@@ -139,6 +139,7 @@ export const mockErrorCalcStatus = (overrides?: Partial<CalcStatus>): CalcStatus
 });
 
 // Aliases for consistency with test naming
+export const mockCalcStatusIdle = mockIdleCalcStatus;
 export const mockCalcStatusComputing = mockComputingCalcStatus;
 export const mockCalcStatusComplete = mockCompleteCalcStatus;
 export const mockCalcStatusError = mockErrorCalcStatus;

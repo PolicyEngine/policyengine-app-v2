@@ -47,7 +47,11 @@ export async function fetchSocietyWideCalculation(
       'Content-Type': 'application/json',
     },
   });
-  console.log('[fetchSocietyWideCalculation] Response status:', response.status, response.statusText);
+  console.log(
+    '[fetchSocietyWideCalculation] Response status:',
+    response.status,
+    response.statusText
+  );
 
   if (!response.ok) {
     console.error(

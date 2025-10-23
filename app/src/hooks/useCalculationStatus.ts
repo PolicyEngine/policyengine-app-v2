@@ -1,8 +1,11 @@
-import { useQueryClient, QueryObserver } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { QueryObserver, useQueryClient } from '@tanstack/react-query';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
-import { useAggregatedCalculationStatus, type AggregatedCalcStatus } from './useAggregatedCalculationStatus';
+import {
+  useAggregatedCalculationStatus,
+  type AggregatedCalcStatus,
+} from './useAggregatedCalculationStatus';
 import { useSyntheticProgress } from './useSyntheticProgress';
 
 /**
@@ -31,7 +34,9 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
 
   const timestamp = Date.now();
   console.log(`[useCalculationStatus][${timestamp}] ========================================`);
-  console.log(`[useCalculationStatus][${timestamp}] CALLED: calcId="${calcId}" targetType="${targetType}"`);
+  console.log(
+    `[useCalculationStatus][${timestamp}] CALLED: calcId="${calcId}" targetType="${targetType}"`
+  );
   console.log(`[useCalculationStatus][${timestamp}] Query key:`, JSON.stringify(queryKey));
 
   // Initialize state with current cache value or initializing
@@ -58,7 +63,9 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
 
   // Subscribe to cache updates via QueryObserver
   useEffect(() => {
-    if (!calcId) return;
+    if (!calcId) {
+      return;
+    }
 
     console.log(`[useCalculationStatus] Creating QueryObserver for ${calcId}`);
 
@@ -102,14 +109,10 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   const needsSyntheticProgress = isLoading || status?.status === 'pending';
 
   // Generate synthetic progress
-  const synthetic = useSyntheticProgress(
-    needsSyntheticProgress,
-    calcType,
-    {
-      queuePosition: status?.queuePosition,
-      estimatedTimeRemaining: status?.estimatedTimeRemaining,
-    }
-  );
+  const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {
+    queuePosition: status?.queuePosition,
+    estimatedTimeRemaining: status?.estimatedTimeRemaining,
+  });
 
   const currentStatus = status?.status || 'initializing';
 
@@ -170,16 +173,10 @@ export function useCalculationStatus(
   const isArray = Array.isArray(calcId);
 
   // Call aggregated version for arrays
-  const aggregated = useAggregatedCalculationStatus(
-    isArray ? calcId : [],
-    targetType
-  );
+  const aggregated = useAggregatedCalculationStatus(isArray ? calcId : [], targetType);
 
   // Call single version for strings
-  const single = useSingleCalculationStatus(
-    !isArray ? calcId : '',
-    targetType
-  );
+  const single = useSingleCalculationStatus(!isArray ? calcId : '', targetType);
 
   return isArray ? aggregated : single;
 }

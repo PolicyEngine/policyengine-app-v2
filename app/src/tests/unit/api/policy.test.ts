@@ -1,14 +1,14 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchPolicyById, createPolicy } from '@/api/policy';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { createPolicy, fetchPolicyById } from '@/api/policy';
 import { BASE_URL } from '@/constants';
 import {
-  TEST_POLICY_IDS,
-  TEST_COUNTRIES,
+  mockErrorFetchResponse,
+  mockPolicyCreateResponse,
   mockPolicyData,
   mockPolicyPayload,
-  mockPolicyCreateResponse,
   mockSuccessFetchResponse,
-  mockErrorFetchResponse,
+  TEST_COUNTRIES,
+  TEST_POLICY_IDS,
 } from '@/tests/fixtures/api/policyMocks';
 
 // Mock fetch
@@ -22,9 +22,7 @@ describe('policy API', () => {
   describe('fetchPolicyById', () => {
     it('given valid policy ID then fetches policy metadata', async () => {
       // Given
-      (global.fetch as any).mockResolvedValue(
-        mockSuccessFetchResponse(mockPolicyData())
-      );
+      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockPolicyData()));
 
       // When
       const result = await fetchPolicyById(TEST_COUNTRIES.US, TEST_POLICY_IDS.POLICY_123);
@@ -60,9 +58,7 @@ describe('policy API', () => {
       const payload = mockPolicyPayload();
       const response = mockPolicyCreateResponse();
 
-      (global.fetch as any).mockResolvedValue(
-        mockSuccessFetchResponse(response)
-      );
+      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(response));
 
       // When
       const result = await createPolicy(TEST_COUNTRIES.US, payload);

@@ -26,7 +26,7 @@ const defaultConfig: CacheMonitorConfig = {
 class CacheMonitor {
   private config: CacheMonitorConfig;
   private queryClient: QueryClient | null = null;
-  private activeQueries: Map<string, { startTime: number; key: any[] }> = new Map();
+  private activeQueries = new Map<string, { startTime: number; key: any[] }>();
 
   constructor(config: Partial<CacheMonitorConfig> = {}) {
     this.config = { ...defaultConfig, ...config };
@@ -37,7 +37,9 @@ class CacheMonitor {
    * Sets up event listeners to track cache operations
    */
   init(queryClient: QueryClient) {
-    if (!this.config.enabled) return;
+    if (!this.config.enabled) {
+      return;
+    }
 
     this.queryClient = queryClient;
 
@@ -68,7 +70,9 @@ class CacheMonitor {
    * Called when a query starts fetching
    */
   private onQueryFetchStart(query: any) {
-    if (!this.config.logFetches) return;
+    if (!this.config.logFetches) {
+      return;
+    }
 
     const key = this.getQueryKeyString(query.queryKey);
     const wasInvalidated = query.state.isInvalidated;
@@ -93,22 +97,20 @@ class CacheMonitor {
    * Called when a query finishes fetching
    */
   private onQueryFetchEnd(query: any) {
-    if (!this.config.logFetches) return;
+    if (!this.config.logFetches) {
+      return;
+    }
 
     const key = this.getQueryKeyString(query.queryKey);
     const active = this.activeQueries.get(key);
 
     if (active) {
       const duration = Date.now() - active.startTime;
-      console.log(
-        `✅ [CacheMonitor] FETCH END: ${key}`,
-        `(${duration}ms)`,
-        {
-          queryKey: query.queryKey,
-          hasData: !!query.state.data,
-          hasError: !!query.state.error,
-        }
-      );
+      console.log(`✅ [CacheMonitor] FETCH END: ${key}`, `(${duration}ms)`, {
+        queryKey: query.queryKey,
+        hasData: !!query.state.data,
+        hasError: !!query.state.error,
+      });
       this.activeQueries.delete(key);
     }
   }
@@ -117,45 +119,45 @@ class CacheMonitor {
    * Called when a query is removed from cache (garbage collected)
    */
   private onQueryRemoved(query: any) {
-    if (!this.config.logGarbageCollection) return;
+    if (!this.config.logGarbageCollection) {
+      return;
+    }
 
     const key = this.getQueryKeyString(query.queryKey);
     const dataAge = query.state.dataUpdatedAt
       ? ((Date.now() - query.state.dataUpdatedAt) / 1000).toFixed(1)
       : 'N/A';
 
-    console.log(
-      `🗑️ [CacheMonitor] GARBAGE COLLECTED: ${key}`,
-      {
-        queryKey: query.queryKey,
-        dataAge: `${dataAge}s old`,
-        hadData: !!query.state.data,
-      }
-    );
+    console.log(`🗑️ [CacheMonitor] GARBAGE COLLECTED: ${key}`, {
+      queryKey: query.queryKey,
+      dataAge: `${dataAge}s old`,
+      hadData: !!query.state.data,
+    });
   }
 
   /**
    * Log when a query is manually invalidated
    */
   logInvalidation(queryKey: any, options?: any) {
-    if (!this.config.logInvalidations) return;
+    if (!this.config.logInvalidations) {
+      return;
+    }
 
     const key = this.getQueryKeyString(queryKey);
-    console.log(
-      `❌ [CacheMonitor] INVALIDATED: ${key}`,
-      {
-        queryKey,
-        options,
-        timestamp: new Date().toLocaleTimeString(),
-      }
-    );
+    console.log(`❌ [CacheMonitor] INVALIDATED: ${key}`, {
+      queryKey,
+      options,
+      timestamp: new Date().toLocaleTimeString(),
+    });
   }
 
   /**
    * Get current cache state for debugging
    */
   getCacheState(): { [key: string]: any } {
-    if (!this.queryClient) return {};
+    if (!this.queryClient) {
+      return {};
+    }
 
     const cache = this.queryClient.getQueryCache();
     const queries = cache.getAll();
@@ -204,7 +206,9 @@ class CacheMonitor {
    * Helper to convert query key array to readable string
    */
   private getQueryKeyString(queryKey: readonly unknown[]): string {
-    if (!Array.isArray(queryKey)) return String(queryKey);
+    if (!Array.isArray(queryKey)) {
+      return String(queryKey);
+    }
 
     // Handle common patterns
     if (queryKey[0] === 'simulations' && queryKey[1] === 'simulation_id') {
@@ -224,15 +228,17 @@ class CacheMonitor {
    * Monitor specific simulation IDs
    */
   monitorSimulations(simulationIds: string[]) {
-    if (!this.queryClient) return;
+    if (!this.queryClient) {
+      return;
+    }
 
     console.log(`👁️ [CacheMonitor] Monitoring simulations:`, simulationIds);
 
     const cache = this.queryClient.getQueryCache();
     const queries = cache.getAll();
 
-    const relevantQueries = queries.filter((q) =>
-      q.queryKey[0] === 'simulations' && simulationIds.includes(q.queryKey[2] as string)
+    const relevantQueries = queries.filter(
+      (q) => q.queryKey[0] === 'simulations' && simulationIds.includes(q.queryKey[2] as string)
     );
 
     relevantQueries.forEach((query) => {
@@ -253,19 +259,21 @@ class CacheMonitor {
    * Get statistics about cache usage
    */
   getStats() {
-    if (!this.queryClient) return null;
+    if (!this.queryClient) {
+      return null;
+    }
 
     const cache = this.queryClient.getQueryCache();
     const queries = cache.getAll();
 
     const stats = {
       total: queries.length,
-      fetching: queries.filter(q => q.state.fetchStatus === 'fetching').length,
-      stale: queries.filter(q => q.isStale()).length,
-      fresh: queries.filter(q => !q.isStale()).length,
-      withData: queries.filter(q => !!q.state.data).length,
-      withObservers: queries.filter(q => q.getObserversCount() > 0).length,
-      orphaned: queries.filter(q => q.getObserversCount() === 0).length,
+      fetching: queries.filter((q) => q.state.fetchStatus === 'fetching').length,
+      stale: queries.filter((q) => q.isStale()).length,
+      fresh: queries.filter((q) => !q.isStale()).length,
+      withData: queries.filter((q) => !!q.state.data).length,
+      withObservers: queries.filter((q) => q.getObserversCount() > 0).length,
+      orphaned: queries.filter((q) => q.getObserversCount() === 0).length,
     };
 
     console.log('📈 [CacheMonitor] Stats:', stats);

@@ -1,16 +1,16 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserReportAdapter } from '@/adapters/UserReportAdapter';
+import { ApiReportStore, LocalStorageReportStore } from '@/api/reportAssociation';
 import {
-  TEST_USER_IDS,
-  TEST_REPORT_IDS,
-  TEST_USER_REPORT_IDS,
-  TEST_LABELS,
-  mockReportInput,
+  mockErrorFetchResponse,
   mockReport,
   mockReportApiResponse,
+  mockReportInput,
   mockSuccessFetchResponse,
-  mockErrorFetchResponse,
+  TEST_LABELS,
+  TEST_REPORT_IDS,
+  TEST_USER_IDS,
+  TEST_USER_REPORT_IDS,
 } from '@/tests/fixtures/api/reportAssociationMocks';
 
 // Mock the adapter
@@ -35,9 +35,7 @@ describe('ApiReportStore', () => {
 
   describe('create', () => {
     it('given valid report then creates report association', async () => {
-      (global.fetch as any).mockResolvedValue(
-        mockSuccessFetchResponse(mockReportApiResponse())
-      );
+      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockReportApiResponse()));
 
       const result = await store.create(mockReportInput());
 
@@ -63,9 +61,7 @@ describe('ApiReportStore', () => {
 
   describe('findByUser', () => {
     it('given valid user ID then fetches user report associations', async () => {
-      (global.fetch as any).mockResolvedValue(
-        mockSuccessFetchResponse([mockReportApiResponse()])
-      );
+      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse([mockReportApiResponse()]));
 
       const result = await store.findByUser(TEST_USER_IDS.USER_123);
 
@@ -89,9 +85,7 @@ describe('ApiReportStore', () => {
 
   describe('findById', () => {
     it('given valid IDs then fetches specific association', async () => {
-      (global.fetch as any).mockResolvedValue(
-        mockSuccessFetchResponse(mockReportApiResponse())
-      );
+      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockReportApiResponse()));
 
       const result = await store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456);
 
@@ -115,17 +109,15 @@ describe('ApiReportStore', () => {
     it('given other error then throws error', async () => {
       (global.fetch as any).mockResolvedValue(mockErrorFetchResponse(500));
 
-      await expect(store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456)).rejects.toThrow(
-        'Failed to fetch association'
-      );
+      await expect(
+        store.findById(TEST_USER_IDS.USER_123, TEST_REPORT_IDS.REPORT_456)
+      ).rejects.toThrow('Failed to fetch association');
     });
   });
 
   describe('findByUserReportId', () => {
     it('given valid user report ID then fetches report', async () => {
-      (global.fetch as any).mockResolvedValue(
-        mockSuccessFetchResponse(mockReportApiResponse())
-      );
+      (global.fetch as any).mockResolvedValue(mockSuccessFetchResponse(mockReportApiResponse()));
 
       const result = await store.findByUserReportId(TEST_USER_REPORT_IDS.SUR_ABC123);
 
@@ -203,7 +195,6 @@ describe('LocalStorageReportStore', () => {
       const input2 = mockReportInput({
         reportId: TEST_REPORT_IDS.REPORT_789,
         label: TEST_LABELS.TEST_REPORT_2,
-        countryId: 'uk',
       });
       const result1 = await store.create(input1);
       const result2 = await store.create(input2);
@@ -217,19 +208,19 @@ describe('LocalStorageReportStore', () => {
       const input = mockReportInput();
       await store.create(input);
 
-      await expect(store.create(input)).rejects.toThrow(
-        'Association already exists'
-      );
+      await expect(store.create(input)).rejects.toThrow('Association already exists');
     });
   });
 
   describe('findByUser', () => {
     it('given user with reports then returns all user reports', async () => {
       await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
-      await store.create(mockReportInput({
-        reportId: TEST_REPORT_IDS.REPORT_789,
-        label: TEST_LABELS.TEST_REPORT_2,
-      }));
+      await store.create(
+        mockReportInput({
+          reportId: TEST_REPORT_IDS.REPORT_789,
+          label: TEST_LABELS.TEST_REPORT_2,
+        })
+      );
 
       const result = await store.findByUser(TEST_USER_IDS.USER_123);
 

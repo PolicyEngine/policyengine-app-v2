@@ -1,15 +1,14 @@
 import type { QueryClient } from '@tanstack/react-query';
-import { HouseholdSimCalculator } from './HouseholdSimCalculator';
+import { markReportCompleted } from '@/api/report';
+import { fetchSimulationById, markSimulationError, updateSimulationOutput } from '@/api/simulation';
+import { reportKeys, simulationKeys } from '@/libs/queryKeys';
+import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
+import type { HouseholdData } from '@/types/ingredients/Household';
+import type { Report } from '@/types/ingredients/Report';
+import { cacheMonitor } from '@/utils/cacheMonitor';
 import { HouseholdProgressCoordinator } from './HouseholdProgressCoordinator';
 import { buildHouseholdReportOutput } from './householdReportUtils';
-import { simulationKeys, reportKeys } from '@/libs/queryKeys';
-import { updateSimulationOutput, markSimulationError } from '@/api/simulation';
-import { markReportCompleted } from '@/api/report';
-import { fetchSimulationById } from '@/api/simulation';
-import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
-import type { Report } from '@/types/ingredients/Report';
-import type { HouseholdData } from '@/types/ingredients/Household';
-import { cacheMonitor } from '@/utils/cacheMonitor';
+import { HouseholdSimCalculator } from './HouseholdSimCalculator';
 
 /**
  * Simplified orchestrator for household report calculations
@@ -32,7 +31,10 @@ export class HouseholdReportOrchestrator {
   private queryClient: QueryClient;
   private activeCalculations: Set<string>; // Track which simulations are running
   private simulationResults: Map<string, Map<string, HouseholdData>>; // reportId -> (simId -> result)
-  private progressCoordinators: Map<string, { coordinator: HouseholdProgressCoordinator; timer: NodeJS.Timeout }>; // reportId -> coordinator
+  private progressCoordinators: Map<
+    string,
+    { coordinator: HouseholdProgressCoordinator; timer: NodeJS.Timeout }
+  >; // reportId -> coordinator
 
   private constructor(queryClient: QueryClient) {
     this.queryClient = queryClient;
@@ -61,13 +63,15 @@ export class HouseholdReportOrchestrator {
     const timestamp = Date.now();
 
     console.log(`[HouseholdReportOrchestrator][${timestamp}] Starting report ${reportId}`);
-    console.log(`[HouseholdReportOrchestrator][${timestamp}] ${simulationConfigs.length} simulations to calculate`);
+    console.log(
+      `[HouseholdReportOrchestrator][${timestamp}] ${simulationConfigs.length} simulations to calculate`
+    );
 
     // Initialize results map for this report
     this.simulationResults.set(reportId, new Map());
 
     // Create progress coordinator for this report
-    const simulationIds = simulationConfigs.map(sc => sc.simulationId);
+    const simulationIds = simulationConfigs.map((sc) => sc.simulationId);
     const progressCoordinator = new HouseholdProgressCoordinator(
       this.queryClient,
       reportId,
@@ -76,7 +80,10 @@ export class HouseholdReportOrchestrator {
 
     // Start progress timer
     const progressTimer = progressCoordinator.startProgressTimer();
-    this.progressCoordinators.set(reportId, { coordinator: progressCoordinator, timer: progressTimer });
+    this.progressCoordinators.set(reportId, {
+      coordinator: progressCoordinator,
+      timer: progressTimer,
+    });
 
     // Start each simulation in parallel
     const promises = simulationConfigs.map((simConfig) =>
@@ -87,13 +94,18 @@ export class HouseholdReportOrchestrator {
     // Mark report complete when all simulations finish
     Promise.all(promises)
       .then(() => {
-        console.log(`[HouseholdReportOrchestrator][${timestamp}] All simulations completed for report ${reportId}`);
+        console.log(
+          `[HouseholdReportOrchestrator][${timestamp}] All simulations completed for report ${reportId}`
+        );
 
         // Mark report complete now that all simulations are done
         return this.markReportComplete(config.report, countryId, reportId);
       })
       .catch((error) => {
-        console.error(`[HouseholdReportOrchestrator][${timestamp}] Error in parallel execution:`, error);
+        console.error(
+          `[HouseholdReportOrchestrator][${timestamp}] Error in parallel execution:`,
+          error
+        );
 
         // Mark report as error
         return this.markReportError(config.report, countryId, reportId);
@@ -117,7 +129,9 @@ export class HouseholdReportOrchestrator {
 
     // Check if already running
     if (this.activeCalculations.has(simulationId)) {
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} already calculating, skipping`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} already calculating, skipping`
+      );
       return;
     }
 
@@ -141,7 +155,9 @@ export class HouseholdReportOrchestrator {
         policyId,
       });
 
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} calculation completed`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} calculation completed`
+      );
 
       // Store result for report output aggregation
       const reportResults = this.simulationResults.get(reportId);
@@ -155,9 +171,14 @@ export class HouseholdReportOrchestrator {
       // Persist result to simulation.output
       await this.persistSimulation(countryId, simulationId, result);
 
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} persisted to database`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} persisted to database`
+      );
     } catch (error) {
-      console.error(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} failed:`, error);
+      console.error(
+        `[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} failed:`,
+        error
+      );
 
       // Notify progress coordinator that this simulation failed
       progressCoordinator.failSimulation(simulationId);
@@ -177,9 +198,14 @@ export class HouseholdReportOrchestrator {
           queryKey: simulationKeys.byId(simulationId),
         });
 
-        console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} marked as error`);
+        console.log(
+          `[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} marked as error`
+        );
       } catch (patchError) {
-        console.error(`[HouseholdReportOrchestrator][${timestamp}] Failed to mark simulation as error:`, patchError);
+        console.error(
+          `[HouseholdReportOrchestrator][${timestamp}] Failed to mark simulation as error:`,
+          patchError
+        );
       }
 
       throw error; // Re-throw to trigger Promise.all catch
@@ -198,17 +224,27 @@ export class HouseholdReportOrchestrator {
   ): Promise<void> {
     const timestamp = Date.now();
 
-    console.log(`[HouseholdReportOrchestrator][${timestamp}] Persisting simulation ${simulationId}`);
+    console.log(
+      `[HouseholdReportOrchestrator][${timestamp}] Persisting simulation ${simulationId}`
+    );
 
     try {
       // DIAGNOSTIC: Capture PATCH response
       const patchResponse = await updateSimulationOutput(countryId as any, simulationId, result);
       const patchTimestamp = Date.now();
 
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] ========== PATCH RESPONSE ==========`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH completed at: ${patchTimestamp}`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH response status: ${patchResponse.status}`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH response hasOutput: ${!!patchResponse.output}`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] ========== PATCH RESPONSE ==========`
+      );
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] PATCH completed at: ${patchTimestamp}`
+      );
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] PATCH response status: ${patchResponse.status}`
+      );
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] PATCH response hasOutput: ${!!patchResponse.output}`
+      );
 
       // DIAGNOSTIC: Invalidate and immediately check what GET returns
       console.log(`[HouseholdReportOrchestrator][${timestamp}] Invalidating query...`);
@@ -225,24 +261,41 @@ export class HouseholdReportOrchestrator {
 
       // DIAGNOSTIC: Wait a moment and manually fetch to see what the API returns
       console.log(`[HouseholdReportOrchestrator][${timestamp}] Waiting 100ms before GET...`);
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       const getTimestamp = Date.now();
       const getFreshData = await fetchSimulationById(countryId as any, simulationId);
 
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] ========== GET RESPONSE (after 100ms) ==========`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] ========== GET RESPONSE (after 100ms) ==========`
+      );
       console.log(`[HouseholdReportOrchestrator][${timestamp}] GET completed at: ${getTimestamp}`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] Time delta (GET - PATCH): ${getTimestamp - patchTimestamp}ms`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] GET response status: ${getFreshData.status}`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] GET response hasOutput: ${!!getFreshData.output}`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] Time delta (GET - PATCH): ${getTimestamp - patchTimestamp}ms`
+      );
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] GET response status: ${getFreshData.status}`
+      );
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] GET response hasOutput: ${!!getFreshData.output}`
+      );
 
       console.log(`[HouseholdReportOrchestrator][${timestamp}] ========== COMPARISON ==========`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] PATCH status: ${patchResponse.status} | GET status: ${getFreshData.status}`);
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] Status match: ${patchResponse.status === getFreshData.status}`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] PATCH status: ${patchResponse.status} | GET status: ${getFreshData.status}`
+      );
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] Status match: ${patchResponse.status === getFreshData.status}`
+      );
 
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} persisted successfully`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] Simulation ${simulationId} persisted successfully`
+      );
     } catch (error) {
-      console.error(`[HouseholdReportOrchestrator][${timestamp}] Failed to persist simulation ${simulationId}:`, error);
+      console.error(
+        `[HouseholdReportOrchestrator][${timestamp}] Failed to persist simulation ${simulationId}:`,
+        error
+      );
       throw error;
     }
   }
@@ -257,7 +310,11 @@ export class HouseholdReportOrchestrator {
   /**
    * Mark report as complete (all simulations succeeded)
    */
-  private async markReportComplete(report: Report, countryId: string, reportId: string): Promise<void> {
+  private async markReportComplete(
+    report: Report,
+    countryId: string,
+    reportId: string
+  ): Promise<void> {
     const timestamp = Date.now();
     console.log(`[HouseholdReportOrchestrator][${timestamp}] Marking report ${report.id} complete`);
 
@@ -265,14 +322,18 @@ export class HouseholdReportOrchestrator {
     const reportResults = this.simulationResults.get(reportId);
     console.log(`[HouseholdReportOrchestrator][${timestamp}] Simulations: `, reportResults);
     if (!reportResults || reportResults.size === 0) {
-      console.error(`[HouseholdReportOrchestrator][${timestamp}] No simulation results found for report ${reportId}`);
+      console.error(
+        `[HouseholdReportOrchestrator][${timestamp}] No simulation results found for report ${reportId}`
+      );
       return;
     }
 
     // Build aggregated output: object mapping sim IDs (alphabetically sorted) to their outputs
     const householdReportOutput = buildHouseholdReportOutput(reportResults);
 
-    console.log(`[HouseholdReportOrchestrator][${timestamp}] Built report output with ${reportResults.size} simulations`);
+    console.log(
+      `[HouseholdReportOrchestrator][${timestamp}] Built report output with ${reportResults.size} simulations`
+    );
 
     const completedReport: Report = {
       ...report,
@@ -289,7 +350,9 @@ export class HouseholdReportOrchestrator {
         queryKey: reportKeys.byId(report.id!),
       });
 
-      console.log(`[HouseholdReportOrchestrator][${timestamp}] Report ${report.id} marked complete`);
+      console.log(
+        `[HouseholdReportOrchestrator][${timestamp}] Report ${report.id} marked complete`
+      );
 
       // Clean up stored results
       this.simulationResults.delete(reportId);
@@ -301,14 +364,21 @@ export class HouseholdReportOrchestrator {
         this.progressCoordinators.delete(reportId);
       }
     } catch (error) {
-      console.error(`[HouseholdReportOrchestrator][${timestamp}] Failed to mark report complete:`, error);
+      console.error(
+        `[HouseholdReportOrchestrator][${timestamp}] Failed to mark report complete:`,
+        error
+      );
     }
   }
 
   /**
    * Mark report as error (some simulation failed)
    */
-  private async markReportError(report: Report, countryId: string, reportId: string): Promise<void> {
+  private async markReportError(
+    report: Report,
+    countryId: string,
+    reportId: string
+  ): Promise<void> {
     const timestamp = Date.now();
     console.log(`[HouseholdReportOrchestrator][${timestamp}] Marking report ${report.id} error`);
 
@@ -337,7 +407,10 @@ export class HouseholdReportOrchestrator {
         this.progressCoordinators.delete(reportId);
       }
     } catch (error) {
-      console.error(`[HouseholdReportOrchestrator][${timestamp}] Failed to mark report error:`, error);
+      console.error(
+        `[HouseholdReportOrchestrator][${timestamp}] Failed to mark report error:`,
+        error
+      );
     }
   }
 }

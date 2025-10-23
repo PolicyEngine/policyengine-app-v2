@@ -1,5 +1,5 @@
-import type { PolicyMetadata, PolicyMetadataParams } from '@/types/metadata/policyMetadata';
 import type { Policy } from '@/types/ingredients/Policy';
+import type { PolicyMetadata, PolicyMetadataParams } from '@/types/metadata/policyMetadata';
 import type { Parameter } from '@/types/subIngredients/parameter';
 
 export const TEST_POLICY_IDS = {
@@ -38,7 +38,7 @@ export const mockPolicyMetadataMultipleParams = (): PolicyMetadata => ({
   policy_hash: 'hash-456',
   policy_json: {
     tax_rate: {
-      '2024-01-01.2024-12-31': 0.20,
+      '2024-01-01.2024-12-31': 0.2,
     },
     benefit_amount: {
       '2024-01-01.2024-12-31': 1000,

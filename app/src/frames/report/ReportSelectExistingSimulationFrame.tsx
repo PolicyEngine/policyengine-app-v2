@@ -67,7 +67,10 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   const userSimulations = data || [];
 
   console.log('[ReportSelectExistingSimulationFrame] ========== BEFORE FILTERING ==========');
-  console.log('[ReportSelectExistingSimulationFrame] User simulations count:', userSimulations.length);
+  console.log(
+    '[ReportSelectExistingSimulationFrame] User simulations count:',
+    userSimulations.length
+  );
   console.log('[ReportSelectExistingSimulationFrame] User simulations:', userSimulations);
 
   // TODO: For all of these, refactor into something more reusable
@@ -105,8 +108,13 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   const filteredSimulations = userSimulations.filter((enhancedSim) => enhancedSim.simulation?.id);
 
   console.log('[ReportSelectExistingSimulationFrame] ========== AFTER FILTERING ==========');
-  console.log('[ReportSelectExistingSimulationFrame] Filtered simulations count:', filteredSimulations.length);
-  console.log('[ReportSelectExistingSimulationFrame] Filter criteria: enhancedSim.simulation?.id exists');
+  console.log(
+    '[ReportSelectExistingSimulationFrame] Filtered simulations count:',
+    filteredSimulations.length
+  );
+  console.log(
+    '[ReportSelectExistingSimulationFrame] Filter criteria: enhancedSim.simulation?.id exists'
+  );
   console.log('[ReportSelectExistingSimulationFrame] Filtered simulations:', filteredSimulations);
 
   // Build card list items from ALL filtered simulations (pagination handled by FlowView)
@@ -123,11 +131,10 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     }
 
     // Add policy and population info to subtitle if available
-    const policyLabel = enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
+    const policyLabel =
+      enhancedSim.userPolicy?.label || enhancedSim.policy?.label || enhancedSim.policy?.id;
     const populationLabel =
-      enhancedSim.userHousehold?.label ||
-      enhancedSim.geography?.name ||
-      simulation.populationId;
+      enhancedSim.userHousehold?.label || enhancedSim.geography?.name || simulation.populationId;
 
     if (policyLabel && populationLabel) {
       subtitle = subtitle

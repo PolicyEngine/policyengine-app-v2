@@ -50,11 +50,7 @@ export class HouseholdProgressCoordinator {
   private queryClient: QueryClient;
   private estimatedDurationPerSim = 70000; // 70 seconds (1 minute 10 seconds) per simulation
 
-  constructor(
-    queryClient: QueryClient,
-    reportId: string,
-    simulationIds: string[]
-  ) {
+  constructor(queryClient: QueryClient, reportId: string, simulationIds: string[]) {
     this.queryClient = queryClient;
     this.reportId = reportId;
     this.simulations = new Map(
@@ -172,12 +168,8 @@ export class HouseholdProgressCoordinator {
     progress: number,
     simulations: Map<string, SimulationProgressState>
   ): string {
-    const pendingSims = Array.from(simulations.values()).filter(
-      (s) => s.status === 'pending'
-    );
-    const completedSims = Array.from(simulations.values()).filter(
-      (s) => s.status === 'complete'
-    );
+    const pendingSims = Array.from(simulations.values()).filter((s) => s.status === 'pending');
+    const completedSims = Array.from(simulations.values()).filter((s) => s.status === 'complete');
 
     // All simulations complete
     if (completedSims.length === simulations.size) {

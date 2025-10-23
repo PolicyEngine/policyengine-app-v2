@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { CalcError } from '@/types/calculation';
+import { describe, expect, it } from 'vitest';
 import { mockCalcError } from '@/tests/fixtures/types/calculationFixtures';
+import { CalcError } from '@/types/calculation';
 
 describe('CalcError types', () => {
   it('should include error code', () => {

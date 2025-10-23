@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { SimulationAdapter } from '@/adapters/SimulationAdapter';
 import {
+  mockErrorMessage,
+  mockSimulation,
   mockSimulationMetadata,
   mockSimulationMetadataGeography,
   mockSimulationMetadataStringifiedOutput,
-  mockSimulation,
   mockSimulationOutput,
-  mockErrorMessage,
-  TEST_SIMULATION_IDS,
+  TEST_COUNTRIES,
   TEST_POLICY_IDS,
   TEST_POPULATION_IDS,
-  TEST_COUNTRIES,
+  TEST_SIMULATION_IDS,
 } from '@/tests/fixtures/adapters/SimulationAdapterMocks';
 
 describe('SimulationAdapter', () => {
@@ -166,21 +166,31 @@ describe('SimulationAdapter', () => {
       const output = mockSimulationOutput();
 
       // When
-      const payload = SimulationAdapter.toUpdatePayload(output, 'complete');
+      const payload = SimulationAdapter.toUpdatePayload(
+        TEST_SIMULATION_IDS.SIM_123,
+        output,
+        'complete'
+      );
 
       // Then
       expect(payload).toEqual({
-        output,
+        id: TEST_SIMULATION_IDS.SIM_123,
+        output: JSON.stringify(output),
         status: 'complete',
       });
     });
 
     it('given null output then includes null in payload', () => {
       // When
-      const payload = SimulationAdapter.toUpdatePayload(null, 'pending');
+      const payload = SimulationAdapter.toUpdatePayload(
+        TEST_SIMULATION_IDS.SIM_123,
+        null,
+        'pending'
+      );
 
       // Then
       expect(payload).toEqual({
+        id: TEST_SIMULATION_IDS.SIM_123,
         output: null,
         status: 'pending',
       });
@@ -188,10 +198,11 @@ describe('SimulationAdapter', () => {
 
     it('given error status then creates payload', () => {
       // When
-      const payload = SimulationAdapter.toUpdatePayload(null, 'error');
+      const payload = SimulationAdapter.toUpdatePayload(TEST_SIMULATION_IDS.SIM_123, null, 'error');
 
       // Then
       expect(payload).toEqual({
+        id: TEST_SIMULATION_IDS.SIM_123,
         output: null,
         status: 'error',
       });
@@ -204,11 +215,12 @@ describe('SimulationAdapter', () => {
       const output = mockSimulationOutput();
 
       // When
-      const payload = SimulationAdapter.toCompletedPayload(output);
+      const payload = SimulationAdapter.toCompletedPayload(TEST_SIMULATION_IDS.SIM_123, output);
 
       // Then
       expect(payload).toEqual({
-        output,
+        id: TEST_SIMULATION_IDS.SIM_123,
+        output: JSON.stringify(output),
         status: 'complete',
       });
     });
@@ -220,10 +232,11 @@ describe('SimulationAdapter', () => {
       const errorMessage = mockErrorMessage();
 
       // When
-      const payload = SimulationAdapter.toErrorPayload(errorMessage);
+      const payload = SimulationAdapter.toErrorPayload(TEST_SIMULATION_IDS.SIM_123, errorMessage);
 
       // Then
       expect(payload).toEqual({
+        id: TEST_SIMULATION_IDS.SIM_123,
         output: null,
         status: 'error',
         error_message: errorMessage,
@@ -232,10 +245,11 @@ describe('SimulationAdapter', () => {
 
     it('given no error message then omits error_message field', () => {
       // When
-      const payload = SimulationAdapter.toErrorPayload();
+      const payload = SimulationAdapter.toErrorPayload(TEST_SIMULATION_IDS.SIM_123);
 
       // Then
       expect(payload).toEqual({
+        id: TEST_SIMULATION_IDS.SIM_123,
         output: null,
         status: 'error',
       });
@@ -245,13 +259,14 @@ describe('SimulationAdapter', () => {
   describe('toEconomyPlaceholderPayload', () => {
     it('given no params then creates economy placeholder payload', () => {
       // When
-      const payload = SimulationAdapter.toEconomyPlaceholderPayload();
+      const payload = SimulationAdapter.toEconomyPlaceholderPayload(TEST_SIMULATION_IDS.SIM_123);
 
       // Then
       expect(payload).toEqual({
-        output: {
-          message: "Economy-wide reports do not save simulation-level results at this time"
-        },
+        id: TEST_SIMULATION_IDS.SIM_123,
+        output: JSON.stringify({
+          message: 'Economy-wide reports do not save simulation-level results at this time',
+        }),
         status: 'complete',
       });
     });

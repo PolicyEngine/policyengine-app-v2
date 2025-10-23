@@ -1,18 +1,18 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { renderHook, waitFor } from '@test-utils';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@test-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAggregatedCalculationStatus } from '@/hooks/useAggregatedCalculationStatus';
 import { calculationKeys } from '@/libs/queryKeys';
+import { createTestMetadata, TEST_SIM_IDS } from '@/tests/fixtures/hooks/aggregatedStatusMocks';
 import {
   mockCalcStatusComplete,
   mockCalcStatusComputing,
   mockCalcStatusError,
   mockCalcStatusIdle,
-  mockSocietyWideResult,
   mockHouseholdResult,
+  mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
-import { TEST_SIM_IDS, createTestMetadata } from '@/tests/fixtures/hooks/aggregatedStatusMocks';
 
 // Mock useSyntheticProgress
 vi.mock('@/hooks/useSyntheticProgress', () => ({
@@ -82,10 +82,9 @@ describe.skip('useAggregatedCalculationStatus', () => {
       queryClient.setQueryData(calculationKeys.bySimulationId(simId), errorStatus);
 
       // When
-      const { result } = renderHook(
-        () => useAggregatedCalculationStatus([simId], 'simulation'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useAggregatedCalculationStatus([simId], 'simulation'), {
+        wrapper,
+      });
 
       // Then
       expect(result.current.status).toBe('error');
@@ -102,10 +101,9 @@ describe.skip('useAggregatedCalculationStatus', () => {
       queryClient.setQueryData(calculationKeys.bySimulationId(simId), idleStatus);
 
       // When
-      const { result } = renderHook(
-        () => useAggregatedCalculationStatus([simId], 'simulation'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useAggregatedCalculationStatus([simId], 'simulation'), {
+        wrapper,
+      });
 
       // Then
       expect(result.current.status).toBe('idle');
@@ -198,10 +196,9 @@ describe.skip('useAggregatedCalculationStatus', () => {
   describe('edge cases', () => {
     it('given empty array then returns idle', () => {
       // When
-      const { result } = renderHook(
-        () => useAggregatedCalculationStatus([], 'simulation'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useAggregatedCalculationStatus([], 'simulation'), {
+        wrapper,
+      });
 
       // Then
       expect(result.current.status).toBe('idle');
@@ -214,10 +211,9 @@ describe.skip('useAggregatedCalculationStatus', () => {
       const simId = TEST_SIM_IDS.SIM_1;
 
       // When
-      const { result } = renderHook(
-        () => useAggregatedCalculationStatus([simId], 'simulation'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useAggregatedCalculationStatus([simId], 'simulation'), {
+        wrapper,
+      });
 
       // Then
       expect(result.current.status).toBe('initializing');
@@ -236,10 +232,9 @@ describe.skip('useAggregatedCalculationStatus', () => {
       queryClient.setQueryData(calculationKeys.byReportId(reportId), status);
 
       // When
-      const { result } = renderHook(
-        () => useAggregatedCalculationStatus([reportId], 'report'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useAggregatedCalculationStatus([reportId], 'report'), {
+        wrapper,
+      });
 
       // Then
       expect(result.current.status).toBe('complete');

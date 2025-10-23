@@ -1,23 +1,23 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
+import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
 import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { calculationKeys } from '@/libs/queryKeys';
-import type { CalcStatus } from '@/types/calculation';
 import {
-  mockHouseholdCalcConfig,
-  mockSocietyWideCalcConfig,
-  mockHouseholdCalcResult,
-  mockSocietyWideCalcResult,
-  mockIntegrationComputingStatus,
-  mockIntegrationCompleteStatus,
   INTEGRATION_TEST_CONSTANTS,
+  mockHouseholdCalcConfig,
+  mockHouseholdCalcResult,
+  mockIntegrationCompleteStatus,
+  mockIntegrationComputingStatus,
+  mockSocietyWideCalcConfig,
+  mockSocietyWideCalcResult,
 } from '@/tests/fixtures/integration/calculationFlowFixtures';
+import type { CalcStatus } from '@/types/calculation';
 
 /**
  * Integration tests validating critical calculation pathways
@@ -108,11 +108,12 @@ describe.skip('Calculation Pathways Integration', () => {
 
       // When - Use auto-start hook
       const { result } = renderHook(
-        () => useStartCalculationOnLoad({
-          enabled: true,
-          configs: [config],
-          isComplete: false,
-        }),
+        () =>
+          useStartCalculationOnLoad({
+            enabled: true,
+            configs: [config],
+            isComplete: false,
+          }),
         { wrapper }
       );
 
@@ -128,16 +129,17 @@ describe.skip('Calculation Pathways Integration', () => {
 
       // When - Try to start but already complete
       renderHook(
-        () => useStartCalculationOnLoad({
-          enabled: true,
-          configs: [config],
-          isComplete: true, // Already complete
-        }),
+        () =>
+          useStartCalculationOnLoad({
+            enabled: true,
+            configs: [config],
+            isComplete: true, // Already complete
+          }),
         { wrapper }
       );
 
       // Wait a bit to ensure no call
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Then - Should not start calculation
       expect(startCalculationSpy).not.toHaveBeenCalled();
@@ -150,16 +152,17 @@ describe.skip('Calculation Pathways Integration', () => {
 
       // When - Try to start but already computing
       renderHook(
-        () => useStartCalculationOnLoad({
-          enabled: true,
-          configs: [config],
-          isComplete: false,
-        }),
+        () =>
+          useStartCalculationOnLoad({
+            enabled: true,
+            configs: [config],
+            isComplete: false,
+          }),
         { wrapper }
       );
 
       // Wait a bit
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Then - Should not start calculation
       expect(startCalculationSpy).not.toHaveBeenCalled();
@@ -172,10 +175,7 @@ describe.skip('Calculation Pathways Integration', () => {
       const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.SOCIETY_WIDE_REPORT;
       const queryKey = calculationKeys.byReportId(calcId);
 
-      const { result } = renderHook(
-        () => useCalculationStatus(calcId, 'report'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useCalculationStatus(calcId, 'report'), { wrapper });
 
       // Initially idle
       expect(result.current.status).toBe('idle');
@@ -222,10 +222,9 @@ describe.skip('Calculation Pathways Integration', () => {
       );
 
       // When - Use status hook with array of IDs
-      const { result } = renderHook(
-        () => useCalculationStatus([sim1Id, sim2Id], 'simulation'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useCalculationStatus([sim1Id, sim2Id], 'simulation'), {
+        wrapper,
+      });
 
       // Then - Should aggregate to computing status
       await waitFor(() => {
@@ -262,9 +261,7 @@ describe.skip('Calculation Pathways Integration', () => {
       );
 
       // Then - Should preserve computing status
-      const cachedStatus = queryClient.getQueryData<CalcStatus>(
-        calculationKeys.byReportId(calcId)
-      );
+      const cachedStatus = queryClient.getQueryData<CalcStatus>(calculationKeys.byReportId(calcId));
       expect(cachedStatus).toEqual(computingStatus);
       expect(cachedStatus?.status).toBe('computing');
       expect(cachedStatus?.progress).toBe(75);
@@ -277,10 +274,7 @@ describe.skip('Calculation Pathways Integration', () => {
       const calcId = INTEGRATION_TEST_CONSTANTS.CALC_IDS.SOCIETY_WIDE_REPORT;
       const queryKey = calculationKeys.byReportId(calcId);
 
-      const { result } = renderHook(
-        () => useCalculationStatus(calcId, 'report'),
-        { wrapper }
-      );
+      const { result } = renderHook(() => useCalculationStatus(calcId, 'report'), { wrapper });
 
       // When - Set error status
       queryClient.setQueryData<CalcStatus>(queryKey, {

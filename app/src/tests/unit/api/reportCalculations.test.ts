@@ -1,17 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchCalculationWithMeta } from '@/api/reportCalculations';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
+import { fetchCalculationWithMeta } from '@/api/reportCalculations';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR } from '@/constants';
 import {
-  TEST_POLICY_IDS,
-  TEST_COUNTRIES,
-  TEST_POPULATION_IDS,
-  TEST_REGIONS,
-  mockHouseholdMeta,
+  mockEconomyCalcResult,
   mockEconomyMeta,
   mockHouseholdCalcResult,
-  mockEconomyCalcResult,
+  mockHouseholdMeta,
+  TEST_COUNTRIES,
+  TEST_POLICY_IDS,
+  TEST_POPULATION_IDS,
+  TEST_REGIONS,
 } from '@/tests/fixtures/api/reportCalculationsMocks';
 
 // Mock the calculation APIs

@@ -1,22 +1,21 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
 import { ResultPersister } from '@/libs/calculations/ResultPersister';
 import { calculationQueries } from '@/libs/queries/calculationQueries';
-import { mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 import {
-  createTestQueryClient,
   createMockManager,
+  createTestQueryClient,
+  mockCompleteHouseholdStatus,
+  mockHouseholdCalcConfig,
+  mockHouseholdCalcConfigWithReport,
+  mockHouseholdQueryOptions,
+  mockPendingSocietyWideStatus,
+  mockPendingSocietyWideStatusWithMessage,
+  mockSocietyWideCalcConfig,
+  mockSocietyWideQueryOptions,
   TEST_CALC_IDS,
   TEST_COUNTRIES,
   TEST_POPULATION_IDS,
-  mockHouseholdCalcConfig,
-  mockHouseholdCalcConfigWithReport,
-  mockSocietyWideCalcConfig,
-  mockCompleteHouseholdStatus,
-  mockPendingSocietyWideStatus,
-  mockPendingSocietyWideStatusWithMessage,
-  mockHouseholdQueryOptions,
-  mockSocietyWideQueryOptions,
 } from '@/tests/fixtures/libs/calculations/orchestratorMocks';
 
 // Mock dependencies
@@ -33,7 +32,7 @@ describe('CalcOrchestrator', () => {
     queryClient = createTestQueryClient();
     mockResultPersister = new ResultPersister(queryClient);
     mockManager = createMockManager();
-    orchestrator = new CalcOrchestrator(queryClient, mockResultPersister, mockManager);
+    orchestrator = new CalcOrchestrator(queryClient, mockResultPersister, mockManager as any);
     vi.clearAllMocks();
   });
 
@@ -162,16 +161,18 @@ describe('CalcOrchestrator', () => {
       const completeStatus = mockCompleteHouseholdStatus();
       const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
 
-      (calculationQueries.forSimulation as any).mockImplementation((calcId, metadata, params) => {
-        // Verify metadata passed to query
-        expect(metadata).toMatchObject({
-          calcId: TEST_CALC_IDS.SIM_1,
-          calcType: 'household',
-          targetType: 'simulation',
-          reportId: TEST_CALC_IDS.REPORT_123,
-        });
-        return mockHouseholdQueryOptions(calcId, mockQueryFn);
-      });
+      (calculationQueries.forSimulation as any).mockImplementation(
+        (calcId: string, metadata: any, _params: any) => {
+          // Verify metadata passed to query
+          expect(metadata).toMatchObject({
+            calcId: TEST_CALC_IDS.SIM_1,
+            calcType: 'household',
+            targetType: 'simulation',
+            reportId: TEST_CALC_IDS.REPORT_123,
+          });
+          return mockHouseholdQueryOptions(calcId, mockQueryFn);
+        }
+      );
 
       (mockResultPersister.persist as any).mockResolvedValue(undefined);
 
@@ -188,15 +189,17 @@ describe('CalcOrchestrator', () => {
       const computingStatus = mockPendingSocietyWideStatus();
       const mockQueryFn = vi.fn().mockResolvedValue(computingStatus);
 
-      (calculationQueries.forReport as any).mockImplementation((calcId, metadata, params) => {
-        // Verify metadata passed to query
-        expect(metadata).toMatchObject({
-          calcId: TEST_CALC_IDS.REPORT_1,
-          calcType: 'societyWide',
-          targetType: 'report',
-        });
-        return mockSocietyWideQueryOptions(calcId, mockQueryFn);
-      });
+      (calculationQueries.forReport as any).mockImplementation(
+        (calcId: string, metadata: any, _params: any) => {
+          // Verify metadata passed to query
+          expect(metadata).toMatchObject({
+            calcId: TEST_CALC_IDS.REPORT_1,
+            calcType: 'societyWide',
+            targetType: 'report',
+          });
+          return mockSocietyWideQueryOptions(calcId, mockQueryFn);
+        }
+      );
 
       // When
       await orchestrator.startCalculation(config);
@@ -213,19 +216,21 @@ describe('CalcOrchestrator', () => {
       const completeStatus = mockCompleteHouseholdStatus();
       const mockQueryFn = vi.fn().mockResolvedValue(completeStatus);
 
-      (calculationQueries.forSimulation as any).mockImplementation((calcId, metadata, params) => {
-        // Verify params passed to query
-        expect(params).toMatchObject({
-          countryId: TEST_COUNTRIES.US,
-          calcType: 'household',
-          policyIds: {
-            baseline: 'policy-1',
-          },
-          populationId: TEST_POPULATION_IDS.HOUSEHOLD_1,
-          calcId: TEST_CALC_IDS.SIM_1,
-        });
-        return mockHouseholdQueryOptions(calcId, mockQueryFn);
-      });
+      (calculationQueries.forSimulation as any).mockImplementation(
+        (calcId: string, _metadata: any, params: any) => {
+          // Verify params passed to query
+          expect(params).toMatchObject({
+            countryId: TEST_COUNTRIES.US,
+            calcType: 'household',
+            policyIds: {
+              baseline: 'policy-1',
+            },
+            populationId: TEST_POPULATION_IDS.HOUSEHOLD_1,
+            calcId: TEST_CALC_IDS.SIM_1,
+          });
+          return mockHouseholdQueryOptions(calcId, mockQueryFn);
+        }
+      );
 
       (mockResultPersister.persist as any).mockResolvedValue(undefined);
 
@@ -242,21 +247,23 @@ describe('CalcOrchestrator', () => {
       const computingStatus = mockPendingSocietyWideStatus();
       const mockQueryFn = vi.fn().mockResolvedValue(computingStatus);
 
-      (calculationQueries.forReport as any).mockImplementation((calcId, metadata, params) => {
-        // Verify params passed to query
-        expect(params).toMatchObject({
-          countryId: TEST_COUNTRIES.US,
-          calcType: 'societyWide',
-          policyIds: {
-            baseline: 'policy-1',
-            reform: 'policy-2',
-          },
-          populationId: TEST_POPULATION_IDS.US,
-          region: TEST_POPULATION_IDS.US,
-          calcId: TEST_CALC_IDS.REPORT_1,
-        });
-        return mockSocietyWideQueryOptions(calcId, mockQueryFn);
-      });
+      (calculationQueries.forReport as any).mockImplementation(
+        (calcId: string, _metadata: any, params: any) => {
+          // Verify params passed to query
+          expect(params).toMatchObject({
+            countryId: TEST_COUNTRIES.US,
+            calcType: 'societyWide',
+            policyIds: {
+              baseline: 'policy-1',
+              reform: 'policy-2',
+            },
+            populationId: TEST_POPULATION_IDS.US,
+            region: TEST_POPULATION_IDS.US,
+            calcId: TEST_CALC_IDS.REPORT_1,
+          });
+          return mockSocietyWideQueryOptions(calcId, mockQueryFn);
+        }
+      );
 
       // When
       await orchestrator.startCalculation(config);

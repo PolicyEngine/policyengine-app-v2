@@ -51,7 +51,13 @@ export const MOCK_UNCONFIGURED_SIMULATION = {
 export const SELECTED_SIMULATION_LOG_PREFIX = 'Submitting Simulation in handleSubmit:';
 
 // Helper function to create EnhancedUserSimulation from a basic simulation
-export function createEnhancedUserSimulation(simulation: typeof MOCK_CONFIGURED_SIMULATION_1) {
+export function createEnhancedUserSimulation(
+  simulation:
+    | typeof MOCK_CONFIGURED_SIMULATION_1
+    | typeof MOCK_CONFIGURED_SIMULATION_2
+    | typeof MOCK_CONFIGURED_SIMULATION_WITHOUT_LABEL
+    | typeof MOCK_UNCONFIGURED_SIMULATION
+) {
   return {
     userSimulation: {
       id: `user-sim-${simulation.id}`,
@@ -62,7 +68,7 @@ export function createEnhancedUserSimulation(simulation: typeof MOCK_CONFIGURED_
       updatedAt: '2024-01-01T00:00:00Z',
       isCreated: simulation.isCreated,
     },
-    simulation: simulation,
+    simulation,
     policy: simulation.policyId
       ? {
           id: simulation.policyId,
@@ -71,22 +77,24 @@ export function createEnhancedUserSimulation(simulation: typeof MOCK_CONFIGURED_
           data: {},
         }
       : undefined,
-    household: simulation.populationType === 'household' && simulation.populationId
-      ? {
-          id: simulation.populationId,
-          label: `Household ${simulation.populationId}`,
-          countryId: 'us',
-          data: {},
-        }
-      : undefined,
-    geography: simulation.populationType === 'geography' && simulation.populationId
-      ? {
-          id: simulation.populationId,
-          name: `Geography ${simulation.populationId}`,
-          countryId: 'us',
-          type: 'state' as const,
-        }
-      : undefined,
+    household:
+      simulation.populationType && simulation.populationId
+        ? {
+            id: simulation.populationId,
+            label: `Household ${simulation.populationId}`,
+            countryId: 'us',
+            data: {},
+          }
+        : undefined,
+    geography:
+      simulation.populationType && simulation.populationId
+        ? {
+            id: simulation.populationId,
+            name: `Geography ${simulation.populationId}`,
+            countryId: 'us',
+            type: 'state' as const,
+          }
+        : undefined,
     isLoading: false,
     error: null,
   };

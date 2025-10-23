@@ -153,8 +153,13 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   );
 
   console.log('[SimulationSelectExistingPolicyFrame] ========== AFTER FILTERING ==========');
-  console.log('[SimulationSelectExistingPolicyFrame] Filtered policies count:', filteredPolicies.length);
-  console.log('[SimulationSelectExistingPolicyFrame] Filter criteria: isPolicyMetadataWithAssociation(association)');
+  console.log(
+    '[SimulationSelectExistingPolicyFrame] Filtered policies count:',
+    filteredPolicies.length
+  );
+  console.log(
+    '[SimulationSelectExistingPolicyFrame] Filter criteria: isPolicyMetadataWithAssociation(association)'
+  );
   console.log('[SimulationSelectExistingPolicyFrame] Filtered policies:', filteredPolicies);
 
   // Build card list items from ALL filtered policies (pagination handled by FlowView)

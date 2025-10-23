@@ -1,12 +1,12 @@
 import { useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { useUserReportById } from '@/hooks/useUserReports';
+import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
+import { useUserReportById } from '@/hooks/useUserReports';
 import type { CalcStartConfig } from '@/types/calculation';
-import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
-import LoadingPage from './LoadingPage';
 import ErrorPage from './ErrorPage';
+import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
 
@@ -57,8 +57,8 @@ export function SocietyWideReportOutput() {
         targetType: 'report' as const,
         countryId: report.countryId,
         simulations: {
-          simulation1: simulation1,
-          simulation2: simulation2,
+          simulation1,
+          simulation2,
         },
         populations: {
           household1: null,
@@ -95,10 +95,7 @@ export function SocietyWideReportOutput() {
   // Show loading page if calculation is still running
   if (calcStatus.isPending) {
     return (
-      <LoadingPage
-        message="Computing society-wide impacts..."
-        progress={calcStatus.progress}
-      />
+      <LoadingPage message="Computing society-wide impacts..." progress={calcStatus.progress} />
     );
   }
 
@@ -112,12 +109,7 @@ export function SocietyWideReportOutput() {
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    return (
-      <OverviewSubPage
-        output={output}
-        outputType="societyWide"
-      />
-    );
+    return <OverviewSubPage output={output} outputType="societyWide" />;
   }
 
   // No output yet

@@ -110,11 +110,13 @@ export class SimulationAdapter {
    * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
    */
   static toUpdatePayload(
+    id: number,
     output: unknown,
     status: 'pending' | 'complete' | 'error'
   ): SimulationSetOutputPayload {
     return {
-      output: output || null,
+      id,
+      output: typeof output === 'string' ? output : output ? JSON.stringify(output) : null,
       status,
     };
   }
@@ -123,9 +125,10 @@ export class SimulationAdapter {
    * Creates payload for marking a simulation as completed with output
    * Note: Output is NOT stringified here - it's stringified when the entire payload is JSON.stringified
    */
-  static toCompletedPayload(output: unknown): SimulationSetOutputPayload {
+  static toCompletedPayload(id: number, output: unknown): SimulationSetOutputPayload {
     return {
-      output,
+      id,
+      output: typeof output === 'string' ? output : JSON.stringify(output),
       status: 'complete',
     };
   }
@@ -133,8 +136,9 @@ export class SimulationAdapter {
   /**
    * Creates payload for marking a simulation as errored
    */
-  static toErrorPayload(errorMessage?: string): SimulationSetOutputPayload {
+  static toErrorPayload(id: number, errorMessage?: string): SimulationSetOutputPayload {
     const payload: SimulationSetOutputPayload = {
+      id,
       output: null,
       status: 'error',
     };
@@ -148,11 +152,12 @@ export class SimulationAdapter {
    * Creates payload for marking an economy simulation as complete with placeholder output
    * Economy simulations don't store individual outputs (only the report has aggregated output)
    */
-  static toEconomyPlaceholderPayload(): SimulationSetOutputPayload {
+  static toEconomyPlaceholderPayload(id: number): SimulationSetOutputPayload {
     return {
-      output: {
-        message: "Economy-wide reports do not save simulation-level results at this time"
-      },
+      id,
+      output: JSON.stringify({
+        message: 'Economy-wide reports do not save simulation-level results at this time',
+      }),
       status: 'complete',
     };
   }

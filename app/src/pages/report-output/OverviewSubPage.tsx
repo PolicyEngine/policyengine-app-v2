@@ -1,8 +1,8 @@
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { Household } from '@/types/ingredients/Household';
 import { ReportOutputType } from '../ReportOutput.page';
-import SocietyWideOverview from './SocietyWideOverview';
 import HouseholdOverview from './HouseholdOverview';
+import SocietyWideOverview from './SocietyWideOverview';
 
 interface OverviewSubPageProps {
   output: SocietyWideReportOutput | Household | Household[];
@@ -14,7 +14,11 @@ interface OverviewSubPageProps {
  * Overview sub-page - displays high-level summary of report results
  * Routes to the appropriate overview component based on output type
  */
-export default function OverviewSubPage({ output, outputType, policyLabels }: OverviewSubPageProps) {
+export default function OverviewSubPage({
+  output,
+  outputType,
+  policyLabels,
+}: OverviewSubPageProps) {
   if (outputType === 'societyWide') {
     return <SocietyWideOverview output={output as SocietyWideReportOutput} />;
   }

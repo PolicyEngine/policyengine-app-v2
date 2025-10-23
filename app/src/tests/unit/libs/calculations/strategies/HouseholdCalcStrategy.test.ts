@@ -1,9 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { HouseholdCalcStrategy } from '@/libs/calculations/strategies/HouseholdCalcStrategy';
+import { mockHouseholdSuccessResponse } from '@/tests/fixtures/libs/calculations/strategyFixtures';
 import { mockHouseholdCalcParams } from '@/tests/fixtures/types/calculationFixtures';
-import {
-  mockHouseholdSuccessResponse,
-} from '@/tests/fixtures/libs/calculations/strategyFixtures';
 
 // Mock the household API
 vi.mock('@/api/householdCalculation', () => ({
@@ -30,7 +28,12 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
 
       // When
-      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith(
@@ -47,7 +50,12 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockResolvedValue(mockResult);
 
       // When
-      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      const result = await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(result.status).toBe('complete');
@@ -63,7 +71,12 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockRejectedValue(mockError);
 
       // When
-      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      const result = await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(result.status).toBe('error');
@@ -83,7 +96,12 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockResolvedValue(mockHouseholdSuccessResponse());
 
       // When
-      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(mockFetchHouseholdCalculation).toHaveBeenCalledWith(
@@ -99,7 +117,12 @@ describe('HouseholdCalcStrategy', () => {
       mockFetchHouseholdCalculation.mockRejectedValue('String error');
 
       // When
-      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      const result = await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(result.status).toBe('error');

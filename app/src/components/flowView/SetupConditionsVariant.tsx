@@ -16,7 +16,9 @@ interface SetupConditionsVariantProps {
 }
 
 export default function SetupConditionsVariant({ cards }: SetupConditionsVariantProps) {
-  if (!cards) return null;
+  if (!cards) {
+    return null;
+  }
 
   return (
     <Stack>

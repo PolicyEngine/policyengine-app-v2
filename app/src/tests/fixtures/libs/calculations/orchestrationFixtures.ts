@@ -1,9 +1,9 @@
-import { vi } from 'vitest';
 import type { QueryClient } from '@tanstack/react-query';
+import { vi } from 'vitest';
 import type { CalcStartConfig } from '@/types/calculation';
-import type { Simulation } from '@/types/ingredients/Simulation';
-import type { Household } from '@/types/ingredients/Household';
 import type { Geography } from '@/types/ingredients/Geography';
+import type { Household } from '@/types/ingredients/Household';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 /**
  * Test constants for orchestration components

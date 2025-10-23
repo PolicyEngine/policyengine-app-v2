@@ -43,13 +43,12 @@ export const TEST_LABELS = {
 /**
  * Mock UserSimulation input (without id and createdAt)
  */
-export const mockSimulationInput = (overrides?: Partial<Omit<UserSimulation, 'id' | 'createdAt'>>): Omit<UserSimulation, 'id' | 'createdAt'> => ({
+export const mockSimulationInput = (
+  overrides?: Partial<Omit<UserSimulation, 'id' | 'createdAt'>>
+): Omit<UserSimulation, 'id' | 'createdAt'> => ({
   userId: TEST_USER_IDS.USER_123,
   simulationId: TEST_SIM_IDS.SIM_456,
-  policyId: TEST_POLICY_IDS.POLICY_789,
-  countryId: TEST_COUNTRIES.US,
   label: TEST_LABELS.TEST_SIMULATION_1,
-  populationType: 'geography',
   isCreated: true,
   ...overrides,
 });

@@ -1,7 +1,10 @@
 import { CURRENT_YEAR } from '@/constants';
 import { countryIds } from '@/libs/countries';
-import { SocietyWideCalculationParams, fetchSocietyWideCalculation } from './societyWideCalculation';
 import { fetchHouseholdCalculation } from './householdCalculation';
+import {
+  fetchSocietyWideCalculation,
+  SocietyWideCalculationParams,
+} from './societyWideCalculation';
 
 /**
  * Metadata needed to fetch a calculation

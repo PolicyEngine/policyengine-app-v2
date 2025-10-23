@@ -1,5 +1,5 @@
-import type { HouseholdData } from '@/types/ingredients/Household';
 import type { HouseholdReportOutput } from '@/types/calculation/household';
+import type { HouseholdData } from '@/types/ingredients/Household';
 
 /**
  * Build household report output from simulation results

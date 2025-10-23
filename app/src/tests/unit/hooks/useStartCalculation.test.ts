@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook, waitFor } from '@test-utils';
 import { createElement } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@test-utils';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useStartCalculation } from '@/hooks/useStartCalculation';
 import {
   createTestQueryClient,
-  mockHookCalcStartConfig,
   HOOK_TEST_CONSTANTS,
+  mockHookCalcStartConfig,
 } from '@/tests/fixtures/hooks/calculationHookFixtures';
 
 // Mock the orchestrator and persister
@@ -82,10 +82,13 @@ describe('useStartCalculation', () => {
 
     // Override the mock for this test
     const { CalcOrchestrator } = await import('@/libs/calculations/CalcOrchestrator');
-    vi.mocked(CalcOrchestrator).mockImplementationOnce(() => ({
-      startCalculation: vi.fn().mockRejectedValue(testError),
-      cleanup: vi.fn(),
-    }) as any);
+    vi.mocked(CalcOrchestrator).mockImplementationOnce(
+      () =>
+        ({
+          startCalculation: vi.fn().mockRejectedValue(testError),
+          cleanup: vi.fn(),
+        }) as any
+    );
 
     const config = mockHookCalcStartConfig();
     const { result } = renderHook(() => useStartCalculation(), { wrapper });
@@ -129,10 +132,13 @@ describe('useStartCalculation', () => {
 
     // Override the mock for this test
     const { CalcOrchestrator } = await import('@/libs/calculations/CalcOrchestrator');
-    vi.mocked(CalcOrchestrator).mockImplementationOnce(() => ({
-      startCalculation: vi.fn().mockReturnValue(promise),
-      cleanup: vi.fn(),
-    }) as any);
+    vi.mocked(CalcOrchestrator).mockImplementationOnce(
+      () =>
+        ({
+          startCalculation: vi.fn().mockReturnValue(promise),
+          cleanup: vi.fn(),
+        }) as any
+    );
 
     const config = mockHookCalcStartConfig();
     const { result } = renderHook(() => useStartCalculation(), { wrapper });

@@ -1,8 +1,8 @@
 import { Query } from '@tanstack/react-query';
 import {
+  fetchSocietyWideCalculation,
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
-  fetchSocietyWideCalculation,
 } from '@/api/societyWideCalculation';
 import { CURRENT_YEAR } from '@/constants';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
@@ -60,10 +60,7 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
   /**
    * Transform society-wide API response with provided metadata
    */
-  transformResponseWithMetadata(
-    apiResponse: unknown,
-    metadata: CalcMetadata
-  ): CalcStatus {
+  transformResponseWithMetadata(apiResponse: unknown, metadata: CalcMetadata): CalcStatus {
     const response = apiResponse as SocietyWideCalculationResponse;
 
     // Map computing status from API to pending status in CalcStatus

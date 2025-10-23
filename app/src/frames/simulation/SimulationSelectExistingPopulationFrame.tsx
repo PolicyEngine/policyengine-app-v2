@@ -43,9 +43,14 @@ export default function SimulationSelectExistingPopulationFrame({
     error: householdError,
   } = useUserHouseholds(userId);
 
-  console.log('[SimulationSelectExistingPopulationFrame] ========== HOUSEHOLD DATA FETCH ==========');
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] ========== HOUSEHOLD DATA FETCH =========='
+  );
   console.log('[SimulationSelectExistingPopulationFrame] Household raw data:', householdData);
-  console.log('[SimulationSelectExistingPopulationFrame] Household raw data length:', householdData?.length);
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Household raw data length:',
+    householdData?.length
+  );
   console.log('[SimulationSelectExistingPopulationFrame] Household isLoading:', isHouseholdLoading);
   console.log('[SimulationSelectExistingPopulationFrame] Household isError:', isHouseholdError);
   console.log('[SimulationSelectExistingPopulationFrame] Household error:', householdError);
@@ -58,10 +63,18 @@ export default function SimulationSelectExistingPopulationFrame({
     error: geographicError,
   } = useUserGeographics(userId);
 
-  console.log('[SimulationSelectExistingPopulationFrame] ========== GEOGRAPHIC DATA FETCH ==========');
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] ========== GEOGRAPHIC DATA FETCH =========='
+  );
   console.log('[SimulationSelectExistingPopulationFrame] Geographic raw data:', geographicData);
-  console.log('[SimulationSelectExistingPopulationFrame] Geographic raw data length:', geographicData?.length);
-  console.log('[SimulationSelectExistingPopulationFrame] Geographic isLoading:', isGeographicLoading);
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Geographic raw data length:',
+    geographicData?.length
+  );
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Geographic isLoading:',
+    isGeographicLoading
+  );
   console.log('[SimulationSelectExistingPopulationFrame] Geographic isError:', isGeographicError);
   console.log('[SimulationSelectExistingPopulationFrame] Geographic error:', geographicError);
 
@@ -187,10 +200,22 @@ export default function SimulationSelectExistingPopulationFrame({
   const geographicPopulations = geographicData || [];
 
   console.log('[SimulationSelectExistingPopulationFrame] ========== BEFORE FILTERING ==========');
-  console.log('[SimulationSelectExistingPopulationFrame] Household populations count:', householdPopulations.length);
-  console.log('[SimulationSelectExistingPopulationFrame] Household populations:', householdPopulations);
-  console.log('[SimulationSelectExistingPopulationFrame] Geographic populations count:', geographicPopulations.length);
-  console.log('[SimulationSelectExistingPopulationFrame] Geographic populations:', geographicPopulations);
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Household populations count:',
+    householdPopulations.length
+  );
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Household populations:',
+    householdPopulations
+  );
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Geographic populations count:',
+    geographicPopulations.length
+  );
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Geographic populations:',
+    geographicPopulations
+  );
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -229,8 +254,13 @@ export default function SimulationSelectExistingPopulationFrame({
   );
 
   console.log('[SimulationSelectExistingPopulationFrame] ========== AFTER FILTERING ==========');
-  console.log('[SimulationSelectExistingPopulationFrame] Filtered households count:', filteredHouseholds.length);
-  console.log('[SimulationSelectExistingPopulationFrame] Filter criteria: isHouseholdMetadataWithAssociation(association)');
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Filtered households count:',
+    filteredHouseholds.length
+  );
+  console.log(
+    '[SimulationSelectExistingPopulationFrame] Filter criteria: isHouseholdMetadataWithAssociation(association)'
+  );
   console.log('[SimulationSelectExistingPopulationFrame] Filtered households:', filteredHouseholds);
 
   // Combine all populations (pagination handled by FlowView)

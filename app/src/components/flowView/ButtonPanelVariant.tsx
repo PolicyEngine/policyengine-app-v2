@@ -15,7 +15,9 @@ interface ButtonPanelVariantProps {
 }
 
 export default function ButtonPanelVariant({ cards }: ButtonPanelVariantProps) {
-  if (!cards) return null;
+  if (!cards) {
+    return null;
+  }
 
   return (
     <Stack>

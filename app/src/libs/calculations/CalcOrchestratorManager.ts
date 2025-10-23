@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
+import { CalcStartConfig } from '@/types/calculation';
 import { CalcOrchestrator } from './CalcOrchestrator';
 import { ResultPersister } from './ResultPersister';
-import { CalcStartConfig } from '@/types/calculation';
 
 /**
  * Manages all calculation orchestrators
@@ -56,14 +56,24 @@ export class CalcOrchestratorManager {
 
     // CHECK: Is this calculation already being managed?
     if (this.activeOrchestrators.has(calcId)) {
-      console.log(`[CalcOrchestratorManager][${timestamp}] ⚠️  SKIPPING: Orchestrator already exists for ${calcId}`);
-      console.log(`[CalcOrchestratorManager][${timestamp}]   Active orchestrators: ${this.activeOrchestrators.size}`);
-      console.log(`[CalcOrchestratorManager][${timestamp}]   Active IDs: [${Array.from(this.activeOrchestrators.keys()).join(', ')}]`);
-      console.log(`[CalcOrchestratorManager][${timestamp}] ========================================`);
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}] ⚠️  SKIPPING: Orchestrator already exists for ${calcId}`
+      );
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}]   Active orchestrators: ${this.activeOrchestrators.size}`
+      );
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}]   Active IDs: [${Array.from(this.activeOrchestrators.keys()).join(', ')}]`
+      );
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}] ========================================`
+      );
       return;
     }
 
-    console.log(`[CalcOrchestratorManager][${timestamp}] ✓ No existing orchestrator found, creating new one`);
+    console.log(
+      `[CalcOrchestratorManager][${timestamp}] ✓ No existing orchestrator found, creating new one`
+    );
 
     // Create new orchestrator with manager reference
     const orchestrator = new CalcOrchestrator(
@@ -75,24 +85,37 @@ export class CalcOrchestratorManager {
     // Register BEFORE starting (prevents race condition)
     this.activeOrchestrators.set(calcId, orchestrator);
     console.log(`[CalcOrchestratorManager][${timestamp}] ✓ Orchestrator registered for ${calcId}`);
-    console.log(`[CalcOrchestratorManager][${timestamp}]   Active orchestrators: ${this.activeOrchestrators.size}`);
+    console.log(
+      `[CalcOrchestratorManager][${timestamp}]   Active orchestrators: ${this.activeOrchestrators.size}`
+    );
 
     try {
       // Start the calculation
-      console.log(`[CalcOrchestratorManager][${timestamp}] → Calling orchestrator.startCalculation()...`);
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}] → Calling orchestrator.startCalculation()...`
+      );
       await orchestrator.startCalculation(config);
-      console.log(`[CalcOrchestratorManager][${timestamp}] ✓ orchestrator.startCalculation() completed`);
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}] ✓ orchestrator.startCalculation() completed`
+      );
 
       // NOTE: For household calculations, the calculation is already complete at this point
       // and the orchestrator has already cleaned itself up.
       // For economy calculations, polling has started and cleanup will happen later.
 
-      console.log(`[CalcOrchestratorManager][${timestamp}] ========================================`);
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}] ========================================`
+      );
     } catch (error) {
-      console.error(`[CalcOrchestratorManager][${timestamp}] ❌ Failed to start calculation ${calcId}:`, error);
+      console.error(
+        `[CalcOrchestratorManager][${timestamp}] ❌ Failed to start calculation ${calcId}:`,
+        error
+      );
       console.log(`[CalcOrchestratorManager][${timestamp}] → Cleaning up failed orchestrator`);
       this.cleanup(calcId);
-      console.log(`[CalcOrchestratorManager][${timestamp}] ========================================`);
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}] ========================================`
+      );
       throw error;
     }
   }
@@ -123,8 +146,12 @@ export class CalcOrchestratorManager {
     const orchestrator = this.activeOrchestrators.get(calcId);
 
     if (!orchestrator) {
-      console.log(`[CalcOrchestratorManager][${timestamp}]   ⚠️  No orchestrator found for ${calcId}`);
-      console.log(`[CalcOrchestratorManager][${timestamp}]   Active orchestrators: ${this.activeOrchestrators.size}`);
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}]   ⚠️  No orchestrator found for ${calcId}`
+      );
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}]   Active orchestrators: ${this.activeOrchestrators.size}`
+      );
       return;
     }
 
@@ -133,10 +160,14 @@ export class CalcOrchestratorManager {
 
     this.activeOrchestrators.delete(calcId);
     console.log(`[CalcOrchestratorManager][${timestamp}]   ✓ Orchestrator removed from registry`);
-    console.log(`[CalcOrchestratorManager][${timestamp}]   Active orchestrators remaining: ${this.activeOrchestrators.size}`);
+    console.log(
+      `[CalcOrchestratorManager][${timestamp}]   Active orchestrators remaining: ${this.activeOrchestrators.size}`
+    );
 
     if (this.activeOrchestrators.size > 0) {
-      console.log(`[CalcOrchestratorManager][${timestamp}]   Active IDs: [${Array.from(this.activeOrchestrators.keys()).join(', ')}]`);
+      console.log(
+        `[CalcOrchestratorManager][${timestamp}]   Active IDs: [${Array.from(this.activeOrchestrators.keys()).join(', ')}]`
+      );
     }
   }
 
@@ -148,7 +179,9 @@ export class CalcOrchestratorManager {
   cleanupAll(): void {
     const timestamp = Date.now();
     console.log(`[CalcOrchestratorManager][${timestamp}] cleanupAll() called`);
-    console.log(`[CalcOrchestratorManager][${timestamp}]   Cleaning up ${this.activeOrchestrators.size} orchestrators`);
+    console.log(
+      `[CalcOrchestratorManager][${timestamp}]   Cleaning up ${this.activeOrchestrators.size} orchestrators`
+    );
 
     for (const [calcId, orchestrator] of this.activeOrchestrators.entries()) {
       console.log(`[CalcOrchestratorManager][${timestamp}]   → Cleaning up ${calcId}`);

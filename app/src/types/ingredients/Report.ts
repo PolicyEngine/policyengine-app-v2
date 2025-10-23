@@ -1,8 +1,8 @@
 import { countryIds } from '@/libs/countries';
+import type { HouseholdReportOutput } from '@/types/calculation/household';
 import { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 import { Household } from './Household';
-import type { HouseholdReportOutput } from '@/types/calculation/household';
 
 export type EconomyOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 export type HouseholdOutput = Household | Household[];

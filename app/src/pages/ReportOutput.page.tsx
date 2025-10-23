@@ -25,13 +25,13 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUserReportById } from '@/hooks/useUserReports';
-import { Household, HouseholdData } from '@/types/ingredients/Household';
 import { CalcStartConfig } from '@/types/calculation';
+import { Household, HouseholdData } from '@/types/ingredients/Household';
 import ErrorPage from './report-output/ErrorPage';
+import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import LoadingPage from './report-output/LoadingPage';
 import NotFoundSubPage from './report-output/NotFoundSubPage';
 import OverviewSubPage from './report-output/OverviewSubPage';
-import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
 
 /**
@@ -76,8 +76,15 @@ export default function ReportOutputPage() {
   }
 
   // Fetch report structure and metadata
-  const { userReport, report, simulations, userSimulations, userPolicies, isLoading: dataLoading, error: dataError } =
-    useUserReportById(userReportId);
+  const {
+    userReport,
+    report,
+    simulations,
+    userSimulations,
+    userPolicies,
+    isLoading: dataLoading,
+    error: dataError,
+  } = useUserReportById(userReportId);
 
   console.log('[ReportOutputPage] Fetched user report and simulations:', {
     userReport,
@@ -89,11 +96,12 @@ export default function ReportOutputPage() {
   });
 
   // Derive output type from simulation (needed for target type determination)
-  const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
-    ? 'household'
-    : simulations?.[0]?.populationType === 'geography'
-    ? 'societyWide'
-    : undefined;
+  const outputType: ReportOutputType | undefined =
+    simulations?.[0]?.populationType === 'household'
+      ? 'household'
+      : simulations?.[0]?.populationType === 'geography'
+        ? 'societyWide'
+        : undefined;
 
   const DEFAULT_PAGE = 'overview';
   const activeTab = subpage || DEFAULT_PAGE;
@@ -339,14 +347,20 @@ function LegacyReportOutput() {
     return null;
   }
 
-  const { userReport, report, simulations, isLoading: dataLoading, error: dataError } =
-    useUserReportById(userReportId);
+  const {
+    userReport,
+    report,
+    simulations,
+    isLoading: dataLoading,
+    error: dataError,
+  } = useUserReportById(userReportId);
 
-  const outputType: ReportOutputType | undefined = simulations?.[0]?.populationType === 'household'
-    ? 'household'
-    : simulations?.[0]?.populationType === 'geography'
-    ? 'societyWide'
-    : undefined;
+  const outputType: ReportOutputType | undefined =
+    simulations?.[0]?.populationType === 'household'
+      ? 'household'
+      : simulations?.[0]?.populationType === 'geography'
+        ? 'societyWide'
+        : undefined;
 
   // At this point, outputType can only be 'societyWide' or undefined
   // (household and society-wide both routed above)
@@ -354,7 +368,7 @@ function LegacyReportOutput() {
 
   const calcIds = useMemo(() => {
     if (isHouseholdReport) {
-      return simulations?.map(s => s.id).filter((id): id is string => !!id) || [];
+      return simulations?.map((s) => s.id).filter((id): id is string => !!id) || [];
     }
     // Return null instead of empty string to prevent invalid queries
     return report?.id ? String(report.id) : null;
@@ -375,7 +389,7 @@ function LegacyReportOutput() {
     : calcIds !== null;
 
   const calcStatus = useCalculationStatus(
-    shouldFetchCalcStatus ? calcIds! : (isHouseholdReport ? [] : ''),
+    shouldFetchCalcStatus ? calcIds! : isHouseholdReport ? [] : '',
     targetType
   );
 
@@ -400,7 +414,11 @@ function LegacyReportOutput() {
     if (isHousehold) {
       // HOUSEHOLD: Return array of configs, one per simulation
       // Each simulation needs its own calculation at simulation level
-      const household = { id: simulation1.populationId, countryId: report.countryId, householdData: {} as any };
+      const household = {
+        id: simulation1.populationId,
+        countryId: report.countryId,
+        householdData: {} as any,
+      };
 
       const configs: CalcStartConfig[] = [];
 
@@ -412,7 +430,7 @@ function LegacyReportOutput() {
           countryId: report.countryId,
           reportId: report.id, // Parent report ID for marking report complete after all sims finish
           simulations: {
-            simulation1: simulation1,
+            simulation1,
             simulation2: null,
           },
           populations: {
@@ -445,22 +463,23 @@ function LegacyReportOutput() {
       }
 
       return configs;
-    } else {
-      // ECONOMY: Return single config at report level
-      const geography = {
-        id: `${report.countryId}-${simulation1.populationId}`,
-        countryId: report.countryId,
-        scope: 'national' as const,
-        geographyId: simulation1.populationId || '',
-      };
+    }
+    // ECONOMY: Return single config at report level
+    const geography = {
+      id: `${report.countryId}-${simulation1.populationId}`,
+      countryId: report.countryId,
+      scope: 'national' as const,
+      geographyId: simulation1.populationId || '',
+    };
 
-      return [{
+    return [
+      {
         calcId: report.id,
         targetType: 'report' as const,
         countryId: report.countryId,
         simulations: {
-          simulation1: simulation1,
-          simulation2: simulation2,
+          simulation1,
+          simulation2,
         },
         populations: {
           household1: null,
@@ -468,8 +487,8 @@ function LegacyReportOutput() {
           geography1: geography,
           geography2: null,
         },
-      }];
-    }
+      },
+    ];
   }, [report, simulations]);
 
   // Phase 4: Auto-start calculation if needed (direct URL loads)

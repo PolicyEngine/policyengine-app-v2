@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SocietyWideCalcStrategy } from '@/libs/calculations/economy/SocietyWideCalcStrategy';
-import { mockSocietyWideCalcParams } from '@/tests/fixtures/types/calculationFixtures';
 import {
-  mockSocietyWideComputingResponse,
   mockSocietyWideCompleteResponse,
+  mockSocietyWideComputingResponse,
   mockSocietyWideErrorResponse,
   STRATEGY_TEST_CONSTANTS,
 } from '@/tests/fixtures/libs/calculations/strategyFixtures';
+import { mockSocietyWideCalcParams } from '@/tests/fixtures/types/calculationFixtures';
 
 // Mock the societyWide API
 vi.mock('@/api/societyWideCalculation', () => ({
@@ -37,7 +37,12 @@ describe('SocietyWideCalcStrategy', () => {
       mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
 
       // When
-      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
@@ -58,12 +63,19 @@ describe('SocietyWideCalcStrategy', () => {
       mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
 
       // When
-      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      const result = await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(result.status).toBe('pending');
       expect(result.queuePosition).toBe(STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION);
-      expect(result.estimatedTimeRemaining).toBe(STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_AVERAGE_TIME_MS);
+      expect(result.estimatedTimeRemaining).toBe(
+        STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_AVERAGE_TIME_MS
+      );
       expect(result.message).toContain(`position ${STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION}`);
     });
 
@@ -74,7 +86,12 @@ describe('SocietyWideCalcStrategy', () => {
       mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
 
       // When
-      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      const result = await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(result.status).toBe('complete');
@@ -89,7 +106,12 @@ describe('SocietyWideCalcStrategy', () => {
       mockFetchSocietyWideCalculation.mockResolvedValue(apiResponse);
 
       // When
-      const result = await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      const result = await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(result.status).toBe('error');
@@ -104,7 +126,12 @@ describe('SocietyWideCalcStrategy', () => {
       mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
 
       // When
-      await strategy.execute(params, { calcId: "test", calcType: "household", targetType: "simulation", startedAt: Date.now() });
+      await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'household',
+        targetType: 'simulation',
+        startedAt: Date.now(),
+      });
 
       // Then
       expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(

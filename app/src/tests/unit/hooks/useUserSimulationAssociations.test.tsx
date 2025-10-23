@@ -2,22 +2,19 @@ import { QueryClient } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  useSimulationAssociationsByUser,
-  useSimulationAssociation,
   useCreateSimulationAssociation,
+  useSimulationAssociation,
+  useSimulationAssociationsByUser,
   useUserSimulationStore,
 } from '@/hooks/useUserSimulationAssociations';
 import {
   createMockQueryClient,
   createWrapper,
-  createMockStore,
-  setupMockStore,
   mockUserSimulation,
   mockUserSimulationList,
-  mockQueryConfig,
-  mockSimulationAssociationKeys,
-  TEST_USER_ID,
+  setupMockStore,
   TEST_SIMULATION_IDS,
+  TEST_USER_ID,
 } from '@/tests/fixtures/hooks/useUserSimulationAssociationsMocks';
 
 // Mock the stores
@@ -180,7 +177,7 @@ describe('useUserSimulationAssociations', () => {
       // Given
       const mockStore = (LocalStorageSimulationStore as any)();
       const newAssociation = {
-        userId: 1,
+        userId: '1',
         simulationId: '100',
         label: 'New Simulation',
       };
@@ -202,7 +199,7 @@ describe('useUserSimulationAssociations', () => {
       // Given
       const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
       const newAssociation = {
-        userId: 1,
+        userId: '1',
         simulationId: '100',
         label: 'New Simulation',
       };
@@ -226,7 +223,7 @@ describe('useUserSimulationAssociations', () => {
       // Given
       const setQueryDataSpy = vi.spyOn(queryClient, 'setQueryData');
       const newAssociation = {
-        userId: 1,
+        userId: '1',
         simulationId: '100',
         label: 'New Simulation',
       };
@@ -251,7 +248,7 @@ describe('useUserSimulationAssociations', () => {
       const mockStore = (LocalStorageSimulationStore as any)();
       mockStore.create.mockRejectedValue(new Error('Creation failed'));
       const newAssociation = {
-        userId: 1,
+        userId: '1',
         simulationId: '100',
         label: 'New Simulation',
       };

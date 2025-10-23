@@ -32,7 +32,9 @@ export const createMockStrategy = (refetchInterval: number | false = 2000) => ({
   }),
 });
 
-export const mockSocietyWideMetadata = (calcId: string = TEST_CALC_IDS.REPORT_123): CalcMetadata => ({
+export const mockSocietyWideMetadata = (
+  calcId: string = TEST_CALC_IDS.REPORT_123
+): CalcMetadata => ({
   calcId,
   calcType: 'societyWide',
   targetType: 'report',

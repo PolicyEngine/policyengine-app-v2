@@ -1,10 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
+import { describe, expect, it } from 'vitest';
 import {
-  TEST_DIRECTIONS,
-  EXPECTED_COLORS,
   EXPECTED_ARROW_DIRECTIONS,
+  EXPECTED_COLORS,
+  TEST_DIRECTIONS,
 } from '@/tests/fixtures/utils/householdDisplayStylesMocks';
+import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
 
 describe('householdDisplayStyles', () => {
   describe('getDisplayStyleConfig', () => {

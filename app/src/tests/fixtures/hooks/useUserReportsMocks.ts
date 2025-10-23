@@ -53,14 +53,14 @@ export const mockPolicy1: Policy = {
   id: TEST_POLICY_ID_1,
   countryId: TEST_COUNTRIES.US,
   apiVersion: 'v1',
-  parameters: {},
+  parameters: [],
 };
 
 export const mockPolicy2: Policy = {
   id: TEST_POLICY_ID_2,
   countryId: TEST_COUNTRIES.US,
   apiVersion: 'v1',
-  parameters: {},
+  parameters: [],
 };
 
 // Mock Household entity

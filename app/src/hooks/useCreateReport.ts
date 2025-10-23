@@ -3,12 +3,12 @@ import { createReportAndAssociateWithUser, CreateReportWithAssociationResult } f
 import { MOCK_USER_ID } from '@/constants';
 import { useCalcOrchestratorManager } from '@/contexts/CalcOrchestratorContext';
 import { countryIds } from '@/libs/countries';
-import { reportKeys, reportAssociationKeys } from '@/libs/queryKeys';
+import { reportAssociationKeys, reportKeys } from '@/libs/queryKeys';
+import { CalcStartConfig } from '@/types/calculation';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { ReportCreationPayload } from '@/types/payloads';
-import { CalcStartConfig } from '@/types/calculation';
 
 interface CreateReportAndBeginCalculationParams {
   countryId: (typeof countryIds)[number];
@@ -87,7 +87,10 @@ export function useCreateReport(reportLabel?: string) {
         console.log(`[useCreateReport][${timestamp}] Report type:`, typeof report.id);
         console.log(`[useCreateReport][${timestamp}] Report object:`, report);
         console.log(`[useCreateReport][${timestamp}] Report.countryId:`, report.countryId);
-        console.log(`[useCreateReport][${timestamp}] Report.country_id:`, (report as any).country_id);
+        console.log(
+          `[useCreateReport][${timestamp}] Report.country_id:`,
+          (report as any).country_id
+        );
 
         // Invalidate queries
         // WHY: We need to invalidate BOTH reports AND report associations
@@ -99,7 +102,10 @@ export function useCreateReport(reportLabel?: string) {
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
         // Cache the report data using consistent key structure
-        console.log(`[useCreateReport][${timestamp}] Caching report data with key:`, reportKeys.byId(reportIdStr));
+        console.log(
+          `[useCreateReport][${timestamp}] Caching report data with key:`,
+          reportKeys.byId(reportIdStr)
+        );
         queryClient.setQueryData(reportKeys.byId(reportIdStr), report);
 
         // Determine calculation type from simulation
@@ -124,7 +130,9 @@ export function useCreateReport(reportLabel?: string) {
           // CRITICAL: We do NOT await these calls. The household API takes 30-60s per
           // simulation, but we want the UI to navigate immediately and show progress.
           // TanStack Query will handle waiting for the response in the background.
-          console.log('[useCreateReport] Starting household calculations for each simulation (non-blocking)');
+          console.log(
+            '[useCreateReport] Starting household calculations for each simulation (non-blocking)'
+          );
 
           const allSimulations = [simulation1, simulation2].filter(
             (sim): sim is Simulation => sim !== null && sim !== undefined
@@ -136,26 +144,33 @@ export function useCreateReport(reportLabel?: string) {
               continue;
             }
 
-            console.log(`[useCreateReport] → Starting calculation for simulation ${sim.id} (fire and forget)`);
+            console.log(
+              `[useCreateReport] → Starting calculation for simulation ${sim.id} (fire and forget)`
+            );
             // Fire and forget - don't await, let TanStack Query handle the waiting
-            manager.startCalculation({
-              calcId: sim.id,                     // Each simulation uses its own ID
-              targetType: 'simulation',           // Simulation-level calculation
-              countryId: report.countryId,
-              simulations: {
-                simulation1: sim,                 // Only this specific simulation
-                simulation2: null,
-              },
-              populations: {
-                household1: household || null,
-                household2: null,
-                geography1: null,
-                geography2: null,
-              },
-            }).catch((error) => {
-              // Log errors but don't block the flow
-              console.error(`[useCreateReport] Failed to start calculation for simulation ${sim.id}:`, error);
-            });
+            manager
+              .startCalculation({
+                calcId: sim.id, // Each simulation uses its own ID
+                targetType: 'simulation', // Simulation-level calculation
+                countryId: report.countryId,
+                simulations: {
+                  simulation1: sim, // Only this specific simulation
+                  simulation2: null,
+                },
+                populations: {
+                  household1: household || null,
+                  household2: null,
+                  geography1: null,
+                  geography2: null,
+                },
+              })
+              .catch((error) => {
+                // Log errors but don't block the flow
+                console.error(
+                  `[useCreateReport] Failed to start calculation for simulation ${sim.id}:`,
+                  error
+                );
+              });
             console.log(`[useCreateReport] ✓ Calculation request fired for simulation ${sim.id}`);
           }
         } else {

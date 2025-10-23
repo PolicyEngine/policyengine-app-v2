@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { CalcParams } from '@/types/calculation';
+import { describe, expect, it } from 'vitest';
 import {
-  mockSocietyWideCalcParams,
   mockHouseholdCalcParams,
+  mockSocietyWideCalcParams,
 } from '@/tests/fixtures/types/calculationFixtures';
+import { CalcParams } from '@/types/calculation';
 
 describe('CalcParams types', () => {
   describe('economy calculation params', () => {

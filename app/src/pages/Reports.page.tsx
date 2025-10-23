@@ -8,16 +8,16 @@ import {
   LinkValue,
   TextValue,
 } from '@/components/columns';
-import { OutputTypeCell } from '@/components/report/OutputTypeCell';
 import IngredientReadView from '@/components/IngredientReadView';
+import { OutputTypeCell } from '@/components/report/OutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
 import { countryIds } from '@/libs/countries';
 import { setFlow } from '@/reducers/flowReducer';
-import { formatDate } from '@/utils/dateUtils';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
+import { formatDate } from '@/utils/dateUtils';
 
 export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -46,32 +46,35 @@ export default function ReportsPage() {
   };
 
   // Memoize callback to prevent OutputTypeCell from re-rendering unnecessarily
-  const handleMenuAction = useCallback((action: string, recordId: string) => {
-    switch (action) {
-      case 'view-output':
-        // recordId is now the UserReport.id
-        navigate(`/${countryId}/report-output/${recordId}`);
-        break;
-      case 'export':
-        // TODO: Implement export functionality
-        console.log('Export report:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share report:', recordId);
-        break;
-      case 'duplicate':
-        // TODO: Implement duplicate functionality
-        console.log('Duplicate report:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete report:', recordId);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
-  }, [navigate, countryId]);
+  const handleMenuAction = useCallback(
+    (action: string, recordId: string) => {
+      switch (action) {
+        case 'view-output':
+          // recordId is now the UserReport.id
+          navigate(`/${countryId}/report-output/${recordId}`);
+          break;
+        case 'export':
+          // TODO: Implement export functionality
+          console.log('Export report:', recordId);
+          break;
+        case 'share':
+          // TODO: Implement share functionality
+          console.log('Share report:', recordId);
+          break;
+        case 'duplicate':
+          // TODO: Implement duplicate functionality
+          console.log('Duplicate report:', recordId);
+          break;
+        case 'delete':
+          // TODO: Implement delete functionality
+          console.log('Delete report:', recordId);
+          break;
+        default:
+          console.log('Unknown action:', action);
+      }
+    },
+    [navigate, countryId]
+  );
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>
@@ -125,53 +128,57 @@ export default function ReportsPage() {
 
   // Transform the data to match the new structure
   // Use useMemo to prevent unnecessary re-creation of data objects
-  const transformedData: IngredientRecord[] = useMemo(() =>
-    data?.map((item) => {
-      const simulationIds = item.simulations?.map(s => s.id).filter(Boolean) as string[] || [];
-      const isHouseholdReport = item.simulations?.[0]?.populationType === 'household';
+  const transformedData: IngredientRecord[] = useMemo(
+    () =>
+      data?.map((item) => {
+        const simulationIds =
+          (item.simulations?.map((s) => s.id).filter(Boolean) as string[]) || [];
+        const isHouseholdReport = item.simulations?.[0]?.populationType === 'household';
 
-      return {
-        id: item.userReport.id,
-        report: {
-          text: item.userReport.label || `Report #${item.userReport.reportId}`,
-          url: `/${countryId}/report-output/${item.userReport.id}`,
-        } as LinkValue,
-        dateCreated: {
-          text: item.userReport.createdAt
-            ? formatDate(
-                item.userReport.createdAt,
-                'short-month-day-year',
-                (item.report?.countryId || countryId) as (typeof countryIds)[number],
-                true
-              )
-            : '',
-        } as TextValue,
-        status: {
-          text: formatStatus(item.report?.status || 'initializing'),
-        } as TextValue,
-        simulations: {
-          items: item.simulations?.map((sim, index) => ({
-            text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-          })) || [
-            {
-              text: 'No simulations',
-            },
-          ],
-        } as BulletsValue,
-        // Use OutputTypeCell component with CalcStatus subscription
-        // This cell will re-render independently when its CalcStatus updates
-        outputType: {
-          custom: (
-            <OutputTypeCell
-              simulationIds={simulationIds}
-              isHouseholdReport={isHouseholdReport}
-              simulations={item.simulations}
-              report={item.report}
-            />
-          ),
-        },
-      };
-    }) || [], [data, countryId]);
+        return {
+          id: item.userReport.id,
+          report: {
+            text: item.userReport.label || `Report #${item.userReport.reportId}`,
+            url: `/${countryId}/report-output/${item.userReport.id}`,
+          } as LinkValue,
+          dateCreated: {
+            text: item.userReport.createdAt
+              ? formatDate(
+                  item.userReport.createdAt,
+                  'short-month-day-year',
+                  (item.report?.countryId || countryId) as (typeof countryIds)[number],
+                  true
+                )
+              : '',
+          } as TextValue,
+          status: {
+            text: formatStatus(item.report?.status || 'initializing'),
+          } as TextValue,
+          simulations: {
+            items: item.simulations?.map((sim, index) => ({
+              text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
+            })) || [
+              {
+                text: 'No simulations',
+              },
+            ],
+          } as BulletsValue,
+          // Use OutputTypeCell component with CalcStatus subscription
+          // This cell will re-render independently when its CalcStatus updates
+          outputType: {
+            custom: (
+              <OutputTypeCell
+                simulationIds={simulationIds}
+                isHouseholdReport={isHouseholdReport}
+                simulations={item.simulations}
+                report={item.report}
+              />
+            ),
+          },
+        };
+      }) || [],
+    [data, countryId]
+  );
 
   return (
     <IngredientReadView

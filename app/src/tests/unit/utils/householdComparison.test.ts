@@ -1,18 +1,17 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { calculateVariableComparison } from '@/utils/householdComparison';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   mockHousehold,
   mockMetadata,
-  TEST_VARIABLE_NAMES,
   TEST_VALUES,
+  TEST_VARIABLE_NAMES,
 } from '@/tests/fixtures/utils/householdComparisonMocks';
+import { calculateVariableComparison } from '@/utils/householdComparison';
+import { getValueFromHousehold } from '@/utils/householdValues';
 
 // Mock the householdValues module
 vi.mock('@/utils/householdValues', () => ({
   getValueFromHousehold: vi.fn(),
 }));
-
-import { getValueFromHousehold } from '@/utils/householdValues';
 
 describe('householdComparison', () => {
   beforeEach(() => {

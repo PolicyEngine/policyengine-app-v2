@@ -1,15 +1,15 @@
 import { useMemo } from 'react';
 import { useSimulationProgressDisplay } from '@/hooks/household';
-import { getDisplayStatus } from '@/utils/statusMapping';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import LoadingPage from './LoadingPage';
+import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { getDisplayStatus } from '@/utils/statusMapping';
 import ErrorPage from './ErrorPage';
+import { HouseholdReportViewModel } from './HouseholdReportViewModel';
+import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
-import { HouseholdReportViewModel } from './HouseholdReportViewModel';
 import { useHouseholdCalculations } from './useHouseholdCalculations';
 
 interface HouseholdReportOutputProps {
@@ -51,8 +51,11 @@ export function HouseholdReportOutput({
   useHouseholdCalculations(viewModel);
 
   // Get real-time progress display (for UI enhancement only)
-  const { displayProgress, hasCalcStatus, message: progressMessage } =
-    useSimulationProgressDisplay(viewModel.simulationIds);
+  const {
+    displayProgress,
+    hasCalcStatus,
+    message: progressMessage,
+  } = useSimulationProgressDisplay(viewModel.simulationIds);
 
   // Extract states from view model
   const { isPending, isComplete, isError } = viewModel.simulationStates;
@@ -104,7 +107,7 @@ export function HouseholdReportOutput({
     console.log('[HouseholdReportOutput] Complete simulations:', simulations);
     console.log(
       '[HouseholdReportOutput] Simulation statuses:',
-      simulations?.map(s => ({ id: s.id, status: s.status, hasOutput: !!s.output }))
+      simulations?.map((s) => ({ id: s.id, status: s.status, hasOutput: !!s.output }))
     );
 
     const output = viewModel.getFormattedOutput();
@@ -120,7 +123,9 @@ export function HouseholdReportOutput({
     // Render different content based on active tab
     switch (activeTab) {
       case 'overview':
-        return <OverviewSubPage output={output} outputType="household" policyLabels={policyLabels} />;
+        return (
+          <OverviewSubPage output={output} outputType="household" policyLabels={policyLabels} />
+        );
       case 'baseline-results':
         // TODO: Implement baseline results view
         return <NotFoundSubPage />;

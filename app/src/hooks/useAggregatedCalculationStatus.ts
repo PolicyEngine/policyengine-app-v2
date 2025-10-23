@@ -1,5 +1,5 @@
-import { useQueryClient, QueryObserver } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
+import { QueryObserver, useQueryClient } from '@tanstack/react-query';
 import { calculationKeys } from '@/libs/queryKeys';
 import type { CalcStatus } from '@/types/calculation';
 import { useSyntheticProgress } from './useSyntheticProgress';
@@ -177,11 +177,16 @@ export function useAggregatedCalculationStatus(
 
       const cached = queryClient.getQueryData<CalcStatus>(queryKey);
       if (cached) {
-        console.log(`[useAggregatedCalculationStatus] Initial cache hit for ${calcId}:`, cached.status);
+        console.log(
+          `[useAggregatedCalculationStatus] Initial cache hit for ${calcId}:`,
+          cached.status
+        );
         return cached;
       }
 
-      console.log(`[useAggregatedCalculationStatus] No initial cache for ${calcId}, returning initializing`);
+      console.log(
+        `[useAggregatedCalculationStatus] No initial cache for ${calcId}, returning initializing`
+      );
       return {
         status: 'initializing' as const,
         metadata: {
@@ -198,7 +203,9 @@ export function useAggregatedCalculationStatus(
 
   // Subscribe to cache updates for all calculations via QueryObserver
   useEffect(() => {
-    if (calcIds.length === 0) return;
+    if (calcIds.length === 0) {
+      return;
+    }
 
     console.log(`[useAggregatedCalculationStatus] Creating ${calcIds.length} QueryObservers`);
 
@@ -217,7 +224,10 @@ export function useAggregatedCalculationStatus(
     // Subscribe to all observers
     const unsubscribers = observers.map((observer, index) => {
       return observer.subscribe((result) => {
-        console.log(`[useAggregatedCalculationStatus] Observer update for ${calcIds[index]}:`, result.data?.status);
+        console.log(
+          `[useAggregatedCalculationStatus] Observer update for ${calcIds[index]}:`,
+          result.data?.status
+        );
 
         setCalculations((prev) => {
           const next = [...prev];
@@ -253,25 +263,23 @@ export function useAggregatedCalculationStatus(
   }, [queryClient, calcIds, targetType]);
 
   // Determine calculation type from first available metadata
-  const calcType = calculations.length > 0
-    ? calculations[0]?.metadata?.calcType || 'household'
-    : 'household';
+  const calcType =
+    calculations.length > 0 ? calculations[0]?.metadata?.calcType || 'household' : 'household';
 
   // Activate synthetic progress when any query is loading or any status is computing
-  const needsSyntheticProgress = anyLoading || calculations.some((calc) => calc.status === 'pending');
+  const needsSyntheticProgress =
+    anyLoading || calculations.some((calc) => calc.status === 'pending');
 
   // Generate synthetic progress
-  const synthetic = useSyntheticProgress(
-    needsSyntheticProgress,
-    calcType,
-    {
-      queuePosition: calculations.find((calc) => calc.queuePosition)?.queuePosition,
-      estimatedTimeRemaining: calculations.find((calc) => calc.estimatedTimeRemaining)?.estimatedTimeRemaining,
-    }
-  );
+  const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {
+    queuePosition: calculations.find((calc) => calc.queuePosition)?.queuePosition,
+    estimatedTimeRemaining: calculations.find((calc) => calc.estimatedTimeRemaining)
+      ?.estimatedTimeRemaining,
+  });
 
   // Check if any are initializing
-  const hasInitializing = calculations.some((calc) => calc.status === 'initializing') ||
+  const hasInitializing =
+    calculations.some((calc) => calc.status === 'initializing') ||
     (calculations.length === 0 && anyLoading);
 
   if (hasInitializing) {

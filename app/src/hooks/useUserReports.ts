@@ -162,8 +162,9 @@ export const useUserReports = (userId: string) => {
   });
 
   console.log('simulationResults', simulationResults);
-  console.log('[useUserReports] simulationResults AFTER QUERY:',
-    simulationResults.queries.map(q => ({
+  console.log(
+    '[useUserReports] simulationResults AFTER QUERY:',
+    simulationResults.queries.map((q) => ({
       id: q.data?.id,
       status: q.data?.status,
       hasOutput: !!q.data?.output,
@@ -486,8 +487,9 @@ export const useUserReportById = (userReportId: string) => {
     gcTime: 0,
   });
 
-  console.log('[useUserReportById] simulationResults AFTER QUERY:',
-    simulationResults.queries.map(q => ({
+  console.log(
+    '[useUserReportById] simulationResults AFTER QUERY:',
+    simulationResults.queries.map((q) => ({
       id: q.data?.id,
       status: q.data?.status,
       hasOutput: !!q.data?.output,
@@ -500,11 +502,14 @@ export const useUserReportById = (userReportId: string) => {
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
 
-  console.log('[useUserReportById] SIMULATIONS FROM REACT QUERY:', simulations.map(s => ({
-    id: s.id,
-    status: s.status,
-    hasOutput: !!s.output,
-  })));
+  console.log(
+    '[useUserReportById] SIMULATIONS FROM REACT QUERY:',
+    simulations.map((s) => ({
+      id: s.id,
+      status: s.status,
+      hasOutput: !!s.output,
+    }))
+  );
 
   // Step 4: Extract policy IDs from simulations and fetch policies
   const policyIds = extractUniqueIds(simulations, 'policyId');
@@ -531,8 +536,14 @@ export const useUserReportById = (userReportId: string) => {
 
   console.log('[useUserReportById] finalReport', finalReport);
 
-  console.log('[useUserReportById] type of each member of finalReport.simulationIds', finalReport?.simulationIds?.map(id => typeof id));
-  console.log('[useUserReportById] type of simulationAssociations.simulationId', simulationAssociations?.map(sa => ({id: sa.simulationId, type: typeof sa.simulationId})));
+  console.log(
+    '[useUserReportById] type of each member of finalReport.simulationIds',
+    finalReport?.simulationIds?.map((id) => typeof id)
+  );
+  console.log(
+    '[useUserReportById] type of simulationAssociations.simulationId',
+    simulationAssociations?.map((sa) => ({ id: sa.simulationId, type: typeof sa.simulationId }))
+  );
 
   const userSimulations = simulationAssociations?.filter((sa) =>
     finalReport?.simulationIds?.includes(sa.simulationId)
@@ -546,7 +557,7 @@ export const useUserReportById = (userReportId: string) => {
 
   // Step 6: Extract households from simulations and fetch them
   // Filter for household simulations, then extract unique population IDs
-  const householdSimulations = simulations.filter(s => s.populationType === 'household');
+  const householdSimulations = simulations.filter((s) => s.populationType === 'household');
   const householdIds = extractUniqueIds(householdSimulations, 'populationId');
 
   const householdResults = useParallelQueries<Household>(householdIds, {

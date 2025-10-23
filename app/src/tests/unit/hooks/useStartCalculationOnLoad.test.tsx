@@ -1,12 +1,12 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, Mock, vi } from 'vitest';
+import { CalcOrchestratorProvider } from '@/contexts/CalcOrchestratorContext';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { CalcOrchestrator } from '@/libs/calculations/CalcOrchestrator';
-import { CalcOrchestratorProvider } from '@/contexts/CalcOrchestratorContext';
-import { CalcStartConfig } from '@/types/calculation';
 import { CACHE_HYDRATION_TEST_CONSTANTS } from '@/tests/fixtures/hooks/cacheHydrationFixtures';
+import { CalcStartConfig } from '@/types/calculation';
 
 // Mock CalcOrchestrator
 vi.mock('@/libs/calculations/CalcOrchestrator');
@@ -101,7 +101,7 @@ describe('useStartCalculationOnLoad', () => {
     );
 
     // Wait a bit to ensure it doesn't start
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(mockStartCalculation).not.toHaveBeenCalled();
   });
@@ -117,7 +117,7 @@ describe('useStartCalculationOnLoad', () => {
       { wrapper }
     );
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(mockStartCalculation).not.toHaveBeenCalled();
   });
@@ -135,7 +135,7 @@ describe('useStartCalculationOnLoad', () => {
       { wrapper }
     );
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(mockStartCalculation).not.toHaveBeenCalled();
   });
@@ -155,7 +155,7 @@ describe('useStartCalculationOnLoad', () => {
       { wrapper }
     );
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Should start orchestrator to resume polling
     expect(mockStartCalculation).toHaveBeenCalledWith(config);
@@ -182,7 +182,7 @@ describe('useStartCalculationOnLoad', () => {
     rerender();
 
     // Wait a bit
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Should still only be called once
     expect(mockStartCalculation).toHaveBeenCalledTimes(1);
@@ -204,8 +204,8 @@ describe('useStartCalculationOnLoad', () => {
 
     await waitFor(() => {
       // Check that logs include the calcId (log format changed to use timestamps)
-      const logCalls = consoleLogSpy.mock.calls.map(call => call.join(' '));
-      const hasCalcId = logCalls.some(log => log.includes(config.calcId));
+      const logCalls = consoleLogSpy.mock.calls.map((call) => call.join(' '));
+      const hasCalcId = logCalls.some((log) => log.includes(config.calcId));
       expect(hasCalcId).toBe(true);
     });
   });
@@ -323,7 +323,7 @@ describe('useStartCalculationOnLoad', () => {
     );
 
     // Wait a bit
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Should not start if already complete
     expect(mockStartCalculation).not.toHaveBeenCalled();
@@ -336,5 +336,4 @@ describe('useStartCalculationOnLoad', () => {
       expect(mockStartCalculation).toHaveBeenCalledTimes(1);
     });
   });
-
 });

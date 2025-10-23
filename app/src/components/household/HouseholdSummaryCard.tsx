@@ -3,9 +3,9 @@ import { Box, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
-import { formatVariableValue } from '@/utils/householdValues';
 import { calculateVariableComparison } from '@/utils/householdComparison';
 import { getTitleText } from '@/utils/householdDisplayText';
+import { formatVariableValue } from '@/utils/householdValues';
 import HouseholdBreakdown from './HouseholdBreakdown';
 
 interface HouseholdSummaryCardProps {
@@ -18,7 +18,11 @@ interface HouseholdSummaryCardProps {
  * Displays the main summary card for household overview
  * Shows net income title and recursive breakdown
  */
-export default function HouseholdSummaryCard({ baseline, reform, policyLabels }: HouseholdSummaryCardProps) {
+export default function HouseholdSummaryCard({
+  baseline,
+  reform,
+  policyLabels,
+}: HouseholdSummaryCardProps) {
   const metadata = useSelector((state: RootState) => state.metadata);
 
   const rootVariable = metadata.variables.household_net_income;
@@ -32,7 +36,12 @@ export default function HouseholdSummaryCard({ baseline, reform, policyLabels }:
 
   // Calculate comparison for net income
   const isComparisonMode = reform !== null;
-  const comparison = calculateVariableComparison('household_net_income', baseline, reform, metadata);
+  const comparison = calculateVariableComparison(
+    'household_net_income',
+    baseline,
+    reform,
+    metadata
+  );
 
   // Format the value
   const formattedValue = formatVariableValue(rootVariable, comparison.displayValue, 0);

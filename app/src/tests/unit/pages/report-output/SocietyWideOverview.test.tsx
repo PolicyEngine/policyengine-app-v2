@@ -1,5 +1,5 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SocietyWideOverview from '@/pages/report-output/SocietyWideOverview';
 import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutputMocks';
 
@@ -9,7 +9,9 @@ vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 // Mock formatBudgetaryImpact utility
 vi.mock('@/utils/formatPowers', () => ({
   formatBudgetaryImpact: vi.fn((value: number) => {
-    if (value === 0) return { display: '0', label: '' };
+    if (value === 0) {
+      return { display: '0', label: '' };
+    }
     const absValue = Math.abs(value);
     if (absValue >= 1_000_000_000) {
       return { display: (value / 1_000_000_000).toFixed(1), label: ' billion' };
@@ -22,7 +24,6 @@ vi.mock('@/utils/formatPowers', () => ({
 }));
 
 describe('SocietyWideOverview', () => {
-
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -30,7 +31,9 @@ describe('SocietyWideOverview', () => {
   describe('budgetary impact metric', () => {
     test('given positive budgetary impact then displays cost with formatted value', () => {
       // Given
-      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: 1_000_000 } as any });
+      const output = createMockSocietyWideOutput({
+        budget: { budgetary_impact: 1_000_000 } as any,
+      });
 
       // When
       const { container } = render(<SocietyWideOverview output={output} />);

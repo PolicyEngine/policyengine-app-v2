@@ -1,17 +1,21 @@
-import { describe, it, expect } from 'vitest';
-import { formatDate } from '@/utils/dateUtils';
+import { describe, expect, it } from 'vitest';
 import {
-  TEST_DATES,
-  TEST_COUNTRIES,
   EXPECTED_FORMATS,
+  TEST_COUNTRIES,
+  TEST_DATES,
 } from '@/tests/fixtures/utils/dateUtilsMocks';
+import { formatDate } from '@/utils/dateUtils';
 
 describe('dateUtils', () => {
   describe('formatDate', () => {
     describe('short-month-day-year format', () => {
       it('given ISO date then formats as short month', () => {
         // When
-        const result = formatDate(TEST_DATES.ISO_2024_01_01, 'short-month-day-year', TEST_COUNTRIES.US);
+        const result = formatDate(
+          TEST_DATES.ISO_2024_01_01,
+          'short-month-day-year',
+          TEST_COUNTRIES.US
+        );
 
         // Then
         expect(result).toBe(EXPECTED_FORMATS.SHORT_MONTH_US);
@@ -19,7 +23,11 @@ describe('dateUtils', () => {
 
       it('given mid-year date then formats correctly', () => {
         // When
-        const result = formatDate(TEST_DATES.ISO_2024_06_15, 'short-month-day-year', TEST_COUNTRIES.US);
+        const result = formatDate(
+          TEST_DATES.ISO_2024_06_15,
+          'short-month-day-year',
+          TEST_COUNTRIES.US
+        );
 
         // Then
         expect(result).toContain('Jun');
@@ -110,7 +118,12 @@ describe('dateUtils', () => {
     describe('stripTime parameter', () => {
       it('given stripTime true then removes time component', () => {
         // When
-        const result = formatDate(TEST_DATES.ISO_WITH_TIME, 'short-month-day-year', TEST_COUNTRIES.US, true);
+        const result = formatDate(
+          TEST_DATES.ISO_WITH_TIME,
+          'short-month-day-year',
+          TEST_COUNTRIES.US,
+          true
+        );
 
         // Then
         expect(result).toContain('Mar');
@@ -120,7 +133,12 @@ describe('dateUtils', () => {
 
       it('given stripTime false then preserves date', () => {
         // When
-        const result = formatDate(TEST_DATES.ISO_2024_01_01, 'short-month-day-year', TEST_COUNTRIES.US, false);
+        const result = formatDate(
+          TEST_DATES.ISO_2024_01_01,
+          'short-month-day-year',
+          TEST_COUNTRIES.US,
+          false
+        );
 
         // Then
         expect(result).toBe(EXPECTED_FORMATS.SHORT_MONTH_US);
@@ -138,7 +156,11 @@ describe('dateUtils', () => {
 
       it('given no stripTime then defaults to false', () => {
         // When
-        const result = formatDate(TEST_DATES.ISO_2024_01_01, 'short-month-day-year', TEST_COUNTRIES.US);
+        const result = formatDate(
+          TEST_DATES.ISO_2024_01_01,
+          'short-month-day-year',
+          TEST_COUNTRIES.US
+        );
 
         // Then
         expect(result).toBe(EXPECTED_FORMATS.SHORT_MONTH_US);

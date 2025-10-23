@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { CalcStatus, CalcResult } from '@/types/calculation';
+import { describe, expect, it } from 'vitest';
 import {
-  mockIdleCalcStatus,
-  mockComputingCalcStatus,
   mockCompleteCalcStatus,
+  mockComputingCalcStatus,
   mockErrorCalcStatus,
-  mockSocietyWideResult,
   mockHouseholdResult,
+  mockIdleCalcStatus,
+  mockSocietyWideResult,
 } from '@/tests/fixtures/types/calculationFixtures';
+import { CalcResult, CalcStatus } from '@/types/calculation';
 
 describe('CalcStatus types', () => {
   describe('CalcStatus interface', () => {

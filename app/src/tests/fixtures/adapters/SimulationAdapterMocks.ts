@@ -1,5 +1,5 @@
-import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import type { Simulation } from '@/types/ingredients/Simulation';
+import type { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 
 export const TEST_SIMULATION_IDS = {
   SIM_123: 123,
@@ -22,7 +22,9 @@ export const TEST_COUNTRIES = {
   UK: 'uk',
 } as const;
 
-export const mockSimulationMetadata = (overrides?: Partial<SimulationMetadata>): SimulationMetadata => ({
+export const mockSimulationMetadata = (
+  overrides?: Partial<SimulationMetadata>
+): SimulationMetadata => ({
   id: TEST_SIMULATION_IDS.SIM_123,
   country_id: TEST_COUNTRIES.US,
   api_version: '1.0.0',

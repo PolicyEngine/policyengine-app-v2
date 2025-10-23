@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'vitest';
-import { getVariableDisplayText, getTitleText } from '@/utils/householdDisplayText';
+import { describe, expect, it } from 'vitest';
 import {
-  TEST_VARIABLE_LABELS,
-  TEST_FORMATTED_VALUES,
-  mockComparisonIncrease,
   mockComparisonDecrease,
+  mockComparisonIncrease,
   mockComparisonNoChange,
   mockComparisonSingleMode,
+  TEST_FORMATTED_VALUES,
+  TEST_VARIABLE_LABELS,
 } from '@/tests/fixtures/utils/householdDisplayTextMocks';
+import { getTitleText, getVariableDisplayText } from '@/utils/householdDisplayText';
 
 describe('householdDisplayText', () => {
   describe('getVariableDisplayText', () => {

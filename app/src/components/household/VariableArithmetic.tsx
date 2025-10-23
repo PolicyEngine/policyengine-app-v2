@@ -6,14 +6,14 @@ import { CURRENT_YEAR } from '@/constants';
 import { spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
+import { calculateVariableComparison } from '@/utils/householdComparison';
+import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
+import { getVariableDisplayText } from '@/utils/householdDisplayText';
 import {
   formatVariableValue,
   getParameterAtInstant,
   shouldShowVariable,
 } from '@/utils/householdValues';
-import { calculateVariableComparison } from '@/utils/householdComparison';
-import { getVariableDisplayText } from '@/utils/householdDisplayText';
-import { getDisplayStyleConfig } from '@/utils/householdDisplayStyles';
 
 interface VariableArithmeticProps {
   variableName: string;

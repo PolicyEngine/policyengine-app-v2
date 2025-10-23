@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useEffect, ReactNode } from 'react';
+import { createContext, ReactNode, useContext, useEffect, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { CalcOrchestratorManager } from '@/libs/calculations/CalcOrchestratorManager';
 
@@ -52,9 +52,7 @@ export function CalcOrchestratorProvider({ children }: CalcOrchestratorProviderP
   }, [manager]);
 
   return (
-    <CalcOrchestratorContext.Provider value={manager}>
-      {children}
-    </CalcOrchestratorContext.Provider>
+    <CalcOrchestratorContext.Provider value={manager}>{children}</CalcOrchestratorContext.Provider>
   );
 }
 
@@ -75,7 +73,7 @@ export function useCalcOrchestratorManager(): CalcOrchestratorManager {
   if (!manager) {
     const error = new Error(
       'useCalcOrchestratorManager must be used within CalcOrchestratorProvider. ' +
-      'Wrap your app with <CalcOrchestratorProvider>.'
+        'Wrap your app with <CalcOrchestratorProvider>.'
     );
     console.error('[useCalcOrchestratorManager] ❌', error.message);
     throw error;

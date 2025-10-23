@@ -1,7 +1,10 @@
 import { vi } from 'vitest';
 import { SocietyWideCalculationResponse } from '@/api/societyWideCalculation';
+import {
+  mockHouseholdResult,
+  mockSocietyWideResult,
+} from '@/tests/fixtures/types/calculationFixtures';
 import { HouseholdData } from '@/types/ingredients/Household';
-import { mockSocietyWideResult, mockHouseholdResult } from '@/tests/fixtures/types/calculationFixtures';
 
 /**
  * Test constants for strategy timing and progress

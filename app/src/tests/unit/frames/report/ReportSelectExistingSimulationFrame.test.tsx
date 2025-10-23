@@ -1,6 +1,6 @@
+import { QueryNormalizerProvider } from '@normy/react-query';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { QueryNormalizerProvider } from '@normy/react-query';
 import { screen, userEvent } from '@test-utils';
 import { render } from '@testing-library/react';
 import { Provider } from 'react-redux';
@@ -128,27 +128,29 @@ describe('ReportSelectExistingSimulationFrame', () => {
     // Given - mock hook returns unconfigured simulation (simulation without id)
     // The component filters based on enhancedSim.simulation?.id, so we need to ensure id is falsy
     mockUseUserSimulations.mockReturnValue({
-      data: [{
-        userSimulation: {
-          id: 'user-sim-unconfigured',
-          userId: '1',
-          simulationId: MOCK_UNCONFIGURED_SIMULATION.id,
-          label: MOCK_UNCONFIGURED_SIMULATION.label,
-          createdAt: '2024-01-01T00:00:00Z',
-          updatedAt: '2024-01-01T00:00:00Z',
-          isCreated: false,
+      data: [
+        {
+          userSimulation: {
+            id: 'user-sim-unconfigured',
+            userId: '1',
+            simulationId: MOCK_UNCONFIGURED_SIMULATION.id,
+            label: MOCK_UNCONFIGURED_SIMULATION.label,
+            createdAt: '2024-01-01T00:00:00Z',
+            updatedAt: '2024-01-01T00:00:00Z',
+            isCreated: false,
+          },
+          simulation: {
+            id: null, // Explicitly null to be filtered out
+            label: MOCK_UNCONFIGURED_SIMULATION.label,
+            policyId: null,
+            populationId: null,
+            populationType: null,
+            isCreated: false,
+          },
+          isLoading: false,
+          error: null,
         },
-        simulation: {
-          id: null, // Explicitly null to be filtered out
-          label: MOCK_UNCONFIGURED_SIMULATION.label,
-          policyId: null,
-          populationId: null,
-          populationType: null,
-          isCreated: false,
-        },
-        isLoading: false,
-        error: null,
-      }],
+      ],
       isLoading: false,
       isError: false,
       error: null,
@@ -280,7 +282,14 @@ describe('ReportSelectExistingSimulationFrame', () => {
     store.dispatch(
       simulationsActions.createSimulationAtPosition({
         position: 0,
-        simulation: { id: null, label: null, policyId: null, populationId: null, populationType: null, isCreated: false },
+        simulation: {
+          id: undefined,
+          label: undefined,
+          policyId: undefined,
+          populationId: undefined,
+          populationType: undefined,
+          isCreated: false,
+        },
       })
     );
 
@@ -312,7 +321,14 @@ describe('ReportSelectExistingSimulationFrame', () => {
     store.dispatch(
       simulationsActions.createSimulationAtPosition({
         position: 0,
-        simulation: { id: null, label: null, policyId: null, populationId: null, populationType: null, isCreated: false },
+        simulation: {
+          id: undefined,
+          label: undefined,
+          policyId: undefined,
+          populationId: undefined,
+          populationType: undefined,
+          isCreated: false,
+        },
       })
     );
 

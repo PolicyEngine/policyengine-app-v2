@@ -1,7 +1,7 @@
 import { Stack } from '@mantine/core';
+import HouseholdSummaryCard from '@/components/household/HouseholdSummaryCard';
 import { spacing } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
-import HouseholdSummaryCard from '@/components/household/HouseholdSummaryCard';
 
 interface HouseholdOverviewProps {
   outputs: Household[];
@@ -27,11 +27,17 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
   console.log('[HouseholdOverview] Total outputs:', outputs.length);
   console.log('[HouseholdOverview] Baseline (outputs[0]):', outputs[0]);
   console.log('[HouseholdOverview] Baseline household data:', outputs[0]?.householdData);
-  console.log('[HouseholdOverview] Baseline household data keys:', outputs[0]?.householdData ? Object.keys(outputs[0].householdData) : []);
+  console.log(
+    '[HouseholdOverview] Baseline household data keys:',
+    outputs[0]?.householdData ? Object.keys(outputs[0].householdData) : []
+  );
   if (outputs[1]) {
     console.log('[HouseholdOverview] Reform (outputs[1]):', outputs[1]);
     console.log('[HouseholdOverview] Reform household data:', outputs[1]?.householdData);
-    console.log('[HouseholdOverview] Reform household data keys:', outputs[1]?.householdData ? Object.keys(outputs[1].householdData) : []);
+    console.log(
+      '[HouseholdOverview] Reform household data keys:',
+      outputs[1]?.householdData ? Object.keys(outputs[1].householdData) : []
+    );
   }
 
   // Determine mode and extract households

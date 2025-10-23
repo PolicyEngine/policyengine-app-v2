@@ -1,10 +1,10 @@
+import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
 import type { HouseholdReportConfig, SimulationConfig } from '@/types/calculation/household';
 import type { Household, HouseholdData } from '@/types/ingredients/Household';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { HouseholdReportOrchestrator } from '@/libs/calculations/household/HouseholdReportOrchestrator';
+import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 
 /**
  * View Model for HouseholdReportOutput
@@ -24,7 +24,7 @@ export class HouseholdReportViewModel {
    * Extract valid simulation IDs
    */
   get simulationIds(): string[] {
-    return this.simulations?.map(s => s.id).filter((id): id is string => !!id) || [];
+    return this.simulations?.map((s) => s.id).filter((id): id is string => !!id) || [];
   }
 
   /**
@@ -39,9 +39,9 @@ export class HouseholdReportViewModel {
     return {
       // 'pending' means: needs calculation OR currently calculating
       // Also check for undefined/null status (defensive)
-      isPending: this.simulations.some(s => !s.status || s.status === 'pending'),
-      isComplete: this.simulations.every(s => s.status === 'complete'),
-      isError: this.simulations.some(s => s.status === 'error'),
+      isPending: this.simulations.some((s) => !s.status || s.status === 'pending'),
+      isComplete: this.simulations.every((s) => s.status === 'complete'),
+      isError: this.simulations.some((s) => s.status === 'error'),
     };
   }
 
@@ -49,11 +49,13 @@ export class HouseholdReportViewModel {
    * Build calculation config for orchestrator
    */
   buildCalculationConfig(): HouseholdReportConfig | null {
-    if (!this.report?.id) return null;
+    if (!this.report?.id) {
+      return null;
+    }
 
     const configs: SimulationConfig[] = (this.simulations || [])
-      .filter(sim => sim.id && sim.populationId && sim.policyId)
-      .map(sim => ({
+      .filter((sim) => sim.id && sim.populationId && sim.policyId)
+      .map((sim) => ({
         simulationId: sim.id!,
         populationId: sim.populationId!,
         policyId: sim.policyId!,
@@ -80,22 +82,20 @@ export class HouseholdReportViewModel {
     }
 
     // Don't start if any simulation is already calculating
-    return !this.simulations.some(sim => orchestrator.isCalculating(sim.id!));
+    return !this.simulations.some((sim) => orchestrator.isCalculating(sim.id!));
   }
 
   /**
    * Get error message for failed simulations
    */
   getErrorMessage(): string {
-    const errorSims = this.simulations?.filter(s => s.status === 'error') || [];
+    const errorSims = this.simulations?.filter((s) => s.status === 'error') || [];
 
     if (errorSims.length === 0) {
       return 'Calculation failed';
     }
 
-    return errorSims
-      .map(s => `Simulation ${s.id}: Failed to calculate`)
-      .join('\n');
+    return errorSims.map((s) => `Simulation ${s.id}: Failed to calculate`).join('\n');
   }
 
   /**
@@ -107,8 +107,8 @@ export class HouseholdReportViewModel {
     }
 
     return this.simulations
-      .filter(sim => sim.output)
-      .map(sim => ({
+      .filter((sim) => sim.output)
+      .map((sim) => ({
         id: sim.id,
         countryId: this.report!.countryId,
         householdData: sim.output as HouseholdData,
@@ -124,9 +124,9 @@ export class HouseholdReportViewModel {
     }
 
     return this.simulations
-      .filter(sim => sim.output)
-      .map(sim => {
-        const userPolicy = this.userPolicies!.find(up => up.policyId === sim.policyId);
+      .filter((sim) => sim.output)
+      .map((sim) => {
+        const userPolicy = this.userPolicies!.find((up) => up.policyId === sim.policyId);
         return userPolicy?.label || `Policy ${sim.policyId}`;
       });
   }

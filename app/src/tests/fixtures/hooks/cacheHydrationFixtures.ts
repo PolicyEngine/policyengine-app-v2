@@ -1,5 +1,5 @@
-import { ReportMetadata } from '@/types/metadata/reportMetadata';
 import { CalcStatus } from '@/types/calculation';
+import { ReportMetadata } from '@/types/metadata/reportMetadata';
 
 /**
  * Test constants for cache hydration tests
@@ -19,7 +19,9 @@ export const CACHE_HYDRATION_TEST_CONSTANTS = {
 /**
  * Create mock report with output (completed calculation)
  */
-export const createMockReportWithOutput = (overrides?: Partial<ReportMetadata>): ReportMetadata => ({
+export const createMockReportWithOutput = (
+  overrides?: Partial<ReportMetadata>
+): ReportMetadata => ({
   id: 123,
   country_id: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
   simulation_1_id: 'sim-1',
@@ -41,7 +43,9 @@ export const createMockReportWithOutput = (overrides?: Partial<ReportMetadata>):
 /**
  * Create mock report without output (incomplete calculation)
  */
-export const createMockReportWithoutOutput = (overrides?: Partial<ReportMetadata>): ReportMetadata => ({
+export const createMockReportWithoutOutput = (
+  overrides?: Partial<ReportMetadata>
+): ReportMetadata => ({
   id: 456,
   country_id: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
   simulation_1_id: 'sim-1',

@@ -1,15 +1,15 @@
-import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode } from 'react';
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { renderHook, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useHydrateCalculationCache } from '@/hooks/useHydrateCalculationCache';
 import { calculationKeys } from '@/libs/queryKeys';
+import {
+  CACHE_HYDRATION_TEST_CONSTANTS,
+  createMockCalcStatusComputing,
+} from '@/tests/fixtures/hooks/cacheHydrationFixtures';
 import { CalcStatus } from '@/types/calculation';
 import { Report } from '@/types/ingredients/Report';
-import {
-  createMockCalcStatusComputing,
-  CACHE_HYDRATION_TEST_CONSTANTS,
-} from '@/tests/fixtures/hooks/cacheHydrationFixtures';
 
 describe('useHydrateCalculationCache', () => {
   let queryClient: QueryClient;
@@ -29,30 +29,31 @@ describe('useHydrateCalculationCache', () => {
   );
 
   const createMockReport = (withOutput: boolean): Report => ({
-    id: withOutput ? CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.WITH_OUTPUT : CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.WITHOUT_OUTPUT,
+    id: withOutput
+      ? CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.WITH_OUTPUT
+      : CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.WITHOUT_OUTPUT,
     label: 'Test Report',
     countryId: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
     apiVersion: '1.0.0',
     simulationIds: ['sim-1', 'sim-2'],
     status: withOutput ? 'complete' : 'pending',
-    output: withOutput ? {
-      budget: {
-        budgetary_impact: 1000,
-      },
-      earnings: {
-        total_earnings: 50000,
-      },
-    } as any : null,
+    output: withOutput
+      ? ({
+          budget: {
+            budgetary_impact: 1000,
+          },
+          earnings: {
+            total_earnings: 50000,
+          },
+        } as any)
+      : null,
   });
 
   it('should hydrate cache with persisted output for economy report', () => {
     const mockReport = createMockReport(true);
     const outputType: 'societyWide' | 'household' = 'societyWide';
 
-    renderHook(
-      () => useHydrateCalculationCache({ report: mockReport, outputType }),
-      { wrapper }
-    );
+    renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType }), { wrapper });
 
     const queryKey = calculationKeys.byReportId(mockReport.id!);
     const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
@@ -72,10 +73,7 @@ describe('useHydrateCalculationCache', () => {
     const mockReport = createMockReport(true);
     const outputType: 'societyWide' | 'household' = 'household';
 
-    renderHook(
-      () => useHydrateCalculationCache({ report: mockReport, outputType }),
-      { wrapper }
-    );
+    renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType }), { wrapper });
 
     // For household reports, the hook hydrates simulation-level caches, not report-level cache
     // Since no simulations are in the cache, nothing gets hydrated
@@ -91,10 +89,7 @@ describe('useHydrateCalculationCache', () => {
     const mockReport = createMockReport(false);
     const outputType: 'societyWide' | 'household' = 'societyWide';
 
-    renderHook(
-      () => useHydrateCalculationCache({ report: mockReport, outputType }),
-      { wrapper }
-    );
+    renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType }), { wrapper });
 
     const queryKey = calculationKeys.byReportId(mockReport.id!);
     const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
@@ -105,10 +100,9 @@ describe('useHydrateCalculationCache', () => {
   it('should skip hydration if report is undefined', () => {
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    renderHook(
-      () => useHydrateCalculationCache({ report: undefined, outputType: 'societyWide' }),
-      { wrapper }
-    );
+    renderHook(() => useHydrateCalculationCache({ report: undefined, outputType: 'societyWide' }), {
+      wrapper,
+    });
 
     expect(consoleLogSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('[useHydrateCalculationCache]')
@@ -119,10 +113,9 @@ describe('useHydrateCalculationCache', () => {
     const mockReport = createMockReport(true);
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    renderHook(
-      () => useHydrateCalculationCache({ report: mockReport, outputType: undefined }),
-      { wrapper }
-    );
+    renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType: undefined }), {
+      wrapper,
+    });
 
     expect(consoleLogSpy).not.toHaveBeenCalledWith(
       expect.stringContaining('[useHydrateCalculationCache]')
@@ -140,10 +133,7 @@ describe('useHydrateCalculationCache', () => {
 
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    renderHook(
-      () => useHydrateCalculationCache({ report: mockReport, outputType }),
-      { wrapper }
-    );
+    renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType }), { wrapper });
 
     // Should log that cache is already populated with timestamp
     expect(consoleLogSpy).toHaveBeenCalledWith(
@@ -182,10 +172,7 @@ describe('useHydrateCalculationCache', () => {
 
     const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-    renderHook(
-      () => useHydrateCalculationCache({ report: mockReport, outputType }),
-      { wrapper }
-    );
+    renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType }), { wrapper });
 
     expect(consoleLogSpy).toHaveBeenCalledWith(
       '[useHydrateCache] Hydrating cache with persisted result'
@@ -197,7 +184,7 @@ describe('useHydrateCalculationCache', () => {
     const outputType: 'societyWide' | 'household' = 'societyWide';
 
     const { rerender } = renderHook(
-      (props: { report: Report | undefined, outputType: 'societyWide' | 'household' }) =>
+      (props: { report: Report | undefined; outputType: 'societyWide' | 'household' }) =>
         useHydrateCalculationCache(props),
       {
         wrapper,

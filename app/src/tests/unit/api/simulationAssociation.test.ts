@@ -1,15 +1,15 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { UserSimulationAdapter } from '@/adapters/UserSimulationAdapter';
+import { ApiSimulationStore, LocalStorageSimulationStore } from '@/api/simulationAssociation';
 import {
-  TEST_USER_IDS,
-  TEST_SIM_IDS,
-  TEST_LABELS,
-  mockSimulationInput,
+  mockErrorFetchResponse,
   mockSimulation,
   mockSimulationApiResponse,
+  mockSimulationInput,
   mockSuccessFetchResponse,
-  mockErrorFetchResponse,
+  TEST_LABELS,
+  TEST_SIM_IDS,
+  TEST_USER_IDS,
 } from '@/tests/fixtures/api/simulationAssociationMocks';
 
 // Mock the adapter
@@ -180,7 +180,9 @@ describe('LocalStorageSimulationStore', () => {
   describe('create', () => {
     it('given new simulation then stores in localStorage', async () => {
       // When
-      const result = await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
+      const result = await store.create(
+        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+      );
 
       // Then
       expect(result).toMatchObject({
@@ -197,11 +199,15 @@ describe('LocalStorageSimulationStore', () => {
 
     it('given simulation then generates unique ID', async () => {
       // When
-      const result1 = await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
-      const result2 = await store.create(mockSimulationInput({
-        simulationId: TEST_SIM_IDS.SIM_999,
-        label: TEST_LABELS.TEST_SIMULATION_2,
-      }));
+      const result1 = await store.create(
+        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+      );
+      const result2 = await store.create(
+        mockSimulationInput({
+          simulationId: TEST_SIM_IDS.SIM_999,
+          label: TEST_LABELS.TEST_SIMULATION_2,
+        })
+      );
 
       // Then
       expect(result1.id).toMatch(/^sus-/);
@@ -224,10 +230,12 @@ describe('LocalStorageSimulationStore', () => {
     it('given user with simulations then returns all user simulations', async () => {
       // Given
       await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
-      await store.create(mockSimulationInput({
-        simulationId: TEST_SIM_IDS.SIM_999,
-        label: TEST_LABELS.TEST_SIMULATION_2,
-      }));
+      await store.create(
+        mockSimulationInput({
+          simulationId: TEST_SIM_IDS.SIM_999,
+          label: TEST_LABELS.TEST_SIMULATION_2,
+        })
+      );
 
       // When
       const result = await store.findByUser(TEST_USER_IDS.USER_123);

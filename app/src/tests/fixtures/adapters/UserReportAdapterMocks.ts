@@ -20,7 +20,9 @@ export const TEST_LABELS = {
   ANOTHER_REPORT: 'Another Report',
 } as const;
 
-export const mockUserReportInput = (overrides?: Partial<Omit<UserReport, 'id' | 'createdAt'>>): Omit<UserReport, 'id' | 'createdAt'> => ({
+export const mockUserReportInput = (
+  overrides?: Partial<Omit<UserReport, 'id' | 'createdAt'>>
+): Omit<UserReport, 'id' | 'createdAt'> => ({
   userId: TEST_USER_IDS.USER_123,
   reportId: TEST_REPORT_IDS.REPORT_456,
   label: TEST_LABELS.TEST_REPORT,

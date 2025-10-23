@@ -1,14 +1,14 @@
 import { Container, Divider, Stack, Text, Title } from '@mantine/core';
-import { spacing } from '@/designTokens';
-import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 import {
-  SetupConditionsVariant,
   ButtonPanelVariant,
   CardListVariant,
-  type SetupConditionCard,
+  SetupConditionsVariant,
   type ButtonPanelCard,
   type CardListItem,
+  type SetupConditionCard,
 } from '@/components/flowView';
+import { spacing } from '@/designTokens';
+import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
 interface FlowViewProps {
   title: string;

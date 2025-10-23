@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { getDisplayStatus, STATUS_DISPLAY_MAP } from '@/utils/statusMapping';
+import { describe, expect, it } from 'vitest';
 import {
-  TEST_API_STATUSES,
   EXPECTED_DISPLAY_STATUSES,
+  TEST_API_STATUSES,
 } from '@/tests/fixtures/utils/statusMappingMocks';
+import { getDisplayStatus, STATUS_DISPLAY_MAP } from '@/utils/statusMapping';
 
 describe('statusMapping', () => {
   describe('getDisplayStatus', () => {

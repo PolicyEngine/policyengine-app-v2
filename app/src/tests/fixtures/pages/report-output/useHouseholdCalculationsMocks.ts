@@ -16,29 +16,33 @@ export const mockOrchestrator = {
   getProgress: vi.fn(() => ({ completed: 0, total: 2 })),
 };
 
-export const mockViewModel = () => ({
-  shouldStartCalculations: vi.fn(() => false),
-  buildCalculationConfig: vi.fn(() => mockCalcConfig),
-  simulationStates: { isPending: false },
-} as unknown as HouseholdReportViewModel);
+export const mockViewModel = () =>
+  ({
+    shouldStartCalculations: vi.fn(() => false),
+    buildCalculationConfig: vi.fn(() => mockCalcConfig),
+    simulationStates: { isPending: false },
+  }) as unknown as HouseholdReportViewModel;
 
-export const mockViewModelShouldStart = () => ({
-  shouldStartCalculations: vi.fn(() => true),
-  buildCalculationConfig: vi.fn(() => mockCalcConfig),
-  simulationStates: { isPending: false },
-} as unknown as HouseholdReportViewModel);
+export const mockViewModelShouldStart = () =>
+  ({
+    shouldStartCalculations: vi.fn(() => true),
+    buildCalculationConfig: vi.fn(() => mockCalcConfig),
+    simulationStates: { isPending: false },
+  }) as unknown as HouseholdReportViewModel;
 
-export const mockViewModelShouldNotStart = () => ({
-  shouldStartCalculations: vi.fn(() => false),
-  buildCalculationConfig: vi.fn(() => mockCalcConfig),
-  simulationStates: { isPending: false },
-} as unknown as HouseholdReportViewModel);
+export const mockViewModelShouldNotStart = () =>
+  ({
+    shouldStartCalculations: vi.fn(() => false),
+    buildCalculationConfig: vi.fn(() => mockCalcConfig),
+    simulationStates: { isPending: false },
+  }) as unknown as HouseholdReportViewModel;
 
-export const mockViewModelNoConfig = () => ({
-  shouldStartCalculations: vi.fn(() => true),
-  buildCalculationConfig: vi.fn(() => null),
-  simulationStates: { isPending: false },
-} as unknown as HouseholdReportViewModel);
+export const mockViewModelNoConfig = () =>
+  ({
+    shouldStartCalculations: vi.fn(() => true),
+    buildCalculationConfig: vi.fn(() => null),
+    simulationStates: { isPending: false },
+  }) as unknown as HouseholdReportViewModel;
 
 // Mock for @/hooks/household module
 export const mockHouseholdHookModule = () => ({
