@@ -11,7 +11,10 @@ export const policyAssociationKeys = {
 
 export const householdAssociationKeys = {
   all: ['household-associations'] as const,
-  byUser: (userId: string) => [...householdAssociationKeys.all, 'user_id', userId] as const,
+  byUser: (userId: string, countryId?: string) =>
+    countryId
+      ? ([...householdAssociationKeys.all, 'user_id', userId, 'country', countryId] as const)
+      : ([...householdAssociationKeys.all, 'user_id', userId] as const),
   byHousehold: (householdId: string) =>
     [...householdAssociationKeys.all, 'household_id', householdId] as const,
   specific: (userId: string, householdId: string) =>
