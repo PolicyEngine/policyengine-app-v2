@@ -30,6 +30,11 @@ vi.mock('@/api/simulationAssociation', () => {
   };
 });
 
+// Mock useCurrentCountry
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock query config
 vi.mock('@/libs/queryConfig', () => ({
   queryConfig: {

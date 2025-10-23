@@ -44,7 +44,11 @@ export const MOCK_HOUSEHOLD_FAMILY = {
     country_id: 'us',
     household_json: { people: {} },
   },
-  association: { label: 'My Family' },
+  association: {
+    label: 'My Family',
+    countryId: 'us',
+    isCreated: true,
+  },
 };
 
 export const mockHouseholdData = [MOCK_HOUSEHOLD_FAMILY];
@@ -58,7 +62,11 @@ export const MOCK_GEOGRAPHIC_US = {
     geographyId: 'us',
     name: 'United States',
   },
-  association: { label: 'US National' },
+  association: {
+    label: 'US National',
+    countryId: 'us',
+    isCreated: true,
+  },
 };
 
 export const mockGeographicData = [MOCK_GEOGRAPHIC_US];
