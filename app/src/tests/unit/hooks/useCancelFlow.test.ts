@@ -6,12 +6,10 @@ import { clearFlow } from '@/reducers/flowReducer';
 import {
   createMockDispatch,
   createMockNavigate,
-  createMockRootState,
   createMockUseIngredientReset,
   EXPECTED_NAVIGATION_PATHS,
   TEST_COUNTRIES,
   TEST_INGREDIENT_TYPES,
-  TEST_POSITIONS,
 } from '@/tests/fixtures/hooks/useCancelFlowMocks';
 
 // Mock dependencies
@@ -44,20 +42,15 @@ vi.mock('@/reducers/flowReducer', () => ({
   clearFlow: vi.fn(() => ({ type: 'flow/clearFlow' })),
 }));
 
-let mockRootState: ReturnType<typeof createMockRootState>;
-
 describe('useCancelFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Default: standalone flow (no subflow), position 0, country 'us'
-    mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
     mockUseCurrentCountry.mockReturnValue(TEST_COUNTRIES.US);
   });
 
   describe('Nuclear option behavior', () => {
     test('given policy cancellation then clears all policies, exits all flows, and navigates', () => {
       // Given - Can be in any context (standalone or subflow, any position)
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
       // When
@@ -75,7 +68,6 @@ describe('useCancelFlow', () => {
 
     test('given population cancellation then clears all populations, exits all flows, and navigates', () => {
       // Given
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POPULATION));
 
       // When
@@ -93,7 +85,6 @@ describe('useCancelFlow', () => {
 
     test('given simulation cancellation then clears all simulations, exits all flows, and navigates', () => {
       // Given
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.SIMULATION));
 
       // When
@@ -111,7 +102,6 @@ describe('useCancelFlow', () => {
 
     test('given report cancellation then clears all reports, exits all flows, and navigates', () => {
       // Given
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.REPORT));
 
       // When
@@ -131,7 +121,6 @@ describe('useCancelFlow', () => {
   describe('Context independence', () => {
     test('given standalone flow then behavior is same as subflow', () => {
       // Given - Standalone flow (flowStack length = 0)
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
       // When
@@ -149,7 +138,6 @@ describe('useCancelFlow', () => {
 
     test('given subflow then behavior is same as standalone', () => {
       // Given - Subflow (flowStack length = 1)
-      mockRootState = createMockRootState(1, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
       // When
@@ -167,7 +155,6 @@ describe('useCancelFlow', () => {
 
     test('given deep subflow then still exits all flows', () => {
       // Given - Deep subflow (flowStack length = 3)
-      mockRootState = createMockRootState(3, TEST_POSITIONS.SECOND, TEST_COUNTRIES.UK);
       mockUseCurrentCountry.mockReturnValue(TEST_COUNTRIES.UK);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.SIMULATION));
 
@@ -186,7 +173,6 @@ describe('useCancelFlow', () => {
 
     test('given position 1 then still resets all (position-independent)', () => {
       // Given - At position 1
-      mockRootState = createMockRootState(0, TEST_POSITIONS.SECOND, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POPULATION));
 
       // When
@@ -206,7 +192,6 @@ describe('useCancelFlow', () => {
   describe('Country-specific navigation', () => {
     test('given UK country then navigates to UK policies page', () => {
       // Given
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.UK);
       mockUseCurrentCountry.mockReturnValue(TEST_COUNTRIES.UK);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
@@ -223,7 +208,6 @@ describe('useCancelFlow', () => {
   describe('Return value', () => {
     test('given hook called then returns handleCancel function', () => {
       // Given
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
       // Then
