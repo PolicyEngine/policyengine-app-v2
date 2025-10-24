@@ -216,12 +216,17 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   const primaryAction = getPrimaryAction();
 
+  const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
   return (
     <FlowView
       title="Setup Simulation"
       variant="setupConditions"
       setupConditionCards={setupConditionCards}
       primaryAction={primaryAction}
+      cancelAction={cancelAction}
     />
   );
 }

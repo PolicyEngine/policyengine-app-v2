@@ -40,5 +40,16 @@ export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) 
     onClick: submissionHandler,
   };
 
-  return <FlowView title="Create report" content={formInputs} primaryAction={primaryAction} />;
+  const cancelAction = {
+    ingredientType: 'report' as const,
+  };
+
+  return (
+    <FlowView
+      title="Create report"
+      content={formInputs}
+      primaryAction={primaryAction}
+      cancelAction={cancelAction}
+    />
+  );
 }

@@ -95,7 +95,11 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   }
 
   if (userSimulations.length === 0) {
-    return (
+    const cancelAction = {
+    ingredientType: 'report' as const,
+  };
+
+  return (
       <FlowView
         title="Select an Existing Simulation"
         content={<Text>No simulations available. Please create a new simulation.</Text>}
@@ -156,6 +160,10 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     isDisabled: !canProceed(),
   };
 
+  const cancelAction = {
+    ingredientType: 'report' as const,
+  };
+
   return (
     <FlowView
       title="Select an Existing Simulation"
@@ -163,6 +171,7 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
       cardListItems={simulationCardItems}
       primaryAction={primaryAction}
       itemsPerPage={5}
+      cancelAction={cancelAction}
     />
   );
 }

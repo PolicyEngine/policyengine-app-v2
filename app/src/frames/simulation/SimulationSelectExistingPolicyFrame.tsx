@@ -132,7 +132,11 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
-    return (
+    const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
+  return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text>Loading policies...</Text>}
@@ -142,7 +146,11 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   }
 
   if (isError) {
-    return (
+    const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
+  return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
@@ -152,7 +160,11 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   }
 
   if (userPolicies.length === 0) {
-    return (
+    const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
+  return (
       <FlowView
         title="Select an Existing Policy"
         content={<Text>No policies available. Please create a new policy.</Text>}
@@ -203,6 +215,10 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     isDisabled: !canProceed(),
   };
 
+  const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
   return (
     <FlowView
       title="Select an Existing Policy"
@@ -210,6 +226,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       cardListItems={policyCardItems}
       primaryAction={primaryAction}
       itemsPerPage={5}
+      cancelAction={cancelAction}
     />
   );
 }
