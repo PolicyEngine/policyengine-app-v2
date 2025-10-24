@@ -21,8 +21,11 @@ import {
 } from '@mantine/core';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReportById } from '@/hooks/useUserReports';
+import { getComparativeAnalysisTree } from './report-output/comparativeAnalysisTree';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
+import { ReportSidebar } from './report-output/ReportSidebar';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
 
 /**
@@ -45,7 +48,16 @@ export type ReportOutputType = 'household' | 'societyWide';
 
 export default function ReportOutputPage() {
   const navigate = useNavigate();
-  const { reportId: userReportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
+  const {
+    reportId: userReportId,
+    subpage,
+    view,
+  } = useParams<{
+    reportId?: string;
+    subpage?: string;
+    view?: string;
+  }>();
+  const countryId = useCurrentCountry();
 
   // If no userReportId, show error
   if (!userReportId) {
@@ -88,6 +100,7 @@ export default function ReportOutputPage() {
 
   const DEFAULT_PAGE = 'overview';
   const activeTab = subpage || DEFAULT_PAGE;
+  const activeView = view || '';
 
   // Redirect to overview if no subpage is specified and data is ready
   useEffect(() => {
@@ -129,6 +142,15 @@ export default function ReportOutputPage() {
     );
   }
 
+  // Determine if sidebar should be shown
+  const showSidebar = activeTab === 'comparative-analysis' && outputType === 'societyWide';
+
+  // Handle sidebar navigation
+  const handleSidebarNavigate = (viewName: string) => {
+    // Build absolute path to ensure correct navigation
+    navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
+  };
+
   // Render content based on active tab and output type
   const renderContent = () => {
     if (outputType === 'household') {
@@ -147,7 +169,7 @@ export default function ReportOutputPage() {
     }
 
     if (outputType === 'societyWide') {
-      return <SocietyWideReportOutput activeTab={activeTab} />;
+      return <SocietyWideReportOutput activeTab={activeTab} activeView={activeView} />;
     }
 
     return <Text c="red">Unknown report type</Text>;
@@ -282,8 +304,19 @@ export default function ReportOutputPage() {
           </Box>
         </Box>
 
-        {/* Content Area */}
-        {renderContent()}
+        {/* Content Area with optional sidebar */}
+        {showSidebar ? (
+          <Group align="flex-start" gap={0}>
+            <ReportSidebar
+              tree={getComparativeAnalysisTree(countryId)}
+              activeView={activeView}
+              onNavigate={handleSidebarNavigate}
+            />
+            <Box style={{ flex: 1 }}>{renderContent()}</Box>
+          </Group>
+        ) : (
+          renderContent()
+        )}
       </Stack>
     </Container>
   );
@@ -298,8 +331,7 @@ function getTabsForOutputType(
   if (outputType === 'societyWide') {
     return [
       { value: 'overview', label: 'Overview' },
-      { value: 'budgetary-impact', label: 'Budgetary Impact' },
-      { value: 'budgetary-impact-by-program', label: 'Budgetary Impact by Program' },
+      { value: 'comparative-analysis', label: 'Comparative Analysis' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'dynamics', label: 'Dynamics' },
