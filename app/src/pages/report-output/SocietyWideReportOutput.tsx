@@ -3,14 +3,19 @@ import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/society
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import type { CalcStartConfig } from '@/types/calculation';
+import type { Geography } from '@/types/ingredients/Geography';
+import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
+import PolicySubPage from './PolicySubPage';
+import PopulationSubPage from './PopulationSubPage';
 
 interface SocietyWideReportOutputProps {
   reportId: string;
@@ -19,6 +24,8 @@ interface SocietyWideReportOutputProps {
   simulations?: Simulation[];
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
+  policies?: Policy[];
+  geographies?: Geography[];
 }
 
 /**
@@ -33,6 +40,9 @@ export function SocietyWideReportOutput({
   subpage = 'overview',
   report,
   simulations,
+  userPolicies,
+  policies,
+  geographies,
 }: SocietyWideReportOutputProps) {
 
   // Get calculation status for report
@@ -111,7 +121,40 @@ export function SocietyWideReportOutput({
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    return <OverviewSubPage output={output} outputType="societyWide" />;
+    // Route to appropriate SubPage based on subpage param
+    switch (subpage) {
+      case 'overview':
+        return <OverviewSubPage output={output} outputType="societyWide" />;
+
+      case 'policy':
+        return (
+          <PolicySubPage
+            policies={policies}
+            userPolicies={userPolicies}
+            reportType="economy"
+          />
+        );
+
+      case 'population':
+        return (
+          <PopulationSubPage
+            baselineSimulation={simulations?.[0]}
+            reformSimulation={simulations?.[1]}
+            geographies={geographies}
+          />
+        );
+
+      case 'dynamics':
+        return <DynamicsSubPage />;
+
+      case 'baseline-results':
+      case 'reform-results':
+        // TODO: Implement baseline and reform results views
+        return <NotFoundSubPage />;
+
+      default:
+        return <NotFoundSubPage />;
+    }
   }
 
   // No output yet
