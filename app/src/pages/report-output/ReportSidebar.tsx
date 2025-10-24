@@ -38,8 +38,13 @@ function MenuItem({ node, activeView, onNavigate }: MenuItemProps) {
       <Text
         size="sm"
         style={{
-          color: isDisabled ? colors.gray[400] : isActive ? colors.text.primary : colors.gray[700],
-          fontWeight: isActive ? 500 : 400,
+          color: isDisabled
+            ? colors.gray[400]
+            : isActive
+              ? colors.text.primary
+              : 'rgba(0, 0, 0, 0.85)',
+          fontWeight: 400,
+          fontFamily: 'Roboto, sans-serif',
         }}
       >
         {node.label}
@@ -87,21 +92,22 @@ function MenuGroup({ node, activeView, onNavigate }: MenuGroupProps) {
           e.currentTarget.style.backgroundColor = 'transparent';
         }}
       >
-        <Group gap={spacing.xs}>
+        <Group gap={spacing.xs} justify="space-between" style={{ width: '100%' }}>
+          <Text
+            size="sm"
+            style={{
+              color: isDisabled ? colors.gray[400] : colors.text.primary,
+              fontWeight: 400,
+              fontFamily: 'Roboto, sans-serif',
+            }}
+          >
+            {node.label}
+          </Text>
           {expanded ? (
             <IconChevronDown size={16} color={isDisabled ? colors.gray[400] : colors.gray[600]} />
           ) : (
             <IconChevronRight size={16} color={isDisabled ? colors.gray[400] : colors.gray[600]} />
           )}
-          <Text
-            size="sm"
-            style={{
-              color: isDisabled ? colors.gray[400] : colors.text.primary,
-              fontWeight: 500,
-            }}
-          >
-            {node.label}
-          </Text>
         </Group>
       </Box>
 
