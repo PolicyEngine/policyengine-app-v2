@@ -1,14 +1,25 @@
 import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
-import { useUserReportById } from '@/hooks/useUserReports';
 import type { CalcStartConfig } from '@/types/calculation';
+import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
+import type { UserPolicy } from '@/types/ingredients/UserPolicy';
+import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
+
+interface SocietyWideReportOutputProps {
+  reportId: string;
+  subpage?: string;
+  report?: Report;
+  simulations?: Simulation[];
+  userSimulations?: UserSimulation[];
+  userPolicies?: UserPolicy[];
+}
 
 /**
  * Society-wide report output page
@@ -17,16 +28,12 @@ import OverviewSubPage from './OverviewSubPage';
  * This is the same as the societyWide branch of ReportOutput.page.tsx,
  * just isolated into its own component for clarity.
  */
-export function SocietyWideReportOutput() {
-  const { reportId } = useParams<{ reportId: string }>();
-
-  // Fetch report and simulations
-  const {
-    report,
-    simulations,
-    isLoading: dataLoading,
-    error: dataError,
-  } = useUserReportById(reportId!);
+export function SocietyWideReportOutput({
+  reportId,
+  subpage = 'overview',
+  report,
+  simulations,
+}: SocietyWideReportOutputProps) {
 
   // Get calculation status for report
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
@@ -77,14 +84,9 @@ export function SocietyWideReportOutput() {
     isComplete: calcStatus.isComplete,
   });
 
-  // Show loading state while fetching data
-  if (dataLoading) {
-    return <LoadingPage message="Loading report..." />;
-  }
-
-  // Show error if data failed to load
-  if (dataError || !report) {
-    return <ErrorPage error={dataError || new Error('Report not found')} />;
+  // Show error if no report data
+  if (!report) {
+    return <ErrorPage error={new Error('Report not found')} />;
   }
 
   // Show loading if calculation status is still initializing

@@ -18,7 +18,7 @@ interface HouseholdReportOutputProps {
   simulations: Simulation[] | undefined;
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
-  activeTab?: string;
+  subpage?: string;
   isLoading: boolean;
   error: Error | null;
 }
@@ -37,7 +37,7 @@ export function HouseholdReportOutput({
   simulations,
   userSimulations,
   userPolicies,
-  activeTab = 'overview',
+  subpage = 'overview',
   isLoading: dataLoading,
   error: dataError,
 }: HouseholdReportOutputProps) {
@@ -121,7 +121,7 @@ export function HouseholdReportOutput({
     }
 
     // Render different content based on active tab
-    switch (activeTab) {
+    switch (subpage) {
       case 'overview':
         return (
           <OverviewSubPage output={output} outputType="household" policyLabels={policyLabels} />
