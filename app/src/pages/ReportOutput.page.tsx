@@ -147,7 +147,7 @@ export default function ReportOutputPage() {
     }
 
     if (outputType === 'societyWide') {
-      return <SocietyWideReportOutput />;
+      return <SocietyWideReportOutput activeTab={activeTab} />;
     }
 
     return <Text c="red">Unknown report type</Text>;
@@ -298,6 +298,8 @@ function getTabsForOutputType(
   if (outputType === 'societyWide') {
     return [
       { value: 'overview', label: 'Overview' },
+      { value: 'budgetary-impact', label: 'Budgetary Impact' },
+      { value: 'budgetary-impact-by-program', label: 'Budgetary Impact by Program' },
       { value: 'baseline-results', label: 'Baseline Simulation Results' },
       { value: 'reform-results', label: 'Reform Results' },
       { value: 'dynamics', label: 'Dynamics' },

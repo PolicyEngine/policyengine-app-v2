@@ -5,10 +5,16 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { CalcStartConfig } from '@/types/calculation';
+import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
+import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
+
+interface Props {
+  activeTab: string;
+}
 
 /**
  * Society-wide report output page
@@ -17,7 +23,7 @@ import OverviewSubPage from './OverviewSubPage';
  * This is the same as the societyWide branch of ReportOutput.page.tsx,
  * just isolated into its own component for clarity.
  */
-export function SocietyWideReportOutput() {
+export function SocietyWideReportOutput({ activeTab }: Props) {
   const { reportId } = useParams<{ reportId: string }>();
 
   // Fetch report and simulations
@@ -109,7 +115,17 @@ export function SocietyWideReportOutput() {
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    return <OverviewSubPage output={output} outputType="societyWide" />;
+    // Render appropriate subpage based on activeTab
+    switch (activeTab) {
+      case 'overview':
+        return <OverviewSubPage output={output} outputType="societyWide" />;
+      case 'budgetary-impact':
+        return <BudgetaryImpactSubPage output={output} />;
+      case 'budgetary-impact-by-program':
+        return <BudgetaryImpactByProgramSubPage output={output} />;
+      default:
+        return <NotFoundSubPage />;
+    }
   }
 
   // No output yet
