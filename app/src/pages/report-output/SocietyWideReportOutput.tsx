@@ -5,10 +5,16 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { CalcStartConfig } from '@/types/calculation';
+import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
+
+interface Props {
+  activeTab: string;
+  activeView?: string;
+}
 
 /**
  * Society-wide report output page
@@ -17,8 +23,10 @@ import OverviewSubPage from './OverviewSubPage';
  * This is the same as the societyWide branch of ReportOutput.page.tsx,
  * just isolated into its own component for clarity.
  */
-export function SocietyWideReportOutput() {
+export function SocietyWideReportOutput({ activeTab, activeView }: Props) {
   const { reportId } = useParams<{ reportId: string }>();
+
+  console.log('[SocietyWideReportOutput] Rendering with:', { activeTab, activeView });
 
   // Fetch report and simulations
   const {
@@ -109,7 +117,29 @@ export function SocietyWideReportOutput() {
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    return <OverviewSubPage output={output} outputType="societyWide" />;
+    console.log(
+      '[SocietyWideReportOutput] Rendering content for tab:',
+      activeTab,
+      'view:',
+      activeView
+    );
+
+    // Render appropriate subpage based on activeTab
+    // Using key prop to force re-render when tab changes
+    switch (activeTab) {
+      case 'overview':
+        return <OverviewSubPage key={activeTab} output={output} outputType="societyWide" />;
+      case 'comparative-analysis':
+        return (
+          <ComparativeAnalysisPage
+            key={`${activeTab}-${activeView}`}
+            output={output}
+            view={activeView}
+          />
+        );
+      default:
+        return <NotFoundSubPage key={activeTab} />;
+    }
   }
 
   // No output yet

@@ -54,7 +54,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     expect(screen.getByText('Loading report...')).toBeInTheDocument();
@@ -78,7 +78,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     expect(screen.getByText('Failed to load report')).toBeInTheDocument();
@@ -101,7 +101,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     expect(screen.getByText('Loading calculation status...')).toBeInTheDocument();
@@ -125,7 +125,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     expect(screen.getByText('Computing society-wide impacts...')).toBeInTheDocument();
@@ -149,7 +149,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     expect(screen.getByText('Calculation failed')).toBeInTheDocument();
@@ -186,7 +186,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     await waitFor(() => {
@@ -213,7 +213,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     expect(screen.getByText('Page Not Found')).toBeInTheDocument();
@@ -236,7 +236,7 @@ describe('SocietyWideReportOutput', () => {
     });
 
     // When
-    render(<SocietyWideReportOutput />);
+    render(<SocietyWideReportOutput activeTab="overview" />);
 
     // Then
     expect(mockUseStartCalculationOnLoad).toHaveBeenCalledWith(
