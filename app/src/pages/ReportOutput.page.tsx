@@ -112,9 +112,9 @@ export default function ReportOutputPage() {
   // Determine which tabs to show based on output type
   const tabs = outputType ? getTabsForOutputType(outputType) : [];
 
-  // Handle tab navigation (relative navigation)
+  // Handle tab navigation
   const handleTabClick = (tabValue: string) => {
-    navigate(tabValue);
+    navigate(`../${tabValue}`, { relative: 'path' });
   };
 
   // Format timestamp (placeholder for now)
