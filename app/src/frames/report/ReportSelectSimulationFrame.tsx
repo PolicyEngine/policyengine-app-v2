@@ -42,17 +42,12 @@ export default function ReportSelectSimulationFrame({ onNavigate }: FlowComponen
     isDisabled: !selectedAction,
   };
 
-  const cancelAction = {
-    ingredientType: 'report' as const,
-  };
-
   return (
     <FlowView
       title="Select Simulation"
       variant="buttonPanel"
       buttonPanelCards={buttonPanelCards}
       primaryAction={primaryAction}
-      cancelAction={cancelAction}
     />
   );
 }

@@ -107,8 +107,8 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
   };
 
   const cancelAction = {
-    label: 'Cancel',
-    ingredientType: 'population' as const,
+    label: 'Back',
+    onClick: () => onNavigate('back'),
   };
 
   return (

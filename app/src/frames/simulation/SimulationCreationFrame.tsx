@@ -66,16 +66,5 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
     onClick: submissionHandler,
   };
 
-  const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
-
-  return (
-    <FlowView
-      title="Create simulation"
-      content={formInputs}
-      primaryAction={primaryAction}
-      cancelAction={cancelAction}
-    />
-  );
+  return <FlowView title="Create simulation" content={formInputs} primaryAction={primaryAction} />;
 }

@@ -12,25 +12,12 @@ import {
   SELECT_SIMULATION_FRAME_TITLE,
 } from '@/tests/fixtures/frames/ReportSelectSimulationFrame';
 
-// Mock useBackButton hook
-const mockHandleBack = vi.fn();
-vi.mock('@/hooks/useBackButton', () => ({
-  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
-}));
-
-// Mock useCancelFlow
-const mockHandleCancel = vi.fn();
-vi.mock('@/hooks/useCancelFlow', () => ({
-  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
-}));
-
 describe('ReportSelectSimulationFrame', () => {
   let mockOnNavigate: ReturnType<typeof vi.fn>;
   let mockOnReturn: ReturnType<typeof vi.fn>;
   let defaultFlowProps: any;
 
   beforeEach(() => {
-    mockHandleCancel.mockClear();
     vi.clearAllMocks();
 
     mockOnNavigate = vi.fn();

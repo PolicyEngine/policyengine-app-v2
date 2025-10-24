@@ -1,8 +1,6 @@
 import { IconCheck } from '@tabler/icons-react';
 import { Badge, Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
-import { useBackButton } from '@/hooks/useBackButton';
-import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // Interfaces for different content types
@@ -36,7 +34,6 @@ interface IngredientSubmissionViewProps {
   submitButtonText?: string; // Defaults to title
   submissionHandler: CallableFunction; // Function to handle form submission
   submitButtonLoading?: boolean;
-  ingredientType: 'policy' | 'population' | 'simulation' | 'report';
 
   // Content modes - only one should be provided
   content?: React.ReactNode; // Original free-form content
@@ -53,25 +50,12 @@ export default function IngredientSubmissionView({
   submitButtonText,
   submissionHandler,
   submitButtonLoading,
-  ingredientType,
 }: IngredientSubmissionViewProps) {
-  const { handleBack, canGoBack } = useBackButton();
-  const { handleCancel } = useCancelFlow(ingredientType);
-
   const buttonConfig: ButtonConfig[] = [
-    ...(canGoBack
-      ? [
-          {
-            label: 'Back',
-            variant: 'default' as const,
-            onClick: handleBack,
-          },
-        ]
-      : []),
     {
       label: 'Cancel',
       variant: 'default' as const,
-      onClick: handleCancel,
+      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
     },
     {
       label: submitButtonText || title,

@@ -31,9 +31,9 @@ export default function FlowContainer() {
       return;
     }
 
-    // Handle special return keyword (successful completion - use returnFrame)
+    // Handle special return keyword
     if (target === '__return__') {
-      dispatch(returnFromFlow({ useReturnFrame: true }));
+      dispatch(returnFromFlow());
       return;
     }
 
@@ -63,9 +63,9 @@ export default function FlowContainer() {
     }
   };
 
-  // Handle returning from a subflow (successful completion - use returnFrame)
+  // Handle returning from a subflow
   const handleReturn = () => {
-    dispatch(returnFromFlow({ useReturnFrame: true }));
+    dispatch(returnFromFlow());
   };
 
   // Get the component to render

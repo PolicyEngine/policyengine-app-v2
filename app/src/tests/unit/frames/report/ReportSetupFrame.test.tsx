@@ -38,21 +38,8 @@ vi.mock('react-redux', async () => {
   };
 });
 
-// Mock useBackButton hook
-const mockHandleBack = vi.fn();
-vi.mock('@/hooks/useBackButton', () => ({
-  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
-}));
-
-// Mock useCancelFlow
-const mockHandleCancel = vi.fn();
-vi.mock('@/hooks/useCancelFlow', () => ({
-  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
-}));
-
 describe('ReportSetupFrame', () => {
   beforeEach(() => {
-    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockDispatch.mockClear();
     mockReportFlowProps.onNavigate.mockClear();
