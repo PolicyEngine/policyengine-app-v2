@@ -67,19 +67,24 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
     let currentLine = '';
 
     words.forEach((word) => {
-      if ((currentLine + ' ' + word).length > width) {
-        if (currentLine) lines.push(currentLine);
+      if (`${currentLine} ${word}`.length > width) {
+        if (currentLine) {
+          lines.push(currentLine);
+        }
         currentLine = word;
       } else {
-        currentLine = currentLine ? currentLine + ' ' + word : word;
+        currentLine = currentLine ? `${currentLine} ${word}` : word;
       }
     });
-    if (currentLine) lines.push(currentLine);
+    if (currentLine) {
+      lines.push(currentLine);
+    }
     return lines.join('<br>');
   };
 
   const hoverMessage = (x: number, y: string, category: string) => {
-    const term1 = y === 'All' ? 'Of all households,' : `Of households in the ${ordinal(y as any)} decile,`;
+    const term1 =
+      y === 'All' ? 'Of all households,' : `Of households in the ${ordinal(y as any)} decile,`;
     const term2 = formatPercent(x, countryId, {
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
@@ -92,8 +97,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   const getChartTitle = () => {
     const totalAhead = all['Gain more than 5%'] + all['Gain less than 5%'];
     const totalBehind = all['Lose more than 5%'] + all['Lose less than 5%'];
-    const percent = (n: number) =>
-      formatPercent(n, countryId, { maximumFractionDigits: 0 });
+    const percent = (n: number) => formatPercent(n, countryId, { maximumFractionDigits: 0 });
     const totalAheadTerm = percent(totalAhead);
     const totalBehindTerm = percent(totalBehind);
     const objectTerm = 'the net income';
@@ -102,13 +106,14 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
     if (totalAhead > 0 && totalBehind > 0) {
       return `This reform would increase ${objectTerm} for ${totalAheadTerm} of the population${regionPhrase} and decrease it for ${totalBehindTerm}`;
-    } else if (totalAhead > 0) {
-      return `This reform would increase ${objectTerm} for ${totalAheadTerm} of the population${regionPhrase}`;
-    } else if (totalBehind > 0) {
-      return `This reform would decrease ${objectTerm} for ${totalBehindTerm} of the population${regionPhrase}`;
-    } else {
-      return `This reform would have no effect on ${objectTerm} for the population${regionPhrase}`;
     }
+    if (totalAhead > 0) {
+      return `This reform would increase ${objectTerm} for ${totalAheadTerm} of the population${regionPhrase}`;
+    }
+    if (totalBehind > 0) {
+      return `This reform would decrease ${objectTerm} for ${totalBehindTerm} of the population${regionPhrase}`;
+    }
+    return `This reform would have no effect on ${objectTerm} for the population${regionPhrase}`;
   };
 
   // CSV export handler
@@ -145,10 +150,12 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
   // Generate trace for a specific type and category
   const createTrace = (type: 'all' | 'decile', category: string) => {
-    const hoverTitle = (y: string | number) =>
-      y === 'All' ? 'All households' : `Decile ${y}`;
+    const hoverTitle = (y: string | number) => (y === 'All' ? 'All households' : `Decile ${y}`);
 
-    const xArray = type === 'all' ? [all[category]] : deciles[category];
+    const xArray =
+      type === 'all'
+        ? [all[category as keyof typeof all]]
+        : deciles[category as keyof typeof deciles];
     const yArray = type === 'all' ? ['All'] : decileNumbers;
 
     return {
@@ -164,10 +171,10 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
         color: COLOR_MAP[category],
       },
       orientation: 'h' as const,
-      text: xArray.map((value) => (value * 100).toFixed(0) + '%') as any,
+      text: xArray.map((value: number) => `${(value * 100).toFixed(0)}%`) as any,
       textposition: 'inside' as const,
       textangle: 0,
-      customdata: xArray.map((x, i) => ({
+      customdata: xArray.map((x: number, i: number) => ({
         title: hoverTitle(yArray[i]),
         msg: hoverMessage(x, yArray[i].toString(), category),
       })) as any,
@@ -185,8 +192,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
 
   const layout = {
     height: mobile ? 300 : 450,
-    barmode: 'stack' as const,
-    orientation: 'h' as const,
+    barmode: 'stack',
     grid: {
       rows: 2,
       columns: 1,
@@ -194,7 +200,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
     yaxis: {
       title: { text: '' },
       tickvals: ['All'],
-      domain: [0.91, 1],
+      domain: [0.91, 1] as [number, number],
     },
     xaxis: {
       title: { text: '' },
@@ -215,7 +221,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
       title: { text: 'Income decile' },
       tickvals: decileNumbers,
       anchor: 'x2',
-      domain: [0, 0.85],
+      domain: [0, 0.85] as [number, number],
     },
     showlegend: true,
     legend: {
@@ -225,7 +231,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
       tracegroupgap: 10,
     },
     uniformtext: {
-      mode: 'hide' as const,
+      mode: 'hide',
       minsize: mobile ? 7 : 10,
     },
     margin: {
@@ -247,7 +253,11 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   return (
     <Stack gap={spacing.md}>
       <Group justify="space-between" align="center">
-        <Text size="lg" fw={500} style={{ marginBottom: 20, width: '100%', wordWrap: 'break-word' }}>
+        <Text
+          size="lg"
+          fw={500}
+          style={{ marginBottom: 20, width: '100%', wordWrap: 'break-word' }}
+        >
           {getChartTitle()}
         </Text>
         <Button variant="outline" size="sm" onClick={handleDownloadCsv}>

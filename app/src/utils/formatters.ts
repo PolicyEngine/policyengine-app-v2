@@ -145,5 +145,7 @@ export function precision(values: number[], multiplier: number): number {
     }
   });
   const intervalLength = values.length ? (maxValue - minValue) * multiplier : 0;
-  return intervalLength > 10 || intervalLength <= 0 ? 0 : 1 - Math.round(Math.log10(intervalLength));
+  return intervalLength > 10 || intervalLength <= 0
+    ? 0
+    : 1 - Math.round(Math.log10(intervalLength));
 }

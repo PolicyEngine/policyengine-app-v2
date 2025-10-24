@@ -4,8 +4,8 @@
  */
 
 import wordwrap from 'wordwrapjs';
-import { formatPercent } from './formatters';
 import type { countryIds } from '@/libs/countries';
+import { formatPercent } from './formatters';
 
 type CountryId = (typeof countryIds)[number];
 

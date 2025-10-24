@@ -4,6 +4,7 @@ import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactB
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
+import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
 import NotFoundSubPage from './NotFoundSubPage';
 
 interface Props {
@@ -24,8 +25,8 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
   'budgetary-impact-by-program': BudgetaryImpactByProgramSubPage,
   'distributional-impact-income-relative': DistributionalImpactIncomeRelativeSubPage,
   'distributional-impact-income-average': DistributionalImpactIncomeAverageSubPage,
+  'winners-losers-income-decile': WinnersLosersIncomeDecileSubPage,
   // Add more as implemented:
-  // 'winners-losers-income-decile': WinnersLosersIncomeDecileSubPage,
   // 'distributional-impact-wealth-relative': DistributionalImpactWealthRelativeSubPage,
   // 'distributional-impact-wealth-average': DistributionalImpactWealthAverageSubPage,
   // 'winners-losers-wealth-decile': WinnersLosersWealthDecileSubPage,
