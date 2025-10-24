@@ -1,8 +1,8 @@
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { clearFlow } from '@/reducers/flowReducer';
-import { RootState } from '@/store';
 import { useIngredientReset } from './useIngredientReset';
+import { useCurrentCountry } from './useCurrentCountry';
 
 /**
  * Hook for managing cancel functionality in ingredient creation flows.
@@ -28,7 +28,7 @@ export const useCancelFlow = (
   const { resetIngredient } = useIngredientReset();
 
   // Get country for navigation
-  const countryId = useSelector((state: RootState) => state.metadata.currentCountry) || 'us';
+  const countryId = useCurrentCountry();
 
   const handleCancel = () => {
     // Step 1: Clear ALL ingredient data (nuclear option)
