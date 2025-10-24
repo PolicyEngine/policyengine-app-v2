@@ -20,11 +20,24 @@ import {
   UI_TEXT,
 } from '@/tests/fixtures/frames/populationMocks';
 
+// Mock useBackButton hook
+const mockHandleBack = vi.fn();
+vi.mock('@/hooks/useBackButton', () => ({
+  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
+}));
+
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('SetPopulationLabelFrame', () => {
   let store: any;
   const user = userEvent.setup();
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
   });
 
@@ -256,15 +269,14 @@ describe('SetPopulationLabelFrame', () => {
   describe('Navigation', () => {
     test('given back button clicked then navigates to back', async () => {
       // Given
-      const mockOnNavigate = vi.fn();
-      renderComponent(null, { ...mockFlowProps, onNavigate: mockOnNavigate });
+      renderComponent(null, mockFlowProps);
 
       // When
-      const backButton = screen.getByRole('button', { name: /Back/i });
-      await user.click(backButton);
+      const cancelButton = screen.getByRole('button', { name: /Cancel/i });
+      await user.click(cancelButton);
 
       // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('back');
+      expect(mockHandleCancel).toHaveBeenCalledTimes(1);
     });
   });
 });

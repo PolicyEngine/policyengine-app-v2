@@ -59,10 +59,23 @@ vi.mock('@/reducers/populationReducer', () => ({
   selectGeographyAtPosition: vi.fn(() => null),
 }));
 
+// Mock useBackButton hook
+const mockHandleBack = vi.fn();
+vi.mock('@/hooks/useBackButton', () => ({
+  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
+}));
+
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('ReportSubmitFrame', () => {
   let store: any;
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     clearAllMocks();
 
     (useCreateReport as any).mockReturnValue({

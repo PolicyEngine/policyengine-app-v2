@@ -1,4 +1,6 @@
 import { Container, Divider, Stack, Title } from '@mantine/core';
+import { useBackButton } from '@/hooks/useBackButton';
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 interface IngredientCreationStartViewProps {
@@ -6,6 +8,7 @@ interface IngredientCreationStartViewProps {
   submitButtonText?: string; // Defaults to title
   formInputs?: React.ReactNode;
   submissionHandler: CallableFunction; // Function to handle form submission
+  ingredientType: 'policy' | 'population' | 'simulation' | 'report'; // Required for cancel functionality
 }
 
 export default function IngredientCreationStartView({
@@ -13,12 +16,25 @@ export default function IngredientCreationStartView({
   formInputs,
   submitButtonText,
   submissionHandler,
+  ingredientType,
 }: IngredientCreationStartViewProps) {
+  const { handleBack, canGoBack } = useBackButton();
+  const { handleCancel } = useCancelFlow(ingredientType);
+
   const buttonConfig: ButtonConfig[] = [
+    ...(canGoBack
+      ? [
+          {
+            label: 'Back',
+            variant: 'default' as const,
+            onClick: handleBack,
+          },
+        ]
+      : []),
     {
       label: 'Cancel',
       variant: 'default' as const,
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+      onClick: handleCancel,
     },
     {
       label: submitButtonText || title,

@@ -94,6 +94,7 @@ export default function SimulationSubmitFrame({ onNavigate, isInSubflow }: FlowC
       submitButtonText="Save Simulation"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
+      ingredientType="simulation"
     />
   );
 }

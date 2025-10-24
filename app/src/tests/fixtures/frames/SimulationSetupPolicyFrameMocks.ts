@@ -86,6 +86,12 @@ export const createMockSimulationSetupPolicyState = (overrides?: {
     policy: {
       policies: [null, null],
     },
+    flow: {
+      currentFlow: null,
+      currentFrame: null,
+      flowStack: [],
+      frameHistory: [],
+    },
   };
 };
 

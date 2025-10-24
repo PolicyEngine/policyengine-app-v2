@@ -7,6 +7,8 @@ import {
   type CardListItem,
   type SetupConditionCard,
 } from '@/components/flowView';
+import { useBackButton } from '@/hooks/useBackButton';
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
 interface FlowViewProps {
@@ -43,7 +45,8 @@ interface FlowViewProps {
 
   cancelAction?: {
     label?: string; // defaults to "Cancel"
-    onClick?: () => void; // defaults to console.log placeholder
+    onClick?: () => void; // if not provided, must provide ingredientType
+    ingredientType?: 'policy' | 'population' | 'simulation' | 'report'; // if provided, uses useCancelFlow
   };
 
   // Preset configurations
@@ -65,6 +68,18 @@ export default function FlowView({
   itemsPerPage = 5,
   showPagination = true,
 }: FlowViewProps) {
+  // Use back button hook
+  const { handleBack, canGoBack } = useBackButton();
+
+  // Use cancel flow hook if ingredientType is provided
+  const { handleCancel } = cancelAction?.ingredientType
+    ? useCancelFlow(cancelAction.ingredientType)
+    : { handleCancel: undefined };
+
+  // Determine cancel handler: explicit onClick takes priority, then hook, then no-op
+  const cancelHandler =
+    cancelAction?.onClick || handleCancel || (() => console.warn('Cancel action not configured'));
+
   // Generate buttons from convenience props if explicit buttons not provided
   function getButtons(): ButtonConfig[] {
     // If explicit buttons provided, use them
@@ -78,23 +93,44 @@ export default function FlowView({
     }
 
     if (buttonPreset === 'cancel-only') {
-      return [
-        {
-          label: cancelAction?.label || 'Cancel',
+      const buttons: ButtonConfig[] = [];
+
+      // Add back button if there's frame history or parent flow
+      if (canGoBack) {
+        buttons.push({
+          label: 'Back',
           variant: 'default',
-          onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
-        },
-      ];
+          onClick: handleBack,
+        });
+      }
+
+      // Add cancel button
+      buttons.push({
+        label: cancelAction?.label || 'Cancel',
+        variant: 'default',
+        onClick: cancelHandler,
+      });
+
+      return buttons;
     }
 
-    // Default behavior: cancel + primary (or just cancel if no primary action)
+    // Default behavior: back + cancel + primary (or just cancel if no primary action)
     const generatedButtons: ButtonConfig[] = [];
+
+    // Add back button if there's frame history
+    if (canGoBack) {
+      generatedButtons.push({
+        label: 'Back',
+        variant: 'default',
+        onClick: handleBack,
+      });
+    }
 
     // Always add cancel button unless explicitly disabled
     generatedButtons.push({
       label: cancelAction?.label || 'Cancel',
       variant: 'default',
-      onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
+      onClick: cancelHandler,
     });
 
     // Add primary action if provided

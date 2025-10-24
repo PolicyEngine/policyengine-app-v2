@@ -257,11 +257,16 @@ export default function SimulationSelectExistingPopulationFrame({
   }
 
   if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
+    const cancelAction = {
+      ingredientType: 'simulation' as const,
+    };
+
     return (
       <FlowView
         title="Select an Existing Population"
         content={<Text>No populations available. Please create a new population.</Text>}
         buttonPreset="cancel-only"
+        cancelAction={cancelAction}
       />
     );
   }
@@ -366,6 +371,10 @@ export default function SimulationSelectExistingPopulationFrame({
     isDisabled: !canProceed(),
   };
 
+  const cancelAction = {
+    ingredientType: 'simulation' as const,
+  };
+
   return (
     <FlowView
       title="Select an Existing Population"
@@ -373,6 +382,7 @@ export default function SimulationSelectExistingPopulationFrame({
       cardListItems={cardListItems}
       primaryAction={primaryAction}
       itemsPerPage={5}
+      cancelAction={cancelAction}
     />
   );
 }

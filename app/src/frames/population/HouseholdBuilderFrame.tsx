@@ -611,7 +611,7 @@ export default function HouseholdBuilderFrame({
       content={content}
       primaryAction={primaryAction}
       cancelAction={{
-        onClick: onReturn,
+        ingredientType: 'population',
       }}
       buttonPreset="cancel-primary"
     />

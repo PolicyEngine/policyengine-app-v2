@@ -43,10 +43,23 @@ vi.mock('@/hooks/useCreatePolicy', () => ({
   useCreatePolicy: () => mockUseCreatePolicy,
 }));
 
+// Mock useBackButton hook
+const mockHandleBack = vi.fn();
+vi.mock('@/hooks/useBackButton', () => ({
+  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
+}));
+
+// Mock useCancelFlow
+const mockHandleCancel = vi.fn();
+vi.mock('@/hooks/useCancelFlow', () => ({
+  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
+}));
+
 describe('PolicySubmitFrame', () => {
   const mockFlowProps = createMockFlowProps();
 
   beforeEach(() => {
+    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockSelectCurrentPosition.mockReturnValue(0);
     mockSelectActivePolicy.mockReturnValue(MOCK_POLICY_WITH_PARAMS);

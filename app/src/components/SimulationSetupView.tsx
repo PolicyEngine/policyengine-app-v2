@@ -1,5 +1,7 @@
 import { useSelector } from 'react-redux';
 import { Card, Container, Stack, Text } from '@mantine/core';
+import { useBackButton } from '@/hooks/useBackButton';
+import { useCancelFlow } from '@/hooks/useCancelFlow';
 import MultiButtonFooter, { ButtonConfig } from './common/MultiButtonFooter';
 
 // TODO: Refactor these props based on integration of population
@@ -20,8 +22,22 @@ export default function SimulationSetupView({
   onNext,
   canProceed,
 }: SimulationSetupViewProps) {
+  const { handleBack, canGoBack } = useBackButton();
+  const { handleCancel } = useCancelFlow('simulation');
   const userDefinedPolicy = useSelector((state: any) => state.policy);
   const userDefinedPopulation = useSelector((state: any) => state.population);
+
+  const backButtonConfig: ButtonConfig = {
+    label: 'Back',
+    variant: 'default' as const,
+    onClick: handleBack,
+  };
+
+  const cancelButtonConfig: ButtonConfig = {
+    label: 'Cancel',
+    variant: 'default' as const,
+    onClick: handleCancel,
+  };
 
   const canProceedNextButtonConfig: ButtonConfig = {
     label: 'Next',
@@ -35,17 +51,11 @@ export default function SimulationSetupView({
     onClick: () => null,
   };
 
-  const cancelButtonConfig: ButtonConfig = {
-    label: 'Cancel',
-    variant: 'default' as const,
-    onClick: () => {
-      console.log('Cancel clicked');
-    },
-  };
-
-  const buttonConfig: ButtonConfig[] = canProceed
-    ? [cancelButtonConfig, canProceedNextButtonConfig]
-    : [cancelButtonConfig, cantProceedNextButtonConfig];
+  const buttonConfig: ButtonConfig[] = [
+    ...(canGoBack ? [backButtonConfig] : []),
+    cancelButtonConfig,
+    canProceed ? canProceedNextButtonConfig : cantProceedNextButtonConfig,
+  ];
 
   return (
     <Container variant="guttered">
