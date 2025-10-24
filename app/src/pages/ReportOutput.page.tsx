@@ -45,6 +45,8 @@ export default function ReportOutputPage() {
     simulations,
     userSimulations,
     userPolicies,
+    policies,
+    geographies,
     isLoading: dataLoading,
     error: dataError,
   } = useUserReportById(userReportId);
@@ -144,6 +146,8 @@ export default function ReportOutputPage() {
           simulations={simulations}
           userSimulations={userSimulations}
           userPolicies={userPolicies}
+          policies={policies}
+          geographies={geographies}
         />
       );
     }
