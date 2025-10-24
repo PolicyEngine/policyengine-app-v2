@@ -23,7 +23,7 @@ export default function DistributionalImpactWealthRelativeSubPage({ output }: Pr
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // Extract data - object with keys "1", "2", ..., "10"
-  const decileRelative = output.wealth_decile.relative;
+  const decileRelative = output.wealth_decile?.relative || {};
 
   // Convert to arrays for plotting
   const xArray = Object.keys(decileRelative);

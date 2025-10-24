@@ -23,7 +23,7 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // Extract data - object with keys "1", "2", ..., "10"
-  const decileAverage = output.wealth_decile.average;
+  const decileAverage = output.wealth_decile?.average || {};
 
   // Convert to arrays for plotting
   const xArray = Object.keys(decileAverage);

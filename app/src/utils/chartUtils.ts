@@ -29,7 +29,6 @@ export function getReformPolicyLabel(
   return 'Reform';
 }
 
-
 /**
  * Downloads data as a CSV file
  * @param data - 2D array of data to export

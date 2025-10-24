@@ -125,7 +125,7 @@ export default function CliffImpactSubPage({ output }: Props) {
 
   // Get currency symbol
   const getCurrency = () => {
-    return metadata.countryId === 'uk' ? '£' : '$';
+    return countryId === 'uk' ? '£' : '$';
   };
 
   // Chart configuration
@@ -143,13 +143,13 @@ export default function CliffImpactSubPage({ output }: Props) {
       text: [
         (cliffShareChange >= 0 ? '+' : '') + formatPer(cliffShareChange),
         (cliffGapChange >= 0 ? '+' : '') + formatPer(cliffGapChange),
-      ] as any,
-      textposition: 'auto',
+      ],
+      textposition: 'auto' as const,
       textangle: 0,
-      customdata: xArray.map(hoverMessage) as any,
+      customdata: xArray.map(hoverMessage),
       hovertemplate: '<b>%{x}</b><br><br>%{customdata}<extra></extra>',
     },
-  ];
+  ] as any;
 
   const layout = {
     height: mobile ? 300 : 450,

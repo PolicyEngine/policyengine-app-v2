@@ -55,8 +55,14 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // Extract data
-  const deciles = output.intra_wealth_decile.deciles;
-  const all = output.intra_wealth_decile.all;
+  const deciles = output.intra_wealth_decile?.deciles || {};
+  const all = output.intra_wealth_decile?.all || {
+    'Gain more than 5%': 0,
+    'Gain less than 5%': 0,
+    'No change': 0,
+    'Lose less than 5%': 0,
+    'Lose more than 5%': 0,
+  };
   const decileNumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
   // Generate hover message using wordwrap utility pattern
@@ -124,7 +130,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     const rows = [
       ...decileNumbers.map((d) => [
         d.toString(),
-        ...CATEGORIES.map((cat) => deciles[d][cat].toString()),
+        ...CATEGORIES.map((cat) => (deciles as any)[d]?.[cat]?.toString() || '0'),
       ]),
       ['All', ...CATEGORIES.map((cat) => all[cat].toString())],
     ];
@@ -134,14 +140,14 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   // Prepare data for stacked bar chart
   const chartData = CATEGORIES.map((category) => ({
     x: [...decileNumbers.map((d) => d.toString()), 'All'],
-    y: [...decileNumbers.map((d) => deciles[d][category]), all[category]],
+    y: [...decileNumbers.map((d) => (deciles as any)[d]?.[category] || 0), all[category]],
     type: 'bar' as const,
     name: LEGEND_TEXT_MAP[category],
     marker: {
       color: COLOR_MAP[category],
     },
     customdata: [
-      ...decileNumbers.map((d) => hoverMessage(deciles[d][category], d.toString(), category)),
+      ...decileNumbers.map((d) => hoverMessage((deciles as any)[d]?.[category] || 0, d.toString(), category)),
       hoverMessage(all[category], 'All', category),
     ] as any,
     hovertemplate: '%{customdata}<extra></extra>',
