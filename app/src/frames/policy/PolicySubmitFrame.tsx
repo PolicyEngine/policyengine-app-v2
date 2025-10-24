@@ -101,7 +101,6 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
       submitButtonText="Submit Policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      ingredientType="policy"
     />
   );
 }

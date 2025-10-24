@@ -81,17 +81,12 @@ export default function SimulationSetupPolicyFrame({ onNavigate }: FlowComponent
     isDisabled: !selectedAction,
   };
 
-  const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
-
   return (
     <FlowView
       title="Select Policy"
       variant="buttonPanel"
       buttonPanelCards={buttonPanelCards}
       primaryAction={primaryAction}
-      cancelAction={cancelAction}
     />
   );
 }

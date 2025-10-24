@@ -23,12 +23,6 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => mockUseCurrentCountry(),
 }));
 
-// Mock useCancelFlow hook
-const mockHandleCancel = vi.fn();
-vi.mock('@/hooks/useCancelFlow', () => ({
-  useCancelFlow: () => ({ handleCancel: mockHandleCancel }),
-}));
-
 // Mock Redux
 const mockUseSelector = vi.fn();
 vi.mock('react-redux', async () => {

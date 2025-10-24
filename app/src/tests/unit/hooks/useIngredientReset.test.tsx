@@ -10,6 +10,7 @@ import {
   TEST_COUNTRY_ID,
   TEST_INGREDIENTS,
   TEST_MODES,
+  TEST_POSITIONS,
 } from '@/tests/fixtures/hooks/useIngredientResetMocks';
 
 // Mock useCurrentCountry hook
@@ -68,7 +69,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: 0,
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 
@@ -87,7 +88,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: 0,
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 
@@ -108,7 +109,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: 0,
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 
@@ -133,7 +134,7 @@ describe('useIngredientReset', () => {
     });
     expect(dispatch).toHaveBeenCalledWith({
       type: 'report/setActiveSimulationPosition',
-      payload: 0,
+      payload: TEST_POSITIONS.FIRST,
     });
   });
 

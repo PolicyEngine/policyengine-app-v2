@@ -127,17 +127,12 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
 
   const primaryAction = getPrimaryAction();
 
-  const cancelAction = {
-    ingredientType: 'report' as const,
-  };
-
   return (
     <FlowView
       title="Setup Report"
       variant="setupConditions"
       setupConditionCards={setupConditionCards}
       primaryAction={primaryAction}
-      cancelAction={cancelAction}
     />
   );
 }

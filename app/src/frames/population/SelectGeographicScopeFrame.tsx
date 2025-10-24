@@ -116,16 +116,5 @@ export default function SelectGeographicScopeFrame({
     onClick: submissionHandler,
   };
 
-  const cancelAction = {
-    ingredientType: 'population' as const,
-  };
-
-  return (
-    <FlowView
-      title="Select Scope"
-      content={formInputs}
-      primaryAction={primaryAction}
-      cancelAction={cancelAction}
-    />
-  );
+  return <FlowView title="Select Scope" content={formInputs} primaryAction={primaryAction} />;
 }
