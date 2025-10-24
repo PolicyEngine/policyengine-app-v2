@@ -57,19 +57,55 @@ const router = createBrowserRouter(
                 },
                 {
                   path: 'reports',
-                  element: <ReportsPage />,
+                  children: [
+                    {
+                      index: true,
+                      element: <ReportsPage />,
+                    },
+                    {
+                      path: 'create',
+                      element: <ReportsPage flowMode="create" />,
+                    },
+                  ],
                 },
                 {
                   path: 'simulations',
-                  element: <SimulationsPage />,
+                  children: [
+                    {
+                      index: true,
+                      element: <SimulationsPage />,
+                    },
+                    {
+                      path: 'create',
+                      element: <SimulationsPage flowMode="create" />,
+                    },
+                  ],
                 },
                 {
                   path: 'populations',
-                  element: <PopulationsPage />,
+                  children: [
+                    {
+                      index: true,
+                      element: <PopulationsPage />,
+                    },
+                    {
+                      path: 'create',
+                      element: <PopulationsPage flowMode="create" />,
+                    },
+                  ],
                 },
                 {
                   path: 'policies',
-                  element: <PoliciesPage />,
+                  children: [
+                    {
+                      index: true,
+                      element: <PoliciesPage />,
+                    },
+                    {
+                      path: 'create',
+                      element: <PoliciesPage flowMode="create" />,
+                    },
+                  ],
                 },
                 {
                   path: 'account',

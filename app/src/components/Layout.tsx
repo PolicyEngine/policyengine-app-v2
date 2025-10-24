@@ -49,8 +49,10 @@ export default function Layout() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        <Outlet />
+        {!currentFrame ? <Outlet /> : <FlowOverlay />}
+        {/*<Outlet />
         <FlowOverlay />
+        */}
       </AppShell.Main>
     </AppShell>
   );

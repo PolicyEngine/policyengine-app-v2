@@ -18,7 +18,8 @@ export default function FlowOverlay() {
   };
 
   return (
-    <Box
+    <>
+    {/*<Box
       style={{
         position: 'fixed',
         top: 0,
@@ -40,8 +41,9 @@ export default function FlowOverlay() {
           zIndex: 1001,
         }}
         aria-label="Close flow"
-      />
       <FlowContainer />
-    </Box>
+    </Box>*/}
+    <FlowContainer />
+    </>
   );
 }
