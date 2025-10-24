@@ -18,18 +18,26 @@ import {
 const mockNavigate = createMockNavigate();
 const mockDispatch = createMockDispatch();
 const mockUseIngredientReset = createMockUseIngredientReset();
+const mockUseCurrentCountry = vi.fn();
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 vi.mock('react-redux', () => ({
   useDispatch: () => mockDispatch,
-  useSelector: (selector: any) => selector(mockRootState),
 }));
 
 vi.mock('@/hooks/useIngredientReset', () => ({
   useIngredientReset: () => mockUseIngredientReset,
+}));
+
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: () => mockUseCurrentCountry(),
 }));
 
 vi.mock('@/reducers/flowReducer', () => ({
@@ -43,6 +51,7 @@ describe('useCancelFlow', () => {
     vi.clearAllMocks();
     // Default: standalone flow (no subflow), position 0, country 'us'
     mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.US);
+    mockUseCurrentCountry.mockReturnValue(TEST_COUNTRIES.US);
   });
 
   describe('Nuclear option behavior', () => {
@@ -159,6 +168,7 @@ describe('useCancelFlow', () => {
     test('given deep subflow then still exits all flows', () => {
       // Given - Deep subflow (flowStack length = 3)
       mockRootState = createMockRootState(3, TEST_POSITIONS.SECOND, TEST_COUNTRIES.UK);
+      mockUseCurrentCountry.mockReturnValue(TEST_COUNTRIES.UK);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.SIMULATION));
 
       // When
@@ -197,6 +207,7 @@ describe('useCancelFlow', () => {
     test('given UK country then navigates to UK policies page', () => {
       // Given
       mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, TEST_COUNTRIES.UK);
+      mockUseCurrentCountry.mockReturnValue(TEST_COUNTRIES.UK);
       const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POLICY));
 
       // When
@@ -205,20 +216,6 @@ describe('useCancelFlow', () => {
       // Then
       expect(mockNavigate).toHaveBeenCalledWith(
         EXPECTED_NAVIGATION_PATHS.POLICIES(TEST_COUNTRIES.UK)
-      );
-    });
-
-    test('given no country ID then defaults to US', () => {
-      // Given
-      mockRootState = createMockRootState(0, TEST_POSITIONS.FIRST, '');
-      const { result } = renderHook(() => useCancelFlow(TEST_INGREDIENT_TYPES.POPULATION));
-
-      // When
-      result.current.handleCancel();
-
-      // Then
-      expect(mockNavigate).toHaveBeenCalledWith(
-        EXPECTED_NAVIGATION_PATHS.POPULATIONS(TEST_COUNTRIES.US)
       );
     });
   });
