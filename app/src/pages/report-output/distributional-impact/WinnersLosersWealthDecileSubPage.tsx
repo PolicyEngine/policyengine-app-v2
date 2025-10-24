@@ -147,7 +147,9 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
       color: COLOR_MAP[category],
     },
     customdata: [
-      ...decileNumbers.map((d) => hoverMessage((deciles as any)[d]?.[category] || 0, d.toString(), category)),
+      ...decileNumbers.map((d) =>
+        hoverMessage((deciles as any)[d]?.[category] || 0, d.toString(), category)
+      ),
       hoverMessage(all[category], 'All', category),
     ] as any,
     hovertemplate: '%{customdata}<extra></extra>',
