@@ -1,19 +1,25 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import FlowContainer from '@/components/FlowContainer';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
-import { setFlow } from '@/reducers/flowReducer';
+import { clearFlow, setFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
-export default function PopulationsPage() {
+interface PopulationsPageProps {
+  flowMode?: 'create';
+}
+
+export default function PopulationsPage({ flowMode }: PopulationsPageProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -35,6 +41,8 @@ export default function PopulationsPage() {
   } = useGeographicAssociationsByUser(userId);
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { currentFlow } = useSelector((state: RootState) => state.flow);
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -44,8 +52,30 @@ export default function PopulationsPage() {
   const isError = isHouseholdError || isGeographicError;
   const error = householdError || geographicError;
 
+  // Initialize flow when in create mode
+  useEffect(() => {
+    if (flowMode === 'create') {
+      dispatch(setFlow(PopulationCreationFlow));
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (currentFlow) {
+        dispatch(clearFlow());
+      }
+    };
+  }, [flowMode, dispatch]);
+
+  // Listen for flow completion
+  useEffect(() => {
+    // If we're in create mode but flow was cleared (completed), navigate back
+    if (flowMode === 'create' && !currentFlow) {
+      navigate('/us/populations');
+    }
+  }, [currentFlow, flowMode, navigate]);
+
   const handleBuildPopulation = () => {
-    dispatch(setFlow(PopulationCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
@@ -199,6 +229,12 @@ export default function PopulationsPage() {
   // Combine both data sources
   const transformedData: IngredientRecord[] = [...householdRecords, ...geographicRecords];
 
+  // Render flow if in create mode
+  if (flowMode === 'create') {
+    return <FlowContainer />;
+  }
+
+  // Otherwise render normal list view
   return (
     <IngredientReadView
       ingredient="population"

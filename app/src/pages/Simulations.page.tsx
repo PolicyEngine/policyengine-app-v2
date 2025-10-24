@@ -1,23 +1,54 @@
-import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import FlowContainer from '@/components/FlowContainer';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { setFlow } from '@/reducers/flowReducer';
+import { clearFlow, setFlow } from '@/reducers/flowReducer';
+import { RootState } from '@/store';
 import { formatDate } from '@/utils/dateUtils';
 
-export default function SimulationsPage() {
+interface SimulationsPageProps {
+  flowMode?: 'create';
+}
+
+export default function SimulationsPage({ flowMode }: SimulationsPageProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { currentFlow } = useSelector((state: RootState) => state.flow);
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Initialize flow when in create mode
+  useEffect(() => {
+    if (flowMode === 'create') {
+      dispatch(setFlow(SimulationCreationFlow));
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (currentFlow) {
+        dispatch(clearFlow());
+      }
+    };
+  }, [flowMode, dispatch]);
+
+  // Listen for flow completion
+  useEffect(() => {
+    // If we're in create mode but flow was cleared (completed), navigate back
+    if (flowMode === 'create' && !currentFlow) {
+      navigate('/us/simulations');
+    }
+  }, [currentFlow, flowMode, navigate]);
+
   const handleBuildSimulation = () => {
-    dispatch(setFlow(SimulationCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
@@ -85,6 +116,12 @@ export default function SimulationsPage() {
       } as TextValue,
     })) || [];
 
+  // Render flow if in create mode
+  if (flowMode === 'create') {
+    return <FlowContainer />;
+  }
+
+  // Otherwise render normal list view
   return (
     <IngredientReadView
       ingredient="simulation"

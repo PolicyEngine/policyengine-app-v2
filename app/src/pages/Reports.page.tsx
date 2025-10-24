@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   BulletsValue,
   ColumnConfig,
@@ -7,17 +8,23 @@ import {
   LinkValue,
   TextValue,
 } from '@/components/columns';
+import FlowContainer from '@/components/FlowContainer';
 import IngredientReadView from '@/components/IngredientReadView';
 import { OutputTypeCell } from '@/components/report/OutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
 import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
-import { setFlow } from '@/reducers/flowReducer';
+import { clearFlow, setFlow } from '@/reducers/flowReducer';
+import { RootState } from '@/store';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
-export default function ReportsPage() {
+interface ReportsPageProps {
+  flowMode?: 'create';
+}
+
+export default function ReportsPage({ flowMode }: ReportsPageProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
   const cacheMonitor = useCacheMonitor();
@@ -28,13 +35,37 @@ export default function ReportsPage() {
     cacheMonitor.getStats();
   }, [data]);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const countryId = useCurrentCountry();
+  const { currentFlow } = useSelector((state: RootState) => state.flow);
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Initialize flow when in create mode
+  useEffect(() => {
+    if (flowMode === 'create') {
+      dispatch(setFlow(ReportCreationFlow));
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (currentFlow) {
+        dispatch(clearFlow());
+      }
+    };
+  }, [flowMode, dispatch]);
+
+  // Listen for flow completion
+  useEffect(() => {
+    // If we're in create mode but flow was cleared (completed), navigate back
+    if (flowMode === 'create' && !currentFlow) {
+      navigate('/us/reports');
+    }
+  }, [currentFlow, flowMode, navigate]);
+
   const handleBuildReport = () => {
-    dispatch(setFlow(ReportCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
@@ -146,6 +177,12 @@ export default function ReportsPage() {
     [data, countryId]
   );
 
+  // Render flow if in create mode
+  if (flowMode === 'create') {
+    return <FlowContainer />;
+  }
+
+  // Otherwise render normal list view
   return (
     <IngredientReadView
       ingredient="report"

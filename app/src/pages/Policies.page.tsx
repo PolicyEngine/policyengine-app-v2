@@ -1,24 +1,55 @@
-import { useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import FlowContainer from '@/components/FlowContainer';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { setFlow } from '@/reducers/flowReducer';
+import { clearFlow, setFlow } from '@/reducers/flowReducer';
+import { RootState } from '@/store';
 import { countParameterChanges } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
 
-export default function PoliciesPage() {
+interface PoliciesPageProps {
+  flowMode?: 'create';
+}
+
+export default function PoliciesPage({ flowMode }: PoliciesPageProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const { currentFlow } = useSelector((state: RootState) => state.flow);
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Initialize flow when in create mode
+  useEffect(() => {
+    if (flowMode === 'create') {
+      dispatch(setFlow(PolicyCreationFlow));
+    }
+
+    // Cleanup on unmount
+    return () => {
+      if (currentFlow) {
+        dispatch(clearFlow());
+      }
+    };
+  }, [flowMode, dispatch]);
+
+  // Listen for flow completion
+  useEffect(() => {
+    // If we're in create mode but flow was cleared (completed), navigate back
+    if (flowMode === 'create' && !currentFlow) {
+      navigate('/us/policies');
+    }
+  }, [currentFlow, flowMode, navigate]);
+
   const handleBuildPolicy = () => {
-    dispatch(setFlow(PolicyCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
@@ -77,6 +108,12 @@ export default function PoliciesPage() {
       } as TextValue,
     })) || [];
 
+  // Render flow if in create mode
+  if (flowMode === 'create') {
+    return <FlowContainer />;
+  }
+
+  // Otherwise render normal list view
   return (
     <IngredientReadView
       ingredient="policy"
