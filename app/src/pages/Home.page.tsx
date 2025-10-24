@@ -1,7 +1,6 @@
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@mantine/core';
-import FlowContainer from '@/components/FlowContainer';
 import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { PolicyViewFlow } from '@/flows/policyViewFlow';
 import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
@@ -53,7 +52,6 @@ export default function HomePage() {
       <Button variant="default" onClick={() => navigate('/us/household-output-demo')}>
         View Household Report Output (Demo)
       </Button>
-      <FlowContainer />
     </>
   );
 }

@@ -5,6 +5,7 @@ import { AppShell } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
 import { cacheMonitor } from '@/utils/cacheMonitor';
+import FlowOverlay from './FlowOverlay';
 import HeaderBar from './shared/HeaderBar';
 import Sidebar from './Sidebar';
 
@@ -49,6 +50,7 @@ export default function Layout() {
 
       <AppShell.Main>
         <Outlet />
+        <FlowOverlay />
       </AppShell.Main>
     </AppShell>
   );
