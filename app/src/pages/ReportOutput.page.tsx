@@ -114,7 +114,14 @@ export default function ReportOutputPage() {
 
   // Handle tab navigation
   const handleTabClick = (tabValue: string) => {
-    navigate(`../${tabValue}`, { relative: 'path' });
+    console.log(
+      '[ReportOutputPage] Tab clicked:',
+      tabValue,
+      'Current path:',
+      window.location.pathname
+    );
+    // Use absolute path to ensure navigation works correctly
+    navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
   };
 
   // Format timestamp (placeholder for now)

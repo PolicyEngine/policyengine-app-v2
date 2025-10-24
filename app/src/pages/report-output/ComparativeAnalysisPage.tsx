@@ -2,10 +2,20 @@ import type { ComponentType } from 'react';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
+import CliffImpactSubPage from './cliff-impact/CliffImpactSubPage';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
 import DistributionalImpactIncomeRelativeSubPage from './distributional-impact/DistributionalImpactIncomeRelativeSubPage';
+import DistributionalImpactWealthAverageSubPage from './distributional-impact/DistributionalImpactWealthAverageSubPage';
+import DistributionalImpactWealthRelativeSubPage from './distributional-impact/DistributionalImpactWealthRelativeSubPage';
 import WinnersLosersIncomeDecileSubPage from './distributional-impact/WinnersLosersIncomeDecileSubPage';
+import WinnersLosersWealthDecileSubPage from './distributional-impact/WinnersLosersWealthDecileSubPage';
+import InequalityImpactSubPage from './inequality-impact/InequalityImpactSubPage';
 import NotFoundSubPage from './NotFoundSubPage';
+import DeepPovertyImpactByAgeSubPage from './poverty-impact/DeepPovertyImpactByAgeSubPage';
+import DeepPovertyImpactByGenderSubPage from './poverty-impact/DeepPovertyImpactByGenderSubPage';
+import PovertyImpactByAgeSubPage from './poverty-impact/PovertyImpactByAgeSubPage';
+import PovertyImpactByGenderSubPage from './poverty-impact/PovertyImpactByGenderSubPage';
+import PovertyImpactByRaceSubPage from './poverty-impact/PovertyImpactByRaceSubPage';
 
 interface Props {
   output: SocietyWideOutput;
@@ -25,12 +35,17 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
   'budgetary-impact-by-program': BudgetaryImpactByProgramSubPage,
   'distributional-impact-income-relative': DistributionalImpactIncomeRelativeSubPage,
   'distributional-impact-income-average': DistributionalImpactIncomeAverageSubPage,
+  'distributional-impact-wealth-relative': DistributionalImpactWealthRelativeSubPage,
+  'distributional-impact-wealth-average': DistributionalImpactWealthAverageSubPage,
   'winners-losers-income-decile': WinnersLosersIncomeDecileSubPage,
-  // Add more as implemented:
-  // 'distributional-impact-wealth-relative': DistributionalImpactWealthRelativeSubPage,
-  // 'distributional-impact-wealth-average': DistributionalImpactWealthAverageSubPage,
-  // 'winners-losers-wealth-decile': WinnersLosersWealthDecileSubPage,
-  // etc.
+  'winners-losers-wealth-decile': WinnersLosersWealthDecileSubPage,
+  'poverty-impact-age': PovertyImpactByAgeSubPage,
+  'poverty-impact-gender': PovertyImpactByGenderSubPage,
+  'poverty-impact-race': PovertyImpactByRaceSubPage,
+  'deep-poverty-impact-age': DeepPovertyImpactByAgeSubPage,
+  'deep-poverty-impact-gender': DeepPovertyImpactByGenderSubPage,
+  'inequality-impact': InequalityImpactSubPage,
+  'cliff-impact': CliffImpactSubPage,
 };
 
 /**

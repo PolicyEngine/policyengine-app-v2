@@ -90,21 +90,41 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
       label: 'Poverty Impact',
       children: [
         {
-          name: 'poverty-impact-age',
-          label: 'By age',
+          name: 'povertyImpact.regular',
+          label: 'Regular poverty',
+          children: [
+            {
+              name: 'poverty-impact-age',
+              label: 'By age',
+            },
+            {
+              name: 'poverty-impact-gender',
+              label: 'By gender',
+            },
+            ...(countryId === 'us'
+              ? [
+                  {
+                    name: 'poverty-impact-race',
+                    label: 'By race',
+                  },
+                ]
+              : []),
+          ],
         },
         {
-          name: 'poverty-impact-gender',
-          label: 'By gender',
+          name: 'povertyImpact.deep',
+          label: 'Deep poverty',
+          children: [
+            {
+              name: 'deep-poverty-impact-age',
+              label: 'By age',
+            },
+            {
+              name: 'deep-poverty-impact-gender',
+              label: 'By gender',
+            },
+          ],
         },
-        ...(countryId === 'us'
-          ? [
-              {
-                name: 'poverty-impact-race',
-                label: 'By race',
-              },
-            ]
-          : []),
       ],
     },
     {

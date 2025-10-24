@@ -26,6 +26,8 @@ interface Props {
 export function SocietyWideReportOutput({ activeTab, activeView }: Props) {
   const { reportId } = useParams<{ reportId: string }>();
 
+  console.log('[SocietyWideReportOutput] Rendering with:', { activeTab, activeView });
+
   // Fetch report and simulations
   const {
     report,
@@ -115,14 +117,28 @@ export function SocietyWideReportOutput({ activeTab, activeView }: Props) {
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
+    console.log(
+      '[SocietyWideReportOutput] Rendering content for tab:',
+      activeTab,
+      'view:',
+      activeView
+    );
+
     // Render appropriate subpage based on activeTab
+    // Using key prop to force re-render when tab changes
     switch (activeTab) {
       case 'overview':
-        return <OverviewSubPage output={output} outputType="societyWide" />;
+        return <OverviewSubPage key={activeTab} output={output} outputType="societyWide" />;
       case 'comparative-analysis':
-        return <ComparativeAnalysisPage output={output} view={activeView} />;
+        return (
+          <ComparativeAnalysisPage
+            key={`${activeTab}-${activeView}`}
+            output={output}
+            view={activeView}
+          />
+        );
       default:
-        return <NotFoundSubPage />;
+        return <NotFoundSubPage key={activeTab} />;
     }
   }
 
