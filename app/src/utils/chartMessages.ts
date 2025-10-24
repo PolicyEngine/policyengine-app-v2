@@ -4,6 +4,10 @@
  */
 
 import wordwrap from 'wordwrapjs';
+import { formatPercent } from './formatters';
+import type { countryIds } from '@/libs/countries';
+
+type CountryId = (typeof countryIds)[number];
 
 /**
  * Wrap text to a specified width, replacing newlines with <br> tags
@@ -35,6 +39,53 @@ export function absoluteChangeMessage(
         ? `increase ${objectTerm} by less than ${formatter(tolerance)}`
         : change < -tolerance
           ? `decrease ${objectTerm} by ${formatter(-change)}`
+          : change < 0
+            ? `decrease ${objectTerm} by less than ${formatter(tolerance)}`
+            : `have no effect on ${objectTerm}`;
+
+  const msg = `${subjectTerm} would ${signTerm}`;
+  return wordWrap(msg, 50);
+}
+
+/**
+ * Generate a relative change message
+ * @param subjectTerm - The subject of the sentence (e.g., "This reform")
+ * @param objectTerm - The object of the sentence (e.g., "the income of households in the 1st decile")
+ * @param change - The relative change value (as a decimal, e.g., 0.05 for 5%)
+ * @param tolerance - Tolerance for "less than" messaging (e.g., 0.001 for 0.1%)
+ * @param countryId - Country ID for formatting
+ * @param options - Optional baseline and reform values with formatter
+ * @returns The formatted message with HTML line breaks
+ */
+export function relativeChangeMessage(
+  subjectTerm: string,
+  objectTerm: string,
+  change: number,
+  tolerance: number,
+  countryId: CountryId,
+  options?: {
+    baseline: number;
+    reform: number;
+    formatter: (value: number) => string;
+  }
+): string {
+  const formatter = (x: number) =>
+    formatPercent(x, countryId, {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    });
+
+  const baselineReformTerm = options
+    ? ` from ${options.formatter(options.baseline)} to ${options.formatter(options.reform)}`
+    : '';
+
+  const signTerm =
+    change > tolerance
+      ? `increase ${objectTerm} by ${formatter(change) + baselineReformTerm}`
+      : change > 0
+        ? `increase ${objectTerm} by less than ${formatter(tolerance)}`
+        : change < -tolerance
+          ? `decrease ${objectTerm} by ${formatter(-change) + baselineReformTerm}`
           : change < 0
             ? `decrease ${objectTerm} by less than ${formatter(tolerance)}`
             : `have no effect on ${objectTerm}`;
