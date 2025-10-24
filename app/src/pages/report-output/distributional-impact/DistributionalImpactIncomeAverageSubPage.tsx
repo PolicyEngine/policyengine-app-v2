@@ -132,7 +132,11 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
   return (
     <Stack gap={spacing.md}>
       <Group justify="space-between" align="center">
-        <Text size="lg" fw={500} style={{ marginBottom: 20, width: '100%', wordWrap: 'break-word' }}>
+        <Text
+          size="lg"
+          fw={500}
+          style={{ marginBottom: 20, width: '100%', wordWrap: 'break-word' }}
+        >
           {getChartTitle()}
         </Text>
         <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
