@@ -1,58 +1,27 @@
 import { useEffect } from 'react';
-import {
-  IconChevronLeft,
-  IconClock,
-  IconPencil,
-  IconRefresh,
-  IconShare,
-  IconStack2,
-} from '@tabler/icons-react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  ActionIcon,
-  Anchor,
-  Box,
-  Button,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Container, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
-import { colors, spacing, typography } from '@/designTokens';
+import { spacing } from '@/designTokens';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
+import ReportOutputLayout from './report-output/ReportOutputLayout';
 
 /**
  * Type discriminator for output types
  */
 export type ReportOutputType = 'household' | 'societyWide';
-import PolicySubPage from './report-output/PolicySubPage';
-import PopulationSubPage from './report-output/PopulationSubPage';
-import DynamicsSubPage from './report-output/DynamicsSubPage';
 
 /**
- * ReportOutputPage - Structural page component that provides layout chrome
- * for displaying report calculation outputs.
+ * ReportOutputPage - Orchestration layer for report output pages
  *
- * This component serves as a container that:
- * - Fetches output artifacts from report calculations
- * - Provides consistent layout and navigation structure
- * - Conditionally renders appropriate sub-pages based on output type
- * - Acts as the main structural wrapper for all report output views
- *
- * Sub-page components will be implemented separately and integrated here.
+ * This component:
+ * - Fetches report metadata and determines output type
+ * - Manages tab navigation
+ * - Delegates to type-specific output components (Household or SocietyWide)
+ * - Wraps content in ReportOutputLayout for consistent chrome
  */
-
-// Valid sub-pages registry
-const VALID_SUBPAGES = ['overview', 'policy', 'dynamics', 'population', 'loading', 'error'] as const;
-type ValidSubPage = (typeof VALID_SUBPAGES)[number];
-
-function isValidSubPage(subpage: string | undefined): subpage is ValidSubPage {
-  return VALID_SUBPAGES.includes(subpage as ValidSubPage);
-}
 
 export default function ReportOutputPage() {
   const navigate = useNavigate();
@@ -98,13 +67,11 @@ export default function ReportOutputPage() {
         : undefined;
 
   // Debug logging for household reports
-  if (outputType === 'household' && status === 'complete') {
+  if (outputType === 'household') {
     console.log('Household Report Data:', {
       outputType,
-      normalizedReport,
-      policies: normalizedReport.policies,
-      simulations: normalizedReport.simulations,
-      households: normalizedReport.households,
+      report,
+      simulations,
     });
   }
 
@@ -151,7 +118,7 @@ export default function ReportOutputPage() {
     );
   }
 
-  // Render content based on active tab and output type
+  // Render content based on output type
   const renderContent = () => {
     if (outputType === 'household') {
       return (
@@ -161,7 +128,7 @@ export default function ReportOutputPage() {
           simulations={simulations}
           userSimulations={userSimulations}
           userPolicies={userPolicies}
-          activeTab={activeTab}
+          subpage={activeTab}
           isLoading={dataLoading}
           error={dataError}
         />
@@ -169,145 +136,32 @@ export default function ReportOutputPage() {
     }
 
     if (outputType === 'societyWide') {
-      return <SocietyWideReportOutput />;
+      return (
+        <SocietyWideReportOutput
+          reportId={userReportId}
+          subpage={activeTab}
+          report={report}
+          simulations={simulations}
+          userSimulations={userSimulations}
+          userPolicies={userPolicies}
+        />
+      );
     }
 
     return <Text c="red">Unknown report type</Text>;
   };
 
   return (
-    <Container size="xl" px={spacing.xl}>
-      <Stack gap={spacing.xl}>
-        {/* Back navigation */}
-        <Group gap={spacing.xs} align="center">
-          <IconChevronLeft size={20} color={colors.text.secondary} />
-          <Text size="md" c={colors.text.secondary}>
-            Reports
-          </Text>
-        </Group>
-
-        {/* Header Section */}
-        <Box>
-          {/* Title row with actions */}
-          <Group justify="space-between" align="flex-start" mb={spacing.xs}>
-            <Group gap={spacing.xs} align="center">
-              <Title
-                order={1}
-                variant="colored"
-                fw={typography.fontWeight.semibold}
-                fz={typography.fontSize['3xl']}
-              >
-                {userReport?.label || userReportId}
-              </Title>
-              <ActionIcon variant="subtle" color="gray" size="lg" aria-label="Edit report name">
-                <IconPencil size={18} />
-              </ActionIcon>
-            </Group>
-
-            <Group gap={spacing.sm}>
-              <Button
-                variant="filled"
-                leftSection={<IconRefresh size={18} />}
-                bg={colors.warning}
-                c={colors.black}
-                styles={{
-                  root: {
-                    '&:hover': {
-                      backgroundColor: colors.warning,
-                      filter: 'brightness(0.95)',
-                    },
-                  },
-                }}
-              >
-                Run Again
-              </Button>
-              <Button variant="default" leftSection={<IconShare size={18} />}>
-                Share
-              </Button>
-            </Group>
-          </Group>
-
-          {/* Timestamp and View All */}
-          <Group gap={spacing.xs} align="center">
-            <IconClock size={16} color={colors.text.secondary} />
-            <Text size="sm" c="dimmed">
-              {timestamp}
-            </Text>
-            <Anchor size="sm" underline="always" c={colors.blue[700]}>
-              View All
-            </Anchor>
-          </Group>
-        </Box>
-
-        {/* Navigation Tabs */}
-        <Box
-          style={{
-            borderTop: `1px solid ${colors.border.light}`,
-            paddingTop: spacing.md,
-          }}
-        >
-          <Box
-            style={{
-              display: 'flex',
-              position: 'relative',
-              borderBottom: `1px solid ${colors.border.light}`,
-            }}
-          >
-            {tabs.map((tab, index) => (
-              <Box
-                key={tab.value}
-                onClick={() => handleTabClick(tab.value)}
-                style={{
-                  paddingLeft: spacing.sm,
-                  paddingRight: spacing.sm,
-                  paddingBottom: spacing.xs,
-                  paddingTop: spacing.xs,
-                  cursor: 'pointer',
-                  transition: 'color 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: spacing.xs,
-                  position: 'relative',
-                  borderRight:
-                    index < tabs.length - 1 ? `1px solid ${colors.border.light}` : 'none',
-                  marginBottom: '-1px',
-                }}
-              >
-                <Text
-                  span
-                  variant="tab"
-                  style={{
-                    color: activeTab === tab.value ? colors.text.primary : colors.gray[700],
-                    fontWeight:
-                      activeTab === tab.value
-                        ? typography.fontWeight.medium
-                        : typography.fontWeight.normal,
-                  }}
-                >
-                  {tab.label}
-                </Text>
-                <IconStack2 size={14} color={colors.gray[500]} />
-                {activeTab === tab.value && (
-                  <Box
-                    style={{
-                      position: 'absolute',
-                      bottom: 0,
-                      left: 0,
-                      right: 0,
-                      height: '2px',
-                      backgroundColor: colors.primary[700],
-                    }}
-                  />
-                )}
-              </Box>
-            ))}
-          </Box>
-        </Box>
-
-        {/* Content Area */}
-        {renderContent()}
-      </Stack>
-    </Container>
+    <ReportOutputLayout
+      reportId={userReportId}
+      reportLabel={userReport?.label}
+      timestamp={timestamp}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={handleTabClick}
+    >
+      {renderContent()}
+    </ReportOutputLayout>
   );
 }
 
