@@ -1,15 +1,21 @@
 import { useMemo } from 'react';
 import { useSimulationProgressDisplay } from '@/hooks/household';
+import type { Household } from '@/types/ingredients/Household';
+import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
+import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { getDisplayStatus } from '@/utils/statusMapping';
+import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import { HouseholdReportViewModel } from './HouseholdReportViewModel';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
+import PolicySubPage from './PolicySubPage';
+import PopulationSubPage from './PopulationSubPage';
 import { useHouseholdCalculations } from './useHouseholdCalculations';
 
 interface HouseholdReportOutputProps {
@@ -18,6 +24,9 @@ interface HouseholdReportOutputProps {
   simulations: Simulation[] | undefined;
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
+  policies?: Policy[];
+  households?: Household[];
+  userHouseholds?: UserHouseholdPopulation[];
   subpage?: string;
   isLoading: boolean;
   error: Error | null;
@@ -37,6 +46,9 @@ export function HouseholdReportOutput({
   simulations,
   userSimulations,
   userPolicies,
+  policies,
+  households,
+  userHouseholds,
   subpage = 'overview',
   isLoading: dataLoading,
   error: dataError,
@@ -126,18 +138,34 @@ export function HouseholdReportOutput({
         return (
           <OverviewSubPage output={output} outputType="household" policyLabels={policyLabels} />
         );
-      case 'baseline-results':
-        // TODO: Implement baseline results view
-        return <NotFoundSubPage />;
-      case 'reform-results':
-        // TODO: Implement reform results view
-        return <NotFoundSubPage />;
-      case 'parameters':
-        // TODO: Implement parameters view
-        return <NotFoundSubPage />;
+
+      case 'policy':
+        return (
+          <PolicySubPage
+            policies={policies}
+            userPolicies={userPolicies}
+            reportType="household"
+          />
+        );
+
       case 'population':
-        // TODO: Implement population view
+        return (
+          <PopulationSubPage
+            baselineSimulation={simulations?.[0]}
+            reformSimulation={simulations?.[1]}
+            households={households}
+            userHouseholds={userHouseholds}
+          />
+        );
+
+      case 'dynamics':
+        return <DynamicsSubPage />;
+
+      case 'baseline-results':
+      case 'reform-results':
+        // TODO: Implement baseline and reform results views
         return <NotFoundSubPage />;
+
       default:
         return <NotFoundSubPage />;
     }

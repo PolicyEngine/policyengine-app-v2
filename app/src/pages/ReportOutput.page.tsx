@@ -46,6 +46,8 @@ export default function ReportOutputPage() {
     userSimulations,
     userPolicies,
     policies,
+    households,
+    userHouseholds,
     geographies,
     isLoading: dataLoading,
     error: dataError,
@@ -130,6 +132,9 @@ export default function ReportOutputPage() {
           simulations={simulations}
           userSimulations={userSimulations}
           userPolicies={userPolicies}
+          policies={policies}
+          households={households}
+          userHouseholds={userHouseholds}
           subpage={activeTab}
           isLoading={dataLoading}
           error={dataError}
