@@ -187,11 +187,9 @@ function getTabsForOutputType(
   // Common tabs shared by all report types
   const commonTabs = [
     { value: 'overview', label: 'Overview' },
-    { value: 'baseline-results', label: 'Baseline Simulation Results' },
-    { value: 'reform-results', label: 'Reform Results' },
-    { value: 'dynamics', label: 'Dynamics' },
     { value: 'policy', label: 'Policy' },
     { value: 'population', label: 'Population' },
+    { value: 'dynamics', label: 'Dynamics' },
   ];
 
   if (outputType === 'societyWide') {
