@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   BulletsValue,
   ColumnConfig,
@@ -10,10 +10,8 @@ import {
 import IngredientReadView from '@/components/IngredientReadView';
 import { OutputTypeCell } from '@/components/report/OutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
-import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
-import { setFlow } from '@/reducers/flowReducer';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -27,14 +25,14 @@ export default function ReportsPage() {
     console.log('📊 [ReportsPage] Component mounted/updated');
     cacheMonitor.getStats();
   }, [data]);
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildReport = () => {
-    dispatch(setFlow(ReportCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
