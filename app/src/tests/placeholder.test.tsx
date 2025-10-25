@@ -1,6 +1,6 @@
 import { render, screen } from '@test-utils';
 import { vi } from 'vitest';
-import HomePage from '@/pages/Home.page';
+import HomePage from '@/pages/Dashboard.page';
 
 // Mock react-router-dom
 vi.mock('react-router-dom', async (importOriginal) => {
