@@ -60,9 +60,15 @@ export const flowSlice = createSlice({
     // Return from a subflow - pops from stack
     returnFromFlow: (state) => {
       if (state.flowStack.length > 0) {
+        // In a subflow: pop back to parent flow
         const previousState = state.flowStack.pop()!;
         state.currentFlow = previousState.flow;
         state.currentFrame = previousState.frame;
+      } else {
+        // At top level: clear the flow entirely
+        state.currentFlow = null;
+        state.currentFrame = null;
+        state.flowStack = [];
       }
     },
   },
