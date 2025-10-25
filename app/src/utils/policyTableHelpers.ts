@@ -1,6 +1,8 @@
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyColumn } from './policyComparison';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { UNCONFIRMED_PARAM_DEFINITION_DATE } from '@/constants';
 
 export { determinePolicyColumns } from './policyComparison';
 export type { PolicyColumn } from './policyComparison';
@@ -65,6 +67,49 @@ export function formatParameterValue(value: any, unit?: string): string {
     return value.toLocaleString();
   }
   return String(value);
+}
+
+/**
+ * Gets the current law parameter value for a given parameter on a specific date
+ * @param paramName - The parameter identifier (e.g., "gov.hmrc.income_tax.rates.uk[0].rate")
+ * @param parameters - The parameter metadata collection
+ * @param date - ISO date string (YYYY-MM-DD) to query, defaults to UNCONFIRMED_PARAM_DEFINITION_DATE
+ * @returns Formatted string value or '—' if not found
+ */
+export function getCurrentLawParameterValue(
+  paramName: string,
+  parameters: Record<string, ParameterMetadata>,
+  date: string = UNCONFIRMED_PARAM_DEFINITION_DATE
+): string {
+  const metadata = parameters[paramName];
+
+  // If parameter doesn't exist in metadata, return dash
+  if (!metadata) return '—';
+
+  // If no values defined, return dash
+  if (!metadata.values) return '—';
+
+  // Create ValueIntervalCollection from the values list
+  const intervalCollection = new ValueIntervalCollection(metadata.values);
+
+  // Get all intervals
+  const intervals = intervalCollection.getIntervals();
+
+  // Find the interval that contains the target date
+  const targetInterval = intervals.find((interval) => {
+    const startDate = new Date(interval.startDate).getTime();
+    const endDate = new Date(interval.endDate).getTime();
+    const targetDate = new Date(date).getTime();
+
+    return targetDate >= startDate && targetDate <= endDate;
+  });
+
+  // If no matching interval found, return dash
+  if (!targetInterval) return '—';
+
+  // Format the value using existing formatter
+  const unit = metadata.unit || '';
+  return formatParameterValue(targetInterval.value, unit);
 }
 
 /**
