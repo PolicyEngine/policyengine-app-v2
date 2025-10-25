@@ -171,29 +171,37 @@ export default function ReportOutputPage() {
 
 /**
  * Determine which tabs to display based on output type and content
+ *
+ * Uses a common tabs structure that can be easily extended with
+ * type-specific tabs in the future (e.g., regional breakdown for
+ * society-wide, family structure for household).
  */
 function getTabsForOutputType(
   outputType: ReportOutputType
 ): Array<{ value: string; label: string }> {
+  // Common tabs shared by all report types
+  const commonTabs = [
+    { value: 'overview', label: 'Overview' },
+    { value: 'baseline-results', label: 'Baseline Simulation Results' },
+    { value: 'reform-results', label: 'Reform Results' },
+    { value: 'dynamics', label: 'Dynamics' },
+    { value: 'policy', label: 'Policy' },
+    { value: 'population', label: 'Population' },
+  ];
+
   if (outputType === 'societyWide') {
     return [
-      { value: 'overview', label: 'Overview' },
-      { value: 'baseline-results', label: 'Baseline Simulation Results' },
-      { value: 'reform-results', label: 'Reform Results' },
-      { value: 'dynamics', label: 'Dynamics' },
-      { value: 'policy', label: 'Policy' },
-      { value: 'population', label: 'Population' },
+      ...commonTabs,
+      // Add society-wide specific tabs here in the future
+      // e.g., { value: 'regional', label: 'Regional Breakdown' },
     ];
   }
 
   if (outputType === 'household') {
     return [
-      { value: 'overview', label: 'Overview' },
-      { value: 'baseline-results', label: 'Baseline Simulation Results' },
-      { value: 'reform-results', label: 'Reform Results' },
-      { value: 'dynamics', label: 'Dynamics' },
-      { value: 'policy', label: 'Policy' },
-      { value: 'population', label: 'Population' },
+      ...commonTabs,
+      // Add household-specific tabs here in the future
+      // e.g., { value: 'family-structure', label: 'Family Details' },
     ];
   }
 
