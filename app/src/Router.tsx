@@ -1,5 +1,10 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
+import { PolicyCreationFlow } from './flows/policyCreationFlow';
+import { PopulationCreationFlow } from './flows/populationCreationFlow';
+import { ReportCreationFlow } from './flows/reportCreationFlow';
+import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -60,16 +65,32 @@ const router = createBrowserRouter(
                   element: <ReportsPage />,
                 },
                 {
+                  path: 'reports/create',
+                  element: <FlowRouter flow={ReportCreationFlow} returnPath="reports" />,
+                },
+                {
                   path: 'simulations',
                   element: <SimulationsPage />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
                   path: 'populations',
                   element: <PopulationsPage />,
                 },
                 {
+                  path: 'populations/create',
+                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="populations" />,
+                },
+                {
                   path: 'policies',
                   element: <PoliciesPage />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <FlowRouter flow={PolicyCreationFlow} returnPath="policies" />,
                 },
                 {
                   path: 'account',
