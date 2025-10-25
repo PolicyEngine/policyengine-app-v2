@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { IconChevronDown } from '@tabler/icons-react';
+import { useNavigate } from 'react-router-dom';
 import {
   Anchor,
   Box,
   Burger,
   Button,
-  ButtonProps,
+  /*ButtonProps,*/
   Container,
   Drawer,
   Group,
@@ -17,10 +18,11 @@ import {
 import { useDisclosure } from '@mantine/hooks';
 import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
-type ActionButtonProps = ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>;
+//type ActionButtonProps = ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>;
 
-const ActionButton: React.FC<ActionButtonProps> = (props) => (
+/*const ActionButton: React.FC<ActionButtonProps> = (props) => (
   <Button
     variant="subtle"
     size="sm"
@@ -28,26 +30,45 @@ const ActionButton: React.FC<ActionButtonProps> = (props) => (
     c={colors.text.inverse}
     {...props}
   />
-);
+);*/
 
 const HeaderNavigation: React.FC = () => {
   const [opened, { open, close }] = useDisclosure(false);
 
-  const links = ['Research', 'About', 'Donate'];
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 50);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  interface NavLink {
+    label: string;
+    path: string;
+  }
+
+  const countryId = useCurrentCountry();
+  const links: NavLink[] = [
+    { label: 'Research', path: `/${countryId}/app/research` },
+    { label: 'About', path: `/${countryId}/app/about` },
+    { label: 'Donate', path: `/${countryId}/app/donate` },
+  ];
+
+  const navigate = useNavigate();
 
   return (
     <Box
       px={{ xs: spacing.md, sm: spacing['2xl'] }}
       py={spacing.sm}
       style={{
-        position: 'absolute',
-        top: spacing['3xl'],
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '85%',
+        position: 'sticky',
+        top: isScrolled ? 0 : spacing['3xl'],
+        margin: isScrolled ? 0 : '0 auto',
+        width: isScrolled ? '100%' : '85%',
         height: spacing.layout.header,
         backgroundColor: colors.primary[600],
-        borderRadius: spacing.radius.lg,
+        borderRadius: isScrolled ? 0 : spacing.radius.lg,
         borderBottom: `0.5px solid ${colors.border.dark}`,
         boxShadow: `
           0px 2px 4px -1px rgba(0, 0, 0, 0.06),
@@ -55,9 +76,8 @@ const HeaderNavigation: React.FC = () => {
         `,
         zIndex: 1000,
         fontFamily: typography.fontFamily.primary,
-        pointerEvents: opened ? 'none' : 'auto',
         opacity: opened ? 0 : 1,
-        transition: 'opacity 0.2s ease',
+        transition: 'all 0.1s ease',
       }}
     >
       <Container size="xl" h="100%">
@@ -77,16 +97,17 @@ const HeaderNavigation: React.FC = () => {
             </Box>
 
             <Group gap={spacing['3xl']} visibleFrom="lg">
-              {links.map((label) => (
+              {links.map((link) => (
                 <Anchor
-                  key={label}
+                  key={link.label}
                   c={colors.text.inverse}
                   variant="subtle"
                   td="none"
                   fw={typography.fontWeight.medium}
                   size="sm"
+                  onClick={() => navigate(link.path)}
                 >
-                  {label}
+                  {link.label}
                 </Anchor>
               ))}
 
@@ -119,8 +140,7 @@ const HeaderNavigation: React.FC = () => {
 
           {/* Action Buttons */}
           <Group gap={spacing.sm} visibleFrom="lg">
-            <ActionButton>Book Demo</ActionButton>
-            <ActionButton>Log In</ActionButton>
+            {/*<ActionButton>Log In</ActionButton>*/}
             <Button
               style={{ backgroundColor: colors.warning, borderRadius: spacing.radius.md }}
               c={colors.text.primary}
@@ -151,15 +171,17 @@ const HeaderNavigation: React.FC = () => {
         closeButtonProps={{ style: { color: colors.text.inverse }, size: 'md' }}
       >
         <Stack gap={spacing.lg} p={spacing.lg}>
-          {links.map((label) => (
+          {links.map((link) => (
             <Anchor
-              key={label}
+              key={link.label}
               c={colors.text.inverse}
+              variant="subtle"
               td="none"
               fw={typography.fontWeight.medium}
-              onClick={close}
+              size="sm"
+              onClick={() => navigate(link.path)}
             >
-              {label}
+              {link.label}
             </Anchor>
           ))}
 
@@ -184,12 +206,9 @@ const HeaderNavigation: React.FC = () => {
           </Box>
 
           <Box pt={spacing.lg} style={{ borderTop: `1px solid ${colors.border.light}` }}>
-            <ActionButton fullWidth mb={spacing.sm} onClick={close}>
-              Book Demo
-            </ActionButton>
-            <ActionButton fullWidth mb={spacing.sm} onClick={close}>
+            {/*<ActionButton fullWidth mb={spacing.sm} onClick={close}>
               Log In
-            </ActionButton>
+            </ActionButton>*/}
             <Button
               style={{ backgroundColor: colors.warning, borderRadius: spacing.radius.md }}
               c={colors.text.primary}
