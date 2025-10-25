@@ -9,6 +9,8 @@ import {
   extractPoliciesFromArray,
   collectUniqueParameterNames,
   getParameterValueFromPolicy,
+  getCurrentLawParameterValue,
+  hasCurrentLawPolicy,
   calculateColumnWidths,
   PolicyColumn,
 } from '@/utils/policyTableHelpers';
@@ -34,6 +36,7 @@ interface PolicySubPageProps {
  */
 export default function PolicySubPage({ policies, userPolicies }: PolicySubPageProps) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const [expandedParams, setExpandedParams] = useState<Set<string>>(new Set());
 
   if (!policies || policies.length === 0) {
@@ -50,14 +53,18 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
     return userPolicy?.label || policy.label || 'Unnamed Policy';
   };
 
+  // Determine if current law column is needed (none of the policies is current law)
+  const needsCurrentLawColumn = !hasCurrentLawPolicy(policies, currentLawId);
+
   // Determine column structure with smart collapsing
   const columns = determinePolicyColumns(undefined, baseline, reform);
 
   // Collect all unique parameter names across all policies
   const paramList = collectUniqueParameterNames(policies);
 
-  // Calculate column width percentages
-  const { labelColumnWidth, valueColumnWidth } = calculateColumnWidths(columns.length);
+  // Calculate column width percentages (including current law column if needed)
+  const totalValueColumns = columns.length + (needsCurrentLawColumn ? 1 : 0);
+  const { labelColumnWidth, valueColumnWidth } = calculateColumnWidths(totalValueColumns);
 
   const toggleExpanded = (paramName: string) => {
     setExpandedParams((prev) => {
@@ -100,6 +107,22 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
               >
                 Parameter
               </Table.Th>
+              {needsCurrentLawColumn && (
+                <Table.Th
+                  style={{
+                    width: `${valueColumnWidth}%`,
+                    textAlign: 'right',
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.secondary,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: `${spacing.md} ${spacing.lg}`,
+                  }}
+                >
+                  CURRENT LAW
+                </Table.Th>
+              )}
               {columns.map((column: PolicyColumn, idx: number) => {
                 // Build header text: "Policy Name (BASELINE)" or "Policy Name (BASELINE / REFORM)"
                 // Use user-specified names from userPolicies, not the base policy label
@@ -178,6 +201,22 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
                       </Text>
                     </Box>
                   </Table.Td>
+                  {needsCurrentLawColumn && (
+                    <Table.Td
+                      style={{
+                        textAlign: 'right',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      <Text
+                        size="sm"
+                        fw={typography.fontWeight.medium}
+                        c={colors.text.secondary}
+                      >
+                        {getCurrentLawParameterValue(paramName, parameters)}
+                      </Text>
+                    </Table.Td>
+                  )}
                   {columnValues.map((value: string, idx: number) => (
                     <Table.Td
                       key={idx}
