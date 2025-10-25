@@ -113,6 +113,18 @@ export function getCurrentLawParameterValue(
 }
 
 /**
+ * Checks if any policy in the list is the current law policy
+ * @param policies - Array of policies to check
+ * @param currentLawId - The ID that represents current law (from metadata)
+ * @returns True if any policy matches current law ID
+ */
+export function hasCurrentLawPolicy(policies: Policy[], currentLawId: number): boolean {
+  // Convert numeric current law ID to string for comparison with policy IDs (which are strings)
+  const currentLawIdString = String(currentLawId);
+  return policies.some((policy) => policy.id === currentLawIdString);
+}
+
+/**
  * Calculate column widths for table layout
  * Label column gets 45%, remaining width split among value columns
  */
