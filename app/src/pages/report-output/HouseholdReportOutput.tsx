@@ -161,11 +161,6 @@ export function HouseholdReportOutput({
       case 'dynamics':
         return <DynamicsSubPage />;
 
-      case 'baseline-results':
-      case 'reform-results':
-        // TODO: Implement baseline and reform results views
-        return <NotFoundSubPage />;
-
       default:
         return <NotFoundSubPage />;
     }
