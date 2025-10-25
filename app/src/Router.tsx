@@ -59,7 +59,7 @@ const router = createBrowserRouter(
               element: <Layout />,
               children: [
                 {
-                  index: true,
+                  path: 'app/dashboard',
                   // TODO: Move HomePage out of Layout once actual static homepage is merged
                   // Currently HomePage has calculator navigation buttons so needs Layout
                   element: <DashBoardPage />,
