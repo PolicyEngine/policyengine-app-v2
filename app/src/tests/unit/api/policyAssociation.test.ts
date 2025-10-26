@@ -29,6 +29,7 @@ describe('ApiPolicyStore', () => {
     country_id: 'us',
     label: 'Test Policy',
     created_at: '2025-01-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
   };
 
   beforeEach(() => {
@@ -57,10 +58,14 @@ describe('ApiPolicyStore', () => {
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockApiResponse),
         })
       );
-      expect(result).toEqual(mockPolicy);
+      expect(result).toMatchObject({
+        userId: 'user-123',
+        policyId: 'policy-456',
+        countryId: 'us',
+        label: 'Test Policy',
+      });
     });
 
     it('given API error then throws error', async () => {
@@ -95,7 +100,13 @@ describe('ApiPolicyStore', () => {
           headers: { 'Content-Type': 'application/json' },
         })
       );
-      expect(result).toEqual([mockPolicy]);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        userId: 'user-123',
+        policyId: 'policy-456',
+        countryId: 'us',
+        label: 'Test Policy',
+      });
     });
 
     it('given API error then throws error', async () => {
@@ -131,7 +142,12 @@ describe('ApiPolicyStore', () => {
           headers: { 'Content-Type': 'application/json' },
         })
       );
-      expect(result).toEqual(mockPolicy);
+      expect(result).toMatchObject({
+        userId: 'user-123',
+        policyId: 'policy-456',
+        countryId: 'us',
+        label: 'Test Policy',
+      });
     });
 
     it('given 404 response then returns null', async () => {

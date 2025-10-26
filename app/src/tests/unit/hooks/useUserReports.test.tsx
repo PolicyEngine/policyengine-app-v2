@@ -715,10 +715,7 @@ describe('useUserReportById', () => {
 
     // Then
     await waitFor(() => {
-      expect(result.current.report).toEqual({
-        ...mockReport,
-        simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
-      });
+      expect(result.current.report).toEqual(mockReport);
     });
   });
 

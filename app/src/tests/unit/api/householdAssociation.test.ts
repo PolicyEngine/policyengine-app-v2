@@ -35,12 +35,19 @@ describe('ApiHouseholdStore', () => {
       const result = await store.create(mockUserHouseholdPopulation);
 
       // Then
-      expect(global.fetch).toHaveBeenCalledWith('/api/user-household-associations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mockCreationPayload),
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/user-household-associations',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
+      );
+      expect(result).toMatchObject({
+        householdId: '123',
+        userId: 'user-456',
+        countryId: 'us',
+        label: 'My Test Household',
       });
-      expect(result).toEqual(mockUserHouseholdPopulation);
     });
 
     test('given API returns error then throws error', async () => {

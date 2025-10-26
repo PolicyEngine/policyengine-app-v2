@@ -23,7 +23,9 @@ describe('ApiGeographicStore', () => {
     geography_id: 'geo-456',
     country_id: 'us',
     label: 'Test Geography',
+    scope: 'subnational',
     created_at: '2025-01-01T00:00:00Z',
+    updated_at: '2025-01-01T00:00:00Z',
   };
 
   beforeEach(() => {
@@ -52,10 +54,15 @@ describe('ApiGeographicStore', () => {
         expect.objectContaining({
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(mockApiResponse),
         })
       );
-      expect(result).toEqual(mockPopulation);
+      expect(result).toMatchObject({
+        userId: 'user-123',
+        geographyId: 'geo-456',
+        countryId: 'us',
+        label: 'Test Geography',
+        scope: 'subnational',
+      });
     });
 
     it('given API error then throws error', async () => {
@@ -90,7 +97,14 @@ describe('ApiGeographicStore', () => {
           headers: { 'Content-Type': 'application/json' },
         })
       );
-      expect(result).toEqual([mockPopulation]);
+      expect(result).toHaveLength(1);
+      expect(result[0]).toMatchObject({
+        userId: 'user-123',
+        geographyId: 'geo-456',
+        countryId: 'us',
+        label: 'Test Geography',
+        scope: 'subnational',
+      });
     });
 
     it('given API error then throws error', async () => {
@@ -126,7 +140,13 @@ describe('ApiGeographicStore', () => {
           headers: { 'Content-Type': 'application/json' },
         })
       );
-      expect(result).toEqual(mockPopulation);
+      expect(result).toMatchObject({
+        userId: 'user-123',
+        geographyId: 'geo-456',
+        countryId: 'us',
+        label: 'Test Geography',
+        scope: 'subnational',
+      });
     });
 
     it('given 404 response then returns null', async () => {

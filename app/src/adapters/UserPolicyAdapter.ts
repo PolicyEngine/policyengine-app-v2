@@ -7,32 +7,36 @@ import { UserPolicyCreationPayload } from '@/types/payloads';
 export class UserPolicyAdapter {
   /**
    * Convert UserPolicy to API creation payload
+   * Note: API endpoint doesn't exist yet
+   *
    */
   static toCreationPayload(
     userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>
   ): UserPolicyCreationPayload {
     return {
-      userId: String(userPolicy.userId),
-      policyId: String(userPolicy.policyId),
-      countryId: userPolicy.countryId,
+      user_id: String(userPolicy.userId),
+      policy_id: String(userPolicy.policyId),
+      country_id: userPolicy.countryId,
       label: userPolicy.label,
-      updatedAt: userPolicy.updatedAt || new Date().toISOString(),
-    };
+      created_at: userPolicy.createdAt,
+      updated_at: userPolicy.updatedAt || new Date().toISOString(),
+    } as any;
   }
 
   /**
    * Convert API response to UserPolicy
    * Explicitly coerces IDs to strings to handle JSON.parse type mismatches
+   * Note: API endpoint doesn't exist yet
    */
   static fromApiResponse(apiData: any): UserPolicy {
     return {
-      id: String(apiData.policyId),
-      userId: String(apiData.userId),
-      policyId: String(apiData.policyId),
-      countryId: apiData.countryId,
+      id: String(apiData.policy_id),
+      userId: String(apiData.user_id),
+      policyId: String(apiData.policy_id),
+      countryId: apiData.country_id,
       label: apiData.label,
-      createdAt: apiData.createdAt,
-      updatedAt: apiData.updatedAt,
+      createdAt: apiData.created_at,
+      updatedAt: apiData.updated_at,
       isCreated: true,
     };
   }
