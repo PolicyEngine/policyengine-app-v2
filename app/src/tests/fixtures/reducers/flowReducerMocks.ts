@@ -9,6 +9,7 @@ interface FlowState {
     flow: Flow;
     frame: ComponentKey;
   }>;
+  returnPath: string | null;
 }
 
 // Test constants for flow names
@@ -120,6 +121,7 @@ export const INITIAL_STATE: FlowState = {
   currentFlow: null,
   currentFrame: null,
   flowStack: [],
+  returnPath: null,
 };
 
 // Helper function to create a flow state
@@ -209,6 +211,7 @@ export const expectedStateAfterSetFlow: FlowState = {
   currentFlow: mockMainFlow,
   currentFrame: FRAME_NAMES.INITIAL_FRAME,
   flowStack: [],
+  returnPath: null,
 };
 
 export const expectedStateAfterNavigateToFrame: FlowState = {
@@ -220,18 +223,21 @@ export const expectedStateAfterNavigateToFlow: FlowState = {
   currentFlow: mockSubFlow,
   currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
   flowStack: [createFlowStackEntry(mockMainFlow, FRAME_NAMES.INITIAL_FRAME)],
+  returnPath: null,
 };
 
 export const expectedStateAfterNavigateToFlowWithReturn: FlowState = {
   currentFlow: mockSubFlow,
   currentFrame: FRAME_NAMES.SUB_INITIAL_FRAME,
   flowStack: [createFlowStackEntry(mockMainFlow, FRAME_NAMES.RETURN_FRAME)],
+  returnPath: null,
 };
 
 export const expectedStateAfterReturnFromFlow: FlowState = {
   currentFlow: mockMainFlow,
   currentFrame: FRAME_NAMES.SECOND_FRAME,
   flowStack: [],
+  returnPath: null,
 };
 
 export const expectedStateAfterClearFlow: FlowState = INITIAL_STATE;

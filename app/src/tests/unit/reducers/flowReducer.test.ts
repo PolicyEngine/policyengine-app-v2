@@ -70,7 +70,7 @@ describe('flowReducer', () => {
 
   describe('setFlow Action', () => {
     test('given flow with initial frame then sets flow and frame', () => {
-      const state = flowReducer(INITIAL_STATE, setFlow(mockMainFlow));
+      const state = flowReducer(INITIAL_STATE, setFlow({ flow: mockMainFlow }));
 
       expect(state).toEqual(expectedStateAfterSetFlow);
       expect(state.currentFlow).toEqual(mockMainFlow);
@@ -79,7 +79,7 @@ describe('flowReducer', () => {
     });
 
     test('given flow without initial frame then sets flow but not frame', () => {
-      const state = flowReducer(INITIAL_STATE, setFlow(mockFlowWithoutInitialFrame));
+      const state = flowReducer(INITIAL_STATE, setFlow({ flow: mockFlowWithoutInitialFrame }));
 
       expect(state.currentFlow).toEqual(mockFlowWithoutInitialFrame);
       expect(state.currentFrame).toBeNull();
@@ -87,7 +87,7 @@ describe('flowReducer', () => {
     });
 
     test('given flow with non-string initial frame then sets flow but not frame', () => {
-      const state = flowReducer(INITIAL_STATE, setFlow(mockFlowWithNonStringInitialFrame));
+      const state = flowReducer(INITIAL_STATE, setFlow({ flow: mockFlowWithNonStringInitialFrame }));
 
       expect(state.currentFlow).toEqual(mockFlowWithNonStringInitialFrame);
       expect(state.currentFrame).toBeNull();
@@ -95,10 +95,27 @@ describe('flowReducer', () => {
     });
 
     test('given existing flow state then replaces with new flow and clears stack', () => {
-      const state = flowReducer(mockStateWithNestedFlow, setFlow(mockMainFlow));
+      const state = flowReducer(mockStateWithNestedFlow, setFlow({ flow: mockMainFlow }));
 
       expect(state).toEqual(expectedStateAfterSetFlow);
       expect(state.flowStack).toEqual(mockEmptyStack);
+    });
+
+    test('given flow with returnPath then sets returnPath', () => {
+      const returnPath = '/us/reports';
+      const state = flowReducer(INITIAL_STATE, setFlow({ flow: mockMainFlow, returnPath }));
+
+      expect(state.currentFlow).toEqual(mockMainFlow);
+      expect(state.currentFrame).toEqual(FRAME_NAMES.INITIAL_FRAME);
+      expect(state.returnPath).toEqual(returnPath);
+      expect(state.flowStack).toEqual(mockEmptyStack);
+    });
+
+    test('given flow without returnPath then sets returnPath to null', () => {
+      const state = flowReducer(INITIAL_STATE, setFlow({ flow: mockMainFlow }));
+
+      expect(state.currentFlow).toEqual(mockMainFlow);
+      expect(state.returnPath).toBeNull();
     });
   });
 
@@ -199,7 +216,7 @@ describe('flowReducer', () => {
 
     test('given nested navigation then creates multi-level stack', () => {
       // Start with main flow
-      let state = flowReducer(INITIAL_STATE, setFlow(mockMainFlow));
+      let state = flowReducer(INITIAL_STATE, setFlow({ flow: mockMainFlow }));
 
       // Navigate to sub flow
       state = flowReducer(state, navigateToFlow({ flow: mockSubFlow }));
@@ -234,12 +251,11 @@ describe('flowReducer', () => {
       expect(state.flowStack[0].flow).toEqual(mockMainFlow);
     });
 
-    test('given empty stack then does nothing', () => {
+    test('given empty stack then clears flow', () => {
       const state = flowReducer(mockStateWithMainFlow, returnFromFlow());
 
-      expect(state).toEqual(mockStateWithMainFlow);
-      expect(state.currentFlow).toEqual(mockMainFlow);
-      expect(state.currentFrame).toEqual(FRAME_NAMES.INITIAL_FRAME);
+      expect(state.currentFlow).toBeNull();
+      expect(state.currentFrame).toBeNull();
       expect(state.flowStack).toEqual(mockEmptyStack);
     });
 
@@ -269,7 +285,7 @@ describe('flowReducer', () => {
       let state = flowReducer(undefined, { type: 'init' });
 
       // Set initial flow
-      state = flowReducer(state, setFlow(mockMainFlow));
+      state = flowReducer(state, setFlow({ flow: mockMainFlow }));
       expect(state.currentFrame).toEqual(FRAME_NAMES.INITIAL_FRAME);
 
       // Navigate to second frame
@@ -318,7 +334,7 @@ describe('flowReducer', () => {
         flowStack: mockTwoLevelStack,
       });
 
-      state = flowReducer(state, setFlow(mockMainFlow));
+      state = flowReducer(state, setFlow({ flow: mockMainFlow }));
 
       expect(state.currentFlow).toEqual(mockMainFlow);
       expect(state.currentFrame).toEqual(FRAME_NAMES.INITIAL_FRAME);
@@ -336,19 +352,20 @@ describe('flowReducer', () => {
     test('given multiple returns then handles gracefully', () => {
       let state = mockStateWithSubFlow;
 
-      // First return - should work
+      // First return - should work, returning to parent flow
       state = flowReducer(state, returnFromFlow());
       expect(state.flowStack).toEqual(mockEmptyStack);
-
-      // Second return - should do nothing
-      state = flowReducer(state, returnFromFlow());
       expect(state.currentFlow).toEqual(mockMainFlow);
-      expect(state.currentFrame).toEqual(FRAME_NAMES.SECOND_FRAME);
 
-      // Third return - should still do nothing
+      // Second return - empty stack, so clears flow
       state = flowReducer(state, returnFromFlow());
-      expect(state.currentFlow).toEqual(mockMainFlow);
-      expect(state.currentFrame).toEqual(FRAME_NAMES.SECOND_FRAME);
+      expect(state.currentFlow).toBeNull();
+      expect(state.currentFrame).toBeNull();
+
+      // Third return - already null, stays null
+      state = flowReducer(state, returnFromFlow());
+      expect(state.currentFlow).toBeNull();
+      expect(state.currentFrame).toBeNull();
     });
   });
 });
