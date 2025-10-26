@@ -58,13 +58,31 @@ export function getParameterValueFromPolicy(
  */
 export function formatParameterValue(value: any, unit?: string): string {
   if (typeof value === 'number') {
-    if (unit === '%') {
-      return `${(value * 100).toFixed(1)}%`;
+    const DECIMAL_PRECISION = 1;
+    const INTEGER_PRECISION = 0;
+    const precision = Number.isInteger(value) ? INTEGER_PRECISION : DECIMAL_PRECISION;
+
+    if (unit === '/1') {
+      const percentValue = value * 100;
+      const percentPrecision = Number.isInteger(percentValue) ? INTEGER_PRECISION : DECIMAL_PRECISION;
+      return `${percentValue.toFixed(percentPrecision)}%`;
     }
     if (unit === 'currency-USD') {
-      return `$${value.toLocaleString()}`;
+      return `$${value.toLocaleString('en-US', {
+        minimumFractionDigits: precision,
+        maximumFractionDigits: precision,
+      })}`;
     }
-    return value.toLocaleString();
+    if (unit === 'currency-GBP') {
+      return `£${value.toLocaleString('en-GB', {
+        minimumFractionDigits: precision,
+        maximumFractionDigits: precision,
+      })}`;
+    }
+    return value.toLocaleString('en-US', {
+      minimumFractionDigits: precision,
+      maximumFractionDigits: precision,
+    });
   }
   return String(value);
 }
