@@ -1,7 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { screen } from '@test-utils';
-import { render } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { render, screen, userEvent } from '@test-utils';
 import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
