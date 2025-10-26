@@ -64,36 +64,22 @@ export const getBasicInputFields = createSelector(
 export const makeGetFieldOptions = () =>
   createSelector(
     (state: RootState, fieldName: string) => ({
-      regions: state.metadata.economyOptions.region,
       variables: state.metadata.variables,
       fieldName,
     }),
-    ({ regions, variables, fieldName }) => {
-      // For region-based fields, use regions from economy options
-      // Frustratingly, "state_name" must be uppercased manually
-      if (fieldName === 'state_name') {
-        return (
-          regions?.map((region) => ({
-            value: region.name.toUpperCase(),
-            label: region.label,
-          })) || []
-        );
-      } else if (fieldName === 'region') {
-        return (
-          regions?.map((region) => ({
-            value: region.name,
-            label: region.label,
-          })) || []
-        );
-      }
-
-      // For other fields, try to find options in variables metadata
+    ({ variables, fieldName }) => {
+      // Get field variable from metadata
       const fieldVariable = variables?.[fieldName];
 
-      if (fieldVariable && fieldVariable.possible_values) {
-        return Object.entries(fieldVariable.possible_values).map(([value, label]) => ({
-          value,
-          label: typeof label === 'string' ? label : value,
+      // Check if the variable has possibleValues (array format from API)
+      if (
+        fieldVariable &&
+        fieldVariable.possibleValues &&
+        Array.isArray(fieldVariable.possibleValues)
+      ) {
+        return fieldVariable.possibleValues.map((option: { value: string; label: string }) => ({
+          value: option.value,
+          label: option.label,
         }));
       }
 
@@ -110,9 +96,14 @@ export const getFieldOptions = (state: RootState, fieldName: string) => {
   return getFieldOptionsSelector(state, fieldName);
 };
 
-// Check if a field should be a dropdown
-export const isDropdownField = (fieldName: string) => {
-  return ['state_name', 'region', 'brma', 'local_authority'].includes(fieldName);
+// Check if a field should be a dropdown based on metadata
+export const isDropdownField = (state: RootState, fieldName: string): boolean => {
+  const fieldVariable = state.metadata.variables?.[fieldName];
+  return !!(
+    fieldVariable &&
+    fieldVariable.possibleValues &&
+    Array.isArray(fieldVariable.possibleValues)
+  );
 };
 
 // Get user-friendly label for field

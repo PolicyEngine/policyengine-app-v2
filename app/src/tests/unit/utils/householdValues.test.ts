@@ -16,6 +16,7 @@ import {
 } from '@/tests/fixtures/utils/householdValuesMocks';
 import {
   formatVariableValue,
+  getInputFormattingProps,
   getParameterAtInstant,
   getValueFromHousehold,
   shouldShowVariable,
@@ -275,6 +276,163 @@ describe('getParameterAtInstant', () => {
 
     // Then
     expect(result).toEqual([]);
+  });
+});
+
+describe('getInputFormattingProps', () => {
+  describe('Currency formatting', () => {
+    test('given USD currency variable then returns dollar prefix with 2 decimals', () => {
+      // Given
+      const variable = { valueType: 'float', unit: 'currency-USD' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        prefix: '$',
+        thousandSeparator: ',',
+        decimalScale: 2,
+      });
+    });
+
+    test('given GBP currency variable then returns pound prefix with 2 decimals', () => {
+      // Given
+      const variable = { valueType: 'float', unit: 'currency-GBP' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        prefix: '£',
+        thousandSeparator: ',',
+        decimalScale: 2,
+      });
+    });
+
+    test('given EUR currency variable then returns euro prefix with 2 decimals', () => {
+      // Given
+      const variable = { valueType: 'float', unit: 'currency-EUR' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        prefix: '€',
+        thousandSeparator: ',',
+        decimalScale: 2,
+      });
+    });
+  });
+
+  describe('Percentage formatting', () => {
+    test('given percentage variable then returns percent suffix with 2 decimals', () => {
+      // Given
+      const variable = { valueType: 'float', unit: '/1' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        suffix: '%',
+        thousandSeparator: ',',
+        decimalScale: 2,
+      });
+    });
+  });
+
+  describe('Integer formatting', () => {
+    test('given int variable then returns 0 decimals', () => {
+      // Given
+      const variable = { valueType: 'int', unit: null };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        thousandSeparator: ',',
+        decimalScale: 0,
+      });
+    });
+
+    test('given Enum variable then returns 0 decimals', () => {
+      // Given
+      const variable = { valueType: 'Enum', unit: null };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        thousandSeparator: ',',
+        decimalScale: 0,
+      });
+    });
+  });
+
+  describe('Float formatting', () => {
+    test('given float variable without unit then returns 0 decimals', () => {
+      // Given
+      const variable = { valueType: 'float', unit: null };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        thousandSeparator: ',',
+        decimalScale: 0,
+      });
+    });
+
+    test('given float variable with unknown unit then returns 0 decimals', () => {
+      // Given
+      const variable = { valueType: 'float', unit: 'years' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        thousandSeparator: ',',
+        decimalScale: 0,
+      });
+    });
+  });
+
+  describe('Edge cases', () => {
+    test('given variable without valueType then handles gracefully', () => {
+      // Given
+      const variable = { unit: 'currency-USD' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        prefix: '$',
+        thousandSeparator: ',',
+        decimalScale: undefined,
+      });
+    });
+
+    test('given variable without unit then returns default formatting', () => {
+      // Given
+      const variable = { valueType: 'float' };
+
+      // When
+      const result = getInputFormattingProps(variable);
+
+      // Then
+      expect(result).toEqual({
+        thousandSeparator: ',',
+        decimalScale: 0,
+      });
+    });
   });
 });
 

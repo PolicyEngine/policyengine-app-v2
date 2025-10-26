@@ -132,6 +132,66 @@ export function getValueFromHousehold(
 }
 
 /**
+ * Gets input formatting properties for a variable based on its metadata
+ * Determines prefix, suffix, decimal scale, and thousands separator
+ * based on the variable's valueType and unit
+ *
+ * @param variable - The variable metadata
+ * @returns Formatting properties for NumberInput components
+ */
+export function getInputFormattingProps(variable: any): {
+  prefix?: string;
+  suffix?: string;
+  thousandSeparator: string;
+  decimalScale?: number;
+} {
+  const currencyMap: Record<string, string> = {
+    'currency-USD': '$',
+    'currency-GBP': '£',
+    'currency-EUR': '€',
+  };
+
+  // Determine decimal scale based on valueType
+  let decimalScale: number | undefined;
+  if (variable.valueType === 'int' || variable.valueType === 'Enum') {
+    decimalScale = 0;
+  } else if (variable.valueType === 'float') {
+    // For currency, use 2 decimals; for percentages use 2; otherwise use 0 for simplicity
+    if (variable.unit && currencyMap[variable.unit]) {
+      decimalScale = 2;
+    } else if (variable.unit === '/1') {
+      decimalScale = 2;
+    } else {
+      decimalScale = 0;
+    }
+  }
+
+  // Currency formatting
+  if (variable.unit && currencyMap[variable.unit]) {
+    return {
+      prefix: currencyMap[variable.unit],
+      thousandSeparator: ',',
+      decimalScale,
+    };
+  }
+
+  // Percentage formatting
+  if (variable.unit === '/1') {
+    return {
+      suffix: '%',
+      thousandSeparator: ',',
+      decimalScale,
+    };
+  }
+
+  // Default formatting (plain number)
+  return {
+    thousandSeparator: ',',
+    decimalScale,
+  };
+}
+
+/**
  * Formats a variable value for display
  * Based on the v1 app's formatVariableValue function
  *
