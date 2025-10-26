@@ -1,3 +1,5 @@
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { householdsAreEqual } from '@/utils/householdTableData';
@@ -22,6 +24,9 @@ export default function HouseholdSubPage({
   reformHousehold,
   userHouseholds,
 }: HouseholdSubPageProps) {
+  // Get metadata for variable formatting
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+
   if (!baselineHousehold && !reformHousehold) {
     return <div>No household data available</div>;
   }
@@ -44,9 +49,9 @@ export default function HouseholdSubPage({
   const baselineLabel = baselineUserHousehold?.label || 'Baseline';
   const reformLabel = reformUserHousehold?.label || 'Reform';
 
-  // Extract group entities from both households
-  const baselineGroupEntities = baselineHousehold ? extractGroupEntities(baselineHousehold) : [];
-  const reformGroupEntities = reformHousehold ? extractGroupEntities(reformHousehold) : [];
+  // Extract group entities from both households with metadata for proper formatting
+  const baselineGroupEntities = baselineHousehold ? extractGroupEntities(baselineHousehold, variables) : [];
+  const reformGroupEntities = reformHousehold ? extractGroupEntities(reformHousehold, variables) : [];
 
   // Collect all unique entity types
   const allEntityTypes = new Set<string>();

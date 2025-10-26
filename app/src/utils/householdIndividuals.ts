@@ -4,6 +4,7 @@ export interface EntityVariable {
   paramName: string;
   label: string;
   value: any;
+  unit?: string; // Unit from metadata (e.g., 'currency-USD', '/1' for percentage)
 }
 
 export interface EntityMember {
@@ -37,7 +38,10 @@ function hasEntityVariables(entityData: HouseholdGroupEntity): boolean {
  * Returns entities like people, households, tax_units, etc.
  * Only includes group entities that have variables defined (not just members)
  */
-export function extractGroupEntities(household: Household): GroupEntity[] {
+export function extractGroupEntities(
+  household: Household,
+  variablesMetadata?: Record<string, any>
+): GroupEntity[] {
   const groupEntities: GroupEntity[] = [];
 
   if (!household.householdData) {
@@ -56,7 +60,7 @@ export function extractGroupEntities(household: Household): GroupEntity[] {
         peopleInstances.push({
           id: personId,
           name: formatPersonName(personId),
-          members: [extractEntityMember(personId, personData)],
+          members: [extractEntityMember(personId, personData, variablesMetadata)],
         });
       });
 
@@ -77,10 +81,10 @@ export function extractGroupEntities(household: Household): GroupEntity[] {
             return;
           }
 
-          const members = extractMembersFromGroupEntity(entityData, householdData.people);
+          const members = extractMembersFromGroupEntity(entityData, householdData.people, variablesMetadata);
 
           // Extract the entity's own variables (not member variables)
-          const entityVariables = extractEntityVariables(entityData);
+          const entityVariables = extractEntityVariables(entityData, variablesMetadata);
 
           instances.push({
             id: entityId,
@@ -108,7 +112,10 @@ export function extractGroupEntities(household: Household): GroupEntity[] {
 /**
  * Extract variables from the entity itself (not from its members)
  */
-function extractEntityVariables(entityData: HouseholdGroupEntity): EntityVariable[] {
+function extractEntityVariables(
+  entityData: HouseholdGroupEntity,
+  variablesMetadata?: Record<string, any>
+): EntityVariable[] {
   const variables: EntityVariable[] = [];
 
   Object.entries(entityData).forEach(([paramName, paramValues]) => {
@@ -118,11 +125,13 @@ function extractEntityVariables(entityData: HouseholdGroupEntity): EntityVariabl
     // paramValues is typically { "2024": value, "2025": value, ... }
     if (typeof paramValues === 'object' && paramValues !== null) {
       const firstValue = Object.values(paramValues)[0];
+      const unit = variablesMetadata?.[paramName]?.unit;
 
       variables.push({
         paramName,
         label: formatParameterLabel(paramName),
         value: firstValue,
+        unit,
       });
     }
   });
@@ -136,7 +145,8 @@ function extractEntityVariables(entityData: HouseholdGroupEntity): EntityVariabl
  */
 export function extractMembersFromGroupEntity(
   groupEntity: HouseholdGroupEntity,
-  people: Record<string, any>
+  people: Record<string, any>,
+  variablesMetadata?: Record<string, any>
 ): EntityMember[] {
   const members: EntityMember[] = [];
 
@@ -147,7 +157,7 @@ export function extractMembersFromGroupEntity(
   groupEntity.members.forEach((personId) => {
     const personData = people[personId];
     if (personData) {
-      members.push(extractEntityMember(personId, personData));
+      members.push(extractEntityMember(personId, personData, variablesMetadata));
     }
   });
 
@@ -157,18 +167,24 @@ export function extractMembersFromGroupEntity(
 /**
  * Extract a single entity member with their variables
  */
-function extractEntityMember(memberId: string, memberData: any): EntityMember {
+function extractEntityMember(
+  memberId: string,
+  memberData: any,
+  variablesMetadata?: Record<string, any>
+): EntityMember {
   const variables: EntityVariable[] = [];
 
   Object.entries(memberData).forEach(([paramName, paramValues]) => {
     // paramValues is typically { "2024": value, "2025": value, ... }
     if (typeof paramValues === 'object' && paramValues !== null) {
       const firstValue = Object.values(paramValues)[0];
+      const unit = variablesMetadata?.[paramName]?.unit;
 
       variables.push({
         paramName,
         label: formatParameterLabel(paramName),
         value: firstValue,
+        unit,
       });
     }
   });

@@ -1,6 +1,7 @@
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { EntityMember } from '@/utils/householdIndividuals';
+import { formatVariableValue } from '@/utils/householdValues';
 
 interface IndividualTableProps {
   baselineMember?: EntityMember;
@@ -38,11 +39,21 @@ export default function IndividualTable({
   const labelColumnWidth = 45;
   const valueColumnWidth = isSameHousehold ? 55 : 27.5;
 
-  // Helper to find variable value
+  // Helper to find variable value and format it properly
   const findVariableValue = (member: EntityMember | undefined, paramName: string): string => {
     const variable = member?.variables.find((v) => v.paramName === paramName);
     if (!variable) return '—';
 
+    // Use formatVariableValue with unit information from metadata
+    if (typeof variable.value === 'number' && variable.unit) {
+      // Use precision 1 for decimals, 0 for integers
+      const DECIMAL_PRECISION = 1;
+      const INTEGER_PRECISION = 0;
+      const precision = Number.isInteger(variable.value) ? INTEGER_PRECISION : DECIMAL_PRECISION;
+      return formatVariableValue({ unit: variable.unit }, variable.value, precision);
+    }
+
+    // Fallback for non-numeric or no unit
     if (typeof variable.value === 'number') {
       return variable.value.toLocaleString();
     }
