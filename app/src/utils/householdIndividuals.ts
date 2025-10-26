@@ -81,7 +81,11 @@ export function extractGroupEntities(
             return;
           }
 
-          const members = extractMembersFromGroupEntity(entityData, householdData.people, variablesMetadata);
+          const members = extractMembersFromGroupEntity(
+            entityData,
+            householdData.people,
+            variablesMetadata
+          );
 
           // Extract the entity's own variables (not member variables)
           const entityVariables = extractEntityVariables(entityData, variablesMetadata);
@@ -120,7 +124,9 @@ function extractEntityVariables(
 
   Object.entries(entityData).forEach(([paramName, paramValues]) => {
     // Skip the 'members' array - it's metadata, not a variable
-    if (paramName === 'members') return;
+    if (paramName === 'members') {
+      return;
+    }
 
     // paramValues is typically { "2024": value, "2025": value, ... }
     if (typeof paramValues === 'object' && paramValues !== null) {
@@ -225,7 +231,18 @@ function formatPersonName(personId: string): string {
     if (index === 0) {
       return 'You';
     }
-    const ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
+    const ordinals = [
+      'first',
+      'second',
+      'third',
+      'fourth',
+      'fifth',
+      'sixth',
+      'seventh',
+      'eighth',
+      'ninth',
+      'tenth',
+    ];
     const ordinal = ordinals[index - 1] || `${index}th`;
     return `Your ${ordinal} dependent`;
   }

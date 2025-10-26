@@ -1,6 +1,6 @@
 import { Box, Table, Text } from '@mantine/core';
-import { Geography } from '@/types/ingredients/Geography';
 import { colors, spacing, typography } from '@/designTokens';
+import { Geography } from '@/types/ingredients/Geography';
 
 interface GeographySubPageProps {
   baselineGeography?: Geography;

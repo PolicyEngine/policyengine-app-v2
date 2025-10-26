@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   IconChevronLeft,
   IconClock,
@@ -8,6 +7,8 @@ import {
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
   Anchor,
@@ -19,13 +20,15 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { useSelector } from 'react-redux';
-import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { MOCK_BASELINE_POLICY, MOCK_REFORM_POLICY, MOCK_CURRENT_LAW_POLICY } from './mockPolicyData';
+import {
+  MOCK_BASELINE_POLICY,
+  MOCK_CURRENT_LAW_POLICY,
+  MOCK_REFORM_POLICY,
+} from './mockPolicyData';
 
 /**
  * Policy Design 7: Borderless list format with left-hand tabs
@@ -330,8 +333,7 @@ export default function PolicyDesign7Page() {
                       px={spacing.md}
                       style={{
                         cursor: 'pointer',
-                        backgroundColor:
-                          activePolicyTab === tab.value ? '#F0FCFB' : 'transparent', // Mix of teal and gray
+                        backgroundColor: activePolicyTab === tab.value ? '#F0FCFB' : 'transparent', // Mix of teal and gray
                         borderLeft:
                           activePolicyTab === tab.value
                             ? `3px solid ${colors.primary[500]}`
@@ -346,7 +348,11 @@ export default function PolicyDesign7Page() {
                             ? typography.fontWeight.medium
                             : typography.fontWeight.normal
                         }
-                        c={activePolicyTab === tab.value ? colors.text.primary : colors.text.secondary}
+                        c={
+                          activePolicyTab === tab.value
+                            ? colors.text.primary
+                            : colors.text.secondary
+                        }
                       >
                         {tab.label}
                       </Text>

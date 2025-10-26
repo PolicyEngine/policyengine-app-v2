@@ -1,5 +1,8 @@
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { UserPolicyCreationMetadata, UserPolicyMetadata } from '@/types/metadata/userPolicyMetadata';
+import {
+  UserPolicyCreationMetadata,
+  UserPolicyMetadata,
+} from '@/types/metadata/userPolicyMetadata';
 
 /**
  * Adapter for converting between UserPolicy and API formats

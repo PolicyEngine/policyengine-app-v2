@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import {
   IconChevronLeft,
   IconClock,
@@ -7,6 +6,8 @@ import {
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
   Anchor,
@@ -19,13 +20,15 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { useSelector } from 'react-redux';
-import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { MOCK_BASELINE_POLICY, MOCK_REFORM_POLICY, MOCK_CURRENT_LAW_POLICY } from './mockPolicyData';
+import {
+  MOCK_BASELINE_POLICY,
+  MOCK_CURRENT_LAW_POLICY,
+  MOCK_REFORM_POLICY,
+} from './mockPolicyData';
 
 /**
  * Policy Design 4: Table/List format with Baseline, Reform, and Current Law columns
@@ -35,11 +38,7 @@ import { MOCK_BASELINE_POLICY, MOCK_REFORM_POLICY, MOCK_CURRENT_LAW_POLICY } fro
  */
 
 // Helper to get parameter value as formatted string
-function getParameterValue(
-  policy: Policy,
-  paramName: string,
-  unit: string
-): string | undefined {
+function getParameterValue(policy: Policy, paramName: string, unit: string): string | undefined {
   const param = policy.parameters?.find((p) => p.name === paramName);
   if (!param || !param.values || param.values.length === 0) {
     return undefined;
@@ -284,97 +283,97 @@ export default function PolicyDesign4Page() {
                     </Table.Th>
                   </Table.Tr>
                 </Table.Thead>
-              <Table.Tbody>
-                {paramList.map((paramName) => {
-                  const metadata: ParameterMetadata | undefined = parameters[paramName];
-                  const paramLabel = metadata?.label || paramName;
-                  const unit = metadata?.unit || '';
+                <Table.Tbody>
+                  {paramList.map((paramName) => {
+                    const metadata: ParameterMetadata | undefined = parameters[paramName];
+                    const paramLabel = metadata?.label || paramName;
+                    const unit = metadata?.unit || '';
 
-                  const currentLawValue = getParameterValue(
-                    MOCK_CURRENT_LAW_POLICY,
-                    paramName,
-                    unit
-                  );
-                  const baselineValue = getParameterValue(MOCK_BASELINE_POLICY, paramName, unit);
-                  const reformValue = getParameterValue(MOCK_REFORM_POLICY, paramName, unit);
+                    const currentLawValue = getParameterValue(
+                      MOCK_CURRENT_LAW_POLICY,
+                      paramName,
+                      unit
+                    );
+                    const baselineValue = getParameterValue(MOCK_BASELINE_POLICY, paramName, unit);
+                    const reformValue = getParameterValue(MOCK_REFORM_POLICY, paramName, unit);
 
-                  // Check if values differ
-                  const hasChanges =
-                    currentLawValue !== baselineValue ||
-                    baselineValue !== reformValue ||
-                    currentLawValue !== reformValue;
+                    // Check if values differ
+                    const hasChanges =
+                      currentLawValue !== baselineValue ||
+                      baselineValue !== reformValue ||
+                      currentLawValue !== reformValue;
 
-                  return (
-                    <Table.Tr key={paramName}>
-                      <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
-                        <Box>
-                          <Text size="sm" fw={typography.fontWeight.medium}>
-                            {paramLabel}
+                    return (
+                      <Table.Tr key={paramName}>
+                        <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                          <Box>
+                            <Text size="sm" fw={typography.fontWeight.medium}>
+                              {paramLabel}
+                            </Text>
+                            <Text size="xs" c={colors.text.secondary}>
+                              {paramName}
+                            </Text>
+                          </Box>
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            textAlign: 'right',
+                            padding: `${spacing.md} ${spacing.lg}`,
+                          }}
+                        >
+                          <Text
+                            size="sm"
+                            fw={typography.fontWeight.medium}
+                            c={
+                              hasChanges && currentLawValue !== baselineValue
+                                ? colors.primary[700]
+                                : colors.text.primary
+                            }
+                          >
+                            {currentLawValue || '—'}
                           </Text>
-                          <Text size="xs" c={colors.text.secondary}>
-                            {paramName}
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            textAlign: 'right',
+                            padding: `${spacing.md} ${spacing.lg}`,
+                          }}
+                        >
+                          <Text
+                            size="sm"
+                            fw={typography.fontWeight.medium}
+                            c={
+                              hasChanges && baselineValue !== currentLawValue
+                                ? colors.primary[700]
+                                : colors.text.primary
+                            }
+                          >
+                            {baselineValue || '—'}
                           </Text>
-                        </Box>
-                      </Table.Td>
-                      <Table.Td
-                        style={{
-                          textAlign: 'right',
-                          padding: `${spacing.md} ${spacing.lg}`,
-                        }}
-                      >
-                        <Text
-                          size="sm"
-                          fw={typography.fontWeight.medium}
-                          c={
-                            hasChanges && currentLawValue !== baselineValue
-                              ? colors.primary[700]
-                              : colors.text.primary
-                          }
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            textAlign: 'right',
+                            padding: `${spacing.md} ${spacing.lg}`,
+                          }}
                         >
-                          {currentLawValue || '—'}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td
-                        style={{
-                          textAlign: 'right',
-                          padding: `${spacing.md} ${spacing.lg}`,
-                        }}
-                      >
-                        <Text
-                          size="sm"
-                          fw={typography.fontWeight.medium}
-                          c={
-                            hasChanges && baselineValue !== currentLawValue
-                              ? colors.primary[700]
-                              : colors.text.primary
-                          }
-                        >
-                          {baselineValue || '—'}
-                        </Text>
-                      </Table.Td>
-                      <Table.Td
-                        style={{
-                          textAlign: 'right',
-                          padding: `${spacing.md} ${spacing.lg}`,
-                        }}
-                      >
-                        <Text
-                          size="sm"
-                          fw={typography.fontWeight.bold}
-                          c={
-                            hasChanges && reformValue !== baselineValue
-                              ? colors.primary[700]
-                              : colors.text.primary
-                          }
-                        >
-                          {reformValue || '—'}
-                        </Text>
-                      </Table.Td>
-                    </Table.Tr>
-                  );
-                })}
-              </Table.Tbody>
-            </Table>
+                          <Text
+                            size="sm"
+                            fw={typography.fontWeight.bold}
+                            c={
+                              hasChanges && reformValue !== baselineValue
+                                ? colors.primary[700]
+                                : colors.text.primary
+                            }
+                          >
+                            {reformValue || '—'}
+                          </Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    );
+                  })}
+                </Table.Tbody>
+              </Table>
             </Box>
           </Box>
         </Box>

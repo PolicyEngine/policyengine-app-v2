@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import PopulationSubPage from '@/pages/report-output/PopulationSubPage';
 import { createPopulationSubPageProps } from '@/tests/fixtures/pages/report-output/PopulationSubPage';
 

@@ -95,7 +95,13 @@ export const EXPECTED_HIERARCHICAL_LABELS = {
     'Eitc maximum amount by number of children',
   ],
   // For SIX_LEVELS: path splits to [...'eitc', 'max[0]', 'amount'] so 'max' level is skipped
-  SIX_LEVELS: ['Internal revenue service (irs)', 'Credits', 'Earned income tax credit', 'Bracket 1', 'Amount'],
+  SIX_LEVELS: [
+    'Internal revenue service (irs)',
+    'Credits',
+    'Earned income tax credit',
+    'Bracket 1',
+    'Amount',
+  ],
   // For WITH_BRACKETS: path ends at rates[1] which has no metadata, so rates level is last
   WITH_BRACKETS: ['Internal revenue service (irs)', 'Income', 'Bracket'],
 } as const;

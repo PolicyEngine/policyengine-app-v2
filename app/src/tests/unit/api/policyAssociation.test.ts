@@ -16,12 +16,6 @@ describe('ApiPolicyStore', () => {
     isCreated: true,
   };
 
-  const mockPolicy: UserPolicy = {
-    ...mockPolicyInput,
-    id: 'policy-456',
-    createdAt: '2025-01-01T00:00:00Z',
-  };
-
   const mockApiResponse = {
     id: 'policy-456',
     user_id: 'user-123',

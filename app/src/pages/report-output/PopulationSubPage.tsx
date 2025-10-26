@@ -2,8 +2,8 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import HouseholdSubPage from './HouseholdSubPage';
 import GeographySubPage from './GeographySubPage';
+import HouseholdSubPage from './HouseholdSubPage';
 
 interface PopulationSubPageProps {
   baselineSimulation?: Simulation;
@@ -30,8 +30,7 @@ export default function PopulationSubPage({
 
   console.log(`[PopulationSubPage] userHouseholds:`, userHouseholds);
 
-  const populationType =
-    baselineSimulation?.populationType || reformSimulation?.populationType;
+  const populationType = baselineSimulation?.populationType || reformSimulation?.populationType;
 
   if (!populationType) {
     return <div>No population data available</div>;
@@ -67,8 +66,8 @@ export default function PopulationSubPage({
       baselineGeographyId,
       reformGeographyId,
       availableGeographies: geographies,
-      geographyIds: geographies?.map(g => g.id),
-      geographyGeographyIds: geographies?.map(g => g.geographyId),
+      geographyIds: geographies?.map((g) => g.id),
+      geographyGeographyIds: geographies?.map((g) => g.geographyId),
     });
 
     // Find the geographies - match by full id
@@ -83,10 +82,7 @@ export default function PopulationSubPage({
     });
 
     return (
-      <GeographySubPage
-        baselineGeography={baselineGeography}
-        reformGeography={reformGeography}
-      />
+      <GeographySubPage baselineGeography={baselineGeography} reformGeography={reformGeography} />
     );
   }
 

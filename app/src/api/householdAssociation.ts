@@ -171,7 +171,9 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
   private getStoredHouseholds(): UserHouseholdPopulation[] {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (!stored) return [];
+      if (!stored) {
+        return [];
+      }
 
       const parsed = JSON.parse(stored);
       // Data is already in application format (UserHouseholdPopulation), just ensure type coercion

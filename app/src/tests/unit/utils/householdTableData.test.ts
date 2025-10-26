@@ -1,15 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  extractHouseholdInputs,
-  householdsAreEqual,
-  HouseholdInputRow,
-} from '@/utils/householdTableData';
-import {
-  MOCK_HOUSEHOLD_SIMPLE,
   MOCK_HOUSEHOLD_COMPLEX,
   MOCK_HOUSEHOLD_EMPTY,
+  MOCK_HOUSEHOLD_SIMPLE,
   MOCK_HOUSEHOLD_SIMPLE_CLONE,
 } from '@/tests/fixtures/utils/householdTableDataMocks';
+import {
+  extractHouseholdInputs,
+  HouseholdInputRow,
+  householdsAreEqual,
+} from '@/utils/householdTableData';
 
 describe('householdTableData', () => {
   describe('extractHouseholdInputs', () => {
@@ -20,9 +20,7 @@ describe('householdTableData', () => {
       expect(rows.length).toBeGreaterThan(0);
 
       // Check person-1 inputs
-      const person1Age = rows.find(
-        (r) => r.category === 'person-1' && r.paramName === 'age'
-      );
+      const person1Age = rows.find((r) => r.category === 'person-1' && r.paramName === 'age');
       expect(person1Age).toBeDefined();
       expect(person1Age?.value).toBe(35);
       expect(person1Age?.label).toBe('Age');

@@ -1,7 +1,6 @@
 import { vi } from 'vitest';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { Policy } from '@/types/ingredients/Policy';
-import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyColumn } from '@/utils/policyTableHelpers';
 
 export const MOCK_PARAMETER_METADATA: Record<string, ParameterMetadata> = {

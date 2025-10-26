@@ -1,12 +1,12 @@
-import { describe, test, expect } from 'vitest';
-import { getPolicyLabel, buildColumnHeaderText } from '@/utils/policyColumnHeaders';
+import { describe, expect, test } from 'vitest';
 import {
   MOCK_POLICY_BASELINE,
-  MOCK_USER_POLICY_BASELINE,
-  MOCK_USER_POLICY_REFORM,
   MOCK_POLICY_COLUMNS,
   MOCK_POLICY_COLUMNS_MERGED,
+  MOCK_USER_POLICY_BASELINE,
+  MOCK_USER_POLICY_REFORM,
 } from '@/tests/fixtures/utils/policyColumnHeaders';
+import { buildColumnHeaderText, getPolicyLabel } from '@/utils/policyColumnHeaders';
 
 describe('policyColumnHeaders', () => {
   describe('getPolicyLabel', () => {

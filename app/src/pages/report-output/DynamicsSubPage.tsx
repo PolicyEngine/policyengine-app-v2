@@ -1,20 +1,20 @@
 import { useSelector } from 'react-redux';
 import { Box, Text } from '@mantine/core';
+import ParameterTable from '@/components/report/ParameterTable';
+import { colors, spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { buildColumnHeaderText } from '@/utils/policyColumnHeaders';
 import {
+  calculateColumnWidths,
   determinePolicyColumns,
   extractPoliciesFromArray,
-  getParameterValueFromPolicy,
   getCurrentLawParameterValue,
+  getParameterValueFromPolicy,
   hasCurrentLawPolicy,
-  calculateColumnWidths,
 } from '@/utils/policyTableHelpers';
-import { buildColumnHeaderText } from '@/utils/policyColumnHeaders';
-import ParameterTable from '@/components/report/ParameterTable';
-import { colors, spacing } from '@/designTokens';
 
 interface DynamicsSubPageProps {
   policies?: Policy[];
@@ -29,7 +29,7 @@ interface DynamicsSubPageProps {
  */
 function filterDynamicsParameters(paramNames: string[], countryId: string): string[] {
   const dynamicsPrefix = countryId === 'us' ? 'gov.simulation' : 'gov.dynamic';
-  return paramNames.filter(paramName => paramName.startsWith(dynamicsPrefix));
+  return paramNames.filter((paramName) => paramName.startsWith(dynamicsPrefix));
 }
 
 /**

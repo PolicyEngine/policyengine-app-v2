@@ -1,8 +1,7 @@
+import { UNCONFIRMED_PARAM_DEFINITION_DATE } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { PolicyColumn } from './policyComparison';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
-import { UNCONFIRMED_PARAM_DEFINITION_DATE } from '@/constants';
 
 export { determinePolicyColumns } from './policyComparison';
 export type { PolicyColumn } from './policyComparison';
@@ -41,10 +40,14 @@ export function getParameterValueFromPolicy(
   paramName: string,
   parameters: Record<string, ParameterMetadata>
 ): string {
-  if (!policy) return '—';
+  if (!policy) {
+    return '—';
+  }
 
   const param = policy.parameters?.find((p) => p.name === paramName);
-  if (!param || !param.values || param.values.length === 0) return '—';
+  if (!param || !param.values || param.values.length === 0) {
+    return '—';
+  }
 
   const value = param.values[0].value;
   const metadata = parameters[paramName];
@@ -64,7 +67,9 @@ export function formatParameterValue(value: any, unit?: string): string {
 
     if (unit === '/1') {
       const percentValue = value * 100;
-      const percentPrecision = Number.isInteger(percentValue) ? INTEGER_PRECISION : DECIMAL_PRECISION;
+      const percentPrecision = Number.isInteger(percentValue)
+        ? INTEGER_PRECISION
+        : DECIMAL_PRECISION;
       return `${percentValue.toFixed(percentPrecision)}%`;
     }
     if (unit === 'currency-USD') {
@@ -102,10 +107,14 @@ export function getCurrentLawParameterValue(
   const metadata = parameters[paramName];
 
   // If parameter doesn't exist in metadata, return dash
-  if (!metadata) return '—';
+  if (!metadata) {
+    return '—';
+  }
 
   // If no values defined, return dash
-  if (!metadata.values) return '—';
+  if (!metadata.values) {
+    return '—';
+  }
 
   // Create ValueIntervalCollection from the values list
   const intervalCollection = new ValueIntervalCollection(metadata.values);
@@ -123,7 +132,9 @@ export function getCurrentLawParameterValue(
   });
 
   // If no matching interval found, return dash
-  if (!targetInterval) return '—';
+  if (!targetInterval) {
+    return '—';
+  }
 
   // Format the value using existing formatter
   const unit = metadata.unit || '';

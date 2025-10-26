@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   IconChevronLeft,
   IconClock,
@@ -8,6 +7,8 @@ import {
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
   Anchor,
@@ -19,18 +20,20 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { useSelector } from 'react-redux';
-import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { MOCK_BASELINE_POLICY, MOCK_REFORM_POLICY, MOCK_CURRENT_LAW_POLICY } from './mockPolicyData';
 import {
-  getHierarchicalLabels,
   buildCompactLabel,
   formatLabelParts,
+  getHierarchicalLabels,
 } from '@/utils/parameterLabels';
+import {
+  MOCK_BASELINE_POLICY,
+  MOCK_CURRENT_LAW_POLICY,
+  MOCK_REFORM_POLICY,
+} from './mockPolicyData';
 
 /**
  * Policy Design 10: Ultra-minimal list with separate ribbon tabs

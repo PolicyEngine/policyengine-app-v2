@@ -3,7 +3,6 @@ import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAs
 import {
   mockApiResponse,
   mockApiResponseList,
-  mockCreationPayload,
   mockUserHouseholdPopulation,
   mockUserHouseholdPopulationList,
 } from '@/tests/fixtures/api/householdAssociationMocks';

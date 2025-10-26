@@ -4,8 +4,8 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
+import type { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import DynamicsSubPage from './DynamicsSubPage';
@@ -141,11 +141,7 @@ export function HouseholdReportOutput({
 
       case 'policy':
         return (
-          <PolicySubPage
-            policies={policies}
-            userPolicies={userPolicies}
-            reportType="household"
-          />
+          <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="household" />
         );
 
       case 'population':
@@ -160,11 +156,7 @@ export function HouseholdReportOutput({
 
       case 'dynamics':
         return (
-          <DynamicsSubPage
-            policies={policies}
-            userPolicies={userPolicies}
-            reportType="household"
-          />
+          <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="household" />
         );
 
       default:

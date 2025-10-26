@@ -1,12 +1,12 @@
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { UserPolicyMetadata } from '@/types/metadata/userPolicyMetadata';
 import {
   UserPolicyCreationPayload,
   UserReportCreationPayload,
   UserSimulationCreationPayload,
 } from '@/types/payloads';
-import { UserPolicyMetadata } from '@/types/metadata/userPolicyMetadata';
 import {
   TEST_COUNTRIES,
   TEST_LABELS,

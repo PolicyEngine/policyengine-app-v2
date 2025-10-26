@@ -1,5 +1,5 @@
 // Components submodule for Mantine theme
-import { AppShell, Card, Container, Title, Table } from '@mantine/core';
+import { AppShell, Card, Container, Table, Title } from '@mantine/core';
 import { colors, spacing, typography } from '../designTokens';
 import { themeDefaults } from './defaults';
 

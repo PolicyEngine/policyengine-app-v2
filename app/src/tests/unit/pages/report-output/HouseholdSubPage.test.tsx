@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import HouseholdSubPage from '@/pages/report-output/HouseholdSubPage';
 import {
   mockHouseholdFamilyOfFour,

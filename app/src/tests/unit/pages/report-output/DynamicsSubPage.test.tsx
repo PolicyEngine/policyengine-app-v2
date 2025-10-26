@@ -1,11 +1,11 @@
 import { render, screen, within } from '@test-utils';
-import { describe, test, expect, beforeEach, vi } from 'vitest';
 import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import DynamicsSubPage from '@/pages/report-output/DynamicsSubPage';
 import {
+  createMockStore,
   MOCK_POLICY_BASELINE,
   MOCK_POLICY_REFORM,
-  createMockStore,
 } from '@/tests/fixtures/pages/report-output/DynamicsSubPage';
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -51,7 +51,9 @@ describe('DynamicsSubPage', () => {
 
     // Then
     expect(screen.getByText('Dynamics Information')).toBeInTheDocument();
-    expect(screen.getByText('No custom dynamics configuration for this report.')).toBeInTheDocument();
+    expect(
+      screen.getByText('No custom dynamics configuration for this report.')
+    ).toBeInTheDocument();
   });
 
   test('given policies with dynamics parameters then displays table', () => {

@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   IconChevronLeft,
   IconClock,
@@ -8,6 +7,8 @@ import {
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
   Anchor,
@@ -19,18 +20,20 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { useSelector } from 'react-redux';
-import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { MOCK_BASELINE_POLICY, MOCK_REFORM_POLICY, MOCK_CURRENT_LAW_POLICY } from './mockPolicyData';
 import {
-  getHierarchicalLabels,
   buildCompactLabel,
   formatLabelParts,
+  getHierarchicalLabels,
 } from '@/utils/parameterLabels';
+import {
+  MOCK_BASELINE_POLICY,
+  MOCK_CURRENT_LAW_POLICY,
+  MOCK_REFORM_POLICY,
+} from './mockPolicyData';
 
 /**
  * Policy Design 11: Ultra-minimal head-to-head comparison
@@ -40,11 +43,7 @@ import {
  */
 
 // Helper to get parameter value as formatted string
-function getParameterValue(
-  policy: Policy,
-  paramName: string,
-  unit: string
-): string | undefined {
+function getParameterValue(policy: Policy, paramName: string, unit: string): string | undefined {
   const param = policy.parameters?.find((p) => p.name === paramName);
   if (!param || !param.values || param.values.length === 0) {
     return undefined;
@@ -288,12 +287,7 @@ export default function PolicyDesign11Page() {
                     <Group gap={spacing.xl} align="flex-start" wrap="nowrap">
                       {/* Current Law */}
                       <Box style={{ flex: 1 }}>
-                        <Text
-                          size="xs"
-                          c={colors.text.secondary}
-                          mb={spacing.xs}
-                          tt="uppercase"
-                        >
+                        <Text size="xs" c={colors.text.secondary} mb={spacing.xs} tt="uppercase">
                           Current Law
                         </Text>
                         <Text size="xl" fw={typography.fontWeight.bold} c={colors.text.primary}>
@@ -303,12 +297,7 @@ export default function PolicyDesign11Page() {
 
                       {/* Baseline */}
                       <Box style={{ flex: 1 }}>
-                        <Text
-                          size="xs"
-                          c={colors.text.secondary}
-                          mb={spacing.xs}
-                          tt="uppercase"
-                        >
+                        <Text size="xs" c={colors.text.secondary} mb={spacing.xs} tt="uppercase">
                           Baseline
                         </Text>
                         <Text size="xl" fw={typography.fontWeight.bold} c={colors.text.primary}>
@@ -318,12 +307,7 @@ export default function PolicyDesign11Page() {
 
                       {/* Reform */}
                       <Box style={{ flex: 1 }}>
-                        <Text
-                          size="xs"
-                          c={colors.text.secondary}
-                          mb={spacing.xs}
-                          tt="uppercase"
-                        >
+                        <Text size="xs" c={colors.text.secondary} mb={spacing.xs} tt="uppercase">
                           Reform
                         </Text>
                         <Text size="xl" fw={typography.fontWeight.bold} c={colors.primary[700]}>

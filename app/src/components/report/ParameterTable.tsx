@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Box, Table, Text } from '@mantine/core';
+import { colors, spacing, typography } from '@/designTokens';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { PolicyColumn } from '@/utils/policyTableHelpers';
 import {
-  getHierarchicalLabels,
   buildCompactLabel,
   formatLabelParts,
+  getHierarchicalLabels,
 } from '@/utils/parameterLabels';
-import { colors, spacing, typography } from '@/designTokens';
+import { PolicyColumn } from '@/utils/policyTableHelpers';
 
 interface TableHeaderProps {
   width: string;

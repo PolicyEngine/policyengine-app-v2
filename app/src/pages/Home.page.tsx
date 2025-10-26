@@ -23,28 +23,28 @@ export default function HomePage() {
       <Button variant="default" onClick={() => dispatch(clearFlow())}>
         Clear all flows
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PolicyCreationFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: PolicyCreationFlow }))}>
         Execute policy creation flow
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PolicyViewFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: PolicyViewFlow }))}>
         Show Policy View
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(SimulationCreationFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: SimulationCreationFlow }))}>
         Execute simulation creation flow
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(SimulationViewFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: SimulationViewFlow }))}>
         Show Simulation View
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PopulationCreationFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: PopulationCreationFlow }))}>
         Execute Population Flow
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PopulationViewFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: PopulationViewFlow }))}>
         View Populations
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(ReportCreationFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: ReportCreationFlow }))}>
         Execute Report Creation Flow (TEST)
       </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(ReportViewFlow))}>
+      <Button variant="default" onClick={() => dispatch(setFlow({ flow: ReportViewFlow }))}>
         Show Report View
       </Button>
       <Button variant="default" onClick={() => navigate('/us/report-output-demo')}>

@@ -43,11 +43,13 @@ export function extractHouseholdInputs(household: Household): HouseholdInputRow[
   // householdVars is a Record<string, HouseholdGroupEntity>
   // Each entity has a members array and other parameters
   if (householdVars) {
-    Object.entries(householdVars).forEach(([householdId, householdEntity]) => {
+    Object.entries(householdVars).forEach(([_householdId, householdEntity]) => {
       if (typeof householdEntity === 'object' && householdEntity !== null) {
         Object.entries(householdEntity).forEach(([paramName, paramValues]) => {
           // Skip the 'members' array - it's metadata, not an input
-          if (paramName === 'members') return;
+          if (paramName === 'members') {
+            return;
+          }
 
           if (typeof paramValues === 'object' && paramValues !== null) {
             const firstValue = Object.values(paramValues)[0];
@@ -85,8 +87,12 @@ export function householdsAreEqual(
   household1: Household | undefined,
   household2: Household | undefined
 ): boolean {
-  if (!household1 || !household2) return false;
-  if (household1.id === household2.id) return true;
+  if (!household1 || !household2) {
+    return false;
+  }
+  if (household1.id === household2.id) {
+    return true;
+  }
 
   // Deep comparison of householdData
   return JSON.stringify(household1.householdData) === JSON.stringify(household2.householdData);

@@ -24,7 +24,9 @@ function buildCumulativePaths(parts: string[]): string[] {
  * Formats a string to sentence case (only first letter capitalized).
  */
 function toSentenceCase(text: string): string {
-  if (!text) return text;
+  if (!text) {
+    return text;
+  }
   return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
 }
 
@@ -42,7 +44,7 @@ export function getHierarchicalLabels(
   // Skip the first path ("gov") and collect labels
   const labels = paths
     .slice(1)
-    .map(path => parameters[path]?.label)
+    .map((path) => parameters[path]?.label)
     .filter((label): label is string => Boolean(label))
     .map(toSentenceCase);
 

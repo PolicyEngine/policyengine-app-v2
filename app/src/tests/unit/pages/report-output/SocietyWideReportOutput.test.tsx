@@ -4,18 +4,18 @@ import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
 import {
-  MOCK_REPORT,
-  MOCK_SIMULATION_BASELINE,
-  MOCK_SIMULATION_REFORM,
-  MOCK_POLICY_BASELINE,
-  MOCK_POLICY_REFORM,
-  MOCK_USER_POLICY,
-  MOCK_GEOGRAPHY,
-  MOCK_CALC_STATUS_INITIALIZING,
-  MOCK_CALC_STATUS_PENDING,
   MOCK_CALC_STATUS_COMPLETE,
   MOCK_CALC_STATUS_ERROR,
   MOCK_CALC_STATUS_IDLE,
+  MOCK_CALC_STATUS_INITIALIZING,
+  MOCK_CALC_STATUS_PENDING,
+  MOCK_GEOGRAPHY,
+  MOCK_POLICY_BASELINE,
+  MOCK_POLICY_REFORM,
+  MOCK_REPORT,
+  MOCK_SIMULATION_BASELINE,
+  MOCK_SIMULATION_REFORM,
+  MOCK_USER_POLICY,
 } from '@/tests/fixtures/pages/report-output/SocietyWideReportOutput';
 
 // Mock hooks

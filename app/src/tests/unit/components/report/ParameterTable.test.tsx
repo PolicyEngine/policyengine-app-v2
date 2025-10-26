@@ -1,17 +1,18 @@
 import { render, screen, userEvent } from '@test-utils';
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import ParameterTable from '@/components/report/ParameterTable';
 import {
-  MOCK_PARAMETER_METADATA,
-  MOCK_POLICY_COLUMNS,
-  MOCK_PARAMETER_NAMES,
   createMockRenderFunctions,
+  MOCK_PARAMETER_METADATA,
+  MOCK_PARAMETER_NAMES,
+  MOCK_POLICY_COLUMNS,
 } from '@/tests/fixtures/components/report/ParameterTable';
 
 describe('ParameterTable', () => {
   test('given parameters then renders table with parameter names', () => {
     // Given
-    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } = createMockRenderFunctions();
+    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } =
+      createMockRenderFunctions();
 
     // When
     render(
@@ -35,7 +36,8 @@ describe('ParameterTable', () => {
 
   test('given current law column needed then renders current law header', () => {
     // Given
-    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } = createMockRenderFunctions();
+    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } =
+      createMockRenderFunctions();
 
     // When
     render(
@@ -43,7 +45,7 @@ describe('ParameterTable', () => {
         parameterNames={MOCK_PARAMETER_NAMES}
         parameters={MOCK_PARAMETER_METADATA}
         columns={MOCK_POLICY_COLUMNS}
-        needsCurrentLawColumn={true}
+        needsCurrentLawColumn
         labelColumnWidth={45}
         valueColumnWidth={27.5}
         renderColumnHeader={renderColumnHeader}
@@ -59,7 +61,8 @@ describe('ParameterTable', () => {
   test('given user clicks ellipsis then expands parameter label', async () => {
     // Given
     const user = userEvent.setup();
-    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } = createMockRenderFunctions();
+    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } =
+      createMockRenderFunctions();
 
     render(
       <ParameterTable
@@ -87,7 +90,7 @@ describe('ParameterTable', () => {
   test('given columns then renders column headers', () => {
     // Given
     const { renderCurrentLawValue, renderColumnValue } = createMockRenderFunctions();
-    const renderColumnHeader = vi.fn((column, idx) => `COLUMN ${idx}`);
+    const renderColumnHeader = vi.fn((_column, idx) => `COLUMN ${idx}`);
 
     // When
     render(
@@ -112,7 +115,8 @@ describe('ParameterTable', () => {
 
   test('given parameters then calls render functions with correct arguments', () => {
     // Given
-    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } = createMockRenderFunctions();
+    const { renderColumnHeader, renderCurrentLawValue, renderColumnValue } =
+      createMockRenderFunctions();
 
     // When
     render(
@@ -120,7 +124,7 @@ describe('ParameterTable', () => {
         parameterNames={MOCK_PARAMETER_NAMES}
         parameters={MOCK_PARAMETER_METADATA}
         columns={MOCK_POLICY_COLUMNS}
-        needsCurrentLawColumn={true}
+        needsCurrentLawColumn
         labelColumnWidth={45}
         valueColumnWidth={27.5}
         renderColumnHeader={renderColumnHeader}

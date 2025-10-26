@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen, within } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import GeographySubPage from '@/pages/report-output/GeographySubPage';
 import {
   mockGeographyCalifornia,
@@ -9,9 +9,7 @@ import {
 describe('GeographySubPage - Design 4 Table Format', () => {
   describe('Empty and error states', () => {
     test('given no geographies then displays no data message', () => {
-      render(
-        <GeographySubPage baselineGeography={undefined} reformGeography={undefined} />
-      );
+      render(<GeographySubPage baselineGeography={undefined} reformGeography={undefined} />);
       expect(screen.getByText(/no geography data available/i)).toBeInTheDocument();
     });
   });

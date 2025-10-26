@@ -1,19 +1,18 @@
 import { useSelector } from 'react-redux';
+import ParameterTable from '@/components/report/ParameterTable';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { buildColumnHeaderText } from '@/utils/policyColumnHeaders';
 import {
+  calculateColumnWidths,
+  collectUniqueParameterNames,
   determinePolicyColumns,
   extractPoliciesFromArray,
-  collectUniqueParameterNames,
-  getParameterValueFromPolicy,
   getCurrentLawParameterValue,
+  getParameterValueFromPolicy,
   hasCurrentLawPolicy,
-  calculateColumnWidths,
-  PolicyColumn,
 } from '@/utils/policyTableHelpers';
-import { buildColumnHeaderText } from '@/utils/policyColumnHeaders';
-import ParameterTable from '@/components/report/ParameterTable';
 
 interface PolicySubPageProps {
   policies?: Policy[];

@@ -1,8 +1,8 @@
+import type { Geography } from '@/types/ingredients/Geography';
+import type { Policy } from '@/types/ingredients/Policy';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
-import type { Policy } from '@/types/ingredients/Policy';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import type { Geography } from '@/types/ingredients/Geography';
 
 /**
  * Mock Report for SocietyWideReportOutput tests
@@ -172,4 +172,3 @@ export const MOCK_CALC_STATUS_IDLE = {
   error: null,
   progress: 0,
 };
-

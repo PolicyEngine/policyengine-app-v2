@@ -36,7 +36,7 @@ interface SocietyWideReportOutputProps {
  * just isolated into its own component for clarity.
  */
 export function SocietyWideReportOutput({
-  reportId,
+  reportId: _reportId,
   subpage = 'overview',
   report,
   simulations,
@@ -44,7 +44,6 @@ export function SocietyWideReportOutput({
   policies,
   geographies,
 }: SocietyWideReportOutputProps) {
-
   // Get calculation status for report
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
 
@@ -128,11 +127,7 @@ export function SocietyWideReportOutput({
 
       case 'policy':
         return (
-          <PolicySubPage
-            policies={policies}
-            userPolicies={userPolicies}
-            reportType="economy"
-          />
+          <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
         );
 
       case 'population':
@@ -146,11 +141,7 @@ export function SocietyWideReportOutput({
 
       case 'dynamics':
         return (
-          <DynamicsSubPage
-            policies={policies}
-            userPolicies={userPolicies}
-            reportType="economy"
-          />
+          <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
         );
 
       default:

@@ -7,14 +7,20 @@ export function policiesAreEqual(
   policy1: Policy | undefined,
   policy2: Policy | undefined
 ): boolean {
-  if (!policy1 || !policy2) return false;
-  if (policy1.id === policy2.id) return true;
+  if (!policy1 || !policy2) {
+    return false;
+  }
+  if (policy1.id === policy2.id) {
+    return true;
+  }
 
   // Compare parameters arrays
   const params1 = policy1.parameters || [];
   const params2 = policy2.parameters || [];
 
-  if (params1.length !== params2.length) return false;
+  if (params1.length !== params2.length) {
+    return false;
+  }
 
   // Sort by parameter name for comparison
   const sorted1 = [...params1].sort((a, b) => a.name.localeCompare(b.name));
@@ -25,20 +31,20 @@ export function policiesAreEqual(
     const p1 = sorted1[i];
     const p2 = sorted2[i];
 
-    if (p1.name !== p2.name) return false;
+    if (p1.name !== p2.name) {
+      return false;
+    }
 
     // Compare values arrays
-    if (p1.values.length !== p2.values.length) return false;
+    if (p1.values.length !== p2.values.length) {
+      return false;
+    }
 
     for (let j = 0; j < p1.values.length; j++) {
       const v1 = p1.values[j];
       const v2 = p2.values[j];
 
-      if (
-        v1.startDate !== v2.startDate ||
-        v1.endDate !== v2.endDate ||
-        v1.value !== v2.value
-      ) {
+      if (v1.startDate !== v2.startDate || v1.endDate !== v2.endDate || v1.value !== v2.value) {
         return false;
       }
     }

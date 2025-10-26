@@ -1,13 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { describe, test, expect, beforeEach } from 'vitest';
 import { render, screen, within } from '@test-utils';
 import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test } from 'vitest';
 import PolicySubPage from '@/pages/report-output/PolicySubPage';
 import {
-  mockBaselinePolicy,
-  mockReformPolicy,
-  mockParameterMetadata,
   createPolicySubPageProps,
+  mockBaselinePolicy,
+  mockParameterMetadata,
+  mockReformPolicy,
   TEST_PARAMETER_NAMES,
 } from '@/tests/fixtures/pages/report-output/PolicySubPage';
 
@@ -79,7 +79,7 @@ describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
       // Header format is "POLICY NAME (BASELINE)" or "POLICY NAME (REFORM)"
       const headers = screen.getAllByRole('columnheader');
       // Just check that at least one policy name appears somewhere
-      const headerTexts = headers.map(h => h.textContent).join(' ');
+      const headerTexts = headers.map((h) => h.textContent).join(' ');
       expect(headerTexts).toMatch(/BASELINE|REFORM/);
     });
 

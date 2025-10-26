@@ -27,7 +27,6 @@ import {
   extractUniqueIds,
   useParallelQueries,
 } from './utils/normalizedUtils';
-import { createMockReportStateNoLabels } from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
 
 /**
  * Enhanced result type that includes all relationships
@@ -574,10 +573,14 @@ export const useUserReportById = (userReportId: string) => {
   });
 
   const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
-  
+
   console.log('[useUserReportById] households', households);
-  console.log('[useUserReportById] type of household IDs', householdIds.map((id) => typeof id));
-  console.log(`[useUserReportById] type of householdAssociations.householdId`,
+  console.log(
+    '[useUserReportById] type of household IDs',
+    householdIds.map((id) => typeof id)
+  );
+  console.log(
+    `[useUserReportById] type of householdAssociations.householdId`,
     householdAssociations?.map((ha) => ({ id: ha.householdId, type: typeof ha.householdId }))
   );
 
@@ -592,9 +595,9 @@ export const useUserReportById = (userReportId: string) => {
 
   console.log('Geography Construction Debug:', {
     geographyOptions,
-    optionNames: geographyOptions?.map(r => r.name),
+    optionNames: geographyOptions?.map((r) => r.name),
     simulations,
-    geographySimulations: simulations.filter(s => s.populationType === 'geography'),
+    geographySimulations: simulations.filter((s) => s.populationType === 'geography'),
   });
 
   const geographies: Geography[] = [];
@@ -602,7 +605,7 @@ export const useUserReportById = (userReportId: string) => {
     if (sim.populationType === 'geography' && sim.populationId) {
       console.log('Attempting to match geography:', {
         populationId: sim.populationId,
-        availableNames: geographyOptions?.map(r => r.name),
+        availableNames: geographyOptions?.map((r) => r.name),
       });
 
       const regionData = geographyOptions?.find((r) => r.name === sim.populationId);

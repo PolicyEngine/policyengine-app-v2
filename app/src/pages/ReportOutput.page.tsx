@@ -5,8 +5,8 @@ import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideC
 import { spacing } from '@/designTokens';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
-import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
+import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
 
 /**
  * Type discriminator for output types
@@ -61,7 +61,7 @@ export default function ReportOutputPage() {
     dataLoading,
     dataError,
     userHouseholds,
-    geographies
+    geographies,
   });
 
   // Derive output type from simulation (needed for target type determination)

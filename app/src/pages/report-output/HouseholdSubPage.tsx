@@ -1,10 +1,10 @@
 import { useSelector } from 'react-redux';
+import GroupEntityDisplay from '@/components/report/GroupEntityDisplay';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
-import { householdsAreEqual } from '@/utils/householdTableData';
 import { extractGroupEntities } from '@/utils/householdIndividuals';
-import GroupEntityDisplay from '@/components/report/GroupEntityDisplay';
+import { householdsAreEqual } from '@/utils/householdTableData';
 
 interface HouseholdSubPageProps {
   baselineHousehold?: Household;
@@ -42,16 +42,18 @@ export default function HouseholdSubPage({
   const baselineUserHousehold = userHouseholds?.find(
     (uh) => uh.householdId === baselineHousehold?.id
   );
-  const reformUserHousehold = userHouseholds?.find(
-    (uh) => uh.householdId === reformHousehold?.id
-  );
+  const reformUserHousehold = userHouseholds?.find((uh) => uh.householdId === reformHousehold?.id);
 
   const baselineLabel = baselineUserHousehold?.label || 'Baseline';
   const reformLabel = reformUserHousehold?.label || 'Reform';
 
   // Extract group entities from both households with metadata for proper formatting
-  const baselineGroupEntities = baselineHousehold ? extractGroupEntities(baselineHousehold, variables) : [];
-  const reformGroupEntities = reformHousehold ? extractGroupEntities(reformHousehold, variables) : [];
+  const baselineGroupEntities = baselineHousehold
+    ? extractGroupEntities(baselineHousehold, variables)
+    : [];
+  const reformGroupEntities = reformHousehold
+    ? extractGroupEntities(reformHousehold, variables)
+    : [];
 
   // Collect all unique entity types
   const allEntityTypes = new Set<string>();

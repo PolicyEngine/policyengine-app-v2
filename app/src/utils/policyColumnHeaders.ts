@@ -5,11 +5,10 @@ import { PolicyColumn } from '@/utils/policyTableHelpers';
 /**
  * Get user-specified policy label, falling back to policy label
  */
-export function getPolicyLabel(
-  policy: Policy | undefined,
-  userPolicies?: UserPolicy[]
-): string {
-  if (!policy) return 'Unnamed Policy';
+export function getPolicyLabel(policy: Policy | undefined, userPolicies?: UserPolicy[]): string {
+  if (!policy) {
+    return 'Unnamed Policy';
+  }
   const userPolicy = userPolicies?.find((up) => up.policyId === policy.id);
   return userPolicy?.label || policy.label || 'Unnamed Policy';
 }
@@ -20,10 +19,7 @@ export function getPolicyLabel(
  * - Single policy: "Policy Name (BASELINE)"
  * - Merged column: "Policy Name (BASELINE / REFORM)"
  */
-export function buildColumnHeaderText(
-  column: PolicyColumn,
-  userPolicies?: UserPolicy[]
-): string {
+export function buildColumnHeaderText(column: PolicyColumn, userPolicies?: UserPolicy[]): string {
   const policyNames = column.policies.map((p) => getPolicyLabel(p, userPolicies));
   const roleLabels = column.label.toUpperCase().split(' / ');
 

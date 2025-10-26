@@ -1,6 +1,6 @@
 import { Box, Text } from '@mantine/core';
-import { GroupEntity } from '@/utils/householdIndividuals';
 import { colors, spacing, typography } from '@/designTokens';
+import { GroupEntity } from '@/utils/householdIndividuals';
 import EntityInstanceDisplay from './EntityInstanceDisplay';
 
 interface GroupEntityDisplayProps {

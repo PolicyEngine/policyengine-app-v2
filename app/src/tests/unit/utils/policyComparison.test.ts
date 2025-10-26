@@ -1,12 +1,12 @@
-import { describe, it, expect } from 'vitest';
-import { policiesAreEqual, determinePolicyColumns } from '@/utils/policyComparison';
+import { describe, expect, it } from 'vitest';
 import {
+  MOCK_EMPTY_POLICY,
   MOCK_POLICY_A,
+  MOCK_POLICY_A_CLONE,
   MOCK_POLICY_B,
   MOCK_POLICY_C,
-  MOCK_POLICY_A_CLONE,
-  MOCK_EMPTY_POLICY,
 } from '@/tests/fixtures/utils/policyComparisonMocks';
+import { determinePolicyColumns, policiesAreEqual } from '@/utils/policyComparison';
 
 describe('policyComparison', () => {
   describe('policiesAreEqual', () => {

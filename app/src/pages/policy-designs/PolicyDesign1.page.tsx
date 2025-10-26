@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   IconChevronLeft,
   IconClock,
@@ -8,6 +7,8 @@ import {
   IconShare,
   IconStack2,
 } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import {
   ActionIcon,
   Anchor,
@@ -19,7 +20,6 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import { useSelector } from 'react-redux';
 import { colors, spacing, typography } from '@/designTokens';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
@@ -289,7 +289,9 @@ export default function PolicyDesign1Page() {
                           ? typography.fontWeight.medium
                           : typography.fontWeight.normal
                       }
-                      c={activePolicyTab === 'baseline' ? colors.text.primary : colors.text.secondary}
+                      c={
+                        activePolicyTab === 'baseline' ? colors.text.primary : colors.text.secondary
+                      }
                     >
                       Baseline Policy
                     </Text>

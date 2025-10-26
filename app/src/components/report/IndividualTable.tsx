@@ -22,7 +22,7 @@ export default function IndividualTable({
   reformMember,
   baselineLabel,
   reformLabel,
-  isSameHousehold
+  isSameHousehold,
 }: IndividualTableProps) {
   // Collect all unique variable names from both baseline and reform
   const allParamNames = new Set<string>();
@@ -42,7 +42,9 @@ export default function IndividualTable({
   // Helper to find variable value and format it properly
   const findVariableValue = (member: EntityMember | undefined, paramName: string): string => {
     const variable = member?.variables.find((v) => v.paramName === paramName);
-    if (!variable) return '—';
+    if (!variable) {
+      return '—';
+    }
 
     // Use formatVariableValue with unit information from metadata
     if (typeof variable.value === 'number' && variable.unit) {

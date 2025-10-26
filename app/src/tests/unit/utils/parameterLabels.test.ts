@@ -1,10 +1,5 @@
 import { describe, expect, test } from 'vitest';
 import {
-  buildCompactLabel,
-  formatLabelParts,
-  getHierarchicalLabels,
-} from '@/utils/parameterLabels';
-import {
   EXPECTED_COMPACT_LABELS,
   EXPECTED_FORMATTED_STRINGS,
   EXPECTED_HIERARCHICAL_LABELS,
@@ -13,6 +8,11 @@ import {
   TEST_LABEL_ARRAYS,
   TEST_PARAM_NAMES,
 } from '@/tests/fixtures/utils/parameterLabelsMocks';
+import {
+  buildCompactLabel,
+  formatLabelParts,
+  getHierarchicalLabels,
+} from '@/utils/parameterLabels';
 
 describe('getHierarchicalLabels', () => {
   test('given single level parameter then returns empty array', () => {
@@ -101,7 +101,7 @@ describe('getHierarchicalLabels', () => {
         label: 'IRS',
         type: 'parameterNode' as const,
         parameter: 'gov.irs',
-        unit: ''
+        unit: '',
       },
       // Missing 'gov.irs.missing' and 'gov.irs.missing.param'
     };
@@ -340,7 +340,7 @@ describe('sentence case formatting', () => {
 
   test('given empty string then returns empty string', () => {
     // Given
-    const { input, expected } = SENTENCE_CASE_TESTS.EMPTY;
+    const { input } = SENTENCE_CASE_TESTS.EMPTY;
 
     // When
     const result = getHierarchicalLabels('gov.irs', {

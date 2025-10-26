@@ -787,7 +787,9 @@ describe('useUserReportById', () => {
 
     // Should have an empty geographies array or no geography for the nonexistent region
     expect(result.current.geographies).toBeDefined();
-    const nonexistentGeo = result.current.geographies.find((g) => g.geographyId === 'nonexistent-region');
+    const nonexistentGeo = result.current.geographies.find(
+      (g) => g.geographyId === 'nonexistent-region'
+    );
     expect(nonexistentGeo).toBeUndefined();
   });
 
