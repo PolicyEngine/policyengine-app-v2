@@ -27,7 +27,7 @@ import { useFetchMetadata } from '@/hooks/useMetadata';
  * {
  *   element: <MetadataLazyLoader />,
  *   children: [
- *     { index: true, element: <HomePage /> },
+ *     { index: true, element: <DashboardPage /> },
  *     { path: 'simulations', element: <SimulationsPage /> },
  *   ],
  * }
