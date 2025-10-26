@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getFieldLabel, isDropdownField, transformMetadataPayload } from '@/libs/metadataUtils';
+import {
+  getFieldLabel,
+  getFieldOptions,
+  isDropdownField,
+  transformMetadataPayload,
+} from '@/libs/metadataUtils';
 import {
   EXPECTED_LABELS,
   mockMetadataPayload,
@@ -86,6 +91,62 @@ describe('metadataUtils', () => {
 
       // Then
       expect(result).toBe(false);
+    });
+  });
+
+  describe('getFieldOptions', () => {
+    it('given field with possibleValues then returns options array', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+      const fieldName = TEST_FIELD_NAMES.STATE_NAME;
+
+      // When
+      const result = getFieldOptions(state, fieldName);
+
+      // Then
+      expect(result).toEqual([
+        { value: 'CA', label: 'California' },
+        { value: 'NY', label: 'New York' },
+      ]);
+    });
+
+    it('given field without possibleValues then returns empty array', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+      const fieldName = TEST_FIELD_NAMES.AGE;
+
+      // When
+      const result = getFieldOptions(state, fieldName);
+
+      // Then
+      expect(result).toEqual([]);
+    });
+
+    it('given region field then returns region options from possibleValues', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+      const fieldName = TEST_FIELD_NAMES.REGION;
+
+      // When
+      const result = getFieldOptions(state, fieldName);
+
+      // Then
+      expect(result).toEqual([
+        { value: 'NORTH_EAST', label: 'North East' },
+        { value: 'SOUTH', label: 'South' },
+      ]);
+    });
+
+    it('given nonexistent field then returns empty array', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+      const fieldName = 'nonexistent_field';
+
+      // When
+      const result = getFieldOptions(state, fieldName);
+
+      // Then
+      expect(result).toEqual([]);
     });
   });
 
