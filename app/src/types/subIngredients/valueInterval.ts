@@ -33,7 +33,7 @@ export class ValueIntervalCollection {
     }
 
     if (Array.isArray(input)) {
-      this.intervals = input;
+      this.intervals = [...input];
       return;
     }
 

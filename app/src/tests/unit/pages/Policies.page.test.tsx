@@ -1,14 +1,9 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
-import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import PoliciesPage from '@/pages/Policies.page';
-import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import {
-  createMockDispatch,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
   mockEmptyHookReturn,
@@ -21,14 +16,13 @@ vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
 }));
 
-// Mock the dispatch
-const mockDispatch = createMockDispatch();
-
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual('react-redux');
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useDispatch: () => mockDispatch,
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -92,13 +86,6 @@ vi.mock('@/components/IngredientReadView', () => ({
 }));
 
 describe('PoliciesPage', () => {
-  const mockStore = configureStore({
-    reducer: {
-      flow: flowReducer,
-      metadata: () => ({ currentCountry: 'us' }),
-    },
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     (useUserPolicies as any).mockReturnValue(mockDefaultHookReturn);
@@ -106,11 +93,7 @@ describe('PoliciesPage', () => {
 
   test('given policies data when rendering then displays policies page', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText('Your saved policies')).toBeInTheDocument();
@@ -123,11 +106,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(mockLoadingHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -138,11 +117,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(mockErrorHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText(`Error: ${ERROR_MESSAGES.FETCH_FAILED}`)).toBeInTheDocument();
@@ -151,17 +126,13 @@ describe('PoliciesPage', () => {
   test('given user clicks build policy button then dispatches policy creation flow', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // When
     await user.click(screen.getByRole('button', { name: /Build Policy/i }));
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(setFlow(PolicyCreationFlow));
+    expect(mockNavigate).toHaveBeenCalledWith('create');
   });
 
   test('given no policies when rendering then displays empty state', () => {
@@ -169,11 +140,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(mockEmptyHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText('Data count: 0')).toBeInTheDocument();
@@ -182,11 +149,7 @@ describe('PoliciesPage', () => {
   test('given user searches then updates search value', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // When
     const searchInput = screen.getByPlaceholderText('Search');
@@ -198,11 +161,7 @@ describe('PoliciesPage', () => {
 
   test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(useUserPolicies).toHaveBeenCalledWith(MOCK_USER_ID.toString());
@@ -210,11 +169,7 @@ describe('PoliciesPage', () => {
 
   test('given policy with parameter changes then displays correct count', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     const parameterChanges = screen.getByTestId('parameter-changes');
@@ -234,11 +189,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(singleChangeData);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     const parameterChanges = screen.getByTestId('parameter-changes');
@@ -262,11 +213,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(dataWithoutLabel);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     const policyName = screen.getByTestId('policy-name');
@@ -275,11 +222,7 @@ describe('PoliciesPage', () => {
 
   test('given column configuration then does not include connections column', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     // The component should render successfully without connections column

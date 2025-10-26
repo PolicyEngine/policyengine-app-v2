@@ -1,6 +1,10 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
-import HomePage from './pages/Home.page';
+import { PolicyCreationFlow } from './flows/policyCreationFlow';
+import { PopulationCreationFlow } from './flows/populationCreationFlow';
+import { ReportCreationFlow } from './flows/reportCreationFlow';
+import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -51,25 +55,39 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  // TODO: Move HomePage out of Layout once actual static homepage is merged
-                  // Currently HomePage has calculator navigation buttons so needs Layout
-                  element: <HomePage />,
+                  element: <Navigate to="reports" replace />,
                 },
                 {
                   path: 'reports',
                   element: <ReportsPage />,
                 },
                 {
+                  path: 'reports/create',
+                  element: <FlowRouter flow={ReportCreationFlow} returnPath="reports" />,
+                },
+                {
                   path: 'simulations',
                   element: <SimulationsPage />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
                   path: 'populations',
                   element: <PopulationsPage />,
                 },
                 {
+                  path: 'populations/create',
+                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="populations" />,
+                },
+                {
                   path: 'policies',
                   element: <PoliciesPage />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <FlowRouter flow={PolicyCreationFlow} returnPath="policies" />,
                 },
                 {
                   path: 'account',

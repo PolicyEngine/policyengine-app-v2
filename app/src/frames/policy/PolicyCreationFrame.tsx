@@ -3,35 +3,58 @@ import { useDispatch, useSelector } from 'react-redux';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { selectCurrentPosition } from '@/reducers/activeSelectors';
-import { createPolicyAtPosition, updatePolicyAtPosition } from '@/reducers/policyReducer';
+import {
+  createPolicyAtPosition,
+  selectPolicyAtPosition,
+  updatePolicyAtPosition,
+} from '@/reducers/policyReducer';
 import { setMode } from '@/reducers/reportReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function PolicyCreationFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
-  const dispatch = useDispatch();
   const [localLabel, setLocalLabel] = useState('');
+  const dispatch = useDispatch();
 
-  // Read position from report reducer via cross-cutting selector
+  // Get the current position from the cross-cutting selector
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const policy = useSelector((state: RootState) => selectPolicyAtPosition(state, currentPosition));
 
-  // Set mode to standalone if accessed directly (not in subflow)
+  console.log('[PolicyCreationFrame] RENDER - currentPosition:', currentPosition);
+  console.log('[PolicyCreationFrame] RENDER - policy:', policy);
+
+  // Set mode to standalone if not in a subflow
   useEffect(() => {
+    console.log('[PolicyCreationFrame] Mode effect - isInSubflow:', isInSubflow);
     if (!isInSubflow) {
       dispatch(setMode('standalone'));
     }
+
+    return () => {
+      console.log('[PolicyCreationFrame] Cleanup - mode effect');
+    };
   }, [dispatch, isInSubflow]);
 
-  // Create policy at current position when component mounts
   useEffect(() => {
-    dispatch(createPolicyAtPosition({ position: currentPosition }));
-  }, [dispatch, currentPosition]);
+    console.log('[PolicyCreationFrame] Create policy effect - policy exists?:', !!policy);
+    // If there's no policy at current position, create one
+    if (!policy) {
+      console.log('[PolicyCreationFrame] Creating policy at position', currentPosition);
+      dispatch(createPolicyAtPosition({ position: currentPosition }));
+    }
+
+    return () => {
+      console.log('[PolicyCreationFrame] Cleanup - create policy effect');
+    };
+  }, [currentPosition, policy, dispatch]);
 
   function handleLocalLabelChange(value: string) {
     setLocalLabel(value);
   }
 
   function submissionHandler() {
+    console.log('[PolicyCreationFrame] ========== submissionHandler START ==========');
+    console.log('[PolicyCreationFrame] Updating policy with label:', localLabel);
     // Update the policy at the current position with the label
     dispatch(
       updatePolicyAtPosition({
@@ -39,7 +62,9 @@ export default function PolicyCreationFrame({ onNavigate, isInSubflow }: FlowCom
         updates: { label: localLabel },
       })
     );
+    console.log('[PolicyCreationFrame] Calling onNavigate("next")');
     onNavigate('next');
+    console.log('[PolicyCreationFrame] ========== submissionHandler END ==========');
   }
 
   const formInputs = (

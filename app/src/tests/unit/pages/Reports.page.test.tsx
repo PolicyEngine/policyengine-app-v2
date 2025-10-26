@@ -1,14 +1,9 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
-import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useUserReports } from '@/hooks/useUserReports';
 import ReportsPage from '@/pages/Reports.page';
-import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import {
-  createMockDispatch,
   createMockNavigate,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
@@ -26,17 +21,8 @@ vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),
 }));
 
-// Mock the dispatch and navigate
-const mockDispatch = createMockDispatch();
+// Mock navigate
 const mockNavigate = createMockNavigate();
-
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual('react-redux');
-  return {
-    ...actual,
-    useDispatch: () => mockDispatch,
-  };
-});
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -114,13 +100,6 @@ vi.mock('@/components/IngredientReadView', () => ({
 }));
 
 describe('ReportsPage', () => {
-  const mockStore = configureStore({
-    reducer: {
-      flow: flowReducer,
-      metadata: () => ({ currentCountry: 'us' }),
-    },
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockNavigate.mockClear();
@@ -129,11 +108,7 @@ describe('ReportsPage', () => {
 
   test('given reports data when rendering then displays reports page', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Your saved reports')).toBeInTheDocument();
@@ -146,11 +121,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockLoadingHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -161,11 +132,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockErrorHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText(`Error: ${ERROR_MESSAGES.FETCH_FAILED}`)).toBeInTheDocument();
@@ -174,17 +141,13 @@ describe('ReportsPage', () => {
   test('given user clicks build report button then dispatches report creation flow', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // When
     await user.click(screen.getByRole('button', { name: /Build Report/i }));
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(setFlow(ReportCreationFlow));
+    expect(mockNavigate).toHaveBeenCalledWith('create');
   });
 
   test('given no reports when rendering then displays empty state', () => {
@@ -192,11 +155,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockEmptyHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Data count: 0')).toBeInTheDocument();
@@ -205,11 +164,7 @@ describe('ReportsPage', () => {
   test('given user searches then updates search value', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // When
     const searchInput = screen.getByPlaceholderText('Search');
@@ -221,11 +176,7 @@ describe('ReportsPage', () => {
 
   test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(useUserReports).toHaveBeenCalledWith(MOCK_USER_ID.toString());
@@ -236,11 +187,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockMixedStatusHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Data count: 3')).toBeInTheDocument();
@@ -249,11 +196,7 @@ describe('ReportsPage', () => {
   test('given user clicks view output then navigates with UserReport ID', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // When - click the report link which navigates to output
     await user.click(screen.getByTestId('report-link'));
@@ -267,11 +210,7 @@ describe('ReportsPage', () => {
 
   test('given reports data when rendering then report column displays as link with UserReport ID', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     const reportLink = screen.getByTestId('report-link');
@@ -297,11 +236,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(dataWithoutLabel);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // Then
     const reportLink = screen.getByTestId('report-link');
@@ -311,11 +246,7 @@ describe('ReportsPage', () => {
   test('given report link clicked when clicked then does not trigger row selection', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <ReportsPage />
-      </Provider>
-    );
+    render(<ReportsPage />);
 
     // When
     const reportLink = screen.getByTestId('report-link');
