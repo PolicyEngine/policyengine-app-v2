@@ -9,9 +9,11 @@ describe('PopulationSubPage - Design 4 Router', () => {
       const props = createPopulationSubPageProps.householdDifferent();
       render(<PopulationSubPage {...props} />);
 
-      // Should render household table (check for household-specific content)
-      expect(screen.getByRole('table')).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /input variable/i })).toBeInTheDocument();
+      // Should render household tables (check for household-specific content)
+      const tables = screen.getAllByRole('table');
+      expect(tables.length).toBeGreaterThan(0);
+      const variableHeaders = screen.getAllByRole('columnheader', { name: /variable/i });
+      expect(variableHeaders.length).toBeGreaterThan(0);
     });
 
     test('given geography simulations then routes to GeographySubPage', () => {
@@ -69,14 +71,12 @@ describe('PopulationSubPage - Design 4 Router', () => {
       expect(screen.getByText(/no household data available/i)).toBeInTheDocument();
     });
 
-    test('given missing geography data then creates fallback geography objects', () => {
+    test('given missing geography data then shows error message', () => {
       const props = createPopulationSubPageProps.geographyMissingData();
       render(<PopulationSubPage {...props} />);
 
-      // Now creates fallback geography objects from simulation data
-      // Should display the geography table (not an error)
-      expect(screen.getByRole('table')).toBeInTheDocument();
-      expect(screen.getByRole('columnheader', { name: /property/i })).toBeInTheDocument();
+      // When geography data is missing, shows error message
+      expect(screen.getByText(/no geography data available/i)).toBeInTheDocument();
     });
   });
 
