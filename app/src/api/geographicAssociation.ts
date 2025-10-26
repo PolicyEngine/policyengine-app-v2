@@ -171,7 +171,11 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
   private getStoredPopulations(): UserGeographyPopulation[] {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+
+      const parsed = JSON.parse(stored);
+      // Route through adapter to ensure type coercion (e.g., number IDs -> strings)
+      return parsed.map((data: any) => UserGeographicAdapter.fromApiResponse(data));
     } catch {
       return [];
     }

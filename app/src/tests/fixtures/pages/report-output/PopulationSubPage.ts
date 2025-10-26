@@ -164,6 +164,7 @@ export const mockUserHousehold: UserHouseholdPopulation = {
   type: 'household',
   userId: TEST_USER_ID,
   householdId: TEST_HOUSEHOLD_IDS.FAMILY_OF_FOUR,
+  countryId: 'us',
   label: 'Family of Four',
   createdAt: '2025-01-15T14:00:00Z',
 };

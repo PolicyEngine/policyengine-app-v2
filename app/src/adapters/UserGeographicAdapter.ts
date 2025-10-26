@@ -15,8 +15,20 @@ export class UserGeographicAdapter {
 
   /**
    * Convert API response to UserGeographyPopulation
+   * Explicitly coerces IDs to strings to handle JSON.parse type mismatches
    */
   static fromApiResponse(apiData: any): UserGeographyPopulation {
-    return apiData as UserGeographyPopulation;
+    return {
+      type: 'geography' as const,
+      id: String(apiData.geographyId),
+      userId: String(apiData.userId),
+      geographyId: String(apiData.geographyId),
+      countryId: apiData.countryId,
+      scope: apiData.scope || 'national',
+      label: apiData.label,
+      createdAt: apiData.createdAt,
+      updatedAt: apiData.updatedAt,
+      isCreated: true,
+    };
   }
 }

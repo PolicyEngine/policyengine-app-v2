@@ -13,7 +13,7 @@ export class PolicyAdapter {
    */
   static fromMetadata(metadata: PolicyMetadata): Policy {
     return {
-      id: metadata.id,
+      id: String(metadata.id),
       countryId: metadata.country_id,
       apiVersion: metadata.api_version,
       parameters: convertPolicyJsonToParameters(metadata.policy_json),

@@ -21,13 +21,14 @@ export class UserHouseholdAdapter {
 
   /**
    * Convert API response to UserHouseholdPopulation
+   * Explicitly coerces IDs to strings to handle JSON.parse type mismatches
    */
   static fromApiResponse(apiData: any): UserHouseholdPopulation {
     return {
       type: 'household' as const,
-      id: apiData.householdId,
-      userId: apiData.userId,
-      householdId: apiData.householdId,
+      id: String(apiData.householdId),
+      userId: String(apiData.userId),
+      householdId: String(apiData.householdId),
       countryId: apiData.countryId,
       label: apiData.label,
       createdAt: apiData.createdAt,

@@ -24,6 +24,10 @@ export default function GeographySubPage({
   // Check if geographies are the same
   const geographiesAreSame = baselineGeography?.id === reformGeography?.id;
 
+  // Get labels from geography names, fallback to generic labels
+  const baselineLabel = baselineGeography?.name || 'Baseline';
+  const reformLabel = reformGeography?.name || 'Reform';
+
   // Define table rows
   const rows = [
     {
@@ -94,7 +98,7 @@ export default function GeographySubPage({
                     padding: `${spacing.md} ${spacing.lg}`,
                   }}
                 >
-                  Baseline / Reform
+                  {baselineLabel.toUpperCase()} (BASELINE / REFORM)
                 </Table.Th>
               ) : (
                 <>
@@ -110,7 +114,7 @@ export default function GeographySubPage({
                       padding: `${spacing.md} ${spacing.lg}`,
                     }}
                   >
-                    Baseline
+                    {baselineLabel.toUpperCase()} (BASELINE)
                   </Table.Th>
                   <Table.Th
                     style={{
@@ -124,7 +128,7 @@ export default function GeographySubPage({
                       padding: `${spacing.md} ${spacing.lg}`,
                     }}
                   >
-                    Reform
+                    {reformLabel.toUpperCase()} (REFORM)
                   </Table.Th>
                 </>
               )}

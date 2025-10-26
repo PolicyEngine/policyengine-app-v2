@@ -171,7 +171,11 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
   private getStoredHouseholds(): UserHouseholdPopulation[] {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+
+      const parsed = JSON.parse(stored);
+      // Route through adapter to ensure type coercion (e.g., number IDs -> strings)
+      return parsed.map((data: any) => UserHouseholdAdapter.fromApiResponse(data));
     } catch {
       return [];
     }

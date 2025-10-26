@@ -60,6 +60,8 @@ export default function ReportOutputPage() {
     userSimulations,
     dataLoading,
     dataError,
+    userHouseholds,
+    geographies
   });
 
   // Derive output type from simulation (needed for target type determination)

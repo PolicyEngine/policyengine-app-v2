@@ -27,6 +27,7 @@ import {
   extractUniqueIds,
   useParallelQueries,
 } from './utils/normalizedUtils';
+import { createMockReportStateNoLabels } from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
 
 /**
  * Enhanced result type that includes all relationships
@@ -534,6 +535,8 @@ export const useUserReportById = (userReportId: string) => {
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
 
+  console.log('[useUserReportById] householdAssociations', householdAssociations);
+
   console.log('[useUserReportById] finalReport', finalReport);
 
   console.log(
@@ -571,10 +574,18 @@ export const useUserReportById = (userReportId: string) => {
   });
 
   const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
+  
+  console.log('[useUserReportById] households', households);
+  console.log('[useUserReportById] type of household IDs', householdIds.map((id) => typeof id));
+  console.log(`[useUserReportById] type of householdAssociations.householdId`,
+    householdAssociations?.map((ha) => ({ id: ha.householdId, type: typeof ha.householdId }))
+  );
 
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)
   );
+
+  console.log('[useUserReportById] userHouseholds post-filter', userHouseholds);
 
   // Step 7: Get geography data from simulations
   const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);

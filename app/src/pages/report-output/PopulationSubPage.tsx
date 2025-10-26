@@ -27,6 +27,9 @@ export default function PopulationSubPage({
   userHouseholds,
 }: PopulationSubPageProps) {
   // Determine population type from simulations
+
+  console.log(`[PopulationSubPage] userHouseholds:`, userHouseholds);
+
   const populationType =
     baselineSimulation?.populationType || reformSimulation?.populationType;
 

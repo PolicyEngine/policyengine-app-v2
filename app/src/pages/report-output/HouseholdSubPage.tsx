@@ -29,6 +29,21 @@ export default function HouseholdSubPage({
   // Check if households are the same
   const householdsSame = householdsAreEqual(baselineHousehold, reformHousehold);
 
+  console.log(`[HouseholdSubPage] baselineHousehold:`, baselineHousehold);
+  console.log(`[HouseholdSubPage] reformHousehold:`, reformHousehold);
+  console.log(`[HouseholdSubPage] userHouseholds:`, userHouseholds);
+
+  // Get custom labels from userHouseholds, fallback to generic labels
+  const baselineUserHousehold = userHouseholds?.find(
+    (uh) => uh.householdId === baselineHousehold?.id
+  );
+  const reformUserHousehold = userHouseholds?.find(
+    (uh) => uh.householdId === reformHousehold?.id
+  );
+
+  const baselineLabel = baselineUserHousehold?.label || 'Baseline';
+  const reformLabel = reformUserHousehold?.label || 'Reform';
+
   // Extract inputs from both households
   const baselineInputs = baselineHousehold ? extractHouseholdInputs(baselineHousehold) : [];
   const reformInputs = reformHousehold ? extractHouseholdInputs(reformHousehold) : [];
@@ -103,7 +118,7 @@ export default function HouseholdSubPage({
                     padding: `${spacing.md} ${spacing.lg}`,
                   }}
                 >
-                  Baseline / Reform
+                  {baselineLabel.toUpperCase()} (BASELINE / REFORM)
                 </Table.Th>
               ) : (
                 <>
@@ -119,7 +134,7 @@ export default function HouseholdSubPage({
                       padding: `${spacing.md} ${spacing.lg}`,
                     }}
                   >
-                    Baseline
+                    {baselineLabel.toUpperCase()} (BASELINE)
                   </Table.Th>
                   <Table.Th
                     style={{
@@ -133,7 +148,7 @@ export default function HouseholdSubPage({
                       padding: `${spacing.md} ${spacing.lg}`,
                     }}
                   >
-                    Reform
+                    {reformLabel.toUpperCase()} (REFORM)
                   </Table.Th>
                 </>
               )}

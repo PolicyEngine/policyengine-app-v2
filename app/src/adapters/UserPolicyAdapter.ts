@@ -12,8 +12,8 @@ export class UserPolicyAdapter {
     userPolicy: Omit<UserPolicy, 'id' | 'createdAt'>
   ): UserPolicyCreationPayload {
     return {
-      userId: userPolicy.userId.toString(),
-      policyId: userPolicy.policyId.toString(),
+      userId: String(userPolicy.userId),
+      policyId: String(userPolicy.policyId),
       countryId: userPolicy.countryId,
       label: userPolicy.label,
       updatedAt: userPolicy.updatedAt || new Date().toISOString(),
@@ -22,12 +22,13 @@ export class UserPolicyAdapter {
 
   /**
    * Convert API response to UserPolicy
+   * Explicitly coerces IDs to strings to handle JSON.parse type mismatches
    */
   static fromApiResponse(apiData: any): UserPolicy {
     return {
-      id: apiData.policyId,
-      userId: apiData.userId,
-      policyId: apiData.policyId,
+      id: String(apiData.policyId),
+      userId: String(apiData.userId),
+      policyId: String(apiData.policyId),
       countryId: apiData.countryId,
       label: apiData.label,
       createdAt: apiData.createdAt,
