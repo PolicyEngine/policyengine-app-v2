@@ -1,33 +1,63 @@
-import { render, screen, waitFor } from '@test-utils';
+import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
-import { useUserReportById } from '@/hooks/useUserReports';
 import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
 import {
-  mockSocietyWideReport,
-  mockSocietyWideSimulation,
-} from '@/tests/fixtures/pages/reportOutputMocks';
-
-// Mock react-router-dom
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('react-router-dom')>();
-  return {
-    ...actual,
-    useParams: () => ({ reportId: 'test-report-123' }),
-    useNavigate: () => vi.fn(),
-  };
-});
+  MOCK_REPORT,
+  MOCK_SIMULATION_BASELINE,
+  MOCK_SIMULATION_REFORM,
+  MOCK_POLICY_BASELINE,
+  MOCK_POLICY_REFORM,
+  MOCK_USER_POLICY,
+  MOCK_GEOGRAPHY,
+  MOCK_CALC_STATUS_INITIALIZING,
+  MOCK_CALC_STATUS_PENDING,
+  MOCK_CALC_STATUS_COMPLETE,
+  MOCK_CALC_STATUS_ERROR,
+  MOCK_CALC_STATUS_IDLE,
+} from '@/tests/fixtures/pages/report-output/SocietyWideReportOutput';
 
 // Mock hooks
-vi.mock('@/hooks/useUserReports');
 vi.mock('@/hooks/useCalculationStatus');
 vi.mock('@/hooks/useStartCalculationOnLoad');
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
-const mockUseUserReportById = useUserReportById as ReturnType<typeof vi.fn>;
+// Mock subpage components with inline mocks to avoid hoisting issues
+vi.mock('@/pages/report-output/LoadingPage', () => ({
+  default: vi.fn(({ message }: { message?: string; progress?: number }) => (
+    <div data-testid="loading-page">{message || 'Loading...'}</div>
+  )),
+}));
+
+vi.mock('@/pages/report-output/ErrorPage', () => ({
+  default: vi.fn(({ error }: { error?: Error }) => (
+    <div data-testid="error-page">{error?.message || 'Unknown error'}</div>
+  )),
+}));
+
+vi.mock('@/pages/report-output/NotFoundSubPage', () => ({
+  default: vi.fn(() => <div data-testid="not-found-page">Page Not Found</div>),
+}));
+
+vi.mock('@/pages/report-output/OverviewSubPage', () => ({
+  default: vi.fn(() => <div data-testid="overview-page">Cost</div>),
+}));
+
+vi.mock('@/pages/report-output/PolicySubPage', () => ({
+  default: vi.fn(() => <div data-testid="policy-page">Policy</div>),
+}));
+
+vi.mock('@/pages/report-output/PopulationSubPage', () => ({
+  default: vi.fn(() => <div data-testid="population-page">Population</div>),
+}));
+
+vi.mock('@/pages/report-output/DynamicsSubPage', () => ({
+  default: vi.fn(() => <div data-testid="dynamics-page">Dynamics</div>),
+}));
+
 const mockUseCalculationStatus = useCalculationStatus as ReturnType<typeof vi.fn>;
 const mockUseStartCalculationOnLoad = useStartCalculationOnLoad as ReturnType<typeof vi.fn>;
 
@@ -37,206 +67,130 @@ describe('SocietyWideReportOutput', () => {
     mockUseStartCalculationOnLoad.mockReturnValue(undefined);
   });
 
-  test('given loading state then shows loading message', () => {
+  test('given no report then shows error message', () => {
     // Given
-    mockUseUserReportById.mockReturnValue({
-      report: undefined,
-      simulations: undefined,
-      isLoading: true,
-      error: null,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'initializing',
-      isInitializing: true,
-      isPending: false,
-      isComplete: false,
-      isError: false,
-    });
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
 
     // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={undefined}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
 
     // Then
-    expect(screen.getByText('Loading report...')).toBeInTheDocument();
-  });
-
-  test('given error loading report then shows error message', () => {
-    // Given
-    const error = new Error('Failed to load report');
-    mockUseUserReportById.mockReturnValue({
-      report: null,
-      simulations: null,
-      isLoading: false,
-      error,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'idle',
-      isInitializing: false,
-      isPending: false,
-      isComplete: false,
-      isError: false,
-    });
-
-    // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
-
-    // Then
-    expect(screen.getByText('Failed to load report')).toBeInTheDocument();
+    expect(screen.getByTestId('error-page')).toBeInTheDocument();
+    expect(screen.getByText('Report not found')).toBeInTheDocument();
   });
 
   test('given calculation initializing then shows loading status message', () => {
     // Given
-    mockUseUserReportById.mockReturnValue({
-      report: mockSocietyWideReport,
-      simulations: [mockSocietyWideSimulation],
-      isLoading: false,
-      error: null,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'initializing',
-      isInitializing: true,
-      isPending: false,
-      isComplete: false,
-      isError: false,
-    });
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_INITIALIZING);
 
     // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
 
     // Then
+    expect(screen.getByTestId('loading-page')).toBeInTheDocument();
     expect(screen.getByText('Loading calculation status...')).toBeInTheDocument();
   });
 
   test('given calculation pending then shows computing message with progress', () => {
     // Given
-    mockUseUserReportById.mockReturnValue({
-      report: mockSocietyWideReport,
-      simulations: [mockSocietyWideSimulation],
-      isLoading: false,
-      error: null,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'pending',
-      isInitializing: false,
-      isPending: true,
-      isComplete: false,
-      isError: false,
-      progress: 50,
-    });
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_PENDING);
 
     // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
 
     // Then
+    expect(screen.getByTestId('loading-page')).toBeInTheDocument();
     expect(screen.getByText('Computing society-wide impacts...')).toBeInTheDocument();
   });
 
   test('given calculation error then shows error message', () => {
     // Given
-    mockUseUserReportById.mockReturnValue({
-      report: mockSocietyWideReport,
-      simulations: [mockSocietyWideSimulation],
-      isLoading: false,
-      error: null,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'error',
-      isInitializing: false,
-      isPending: false,
-      isComplete: false,
-      isError: true,
-      error: { message: 'Calculation failed', code: 'CALC_ERROR', retryable: true },
-    });
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_ERROR);
 
     // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
 
     // Then
+    expect(screen.getByTestId('error-page')).toBeInTheDocument();
     expect(screen.getByText('Calculation failed')).toBeInTheDocument();
   });
 
-  test('given calculation complete then shows overview with output', async () => {
+  test('given calculation complete then shows overview with output', () => {
     // Given
-    const mockOutput = {
-      budget: { budgetary_impact: 1000000 },
-      poverty: { poverty: { all: { baseline: 0.1, reform: 0.09 } } },
-      intra_decile: {
-        all: {
-          'Gain more than 5%': 0.2,
-          'Gain less than 5%': 0.1,
-          'Lose more than 5%': 0.05,
-          'Lose less than 5%': 0.05,
-        },
-      },
-    };
-
-    mockUseUserReportById.mockReturnValue({
-      report: mockSocietyWideReport,
-      simulations: [mockSocietyWideSimulation],
-      isLoading: false,
-      error: null,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'complete',
-      isInitializing: false,
-      isPending: false,
-      isComplete: true,
-      isError: false,
-      result: mockOutput,
-    });
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
 
     // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="overview"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+        policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
+        userPolicies={[MOCK_USER_POLICY]}
+        geographies={[MOCK_GEOGRAPHY]}
+      />
+    );
 
     // Then
-    await waitFor(() => {
-      // Overview component should render with the output data
-      expect(screen.getByText('Cost')).toBeInTheDocument();
-    });
+    expect(screen.getByTestId('overview-page')).toBeInTheDocument();
+    expect(screen.getByText('Cost')).toBeInTheDocument();
   });
 
   test('given no output yet then shows not found message', () => {
     // Given
-    mockUseUserReportById.mockReturnValue({
-      report: mockSocietyWideReport,
-      simulations: [mockSocietyWideSimulation],
-      isLoading: false,
-      error: null,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'idle',
-      isInitializing: false,
-      isPending: false,
-      isComplete: false,
-      isError: false,
-      result: null,
-    });
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
 
     // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
 
     // Then
+    expect(screen.getByTestId('not-found-page')).toBeInTheDocument();
     expect(screen.getByText('Page Not Found')).toBeInTheDocument();
   });
 
   test('given report loaded then starts calculation on load', () => {
     // Given
-    mockUseUserReportById.mockReturnValue({
-      report: mockSocietyWideReport,
-      simulations: [mockSocietyWideSimulation],
-      isLoading: false,
-      error: null,
-    });
-    mockUseCalculationStatus.mockReturnValue({
-      status: 'idle',
-      isInitializing: false,
-      isPending: false,
-      isComplete: false,
-      isError: false,
-    });
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
 
     // When
-    render(<SocietyWideReportOutput reportId="test-report-123" />);
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
 
     // Then
     expect(mockUseStartCalculationOnLoad).toHaveBeenCalledWith(
@@ -251,5 +205,82 @@ describe('SocietyWideReportOutput', () => {
         ]),
       })
     );
+  });
+
+  test('given policy subpage then shows policy page', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="policy"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+        policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
+        userPolicies={[MOCK_USER_POLICY]}
+      />
+    );
+
+    // Then
+    expect(screen.getByTestId('policy-page')).toBeInTheDocument();
+  });
+
+  test('given population subpage then shows population page', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="population"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE, MOCK_SIMULATION_REFORM]}
+        geographies={[MOCK_GEOGRAPHY]}
+      />
+    );
+
+    // Then
+    expect(screen.getByTestId('population-page')).toBeInTheDocument();
+  });
+
+  test('given dynamics subpage then shows dynamics page', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="dynamics"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+        policies={[MOCK_POLICY_BASELINE, MOCK_POLICY_REFORM]}
+        userPolicies={[MOCK_USER_POLICY]}
+      />
+    );
+
+    // Then
+    expect(screen.getByTestId('dynamics-page')).toBeInTheDocument();
+  });
+
+  test('given invalid subpage then shows not found page', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_COMPLETE);
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        subpage="invalid"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
+
+    // Then
+    expect(screen.getByTestId('not-found-page')).toBeInTheDocument();
   });
 });
