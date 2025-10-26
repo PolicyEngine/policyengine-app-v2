@@ -159,7 +159,13 @@ export function HouseholdReportOutput({
         );
 
       case 'dynamics':
-        return <DynamicsSubPage />;
+        return (
+          <DynamicsSubPage
+            policies={policies}
+            userPolicies={userPolicies}
+            reportType="household"
+          />
+        );
 
       default:
         return <NotFoundSubPage />;

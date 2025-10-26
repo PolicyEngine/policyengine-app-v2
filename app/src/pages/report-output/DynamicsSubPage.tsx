@@ -1,9 +1,290 @@
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Box, Table, Text } from '@mantine/core';
+import { RootState } from '@/store';
+import { Policy } from '@/types/ingredients/Policy';
+import { UserPolicy } from '@/types/ingredients/UserPolicy';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import {
+  determinePolicyColumns,
+  extractPoliciesFromArray,
+  getParameterValueFromPolicy,
+  getCurrentLawParameterValue,
+  hasCurrentLawPolicy,
+  calculateColumnWidths,
+  PolicyColumn,
+} from '@/utils/policyTableHelpers';
+import {
+  getHierarchicalLabels,
+  buildCompactLabel,
+  formatLabelParts,
+} from '@/utils/parameterLabels';
+import { colors, spacing, typography } from '@/designTokens';
+
+interface DynamicsSubPageProps {
+  policies?: Policy[];
+  userPolicies?: UserPolicy[];
+  reportType: 'economy' | 'household';
+}
+
 /**
- * DynamicsSubPage - Placeholder for dynamics visualization
- *
- * This component will eventually show dynamic analysis of policy impacts over time.
- * Currently displays a placeholder message.
+ * Filter parameters to only those in dynamics namespaces
+ * US: gov.simulation
+ * UK: gov.dynamic
  */
-export default function DynamicsSubPage() {
-  return <div>Dynamics</div>;
+function filterDynamicsParameters(paramNames: string[], countryId: string): string[] {
+  const dynamicsPrefix = countryId === 'us' ? 'gov.simulation' : 'gov.dynamic';
+  return paramNames.filter(paramName => paramName.startsWith(dynamicsPrefix));
+}
+
+/**
+ * Collect unique dynamics parameter names from policies
+ */
+function collectDynamicsParameterNames(policies: Policy[], countryId: string): string[] {
+  const allParamNames = new Set<string>();
+  policies.forEach((policy) => {
+    policy.parameters?.forEach((param) => allParamNames.add(param.name));
+  });
+  const filtered = filterDynamicsParameters(Array.from(allParamNames), countryId);
+  return filtered.sort();
+}
+
+/**
+ * DynamicsSubPage - Displays dynamics (simulation configuration) parameters
+ *
+ * Shows parameters from gov.simulation (US) or gov.dynamic (UK) namespaces
+ * in the same table format as PolicySubPage.
+ */
+export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubPageProps) {
+  const countryId = useCurrentCountry();
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const [expandedParams, setExpandedParams] = useState<Set<string>>(new Set());
+
+  if (!policies || policies.length === 0) {
+    return <div>No policy data available</div>;
+  }
+
+  // Extract baseline and reform from policies array
+  const { baseline, reform } = extractPoliciesFromArray(policies);
+
+  // Helper to get user-specified policy name
+  const getPolicyLabel = (policy: Policy | undefined): string => {
+    if (!policy) return 'Unnamed Policy';
+    const userPolicy = userPolicies?.find(up => up.policyId === policy.id);
+    return userPolicy?.label || policy.label || 'Unnamed Policy';
+  };
+
+  // Collect dynamics parameters only
+  const paramList = collectDynamicsParameterNames(policies, countryId);
+
+  // If no dynamics parameters, show empty state
+  if (paramList.length === 0) {
+    return (
+      <div>
+        <h2>Dynamics Information</h2>
+        <Box
+          style={{
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: spacing.radius.lg,
+            padding: spacing['2xl'],
+            backgroundColor: colors.white,
+            marginTop: spacing.xl,
+            textAlign: 'center',
+          }}
+        >
+          <Text size="sm" c={colors.text.secondary}>
+            No custom dynamics configuration for this report.
+          </Text>
+        </Box>
+      </div>
+    );
+  }
+
+  // Determine if current law column is needed (none of the policies is current law)
+  const needsCurrentLawColumn = !hasCurrentLawPolicy(policies, currentLawId);
+
+  // Determine column structure with smart collapsing
+  const columns = determinePolicyColumns(undefined, baseline, reform);
+
+  // Calculate column width percentages (including current law column if needed)
+  const totalValueColumns = columns.length + (needsCurrentLawColumn ? 1 : 0);
+  const { labelColumnWidth, valueColumnWidth } = calculateColumnWidths(totalValueColumns);
+
+  const toggleExpanded = (paramName: string) => {
+    setExpandedParams((prev) => {
+      const next = new Set(prev);
+      if (next.has(paramName)) {
+        next.delete(paramName);
+      } else {
+        next.add(paramName);
+      }
+      return next;
+    });
+  };
+
+  return (
+    <div>
+      <h2>Dynamics Information</h2>
+
+      <Box
+        style={{
+          border: `1px solid ${colors.border.light}`,
+          borderRadius: spacing.radius.lg,
+          overflow: 'hidden',
+          backgroundColor: colors.white,
+          marginTop: spacing.xl,
+        }}
+      >
+        <Table>
+          <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
+            <Table.Tr>
+              <Table.Th
+                style={{
+                  width: `${labelColumnWidth}%`,
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.text.secondary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  padding: `${spacing.md} ${spacing.lg}`,
+                }}
+              >
+                Parameter
+              </Table.Th>
+              {needsCurrentLawColumn && (
+                <Table.Th
+                  style={{
+                    width: `${valueColumnWidth}%`,
+                    textAlign: 'right',
+                    fontSize: typography.fontSize.xs,
+                    fontWeight: typography.fontWeight.medium,
+                    color: colors.text.secondary,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: `${spacing.md} ${spacing.lg}`,
+                  }}
+                >
+                  CURRENT LAW
+                </Table.Th>
+              )}
+              {columns.map((column: PolicyColumn, idx: number) => {
+                // Build header text: "Policy Name (BASELINE)" or "Policy Name (BASELINE / REFORM)"
+                // Use user-specified names from userPolicies, not the base policy label
+                const policyNames = column.policies.map(p => getPolicyLabel(p));
+                const roleLabels = column.label.toUpperCase().split(' / ');
+
+                // If single policy, show "Name (ROLE)"
+                // If merged, show "Name (ROLE1 / ROLE2)"
+                const headerText = policyNames.length === 1
+                  ? `${policyNames[0].toUpperCase()} (${roleLabels[0]})`
+                  : `${policyNames[0].toUpperCase()} (${roleLabels.join(' / ')})`;
+
+                return (
+                  <Table.Th
+                    key={idx}
+                    style={{
+                      width: `${valueColumnWidth}%`,
+                      textAlign: 'right',
+                      fontSize: typography.fontSize.xs,
+                      fontWeight: typography.fontWeight.medium,
+                      color: colors.text.secondary,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      padding: `${spacing.md} ${spacing.lg}`,
+                    }}
+                  >
+                    {headerText}
+                  </Table.Th>
+                );
+              })}
+            </Table.Tr>
+          </Table.Thead>
+
+          <Table.Tbody>
+            {paramList.map((paramName: string) => {
+              const metadata = parameters[paramName];
+
+              // Build hierarchical label with chaining
+              const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+              const isExpanded = expandedParams.has(paramName);
+              const { displayParts, hasMore } = buildCompactLabel(hierarchicalLabels);
+              const finalParts = isExpanded && hasMore ? hierarchicalLabels : displayParts;
+              const displayLabel = formatLabelParts(finalParts);
+
+              // Get values for each column
+              const columnValues = columns.map((column: PolicyColumn) => {
+                // For merged columns, just use the first policy since they're equal
+                const policy = column.policies[0];
+                return getParameterValueFromPolicy(policy, paramName, parameters);
+              });
+
+              return (
+                <Table.Tr key={paramName}>
+                  <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                    <Box>
+                      <Text size="sm" fw={typography.fontWeight.medium}>
+                        {displayLabel.split(' → ').map((part, i, arr) => (
+                          <span key={i}>
+                            {part === '...' ? (
+                              <Text
+                                span
+                                style={{ cursor: 'pointer', color: colors.primary[700] }}
+                                onClick={() => toggleExpanded(paramName)}
+                              >
+                                ...
+                              </Text>
+                            ) : (
+                              part
+                            )}
+                            {i < arr.length - 1 && ' → '}
+                          </span>
+                        ))}
+                      </Text>
+                      <Text size="xs" c={colors.text.secondary}>
+                        {paramName}
+                      </Text>
+                    </Box>
+                  </Table.Td>
+                  {needsCurrentLawColumn && (
+                    <Table.Td
+                      style={{
+                        textAlign: 'right',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      <Text
+                        size="sm"
+                        fw={typography.fontWeight.medium}
+                        c={colors.text.secondary}
+                      >
+                        {getCurrentLawParameterValue(paramName, parameters)}
+                      </Text>
+                    </Table.Td>
+                  )}
+                  {columnValues.map((value: string, idx: number) => (
+                    <Table.Td
+                      key={idx}
+                      style={{
+                        textAlign: 'right',
+                        padding: `${spacing.md} ${spacing.lg}`,
+                      }}
+                    >
+                      <Text
+                        size="sm"
+                        fw={typography.fontWeight.medium}
+                        c={colors.text.primary}
+                      >
+                        {value}
+                      </Text>
+                    </Table.Td>
+                  ))}
+                </Table.Tr>
+              );
+            })}
+          </Table.Tbody>
+        </Table>
+      </Box>
+    </div>
+  );
 }

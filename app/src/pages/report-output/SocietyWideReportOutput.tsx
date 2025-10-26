@@ -145,7 +145,13 @@ export function SocietyWideReportOutput({
         );
 
       case 'dynamics':
-        return <DynamicsSubPage />;
+        return (
+          <DynamicsSubPage
+            policies={policies}
+            userPolicies={userPolicies}
+            reportType="economy"
+          />
+        );
 
       default:
         return <NotFoundSubPage />;
