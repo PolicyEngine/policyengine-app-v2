@@ -1,54 +1,183 @@
-import { Household } from '@/types/ingredients/Household';
+import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
 
-export interface IndividualVariable {
+export interface EntityVariable {
   paramName: string;
   label: string;
   value: any;
 }
 
-export interface Individual {
+export interface EntityMember {
   id: string;
   name: string;
-  variables: IndividualVariable[];
+  variables: EntityVariable[];
+}
+
+export interface GroupEntity {
+  entityType: string; // e.g., "people", "households", "tax_units"
+  entityTypeName: string; // e.g., "Your household", "Your tax unit"
+  instances: GroupEntityInstance[];
+}
+
+export interface GroupEntityInstance {
+  id: string;
+  name: string; // e.g., "You", "Your first dependent", "Your household"
+  members: EntityMember[];
+  variables?: EntityVariable[]; // Entity-level variables (e.g., tax_unit.ctc)
 }
 
 /**
- * Extract individuals from household data
- * Each person in the household becomes an Individual with their variables
+ * Check if a group entity has any variables (other than 'members')
  */
-export function extractIndividualsFromHousehold(household: Household): Individual[] {
-  const individuals: Individual[] = [];
+function hasEntityVariables(entityData: HouseholdGroupEntity): boolean {
+  return Object.keys(entityData).some((key) => key !== 'members');
+}
 
-  if (!household.householdData?.people) {
-    return individuals;
+/**
+ * Extract all group entities from household data
+ * Returns entities like people, households, tax_units, etc.
+ * Only includes group entities that have variables defined (not just members)
+ */
+export function extractGroupEntities(household: Household): GroupEntity[] {
+  const groupEntities: GroupEntity[] = [];
+
+  if (!household.householdData) {
+    return groupEntities;
   }
 
-  const { people } = household.householdData;
+  const { householdData } = household;
 
-  Object.entries(people).forEach(([personId, personData]) => {
-    const variables: IndividualVariable[] = [];
+  // Iterate over all keys in householdData
+  Object.entries(householdData).forEach(([entityType, entities]) => {
+    if (entityType === 'people') {
+      // People is special - each person is their own "instance"
+      const peopleInstances: GroupEntityInstance[] = [];
 
-    Object.entries(personData).forEach(([paramName, paramValues]) => {
-      // paramValues is typically { "2024": value, "2025": value, ... }
-      if (typeof paramValues === 'object' && paramValues !== null) {
-        const firstValue = Object.values(paramValues)[0];
+      Object.entries(entities).forEach(([personId, personData]) => {
+        peopleInstances.push({
+          id: personId,
+          name: formatPersonName(personId),
+          members: [extractEntityMember(personId, personData)],
+        });
+      });
 
-        variables.push({
-          paramName,
-          label: formatParameterLabel(paramName),
-          value: firstValue,
+      groupEntities.push({
+        entityType: 'people',
+        entityTypeName: formatEntityTypeName('people'),
+        instances: peopleInstances,
+      });
+    } else {
+      // Group entities (households, tax_units, etc.)
+      // Only include if they have variables defined
+      const instances: GroupEntityInstance[] = [];
+
+      Object.entries(entities as Record<string, HouseholdGroupEntity>).forEach(
+        ([entityId, entityData]) => {
+          // Skip this entity if it has no variables (only 'members')
+          if (!hasEntityVariables(entityData)) {
+            return;
+          }
+
+          const members = extractMembersFromGroupEntity(entityData, householdData.people);
+
+          // Extract the entity's own variables (not member variables)
+          const entityVariables = extractEntityVariables(entityData);
+
+          instances.push({
+            id: entityId,
+            name: formatEntityInstanceName(entityType, entityId),
+            members,
+            variables: entityVariables, // Add entity-level variables
+          });
+        }
+      );
+
+      // Only add this entity type if it has at least one instance with variables
+      if (instances.length > 0) {
+        groupEntities.push({
+          entityType,
+          entityTypeName: formatEntityTypeName(entityType),
+          instances,
         });
       }
-    });
-
-    individuals.push({
-      id: personId,
-      name: formatPersonName(personId),
-      variables,
-    });
+    }
   });
 
-  return individuals;
+  return groupEntities;
+}
+
+/**
+ * Extract variables from the entity itself (not from its members)
+ */
+function extractEntityVariables(entityData: HouseholdGroupEntity): EntityVariable[] {
+  const variables: EntityVariable[] = [];
+
+  Object.entries(entityData).forEach(([paramName, paramValues]) => {
+    // Skip the 'members' array - it's metadata, not a variable
+    if (paramName === 'members') return;
+
+    // paramValues is typically { "2024": value, "2025": value, ... }
+    if (typeof paramValues === 'object' && paramValues !== null) {
+      const firstValue = Object.values(paramValues)[0];
+
+      variables.push({
+        paramName,
+        label: formatParameterLabel(paramName),
+        value: firstValue,
+      });
+    }
+  });
+
+  return variables;
+}
+
+/**
+ * Extract members from a group entity
+ * Returns the people who are members of this entity with their variables
+ */
+export function extractMembersFromGroupEntity(
+  groupEntity: HouseholdGroupEntity,
+  people: Record<string, any>
+): EntityMember[] {
+  const members: EntityMember[] = [];
+
+  if (!groupEntity.members) {
+    return members;
+  }
+
+  groupEntity.members.forEach((personId) => {
+    const personData = people[personId];
+    if (personData) {
+      members.push(extractEntityMember(personId, personData));
+    }
+  });
+
+  return members;
+}
+
+/**
+ * Extract a single entity member with their variables
+ */
+function extractEntityMember(memberId: string, memberData: any): EntityMember {
+  const variables: EntityVariable[] = [];
+
+  Object.entries(memberData).forEach(([paramName, paramValues]) => {
+    // paramValues is typically { "2024": value, "2025": value, ... }
+    if (typeof paramValues === 'object' && paramValues !== null) {
+      const firstValue = Object.values(paramValues)[0];
+
+      variables.push({
+        paramName,
+        label: formatParameterLabel(paramName),
+        value: firstValue,
+      });
+    }
+  });
+
+  return {
+    id: memberId,
+    name: formatPersonName(memberId),
+    variables,
+  };
 }
 
 /**
@@ -71,15 +200,68 @@ function formatParameterLabel(paramName: string): string {
 
 /**
  * Format person ID to human-readable name
- * Capitalizes only the first letter
+ * Converts person_0 to "You", person_1 to "Your first dependent", etc.
  */
 function formatPersonName(personId: string): string {
-  // Convert "person_0" to "Person 1", "person_1" to "Person 2", etc.
   const match = personId.match(/person_(\d+)/);
   if (match) {
-    const number = parseInt(match[1], 10) + 1;
-    return `Person ${number}`;
+    const index = parseInt(match[1], 10);
+    if (index === 0) {
+      return 'You';
+    }
+    const ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth'];
+    const ordinal = ordinals[index - 1] || `${index}th`;
+    return `Your ${ordinal} dependent`;
   }
   // Capitalize only first letter for any other format
   return personId.charAt(0).toUpperCase() + personId.slice(1).toLowerCase();
+}
+
+/**
+ * Format entity type to human-readable name
+ * Converts "households" to "Your household", "tax_units" to "Your tax unit", etc.
+ */
+function formatEntityTypeName(entityType: string): string {
+  // Special cases
+  if (entityType === 'people') {
+    return 'People';
+  }
+
+  // Convert snake_case to sentence case and singularize
+  const words = entityType.replace(/_/g, ' ').split(' ');
+  const formatted = words
+    .map((word) => {
+      // Remove trailing 's' to singularize
+      if (word.endsWith('s')) {
+        return word.slice(0, -1);
+      }
+      return word;
+    })
+    .join(' ');
+
+  return `Your ${formatted}`;
+}
+
+/**
+ * Format entity instance name
+ * For single instances, uses the entity type name
+ * For multiple instances, adds ordinal
+ */
+function formatEntityInstanceName(entityType: string, entityId: string): string {
+  // For households, tax_units, etc. with ID like "household_0", "tax_unit_0"
+  const match = entityId.match(/_(\d+)$/);
+  if (match) {
+    const index = parseInt(match[1], 10);
+    if (index === 0) {
+      // First instance gets the simple name
+      return formatEntityTypeName(entityType);
+    }
+    // Additional instances get ordinals
+    const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
+    const ordinal = ordinals[index] || `${index + 1}th`;
+    const singularType = entityType.replace(/_/g, ' ').replace(/s$/, '');
+    return `Your ${ordinal} ${singularType}`;
+  }
+
+  return formatEntityTypeName(entityType);
 }

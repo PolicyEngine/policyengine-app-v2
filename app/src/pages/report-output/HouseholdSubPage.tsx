@@ -1,10 +1,8 @@
-import { Box, Text } from '@mantine/core';
 import { Household } from '@/types/ingredients/Household';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { householdsAreEqual } from '@/utils/householdTableData';
-import { extractIndividualsFromHousehold, Individual } from '@/utils/householdIndividuals';
-import IndividualTable from '@/components/report/IndividualTable';
-import { colors, spacing, typography } from '@/designTokens';
+import { extractGroupEntities } from '@/utils/householdIndividuals';
+import GroupEntityDisplay from '@/components/report/GroupEntityDisplay';
 
 interface HouseholdSubPageProps {
   baselineHousehold?: Household;
@@ -46,51 +44,36 @@ export default function HouseholdSubPage({
   const baselineLabel = baselineUserHousehold?.label || 'Baseline';
   const reformLabel = reformUserHousehold?.label || 'Reform';
 
-  // Extract individuals from both households
-  const baselineIndividuals = baselineHousehold ? extractIndividualsFromHousehold(baselineHousehold) : [];
-  const reformIndividuals = reformHousehold ? extractIndividualsFromHousehold(reformHousehold) : [];
+  // Extract group entities from both households
+  const baselineGroupEntities = baselineHousehold ? extractGroupEntities(baselineHousehold) : [];
+  const reformGroupEntities = reformHousehold ? extractGroupEntities(reformHousehold) : [];
 
-  // Collect all unique individual IDs
-  const allIndividualIds = new Set<string>();
-  baselineIndividuals.forEach((ind) => allIndividualIds.add(ind.id));
-  reformIndividuals.forEach((ind) => allIndividualIds.add(ind.id));
+  // Collect all unique entity types
+  const allEntityTypes = new Set<string>();
+  baselineGroupEntities.forEach((ge) => allEntityTypes.add(ge.entityType));
+  reformGroupEntities.forEach((ge) => allEntityTypes.add(ge.entityType));
 
-  // Convert to sorted array
-  const sortedIndividualIds = Array.from(allIndividualIds).sort();
+  // Convert to sorted array (we want consistent ordering)
+  const sortedEntityTypes = Array.from(allEntityTypes).sort();
 
   return (
     <div>
       <h2>Population Information</h2>
 
-      {sortedIndividualIds.map((individualId) => {
-        // Find this individual in baseline and reform households
-        const baselineIndividual = baselineIndividuals.find((ind) => ind.id === individualId);
-        const reformIndividual = reformIndividuals.find((ind) => ind.id === individualId);
-
-        // Get the name (should be the same from either)
-        const individualName = baselineIndividual?.name || reformIndividual?.name || individualId;
+      {sortedEntityTypes.map((entityType) => {
+        // Find the group entities for this type in both baseline and reform
+        const baselineEntity = baselineGroupEntities.find((ge) => ge.entityType === entityType);
+        const reformEntity = reformGroupEntities.find((ge) => ge.entityType === entityType);
 
         return (
-          <Box key={individualId} style={{ marginTop: spacing.xl }}>
-            {/* Individual name header */}
-            <Text
-              size="lg"
-              fw={typography.fontWeight.semibold}
-              c={colors.text.primary}
-              style={{ marginBottom: spacing.md }}
-            >
-              {individualName}
-            </Text>
-
-            {/* Table with baseline/reform comparison */}
-            <IndividualTable
-              baselineIndividual={baselineIndividual}
-              reformIndividual={reformIndividual}
-              baselineLabel={baselineLabel}
-              reformLabel={reformLabel}
-              isSameHousehold={householdsSame}
-            />
-          </Box>
+          <GroupEntityDisplay
+            key={entityType}
+            baselineEntity={baselineEntity}
+            reformEntity={reformEntity}
+            baselineLabel={baselineLabel}
+            reformLabel={reformLabel}
+            isSameHousehold={householdsSame}
+          />
         );
       })}
     </div>

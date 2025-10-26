@@ -1,10 +1,10 @@
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { Individual } from '@/utils/householdIndividuals';
+import { EntityMember } from '@/utils/householdIndividuals';
 
 interface IndividualTableProps {
-  baselineIndividual?: Individual;
-  reformIndividual?: Individual;
+  baselineMember?: EntityMember;
+  reformMember?: EntityMember;
   baselineLabel: string;
   reformLabel: string;
   isSameHousehold: boolean;
@@ -17,16 +17,16 @@ interface IndividualTableProps {
  * Used within HouseholdSubPage to display each person's data.
  */
 export default function IndividualTable({
-  baselineIndividual,
-  reformIndividual,
+  baselineMember,
+  reformMember,
   baselineLabel,
   reformLabel,
   isSameHousehold
 }: IndividualTableProps) {
   // Collect all unique variable names from both baseline and reform
   const allParamNames = new Set<string>();
-  baselineIndividual?.variables.forEach((v) => allParamNames.add(v.paramName));
-  reformIndividual?.variables.forEach((v) => allParamNames.add(v.paramName));
+  baselineMember?.variables.forEach((v) => allParamNames.add(v.paramName));
+  reformMember?.variables.forEach((v) => allParamNames.add(v.paramName));
 
   const sortedParamNames = Array.from(allParamNames).sort();
 
@@ -39,8 +39,8 @@ export default function IndividualTable({
   const valueColumnWidth = isSameHousehold ? 55 : 27.5;
 
   // Helper to find variable value
-  const findVariableValue = (individual: Individual | undefined, paramName: string): string => {
-    const variable = individual?.variables.find((v) => v.paramName === paramName);
+  const findVariableValue = (member: EntityMember | undefined, paramName: string): string => {
+    const variable = member?.variables.find((v) => v.paramName === paramName);
     if (!variable) return '—';
 
     if (typeof variable.value === 'number') {
@@ -127,12 +127,12 @@ export default function IndividualTable({
         <Table.Tbody>
           {sortedParamNames.map((paramName) => {
             // Get label from either baseline or reform
-            const baselineVar = baselineIndividual?.variables.find((v) => v.paramName === paramName);
-            const reformVar = reformIndividual?.variables.find((v) => v.paramName === paramName);
+            const baselineVar = baselineMember?.variables.find((v) => v.paramName === paramName);
+            const reformVar = reformMember?.variables.find((v) => v.paramName === paramName);
             const label = baselineVar?.label || reformVar?.label || paramName;
 
-            const baselineValue = findVariableValue(baselineIndividual, paramName);
-            const reformValue = findVariableValue(reformIndividual, paramName);
+            const baselineValue = findVariableValue(baselineMember, paramName);
+            const reformValue = findVariableValue(reformMember, paramName);
 
             return (
               <Table.Tr key={paramName}>
