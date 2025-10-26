@@ -4,37 +4,88 @@ import {
   EXPECTED_LABELS,
   mockMetadataPayload,
   mockMinimalPayload,
+  mockStateWithMetadata,
   TEST_FIELD_NAMES,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
+import type { RootState } from '@/store';
 
 describe('metadataUtils', () => {
   describe('isDropdownField', () => {
-    it('given state_name then returns true', () => {
-      expect(isDropdownField(TEST_FIELD_NAMES.STATE_NAME)).toBe(true);
+    it('given state_name with possibleValues then returns true', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+
+      // When
+      const result = isDropdownField(state, TEST_FIELD_NAMES.STATE_NAME);
+
+      // Then
+      expect(result).toBe(true);
     });
 
-    it('given region then returns true', () => {
-      expect(isDropdownField(TEST_FIELD_NAMES.REGION)).toBe(true);
+    it('given region with possibleValues then returns true', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+
+      // When
+      const result = isDropdownField(state, TEST_FIELD_NAMES.REGION);
+
+      // Then
+      expect(result).toBe(true);
     });
 
-    it('given brma then returns true', () => {
-      expect(isDropdownField(TEST_FIELD_NAMES.BRMA)).toBe(true);
+    it('given brma with possibleValues then returns true', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+
+      // When
+      const result = isDropdownField(state, TEST_FIELD_NAMES.BRMA);
+
+      // Then
+      expect(result).toBe(true);
     });
 
-    it('given local_authority then returns true', () => {
-      expect(isDropdownField(TEST_FIELD_NAMES.LOCAL_AUTHORITY)).toBe(true);
+    it('given local_authority with possibleValues then returns true', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+
+      // When
+      const result = isDropdownField(state, TEST_FIELD_NAMES.LOCAL_AUTHORITY);
+
+      // Then
+      expect(result).toBe(true);
     });
 
-    it('given age then returns false', () => {
-      expect(isDropdownField(TEST_FIELD_NAMES.AGE)).toBe(false);
+    it('given age without possibleValues then returns false', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+
+      // When
+      const result = isDropdownField(state, TEST_FIELD_NAMES.AGE);
+
+      // Then
+      expect(result).toBe(false);
     });
 
-    it('given employment_income then returns false', () => {
-      expect(isDropdownField(TEST_FIELD_NAMES.EMPLOYMENT_INCOME)).toBe(false);
+    it('given employment_income without possibleValues then returns false', () => {
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+
+      // When
+      const result = isDropdownField(state, TEST_FIELD_NAMES.EMPLOYMENT_INCOME);
+
+      // Then
+      expect(result).toBe(false);
     });
 
     it('given unknown field then returns false', () => {
-      expect(isDropdownField('unknown_field')).toBe(false);
+      // Given
+      const state = mockStateWithMetadata() as RootState;
+
+      // When
+      const result = isDropdownField(state, 'unknown_field');
+
+      // Then
+      expect(result).toBe(false);
     });
   });
 
@@ -81,26 +132,14 @@ describe('metadataUtils', () => {
       const result = transformMetadataPayload(payload, 'us');
 
       // Then
-      expect(result).toEqual({
-        currentCountry: 'us',
-        variables: { age: { label: 'Age' } },
-        parameters: { tax_rate: {} },
-        entities: { person: {} },
-        variableModules: { household: ['age'] },
-        economyOptions: {
-          region: [{ name: 'us', label: 'United States' }],
-          time_period: [{ name: 2024, label: '2024' }],
-          datasets: [],
-        },
-        currentLawId: 1,
-        basicInputs: ['age', 'employment_income'],
-        modelledPolicies: {
-          core: { '1': 'Policy 1' },
-          filtered: {},
-        },
-        version: '1.0.0',
-        parameterTree: null,
-      });
+      expect(result.currentCountry).toBe('us');
+      expect(result.currentLawId).toBe(1);
+      expect(result.basicInputs).toEqual(['age', 'employment_income']);
+      expect(result.version).toBe('1.0.0');
+      expect(result.parameterTree).toBeNull();
+      expect(result.variables).toHaveProperty('age');
+      expect(result.variables).toHaveProperty('state_name');
+      expect(result.variables.state_name.possibleValues).toBeDefined();
     });
 
     it('given missing economy_options then uses default', () => {

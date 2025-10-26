@@ -297,7 +297,7 @@ export default function HouseholdBuilderFrame({
   const fieldOptionsMap = useSelector((state: RootState) => {
     const options: Record<string, Array<{ value: string; label: string }>> = {};
     basicInputFields.household.forEach((field) => {
-      if (isDropdownField(field)) {
+      if (isDropdownField(state, field)) {
         options[field] = getFieldOptions(state, field);
       }
     });
@@ -377,7 +377,12 @@ export default function HouseholdBuilderFrame({
           Location & Geographic Information
         </Text>
         {basicInputFields.household.map((field) => {
-          const isDropdown = isDropdownField(field);
+          const fieldVariable = variables?.[field];
+          const isDropdown = !!(
+            fieldVariable &&
+            fieldVariable.possibleValues &&
+            Array.isArray(fieldVariable.possibleValues)
+          );
           const fieldLabel = getFieldLabel(field);
           const fieldValue =
             household.householdData.households?.['your household']?.[field]?.[taxYear] || '';
