@@ -1,14 +1,9 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
-import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import PoliciesPage from '@/pages/Policies.page';
-import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import {
-  createMockDispatch,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
   mockEmptyHookReturn,
@@ -21,14 +16,13 @@ vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
 }));
 
-// Mock the dispatch
-const mockDispatch = createMockDispatch();
-
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual('react-redux');
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useDispatch: () => mockDispatch,
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -92,13 +86,6 @@ vi.mock('@/components/IngredientReadView', () => ({
 }));
 
 describe('PoliciesPage', () => {
-  const mockStore = configureStore({
-    reducer: {
-      flow: flowReducer,
-      metadata: () => ({ currentCountry: 'us' }),
-    },
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     (useUserPolicies as any).mockReturnValue(mockDefaultHookReturn);
@@ -106,11 +93,7 @@ describe('PoliciesPage', () => {
 
   test('given policies data when rendering then displays policies page', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <PoliciesPage />
-      </Provider>
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText('Your saved policies')).toBeInTheDocument();
@@ -124,9 +107,9 @@ describe('PoliciesPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then
@@ -139,9 +122,9 @@ describe('PoliciesPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then
@@ -152,16 +135,16 @@ describe('PoliciesPage', () => {
     // Given
     const user = userEvent.setup();
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // When
     await user.click(screen.getByRole('button', { name: /Build Policy/i }));
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(setFlow(PolicyCreationFlow));
+    expect(mockNavigate).toHaveBeenCalledWith('create');
   });
 
   test('given no policies when rendering then displays empty state', () => {
@@ -170,9 +153,9 @@ describe('PoliciesPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then
@@ -183,9 +166,9 @@ describe('PoliciesPage', () => {
     // Given
     const user = userEvent.setup();
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // When
@@ -199,9 +182,9 @@ describe('PoliciesPage', () => {
   test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then
@@ -211,9 +194,9 @@ describe('PoliciesPage', () => {
   test('given policy with parameter changes then displays correct count', () => {
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then
@@ -235,9 +218,9 @@ describe('PoliciesPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then
@@ -263,9 +246,9 @@ describe('PoliciesPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then
@@ -276,9 +259,9 @@ describe('PoliciesPage', () => {
   test('given column configuration then does not include connections column', () => {
     // When
     render(
-      <Provider store={mockStore}>
+      
         <PoliciesPage />
-      </Provider>
+      
     );
 
     // Then

@@ -1,14 +1,9 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
-import { ReportCreationFlow } from '@/flows/reportCreationFlow';
 import { useUserReports } from '@/hooks/useUserReports';
 import ReportsPage from '@/pages/Reports.page';
-import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import {
-  createMockDispatch,
   createMockNavigate,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
@@ -26,17 +21,8 @@ vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),
 }));
 
-// Mock the dispatch and navigate
-const mockDispatch = createMockDispatch();
+// Mock navigate
 const mockNavigate = createMockNavigate();
-
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual('react-redux');
-  return {
-    ...actual,
-    useDispatch: () => mockDispatch,
-  };
-});
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -114,13 +100,6 @@ vi.mock('@/components/IngredientReadView', () => ({
 }));
 
 describe('ReportsPage', () => {
-  const mockStore = configureStore({
-    reducer: {
-      flow: flowReducer,
-      metadata: () => ({ currentCountry: 'us' }),
-    },
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     mockNavigate.mockClear();
@@ -130,9 +109,9 @@ describe('ReportsPage', () => {
   test('given reports data when rendering then displays reports page', () => {
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -147,9 +126,9 @@ describe('ReportsPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -162,9 +141,9 @@ describe('ReportsPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -175,16 +154,16 @@ describe('ReportsPage', () => {
     // Given
     const user = userEvent.setup();
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // When
     await user.click(screen.getByRole('button', { name: /Build Report/i }));
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(setFlow(ReportCreationFlow));
+    expect(mockNavigate).toHaveBeenCalledWith('create');
   });
 
   test('given no reports when rendering then displays empty state', () => {
@@ -193,9 +172,9 @@ describe('ReportsPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -206,9 +185,9 @@ describe('ReportsPage', () => {
     // Given
     const user = userEvent.setup();
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // When
@@ -222,9 +201,9 @@ describe('ReportsPage', () => {
   test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -237,9 +216,9 @@ describe('ReportsPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -250,9 +229,9 @@ describe('ReportsPage', () => {
     // Given
     const user = userEvent.setup();
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // When - click the report link which navigates to output
@@ -268,9 +247,9 @@ describe('ReportsPage', () => {
   test('given reports data when rendering then report column displays as link with UserReport ID', () => {
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -298,9 +277,9 @@ describe('ReportsPage', () => {
 
     // When
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // Then
@@ -312,9 +291,9 @@ describe('ReportsPage', () => {
     // Given
     const user = userEvent.setup();
     render(
-      <Provider store={mockStore}>
+      
         <ReportsPage />
-      </Provider>
+      
     );
 
     // When

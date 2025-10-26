@@ -1,8 +1,5 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent, waitFor } from '@test-utils';
-import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import PopulationsPage from '@/pages/Populations.page';
@@ -29,6 +26,16 @@ vi.mock('@/hooks/useUserGeographic', () => ({
   useGeographicAssociationsByUser: vi.fn(),
 }));
 
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 // Mock the constants
 vi.mock('@/constants', () => ({
   MOCK_USER_ID: 'test-user-123',
@@ -37,28 +44,11 @@ vi.mock('@/constants', () => ({
 }));
 
 describe('PopulationsPage', () => {
-  let store: any;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     consoleMocks = setupMockConsole();
-
-    // Create a mock store with flow and metadata reducers
-    store = configureStore({
-      reducer: {
-        flow: (state = { current: null }, action: any) => {
-          if (action.type === 'flow/setFlow') {
-            return { ...state, current: action.payload };
-          }
-          return state;
-        },
-        metadata: (state = { economyOptions: { region: [] } }, _action: any) => state,
-      },
-    });
-
-    // Mock dispatch
-    vi.spyOn(store, 'dispatch');
 
     // Set default mock implementations
     (useUserHouseholds as any).mockReturnValue({
@@ -81,11 +71,7 @@ describe('PopulationsPage', () => {
   });
 
   const renderPage = () => {
-    return render(
-      <Provider store={store}>
-        <PopulationsPage />
-      </Provider>
-    );
+    return render(<PopulationsPage />);
   };
 
   describe('initial render', () => {
@@ -308,10 +294,7 @@ describe('PopulationsPage', () => {
       await user.click(buildButton);
 
       // Then
-      expect(store.dispatch).toHaveBeenCalledWith({
-        type: 'flow/setFlow',
-        payload: PopulationCreationFlow,
-      });
+      expect(mockNavigate).toHaveBeenCalledWith('create');
     });
 
     // NOTE: This behavior is a placeholder
