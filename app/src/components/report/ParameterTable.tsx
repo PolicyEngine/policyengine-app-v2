@@ -9,6 +9,42 @@ import {
 } from '@/utils/parameterLabels';
 import { colors, spacing, typography } from '@/designTokens';
 
+interface TableHeaderProps {
+  width: string;
+  align?: 'left' | 'right';
+  children: React.ReactNode;
+}
+
+function TableHeader({ width, align = 'left', children }: TableHeaderProps) {
+  return (
+    <Table.Th
+      style={{
+        width,
+        textAlign: align,
+      }}
+    >
+      {children}
+    </Table.Th>
+  );
+}
+
+interface TableCellProps {
+  align?: 'left' | 'right';
+  children: React.ReactNode;
+}
+
+function TableCell({ align = 'left', children }: TableCellProps) {
+  return (
+    <Table.Td
+      style={{
+        textAlign: align,
+      }}
+    >
+      {children}
+    </Table.Td>
+  );
+}
+
 interface ParameterTableProps {
   parameterNames: string[];
   parameters: Record<string, ParameterMetadata>;
@@ -55,61 +91,22 @@ export default function ParameterTable({
   return (
     <Box
       style={{
-        border: `1px solid ${colors.border.light}`,
-        borderRadius: spacing.radius.lg,
-        overflow: 'hidden',
-        backgroundColor: colors.white,
         marginTop: spacing.xl,
       }}
     >
-      <Table>
-        <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
+      <Table variant="parameterTable">
+        <Table.Thead>
           <Table.Tr>
-            <Table.Th
-              style={{
-                width: `${labelColumnWidth}%`,
-                fontSize: typography.fontSize.xs,
-                fontWeight: typography.fontWeight.medium,
-                color: colors.text.secondary,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                padding: `${spacing.md} ${spacing.lg}`,
-              }}
-            >
-              Parameter
-            </Table.Th>
+            <TableHeader width={`${labelColumnWidth}%`}>Parameter</TableHeader>
             {needsCurrentLawColumn && (
-              <Table.Th
-                style={{
-                  width: `${valueColumnWidth}%`,
-                  textAlign: 'right',
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.secondary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  padding: `${spacing.md} ${spacing.lg}`,
-                }}
-              >
+              <TableHeader width={`${valueColumnWidth}%`} align="right">
                 CURRENT LAW
-              </Table.Th>
+              </TableHeader>
             )}
             {columns.map((column, idx) => (
-              <Table.Th
-                key={idx}
-                style={{
-                  width: `${valueColumnWidth}%`,
-                  textAlign: 'right',
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.secondary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  padding: `${spacing.md} ${spacing.lg}`,
-                }}
-              >
+              <TableHeader key={idx} width={`${valueColumnWidth}%`} align="right">
                 {renderColumnHeader(column, idx)}
-              </Table.Th>
+              </TableHeader>
             ))}
           </Table.Tr>
         </Table.Thead>
@@ -125,7 +122,7 @@ export default function ParameterTable({
 
             return (
               <Table.Tr key={paramName}>
-                <Table.Td style={{ padding: `${spacing.md} ${spacing.lg}` }}>
+                <TableCell>
                   <Box>
                     <Text size="sm" fw={typography.fontWeight.medium}>
                       {displayLabel.split(' → ').map((part, i, arr) => (
@@ -149,39 +146,20 @@ export default function ParameterTable({
                       {paramName}
                     </Text>
                   </Box>
-                </Table.Td>
+                </TableCell>
                 {needsCurrentLawColumn && (
-                  <Table.Td
-                    style={{
-                      textAlign: 'right',
-                      padding: `${spacing.md} ${spacing.lg}`,
-                    }}
-                  >
-                    <Text
-                      size="sm"
-                      fw={typography.fontWeight.medium}
-                      c={colors.text.secondary}
-                    >
+                  <TableCell align="right">
+                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.secondary}>
                       {renderCurrentLawValue(paramName)}
                     </Text>
-                  </Table.Td>
+                  </TableCell>
                 )}
                 {columns.map((column, idx) => (
-                  <Table.Td
-                    key={idx}
-                    style={{
-                      textAlign: 'right',
-                      padding: `${spacing.md} ${spacing.lg}`,
-                    }}
-                  >
-                    <Text
-                      size="sm"
-                      fw={typography.fontWeight.medium}
-                      c={colors.text.primary}
-                    >
+                  <TableCell key={idx} align="right">
+                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
                       {renderColumnValue(column, paramName)}
                     </Text>
-                  </Table.Td>
+                  </TableCell>
                 ))}
               </Table.Tr>
             );
