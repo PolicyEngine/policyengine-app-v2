@@ -21,30 +21,12 @@ export default function FlowRouter({ flow, returnPath }: FlowRouterProps) {
   // Construct absolute path from countryId and returnPath
   const absoluteReturnPath = `/${countryId}/${returnPath}`;
 
-  // Effect 1: Initialize flow on mount, clear on unmount
+  // Initialize flow on mount
   useEffect(() => {
     dispatch(setFlow(flow));
     flowInitialized.current = true;
-
-    return () => {
-      dispatch(clearFlow());
-      flowInitialized.current = false;
-    };
-    // Flow is static per route, dispatch is stable
-    // Only run on mount/unmount to avoid cleanup race condition
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Effect 2: Navigate back when top-level flow completes
-  useEffect(() => {
-    // Only navigate if:
-    // - Flow was initialized (not initial render)
-    // - Flow is now cleared (completion)
-    // - Not in a subflow (flowStack empty)
-    if (flowInitialized.current && !currentFlow && flowStack.length === 0) {
-      navigate(absoluteReturnPath, { replace: true });
-    }
-  }, [currentFlow, flowStack, navigate, absoluteReturnPath]);
 
   return <FlowContainer />;
 }
