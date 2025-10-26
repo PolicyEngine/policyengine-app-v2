@@ -1,11 +1,13 @@
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { componentRegistry, flowRegistry } from '@/flows/registry';
 import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flowReducer';
 import { isComponentKey, isFlowKey, isNavigationObject } from '@/types/flow';
 
 export default function FlowContainer() {
-  const { currentFlow, currentFrame, flowStack } = useSelector((state: any) => state.flow);
+  const { currentFlow, currentFrame, flowStack, returnPath } = useSelector((state: any) => state.flow);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   if (!currentFlow || !currentFrame) {
     return <p>No flow available</p>;
@@ -65,7 +67,14 @@ export default function FlowContainer() {
 
   // Handle returning from a subflow
   const handleReturn = () => {
+    const isTopLevel = flowStack.length === 0;
     dispatch(returnFromFlow());
+    if (isTopLevel && returnPath) {
+      console.log(`[FlowContainer] Navigating to returnPath: ${returnPath}`);
+      
+      navigate(returnPath, { replace: true });
+    }
+    return;
   };
 
   // Get the component to render
