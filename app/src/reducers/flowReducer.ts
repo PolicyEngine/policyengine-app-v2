@@ -32,6 +32,11 @@ export const flowSlice = createSlice({
       state.returnPath = null;
     },
     setFlow: (state, action: PayloadAction<{ flow: Flow; returnPath?: string }>) => {
+      console.log('[FLOW REDUCER] ========== setFlow START ==========');
+      console.log('[FLOW REDUCER] New flow initialFrame:', action.payload.flow.initialFrame);
+      console.log('[FLOW REDUCER] returnPath:', action.payload.returnPath);
+      console.log('[FLOW REDUCER] Current frame before:', state.currentFrame);
+
       state.currentFlow = action.payload.flow;
       state.returnPath = action.payload.returnPath || null;
       // Set initial frame - if it's a component, use it; if it's a flow, handle separately
@@ -39,9 +44,17 @@ export const flowSlice = createSlice({
         state.currentFrame = action.payload.flow.initialFrame as ComponentKey;
       }
       state.flowStack = [];
+
+      console.log('[FLOW REDUCER] Current frame after:', state.currentFrame);
+      console.log('[FLOW REDUCER] ========== setFlow END ==========');
     },
     navigateToFrame: (state, action: PayloadAction<ComponentKey>) => {
+      console.log('[FLOW REDUCER] ========== navigateToFrame START ==========');
+      console.log('[FLOW REDUCER] Current frame:', state.currentFrame);
+      console.log('[FLOW REDUCER] New frame:', action.payload);
       state.currentFrame = action.payload;
+      console.log('[FLOW REDUCER] Frame updated to:', state.currentFrame);
+      console.log('[FLOW REDUCER] ========== navigateToFrame END ==========');
     },
     // Navigate to a subflow - pushes current state onto stack
     navigateToFlow: (state, action: PayloadAction<{ flow: Flow; returnFrame?: ComponentKey }>) => {

@@ -9,6 +9,10 @@ export default function FlowContainer() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  console.log('[FlowContainer] RENDER - currentFrame:', currentFrame);
+  console.log('[FlowContainer] RENDER - currentFlow:', currentFlow?.initialFrame);
+  console.log('[FlowContainer] RENDER - flowStack length:', flowStack?.length);
+
   if (!currentFlow || !currentFrame) {
     return <p>No flow available</p>;
   }
@@ -23,8 +27,16 @@ export default function FlowContainer() {
 
   // Handle navigation function that components can use
   const handleNavigate = (eventName: string) => {
+    console.log('[FlowContainer] ========== handleNavigate START ==========');
+    console.log('[FlowContainer] eventName:', eventName);
+    console.log('[FlowContainer] currentFlow:', currentFlow);
+    console.log('[FlowContainer] currentFrame:', currentFrame);
+
     const frameConfig = currentFlow.frames[currentFrame];
     const target = frameConfig.on[eventName];
+
+    console.log('[FlowContainer] frameConfig:', frameConfig);
+    console.log('[FlowContainer] target:', target);
 
     if (!target) {
       console.error(
@@ -35,12 +47,14 @@ export default function FlowContainer() {
 
     // Handle special return keyword
     if (target === '__return__') {
+      console.log('[FlowContainer] Target is __return__, dispatching returnFromFlow');
       dispatch(returnFromFlow());
       return;
     }
 
     // Handle navigation object with flow and returnTo
     if (isNavigationObject(target)) {
+      console.log('[FlowContainer] Target is navigation object, dispatching navigateToFlow');
       const targetFlow = flowRegistry[target.flow];
       dispatch(
         navigateToFlow({
@@ -53,16 +67,20 @@ export default function FlowContainer() {
 
     // Handle string targets (existing logic)
     if (typeof target === 'string') {
+      console.log('[FlowContainer] Target is string:', target);
       // Check if target is a flow or component
       if (isFlowKey(target)) {
+        console.log('[FlowContainer] Target is flow key, dispatching navigateToFlow');
         const targetFlow = flowRegistry[target];
         dispatch(navigateToFlow({ flow: targetFlow }));
       } else if (isComponentKey(target)) {
+        console.log('[FlowContainer] Target is component key, dispatching navigateToFrame');
         dispatch(navigateToFrame(target));
       } else {
         console.error(`Unknown target type: ${target}`);
       }
     }
+    console.log('[FlowContainer] ========== handleNavigate END ==========');
   };
 
   // Handle returning from a subflow

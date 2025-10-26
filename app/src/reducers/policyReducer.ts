@@ -1,4 +1,9 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+// Helper to detect Immer Proxy objects
+function isProxy(obj: any): boolean {
+  return obj != null && typeof obj === 'object' && obj.constructor?.name === 'DraftObject';
+}
 import { Policy } from '@/types/ingredients/Policy';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -37,9 +42,26 @@ export const policySlice = createSlice({
       }>
     ) => {
       const { position, policy } = action.payload;
+      const currentPolicy = state.policies[position];
 
-      console.log('[POLICY REDUCER] createPolicyAtPosition called:', { position, policy });
-      console.log('[POLICY REDUCER] Current policy at position:', state.policies[position]);
+      console.log('[POLICY REDUCER] ========== createPolicyAtPosition START ==========');
+      console.log('[POLICY REDUCER] Action payload:', { position, policy });
+      console.log('[POLICY REDUCER] Full state.policies:', state.policies);
+      console.log('[POLICY REDUCER] Current policy at position:', currentPolicy);
+      console.log('[POLICY REDUCER] typeof currentPolicy:', typeof currentPolicy);
+      console.log('[POLICY REDUCER] currentPolicy === null:', currentPolicy === null);
+      console.log('[POLICY REDUCER] currentPolicy === undefined:', currentPolicy === undefined);
+      console.log('[POLICY REDUCER] isProxy(currentPolicy):', isProxy(currentPolicy));
+      console.log('[POLICY REDUCER] !currentPolicy:', !currentPolicy);
+
+      if (currentPolicy) {
+        console.log('[POLICY REDUCER] Policy contents:', {
+          id: currentPolicy.id,
+          label: currentPolicy.label,
+          parametersLength: currentPolicy.parameters?.length,
+          isCreated: currentPolicy.isCreated,
+        });
+      }
 
       // Only create if no policy exists at this position
       if (!state.policies[position]) {
@@ -52,9 +74,12 @@ export const policySlice = createSlice({
         };
         console.log('[POLICY REDUCER] Creating new policy:', newPolicy);
         state.policies[position] = newPolicy;
+        console.log('[POLICY REDUCER] After assignment, state.policies[position]:', state.policies[position]);
+        console.log('[POLICY REDUCER] After assignment, isProxy?:', isProxy(state.policies[position]));
       } else {
         console.log('[POLICY REDUCER] Policy already exists, preserving existing data');
       }
+      console.log('[POLICY REDUCER] ========== createPolicyAtPosition END ==========');
     },
 
     // Update policy at position
@@ -65,7 +90,14 @@ export const policySlice = createSlice({
         updates: Partial<Policy>;
       }>
     ) => {
+      console.log('[POLICY REDUCER] ========== updatePolicyAtPosition START ==========');
+      console.log('[POLICY REDUCER] Position:', action.payload.position);
+      console.log('[POLICY REDUCER] Updates:', action.payload.updates);
+
       const policy = state.policies[action.payload.position];
+      console.log('[POLICY REDUCER] Current policy:', policy);
+      console.log('[POLICY REDUCER] isProxy(policy)?:', isProxy(policy));
+
       if (!policy) {
         throw new Error(
           `Cannot update policy at position ${action.payload.position}: no policy exists at that position`
@@ -75,12 +107,18 @@ export const policySlice = createSlice({
         ...policy,
         ...action.payload.updates,
       };
+      console.log('[POLICY REDUCER] Updated policy:', state.policies[action.payload.position]);
+      console.log('[POLICY REDUCER] ========== updatePolicyAtPosition END ==========');
     },
 
     // Add parameter to policy at position
     addPolicyParamAtPosition: (state, action: PayloadAction<PolicyParamAdditionPayload>) => {
       const { position, name, valueInterval } = action.payload;
       const policy = state.policies[position];
+
+      console.log('[POLICY REDUCER] addPolicyParamAtPosition - START');
+      console.log('[POLICY REDUCER] policy:', policy);
+      console.log('[POLICY REDUCER] policy is Proxy?', isProxy(policy));
 
       if (!policy) {
         throw new Error(
@@ -93,24 +131,46 @@ export const policySlice = createSlice({
       }
 
       let param = getParameterByName(policy, name);
+      console.log('[POLICY REDUCER] param:', param);
+      console.log('[POLICY REDUCER] param is Proxy?', isProxy(param));
+
       if (!param) {
         param = { name, values: [] };
         policy.parameters.push(param);
       }
 
+      console.log('[POLICY REDUCER] param.values before collection:', param.values);
+      console.log('[POLICY REDUCER] param.values is Proxy?', isProxy(param.values));
+
       const paramCollection = new ValueIntervalCollection(param.values);
       paramCollection.addInterval(valueInterval);
-      param.values = paramCollection.getIntervals();
+      const newValues = paramCollection.getIntervals();
+
+      console.log('[POLICY REDUCER] newValues from getIntervals():', newValues);
+      console.log('[POLICY REDUCER] newValues is Proxy?', isProxy(newValues));
+      console.log('[POLICY REDUCER] newValues[0] is Proxy?', newValues.length > 0 && isProxy(newValues[0]));
+
+      param.values = newValues;
+      console.log('[POLICY REDUCER] addPolicyParamAtPosition - END');
     },
 
     // Clear policy at position
     clearPolicyAtPosition: (state, action: PayloadAction<0 | 1>) => {
+      console.log('[POLICY REDUCER] ========== clearPolicyAtPosition START ==========');
+      console.log('[POLICY REDUCER] Clearing position:', action.payload);
+      console.log('[POLICY REDUCER] Policy before clear:', state.policies[action.payload]);
       state.policies[action.payload] = null;
+      console.log('[POLICY REDUCER] Policy after clear:', state.policies[action.payload]);
+      console.log('[POLICY REDUCER] ========== clearPolicyAtPosition END ==========');
     },
 
     // Clear all policies
     clearAllPolicies: (state) => {
+      console.log('[POLICY REDUCER] ========== clearAllPolicies START ==========');
+      console.log('[POLICY REDUCER] Policies before clear:', state.policies);
       state.policies = [null, null];
+      console.log('[POLICY REDUCER] Policies after clear:', state.policies);
+      console.log('[POLICY REDUCER] ========== clearAllPolicies END ==========');
     },
   },
 });
