@@ -72,7 +72,11 @@ export const makeGetFieldOptions = () =>
       const fieldVariable = variables?.[fieldName];
 
       // Check if the variable has possibleValues (array format from API)
-      if (fieldVariable && fieldVariable.possibleValues && Array.isArray(fieldVariable.possibleValues)) {
+      if (
+        fieldVariable &&
+        fieldVariable.possibleValues &&
+        Array.isArray(fieldVariable.possibleValues)
+      ) {
         return fieldVariable.possibleValues.map((option: { value: string; label: string }) => ({
           value: option.value,
           label: option.label,
@@ -95,7 +99,11 @@ export const getFieldOptions = (state: RootState, fieldName: string) => {
 // Check if a field should be a dropdown based on metadata
 export const isDropdownField = (state: RootState, fieldName: string): boolean => {
   const fieldVariable = state.metadata.variables?.[fieldName];
-  return !!(fieldVariable && fieldVariable.possibleValues && Array.isArray(fieldVariable.possibleValues));
+  return !!(
+    fieldVariable &&
+    fieldVariable.possibleValues &&
+    Array.isArray(fieldVariable.possibleValues)
+  );
 };
 
 // Get user-friendly label for field

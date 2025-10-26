@@ -101,8 +101,8 @@ vi.mock('@/libs/metadataUtils', () => ({
     };
     return labels[field] || field;
   },
-  isDropdownField: (state: any, field: string) => field === 'state_code',
-  getFieldOptions: (state: any, field: string) => mockFieldOptions,
+  isDropdownField: (_state: any, field: string) => field === 'state_code',
+  getFieldOptions: (_state: any, _field: string) => mockFieldOptions,
 }));
 
 describe('HouseholdBuilderFrame', () => {

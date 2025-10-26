@@ -422,8 +422,12 @@ export default function HouseholdBuilderFrame({
     // Get formatting for age and employment_income
     const ageVariable = variables?.age;
     const employmentIncomeVariable = variables?.employment_income;
-    const ageFormatting = ageVariable ? getInputFormattingProps(ageVariable) : { thousandSeparator: ',' };
-    const incomeFormatting = employmentIncomeVariable ? getInputFormattingProps(employmentIncomeVariable) : { thousandSeparator: ',' };
+    const ageFormatting = ageVariable
+      ? getInputFormattingProps(ageVariable)
+      : { thousandSeparator: ',' };
+    const incomeFormatting = employmentIncomeVariable
+      ? getInputFormattingProps(employmentIncomeVariable)
+      : { thousandSeparator: ',' };
 
     return (
       <Stack gap="md">
@@ -450,7 +454,8 @@ export default function HouseholdBuilderFrame({
           />
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', taxYear) || 0
+              HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', taxYear) ||
+              0
             }
             onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
             min={0}
@@ -508,8 +513,12 @@ export default function HouseholdBuilderFrame({
     // Get formatting for age and employment_income
     const ageVariable = variables?.age;
     const employmentIncomeVariable = variables?.employment_income;
-    const ageFormatting = ageVariable ? getInputFormattingProps(ageVariable) : { thousandSeparator: ',' };
-    const incomeFormatting = employmentIncomeVariable ? getInputFormattingProps(employmentIncomeVariable) : { thousandSeparator: ',' };
+    const ageFormatting = ageVariable
+      ? getInputFormattingProps(ageVariable)
+      : { thousandSeparator: ',' };
+    const incomeFormatting = employmentIncomeVariable
+      ? getInputFormattingProps(employmentIncomeVariable)
+      : { thousandSeparator: ',' };
 
     const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
 

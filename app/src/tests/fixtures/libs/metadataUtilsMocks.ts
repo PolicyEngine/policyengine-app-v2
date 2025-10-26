@@ -1,6 +1,6 @@
-import type { MetadataApiPayload } from '@/types/metadata';
-import type { RootState } from '@/store';
 import { transformMetadataPayload } from '@/libs/metadataUtils';
+import type { RootState } from '@/store';
+import type { MetadataApiPayload } from '@/types/metadata';
 
 export const TEST_FIELD_NAMES = {
   STATE_NAME: 'state_name',
@@ -88,7 +88,9 @@ export const mockMinimalPayload = (): MetadataApiPayload => ({
 });
 
 // Helper to create a mock RootState with metadata for testing
-export const mockStateWithMetadata = (overrides?: Partial<MetadataApiPayload>): Partial<RootState> => {
+export const mockStateWithMetadata = (
+  overrides?: Partial<MetadataApiPayload>
+): Partial<RootState> => {
   const payload = mockMetadataPayload(overrides);
   const metadata = transformMetadataPayload(payload, 'us');
 

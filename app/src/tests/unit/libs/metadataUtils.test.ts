@@ -5,6 +5,7 @@ import {
   isDropdownField,
   transformMetadataPayload,
 } from '@/libs/metadataUtils';
+import type { RootState } from '@/store';
 import {
   EXPECTED_LABELS,
   mockMetadataPayload,
@@ -12,7 +13,6 @@ import {
   mockStateWithMetadata,
   TEST_FIELD_NAMES,
 } from '@/tests/fixtures/libs/metadataUtilsMocks';
-import type { RootState } from '@/store';
 
 describe('metadataUtils', () => {
   describe('isDropdownField', () => {
