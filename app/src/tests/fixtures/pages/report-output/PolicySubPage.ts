@@ -29,7 +29,7 @@ export const mockParameterMetadata = {
   },
   [TEST_PARAMETER_NAMES.TEST_RATE]: {
     label: 'Test Rate',
-    unit: '%',
+    unit: '/1',
     type: 'parameter',
     parameter: TEST_PARAMETER_NAMES.TEST_RATE,
   },
