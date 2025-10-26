@@ -5,7 +5,6 @@ import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
-import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -56,9 +55,7 @@ const router = createBrowserRouter(
               children: [
                 {
                   index: true,
-                  // TODO: Move HomePage out of Layout once actual static homepage is merged
-                  // Currently HomePage has calculator navigation buttons so needs Layout
-                  element: <HomePage />,
+                  element: <Navigate to="reports" replace />,
                 },
                 {
                   path: 'reports',
