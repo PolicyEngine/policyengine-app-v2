@@ -1,5 +1,5 @@
 // Components submodule for Mantine theme
-import { AppShell, Card, Container, Title } from '@mantine/core';
+import { AppShell, Card, Container, Table, Title } from '@mantine/core';
 import { colors, spacing, typography } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -279,6 +279,37 @@ export const themeComponents = {
       navbar: {
         padding: spacing.appShell.navbar.padding,
       },
+    },
+  }),
+  Table: Table.extend({
+    styles: (_theme: any, params: any) => {
+      // Parameter table variant - for policy/dynamics parameter tables
+      if (params.variant === 'parameterTable') {
+        return {
+          table: {
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: spacing.radius.lg,
+            overflow: 'hidden',
+            backgroundColor: colors.white,
+          },
+          thead: {
+            backgroundColor: colors.gray[50],
+          },
+          th: {
+            fontSize: typography.fontSize.xs,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.text.secondary,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            padding: `${spacing.md} ${spacing.lg}`,
+          },
+          td: {
+            padding: `${spacing.md} ${spacing.lg}`,
+          },
+        };
+      }
+
+      return {};
     },
   }),
 };

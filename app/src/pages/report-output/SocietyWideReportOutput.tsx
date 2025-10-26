@@ -1,14 +1,32 @@
 import { useMemo } from 'react';
-import { useParams } from 'react-router-dom';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
-import { useUserReportById } from '@/hooks/useUserReports';
 import type { CalcStartConfig } from '@/types/calculation';
+import type { Geography } from '@/types/ingredients/Geography';
+import type { Policy } from '@/types/ingredients/Policy';
+import type { Report } from '@/types/ingredients/Report';
+import type { Simulation } from '@/types/ingredients/Simulation';
+import type { UserPolicy } from '@/types/ingredients/UserPolicy';
+import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
 import OverviewSubPage from './OverviewSubPage';
+import PolicySubPage from './PolicySubPage';
+import PopulationSubPage from './PopulationSubPage';
+
+interface SocietyWideReportOutputProps {
+  reportId: string;
+  subpage?: string;
+  report?: Report;
+  simulations?: Simulation[];
+  userSimulations?: UserSimulation[];
+  userPolicies?: UserPolicy[];
+  policies?: Policy[];
+  geographies?: Geography[];
+}
 
 /**
  * Society-wide report output page
@@ -17,17 +35,15 @@ import OverviewSubPage from './OverviewSubPage';
  * This is the same as the societyWide branch of ReportOutput.page.tsx,
  * just isolated into its own component for clarity.
  */
-export function SocietyWideReportOutput() {
-  const { reportId } = useParams<{ reportId: string }>();
-
-  // Fetch report and simulations
-  const {
-    report,
-    simulations,
-    isLoading: dataLoading,
-    error: dataError,
-  } = useUserReportById(reportId!);
-
+export function SocietyWideReportOutput({
+  reportId: _reportId,
+  subpage = 'overview',
+  report,
+  simulations,
+  userPolicies,
+  policies,
+  geographies,
+}: SocietyWideReportOutputProps) {
   // Get calculation status for report
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
 
@@ -77,14 +93,9 @@ export function SocietyWideReportOutput() {
     isComplete: calcStatus.isComplete,
   });
 
-  // Show loading state while fetching data
-  if (dataLoading) {
-    return <LoadingPage message="Loading report..." />;
-  }
-
-  // Show error if data failed to load
-  if (dataError || !report) {
-    return <ErrorPage error={dataError || new Error('Report not found')} />;
+  // Show error if no report data
+  if (!report) {
+    return <ErrorPage error={new Error('Report not found')} />;
   }
 
   // Show loading if calculation status is still initializing
@@ -109,7 +120,33 @@ export function SocietyWideReportOutput() {
   if (calcStatus.isComplete && calcStatus.result) {
     const output = calcStatus.result as SocietyWideOutput;
 
-    return <OverviewSubPage output={output} outputType="societyWide" />;
+    // Route to appropriate SubPage based on subpage param
+    switch (subpage) {
+      case 'overview':
+        return <OverviewSubPage output={output} outputType="societyWide" />;
+
+      case 'policy':
+        return (
+          <PolicySubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
+        );
+
+      case 'population':
+        return (
+          <PopulationSubPage
+            baselineSimulation={simulations?.[0]}
+            reformSimulation={simulations?.[1]}
+            geographies={geographies}
+          />
+        );
+
+      case 'dynamics':
+        return (
+          <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
+        );
+
+      default:
+        return <NotFoundSubPage />;
+    }
   }
 
   // No output yet

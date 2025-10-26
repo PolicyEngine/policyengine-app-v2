@@ -534,6 +534,8 @@ export const useUserReportById = (userReportId: string) => {
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
 
+  console.log('[useUserReportById] householdAssociations', householdAssociations);
+
   console.log('[useUserReportById] finalReport', finalReport);
 
   console.log(
@@ -572,9 +574,61 @@ export const useUserReportById = (userReportId: string) => {
 
   const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
 
+  console.log('[useUserReportById] households', households);
+  console.log(
+    '[useUserReportById] type of household IDs',
+    householdIds.map((id) => typeof id)
+  );
+  console.log(
+    `[useUserReportById] type of householdAssociations.householdId`,
+    householdAssociations?.map((ha) => ({ id: ha.householdId, type: typeof ha.householdId }))
+  );
+
   const userHouseholds = householdAssociations?.filter((ha) =>
     households.some((h) => h.id === ha.householdId)
   );
+
+  console.log('[useUserReportById] userHouseholds post-filter', userHouseholds);
+
+  // Step 7: Get geography data from simulations
+  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+
+  console.log('Geography Construction Debug:', {
+    geographyOptions,
+    optionNames: geographyOptions?.map((r) => r.name),
+    simulations,
+    geographySimulations: simulations.filter((s) => s.populationType === 'geography'),
+  });
+
+  const geographies: Geography[] = [];
+  simulations.forEach((sim) => {
+    if (sim.populationType === 'geography' && sim.populationId) {
+      console.log('Attempting to match geography:', {
+        populationId: sim.populationId,
+        availableNames: geographyOptions?.map((r) => r.name),
+      });
+
+      const regionData = geographyOptions?.find((r) => r.name === sim.populationId);
+
+      console.log('Geography match result:', {
+        populationId: sim.populationId,
+        foundMatch: !!regionData,
+        regionData,
+      });
+
+      if (regionData) {
+        geographies.push({
+          id: `${sim.countryId}-${sim.populationId}`,
+          countryId: sim.countryId,
+          scope: 'subnational' as const,
+          geographyId: sim.populationId,
+          name: regionData.label || regionData.name,
+        } as Geography);
+      }
+    }
+  });
+
+  console.log('Final geographies array:', geographies);
 
   return {
     userReport,
@@ -582,6 +636,7 @@ export const useUserReportById = (userReportId: string) => {
     simulations,
     policies,
     households,
+    geographies,
     userSimulations,
     userPolicies,
     userHouseholds,
