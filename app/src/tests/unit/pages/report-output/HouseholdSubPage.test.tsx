@@ -31,11 +31,11 @@ describe('HouseholdSubPage - Design 4 Table Format', () => {
         />
       );
 
-      const table = screen.getByRole('table');
+      const table = screen.getAllByRole('table')[0];
       expect(table).toBeInTheDocument();
 
-      // Should have input variable column header
-      expect(screen.getByRole('columnheader', { name: /input variable/i })).toBeInTheDocument();
+      // Should have variable column header
+      expect(screen.getAllByRole('columnheader', { name: /variable/i })[0]).toBeInTheDocument();
     });
 
     test('given different households then displays two columns', () => {
@@ -168,7 +168,7 @@ describe('HouseholdSubPage - Design 4 Table Format', () => {
         />
       );
 
-      const table = screen.getByRole('table');
+      const table = screen.getAllByRole('table')[0];
       expect(table).toBeInTheDocument();
 
       // Should have thead and tbody

@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { UserPolicyAdapter } from '@/adapters/UserPolicyAdapter';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '@/api/policyAssociation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-
-// Mock the adapter
-vi.mock('@/adapters/UserPolicyAdapter');
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -38,8 +34,6 @@ describe('ApiPolicyStore', () => {
   beforeEach(() => {
     store = new ApiPolicyStore();
     vi.clearAllMocks();
-    (UserPolicyAdapter.toCreationPayload as any).mockReturnValue(mockApiResponse);
-    (UserPolicyAdapter.fromApiResponse as any).mockReturnValue(mockPolicy);
   });
 
   afterEach(() => {

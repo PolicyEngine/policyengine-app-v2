@@ -174,8 +174,13 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
       if (!stored) return [];
 
       const parsed = JSON.parse(stored);
-      // Route through adapter to ensure type coercion (e.g., number IDs -> strings)
-      return parsed.map((data: any) => UserHouseholdAdapter.fromApiResponse(data));
+      // Data is already in application format (UserHouseholdPopulation), just ensure type coercion
+      return parsed.map((data: any) => ({
+        ...data,
+        id: String(data.id),
+        userId: String(data.userId),
+        householdId: String(data.householdId),
+      }));
     } catch {
       return [];
     }

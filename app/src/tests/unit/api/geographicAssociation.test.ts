@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { UserGeographicAdapter } from '@/adapters/UserGeographicAdapter';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-
-// Mock the adapter
-vi.mock('@/adapters/UserGeographicAdapter');
 
 // Mock fetch
 global.fetch = vi.fn();
@@ -33,8 +29,6 @@ describe('ApiGeographicStore', () => {
   beforeEach(() => {
     store = new ApiGeographicStore();
     vi.clearAllMocks();
-    (UserGeographicAdapter.toCreationPayload as any).mockReturnValue(mockApiResponse);
-    (UserGeographicAdapter.fromApiResponse as any).mockReturnValue(mockPopulation);
   });
 
   afterEach(() => {
@@ -175,7 +169,9 @@ describe('LocalStorageGeographicStore', () => {
     label: 'Test Geography 1',
     type: 'geography',
     scope: 'subnational',
+    id: 'geo-456',
     createdAt: '2025-01-01T00:00:00Z',
+    isCreated: true,
   };
 
   const mockPopulation2: UserGeographyPopulation = {
@@ -185,7 +181,9 @@ describe('LocalStorageGeographicStore', () => {
     label: 'Test Geography 2',
     type: 'geography',
     scope: 'subnational',
+    id: 'geo-789',
     createdAt: '2025-01-02T00:00:00Z',
+    isCreated: true,
   };
 
   beforeEach(() => {

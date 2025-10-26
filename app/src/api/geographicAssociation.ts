@@ -174,8 +174,13 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
       if (!stored) return [];
 
       const parsed = JSON.parse(stored);
-      // Route through adapter to ensure type coercion (e.g., number IDs -> strings)
-      return parsed.map((data: any) => UserGeographicAdapter.fromApiResponse(data));
+      // Data is already in application format (UserGeographyPopulation), just ensure type coercion
+      return parsed.map((data: any) => ({
+        ...data,
+        id: String(data.id),
+        userId: String(data.userId),
+        geographyId: String(data.geographyId),
+      }));
     } catch {
       return [];
     }
