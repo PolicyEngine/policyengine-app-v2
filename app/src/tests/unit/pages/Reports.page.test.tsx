@@ -108,11 +108,7 @@ describe('ReportsPage', () => {
 
   test('given reports data when rendering then displays reports page', () => {
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Your saved reports')).toBeInTheDocument();
@@ -125,11 +121,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockLoadingHookReturn);
 
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -140,11 +132,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockErrorHookReturn);
 
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText(`Error: ${ERROR_MESSAGES.FETCH_FAILED}`)).toBeInTheDocument();
@@ -153,11 +141,7 @@ describe('ReportsPage', () => {
   test('given user clicks build report button then dispatches report creation flow', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // When
     await user.click(screen.getByRole('button', { name: /Build Report/i }));
@@ -171,11 +155,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockEmptyHookReturn);
 
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Data count: 0')).toBeInTheDocument();
@@ -184,11 +164,7 @@ describe('ReportsPage', () => {
   test('given user searches then updates search value', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // When
     const searchInput = screen.getByPlaceholderText('Search');
@@ -200,11 +176,7 @@ describe('ReportsPage', () => {
 
   test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(useUserReports).toHaveBeenCalledWith(MOCK_USER_ID.toString());
@@ -215,11 +187,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(mockMixedStatusHookReturn);
 
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     expect(screen.getByText('Data count: 3')).toBeInTheDocument();
@@ -228,11 +196,7 @@ describe('ReportsPage', () => {
   test('given user clicks view output then navigates with UserReport ID', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // When - click the report link which navigates to output
     await user.click(screen.getByTestId('report-link'));
@@ -246,11 +210,7 @@ describe('ReportsPage', () => {
 
   test('given reports data when rendering then report column displays as link with UserReport ID', () => {
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     const reportLink = screen.getByTestId('report-link');
@@ -276,11 +236,7 @@ describe('ReportsPage', () => {
     (useUserReports as any).mockReturnValue(dataWithoutLabel);
 
     // When
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // Then
     const reportLink = screen.getByTestId('report-link');
@@ -290,11 +246,7 @@ describe('ReportsPage', () => {
   test('given report link clicked when clicked then does not trigger row selection', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      
-        <ReportsPage />
-      
-    );
+    render(<ReportsPage />);
 
     // When
     const reportLink = screen.getByTestId('report-link');

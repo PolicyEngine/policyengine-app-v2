@@ -5,7 +5,9 @@ import { navigateToFlow, navigateToFrame, returnFromFlow } from '@/reducers/flow
 import { isComponentKey, isFlowKey, isNavigationObject } from '@/types/flow';
 
 export default function FlowContainer() {
-  const { currentFlow, currentFrame, flowStack, returnPath } = useSelector((state: any) => state.flow);
+  const { currentFlow, currentFrame, flowStack, returnPath } = useSelector(
+    (state: any) => state.flow
+  );
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -89,10 +91,9 @@ export default function FlowContainer() {
     dispatch(returnFromFlow());
     if (isTopLevel && returnPath) {
       console.log(`[FlowContainer] Navigating to returnPath: ${returnPath}`);
-      
+
       navigate(returnPath, { replace: true });
     }
-    return;
   };
 
   // Get the component to render

@@ -38,7 +38,10 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
   }, [dispatch, isInSubflow]);
 
   useEffect(() => {
-    console.log('[SimulationCreationFrame] Create simulation effect - simulation exists?:', !!simulation);
+    console.log(
+      '[SimulationCreationFrame] Create simulation effect - simulation exists?:',
+      !!simulation
+    );
     // If there's no simulation at current position, create one
     if (!simulation) {
       console.log('[SimulationCreationFrame] Creating simulation at position', currentPosition);

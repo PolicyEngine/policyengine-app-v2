@@ -87,7 +87,10 @@ describe('flowReducer', () => {
     });
 
     test('given flow with non-string initial frame then sets flow but not frame', () => {
-      const state = flowReducer(INITIAL_STATE, setFlow({ flow: mockFlowWithNonStringInitialFrame }));
+      const state = flowReducer(
+        INITIAL_STATE,
+        setFlow({ flow: mockFlowWithNonStringInitialFrame })
+      );
 
       expect(state.currentFlow).toEqual(mockFlowWithNonStringInitialFrame);
       expect(state.currentFrame).toBeNull();

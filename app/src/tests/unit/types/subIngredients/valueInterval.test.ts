@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest';
-import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   MOCK_VALUE_INTERVAL,
   MOCK_VALUE_INTERVAL_2,
   MOCK_VALUE_INTERVAL_3,
   MOCK_VALUE_INTERVALS,
 } from '@/tests/fixtures/types/valueIntervalMocks';
+import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 describe('ValueIntervalCollection', () => {
   describe('Construction from Array', () => {

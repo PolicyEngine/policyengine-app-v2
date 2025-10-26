@@ -40,7 +40,10 @@ export const flowSlice = createSlice({
       state.currentFlow = action.payload.flow;
       state.returnPath = action.payload.returnPath || null;
       // Set initial frame - if it's a component, use it; if it's a flow, handle separately
-      if (action.payload.flow.initialFrame && typeof action.payload.flow.initialFrame === 'string') {
+      if (
+        action.payload.flow.initialFrame &&
+        typeof action.payload.flow.initialFrame === 'string'
+      ) {
         state.currentFrame = action.payload.flow.initialFrame as ComponentKey;
       }
       state.flowStack = [];

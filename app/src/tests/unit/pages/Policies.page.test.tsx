@@ -106,11 +106,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(mockLoadingHookReturn);
 
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -121,11 +117,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(mockErrorHookReturn);
 
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText(`Error: ${ERROR_MESSAGES.FETCH_FAILED}`)).toBeInTheDocument();
@@ -134,11 +126,7 @@ describe('PoliciesPage', () => {
   test('given user clicks build policy button then dispatches policy creation flow', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // When
     await user.click(screen.getByRole('button', { name: /Build Policy/i }));
@@ -152,11 +140,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(mockEmptyHookReturn);
 
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(screen.getByText('Data count: 0')).toBeInTheDocument();
@@ -165,11 +149,7 @@ describe('PoliciesPage', () => {
   test('given user searches then updates search value', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // When
     const searchInput = screen.getByPlaceholderText('Search');
@@ -181,11 +161,7 @@ describe('PoliciesPage', () => {
 
   test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     expect(useUserPolicies).toHaveBeenCalledWith(MOCK_USER_ID.toString());
@@ -193,11 +169,7 @@ describe('PoliciesPage', () => {
 
   test('given policy with parameter changes then displays correct count', () => {
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     const parameterChanges = screen.getByTestId('parameter-changes');
@@ -217,11 +189,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(singleChangeData);
 
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     const parameterChanges = screen.getByTestId('parameter-changes');
@@ -245,11 +213,7 @@ describe('PoliciesPage', () => {
     (useUserPolicies as any).mockReturnValue(dataWithoutLabel);
 
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     const policyName = screen.getByTestId('policy-name');
@@ -258,11 +222,7 @@ describe('PoliciesPage', () => {
 
   test('given column configuration then does not include connections column', () => {
     // When
-    render(
-      
-        <PoliciesPage />
-      
-    );
+    render(<PoliciesPage />);
 
     // Then
     // The component should render successfully without connections column

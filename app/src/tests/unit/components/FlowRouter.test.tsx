@@ -1,5 +1,8 @@
 import { render } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+// Import after mocks are set up
+import FlowRouter from '@/components/FlowRouter';
+import { setFlow } from '@/reducers/flowReducer';
 import {
   ABSOLUTE_RETURN_PATH,
   createMockFlowState,
@@ -34,10 +37,6 @@ vi.mock('react-redux', async () => {
     useSelector: (selector: any) => mocks.mockUseSelector(selector),
   };
 });
-
-// Import after mocks are set up
-import FlowRouter from '@/components/FlowRouter';
-import { setFlow } from '@/reducers/flowReducer';
 
 describe('FlowRouter', () => {
   beforeEach(() => {

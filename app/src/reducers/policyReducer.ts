@@ -1,12 +1,12 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Policy } from '@/types/ingredients/Policy';
+import { getParameterByName } from '@/types/subIngredients/parameter';
+import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 // Helper to detect Immer Proxy objects
 function isProxy(obj: any): boolean {
   return obj != null && typeof obj === 'object' && obj.constructor?.name === 'DraftObject';
 }
-import { Policy } from '@/types/ingredients/Policy';
-import { getParameterByName } from '@/types/subIngredients/parameter';
-import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 export interface PolicyParamAdditionPayload {
   position: 0 | 1;
@@ -74,8 +74,14 @@ export const policySlice = createSlice({
         };
         console.log('[POLICY REDUCER] Creating new policy:', newPolicy);
         state.policies[position] = newPolicy;
-        console.log('[POLICY REDUCER] After assignment, state.policies[position]:', state.policies[position]);
-        console.log('[POLICY REDUCER] After assignment, isProxy?:', isProxy(state.policies[position]));
+        console.log(
+          '[POLICY REDUCER] After assignment, state.policies[position]:',
+          state.policies[position]
+        );
+        console.log(
+          '[POLICY REDUCER] After assignment, isProxy?:',
+          isProxy(state.policies[position])
+        );
       } else {
         console.log('[POLICY REDUCER] Policy already exists, preserving existing data');
       }
@@ -148,7 +154,10 @@ export const policySlice = createSlice({
 
       console.log('[POLICY REDUCER] newValues from getIntervals():', newValues);
       console.log('[POLICY REDUCER] newValues is Proxy?', isProxy(newValues));
-      console.log('[POLICY REDUCER] newValues[0] is Proxy?', newValues.length > 0 && isProxy(newValues[0]));
+      console.log(
+        '[POLICY REDUCER] newValues[0] is Proxy?',
+        newValues.length > 0 && isProxy(newValues[0])
+      );
 
       param.values = newValues;
       console.log('[POLICY REDUCER] addPolicyParamAtPosition - END');

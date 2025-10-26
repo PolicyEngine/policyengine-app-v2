@@ -14,7 +14,7 @@ export const MOCK_VALUE_INTERVAL: ValueInterval = {
 export const MOCK_VALUE_INTERVAL_2: ValueInterval = {
   startDate: `${CURRENT_YEAR + 1}-01-01`,
   endDate: `${CURRENT_YEAR + 1}-12-31`,
-  value: 0.30,
+  value: 0.3,
 };
 
 export const MOCK_VALUE_INTERVAL_3: ValueInterval = {

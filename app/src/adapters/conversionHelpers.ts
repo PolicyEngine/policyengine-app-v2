@@ -1,12 +1,12 @@
 import { ReportOutput } from '@/types/ingredients/Report';
+import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
+import { Parameter } from '@/types/subIngredients/parameter';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 // Helper to detect Immer Proxy objects
 function isProxy(obj: any): boolean {
   return obj != null && typeof obj === 'object' && obj.constructor?.name === 'DraftObject';
 }
-import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadata/policyMetadata';
-import { Parameter } from '@/types/subIngredients/parameter';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 /**
  * Converts PolicyMetadataParamValues (with "startDate.endDate" keys) into ValueInterval array

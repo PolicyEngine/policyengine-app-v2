@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
-import FlowContainer from './FlowContainer';
 import { setFlow } from '@/reducers/flowReducer';
 import { Flow } from '@/types/flow';
+import FlowContainer from './FlowContainer';
 
 interface FlowRouterProps {
   flow: Flow;
@@ -24,16 +24,18 @@ export default function FlowRouter({ flow, returnPath }: FlowRouterProps) {
     console.log('[FlowRouter] Effect running - currentFlow:', currentFlow);
     console.log('[FlowRouter] Expected flow:', flow);
     if (!currentFlow) {
-      console.log('[FlowRouter] No current flow, initializing with returnPath:', absoluteReturnPath);
+      console.log(
+        '[FlowRouter] No current flow, initializing with returnPath:',
+        absoluteReturnPath
+      );
       dispatch(setFlow({ flow, returnPath: absoluteReturnPath }));
     } else {
       console.log('[FlowRouter] Flow already exists, skipping setFlow');
     }
     // Initialize flow once on mount, hence empty deps array
-    // This is not an anti-pattern; see 
+    // This is not an anti-pattern; see
     // https://react.dev/reference/react/useEffect#specifying-reactive-dependencies,
     // where React gives example of initializing on mount without dependencies.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return <FlowContainer />;

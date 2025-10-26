@@ -40,7 +40,7 @@ export default function PolicyCreationFrame({ onNavigate, isInSubflow }: FlowCom
     // If there's no policy at current position, create one
     if (!policy) {
       console.log('[PolicyCreationFrame] Creating policy at position', currentPosition);
-      dispatch(createPolicyAtPosition({ position: currentPosition}));
+      dispatch(createPolicyAtPosition({ position: currentPosition }));
     }
 
     return () => {
