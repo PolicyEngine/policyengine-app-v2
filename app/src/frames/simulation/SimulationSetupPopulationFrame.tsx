@@ -15,7 +15,7 @@ import {
   getPopulationSelectionSubtitle,
 } from '@/utils/reportPopulationLock';
 
-type SetupAction = 'createNew' | 'loadExisting';
+type SetupAction = 'createNew' | 'loadExisting' | 'copyExisting';
 
 export default function SimulationSetupPopulationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -52,46 +52,67 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
     setSelectedAction('loadExisting');
   }
 
-  function handleCopyPopulation() {
+  function handleClickCopyExisting() {
     if (!otherPopulation) return;
 
+    // Copy the population and set the action
     copyPopulationToPosition(dispatch, otherPopulation, currentPosition);
-
-    // Navigate back to SimulationSetupFrame
-    // The effect in SimulationSetupFrame will detect the population
-    // and automatically update the simulation with populationId
-    onNavigate('loadExisting');
+    setSelectedAction('copyExisting');
   }
 
   function handleClickSubmit() {
-    if (shouldLockToOtherPopulation) {
-      handleCopyPopulation();
-    } else if (selectedAction) {
+    if (selectedAction) {
       onNavigate(selectedAction);
     }
   }
 
-  const buttonPanelCards = [
+  // Define card arrays separately for clarity
+  const lockedCards = [
+    // Card 1: Load Existing Population (disabled)
     {
-      title: shouldLockToOtherPopulation
-        ? `Use population from ${getSimulationLabel(otherSimulation)}`
-        : 'Load Existing Population',
-      description: shouldLockToOtherPopulation
-        ? `Population: ${getPopulationLabel(otherPopulation)}`
-        : 'Use a population you have already created',
-      onClick: shouldLockToOtherPopulation ? handleCopyPopulation : handleClickExisting,
+      title: 'Load Existing Population',
+      description:
+        'Cannot load a different population when another simulation is already configured',
+      onClick: handleClickExisting,
+      isSelected: false,
+      isDisabled: true,
+    },
+    // Card 2: Create New Population (disabled)
+    {
+      title: 'Create New Population',
+      description:
+        'Cannot create a new population when another simulation is already configured',
+      onClick: handleClickCreateNew,
+      isSelected: false,
+      isDisabled: true,
+    },
+    // Card 3: Use Population from Other Simulation (enabled)
+    {
+      title: `Use population from ${getSimulationLabel(otherSimulation)}`,
+      description: `Population: ${getPopulationLabel(otherPopulation)}`,
+      onClick: handleClickCopyExisting,
+      isSelected: selectedAction === 'copyExisting',
+      isDisabled: false,
+    },
+  ];
+
+  const normalCards = [
+    {
+      title: 'Load Existing Population',
+      description: 'Use a population you have already created',
+      onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
     },
     {
       title: 'Create New Population',
-      description: shouldLockToOtherPopulation
-        ? 'Cannot create a new population when another simulation is already configured'
-        : 'Build a new population',
+      description: 'Build a new population',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
-      isDisabled: shouldLockToOtherPopulation ? true : undefined,
     },
   ];
+
+  // Select appropriate cards based on lock state
+  const buttonPanelCards = shouldLockToOtherPopulation ? lockedCards : normalCards;
 
   const viewTitle = getPopulationSelectionTitle(shouldLockToOtherPopulation);
   const viewSubtitle = getPopulationSelectionSubtitle(shouldLockToOtherPopulation);

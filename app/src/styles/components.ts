@@ -204,6 +204,19 @@ export const themeComponents = {
         };
       }
 
+      if (params.variant === 'buttonPanel--disabled') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'not-allowed',
+            opacity: 0.6,
+          },
+        };
+      }
+
       // Legacy selection variants - kept for backward compatibility
       if (params.variant === 'selection--active') {
         return {
