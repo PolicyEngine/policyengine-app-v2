@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { ActionIcon, Card, Group, Stack, Text } from '@mantine/core';
+import { ActionIcon, Card, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { spacing } from '@/designTokens';
 
 export interface CardListItem {
@@ -9,6 +9,8 @@ export interface CardListItem {
   onClick: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
+  tooltip?: string;
+  tooltipDelay?: number;
 }
 
 interface CardListVariantProps {
@@ -47,25 +49,44 @@ export default function CardListVariant({
     <Stack gap={spacing.md}>
       {/* Card list */}
       <Stack gap={spacing.sm}>
-        {paginatedItems.map((item: CardListItem, index: number) => (
-          <Card
-            key={index}
-            withBorder
-            component="button"
-            onClick={item.onClick}
-            disabled={item.isDisabled}
-            variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
-          >
-            <Stack gap={spacing.xs}>
-              <Text fw={600}>{item.title}</Text>
-              {item.subtitle && (
-                <Text size="sm" c="dimmed">
-                  {item.subtitle}
-                </Text>
-              )}
-            </Stack>
-          </Card>
-        ))}
+        {paginatedItems.map((item: CardListItem, index: number) => {
+          const cardElement = (
+            <Card
+              key={index}
+              withBorder
+              component="button"
+              onClick={item.onClick}
+              disabled={item.isDisabled}
+              variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
+            >
+              <Stack gap={spacing.xs}>
+                <Text fw={600}>{item.title}</Text>
+                {item.subtitle && (
+                  <Text size="sm" c="dimmed">
+                    {item.subtitle}
+                  </Text>
+                )}
+              </Stack>
+            </Card>
+          );
+
+          // Wrap with tooltip if tooltip text is provided
+          if (item.tooltip) {
+            return (
+              <Tooltip
+                key={index}
+                label={item.tooltip}
+                openDelay={item.tooltipDelay || 0}
+                multiline
+                w={300}
+              >
+                <div style={{ width: '100%' }}>{cardElement}</div>
+              </Tooltip>
+            );
+          }
+
+          return cardElement;
+        })}
       </Stack>
 
       {/* Pagination footer */}
