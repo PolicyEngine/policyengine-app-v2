@@ -4,13 +4,11 @@ import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import { transformConstituencyRelativeChange } from '@/adapters/constituency/constituencyDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
-import type { MetadataState } from '@/types/metadata';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_BLUE } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByConstituencyProps {
   output: SocietyWideReportOutput;
-  metadata: MetadataState;
 }
 
 /**
@@ -21,7 +19,6 @@ interface RelativeChangeByConstituencyProps {
  */
 export function RelativeChangeByConstituency({
   output,
-  metadata,
 }: RelativeChangeByConstituencyProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
@@ -38,11 +35,24 @@ export function RelativeChangeByConstituency({
     const outcomes = (output as ReportOutputSocietyWideUK).constituency_impact?.outcomes_by_region?.uk;
     if (!outcomes) return null;
 
+    console.log('[RelativeChangeByConstituency] outcomes_by_region.uk:', outcomes);
+
     const gainers =
       outcomes['Gain more than 5%'] + outcomes['Gain less than 5%'];
     const losers =
       outcomes['Lose more than 5%'] + outcomes['Lose less than 5%'];
     const noChange = outcomes['No change'];
+
+    console.log('[RelativeChangeByConstituency] Summary stats:', {
+      gainers,
+      losers,
+      noChange,
+      'Gain more than 5%': outcomes['Gain more than 5%'],
+      'Gain less than 5%': outcomes['Gain less than 5%'],
+      'Lose more than 5%': outcomes['Lose more than 5%'],
+      'Lose less than 5%': outcomes['Lose less than 5%'],
+      'No change': outcomes['No change'],
+    });
 
     return { gainers, losers, noChange };
   }, [output]);
@@ -69,7 +79,6 @@ export function RelativeChangeByConstituency({
 
       <HexagonalMap
         data={hexMapData}
-        countryId={metadata.currentCountry || 'uk'}
         config={{
           colorScale: {
             colors: DIVERGING_GRAY_BLUE.colors,

@@ -16,9 +16,6 @@ interface HexagonalMapProps {
 
   /** Configuration for the map */
   config?: Partial<HexMapConfig>;
-
-  /** Country ID for locale-specific formatting */
-  countryId?: string;
 }
 
 /**
@@ -45,11 +42,7 @@ interface HexagonalMapProps {
  * />
  * ```
  */
-export function HexagonalMap({
-  data,
-  config = {},
-  countryId = 'uk',
-}: HexagonalMapProps) {
+export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
   // Apply default configuration
   const fullConfig: HexMapConfig = useMemo(
     () => ({
@@ -78,6 +71,22 @@ export function HexagonalMap({
   const hoverText = positionedData.map((p) =>
     generateHoverText(p, fullConfig.formatValue!)
   );
+
+  // Calculate data bounds
+  const dataBounds = useMemo(() => {
+    if (xValues.length === 0) {
+      return { xMin: 0, xMax: 1, yMin: 0, yMax: 1 };
+    }
+    return {
+      xMin: Math.min(...xValues),
+      xMax: Math.max(...xValues),
+      yMin: Math.min(...yValues),
+      yMax: Math.max(...yValues),
+    };
+  }, [xValues, yValues]);
+
+
+
 
   // Calculate color range
   const colorRange = useMemo(() => {
@@ -109,14 +118,25 @@ export function HexagonalMap({
     },
   ];
 
-  // Plotly layout configuration
+  // Plotly layout configuration - Solution 3: constrain="domain"
   const plotLayout = {
     xaxis: {
+      domain: [0.05, 0.85],
+      range: [dataBounds.xMin - 1, dataBounds.xMax + 1],
+      scaleanchor: 'y',
+      scaleratio: 1.18,
+      constrain: 'domain',
+      constraintoward: 'center',
       visible: false,
       showgrid: false,
       showline: false,
     },
     yaxis: {
+      domain: [0.05, 0.95],
+      range: [dataBounds.yMin - 1, dataBounds.yMax + 1],
+      scaleratio: 1,
+      constrain: 'domain',
+      constraintoward: 'middle',
       visible: false,
       showgrid: false,
       showline: false,
@@ -131,6 +151,8 @@ export function HexagonalMap({
         outlinewidth: 0,
         thickness: 10,
         tickformat: fullConfig.colorScale!.tickFormat,
+        x: 0.95, // Position colorbar at 95% (in the 85%-100% area outside plot domain)
+        len: 0.8, // Colorbar height as fraction of plot area
       },
       colorscale: fullConfig.colorScale!.colors.map((color, i, arr) => [
         i / (arr.length - 1),
@@ -138,10 +160,10 @@ export function HexagonalMap({
       ]),
     },
     margin: {
-      t: 0,
+      t: 20,
       b: 80,
       l: 80,
-      r: 0,
+      r: 100,
     },
     ...fullConfig.layoutOverrides,
   } as Partial<Layout>;

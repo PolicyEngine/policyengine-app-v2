@@ -164,12 +164,12 @@ describe('HexagonalMap', () => {
     expect(container).toBeInTheDocument();
   });
 
-  test('given country ID then renders', () => {
+  test('given data then renders component', () => {
     // Given
     const data = MOCK_HEX_MAP_DATA;
 
     // When
-    const { container } = render(<HexagonalMap data={data} countryId="uk" />);
+    const { container } = render(<HexagonalMap data={data} />);
 
     // Then
     expect(container).toBeInTheDocument();

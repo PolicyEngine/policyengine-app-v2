@@ -206,4 +206,11 @@ export const MOCK_METADATA: MetadataState = {
     datasets: [],
   },
   currentLawId: 1,
+  basicInputs: [],
+  modelledPolicies: {
+    core: {},
+    filtered: {},
+  },
+  version: '1.0.0',
+  parameterTree: null,
 };
