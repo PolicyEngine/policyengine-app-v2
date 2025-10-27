@@ -19,9 +19,6 @@ interface SidebarTabsProps {
 
   /** Content to display for the active tab */
   children: ReactNode;
-
-  /** Optional minimum width for sidebar (default: 240px) */
-  sidebarMinWidth?: string;
 }
 
 /**
@@ -50,15 +47,13 @@ export function SidebarTabs({
   activeTab,
   onTabChange,
   children,
-  sidebarMinWidth = '240px',
 }: SidebarTabsProps) {
   return (
     <Group align="flex-start" gap={spacing.xl} style={{ flexWrap: 'nowrap' }}>
       {/* Left sidebar with vertical tabs */}
       <Box
         style={{
-          minWidth: sidebarMinWidth,
-          paddingRight: spacing.lg,
+          paddingRight: spacing.xl,
         }}
       >
         <Stack gap={4}>

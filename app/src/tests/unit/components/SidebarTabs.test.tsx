@@ -113,23 +113,7 @@ describe('SidebarTabs', () => {
     expect(screen.getByText('Only Tab')).toBeInTheDocument();
   });
 
-  test('given custom sidebar width then applies it', () => {
-    // Given
-    const onTabChange = vi.fn();
-
-    // When
-    const { container } = render(
-      <SidebarTabs tabs={MOCK_TABS} activeTab="tab1" onTabChange={onTabChange} sidebarMinWidth="300px">
-        <div>Content</div>
-      </SidebarTabs>
-    );
-
-    // Then
-    const sidebar = container.querySelector('[style*="min-width"]');
-    expect(sidebar).toHaveStyle({ minWidth: '300px' });
-  });
-
-  test('given no custom width then uses default', () => {
+  test('given sidebar then applies padding', () => {
     // Given
     const onTabChange = vi.fn();
 
@@ -141,7 +125,7 @@ describe('SidebarTabs', () => {
     );
 
     // Then
-    const sidebar = container.querySelector('[style*="min-width"]');
-    expect(sidebar).toHaveStyle({ minWidth: '240px' });
+    const sidebar = container.querySelector('[style*="padding-right"]');
+    expect(sidebar).toBeInTheDocument();
   });
 });
