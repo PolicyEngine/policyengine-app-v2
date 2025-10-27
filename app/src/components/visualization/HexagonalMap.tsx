@@ -118,10 +118,9 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
     },
   ];
 
-  // Plotly layout configuration - Solution 3: constrain="domain"
   const plotLayout = {
     xaxis: {
-      domain: [0.05, 0.85],
+      domain: [0.02, 0.88],
       range: [dataBounds.xMin - 1, dataBounds.xMax + 1],
       scaleanchor: 'y',
       scaleratio: 1.18,
@@ -132,7 +131,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       showline: false,
     },
     yaxis: {
-      domain: [0.05, 0.95],
+      domain: [0.02, 0.98],
       range: [dataBounds.yMin - 1, dataBounds.yMax + 1],
       scaleratio: 1,
       constrain: 'domain',
@@ -160,9 +159,9 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       ]),
     },
     margin: {
-      t: 20,
-      b: 80,
-      l: 80,
+      t: 10,
+      b: 40,
+      l: 20,
       r: 100,
     },
     ...fullConfig.layoutOverrides,
