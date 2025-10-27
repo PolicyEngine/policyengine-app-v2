@@ -51,7 +51,7 @@ describe('reportPopulationLock', () => {
       expect(result.shouldLock).toBe(false);
     });
 
-    it('given report mode with other simulation but population not created then returns shouldLock false', () => {
+    it('given report mode with other simulation having populationId then returns shouldLock true regardless of population state', () => {
       // Given
       const mode = 'report';
       const otherSimulation = mockSimulationWithPopulation('pop-123');
@@ -61,7 +61,22 @@ describe('reportPopulationLock', () => {
       const result = getPopulationLockConfig(mode, otherSimulation, otherPopulation);
 
       // Then
-      expect(result.shouldLock).toBe(false);
+      // Should lock based on simulation.populationId alone, not population.isCreated
+      expect(result.shouldLock).toBe(true);
+    });
+
+    it('given report mode with other simulation having populationId but null population then returns shouldLock true', () => {
+      // Given
+      const mode = 'report';
+      const otherSimulation = mockSimulationWithPopulation('pop-123');
+      const otherPopulation = null; // Existing simulation scenario - population not loaded in Redux
+
+      // When
+      const result = getPopulationLockConfig(mode, otherSimulation, otherPopulation);
+
+      // Then
+      // Should lock based on simulation.populationId alone, even if population is null
+      expect(result.shouldLock).toBe(true);
     });
 
     it('given report mode with other simulation having created population then returns shouldLock true', () => {

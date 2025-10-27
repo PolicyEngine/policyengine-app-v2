@@ -1,14 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { HouseholdAdapter } from '@/adapters';
 import FlowView from '@/components/common/FlowView';
+import { MOCK_USER_ID } from '@/constants';
+import { isGeographicMetadataWithAssociation, useUserGeographics } from '@/hooks/useUserGeographic';
+import { isHouseholdMetadataWithAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { selectCurrentPosition } from '@/reducers/activeSelectors';
-import { selectPopulationAtPosition } from '@/reducers/populationReducer';
+import {
+  createPopulationAtPosition,
+  selectPopulationAtPosition,
+  setGeographyAtPosition,
+  setHouseholdAtPosition,
+} from '@/reducers/populationReducer';
 import { selectActiveSimulationPosition } from '@/reducers/reportReducer';
 import { selectSimulationAtPosition } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { getPopulationLabel, getSimulationLabel } from '@/utils/populationCompatibility';
-import { copyPopulationToPosition } from '@/utils/populationCopy';
+import { findMatchingPopulation } from '@/utils/populationMatching';
 import {
   getPopulationLockConfig,
   getPopulationSelectionTitle,
@@ -19,6 +28,7 @@ type SetupAction = 'createNew' | 'loadExisting' | 'copyExisting';
 
 export default function SimulationSetupPopulationFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
+  const userId = MOCK_USER_ID.toString();
   const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
 
   // Get current mode and position information
@@ -37,12 +47,86 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
     selectPopulationAtPosition(state, otherPosition)
   );
 
+  // Fetch ALL user populations (mimicking the policy pattern)
+  const { data: householdData } = useUserHouseholds(userId);
+  const { data: geographicData } = useUserGeographics(userId);
+
   // Determine if population selection should be locked
   const { shouldLock: shouldLockToOtherPopulation } = getPopulationLockConfig(
     mode,
     otherSimulation,
     otherPopulation
   );
+
+  // Auto-select and populate the locked population when in locked mode
+  useEffect(() => {
+    if (!shouldLockToOtherPopulation || !otherSimulation?.populationId) {
+      return;
+    }
+
+    // Find the matching population from fetched data
+    const matchedPopulation = findMatchingPopulation(
+      otherSimulation,
+      householdData,
+      geographicData
+    );
+
+    if (!matchedPopulation) {
+      return;
+    }
+
+    // Populate Redux with the matched population (mimicking SimulationSelectExistingPopulationFrame)
+    if (isHouseholdMetadataWithAssociation(matchedPopulation)) {
+      // Handle household population
+      const householdToSet = HouseholdAdapter.fromMetadata(matchedPopulation.household!);
+
+      dispatch(
+        createPopulationAtPosition({
+          position: currentPosition,
+          population: {
+            label: matchedPopulation.association?.label || '',
+            isCreated: true,
+            household: null,
+            geography: null,
+          },
+        })
+      );
+
+      dispatch(
+        setHouseholdAtPosition({
+          position: currentPosition,
+          household: householdToSet,
+        })
+      );
+    } else if (isGeographicMetadataWithAssociation(matchedPopulation)) {
+      // Handle geographic population
+      dispatch(
+        createPopulationAtPosition({
+          position: currentPosition,
+          population: {
+            label: matchedPopulation.association?.label || '',
+            isCreated: true,
+            household: null,
+            geography: null,
+          },
+        })
+      );
+
+      dispatch(
+        setGeographyAtPosition({
+          position: currentPosition,
+          geography: matchedPopulation.geography!,
+        })
+      );
+    }
+  }, [
+    shouldLockToOtherPopulation,
+    otherSimulation,
+    householdData,
+    geographicData,
+    currentPosition,
+    dispatch,
+  ]);
 
   function handleClickCreateNew() {
     setSelectedAction('createNew');
@@ -53,10 +137,8 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
   }
 
   function handleClickCopyExisting() {
-    if (!otherPopulation) return;
-
-    // Copy the population and set the action
-    copyPopulationToPosition(dispatch, otherPopulation, currentPosition);
+    // The population is already populated in Redux by the useEffect above
+    // We just need to set the action and navigate
     setSelectedAction('copyExisting');
   }
 

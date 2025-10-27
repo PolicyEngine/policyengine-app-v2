@@ -17,7 +17,7 @@ export interface PopulationLockConfig {
  *
  * @param mode - The current mode ('standalone' | 'report')
  * @param otherSimulation - The other simulation in the report (if any)
- * @param otherPopulation - The population of the other simulation (if any)
+ * @param otherPopulation - The population of the other simulation (if any, used for display)
  * @returns Configuration object indicating if population should be locked
  */
 export function getPopulationLockConfig(
@@ -25,10 +25,7 @@ export function getPopulationLockConfig(
   otherSimulation: Simulation | null,
   otherPopulation: Population | null
 ): PopulationLockConfig {
-  const shouldLock =
-    mode === 'report' &&
-    !!otherSimulation?.populationId &&
-    !!otherPopulation?.isCreated;
+  const shouldLock = mode === 'report' && !!otherSimulation?.populationId;
 
   return {
     shouldLock,
