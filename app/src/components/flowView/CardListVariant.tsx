@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
-import { ActionIcon, Card, Group, Stack, Text, Tooltip } from '@mantine/core';
+import { ActionIcon, Card, Group, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
 
 export interface CardListItem {
@@ -9,8 +9,6 @@ export interface CardListItem {
   onClick: () => void;
   isSelected?: boolean;
   isDisabled?: boolean;
-  tooltip?: string;
-  tooltipDelay?: number;
 }
 
 interface CardListVariantProps {
@@ -50,14 +48,22 @@ export default function CardListVariant({
       {/* Card list */}
       <Stack gap={spacing.sm}>
         {paginatedItems.map((item: CardListItem, index: number) => {
-          const cardElement = (
+          // Determine variant based on disabled state first, then selection
+          let variant = 'cardList--inactive';
+          if (item.isDisabled) {
+            variant = 'cardList--disabled';
+          } else if (item.isSelected) {
+            variant = 'cardList--active';
+          }
+
+          return (
             <Card
               key={index}
               withBorder
               component="button"
-              onClick={item.onClick}
+              onClick={item.isDisabled ? undefined : item.onClick}
               disabled={item.isDisabled}
-              variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
+              variant={variant}
             >
               <Stack gap={spacing.xs}>
                 <Text fw={600}>{item.title}</Text>
@@ -69,23 +75,6 @@ export default function CardListVariant({
               </Stack>
             </Card>
           );
-
-          // Wrap with tooltip if tooltip text is provided
-          if (item.tooltip) {
-            return (
-              <Tooltip
-                key={index}
-                label={item.tooltip}
-                openDelay={item.tooltipDelay || 0}
-                multiline
-                w={300}
-              >
-                <div style={{ width: '100%' }}>{cardElement}</div>
-              </Tooltip>
-            );
-          }
-
-          return cardElement;
         })}
       </Stack>
 

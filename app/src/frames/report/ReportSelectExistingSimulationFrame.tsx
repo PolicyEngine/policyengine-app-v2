@@ -156,16 +156,19 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
         : `Policy: ${policyLabel} • Population: ${populationLabel}`;
     }
 
+    // If incompatible, add explanation to subtitle
+    if (!isCompatible) {
+      subtitle = subtitle
+        ? `${subtitle} • Incompatible: different population than configured simulation`
+        : 'Incompatible: different population than configured simulation';
+    }
+
     return {
       title,
       subtitle,
       onClick: () => handleSimulationSelect(enhancedSim),
       isSelected: localSimulation?.simulation?.id === simulation.id,
       isDisabled: !isCompatible,
-      tooltip: !isCompatible
-        ? 'This simulation uses a different population than the one already configured for this report'
-        : undefined,
-      tooltipDelay: 750,
     };
   });
 
