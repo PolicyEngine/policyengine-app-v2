@@ -5,8 +5,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { render as testRender, screen } from '@testing-library/react';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { calculationKeys } from '@/libs/queryKeys';
-import type { CalcStatus } from '@/types/calculation';
-import type { Report } from '@/types/ingredients/Report';
+import {
+  createMockPendingStatus,
+  createMockErrorStatus,
+} from '@/tests/fixtures/hooks/useCalcStatusSubscriptionMocks';
+import {
+  createMockReportWithOutput,
+  createMockReportWithoutOutput,
+  TEST_REPORT_IDS,
+  TEST_PROGRESS_VALUES,
+} from '@/tests/fixtures/components/report/ReportOutputTypeCellMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -34,22 +42,16 @@ describe('ReportOutputTypeCell', () => {
 
   it('given pending calculation then displays spinner and progress percentage', () => {
     // Given
-    const reportId = 'report-123';
-    const pendingStatus: CalcStatus = {
-      status: 'pending',
-      progress: 42,
-      message: 'Running society-wide calculation...',
-      metadata: {
-        calcId: reportId,
-        calcType: 'societyWide',
-        targetType: 'report',
-        startedAt: Date.now(),
-      },
-    };
-    queryClient.setQueryData(calculationKeys.byReportId(reportId), pendingStatus);
+    const pendingStatus = createMockPendingStatus(
+      TEST_REPORT_IDS.REPORT_123,
+      'societyWide',
+      TEST_PROGRESS_VALUES.LOW,
+      'Running society-wide calculation...'
+    );
+    queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_123), pendingStatus);
 
     // When
-    render(<ReportOutputTypeCell reportId={reportId} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_123} />);
 
     // Then
     expect(screen.getByText('42%')).toBeInTheDocument();
@@ -60,21 +62,16 @@ describe('ReportOutputTypeCell', () => {
 
   it('given pending calculation with no progress then displays spinner without percentage', () => {
     // Given
-    const reportId = 'report-456';
-    const pendingStatus: CalcStatus = {
-      status: 'pending',
-      message: 'Starting...',
-      metadata: {
-        calcId: reportId,
-        calcType: 'societyWide',
-        targetType: 'report',
-        startedAt: Date.now(),
-      },
-    };
-    queryClient.setQueryData(calculationKeys.byReportId(reportId), pendingStatus);
+    const pendingStatus = createMockPendingStatus(
+      TEST_REPORT_IDS.REPORT_456,
+      'societyWide',
+      undefined,
+      'Starting...'
+    );
+    queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_456), pendingStatus);
 
     // When
-    render(<ReportOutputTypeCell reportId={reportId} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_456} />);
 
     // Then
     const loader = document.querySelector('.mantine-Loader-root');
@@ -84,18 +81,10 @@ describe('ReportOutputTypeCell', () => {
 
   it('given complete report with output then displays Society-wide', () => {
     // Given
-    const reportId = 'report-789';
-    const report: Report = {
-      id: reportId,
-      countryId: 'us',
-      apiVersion: '1.0.0',
-      simulationIds: ['sim-1', 'sim-2'],
-      status: 'complete',
-      output: { some: 'economy data' },
-    } as Report;
+    const report = createMockReportWithOutput(TEST_REPORT_IDS.REPORT_789);
 
     // When
-    render(<ReportOutputTypeCell reportId={reportId} report={report} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_789} report={report} />);
 
     // Then
     expect(screen.getByText('Society-wide')).toBeInTheDocument();
@@ -103,28 +92,18 @@ describe('ReportOutputTypeCell', () => {
 
   it('given complete report without output then displays Not generated', () => {
     // Given
-    const reportId = 'report-999';
-    const report: Report = {
-      id: reportId,
-      countryId: 'us',
-      apiVersion: '1.0.0',
-      simulationIds: ['sim-1', 'sim-2'],
-      status: 'complete',
-    } as Report;
+    const report = createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_999);
 
     // When
-    render(<ReportOutputTypeCell reportId={reportId} report={report} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_999} report={report} />);
 
     // Then
     expect(screen.getByText('Not generated')).toBeInTheDocument();
   });
 
   it('given no cached status then displays Not generated', () => {
-    // Given
-    const reportId = 'report-no-cache';
-
     // When
-    render(<ReportOutputTypeCell reportId={reportId} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_NO_CACHE} />);
 
     // Then
     expect(screen.getByText('Not generated')).toBeInTheDocument();
@@ -132,21 +111,15 @@ describe('ReportOutputTypeCell', () => {
 
   it('given progress at 95% then displays rounded percentage', () => {
     // Given
-    const reportId = 'report-cap';
-    const pendingStatus: CalcStatus = {
-      status: 'pending',
-      progress: 95.4,
-      metadata: {
-        calcId: reportId,
-        calcType: 'societyWide',
-        targetType: 'report',
-        startedAt: Date.now(),
-      },
-    };
-    queryClient.setQueryData(calculationKeys.byReportId(reportId), pendingStatus);
+    const pendingStatus = createMockPendingStatus(
+      TEST_REPORT_IDS.REPORT_CAP,
+      'societyWide',
+      TEST_PROGRESS_VALUES.HIGH
+    );
+    queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_CAP), pendingStatus);
 
     // When
-    render(<ReportOutputTypeCell reportId={reportId} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_CAP} />);
 
     // Then
     expect(screen.getByText('95%')).toBeInTheDocument();
@@ -154,25 +127,11 @@ describe('ReportOutputTypeCell', () => {
 
   it('given error status then displays Not generated', () => {
     // Given
-    const reportId = 'report-error';
-    const errorStatus: CalcStatus = {
-      status: 'error',
-      error: {
-        code: 'SOCIETY_WIDE_CALC_ERROR',
-        message: 'Calculation failed',
-        retryable: true,
-      },
-      metadata: {
-        calcId: reportId,
-        calcType: 'societyWide',
-        targetType: 'report',
-        startedAt: Date.now(),
-      },
-    };
-    queryClient.setQueryData(calculationKeys.byReportId(reportId), errorStatus);
+    const errorStatus = createMockErrorStatus(TEST_REPORT_IDS.REPORT_ERROR, 'societyWide', 'Calculation failed');
+    queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_ERROR), errorStatus);
 
     // When
-    render(<ReportOutputTypeCell reportId={reportId} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_ERROR} />);
 
     // Then
     expect(screen.getByText('Not generated')).toBeInTheDocument();

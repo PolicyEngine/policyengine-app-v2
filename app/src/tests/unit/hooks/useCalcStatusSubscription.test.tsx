@@ -1,14 +1,21 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import {
   useCalcStatusSubscription,
   useMultiSimulationCalcStatus,
   useReportCalculationStatus,
 } from '@/hooks/useCalcStatusSubscription';
 import { calculationKeys } from '@/libs/queryKeys';
-import type { CalcStatus } from '@/types/calculation';
+import {
+  createMockCompleteStatus,
+  createMockErrorStatus,
+  createMockPendingStatus,
+  TEST_PROGRESS_VALUES,
+  TEST_REPORT_IDS,
+  TEST_SIMULATION_IDS,
+} from '@/tests/fixtures/hooks/useCalcStatusSubscriptionMocks';
 
 describe('useCalcStatusSubscription', () => {
   let queryClient: QueryClient;
@@ -30,32 +37,19 @@ describe('useCalcStatusSubscription', () => {
   describe('useCalcStatusSubscription', () => {
     it('given simulation ID with cached status then returns CalcStatus', () => {
       // Given
-      const simulationId = 'sim-123';
-      const cachedStatus: CalcStatus = {
-        status: 'complete',
-        result: { some: 'data' },
-        metadata: {
-          calcId: simulationId,
-          calcType: 'household',
-          targetType: 'simulation',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.bySimulationId(simulationId), cachedStatus);
+      const cachedStatus = createMockCompleteStatus(TEST_SIMULATION_IDS.SIM_123, 'household', { some: 'data' });
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_SIMULATION_IDS.SIM_123), cachedStatus);
 
       // When
-      const { result } = renderHook(() => useCalcStatusSubscription(simulationId), { wrapper });
+      const { result } = renderHook(() => useCalcStatusSubscription(TEST_SIMULATION_IDS.SIM_123), { wrapper });
 
       // Then
       expect(result.current).toEqual(cachedStatus);
     });
 
     it('given simulation ID with no cached status then returns undefined', () => {
-      // Given
-      const simulationId = 'sim-999';
-
       // When
-      const { result } = renderHook(() => useCalcStatusSubscription(simulationId), { wrapper });
+      const { result } = renderHook(() => useCalcStatusSubscription('sim-999'), { wrapper });
 
       // Then
       expect(result.current).toBeUndefined();
@@ -89,44 +83,30 @@ describe('useCalcStatusSubscription', () => {
 
     it('given simulation with pending status then returns calculating state', () => {
       // Given
-      const simulationIds = ['sim-1', 'sim-2'];
-      const pendingStatus: CalcStatus = {
-        status: 'pending',
-        progress: 45,
-        message: 'Calculating...',
-        metadata: {
-          calcId: 'sim-1',
-          calcType: 'household',
-          targetType: 'simulation',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.bySimulationId('sim-1'), pendingStatus);
+      const simulationIds = [TEST_SIMULATION_IDS.SIM_1, TEST_SIMULATION_IDS.SIM_2];
+      const pendingStatus = createMockPendingStatus(
+        TEST_SIMULATION_IDS.SIM_1,
+        'household',
+        TEST_PROGRESS_VALUES.LOW,
+        'Calculating...'
+      );
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_SIMULATION_IDS.SIM_1), pendingStatus);
 
       // When
       const { result } = renderHook(() => useMultiSimulationCalcStatus(simulationIds), { wrapper });
 
       // Then
       expect(result.current.isCalculating).toBe(true);
-      expect(result.current.progress).toBe(45);
+      expect(result.current.progress).toBe(TEST_PROGRESS_VALUES.LOW);
       expect(result.current.message).toBe('Calculating...');
       expect(result.current.calcStatus).toEqual(pendingStatus);
     });
 
     it('given simulation with complete status then returns not calculating state', () => {
       // Given
-      const simulationIds = ['sim-1'];
-      const completeStatus: CalcStatus = {
-        status: 'complete',
-        result: { data: 'result' },
-        metadata: {
-          calcId: 'sim-1',
-          calcType: 'household',
-          targetType: 'simulation',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.bySimulationId('sim-1'), completeStatus);
+      const simulationIds = [TEST_SIMULATION_IDS.SIM_1];
+      const completeStatus = createMockCompleteStatus(TEST_SIMULATION_IDS.SIM_1, 'household', { data: 'result' });
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_SIMULATION_IDS.SIM_1), completeStatus);
 
       // When
       const { result } = renderHook(() => useMultiSimulationCalcStatus(simulationIds), { wrapper });
@@ -138,37 +118,23 @@ describe('useCalcStatusSubscription', () => {
 
     it('given multiple simulations with first pending then returns first pending status', () => {
       // Given
-      const simulationIds = ['sim-1', 'sim-2', 'sim-3'];
-      const completeStatus: CalcStatus = {
-        status: 'complete',
-        result: {},
-        metadata: {
-          calcId: 'sim-1',
-          calcType: 'household',
-          targetType: 'simulation',
-          startedAt: Date.now(),
-        },
-      };
-      const pendingStatus: CalcStatus = {
-        status: 'pending',
-        progress: 75,
-        message: 'Processing...',
-        metadata: {
-          calcId: 'sim-2',
-          calcType: 'household',
-          targetType: 'simulation',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.bySimulationId('sim-1'), completeStatus);
-      queryClient.setQueryData(calculationKeys.bySimulationId('sim-2'), pendingStatus);
+      const simulationIds = [TEST_SIMULATION_IDS.SIM_1, TEST_SIMULATION_IDS.SIM_2, TEST_SIMULATION_IDS.SIM_3];
+      const completeStatus = createMockCompleteStatus(TEST_SIMULATION_IDS.SIM_1);
+      const pendingStatus = createMockPendingStatus(
+        TEST_SIMULATION_IDS.SIM_2,
+        'household',
+        TEST_PROGRESS_VALUES.HIGH,
+        'Processing...'
+      );
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_SIMULATION_IDS.SIM_1), completeStatus);
+      queryClient.setQueryData(calculationKeys.bySimulationId(TEST_SIMULATION_IDS.SIM_2), pendingStatus);
 
       // When
       const { result } = renderHook(() => useMultiSimulationCalcStatus(simulationIds), { wrapper });
 
       // Then
       expect(result.current.isCalculating).toBe(true);
-      expect(result.current.progress).toBe(75);
+      expect(result.current.progress).toBe(TEST_PROGRESS_VALUES.HIGH);
       expect(result.current.message).toBe('Processing...');
     });
   });
@@ -176,47 +142,31 @@ describe('useCalcStatusSubscription', () => {
   describe('useReportCalculationStatus', () => {
     it('given report ID with pending status then returns calculating state', () => {
       // Given
-      const reportId = 'report-123';
-      const pendingStatus: CalcStatus = {
-        status: 'pending',
-        progress: 60,
-        message: 'Running society-wide calculation...',
-        metadata: {
-          calcId: reportId,
-          calcType: 'societyWide',
-          targetType: 'report',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.byReportId(reportId), pendingStatus);
+      const pendingStatus = createMockPendingStatus(
+        TEST_REPORT_IDS.REPORT_123,
+        'societyWide',
+        TEST_PROGRESS_VALUES.MEDIUM,
+        'Running society-wide calculation...'
+      );
+      queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_123), pendingStatus);
 
       // When
-      const { result } = renderHook(() => useReportCalculationStatus(reportId), { wrapper });
+      const { result } = renderHook(() => useReportCalculationStatus(TEST_REPORT_IDS.REPORT_123), { wrapper });
 
       // Then
       expect(result.current.isCalculating).toBe(true);
-      expect(result.current.progress).toBe(60);
+      expect(result.current.progress).toBe(TEST_PROGRESS_VALUES.MEDIUM);
       expect(result.current.message).toBe('Running society-wide calculation...');
       expect(result.current.calcStatus).toEqual(pendingStatus);
     });
 
     it('given report ID with complete status then returns not calculating state', () => {
       // Given
-      const reportId = 'report-456';
-      const completeStatus: CalcStatus = {
-        status: 'complete',
-        result: { economyData: 'result' },
-        metadata: {
-          calcId: reportId,
-          calcType: 'societyWide',
-          targetType: 'report',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.byReportId(reportId), completeStatus);
+      const completeStatus = createMockCompleteStatus(TEST_REPORT_IDS.REPORT_456, 'societyWide', { economyData: 'result' });
+      queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_456), completeStatus);
 
       // When
-      const { result } = renderHook(() => useReportCalculationStatus(reportId), { wrapper });
+      const { result } = renderHook(() => useReportCalculationStatus(TEST_REPORT_IDS.REPORT_456), { wrapper });
 
       // Then
       expect(result.current.isCalculating).toBe(false);
@@ -226,25 +176,11 @@ describe('useCalcStatusSubscription', () => {
 
     it('given report ID with error status then returns not calculating state', () => {
       // Given
-      const reportId = 'report-789';
-      const errorStatus: CalcStatus = {
-        status: 'error',
-        error: {
-          code: 'SOCIETY_WIDE_CALC_ERROR',
-          message: 'Calculation failed',
-          retryable: true,
-        },
-        metadata: {
-          calcId: reportId,
-          calcType: 'societyWide',
-          targetType: 'report',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.byReportId(reportId), errorStatus);
+      const errorStatus = createMockErrorStatus(TEST_REPORT_IDS.REPORT_789, 'societyWide', 'Calculation failed');
+      queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_789), errorStatus);
 
       // When
-      const { result } = renderHook(() => useReportCalculationStatus(reportId), { wrapper });
+      const { result } = renderHook(() => useReportCalculationStatus(TEST_REPORT_IDS.REPORT_789), { wrapper });
 
       // Then
       expect(result.current.isCalculating).toBe(false);
@@ -252,11 +188,8 @@ describe('useCalcStatusSubscription', () => {
     });
 
     it('given report ID with no cached status then returns empty state', () => {
-      // Given
-      const reportId = 'report-999';
-
       // When
-      const { result } = renderHook(() => useReportCalculationStatus(reportId), { wrapper });
+      const { result } = renderHook(() => useReportCalculationStatus(TEST_REPORT_IDS.REPORT_999), { wrapper });
 
       // Then
       expect(result.current.isCalculating).toBe(false);
@@ -276,25 +209,19 @@ describe('useCalcStatusSubscription', () => {
 
     it('given report with progress at 95% then returns capped progress value', () => {
       // Given
-      const reportId = 'report-cap';
-      const pendingStatus: CalcStatus = {
-        status: 'pending',
-        progress: 95,
-        message: 'Almost complete...',
-        metadata: {
-          calcId: reportId,
-          calcType: 'societyWide',
-          targetType: 'report',
-          startedAt: Date.now(),
-        },
-      };
-      queryClient.setQueryData(calculationKeys.byReportId(reportId), pendingStatus);
+      const pendingStatus = createMockPendingStatus(
+        TEST_REPORT_IDS.REPORT_CAP,
+        'societyWide',
+        TEST_PROGRESS_VALUES.CAPPED,
+        'Almost complete...'
+      );
+      queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_CAP), pendingStatus);
 
       // When
-      const { result } = renderHook(() => useReportCalculationStatus(reportId), { wrapper });
+      const { result } = renderHook(() => useReportCalculationStatus(TEST_REPORT_IDS.REPORT_CAP), { wrapper });
 
       // Then
-      expect(result.current.progress).toBe(95);
+      expect(result.current.progress).toBe(TEST_PROGRESS_VALUES.CAPPED);
       expect(result.current.isCalculating).toBe(true);
     });
   });

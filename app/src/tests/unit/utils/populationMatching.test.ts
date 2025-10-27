@@ -1,40 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { findMatchingPopulation } from '@/utils/populationMatching';
-import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import type { UserGeographicMetadataWithAssociation } from '@/hooks/useUserGeographic';
+import {
+  createMockSimulation,
+  mockGeographicData,
+  mockHouseholdData,
+  TEST_GEOGRAPHY_IDS,
+  TEST_HOUSEHOLD_IDS,
+} from '@/tests/fixtures/utils/populationMatchingMocks';
 
 describe('populationMatching', () => {
   describe('findMatchingPopulation', () => {
-    const mockHouseholdData: UserHouseholdMetadataWithAssociation[] = [
-      {
-        association: { id: 'user-hh-1', userId: '1', householdId: 'hh-123', countryId: 'us' },
-        household: { id: 'hh-123', countryId: 'us', people: {} },
-        isLoading: false,
-        error: null,
-      },
-      {
-        association: { id: 'user-hh-2', userId: '1', householdId: 'hh-456', countryId: 'us' },
-        household: { id: 'hh-456', countryId: 'us', people: {} },
-        isLoading: false,
-        error: null,
-      },
-    ];
-
-    const mockGeographicData: UserGeographicMetadataWithAssociation[] = [
-      {
-        association: { id: 'user-geo-1', userId: '1', geographyId: 'geo-abc', countryId: 'us' },
-        geography: { id: 'geo-abc', name: 'California', countryId: 'us' },
-        isLoading: false,
-        error: null,
-      },
-      {
-        association: { id: 'user-geo-2', userId: '1', geographyId: 'geo-xyz', countryId: 'uk' },
-        geography: { id: 'geo-xyz', name: 'London', countryId: 'uk' },
-        isLoading: false,
-        error: null,
-      },
-    ];
 
     it('given null simulation then returns null', () => {
       // Given
@@ -49,12 +26,7 @@ describe('populationMatching', () => {
 
     it('given simulation without populationId then returns null', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
-        populationType: 'household',
-      } as Simulation;
+      const simulation = createMockSimulation(); // No populationId
 
       // When
       const result = findMatchingPopulation(simulation, mockHouseholdData, mockGeographicData);
@@ -65,13 +37,10 @@ describe('populationMatching', () => {
 
     it('given household simulation with matching populationId then returns matched household', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
+      const simulation = createMockSimulation({
         populationType: 'household',
-        populationId: 'hh-123',
-      } as Simulation;
+        populationId: TEST_HOUSEHOLD_IDS.HOUSEHOLD_123,
+      });
 
       // When
       const result = findMatchingPopulation(simulation, mockHouseholdData, mockGeographicData);
@@ -81,19 +50,16 @@ describe('populationMatching', () => {
       expect(result).not.toBeNull();
       if (result) {
         expect('household' in result).toBe(true);
-        expect((result as UserHouseholdMetadataWithAssociation).household?.id).toBe('hh-123');
+        expect((result as UserHouseholdMetadataWithAssociation).household?.id).toBe(TEST_HOUSEHOLD_IDS.HOUSEHOLD_123);
       }
     });
 
     it('given household simulation with non-matching populationId then returns null', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
+      const simulation = createMockSimulation({
         populationType: 'household',
-        populationId: 'hh-999',
-      } as Simulation;
+        populationId: TEST_HOUSEHOLD_IDS.NON_EXISTENT,
+      });
 
       // When
       const result = findMatchingPopulation(simulation, mockHouseholdData, mockGeographicData);
@@ -104,13 +70,10 @@ describe('populationMatching', () => {
 
     it('given geography simulation with matching populationId then returns matched geography', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
+      const simulation = createMockSimulation({
         populationType: 'geography',
-        populationId: 'geo-abc',
-      } as Simulation;
+        populationId: TEST_GEOGRAPHY_IDS.CALIFORNIA,
+      });
 
       // When
       const result = findMatchingPopulation(simulation, mockHouseholdData, mockGeographicData);
@@ -120,19 +83,16 @@ describe('populationMatching', () => {
       expect(result).not.toBeNull();
       if (result) {
         expect('geography' in result).toBe(true);
-        expect((result as UserGeographicMetadataWithAssociation).geography?.id).toBe('geo-abc');
+        expect((result as UserGeographicMetadataWithAssociation).geography?.id).toBe(TEST_GEOGRAPHY_IDS.CALIFORNIA);
       }
     });
 
     it('given geography simulation with non-matching populationId then returns null', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
+      const simulation = createMockSimulation({
         populationType: 'geography',
-        populationId: 'geo-999',
-      } as Simulation;
+        populationId: TEST_GEOGRAPHY_IDS.NON_EXISTENT,
+      });
 
       // When
       const result = findMatchingPopulation(simulation, mockHouseholdData, mockGeographicData);
@@ -143,13 +103,10 @@ describe('populationMatching', () => {
 
     it('given household simulation with undefined household data then returns null', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
+      const simulation = createMockSimulation({
         populationType: 'household',
-        populationId: 'hh-123',
-      } as Simulation;
+        populationId: TEST_HOUSEHOLD_IDS.HOUSEHOLD_123,
+      });
 
       // When
       const result = findMatchingPopulation(simulation, undefined, mockGeographicData);
@@ -160,13 +117,10 @@ describe('populationMatching', () => {
 
     it('given geography simulation with undefined geographic data then returns null', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
+      const simulation = createMockSimulation({
         populationType: 'geography',
-        populationId: 'geo-abc',
-      } as Simulation;
+        populationId: TEST_GEOGRAPHY_IDS.CALIFORNIA,
+      });
 
       // When
       const result = findMatchingPopulation(simulation, mockHouseholdData, undefined);
@@ -177,13 +131,10 @@ describe('populationMatching', () => {
 
     it('given simulation with empty household data array then returns null', () => {
       // Given
-      const simulation: Simulation = {
-        id: 'sim-1',
-        countryId: 'us',
-        policyId: 'policy-1',
+      const simulation = createMockSimulation({
         populationType: 'household',
-        populationId: 'hh-123',
-      } as Simulation;
+        populationId: TEST_HOUSEHOLD_IDS.HOUSEHOLD_123,
+      });
 
       // When
       const result = findMatchingPopulation(simulation, [], mockGeographicData);
