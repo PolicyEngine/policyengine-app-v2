@@ -5,7 +5,7 @@ import { transformConstituencyRelativeChange } from '@/adapters/constituency/con
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
-import { DIVERGING_GRAY_BLUE } from '@/utils/visualization/colorScales';
+import { DIVERGING_GRAY_TEAL} from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByConstituencyProps {
   output: SocietyWideReportOutput;
@@ -81,7 +81,7 @@ export function RelativeChangeByConstituency({
         data={hexMapData}
         config={{
           colorScale: {
-            colors: DIVERGING_GRAY_BLUE.colors,
+            colors: DIVERGING_GRAY_TEAL.colors,
             tickFormat: '.1%',
             symmetric: true,
           },

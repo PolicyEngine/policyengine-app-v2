@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Box } from '@mantine/core';
 import Plot from 'react-plotly.js';
 import type { Data, Layout, Config } from 'plotly.js';
 import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
@@ -9,6 +10,7 @@ import {
   generateHoverText,
 } from '@/utils/visualization/hexMapUtils';
 import { getColorScale } from '@/utils/visualization/colorScales';
+import { colors, spacing } from '@/designTokens';
 
 interface HexagonalMapProps {
   /** Array of data points to visualize */
@@ -50,7 +52,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       hexSize: 12,
       showColorBar: true,
       colorScale: {
-        colors: getColorScale('diverging-gray-blue'),
+        colors: getColorScale('diverging-gray-teal'),
         tickFormat: '.2f',
         symmetric: true,
         ...config.colorScale,
@@ -174,11 +176,20 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
   };
 
   return (
-    <Plot
-      data={plotData}
-      layout={plotLayout}
-      config={plotConfig}
-      style={{ width: '100%', height: '100%' }}
-    />
+    <Box
+      style={{
+        border: `1px solid ${colors.border.light}`,
+        borderRadius: spacing.sm,
+        backgroundColor: colors.background.primary,
+        overflow: 'hidden',
+      }}
+    >
+      <Plot
+        data={plotData}
+        layout={plotLayout}
+        config={plotConfig}
+        style={{ width: '100%', height: '100%' }}
+      />
+    </Box>
   );
 }

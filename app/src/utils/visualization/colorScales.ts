@@ -1,4 +1,4 @@
-import { colors } from '@/designTokens/colors';
+import { colors } from '@/designTokens';
 
 /**
  * Color scale definition
@@ -33,6 +33,24 @@ export const DIVERGING_GRAY_BLUE: ColorScale = {
 };
 
 /**
+ * Diverging color scale for positive/negative values using teal primary
+ * Gray (negative) → White (neutral) → Teal (positive)
+ *
+ * Uses design tokens from the primary teal color palette
+ */
+export const DIVERGING_GRAY_TEAL: ColorScale = {
+  name: 'diverging-gray-teal',
+  colors: [
+    colors.gray[700], // Dark gray (most negative)
+    colors.gray[400], // Medium gray
+    colors.white, // White (neutral)
+    colors.primary[200], // Light teal
+    colors.primary[600], // Teal (most positive)
+  ],
+  description: 'Gray for negative, teal for positive values',
+};
+
+/**
  * Get color scale by name or return default
  *
  * @param name - Name of the color scale to retrieve
@@ -41,12 +59,15 @@ export const DIVERGING_GRAY_BLUE: ColorScale = {
  * @example
  * ```typescript
  * const colors = getColorScale('diverging-gray-blue');
- * // colors = ['#344054', '#9CA3AF', '#F2F4F7', '#BAE6FD', '#0284C7']
+ * const tealColors = getColorScale('diverging-gray-teal');
  * ```
  */
 export function getColorScale(name?: string): string[] {
   if (name === 'diverging-gray-blue') {
     return DIVERGING_GRAY_BLUE.colors;
   }
-  return DIVERGING_GRAY_BLUE.colors; // Default
+  if (name === 'diverging-gray-teal') {
+    return DIVERGING_GRAY_TEAL.colors;
+  }
+  return DIVERGING_GRAY_TEAL.colors; // Default to teal (primary brand color)
 }
