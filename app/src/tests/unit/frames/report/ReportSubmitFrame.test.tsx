@@ -236,7 +236,7 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${MOCK_REPORT_123.userReport.id}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`/us/report-output/${MOCK_REPORT_123.userReport.id}`);
       expect(mockResetIngredient).toHaveBeenCalledWith('report');
     });
 
@@ -253,7 +253,7 @@ describe('ReportSubmitFrame', () => {
       await user.click(screen.getByRole('button', { name: /Generate Report/i }));
 
       // Then
-      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${MOCK_REPORT_456.userReport.id}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`/us/report-output/${MOCK_REPORT_456.userReport.id}`);
       expect(mockResetIngredient).not.toHaveBeenCalled();
     });
 
@@ -289,7 +289,7 @@ describe('ReportSubmitFrame', () => {
 
       // Then - verify the callback received the complete report data structure
       expect(capturedData).toEqual(MOCK_REPORT_789);
-      expect(mockNavigate).toHaveBeenCalledWith(`report-output/${MOCK_REPORT_789.userReport.id}`);
+      expect(mockNavigate).toHaveBeenCalledWith(`/us/report-output/${MOCK_REPORT_789.userReport.id}`);
     });
 
     test('given household and geography data available then passes populations to createReport', async () => {

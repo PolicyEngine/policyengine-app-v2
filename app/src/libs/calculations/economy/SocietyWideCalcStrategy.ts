@@ -38,7 +38,7 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
     console.log('[SocietyWideCalcStrategy.execute] API response:', response.status);
 
     // Transform to unified status with provided metadata
-    return this.transformResponseWithMetadata(response, metadata);
+    return this.transformResponseWithMetadata(response, metadata, params.countryId);
   }
 
   /**
@@ -60,13 +60,32 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
   /**
    * Transform society-wide API response with provided metadata
    */
-  transformResponseWithMetadata(apiResponse: unknown, metadata: CalcMetadata): CalcStatus {
+  transformResponseWithMetadata(
+    apiResponse: unknown,
+    metadata: CalcMetadata,
+    countryId?: string
+  ): CalcStatus {
     const response = apiResponse as SocietyWideCalculationResponse;
 
     // Map computing status from API to pending status in CalcStatus
     if (response.status === 'computing') {
+      // Calculate synthetic progress based on elapsed time (mimicking household calculations)
+      const elapsed = Date.now() - metadata.startedAt;
+      const estimatedDuration = this.getEstimatedDuration(countryId);
+      const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95%
+
+      console.log('[SocietyWideCalcStrategy] Progress calculation:', {
+        countryId,
+        elapsed,
+        estimatedDuration,
+        rawProgress: (elapsed / estimatedDuration) * 100,
+        cappedProgress: progress,
+        queuePosition: response.queue_position,
+      });
+
       return {
         status: 'pending',
+        progress,
         queuePosition: response.queue_position,
         estimatedTimeRemaining: response.average_time ? response.average_time * 1000 : undefined,
         message: this.getComputingMessage(response.queue_position),
@@ -116,5 +135,20 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       return `In queue (position ${queuePosition})...`;
     }
     return 'Running society-wide calculation...';
+  }
+
+  /**
+   * Get estimated duration for society-wide calculations based on country
+   * US: 5 minutes, UK: 3 minutes
+   */
+  private getEstimatedDuration(countryId?: string): number {
+    if (countryId === 'us') {
+      return 5 * 60 * 1000; // 5 minutes in milliseconds
+    }
+    if (countryId === 'uk') {
+      return 3 * 60 * 1000; // 3 minutes in milliseconds
+    }
+    // Default fallback to 5 minutes
+    return 5 * 60 * 1000;
   }
 }
