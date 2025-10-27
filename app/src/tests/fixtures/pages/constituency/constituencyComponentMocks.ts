@@ -1,5 +1,5 @@
-import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import type { MetadataState } from '@/types/metadata';
+import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 
 /**
  * Mock UK report output with constituency data

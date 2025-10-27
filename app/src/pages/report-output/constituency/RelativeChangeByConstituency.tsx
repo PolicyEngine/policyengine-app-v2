@@ -1,11 +1,11 @@
 import { useMemo } from 'react';
-import { Stack, Title, Text } from '@mantine/core';
-import { HexagonalMap } from '@/components/visualization/HexagonalMap';
+import { Stack, Text, Title } from '@mantine/core';
 import { transformConstituencyRelativeChange } from '@/adapters/constituency/constituencyDataAdapter';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import { formatParameterValue } from '@/utils/chartValueUtils';
-import { DIVERGING_GRAY_TEAL} from '@/utils/visualization/colorScales';
+import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByConstituencyProps {
   output: SocietyWideReportOutput;
@@ -17,30 +17,36 @@ interface RelativeChangeByConstituencyProps {
  * Displays a hexagonal map showing the relative household income change
  * for each UK parliamentary constituency as a percentage.
  */
-export function RelativeChangeByConstituency({
-  output,
-}: RelativeChangeByConstituencyProps) {
+export function RelativeChangeByConstituency({ output }: RelativeChangeByConstituencyProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
     // Type guard to ensure output is UK report with constituency data
-    if (!('constituency_impact' in output)) return [];
-    const constituencyData = (output as ReportOutputSocietyWideUK).constituency_impact?.by_constituency;
-    if (!constituencyData) return [];
+    if (!('constituency_impact' in output)) {
+      return [];
+    }
+    const constituencyData = (output as ReportOutputSocietyWideUK).constituency_impact
+      ?.by_constituency;
+    if (!constituencyData) {
+      return [];
+    }
     return transformConstituencyRelativeChange(constituencyData);
   }, [output]);
 
   // Generate summary statistics (same as average)
   const summary = useMemo(() => {
-    if (!('constituency_impact' in output)) return null;
-    const outcomes = (output as ReportOutputSocietyWideUK).constituency_impact?.outcomes_by_region?.uk;
-    if (!outcomes) return null;
+    if (!('constituency_impact' in output)) {
+      return null;
+    }
+    const outcomes = (output as ReportOutputSocietyWideUK).constituency_impact?.outcomes_by_region
+      ?.uk;
+    if (!outcomes) {
+      return null;
+    }
 
     console.log('[RelativeChangeByConstituency] outcomes_by_region.uk:', outcomes);
 
-    const gainers =
-      outcomes['Gain more than 5%'] + outcomes['Gain less than 5%'];
-    const losers =
-      outcomes['Lose more than 5%'] + outcomes['Lose less than 5%'];
+    const gainers = outcomes['Gain more than 5%'] + outcomes['Gain less than 5%'];
+    const losers = outcomes['Lose more than 5%'] + outcomes['Lose less than 5%'];
     const noChange = outcomes['No change'];
 
     console.log('[RelativeChangeByConstituency] Summary stats:', {
@@ -71,8 +77,8 @@ export function RelativeChangeByConstituency({
         <Title order={3}>Relative Household Income Change by Constituency</Title>
         {summary && (
           <Text c="dimmed" size="sm" mt="xs">
-            {summary.gainers} constituencies gain, {summary.losers} lose,{' '}
-            {summary.noChange} unchanged
+            {summary.gainers} constituencies gain, {summary.losers} lose, {summary.noChange}{' '}
+            unchanged
           </Text>
         )}
       </div>

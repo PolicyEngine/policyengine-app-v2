@@ -1,16 +1,16 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
-  transformConstituencyData,
   transformConstituencyAverageChange,
+  transformConstituencyData,
   transformConstituencyRelativeChange,
 } from '@/adapters/constituency/constituencyDataAdapter';
 import {
-  MOCK_CONSTITUENCY_DATA,
+  EMPTY_CONSTITUENCY_DATA,
   EXPECTED_AVERAGE_CHANGE_DATA,
   EXPECTED_RELATIVE_CHANGE_DATA,
-  SINGLE_CONSTITUENCY_DATA,
-  EMPTY_CONSTITUENCY_DATA,
   LARGE_CONSTITUENCY_DATA,
+  MOCK_CONSTITUENCY_DATA,
+  SINGLE_CONSTITUENCY_DATA,
 } from '@/tests/fixtures/adapters/constituency/constituencyMocks';
 
 describe('constituencyDataAdapter', () => {
@@ -44,10 +44,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = MOCK_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyData(
-        apiData,
-        'average_household_income_change'
-      );
+      const result = transformConstituencyData(apiData, 'average_household_income_change');
 
       // Then
       expect(result[0].x).toBe(0);
@@ -61,10 +58,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = MOCK_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyData(
-        apiData,
-        'average_household_income_change'
-      );
+      const result = transformConstituencyData(apiData, 'average_household_income_change');
 
       // Then
       const ids = result.map((point) => point.id);
@@ -77,10 +71,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = MOCK_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyData(
-        apiData,
-        'average_household_income_change'
-      );
+      const result = transformConstituencyData(apiData, 'average_household_income_change');
 
       // Then
       expect(result[0].label).toBe('Westminster North');
@@ -93,10 +84,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = EMPTY_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyData(
-        apiData,
-        'average_household_income_change'
-      );
+      const result = transformConstituencyData(apiData, 'average_household_income_change');
 
       // Then
       expect(result).toEqual([]);
@@ -107,10 +95,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = SINGLE_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyData(
-        apiData,
-        'average_household_income_change'
-      );
+      const result = transformConstituencyData(apiData, 'average_household_income_change');
 
       // Then
       expect(result).toHaveLength(1);
@@ -125,10 +110,7 @@ describe('constituencyDataAdapter', () => {
       const apiData = LARGE_CONSTITUENCY_DATA;
 
       // When
-      const result = transformConstituencyData(
-        apiData,
-        'average_household_income_change'
-      );
+      const result = transformConstituencyData(apiData, 'average_household_income_change');
 
       // Then
       expect(result).toHaveLength(Object.keys(apiData).length);

@@ -25,9 +25,7 @@ import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
  * // positioned[2].x === 0 (odd row unchanged)
  * ```
  */
-export function applyHexagonalPositioning(
-  points: HexMapDataPoint[]
-): HexMapDataPoint[] {
+export function applyHexagonalPositioning(points: HexMapDataPoint[]): HexMapDataPoint[] {
   return points.map((point) => ({
     ...point,
     x: point.y % 2 === 0 ? point.x + 0.5 : point.x,

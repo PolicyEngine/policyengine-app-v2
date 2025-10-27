@@ -1,5 +1,5 @@
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 import type { ReportOutputSocietyWideByConstituency } from '@/types/metadata/ReportOutputSocietyWideByConstituency';
+import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 
 /**
  * Transform API constituency data to hexagonal map data points

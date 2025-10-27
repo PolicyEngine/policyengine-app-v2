@@ -1,10 +1,10 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 import {
   applyHexagonalPositioning,
   calculateSymmetricRange,
   generateHoverText,
 } from '@/utils/visualization/hexMapUtils';
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
 
 describe('hexMapUtils', () => {
   describe('applyHexagonalPositioning', () => {

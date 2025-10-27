@@ -1,5 +1,5 @@
-import { describe, test, expect, vi } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import { SidebarTabs, type SidebarTab } from '@/components/SidebarTabs';
 
 const MOCK_TABS: SidebarTab[] = [

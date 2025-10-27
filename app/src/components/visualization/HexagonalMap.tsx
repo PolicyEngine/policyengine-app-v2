@@ -1,16 +1,16 @@
 import { useMemo } from 'react';
-import { Box } from '@mantine/core';
+import type { Config, Data, Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
-import type { Data, Layout, Config } from 'plotly.js';
-import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
+import { Box } from '@mantine/core';
+import { colors, spacing } from '@/designTokens';
 import type { HexMapConfig } from '@/types/visualization/HexMapConfig';
+import type { HexMapDataPoint } from '@/types/visualization/HexMapDataPoint';
+import { getColorScale } from '@/utils/visualization/colorScales';
 import {
   applyHexagonalPositioning,
   calculateSymmetricRange,
   generateHoverText,
 } from '@/utils/visualization/hexMapUtils';
-import { getColorScale } from '@/utils/visualization/colorScales';
-import { colors, spacing } from '@/designTokens';
 
 interface HexagonalMapProps {
   /** Array of data points to visualize */
@@ -70,9 +70,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
   const xValues = positionedData.map((p) => p.x);
   const yValues = positionedData.map((p) => p.y);
   const colorValues = positionedData.map((p) => p.value);
-  const hoverText = positionedData.map((p) =>
-    generateHoverText(p, fullConfig.formatValue!)
-  );
+  const hoverText = positionedData.map((p) => generateHoverText(p, fullConfig.formatValue!));
 
   // Calculate data bounds
   const dataBounds = useMemo(() => {
@@ -86,9 +84,6 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       yMax: Math.max(...yValues),
     };
   }, [xValues, yValues]);
-
-
-
 
   // Calculate color range
   const colorRange = useMemo(() => {

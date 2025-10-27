@@ -42,12 +42,7 @@ interface SidebarTabsProps {
  * </SidebarTabs>
  * ```
  */
-export function SidebarTabs({
-  tabs,
-  activeTab,
-  onTabChange,
-  children,
-}: SidebarTabsProps) {
+export function SidebarTabs({ tabs, activeTab, onTabChange, children }: SidebarTabsProps) {
   return (
     <Group align="flex-start" gap={spacing.xl} style={{ flexWrap: 'nowrap' }}>
       {/* Left sidebar with vertical tabs */}

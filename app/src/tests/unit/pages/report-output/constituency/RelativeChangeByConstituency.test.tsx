@@ -1,5 +1,5 @@
-import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import { RelativeChangeByConstituency } from '@/pages/report-output/constituency/RelativeChangeByConstituency';
 import {
   MOCK_UK_REPORT_OUTPUT,

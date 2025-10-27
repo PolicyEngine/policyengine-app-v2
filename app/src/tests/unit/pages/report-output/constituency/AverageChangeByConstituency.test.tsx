@@ -1,5 +1,5 @@
-import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import { AverageChangeByConstituency } from '@/pages/report-output/constituency/AverageChangeByConstituency';
 import {
   MOCK_UK_REPORT_OUTPUT,
@@ -18,9 +18,7 @@ describe('AverageChangeByConstituency', () => {
     render(<AverageChangeByConstituency output={output} />);
 
     // Then
-    expect(
-      screen.getByText('Average Household Income Change by Constituency')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Average Household Income Change by Constituency')).toBeInTheDocument();
   });
 
   test('given constituency data then displays summary statistics', () => {

@@ -1,11 +1,11 @@
-import { describe, test, expect, vi } from 'vitest';
 import { render } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import {
   MOCK_HEX_MAP_DATA,
-  MOCK_POSITIVE_VALUES,
-  MOCK_NEGATIVE_VALUES,
   MOCK_MIXED_VALUES,
+  MOCK_NEGATIVE_VALUES,
+  MOCK_POSITIVE_VALUES,
 } from '@/tests/fixtures/components/visualization/hexMapMocks';
 
 // Mock Plotly
