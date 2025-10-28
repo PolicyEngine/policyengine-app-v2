@@ -42,6 +42,7 @@ export const SimulationCreationFlow: Flow = {
           returnTo: 'SimulationSetupFrame',
         },
         loadExisting: 'SimulationSelectExistingPopulationFrame',
+        copyExisting: 'SimulationSetupFrame',
       },
     },
     SimulationSelectExistingPopulationFrame: {

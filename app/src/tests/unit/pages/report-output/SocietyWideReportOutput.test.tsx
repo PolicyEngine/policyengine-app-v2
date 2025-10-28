@@ -1,6 +1,7 @@
 import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import { SocietyWideReportOutput } from '@/pages/report-output/SocietyWideReportOutput';
 import {
@@ -20,6 +21,7 @@ import {
 
 // Mock hooks
 vi.mock('@/hooks/useCalculationStatus');
+vi.mock('@/hooks/useReportProgressDisplay');
 vi.mock('@/hooks/useStartCalculationOnLoad');
 
 // Mock Plotly
@@ -59,11 +61,17 @@ vi.mock('@/pages/report-output/DynamicsSubPage', () => ({
 }));
 
 const mockUseCalculationStatus = useCalculationStatus as ReturnType<typeof vi.fn>;
+const mockUseReportProgressDisplay = useReportProgressDisplay as ReturnType<typeof vi.fn>;
 const mockUseStartCalculationOnLoad = useStartCalculationOnLoad as ReturnType<typeof vi.fn>;
 
 describe('SocietyWideReportOutput', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseReportProgressDisplay.mockReturnValue({
+      displayProgress: 0,
+      hasCalcStatus: false,
+      message: undefined,
+    });
     mockUseStartCalculationOnLoad.mockReturnValue(undefined);
   });
 

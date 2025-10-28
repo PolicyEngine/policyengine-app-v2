@@ -47,25 +47,35 @@ export default function CardListVariant({
     <Stack gap={spacing.md}>
       {/* Card list */}
       <Stack gap={spacing.sm}>
-        {paginatedItems.map((item: CardListItem, index: number) => (
-          <Card
-            key={index}
-            withBorder
-            component="button"
-            onClick={item.onClick}
-            disabled={item.isDisabled}
-            variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
-          >
-            <Stack gap={spacing.xs}>
-              <Text fw={600}>{item.title}</Text>
-              {item.subtitle && (
-                <Text size="sm" c="dimmed">
-                  {item.subtitle}
-                </Text>
-              )}
-            </Stack>
-          </Card>
-        ))}
+        {paginatedItems.map((item: CardListItem, index: number) => {
+          // Determine variant based on disabled state first, then selection
+          let variant = 'cardList--inactive';
+          if (item.isDisabled) {
+            variant = 'cardList--disabled';
+          } else if (item.isSelected) {
+            variant = 'cardList--active';
+          }
+
+          return (
+            <Card
+              key={index}
+              withBorder
+              component="button"
+              onClick={item.isDisabled ? undefined : item.onClick}
+              disabled={item.isDisabled}
+              variant={variant}
+            >
+              <Stack gap={spacing.xs}>
+                <Text fw={600}>{item.title}</Text>
+                {item.subtitle && (
+                  <Text size="sm" c="dimmed">
+                    {item.subtitle}
+                  </Text>
+                )}
+              </Stack>
+            </Card>
+          );
+        })}
       </Stack>
 
       {/* Pagination footer */}

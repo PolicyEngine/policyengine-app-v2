@@ -13,18 +13,19 @@ interface OutputTypeCellProps {
 
 /**
  * Cell component for displaying report output type with live calculation status
+ * For household reports (multiple simulations)
  *
  * This component subscribes to CalcStatus updates for the report's simulations
  * and re-renders only when its own CalcStatus changes, not when other reports update.
  *
  * Memoized to prevent unnecessary re-renders when parent component updates.
  */
-export const OutputTypeCell = React.memo(
+export const MultiSimOutputTypeCell = React.memo(
   ({ simulationIds, isHouseholdReport, simulations, report }: OutputTypeCellProps) => {
     // Subscribe to CalcStatus for this report's simulations
     const { isCalculating, progress } = useMultiSimulationCalcStatus(simulationIds);
 
-    console.log('[OutputTypeCell] Render:', {
+    console.log('[MultiSimOutputTypeCell] Render:', {
       simulationIds,
       isCalculating,
       progress,

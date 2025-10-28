@@ -84,3 +84,42 @@ export function useMultiSimulationCalcStatus(simulationIds: string[]) {
     calcStatus: activeCalc,
   };
 }
+
+/**
+ * Subscribe to CalcStatus for a single report
+ * Used for society-wide reports that track progress at the report level
+ *
+ * This is the report-level equivalent of useCalcStatusSubscription
+ *
+ * @param reportId - The report ID to subscribe to
+ * @returns Object with calculation state and progress info
+ */
+export function useReportCalculationStatus(reportId: string | undefined) {
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: reportId ? calculationKeys.byReportId(reportId) : (['placeholder'] as const),
+        queryFn: async (): Promise<CalcStatus | undefined> => undefined,
+        enabled: false, // Cache-only subscription, don't fetch
+        staleTime: Infinity, // Never mark as stale
+      },
+    ],
+  });
+
+  const calcStatus = queries[0]?.data as CalcStatus | undefined;
+
+  console.log('[useReportCalculationStatus]', {
+    reportId,
+    status: calcStatus?.status,
+    progress: calcStatus?.progress,
+    isCalculating: calcStatus?.status === 'pending',
+    message: calcStatus?.message,
+  });
+
+  return {
+    isCalculating: calcStatus?.status === 'pending',
+    progress: calcStatus?.progress,
+    message: calcStatus?.message,
+    calcStatus,
+  };
+}

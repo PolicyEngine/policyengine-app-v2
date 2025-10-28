@@ -117,6 +117,18 @@ export const themeComponents = {
         };
       }
 
+      if (params.variant === 'cardList--disabled') {
+        return {
+          root: {
+            padding: spacing.sm,
+            backgroundColor: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'not-allowed',
+            opacity: 0.6,
+          },
+        };
+      }
+
       // Setup Condition variants - for setup steps with fulfillment indicators
       if (params.variant === 'setupCondition--active') {
         return {
@@ -200,6 +212,19 @@ export const themeComponents = {
               backgroundColor: colors.gray[50],
               borderColor: colors.border.medium,
             },
+          },
+        };
+      }
+
+      if (params.variant === 'buttonPanel--disabled') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'not-allowed',
+            opacity: 0.6,
           },
         };
       }
