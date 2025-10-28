@@ -214,21 +214,22 @@ export default function ReportOutputPage() {
 function getTabsForOutputType(
   outputType: ReportOutputType
 ): Array<{ value: string; label: string }> {
-  // Common tabs shared by all report types
-  const commonTabs = [
-    { value: 'overview', label: 'Overview' },
-    { value: 'policy', label: 'Policy' },
-    { value: 'population', label: 'Population' },
-    { value: 'dynamics', label: 'Dynamics' },
-  ];
-
   if (outputType === 'societyWide') {
-    return [...commonTabs, { value: 'comparative-analysis', label: 'Comparative Analysis' }];
+    return [
+      { value: 'overview', label: 'Overview' },
+      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'policy', label: 'Policy' },
+      { value: 'population', label: 'Population' },
+      { value: 'dynamics', label: 'Dynamics' },
+    ];
   }
 
   if (outputType === 'household') {
     return [
-      ...commonTabs,
+      { value: 'overview', label: 'Overview' },
+      { value: 'policy', label: 'Policy' },
+      { value: 'population', label: 'Population' },
+      { value: 'dynamics', label: 'Dynamics' },
       // Add household-specific tabs here in the future
       // e.g., { value: 'family-structure', label: 'Family Details' },
     ];
