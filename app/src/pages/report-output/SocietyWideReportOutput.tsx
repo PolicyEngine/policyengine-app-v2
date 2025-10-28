@@ -9,8 +9,8 @@ import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
-import DynamicsSubPage from './DynamicsSubPage';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
+import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
@@ -146,11 +146,11 @@ export function SocietyWideReportOutput({
         return (
           <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
         );
-      
+
       case 'comparative-analysis':
         return (
           <ComparativeAnalysisPage
-            key={`${activeTab}-${activeView}`}
+            key={`comparative-analysis-${activeView}`}
             output={output}
             view={activeView}
           />

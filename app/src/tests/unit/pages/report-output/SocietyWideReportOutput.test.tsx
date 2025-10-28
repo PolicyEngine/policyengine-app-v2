@@ -77,7 +77,7 @@ describe('SocietyWideReportOutput', () => {
         reportId="test-report-123"
         report={undefined}
         simulations={[MOCK_SIMULATION_BASELINE]}
-        activeTab="overview"
+        subpage="overview"
       />
     );
 

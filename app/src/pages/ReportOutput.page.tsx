@@ -2,12 +2,11 @@ import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
-import { colors, spacing, typography } from '@/designTokens';
+import { spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReportById } from '@/hooks/useUserReports';
-import { getComparativeAnalysisTree } from './report-output/comparativeAnalysisTree';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
-import { ReportSidebar } from './report-output/ReportSidebar';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
 
 /**
@@ -27,6 +26,7 @@ export type ReportOutputType = 'household' | 'societyWide';
 
 export default function ReportOutputPage() {
   const navigate = useNavigate();
+  const countryId = useCurrentCountry();
   const {
     reportId: userReportId,
     subpage,
@@ -36,8 +36,6 @@ export default function ReportOutputPage() {
     subpage?: string;
     view?: string;
   }>();
-  const countryId = useCurrentCountry();
-
   // If no userReportId, show error
   if (!userReportId) {
     return (
@@ -106,7 +104,7 @@ export default function ReportOutputPage() {
   // Determine which tabs to show based on output type
   const tabs = outputType ? getTabsForOutputType(outputType) : [];
 
-  // Handle tab navigation
+  // Handle tab navigation (absolute path)
   const handleTabClick = (tabValue: string) => {
     console.log(
       '[ReportOutputPage] Tab clicked:',
@@ -114,7 +112,6 @@ export default function ReportOutputPage() {
       'Current path:',
       window.location.pathname
     );
-    // Use absolute path to ensure navigation works correctly
     navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
   };
 
@@ -146,18 +143,8 @@ export default function ReportOutputPage() {
   // Determine if sidebar should be shown
   const showSidebar = activeTab === 'comparative-analysis' && outputType === 'societyWide';
 
-  // Handle sidebar navigation
+  // Handle sidebar navigation (absolute path)
   const handleSidebarNavigate = (viewName: string) => {
-    // Build absolute path to ensure correct navigation
-    navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
-  };
-
-  // Determine if sidebar should be shown
-  const showSidebar = activeTab === 'comparative-analysis' && outputType === 'societyWide';
-
-  // Handle sidebar navigation
-  const handleSidebarNavigate = (viewName: string) => {
-    // Build absolute path to ensure correct navigation
     navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
   };
 
@@ -208,21 +195,11 @@ export default function ReportOutputPage() {
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabClick}
+      showSidebar={showSidebar}
+      activeView={activeView}
+      onSidebarNavigate={handleSidebarNavigate}
     >
       {renderContent()}
-              {/* Content Area with optional sidebar */}
-              {showSidebar ? (
-          <Group align="flex-start" gap={0}>
-            <ReportSidebar
-              tree={getComparativeAnalysisTree(countryId)}
-              activeView={activeView}
-              onNavigate={handleSidebarNavigate}
-            />
-            <Box style={{ flex: 1 }}>{renderContent()}</Box>
-          </Group>
-        ) : (
-          renderContent()
-        )}
     </ReportOutputLayout>
   );
 }
@@ -246,11 +223,7 @@ function getTabsForOutputType(
   ];
 
   if (outputType === 'societyWide') {
-    return [
-      ...commonTabs,
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
-
-    ];
+    return [...commonTabs, { value: 'comparative-analysis', label: 'Comparative Analysis' }];
   }
 
   if (outputType === 'household') {

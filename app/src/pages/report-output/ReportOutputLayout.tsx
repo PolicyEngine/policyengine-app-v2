@@ -18,6 +18,9 @@ import {
   Title,
 } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
+import { ReportSidebar } from './ReportSidebar';
 
 interface ReportOutputLayoutProps {
   reportId: string;
@@ -29,6 +32,9 @@ interface ReportOutputLayoutProps {
   onRunAgain?: () => void;
   onShare?: () => void;
   onEditName?: () => void;
+  showSidebar?: boolean;
+  activeView?: string;
+  onSidebarNavigate?: (view: string) => void;
   children: React.ReactNode;
 }
 
@@ -53,8 +59,12 @@ export default function ReportOutputLayout({
   onRunAgain,
   onShare,
   onEditName,
+  showSidebar = false,
+  activeView = '',
+  onSidebarNavigate,
   children,
 }: ReportOutputLayoutProps) {
+  const countryId = useCurrentCountry();
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
@@ -191,8 +201,19 @@ export default function ReportOutputLayout({
           </Box>
         </Box>
 
-        {/* Content Area */}
-        {children}
+        {/* Content Area with optional sidebar */}
+        {showSidebar && onSidebarNavigate ? (
+          <Group align="flex-start" gap={0}>
+            <ReportSidebar
+              tree={getComparativeAnalysisTree(countryId)}
+              activeView={activeView}
+              onNavigate={onSidebarNavigate}
+            />
+            <Box style={{ flex: 1 }}>{children}</Box>
+          </Group>
+        ) : (
+          children
+        )}
       </Stack>
     </Container>
   );

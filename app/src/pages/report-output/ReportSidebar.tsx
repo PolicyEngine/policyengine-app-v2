@@ -1,5 +1,4 @@
-import type { ReactElement } from 'react';
-import { useState } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { Box, NavLink, ScrollArea } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import type { TreeNode } from './comparativeAnalysisTree';
@@ -35,10 +34,10 @@ export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarPro
     return initialExpanded;
   });
 
-  // Update active state when activeView changes from outside
-  if (activeView !== active) {
+  // Update active state when activeView changes from outside (e.g., URL navigation)
+  useEffect(() => {
     setActive(activeView);
-  }
+  }, [activeView]);
 
   function handleClick(name: string, hasChildren: boolean) {
     // Only navigate if it's a leaf node (has no children)
