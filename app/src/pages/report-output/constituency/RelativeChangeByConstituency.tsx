@@ -2,13 +2,14 @@ import { useMemo } from 'react';
 import { Stack, Title, Text } from '@mantine/core';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import { transformConstituencyRelativeChange } from '@/adapters/constituency/constituencyDataAdapter';
+import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
 import type { MetadataState } from '@/types/metadata';
 import { formatParameterValue } from '@/utils/chartValueUtils';
 import { DIVERGING_GRAY_BLUE } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByConstituencyProps {
-  output: ReportOutputSocietyWideUK;
+  output: SocietyWideReportOutput;
   metadata: MetadataState;
 }
 
@@ -24,14 +25,17 @@ export function RelativeChangeByConstituency({
 }: RelativeChangeByConstituencyProps) {
   // Transform API data to hexagonal map format
   const hexMapData = useMemo(() => {
-    const constituencyData = output.constituency_impact?.by_constituency;
+    // Type guard to ensure output is UK report with constituency data
+    if (!('constituency_impact' in output)) return [];
+    const constituencyData = (output as ReportOutputSocietyWideUK).constituency_impact?.by_constituency;
     if (!constituencyData) return [];
     return transformConstituencyRelativeChange(constituencyData);
   }, [output]);
 
   // Generate summary statistics (same as average)
   const summary = useMemo(() => {
-    const outcomes = output.constituency_impact?.outcomes_by_region?.uk;
+    if (!('constituency_impact' in output)) return null;
+    const outcomes = (output as ReportOutputSocietyWideUK).constituency_impact?.outcomes_by_region?.uk;
     if (!outcomes) return null;
 
     const gainers =
@@ -65,7 +69,7 @@ export function RelativeChangeByConstituency({
 
       <HexagonalMap
         data={hexMapData}
-        countryId={metadata.countryId}
+        countryId={metadata.currentCountry || 'uk'}
         config={{
           colorScale: {
             colors: DIVERGING_GRAY_BLUE.colors,

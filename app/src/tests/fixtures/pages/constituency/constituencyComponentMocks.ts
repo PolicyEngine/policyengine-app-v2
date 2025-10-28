@@ -193,11 +193,17 @@ export const MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY: ReportOutputSocietyWideUK = 
  * Mock metadata state
  */
 export const MOCK_METADATA: MetadataState = {
-  countryId: 'uk',
-  currentLaw: { id: 1, label: 'Current Law' },
+  currentCountry: 'uk',
+  loading: false,
+  error: null,
+  variables: {},
+  parameters: {},
+  entities: {},
+  variableModules: {},
   economyOptions: {
     region: [],
-    timePeriod: [],
-    baseline: [],
+    time_period: [],
+    datasets: [],
   },
+  currentLawId: 1,
 };

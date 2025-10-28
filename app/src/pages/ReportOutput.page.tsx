@@ -102,8 +102,8 @@ export default function ReportOutputPage() {
     }
   }, [subpage, navigate, report, simulations]);
 
-  // Determine which tabs to show based on output type
-  const tabs = outputType ? getTabsForOutputType(outputType) : [];
+  // Determine which tabs to show based on output type and country
+  const tabs = outputType ? getTabsForOutputType(outputType, report?.countryId) : [];
 
   // Handle tab navigation (absolute path)
   const handleTabClick = (tabValue: string) => {
@@ -214,16 +214,25 @@ export default function ReportOutputPage() {
  * society-wide, family structure for household).
  */
 function getTabsForOutputType(
-  outputType: ReportOutputType
+  outputType: ReportOutputType,
+  countryId?: string
 ): Array<{ value: string; label: string }> {
   if (outputType === 'societyWide') {
-    return [
+    const tabs = [
       { value: 'overview', label: 'Overview' },
       { value: 'comparative-analysis', label: 'Comparative Analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
     ];
+
+    // IMPORTANT: Only show constituencies for UK reports
+    // US does not have this capability at this time
+    if (countryId === 'uk') {
+      tabs.push({ value: 'constituency', label: 'Constituencies' });
+    }
+
+    return tabs;
   }
 
   if (outputType === 'household') {

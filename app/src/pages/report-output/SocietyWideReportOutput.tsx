@@ -13,6 +13,7 @@ import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
+import { ConstituencySubPage } from './ConstituencySubPage';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
@@ -173,6 +174,9 @@ export function SocietyWideReportOutput({
             view={activeView}
           />
         );
+
+      case 'constituency':
+        return <ConstituencySubPage output={output} />;
 
       default:
         return <NotFoundSubPage />;
