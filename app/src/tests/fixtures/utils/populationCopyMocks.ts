@@ -68,7 +68,7 @@ export function mockPopulationWithGeography(): Population {
  */
 export function mockPopulationWithLabel(label: string): Population {
   return {
-    label: label,
+    label,
     isCreated: true,
     household: null,
     geography: null,

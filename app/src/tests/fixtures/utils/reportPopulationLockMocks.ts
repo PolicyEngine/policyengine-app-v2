@@ -9,7 +9,7 @@ export function mockSimulationWithPopulation(populationId: string | undefined): 
     id: 'sim-123',
     label: 'Test Simulation',
     isCreated: true,
-    populationId: populationId,
+    populationId,
     populationType: populationId ? 'household' : undefined,
     policyId: 'policy-123',
   };

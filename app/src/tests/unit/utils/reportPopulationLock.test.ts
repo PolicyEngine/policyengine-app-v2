@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
-  getPopulationLockConfig,
-  getPopulationSelectionTitle,
-  getPopulationSelectionSubtitle,
-} from '@/utils/reportPopulationLock';
-import {
-  mockSimulationWithPopulation,
   mockPopulationCreated,
   mockPopulationNotCreated,
+  mockSimulationWithPopulation,
 } from '@/tests/fixtures/utils/reportPopulationLockMocks';
+import {
+  getPopulationLockConfig,
+  getPopulationSelectionSubtitle,
+  getPopulationSelectionTitle,
+} from '@/utils/reportPopulationLock';
 
 describe('reportPopulationLock', () => {
   describe('getPopulationLockConfig', () => {
@@ -131,9 +131,7 @@ describe('reportPopulationLock', () => {
       const result = getPopulationSelectionSubtitle(true);
 
       // Then
-      expect(result).toBe(
-        'This report requires using the same population as the other simulation'
-      );
+      expect(result).toBe('This report requires using the same population as the other simulation');
     });
 
     it('given shouldLock false then returns undefined', () => {

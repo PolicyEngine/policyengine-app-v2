@@ -139,10 +139,7 @@ export default function ReportsPage() {
                 report={item.report}
               />
             ) : (
-              <ReportOutputTypeCell
-                reportId={item.userReport.reportId}
-                report={item.report}
-              />
+              <ReportOutputTypeCell reportId={item.userReport.reportId} report={item.report} />
             ),
           },
         };

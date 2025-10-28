@@ -20,8 +20,8 @@ import { getPopulationLabel, getSimulationLabel } from '@/utils/populationCompat
 import { findMatchingPopulation } from '@/utils/populationMatching';
 import {
   getPopulationLockConfig,
-  getPopulationSelectionTitle,
   getPopulationSelectionSubtitle,
+  getPopulationSelectionTitle,
 } from '@/utils/reportPopulationLock';
 
 type SetupAction = 'createNew' | 'loadExisting' | 'copyExisting';
@@ -162,8 +162,7 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
     // Card 2: Create New Population (disabled)
     {
       title: 'Create New Population',
-      description:
-        'Cannot create a new population when another simulation is already configured',
+      description: 'Cannot create a new population when another simulation is already configured',
       onClick: handleClickCreateNew,
       isSelected: false,
       isDisabled: true,

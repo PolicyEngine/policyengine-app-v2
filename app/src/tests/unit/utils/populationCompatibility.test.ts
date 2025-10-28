@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
+  mockPopulationEmpty,
+  mockPopulationWithGeography,
+  mockPopulationWithHousehold,
+  mockPopulationWithLabel,
+  mockSimulationWithId,
+  mockSimulationWithLabel,
+  TEST_POPULATION_IDS,
+  TEST_SIMULATION_IDS,
+} from '@/tests/fixtures/utils/populationCompatibilityMocks';
+import {
   arePopulationsCompatible,
   getPopulationLabel,
   getSimulationLabel,
 } from '@/utils/populationCompatibility';
-import {
-  mockPopulationWithHousehold,
-  mockPopulationWithGeography,
-  mockPopulationWithLabel,
-  mockPopulationEmpty,
-  mockSimulationWithLabel,
-  mockSimulationWithId,
-  TEST_POPULATION_IDS,
-  TEST_SIMULATION_IDS,
-} from '@/tests/fixtures/utils/populationCompatibilityMocks';
 
 describe('populationCompatibility', () => {
   describe('arePopulationsCompatible', () => {
@@ -131,7 +131,11 @@ describe('populationCompatibility', () => {
     it('given population with label prioritizes label over household ID', () => {
       // Given
       const population = mockPopulationWithLabel('Custom Label');
-      population.household = { id: TEST_POPULATION_IDS.HOUSEHOLD_1, countryId: 'us', householdData: { people: {} } };
+      population.household = {
+        id: TEST_POPULATION_IDS.HOUSEHOLD_1,
+        countryId: 'us',
+        householdData: { people: {} },
+      };
 
       // When
       const result = getPopulationLabel(population);

@@ -1,6 +1,6 @@
-import type { Simulation } from '@/types/ingredients/Simulation';
-import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import type { UserGeographicMetadataWithAssociation } from '@/hooks/useUserGeographic';
+import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
+import type { Simulation } from '@/types/ingredients/Simulation';
 
 /**
  * Test constants for populationMatching utility
@@ -31,11 +31,14 @@ export const mockHouseholdData: UserHouseholdMetadataWithAssociation[] = [
       userId: TEST_USER_ID,
       householdId: TEST_HOUSEHOLD_IDS.HOUSEHOLD_123,
       countryId: 'us',
+      type: 'household',
     },
     household: {
       id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_123,
-      countryId: 'us',
-      people: {},
+      country_id: 'us',
+      api_version: '1.0.0',
+      household_json: '{}' as any,
+      household_hash: 'hash123',
     },
     isLoading: false,
     error: null,
@@ -46,11 +49,14 @@ export const mockHouseholdData: UserHouseholdMetadataWithAssociation[] = [
       userId: TEST_USER_ID,
       householdId: TEST_HOUSEHOLD_IDS.HOUSEHOLD_456,
       countryId: 'us',
+      type: 'household',
     },
     household: {
       id: TEST_HOUSEHOLD_IDS.HOUSEHOLD_456,
-      countryId: 'us',
-      people: {},
+      country_id: 'us',
+      api_version: '1.0.0',
+      household_json: '{}' as any,
+      household_hash: 'hash456',
     },
     isLoading: false,
     error: null,
@@ -67,11 +73,15 @@ export const mockGeographicData: UserGeographicMetadataWithAssociation[] = [
       userId: TEST_USER_ID,
       geographyId: TEST_GEOGRAPHY_IDS.CALIFORNIA,
       countryId: 'us',
+      type: 'geography',
+      scope: 'national',
     },
     geography: {
       id: TEST_GEOGRAPHY_IDS.CALIFORNIA,
       name: 'California',
       countryId: 'us',
+      scope: 'national',
+      geographyId: 'ca',
     },
     isLoading: false,
     error: null,
@@ -82,11 +92,15 @@ export const mockGeographicData: UserGeographicMetadataWithAssociation[] = [
       userId: TEST_USER_ID,
       geographyId: TEST_GEOGRAPHY_IDS.LONDON,
       countryId: 'uk',
+      type: 'geography',
+      scope: 'national',
     },
     geography: {
       id: TEST_GEOGRAPHY_IDS.LONDON,
       name: 'London',
       countryId: 'uk',
+      scope: 'national',
+      geographyId: 'london',
     },
     isLoading: false,
     error: null,
@@ -96,9 +110,7 @@ export const mockGeographicData: UserGeographicMetadataWithAssociation[] = [
 /**
  * Helper to create a mock simulation
  */
-export function createMockSimulation(
-  overrides: Partial<Simulation> = {}
-): Simulation {
+export function createMockSimulation(overrides: Partial<Simulation> = {}): Simulation {
   return {
     id: TEST_SIMULATION_ID,
     countryId: 'us',

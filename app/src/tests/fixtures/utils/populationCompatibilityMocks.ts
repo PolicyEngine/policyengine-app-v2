@@ -40,7 +40,10 @@ export function mockPopulationWithHousehold(householdId: string): Population {
 /**
  * Creates a mock population with a geography
  */
-export function mockPopulationWithGeography(name: string | undefined, geographyId: string): Population {
+export function mockPopulationWithGeography(
+  name: string | undefined,
+  geographyId: string
+): Population {
   return {
     label: null,
     isCreated: true,
@@ -49,8 +52,8 @@ export function mockPopulationWithGeography(name: string | undefined, geographyI
       id: geographyId,
       countryId: 'us',
       scope: 'subnational',
-      geographyId: geographyId,
-      name: name,
+      geographyId,
+      name,
     },
   };
 }
@@ -60,7 +63,7 @@ export function mockPopulationWithGeography(name: string | undefined, geographyI
  */
 export function mockPopulationWithLabel(label: string): Population {
   return {
-    label: label,
+    label,
     isCreated: true,
     household: null,
     geography: null,
@@ -84,7 +87,7 @@ export function mockPopulationEmpty(): Population {
  */
 export function mockSimulationWithLabel(label: string): Simulation {
   return {
-    label: label,
+    label,
     isCreated: true,
   };
 }
@@ -94,7 +97,7 @@ export function mockSimulationWithLabel(label: string): Simulation {
  */
 export function mockSimulationWithId(id: string | undefined): Simulation {
   return {
-    id: id,
+    id,
     label: null,
     isCreated: true,
   };

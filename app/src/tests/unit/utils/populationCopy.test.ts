@@ -1,10 +1,10 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { deepCopyPopulation, copyPopulationToPosition } from '@/utils/populationCopy';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   mockPopulationWithComplexHousehold,
   mockPopulationWithGeography,
   mockPopulationWithLabel,
 } from '@/tests/fixtures/utils/populationCopyMocks';
+import { copyPopulationToPosition, deepCopyPopulation } from '@/utils/populationCopy';
 
 describe('populationCopy', () => {
   beforeEach(() => {
@@ -33,7 +33,9 @@ describe('populationCopy', () => {
 
       // Then - Verify nested objects are different references
       expect(copied.household!.householdData).not.toBe(original.household!.householdData);
-      expect(copied.household!.householdData.people).not.toBe(original.household!.householdData.people);
+      expect(copied.household!.householdData.people).not.toBe(
+        original.household!.householdData.people
+      );
     });
 
     it('given population with household then modifying copy does not affect original', () => {

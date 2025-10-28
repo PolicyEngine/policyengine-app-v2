@@ -1,20 +1,20 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MantineProvider } from '@mantine/core';
+import { screen, render as testRender } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render as testRender, screen } from '@testing-library/react';
+import { MantineProvider } from '@mantine/core';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { calculationKeys } from '@/libs/queryKeys';
 import {
-  createMockPendingStatus,
-  createMockErrorStatus,
-} from '@/tests/fixtures/hooks/useCalcStatusSubscriptionMocks';
-import {
-  createMockReportWithOutput,
   createMockReportWithoutOutput,
-  TEST_REPORT_IDS,
+  createMockReportWithOutput,
   TEST_PROGRESS_VALUES,
+  TEST_REPORT_IDS,
 } from '@/tests/fixtures/components/report/ReportOutputTypeCellMocks';
+import {
+  createMockErrorStatus,
+  createMockPendingStatus,
+} from '@/tests/fixtures/hooks/useCalcStatusSubscriptionMocks';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
@@ -127,7 +127,11 @@ describe('ReportOutputTypeCell', () => {
 
   it('given error status then displays Not generated', () => {
     // Given
-    const errorStatus = createMockErrorStatus(TEST_REPORT_IDS.REPORT_ERROR, 'societyWide', 'Calculation failed');
+    const errorStatus = createMockErrorStatus(
+      TEST_REPORT_IDS.REPORT_ERROR,
+      'societyWide',
+      'Calculation failed'
+    );
     queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_ERROR), errorStatus);
 
     // When

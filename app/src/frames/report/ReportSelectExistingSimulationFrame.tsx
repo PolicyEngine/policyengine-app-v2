@@ -5,7 +5,10 @@ import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
 import { selectActiveSimulationPosition } from '@/reducers/reportReducer';
-import { selectSimulationAtPosition, updateSimulationAtPosition } from '@/reducers/simulationsReducer';
+import {
+  selectSimulationAtPosition,
+  updateSimulationAtPosition,
+} from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { arePopulationsCompatible } from '@/utils/populationCompatibility';

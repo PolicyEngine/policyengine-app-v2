@@ -43,7 +43,7 @@ export function createMockReportWithOutput(
     apiVersion: TEST_API_VERSION,
     simulationIds: [TEST_SIMULATION_IDS.SIM_1, TEST_SIMULATION_IDS.SIM_2],
     status: 'complete',
-    output: { some: 'economy data' },
+    output: { some: 'economy data' } as any,
   } as Report;
 }
 

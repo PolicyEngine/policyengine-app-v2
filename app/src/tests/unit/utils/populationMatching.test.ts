@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { findMatchingPopulation } from '@/utils/populationMatching';
-import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import type { UserGeographicMetadataWithAssociation } from '@/hooks/useUserGeographic';
+import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import {
   createMockSimulation,
   mockGeographicData,
@@ -9,10 +8,10 @@ import {
   TEST_GEOGRAPHY_IDS,
   TEST_HOUSEHOLD_IDS,
 } from '@/tests/fixtures/utils/populationMatchingMocks';
+import { findMatchingPopulation } from '@/utils/populationMatching';
 
 describe('populationMatching', () => {
   describe('findMatchingPopulation', () => {
-
     it('given null simulation then returns null', () => {
       // Given
       const simulation = null;
@@ -50,7 +49,9 @@ describe('populationMatching', () => {
       expect(result).not.toBeNull();
       if (result) {
         expect('household' in result).toBe(true);
-        expect((result as UserHouseholdMetadataWithAssociation).household?.id).toBe(TEST_HOUSEHOLD_IDS.HOUSEHOLD_123);
+        expect((result as UserHouseholdMetadataWithAssociation).household?.id).toBe(
+          TEST_HOUSEHOLD_IDS.HOUSEHOLD_123
+        );
       }
     });
 
@@ -83,7 +84,9 @@ describe('populationMatching', () => {
       expect(result).not.toBeNull();
       if (result) {
         expect('geography' in result).toBe(true);
-        expect((result as UserGeographicMetadataWithAssociation).geography?.id).toBe(TEST_GEOGRAPHY_IDS.CALIFORNIA);
+        expect((result as UserGeographicMetadataWithAssociation).geography?.id).toBe(
+          TEST_GEOGRAPHY_IDS.CALIFORNIA
+        );
       }
     });
 

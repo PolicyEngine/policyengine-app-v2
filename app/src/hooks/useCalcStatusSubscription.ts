@@ -98,9 +98,7 @@ export function useReportCalculationStatus(reportId: string | undefined) {
   const queries = useQueries({
     queries: [
       {
-        queryKey: reportId
-          ? calculationKeys.byReportId(reportId)
-          : (['placeholder'] as const),
+        queryKey: reportId ? calculationKeys.byReportId(reportId) : (['placeholder'] as const),
         queryFn: async (): Promise<CalcStatus | undefined> => undefined,
         enabled: false, // Cache-only subscription, don't fetch
         staleTime: Infinity, // Never mark as stale

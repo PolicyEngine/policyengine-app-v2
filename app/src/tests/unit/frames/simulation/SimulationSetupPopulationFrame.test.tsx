@@ -1,5 +1,5 @@
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { render, screen, userEvent } from '@test-utils';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSetupPopulationFrame from '@/frames/simulation/SimulationSetupPopulationFrame';
 import { mockOnNavigate } from '@/tests/fixtures/frames/simulationFrameMocks';

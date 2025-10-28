@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import {
+  EXPECTED_PATHS,
+  TEST_COUNTRY,
+  TEST_REPORT_IDS,
+} from '@/tests/fixtures/utils/reportRoutingMocks';
 import { getReportOutputPath } from '@/utils/reportRouting';
-import { EXPECTED_PATHS, TEST_COUNTRY, TEST_REPORT_IDS } from '@/tests/fixtures/utils/reportRoutingMocks';
 
 describe('reportRouting', () => {
   describe('getReportOutputPath', () => {
