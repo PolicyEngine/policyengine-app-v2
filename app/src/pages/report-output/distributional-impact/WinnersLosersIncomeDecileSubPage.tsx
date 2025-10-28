@@ -1,9 +1,10 @@
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Box, Button, Group, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -251,23 +252,8 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   );
 
   return (
-    <Stack gap={spacing.md}>
-      <Group justify="space-between" align="center">
-        <Text
-          size="lg"
-          fw={500}
-          style={{ marginBottom: 20, width: '100%', wordWrap: 'break-word' }}
-        >
-          {getChartTitle()}
-        </Text>
-        <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
-          Download CSV
-        </Button>
-      </Group>
-
-      {description}
-
-      <Box>
+    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+      <Stack gap={spacing.sm}>
         <Plot
           data={chartData}
           layout={layout}
@@ -277,7 +263,9 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
           }}
           style={{ width: '100%', marginBottom: mobile ? 0 : 50 }}
         />
-      </Box>
-    </Stack>
+
+        {description}
+      </Stack>
+    </ChartContainer>
   );
 }

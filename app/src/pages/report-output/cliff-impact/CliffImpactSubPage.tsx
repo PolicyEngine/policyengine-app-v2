@@ -1,9 +1,10 @@
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Box, Button, Group, Stack, Text } from '@mantine/core';
+import { Stack, Text } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
+import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -171,34 +172,8 @@ export default function CliffImpactSubPage({ output }: Props) {
   } as Partial<Layout>;
 
   return (
-    <Stack gap={spacing.md}>
-      <Group justify="space-between" align="center">
-        <Text
-          size="lg"
-          fw={500}
-          style={{ marginBottom: 20, width: '100%', wordWrap: 'break-word' }}
-        >
-          {getChartTitle()}
-        </Text>
-        <Button variant="outline" size="sm" onClick={handleDownloadCsv}>
-          Download CSV
-        </Button>
-      </Group>
-
-      <Text size="sm" c="dimmed">
-        The cliff rate is the share of households whose net income falls if each adult earned an
-        additional {getCurrency()}1,000. The cliff gap is the sum of the losses incurred by all
-        households on a cliff if their income rose in this way.{' '}
-        <a
-          href="https://policyengine.org/us/research/how-would-reforms-affect-cliffs"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Read more about how PolicyEngine models the effect of reforms on cliffs.
-        </a>
-      </Text>
-
-      <Box>
+    <ChartContainer title={getChartTitle()} onDownloadCsv={handleDownloadCsv}>
+      <Stack gap={spacing.sm}>
         <Plot
           data={chartData}
           layout={layout}
@@ -208,7 +183,20 @@ export default function CliffImpactSubPage({ output }: Props) {
           }}
           style={{ width: '100%' }}
         />
-      </Box>
-    </Stack>
+
+        <Text size="sm" c="dimmed">
+          The cliff rate is the share of households whose net income falls if each adult earned an
+          additional {getCurrency()}1,000. The cliff gap is the sum of the losses incurred by all
+          households on a cliff if their income rose in this way.{' '}
+          <a
+            href="https://policyengine.org/us/research/how-would-reforms-affect-cliffs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Read more about how PolicyEngine models the effect of reforms on cliffs.
+          </a>
+        </Text>
+      </Stack>
+    </ChartContainer>
   );
 }

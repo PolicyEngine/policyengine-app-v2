@@ -203,7 +203,7 @@ export default function ReportOutputLayout({
 
         {/* Content Area with optional sidebar */}
         {showSidebar && onSidebarNavigate ? (
-          <Group align="flex-start" gap={0}>
+          <Group align="flex-start" gap={spacing.lg}>
             <ReportSidebar
               tree={getComparativeAnalysisTree(countryId)}
               activeView={activeView}
