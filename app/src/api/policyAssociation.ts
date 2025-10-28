@@ -136,7 +136,18 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
   private getStoredPolicies(): UserPolicy[] {
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) {
+        return [];
+      }
+
+      const parsed = JSON.parse(stored);
+      // Data is already in application format (UserPolicy), just ensure type coercion
+      return parsed.map((data: any) => ({
+        ...data,
+        id: String(data.id),
+        userId: String(data.userId),
+        policyId: String(data.policyId),
+      }));
     } catch {
       return [];
     }

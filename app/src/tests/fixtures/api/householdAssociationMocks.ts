@@ -42,11 +42,10 @@ export const mockApiResponse = {
   id: '123',
   household_id: '123',
   user_id: 'user-456',
-  user_label: 'My Test Household',
+  label: 'My Test Household',
   country_id: 'us',
   created_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
   updated_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
-  is_default: false,
 };
 
 export const mockApiResponseList = [
@@ -54,28 +53,27 @@ export const mockApiResponseList = [
     id: '1',
     household_id: '1',
     user_id: 'user-456',
-    user_label: 'First Household',
+    label: 'First Household',
     country_id: 'us',
     created_at: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     updated_at: `${CURRENT_YEAR}-01-10T10:00:00Z`,
-    is_default: true,
   },
   {
     id: '2',
     household_id: '2',
     user_id: 'user-456',
-    user_label: 'Second Household',
+    label: 'Second Household',
     country_id: 'uk',
     created_at: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     updated_at: `${CURRENT_YEAR}-01-12T10:00:00Z`,
-    is_default: false,
   },
 ];
 
 export const mockCreationPayload = {
   household_id: '123',
   user_id: 'user-456',
-  user_label: 'My Test Household',
+  label: 'My Test Household',
   country_id: 'us',
-  is_default: false,
+  created_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
+  updated_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
 };

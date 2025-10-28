@@ -1,22 +1,13 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { UserHouseholdAdapter } from '@/adapters/UserHouseholdAdapter';
 import { ApiHouseholdStore, LocalStorageHouseholdStore } from '@/api/householdAssociation';
 import {
   mockApiResponse,
   mockApiResponseList,
-  mockCreationPayload,
   mockUserHouseholdPopulation,
   mockUserHouseholdPopulationList,
 } from '@/tests/fixtures/api/householdAssociationMocks';
 
 global.fetch = vi.fn();
-
-vi.mock('@/adapters/UserHouseholdAdapter', () => ({
-  UserHouseholdAdapter: {
-    toCreationPayload: vi.fn(),
-    fromApiResponse: vi.fn(),
-  },
-}));
 
 describe('ApiHouseholdStore', () => {
   let store: ApiHouseholdStore;
@@ -33,8 +24,6 @@ describe('ApiHouseholdStore', () => {
   describe('create', () => {
     test('given valid household association then creates successfully', async () => {
       // Given
-      (UserHouseholdAdapter.toCreationPayload as any).mockReturnValue(mockCreationPayload);
-      (UserHouseholdAdapter.fromApiResponse as any).mockReturnValue(mockUserHouseholdPopulation);
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockApiResponse),
@@ -45,21 +34,23 @@ describe('ApiHouseholdStore', () => {
       const result = await store.create(mockUserHouseholdPopulation);
 
       // Then
-      expect(UserHouseholdAdapter.toCreationPayload).toHaveBeenCalledWith(
-        mockUserHouseholdPopulation
+      expect(global.fetch).toHaveBeenCalledWith(
+        '/api/user-household-associations',
+        expect.objectContaining({
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        })
       );
-      expect(global.fetch).toHaveBeenCalledWith('/api/user-household-associations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mockCreationPayload),
+      expect(result).toMatchObject({
+        householdId: '123',
+        userId: 'user-456',
+        countryId: 'us',
+        label: 'My Test Household',
       });
-      expect(UserHouseholdAdapter.fromApiResponse).toHaveBeenCalledWith(mockApiResponse);
-      expect(result).toEqual(mockUserHouseholdPopulation);
     });
 
     test('given API returns error then throws error', async () => {
       // Given
-      (UserHouseholdAdapter.toCreationPayload as any).mockReturnValue(mockCreationPayload);
       const mockResponse = {
         ok: false,
         status: 400,
@@ -74,7 +65,6 @@ describe('ApiHouseholdStore', () => {
 
     test('given network error then propagates error', async () => {
       // Given
-      (UserHouseholdAdapter.toCreationPayload as any).mockReturnValue(mockCreationPayload);
       const networkError = new Error('Network failure');
       (global.fetch as any).mockRejectedValue(networkError);
 
@@ -87,10 +77,6 @@ describe('ApiHouseholdStore', () => {
     test('given valid user ID then returns list of households', async () => {
       // Given
       const userId = 'user-456';
-      (UserHouseholdAdapter.fromApiResponse as any).mockImplementation((data: any) => {
-        const index = mockApiResponseList.indexOf(data);
-        return mockUserHouseholdPopulationList[index];
-      });
       const mockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockApiResponseList),
@@ -104,7 +90,6 @@ describe('ApiHouseholdStore', () => {
       expect(global.fetch).toHaveBeenCalledWith(`/api/user-household-associations/user/${userId}`, {
         headers: { 'Content-Type': 'application/json' },
       });
-      expect(UserHouseholdAdapter.fromApiResponse).toHaveBeenCalledTimes(2);
       expect(result).toEqual(mockUserHouseholdPopulationList);
     });
 
@@ -122,7 +107,6 @@ describe('ApiHouseholdStore', () => {
 
       // Then
       expect(result).toEqual([]);
-      expect(UserHouseholdAdapter.fromApiResponse).not.toHaveBeenCalled();
     });
 
     test('given API returns error then throws error', async () => {
@@ -144,7 +128,6 @@ describe('ApiHouseholdStore', () => {
       // Given
       const userId = 'user-456';
       const householdId = 'household-123';
-      (UserHouseholdAdapter.fromApiResponse as any).mockReturnValue(mockUserHouseholdPopulation);
       const mockResponse = {
         ok: true,
         status: 200,
@@ -160,7 +143,6 @@ describe('ApiHouseholdStore', () => {
         `/api/user-household-associations/${userId}/${householdId}`,
         { headers: { 'Content-Type': 'application/json' } }
       );
-      expect(UserHouseholdAdapter.fromApiResponse).toHaveBeenCalledWith(mockApiResponse);
       expect(result).toEqual(mockUserHouseholdPopulation);
     });
 
@@ -179,7 +161,6 @@ describe('ApiHouseholdStore', () => {
 
       // Then
       expect(result).toBeNull();
-      expect(UserHouseholdAdapter.fromApiResponse).not.toHaveBeenCalled();
     });
 
     test('given server error then throws error', async () => {

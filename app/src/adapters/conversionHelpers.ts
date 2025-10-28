@@ -3,6 +3,11 @@ import { PolicyMetadataParams, PolicyMetadataParamValues } from '@/types/metadat
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
+// Helper to detect Immer Proxy objects
+function isProxy(obj: any): boolean {
+  return obj != null && typeof obj === 'object' && obj.constructor?.name === 'DraftObject';
+}
+
 /**
  * Converts PolicyMetadataParamValues (with "startDate.endDate" keys) into ValueInterval array
  * Copied from src/libs/policyParameterTransform.ts
@@ -46,13 +51,31 @@ export function convertPolicyJsonToParameters(policyJson: PolicyMetadataParams):
  * Converts Parameter[] to PolicyMetadataParams format for API payloads
  */
 export function convertParametersToPolicyJson(parameters: Parameter[]): PolicyMetadataParams {
+  console.log('[ADAPTER] convertParametersToPolicyJson - START');
+  console.log('[ADAPTER] parameters:', parameters);
+
   const data: PolicyMetadataParams = {};
 
-  parameters.forEach((param) => {
-    data[param.name] = param.values.reduce((acc, cur) => {
+  parameters.forEach((param, paramIndex) => {
+    console.log(`[ADAPTER] Processing parameter ${paramIndex}:`, param);
+    console.log(`[ADAPTER] param is Proxy?`, isProxy(param));
+    console.log(`[ADAPTER] param.values:`, param.values);
+    console.log(`[ADAPTER] param.values is Array?`, Array.isArray(param.values));
+
+    if (param.values && param.values.length > 0) {
+      console.log(`[ADAPTER] First value:`, param.values[0]);
+      console.log(`[ADAPTER] First value is Proxy?`, isProxy(param.values[0]));
+    }
+
+    data[param.name] = param.values.reduce((acc, cur, valueIndex) => {
+      console.log(`[ADAPTER]   Processing value ${valueIndex}:`, cur);
+      console.log(`[ADAPTER]   cur is Proxy?`, isProxy(cur));
       return { ...acc, [`${cur.startDate}.${cur.endDate}`]: cur.value };
     }, {});
   });
+
+  console.log('[ADAPTER] convertParametersToPolicyJson - END');
+  console.log('[ADAPTER] Final data:', data);
 
   return data;
 }

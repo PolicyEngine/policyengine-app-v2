@@ -22,18 +22,35 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
     selectSimulationAtPosition(state, currentPosition)
   );
 
+  console.log('[SimulationCreationFrame] RENDER - currentPosition:', currentPosition);
+  console.log('[SimulationCreationFrame] RENDER - simulation:', simulation);
+
   // Set mode to standalone if not in a subflow
   useEffect(() => {
+    console.log('[SimulationCreationFrame] Mode effect - isInSubflow:', isInSubflow);
     if (!isInSubflow) {
       dispatch(setMode('standalone'));
     }
+
+    return () => {
+      console.log('[SimulationCreationFrame] Cleanup - mode effect');
+    };
   }, [dispatch, isInSubflow]);
 
   useEffect(() => {
+    console.log(
+      '[SimulationCreationFrame] Create simulation effect - simulation exists?:',
+      !!simulation
+    );
     // If there's no simulation at current position, create one
     if (!simulation) {
+      console.log('[SimulationCreationFrame] Creating simulation at position', currentPosition);
       dispatch(createSimulationAtPosition({ position: currentPosition }));
     }
+
+    return () => {
+      console.log('[SimulationCreationFrame] Cleanup - create simulation effect');
+    };
   }, [currentPosition, simulation, dispatch]);
 
   function handleLocalLabelChange(value: string) {
@@ -41,6 +58,8 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
   }
 
   function submissionHandler() {
+    console.log('[SimulationCreationFrame] ========== submissionHandler START ==========');
+    console.log('[SimulationCreationFrame] Updating simulation with label:', localLabel);
     // Update the simulation at the current position
     dispatch(
       updateSimulationAtPosition({
@@ -48,8 +67,9 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
         updates: { label: localLabel },
       })
     );
-
+    console.log('[SimulationCreationFrame] Calling onNavigate("next")');
     onNavigate('next');
+    console.log('[SimulationCreationFrame] ========== submissionHandler END ==========');
   }
 
   const formInputs = (
@@ -66,16 +86,5 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
     onClick: submissionHandler,
   };
 
-  const cancelAction = {
-    ingredientType: 'simulation' as const,
-  };
-
-  return (
-    <FlowView
-      title="Create simulation"
-      content={formInputs}
-      primaryAction={primaryAction}
-      cancelAction={cancelAction}
-    />
-  );
+  return <FlowView title="Create simulation" content={formInputs} primaryAction={primaryAction} />;
 }

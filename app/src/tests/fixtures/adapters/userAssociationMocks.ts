@@ -1,6 +1,7 @@
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { UserPolicyMetadata } from '@/types/metadata/userPolicyMetadata';
 import {
   UserPolicyCreationPayload,
   UserReportCreationPayload,
@@ -43,20 +44,20 @@ export const mockUserPolicyWithoutOptionalFields: Omit<UserPolicy, 'id' | 'creat
 };
 
 export const mockUserPolicyCreationPayload: UserPolicyCreationPayload = {
-  userId: TEST_USER_IDS.USER_123,
-  policyId: TEST_POLICY_IDS.POLICY_789,
-  countryId: TEST_COUNTRIES.US,
+  user_id: TEST_USER_IDS.USER_123,
+  policy_id: TEST_POLICY_IDS.POLICY_789,
+  country_id: TEST_COUNTRIES.US,
   label: TEST_LABELS.MY_POLICY,
-  updatedAt: TEST_TIMESTAMPS.UPDATED_AT,
+  updated_at: TEST_TIMESTAMPS.UPDATED_AT,
 };
 
-export const mockUserPolicyApiResponse = {
-  policyId: TEST_POLICY_IDS.POLICY_789,
-  userId: TEST_USER_IDS.USER_123,
-  countryId: TEST_COUNTRIES.US,
+export const mockUserPolicyApiResponse: UserPolicyMetadata = {
+  policy_id: TEST_POLICY_IDS.POLICY_789,
+  user_id: TEST_USER_IDS.USER_123,
+  country_id: TEST_COUNTRIES.US,
   label: TEST_LABELS.MY_POLICY,
-  createdAt: TEST_TIMESTAMPS.CREATED_AT,
-  updatedAt: TEST_TIMESTAMPS.UPDATED_AT,
+  created_at: TEST_TIMESTAMPS.CREATED_AT,
+  updated_at: TEST_TIMESTAMPS.UPDATED_AT,
 };
 
 // UserSimulation fixtures

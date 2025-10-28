@@ -149,16 +149,11 @@ export default function GeographicConfirmationFrame({
     isLoading: isPending,
   };
 
-  const cancelAction = {
-    ingredientType: 'population' as const,
-  };
-
   return (
     <FlowView
       title="Confirm Geography"
       content={buildDisplayContent()}
       primaryAction={primaryAction}
-      cancelAction={cancelAction}
     />
   );
 }

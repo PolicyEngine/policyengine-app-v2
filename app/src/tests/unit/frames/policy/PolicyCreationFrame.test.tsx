@@ -18,6 +18,16 @@ vi.mock('@/reducers/activeSelectors', () => ({
   selectCurrentPosition: () => mockSelectCurrentPosition(),
 }));
 
+const mockSelectPolicyAtPosition = vi.fn();
+
+vi.mock('@/reducers/policyReducer', async () => {
+  const actual = await vi.importActual('@/reducers/policyReducer');
+  return {
+    ...actual,
+    selectPolicyAtPosition: (_state: any, position: number) => mockSelectPolicyAtPosition(position),
+  };
+});
+
 // Mock Redux
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual('react-redux');
@@ -28,30 +38,19 @@ vi.mock('react-redux', async () => {
   };
 });
 
-// Mock useBackButton hook
-const mockHandleBack = vi.fn();
-vi.mock('@/hooks/useBackButton', () => ({
-  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
-}));
-
-// Mock useCancelFlow
-const mockHandleCancel = vi.fn();
-vi.mock('@/hooks/useCancelFlow', () => ({
-  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
-}));
-
 describe('PolicyCreationFrame', () => {
   const mockFlowProps = createMockFlowProps();
 
   beforeEach(() => {
-    mockHandleCancel.mockClear();
     vi.clearAllMocks();
     mockSelectCurrentPosition.mockReturnValue(0);
+    mockSelectPolicyAtPosition.mockReturnValue(null);
   });
 
-  test('given component mounts in standalone mode then sets mode to standalone and creates policy at position', () => {
+  test('given component mounts in standalone mode with no existing policy then sets mode and creates policy', () => {
     // Given
     const flowProps = createMockFlowProps({ isInSubflow: false });
+    mockSelectPolicyAtPosition.mockReturnValue(null);
 
     // When
     render(<PolicyCreationFrame {...flowProps} />);
@@ -63,10 +62,11 @@ describe('PolicyCreationFrame', () => {
     );
   });
 
-  test('given component mounts in subflow then does not set mode and creates policy at current position', () => {
+  test('given component mounts in subflow with no existing policy then does not set mode but creates policy', () => {
     // Given
     const flowProps = createMockFlowProps({ isInSubflow: true });
     mockSelectCurrentPosition.mockReturnValue(1);
+    mockSelectPolicyAtPosition.mockReturnValue(null);
 
     // When
     render(<PolicyCreationFrame {...flowProps} />);
@@ -75,6 +75,20 @@ describe('PolicyCreationFrame', () => {
     expect(mockDispatch).not.toHaveBeenCalledWith(reportReducer.setMode('standalone'));
     expect(mockDispatch).toHaveBeenCalledWith(
       policyReducer.createPolicyAtPosition({ position: 1 })
+    );
+  });
+
+  test('given component mounts with existing policy then does not create policy', () => {
+    // Given
+    const existingPolicy = { id: '123', label: 'Existing Policy', parameters: [] };
+    mockSelectPolicyAtPosition.mockReturnValue(existingPolicy);
+
+    // When
+    render(<PolicyCreationFrame {...mockFlowProps} />);
+
+    // Then
+    expect(mockDispatch).not.toHaveBeenCalledWith(
+      expect.objectContaining({ type: expect.stringContaining('createPolicyAtPosition') })
     );
   });
 

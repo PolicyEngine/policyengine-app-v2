@@ -1,14 +1,9 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MOCK_USER_ID } from '@/constants';
-import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import SimulationsPage from '@/pages/Simulations.page';
-import flowReducer, { setFlow } from '@/reducers/flowReducer';
 import {
-  createMockDispatch,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
   mockEmptyHookReturn,
@@ -21,14 +16,13 @@ vi.mock('@/hooks/useUserSimulations', () => ({
   useUserSimulations: vi.fn(),
 }));
 
-// Mock the dispatch
-const mockDispatch = createMockDispatch();
-
-vi.mock('react-redux', async () => {
-  const actual = await vi.importActual('react-redux');
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    useDispatch: () => mockDispatch,
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -92,13 +86,6 @@ vi.mock('@/components/IngredientReadView', () => ({
 }));
 
 describe('SimulationsPage', () => {
-  const mockStore = configureStore({
-    reducer: {
-      flow: flowReducer,
-      metadata: () => ({ currentCountry: 'us' }),
-    },
-  });
-
   beforeEach(() => {
     vi.clearAllMocks();
     (useUserSimulations as any).mockReturnValue(mockDefaultHookReturn);
@@ -106,11 +93,7 @@ describe('SimulationsPage', () => {
 
   test('given simulations data when rendering then displays simulations page', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     expect(screen.getByText('Your saved simulations')).toBeInTheDocument();
@@ -123,11 +106,7 @@ describe('SimulationsPage', () => {
     (useUserSimulations as any).mockReturnValue(mockLoadingHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     expect(screen.getByText('Loading...')).toBeInTheDocument();
@@ -138,30 +117,22 @@ describe('SimulationsPage', () => {
     (useUserSimulations as any).mockReturnValue(mockErrorHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     expect(screen.getByText(`Error: ${ERROR_MESSAGES.FETCH_FAILED}`)).toBeInTheDocument();
   });
 
-  test('given user clicks build simulation button then dispatches simulation creation flow', async () => {
+  test('given user clicks build simulation button then navigates to create route', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // When
     await user.click(screen.getByRole('button', { name: /Build Simulation/i }));
 
     // Then
-    expect(mockDispatch).toHaveBeenCalledWith(setFlow(SimulationCreationFlow));
+    expect(mockNavigate).toHaveBeenCalledWith('create');
   });
 
   test('given no simulations when rendering then displays empty state', () => {
@@ -169,11 +140,7 @@ describe('SimulationsPage', () => {
     (useUserSimulations as any).mockReturnValue(mockEmptyHookReturn);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     expect(screen.getByText('Data count: 0')).toBeInTheDocument();
@@ -182,11 +149,7 @@ describe('SimulationsPage', () => {
   test('given user searches then updates search value', async () => {
     // Given
     const user = userEvent.setup();
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // When
     const searchInput = screen.getByPlaceholderText('Search');
@@ -198,11 +161,7 @@ describe('SimulationsPage', () => {
 
   test('given hook returns correct user ID then uses MOCK_USER_ID', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     expect(useUserSimulations).toHaveBeenCalledWith(MOCK_USER_ID.toString());
@@ -210,11 +169,7 @@ describe('SimulationsPage', () => {
 
   test('given population column then displays as text not link', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     const population = screen.getByTestId('population-value');
@@ -239,11 +194,7 @@ describe('SimulationsPage', () => {
     (useUserSimulations as any).mockReturnValue(dataWithoutLabel);
 
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     const simulationName = screen.getByTestId('simulation-name');
@@ -252,11 +203,7 @@ describe('SimulationsPage', () => {
 
   test('given column configuration then does not include connected column', () => {
     // When
-    render(
-      <Provider store={mockStore}>
-        <SimulationsPage />
-      </Provider>
-    );
+    render(<SimulationsPage />);
 
     // Then
     // The component should render successfully without connected column

@@ -20,18 +20,6 @@ import {
   TEST_REPORT_LABEL,
 } from '@/tests/fixtures/frames/ReportCreationFrame';
 
-// Mock useBackButton hook
-const mockHandleBack = vi.fn();
-vi.mock('@/hooks/useBackButton', () => ({
-  useBackButton: vi.fn(() => ({ handleBack: mockHandleBack, canGoBack: false })),
-}));
-
-// Mock useCancelFlow
-const mockHandleCancel = vi.fn();
-vi.mock('@/hooks/useCancelFlow', () => ({
-  useCancelFlow: vi.fn(() => ({ handleCancel: mockHandleCancel })),
-}));
-
 describe('ReportCreationFrame', () => {
   let store: any;
   let mockOnNavigate: ReturnType<typeof vi.fn>;
@@ -39,7 +27,6 @@ describe('ReportCreationFrame', () => {
   let defaultFlowProps: any;
 
   beforeEach(() => {
-    mockHandleCancel.mockClear();
     vi.clearAllMocks();
 
     // Create a fresh store for each test

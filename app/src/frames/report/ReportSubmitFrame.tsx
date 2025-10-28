@@ -110,7 +110,6 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
       submitButtonText="Generate Report"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
-      ingredientType="report"
     />
   );
 }

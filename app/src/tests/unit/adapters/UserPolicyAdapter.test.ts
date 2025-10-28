@@ -47,12 +47,12 @@ describe('UserPolicyAdapter', () => {
       const result = UserPolicyAdapter.toCreationPayload(userPolicy);
 
       // Then
-      expect(result.userId).toBe(TEST_USER_IDS.USER_123);
-      expect(result.policyId).toBe(TEST_POLICY_IDS.POLICY_789);
-      expect(result.countryId).toBe(TEST_COUNTRIES.US);
+      expect(result.user_id).toBe(TEST_USER_IDS.USER_123);
+      expect(result.policy_id).toBe(TEST_POLICY_IDS.POLICY_789);
+      expect(result.country_id).toBe(TEST_COUNTRIES.US);
       expect(result.label).toBe(TEST_LABELS.MY_POLICY);
-      expect(result.updatedAt).toBeDefined();
-      expect(new Date(result.updatedAt as string).toISOString()).toBe(result.updatedAt);
+      expect(result.updated_at).toBeDefined();
+      expect(new Date(result.updated_at as string).toISOString()).toBe(result.updated_at);
     });
 
     test('given UserPolicy with numeric IDs then converts to strings', () => {
@@ -69,9 +69,9 @@ describe('UserPolicyAdapter', () => {
       const result = UserPolicyAdapter.toCreationPayload(userPolicy);
 
       // Then
-      expect(result.userId).toBe('123');
-      expect(result.policyId).toBe('456');
-      expect(result.countryId).toBe(TEST_COUNTRIES.US);
+      expect(result.user_id).toBe('123');
+      expect(result.policy_id).toBe('456');
+      expect(result.country_id).toBe(TEST_COUNTRIES.US);
     });
 
     test('given UserPolicy without label then includes undefined label', () => {
@@ -83,7 +83,7 @@ describe('UserPolicyAdapter', () => {
 
       // Then
       expect(result.label).toBeUndefined();
-      expect(result.countryId).toBe(TEST_COUNTRIES.US);
+      expect(result.country_id).toBe(TEST_COUNTRIES.US);
     });
 
     test('given UserPolicy with UK country then preserves country ID', () => {
@@ -100,7 +100,7 @@ describe('UserPolicyAdapter', () => {
       const result = UserPolicyAdapter.toCreationPayload(userPolicy);
 
       // Then
-      expect(result.countryId).toBe(TEST_COUNTRIES.UK);
+      expect(result.country_id).toBe(TEST_COUNTRIES.UK);
     });
   });
 
@@ -119,9 +119,9 @@ describe('UserPolicyAdapter', () => {
     test('given API response without optional fields then creates UserPolicy with defaults', () => {
       // Given
       const apiData = {
-        policyId: TEST_POLICY_IDS.POLICY_789,
-        userId: TEST_USER_IDS.USER_123,
-        countryId: TEST_COUNTRIES.US,
+        policy_id: TEST_POLICY_IDS.POLICY_789,
+        user_id: TEST_USER_IDS.USER_123,
+        country_id: TEST_COUNTRIES.US,
       };
 
       // When
@@ -138,22 +138,22 @@ describe('UserPolicyAdapter', () => {
       expect(result.isCreated).toBe(true);
     });
 
-    test('given API response with null label then preserves null', () => {
+    test('given API response with null label then converts to undefined', () => {
       // Given
       const apiData = {
-        policyId: TEST_POLICY_IDS.POLICY_789,
-        userId: TEST_USER_IDS.USER_123,
-        countryId: TEST_COUNTRIES.US,
+        policy_id: TEST_POLICY_IDS.POLICY_789,
+        user_id: TEST_USER_IDS.USER_123,
+        country_id: TEST_COUNTRIES.US,
         label: null,
-        createdAt: TEST_TIMESTAMPS.CREATED_AT,
-        updatedAt: TEST_TIMESTAMPS.UPDATED_AT,
+        created_at: TEST_TIMESTAMPS.CREATED_AT,
+        updated_at: TEST_TIMESTAMPS.UPDATED_AT,
       };
 
       // When
       const result = UserPolicyAdapter.fromApiResponse(apiData);
 
       // Then
-      expect(result.label).toBeNull();
+      expect(result.label).toBeUndefined();
       expect(result.countryId).toBe(TEST_COUNTRIES.US);
     });
 
@@ -161,7 +161,7 @@ describe('UserPolicyAdapter', () => {
       // Given
       const apiData = {
         ...mockUserPolicyApiResponse,
-        countryId: TEST_COUNTRIES.UK,
+        country_id: TEST_COUNTRIES.UK,
       };
 
       // When

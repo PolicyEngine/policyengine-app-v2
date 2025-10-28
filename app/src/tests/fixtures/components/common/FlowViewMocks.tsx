@@ -64,7 +64,6 @@ export const BUTTON_VARIANTS = {
 
 // Mock functions
 export const mockOnClick = vi.fn();
-export const mockBackClick = vi.fn();
 export const mockCancelClick = vi.fn();
 export const mockPrimaryClick = vi.fn();
 export const mockCardClick = vi.fn();
@@ -185,16 +184,9 @@ export const MockCustomContent = () => (
   <div data-testid="custom-content">{FLOW_VIEW_STRINGS.CUSTOM_CONTENT}</div>
 );
 
-// Mock useBackButton hook
-export const createMockUseBackButton = (canGoBack: boolean = false) => ({
-  handleBack: mockBackClick,
-  canGoBack,
-});
-
 // Helper function to reset all mocks
 export const resetAllMocks = () => {
   mockOnClick.mockClear();
-  mockBackClick.mockClear();
   mockCancelClick.mockClear();
   mockPrimaryClick.mockClear();
   mockCardClick.mockClear();

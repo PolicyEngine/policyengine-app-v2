@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
-import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
-import { setFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
@@ -34,7 +33,7 @@ export default function PopulationsPage() {
     error: geographicError,
   } = useGeographicAssociationsByUser(userId);
 
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -45,7 +44,7 @@ export default function PopulationsPage() {
   const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
-    dispatch(setFlow(PopulationCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
