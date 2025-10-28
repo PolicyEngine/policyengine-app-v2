@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { Box } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { Text } from '@mantine/core';
+import { colors } from '@/designTokens';
 
 export interface RichTextBlockProps {
   children: ReactNode;
@@ -12,47 +12,22 @@ export default function RichTextBlock({ children, variant = 'default' }: RichTex
   const linkColor = variant === 'inverted' ? colors.text.inverse : colors.primary[500];
 
   return (
-    <Box
+    <Text
+      variant="richText"
       style={{
         color: textColor,
-        fontFamily: typography.fontFamily.body,
-        fontSize: typography.fontSize.base,
-        lineHeight: typography.lineHeight.relaxed,
+        // CSS custom property for link color that the variant can use
+        ['--link-color' as any]: linkColor,
       }}
       styles={{
         root: {
-          'p': {
-            marginBottom: spacing.md,
-            marginTop: 0,
-            '&:last-child': {
-              marginBottom: 0,
-            },
-          },
-          'a': {
-            color: linkColor,
-            textDecoration: 'underline',
-            transition: 'opacity 0.2s ease',
-            '&:hover': {
-              opacity: 0.8,
-            },
-          },
-          'strong': {
-            fontWeight: typography.fontWeight.bold,
-          },
-          'em': {
-            fontStyle: 'italic',
-          },
-          'ul, ol': {
-            marginBottom: spacing.md,
-            paddingLeft: spacing.xl,
-          },
-          'li': {
-            marginBottom: spacing.xs,
+          '& a': {
+            color: 'var(--link-color)',
           },
         },
       }}
     >
       {children}
-    </Box>
+    </Text>
   );
 }
