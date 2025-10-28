@@ -1,10 +1,14 @@
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { Geography } from '@/types/ingredients/Geography';
+import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { capitalize } from '@/utils/stringUtils';
 
 interface GeographySubPageProps {
   baselineGeography?: Geography;
   reformGeography?: Geography;
+  baselineUserGeography?: UserGeographyPopulation;
+  reformUserGeography?: UserGeographyPopulation;
 }
 
 /**
@@ -16,6 +20,8 @@ interface GeographySubPageProps {
 export default function GeographySubPage({
   baselineGeography,
   reformGeography,
+  baselineUserGeography,
+  reformUserGeography,
 }: GeographySubPageProps) {
   if (!baselineGeography && !reformGeography) {
     return <div>No geography data available</div>;
@@ -24,31 +30,21 @@ export default function GeographySubPage({
   // Check if geographies are the same
   const geographiesAreSame = baselineGeography?.id === reformGeography?.id;
 
-  // Get labels from geography names, fallback to generic labels
-  const baselineLabel = baselineGeography?.name || 'Baseline';
-  const reformLabel = reformGeography?.name || 'Reform';
+  // Get labels from UserGeographyPopulation, fallback to geography names, then to generic labels
+  const baselineLabel = baselineUserGeography?.label || baselineGeography?.name || 'Baseline';
+  const reformLabel = reformUserGeography?.label || reformGeography?.name || 'Reform';
 
   // Define table rows
   const rows = [
     {
-      label: 'Geography ID',
-      baselineValue: baselineGeography?.geographyId || '—',
-      reformValue: reformGeography?.geographyId || '—',
-    },
-    {
-      label: 'Name',
+      label: 'Geographic area',
       baselineValue: baselineGeography?.name || '—',
       reformValue: reformGeography?.name || '—',
     },
     {
-      label: 'Country',
-      baselineValue: baselineGeography?.countryId || '—',
-      reformValue: reformGeography?.countryId || '—',
-    },
-    {
-      label: 'Scope',
-      baselineValue: baselineGeography?.scope || '—',
-      reformValue: reformGeography?.scope || '—',
+      label: 'Type',
+      baselineValue: baselineGeography?.scope ? capitalize(baselineGeography.scope) : '—',
+      reformValue: reformGeography?.scope ? capitalize(reformGeography.scope) : '—',
     },
   ];
 
