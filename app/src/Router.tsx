@@ -44,14 +44,8 @@ const router = createBrowserRouter(
               element: <Layout />,
               children: [
                 {
-                  path: 'report-output/:reportId',
+                  path: 'report-output/:reportId/:subpage?/:view?',
                   element: <ReportOutputPage />,
-                  children: [
-                    {
-                      path: ':subpage',
-                      element: <ReportOutputPage />,
-                    },
-                  ],
                 },
                 // Policy design mockups
                 {

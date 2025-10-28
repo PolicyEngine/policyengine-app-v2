@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
@@ -25,8 +26,16 @@ export type ReportOutputType = 'household' | 'societyWide';
 
 export default function ReportOutputPage() {
   const navigate = useNavigate();
-  const { reportId: userReportId, subpage } = useParams<{ reportId?: string; subpage?: string }>();
-
+  const countryId = useCurrentCountry();
+  const {
+    reportId: userReportId,
+    subpage,
+    view,
+  } = useParams<{
+    reportId?: string;
+    subpage?: string;
+    view?: string;
+  }>();
   // If no userReportId, show error
   if (!userReportId) {
     return (
@@ -84,6 +93,7 @@ export default function ReportOutputPage() {
 
   const DEFAULT_PAGE = 'overview';
   const activeTab = subpage || DEFAULT_PAGE;
+  const activeView = view || '';
 
   // Redirect to overview if no subpage is specified and data is ready
   useEffect(() => {
@@ -95,9 +105,15 @@ export default function ReportOutputPage() {
   // Determine which tabs to show based on output type
   const tabs = outputType ? getTabsForOutputType(outputType) : [];
 
-  // Handle tab navigation (relative navigation)
+  // Handle tab navigation (absolute path)
   const handleTabClick = (tabValue: string) => {
-    navigate(tabValue);
+    console.log(
+      '[ReportOutputPage] Tab clicked:',
+      tabValue,
+      'Current path:',
+      window.location.pathname
+    );
+    navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
   };
 
   // Format timestamp (placeholder for now)
@@ -125,6 +141,14 @@ export default function ReportOutputPage() {
     );
   }
 
+  // Determine if sidebar should be shown
+  const showSidebar = activeTab === 'comparative-analysis' && outputType === 'societyWide';
+
+  // Handle sidebar navigation (absolute path)
+  const handleSidebarNavigate = (viewName: string) => {
+    navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
+  };
+
   // Render content based on output type
   const renderContent = () => {
     if (outputType === 'household') {
@@ -150,6 +174,7 @@ export default function ReportOutputPage() {
         <SocietyWideReportOutput
           reportId={userReportId}
           subpage={activeTab}
+          activeView={activeView}
           report={report}
           simulations={simulations}
           userSimulations={userSimulations}
@@ -172,6 +197,9 @@ export default function ReportOutputPage() {
       tabs={tabs}
       activeTab={activeTab}
       onTabChange={handleTabClick}
+      showSidebar={showSidebar}
+      activeView={activeView}
+      onSidebarNavigate={handleSidebarNavigate}
     >
       {renderContent()}
     </ReportOutputLayout>
@@ -188,25 +216,22 @@ export default function ReportOutputPage() {
 function getTabsForOutputType(
   outputType: ReportOutputType
 ): Array<{ value: string; label: string }> {
-  // Common tabs shared by all report types
-  const commonTabs = [
-    { value: 'overview', label: 'Overview' },
-    { value: 'policy', label: 'Policy' },
-    { value: 'population', label: 'Population' },
-    { value: 'dynamics', label: 'Dynamics' },
-  ];
-
   if (outputType === 'societyWide') {
     return [
-      ...commonTabs,
-      // Add society-wide specific tabs here in the future
-      // e.g., { value: 'regional', label: 'Regional Breakdown' },
+      { value: 'overview', label: 'Overview' },
+      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'policy', label: 'Policy' },
+      { value: 'population', label: 'Population' },
+      { value: 'dynamics', label: 'Dynamics' },
     ];
   }
 
   if (outputType === 'household') {
     return [
-      ...commonTabs,
+      { value: 'overview', label: 'Overview' },
+      { value: 'policy', label: 'Policy' },
+      { value: 'population', label: 'Population' },
+      { value: 'dynamics', label: 'Dynamics' },
       // Add household-specific tabs here in the future
       // e.g., { value: 'family-structure', label: 'Family Details' },
     ];

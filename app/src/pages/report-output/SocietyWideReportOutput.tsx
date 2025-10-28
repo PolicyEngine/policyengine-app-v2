@@ -12,6 +12,7 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { getDisplayStatus } from '@/utils/statusMapping';
+import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
@@ -23,6 +24,7 @@ import PopulationSubPage from './PopulationSubPage';
 interface SocietyWideReportOutputProps {
   reportId: string;
   subpage?: string;
+  activeView?: string;
   report?: Report;
   simulations?: Simulation[];
   userSimulations?: UserSimulation[];
@@ -42,6 +44,7 @@ interface SocietyWideReportOutputProps {
 export function SocietyWideReportOutput({
   reportId: _reportId,
   subpage = 'overview',
+  activeView,
   report,
   simulations,
   userPolicies,
@@ -160,6 +163,15 @@ export function SocietyWideReportOutput({
       case 'dynamics':
         return (
           <DynamicsSubPage policies={policies} userPolicies={userPolicies} reportType="economy" />
+        );
+
+      case 'comparative-analysis':
+        return (
+          <ComparativeAnalysisPage
+            key={`comparative-analysis-${activeView}`}
+            output={output}
+            view={activeView}
+          />
         );
 
       default:
