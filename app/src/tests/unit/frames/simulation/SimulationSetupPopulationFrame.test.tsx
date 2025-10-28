@@ -6,6 +6,25 @@ import { mockOnNavigate } from '@/tests/fixtures/frames/simulationFrameMocks';
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
+// Mock the user hooks to avoid API calls
+vi.mock('@/hooks/useUserHousehold', () => ({
+  useUserHouseholds: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  }),
+  isHouseholdMetadataWithAssociation: () => false,
+}));
+
+vi.mock('@/hooks/useUserGeographic', () => ({
+  useUserGeographics: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  }),
+  isGeographicMetadataWithAssociation: () => false,
+}));
+
 describe('SimulationSetupPopulationFrame', () => {
   const mockFlowProps = {
     onNavigate: mockOnNavigate,

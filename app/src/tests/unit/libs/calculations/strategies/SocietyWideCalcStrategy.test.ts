@@ -233,4 +233,143 @@ describe('SocietyWideCalcStrategy', () => {
       expect(result.error).toBeDefined();
     });
   });
+
+  describe('transformResponseWithMetadata', () => {
+    it('given computing response with US country then includes synthetic progress', () => {
+      // Given
+      const apiResponse = mockSocietyWideComputingResponse();
+      const metadata = {
+        calcId: 'test-report',
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: Date.now() - 60000, // Started 1 minute ago
+      };
+
+      // When
+      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
+
+      // Then
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBeDefined();
+      expect(result.progress).toBeGreaterThan(0);
+      // 1 minute elapsed / 5 minute estimate = 20%
+      expect(result.progress).toBeCloseTo(20, 0);
+    });
+
+    it('given computing response with UK country then uses UK duration estimate', () => {
+      // Given
+      const apiResponse = mockSocietyWideComputingResponse();
+      const metadata = {
+        calcId: 'test-report',
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: Date.now() - 90000, // Started 1.5 minutes ago
+      };
+
+      // When
+      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'uk');
+
+      // Then
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBeDefined();
+      // 1.5 minutes elapsed / 3 minute estimate = 50%
+      expect(result.progress).toBeCloseTo(50, 0);
+    });
+
+    it('given computing response with unknown country then uses default duration', () => {
+      // Given
+      const apiResponse = mockSocietyWideComputingResponse();
+      const metadata = {
+        calcId: 'test-report',
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: Date.now() - 60000, // Started 1 minute ago
+      };
+
+      // When
+      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'ca');
+
+      // Then
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBeDefined();
+      // Uses default (5 minutes): 1 minute / 5 minutes = 20%
+      expect(result.progress).toBeCloseTo(20, 0);
+    });
+
+    it('given computing response with no country then uses default duration', () => {
+      // Given
+      const apiResponse = mockSocietyWideComputingResponse();
+      const metadata = {
+        calcId: 'test-report',
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: Date.now() - 150000, // Started 2.5 minutes ago
+      };
+
+      // When
+      const result = strategy.transformResponseWithMetadata(apiResponse, metadata);
+
+      // Then
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBeDefined();
+      // Uses default (5 minutes): 2.5 minutes / 5 minutes = 50%
+      expect(result.progress).toBeCloseTo(50, 0);
+    });
+
+    it('given long-running calculation then caps progress at 95%', () => {
+      // Given
+      const apiResponse = mockSocietyWideComputingResponse();
+      const metadata = {
+        calcId: 'test-report',
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: Date.now() - 600000, // Started 10 minutes ago (longer than estimate)
+      };
+
+      // When
+      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
+
+      // Then
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBe(95);
+    });
+
+    it('given just-started calculation then shows low progress', () => {
+      // Given
+      const apiResponse = mockSocietyWideComputingResponse();
+      const metadata = {
+        calcId: 'test-report',
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: Date.now() - 1000, // Started 1 second ago
+      };
+
+      // When
+      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
+
+      // Then
+      expect(result.status).toBe('pending');
+      expect(result.progress).toBeDefined();
+      expect(result.progress).toBeLessThan(1);
+    });
+
+    it('given complete response then returns complete status without progress', () => {
+      // Given
+      const apiResponse = mockSocietyWideCompleteResponse();
+      const metadata = {
+        calcId: 'test-report',
+        calcType: 'societyWide' as const,
+        targetType: 'report' as const,
+        startedAt: Date.now() - 60000,
+      };
+
+      // When
+      const result = strategy.transformResponseWithMetadata(apiResponse, metadata, 'us');
+
+      // Then
+      expect(result.status).toBe('complete');
+      expect(result.progress).toBeUndefined();
+      expect(result.result).toBeDefined();
+    });
+  });
 });

@@ -5,9 +5,13 @@ import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
 import { selectActiveSimulationPosition } from '@/reducers/reportReducer';
-import { updateSimulationAtPosition } from '@/reducers/simulationsReducer';
+import {
+  selectSimulationAtPosition,
+  updateSimulationAtPosition,
+} from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+import { arePopulationsCompatible } from '@/utils/populationCompatibility';
 
 export default function ReportSelectExistingSimulationFrame({ onNavigate }: FlowComponentProps) {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -16,6 +20,12 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   // Get the active simulation position from report reducer
   const activeSimulationPosition = useSelector((state: RootState) =>
     selectActiveSimulationPosition(state)
+  );
+
+  // Get the other simulation to check population compatibility
+  const otherPosition = activeSimulationPosition === 0 ? 1 : 0;
+  const otherSimulation = useSelector((state: RootState) =>
+    selectSimulationAtPosition(state, otherPosition)
   );
 
   const { data, isLoading, isError, error } = useUserSimulations(userId);
@@ -120,6 +130,13 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   // Build card list items from ALL filtered simulations (pagination handled by FlowView)
   const simulationCardItems = filteredSimulations.map((enhancedSim) => {
     const simulation = enhancedSim.simulation!;
+
+    // Check compatibility with other simulation
+    const isCompatible = arePopulationsCompatible(
+      otherSimulation?.populationId,
+      simulation.populationId
+    );
+
     let title = '';
     let subtitle = '';
 
@@ -142,11 +159,19 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
         : `Policy: ${policyLabel} • Population: ${populationLabel}`;
     }
 
+    // If incompatible, add explanation to subtitle
+    if (!isCompatible) {
+      subtitle = subtitle
+        ? `${subtitle} • Incompatible: different population than configured simulation`
+        : 'Incompatible: different population than configured simulation';
+    }
+
     return {
       title,
       subtitle,
       onClick: () => handleSimulationSelect(enhancedSim),
       isSelected: localSimulation?.simulation?.id === simulation.id,
+      isDisabled: !isCompatible,
     };
   });
 

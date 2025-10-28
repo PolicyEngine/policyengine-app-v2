@@ -10,6 +10,7 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Report } from '@/types/ingredients/Report';
 import { ReportCreationPayload } from '@/types/payloads';
+import { getReportOutputPath } from '@/utils/reportRouting';
 
 export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
   // Get navigation hook
@@ -71,7 +72,7 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
       },
       {
         onSuccess: (data) => {
-          navigate(`report-output/${data.userReport.id}`);
+          navigate(getReportOutputPath(reportState.countryId, data.userReport.id));
           if (!isInSubflow) {
             resetIngredient('report');
           }

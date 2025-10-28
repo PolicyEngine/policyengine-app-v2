@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { useCalculationStatus } from '@/hooks/useCalculationStatus';
+import { useReportProgressDisplay } from '@/hooks/useReportProgressDisplay';
 import { useStartCalculationOnLoad } from '@/hooks/useStartCalculationOnLoad';
 import type { CalcStartConfig } from '@/types/calculation';
 import type { Geography } from '@/types/ingredients/Geography';
@@ -9,6 +10,7 @@ import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 import type { UserSimulation } from '@/types/ingredients/UserSimulation';
+import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
@@ -47,8 +49,15 @@ export function SocietyWideReportOutput({
   policies,
   geographies,
 }: SocietyWideReportOutputProps) {
-  // Get calculation status for report
+  // Get calculation status for report (for state decisions)
   const calcStatus = useCalculationStatus(report?.id || '', 'report');
+
+  // Get real-time progress display (for UI enhancement only)
+  const {
+    displayProgress,
+    hasCalcStatus,
+    message: progressMessage,
+  } = useReportProgressDisplay(report?.id);
 
   // Build calculation config for auto-start
   const calcConfigs = useMemo(() => {
@@ -96,6 +105,9 @@ export function SocietyWideReportOutput({
     isComplete: calcStatus.isComplete,
   });
 
+  // RENDER DECISIONS: Based on persistent Report.status (via calcStatus)
+  // PROGRESS DISPLAY: Enhanced with ephemeral CalcStatus when available
+
   // Show error if no report data
   if (!report) {
     return <ErrorPage error={new Error('Report not found')} />;
@@ -107,10 +119,12 @@ export function SocietyWideReportOutput({
   }
 
   // Show loading page if calculation is still running
+  // CalcStatus provides progress display if available (same session)
   if (calcStatus.isPending) {
-    return (
-      <LoadingPage message="Computing society-wide impacts..." progress={calcStatus.progress} />
-    );
+    const displayStatusLabel = getDisplayStatus('pending');
+    const message = progressMessage || `${displayStatusLabel} society-wide impacts...`;
+
+    return <LoadingPage message={message} progress={hasCalcStatus ? displayProgress : undefined} />;
   }
 
   // Show error page if calculation failed

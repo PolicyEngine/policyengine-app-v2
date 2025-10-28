@@ -8,7 +8,8 @@ import {
   TextValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
-import { OutputTypeCell } from '@/components/report/OutputTypeCell';
+import { MultiSimOutputTypeCell } from '@/components/report/OutputTypeCell';
+import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
@@ -127,16 +128,18 @@ export default function ReportsPage() {
               },
             ],
           } as BulletsValue,
-          // Use OutputTypeCell component with CalcStatus subscription
+          // Use appropriate cell component based on report type
           // This cell will re-render independently when its CalcStatus updates
           outputType: {
-            custom: (
-              <OutputTypeCell
+            custom: isHouseholdReport ? (
+              <MultiSimOutputTypeCell
                 simulationIds={simulationIds}
                 isHouseholdReport={isHouseholdReport}
                 simulations={item.simulations}
                 report={item.report}
               />
+            ) : (
+              <ReportOutputTypeCell reportId={item.userReport.reportId} report={item.report} />
             ),
           },
         };
