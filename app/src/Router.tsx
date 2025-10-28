@@ -21,6 +21,8 @@ import PopulationsPage from './pages/Populations.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
+import DonatePage from './pages/Donate.page';
+import StaticLayout from './components/StaticLayout';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -163,14 +165,23 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // Static pages - no Layout wrapper needed, no metadata needed
+        // Static pages - use StaticLayout, no metadata needed
         {
-          path: 'methodology',
-          element: <div>Methodology page</div>,
-        },
-        {
-          path: 'support',
-          element: <div>Support page</div>,
+          element: <StaticLayout />,
+          children: [
+            {
+              path: 'donate',
+              element: <DonatePage />,
+            },
+            {
+              path: 'methodology',
+              element: <div>Methodology page</div>,
+            },
+            {
+              path: 'support',
+              element: <div>Support page</div>,
+            },
+          ],
         },
       ],
     },
