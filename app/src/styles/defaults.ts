@@ -1,3 +1,5 @@
+import { typography } from '../designTokens';
+
 // Defaults submodule for Mantine theme
 export const themeDefaults = {
   Button: {
@@ -22,5 +24,15 @@ export const themeDefaults = {
   },
   ActionIcon: {
     size: 'input-sm',
+  },
+};
+
+// Global styles for HTML elements
+export const globalStyles = {
+  em: {
+    fontStyle: 'italic',
+  },
+  strong: {
+    fontWeight: typography.fontWeight.bold,
   },
 };

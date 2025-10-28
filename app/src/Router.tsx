@@ -1,10 +1,12 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
+import StaticLayout from './components/StaticLayout';
 import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import DonatePage from './pages/Donate.page';
 import PoliciesPage from './pages/Policies.page';
 import PolicyDesign1Page from './pages/policy-designs/PolicyDesign1.page';
 import PolicyDesign2Page from './pages/policy-designs/PolicyDesign2.page';
@@ -157,14 +159,23 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // Static pages - no Layout wrapper needed, no metadata needed
+        // Static pages - use StaticLayout, no metadata needed
         {
-          path: 'methodology',
-          element: <div>Methodology page</div>,
-        },
-        {
-          path: 'support',
-          element: <div>Support page</div>,
+          element: <StaticLayout />,
+          children: [
+            {
+              path: 'donate',
+              element: <DonatePage />,
+            },
+            {
+              path: 'methodology',
+              element: <div>Methodology page</div>,
+            },
+            {
+              path: 'support',
+              element: <div>Support page</div>,
+            },
+          ],
         },
       ],
     },

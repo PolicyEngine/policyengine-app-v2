@@ -47,6 +47,43 @@ export const themeComponents = {
         };
       }
 
+      if (params.variant === 'richText') {
+        return {
+          root: {
+            fontFamily: typography.fontFamily.body,
+            fontSize: typography.fontSize.base,
+            lineHeight: typography.lineHeight.relaxed,
+            '& p': {
+              marginBottom: spacing.md,
+              marginTop: 0,
+            },
+            '& p:last-child': {
+              marginBottom: 0,
+            },
+            '& a': {
+              textDecoration: 'underline',
+              transition: 'opacity 0.2s ease',
+            },
+            '& a:hover': {
+              opacity: 0.8,
+            },
+            '& strong': {
+              fontWeight: typography.fontWeight.bold,
+            },
+            '& em': {
+              fontStyle: 'italic',
+            },
+            '& ul, & ol': {
+              marginBottom: spacing.md,
+              paddingLeft: spacing.xl,
+            },
+            '& li': {
+              marginBottom: spacing.xs,
+            },
+          },
+        };
+      }
+
       return {
         root: {
           fontFamily: typography.fontFamily.primary,
