@@ -1,7 +1,10 @@
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Simulation } from '@/types/ingredients/Simulation';
-import { UserGeographyPopulation, UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import {
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
 import GeographySubPage from './GeographySubPage';
 import HouseholdSubPage from './HouseholdSubPage';
 
@@ -65,7 +68,9 @@ export default function PopulationSubPage({
     const reformGeography = geographies?.find((g) => g.id === reformGeographyId);
 
     // Find the user geography associations
-    const baselineUserGeography = userGeographies?.find((ug) => ug.geographyId === baselineGeographyId);
+    const baselineUserGeography = userGeographies?.find(
+      (ug) => ug.geographyId === baselineGeographyId
+    );
     const reformUserGeography = userGeographies?.find((ug) => ug.geographyId === reformGeographyId);
 
     return (
