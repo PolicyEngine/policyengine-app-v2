@@ -27,9 +27,6 @@ export default function PopulationSubPage({
   userHouseholds,
 }: PopulationSubPageProps) {
   // Determine population type from simulations
-
-  console.log(`[PopulationSubPage] userHouseholds:`, userHouseholds);
-
   const populationType = baselineSimulation?.populationType || reformSimulation?.populationType;
 
   if (!populationType) {
@@ -61,25 +58,9 @@ export default function PopulationSubPage({
     const baselineGeographyId = baselineSimulation?.populationId;
     const reformGeographyId = reformSimulation?.populationId;
 
-    // Debug logging for geography lookup
-    console.log('Geography Lookup Debug:', {
-      baselineGeographyId,
-      reformGeographyId,
-      availableGeographies: geographies,
-      geographyIds: geographies?.map((g) => g.id),
-      geographyGeographyIds: geographies?.map((g) => g.geographyId),
-    });
-
     // Find the geographies - match by full id
     const baselineGeography = geographies?.find((g) => g.id === baselineGeographyId);
     const reformGeography = geographies?.find((g) => g.id === reformGeographyId);
-
-    console.log('Geography Lookup Results:', {
-      baselineGeography,
-      reformGeography,
-      foundBaseline: !!baselineGeography,
-      foundReform: !!reformGeography,
-    });
 
     return (
       <GeographySubPage baselineGeography={baselineGeography} reformGeography={reformGeography} />

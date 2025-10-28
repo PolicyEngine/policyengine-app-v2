@@ -591,44 +591,24 @@ export const useUserReportById = (userReportId: string) => {
   console.log('[useUserReportById] userHouseholds post-filter', userHouseholds);
 
   // Step 7: Get geography data from simulations
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
-
-  console.log('Geography Construction Debug:', {
-    geographyOptions,
-    optionNames: geographyOptions?.map((r) => r.name),
-    simulations,
-    geographySimulations: simulations.filter((s) => s.populationType === 'geography'),
-  });
-
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
-    if (sim.populationType === 'geography' && sim.populationId) {
-      console.log('Attempting to match geography:', {
-        populationId: sim.populationId,
-        availableNames: geographyOptions?.map((r) => r.name),
-      });
+    if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
+      // Use the simulation's populationId as-is for the Geography id
+      // The populationId is already in the correct format from createGeographyFromScope
+      const isNational = sim.populationId === sim.countryId;
 
-      const regionData = geographyOptions?.find((r) => r.name === sim.populationId);
+      const geography: Geography = {
+        id: sim.populationId,
+        countryId: sim.countryId,
+        scope: isNational ? 'national' : 'subnational',
+        geographyId: sim.populationId,
+        name: isNational ? sim.countryId.toUpperCase() : sim.populationId,
+      };
 
-      console.log('Geography match result:', {
-        populationId: sim.populationId,
-        foundMatch: !!regionData,
-        regionData,
-      });
-
-      if (regionData) {
-        geographies.push({
-          id: `${sim.countryId}-${sim.populationId}`,
-          countryId: sim.countryId,
-          scope: 'subnational' as const,
-          geographyId: sim.populationId,
-          name: regionData.label || regionData.name,
-        } as Geography);
-      }
+      geographies.push(geography);
     }
   });
-
-  console.log('Final geographies array:', geographies);
 
   return {
     userReport,
