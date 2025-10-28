@@ -1,140 +1,8 @@
+import type { ReactElement } from 'react';
 import { useState } from 'react';
-import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
-import { Box, Group, Text } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { Box, NavLink, ScrollArea } from '@mantine/core';
+import { spacing } from '@/designTokens';
 import type { TreeNode } from './comparativeAnalysisTree';
-
-interface MenuItemProps {
-  node: TreeNode;
-  activeView: string;
-  onNavigate: (view: string) => void;
-}
-
-function MenuItem({ node, activeView, onNavigate }: MenuItemProps) {
-  const isActive = activeView === node.name;
-  const isDisabled = node.disabled;
-
-  return (
-    <Box
-      onClick={isDisabled ? undefined : () => onNavigate(node.name)}
-      style={{
-        cursor: isDisabled ? 'not-allowed' : 'pointer',
-        padding: `${spacing.xs} ${spacing.sm}`,
-        borderRadius: 8,
-        backgroundColor: isActive ? colors.gray[100] : 'transparent',
-        transition: 'background-color 0.2s ease',
-      }}
-      onMouseEnter={(e) => {
-        if (!isDisabled && !isActive) {
-          e.currentTarget.style.backgroundColor = colors.gray[50];
-        }
-      }}
-      onMouseLeave={(e) => {
-        if (!isActive) {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }
-      }}
-    >
-      <Text
-        size="sm"
-        style={{
-          color: isDisabled
-            ? colors.gray[400]
-            : isActive
-              ? colors.text.primary
-              : 'rgba(0, 0, 0, 0.85)',
-          fontWeight: 400,
-          fontFamily: 'Roboto, sans-serif',
-        }}
-      >
-        {node.label}
-      </Text>
-    </Box>
-  );
-}
-
-interface MenuGroupProps {
-  node: TreeNode;
-  activeView: string;
-  onNavigate: (view: string) => void;
-}
-
-function MenuGroup({ node, activeView, onNavigate }: MenuGroupProps) {
-  // Auto-expand if any child is active
-  const isChildActive = node.children?.some(
-    (child) => child.name === activeView || child.children?.some((c) => c.name === activeView)
-  );
-  const [expanded, setExpanded] = useState(isChildActive || false);
-  const isDisabled = node.disabled;
-
-  const toggleExpanded = () => {
-    if (!isDisabled) {
-      setExpanded(!expanded);
-    }
-  };
-
-  return (
-    <Box>
-      <Box
-        onClick={toggleExpanded}
-        style={{
-          cursor: isDisabled ? 'not-allowed' : 'pointer',
-          padding: `${spacing.xs} ${spacing.sm}`,
-          borderRadius: 8,
-          transition: 'background-color 0.2s ease',
-        }}
-        onMouseEnter={(e) => {
-          if (!isDisabled) {
-            e.currentTarget.style.backgroundColor = colors.gray[50];
-          }
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-        }}
-      >
-        <Group gap={spacing.xs} justify="space-between" style={{ width: '100%' }}>
-          <Text
-            size="sm"
-            style={{
-              color: isDisabled ? colors.gray[400] : colors.text.primary,
-              fontWeight: 400,
-              fontFamily: 'Roboto, sans-serif',
-            }}
-          >
-            {node.label}
-          </Text>
-          {expanded ? (
-            <IconChevronDown size={16} color={isDisabled ? colors.gray[400] : colors.gray[600]} />
-          ) : (
-            <IconChevronRight size={16} color={isDisabled ? colors.gray[400] : colors.gray[600]} />
-          )}
-        </Group>
-      </Box>
-
-      {expanded && node.children && (
-        <Box style={{ paddingLeft: spacing.md }}>
-          {node.children.map((child) =>
-            child.children ? (
-              <MenuGroup
-                key={child.name}
-                node={child}
-                activeView={activeView}
-                onNavigate={onNavigate}
-              />
-            ) : (
-              <MenuItem
-                key={child.name}
-                node={child}
-                activeView={activeView}
-                onNavigate={onNavigate}
-              />
-            )
-          )}
-        </Box>
-      )}
-    </Box>
-  );
-}
 
 interface ReportSidebarProps {
   tree: TreeNode[];
@@ -144,25 +12,101 @@ interface ReportSidebarProps {
 
 /**
  * Left sidebar menu for tabs with nested subviews (e.g., Comparative Analysis).
- * Renders expandable/collapsible groups with chevrons; leaf items navigate on click.
  */
 export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarProps) {
+  // Track which item is currently active (clicked)
+  const [active, setActive] = useState<string | null>(activeView);
+
+  // Track which parent items are expanded
+  const [selectedSet, setSelectedSet] = useState<Set<string>>(() => {
+    // Auto-expand parents if any child is active
+    const initialExpanded = new Set<string>();
+    tree.forEach((node) => {
+      if (isChildActive(node, activeView)) {
+        initialExpanded.add(node.name);
+        // Also expand second-level parents
+        node.children?.forEach((child) => {
+          if (isChildActive(child, activeView)) {
+            initialExpanded.add(child.name);
+          }
+        });
+      }
+    });
+    return initialExpanded;
+  });
+
+  // Update active state when activeView changes from outside
+  if (activeView !== active) {
+    setActive(activeView);
+  }
+
+  function handleClick(name: string, hasChildren: boolean) {
+    // Only navigate if it's a leaf node (has no children)
+    if (!hasChildren) {
+      onNavigate(name);
+    }
+
+    // ALWAYS set as active (highlight it)
+    setActive(name);
+
+    // If has children, toggle expand/collapse
+    if (hasChildren) {
+      setSelectedSet((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(name)) {
+          newSet.delete(name);
+        } else {
+          newSet.add(name);
+        }
+        return newSet;
+      });
+    }
+  }
+
+  function renderNode(node: TreeNode): ReactElement {
+    const hasChildren = Boolean(node.children && node.children.length > 0);
+    const isExpanded = selectedSet.has(node.name);
+    const isActive = active === node.name;
+
+    return (
+      <NavLink
+        key={node.name}
+        label={node.label}
+        active={isActive}
+        opened={hasChildren ? isExpanded : undefined}
+        onClick={() => handleClick(node.name, hasChildren)}
+        disabled={node.disabled}
+      >
+        {hasChildren && isExpanded && node.children?.map((child) => renderNode(child))}
+      </NavLink>
+    );
+  }
+
   return (
     <Box
+      bg="gray.0"
       style={{
         width: 250,
         padding: spacing.md,
-        borderRight: `1px solid ${colors.border.light}`,
-        minHeight: '60vh',
+        borderRight: '1px solid var(--mantine-color-gray-3)',
       }}
     >
-      {tree.map((node) =>
-        node.children ? (
-          <MenuGroup key={node.name} node={node} activeView={activeView} onNavigate={onNavigate} />
-        ) : (
-          <MenuItem key={node.name} node={node} activeView={activeView} onNavigate={onNavigate} />
-        )
-      )}
+      <ScrollArea h="100%" type="scroll">
+        {tree.map((node) => renderNode(node))}
+      </ScrollArea>
     </Box>
   );
+}
+
+/**
+ * Helper to check if any descendant is the active view
+ */
+function isChildActive(node: TreeNode, activeView: string): boolean {
+  if (node.name === activeView) {
+    return true;
+  }
+  if (node.children) {
+    return node.children.some((child) => isChildActive(child, activeView));
+  }
+  return false;
 }
