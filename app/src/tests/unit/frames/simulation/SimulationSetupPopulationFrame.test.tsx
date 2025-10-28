@@ -1,5 +1,4 @@
 import { render, screen, userEvent } from '@test-utils';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSetupPopulationFrame from '@/frames/simulation/SimulationSetupPopulationFrame';
 import { mockOnNavigate } from '@/tests/fixtures/frames/simulationFrameMocks';
@@ -43,20 +42,10 @@ describe('SimulationSetupPopulationFrame', () => {
     mockOnNavigate.mockClear();
   });
 
-  const renderWithRouter = (component: React.ReactElement) => {
-    return render(
-      <MemoryRouter initialEntries={['/us/simulation']}>
-        <Routes>
-          <Route path="/:countryId/simulation" element={component} />
-        </Routes>
-      </MemoryRouter>
-    );
-  };
-
   test('given user selects load existing and clicks next then navigates to loadExisting', async () => {
     // Given
     const user = userEvent.setup();
-    renderWithRouter(<SimulationSetupPopulationFrame {...mockFlowProps} />);
+    render(<SimulationSetupPopulationFrame {...mockFlowProps} />);
 
     // When
     const loadExistingButton = screen.getByText('Load Existing Population');
@@ -72,7 +61,7 @@ describe('SimulationSetupPopulationFrame', () => {
   test('given user selects create new and clicks next then navigates to createNew', async () => {
     // Given
     const user = userEvent.setup();
-    renderWithRouter(<SimulationSetupPopulationFrame {...mockFlowProps} />);
+    render(<SimulationSetupPopulationFrame {...mockFlowProps} />);
 
     // When
     const createNewButton = screen.getByText('Create New Population');
@@ -87,7 +76,7 @@ describe('SimulationSetupPopulationFrame', () => {
 
   test('given no selection made then next button is disabled', () => {
     // Given
-    renderWithRouter(<SimulationSetupPopulationFrame {...mockFlowProps} />);
+    render(<SimulationSetupPopulationFrame {...mockFlowProps} />);
 
     // When
     const nextButton = screen.getByRole('button', { name: /Next/i });
