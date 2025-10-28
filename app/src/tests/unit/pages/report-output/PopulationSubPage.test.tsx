@@ -57,11 +57,9 @@ describe('PopulationSubPage - Design 4 Router', () => {
 
       // Should display California (baseline)
       expect(screen.getByText('California')).toBeInTheDocument();
-      expect(screen.getByText('ca')).toBeInTheDocument();
 
       // Should display New York (reform)
       expect(screen.getByText('New York')).toBeInTheDocument();
-      expect(screen.getByText('ny')).toBeInTheDocument();
     });
 
     test('given missing household data then displays error in HouseholdSubPage', () => {

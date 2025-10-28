@@ -39,7 +39,7 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(screen.getByText('Cost')).toBeInTheDocument();
+      expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
       expect(container.textContent).toContain('$1.0');
       expect(container.textContent).toContain('million');
     });
@@ -252,7 +252,7 @@ describe('SocietyWideOverview', () => {
     render(<SocietyWideOverview output={output} />);
 
     // Then
-    expect(screen.getByText('Cost')).toBeInTheDocument();
+    expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
     expect(screen.getByText('Net income')).toBeInTheDocument();
     expect(screen.getByText('Poverty')).toBeInTheDocument();
   });
