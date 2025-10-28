@@ -72,7 +72,7 @@ export default function PolicyParameterSelectorFrame({
         )}
       </AppShell.Navbar>
 
-      <AppShell.Main>
+      <AppShell.Main bg="gray.0">
         {loading || !parameterTree ? (
           <MainEmpty />
         ) : selectedLeafParam ? (

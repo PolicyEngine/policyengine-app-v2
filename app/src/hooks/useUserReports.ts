@@ -14,10 +14,14 @@ import { Policy } from '@/types/ingredients/Policy';
 import { Report } from '@/types/ingredients/Report';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
+import {
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { householdKeys, policyKeys, reportKeys, simulationKeys } from '../libs/queryKeys';
+import { useGeographicAssociationsByUser } from './useUserGeographic';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useReportAssociationById, useReportAssociationsByUser } from './useUserReportAssociations';
@@ -49,6 +53,7 @@ export interface EnhancedUserReport {
   userSimulations?: UserSimulation[];
   userPolicies?: UserPolicy[];
   userHouseholds?: UserHouseholdPopulation[];
+  userGeographies?: UserGeographyPopulation[];
 
   // Status
   isLoading: boolean;
@@ -533,6 +538,7 @@ export const useUserReportById = (userReportId: string) => {
 
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId || '');
   const { data: householdAssociations } = useHouseholdAssociationsByUser(userId || '');
+  const { data: geographyAssociations } = useGeographicAssociationsByUser(userId || '');
 
   console.log('[useUserReportById] householdAssociations', householdAssociations);
 
@@ -593,42 +599,43 @@ export const useUserReportById = (userReportId: string) => {
   // Step 7: Get geography data from simulations
   const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
 
-  console.log('Geography Construction Debug:', {
-    geographyOptions,
-    optionNames: geographyOptions?.map((r) => r.name),
-    simulations,
-    geographySimulations: simulations.filter((s) => s.populationType === 'geography'),
-  });
-
   const geographies: Geography[] = [];
   simulations.forEach((sim) => {
-    if (sim.populationType === 'geography' && sim.populationId) {
-      console.log('Attempting to match geography:', {
-        populationId: sim.populationId,
-        availableNames: geographyOptions?.map((r) => r.name),
-      });
+    if (sim.populationType === 'geography' && sim.populationId && sim.countryId) {
+      // Use the simulation's populationId as-is for the Geography id
+      // The populationId is already in the correct format from createGeographyFromScope
+      const isNational = sim.populationId === sim.countryId;
 
-      const regionData = geographyOptions?.find((r) => r.name === sim.populationId);
+      let name: string;
+      if (isNational) {
+        name = sim.countryId.toUpperCase();
+      } else {
+        // For subnational, extract the base geography ID and look up in metadata
+        // e.g., "us-fl" -> "fl", "uk-scotland" -> "scotland"
+        const parts = sim.populationId.split('-');
+        const baseGeographyId = parts.length > 1 ? parts.slice(1).join('-') : sim.populationId;
 
-      console.log('Geography match result:', {
-        populationId: sim.populationId,
-        foundMatch: !!regionData,
-        regionData,
-      });
-
-      if (regionData) {
-        geographies.push({
-          id: `${sim.countryId}-${sim.populationId}`,
-          countryId: sim.countryId,
-          scope: 'subnational' as const,
-          geographyId: sim.populationId,
-          name: regionData.label || regionData.name,
-        } as Geography);
+        // Try to find the label in metadata
+        const regionData = geographyOptions?.find((r) => r.name === baseGeographyId);
+        name = regionData?.label || sim.populationId;
       }
+
+      const geography: Geography = {
+        id: sim.populationId,
+        countryId: sim.countryId,
+        scope: isNational ? 'national' : 'subnational',
+        geographyId: sim.populationId,
+        name,
+      };
+
+      geographies.push(geography);
     }
   });
 
-  console.log('Final geographies array:', geographies);
+  // Step 8: Filter geography associations for geographies used in this report
+  const userGeographies = geographyAssociations?.filter((ga) =>
+    geographies.some((g) => g.id === ga.geographyId)
+  );
 
   return {
     userReport,
@@ -640,6 +647,7 @@ export const useUserReportById = (userReportId: string) => {
     userSimulations,
     userPolicies,
     userHouseholds,
+    userGeographies,
     isLoading:
       userReportLoading ||
       repLoading ||

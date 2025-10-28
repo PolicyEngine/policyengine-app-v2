@@ -49,6 +49,7 @@ export default function ReportOutputPage() {
     households,
     userHouseholds,
     geographies,
+    userGeographies,
     isLoading: dataLoading,
     error: dataError,
   } = useUserReportById(userReportId);
@@ -155,6 +156,7 @@ export default function ReportOutputPage() {
           userPolicies={userPolicies}
           policies={policies}
           geographies={geographies}
+          userGeographies={userGeographies}
         />
       );
     }

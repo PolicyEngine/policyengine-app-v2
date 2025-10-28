@@ -43,7 +43,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
             pb={spacing.xs}
             style={{ borderBottom: `1px solid ${colors.border.light}` }}
           >
-            Cost
+            Budgetary impact
           </Text>
           <Text variant="metricValue" mt={spacing.sm}>
             Has no impact on the budget
@@ -65,7 +65,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
             pb={spacing.xs}
             style={{ borderBottom: `1px solid ${colors.border.light}` }}
           >
-            Cost
+            Budgetary impact
           </Text>
           <Text variant="metricValue" c="red" mt={spacing.sm}>
             Error calculating budget impact
@@ -75,6 +75,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
     }
 
     const formatted = formatBudgetaryImpact(budgetaryImpact);
+    const action = budgetaryImpact > 0 ? 'Raises' : 'Costs';
 
     return (
       <Box>
@@ -84,16 +85,21 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
           pb={spacing.xs}
           style={{ borderBottom: `1px solid ${colors.border.light}` }}
         >
-          Cost
+          Budgetary impact
         </Text>
-        <Text variant="metricValue" c={colors.primary[700]} mt={spacing.sm}>
-          ${formatted.display}
+        <Group gap={spacing.xs} align="baseline" mt={spacing.sm}>
+          <Text variant="metricValue" c={colors.primary[700]}>
+            {action}
+          </Text>
+          <Text variant="metricValue" c={colors.primary[700]}>
+            ${formatted.display}
+          </Text>
           {formatted.label && (
-            <Text span variant="metricValue">
+            <Text variant="metricValue" c={colors.primary[700]}>
               {formatted.label}
             </Text>
           )}
-        </Text>
+        </Group>
       </Box>
     );
   };

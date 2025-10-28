@@ -72,16 +72,13 @@ describe('GeographySubPage - Design 4 Table Format', () => {
       );
 
       // Should display geography properties
-      expect(screen.getByText(/geography id/i)).toBeInTheDocument();
-      expect(screen.getByText(/name/i)).toBeInTheDocument();
-      expect(screen.getByText(/country/i)).toBeInTheDocument();
-      expect(screen.getByText(/scope/i)).toBeInTheDocument();
+      expect(screen.getByText(/geographic area/i)).toBeInTheDocument();
+      expect(screen.getByText(/type/i)).toBeInTheDocument();
 
       // Should display values
-      expect(screen.getByText('ca')).toBeInTheDocument();
       expect(screen.getByText('California')).toBeInTheDocument();
-      expect(screen.getByText('ny')).toBeInTheDocument();
       expect(screen.getByText('New York')).toBeInTheDocument();
+      expect(screen.getAllByText('Subnational')).toHaveLength(2); // One for baseline, one for reform
     });
 
     test('given same geography then displays value once', () => {
