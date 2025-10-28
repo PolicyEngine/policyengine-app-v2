@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
-import { Box } from '@mantine/core';
 import { Helmet } from 'react-helmet';
+import { Box } from '@mantine/core';
 
 export interface StaticPageLayoutProps {
   title: string;

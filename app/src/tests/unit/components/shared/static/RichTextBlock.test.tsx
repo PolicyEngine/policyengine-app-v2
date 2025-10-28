@@ -1,13 +1,13 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import RichTextBlock from '@/components/shared/static/RichTextBlock';
 import {
-  TEST_PARAGRAPH_TEXT,
-  TEST_LINK_TEXT,
-  TEST_LINK_HREF,
-  TEST_FIRST_PARAGRAPH,
-  TEST_SECOND_PARAGRAPH,
   TEST_BOLD_TEXT,
+  TEST_FIRST_PARAGRAPH,
+  TEST_LINK_HREF,
+  TEST_LINK_TEXT,
+  TEST_PARAGRAPH_TEXT,
+  TEST_SECOND_PARAGRAPH,
 } from '@/tests/fixtures/components/shared/static/RichTextBlockMocks';
 
 describe('RichTextBlock', () => {
@@ -28,8 +28,7 @@ describe('RichTextBlock', () => {
     render(
       <RichTextBlock>
         <p>
-          Text with{' '}
-          <a href={TEST_LINK_HREF}>{TEST_LINK_TEXT}</a>
+          Text with <a href={TEST_LINK_HREF}>{TEST_LINK_TEXT}</a>
         </p>
       </RichTextBlock>
     );

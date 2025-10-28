@@ -13,7 +13,7 @@ export default function ContentSection({
   title,
   variant = 'primary',
   children,
-  centerTitle = false
+  centerTitle = false,
 }: ContentSectionProps) {
   const backgrounds = {
     primary: colors.white,

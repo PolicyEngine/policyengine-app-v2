@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import BulletList from '@/components/shared/static/BulletList';
 import {
   MOCK_BULLET_ITEMS,

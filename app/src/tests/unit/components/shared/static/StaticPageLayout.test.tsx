@@ -1,7 +1,10 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import { TEST_PAGE_TITLE, TEST_CONTENT_TEXT } from '@/tests/fixtures/components/shared/static/StaticPageLayoutMocks';
+import {
+  TEST_CONTENT_TEXT,
+  TEST_PAGE_TITLE,
+} from '@/tests/fixtures/components/shared/static/StaticPageLayoutMocks';
 
 describe('StaticPageLayout', () => {
   test('given page title then document title is set', () => {

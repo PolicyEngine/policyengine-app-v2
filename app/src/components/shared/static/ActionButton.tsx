@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Button, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
@@ -15,7 +15,7 @@ export default function ActionButton({
   href,
   variant = 'primary',
   multiline = false,
-  caption
+  caption,
 }: ActionButtonProps) {
   const buttonRef = useRef<HTMLAnchorElement>(null);
   const [buttonWidth, setButtonWidth] = useState<number | null>(null);
@@ -52,7 +52,14 @@ export default function ActionButton({
   const buttonStyle = styles[variant];
 
   return (
-    <Box style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <Box
+      style={{
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+      }}
+    >
       <Button
         ref={buttonRef}
         component="a"

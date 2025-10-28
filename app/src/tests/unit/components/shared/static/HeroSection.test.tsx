@@ -1,11 +1,11 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import HeroSection from '@/components/shared/static/HeroSection';
 import {
   MOCK_HERO_PROPS,
   MOCK_HERO_PROPS_DARK,
-  TEST_HERO_TITLE,
   TEST_HERO_DESCRIPTION,
+  TEST_HERO_TITLE,
 } from '@/tests/fixtures/components/shared/static/HeroSectionMocks';
 
 describe('HeroSection', () => {

@@ -1,11 +1,11 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import ContentSection from '@/components/shared/static/ContentSection';
 import {
   MOCK_CONTENT_SECTION_PROPS,
   MOCK_CONTENT_SECTION_PROPS_ACCENT,
-  TEST_SECTION_TITLE,
   TEST_SECTION_CONTENT,
+  TEST_SECTION_TITLE,
 } from '@/tests/fixtures/components/shared/static/ContentSectionMocks';
 
 describe('ContentSection', () => {

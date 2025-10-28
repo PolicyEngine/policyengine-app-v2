@@ -1,12 +1,12 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import CTASection from '@/components/shared/static/CTASection';
 import {
-  TEST_SECTION_TITLE,
-  TEST_BUTTON_TEXT,
   TEST_BUTTON_HREF,
+  TEST_BUTTON_TEXT,
   TEST_CAPTION,
   TEST_CTA_CONTENT_TEXT,
+  TEST_SECTION_TITLE,
 } from '@/tests/fixtures/components/shared/static/CTASectionMocks';
 
 describe('CTASection', () => {
@@ -76,9 +76,7 @@ describe('CTASection', () => {
     const cta = { text: TEST_BUTTON_TEXT, href: TEST_BUTTON_HREF };
 
     // When
-    const { container } = render(
-      <CTASection content={content} cta={cta} variant="accent" />
-    );
+    const { container } = render(<CTASection content={content} cta={cta} variant="accent" />);
 
     // Then
     const sectionBox = container.firstChild as HTMLElement;

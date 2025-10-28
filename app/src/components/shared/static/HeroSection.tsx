@@ -11,11 +11,7 @@ export interface HeroSectionProps {
   variant?: 'light' | 'default' | 'accent' | 'dark';
 }
 
-export default function HeroSection({
-  title,
-  description,
-  variant = 'default'
-}: HeroSectionProps) {
+export default function HeroSection({ title, description, variant = 'default' }: HeroSectionProps) {
   const backgrounds = {
     light: '#F7FEFE', // Deprecated, kept for backwards compatibility
     default: '#F7FEFE',
@@ -61,14 +57,18 @@ export default function HeroSection({
         <Divider
           orientation="horizontal"
           size="xs"
-          color={variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.light}
+          color={
+            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.light
+          }
           hiddenFrom="md"
         />
 
         <Divider
           orientation="vertical"
           size="xs"
-          color={variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.light}
+          color={
+            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.light
+          }
           visibleFrom="md"
         />
 

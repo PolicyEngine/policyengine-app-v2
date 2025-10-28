@@ -1,9 +1,9 @@
-import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import HeroSection from '@/components/shared/static/HeroSection';
-import ContentSection from '@/components/shared/static/ContentSection';
 import BulletList, { BulletItem } from '@/components/shared/static/BulletList';
+import ContentSection from '@/components/shared/static/ContentSection';
 import CTASection from '@/components/shared/static/CTASection';
+import HeroSection from '@/components/shared/static/HeroSection';
 import RichTextBlock from '@/components/shared/static/RichTextBlock';
+import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 
 const differenceItems: BulletItem[] = [
   {

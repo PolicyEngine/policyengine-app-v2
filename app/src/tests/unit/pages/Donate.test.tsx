@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import DonatePage from '@/pages/Donate.page';
 
 describe('DonatePage', () => {
@@ -47,9 +47,7 @@ describe('DonatePage', () => {
     render(<DonatePage />);
 
     // Then
-    expect(
-      screen.getByRole('heading', { name: /how to donate/i, level: 2 })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /how to donate/i, level: 2 })).toBeInTheDocument();
   });
 
   test('given page loads then donation button is rendered', () => {

@@ -16,7 +16,7 @@ export default function CTASection({
   variant = 'accent',
   content,
   cta,
-  caption
+  caption,
 }: CTASectionProps) {
   const backgrounds = {
     primary: colors.white,
@@ -65,7 +65,15 @@ export default function CTASection({
           <Box flex={{ base: 1, md: 1.5 }} style={{ color: textColors[variant] }}>
             {content}
           </Box>
-          <Box flex={1} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+          <Box
+            flex={1}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
             <ActionButton
               {...cta}
               variant={isInverted ? 'inverted' : 'primary'}
