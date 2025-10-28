@@ -7,6 +7,7 @@ import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DonatePage from './pages/Donate.page';
+import TeamPage from './pages/Team.page';
 import PoliciesPage from './pages/Policies.page';
 import PolicyDesign1Page from './pages/policy-designs/PolicyDesign1.page';
 import PolicyDesign2Page from './pages/policy-designs/PolicyDesign2.page';
@@ -166,6 +167,10 @@ const router = createBrowserRouter(
             {
               path: 'donate',
               element: <DonatePage />,
+            },
+            {
+              path: 'team',
+              element: <TeamPage />,
             },
             {
               path: 'methodology',

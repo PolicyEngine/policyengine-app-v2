@@ -58,7 +58,7 @@ export default function HeroSection({ title, description, variant = 'default' }:
           orientation="horizontal"
           size="xs"
           color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.light
+            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
           }
           hiddenFrom="md"
         />
@@ -67,7 +67,7 @@ export default function HeroSection({ title, description, variant = 'default' }:
           orientation="vertical"
           size="xs"
           color={
-            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.light
+            variant === 'accent' || variant === 'dark' ? colors.text.inverse : colors.border.dark
           }
           visibleFrom="md"
         />
