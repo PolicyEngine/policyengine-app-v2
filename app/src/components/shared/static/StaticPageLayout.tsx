@@ -1,5 +1,4 @@
 import { ReactNode } from 'react';
-import { Helmet } from 'react-helmet';
 import { Box } from '@mantine/core';
 
 export interface StaticPageLayoutProps {
@@ -10,9 +9,7 @@ export interface StaticPageLayoutProps {
 export default function StaticPageLayout({ title, children }: StaticPageLayoutProps) {
   return (
     <>
-      <Helmet>
-        <title>{title} | PolicyEngine</title>
-      </Helmet>
+      <title>{title} | PolicyEngine</title>
       <Box>{children}</Box>
     </>
   );
