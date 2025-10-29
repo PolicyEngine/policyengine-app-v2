@@ -3,6 +3,8 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
+import EarningsVariationSubPage from './earnings-variation/EarningsVariationSubPage';
+import MarginalTaxRatesSubPage from './marginal-tax-rates/MarginalTaxRatesSubPage';
 import NetIncomeSubPage from './net-income/NetIncomeSubPage';
 import NotFoundSubPage from './NotFoundSubPage';
 
@@ -31,8 +33,8 @@ interface ViewComponentProps {
  */
 const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
   'net-income': NetIncomeSubPage,
-  // 'earnings-variation': EarningsVariationSubPage,  // TODO: Phase 4
-  // 'marginal-tax-rates': MarginalTaxRatesSubPage,  // TODO: Phase 5
+  'earnings-variation': EarningsVariationSubPage,
+  'marginal-tax-rates': MarginalTaxRatesSubPage,
 };
 
 /**
