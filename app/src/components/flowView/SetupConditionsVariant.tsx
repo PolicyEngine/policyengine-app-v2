@@ -30,11 +30,13 @@ export default function SetupConditionsVariant({ cards }: SetupConditionsVariant
           onClick={card.onClick}
           disabled={card.isDisabled}
           variant={
-            card.isSelected
-              ? 'setupCondition--active'
-              : card.isFulfilled
-                ? 'setupCondition--fulfilled'
-                : 'setupCondition--unfulfilled'
+            card.isDisabled
+              ? 'setupCondition--disabled'
+              : card.isSelected
+                ? 'setupCondition--active'
+                : card.isFulfilled
+                  ? 'setupCondition--fulfilled'
+                  : 'setupCondition--unfulfilled'
           }
         >
           <Group gap={spacing.sm} align="center">
