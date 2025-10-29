@@ -35,9 +35,13 @@ export default function IndividualTable({
     return <Text c={colors.text.secondary}>No data available</Text>;
   }
 
+  // Determine if we're showing a comparison or single household
+  const hasReform = !!reformMember;
+  const showComparison = !isSameHousehold && hasReform;
+
   // Calculate column widths
   const labelColumnWidth = 45;
-  const valueColumnWidth = isSameHousehold ? 55 : 27.5;
+  const valueColumnWidth = isSameHousehold || !hasReform ? 55 : 27.5;
 
   // Helper to find variable value and format it properly
   const findVariableValue = (member: EntityMember | undefined, paramName: string): string => {
@@ -102,7 +106,7 @@ export default function IndividualTable({
               >
                 {baselineLabel.toUpperCase()} (BASELINE / REFORM)
               </Table.Th>
-            ) : (
+            ) : showComparison ? (
               <>
                 <Table.Th
                   style={{
@@ -133,6 +137,21 @@ export default function IndividualTable({
                   {reformLabel.toUpperCase()} (REFORM)
                 </Table.Th>
               </>
+            ) : (
+              <Table.Th
+                style={{
+                  width: `${valueColumnWidth}%`,
+                  textAlign: 'right',
+                  fontSize: typography.fontSize.xs,
+                  fontWeight: typography.fontWeight.medium,
+                  color: colors.text.secondary,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em',
+                  padding: `${spacing.md} ${spacing.lg}`,
+                }}
+              >
+                {baselineLabel.toUpperCase()}
+              </Table.Th>
             )}
           </Table.Tr>
         </Table.Thead>
@@ -168,7 +187,7 @@ export default function IndividualTable({
                       {baselineValue}
                     </Text>
                   </Table.Td>
-                ) : (
+                ) : showComparison ? (
                   <>
                     <Table.Td
                       style={{
@@ -191,6 +210,17 @@ export default function IndividualTable({
                       </Text>
                     </Table.Td>
                   </>
+                ) : (
+                  <Table.Td
+                    style={{
+                      textAlign: 'right',
+                      padding: `${spacing.md} ${spacing.lg}`,
+                    }}
+                  >
+                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+                      {baselineValue}
+                    </Text>
+                  </Table.Td>
                 )}
               </Table.Tr>
             );
