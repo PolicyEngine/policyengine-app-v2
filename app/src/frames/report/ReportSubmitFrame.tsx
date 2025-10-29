@@ -40,6 +40,13 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
     const sim1Id = simulation1?.id;
     const sim2Id = simulation2?.id;
 
+    // Validation: Prevent 0-simulation reports
+    // At least one simulation must be configured
+    if (!sim1Id) {
+      console.error('[ReportSubmitFrame] Cannot submit report: no simulations configured');
+      return;
+    }
+
     // Submit both simulations if they exist and aren't created yet
     // TODO: Add logic to create simulations if !isCreated before submitting report
 
@@ -84,7 +91,7 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
   // Create summary boxes based on the simulations
   const summaryBoxes: SummaryBoxItem[] = [
     {
-      title: 'First Simulation',
+      title: 'Baseline simulation',
       description:
         simulation1?.label || (simulation1?.id ? `Simulation #${simulation1.id}` : 'No simulation'),
       isFulfilled: !!simulation1,
@@ -93,10 +100,11 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
         : undefined,
     },
     {
-      title: 'Second Simulation',
+      title: 'Comparison simulation',
       description:
         simulation2?.label || (simulation2?.id ? `Simulation #${simulation2.id}` : 'No simulation'),
       isFulfilled: !!simulation2,
+      isDisabled: !simulation2,
       badge: simulation2
         ? `Policy #${simulation2.policyId} • Population #${simulation2.populationId}`
         : undefined,

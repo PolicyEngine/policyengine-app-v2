@@ -35,9 +35,13 @@ export default function IndividualTable({
     return <Text c={colors.text.secondary}>No data available</Text>;
   }
 
+  // Determine if we're showing a comparison or single household
+  const hasReform = !!reformMember;
+  const showComparison = !isSameHousehold && hasReform;
+
   // Calculate column widths
   const labelColumnWidth = 45;
-  const valueColumnWidth = isSameHousehold ? 55 : 27.5;
+  const valueColumnWidth = isSameHousehold || !hasReform ? 55 : 27.5;
 
   // Helper to find variable value and format it properly
   const findVariableValue = (member: EntityMember | undefined, paramName: string): string => {
@@ -74,65 +78,28 @@ export default function IndividualTable({
       <Table>
         <Table.Thead style={{ backgroundColor: colors.gray[50] }}>
           <Table.Tr>
-            <Table.Th
-              style={{
-                width: `${labelColumnWidth}%`,
-                fontSize: typography.fontSize.xs,
-                fontWeight: typography.fontWeight.medium,
-                color: colors.text.secondary,
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em',
-                padding: `${spacing.md} ${spacing.lg}`,
-              }}
-            >
-              Variable
-            </Table.Th>
+            <TableHeaderCell width={`${labelColumnWidth}%`}>Variable</TableHeaderCell>
             {isSameHousehold ? (
-              <Table.Th
-                style={{
-                  width: `${valueColumnWidth}%`,
-                  textAlign: 'right',
-                  fontSize: typography.fontSize.xs,
-                  fontWeight: typography.fontWeight.medium,
-                  color: colors.text.secondary,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.05em',
-                  padding: `${spacing.md} ${spacing.lg}`,
-                }}
-              >
-                {baselineLabel.toUpperCase()} (BASELINE / REFORM)
-              </Table.Th>
-            ) : (
+              <MergedColumnHeader
+                width={`${valueColumnWidth}%`}
+                label={`${baselineLabel.toUpperCase()} (BASELINE / REFORM)`}
+              />
+            ) : showComparison ? (
               <>
-                <Table.Th
-                  style={{
-                    width: `${valueColumnWidth}%`,
-                    textAlign: 'right',
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.medium,
-                    color: colors.text.secondary,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    padding: `${spacing.md} ${spacing.lg}`,
-                  }}
-                >
-                  {baselineLabel.toUpperCase()} (BASELINE)
-                </Table.Th>
-                <Table.Th
-                  style={{
-                    width: `${valueColumnWidth}%`,
-                    textAlign: 'right',
-                    fontSize: typography.fontSize.xs,
-                    fontWeight: typography.fontWeight.medium,
-                    color: colors.text.secondary,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    padding: `${spacing.md} ${spacing.lg}`,
-                  }}
-                >
-                  {reformLabel.toUpperCase()} (REFORM)
-                </Table.Th>
+                <BaselineColumnHeader
+                  width={`${valueColumnWidth}%`}
+                  label={`${baselineLabel.toUpperCase()} (BASELINE)`}
+                />
+                <ReformColumnHeader
+                  width={`${valueColumnWidth}%`}
+                  label={`${reformLabel.toUpperCase()} (REFORM)`}
+                />
               </>
+            ) : (
+              <SingleColumnHeader
+                width={`${valueColumnWidth}%`}
+                label={baselineLabel.toUpperCase()}
+              />
             )}
           </Table.Tr>
         </Table.Thead>
@@ -158,39 +125,14 @@ export default function IndividualTable({
                   </Text>
                 </Table.Td>
                 {isSameHousehold ? (
-                  <Table.Td
-                    style={{
-                      textAlign: 'right',
-                      padding: `${spacing.md} ${spacing.lg}`,
-                    }}
-                  >
-                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
-                      {baselineValue}
-                    </Text>
-                  </Table.Td>
-                ) : (
+                  <ValueCell value={baselineValue} />
+                ) : showComparison ? (
                   <>
-                    <Table.Td
-                      style={{
-                        textAlign: 'right',
-                        padding: `${spacing.md} ${spacing.lg}`,
-                      }}
-                    >
-                      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
-                        {baselineValue}
-                      </Text>
-                    </Table.Td>
-                    <Table.Td
-                      style={{
-                        textAlign: 'right',
-                        padding: `${spacing.md} ${spacing.lg}`,
-                      }}
-                    >
-                      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
-                        {reformValue}
-                      </Text>
-                    </Table.Td>
+                    <ValueCell value={baselineValue} />
+                    <ValueCell value={reformValue} />
                   </>
+                ) : (
+                  <ValueCell value={baselineValue} />
                 )}
               </Table.Tr>
             );
@@ -198,5 +140,128 @@ export default function IndividualTable({
         </Table.Tbody>
       </Table>
     </Box>
+  );
+}
+
+interface TableHeaderCellProps {
+  width: string;
+  children: React.ReactNode;
+}
+
+function TableHeaderCell({ width, children }: TableHeaderCellProps) {
+  return (
+    <Table.Th
+      style={{
+        width,
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.secondary,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        padding: `${spacing.md} ${spacing.lg}`,
+      }}
+    >
+      {children}
+    </Table.Th>
+  );
+}
+
+interface ColumnHeaderProps {
+  width: string;
+  label: string;
+}
+
+function MergedColumnHeader({ width, label }: ColumnHeaderProps) {
+  return (
+    <Table.Th
+      style={{
+        width,
+        textAlign: 'right',
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.secondary,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        padding: `${spacing.md} ${spacing.lg}`,
+      }}
+    >
+      {label}
+    </Table.Th>
+  );
+}
+
+function BaselineColumnHeader({ width, label }: ColumnHeaderProps) {
+  return (
+    <Table.Th
+      style={{
+        width,
+        textAlign: 'right',
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.secondary,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        padding: `${spacing.md} ${spacing.lg}`,
+      }}
+    >
+      {label}
+    </Table.Th>
+  );
+}
+
+function ReformColumnHeader({ width, label }: ColumnHeaderProps) {
+  return (
+    <Table.Th
+      style={{
+        width,
+        textAlign: 'right',
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.secondary,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        padding: `${spacing.md} ${spacing.lg}`,
+      }}
+    >
+      {label}
+    </Table.Th>
+  );
+}
+
+function SingleColumnHeader({ width, label }: ColumnHeaderProps) {
+  return (
+    <Table.Th
+      style={{
+        width,
+        textAlign: 'right',
+        fontSize: typography.fontSize.xs,
+        fontWeight: typography.fontWeight.medium,
+        color: colors.text.secondary,
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em',
+        padding: `${spacing.md} ${spacing.lg}`,
+      }}
+    >
+      {label}
+    </Table.Th>
+  );
+}
+
+interface ValueCellProps {
+  value: string;
+}
+
+function ValueCell({ value }: ValueCellProps) {
+  return (
+    <Table.Td
+      style={{
+        textAlign: 'right',
+        padding: `${spacing.md} ${spacing.lg}`,
+      }}
+    >
+      <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
+        {value}
+      </Text>
+    </Table.Td>
   );
 }

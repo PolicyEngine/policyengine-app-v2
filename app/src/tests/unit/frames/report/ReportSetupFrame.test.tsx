@@ -1,174 +1,296 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
-import * as reportReducer from '@/reducers/reportReducer';
+import { setActiveSimulationPosition } from '@/reducers/reportReducer';
+import { createSimulationAtPosition } from '@/reducers/simulationsReducer';
 import {
-  mockReportFlowProps,
-  mockSimulation1,
-  mockSimulation2,
-} from '@/tests/fixtures/frames/reportFrameMocks';
+  BASELINE_CONFIGURED_TITLE_PREFIX,
+  BASELINE_SIMULATION_DESCRIPTION,
+  BASELINE_SIMULATION_TITLE,
+  COMPARISON_CONFIGURED_TITLE_PREFIX,
+  COMPARISON_SIMULATION_OPTIONAL_DESCRIPTION,
+  COMPARISON_SIMULATION_OPTIONAL_TITLE,
+  COMPARISON_SIMULATION_REQUIRED_DESCRIPTION,
+  COMPARISON_SIMULATION_REQUIRED_TITLE,
+  COMPARISON_SIMULATION_WAITING_DESCRIPTION,
+  COMPARISON_SIMULATION_WAITING_TITLE,
+  MOCK_COMPARISON_SIMULATION,
+  MOCK_GEOGRAPHY_SIMULATION,
+  MOCK_HOUSEHOLD_SIMULATION,
+  REVIEW_REPORT_LABEL,
+  SETUP_BASELINE_SIMULATION_LABEL,
+  SETUP_COMPARISON_SIMULATION_LABEL,
+} from '@/tests/fixtures/frames/ReportSetupFrame';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
-// Mock Redux dispatch
+// Mock Redux
 const mockDispatch = vi.fn();
-
-// Mock simulation selector at the module level
-const mockSelectSimulationAtPosition = vi.fn();
-vi.mock('@/reducers/simulationsReducer', async () => {
-  const actual = (await vi.importActual('@/reducers/simulationsReducer')) as any;
-  return {
-    ...actual,
-    selectSimulationAtPosition: (_state: any, position: number) =>
-      mockSelectSimulationAtPosition(position),
-    createSimulationAtPosition: actual.createSimulationAtPosition,
-  };
-});
-
+const mockUseSelector = vi.fn();
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual('react-redux');
   return {
     ...actual,
     useDispatch: () => mockDispatch,
-    useSelector: (selector: any) => {
-      // Call the selector with a fake state
-      return selector({});
-    },
+    useSelector: (selector: any) => mockUseSelector(selector),
   };
 });
 
 describe('ReportSetupFrame', () => {
+  const mockOnNavigate = vi.fn();
+  const mockFlowProps = {
+    onNavigate: mockOnNavigate,
+    onReturn: vi.fn(),
+    flowConfig: {
+      component: 'ReportSetupFrame' as any,
+      on: {},
+    },
+    isInSubflow: false,
+    flowDepth: 0,
+  };
+
   beforeEach(() => {
     vi.clearAllMocks();
-    mockDispatch.mockClear();
-    mockReportFlowProps.onNavigate.mockClear();
-    mockSelectSimulationAtPosition.mockClear();
   });
 
-  test('given component mounts then sets mode to report', () => {
-    // Given
-    mockSelectSimulationAtPosition.mockImplementation(() => null);
+  describe('Initial state (no simulations)', () => {
+    test('given no simulations configured then baseline card is enabled', () => {
+      // Given
+      mockUseSelector.mockReturnValue(null);
 
-    // When
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
 
-    // Then
-    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setMode('report'));
+      // Then
+      expect(screen.getByText(BASELINE_SIMULATION_TITLE)).toBeInTheDocument();
+      expect(screen.getByText(BASELINE_SIMULATION_DESCRIPTION)).toBeInTheDocument();
+    });
+
+    test('given no simulations configured then comparison card shows waiting message', () => {
+      // Given
+      mockUseSelector.mockReturnValue(null);
+
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // Then
+      expect(screen.getByText(COMPARISON_SIMULATION_WAITING_TITLE)).toBeInTheDocument();
+      expect(screen.getByText(COMPARISON_SIMULATION_WAITING_DESCRIPTION)).toBeInTheDocument();
+    });
+
+    test('given no simulations configured then Review report button is disabled', () => {
+      // Given
+      mockUseSelector.mockReturnValue(null);
+
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // Then
+      const reviewButton = screen.getByRole('button', { name: REVIEW_REPORT_LABEL });
+      expect(reviewButton).toBeDisabled();
+    });
   });
 
-  test('given both simulations configured then shows comparison view', () => {
-    // Given
-    mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => mockSimulation2);
+  describe('Household report (simulation1 configured)', () => {
+    test('given household simulation configured then baseline card shows configured state', () => {
+      // Given
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_HOUSEHOLD_SIMULATION : null;
+      });
 
-    // When
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
 
-    // Then
-    expect(screen.getByText(/Baseline Simulation/i)).toBeInTheDocument();
-    expect(screen.getByText(/Reform Simulation/i)).toBeInTheDocument();
+      // Then
+      expect(
+        screen.getByText(`${BASELINE_CONFIGURED_TITLE_PREFIX} ${MOCK_HOUSEHOLD_SIMULATION.label}`)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          `Policy #${MOCK_HOUSEHOLD_SIMULATION.policyId} • Population #${MOCK_HOUSEHOLD_SIMULATION.populationId}`
+        )
+      ).toBeInTheDocument();
+    });
+
+    test('given household simulation configured then comparison card shows optional', () => {
+      // Given
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_HOUSEHOLD_SIMULATION : null;
+      });
+
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // Then
+      expect(screen.getByText(COMPARISON_SIMULATION_OPTIONAL_TITLE)).toBeInTheDocument();
+      expect(screen.getByText(COMPARISON_SIMULATION_OPTIONAL_DESCRIPTION)).toBeInTheDocument();
+    });
+
+    test('given household simulation configured then Review report button is enabled', () => {
+      // Given
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_HOUSEHOLD_SIMULATION : null;
+      });
+
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // Then
+      const reviewButton = screen.getByRole('button', { name: REVIEW_REPORT_LABEL });
+      expect(reviewButton).toBeEnabled();
+    });
   });
 
-  test('given first simulation not configured then shows add simulation option', () => {
-    // Given
-    mockSelectSimulationAtPosition.mockImplementation(() => null);
+  describe('Geography report (simulation1 configured)', () => {
+    test('given geography simulation configured then comparison card shows required', () => {
+      // Given
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_GEOGRAPHY_SIMULATION : null;
+      });
 
-    // When
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
 
-    // Then
-    expect(screen.getByText('Add a first simulation')).toBeInTheDocument();
-    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
+      // Then
+      expect(screen.getByText(COMPARISON_SIMULATION_REQUIRED_TITLE)).toBeInTheDocument();
+      expect(screen.getByText(COMPARISON_SIMULATION_REQUIRED_DESCRIPTION)).toBeInTheDocument();
+    });
+
+    test('given geography simulation configured but no comparison then Review report button is disabled', () => {
+      // Given
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_GEOGRAPHY_SIMULATION : null;
+      });
+
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // Then
+      const reviewButton = screen.getByRole('button', { name: REVIEW_REPORT_LABEL });
+      expect(reviewButton).toBeDisabled();
+    });
   });
 
-  test('given first configured but second not then shows both simulations', () => {
-    // Given
-    mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => null);
+  describe('User interactions', () => {
+    test('given user clicks baseline card when not configured then setup button appears', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockUseSelector.mockReturnValue(null);
+      render(<ReportSetupFrame {...mockFlowProps} />);
 
-    // When
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
+      // When
+      await user.click(screen.getByText(BASELINE_SIMULATION_TITLE));
 
-    // Then
-    // First simulation shows as configured
-    expect(screen.getByText(/Simulation 1.*Baseline Simulation/i)).toBeInTheDocument();
-    // Second simulation shows as not configured
-    expect(screen.getByText('Add a second simulation')).toBeInTheDocument();
+      // Then
+      expect(
+        screen.getByRole('button', { name: SETUP_BASELINE_SIMULATION_LABEL })
+      ).toBeInTheDocument();
+    });
+
+    test('given user clicks Setup baseline simulation then creates simulation and navigates', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockUseSelector.mockReturnValue(null);
+      render(<ReportSetupFrame {...mockFlowProps} />);
+      await user.click(screen.getByText(BASELINE_SIMULATION_TITLE));
+
+      // When
+      await user.click(screen.getByRole('button', { name: SETUP_BASELINE_SIMULATION_LABEL }));
+
+      // Then
+      expect(mockDispatch).toHaveBeenCalledWith(createSimulationAtPosition({ position: 0 }));
+      expect(mockDispatch).toHaveBeenCalledWith(setActiveSimulationPosition(0));
+      expect(mockOnNavigate).toHaveBeenCalledWith('setupSimulation1');
+    });
+
+    test('given user clicks comparison card when baseline configured then setup button appears', async () => {
+      // Given
+      const user = userEvent.setup();
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_HOUSEHOLD_SIMULATION : null;
+      });
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // When
+      await user.click(screen.getByText(COMPARISON_SIMULATION_OPTIONAL_TITLE));
+
+      // Then
+      expect(
+        screen.getByRole('button', { name: SETUP_COMPARISON_SIMULATION_LABEL })
+      ).toBeInTheDocument();
+    });
+
+    test('given user clicks Review report when household report ready then navigates to next', async () => {
+      // Given
+      const user = userEvent.setup();
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_HOUSEHOLD_SIMULATION : null;
+      });
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // When
+      await user.click(screen.getByRole('button', { name: REVIEW_REPORT_LABEL }));
+
+      // Then
+      expect(mockOnNavigate).toHaveBeenCalledWith('next');
+    });
   });
 
-  test('given user clicks first simulation card when not configured then navigates to setup', async () => {
-    // Given
-    const user = userEvent.setup();
-    mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => null)
-      .mockImplementationOnce(() => null);
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
+  describe('Both simulations configured', () => {
+    test('given both simulations configured then comparison card shows configured state', () => {
+      // Given
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        return callCount === 1 ? MOCK_HOUSEHOLD_SIMULATION : MOCK_COMPARISON_SIMULATION;
+      });
 
-    // When
-    const firstCard = screen.getByText('Add a first simulation');
-    await user.click(firstCard);
-    const setupButton = screen.getByRole('button', { name: /Setup first simulation/i });
-    await user.click(setupButton);
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
 
-    // Then
-    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(0));
-    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('setupSimulation1');
-  });
+      // Then
+      expect(
+        screen.getByText(
+          `${COMPARISON_CONFIGURED_TITLE_PREFIX} ${MOCK_COMPARISON_SIMULATION.label}`
+        )
+      ).toBeInTheDocument();
+    });
 
-  test('given user clicks second simulation card when not configured then navigates to setup', async () => {
-    // Given
-    const user = userEvent.setup();
-    mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => null);
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
+    test('given both geography simulations configured then Review report button is enabled', () => {
+      // Given
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return MOCK_GEOGRAPHY_SIMULATION;
+        }
+        if (callCount === 2) {
+          return { ...MOCK_GEOGRAPHY_SIMULATION, id: '3', populationId: 'geography_2' };
+        }
+        return null;
+      });
 
-    // When
-    const secondCard = screen.getByText('Add a second simulation');
-    await user.click(secondCard);
-    const setupButton = screen.getByRole('button', { name: /Setup second simulation/i });
-    await user.click(setupButton);
+      // When
+      render(<ReportSetupFrame {...mockFlowProps} />);
 
-    // Then
-    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(1));
-    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('setupSimulation2');
-  });
-
-  test('given user clicks first simulation card when already configured then can re-setup', async () => {
-    // Given
-    const user = userEvent.setup();
-    mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => mockSimulation2);
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
-
-    // When
-    const firstCard = screen.getByText(/Simulation 1:/i);
-    await user.click(firstCard);
-    const setupButton = screen.getByRole('button', { name: /Setup first simulation/i });
-    await user.click(setupButton);
-
-    // Then
-    expect(mockDispatch).toHaveBeenCalledWith(reportReducer.setActiveSimulationPosition(0));
-    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('setupSimulation1');
-  });
-
-  test('given both simulations configured when user clicks next then navigates forward', async () => {
-    // Given
-    const user = userEvent.setup();
-    mockSelectSimulationAtPosition
-      .mockImplementationOnce(() => mockSimulation1)
-      .mockImplementationOnce(() => mockSimulation2);
-    render(<ReportSetupFrame {...mockReportFlowProps} />);
-
-    // When
-    const nextButton = screen.getByRole('button', { name: /Next/i });
-    await user.click(nextButton);
-
-    // Then
-    expect(mockReportFlowProps.onNavigate).toHaveBeenCalledWith('next');
+      // Then
+      const reviewButton = screen.getByRole('button', { name: REVIEW_REPORT_LABEL });
+      expect(reviewButton).toBeEnabled();
+    });
   });
 });

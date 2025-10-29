@@ -8,6 +8,7 @@ export interface SummaryBoxItem {
   title: string;
   description?: string;
   isFulfilled?: boolean;
+  isDisabled?: boolean;
   badge?: string | number;
 }
 
@@ -76,7 +77,11 @@ export default function IngredientSubmissionView({
               key={index}
               withBorder
               variant={
-                item.isFulfilled ? 'setupCondition--fulfilled' : 'setupCondition--unfulfilled'
+                item.isDisabled
+                  ? 'setupCondition--disabled'
+                  : item.isFulfilled
+                    ? 'setupCondition--fulfilled'
+                    : 'setupCondition--unfulfilled'
               }
             >
               <Group gap={spacing.sm} align="center">

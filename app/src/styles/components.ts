@@ -218,6 +218,20 @@ export const themeComponents = {
         };
       }
 
+      if (params.variant === 'setupCondition--disabled') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'not-allowed',
+            opacity: 0.6,
+            pointerEvents: 'none',
+          },
+        };
+      }
+
       // Button Panel variants - for navigation/action panels with carets
       if (params.variant === 'buttonPanel--active') {
         return {

@@ -1,18 +1,25 @@
 // Test constants for ReportSetupFrame
 export const REPORT_SETUP_FRAME_TITLE = 'Setup Report';
 
+// Card titles and descriptions
+export const BASELINE_SIMULATION_TITLE = 'Baseline simulation';
+export const BASELINE_SIMULATION_DESCRIPTION = 'Select your baseline simulation';
+export const COMPARISON_SIMULATION_WAITING_TITLE = 'Comparison simulation · Waiting for baseline';
+export const COMPARISON_SIMULATION_WAITING_DESCRIPTION = 'Set up your baseline simulation first';
+export const COMPARISON_SIMULATION_OPTIONAL_TITLE = 'Comparison simulation (optional)';
+export const COMPARISON_SIMULATION_OPTIONAL_DESCRIPTION =
+  'Optional: add a second simulation to compare';
+export const COMPARISON_SIMULATION_REQUIRED_TITLE = 'Comparison simulation';
+export const COMPARISON_SIMULATION_REQUIRED_DESCRIPTION =
+  'Required: add a second simulation to compare';
+
+export const BASELINE_CONFIGURED_TITLE_PREFIX = 'Baseline:';
+export const COMPARISON_CONFIGURED_TITLE_PREFIX = 'Comparison:';
+
 // Button labels
-export const FIRST_SIMULATION_TITLE = 'Add a first simulation';
-export const FIRST_SIMULATION_DESCRIPTION = 'Select a simulation simulation';
-export const SECOND_SIMULATION_TITLE = 'Add a second simulation';
-export const SECOND_SIMULATION_DESCRIPTION = 'Choose another simulation to compare against';
-
-export const FIRST_SIMULATION_CONFIGURED_TITLE = 'Simulation 1: Configured';
-export const SECOND_SIMULATION_CONFIGURED_TITLE = 'Simulation 2: Configured';
-
-export const SETUP_FIRST_SIMULATION_LABEL = 'Setup first simulation';
-export const SETUP_SECOND_SIMULATION_LABEL = 'Setup second simulation';
-export const NEXT_BUTTON_LABEL = 'Next';
+export const SETUP_BASELINE_SIMULATION_LABEL = 'Setup baseline simulation';
+export const SETUP_COMPARISON_SIMULATION_LABEL = 'Setup comparison simulation';
+export const REVIEW_REPORT_LABEL = 'Review report';
 
 // Console log messages
 export const ADDING_SIMULATION_1_MESSAGE = 'Adding simulation 1';
@@ -23,20 +30,29 @@ export const BOTH_SIMULATIONS_CONFIGURED_MESSAGE =
   'Both simulations configured, proceeding to next step';
 
 // Mock simulation data
-export const MOCK_SIMULATION_1 = {
+export const MOCK_HOUSEHOLD_SIMULATION = {
   id: '1',
-  label: 'Test Simulation 1',
+  label: 'Test Household Sim',
   policyId: '1',
-  populationId: '1',
+  populationId: 'household_1',
   populationType: 'household' as const,
   isCreated: true,
 };
 
-export const MOCK_SIMULATION_2 = {
+export const MOCK_GEOGRAPHY_SIMULATION = {
   id: '2',
-  label: 'Test Simulation 2',
+  label: 'Test Geography Sim',
   policyId: '2',
-  populationId: '2',
+  populationId: 'geography_1',
+  populationType: 'geography' as const,
+  isCreated: true,
+};
+
+export const MOCK_COMPARISON_SIMULATION = {
+  id: '3',
+  label: 'Test Comparison Sim',
+  policyId: '3',
+  populationId: 'household_2',
   populationType: 'household' as const,
   isCreated: true,
 };
@@ -47,5 +63,14 @@ export const MOCK_UNCONFIGURED_SIMULATION = {
   policyId: undefined,
   populationId: undefined,
   populationType: undefined,
+  isCreated: false,
+};
+
+export const MOCK_PARTIALLY_CONFIGURED_SIMULATION = {
+  id: undefined,
+  label: 'In Progress',
+  policyId: '1',
+  populationId: undefined, // Missing population
+  populationType: 'household' as const,
   isCreated: false,
 };
