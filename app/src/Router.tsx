@@ -20,9 +20,13 @@ import PolicyDesign9Page from './pages/policy-designs/PolicyDesign9.page';
 import PolicyDesign10Page from './pages/policy-designs/PolicyDesign10.page';
 import PolicyDesign11Page from './pages/policy-designs/PolicyDesign11.page';
 import PopulationsPage from './pages/Populations.page';
+import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
+import SupportersPage from './pages/Supporters.page';
+import TeamPage from './pages/Team.page';
+import TermsPage from './pages/Terms.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -166,6 +170,22 @@ const router = createBrowserRouter(
             {
               path: 'donate',
               element: <DonatePage />,
+            },
+            {
+              path: 'supporters',
+              element: <SupportersPage />,
+            },
+            {
+              path: 'team',
+              element: <TeamPage />,
+            },
+            {
+              path: 'privacy',
+              element: <PrivacyPage />,
+            },
+            {
+              path: 'terms',
+              element: <TermsPage />,
             },
             {
               path: 'methodology',
