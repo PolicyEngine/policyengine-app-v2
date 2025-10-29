@@ -25,9 +25,13 @@ vi.mock('@/hooks/useIngredientReset', () => ({
 
 // Mock react-router-dom
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => mockNavigate,
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 // Mock Redux
 const mockUseSelector = vi.fn();
@@ -61,14 +65,19 @@ describe('ReportSubmitFrame', () => {
       // Given
       const user = userEvent.setup();
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-      
+
       let callCount = 0;
       mockUseSelector.mockImplementation(() => {
         callCount++;
-        // Return report state on first call, null simulations after
+        // Call 1: reportState
         if (callCount === 1) {
           return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
         }
+        // Call 2: selectBothSimulations - returns array
+        if (callCount === 2) {
+          return [null, null];
+        }
+        // Calls 3-6: household/geography selectors
         return null;
       });
 
@@ -82,7 +91,7 @@ describe('ReportSubmitFrame', () => {
         '[ReportSubmitFrame] Cannot submit report: no simulations configured'
       );
       expect(mockCreateReport).not.toHaveBeenCalled();
-      
+
       consoleSpy.mockRestore();
     });
 
@@ -92,12 +101,15 @@ describe('ReportSubmitFrame', () => {
       let callCount = 0;
       mockUseSelector.mockImplementation(() => {
         callCount++;
+        // Call 1: reportState
         if (callCount === 1) {
           return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
         }
-        // First simulation selector call returns simulation
-        if (callCount === 2) return MOCK_HOUSEHOLD_SIMULATION;
-        // Second simulation selector call returns null
+        // Call 2: selectBothSimulations - returns array with simulation1
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, null];
+        }
+        // Calls 3-6: household/geography selectors
         return null;
       });
 
@@ -117,10 +129,15 @@ describe('ReportSubmitFrame', () => {
       let callCount = 0;
       mockUseSelector.mockImplementation(() => {
         callCount++;
+        // Call 1: reportState
         if (callCount === 1) {
           return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
         }
-        if (callCount === 2) return MOCK_HOUSEHOLD_SIMULATION;
+        // Call 2: selectBothSimulations - returns array with simulation1
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, null];
+        }
+        // Calls 3-6: household/geography selectors
         return null;
       });
 
@@ -128,7 +145,7 @@ describe('ReportSubmitFrame', () => {
       render(<ReportSubmitFrame {...mockFlowProps} />);
 
       // Then
-      expect(screen.getByText('First Simulation')).toBeInTheDocument();
+      expect(screen.getByText('Baseline simulation')).toBeInTheDocument();
       expect(screen.getByText(MOCK_HOUSEHOLD_SIMULATION.label!)).toBeInTheDocument();
     });
 
@@ -138,11 +155,15 @@ describe('ReportSubmitFrame', () => {
       let callCount = 0;
       mockUseSelector.mockImplementation(() => {
         callCount++;
+        // Call 1: reportState
         if (callCount === 1) {
           return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
         }
-        if (callCount === 2) return MOCK_HOUSEHOLD_SIMULATION;
-        if (callCount === 3) return mockSim2;
+        // Call 2: selectBothSimulations - returns array with both simulations
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, mockSim2];
+        }
+        // Calls 3-6: household/geography selectors
         return null;
       });
 

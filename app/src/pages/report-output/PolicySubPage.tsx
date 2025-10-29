@@ -48,8 +48,8 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
   const paramList = collectUniqueParameterNames(policies);
 
   // Check if there are no policy changes (all policies are current law or have no parameters)
-  const hasNoPolicyChanges = paramList.length === 0 ||
-    (policies.length === 1 && policies[0].id === String(currentLawId));
+  const hasNoPolicyChanges =
+    paramList.length === 0 || (policies.length === 1 && policies[0].id === String(currentLawId));
 
   // Calculate column width percentages (including current law column if needed)
   const totalValueColumns = columns.length + (needsCurrentLawColumn ? 1 : 0);

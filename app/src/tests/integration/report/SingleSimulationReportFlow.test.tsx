@@ -1,16 +1,16 @@
-import { render, screen, userEvent, waitFor } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import reportReducer from '@/reducers/reportReducer';
-import simulationsReducer from '@/reducers/simulationsReducer';
+import { render, screen, userEvent, waitFor } from '@test-utils';
+import { Provider } from 'react-redux';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
 import ReportSubmitFrame from '@/frames/report/ReportSubmitFrame';
+import reportReducer from '@/reducers/reportReducer';
+import simulationsReducer from '@/reducers/simulationsReducer';
 import {
   BASELINE_SIMULATION_TITLE,
   COMPARISON_SIMULATION_OPTIONAL_TITLE,
-  REVIEW_REPORT_LABEL,
   MOCK_HOUSEHOLD_SIMULATION,
+  REVIEW_REPORT_LABEL,
 } from '@/tests/fixtures/frames/ReportSetupFrame';
 
 // Mock Plotly
@@ -30,9 +30,13 @@ vi.mock('@/hooks/useIngredientReset', () => ({
   }),
 }));
 
-vi.mock('react-router-dom', () => ({
-  useNavigate: () => vi.fn(),
-}));
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => vi.fn(),
+  };
+});
 
 describe('Single Simulation Report Flow Integration', () => {
   let store: any;
@@ -45,13 +49,20 @@ describe('Single Simulation Report Flow Integration', () => {
       },
       preloadedState: {
         report: {
-          countryId: 'us',
+          id: '',
+          countryId: 'us' as const,
           apiVersion: 'v1',
           label: null,
-          activeSimulationPosition: null,
+          simulationIds: [],
+          status: 'pending' as const,
+          output: null,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          activeSimulationPosition: 0 as const,
+          mode: 'standalone' as const,
         },
         simulations: {
-          simulations: [null, null],
+          simulations: [null, null] as [null, null],
         },
       },
     });
@@ -82,19 +93,14 @@ describe('Single Simulation Report Flow Integration', () => {
     expect(screen.getByRole('button', { name: /setup baseline simulation/i })).toBeInTheDocument();
 
     // When - Configure baseline simulation in store
-    store.dispatch({
-      type: 'simulations/createSimulationAtPosition',
-      payload: { position: 0, simulation: MOCK_HOUSEHOLD_SIMULATION },
+    await waitFor(() => {
+      store.dispatch({
+        type: 'simulations/createSimulationAtPosition',
+        payload: { position: 0, simulation: MOCK_HOUSEHOLD_SIMULATION },
+      });
     });
 
-    // Re-render with updated store
-    render(
-      <Provider store={store}>
-        <ReportSetupFrame {...flowProps} />
-      </Provider>
-    );
-
-    // Then - Review report button should be enabled
+    // Then - Review report button should be enabled (component re-renders automatically)
     await waitFor(() => {
       const reviewButton = screen.getByRole('button', { name: REVIEW_REPORT_LABEL });
       expect(reviewButton).toBeEnabled();
@@ -106,7 +112,6 @@ describe('Single Simulation Report Flow Integration', () => {
 
   test('given user configures geography simulation then cannot proceed without comparison simulation', async () => {
     // Given
-    const user = userEvent.setup();
     const mockOnNavigate = vi.fn();
     const flowProps = {
       onNavigate: mockOnNavigate,
@@ -122,7 +127,7 @@ describe('Single Simulation Report Flow Integration', () => {
       populationType: 'geography' as const,
       populationId: 'geography_1',
     };
-    
+
     store.dispatch({
       type: 'simulations/createSimulationAtPosition',
       payload: { position: 0, simulation: geographySim },
@@ -170,8 +175,8 @@ describe('Single Simulation Report Flow Integration', () => {
     const generateButton = screen.getByRole('button', { name: /generate report/i });
     expect(generateButton).toBeEnabled();
 
-    // Then - Should show first simulation summary
-    expect(screen.getByText('First Simulation')).toBeInTheDocument();
+    // Then - Should show baseline simulation summary
+    expect(screen.getByText('Baseline simulation')).toBeInTheDocument();
     expect(screen.getByText(MOCK_HOUSEHOLD_SIMULATION.label!)).toBeInTheDocument();
   });
 });

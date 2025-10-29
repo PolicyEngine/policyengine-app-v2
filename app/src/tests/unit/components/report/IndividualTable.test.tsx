@@ -2,15 +2,15 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import IndividualTable from '@/components/report/IndividualTable';
 import {
-  MOCK_BASELINE_MEMBER,
-  MOCK_REFORM_MEMBER,
-  MOCK_EMPTY_MEMBER,
   BASELINE_LABEL,
-  REFORM_LABEL,
   EXPECTED_AGE_VALUE,
   EXPECTED_BASELINE_INCOME_VALUE,
   EXPECTED_REFORM_INCOME_VALUE,
+  MOCK_BASELINE_MEMBER,
+  MOCK_EMPTY_MEMBER,
+  MOCK_REFORM_MEMBER,
   NO_DATA_AVAILABLE_MESSAGE,
+  REFORM_LABEL,
   TABLE_HEADER_VARIABLE,
 } from '@/tests/fixtures/components/report/IndividualTable';
 
@@ -87,8 +87,8 @@ describe('IndividualTable', () => {
       );
 
       // Then
-      expect(screen.getByText(`\${BASELINE_LABEL.toUpperCase()} (BASELINE)`)).toBeInTheDocument();
-      expect(screen.getByText(`\${REFORM_LABEL.toUpperCase()} (REFORM)`)).toBeInTheDocument();
+      expect(screen.getByText(`${BASELINE_LABEL.toUpperCase()} (BASELINE)`)).toBeInTheDocument();
+      expect(screen.getByText(`${REFORM_LABEL.toUpperCase()} (REFORM)`)).toBeInTheDocument();
     });
 
     test('given comparison mode then displays values from both members', () => {
@@ -118,13 +118,13 @@ describe('IndividualTable', () => {
           reformMember={MOCK_REFORM_MEMBER}
           baselineLabel={BASELINE_LABEL}
           reformLabel={REFORM_LABEL}
-          isSameHousehold={true}
+          isSameHousehold
         />
       );
 
       // Then
       expect(
-        screen.getByText(`\${BASELINE_LABEL.toUpperCase()} (BASELINE / REFORM)`)
+        screen.getByText(`${BASELINE_LABEL.toUpperCase()} (BASELINE / REFORM)`)
       ).toBeInTheDocument();
     });
 
@@ -136,7 +136,7 @@ describe('IndividualTable', () => {
           reformMember={MOCK_REFORM_MEMBER}
           baselineLabel={BASELINE_LABEL}
           reformLabel={REFORM_LABEL}
-          isSameHousehold={true}
+          isSameHousehold
         />
       );
 

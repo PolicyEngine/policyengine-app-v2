@@ -36,7 +36,6 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
   // Geography reports: simulation2 is required (comparison only)
   // If simulation1 doesn't exist yet, we can't determine optionality
   const isHouseholdReport = simulation1?.populationType === 'household';
-  const isSocietyWideReport = simulation1?.populationType === 'geography';
   const isSimulation2Optional = simulation1Configured && isHouseholdReport;
 
   const handleSimulation1Select = () => {
@@ -108,7 +107,8 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
   // Determine if we can proceed to submission
   // Household reports: Only simulation1 required (simulation2 optional)
   // Geography reports: Both simulations required
-  const canProceed: boolean = simulation1Configured && (isSimulation2Optional || simulation2Configured);
+  const canProceed: boolean =
+    simulation1Configured && (isSimulation2Optional || simulation2Configured);
 
   // Determine the primary action label and state
   const getPrimaryAction = () => {
@@ -159,10 +159,7 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
 /**
  * Get title for baseline simulation card
  */
-function getBaselineCardTitle(
-  simulation: Simulation | null,
-  isConfigured: boolean
-): string {
+function getBaselineCardTitle(simulation: Simulation | null, isConfigured: boolean): string {
   if (isConfigured) {
     const label = simulation?.label || simulation?.id || 'Configured';
     return `Baseline: ${label}`;
@@ -173,10 +170,7 @@ function getBaselineCardTitle(
 /**
  * Get description for baseline simulation card
  */
-function getBaselineCardDescription(
-  simulation: Simulation | null,
-  isConfigured: boolean
-): string {
+function getBaselineCardDescription(simulation: Simulation | null, isConfigured: boolean): string {
   if (isConfigured) {
     return `Policy #${simulation?.policyId} • Population #${simulation?.populationId}`;
   }

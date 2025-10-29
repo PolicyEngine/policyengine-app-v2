@@ -1,25 +1,25 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
-import { createSimulationAtPosition } from '@/reducers/simulationsReducer';
 import { setActiveSimulationPosition } from '@/reducers/reportReducer';
+import { createSimulationAtPosition } from '@/reducers/simulationsReducer';
 import {
-  BASELINE_SIMULATION_TITLE,
-  BASELINE_SIMULATION_DESCRIPTION,
-  COMPARISON_SIMULATION_WAITING_TITLE,
-  COMPARISON_SIMULATION_WAITING_DESCRIPTION,
-  COMPARISON_SIMULATION_OPTIONAL_TITLE,
-  COMPARISON_SIMULATION_OPTIONAL_DESCRIPTION,
-  COMPARISON_SIMULATION_REQUIRED_TITLE,
-  COMPARISON_SIMULATION_REQUIRED_DESCRIPTION,
   BASELINE_CONFIGURED_TITLE_PREFIX,
+  BASELINE_SIMULATION_DESCRIPTION,
+  BASELINE_SIMULATION_TITLE,
   COMPARISON_CONFIGURED_TITLE_PREFIX,
+  COMPARISON_SIMULATION_OPTIONAL_DESCRIPTION,
+  COMPARISON_SIMULATION_OPTIONAL_TITLE,
+  COMPARISON_SIMULATION_REQUIRED_DESCRIPTION,
+  COMPARISON_SIMULATION_REQUIRED_TITLE,
+  COMPARISON_SIMULATION_WAITING_DESCRIPTION,
+  COMPARISON_SIMULATION_WAITING_TITLE,
+  MOCK_COMPARISON_SIMULATION,
+  MOCK_GEOGRAPHY_SIMULATION,
+  MOCK_HOUSEHOLD_SIMULATION,
+  REVIEW_REPORT_LABEL,
   SETUP_BASELINE_SIMULATION_LABEL,
   SETUP_COMPARISON_SIMULATION_LABEL,
-  REVIEW_REPORT_LABEL,
-  MOCK_HOUSEHOLD_SIMULATION,
-  MOCK_GEOGRAPHY_SIMULATION,
-  MOCK_COMPARISON_SIMULATION,
 } from '@/tests/fixtures/frames/ReportSetupFrame';
 
 // Mock Plotly
@@ -106,11 +106,11 @@ describe('ReportSetupFrame', () => {
 
       // Then
       expect(
-        screen.getByText(`\${BASELINE_CONFIGURED_TITLE_PREFIX} \${MOCK_HOUSEHOLD_SIMULATION.label}`)
+        screen.getByText(`${BASELINE_CONFIGURED_TITLE_PREFIX} ${MOCK_HOUSEHOLD_SIMULATION.label}`)
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          `Policy #\${MOCK_HOUSEHOLD_SIMULATION.policyId} • Population #\${MOCK_HOUSEHOLD_SIMULATION.populationId}`
+          `Policy #${MOCK_HOUSEHOLD_SIMULATION.policyId} • Population #${MOCK_HOUSEHOLD_SIMULATION.populationId}`
         )
       ).toBeInTheDocument();
     });
@@ -266,7 +266,7 @@ describe('ReportSetupFrame', () => {
       // Then
       expect(
         screen.getByText(
-          `\${COMPARISON_CONFIGURED_TITLE_PREFIX} \${MOCK_COMPARISON_SIMULATION.label}`
+          `${COMPARISON_CONFIGURED_TITLE_PREFIX} ${MOCK_COMPARISON_SIMULATION.label}`
         )
       ).toBeInTheDocument();
     });
@@ -276,7 +276,9 @@ describe('ReportSetupFrame', () => {
       let callCount = 0;
       mockUseSelector.mockImplementation(() => {
         callCount++;
-        if (callCount === 1) return MOCK_GEOGRAPHY_SIMULATION;
+        if (callCount === 1) {
+          return MOCK_GEOGRAPHY_SIMULATION;
+        }
         if (callCount === 2) {
           return { ...MOCK_GEOGRAPHY_SIMULATION, id: '3', populationId: 'geography_2' };
         }

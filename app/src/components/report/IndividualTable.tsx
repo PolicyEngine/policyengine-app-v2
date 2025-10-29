@@ -96,7 +96,10 @@ export default function IndividualTable({
                 />
               </>
             ) : (
-              <SingleColumnHeader width={`${valueColumnWidth}%`} label={baselineLabel.toUpperCase()} />
+              <SingleColumnHeader
+                width={`${valueColumnWidth}%`}
+                label={baselineLabel.toUpperCase()}
+              />
             )}
           </Table.Tr>
         </Table.Thead>
@@ -139,7 +142,6 @@ export default function IndividualTable({
     </Box>
   );
 }
-
 
 interface TableHeaderCellProps {
   width: string;
