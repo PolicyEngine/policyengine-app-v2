@@ -88,3 +88,19 @@ export const calculationKeys = {
   byReportId: (reportId: string) => ['calculations', 'report', reportId] as const,
   bySimulationId: (simId: string) => ['calculations', 'simulation', simId] as const,
 };
+
+export const householdVariationKeys = {
+  all: ['household-variations'] as const,
+  byParams: (householdId: string, policyId: string, year: string, countryId: string) =>
+    [
+      ...householdVariationKeys.all,
+      'household',
+      householdId,
+      'policy',
+      policyId,
+      'year',
+      year,
+      'country',
+      countryId,
+    ] as const,
+};

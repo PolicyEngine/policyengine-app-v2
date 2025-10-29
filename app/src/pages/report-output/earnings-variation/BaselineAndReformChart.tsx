@@ -9,7 +9,7 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { DEFAULT_CHART_CONFIG } from '@/utils/chartUtils';
+import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
 import { localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
@@ -90,7 +90,7 @@ export default function BaselineAndReformChart({
           y: baselineYValues,
           type: 'scatter' as const,
           mode: 'lines' as const,
-          line: { color: colors.gray[600], width: 3 },
+          line: { color: colors.gray[600], width: 2 },
           name: 'Baseline',
           hovertemplate: '<b>Baseline</b><br>Earnings: %{x:$,.0f}<br>Value: %{y}<extra></extra>',
         },
@@ -99,13 +99,14 @@ export default function BaselineAndReformChart({
           y: reformYValues,
           type: 'scatter' as const,
           mode: 'lines' as const,
-          line: { color: colors.primary[500], width: 3 },
+          line: { color: colors.primary[500], width: 2 },
           name: 'Reform',
           hovertemplate: '<b>Reform</b><br>Earnings: %{x:$,.0f}<br>Value: %{y}<extra></extra>',
         },
       ];
 
       const layout = {
+        ...DEFAULT_CHART_LAYOUT,
         height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
@@ -157,6 +158,7 @@ export default function BaselineAndReformChart({
       ];
 
       const layout = {
+        ...DEFAULT_CHART_LAYOUT,
         height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
@@ -202,6 +204,7 @@ export default function BaselineAndReformChart({
     ];
 
     const layout = {
+      ...DEFAULT_CHART_LAYOUT,
       height: mobile ? 300 : 500,
       xaxis: {
         title: { text: 'Employment income' },

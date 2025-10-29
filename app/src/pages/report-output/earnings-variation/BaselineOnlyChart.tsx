@@ -6,7 +6,7 @@ import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { DEFAULT_CHART_CONFIG } from '@/utils/chartUtils';
+import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
 import { localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
@@ -87,6 +87,7 @@ export default function BaselineOnlyChart({
   ];
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     height: mobile ? 300 : 500,
     xaxis: {
       title: { text: 'Employment income' },

@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { fetchHouseholdById } from '@/api/household';
-import { BASE_URL } from '@/constants';
+import { fetchHouseholdVariation } from '@/api/householdVariation';
 import { countryIds } from '@/libs/countries';
+import { householdVariationKeys } from '@/libs/queryKeys';
 import type { Household } from '@/types/ingredients/Household';
+import { buildHouseholdVariationAxes } from '@/utils/householdVariationAxes';
 
 interface UseHouseholdVariationParams {
   householdId: string;
@@ -40,94 +42,24 @@ export function useHouseholdVariation({
   enabled = true,
 }: UseHouseholdVariationParams) {
   return useQuery({
-    // Use IDs in cache key for stability (objects cause unnecessary cache misses)
-    queryKey: ['household-variation', householdId, policyId, year, countryId],
+    queryKey: householdVariationKeys.byParams(householdId, policyId, year, countryId),
     queryFn: async () => {
       // Step 1: Fetch household input structure from API
       const householdMetadata = await fetchHouseholdById(countryId, householdId);
       const householdInput = householdMetadata.household_json;
 
-      // Validate household has people
-      if (!householdInput?.people || Object.keys(householdInput.people).length === 0) {
-        throw new Error('Household has no people defined');
-      }
+      // Step 2: Build axes configuration
+      const householdWithAxes = buildHouseholdVariationAxes(householdInput, year, countryId);
 
-      // Step 2: Get current earnings for max calculation
-      // Assumes first person is "you" - adjust if household structure differs
-      const firstPerson = Object.values(householdInput.people)[0];
-      const currentEarnings = (firstPerson?.employment_income?.[year] as number) || 0;
+      // Step 3: Call calculate-full API
+      const resultData = await fetchHouseholdVariation(countryId, householdWithAxes, policyData);
 
-      // Step 3: Build axes configuration
-      // Set employment_income to null for first person to vary it
-      const firstPersonKey = Object.keys(householdInput.people)[0];
-      const existingEmploymentIncome =
-        householdInput.people[firstPersonKey].employment_income || {};
-      const householdDataWithVariation = {
-        ...householdInput,
-        people: {
-          ...householdInput.people,
-          [firstPersonKey]: {
-            ...householdInput.people[firstPersonKey],
-            employment_income: {
-              ...existingEmploymentIncome,
-              [year]: null, // Null = vary this for the specific year only
-            },
-          },
-        },
-      };
-
-      // Step 4: Add axes to household data (already in API snake_case format)
-      const householdWithAxes = {
-        ...householdDataWithVariation,
-        axes: [
-          [
-            {
-              name: 'employment_income',
-              period: year,
-              min: 0,
-              max: Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings),
-              count: 401,
-            },
-          ],
-        ],
-      };
-
-      // Step 5: Call calculate-full
-      const requestUrl = `${BASE_URL}/${countryId}/calculate-full`;
-      const response = await fetch(requestUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          household: householdWithAxes,
-          policy: policyData,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-
-        // Try to parse error response if it's JSON
-        let errorDetail = errorText;
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorDetail = errorJson.message || errorJson.error || errorText;
-        } catch {
-          // Not JSON, use text as-is
-        }
-
-        throw new Error(
-          `Variation calculation failed: ${response.status} ${response.statusText}. ${errorDetail}`
-        );
-      }
-
-      const data = await response.json();
-
-      // Wrap the result in a Household object for compatibility with getValueFromHousehold
+      // Step 4: Wrap the result in a Household object for compatibility with getValueFromHousehold
       // The API returns raw HouseholdData, but our utility functions expect a Household wrapper
       const result: Household = {
         id: householdId,
         countryId: countryId as (typeof countryIds)[number],
-        householdData: data.result,
+        householdData: resultData,
       };
       return result;
     },

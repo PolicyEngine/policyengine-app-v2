@@ -14,7 +14,7 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { DEFAULT_CHART_CONFIG } from '@/utils/chartUtils';
+import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
 import { localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
@@ -221,6 +221,7 @@ export default function MarginalTaxRatesSubPage({
       }
 
       const layout = {
+        ...DEFAULT_CHART_LAYOUT,
         height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
@@ -279,6 +280,7 @@ export default function MarginalTaxRatesSubPage({
     ];
 
     const layout = {
+      ...DEFAULT_CHART_LAYOUT,
       height: mobile ? 300 : 500,
       xaxis: {
         title: { text: 'Employment income' },
