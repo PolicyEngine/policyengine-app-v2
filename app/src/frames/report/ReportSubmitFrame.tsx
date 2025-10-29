@@ -40,6 +40,13 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
     const sim1Id = simulation1?.id;
     const sim2Id = simulation2?.id;
 
+    // Validation: Prevent 0-simulation reports
+    // At least one simulation must be configured
+    if (!sim1Id) {
+      console.error('[ReportSubmitFrame] Cannot submit report: no simulations configured');
+      return;
+    }
+
     // Submit both simulations if they exist and aren't created yet
     // TODO: Add logic to create simulations if !isCreated before submitting report
 

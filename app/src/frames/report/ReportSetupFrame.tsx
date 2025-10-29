@@ -30,6 +30,12 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
   const simulation1Configured = !!(simulation1?.policyId && simulation1?.populationId);
   const simulation2Configured = !!(simulation2?.policyId && simulation2?.populationId);
 
+  // Determine if simulation2 is optional based on population type
+  // Household reports: simulation2 is optional (single-sim allowed)
+  // Geography reports: simulation2 is required (comparison only)
+  const isHouseholdReport = simulation1?.populationType === 'household';
+  const isSimulation2Optional = isHouseholdReport;
+
   const handleSimulation1Select = () => {
     setSelectedCard('simulation1');
     console.log('Adding simulation 1');
@@ -83,10 +89,14 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
     {
       title: simulation2Configured
         ? `Simulation 2: ${simulation2?.label || simulation2?.id || 'Configured'}`
-        : 'Add a second simulation',
+        : isSimulation2Optional
+          ? 'Add a simulation to compare to (optional)'
+          : 'Add a second simulation',
       description: simulation2Configured
         ? `Policy #${simulation2?.policyId} • Population #${simulation2?.populationId}`
-        : 'Choose another simulation to compare against',
+        : isSimulation2Optional
+          ? 'Optional: choose another simulation to compare'
+          : 'Choose another simulation to compare against',
       onClick: handleSimulation2Select,
       isSelected: selectedCard === 'simulation2',
       isFulfilled: simulation2Configured,
@@ -94,30 +104,40 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
     },
   ];
 
-  // Determine if both simulations are configured
-  const canProceed: boolean = simulation1Configured && simulation2Configured;
+  // Determine if we can proceed to submission
+  // Household reports: Only simulation1 required (simulation2 optional)
+  // Geography reports: Both simulations required
+  const canProceed: boolean = simulation1Configured && (isSimulation2Optional || simulation2Configured);
 
   // Determine the primary action label and state
   const getPrimaryAction = () => {
+    // Allow setting up simulation1 if selected and not configured
     if (selectedCard === 'simulation1' && !simulation1Configured) {
       return {
         label: 'Setup first simulation',
         onClick: handleNext,
         isDisabled: false,
       };
-    } else if (selectedCard === 'simulation2' && !simulation2Configured) {
+    }
+    // Allow setting up simulation2 if selected and not configured
+    else if (selectedCard === 'simulation2' && !simulation2Configured) {
       return {
         label: 'Setup second simulation',
         onClick: handleNext,
         isDisabled: false,
       };
-    } else if (canProceed) {
+    }
+    // Allow proceeding if:
+    // - Household report: simulation1 configured (simulation2 optional)
+    // - Geography report: both simulations configured
+    else if (canProceed) {
       return {
         label: 'Next',
         onClick: handleNext,
         isDisabled: false,
       };
     }
+    // Disable next button if requirements not met
     return {
       label: 'Next',
       onClick: handleNext,
