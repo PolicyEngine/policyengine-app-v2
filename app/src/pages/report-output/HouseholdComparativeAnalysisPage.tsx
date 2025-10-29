@@ -3,6 +3,7 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
+import NetIncomeSubPage from './net-income/NetIncomeSubPage';
 import NotFoundSubPage from './NotFoundSubPage';
 
 interface Props {
@@ -29,7 +30,7 @@ interface ViewComponentProps {
  * Add new views here as they are implemented
  */
 const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
-  // 'net-income': NetIncomeSubPage,  // TODO: Phase 2
+  'net-income': NetIncomeSubPage,
   // 'earnings-variation': EarningsVariationSubPage,  // TODO: Phase 4
   // 'marginal-tax-rates': MarginalTaxRatesSubPage,  // TODO: Phase 5
 };
