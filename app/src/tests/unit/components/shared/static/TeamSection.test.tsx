@@ -37,20 +37,20 @@ describe('TeamSection', () => {
     expect(screen.queryByRole('img')).not.toBeInTheDocument();
   });
 
-  test('given default variant then component renders without error', () => {
+  test('given primary variant then component renders without error', () => {
     // Given / When
     const { container } = render(
-      <TeamSection title="Test" members={TEST_TEAM_MEMBERS} variant="default" />
+      <TeamSection title="Test" members={TEST_TEAM_MEMBERS} variant="primary" />
     );
 
     // Then
     expect(container.firstChild).toBeInTheDocument();
   });
 
-  test('given light variant then component renders without error', () => {
+  test('given secondary variant then component renders without error', () => {
     // Given / When
     const { container } = render(
-      <TeamSection title="Test" members={TEST_TEAM_MEMBERS} variant="light" />
+      <TeamSection title="Test" members={TEST_TEAM_MEMBERS} variant="secondary" />
     );
 
     // Then

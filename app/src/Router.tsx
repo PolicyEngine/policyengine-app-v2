@@ -9,6 +9,8 @@ import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DonatePage from './pages/Donate.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
+import PrivacyPage from './pages/Privacy.page';
+import TermsPage from './pages/Terms.page';
 import PoliciesPage from './pages/Policies.page';
 import PolicyDesign1Page from './pages/policy-designs/PolicyDesign1.page';
 import PolicyDesign2Page from './pages/policy-designs/PolicyDesign2.page';
@@ -176,6 +178,14 @@ const router = createBrowserRouter(
             {
               path: 'team',
               element: <TeamPage />,
+            },
+            {
+              path: 'privacy',
+              element: <PrivacyPage />,
+            },
+            {
+              path: 'terms',
+              element: <TermsPage />,
             },
             {
               path: 'methodology',

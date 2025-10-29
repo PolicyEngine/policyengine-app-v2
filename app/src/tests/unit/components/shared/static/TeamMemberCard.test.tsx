@@ -42,17 +42,17 @@ describe('TeamMemberCard', () => {
     expect(screen.getByText(TEST_TEAM_MEMBER_NO_IMAGE.name)).toBeInTheDocument();
   });
 
-  test('given light variant then component renders without error', () => {
+  test('given default variant then component renders without error', () => {
     // Given / When
-    const { container } = render(<TeamMemberCard member={TEST_TEAM_MEMBER} variant="light" />);
+    const { container } = render(<TeamMemberCard member={TEST_TEAM_MEMBER} variant="default" />);
 
     // Then
     expect(container.firstChild).toBeInTheDocument();
   });
 
-  test('given dark variant then component renders without error', () => {
+  test('given inverted variant then component renders without error', () => {
     // Given / When
-    const { container } = render(<TeamMemberCard member={TEST_TEAM_MEMBER} variant="dark" />);
+    const { container } = render(<TeamMemberCard member={TEST_TEAM_MEMBER} variant="inverted" />);
 
     // Then
     expect(container.firstChild).toBeInTheDocument();
