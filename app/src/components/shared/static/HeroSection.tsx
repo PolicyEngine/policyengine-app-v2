@@ -3,7 +3,7 @@ import { colors, spacing, typography } from '@/designTokens';
 
 export interface HeroSectionProps {
   title: string;
-  description: string;
+  description: string | React.ReactNode;
   /**
    * @deprecated 'light' variant is deprecated. Use 'default' instead.
    * @deprecated 'accent' variant is deprecated. Use 'dark' instead.
