@@ -20,6 +20,7 @@ import {
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
+import { getHouseholdOutputTree } from './householdOutputTree';
 import { ReportSidebar } from './ReportSidebar';
 
 interface ReportOutputLayoutProps {
@@ -33,6 +34,7 @@ interface ReportOutputLayoutProps {
   onShare?: () => void;
   onEditName?: () => void;
   showSidebar?: boolean;
+  outputType?: 'household' | 'societyWide';
   activeView?: string;
   onSidebarNavigate?: (view: string) => void;
   children: React.ReactNode;
@@ -60,11 +62,16 @@ export default function ReportOutputLayout({
   onShare,
   onEditName,
   showSidebar = false,
+  outputType = 'societyWide',
   activeView = '',
   onSidebarNavigate,
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
+
+  // Get the appropriate tree based on output type
+  const sidebarTree =
+    outputType === 'household' ? getHouseholdOutputTree() : getComparativeAnalysisTree(countryId);
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
@@ -205,7 +212,7 @@ export default function ReportOutputLayout({
         {showSidebar && onSidebarNavigate ? (
           <Group align="flex-start" gap={spacing.lg}>
             <ReportSidebar
-              tree={getComparativeAnalysisTree(countryId)}
+              tree={sidebarTree}
               activeView={activeView}
               onNavigate={onSidebarNavigate}
             />
