@@ -1,6 +1,6 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as ReactRouter from 'react-router-dom';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SupportersPage from '@/pages/Supporters.page';
 
 vi.mock('react-router-dom', async () => {
@@ -98,7 +98,9 @@ describe('SupportersPage', () => {
 
     // Then
     // Arnold has multiple projects - newest should appear first
-    expect(screen.getAllByText(/state & congressional district policy breakdowns/i).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/state & congressional district policy breakdowns/i).length
+    ).toBeGreaterThan(0);
   });
 
   test('given page loads then GBP amounts are formatted correctly', () => {

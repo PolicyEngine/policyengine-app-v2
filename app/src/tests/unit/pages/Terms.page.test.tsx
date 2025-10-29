@@ -1,6 +1,6 @@
 import { render, screen } from '@test-utils';
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import * as ReactRouter from 'react-router-dom';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import TermsPage from '@/pages/Terms.page';
 
 vi.mock('react-router-dom', async () => {

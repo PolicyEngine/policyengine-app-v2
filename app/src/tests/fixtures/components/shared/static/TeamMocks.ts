@@ -12,7 +12,4 @@ export const TEST_TEAM_MEMBER_NO_IMAGE: TeamMember = {
   image: '/assets/team/another-member.png',
 };
 
-export const TEST_TEAM_MEMBERS: TeamMember[] = [
-  TEST_TEAM_MEMBER,
-  TEST_TEAM_MEMBER_NO_IMAGE,
-];
+export const TEST_TEAM_MEMBERS: TeamMember[] = [TEST_TEAM_MEMBER, TEST_TEAM_MEMBER_NO_IMAGE];

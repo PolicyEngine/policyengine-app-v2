@@ -1,5 +1,5 @@
-import LegalPageLayout, { LegalSection } from '@/components/shared/static/LegalPageLayout';
 import { useParams } from 'react-router-dom';
+import LegalPageLayout, { LegalSection } from '@/components/shared/static/LegalPageLayout';
 
 export default function TermsPage() {
   const { countryId } = useParams<{ countryId: string }>();
@@ -27,7 +27,9 @@ export default function TermsPage() {
             PolicyEngine does not guarantee the accuracy, completeness, or reliability of the
             information or analysis provided through the Service.
           </p>
-          <p>2.2 You are responsible for any activity that occurs through your use of the Service.</p>
+          <p>
+            2.2 You are responsible for any activity that occurs through your use of the Service.
+          </p>
           <p>2.3 You agree not to use the Service for any unlawful or prohibited purpose.</p>
         </>
       ),

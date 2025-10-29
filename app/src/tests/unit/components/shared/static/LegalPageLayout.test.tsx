@@ -2,12 +2,12 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import LegalPageLayout from '@/components/shared/static/LegalPageLayout';
 import {
-  TEST_LEGAL_TITLE,
+  TEST_LEGAL_SECTION_MULTIPLE_PARAGRAPHS,
   TEST_LEGAL_SECTION_SIMPLE,
   TEST_LEGAL_SECTION_WITH_BOLD,
   TEST_LEGAL_SECTION_WITH_LINK,
-  TEST_LEGAL_SECTION_MULTIPLE_PARAGRAPHS,
   TEST_LEGAL_SECTIONS,
+  TEST_LEGAL_TITLE,
 } from '@/tests/fixtures/components/shared/static/LegalPageLayoutMocks';
 
 describe('LegalPageLayout', () => {
@@ -60,7 +60,10 @@ describe('LegalPageLayout', () => {
   test('given section with multiple paragraphs then all paragraphs are rendered', () => {
     // Given / When
     render(
-      <LegalPageLayout title={TEST_LEGAL_TITLE} sections={[TEST_LEGAL_SECTION_MULTIPLE_PARAGRAPHS]} />
+      <LegalPageLayout
+        title={TEST_LEGAL_TITLE}
+        sections={[TEST_LEGAL_SECTION_MULTIPLE_PARAGRAPHS]}
+      />
     );
 
     // Then

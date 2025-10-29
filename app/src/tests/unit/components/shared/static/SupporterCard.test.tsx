@@ -2,10 +2,10 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import SupporterCard from '@/components/shared/static/SupporterCard';
 import {
+  TEST_PROJECT_GBP,
+  TEST_PROJECT_USD,
   TEST_SUPPORTER,
   TEST_SUPPORTER_NO_LOGO,
-  TEST_PROJECT_USD,
-  TEST_PROJECT_GBP,
 } from '@/tests/fixtures/components/shared/static/SupportersMocks';
 
 describe('SupporterCard', () => {

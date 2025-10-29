@@ -1,5 +1,5 @@
-import { Supporter } from '@/components/shared/static/SupporterCard';
 import { SupportedProject } from '@/components/shared/static/SupportedProject';
+import { Supporter } from '@/components/shared/static/SupporterCard';
 
 export const TEST_SUPPORTER: Supporter = {
   id: 'test-org',

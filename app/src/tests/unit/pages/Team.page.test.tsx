@@ -16,9 +16,7 @@ describe('TeamPage', () => {
     render(<TeamPage />);
 
     // Then
-    expect(
-      screen.getByText(/policyengine.*team leads a global movement/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/policyengine.*team leads a global movement/i)).toBeInTheDocument();
   });
 
   test('given page loads then founders section is rendered', () => {

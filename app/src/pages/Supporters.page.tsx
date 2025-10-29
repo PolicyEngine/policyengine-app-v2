@@ -1,10 +1,10 @@
-import HeroSection from '@/components/shared/static/HeroSection';
-import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import ContentSection from '@/components/shared/static/ContentSection';
-import SupporterCard, { Supporter } from '@/components/shared/static/SupporterCard';
-import { SupportedProject } from '@/components/shared/static/SupportedProject';
 import { useParams } from 'react-router-dom';
 import { Text } from '@mantine/core';
+import ContentSection from '@/components/shared/static/ContentSection';
+import HeroSection from '@/components/shared/static/HeroSection';
+import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
+import { SupportedProject } from '@/components/shared/static/SupportedProject';
+import SupporterCard, { Supporter } from '@/components/shared/static/SupporterCard';
 
 const supporters: Supporter[] = [
   {
@@ -12,55 +12,63 @@ const supporters: Supporter[] = [
     name: 'Nuffield Foundation',
     websiteUrl: 'https://www.nuffieldfoundation.org/',
     logoUrl: '/assets/supporters/nuffield.png',
-    description: 'an independent charitable trust with a mission to advance educational opportunity and social well-being.',
+    description:
+      'an independent charitable trust with a mission to advance educational opportunity and social well-being.',
   },
   {
     id: 'arnold',
     name: 'Arnold Ventures',
     websiteUrl: 'https://www.arnoldventures.org/',
     logoUrl: '/assets/supporters/arnold.svg',
-    description: 'a philanthropy dedicated to improving the lives of all Americans through evidence-based policy solutions that maximize opportunity and minimize injustice.',
+    description:
+      'a philanthropy dedicated to improving the lives of all Americans through evidence-based policy solutions that maximize opportunity and minimize injustice.',
   },
   {
     id: 'neo',
     name: 'NEO Philanthropy',
     websiteUrl: 'https://neophilanthropy.org/',
     logoUrl: '/assets/supporters/neo.png',
-    description: 'a funder intermediary with more than 40 years of experience strengthening social justice movements.',
+    description:
+      'a funder intermediary with more than 40 years of experience strengthening social justice movements.',
   },
   {
     id: 'myfriendben',
     name: 'MyFriendBen',
     websiteUrl: 'https://myfriendben.org/',
     logoUrl: '/assets/supporters/myfriendben.webp',
-    description: 'a benefit eligibility screener that provides households with a comprehensive understanding of the programs available to them.',
+    description:
+      'a benefit eligibility screener that provides households with a comprehensive understanding of the programs available to them.',
   },
   {
     id: 'huff',
     name: 'Gerald Huff Fund for Humanity',
     websiteUrl: 'https://www.hufffund.org/',
     logoUrl: '/assets/supporters/huff.png',
-    description: 'a non-profit organization that was created in 2019 to promulgate the message of Gerald Huff, ardent proponent of Universal Basic Income as a transitional solution to the existential threat of technological unemployment.',
+    description:
+      'a non-profit organization that was created in 2019 to promulgate the message of Gerald Huff, ardent proponent of Universal Basic Income as a transitional solution to the existential threat of technological unemployment.',
   },
   {
     id: 'corvus',
     name: 'Corvus Oaks Foundation',
     websiteUrl: 'https://corvusoaks.org/',
-    description: 'a new private foundation currently exploring several issues for future engagement and collaboration.',
+    description:
+      'a new private foundation currently exploring several issues for future engagement and collaboration.',
   },
   {
     id: 'institute',
     name: 'The Institute',
     websiteUrl: 'https://www.the-institute.co/',
     logoUrl: '/assets/supporters/institute.svg',
-    description: 'a public benefit corporation with a philanthropic mission committed to contributing positively to humanity.',
+    description:
+      'a public benefit corporation with a philanthropic mission committed to contributing positively to humanity.',
   },
   {
     id: 'crfb',
     name: 'Committee for a Responsible Federal Budget',
     websiteUrl: 'https://www.crfb.org/',
     logoUrl: '/assets/supporters/crfb.png',
-    description: 'a nonpartisan, non-profit organization committed to educating the public on issues with significant fiscal policy impact.',
+    description:
+      'a nonpartisan, non-profit organization committed to educating the public on issues with significant fiscal policy impact.',
   },
   {
     id: 'imaginela',
@@ -80,14 +88,16 @@ const supporters: Supporter[] = [
     name: 'National Science Foundation',
     websiteUrl: 'https://www.nsf.gov/',
     logoUrl: '/assets/supporters/nsf.png',
-    description: 'an independent federal agency supporting science and engineering in all 50 states and U.S. territories through research and education.',
+    description:
+      'an independent federal agency supporting science and engineering in all 50 states and U.S. territories through research and education.',
   },
 ];
 
 const projects: SupportedProject[] = [
   {
     title: 'Enhancing, localising and democratising tax-benefit policy analysis',
-    projectUrl: 'https://www.nuffieldfoundation.org/project/enhancing-localising-and-democratising-tax-benefit-policy-analysis',
+    projectUrl:
+      'https://www.nuffieldfoundation.org/project/enhancing-localising-and-democratising-tax-benefit-policy-analysis',
     amount: 251296,
     currency: 'GBP',
     awardDate: '2024-09',
@@ -101,8 +111,7 @@ const projects: SupportedProject[] = [
     amount: 85200,
     currency: 'USD',
     awardDate: '2023-12',
-    description:
-      'Supporting the development of labor supply responses in PolicyEngine US.',
+    description: 'Supporting the development of labor supply responses in PolicyEngine US.',
     supporterId: 'arnold',
   },
   {
@@ -147,7 +156,8 @@ const projects: SupportedProject[] = [
     amount: 25000,
     currency: 'USD',
     awardDate: '2025-01',
-    description: 'Supporting the addition of Affordable Care Act premium tax credit rules to the PolicyEngine API.',
+    description:
+      'Supporting the addition of Affordable Care Act premium tax credit rules to the PolicyEngine API.',
     supporterId: 'myfriendben',
   },
   {
@@ -155,7 +165,8 @@ const projects: SupportedProject[] = [
     amount: 50000,
     currency: 'USD',
     awardDate: '2024-08',
-    description: 'Supporting our ability to grow technological capacity, integrate AI more fully, build organizational strength, and increase sustainability.',
+    description:
+      'Supporting our ability to grow technological capacity, integrate AI more fully, build organizational strength, and increase sustainability.',
     supporterId: 'huff',
   },
   {
@@ -163,7 +174,8 @@ const projects: SupportedProject[] = [
     amount: 50000,
     currency: 'USD',
     awardDate: '2023-08',
-    description: 'Supporting the improvement and marketing of the software as we pursue longer-term funding strategies.',
+    description:
+      'Supporting the improvement and marketing of the software as we pursue longer-term funding strategies.',
     supporterId: 'huff',
   },
   {
@@ -171,7 +183,8 @@ const projects: SupportedProject[] = [
     amount: 25000,
     currency: 'USD',
     awardDate: '2024-09',
-    description: 'Supporting our ability to connect with the benefit access community through travel and events.',
+    description:
+      'Supporting our ability to connect with the benefit access community through travel and events.',
     supporterId: 'corvus',
   },
   {
@@ -179,7 +192,8 @@ const projects: SupportedProject[] = [
     amount: 35000,
     currency: 'USD',
     awardDate: '2023-07',
-    description: 'Supporting the development of a report simulating options for budget-neutral tax-benefit reforms creating a universal basic income in the US.',
+    description:
+      'Supporting the development of a report simulating options for budget-neutral tax-benefit reforms creating a universal basic income in the US.',
     supporterId: 'institute',
   },
   {
@@ -205,7 +219,8 @@ const projects: SupportedProject[] = [
     amount: 30000,
     currency: 'USD',
     awardDate: '2022-12',
-    description: 'Supporting the development of a calibrated dataset for accurate tax-benefit microsimulation.',
+    description:
+      'Supporting the development of a calibrated dataset for accurate tax-benefit microsimulation.',
     supporterId: 'dylan',
   },
   {

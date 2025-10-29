@@ -1,4 +1,4 @@
-import { Box, Container, Title, Text } from '@mantine/core';
+import { Box, Container, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import StaticPageLayout from './StaticPageLayout';
 

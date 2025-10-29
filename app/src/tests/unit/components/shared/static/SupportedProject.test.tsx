@@ -2,13 +2,13 @@ import { render, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import SupportedProject from '@/components/shared/static/SupportedProject';
 import {
-  TEST_PROJECT_USD,
-  TEST_PROJECT_GBP,
-  TEST_PROJECT_NO_URL,
+  FORMATTED_AMOUNT_GBP,
+  FORMATTED_AMOUNT_USD,
   FORMATTED_DATE_JUNE_2024,
   FORMATTED_DATE_MARCH_2024,
-  FORMATTED_AMOUNT_USD,
-  FORMATTED_AMOUNT_GBP,
+  TEST_PROJECT_GBP,
+  TEST_PROJECT_NO_URL,
+  TEST_PROJECT_USD,
 } from '@/tests/fixtures/components/shared/static/SupportersMocks';
 
 describe('SupportedProject', () => {
