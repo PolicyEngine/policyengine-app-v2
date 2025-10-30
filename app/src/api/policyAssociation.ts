@@ -99,23 +99,21 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
+    // Generate a unique ID for local storage
+    // Format: "sup-[short-timestamp][random]"
+    // Use base36 encoding for compactness
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const uniqueId = `sup-${timestamp}${random}`;
+
     const newPolicy: UserPolicy = {
       ...policy,
-      id: policy.policyId, // Use policyId as the ID
+      id: uniqueId,
       createdAt: new Date().toISOString(),
       isCreated: true,
     };
 
     const policies = this.getStoredPolicies();
-
-    // Check for duplicates
-    const exists = policies.some(
-      (p) => p.userId === policy.userId && p.policyId === policy.policyId
-    );
-
-    if (exists) {
-      throw new Error('Association already exists');
-    }
 
     const updatedPolicies = [...policies, newPolicy];
     this.setStoredPolicies(updatedPolicies);
