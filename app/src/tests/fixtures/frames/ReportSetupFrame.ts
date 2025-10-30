@@ -34,7 +34,7 @@ export const MOCK_HOUSEHOLD_SIMULATION = {
   id: '1',
   label: 'Test Household Sim',
   policyId: '1',
-  populationId: 'household_1',
+  populationId: 'household-123', // Matches TEST_HOUSEHOLD_ID_1 from useUserHouseholdMocks
   populationType: 'household' as const,
   isCreated: true,
 };
@@ -43,7 +43,7 @@ export const MOCK_GEOGRAPHY_SIMULATION = {
   id: '2',
   label: 'Test Geography Sim',
   policyId: '2',
-  populationId: 'geography_1',
+  populationId: 'geography-789', // Matches TEST_GEOGRAPHY_ID_1 from useUserHouseholdMocks
   populationType: 'geography' as const,
   isCreated: true,
 };
@@ -74,3 +74,66 @@ export const MOCK_PARTIALLY_CONFIGURED_SIMULATION = {
   populationType: 'household' as const,
   isCreated: false,
 };
+
+// Population data for prefill tests
+export const MOCK_POPULATION_1 = {
+  label: 'Test Population 1',
+  isCreated: true,
+  household: {
+    id: 'household-123',
+    countryId: 'us' as any,
+    householdData: {
+      people: { you: { age: { '2025': 30 } } },
+      families: {},
+      spm_units: {},
+      households: { 'your household': { members: ['you'] } },
+      marital_units: {},
+      tax_units: { 'your tax unit': { members: ['you'] } },
+    },
+  },
+  geography: null,
+};
+
+export const MOCK_POPULATION_2 = {
+  label: 'Test Population 2',
+  isCreated: true,
+  household: {
+    id: 'household-456',
+    countryId: 'us' as any,
+    householdData: {
+      people: { you: { age: { '2025': 35 } } },
+      families: {},
+      spm_units: {},
+      households: { 'your household': { members: ['you'] } },
+      marital_units: {},
+      tax_units: { 'your tax unit': { members: ['you'] } },
+    },
+  },
+  geography: null,
+};
+
+export const MOCK_GEOGRAPHY_POPULATION = {
+  label: 'Geographic Population',
+  isCreated: true,
+  household: null,
+  geography: {
+    id: 'geography-789',
+    countryId: 'us' as any,
+    scope: 'national',
+    geographyId: 'us',
+  },
+};
+
+// Console messages for prefill
+export const PREFILL_CONSOLE_MESSAGES = {
+  PRE_FILLING_START: '[ReportSetupFrame] ===== PRE-FILLING POPULATION 2 =====',
+  PRE_FILLING_HOUSEHOLD: '[ReportSetupFrame] Pre-filling household population',
+  PRE_FILLING_GEOGRAPHY: '[ReportSetupFrame] Pre-filling geographic population',
+  HOUSEHOLD_SUCCESS: '[ReportSetupFrame] Household population pre-filled successfully',
+  GEOGRAPHY_SUCCESS: '[ReportSetupFrame] Geographic population pre-filled successfully',
+  ALREADY_EXISTS: '[ReportSetupFrame] Population 2 already exists, skipping prefill',
+  NO_POPULATION: '[ReportSetupFrame] Cannot prefill: simulation1 has no population',
+};
+
+// Loading messages
+export const LOADING_POPULATION_DATA_MESSAGE = 'Loading population data...';
