@@ -214,6 +214,7 @@ describe('LocalStorageHouseholdStore', () => {
       // Given
       const household = { ...mockUserHouseholdPopulation };
       delete (household as any).createdAt; // Test that createdAt is generated
+      delete (household as any).id; // ID will be generated
 
       // When
       const result = await store.create(household);
