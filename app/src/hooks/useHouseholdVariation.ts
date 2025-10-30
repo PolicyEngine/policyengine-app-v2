@@ -29,7 +29,7 @@ interface UseHouseholdVariationParams {
  * V2 IMPROVEMENTS:
  * - TanStack Query caching: shares cache between Earnings Variation ↔ MTR
  * - Stable cache keys: uses IDs not full objects
- * - Aggressive staleTime: 5min minimum before considering refetch
+ * - Aggressive staleTime: 30 min minimum before considering refetch
  * - Disabled automatic refetches: manual control only
  * - Single retry on failure
  */
@@ -64,9 +64,9 @@ export function useHouseholdVariation({
       return result;
     },
     enabled,
-    staleTime: 5 * 60 * 1000, // 5 min (match backend Redis)
-    gcTime: 10 * 60 * 1000, // Keep in cache 10 min
-    // B) CONCERN: calculate-full is expensive - use longer cache + prevent refetch on window focus
+    staleTime: 30 * 60 * 1000, // 30 min - data stays fresh
+    gcTime: 35 * 60 * 1000, // 35 min - keep in memory longer than staleTime
+    // CONCERN: calculate-full is expensive - use longer cache + prevent refetch on window focus
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
