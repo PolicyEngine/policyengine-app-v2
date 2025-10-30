@@ -13,6 +13,7 @@ import {
   NumberInput,
   SimpleGrid,
   Stack,
+  Switch,
   Text,
 } from '@mantine/core';
 import { DatePickerInput, YearPickerInput } from '@mantine/dates';
@@ -266,7 +267,7 @@ export function DateValueSelector(props: ValueSetterProps) {
   }
 
   return (
-    <Group align="flex-end">
+    <Group align="flex-end" style={{ flex: 1 }}>
       <DatePickerInput
         placeholder="Pick a start date"
         label="From"
@@ -387,6 +388,7 @@ export function ValueInputBox(props: ValueInputBoxProps) {
       : '';
 
   const isPercentage = param.unit === '/1';
+  const isBool = param.unit === 'bool';
 
   if (param.type !== 'parameter') {
     console.error("ValueInputBox expects a parameter type of 'parameter', got:", param.type);
@@ -401,6 +403,12 @@ export function ValueInputBox(props: ValueInputBoxProps) {
     }
   };
 
+  const handleBoolChange = (checked: boolean) => {
+    if (onChange) {
+      onChange(checked);
+    }
+  };
+
   // Convert decimal value (0-1) to percentage display value (0-100)
   const displayValue = isPercentage
     ? value !== undefined
@@ -410,9 +418,42 @@ export function ValueInputBox(props: ValueInputBoxProps) {
       ? value
       : 0;
 
-  return param.unit === 'bool' ? (
-    <Text>TODO: Switch for boolean value</Text>
-  ) : (
+  if (isBool) {
+    return (
+      <Stack gap="xs" style={{ flex: 1 }}>
+        {label && (
+          <Text size="sm" fw={500}>
+            {label}
+          </Text>
+        )}
+        <Group
+          justify="space-between"
+          align="center"
+          style={{
+            border: '1px solid #ced4da',
+            borderRadius: '4px',
+            padding: '6px 12px',
+            height: '36px',
+            backgroundColor: 'white',
+          }}
+        >
+          <Text size="sm" c={value ? 'dimmed' : 'dark'} fw={value ? 400 : 600}>
+            False
+          </Text>
+          <Switch
+            checked={value || false}
+            onChange={(event) => handleBoolChange(event.currentTarget.checked)}
+            size="md"
+          />
+          <Text size="sm" c={value ? 'dark' : 'dimmed'} fw={value ? 600 : 400}>
+            True
+          </Text>
+        </Group>
+      </Stack>
+    );
+  }
+
+  return (
     <NumberInput
       label={label}
       placeholder="Enter value"
