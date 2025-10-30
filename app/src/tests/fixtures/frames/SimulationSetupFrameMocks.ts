@@ -88,3 +88,49 @@ export const POSITION_1 = 1;
 // Mode constants
 export const MODE_REPORT = 'report';
 export const MODE_STANDALONE = 'standalone';
+
+// Helper function to create mockUseSelector implementation for standalone mode (position 0)
+export function createStandaloneMockSelector(
+  population: typeof MOCK_HOUSEHOLD_POPULATION | typeof MOCK_GEOGRAPHY_POPULATION | typeof MOCK_UNFILLED_POPULATION,
+  policy = MOCK_POLICY,
+  simulation = MOCK_SIMULATION
+) {
+  let callCount = 0;
+  return () => {
+    callCount++;
+    // Call 1: selectCurrentPosition
+    if (callCount === 1) return POSITION_0;
+    // Call 2: selectSimulationAtPosition
+    if (callCount === 2) return simulation;
+    // Call 3: selectActivePolicy
+    if (callCount === 3) return policy;
+    // Call 4: selectActivePopulation
+    if (callCount === 4) return population;
+    // Call 5: state.report.mode
+    if (callCount === 5) return MODE_STANDALONE;
+    return null;
+  };
+}
+
+// Helper function to create mockUseSelector implementation for report mode (position 1)
+export function createReportModeMockSelector(
+  population: typeof MOCK_HOUSEHOLD_POPULATION | typeof MOCK_GEOGRAPHY_POPULATION | typeof MOCK_UNFILLED_POPULATION,
+  policy = MOCK_POLICY,
+  simulation = MOCK_SIMULATION
+) {
+  let callCount = 0;
+  return () => {
+    callCount++;
+    // Call 1: selectCurrentPosition
+    if (callCount === 1) return POSITION_1;
+    // Call 2: selectSimulationAtPosition
+    if (callCount === 2) return simulation;
+    // Call 3: selectActivePolicy
+    if (callCount === 3) return policy;
+    // Call 4: selectActivePopulation
+    if (callCount === 4) return population;
+    // Call 5: state.report.mode
+    if (callCount === 5) return MODE_REPORT;
+    return null;
+  };
+}
