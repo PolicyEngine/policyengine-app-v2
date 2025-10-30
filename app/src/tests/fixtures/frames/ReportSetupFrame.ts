@@ -34,7 +34,7 @@ export const MOCK_HOUSEHOLD_SIMULATION = {
   id: '1',
   label: 'Test Household Sim',
   policyId: '1',
-  populationId: 'household_1',
+  populationId: 'household-123', // Matches TEST_HOUSEHOLD_ID_1 from useUserHouseholdMocks
   populationType: 'household' as const,
   isCreated: true,
 };
@@ -43,7 +43,7 @@ export const MOCK_GEOGRAPHY_SIMULATION = {
   id: '2',
   label: 'Test Geography Sim',
   policyId: '2',
-  populationId: 'geography_1',
+  populationId: 'geography-789', // Matches TEST_GEOGRAPHY_ID_1 from useUserHouseholdMocks
   populationType: 'geography' as const,
   isCreated: true,
 };

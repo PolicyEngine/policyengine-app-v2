@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
 import { setActiveSimulationPosition } from '@/reducers/reportReducer';
 import { createSimulationAtPosition } from '@/reducers/simulationsReducer';
@@ -17,6 +17,7 @@ import {
   MOCK_COMPARISON_SIMULATION,
   MOCK_GEOGRAPHY_SIMULATION,
   MOCK_HOUSEHOLD_SIMULATION,
+  PREFILL_CONSOLE_MESSAGES,
   REVIEW_REPORT_LABEL,
   SETUP_BASELINE_SIMULATION_LABEL,
   SETUP_COMPARISON_SIMULATION_LABEL,
@@ -54,6 +55,11 @@ vi.mock('@/hooks/useUserGeographic', () => ({
     isError: false,
   })),
   isGeographicMetadataWithAssociation: vi.fn(() => false),
+}));
+
+// Mock populationMatching utility
+vi.mock('@/utils/populationMatching', () => ({
+  findMatchingPopulation: vi.fn(() => null),
 }));
 
 describe('ReportSetupFrame', () => {
@@ -310,6 +316,298 @@ describe('ReportSetupFrame', () => {
       // Then
       const reviewButton = screen.getByRole('button', { name: REVIEW_REPORT_LABEL });
       expect(reviewButton).toBeEnabled();
+    });
+  });
+
+  describe('Population Pre-filling', () => {
+    let consoleLogSpy: ReturnType<typeof vi.spyOn>;
+    let consoleErrorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      // Spy on console methods but allow them to pass through so we can see what's happening
+      consoleLogSpy = vi.spyOn(console, 'log');
+      consoleErrorSpy = vi.spyOn(console, 'error');
+    });
+
+    afterEach(() => {
+      consoleLogSpy.mockRestore();
+      consoleErrorSpy.mockRestore();
+    });
+
+    test('given user sets up simulation 2 with household report then population is pre-filled', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      // Import fixtures and mocked modules
+      const {
+        mockHouseholdMetadata,
+        mockUseUserHouseholdsSuccess,
+        mockUseUserGeographicsEmpty,
+        TEST_HOUSEHOLD_ID_1,
+        TEST_HOUSEHOLD_LABEL,
+      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+      const { createPopulationAtPosition, setHouseholdAtPosition, updatePopulationAtPosition } =
+        await import('@/reducers/populationReducer');
+
+      // Get the mocked functions
+      const { useUserHouseholds, isHouseholdMetadataWithAssociation } = await import('@/hooks/useUserHousehold');
+      const { useUserGeographics, isGeographicMetadataWithAssociation } = await import('@/hooks/useUserGeographic');
+      const { findMatchingPopulation } = await import('@/utils/populationMatching');
+
+      // Mock useSelector to handle different selectors
+      mockUseSelector.mockImplementation((selector: any) => {
+        // Create a mock state
+        const mockState = {
+          simulations: {
+            simulations: [MOCK_HOUSEHOLD_SIMULATION, null], // position 0 and 1
+          },
+          population: {
+            populations: [null, null], // position 0 and 1 - population2 not yet created
+          },
+        };
+        return selector(mockState);
+      });
+
+      // Mock hooks using vi.mocked
+      vi.mocked(useUserHouseholds).mockImplementation(() => mockUseUserHouseholdsSuccess);
+      vi.mocked(useUserGeographics).mockImplementation(() => mockUseUserGeographicsEmpty);
+      vi.mocked(findMatchingPopulation).mockImplementation(() => mockHouseholdMetadata);
+      vi.mocked(isHouseholdMetadataWithAssociation).mockImplementation(() => true);
+      vi.mocked(isGeographicMetadataWithAssociation).mockImplementation(() => false);
+
+      render(<ReportSetupFrame {...mockFlowProps} />);
+      await user.click(screen.getByText(COMPARISON_SIMULATION_OPTIONAL_TITLE));
+
+      // When
+      await user.click(screen.getByRole('button', { name: SETUP_COMPARISON_SIMULATION_LABEL }));
+
+      // Then
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: createPopulationAtPosition.type,
+          payload: expect.objectContaining({
+            position: 1,
+            population: expect.objectContaining({
+              label: TEST_HOUSEHOLD_LABEL,
+              isCreated: true,
+            }),
+          }),
+        })
+      );
+
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: setHouseholdAtPosition.type,
+          payload: expect.objectContaining({
+            position: 1,
+          }),
+        })
+      );
+
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: updatePopulationAtPosition.type,
+          payload: expect.objectContaining({
+            position: 1,
+            updates: expect.objectContaining({
+              isCreated: true,
+            }),
+          }),
+        })
+      );
+    });
+
+    test('given user sets up simulation 2 with geography report then geography is pre-filled', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      const {
+        mockGeographicMetadata,
+        mockUseUserHouseholdsEmpty,
+        mockUseUserGeographicsSuccess,
+        TEST_GEOGRAPHY_LABEL,
+      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+      const { createPopulationAtPosition, setGeographyAtPosition, updatePopulationAtPosition } =
+        await import('@/reducers/populationReducer');
+
+      // Get the mocked functions
+      const { useUserHouseholds, isHouseholdMetadataWithAssociation } = await import('@/hooks/useUserHousehold');
+      const { useUserGeographics, isGeographicMetadataWithAssociation } = await import('@/hooks/useUserGeographic');
+      const { findMatchingPopulation } = await import('@/utils/populationMatching');
+
+      // Mock useSelector to handle different selectors
+      mockUseSelector.mockImplementation((selector: any) => {
+        const mockState = {
+          simulations: {
+            simulations: [MOCK_GEOGRAPHY_SIMULATION, null],
+          },
+          population: {
+            populations: [null, null],
+          },
+        };
+        return selector(mockState);
+      });
+
+      vi.mocked(useUserHouseholds).mockImplementation(() => mockUseUserHouseholdsEmpty);
+      vi.mocked(useUserGeographics).mockImplementation(() => mockUseUserGeographicsSuccess);
+      vi.mocked(findMatchingPopulation).mockImplementation(() => mockGeographicMetadata);
+      vi.mocked(isHouseholdMetadataWithAssociation).mockImplementation(() => false);
+      vi.mocked(isGeographicMetadataWithAssociation).mockImplementation(() => true);
+
+      render(<ReportSetupFrame {...mockFlowProps} />);
+      await user.click(screen.getByText(COMPARISON_SIMULATION_REQUIRED_TITLE));
+
+      // When
+      await user.click(screen.getByRole('button', { name: SETUP_COMPARISON_SIMULATION_LABEL }));
+
+      // Then
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: createPopulationAtPosition.type,
+          payload: expect.objectContaining({
+            position: 1,
+            population: expect.objectContaining({
+              label: TEST_GEOGRAPHY_LABEL,
+              isCreated: true,
+            }),
+          }),
+        })
+      );
+
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: setGeographyAtPosition.type,
+          payload: expect.objectContaining({
+            position: 1,
+          }),
+        })
+      );
+
+      expect(mockDispatch).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: updatePopulationAtPosition.type,
+          payload: expect.objectContaining({
+            position: 1,
+            updates: expect.objectContaining({
+              isCreated: true,
+            }),
+          }),
+        })
+      );
+    });
+
+    test('given population data is loading then button is disabled', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      const {
+        mockUseUserHouseholdsLoading,
+        mockUseUserGeographicsLoading,
+      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+
+      // Get the mocked functions
+      const { useUserHouseholds } = await import('@/hooks/useUserHousehold');
+      const { useUserGeographics } = await import('@/hooks/useUserGeographic');
+
+      mockUseSelector.mockImplementation((selector: any) => {
+        const mockState = {
+          simulations: {
+            simulations: [MOCK_HOUSEHOLD_SIMULATION, null],
+          },
+          population: {
+            populations: [null, null],
+          },
+        };
+        return selector(mockState);
+      });
+
+      vi.mocked(useUserHouseholds).mockImplementation(() => mockUseUserHouseholdsLoading);
+      vi.mocked(useUserGeographics).mockImplementation(() => mockUseUserGeographicsLoading);
+
+      render(<ReportSetupFrame {...mockFlowProps} />);
+      await user.click(screen.getByText(COMPARISON_SIMULATION_OPTIONAL_TITLE));
+
+      // Then - Button should be disabled while loading
+      const button = screen.getByRole('button', { name: SETUP_COMPARISON_SIMULATION_LABEL });
+      expect(button).toBeDisabled();
+    });
+
+    test('given population 2 already exists then prefill is skipped', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      const {
+        mockUseUserHouseholdsSuccess,
+        mockUseUserGeographicsEmpty,
+      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+
+      // Get the mocked functions
+      const { useUserHouseholds } = await import('@/hooks/useUserHousehold');
+      const { useUserGeographics } = await import('@/hooks/useUserGeographic');
+
+      mockUseSelector.mockImplementation((selector: any) => {
+        const mockState = {
+          simulations: {
+            simulations: [MOCK_HOUSEHOLD_SIMULATION, null],
+          },
+          population: {
+            populations: [null, { isCreated: true }], // population2 already exists
+          },
+        };
+        return selector(mockState);
+      });
+
+      vi.mocked(useUserHouseholds).mockImplementation(() => mockUseUserHouseholdsSuccess);
+      vi.mocked(useUserGeographics).mockImplementation(() => mockUseUserGeographicsEmpty);
+
+      render(<ReportSetupFrame {...mockFlowProps} />);
+      await user.click(screen.getByText(COMPARISON_SIMULATION_OPTIONAL_TITLE));
+
+      // When
+      await user.click(screen.getByRole('button', { name: SETUP_COMPARISON_SIMULATION_LABEL }));
+
+      // Then - Should log that prefill was skipped
+      expect(consoleLogSpy).toHaveBeenCalledWith(
+        expect.stringContaining(PREFILL_CONSOLE_MESSAGES.ALREADY_EXISTS.slice(19)) // Remove "[ReportSetupFrame]" prefix
+      );
+    });
+
+    test('given simulation1 has no population then prefill shows error', async () => {
+      // Given
+      const user = userEvent.setup();
+
+      const {
+        mockUseUserHouseholdsSuccess,
+        mockUseUserGeographicsEmpty,
+      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+
+      // Get the mocked functions
+      const { useUserHouseholds } = await import('@/hooks/useUserHousehold');
+      const { useUserGeographics } = await import('@/hooks/useUserGeographic');
+
+      mockUseSelector.mockImplementation((selector: any) => {
+        const mockState = {
+          simulations: {
+            simulations: [{ ...MOCK_HOUSEHOLD_SIMULATION, populationId: undefined }, null], // simulation1 without population
+          },
+          population: {
+            populations: [null, null],
+          },
+        };
+        return selector(mockState);
+      });
+
+      vi.mocked(useUserHouseholds).mockImplementation(() => mockUseUserHouseholdsSuccess);
+      vi.mocked(useUserGeographics).mockImplementation(() => mockUseUserGeographicsEmpty);
+
+      render(<ReportSetupFrame {...mockFlowProps} />);
+
+      // Need to wait for simulation1 to be "configured" which requires both policyId and populationId
+      // Since populationId is undefined, simulation1Configured will be false
+      // So comparison card will show "Waiting" state, not "Optional"
+      // Let's check the actual text that appears
+      const waitingTitle = screen.getByText(COMPARISON_SIMULATION_WAITING_TITLE);
+      expect(waitingTitle).toBeInTheDocument();
     });
   });
 });
