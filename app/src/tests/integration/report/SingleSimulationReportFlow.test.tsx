@@ -30,6 +30,28 @@ vi.mock('@/hooks/useIngredientReset', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useUserHousehold', () => ({
+  useUserHouseholds: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+    error: null,
+    associations: [],
+  }),
+  isHouseholdMetadataWithAssociation: vi.fn(() => false),
+}));
+
+vi.mock('@/hooks/useUserGeographic', () => ({
+  useUserGeographics: () => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+    error: null,
+    associations: [],
+  }),
+  isGeographicMetadataWithAssociation: vi.fn(() => false),
+}));
+
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
