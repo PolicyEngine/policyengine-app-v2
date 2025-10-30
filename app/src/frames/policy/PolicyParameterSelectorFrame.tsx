@@ -76,7 +76,7 @@ export default function PolicyParameterSelectorFrame({
         {loading || !parameterTree ? (
           <MainEmpty />
         ) : selectedLeafParam ? (
-          <Main param={selectedLeafParam} />
+          <Main key={selectedLeafParam.parameter} param={selectedLeafParam} />
         ) : (
           <MainEmpty />
         )}
