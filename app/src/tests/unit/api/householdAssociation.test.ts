@@ -259,16 +259,17 @@ describe('LocalStorageHouseholdStore', () => {
       const newHousehold = {
         ...mockUserHouseholdPopulation,
         householdId: 'new-household',
-        id: 'new-household',
       };
 
       // When
-      await store.create(newHousehold);
+      const result = await store.create(newHousehold);
 
       // Then
       const stored = JSON.parse(mockLocalStorage['user-population-households']);
       expect(stored).toHaveLength(2);
       expect(stored[1].householdId).toBe('new-household');
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^suh-/);
     });
 
     test('given storage failure then throws error', async () => {
