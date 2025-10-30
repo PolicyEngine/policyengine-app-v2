@@ -127,8 +127,29 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
   );
   console.log('[ReportSelectExistingSimulationFrame] Filtered simulations:', filteredSimulations);
 
-  // Build card list items from ALL filtered simulations (pagination handled by FlowView)
-  const simulationCardItems = filteredSimulations.map((enhancedSim) => {
+  // Sort simulations to show compatible first, then incompatible
+  const sortedSimulations = [...filteredSimulations].sort((a, b) => {
+    const aCompatible = arePopulationsCompatible(
+      otherSimulation?.populationId,
+      a.simulation!.populationId
+    );
+    const bCompatible = arePopulationsCompatible(
+      otherSimulation?.populationId,
+      b.simulation!.populationId
+    );
+
+    // Compatible items first (true > false in our sort)
+    return bCompatible === aCompatible ? 0 : bCompatible ? -1 : 1;
+  });
+
+  console.log('[ReportSelectExistingSimulationFrame] ========== AFTER SORTING ==========');
+  console.log(
+    '[ReportSelectExistingSimulationFrame] Sorted simulations count:',
+    sortedSimulations.length
+  );
+
+  // Build card list items from sorted simulations (pagination handled by FlowView)
+  const simulationCardItems = sortedSimulations.map((enhancedSim) => {
     const simulation = enhancedSim.simulation!;
 
     // Check compatibility with other simulation
