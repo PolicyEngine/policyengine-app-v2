@@ -120,15 +120,6 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
 
     const simulations = this.getStoredSimulations();
 
-    // Check for duplicates
-    const exists = simulations.some(
-      (s) => s.userId === simulation.userId && s.simulationId === simulation.simulationId
-    );
-
-    if (exists) {
-      throw new Error('Association already exists');
-    }
-
     const updatedSimulations = [...simulations, newSimulation];
     this.setStoredSimulations(updatedSimulations);
 

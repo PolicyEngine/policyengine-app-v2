@@ -214,14 +214,22 @@ describe('LocalStorageSimulationStore', () => {
       expect(result1.id).not.toBe(result2.id);
     });
 
-    it('given duplicate simulation then throws error', async () => {
+    it('given duplicate simulation then creates new association with unique ID', async () => {
       // Given
-      await store.create(mockSimulationInput());
+      const first = await store.create(mockSimulationInput());
 
-      // When/Then
-      await expect(store.create(mockSimulationInput())).rejects.toThrow(
-        'Association already exists'
-      );
+      // When
+      const second = await store.create(mockSimulationInput());
+
+      // Then
+      expect(second).toMatchObject({
+        userId: first.userId,
+        simulationId: first.simulationId,
+        countryId: first.countryId,
+      });
+      expect(second.id).toBeDefined();
+      expect(second.id).not.toBe(first.id);
+      expect(second.id).toMatch(/^sus-/);
     });
   });
 

@@ -99,24 +99,22 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
   private readonly STORAGE_KEY = 'user-population-households';
 
   async create(household: UserHouseholdPopulation): Promise<UserHouseholdPopulation> {
+    // Generate a unique ID for local storage
+    // Format: "suh-[short-timestamp][random]"
+    // Use base36 encoding for compactness
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const uniqueId = `suh-${timestamp}${random}`;
+
     const newHousehold: UserHouseholdPopulation = {
       ...household,
       type: 'household' as const,
-      id: household.householdId, // Use householdId as the ID
+      id: uniqueId,
       createdAt: household.createdAt || new Date().toISOString(),
       isCreated: true,
     };
 
     const households = this.getStoredHouseholds();
-
-    // Check for duplicates
-    const exists = households.some(
-      (h) => h.userId === household.userId && h.householdId === household.householdId
-    );
-
-    if (exists) {
-      throw new Error('Association already exists');
-    }
 
     const updatedHouseholds = [...households, newHousehold];
     this.setStoredHouseholds(updatedHouseholds);

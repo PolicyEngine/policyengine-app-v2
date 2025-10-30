@@ -134,15 +134,6 @@ export class LocalStorageReportStore implements UserReportStore {
 
     const reports = this.getStoredReports();
 
-    // Check for duplicates
-    const exists = reports.some(
-      (r) => r.userId === report.userId && r.reportId === report.reportId
-    );
-
-    if (exists) {
-      throw new Error('Association already exists');
-    }
-
     const updatedReports = [...reports, newReport];
     this.setStoredReports(updatedReports);
 
