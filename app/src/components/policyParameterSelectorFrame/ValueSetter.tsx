@@ -19,10 +19,11 @@ import {
 import { DatePickerInput, YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
-import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { selectActivePolicy, selectCurrentPosition } from '@/reducers/activeSelectors';
 import { addPolicyParamAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 enum ValueSetterMode {
@@ -30,6 +31,40 @@ enum ValueSetterMode {
   YEARLY = 'yearly',
   DATE = 'date',
   MULTI_YEAR = 'multi-year',
+}
+
+/**
+ * Helper function to get default value for a parameter at a specific date
+ * Priority: 1) User's reform value, 2) Baseline current law value
+ */
+function getDefaultValueForParam(
+  param: ParameterMetadata,
+  activePolicy: any,
+  date: string
+): any {
+  // First check if user has set a reform value for this parameter
+  if (activePolicy) {
+    const userParam = getParameterByName(activePolicy, param.parameter);
+    if (userParam && userParam.values && userParam.values.length > 0) {
+      const userCollection = new ValueIntervalCollection(userParam.values);
+      const userValue = userCollection.getValueAtDate(date);
+      if (userValue !== undefined) {
+        return userValue;
+      }
+    }
+  }
+
+  // Fall back to baseline current law value from metadata
+  if (param.values) {
+    const collection = new ValueIntervalCollection(param.values as any);
+    const value = collection.getValueAtDate(date);
+    if (value !== undefined) {
+      return value;
+    }
+  }
+
+  // Last resort: default based on unit type
+  return param.unit === 'bool' ? false : 0;
 }
 
 interface ValueSetterContainerProps {
@@ -43,6 +78,10 @@ interface ValueSetterProps {
   param: ParameterMetadata;
   intervals: ValueInterval[];
   setIntervals: Dispatch<SetStateAction<ValueInterval[]>>;
+  startDate: string;
+  setStartDate: Dispatch<SetStateAction<string>>;
+  endDate: string;
+  setEndDate: Dispatch<SetStateAction<string>>;
 }
 
 interface ValueInputBoxProps {
@@ -75,6 +114,10 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
+  // Hoisted date state for all non-multi-year selectors
+  const [startDate, setStartDate] = useState<string>('2025-01-01');
+  const [endDate, setEndDate] = useState<string>('2025-12-31');
+
   function resetValueSettingState() {
     setIntervals([]);
   }
@@ -104,6 +147,10 @@ export default function PolicyParameterSelectorValueSetterContainer(
     param,
     intervals,
     setIntervals,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
   };
 
   return (
@@ -141,38 +188,51 @@ export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => 
 }
 
 export function DefaultValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } = props;
 
-  // Get default value for 2025-01-01 from metadata
-  const defaultValue = useMemo(() => {
-    if (param.values) {
-      const collection = new ValueIntervalCollection(param.values as any);
-      const value = collection.getValueAtDate('2025-01-01');
-      return value !== undefined ? value : (param.unit === 'bool' ? false : 0);
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
+
+  // Local state for param value
+  const [paramValue, setParamValue] = useState<any>(
+    getDefaultValueForParam(param, activePolicy, startDate)
+  );
+
+  // Set endDate to 2100-12-31 for default mode
+  useEffect(() => {
+    setEndDate(FOREVER);
+  }, [setEndDate]);
+
+  // Update param value when startDate changes
+  useEffect(() => {
+    if (startDate) {
+      const newValue = getDefaultValueForParam(param, activePolicy, startDate);
+      setParamValue(newValue);
     }
-    return param.unit === 'bool' ? false : 0;
-  }, [param.values, param.unit]);
-
-  // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('2025-01-01');
-  const [paramValue, setParamValue] = useState<any>(defaultValue);
+  }, [startDate, param, activePolicy]);
 
   // Update intervals whenever local state changes
   useEffect(() => {
-    if (startDate) {
+    if (startDate && endDate) {
       const newInterval: ValueInterval = {
         startDate,
-        endDate: FOREVER,
+        endDate,
         value: paramValue,
       };
       setIntervals([newInterval]);
     } else {
       setIntervals([]);
     }
-  }, [startDate, paramValue, setIntervals]);
+  }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: string | null) {
-    setStartDate(value || '');
+  function handleStartDateChange(value: Date | string | null) {
+    if (value) {
+      const dateValue = typeof value === 'string' ? new Date(value) : value;
+      const isoString = dateValue.toISOString().split('T')[0];
+      setStartDate(isoString);
+    } else {
+      setStartDate('');
+    }
   }
 
   return (
@@ -192,22 +252,33 @@ export function DefaultValueSelector(props: ValueSetterProps) {
 }
 
 export function YearlyValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } = props;
 
-  // Get default value for 2025-01-01 from metadata
-  const defaultValue = useMemo(() => {
-    if (param.values) {
-      const collection = new ValueIntervalCollection(param.values as any);
-      const value = collection.getValueAtDate('2025-01-01');
-      return value !== undefined ? value : (param.unit === 'bool' ? false : 0);
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
+
+  // Local state for param value
+  const [paramValue, setParamValue] = useState<any>(
+    getDefaultValueForParam(param, activePolicy, startDate)
+  );
+
+  // Set endDate to end of year of startDate
+  useEffect(() => {
+    if (startDate) {
+      const endOfYearDate = dayjs(startDate)
+        .endOf('year')
+        .format('YYYY-MM-DD');
+      setEndDate(endOfYearDate);
     }
-    return param.unit === 'bool' ? false : 0;
-  }, [param.values, param.unit]);
+  }, [startDate, setEndDate]);
 
-  // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('2025-01-01');
-  const [endDate, setEndDate] = useState<string>('2025-12-31');
-  const [paramValue, setParamValue] = useState<any>(defaultValue);
+  // Update param value when startDate changes
+  useEffect(() => {
+    if (startDate) {
+      const newValue = getDefaultValueForParam(param, activePolicy, startDate);
+      setParamValue(newValue);
+    }
+  }, [startDate, param, activePolicy]);
 
   // Update intervals whenever local state changes
   useEffect(() => {
@@ -223,15 +294,25 @@ export function YearlyValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: string | null) {
-    setStartDate(value || '');
+  function handleStartDateChange(value: Date | string | null) {
+    if (value) {
+      const dateValue = typeof value === 'string' ? new Date(value) : value;
+      const isoString = dateValue.toISOString().split('T')[0];
+      setStartDate(isoString);
+    } else {
+      setStartDate('');
+    }
   }
 
-  function handleEndDateChange(value: string | null) {
-    const endOfYearDate = dayjs(value || '')
-      .endOf('year')
-      .format('YYYY-MM-DD');
-    setEndDate(endOfYearDate);
+  function handleEndDateChange(value: Date | string | null) {
+    if (value) {
+      const endOfYearDate = dayjs(value)
+        .endOf('year')
+        .format('YYYY-MM-DD');
+      setEndDate(endOfYearDate);
+    } else {
+      setEndDate('');
+    }
   }
 
   return (
@@ -260,22 +341,33 @@ export function YearlyValueSelector(props: ValueSetterProps) {
 }
 
 export function DateValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } = props;
 
-  // Get default value for 2025-01-01 from metadata
-  const defaultValue = useMemo(() => {
-    if (param.values) {
-      const collection = new ValueIntervalCollection(param.values as any);
-      const value = collection.getValueAtDate('2025-01-01');
-      return value !== undefined ? value : (param.unit === 'bool' ? false : 0);
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
+
+  // Local state for param value
+  const [paramValue, setParamValue] = useState<any>(
+    getDefaultValueForParam(param, activePolicy, startDate)
+  );
+
+  // Set endDate to end of year of startDate
+  useEffect(() => {
+    if (startDate) {
+      const endOfYearDate = dayjs(startDate)
+        .endOf('year')
+        .format('YYYY-MM-DD');
+      setEndDate(endOfYearDate);
     }
-    return param.unit === 'bool' ? false : 0;
-  }, [param.values, param.unit]);
+  }, [startDate, setEndDate]);
 
-  // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('2025-01-01');
-  const [endDate, setEndDate] = useState<string>('2025-01-01');
-  const [paramValue, setParamValue] = useState<any>(defaultValue);
+  // Update param value when startDate changes
+  useEffect(() => {
+    if (startDate) {
+      const newValue = getDefaultValueForParam(param, activePolicy, startDate);
+      setParamValue(newValue);
+    }
+  }, [startDate, param, activePolicy]);
 
   // Update intervals whenever local state changes
   useEffect(() => {
@@ -291,12 +383,24 @@ export function DateValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: string | null) {
-    setStartDate(value || '');
+  function handleStartDateChange(value: Date | string | null) {
+    if (value) {
+      const dateValue = typeof value === 'string' ? new Date(value) : value;
+      const isoString = dateValue.toISOString().split('T')[0];
+      setStartDate(isoString);
+    } else {
+      setStartDate('');
+    }
   }
 
-  function handleEndDateChange(value: string | null) {
-    setEndDate(value || '');
+  function handleEndDateChange(value: Date | string | null) {
+    if (value) {
+      const dateValue = typeof value === 'string' ? new Date(value) : value;
+      const isoString = dateValue.toISOString().split('T')[0];
+      setEndDate(isoString);
+    } else {
+      setEndDate('');
+    }
   }
 
   return (
@@ -327,6 +431,9 @@ export function DateValueSelector(props: ValueSetterProps) {
 export function MultiYearValueSelector(props: ValueSetterProps) {
   const { param, setIntervals, minDate, maxDate } = props;
 
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
+
   const MAX_YEARS = 10;
 
   // Generate years from minDate to maxDate, starting from 2025
@@ -342,22 +449,14 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   const years = generateYears();
 
-  // Get values from metadata for each year
+  // Get values for each year - check reform first, then baseline
   const getInitialYearValues = useMemo(() => {
     const initialValues: Record<string, any> = {};
-    if (param.values) {
-      const collection = new ValueIntervalCollection(param.values as any);
-      years.forEach((year) => {
-        const value = collection.getValueAtDate(`${year}-01-01`);
-        initialValues[year] = value !== undefined ? value : (param.unit === 'bool' ? false : 0);
-      });
-    } else {
-      years.forEach((year) => {
-        initialValues[year] = param.unit === 'bool' ? false : 0;
-      });
-    }
+    years.forEach((year) => {
+      initialValues[year] = getDefaultValueForParam(param, activePolicy, `${year}-01-01`);
+    });
     return initialValues;
-  }, [param.values, param.unit, years]);
+  }, [param, activePolicy, years]);
 
   const [yearValues, setYearValues] = useState<Record<string, any>>(getInitialYearValues);
 
