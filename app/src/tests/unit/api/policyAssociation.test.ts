@@ -226,18 +226,29 @@ describe('LocalStoragePolicyStore', () => {
         policyId: 'policy-456',
         label: 'Test Policy 1',
       });
-      expect(result.id).toBe('policy-456');
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^sup-/);
       expect(result.createdAt).toBeDefined();
       expect(result.isCreated).toBe(true);
       expect(localStorage.setItem).toHaveBeenCalled();
     });
 
-    it('given duplicate policy then throws error', async () => {
+    it('given duplicate policy then creates new association with unique ID', async () => {
       // Given
-      await store.create(mockPolicyInput1);
+      const first = await store.create(mockPolicyInput1);
 
-      // When/Then
-      await expect(store.create(mockPolicyInput1)).rejects.toThrow('Association already exists');
+      // When
+      const second = await store.create(mockPolicyInput1);
+
+      // Then
+      expect(second).toMatchObject({
+        userId: 'user-123',
+        policyId: 'policy-456',
+        label: 'Test Policy 1',
+      });
+      expect(second.id).toBeDefined();
+      expect(second.id).not.toBe(first.id);
+      expect(second.id).toMatch(/^sup-/);
     });
   });
 

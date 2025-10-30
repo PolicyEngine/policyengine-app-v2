@@ -222,9 +222,10 @@ describe('LocalStorageHouseholdStore', () => {
       expect(result).toMatchObject({
         ...household,
         type: 'household',
-        id: household.householdId,
         isCreated: true,
       });
+      expect(result.id).toBeDefined();
+      expect(result.id).toMatch(/^suh-/);
       expect(result.createdAt).toBeDefined();
       expect(localStorage.setItem).toHaveBeenCalledWith(
         'user-population-households',
@@ -232,16 +233,23 @@ describe('LocalStorageHouseholdStore', () => {
       );
     });
 
-    test('given duplicate association then throws error', async () => {
+    test('given duplicate association then creates new association with unique ID', async () => {
       // Given
-      mockLocalStorage['user-population-households'] = JSON.stringify([
-        mockUserHouseholdPopulation,
-      ]);
+      const first = await store.create(mockUserHouseholdPopulation);
 
-      // When/Then
-      await expect(store.create(mockUserHouseholdPopulation)).rejects.toThrow(
-        'Association already exists'
-      );
+      // When
+      const second = await store.create(mockUserHouseholdPopulation);
+
+      // Then
+      expect(second).toMatchObject({
+        type: 'household',
+        userId: mockUserHouseholdPopulation.userId,
+        householdId: mockUserHouseholdPopulation.householdId,
+        isCreated: true,
+      });
+      expect(second.id).toBeDefined();
+      expect(second.id).not.toBe(first.id);
+      expect(second.id).toMatch(/^suh-/);
     });
 
     test('given existing households then appends new household', async () => {

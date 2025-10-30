@@ -354,11 +354,23 @@ describe('LocalStorageReportStore', () => {
       expect(result1.id).not.toBe(result2.id);
     });
 
-    it('given duplicate report then throws error', async () => {
+    it('given duplicate report then creates new association with unique ID', async () => {
+      // Given
       const input = mockReportInput();
-      await store.create(input);
+      const first = await store.create(input);
 
-      await expect(store.create(input)).rejects.toThrow('Association already exists');
+      // When
+      const second = await store.create(input);
+
+      // Then
+      expect(second).toMatchObject({
+        userId: first.userId,
+        reportId: first.reportId,
+        countryId: first.countryId,
+      });
+      expect(second.id).toBeDefined();
+      expect(second.id).not.toBe(first.id);
+      expect(second.id).toMatch(/^sur-/);
     });
   });
 
