@@ -49,6 +49,10 @@ export const MOCK_UNCONFIGURED_SIMULATION = {
 
 // Console log messages
 export const SELECTED_SIMULATION_LOG_PREFIX = 'Submitting Simulation in handleSubmit:';
+export const AFTER_SORTING_LOG = '[ReportSelectExistingSimulationFrame] ========== AFTER SORTING ==========';
+
+// Incompatibility messages
+export const INCOMPATIBLE_POPULATION_MESSAGE = 'Incompatible: different population than configured simulation';
 
 // Helper function to create EnhancedUserSimulation from a basic simulation
 export function createEnhancedUserSimulation(

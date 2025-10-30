@@ -37,6 +37,25 @@ vi.mock('react-redux', async () => {
   };
 });
 
+// Mock population hooks (needed for Phase 1 prefill functionality)
+vi.mock('@/hooks/useUserHousehold', () => ({
+  useUserHouseholds: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  })),
+  isHouseholdMetadataWithAssociation: vi.fn(() => false),
+}));
+
+vi.mock('@/hooks/useUserGeographic', () => ({
+  useUserGeographics: vi.fn(() => ({
+    data: [],
+    isLoading: false,
+    isError: false,
+  })),
+  isGeographicMetadataWithAssociation: vi.fn(() => false),
+}));
+
 describe('ReportSetupFrame', () => {
   const mockOnNavigate = vi.fn();
   const mockFlowProps = {
