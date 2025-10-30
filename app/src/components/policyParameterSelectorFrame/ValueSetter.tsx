@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -23,7 +23,7 @@ import { selectCurrentPosition } from '@/reducers/activeSelectors';
 import { addPolicyParamAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 enum ValueSetterMode {
   DEFAULT = 'default',
@@ -143,9 +143,19 @@ export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => 
 export function DefaultValueSelector(props: ValueSetterProps) {
   const { param, setIntervals, minDate, maxDate } = props;
 
+  // Get default value for 2025-01-01 from metadata
+  const defaultValue = useMemo(() => {
+    if (param.values) {
+      const collection = new ValueIntervalCollection(param.values as any);
+      const value = collection.getValueAtDate('2025-01-01');
+      return value !== undefined ? value : (param.unit === 'bool' ? false : 0);
+    }
+    return param.unit === 'bool' ? false : 0;
+  }, [param.values, param.unit]);
+
   // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('');
-  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+  const [startDate, setStartDate] = useState<string>('2025-01-01');
+  const [paramValue, setParamValue] = useState<any>(defaultValue);
 
   // Update intervals whenever local state changes
   useEffect(() => {
@@ -172,6 +182,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         label="From"
         minDate={minDate}
         maxDate={maxDate}
+        value={startDate ? new Date(startDate) : null}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
@@ -183,10 +194,20 @@ export function DefaultValueSelector(props: ValueSetterProps) {
 export function YearlyValueSelector(props: ValueSetterProps) {
   const { param, setIntervals, minDate, maxDate } = props;
 
+  // Get default value for 2025-01-01 from metadata
+  const defaultValue = useMemo(() => {
+    if (param.values) {
+      const collection = new ValueIntervalCollection(param.values as any);
+      const value = collection.getValueAtDate('2025-01-01');
+      return value !== undefined ? value : (param.unit === 'bool' ? false : 0);
+    }
+    return param.unit === 'bool' ? false : 0;
+  }, [param.values, param.unit]);
+
   // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+  const [startDate, setStartDate] = useState<string>('2025-01-01');
+  const [endDate, setEndDate] = useState<string>('2025-12-31');
+  const [paramValue, setParamValue] = useState<any>(defaultValue);
 
   // Update intervals whenever local state changes
   useEffect(() => {
@@ -220,6 +241,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
         label="From"
         minDate={minDate}
         maxDate={maxDate}
+        value={startDate ? new Date(startDate) : null}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
@@ -228,6 +250,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
         label="To"
         minDate={minDate}
         maxDate={maxDate}
+        value={endDate ? new Date(endDate) : null}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
@@ -239,10 +262,20 @@ export function YearlyValueSelector(props: ValueSetterProps) {
 export function DateValueSelector(props: ValueSetterProps) {
   const { param, setIntervals, minDate, maxDate } = props;
 
+  // Get default value for 2025-01-01 from metadata
+  const defaultValue = useMemo(() => {
+    if (param.values) {
+      const collection = new ValueIntervalCollection(param.values as any);
+      const value = collection.getValueAtDate('2025-01-01');
+      return value !== undefined ? value : (param.unit === 'bool' ? false : 0);
+    }
+    return param.unit === 'bool' ? false : 0;
+  }, [param.values, param.unit]);
+
   // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+  const [startDate, setStartDate] = useState<string>('2025-01-01');
+  const [endDate, setEndDate] = useState<string>('2025-01-01');
+  const [paramValue, setParamValue] = useState<any>(defaultValue);
 
   // Update intervals whenever local state changes
   useEffect(() => {
@@ -273,6 +306,7 @@ export function DateValueSelector(props: ValueSetterProps) {
         label="From"
         minDate={minDate}
         maxDate={maxDate}
+        value={startDate ? new Date(startDate) : null}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
@@ -281,6 +315,7 @@ export function DateValueSelector(props: ValueSetterProps) {
         label="To"
         minDate={minDate}
         maxDate={maxDate}
+        value={endDate ? new Date(endDate) : null}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
@@ -294,9 +329,9 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   const MAX_YEARS = 10;
 
-  // Generate years from minDate to maxDate
+  // Generate years from minDate to maxDate, starting from 2025
   const generateYears = () => {
-    const startYear = dayjs(minDate).year();
+    const startYear = 2025;
     const endYear = dayjs(maxDate).year();
     const years = [];
     for (let year = startYear; year <= endYear; year++) {
@@ -307,13 +342,24 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   const years = generateYears();
 
-  const [yearValues, setYearValues] = useState<Record<string, any>>(() => {
+  // Get values from metadata for each year
+  const getInitialYearValues = useMemo(() => {
     const initialValues: Record<string, any> = {};
-    years.forEach((year) => {
-      initialValues[year] = param.unit === 'bool' ? false : 0;
-    });
+    if (param.values) {
+      const collection = new ValueIntervalCollection(param.values as any);
+      years.forEach((year) => {
+        const value = collection.getValueAtDate(`${year}-01-01`);
+        initialValues[year] = value !== undefined ? value : (param.unit === 'bool' ? false : 0);
+      });
+    } else {
+      years.forEach((year) => {
+        initialValues[year] = param.unit === 'bool' ? false : 0;
+      });
+    }
     return initialValues;
-  });
+  }, [param.values, param.unit, years]);
+
+  const [yearValues, setYearValues] = useState<Record<string, any>>(getInitialYearValues);
 
   // Update intervals whenever yearValues changes
   useEffect(() => {
