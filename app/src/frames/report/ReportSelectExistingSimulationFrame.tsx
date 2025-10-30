@@ -139,7 +139,10 @@ export default function ReportSelectExistingSimulationFrame({ onNavigate }: Flow
     );
 
     // Compatible items first (true > false in our sort)
-    return bCompatible === aCompatible ? 0 : bCompatible ? -1 : 1;
+    // If both are same compatibility, keep original order (return 0)
+    // If a is compatible and b is not, a comes first (return -1)
+    // If b is compatible and a is not, b comes first (return 1)
+    return bCompatible === aCompatible ? 0 : aCompatible ? -1 : 1;
   });
 
   console.log('[ReportSelectExistingSimulationFrame] ========== AFTER SORTING ==========');
