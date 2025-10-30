@@ -1,6 +1,23 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import FlowView from '@/components/common/FlowView';
+import { HouseholdAdapter } from '@/adapters';
+import { MOCK_USER_ID } from '@/constants';
+import {
+  isGeographicMetadataWithAssociation,
+  useUserGeographics,
+} from '@/hooks/useUserGeographic';
+import {
+  isHouseholdMetadataWithAssociation,
+  useUserHouseholds,
+} from '@/hooks/useUserHousehold';
+import {
+  createPopulationAtPosition,
+  selectPopulationAtPosition,
+  setGeographyAtPosition,
+  setHouseholdAtPosition,
+  updatePopulationAtPosition,
+} from '@/reducers/populationReducer';
 import { setActiveSimulationPosition, setMode } from '@/reducers/reportReducer';
 import {
   createSimulationAtPosition,
@@ -9,6 +26,7 @@ import {
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { Simulation } from '@/types/ingredients/Simulation';
+import { findMatchingPopulation } from '@/utils/populationMatching';
 
 type SimulationCard = 'simulation1' | 'simulation2';
 
@@ -27,9 +45,22 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
   const simulation1 = useSelector((state: RootState) => selectSimulationAtPosition(state, 0));
   const simulation2 = useSelector((state: RootState) => selectSimulationAtPosition(state, 1));
 
+  // Fetch population data for pre-filling simulation 2
+  const userId = MOCK_USER_ID.toString();
+  const { data: householdData } = useUserHouseholds(userId);
+  const { data: geographicData } = useUserGeographics(userId);
+
+  // Get population at position 1 to check if already filled
+  const population2 = useSelector((state: RootState) =>
+    selectPopulationAtPosition(state, 1)
+  );
+
   // Check if simulations are fully configured
   const simulation1Configured = !!(simulation1?.policyId && simulation1?.populationId);
   const simulation2Configured = !!(simulation2?.policyId && simulation2?.populationId);
+
+  // Check if population data is loaded (needed for simulation2 prefill)
+  const isPopulationDataLoaded = householdData !== undefined && geographicData !== undefined;
 
   // Determine if simulation2 is optional based on population type of simulation1
   // Household reports: simulation2 is optional (single-sim allowed)
@@ -48,6 +79,115 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
     console.log('Adding simulation 2');
   };
 
+  /**
+   * Pre-fills population for simulation 2 by copying from simulation 1.
+   * Called when user clicks to setup simulation 2.
+   * This ensures both simulations use the same population as required by reports.
+   */
+  function prefillPopulation2FromSimulation1() {
+    console.log('[ReportSetupFrame] ===== PRE-FILLING POPULATION 2 =====');
+
+    if (!simulation1?.populationId) {
+      console.error('[ReportSetupFrame] Cannot prefill: simulation1 has no population');
+      return;
+    }
+
+    if (population2?.isCreated) {
+      console.log('[ReportSetupFrame] Population 2 already exists, skipping prefill');
+      return;
+    }
+
+    console.log('[ReportSetupFrame] simulation1:', simulation1);
+    console.log('[ReportSetupFrame] householdData:', householdData);
+    console.log('[ReportSetupFrame] geographicData:', geographicData);
+
+    // Find matching population from simulation1
+    const matchedPopulation = findMatchingPopulation(
+      simulation1,
+      householdData,
+      geographicData
+    );
+
+    console.log('[ReportSetupFrame] matchedPopulation:', matchedPopulation);
+
+    if (!matchedPopulation) {
+      console.error('[ReportSetupFrame] No matching population found for simulation1');
+      return;
+    }
+
+    // Handle household population
+    if (isHouseholdMetadataWithAssociation(matchedPopulation)) {
+      console.log('[ReportSetupFrame] Pre-filling household population');
+      const householdToSet = HouseholdAdapter.fromMetadata(matchedPopulation.household!);
+
+      // Create population with isCreated: true
+      dispatch(
+        createPopulationAtPosition({
+          position: 1,
+          population: {
+            label: matchedPopulation.association?.label || '',
+            isCreated: true,
+            household: null,
+            geography: null,
+          },
+        })
+      );
+
+      // Set household data
+      dispatch(
+        setHouseholdAtPosition({
+          position: 1,
+          household: householdToSet,
+        })
+      );
+
+      // Ensure isCreated flag is set (handles case where population already existed)
+      dispatch(
+        updatePopulationAtPosition({
+          position: 1,
+          updates: { isCreated: true },
+        })
+      );
+
+      console.log('[ReportSetupFrame] Household population pre-filled successfully');
+    }
+    // Handle geographic population
+    else if (isGeographicMetadataWithAssociation(matchedPopulation)) {
+      console.log('[ReportSetupFrame] Pre-filling geographic population');
+
+      // Create population with isCreated: true
+      dispatch(
+        createPopulationAtPosition({
+          position: 1,
+          population: {
+            label: matchedPopulation.association?.label || '',
+            isCreated: true,
+            household: null,
+            geography: null,
+          },
+        })
+      );
+
+      // Set geography data
+      dispatch(
+        setGeographyAtPosition({
+          position: 1,
+          geography: matchedPopulation.geography!,
+        })
+      );
+
+      // Ensure isCreated flag is set (handles case where population already existed)
+      dispatch(
+        updatePopulationAtPosition({
+          position: 1,
+          updates: { isCreated: true },
+        })
+      );
+
+      console.log('[ReportSetupFrame] Geographic population pre-filled successfully');
+    }
+  }
+
   const handleNext = () => {
     if (selectedCard === 'simulation1') {
       console.log('Setting up simulation 1');
@@ -65,6 +205,8 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
       if (!simulation2) {
         dispatch(createSimulationAtPosition({ position: 1 }));
       }
+      // PRE-FILL POPULATION FROM SIMULATION 1
+      prefillPopulation2FromSimulation1();
       // Set position 1 as active in report reducer
       dispatch(setActiveSimulationPosition(1));
       // Navigate to simulation selection frame
@@ -95,7 +237,8 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
         simulation2,
         simulation2Configured,
         simulation1Configured,
-        isSimulation2Optional
+        isSimulation2Optional,
+        !isPopulationDataLoaded
       ),
       onClick: handleSimulation2Select,
       isSelected: selectedCard === 'simulation2',
@@ -125,7 +268,7 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
       return {
         label: 'Setup comparison simulation',
         onClick: handleNext,
-        isDisabled: false,
+        isDisabled: !isPopulationDataLoaded, // Disable if data not loaded
       };
     }
     // Allow proceeding if requirements met
@@ -211,7 +354,8 @@ function getComparisonCardDescription(
   simulation: Simulation | null,
   isConfigured: boolean,
   baselineConfigured: boolean,
-  isOptional: boolean
+  isOptional: boolean,
+  dataLoading: boolean
 ): string {
   // If configured, show simulation details
   if (isConfigured) {
@@ -221,6 +365,11 @@ function getComparisonCardDescription(
   // If baseline not configured yet, show waiting message
   if (!baselineConfigured) {
     return 'Set up your baseline simulation first';
+  }
+
+  // If baseline configured but data still loading, show loading message
+  if (dataLoading && baselineConfigured && !isConfigured) {
+    return 'Loading population data...';
   }
 
   // Baseline configured: show optional or required message
