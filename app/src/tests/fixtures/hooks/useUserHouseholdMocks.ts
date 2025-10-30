@@ -1,7 +1,10 @@
 // Fixtures for useUserHouseholds and useUserGeographics hooks
-import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { Geography } from '@/types/ingredients/Geography';
-import { UserHouseholdPopulation, UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import {
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
+import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 
 // Test household IDs
 export const TEST_HOUSEHOLD_ID_1 = 'household-123';

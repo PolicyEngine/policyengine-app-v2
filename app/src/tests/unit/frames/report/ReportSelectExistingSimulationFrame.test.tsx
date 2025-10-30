@@ -16,6 +16,7 @@ import reportReducer from '@/reducers/reportReducer';
 import simulationsReducer, * as simulationsActions from '@/reducers/simulationsReducer';
 import {
   AFTER_SORTING_LOG,
+  BASE_POPULATION_ID,
   COMPATIBLE_SIMULATION_CONFIG,
   COMPATIBLE_SIMULATIONS,
   createEnhancedUserSimulation,
@@ -31,9 +32,7 @@ import {
   OTHER_SIMULATION_CONFIG,
   SELECT_EXISTING_SIMULATION_FRAME_TITLE,
   SELECTED_SIMULATION_LOG_PREFIX,
-  SHARED_POPULATION_ID,
   SHARED_POPULATION_ID_2,
-  BASE_POPULATION_ID,
   TEST_SIMULATION_CONFIG,
   VARIOUS_POPULATION_SIMULATIONS,
 } from '@/tests/fixtures/frames/ReportSelectExistingSimulationFrame';

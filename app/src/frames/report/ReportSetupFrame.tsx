@@ -1,16 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import FlowView from '@/components/common/FlowView';
 import { HouseholdAdapter } from '@/adapters';
+import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
-import {
-  isGeographicMetadataWithAssociation,
-  useUserGeographics,
-} from '@/hooks/useUserGeographic';
-import {
-  isHouseholdMetadataWithAssociation,
-  useUserHouseholds,
-} from '@/hooks/useUserHousehold';
+import { isGeographicMetadataWithAssociation, useUserGeographics } from '@/hooks/useUserGeographic';
+import { isHouseholdMetadataWithAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import {
   createPopulationAtPosition,
   selectPopulationAtPosition,
@@ -51,9 +45,7 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
   const { data: geographicData } = useUserGeographics(userId);
 
   // Get population at position 1 to check if already filled
-  const population2 = useSelector((state: RootState) =>
-    selectPopulationAtPosition(state, 1)
-  );
+  const population2 = useSelector((state: RootState) => selectPopulationAtPosition(state, 1));
 
   // Check if simulations are fully configured
   const simulation1Configured = !!(simulation1?.policyId && simulation1?.populationId);
@@ -102,11 +94,7 @@ export default function ReportSetupFrame({ onNavigate }: ReportSetupFrameProps) 
     console.log('[ReportSetupFrame] geographicData:', geographicData);
 
     // Find matching population from simulation1
-    const matchedPopulation = findMatchingPopulation(
-      simulation1,
-      householdData,
-      geographicData
-    );
+    const matchedPopulation = findMatchingPopulation(simulation1, householdData, geographicData);
 
     console.log('[ReportSetupFrame] matchedPopulation:', matchedPopulation);
 

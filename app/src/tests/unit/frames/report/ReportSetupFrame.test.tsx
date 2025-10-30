@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@test-utils';
-import { beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSetupFrame from '@/frames/report/ReportSetupFrame';
 import { setActiveSimulationPosition } from '@/reducers/reportReducer';
 import { createSimulationAtPosition } from '@/reducers/simulationsReducer';
@@ -343,15 +343,18 @@ describe('ReportSetupFrame', () => {
         mockHouseholdMetadata,
         mockUseUserHouseholdsSuccess,
         mockUseUserGeographicsEmpty,
-        TEST_HOUSEHOLD_ID_1,
         TEST_HOUSEHOLD_LABEL,
       } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
       const { createPopulationAtPosition, setHouseholdAtPosition, updatePopulationAtPosition } =
         await import('@/reducers/populationReducer');
 
       // Get the mocked functions
-      const { useUserHouseholds, isHouseholdMetadataWithAssociation } = await import('@/hooks/useUserHousehold');
-      const { useUserGeographics, isGeographicMetadataWithAssociation } = await import('@/hooks/useUserGeographic');
+      const { useUserHouseholds, isHouseholdMetadataWithAssociation } = await import(
+        '@/hooks/useUserHousehold'
+      );
+      const { useUserGeographics, isGeographicMetadataWithAssociation } = await import(
+        '@/hooks/useUserGeographic'
+      );
       const { findMatchingPopulation } = await import('@/utils/populationMatching');
 
       // Mock useSelector to handle different selectors
@@ -431,8 +434,12 @@ describe('ReportSetupFrame', () => {
         await import('@/reducers/populationReducer');
 
       // Get the mocked functions
-      const { useUserHouseholds, isHouseholdMetadataWithAssociation } = await import('@/hooks/useUserHousehold');
-      const { useUserGeographics, isGeographicMetadataWithAssociation } = await import('@/hooks/useUserGeographic');
+      const { useUserHouseholds, isHouseholdMetadataWithAssociation } = await import(
+        '@/hooks/useUserHousehold'
+      );
+      const { useUserGeographics, isGeographicMetadataWithAssociation } = await import(
+        '@/hooks/useUserGeographic'
+      );
       const { findMatchingPopulation } = await import('@/utils/populationMatching');
 
       // Mock useSelector to handle different selectors
@@ -500,10 +507,9 @@ describe('ReportSetupFrame', () => {
       // Given
       const user = userEvent.setup();
 
-      const {
-        mockUseUserHouseholdsLoading,
-        mockUseUserGeographicsLoading,
-      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+      const { mockUseUserHouseholdsLoading, mockUseUserGeographicsLoading } = await import(
+        '@/tests/fixtures/hooks/useUserHouseholdMocks'
+      );
 
       // Get the mocked functions
       const { useUserHouseholds } = await import('@/hooks/useUserHousehold');
@@ -536,10 +542,9 @@ describe('ReportSetupFrame', () => {
       // Given
       const user = userEvent.setup();
 
-      const {
-        mockUseUserHouseholdsSuccess,
-        mockUseUserGeographicsEmpty,
-      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+      const { mockUseUserHouseholdsSuccess, mockUseUserGeographicsEmpty } = await import(
+        '@/tests/fixtures/hooks/useUserHouseholdMocks'
+      );
 
       // Get the mocked functions
       const { useUserHouseholds } = await import('@/hooks/useUserHousehold');
@@ -574,12 +579,9 @@ describe('ReportSetupFrame', () => {
 
     test('given simulation1 has no population then prefill shows error', async () => {
       // Given
-      const user = userEvent.setup();
-
-      const {
-        mockUseUserHouseholdsSuccess,
-        mockUseUserGeographicsEmpty,
-      } = await import('@/tests/fixtures/hooks/useUserHouseholdMocks');
+      const { mockUseUserHouseholdsSuccess, mockUseUserGeographicsEmpty } = await import(
+        '@/tests/fixtures/hooks/useUserHouseholdMocks'
+      );
 
       // Get the mocked functions
       const { useUserHouseholds } = await import('@/hooks/useUserHousehold');

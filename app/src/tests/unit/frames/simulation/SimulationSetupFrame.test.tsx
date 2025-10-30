@@ -79,7 +79,9 @@ describe('SimulationSetupFrame', () => {
       // Then
       expect(
         screen.getByText(
-          new RegExp(`${UI_TEXT.INHERITED_HOUSEHOLD_PREFIX}${MOCK_HOUSEHOLD_POPULATION.household.id}`)
+          new RegExp(
+            `${UI_TEXT.INHERITED_HOUSEHOLD_PREFIX}${MOCK_HOUSEHOLD_POPULATION.household.id}`
+          )
         )
       ).toBeInTheDocument();
       expect(screen.getByText(new RegExp(UI_TEXT.INHERITED_SUFFIX))).toBeInTheDocument();
@@ -95,7 +97,9 @@ describe('SimulationSetupFrame', () => {
       // Then
       expect(
         screen.getByText(
-          new RegExp(`${UI_TEXT.INHERITED_GEOGRAPHY_PREFIX}${MOCK_GEOGRAPHY_POPULATION.geography!.id}`)
+          new RegExp(
+            `${UI_TEXT.INHERITED_GEOGRAPHY_PREFIX}${MOCK_GEOGRAPHY_POPULATION.geography!.id}`
+          )
         )
       ).toBeInTheDocument();
       expect(screen.getByText(new RegExp(UI_TEXT.INHERITED_SUFFIX))).toBeInTheDocument();
