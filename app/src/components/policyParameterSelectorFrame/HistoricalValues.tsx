@@ -4,6 +4,7 @@ import { Stack, Text } from '@mantine/core';
 import { CHART_COLORS } from '@/constants/chartColors';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { capitalize } from '@/utils/stringUtils';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   extendForDisplay,
@@ -44,7 +45,7 @@ export default function PolicyParameterSelectorHistoricalValues(
   return (
     <Stack mt="xl">
       <Text fw={700}>Historical values</Text>
-      <Text>{param.label} over time</Text>
+      <Text>{capitalize(param.label)} over time</Text>
       <ParameterOverTimeChart
         param={param}
         baseValuesCollection={baseValues}
