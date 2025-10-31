@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
-import DashBoardPage from './pages/Dashboard.page';
+import DashboardPage from './pages/Dashboard.page';
 import StaticLayout from './components/StaticLayout';
 import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
@@ -62,7 +62,7 @@ const router = createBrowserRouter(
                   path: 'app/dashboard',
                   // TODO: Move HomePage out of Layout once actual static homepage is merged
                   // Currently HomePage has calculator navigation buttons so needs Layout
-                  element: <DashBoardPage />,
+                  element: <DashboardPage />,
                 },
                 {
                   path: 'reports',

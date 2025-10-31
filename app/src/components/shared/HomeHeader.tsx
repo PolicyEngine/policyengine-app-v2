@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { IconChevronDown } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import {
   Anchor,
   Box,
   Burger,
-  Button /*ButtonProps,*/,
+  Button,
   Container,
   Drawer,
   Group,
@@ -19,22 +19,16 @@ import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
-//type ActionButtonProps = ButtonProps & React.ButtonHTMLAttributes<HTMLButtonElement>;
+interface NavLink {
+  label: string;
+  path?: string;
+}
 
-/*const ActionButton: React.FC<ActionButtonProps> = (props) => (
-  <Button
-    variant="subtle"
-    size="sm"
-    fw={typography.fontWeight.medium}
-    c={colors.text.inverse}
-    {...props}
-  />
-);*/
-
-const HeaderNavigation: React.FC = () => {
+export default function HeaderNavigation() {
   const [opened, { open, close }] = useDisclosure(false);
-
   const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
+  const countryId = useCurrentCountry();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -42,19 +36,27 @@ const HeaderNavigation: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  interface NavLink {
-    label: string;
-    path: string;
-  }
-
-  const countryId = useCurrentCountry();
-  const links: NavLink[] = [
-    { label: 'Research', path: `/${countryId}/app/research` },
-    { label: 'About', path: `/${countryId}/app/about` },
-    { label: 'Donate', path: `/${countryId}/app/donate` },
+  const navLinks: NavLink[] = [
+    { label: 'Research', path: `/${countryId}/research` },
+    { label: 'About', path: `/${countryId}/about` },
+    { label: 'Donate', path: `/${countryId}/donate` },
   ];
 
-  const navigate = useNavigate();
+  const learnLinks: NavLink[] = [
+    { label: 'AI & ML' },
+    { label: 'API' },
+    { label: 'Microsimulation' },
+    { label: 'Benefit Access' },
+    { label: 'Educational Use' },
+    { label: 'Open Source' },
+  ];
+
+  const handleNavClick = (path?: string) => {
+    if (path) {
+      navigate(path);
+      close();
+    }
+  };
 
   return (
     <Box
@@ -96,15 +98,15 @@ const HeaderNavigation: React.FC = () => {
             </Box>
 
             <Group gap={spacing['3xl']} visibleFrom="lg">
-              {links.map((link) => (
+              {navLinks.map((link) => (
                 <Anchor
                   key={link.label}
                   c={colors.text.inverse}
                   variant="subtle"
                   td="none"
                   fw={typography.fontWeight.medium}
-                  size="sm"
-                  onClick={() => navigate(link.path)}
+                  size="md"
+                  onClick={() => handleNavClick(link.path)}
                 >
                   {link.label}
                 </Anchor>
@@ -114,7 +116,7 @@ const HeaderNavigation: React.FC = () => {
                 <Menu.Target>
                   <UnstyledButton>
                     <Group gap={4}>
-                      <Text c={colors.text.inverse} fw={typography.fontWeight.medium} size="sm">
+                      <Text c={colors.text.inverse} fw={typography.fontWeight.medium} size="md">
                         Learn
                       </Text>
                       <IconChevronDown size={16} color={colors.text.inverse} />
@@ -122,15 +124,8 @@ const HeaderNavigation: React.FC = () => {
                   </UnstyledButton>
                 </Menu.Target>
                 <Menu.Dropdown>
-                  {[
-                    'AI & ML',
-                    'API',
-                    'Microsimulation',
-                    'Benefit Access',
-                    'Educational Use',
-                    'Open Source',
-                  ].map((item) => (
-                    <Menu.Item key={item}>{item}</Menu.Item>
+                  {learnLinks.map((link) => (
+                    <Menu.Item key={link.label}>{link.label}</Menu.Item>
                   ))}
                 </Menu.Dropdown>
               </Menu>
@@ -139,7 +134,6 @@ const HeaderNavigation: React.FC = () => {
 
           {/* Action Buttons */}
           <Group gap={spacing.sm} visibleFrom="lg">
-            {/*<ActionButton>Log In</ActionButton>*/}
             <Button
               style={{ backgroundColor: colors.warning, borderRadius: spacing.radius.md }}
               c={colors.text.primary}
@@ -170,7 +164,7 @@ const HeaderNavigation: React.FC = () => {
         closeButtonProps={{ style: { color: colors.text.inverse }, size: 'md' }}
       >
         <Stack gap={spacing.lg} p={spacing.lg}>
-          {links.map((link) => (
+          {navLinks.map((link) => (
             <Anchor
               key={link.label}
               c={colors.text.inverse}
@@ -178,7 +172,7 @@ const HeaderNavigation: React.FC = () => {
               td="none"
               fw={typography.fontWeight.medium}
               size="sm"
-              onClick={() => navigate(link.path)}
+              onClick={() => handleNavClick(link.path)}
             >
               {link.label}
             </Anchor>
@@ -188,26 +182,17 @@ const HeaderNavigation: React.FC = () => {
             <Text c={colors.text.inverse} fw={typography.fontWeight.semibold} mb={spacing.sm}>
               Learn
             </Text>
+
             <Stack gap={spacing.xs} ml={spacing.md}>
-              {[
-                'AI & ML',
-                'API',
-                'Microsimulation',
-                'Benefit Access',
-                'Educational Use',
-                'Open Source',
-              ].map((item) => (
-                <Text key={item} c={colors.text.inverse} size="sm" onClick={close}>
-                  {item}
+              {learnLinks.map((link) => (
+                <Text key={link.label} c={colors.text.inverse} size="sm" onClick={close}>
+                  {link.label}
                 </Text>
               ))}
             </Stack>
           </Box>
 
           <Box pt={spacing.lg} style={{ borderTop: `1px solid ${colors.border.light}` }}>
-            {/*<ActionButton fullWidth mb={spacing.sm} onClick={close}>
-              Log In
-            </ActionButton>*/}
             <Button
               style={{ backgroundColor: colors.warning, borderRadius: spacing.radius.md }}
               c={colors.text.primary}
@@ -223,6 +208,4 @@ const HeaderNavigation: React.FC = () => {
       </Drawer>
     </Box>
   );
-};
-
-export default HeaderNavigation;
+}
