@@ -14,10 +14,12 @@ import reportReducer, * as reportActions from '@/reducers/reportReducer';
 import simulationsReducer from '@/reducers/simulationsReducer';
 import {
   CREATE_REPORT_BUTTON_LABEL,
+  DEFAULT_YEAR,
   EMPTY_REPORT_LABEL,
   REPORT_CREATION_FRAME_TITLE,
   REPORT_NAME_INPUT_LABEL,
   TEST_REPORT_LABEL,
+  YEAR_INPUT_LABEL,
 } from '@/tests/fixtures/frames/ReportCreationFrame';
 
 describe('ReportCreationFrame', () => {
@@ -95,10 +97,26 @@ describe('ReportCreationFrame', () => {
       </Provider>
     );
 
-    // Then - should display title, input and button
+    // Then - should display title, inputs and button
     expect(screen.getByRole('heading', { name: REPORT_CREATION_FRAME_TITLE })).toBeInTheDocument();
     expect(screen.getByLabelText(REPORT_NAME_INPUT_LABEL)).toBeInTheDocument();
+    expect(screen.getByText(YEAR_INPUT_LABEL)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: CREATE_REPORT_BUTTON_LABEL })).toBeInTheDocument();
+  });
+
+  test('given year dropdown renders then it is disabled with default value', () => {
+    // Given/When
+    const { container } = renderWithRouter(
+      <Provider store={store}>
+        <ReportCreationFrame {...defaultFlowProps} />
+      </Provider>
+    );
+
+    // Then - year dropdown should be disabled
+    // Mantine Select with disabled prop adds data-disabled attribute to the input
+    const yearInput = container.querySelector('input[data-disabled="true"]');
+    expect(yearInput).toBeInTheDocument();
+    expect(yearInput).toHaveValue(DEFAULT_YEAR);
   });
 
   test('given user enters label then input value updates', async () => {
