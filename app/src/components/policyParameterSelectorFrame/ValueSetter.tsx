@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
+import { fromISODateString, toISODateString } from '@/utils/dateUtils';
 import {
   ActionIcon,
   Box,
@@ -226,13 +227,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | string | null) {
-    if (value) {
-      const dateValue = typeof value === 'string' ? new Date(value) : value;
-      const isoString = dateValue.toISOString().split('T')[0];
-      setStartDate(isoString);
-    } else {
-      setStartDate('');
-    }
+    setStartDate(toISODateString(value));
   }
 
   return (
@@ -240,9 +235,9 @@ export function DefaultValueSelector(props: ValueSetterProps) {
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
-        minDate={minDate}
-        maxDate={maxDate}
-        value={startDate ? new Date(startDate) : null}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
@@ -295,18 +290,13 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | string | null) {
-    if (value) {
-      const dateValue = typeof value === 'string' ? new Date(value) : value;
-      const isoString = dateValue.toISOString().split('T')[0];
-      setStartDate(isoString);
-    } else {
-      setStartDate('');
-    }
+    setStartDate(toISODateString(value));
   }
 
   function handleEndDateChange(value: Date | string | null) {
-    if (value) {
-      const endOfYearDate = dayjs(value)
+    const isoString = toISODateString(value);
+    if (isoString) {
+      const endOfYearDate = dayjs(isoString)
         .endOf('year')
         .format('YYYY-MM-DD');
       setEndDate(endOfYearDate);
@@ -320,18 +310,18 @@ export function YearlyValueSelector(props: ValueSetterProps) {
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
-        minDate={minDate}
-        maxDate={maxDate}
-        value={startDate ? new Date(startDate) : null}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
       <YearPickerInput
         placeholder="Pick a year"
         label="To"
-        minDate={minDate}
-        maxDate={maxDate}
-        value={endDate ? new Date(endDate) : null}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(endDate)}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
@@ -384,23 +374,11 @@ export function DateValueSelector(props: ValueSetterProps) {
   }, [startDate, endDate, paramValue, setIntervals]);
 
   function handleStartDateChange(value: Date | string | null) {
-    if (value) {
-      const dateValue = typeof value === 'string' ? new Date(value) : value;
-      const isoString = dateValue.toISOString().split('T')[0];
-      setStartDate(isoString);
-    } else {
-      setStartDate('');
-    }
+    setStartDate(toISODateString(value));
   }
 
   function handleEndDateChange(value: Date | string | null) {
-    if (value) {
-      const dateValue = typeof value === 'string' ? new Date(value) : value;
-      const isoString = dateValue.toISOString().split('T')[0];
-      setEndDate(isoString);
-    } else {
-      setEndDate('');
-    }
+    setEndDate(toISODateString(value));
   }
 
   return (
@@ -408,18 +386,18 @@ export function DateValueSelector(props: ValueSetterProps) {
       <DatePickerInput
         placeholder="Pick a start date"
         label="From"
-        minDate={minDate}
-        maxDate={maxDate}
-        value={startDate ? new Date(startDate) : null}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
       <DatePickerInput
         placeholder="Pick an end date"
         label="To"
-        minDate={minDate}
-        maxDate={maxDate}
-        value={endDate ? new Date(endDate) : null}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(endDate)}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
