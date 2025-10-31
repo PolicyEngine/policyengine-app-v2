@@ -79,7 +79,7 @@ export default function IngredientReadView({
         </Flex>
       </Box>
 
-      {/* Title and Filters Section */}
+      {/* Title Section */}
       <Box mb={spacing.xl}>
         <Title
           order={2}
@@ -90,33 +90,6 @@ export default function IngredientReadView({
         >
           {title}
         </Title>
-
-        {/* Filters and Search */}
-        <Flex gap={spacing.md} align="center" mb={spacing.lg}>
-          {/* TODO: Future filters */}
-
-          <Button
-            variant="outline"
-            disabled
-            leftSection={<IconFilter size={14} />}
-            size="sm"
-            onClick={onMoreFilters}
-          >
-            More filters
-          </Button>
-
-          {onSearchChange && (
-            <Box style={{ marginLeft: 'auto', width: '300px' }}>
-              <TextInput
-                disabled
-                placeholder="Search"
-                leftSection={<IconSearch size={16} />}
-                value={searchValue}
-                onChange={(e) => onSearchChange(e.currentTarget.value)}
-              />
-            </Box>
-          )}
-        </Flex>
       </Box>
 
       {/* Content Section */}
