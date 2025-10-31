@@ -2,6 +2,8 @@
  * General chart utility functions
  */
 
+import { typography } from '@/designTokens';
+
 /**
  * Gets the label for the reform policy line in parameter charts
  *
@@ -54,12 +56,29 @@ export const DEFAULT_CHART_CONFIG = {
 };
 
 /**
+ * Default font configuration for all charts
+ * Matches the app's primary font (Inter)
+ */
+export const CHART_FONT = {
+  family: typography.fontFamily.primary,
+};
+
+/**
+ * Default layout properties that should be applied to all charts
+ * Spread this into your layout object to automatically include font settings
+ */
+export const DEFAULT_CHART_LAYOUT = {
+  font: CHART_FONT,
+};
+
+/**
  * Returns base layout configuration for charts
  * @param mobile - Whether the chart is being rendered on mobile
  * @returns Plotly layout object
  */
 export function getBaseChartLayout(mobile: boolean) {
   return {
+    ...DEFAULT_CHART_LAYOUT,
     height: mobile ? 300 : 500,
     margin: { t: 40, r: 20, b: 60, l: 80 },
     xaxis: { fixedrange: true },

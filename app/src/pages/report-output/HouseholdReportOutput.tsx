@@ -10,6 +10,7 @@ import type { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { getDisplayStatus } from '@/utils/statusMapping';
 import DynamicsSubPage from './DynamicsSubPage';
 import ErrorPage from './ErrorPage';
+import { HouseholdComparativeAnalysisPage } from './HouseholdComparativeAnalysisPage';
 import { HouseholdReportViewModel } from './HouseholdReportViewModel';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
@@ -28,6 +29,7 @@ interface HouseholdReportOutputProps {
   households?: Household[];
   userHouseholds?: UserHouseholdPopulation[];
   subpage?: string;
+  activeView?: string;
   isLoading: boolean;
   error: Error | null;
 }
@@ -50,6 +52,7 @@ export function HouseholdReportOutput({
   households,
   userHouseholds,
   subpage = 'overview',
+  activeView = '',
   isLoading: dataLoading,
   error: dataError,
 }: HouseholdReportOutputProps) {
@@ -138,6 +141,26 @@ export function HouseholdReportOutput({
         return (
           <OverviewSubPage output={output} outputType="household" policyLabels={policyLabels} />
         );
+
+      case 'comparative-analysis': {
+        // Extract baseline and reform from output
+        const outputs = Array.isArray(output) ? output : [output];
+        const baseline = outputs[0];
+        const reform = outputs.length > 1 ? outputs[1] : null;
+
+        return (
+          <HouseholdComparativeAnalysisPage
+            key={`comparative-analysis-${activeView}`}
+            baseline={baseline}
+            reform={reform}
+            simulations={simulations || []}
+            policies={policies}
+            userPolicies={userPolicies}
+            households={households}
+            view={activeView}
+          />
+        );
+      }
 
       case 'policy':
         return (

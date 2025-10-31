@@ -142,7 +142,7 @@ export default function ReportOutputPage() {
   }
 
   // Determine if sidebar should be shown
-  const showSidebar = activeTab === 'comparative-analysis' && outputType === 'societyWide';
+  const showSidebar = activeTab === 'comparative-analysis';
 
   // Handle sidebar navigation (absolute path)
   const handleSidebarNavigate = (viewName: string) => {
@@ -163,6 +163,7 @@ export default function ReportOutputPage() {
           households={households}
           userHouseholds={userHouseholds}
           subpage={activeTab}
+          activeView={activeView}
           isLoading={dataLoading}
           error={dataError}
         />
@@ -198,6 +199,7 @@ export default function ReportOutputPage() {
       activeTab={activeTab}
       onTabChange={handleTabClick}
       showSidebar={showSidebar}
+      outputType={outputType}
       activeView={activeView}
       onSidebarNavigate={handleSidebarNavigate}
     >
@@ -238,11 +240,10 @@ function getTabsForOutputType(
   if (outputType === 'household') {
     return [
       { value: 'overview', label: 'Overview' },
+      { value: 'comparative-analysis', label: 'Comparative Analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
-      // Add household-specific tabs here in the future
-      // e.g., { value: 'family-structure', label: 'Family Details' },
     ];
   }
 
