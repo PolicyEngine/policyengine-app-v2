@@ -15,6 +15,7 @@ export default function HomePage() {
         minHeight: '100vh',
         fontFamily: typography.fontFamily.primary,
         position: 'relative',
+        paddingTop: spacing['3xl'], // Fill the gap created by navbar's initial marginTop
       }}
     >
       <HeaderNavigation enableScrollAnimation={true} />
