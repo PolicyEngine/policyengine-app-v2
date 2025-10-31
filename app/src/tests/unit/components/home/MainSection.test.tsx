@@ -1,5 +1,5 @@
-import { describe, test, expect } from 'vitest';
 import { renderWithCountry, screen } from '@test-utils';
+import { describe, expect, test } from 'vitest';
 import MainSection from '@/components/home/MainSection';
 import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/home-header/CountrySelectorMocks';
 
@@ -26,7 +26,9 @@ describe('MainSection', () => {
     renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.US);
 
     // Then
-    expect(screen.getByRole('heading', { name: /computing public policy for everyone/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: /computing public policy for everyone/i })
+    ).toBeInTheDocument();
   });
 
   test('given component renders then displays subtitle text', () => {

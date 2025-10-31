@@ -1,6 +1,6 @@
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
-import { motion, useScroll, useTransform } from 'framer-motion';
 import HeaderContent from '@/components/home-header/HeaderContent';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -25,9 +25,7 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
   const marginTop = enableScrollAnimation
     ? useTransform(scrollY, [0, 50], ['32px', '0px'])
     : undefined;
-  const width = enableScrollAnimation
-    ? useTransform(scrollY, [0, 50], ['85%', '100%'])
-    : undefined;
+  const width = enableScrollAnimation ? useTransform(scrollY, [0, 50], ['85%', '100%']) : undefined;
   const borderRadius = enableScrollAnimation
     ? useTransform(scrollY, [0, 50], ['8px', '0px'])
     : undefined;
@@ -37,9 +35,7 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
     { label: 'Supporters', path: `/${countryId}/supporters` },
   ];
 
-  const navLinks: NavLink[] = [
-    { label: 'Donate', path: `/${countryId}/donate` },
-  ];
+  const navLinks: NavLink[] = [{ label: 'Donate', path: `/${countryId}/donate` }];
 
   const handleNavClick = (path?: string) => {
     if (path) {
@@ -55,8 +51,8 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
     top: 0,
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
-    paddingLeft: "24px",
-    paddingRight: "24px",
+    paddingLeft: '24px',
+    paddingRight: '24px',
     height: spacing.layout.header,
     backgroundColor: colors.primary[600],
     borderBottom: `0.5px solid ${colors.border.dark}`,

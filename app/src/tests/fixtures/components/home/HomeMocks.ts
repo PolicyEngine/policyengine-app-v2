@@ -1,6 +1,4 @@
-export const MOCK_NAV_LINKS = [
-  { label: 'Donate', path: '/us/donate' },
-];
+export const MOCK_NAV_LINKS = [{ label: 'Donate', path: '/us/donate' }];
 
 export const MOCK_ABOUT_LINKS = [
   { label: 'Team', path: '/us/team' },

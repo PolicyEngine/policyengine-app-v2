@@ -22,7 +22,9 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
 
   // Get organizations for current country, limit to 7
   const countryOrgs = logos[countryId as keyof OrgData];
-  if (!countryOrgs) return null;
+  if (!countryOrgs) {
+    return null;
+  }
 
   const orgsArray = Object.values(countryOrgs).slice(0, 7);
 

@@ -5,7 +5,11 @@ import { MantineProvider } from '@mantine/core';
 import { store } from '../src/store';
 import { policyEngineTheme } from '../src/theme';
 
-export function renderWithCountry(ui: React.ReactNode, countryId: string = 'us', path: string = `/${countryId}`) {
+export function renderWithCountry(
+  ui: React.ReactNode,
+  countryId: string = 'us',
+  path: string = `/${countryId}`
+) {
   return testingLibraryRender(ui, {
     wrapper: ({ children }: { children: React.ReactNode }) => (
       <ReduxProvider store={store}>

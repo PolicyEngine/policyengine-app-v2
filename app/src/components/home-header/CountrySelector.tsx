@@ -1,6 +1,6 @@
 import { IconWorld } from '@tabler/icons-react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Group, Menu, Text, UnstyledButton } from '@mantine/core';
-import { useNavigate, useLocation } from 'react-router-dom';
 import { colors, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -44,7 +44,9 @@ export default function CountrySelector() {
             }}
           >
             <Text
-              fw={countryId === country.id ? typography.fontWeight.bold : typography.fontWeight.normal}
+              fw={
+                countryId === country.id ? typography.fontWeight.bold : typography.fontWeight.normal
+              }
               style={{
                 fontFamily: typography.fontFamily.primary,
               }}

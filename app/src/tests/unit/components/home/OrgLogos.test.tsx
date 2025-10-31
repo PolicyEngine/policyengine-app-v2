@@ -1,8 +1,8 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { renderWithCountry, screen } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import OrgLogos from '@/components/home/OrgLogos';
-import { MOCK_ORG_DATA } from '@/tests/fixtures/data/organizationsMocks';
 import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/home-header/CountrySelectorMocks';
+import { MOCK_ORG_DATA } from '@/tests/fixtures/data/organizationsMocks';
 
 describe('OrgLogos', () => {
   beforeEach(() => {

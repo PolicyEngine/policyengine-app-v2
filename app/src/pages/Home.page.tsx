@@ -18,7 +18,7 @@ export default function HomePage() {
         paddingTop: spacing['3xl'], // Fill the gap created by navbar's initial marginTop
       }}
     >
-      <HeaderNavigation enableScrollAnimation={true} />
+      <HeaderNavigation enableScrollAnimation />
 
       <Box pt={`calc(${spacing.layout.header} + ${spacing['4xl']})`}>
         <MainSection />

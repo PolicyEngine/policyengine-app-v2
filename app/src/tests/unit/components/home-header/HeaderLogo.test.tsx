@@ -1,5 +1,5 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { renderWithCountry, screen } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import HeaderLogo from '@/components/home-header/HeaderLogo';
 import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/home-header/CountrySelectorMocks';
 

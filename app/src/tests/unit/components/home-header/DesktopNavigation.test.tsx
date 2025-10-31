@@ -1,7 +1,7 @@
-import { describe, test, expect, vi } from 'vitest';
 import { renderWithCountry, screen } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import DesktopNavigation from '@/components/home-header/DesktopNavigation';
-import { MOCK_NAV_LINKS, MOCK_ABOUT_LINKS } from '@/tests/fixtures/components/home/HomeMocks';
+import { MOCK_ABOUT_LINKS, MOCK_NAV_LINKS } from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('DesktopNavigation', () => {
   test('given nav links then displays nav items', () => {
@@ -10,7 +10,11 @@ describe('DesktopNavigation', () => {
 
     // When
     renderWithCountry(
-      <DesktopNavigation navLinks={MOCK_NAV_LINKS} aboutLinks={MOCK_ABOUT_LINKS} onNavClick={onNavClick} />,
+      <DesktopNavigation
+        navLinks={MOCK_NAV_LINKS}
+        aboutLinks={MOCK_ABOUT_LINKS}
+        onNavClick={onNavClick}
+      />,
       'us'
     );
 
@@ -26,7 +30,11 @@ describe('DesktopNavigation', () => {
 
     // When
     renderWithCountry(
-      <DesktopNavigation navLinks={MOCK_NAV_LINKS} aboutLinks={MOCK_ABOUT_LINKS} onNavClick={onNavClick} />,
+      <DesktopNavigation
+        navLinks={MOCK_NAV_LINKS}
+        aboutLinks={MOCK_ABOUT_LINKS}
+        onNavClick={onNavClick}
+      />,
       'us'
     );
     await user.click(screen.getByText('About'));
@@ -44,7 +52,11 @@ describe('DesktopNavigation', () => {
 
     // When
     renderWithCountry(
-      <DesktopNavigation navLinks={MOCK_NAV_LINKS} aboutLinks={MOCK_ABOUT_LINKS} onNavClick={onNavClick} />,
+      <DesktopNavigation
+        navLinks={MOCK_NAV_LINKS}
+        aboutLinks={MOCK_ABOUT_LINKS}
+        onNavClick={onNavClick}
+      />,
       'us'
     );
     await user.click(screen.getByText('Donate'));
@@ -61,7 +73,11 @@ describe('DesktopNavigation', () => {
 
     // When
     renderWithCountry(
-      <DesktopNavigation navLinks={MOCK_NAV_LINKS} aboutLinks={MOCK_ABOUT_LINKS} onNavClick={onNavClick} />,
+      <DesktopNavigation
+        navLinks={MOCK_NAV_LINKS}
+        aboutLinks={MOCK_ABOUT_LINKS}
+        onNavClick={onNavClick}
+      />,
       'us'
     );
     await user.click(screen.getByText('About'));
