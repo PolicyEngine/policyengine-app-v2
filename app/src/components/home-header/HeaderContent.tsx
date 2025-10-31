@@ -14,6 +14,7 @@ interface HeaderContentProps {
   onOpen: () => void;
   onClose: () => void;
   navLinks: NavLink[];
+  aboutLinks: NavLink[];
   onNavClick: (path?: string) => void;
 }
 
@@ -22,6 +23,7 @@ export default function HeaderContent({
   onOpen,
   onClose,
   navLinks,
+  aboutLinks,
   onNavClick,
 }: HeaderContentProps) {
   return (
@@ -39,7 +41,7 @@ export default function HeaderContent({
       <Group justify="space-between" h="100%">
         <Group>
           <HeaderLogo />
-          <DesktopNavigation navLinks={navLinks} onNavClick={onNavClick} />
+          <DesktopNavigation navLinks={navLinks} aboutLinks={aboutLinks} onNavClick={onNavClick} />
         </Group>
 
         <HeaderActionButtons />
@@ -49,6 +51,7 @@ export default function HeaderContent({
           onOpen={onOpen}
           onClose={onClose}
           navLinks={navLinks}
+          aboutLinks={aboutLinks}
           onNavClick={onNavClick}
         />
       </Group>

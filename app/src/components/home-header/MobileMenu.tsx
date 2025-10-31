@@ -1,4 +1,4 @@
-import { Anchor, Burger, Drawer, Group, Stack } from '@mantine/core';
+import { Anchor, Box, Burger, Drawer, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface NavLink {
@@ -11,6 +11,7 @@ interface MobileMenuProps {
   onOpen: () => void;
   onClose: () => void;
   navLinks: NavLink[];
+  aboutLinks: NavLink[];
   onNavClick: (path?: string) => void;
 }
 
@@ -19,6 +20,7 @@ export default function MobileMenu({
   onOpen,
   onClose,
   navLinks,
+  aboutLinks,
   onNavClick,
 }: MobileMenuProps) {
   return (
@@ -41,6 +43,34 @@ export default function MobileMenu({
         closeButtonProps={{ style: { color: colors.text.inverse }, size: 'md' }}
       >
         <Stack gap={spacing.lg} p={spacing.lg}>
+          <Box>
+            <Text
+              c={colors.text.inverse}
+              fw={typography.fontWeight.medium}
+              size="sm"
+              mb={spacing.xs}
+              style={{ fontFamily: typography.fontFamily.primary }}
+            >
+              About
+            </Text>
+            <Stack gap={spacing.xs} pl={spacing.md}>
+              {aboutLinks.map((link) => (
+                <Anchor
+                  key={link.label}
+                  c={colors.text.inverse}
+                  variant="subtle"
+                  td="none"
+                  fw={typography.fontWeight.normal}
+                  size="sm"
+                  onClick={() => onNavClick(link.path)}
+                  style={{ fontFamily: typography.fontFamily.primary }}
+                >
+                  {link.label}
+                </Anchor>
+              ))}
+            </Stack>
+          </Box>
+
           {navLinks.map((link) => (
             <Anchor
               key={link.label}
@@ -50,6 +80,7 @@ export default function MobileMenu({
               fw={typography.fontWeight.medium}
               size="sm"
               onClick={() => onNavClick(link.path)}
+              style={{ fontFamily: typography.fontFamily.primary }}
             >
               {link.label}
             </Anchor>

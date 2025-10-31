@@ -32,8 +32,12 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
     ? useTransform(scrollY, [0, 50], ['8px', '0px'])
     : undefined;
 
+  const aboutLinks: NavLink[] = [
+    { label: 'Team', path: `/${countryId}/team` },
+    { label: 'Supporters', path: `/${countryId}/supporters` },
+  ];
+
   const navLinks: NavLink[] = [
-    { label: 'About', path: `/${countryId}/about` },
     { label: 'Donate', path: `/${countryId}/donate` },
   ];
 
@@ -84,6 +88,7 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
           onOpen={open}
           onClose={close}
           navLinks={navLinks}
+          aboutLinks={aboutLinks}
           onNavClick={handleNavClick}
         />
       </motion.div>
@@ -107,6 +112,7 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
         onOpen={open}
         onClose={close}
         navLinks={navLinks}
+        aboutLinks={aboutLinks}
         onNavClick={handleNavClick}
       />
     </div>
