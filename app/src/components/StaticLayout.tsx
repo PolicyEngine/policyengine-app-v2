@@ -1,6 +1,11 @@
 import { Outlet } from 'react-router-dom';
+import HeaderNavigation from '@/components/shared/HomeHeader';
 
 export default function StaticLayout() {
-  // Placeholder for future static navbar and footer
-  return <Outlet />;
+  return (
+    <>
+      <HeaderNavigation enableScrollAnimation={false} />
+      <Outlet />
+    </>
+  );
 }

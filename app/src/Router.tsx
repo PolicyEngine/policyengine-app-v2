@@ -17,6 +17,7 @@ import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import HomePage from './pages/Home.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -59,9 +60,8 @@ const router = createBrowserRouter(
               element: <Layout />,
               children: [
                 {
-                  path: 'app/dashboard',
-                  // TODO: Move HomePage out of Layout once actual static homepage is merged
-                  // Currently HomePage has calculator navigation buttons so needs Layout
+                  path: 'dashboard',
+                  // TODO: Build dashboard page
                   element: <DashboardPage />,
                 },
                 {
