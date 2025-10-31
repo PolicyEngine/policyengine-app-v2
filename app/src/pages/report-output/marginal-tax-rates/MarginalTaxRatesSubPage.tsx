@@ -273,7 +273,7 @@ export default function MarginalTaxRatesSubPage({
         mode: 'lines' as const,
         line: { color: colors.primary[500], width: 2 },
         fill: 'tozeroy' as const,
-        fillcolor: colors.primary[100],
+        fillcolor: colors.primary.alpha[60],
         name: 'MTR Difference',
         hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y:.1%}<extra></extra>',
       },
