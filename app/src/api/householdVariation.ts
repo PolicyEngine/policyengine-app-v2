@@ -23,7 +23,7 @@ export async function fetchHouseholdVariation(
   const requestUrl = `${BASE_URL}/${countryId}/calculate-full`;
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 240000); // 4-minute timeout
+  const timeoutId = setTimeout(() => controller.abort(), 600000); // 10-minute timeout
 
   try {
     const response = await fetch(requestUrl, {
@@ -68,7 +68,7 @@ export async function fetchHouseholdVariation(
     // Check if it's a timeout error
     if (error instanceof Error && error.name === 'AbortError') {
       throw new Error(
-        'Household variation calculation timed out after 4 minutes (client-side timeout)'
+        'Household variation calculation timed out after 10 minutes (client-side timeout)'
       );
     }
 
