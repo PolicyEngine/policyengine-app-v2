@@ -1,50 +1,26 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import {
-  BulletsValue,
-  ColumnConfig,
-  IngredientRecord,
-  LinkValue,
-  TextValue,
-} from '@/components/columns';
+import { useNavigate } from 'react-router-dom';
+import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
-import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { countryIds } from '@/libs/countries';
-import { setFlow } from '@/reducers/flowReducer';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function SimulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserSimulations(userId);
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildSimulation = () => {
-    dispatch(setFlow(SimulationCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
     // TODO: Implement more filters modal/dropdown
     console.log('More filters clicked');
-  };
-
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'add-to-report':
-        // TODO: Implement add to report functionality
-        console.log('Add to report:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete simulation:', recordId);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -75,28 +51,7 @@ export default function SimulationsPage() {
     {
       key: 'population',
       header: 'Population',
-      type: 'link',
-    },
-    {
-      key: 'connected',
-      header: 'Connected',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
-    },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'Add to Report', action: 'add-to-report' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
+      type: 'text',
     },
   ];
 
@@ -112,7 +67,7 @@ export default function SimulationsPage() {
           ? formatDate(
               item.userSimulation.createdAt,
               'short-month-day-year',
-              (item.simulation?.countryId || 'us') as (typeof countryIds)[number],
+              item.userSimulation.countryId,
               true
             )
           : '',
@@ -125,22 +80,13 @@ export default function SimulationsPage() {
           item.userHousehold?.label ||
           item.geography?.name ||
           (item.household ? `Household #${item.household.id}` : 'No population'),
-        url: item.household?.id ? `#${item.household.id}` : '#',
-      } as LinkValue,
-      connected: {
-        items: [
-          {
-            text: 'No reports yet', // TODO: Connect to actual reports
-            badge: 0,
-          },
-        ],
-      } as BulletsValue,
+      } as TextValue,
     })) || [];
 
   return (
     <IngredientReadView
       ingredient="simulation"
-      title="Simulations"
+      title="Your saved simulations"
       subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
       onBuild={handleBuildSimulation}
       isLoading={isLoading}

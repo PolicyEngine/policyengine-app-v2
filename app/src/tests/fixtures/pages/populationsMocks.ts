@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
@@ -14,20 +15,20 @@ export const POPULATION_TEST_IDS = {
   HOUSEHOLD_ID_2: '2',
   GEOGRAPHIC_ID_1: '1',
   GEOGRAPHIC_ID_2: '2',
-  TIMESTAMP_1: '2024-01-15T10:00:00Z',
-  TIMESTAMP_2: '2024-01-20T14:30:00Z',
+  TIMESTAMP_1: `${CURRENT_YEAR}-01-15T10:00:00Z`,
+  TIMESTAMP_2: `${CURRENT_YEAR}-01-20T14:30:00Z`,
 } as const;
 
 // Labels and display text
 export const POPULATION_LABELS = {
   HOUSEHOLD_1: 'My Test Household',
-  HOUSEHOLD_2: 'Family Household 2024',
+  HOUSEHOLD_2: `Family Household ${CURRENT_YEAR}`,
   GEOGRAPHIC_1: 'California Population',
   GEOGRAPHIC_2: 'United Kingdom National',
   PAGE_TITLE: 'Your populations',
   PAGE_SUBTITLE:
     'Create a population configuration or find and save existing populations to use in your simulation configurations.',
-  BUILD_BUTTON: 'Build population',
+  BUILD_BUTTON: 'New population',
   SEARCH_PLACEHOLDER: 'Search populations',
   MORE_FILTERS: 'More filters',
   LOADING_TEXT: 'Loading...',
@@ -114,12 +115,12 @@ export const mockHouseholdMetadata1: HouseholdMetadata = {
   household_json: {
     people: {
       person1: {
-        age: { 2024: 30 },
-        employment_income: { 2024: 50000 },
+        age: { [CURRENT_YEAR]: 30 },
+        employment_income: { [CURRENT_YEAR]: 50000 },
       },
       person2: {
-        age: { 2024: 28 },
-        employment_income: { 2024: 45000 },
+        age: { [CURRENT_YEAR]: 28 },
+        employment_income: { [CURRENT_YEAR]: 45000 },
       },
     },
     families: {
@@ -158,7 +159,7 @@ export const mockHouseholdMetadata2: HouseholdMetadata = {
   household_json: {
     people: {
       person1: {
-        age: { 2024: 45 },
+        age: { [CURRENT_YEAR]: 45 },
       },
     },
     families: {},
@@ -193,6 +194,7 @@ export const mockHouseholdAssociation1: UserHouseholdPopulation = {
   id: POPULATION_TEST_IDS.HOUSEHOLD_ID_1,
   householdId: POPULATION_TEST_IDS.HOUSEHOLD_ID_1,
   userId: POPULATION_TEST_IDS.USER_ID,
+  countryId: POPULATION_GEO.COUNTRY_US,
   label: POPULATION_LABELS.HOUSEHOLD_1,
   createdAt: POPULATION_TEST_IDS.TIMESTAMP_1,
   updatedAt: POPULATION_TEST_IDS.TIMESTAMP_1,
@@ -204,6 +206,7 @@ export const mockHouseholdAssociation2: UserHouseholdPopulation = {
   id: POPULATION_TEST_IDS.HOUSEHOLD_ID_2,
   householdId: POPULATION_TEST_IDS.HOUSEHOLD_ID_2,
   userId: POPULATION_TEST_IDS.USER_ID,
+  countryId: POPULATION_GEO.COUNTRY_US,
   label: POPULATION_LABELS.HOUSEHOLD_2,
   createdAt: POPULATION_TEST_IDS.TIMESTAMP_2,
   updatedAt: POPULATION_TEST_IDS.TIMESTAMP_2,

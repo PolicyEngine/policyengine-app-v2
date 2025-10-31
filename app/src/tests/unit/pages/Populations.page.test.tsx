@@ -1,11 +1,7 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent, waitFor } from '@test-utils';
-import { Provider } from 'react-redux';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-// Now import everything else
 import PopulationsPage from '@/pages/Populations.page';
 import {
   createEmptyDataState,
@@ -30,35 +26,29 @@ vi.mock('@/hooks/useUserGeographic', () => ({
   useGeographicAssociationsByUser: vi.fn(),
 }));
 
+// Mock useNavigate
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
 // Mock the constants
 vi.mock('@/constants', () => ({
   MOCK_USER_ID: 'test-user-123',
   BASE_URL: 'https://api.test.com',
+  CURRENT_YEAR: '2025',
 }));
 
 describe('PopulationsPage', () => {
-  let store: any;
   let consoleMocks: ReturnType<typeof setupMockConsole>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     consoleMocks = setupMockConsole();
-
-    // Create a mock store with flow and metadata reducers
-    store = configureStore({
-      reducer: {
-        flow: (state = { current: null }, action: any) => {
-          if (action.type === 'flow/setFlow') {
-            return { ...state, current: action.payload };
-          }
-          return state;
-        },
-        metadata: (state = { economyOptions: { region: [] } }, _action: any) => state,
-      },
-    });
-
-    // Mock dispatch
-    vi.spyOn(store, 'dispatch');
 
     // Set default mock implementations
     (useUserHouseholds as any).mockReturnValue({
@@ -81,11 +71,7 @@ describe('PopulationsPage', () => {
   });
 
   const renderPage = () => {
-    return render(
-      <Provider store={store}>
-        <PopulationsPage />
-      </Provider>
-    );
+    return render(<PopulationsPage />);
   };
 
   describe('initial render', () => {
@@ -94,7 +80,9 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then
-      expect(screen.getByText(POPULATION_LABELS.PAGE_TITLE)).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Your saved populations', level: 2 })
+      ).toBeInTheDocument();
       expect(screen.getByText(POPULATION_LABELS.PAGE_SUBTITLE)).toBeInTheDocument();
     });
 
@@ -172,7 +160,7 @@ describe('PopulationsPage', () => {
       renderPage();
 
       // Then
-      // Format dates as 'short-month-day-year' format: "Jan 15, 2024"
+      // Format dates as 'short-month-day-year' format: "Jan 15, 2025"
       const date1 = new Date(POPULATION_TEST_IDS.TIMESTAMP_1).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
@@ -306,36 +294,7 @@ describe('PopulationsPage', () => {
       await user.click(buildButton);
 
       // Then
-      expect(store.dispatch).toHaveBeenCalledWith({
-        type: 'flow/setFlow',
-        payload: PopulationCreationFlow,
-      });
-    });
-
-    // NOTE: This behavior is a placeholder
-    test('given user clicks more filters then logs action', async () => {
-      // Given
-      userEvent.setup();
-      renderPage();
-
-      // When - The button is disabled in the component
-      const moreFiltersButton = screen.getByRole('button', { name: /filter/i });
-
-      // Then - Verify button is disabled (can't be clicked)
-      expect(moreFiltersButton).toBeDisabled();
-    });
-
-    test('given user searches then filters populations', async () => {
-      // Given
-      userEvent.setup();
-      renderPage();
-      const searchInput = screen.getByPlaceholderText(/search/i);
-
-      // When - Note that search is disabled in the component
-      // The input is disabled, so we can't type into it
-
-      // Then - Just verify the input exists and is disabled
-      expect(searchInput).toBeDisabled();
+      expect(mockNavigate).toHaveBeenCalledWith('create');
     });
 
     test('given user selects population then updates selection state', async () => {
@@ -457,7 +416,7 @@ describe('PopulationsPage', () => {
   });
 
   describe('column configuration', () => {
-    test('given page renders then displays correct column headers', () => {
+    test('given page renders then displays correct column headers without connections', () => {
       // When
       renderPage();
 
@@ -465,30 +424,21 @@ describe('PopulationsPage', () => {
       expect(screen.getByText(POPULATION_COLUMNS.NAME)).toBeInTheDocument();
       expect(screen.getByText(POPULATION_COLUMNS.DATE)).toBeInTheDocument();
       expect(screen.getByText(POPULATION_COLUMNS.DETAILS)).toBeInTheDocument();
-      expect(screen.getByText(POPULATION_COLUMNS.CONNECTIONS)).toBeInTheDocument();
+      // Connections column should not be present
+      expect(screen.queryByText(POPULATION_COLUMNS.CONNECTIONS)).not.toBeInTheDocument();
     });
 
-    test('given household data then displays connections placeholders', () => {
+    test('given column configuration then does not include connections column', () => {
       // When
       renderPage();
 
       // Then
-      // Check for multiple occurrences since there are multiple households
-      const simulations = screen.getAllByText(POPULATION_DETAILS.SAMPLE_SIMULATION);
-      const reports = screen.getAllByText(POPULATION_DETAILS.SAMPLE_REPORT);
-
-      expect(simulations.length).toBeGreaterThan(0);
-      expect(reports.length).toBeGreaterThan(0);
-    });
-
-    test('given geographic data then displays available for simulations', () => {
-      // When
-      renderPage();
-
-      // Then
-      // Check for multiple occurrences since there are multiple geographic associations
-      const available = screen.getAllByText(POPULATION_DETAILS.AVAILABLE_FOR_SIMULATIONS);
-      expect(available.length).toBeGreaterThan(0);
+      // The component should render successfully without connections column
+      expect(
+        screen.getByRole('heading', { name: 'Your saved populations', level: 2 })
+      ).toBeInTheDocument();
+      // Verify data is displayed correctly
+      expect(screen.getByText(POPULATION_LABELS.HOUSEHOLD_1)).toBeInTheDocument();
     });
   });
 });

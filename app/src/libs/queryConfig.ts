@@ -6,7 +6,7 @@ export const queryConfig = {
     refetchOnWindowFocus: true,
     retry: 3,
   },
-  sessionStorage: {
+  localStorage: {
     staleTime: Infinity,
     refetchOnWindowFocus: false,
     retry: 0,

@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as householdApi from '@/api/household';
 import * as policyApi from '@/api/policy';
@@ -10,17 +11,22 @@ import * as reportApi from '@/api/report';
 import * as simulationApi from '@/api/simulation';
 import { useHouseholdAssociationsByUser } from '@/hooks/useUserHousehold';
 import { usePolicyAssociationsByUser } from '@/hooks/useUserPolicy';
-import { useReportAssociationsByUser } from '@/hooks/useUserReportAssociations';
+import {
+  useReportAssociationById,
+  useReportAssociationsByUser,
+} from '@/hooks/useUserReportAssociations';
 import { useUserReportById, useUserReports } from '@/hooks/useUserReports';
 import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssociations';
 import metadataReducer from '@/reducers/metadataReducer';
 import { mockReport, mockReportMetadata } from '@/tests/fixtures/adapters/reportMocks';
 import {
-  createMockQueryClient,
   mockUserReportList,
+  TEST_LABEL,
   TEST_REPORT_ID,
+  TEST_TIMESTAMP,
   TEST_USER_ID,
 } from '@/tests/fixtures/api/reportAssociationMocks';
+import { createMockQueryClient } from '@/tests/fixtures/hooks/hooksMocks';
 import {
   createNormalizedCacheMock,
   ERROR_MESSAGES,
@@ -49,11 +55,13 @@ vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 // Mock the normalizer
 vi.mock('@normy/react-query', () => ({
   useQueryNormalizer: () => createNormalizedCacheMock(),
+  QueryNormalizerProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock the association hooks
 vi.mock('@/hooks/useUserReportAssociations', () => ({
   useReportAssociationsByUser: vi.fn(),
+  useReportAssociationById: vi.fn(),
 }));
 
 vi.mock('@/hooks/useUserSimulationAssociations', () => ({
@@ -114,22 +122,22 @@ describe('useUserReports', () => {
 
     // Mock API calls
     vi.spyOn(reportApi, 'fetchReportById').mockImplementation((_country, id) => {
-      if (id === mockReport.reportId) {
+      if (id === mockReport.id || id === TEST_REPORT_ID) {
         return Promise.resolve(mockReportMetadata);
       }
-      if (id === 'report-1') {
+      if (id === 'report-1' || id === '1') {
         return Promise.resolve({
           ...mockReportMetadata,
           id: 1,
-          simulation_1_id: TEST_SIMULATION_ID_1,
-          simulation_2_id: TEST_SIMULATION_ID_2,
+          simulation_1_id: '456', // Match the numeric part of TEST_SIMULATION_ID_1
+          simulation_2_id: '789', // Match the numeric part of TEST_SIMULATION_ID_2
         });
       }
-      if (id === 'report-2') {
+      if (id === 'report-2' || id === '2') {
         return Promise.resolve({
           ...mockReportMetadata,
           id: 2,
-          simulation_1_id: TEST_SIMULATION_ID_1,
+          simulation_1_id: '456', // Match the numeric part of TEST_SIMULATION_ID_1
           simulation_2_id: null,
         });
       }
@@ -137,10 +145,10 @@ describe('useUserReports', () => {
     });
 
     vi.spyOn(simulationApi, 'fetchSimulationById').mockImplementation((_country, id) => {
-      if (id === TEST_SIMULATION_ID_1) {
+      if (id === TEST_SIMULATION_ID_1 || id === '456') {
         return Promise.resolve(mockSimulationMetadata1);
       }
-      if (id === TEST_SIMULATION_ID_2) {
+      if (id === TEST_SIMULATION_ID_2 || id === '789') {
         return Promise.resolve(mockSimulationMetadata2);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.SIMULATION_NOT_FOUND(id)));
@@ -166,7 +174,13 @@ describe('useUserReports', () => {
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/us/reports']}>
+          <Routes>
+            <Route path="/:countryId/*" element={children} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     </Provider>
   );
 
@@ -183,7 +197,7 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      expect(result.current.data).toHaveLength(2); // Based on mockUserReportList
+      expect(result.current.data).toHaveLength(3); // Based on mockUserReportList (now has 3 items)
       expect(result.current.isError).toBe(false);
     });
 
@@ -220,6 +234,23 @@ describe('useUserReports', () => {
       });
 
       const reports = result.current.data;
+      console.log('[HOUSEHOLD TEST] Total reports:', reports.length);
+      reports.forEach((r, i) => {
+        console.log(`[HOUSEHOLD TEST] Report ${i}:`, {
+          id: r.report?.id,
+          hasSimulations: !!r.simulations,
+          simulationCount: r.simulations?.length || 0,
+          simulationTypes: r.simulations?.map((s) => s.populationType) || [],
+          simulations:
+            r.simulations?.map((s) => ({
+              id: s.id,
+              populationType: s.populationType,
+              policyId: s.policyId,
+              populationId: s.populationId,
+            })) || [],
+        });
+      });
+
       const reportWithHousehold = reports.find((r) =>
         r.simulations?.some((s) => s.populationType === 'household')
       );
@@ -371,7 +402,10 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      const reports = result.current.getReportsBySimulation(TEST_SIMULATION_ID_1);
+      // Use '456' instead of TEST_SIMULATION_ID_1 because simulations are adapted to have numeric string IDs
+      const reports = result.current.getReportsBySimulation('456');
+
+      console.error('[useUserReports.test.tsx] reports:', reports);
 
       // Then
       expect(reports).toBeDefined();
@@ -425,13 +459,13 @@ describe('useUserReports', () => {
         expect(result.current.isLoading).toBe(false);
       });
 
-      // TEST_REPORT_ID is 'report-123' but mockReport has reportId '123'
+      // TEST_REPORT_ID is '123' which matches mockReport.id after adaptation
       // We should check for the correct report ID that exists in our mocks
-      const cachedReport = result.current.getNormalizedReport('report-1');
+      const cachedReport = result.current.getNormalizedReport('1');
 
       // Then
       expect(cachedReport).toBeDefined();
-      expect(cachedReport?.reportId).toBe('report-1');
+      expect(cachedReport?.id).toBe('1');
     });
 
     test('given entity ID when using getNormalizedSimulation then returns cached simulation', async () => {
@@ -447,8 +481,11 @@ describe('useUserReports', () => {
 
       const cachedSimulation = result.current.getNormalizedSimulation(TEST_SIMULATION_ID_1);
 
-      // Then
-      expect(cachedSimulation).toEqual(mockSimulation1);
+      // Then - expect adapted format with numeric string ID
+      expect(cachedSimulation).toEqual({
+        ...mockSimulation1,
+        id: '456', // Adapted format uses numeric string ID
+      });
     });
 
     test('given entity ID when using getNormalizedPolicy then returns cached policy', async () => {
@@ -548,13 +585,17 @@ describe('useUserReportById', () => {
     queryClient = createMockQueryClient();
     store = createMockStore();
 
-    // Setup API mocks
-    vi.spyOn(reportApi, 'fetchReportById').mockResolvedValue(mockReportMetadata);
+    // Setup API mocks - use IDs that match mockReport's simulationIds
+    vi.spyOn(reportApi, 'fetchReportById').mockResolvedValue({
+      ...mockReportMetadata,
+      simulation_1_id: TEST_SIMULATION_ID_1,
+      simulation_2_id: TEST_SIMULATION_ID_2,
+    });
     vi.spyOn(simulationApi, 'fetchSimulationById').mockImplementation((_country, id) => {
-      if (id === TEST_SIMULATION_ID_1) {
+      if (id === TEST_SIMULATION_ID_1 || id === '456') {
         return Promise.resolve(mockSimulationMetadata1);
       }
-      if (id === TEST_SIMULATION_ID_2) {
+      if (id === TEST_SIMULATION_ID_2 || id === '789') {
         return Promise.resolve(mockSimulationMetadata2);
       }
       return Promise.reject(new Error(ERROR_MESSAGES.SIMULATION_NOT_FOUND(id)));
@@ -586,21 +627,41 @@ describe('useUserReportById', () => {
       isLoading: false,
       error: null,
     });
+
+    // Mock useReportAssociationById to return a UserReport
+    (useReportAssociationById as any).mockReturnValue({
+      data: {
+        id: TEST_REPORT_ID,
+        userId: TEST_USER_ID,
+        reportId: TEST_REPORT_ID,
+        label: TEST_LABEL,
+        createdAt: TEST_TIMESTAMP,
+        updatedAt: TEST_TIMESTAMP,
+        isCreated: true,
+      },
+      isLoading: false,
+      error: null,
+    });
   });
 
   const wrapper = ({ children }: { children: React.ReactNode }) => (
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/us/reports']}>
+          <Routes>
+            <Route path="/:countryId/*" element={children} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     </Provider>
   );
 
-  test('given report ID when fetching then returns single report with full context', async () => {
+  test('given user report ID when fetching then returns single report with full context', async () => {
     // Given
-    const userId = TEST_USER_ID;
-    const reportId = TEST_REPORT_ID;
+    const userReportId = TEST_REPORT_ID;
 
     // When
-    const { result } = renderHook(() => useUserReportById(userId, reportId), { wrapper });
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
 
     // Then
     await waitFor(() => {
@@ -612,34 +673,141 @@ describe('useUserReportById', () => {
     expect(result.current.policies).toBeDefined();
     expect(result.current.userSimulations).toBeDefined();
     expect(result.current.userPolicies).toBeDefined();
+    expect(result.current.userReport).toBeDefined();
   });
 
   test('given non-existent report ID then fetches from API', async () => {
     // Given
-    const userId = TEST_USER_ID;
-    const reportId = 'non-cached-report';
+    const userReportId = 'non-cached-report';
+    const baseReportId = 'non-cached-base-report';
     const fetchSpy = vi.spyOn(reportApi, 'fetchReportById');
 
+    // Mock useReportAssociationById for this specific test
+    (useReportAssociationById as any).mockReturnValueOnce({
+      data: {
+        id: userReportId,
+        userId: TEST_USER_ID,
+        reportId: baseReportId,
+        label: 'Non-cached Report',
+        createdAt: TEST_TIMESTAMP,
+        updatedAt: TEST_TIMESTAMP,
+        isCreated: true,
+      },
+      isLoading: false,
+      error: null,
+    });
+
     // When
-    renderHook(() => useUserReportById(userId, reportId), { wrapper });
+    renderHook(() => useUserReportById(userReportId), { wrapper });
 
     // Then
     await waitFor(() => {
-      expect(fetchSpy).toHaveBeenCalledWith('us', reportId);
+      expect(fetchSpy).toHaveBeenCalledWith('us', baseReportId);
     });
   });
 
   test('given cached report then uses normalized cache', async () => {
     // Given
-    const userId = TEST_USER_ID;
-    const reportId = TEST_REPORT_ID;
+    const userReportId = TEST_REPORT_ID;
 
     // When
-    const { result } = renderHook(() => useUserReportById(userId, reportId), { wrapper });
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
 
     // Then
     await waitFor(() => {
       expect(result.current.report).toEqual(mockReport);
     });
+  });
+
+  test('given report with household simulations then includes household data', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.households).toBeDefined();
+    expect(result.current.households.length).toBeGreaterThan(0);
+    expect(result.current.userHouseholds).toBeDefined();
+  });
+
+  test('given report with geography simulations then constructs geography data', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.geographies).toBeDefined();
+    expect(result.current.geographies.length).toBeGreaterThan(0);
+
+    const geography = result.current.geographies.find((g) => g.geographyId === 'california');
+    expect(geography).toBeDefined();
+    expect(geography?.name).toBe('California');
+    expect(geography?.countryId).toBe('us');
+    expect(geography?.scope).toBe('subnational');
+  });
+
+  test('given geography simulation with no matching region data then geographies array is empty', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // Mock simulations with non-existent geography
+    vi.spyOn(simulationApi, 'fetchSimulationById').mockImplementation((_country, id) => {
+      if (id === TEST_SIMULATION_ID_1) {
+        return Promise.resolve(mockSimulationMetadata1);
+      }
+      if (id === TEST_SIMULATION_ID_2) {
+        return Promise.resolve({
+          ...mockSimulationMetadata2,
+          population_id: 'nonexistent-region',
+          population_type: 'geography',
+        });
+      }
+      return Promise.reject(new Error('Simulation not found'));
+    });
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    // Should have an empty geographies array or no geography for the nonexistent region
+    expect(result.current.geographies).toBeDefined();
+    const nonexistentGeo = result.current.geographies.find(
+      (g) => g.geographyId === 'nonexistent-region'
+    );
+    expect(nonexistentGeo).toBeUndefined();
+  });
+
+  test('given report with both household and geography simulations then includes both types of data', async () => {
+    // Given
+    const userReportId = TEST_REPORT_ID;
+
+    // When
+    const { result } = renderHook(() => useUserReportById(userReportId), { wrapper });
+
+    // Then
+    await waitFor(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+
+    expect(result.current.households).toBeDefined();
+    expect(result.current.geographies).toBeDefined();
+    expect(result.current.households.length).toBeGreaterThan(0);
+    expect(result.current.geographies.length).toBeGreaterThan(0);
   });
 });

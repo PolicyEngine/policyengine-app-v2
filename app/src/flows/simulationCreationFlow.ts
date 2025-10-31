@@ -25,6 +25,7 @@ export const SimulationCreationFlow: Flow = {
           returnTo: 'SimulationSetupFrame',
         },
         loadExisting: 'SimulationSelectExistingPolicyFrame',
+        selectCurrentLaw: 'SimulationSetupFrame',
       },
     },
     SimulationSelectExistingPolicyFrame: {
@@ -41,6 +42,7 @@ export const SimulationCreationFlow: Flow = {
           returnTo: 'SimulationSetupFrame',
         },
         loadExisting: 'SimulationSelectExistingPopulationFrame',
+        copyExisting: 'SimulationSetupFrame',
       },
     },
     SimulationSelectExistingPopulationFrame: {

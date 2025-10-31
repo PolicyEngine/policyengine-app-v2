@@ -12,7 +12,9 @@ import {
 } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import FlowView from '@/components/common/FlowView';
+import { CURRENT_YEAR } from '@/constants';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
 import {
   getBasicInputFields,
@@ -34,6 +36,7 @@ import { Household } from '@/types/ingredients/Household';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
+import { getInputFormattingProps } from '@/utils/householdValues';
 
 export default function HouseholdBuilderFrame({
   onNavigate,
@@ -45,14 +48,14 @@ export default function HouseholdBuilderFrame({
   const populationState = useSelector((state: RootState) => selectActivePopulation(state));
   const { createHousehold, isPending } = useCreateHousehold(populationState?.label || '');
   const { resetIngredient } = useIngredientReset();
-  const countryId = 'us'; // TODO: Get from application state when available
+  const countryId = useCurrentCountry();
 
   // Initialize with empty household if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {
     if (populationState?.household) {
       return populationState.household;
     }
-    const builder = new HouseholdBuilder(countryId as any, '2024');
+    const builder = new HouseholdBuilder(countryId as any, CURRENT_YEAR);
     return builder.build();
   });
 
@@ -71,7 +74,7 @@ export default function HouseholdBuilderFrame({
   };
 
   // State for form controls
-  const [taxYear, setTaxYear] = useState<string>('2024');
+  const [taxYear, setTaxYear] = useState<string>(CURRENT_YEAR);
   const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
   const [numChildren, setNumChildren] = useState<number>(0);
 
@@ -295,7 +298,7 @@ export default function HouseholdBuilderFrame({
   const fieldOptionsMap = useSelector((state: RootState) => {
     const options: Record<string, Array<{ value: string; label: string }>> = {};
     basicInputFields.household.forEach((field) => {
-      if (isDropdownField(field)) {
+      if (isDropdownField(state, field)) {
         options[field] = getFieldOptions(state, field);
       }
     });
@@ -375,7 +378,12 @@ export default function HouseholdBuilderFrame({
           Location & Geographic Information
         </Text>
         {basicInputFields.household.map((field) => {
-          const isDropdown = isDropdownField(field);
+          const fieldVariable = variables?.[field];
+          const isDropdown = !!(
+            fieldVariable &&
+            fieldVariable.possibleValues &&
+            Array.isArray(fieldVariable.possibleValues)
+          );
           const fieldLabel = getFieldLabel(field);
           const fieldValue =
             household.householdData.households?.['your household']?.[field]?.[taxYear] || '';
@@ -410,84 +418,107 @@ export default function HouseholdBuilderFrame({
   };
 
   // Render adults section
-  const renderAdults = () => (
-    <Stack gap="md">
-      <Text fw={500} size="sm" c="dimmed">
-        Adults
-      </Text>
+  const renderAdults = () => {
+    // Get formatting for age and employment_income
+    const ageVariable = variables?.age;
+    const employmentIncomeVariable = variables?.employment_income;
+    const ageFormatting = ageVariable
+      ? getInputFormattingProps(ageVariable)
+      : { thousandSeparator: ',' };
+    const incomeFormatting = employmentIncomeVariable
+      ? getInputFormattingProps(employmentIncomeVariable)
+      : { thousandSeparator: ',' };
 
-      {/* Primary adult */}
-      <Group gap="xs">
-        <Text size="sm" fw={500} style={{ flex: 0, minWidth: 100 }}>
-          You
+    return (
+      <Stack gap="md">
+        <Text fw={500} size="sm" c="dimmed">
+          Adults
         </Text>
-        <NumberInput
-          value={
-            HouseholdQueries.getPersonVariable(household, 'you', 'age', taxYear) ||
-            getVariableDefault('age')
-          }
-          onChange={(val) => handleAdultChange('you', 'age', val || 0)}
-          min={18}
-          max={120}
-          placeholder="Age"
-          style={{ flex: 1 }}
-        />
-        <NumberInput
-          value={
-            HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', taxYear) || 0
-          }
-          onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
-          min={0}
-          prefix="$"
-          thousandSeparator=","
-          placeholder="Employment Income"
-          style={{ flex: 2 }}
-        />
-      </Group>
 
-      {/* Spouse (if married) */}
-      {maritalStatus === 'married' && (
+        {/* Primary adult */}
         <Group gap="xs">
           <Text size="sm" fw={500} style={{ flex: 0, minWidth: 100 }}>
-            Your Partner
+            You
           </Text>
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'your partner', 'age', taxYear) ||
+              HouseholdQueries.getPersonVariable(household, 'you', 'age', taxYear) ||
               getVariableDefault('age')
             }
-            onChange={(val) => handleAdultChange('your partner', 'age', val || 0)}
+            onChange={(val) => handleAdultChange('you', 'age', val || 0)}
             min={18}
             max={120}
             placeholder="Age"
             style={{ flex: 1 }}
+            {...ageFormatting}
           />
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(
-                household,
-                'your partner',
-                'employment_income',
-                taxYear
-              ) || 0
+              HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', taxYear) ||
+              0
             }
-            onChange={(val) => handleAdultChange('your partner', 'employment_income', val || 0)}
+            onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
             min={0}
-            prefix="$"
-            thousandSeparator=","
             placeholder="Employment Income"
             style={{ flex: 2 }}
+            {...incomeFormatting}
           />
         </Group>
-      )}
-    </Stack>
-  );
+
+        {/* Spouse (if married) */}
+        {maritalStatus === 'married' && (
+          <Group gap="xs">
+            <Text size="sm" fw={500} style={{ flex: 0, minWidth: 100 }}>
+              Your Partner
+            </Text>
+            <NumberInput
+              value={
+                HouseholdQueries.getPersonVariable(household, 'your partner', 'age', taxYear) ||
+                getVariableDefault('age')
+              }
+              onChange={(val) => handleAdultChange('your partner', 'age', val || 0)}
+              min={18}
+              max={120}
+              placeholder="Age"
+              style={{ flex: 1 }}
+              {...ageFormatting}
+            />
+            <NumberInput
+              value={
+                HouseholdQueries.getPersonVariable(
+                  household,
+                  'your partner',
+                  'employment_income',
+                  taxYear
+                ) || 0
+              }
+              onChange={(val) => handleAdultChange('your partner', 'employment_income', val || 0)}
+              min={0}
+              placeholder="Employment Income"
+              style={{ flex: 2 }}
+              {...incomeFormatting}
+            />
+          </Group>
+        )}
+      </Stack>
+    );
+  };
 
   // Render children section
   const renderChildren = () => {
     if (numChildren === 0) {
       return null;
     }
+
+    // Get formatting for age and employment_income
+    const ageVariable = variables?.age;
+    const employmentIncomeVariable = variables?.employment_income;
+    const ageFormatting = ageVariable
+      ? getInputFormattingProps(ageVariable)
+      : { thousandSeparator: ',' };
+    const incomeFormatting = employmentIncomeVariable
+      ? getInputFormattingProps(employmentIncomeVariable)
+      : { thousandSeparator: ',' };
 
     const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
 
@@ -513,6 +544,7 @@ export default function HouseholdBuilderFrame({
                 max={17}
                 placeholder="Age"
                 style={{ flex: 1 }}
+                {...ageFormatting}
               />
               <NumberInput
                 value={
@@ -525,10 +557,9 @@ export default function HouseholdBuilderFrame({
                 }
                 onChange={(val) => handleChildChange(childKey, 'employment_income', val || 0)}
                 min={0}
-                prefix="$"
-                thousandSeparator=","
                 placeholder="Employment Income"
                 style={{ flex: 2 }}
+                {...incomeFormatting}
               />
             </Group>
           );
@@ -555,7 +586,7 @@ export default function HouseholdBuilderFrame({
       <Select
         label="Tax Year"
         value={taxYear}
-        onChange={(val) => setTaxYear(val || '2024')}
+        onChange={(val) => setTaxYear(val || CURRENT_YEAR)}
         data={taxYears}
         placeholder="Select Tax Year"
         required

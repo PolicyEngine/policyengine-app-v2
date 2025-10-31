@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Stack, Text } from '@mantine/core';
+import { Text } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { MOCK_USER_ID } from '@/constants';
 import {
@@ -24,10 +24,12 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicy, setLocalPolicy] = useState<UserPolicyMetadataWithAssociation | null>(null);
 
-  console.log('Policy Data:', data);
-  console.log('Policy Loading:', isLoading);
-  console.log('Policy Error:', isError);
-  console.log('Policy Error Message:', error);
+  console.log('[SimulationSelectExistingPolicyFrame] ========== DATA FETCH ==========');
+  console.log('[SimulationSelectExistingPolicyFrame] Raw data:', data);
+  console.log('[SimulationSelectExistingPolicyFrame] Raw data length:', data?.length);
+  console.log('[SimulationSelectExistingPolicyFrame] isLoading:', isLoading);
+  console.log('[SimulationSelectExistingPolicyFrame] isError:', isError);
+  console.log('[SimulationSelectExistingPolicyFrame] Error:', error);
 
   function canProceed() {
     if (!localPolicy) {
@@ -67,9 +69,21 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
       return;
     }
 
-    console.log('Local Policy on Submit:', localPolicy);
+    console.log('[POLICY SELECT] === SUBMIT START ===');
+    console.log('[POLICY SELECT] Local Policy on Submit:', localPolicy);
+    console.log('[POLICY SELECT] Association:', localPolicy.association);
+    console.log('[POLICY SELECT] Association countryId:', localPolicy.association?.countryId);
+    console.log('[POLICY SELECT] Policy metadata:', localPolicy.policy);
+    console.log('[POLICY SELECT] Policy ID:', localPolicy.policy?.id);
 
     // Create a new policy at the current position
+    console.log('[POLICY SELECT] Dispatching createPolicyAtPosition with:', {
+      position: currentPosition,
+      id: localPolicy.policy?.id?.toString(),
+      label: localPolicy.association?.label || '',
+      isCreated: true,
+      countryId: localPolicy.policy?.country_id,
+    });
     dispatch(
       createPolicyAtPosition({
         position: currentPosition,
@@ -87,6 +101,7 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     // Parameters must be added one at a time with individual value intervals
     if (localPolicy.policy?.policy_json) {
       const policyJson = localPolicy.policy.policy_json;
+      console.log('[POLICY SELECT] Adding parameters from policy_json:', Object.keys(policyJson));
       Object.entries(policyJson).forEach(([paramName, valueIntervals]) => {
         if (Array.isArray(valueIntervals) && valueIntervals.length > 0) {
           // Add each value interval separately as required by PolicyParamAdditionPayload
@@ -106,11 +121,14 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
         }
       });
     }
+    console.log('[POLICY SELECT] === SUBMIT END ===');
   }
 
   const userPolicies = data || [];
 
-  console.log('User Policies:', userPolicies);
+  console.log('[SimulationSelectExistingPolicyFrame] ========== BEFORE FILTERING ==========');
+  console.log('[SimulationSelectExistingPolicyFrame] User policies count:', userPolicies.length);
+  console.log('[SimulationSelectExistingPolicyFrame] User policies:', userPolicies);
 
   // TODO: For all of these, refactor into something more reusable
   if (isLoading) {
@@ -143,40 +161,41 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     );
   }
 
-  // Build card list items from user policies
-  const policyCardItems = userPolicies
-    .filter((association) => isPolicyMetadataWithAssociation(association)) // Only include associations with loaded policies
-    .slice(0, 5) // Display only the first 5 policies
-    .map((association) => {
-      let title = '';
-      let subtitle = '';
-      if ('label' in association.association && association.association.label) {
-        title = association.association.label;
-        subtitle = `Policy #${association.policy!.id}`;
-      } else {
-        title = `Policy #${association.policy!.id}`;
-      }
-
-      return {
-        title,
-        subtitle,
-        onClick: () => handlePolicySelect(association),
-        isSelected:
-          isPolicyMetadataWithAssociation(localPolicy) &&
-          localPolicy.policy?.id === association.policy!.id,
-      };
-    });
-
-  const content = (
-    <Stack>
-      <Text size="sm">Search</Text>
-      <Text fw={700}>TODO: Search</Text>
-      <Text fw={700}>Your Policies</Text>
-      <Text size="sm" c="dimmed">
-        Showing {policyCardItems.length} policies
-      </Text>
-    </Stack>
+  // Filter policies with loaded data
+  const filteredPolicies = userPolicies.filter((association) =>
+    isPolicyMetadataWithAssociation(association)
   );
+
+  console.log('[SimulationSelectExistingPolicyFrame] ========== AFTER FILTERING ==========');
+  console.log(
+    '[SimulationSelectExistingPolicyFrame] Filtered policies count:',
+    filteredPolicies.length
+  );
+  console.log(
+    '[SimulationSelectExistingPolicyFrame] Filter criteria: isPolicyMetadataWithAssociation(association)'
+  );
+  console.log('[SimulationSelectExistingPolicyFrame] Filtered policies:', filteredPolicies);
+
+  // Build card list items from ALL filtered policies (pagination handled by FlowView)
+  const policyCardItems = filteredPolicies.map((association) => {
+    let title = '';
+    let subtitle = '';
+    if ('label' in association.association && association.association.label) {
+      title = association.association.label;
+      subtitle = `Policy #${association.policy!.id}`;
+    } else {
+      title = `Policy #${association.policy!.id}`;
+    }
+
+    return {
+      title,
+      subtitle,
+      onClick: () => handlePolicySelect(association),
+      isSelected:
+        isPolicyMetadataWithAssociation(localPolicy) &&
+        localPolicy.policy?.id === association.policy!.id,
+    };
+  });
 
   const primaryAction = {
     label: 'Next',
@@ -188,9 +207,9 @@ export default function SimulationSelectExistingPolicyFrame({ onNavigate }: Flow
     <FlowView
       title="Select an Existing Policy"
       variant="cardList"
-      content={content}
       cardListItems={policyCardItems}
       primaryAction={primaryAction}
+      itemsPerPage={5}
     />
   );
 }

@@ -3,7 +3,7 @@ import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 
 export interface UserGeographicStore {
   create: (population: UserGeographyPopulation) => Promise<UserGeographyPopulation>;
-  findByUser: (userId: string) => Promise<UserGeographyPopulation[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserGeographyPopulation[]>;
   findById: (userId: string, geographyId: string) => Promise<UserGeographyPopulation | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation>;
@@ -31,18 +31,29 @@ export class ApiGeographicStore implements UserGeographicStore {
     return UserGeographicAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+  async findByUser(userId: string, countryId?: string): Promise<UserGeographyPopulation[]> {
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
 
     const apiResponses = await response.json();
-    return apiResponses.map((apiData: any) => UserGeographicAdapter.fromApiResponse(apiData));
+
+    // Convert each API response to UserGeographyPopulation and filter by country if specified
+    const geographies = apiResponses.map((apiData: any) =>
+      UserGeographicAdapter.fromApiResponse(apiData)
+    );
+    return countryId
+      ? geographies.filter((g: UserGeographyPopulation) => g.countryId === countryId)
+      : geographies;
   }
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${geographyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;
@@ -87,7 +98,7 @@ export class ApiGeographicStore implements UserGeographicStore {
   */
 }
 
-export class SessionStorageGeographicStore implements UserGeographicStore {
+export class LocalStorageGeographicStore implements UserGeographicStore {
   private readonly STORAGE_KEY = 'user-geographic-associations';
 
   async create(population: UserGeographyPopulation): Promise<UserGeographyPopulation> {
@@ -113,9 +124,11 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
     return newPopulation;
   }
 
-  async findByUser(userId: string): Promise<UserGeographyPopulation[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserGeographyPopulation[]> {
     const populations = this.getStoredPopulations();
-    return populations.filter((p) => p.userId === userId);
+    return populations.filter(
+      (p) => p.userId === userId && (!countryId || p.countryId === countryId)
+    );
   }
 
   async findById(userId: string, geographyId: string): Promise<UserGeographyPopulation | null> {
@@ -157,8 +170,19 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
 
   private getStoredPopulations(): UserGeographyPopulation[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (!stored) {
+        return [];
+      }
+
+      const parsed = JSON.parse(stored);
+      // Data is already in application format (UserGeographyPopulation), just ensure type coercion
+      return parsed.map((data: any) => ({
+        ...data,
+        id: String(data.id),
+        userId: String(data.userId),
+        geographyId: String(data.geographyId),
+      }));
     } catch {
       return [];
     }
@@ -166,9 +190,9 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
 
   private setStoredPopulations(populations: UserGeographyPopulation[]): void {
     try {
-      sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(populations));
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(populations));
     } catch (error) {
-      throw new Error('Failed to store geographic populations in session storage');
+      throw new Error('Failed to store geographic populations in local storage');
     }
   }
 
@@ -178,6 +202,6 @@ export class SessionStorageGeographicStore implements UserGeographicStore {
   }
 
   clearAllPopulations(): void {
-    sessionStorage.removeItem(this.STORAGE_KEY);
+    localStorage.removeItem(this.STORAGE_KEY);
   }
 }

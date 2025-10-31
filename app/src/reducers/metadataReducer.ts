@@ -106,8 +106,7 @@ const metadataSlice = createSlice({
 
 export const { setCurrentCountry, clearMetadata } = metadataSlice.actions;
 
-// Selectors
-export const selectCurrentCountry = (state: { metadata: MetadataState }) =>
-  state.metadata.currentCountry;
+// The metadata.currentCountry state is only used internally by useFetchMetadata
+// to track which country's metadata is currently cached.
 
 export default metadataSlice.reducer;

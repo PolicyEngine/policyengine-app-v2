@@ -40,7 +40,7 @@ export const spacing = {
   layout: {
     sidebar: '79px',
     sidebarWidth: '280px', // Width of the navigation sidebar
-    header: '76px',
+    header: '58px', // Unified header height for all navbars
     content: '1361px',
     container: '976px',
     sideGutter: '200px', // TODO: Make this responsive/attempt to use 'container'
@@ -49,7 +49,7 @@ export const spacing = {
   // AppShell design tokens
   appShell: {
     header: {
-      height: '40px',
+      height: '58px', // Unified header height for all navbars
       padding: '8px 16px',
     },
     navbar: {

@@ -1,4 +1,4 @@
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { mockErrorReport, mockPendingReport, mockReport } from '../adapters/reportMocks';
 import {
   mockSimulation1,
@@ -14,8 +14,10 @@ export const mockReportData = [
       id: 'report-1',
       userId: MOCK_USER_ID,
       reportId: '123',
+      countryId: 'us',
       label: 'Test Report 1',
-      createdAt: '2024-01-15T10:30:00Z',
+      isCreated: true,
+      createdAt: `${CURRENT_YEAR}-01-15T10:30:00Z`,
     },
     report: mockReport,
     simulations: [mockSimulation1, mockSimulation2],
@@ -33,8 +35,10 @@ export const mockReportData = [
       id: 'report-2',
       userId: MOCK_USER_ID,
       reportId: '1',
+      countryId: 'us',
       label: 'Test Report 2',
-      createdAt: '2024-01-15T11:00:00Z',
+      isCreated: true,
+      createdAt: `${CURRENT_YEAR}-01-15T11:00:00Z`,
     },
     report: mockPendingReport,
     simulations: [],
@@ -64,8 +68,10 @@ export const mockMixedStatusReportData = [
       id: 'report-3',
       userId: MOCK_USER_ID,
       reportId: '2',
+      countryId: 'us',
       label: 'Test Report 3',
-      createdAt: '2024-01-15T11:30:00Z',
+      isCreated: true,
+      createdAt: `${CURRENT_YEAR}-01-15T11:30:00Z`,
     },
     report: { ...mockErrorReport, status: 'error' as const },
     simulations: [],
@@ -120,3 +126,9 @@ export const mockMixedStatusHookReturn = {
 export const ERROR_MESSAGES = {
   FETCH_FAILED: 'Failed to fetch reports',
 } as const;
+
+// Mock factories for tests
+// Note: These are factory functions that return mocked implementations
+// They cannot be called directly in vi.mock() due to Vitest hoisting restrictions
+export const createMockDispatch = () => vi.fn();
+export const createMockNavigate = () => vi.fn();

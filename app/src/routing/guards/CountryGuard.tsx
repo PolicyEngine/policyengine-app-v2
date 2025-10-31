@@ -1,38 +1,60 @@
-import { Navigate, useLocation, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { Navigate, Outlet, useParams } from 'react-router-dom';
 import { countryIds } from '@/libs/countries';
-
-interface CountryGuardProps {
-  children: React.ReactNode;
-}
+import { setCurrentCountry } from '@/reducers/metadataReducer';
+import { clearAllPolicies } from '@/reducers/policyReducer';
+import { clearAllPopulations } from '@/reducers/populationReducer';
+import { clearReport } from '@/reducers/reportReducer';
+import { clearAllSimulations } from '@/reducers/simulationsReducer';
+import { AppDispatch } from '@/store';
 
 /**
  * Guard component that validates country parameter in the route.
- * Wraps the Layout component and redirects if country is invalid.
+ *
+ * Architecture:
+ * - URL parameter is the single source of truth for country
+ * - This guard validates the country parameter
+ * - Components read country directly from URL via useCurrentCountry() hook
+ * - Syncs to Redux state for metadata loading and session-scoped state management
+ *
+ * Flow:
+ * 1. Validates countryId from URL parameter
+ * 2. If valid, syncs to Redux metadata state
+ * 3. Clears all ingredient state for new country (session-scoped behavior)
+ *    - Policies, simulations, populations, and reports are all cleared
+ *    - This prevents cross-country data contamination
+ * 4. If invalid, redirects to root path
+ *
+ * Acts as a layout component that either redirects or renders child routes.
  */
-export function CountryGuard({ children }: CountryGuardProps) {
+export function CountryGuard() {
   const { countryId } = useParams<{ countryId: string }>();
-  const location = useLocation();
+  const dispatch = useDispatch<AppDispatch>();
 
   // Validation logic
   const isValid = countryId && countryIds.includes(countryId as any);
 
-  if (!isValid) {
-    // Extract path after country segment to preserve user's intended destination.
-    // We can't use useParams for this - it only gives us { countryId }, not the rest.
-    // Route pattern /:countryId doesn't capture /policies/123 part.
-    // Using /:countryId/* would capture it but breaks child route matching.
-    // So we must use string manipulation on location.pathname.
-    const currentPath = location.pathname;
-    const pathAfterCountry = countryId
-      ? currentPath.substring(countryId.length + 1) // Skip "/{country}"
-      : currentPath;
-    const defaultCountry = 'us';
-    const redirectPath = `/${defaultCountry}${pathAfterCountry}`;
+  // Sync country to Redux and clear all ingredient state (session-scoped)
+  // This ensures all state is tied to the current country session and prevents
+  // cross-country data contamination (e.g., US policy used with UK simulation)
+  useEffect(() => {
+    if (isValid && countryId) {
+      dispatch(setCurrentCountry(countryId));
+      // Clear all ingredient state when country changes
+      // Pass countryId directly from URL to avoid race conditions
+      dispatch(clearReport(countryId as (typeof countryIds)[number]));
+      dispatch(clearAllPolicies());
+      dispatch(clearAllSimulations());
+      dispatch(clearAllPopulations());
+    }
+  }, [countryId, isValid, dispatch]);
 
-    return <Navigate to={redirectPath} replace />;
+  if (!isValid) {
+    // Redirect to root path and let the root route handler determine the country.
+    return <Navigate to="/" replace />;
   }
 
-  // Render children (Layout) when validation passes.
-  // Using {children} instead of <Outlet /> keeps this a simple wrapper component.
-  return <>{children}</>;
+  // Render child routes when validation passes.
+  return <Outlet />;
 }

@@ -19,9 +19,6 @@ export default function PolicyParameterSelectorMenu({
       <Box>
         <SelectorMenuHeader />
         <Divider my="xs" />
-        <Text fw={700} mb="md">
-          TODO: Search feature
-        </Text>
       </Box>
 
       <ScrollArea flex={1} type="scroll">

@@ -1,13 +1,39 @@
-import { useSelector } from 'react-redux';
-import { Outlet } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { Outlet, useLocation } from 'react-router-dom';
 import { AppShell } from '@mantine/core';
 import { spacing } from '@/designTokens';
+import { useIngredientReset } from '@/hooks/useIngredientReset';
+import { clearFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
-import HeaderBar from './shared/HeaderBar';
+import { cacheMonitor } from '@/utils/cacheMonitor';
+import HeaderNavigation from './shared/HomeHeader';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
-  const { currentFrame } = useSelector((state: RootState) => state.flow);
+  const dispatch = useDispatch();
+  const { currentFrame, currentFlow } = useSelector((state: RootState) => state.flow);
+  const { resetIngredient } = useIngredientReset();
+  const location = useLocation();
+  const previousLocation = useRef(location.pathname);
+
+  // Log navigation events for cache monitoring and handle flow clearing
+  useEffect(() => {
+    const from = previousLocation.current;
+    const to = location.pathname;
+
+    if (from !== to) {
+      cacheMonitor.logNavigation(from, to);
+
+      // Clear flow and all ingredients when navigating away from /create routes
+      if (currentFlow && from.includes('/create') && !to.includes('/create')) {
+        dispatch(clearFlow());
+        resetIngredient('report'); // Cascades to clear all ingredients
+      }
+
+      previousLocation.current = to;
+    }
+  }, [location.pathname, currentFlow, dispatch]);
 
   // If PolicyParameterSelectorFrame is active, let it manage its own layout completely
   if (currentFrame === 'PolicyParameterSelectorFrame') {
@@ -25,7 +51,7 @@ export default function Layout() {
       }}
     >
       <AppShell.Header p={0}>
-        <HeaderBar showLogo />
+        <HeaderNavigation />
       </AppShell.Header>
 
       <AppShell.Navbar>

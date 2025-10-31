@@ -1,16 +1,17 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ApiReportStore, SessionStorageReportStore } from '../api/reportAssociation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { ApiReportStore, LocalStorageReportStore } from '../api/reportAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { reportAssociationKeys } from '../libs/queryKeys';
 import { UserReport } from '../types/ingredients/UserReport';
 
 const apiReportStore = new ApiReportStore();
-const sessionReportStore = new SessionStorageReportStore();
+const localReportStore = new LocalStorageReportStore();
 
 export const useUserReportStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiReportStore : sessionReportStore;
+  return isLoggedIn ? apiReportStore : localReportStore;
 };
 
 /**
@@ -25,13 +26,14 @@ export const useUserReportStore = () => {
  */
 export const useReportAssociationsByUser = (userId: string) => {
   const store = useUserReportStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: reportAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: reportAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
@@ -39,11 +41,23 @@ export const useReportAssociationsByUser = (userId: string) => {
 export const useReportAssociation = (userId: string, reportId: string) => {
   const store = useUserReportStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: reportAssociationKeys.specific(userId, reportId),
     queryFn: () => store.findById(userId, reportId),
+    ...config,
+  });
+};
+
+export const useReportAssociationById = (userReportId: string) => {
+  const store = useUserReportStore();
+  const isLoggedIn = false; // TODO: Replace with actual auth check in future
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
+
+  return useQuery({
+    queryKey: reportAssociationKeys.byUserReportId(userReportId),
+    queryFn: () => store.findByUserReportId(userReportId),
     ...config,
   });
 };
@@ -57,7 +71,10 @@ export const useCreateReportAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: reportAssociationKeys.byUser(newAssociation.userId.toString()),
+        queryKey: reportAssociationKeys.byUser(
+          newAssociation.userId.toString(),
+          newAssociation.countryId
+        ),
       });
       queryClient.invalidateQueries({
         queryKey: reportAssociationKeys.byReport(newAssociation.reportId.toString()),
@@ -88,7 +105,7 @@ export const useUpdateReportAssociation = () => {
       updates: Partial<UserReport>;
     }) => store.update(userId, reportId, updates),
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(updatedAssociation.userId) });
+      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId) });
       queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byReport(updatedAssociation.reportId) });
 
       queryClient.setQueryData(
@@ -107,10 +124,10 @@ export const useDeleteReportAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, reportId }: { userId: string; reportId: string }) =>
+    mutationFn: ({ userId, reportId }: { userId: string; reportId: string; countryId?: string }) =>
       store.delete(userId, reportId),
-    onSuccess: (_, { userId, reportId }) => {
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(userId) });
+    onSuccess: (_, { userId, reportId, countryId }) => {
+      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(userId, countryId) });
       queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byReport(reportId) });
 
       queryClient.setQueryData(

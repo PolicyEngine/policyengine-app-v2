@@ -15,8 +15,8 @@ import { TEST_USER_ID } from '../api/reportAssociationMocks';
 // Test ID constants
 export const TEST_SIMULATION_ID_1 = 'sim-456';
 export const TEST_SIMULATION_ID_2 = 'sim-789';
-export const TEST_POLICY_ID_1 = '456';
-export const TEST_POLICY_ID_2 = '789';
+export const TEST_POLICY_ID_1 = 'policy-456'; // Changed to avoid ID collision with simulations
+export const TEST_POLICY_ID_2 = 'policy-789'; // Changed to avoid ID collision with simulations
 export const TEST_HOUSEHOLD_ID = 'household-123';
 export const TEST_GEOGRAPHY_ID = 'california';
 export const TEST_COUNTRIES = {
@@ -29,7 +29,7 @@ export const TEST_COUNTRIES = {
 export const mockSimulation1: Simulation = {
   id: TEST_SIMULATION_ID_1,
   countryId: TEST_COUNTRIES.US,
-  policyId: TEST_POLICY_ID_1,
+  policyId: TEST_POLICY_ID_1, // policy-456
   populationId: TEST_HOUSEHOLD_ID,
   populationType: 'household',
   apiVersion: 'v1',
@@ -40,7 +40,7 @@ export const mockSimulation1: Simulation = {
 export const mockSimulation2: Simulation = {
   id: TEST_SIMULATION_ID_2,
   countryId: TEST_COUNTRIES.US,
-  policyId: TEST_POLICY_ID_2,
+  policyId: TEST_POLICY_ID_2, // policy-789
   populationId: TEST_GEOGRAPHY_ID,
   populationType: 'geography',
   apiVersion: 'v1',
@@ -48,17 +48,19 @@ export const mockSimulation2: Simulation = {
   isCreated: true,
 };
 
-// Mock Policy entities
+// Mock Policy entities (matching PolicyAdapter.fromMetadata structure)
 export const mockPolicy1: Policy = {
   id: TEST_POLICY_ID_1,
   countryId: TEST_COUNTRIES.US,
-  label: 'Test Policy 1',
+  apiVersion: 'v1',
+  parameters: [],
 };
 
 export const mockPolicy2: Policy = {
   id: TEST_POLICY_ID_2,
   countryId: TEST_COUNTRIES.US,
-  label: 'Test Policy 2',
+  apiVersion: 'v1',
+  parameters: [],
 };
 
 // Mock Household entity
@@ -82,14 +84,16 @@ export const mockUserSimulations: UserSimulation[] = [
     userId: TEST_USER_ID,
     simulationId: TEST_SIMULATION_ID_1,
     label: 'My Simulation 1',
-    createdAt: '2024-01-01T10:00:00Z',
+    createdAt: '2025-01-01T10:00:00Z',
+    countryId: 'us',
   },
   {
     id: 'user-sim-2',
     userId: TEST_USER_ID,
     simulationId: TEST_SIMULATION_ID_2,
     label: 'My Simulation 2',
-    createdAt: '2024-01-02T10:00:00Z',
+    createdAt: '2025-01-02T10:00:00Z',
+    countryId: 'us',
   },
 ];
 
@@ -99,14 +103,16 @@ export const mockUserPolicies: UserPolicy[] = [
     userId: TEST_USER_ID,
     policyId: TEST_POLICY_ID_1,
     label: 'My Policy 1',
-    createdAt: '2024-01-01T09:00:00Z',
+    createdAt: '2025-01-01T09:00:00Z',
+    countryId: 'us',
   },
   {
     id: 'user-pol-2',
     userId: TEST_USER_ID,
     policyId: TEST_POLICY_ID_2,
     label: 'My Policy 2',
-    createdAt: '2024-01-02T09:00:00Z',
+    createdAt: '2025-01-02T09:00:00Z',
+    countryId: 'us',
   },
 ];
 
@@ -115,9 +121,10 @@ export const mockUserHouseholds: UserHouseholdPopulation[] = [
     id: 'user-hh-1',
     userId: TEST_USER_ID,
     householdId: TEST_HOUSEHOLD_ID,
+    countryId: 'us',
     label: 'My Household',
     type: 'household',
-    createdAt: '2024-01-01T08:00:00Z',
+    createdAt: '2025-01-01T08:00:00Z',
   },
 ];
 
@@ -128,7 +135,7 @@ export const mockSimulationMetadata1: SimulationMetadata = {
   api_version: 'v1',
   population_id: TEST_HOUSEHOLD_ID,
   population_type: 'household' as const,
-  policy_id: TEST_POLICY_ID_1,
+  policy_id: TEST_POLICY_ID_1, // policy-456
 };
 
 export const mockSimulationMetadata2: SimulationMetadata = {
@@ -137,7 +144,7 @@ export const mockSimulationMetadata2: SimulationMetadata = {
   api_version: 'v1',
   population_id: TEST_GEOGRAPHY_ID,
   population_type: 'geography' as const,
-  policy_id: TEST_POLICY_ID_2,
+  policy_id: TEST_POLICY_ID_2, // policy-789
 };
 
 export const mockPolicyMetadata1: PolicyMetadata = {
@@ -204,36 +211,46 @@ export const mockMetadataInitialState = {
 export const createNormalizedCacheMock = () => ({
   getObjectById: vi.fn((id: string) => {
     // Return mocked normalized data based on ID
-    if (id === mockReport.reportId) {
+    if (id === mockReport.id || id === '123') {
       return mockReport;
     }
-    if (id === 'report-1') {
+    if (id === 'report-1' || id === '1') {
       return {
         ...mockReport,
-        reportId: 'report-1',
-        simulationIds: [TEST_SIMULATION_ID_1, TEST_SIMULATION_ID_2],
+        id: '1',
+        simulationIds: ['456', '789'],
       };
     }
-    if (id === 'report-2') {
+    if (id === 'report-2' || id === '2') {
       return {
         ...mockReport,
-        reportId: 'report-2',
-        simulationIds: [TEST_SIMULATION_ID_1],
+        id: '2',
+        simulationIds: ['456'],
       };
     }
-    if (id === TEST_SIMULATION_ID_1) {
-      return mockSimulation1;
-    }
-    if (id === TEST_SIMULATION_ID_2) {
-      return mockSimulation2;
-    }
-    if (id === TEST_POLICY_ID_1) {
+    // Check policies first (before simulations)
+    if (id === TEST_POLICY_ID_1 || id === 'policy-456') {
       return mockPolicy1;
     }
-    if (id === TEST_POLICY_ID_2) {
+    if (id === TEST_POLICY_ID_2 || id === 'policy-789') {
       return mockPolicy2;
     }
-    if (id === TEST_HOUSEHOLD_ID) {
+    // Then check simulations
+    if (id === TEST_SIMULATION_ID_1 || id === '456') {
+      // Return simulation with adapted ID format (string number) to match SimulationAdapter output
+      return {
+        ...mockSimulation1,
+        id: '456', // Override to match adapted format
+      };
+    }
+    if (id === TEST_SIMULATION_ID_2 || id === '789') {
+      // Return simulation with adapted ID format (string number) to match SimulationAdapter output
+      return {
+        ...mockSimulation2,
+        id: '789', // Override to match adapted format
+      };
+    }
+    if (id === TEST_HOUSEHOLD_ID || id === 'household-123') {
       return mockHousehold1;
     }
     return undefined;

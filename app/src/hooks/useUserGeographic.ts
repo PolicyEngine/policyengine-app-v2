@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSelector } from 'react-redux';
-import { ApiGeographicStore, SessionStorageGeographicStore } from '@/api/geographicAssociation';
+import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
 import { RootState } from '@/store';
@@ -9,22 +10,23 @@ import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { getCountryLabel } from '@/utils/geographyUtils';
 
 const apiGeographicStore = new ApiGeographicStore();
-const sessionGeographicStore = new SessionStorageGeographicStore();
+const localGeographicStore = new LocalStorageGeographicStore();
 
 export const useUserGeographicStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiGeographicStore : sessionGeographicStore;
+  return isLoggedIn ? apiGeographicStore : localGeographicStore;
 };
 
 // This fetches only the user-geographic associations
 export const useGeographicAssociationsByUser = (userId: string) => {
   const store = useUserGeographicStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: geographicAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: geographicAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
@@ -32,7 +34,7 @@ export const useGeographicAssociationsByUser = (userId: string) => {
 export const useGeographicAssociation = (userId: string, geographyId: string) => {
   const store = useUserGeographicStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: geographicAssociationKeys.specific(userId, geographyId),
@@ -51,7 +53,7 @@ export const useCreateGeographicAssociation = () => {
     onSuccess: (newPopulation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: geographicAssociationKeys.byUser(newPopulation.userId),
+        queryKey: geographicAssociationKeys.byUser(newPopulation.userId, newPopulation.countryId),
       });
       queryClient.invalidateQueries({
         queryKey: geographicAssociationKeys.byGeography(newPopulation.geographyId),

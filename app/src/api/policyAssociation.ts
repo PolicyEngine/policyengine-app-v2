@@ -4,7 +4,7 @@ import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
-  findByUser: (userId: string) => Promise<UserPolicy[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserPolicy[]>;
   findById: (userId: string, policyId: string) => Promise<UserPolicy | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy>;
@@ -32,20 +32,25 @@ export class ApiPolicyStore implements UserPolicyStore {
     return UserPolicyAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserPolicy[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+  async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
 
     const apiResponses = await response.json();
 
-    // Convert each API response to UserPolicy
-    return apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
+    // Convert each API response to UserPolicy and filter by country if specified
+    const policies = apiResponses.map((apiData: any) => UserPolicyAdapter.fromApiResponse(apiData));
+    return countryId ? policies.filter((p: UserPolicy) => p.countryId === countryId) : policies;
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${policyId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;
@@ -90,27 +95,25 @@ export class ApiPolicyStore implements UserPolicyStore {
   */
 }
 
-export class SessionStoragePolicyStore implements UserPolicyStore {
+export class LocalStoragePolicyStore implements UserPolicyStore {
   private readonly STORAGE_KEY = 'user-policy-associations';
 
   async create(policy: Omit<UserPolicy, 'id' | 'createdAt'>): Promise<UserPolicy> {
+    // Generate a unique ID for local storage
+    // Format: "sup-[short-timestamp][random]"
+    // Use base36 encoding for compactness
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const uniqueId = `sup-${timestamp}${random}`;
+
     const newPolicy: UserPolicy = {
       ...policy,
-      id: policy.policyId, // Use policyId as the ID
+      id: uniqueId,
       createdAt: new Date().toISOString(),
       isCreated: true,
     };
 
     const policies = this.getStoredPolicies();
-
-    // Check for duplicates
-    const exists = policies.some(
-      (p) => p.userId === policy.userId && p.policyId === policy.policyId
-    );
-
-    if (exists) {
-      throw new Error('Association already exists');
-    }
 
     const updatedPolicies = [...policies, newPolicy];
     this.setStoredPolicies(updatedPolicies);
@@ -118,9 +121,9 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
     return newPolicy;
   }
 
-  async findByUser(userId: string): Promise<UserPolicy[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserPolicy[]> {
     const policies = this.getStoredPolicies();
-    return policies.filter((p) => p.userId === userId);
+    return policies.filter((p) => p.userId === userId && (!countryId || p.countryId === countryId));
   }
 
   async findById(userId: string, policyId: string): Promise<UserPolicy | null> {
@@ -130,15 +133,26 @@ export class SessionStoragePolicyStore implements UserPolicyStore {
 
   private getStoredPolicies(): UserPolicy[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
+      const stored = localStorage.getItem(this.STORAGE_KEY);
+      if (!stored) {
+        return [];
+      }
+
+      const parsed = JSON.parse(stored);
+      // Data is already in application format (UserPolicy), just ensure type coercion
+      return parsed.map((data: any) => ({
+        ...data,
+        id: String(data.id),
+        userId: String(data.userId),
+        policyId: String(data.policyId),
+      }));
     } catch {
       return [];
     }
   }
 
   private setStoredPolicies(policies: UserPolicy[]): void {
-    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
   }
 
   // Not yet implemented, but keeping for future use

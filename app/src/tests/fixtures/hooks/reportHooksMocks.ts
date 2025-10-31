@@ -1,84 +1,124 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
-import { MOCK_USER_ID } from '@/constants';
+import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { Simulation } from '@/types/ingredients/Simulation';
 import { UserReport } from '@/types/ingredients/UserReport';
-import { ReportMetadata } from '@/types/metadata/reportMetadata';
-import { ReportCreationPayload } from '@/types/payloads';
+
+// Re-export from adapters/reportMocks
+export { mockReport, mockReportCreationPayload } from '@/tests/fixtures/adapters/reportMocks';
+
+// Re-export from api/reportAssociationMocks
+export { TEST_USER_ID } from '@/tests/fixtures/api/reportAssociationMocks';
 
 // Test constants
-export const TEST_REPORT_ID = 123;
-export const TEST_REPORT_ID_STRING = '123';
-export const TEST_USER_ID = MOCK_USER_ID;
 export const TEST_COUNTRY_ID = 'us';
-export const TEST_LABEL = 'My Test Report';
-export const TEST_TIMESTAMP = '2024-01-15T10:00:00Z';
+export const TEST_LABEL = 'Test Report';
+export const TEST_REPORT_ID_STRING = '123';
+export const TEST_USER_REPORT_ID = 'sur-abc123';
 
-// Mock Report Metadata (API response)
-export const mockReportMetadata: ReportMetadata = {
-  id: TEST_REPORT_ID,
-  country_id: TEST_COUNTRY_ID,
-  simulation_1_id: '1',
-  simulation_2_id: '2',
-  api_version: 'v1',
+// Mock QueryClient factory
+export const createMockQueryClient = () => {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+      mutations: {
+        retry: false,
+      },
+    },
+  });
+};
+
+// Mock console setup
+export const setupConsoleMocks = () => {
+  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+  return {
+    errorSpy,
+    warnSpy,
+    logSpy,
+    restore: () => {
+      errorSpy.mockRestore();
+      warnSpy.mockRestore();
+      logSpy.mockRestore();
+    },
+  };
+};
+
+// Mock Household
+export const mockHousehold: Household = {
+  id: 'household-123',
+  countryId: 'us',
+  householdData: {
+    people: {},
+    families: {},
+    tax_units: {},
+    spm_units: {},
+    households: {},
+    marital_units: {},
+  },
+};
+
+// Mock Geography - National
+export const mockNationalGeography: Geography = {
+  id: 'us',
+  countryId: 'us',
+  scope: 'national',
+  geographyId: 'us',
+};
+
+// Mock Geography - Subnational
+export const mockSubnationalGeography: Geography = {
+  id: 'california',
+  countryId: 'us',
+  scope: 'subnational',
+  geographyId: 'california',
+};
+
+// Mock Simulations
+export const mockHouseholdSimulation: Simulation = {
+  id: 'sim-456',
+  countryId: 'us',
+  apiVersion: 'v1',
+  policyId: 'policy-1',
+  populationId: 'household-123',
+  populationType: 'household',
+  label: 'Household Simulation',
+  isCreated: true,
   status: 'pending',
   output: null,
 };
 
-// Mock Report Creation Payload
-export const mockReportCreationPayload: ReportCreationPayload = {
-  simulation_1_id: 1,
-  simulation_2_id: 2,
+export const mockSocietyWideSimulation: Simulation = {
+  id: 'sim-789',
+  countryId: 'us',
+  apiVersion: 'v1',
+  policyId: 'policy-2',
+  populationId: 'us',
+  populationType: 'geography',
+  label: 'Society-Wide Simulation',
+  isCreated: true,
+  status: 'pending',
+  output: null,
 };
 
-// Mock User Report Association
+// Mock UserReport Association
 export const mockUserReportAssociation: UserReport = {
-  userId: TEST_USER_ID,
+  id: TEST_USER_REPORT_ID,
+  userId: 'user-123',
   reportId: TEST_REPORT_ID_STRING,
+  countryId: TEST_COUNTRY_ID,
   label: TEST_LABEL,
   isCreated: true,
-  id: TEST_REPORT_ID_STRING,
-  createdAt: TEST_TIMESTAMP,
-  updatedAt: TEST_TIMESTAMP,
-};
-
-// Mock Create Association function
-export const createMockCreateAssociation = () => ({
-  mutateAsync: vi.fn().mockResolvedValue(mockUserReportAssociation),
-});
-
-// Query Client factory
-export const createMockQueryClient = () =>
-  new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  });
-
-// Console mocks
-export const setupConsoleMocks = () => {
-  const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-  const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-  return {
-    logSpy,
-    errorSpy,
-    restore: () => {
-      logSpy.mockRestore();
-      errorSpy.mockRestore();
-    },
-  };
+  createdAt: '2025-01-01T00:00:00Z',
 };
 
 // Error messages
 export const ERROR_MESSAGES = {
   CREATE_REPORT_FAILED: 'Failed to create report',
-  CREATE_ASSOCIATION_FAILED: 'Failed to create association',
-  API_ERROR: 'API Error',
-  ASSOCIATION_LOG: 'Report created but association failed:',
-} as const;
-
-// Console messages
-export const CONSOLE_MESSAGES = {
-  LABEL_LOG: 'Report label in useCreateReport:',
+  API_ERROR: 'API error occurred',
 } as const;

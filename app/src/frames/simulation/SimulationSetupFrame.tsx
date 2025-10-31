@@ -29,6 +29,16 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const policy = useSelector((state: RootState) => selectActivePolicy(state));
   const population = useSelector((state: RootState) => selectActivePopulation(state));
 
+  // Detect if we're in report mode for simulation 2 (population will be inherited)
+  const mode = useSelector((state: RootState) => state.report.mode);
+  const isReportMode = mode === 'report';
+  const isSimulation2InReport = isReportMode && currentPosition === 1;
+
+  console.log('[SimulationSetupFrame] currentPosition: ', currentPosition);
+  console.log('[SimulationSetupFrame] policy: ', policy);
+  console.log('[SimulationSetupFrame] population: ', population);
+  console.log('[SimulationSetupFrame] isSimulation2InReport: ', isSimulation2InReport);
+
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
 
   // Ensure we have a simulation at the current position
@@ -113,6 +123,12 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     if (!population || !population.isCreated) {
       return 'Add Population';
     }
+
+    // In simulation 2 of a report, indicate population is inherited from baseline
+    if (isSimulation2InReport) {
+      return `${population.label || 'Population'} (from baseline)`;
+    }
+
     if (population.label) {
       return population.label;
     }
@@ -130,6 +146,14 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
     if (!population || !population.isCreated) {
       return 'Select a geographic scope or specific household';
     }
+
+    // In simulation 2 of a report, indicate population is inherited from baseline
+    if (isSimulation2InReport) {
+      const popId = population.household?.id || population.geography?.id;
+      const popType = population.household ? 'Household' : 'Geographic';
+      return `${popType} population #${popId} • Inherited from baseline simulation`;
+    }
+
     if (population.label && population.household) {
       return `Population #${population.household.id}`;
     }

@@ -24,7 +24,7 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: String(mockReportMetadata.id),
+        id: String(mockReportMetadata.id),
         countryId: mockReportMetadata.country_id,
         apiVersion: mockReportMetadata.api_version,
         simulationIds: ['456', '789'],
@@ -42,7 +42,7 @@ describe('ReportAdapter', () => {
 
       // Then
       expect(result).toEqual({
-        reportId: String(mockReportMetadataSingleSimulation.id),
+        id: String(mockReportMetadataSingleSimulation.id),
         countryId: mockReportMetadataSingleSimulation.country_id,
         apiVersion: mockReportMetadataSingleSimulation.api_version,
         simulationIds: ['999'],

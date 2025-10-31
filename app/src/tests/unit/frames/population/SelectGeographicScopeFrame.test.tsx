@@ -3,6 +3,7 @@ import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import SelectGeographicScopeFrame from '@/frames/population/SelectGeographicScopeFrame';
@@ -15,34 +16,21 @@ import {
   TEST_COUNTRIES,
 } from '@/tests/fixtures/frames/populationMocks';
 
-// Mock the regions data
-vi.mock('@/mocks/regions', () => ({
-  us_regions: {
-    result: {
-      economy_options: {
-        region: [
-          { name: 'us', label: 'United States' },
-          { name: 'state/ca', label: 'California' },
-          { name: 'state/ny', label: 'New York' },
-          { name: 'state/tx', label: 'Texas' },
-        ],
-      },
-    },
-  },
-  uk_regions: {
-    result: {
-      economy_options: {
-        region: [
-          { name: 'uk', label: 'United Kingdom' },
-          { name: 'country/england', label: 'England' },
-          { name: 'country/scotland', label: 'Scotland' },
-          { name: 'constituency/london', label: 'London' },
-          { name: 'constituency/manchester', label: 'Manchester' },
-        ],
-      },
-    },
-  },
-}));
+// Mock region data for tests
+const mockUSRegions = [
+  { name: 'us', label: 'United States' },
+  { name: 'ca', label: 'California' },
+  { name: 'ny', label: 'New York' },
+  { name: 'tx', label: 'Texas' },
+];
+
+const mockUKRegions = [
+  { name: 'uk', label: 'United Kingdom' },
+  { name: 'country/england', label: 'England' },
+  { name: 'country/scotland', label: 'Scotland' },
+  { name: 'constituency/E14000639', label: 'Cities of London and Westminster' },
+  { name: 'constituency/E14000973', label: 'Uxbridge and South Ruislip' },
+];
 
 describe('SelectGeographicScopeFrame', () => {
   let store: any;
@@ -56,15 +44,18 @@ describe('SelectGeographicScopeFrame', () => {
     metadataState: Partial<any> = { currentCountry: TEST_COUNTRIES.US as string },
     props = mockFlowProps
   ) => {
+    const countryId = metadataState.currentCountry || TEST_COUNTRIES.US;
+    const regionData = countryId === TEST_COUNTRIES.UK ? mockUKRegions : mockUSRegions;
+
     const fullMetadataState = {
       loading: false,
       error: null,
-      currentCountry: TEST_COUNTRIES.US as string,
+      currentCountry: countryId as string,
       variables: {},
       parameters: {},
       entities: {},
       variableModules: {},
-      economyOptions: { region: [], time_period: [], datasets: [] },
+      economyOptions: { region: regionData, time_period: [], datasets: [] },
       currentLawId: 0,
       basicInputs: [],
       modelledPolicies: { core: {}, filtered: {} },
@@ -87,10 +78,17 @@ describe('SelectGeographicScopeFrame', () => {
       },
     });
 
+    // Use the country from metadata state for the router path
+    const countryForRouter = fullMetadataState.currentCountry || TEST_COUNTRIES.US;
+
     return render(
       <Provider store={store}>
         <MantineProvider>
-          <SelectGeographicScopeFrame {...props} />
+          <MemoryRouter initialEntries={[`/${countryForRouter}/populations`]}>
+            <Routes>
+              <Route path="/:countryId/*" element={<SelectGeographicScopeFrame {...props} />} />
+            </Routes>
+          </MemoryRouter>
         </MantineProvider>
       </Provider>
     );
@@ -143,30 +141,47 @@ describe('SelectGeographicScopeFrame', () => {
       });
     });
 
-    test('given UK country and state scope then shows constituency options', async () => {
+    test('given UK then shows UK-wide, Country, Parliamentary Constituency, Household options', async () => {
+      // Given
+      renderComponent({ currentCountry: TEST_COUNTRIES.UK });
+
+      // Then - Shows 4 UK options
+      expect(screen.getByLabelText('UK-wide')).toBeInTheDocument();
+      expect(screen.getByLabelText('Country')).toBeInTheDocument();
+      expect(screen.getByLabelText('Parliamentary Constituency')).toBeInTheDocument();
+      expect(screen.getByLabelText('Household')).toBeInTheDocument();
+    });
+
+    test('given UK Country selected then shows country dropdown', async () => {
       // Given
       renderComponent({ currentCountry: TEST_COUNTRIES.UK });
 
       // When
-      const stateRadio = screen.getByLabelText('State');
-      await user.click(stateRadio);
+      const countryRadio = screen.getByLabelText('Country');
+      await user.click(countryRadio);
 
-      // Then - Shows UK country selector
+      // Then - Shows country selector
       await waitFor(() => {
         expect(screen.getByPlaceholderText('Pick a country')).toBeInTheDocument();
       });
 
-      // Select a UK country
       const countryDropdown = screen.getByPlaceholderText('Pick a country');
       await user.click(countryDropdown);
       await waitFor(() => {
         expect(screen.getByText('England')).toBeInTheDocument();
         expect(screen.getByText('Scotland')).toBeInTheDocument();
       });
+    });
 
-      await user.click(screen.getByText('England'));
+    test('given UK Constituency selected then shows constituency dropdown', async () => {
+      // Given
+      renderComponent({ currentCountry: TEST_COUNTRIES.UK });
 
-      // Then shows constituency selector
+      // When
+      const constituencyRadio = screen.getByLabelText('Parliamentary Constituency');
+      await user.click(constituencyRadio);
+
+      // Then - Shows constituency selector
       await waitFor(() => {
         expect(screen.getByPlaceholderText('Pick a constituency')).toBeInTheDocument();
       });
@@ -175,8 +190,8 @@ describe('SelectGeographicScopeFrame', () => {
       await user.click(constituencyDropdown);
 
       await waitFor(() => {
-        expect(screen.getByText('London')).toBeInTheDocument();
-        expect(screen.getByText('Manchester')).toBeInTheDocument();
+        expect(screen.getByText('Cities of London and Westminster')).toBeInTheDocument();
+        expect(screen.getByText('Uxbridge and South Ruislip')).toBeInTheDocument();
       });
     });
 
@@ -275,7 +290,7 @@ describe('SelectGeographicScopeFrame', () => {
 
       // Then
       expect(props.onNavigate).not.toHaveBeenCalled();
-      expect(consoleSpy).toHaveBeenCalledWith('State selected but no region chosen');
+      expect(consoleSpy).toHaveBeenCalledWith('state selected but no region chosen');
 
       consoleSpy.mockRestore();
     });
@@ -302,7 +317,7 @@ describe('SelectGeographicScopeFrame', () => {
   });
 
   describe('Region value extraction', () => {
-    test('given region with slash prefix when submitted then extracts correct value', async () => {
+    test('given US state when submitted then uses value as-is', async () => {
       // Given
       const props = { ...mockFlowProps };
       renderComponent(undefined, props);
@@ -314,45 +329,61 @@ describe('SelectGeographicScopeFrame', () => {
       const dropdown = await screen.findByPlaceholderText('Pick a state');
       await user.click(dropdown);
 
-      // Select state/ca which should extract to 'ca'
       const california = await screen.findByText('California');
       await user.click(california);
 
       const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
-      // Then
+      // Then - US values used as-is
       const state = store.getState();
-      expect(state.population.populations[0]?.geography?.geographyId).toBe('ca'); // Not 'state/ca'
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('ca');
     });
 
-    test('given UK constituency when submitted then extracts constituency name', async () => {
+    test('given UK constituency when submitted then strips constituency prefix', async () => {
       // Given
       const props = { ...mockFlowProps };
       renderComponent({ currentCountry: TEST_COUNTRIES.UK }, props);
 
       // When
-      const stateRadio = screen.getByLabelText('State');
-      await user.click(stateRadio);
+      const constituencyRadio = screen.getByLabelText('Parliamentary Constituency');
+      await user.click(constituencyRadio);
 
-      // Select UK country
+      // Select constituency
+      const constituencyDropdown = await screen.findByPlaceholderText('Pick a constituency');
+      await user.click(constituencyDropdown);
+      const constituency = await screen.findByText('Cities of London and Westminster');
+      await user.click(constituency);
+
+      const submitButton = screen.getByRole('button', { name: /Select Scope/i });
+      await user.click(submitButton);
+
+      // Then - Should strip 'constituency/' prefix
+      const state = store.getState();
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('E14000639');
+    });
+
+    test('given UK country when submitted then strips country prefix', async () => {
+      // Given
+      const props = { ...mockFlowProps };
+      renderComponent({ currentCountry: TEST_COUNTRIES.UK }, props);
+
+      // When
+      const countryRadio = screen.getByLabelText('Country');
+      await user.click(countryRadio);
+
+      // Select country
       const countryDropdown = await screen.findByPlaceholderText('Pick a country');
       await user.click(countryDropdown);
       const england = await screen.findByText('England');
       await user.click(england);
 
-      // Select constituency
-      const constituencyDropdown = await screen.findByPlaceholderText('Pick a constituency');
-      await user.click(constituencyDropdown);
-      const london = await screen.findByText('London');
-      await user.click(london);
-
       const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
-      // Then
+      // Then - Should strip 'country/' prefix
       const state = store.getState();
-      expect(state.population.populations[0]?.geography?.geographyId).toBe('london'); // Not 'constituency/london'
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('england');
     });
   });
 

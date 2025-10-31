@@ -36,7 +36,7 @@ export const ReportCreationFlow: Flow = {
     ReportSubmitFrame: {
       component: 'ReportSubmitFrame',
       on: {
-        submit: '__return__', // Returns to parent flow after successful submission
+        submit: '__return__', // Report creation navigates directly via React Router
       },
     },
   },

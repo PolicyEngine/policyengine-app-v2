@@ -1,9 +1,9 @@
 import { render, screen } from '@test-utils';
-import HomePage from '@/pages/Home.page';
+import DashboardPage from '@/pages/Dashboard.page';
 
-describe('HomePage component', () => {
+describe('DashboardPage component', () => {
   it('exists', () => {
-    render(<HomePage />);
-    expect(screen.getByText('TODO: Home Page')).toBeInTheDocument();
+    render(<DashboardPage />);
+    expect(screen.getByText('TODO: Dashboard page')).toBeInTheDocument();
   });
 });

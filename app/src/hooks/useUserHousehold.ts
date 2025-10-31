@@ -1,41 +1,44 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { fetchHouseholdById } from '@/api/household';
-import { selectCurrentCountry } from '@/reducers/metadataReducer';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
-import { ApiHouseholdStore, SessionStorageHouseholdStore } from '../api/householdAssociation';
+import { ApiHouseholdStore, LocalStorageHouseholdStore } from '../api/householdAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { householdAssociationKeys, householdKeys } from '../libs/queryKeys';
 
 const apiHouseholdStore = new ApiHouseholdStore();
-const sessionHouseholdStore = new SessionStorageHouseholdStore();
+const localHouseholdStore = new LocalStorageHouseholdStore();
 
 export const useUserHouseholdStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiHouseholdStore : sessionHouseholdStore;
+  return isLoggedIn ? apiHouseholdStore : localHouseholdStore;
 };
 
 // This fetches only the user-household associations; see
 // 'useUserHouseholds' below to also fetch full household details
 export const useHouseholdAssociationsByUser = (userId: string) => {
   const store = useUserHouseholdStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   console.log('userId', userId);
   console.log('store', store);
   console.log('isLoggedIn', isLoggedIn);
   console.log('config', config);
 
-  console.log('householdAssociationKeys.byUser(userId)', householdAssociationKeys.byUser(userId));
-  console.log('store.findByUser(userId)', store.findByUser(userId));
+  console.log(
+    'householdAssociationKeys.byUser(userId, countryId)',
+    householdAssociationKeys.byUser(userId, countryId)
+  );
+  console.log('store.findByUser(userId, countryId)', store.findByUser(userId, countryId));
 
   return useQuery({
-    queryKey: householdAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: householdAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
@@ -43,7 +46,7 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
 export const useHouseholdAssociation = (userId: string, householdId: string) => {
   const store = useUserHouseholdStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: householdAssociationKeys.specific(userId, householdId),
@@ -68,7 +71,7 @@ export const useCreateHouseholdAssociation = () => {
 
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: householdAssociationKeys.byUser(newAssociation.userId),
+        queryKey: householdAssociationKeys.byUser(newAssociation.userId, newAssociation.countryId),
       });
       queryClient.invalidateQueries({
         queryKey: householdAssociationKeys.byHousehold(newAssociation.householdId),
@@ -154,8 +157,7 @@ export function isHouseholdMetadataWithAssociation(
 }
 
 export const useUserHouseholds = (userId: string) => {
-  // Get country from metadata state, fallback to 'us' if not available
-  const country = useSelector(selectCurrentCountry) || 'us';
+  const country = useCurrentCountry();
 
   // First, get the associations
   const {

@@ -1,13 +1,12 @@
 import { useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
-import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
-import { setFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
@@ -34,7 +33,7 @@ export default function PopulationsPage() {
     error: geographicError,
   } = useGeographicAssociationsByUser(userId);
 
-  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -45,39 +44,12 @@ export default function PopulationsPage() {
   const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
-    dispatch(setFlow(PopulationCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
     // TODO: Implement more filters modal/dropdown
     console.log('More filters clicked');
-  };
-
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-population':
-        // TODO: Implement view population functionality
-        console.log('View details:', recordId);
-        break;
-      case 'bookmark':
-        // TODO: Implement bookmark functionality
-        console.log('Bookmark population:', recordId);
-        break;
-      case 'edit':
-        // TODO: Implement edit functionality
-        console.log('Edit population:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share population:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete population:', recordId);
-        break;
-      default:
-        console.error('Unknown action:', action);
-    }
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -169,30 +141,6 @@ export default function PopulationsPage() {
         },
       ],
     },
-    {
-      key: 'connections',
-      header: 'Connections',
-      type: 'bullets',
-      items: [
-        {
-          textKey: 'text',
-          badgeKey: 'badge',
-        },
-      ],
-    },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View details', action: 'view-population' },
-        { label: 'Bookmark', action: 'bookmark' },
-        { label: 'Edit', action: 'edit' },
-        { label: 'Share', action: 'share' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
   ];
 
   // Transform household data
@@ -210,25 +158,13 @@ export default function PopulationsPage() {
             ? formatDate(
                 item.association.createdAt,
                 'short-month-day-year',
-                (item.household?.country_id || 'us') as (typeof countryIds)[number],
+                item.association.countryId,
                 true
               )
             : '',
         } as TextValue,
         details: {
           items: detailsItems,
-        } as BulletsValue,
-        connections: {
-          items: [
-            {
-              text: 'Sample simulation',
-              badge: '',
-            },
-            {
-              text: 'Sample report',
-              badge: '',
-            },
-          ],
         } as BulletsValue,
       };
     }) || [];
@@ -248,21 +184,13 @@ export default function PopulationsPage() {
             ? formatDate(
                 association.createdAt,
                 'short-month-day-year',
-                (association?.countryId || 'us') as (typeof countryIds)[number],
+                association?.countryId as (typeof countryIds)[number],
                 true
               )
             : '',
         } as TextValue,
         details: {
           items: detailsItems,
-        } as BulletsValue,
-        connections: {
-          items: [
-            {
-              text: 'Available for simulations',
-              badge: '',
-            },
-          ],
         } as BulletsValue,
       };
     }) || [];
@@ -273,7 +201,7 @@ export default function PopulationsPage() {
   return (
     <IngredientReadView
       ingredient="population"
-      title="Your populations"
+      title="Your saved populations"
       subtitle="Create a population configuration or find and save existing populations to use in your simulation configurations."
       onBuild={handleBuildPopulation}
       isLoading={isLoading}

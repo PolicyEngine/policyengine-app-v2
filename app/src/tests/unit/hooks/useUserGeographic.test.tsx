@@ -2,8 +2,7 @@ import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { SessionStorageGeographicStore } from '@/api/geographicAssociation';
-// Now import everything
+import { LocalStorageGeographicStore } from '@/api/geographicAssociation';
 import {
   useCreateGeographicAssociation,
   useGeographicAssociation,
@@ -20,6 +19,11 @@ import {
   TEST_LABELS,
 } from '@/tests/fixtures/hooks/hooksMocks';
 
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock the stores first
 vi.mock('@/api/geographicAssociation', () => {
   const mockStore = {
@@ -29,7 +33,7 @@ vi.mock('@/api/geographicAssociation', () => {
   };
   return {
     ApiGeographicStore: vi.fn(() => mockStore),
-    SessionStorageGeographicStore: vi.fn(() => mockStore),
+    LocalStorageGeographicStore: vi.fn(() => mockStore),
   };
 });
 
@@ -40,7 +44,7 @@ vi.mock('@/libs/queryConfig', () => ({
       staleTime: 5 * 60 * 1000,
       cacheTime: 10 * 60 * 1000,
     },
-    sessionStorage: {
+    localStorage: {
       staleTime: 0,
       cacheTime: 0,
     },
@@ -65,8 +69,8 @@ describe('useUserGeographic hooks', () => {
 
     // Get the mock store instance
     const mockStore =
-      (SessionStorageGeographicStore as any).mock.results[0]?.value ||
-      (SessionStorageGeographicStore as any)();
+      (LocalStorageGeographicStore as any).mock.results[0]?.value ||
+      (LocalStorageGeographicStore as any)();
 
     // Set default mock implementations
     mockStore.create.mockImplementation((input: any) => Promise.resolve(input));
@@ -79,7 +83,7 @@ describe('useUserGeographic hooks', () => {
   );
 
   describe('useUserGeographicStore', () => {
-    test('given user not logged in then returns session storage store', () => {
+    test('given user not logged in then returns local storage store', () => {
       // When
       const { result } = renderHook(() => useUserGeographicStore());
 
@@ -108,14 +112,14 @@ describe('useUserGeographic hooks', () => {
       });
 
       expect(result.current.data).toEqual(mockUserGeographicAssociationList);
-      const mockStore = (SessionStorageGeographicStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith(userId);
+      const mockStore = (LocalStorageGeographicStore as any)();
+      expect(mockStore.findByUser).toHaveBeenCalledWith(userId, 'us');
     });
 
     test('given store throws error when fetching then returns error state', async () => {
       // Given
       const error = new Error('Failed to fetch associations');
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       mockStore.findByUser.mockRejectedValue(error);
 
       // When
@@ -140,13 +144,13 @@ describe('useUserGeographic hooks', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      const mockStore = (SessionStorageGeographicStore as any)();
-      expect(mockStore.findByUser).toHaveBeenCalledWith('');
+      const mockStore = (LocalStorageGeographicStore as any)();
+      expect(mockStore.findByUser).toHaveBeenCalledWith('', 'us');
     });
 
     test('given user with no associations then returns empty array', async () => {
       // Given
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       mockStore.findByUser.mockResolvedValue([]);
 
       // When
@@ -180,13 +184,13 @@ describe('useUserGeographic hooks', () => {
       });
 
       expect(result.current.data).toEqual(mockUserGeographicAssociation);
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       expect(mockStore.findById).toHaveBeenCalledWith(userId, geographyId);
     });
 
     test('given non-existent association when fetching then returns null', async () => {
       // Given
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       mockStore.findById.mockResolvedValue(null);
 
       // When
@@ -206,7 +210,7 @@ describe('useUserGeographic hooks', () => {
     test('given error in fetching then returns error state', async () => {
       // Given
       const error = new Error('Network error');
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       mockStore.findById.mockRejectedValue(error);
 
       // When
@@ -247,7 +251,7 @@ describe('useUserGeographic hooks', () => {
       });
 
       // Verify store was called
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       expect(mockStore.create).toHaveBeenCalledWith({ ...newAssociation, type: 'geography' });
 
       // Verify cache invalidation
@@ -274,7 +278,7 @@ describe('useUserGeographic hooks', () => {
         countryId: GEO_CONSTANTS.COUNTRY_US,
       } as const;
 
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       mockStore.create.mockResolvedValue(subnationalAssociation);
       const { result } = renderHook(() => useCreateGeographicAssociation(), { wrapper });
 
@@ -291,7 +295,7 @@ describe('useUserGeographic hooks', () => {
     test('given creation fails when creating then returns error', async () => {
       // Given
       const error = new Error('Creation failed');
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       mockStore.create.mockRejectedValue(error);
       const { result } = renderHook(() => useCreateGeographicAssociation(), { wrapper });
 
@@ -334,7 +338,7 @@ describe('useUserGeographic hooks', () => {
       } as const;
 
       // When
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       await result.current.mutateAsync(association1);
       mockStore.create.mockResolvedValue({
         ...mockUserGeographicAssociation,
@@ -349,7 +353,7 @@ describe('useUserGeographic hooks', () => {
   });
 
   describe('query configuration', () => {
-    test('given session storage mode then uses session storage config', async () => {
+    test('given local storage mode then uses local storage config', async () => {
       // When
       const { result } = renderHook(() => useGeographicAssociationsByUser(TEST_IDS.USER_ID), {
         wrapper,
@@ -360,7 +364,7 @@ describe('useUserGeographic hooks', () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      // Session storage should have no stale time
+      // Local storage should have no stale time
       const queryState = queryClient.getQueryState(
         QUERY_KEY_PATTERNS.GEO_ASSOCIATION_BY_USER(TEST_IDS.USER_ID)
       );
@@ -381,7 +385,7 @@ describe('useUserGeographic hooks', () => {
       expect(result.current.data).toEqual(mockUserGeographicAssociationList);
 
       // When
-      const mockStore = (SessionStorageGeographicStore as any)();
+      const mockStore = (LocalStorageGeographicStore as any)();
       mockStore.findByUser.mockResolvedValue([]);
 
       // Force refetch

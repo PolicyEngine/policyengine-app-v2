@@ -4,7 +4,7 @@ import { UserSimulation } from '../types/ingredients/UserSimulation';
 
 export interface UserSimulationStore {
   create: (simulation: Omit<UserSimulation, 'id' | 'createdAt'>) => Promise<UserSimulation>;
-  findByUser: (userId: string) => Promise<UserSimulation[]>;
+  findByUser: (userId: string, countryId?: string) => Promise<UserSimulation[]>;
   findById: (userId: string, simulationId: string) => Promise<UserSimulation | null>;
   // The below are not yet implemented, but keeping for future use
   // update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation>;
@@ -33,20 +33,29 @@ export class ApiSimulationStore implements UserSimulationStore {
     return UserSimulationAdapter.fromApiResponse(apiResponse);
   }
 
-  async findByUser(userId: string): Promise<UserSimulation[]> {
-    const response = await fetch(`${this.BASE_URL}/user/${userId}`);
+  async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
+    const response = await fetch(`${this.BASE_URL}/user/${userId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
     if (!response.ok) {
       throw new Error('Failed to fetch user associations');
     }
 
     const apiResponses = await response.json();
 
-    // Convert each API response to UserSimulation
-    return apiResponses.map((apiData: any) => UserSimulationAdapter.fromApiResponse(apiData));
+    // Convert each API response to UserSimulation and filter by country if specified
+    const simulations = apiResponses.map((apiData: any) =>
+      UserSimulationAdapter.fromApiResponse(apiData)
+    );
+    return countryId
+      ? simulations.filter((s: UserSimulation) => s.countryId === countryId)
+      : simulations;
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
-    const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`);
+    const response = await fetch(`${this.BASE_URL}/${userId}/${simulationId}`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
 
     if (response.status === 404) {
       return null;
@@ -91,27 +100,25 @@ export class ApiSimulationStore implements UserSimulationStore {
   */
 }
 
-export class SessionStorageSimulationStore implements UserSimulationStore {
+export class LocalStorageSimulationStore implements UserSimulationStore {
   private readonly STORAGE_KEY = 'user-simulation-associations';
 
   async create(simulation: Omit<UserSimulation, 'id' | 'createdAt'>): Promise<UserSimulation> {
+    // Generate a unique ID for local storage
+    // Format: "sus-[short-timestamp][random]"
+    // Use base36 encoding for compactness
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).substring(2, 6);
+    const uniqueId = `sus-${timestamp}${random}`;
+
     const newSimulation: UserSimulation = {
       ...simulation,
-      id: simulation.simulationId, // Use simulationId as the ID
+      id: uniqueId,
       createdAt: new Date().toISOString(),
       isCreated: true,
     };
 
     const simulations = this.getStoredSimulations();
-
-    // Check for duplicates
-    const exists = simulations.some(
-      (s) => s.userId === simulation.userId && s.simulationId === simulation.simulationId
-    );
-
-    if (exists) {
-      throw new Error('Association already exists');
-    }
 
     const updatedSimulations = [...simulations, newSimulation];
     this.setStoredSimulations(updatedSimulations);
@@ -119,9 +126,11 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
     return newSimulation;
   }
 
-  async findByUser(userId: string): Promise<UserSimulation[]> {
+  async findByUser(userId: string, countryId?: string): Promise<UserSimulation[]> {
     const simulations = this.getStoredSimulations();
-    return simulations.filter((s) => s.userId === userId);
+    return simulations.filter(
+      (s) => s.userId === userId && (!countryId || s.countryId === countryId)
+    );
   }
 
   async findById(userId: string, simulationId: string): Promise<UserSimulation | null> {
@@ -131,7 +140,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
 
   private getStoredSimulations(): UserSimulation[] {
     try {
-      const stored = sessionStorage.getItem(this.STORAGE_KEY);
+      const stored = localStorage.getItem(this.STORAGE_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch {
       return [];
@@ -139,7 +148,7 @@ export class SessionStorageSimulationStore implements UserSimulationStore {
   }
 
   private setStoredSimulations(simulations: UserSimulation[]): void {
-    sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(simulations));
+    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(simulations));
   }
 
   // Not yet implemented, but keeping for future use

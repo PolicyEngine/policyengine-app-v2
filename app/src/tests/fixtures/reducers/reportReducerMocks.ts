@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { ReportOutput } from '@/types/ingredients/Report';
 import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyWideUS';
 
@@ -7,8 +8,8 @@ export const TEST_REPORT_ID_2 = '456';
 export const TEST_SIMULATION_ID_1 = '1';
 export const TEST_SIMULATION_ID_2 = '2';
 export const TEST_SIMULATION_ID_3 = '3';
-export const TEST_TIMESTAMP_CREATED = '2024-01-15T10:00:00.000Z';
-export const TEST_TIMESTAMP_UPDATED = '2024-01-15T10:30:00.000Z';
+export const TEST_TIMESTAMP_CREATED = `${CURRENT_YEAR}-01-15T10:00:00.000Z`;
+export const TEST_TIMESTAMP_UPDATED = `${CURRENT_YEAR}-01-15T10:30:00.000Z`;
 
 // Create a minimal valid US report output
 export const MOCK_REPORT_OUTPUT: ReportOutputSocietyWideUS = {
@@ -199,7 +200,7 @@ export const MOCK_REPORT_OUTPUT_ALTERNATIVE: ReportOutputSocietyWideUS = {
 
 // Initial state
 export const EXPECTED_INITIAL_STATE = {
-  reportId: '',
+  id: '',
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: null,
@@ -214,7 +215,7 @@ export const EXPECTED_INITIAL_STATE = {
 
 // Mock states for different scenarios
 export const MOCK_EMPTY_REPORT = {
-  reportId: '',
+  id: '',
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: null,
@@ -228,7 +229,7 @@ export const MOCK_EMPTY_REPORT = {
 };
 
 export const MOCK_PENDING_REPORT = {
-  reportId: TEST_REPORT_ID_1,
+  id: TEST_REPORT_ID_1,
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
@@ -242,7 +243,7 @@ export const MOCK_PENDING_REPORT = {
 };
 
 export const MOCK_COMPLETE_REPORT = {
-  reportId: TEST_REPORT_ID_1,
+  id: TEST_REPORT_ID_1,
   label: 'Test Report',
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
@@ -256,7 +257,7 @@ export const MOCK_COMPLETE_REPORT = {
 };
 
 export const MOCK_ERROR_REPORT = {
-  reportId: TEST_REPORT_ID_2,
+  id: TEST_REPORT_ID_2,
   label: null,
   countryId: 'uk' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v2',
@@ -271,7 +272,7 @@ export const MOCK_ERROR_REPORT = {
 
 // Helper functions for creating test states
 export const createMockReportState = (overrides?: Partial<any>) => ({
-  reportId: TEST_REPORT_ID_1,
+  id: TEST_REPORT_ID_1,
   label: null,
   countryId: 'us' as 'us' | 'uk' | 'ca' | 'ng' | 'il',
   apiVersion: 'v1',
@@ -287,7 +288,7 @@ export const createMockReportState = (overrides?: Partial<any>) => ({
 
 // Assertion helpers
 export const expectReportId = (state: any, expectedId: string) => {
-  expect(state.reportId).toBe(expectedId);
+  expect(state.id).toBe(expectedId);
 };
 
 export const expectSimulationIds = (state: any, expectedIds: string[]) => {

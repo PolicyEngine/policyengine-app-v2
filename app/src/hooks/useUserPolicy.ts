@@ -1,33 +1,33 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { fetchPolicyById } from '@/api/policy';
-import { selectCurrentCountry } from '@/reducers/metadataReducer';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
-import { ApiPolicyStore, SessionStoragePolicyStore } from '../api/policyAssociation';
+import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
 import { UserPolicy } from '../types/ingredients/UserPolicy';
 
 const apiPolicyStore = new ApiPolicyStore();
-const sessionPolicyStore = new SessionStoragePolicyStore();
+const localPolicyStore = new LocalStoragePolicyStore();
 
 export const useUserPolicyStore = () => {
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  return isLoggedIn ? apiPolicyStore : sessionPolicyStore;
+  return isLoggedIn ? apiPolicyStore : localPolicyStore;
 };
 
 // This fetches only the user-policy associations; see
 // 'useUserPolicies' below to also fetch full policy details
 export const usePolicyAssociationsByUser = (userId: string) => {
   const store = useUserPolicyStore();
+  const countryId = useCurrentCountry();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
-    queryKey: policyAssociationKeys.byUser(userId),
-    queryFn: () => store.findByUser(userId),
+    queryKey: policyAssociationKeys.byUser(userId, countryId),
+    queryFn: () => store.findByUser(userId, countryId),
     ...config,
   });
 };
@@ -35,7 +35,7 @@ export const usePolicyAssociationsByUser = (userId: string) => {
 export const usePolicyAssociation = (userId: string, policyId: string) => {
   const store = useUserPolicyStore();
   const isLoggedIn = false; // TODO: Replace with actual auth check in future
-  const config = isLoggedIn ? queryConfig.api : queryConfig.sessionStorage;
+  const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
   return useQuery({
     queryKey: policyAssociationKeys.specific(userId, policyId),
@@ -53,7 +53,10 @@ export const useCreatePolicyAssociation = () => {
     onSuccess: (newAssociation) => {
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(newAssociation.userId.toString()),
+        queryKey: policyAssociationKeys.byUser(
+          newAssociation.userId.toString(),
+          newAssociation.countryId
+        ),
       });
       queryClient.invalidateQueries({
         queryKey: policyAssociationKeys.byPolicy(newAssociation.policyId.toString()),
@@ -84,7 +87,7 @@ export const useUpdateAssociation = () => {
       updates: Partial<UserPolicyAssociation>;
     }) => store.update(userId, policyId, updates),
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(updatedAssociation.userId) });
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId) });
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(updatedAssociation.policyId) });
 
       queryClient.setQueryData(
@@ -103,10 +106,10 @@ export const useDeleteAssociation = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, policyId }: { userId: string; policyId: string }) =>
+    mutationFn: ({ userId, policyId }: { userId: string; policyId: string; countryId?: string }) =>
       store.delete(userId, policyId),
-    onSuccess: (_, { userId, policyId }) => {
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId) });
+    onSuccess: (_, { userId, policyId, countryId }) => {
+      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(userId, countryId) });
       queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(policyId) });
 
       queryClient.setQueryData(
@@ -142,10 +145,9 @@ export function isPolicyMetadataWithAssociation(
 }
 
 export const useUserPolicies = (userId: string) => {
-  // Get country from metadata state, fallback to 'us' if not available
-  const country = useSelector(selectCurrentCountry) || 'us';
+  const country = useCurrentCountry();
 
-  // First, get the associations
+  // First, get the associations (filtered by current country)
   const {
     data: associations,
     isLoading: associationsLoading,

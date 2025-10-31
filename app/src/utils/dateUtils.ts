@@ -11,15 +11,46 @@ export type DateFormatType =
   | 'year-only'; // e.g., "2023"
 
 /**
+ * Convert a Date object or ISO string to YYYY-MM-DD format
+ * Handles both Date objects from Mantine pickers and ISO strings
+ * @param value - Date object, ISO string, or null
+ * @returns ISO date string (YYYY-MM-DD) or empty string if null
+ */
+export function toISODateString(value: Date | string | null): string {
+  if (!value) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  } // Already ISO string
+  return value.toISOString().split('T')[0];
+}
+
+/**
+ * Convert ISO string to Date object for Mantine pickers
+ * Returns undefined if empty string (Mantine pickers expect undefined, not null)
+ * @param isoString - ISO date string (YYYY-MM-DD)
+ * @returns Date object or undefined
+ */
+export function fromISODateString(isoString: string): Date | undefined {
+  if (!isoString) {
+    return undefined;
+  }
+  return new Date(isoString);
+}
+
+/**
  * Formats a date string using Intl.DateTimeFormat with UTC timezone
  * @param dateStr - ISO date string (e.g., "2023-01-01")
  * @param formatType - The desired format type
+ * @param countryId - Country ID for locale formatting (must be explicitly provided)
+ * @param stripTime - Whether to strip time component
  * @returns Formatted date string
  */
 export function formatDate(
   dateStr: string,
   formatType: DateFormatType,
-  countryId: (typeof countryIds)[number] = 'us',
+  countryId: (typeof countryIds)[number],
   stripTime: boolean = false
 ): string {
   console.log('Formatting date:', dateStr, 'with format type:', formatType);

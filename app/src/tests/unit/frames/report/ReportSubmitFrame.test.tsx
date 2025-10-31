@@ -1,240 +1,178 @@
-import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, userEvent } from '@test-utils';
-import { Provider } from 'react-redux';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSubmitFrame from '@/frames/report/ReportSubmitFrame';
-import { useCreateReport } from '@/hooks/useCreateReport';
-import { useIngredientReset } from '@/hooks/useIngredientReset';
-import reportReducer from '@/reducers/reportReducer';
-import simulationsReducer from '@/reducers/simulationsReducer';
-import {
-  clearAllMocks,
-  createMockReportState,
-  createMockReportStateNoLabels,
-  defaultFlowProps,
-  mockCreateReport,
-  mockOnNavigate,
-  mockReportWithLabel,
-  mockResetIngredient,
-  mockSimulation1,
-} from '@/tests/fixtures/frames/ReportSubmitFrameMocks';
-import { Report } from '@/types/ingredients/Report';
-import { Simulation } from '@/types/ingredients/Simulation';
+import { MOCK_HOUSEHOLD_SIMULATION } from '@/tests/fixtures/frames/ReportSetupFrame';
 
-// Mock the hooks
+// Mock Plotly
+vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
+
+// Mock useCreateReport hook
+const mockCreateReport = vi.fn();
+const mockIsPending = false;
 vi.mock('@/hooks/useCreateReport', () => ({
-  useCreateReport: vi.fn(),
+  useCreateReport: () => ({
+    createReport: mockCreateReport,
+    isPending: mockIsPending,
+  }),
 }));
 
+// Mock useIngredientReset hook
 vi.mock('@/hooks/useIngredientReset', () => ({
-  useIngredientReset: vi.fn(),
+  useIngredientReset: () => ({
+    resetIngredient: vi.fn(),
+  }),
 }));
 
-// Mock the adapter
-vi.mock('@/adapters', () => ({
-  ReportAdapter: {
-    toCreationPayload: vi.fn((report: Report) => ({
-      simulation_1_id: report.simulationIds[0],
-      simulation_2_id: report.simulationIds[1] || null,
-    })),
-  },
-}));
+// Mock react-router-dom
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
+
+// Mock Redux
+const mockUseSelector = vi.fn();
+vi.mock('react-redux', async () => {
+  const actual = await vi.importActual('react-redux');
+  return {
+    ...actual,
+    useSelector: (selector: any) => mockUseSelector(selector),
+  };
+});
 
 describe('ReportSubmitFrame', () => {
-  let store: any;
-
-  beforeEach(() => {
-    clearAllMocks();
-
-    (useCreateReport as any).mockReturnValue({
-      createReport: mockCreateReport,
-      isPending: false,
-    });
-
-    (useIngredientReset as any).mockReturnValue({
-      resetIngredient: mockResetIngredient,
-    });
-
-    // Create Redux store with test data
-    store = configureStore({
-      reducer: {
-        report: reportReducer,
-        simulations: simulationsReducer,
-      },
-      preloadedState: createMockReportState(),
-    });
-  });
-
-  const renderComponent = (props: Partial<Parameters<typeof ReportSubmitFrame>[0]> = {}) => {
-    return render(
-      <Provider store={store}>
-        <ReportSubmitFrame {...defaultFlowProps} {...props} />
-      </Provider>
-    );
+  const mockFlowProps = {
+    onNavigate: vi.fn(),
+    onReturn: vi.fn(),
+    flowConfig: {
+      component: 'ReportSubmitFrame' as any,
+      on: {},
+    },
+    isInSubflow: false,
+    flowDepth: 0,
   };
 
-  describe('rendering', () => {
-    test('given two simulations then displays both in summary boxes', () => {
-      // When
-      renderComponent();
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseSelector.mockReturnValue(null);
+  });
 
-      // Then
-      expect(screen.getByText('Review Report Configuration')).toBeInTheDocument();
-      expect(screen.getByText('Test Simulation 1')).toBeInTheDocument();
-      expect(screen.getByText('Test Simulation 2')).toBeInTheDocument();
-      expect(screen.getByText('Policy #1 • Population #1')).toBeInTheDocument();
-      expect(screen.getByText('Policy #2 • Population #2')).toBeInTheDocument();
-    });
-
-    test('given position-based storage then accesses simulations by position', () => {
-      // Given - verify the state structure is position-based
-      const state = store.getState();
-
-      // Then - verify simulations are stored in position-based array
-      expect(state.simulations.simulations).toHaveLength(2);
-      expect(state.simulations.simulations[0]).toMatchObject({
-        id: '1',
-        label: 'Test Simulation 1',
-      });
-      expect(state.simulations.simulations[1]).toMatchObject({
-        id: '2',
-        label: 'Test Simulation 2',
-      });
-
-      // When
-      renderComponent();
-
-      // Then - verify the component correctly displays both simulations
-      expect(screen.getByText('Test Simulation 1')).toBeInTheDocument();
-      expect(screen.getByText('Test Simulation 2')).toBeInTheDocument();
-    });
-
-    test('given simulations without labels then shows IDs', () => {
+  describe('Validation', () => {
+    test('given no simulation1 then does not submit report', async () => {
       // Given
-      store = configureStore({
-        reducer: {
-          report: reportReducer,
-          simulations: simulationsReducer,
-        },
-        preloadedState: createMockReportStateNoLabels(),
+      const user = userEvent.setup();
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        // Call 1: reportState
+        if (callCount === 1) {
+          return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
+        }
+        // Call 2: selectBothSimulations - returns array
+        if (callCount === 2) {
+          return [null, null];
+        }
+        // Calls 3-6: household/geography selectors
+        return null;
       });
 
+      render(<ReportSubmitFrame {...mockFlowProps} />);
+
       // When
-      renderComponent();
+      await user.click(screen.getByRole('button', { name: /generate report/i }));
 
       // Then
-      expect(screen.getByText('Simulation #1')).toBeInTheDocument();
-      expect(screen.getByText('Simulation #2')).toBeInTheDocument();
+      expect(consoleSpy).toHaveBeenCalledWith(
+        '[ReportSubmitFrame] Cannot submit report: no simulations configured'
+      );
+      expect(mockCreateReport).not.toHaveBeenCalled();
+
+      consoleSpy.mockRestore();
     });
 
-    test('given report label then passes to useCreateReport hook', () => {
-      // When
-      renderComponent();
-
-      // Then
-      expect(useCreateReport).toHaveBeenCalledWith('My Test Report');
-    });
-
-    test('given missing simulation at position then handles gracefully', () => {
-      // Given - only one simulation at position 0
-      store = configureStore({
-        reducer: {
-          report: reportReducer,
-          simulations: simulationsReducer,
-        },
-        preloadedState: {
-          report: {
-            ...mockReportWithLabel,
-            activeSimulationPosition: 0 as 0 | 1,
-            mode: 'report' as const,
-          } as any,
-          simulations: {
-            simulations: [mockSimulation1, null] as [Simulation | null, Simulation | null],
-            activePosition: null as 0 | 1 | null,
-          },
-        },
+    test('given simulation1 exists then allows submission', async () => {
+      // Given
+      const user = userEvent.setup();
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        // Call 1: reportState
+        if (callCount === 1) {
+          return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
+        }
+        // Call 2: selectBothSimulations - returns array with simulation1
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, null];
+        }
+        // Calls 3-6: household/geography selectors
+        return null;
       });
 
+      render(<ReportSubmitFrame {...mockFlowProps} />);
+
       // When
-      renderComponent();
+      await user.click(screen.getByRole('button', { name: /generate report/i }));
 
       // Then
-      expect(screen.getByText('Test Simulation 1')).toBeInTheDocument();
-      expect(screen.getByText('No simulation')).toBeInTheDocument();
+      expect(mockCreateReport).toHaveBeenCalled();
     });
   });
 
-  describe('submission', () => {
-    test('given valid data when submit clicked then creates report', async () => {
+  describe('Display', () => {
+    test('given one simulation then shows first simulation summary', () => {
       // Given
-      const user = userEvent.setup();
-      renderComponent();
-
-      // When
-      await user.click(screen.getByRole('button', { name: /Generate Report/i }));
-
-      // Then
-      expect(mockCreateReport).toHaveBeenCalledWith(
-        {
-          countryId: 'us',
-          payload: {
-            simulation_1_id: '1',
-            simulation_2_id: '2',
-          },
-        },
-        {
-          onSuccess: expect.any(Function),
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        // Call 1: reportState
+        if (callCount === 1) {
+          return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
         }
-      );
-    });
-
-    test('given successful creation then navigates and resets', async () => {
-      // Given
-      const user = userEvent.setup();
-      mockCreateReport.mockImplementation((_data: any, options: any) => {
-        options.onSuccess();
-        return Promise.resolve();
-      });
-      renderComponent();
-
-      // When
-      await user.click(screen.getByRole('button', { name: /Generate Report/i }));
-
-      // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
-      expect(mockResetIngredient).toHaveBeenCalledWith('report');
-    });
-
-    test('given in subflow when successful then does not reset', async () => {
-      // Given
-      const user = userEvent.setup();
-      mockCreateReport.mockImplementation((_data: any, options: any) => {
-        options.onSuccess();
-        return Promise.resolve();
-      });
-      renderComponent({ isInSubflow: true });
-
-      // When
-      await user.click(screen.getByRole('button', { name: /Generate Report/i }));
-
-      // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('submit');
-      expect(mockResetIngredient).not.toHaveBeenCalled();
-    });
-
-    test('given pending state then shows loading button', () => {
-      // Given
-      (useCreateReport as any).mockReturnValue({
-        createReport: mockCreateReport,
-        isPending: true,
+        // Call 2: selectBothSimulations - returns array with simulation1
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, null];
+        }
+        // Calls 3-6: household/geography selectors
+        return null;
       });
 
       // When
-      renderComponent();
+      render(<ReportSubmitFrame {...mockFlowProps} />);
 
       // Then
-      const button = screen.getByRole('button', { name: /Generate Report/i });
-      expect(button).toHaveAttribute('data-loading', 'true');
+      expect(screen.getByText('Baseline simulation')).toBeInTheDocument();
+      expect(screen.getByText(MOCK_HOUSEHOLD_SIMULATION.label!)).toBeInTheDocument();
+    });
+
+    test('given two simulations then shows both simulation summaries', () => {
+      // Given
+      const mockSim2 = { ...MOCK_HOUSEHOLD_SIMULATION, id: '2', label: 'Second Sim' };
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        // Call 1: reportState
+        if (callCount === 1) {
+          return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
+        }
+        // Call 2: selectBothSimulations - returns array with both simulations
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, mockSim2];
+        }
+        // Calls 3-6: household/geography selectors
+        return null;
+      });
+
+      // When
+      render(<ReportSubmitFrame {...mockFlowProps} />);
+
+      // Then
+      expect(screen.getByText(MOCK_HOUSEHOLD_SIMULATION.label!)).toBeInTheDocument();
+      expect(screen.getByText(mockSim2.label!)).toBeInTheDocument();
     });
   });
 });

@@ -84,7 +84,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
 
       <TextInput
         label="Population Label"
-        placeholder="e.g., My Family 2024, California Low Income, UK National Average"
+        placeholder="e.g., My Family 2025, California Low Income, UK National Average"
         value={label}
         onChange={(event) => {
           setLabel(event.currentTarget.value);

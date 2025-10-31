@@ -1,0 +1,1 @@
+export { SocietyWideCalcStrategy } from './SocietyWideCalcStrategy';

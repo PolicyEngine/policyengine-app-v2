@@ -1,56 +1,44 @@
-import { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import {
+  BulletsValue,
+  ColumnConfig,
+  IngredientRecord,
+  LinkValue,
+  TextValue,
+} from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
+import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
+import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
-import { ReportCreationFlow } from '@/flows/reportCreationFlow';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReports } from '@/hooks/useUserReports';
-import { countryIds } from '@/libs/countries';
-import { setFlow } from '@/reducers/flowReducer';
+import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function ReportsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
-  const dispatch = useDispatch();
+  const cacheMonitor = useCacheMonitor();
+
+  // Log cache state when component mounts and when data changes
+  useEffect(() => {
+    console.log('📊 [ReportsPage] Component mounted/updated');
+    cacheMonitor.getStats();
+  }, [data]);
+  const navigate = useNavigate();
+  const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildReport = () => {
-    dispatch(setFlow(ReportCreationFlow));
+    navigate('create');
   };
 
   const handleMoreFilters = () => {
     // TODO: Implement more filters modal/dropdown
     console.log('More filters clicked');
-  };
-
-  const handleMenuAction = (action: string, recordId: string) => {
-    switch (action) {
-      case 'view-output':
-        // TODO: Implement view output functionality
-        console.log('View output:', recordId);
-        break;
-      case 'export':
-        // TODO: Implement export functionality
-        console.log('Export report:', recordId);
-        break;
-      case 'share':
-        // TODO: Implement share functionality
-        console.log('Share report:', recordId);
-        break;
-      case 'duplicate':
-        // TODO: Implement duplicate functionality
-        console.log('Duplicate report:', recordId);
-        break;
-      case 'delete':
-        // TODO: Implement delete functionality
-        console.log('Delete report:', recordId);
-        break;
-      default:
-        console.log('Unknown action:', action);
-    }
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -61,17 +49,12 @@ export default function ReportsPage() {
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
-  // Helper function to format status text
-  const formatStatus = (status: string): string => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
   // Define column configurations for reports
   const reportColumns: ColumnConfig[] = [
     {
       key: 'report',
       header: 'Report',
-      type: 'text',
+      type: 'link',
     },
     {
       key: 'dateCreated',
@@ -99,61 +82,67 @@ export default function ReportsPage() {
       header: 'Output Type',
       type: 'text',
     },
-    {
-      key: 'actions',
-      header: '',
-      type: 'split-menu',
-      actions: [
-        { label: 'View Output', action: 'view-output' },
-        { label: 'Export', action: 'export' },
-        { label: 'Share', action: 'share' },
-        { label: 'Duplicate', action: 'duplicate' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
-      onAction: handleMenuAction,
-    },
   ];
 
+  console.log('User Reports Data:', data);
+
   // Transform the data to match the new structure
-  const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.userReport.reportId,
-      report: {
-        text: item.userReport.label || `Report #${item.userReport.reportId}`,
-      } as TextValue,
-      dateCreated: {
-        text: item.userReport.createdAt
-          ? formatDate(
-              item.userReport.createdAt,
-              'short-month-day-year',
-              (item.report?.countryId || 'us') as (typeof countryIds)[number],
-              true
-            )
-          : '',
-      } as TextValue,
-      status: {
-        text: formatStatus(item.report?.status || 'pending'),
-      } as TextValue,
-      simulations: {
-        items: item.simulations?.map((sim, index) => ({
-          text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
-          badge: item.userPolicies?.find((p) => p.policyId === sim.policyId)?.label ? 1 : 0,
-        })) || [
-          {
-            text: 'No simulations',
-            badge: 0,
+  // Use useMemo to prevent unnecessary re-creation of data objects
+  const transformedData: IngredientRecord[] = useMemo(
+    () =>
+      data?.map((item) => {
+        const simulationIds =
+          (item.simulations?.map((s) => s.id).filter(Boolean) as string[]) || [];
+        const isHouseholdReport = item.simulations?.[0]?.populationType === 'household';
+
+        return {
+          id: item.userReport.id,
+          report: {
+            text: item.userReport.label || `Report #${item.userReport.reportId}`,
+            url: `/${countryId}/report-output/${item.userReport.id}`,
+          } as LinkValue,
+          dateCreated: {
+            text: item.userReport.createdAt
+              ? formatDate(
+                  item.userReport.createdAt,
+                  'short-month-day-year',
+                  item.userReport.countryId,
+                  true
+                )
+              : '',
+          } as TextValue,
+          status: {
+            custom: isHouseholdReport ? (
+              <MultiSimOutputTypeCell
+                simulationIds={simulationIds}
+                report={item.report}
+                simulations={item.simulations}
+              />
+            ) : (
+              <ReportOutputTypeCell reportId={item.userReport.reportId} report={item.report} />
+            ),
           },
-        ],
-      } as BulletsValue,
-      outputType: {
-        text: item.report?.output ? 'Society-wide' : 'Not generated',
-      } as TextValue,
-    })) || [];
+          simulations: {
+            items: item.simulations?.map((sim, index) => ({
+              text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
+            })) || [
+              {
+                text: 'No simulations',
+              },
+            ],
+          } as BulletsValue,
+          outputType: {
+            text: isHouseholdReport ? 'Household' : 'Society-wide',
+          } as TextValue,
+        };
+      }) || [],
+    [data, countryId]
+  );
 
   return (
     <IngredientReadView
       ingredient="report"
-      title="Reports"
+      title="Your saved reports"
       subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
       onBuild={handleBuildReport}
       isLoading={isLoading}

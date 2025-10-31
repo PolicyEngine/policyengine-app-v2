@@ -74,7 +74,11 @@ export interface BulletsValue {
   items: BulletValue[];
 }
 
-export type ColumnValue = TextValue | LinkValue | BulletsValue | null;
+export interface CustomValue {
+  custom: React.ReactNode;
+}
+
+export type ColumnValue = TextValue | LinkValue | BulletsValue | CustomValue | null;
 
 // Record interface
 export interface IngredientRecord {

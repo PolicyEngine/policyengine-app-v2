@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
 import { MetadataApiPayload, MetadataState } from '@/types/metadata';
 
@@ -52,7 +53,7 @@ export const MOCK_PARAMETERS = {
     parameter: TEST_PARAMETER_KEY,
     label: TEST_PARAMETER_LABEL,
     unit: 'currency-USD',
-    values: { '2024': 0.2 },
+    values: { [CURRENT_YEAR]: 0.2 },
     economy: true,
     household: false,
   },
@@ -60,7 +61,7 @@ export const MOCK_PARAMETERS = {
     parameter: 'gov.benefit.child_benefit',
     label: 'Child Benefit',
     unit: 'currency-USD',
-    values: { '2024': 1000 },
+    values: { [CURRENT_YEAR]: 1000 },
     economy: false,
     household: true,
   },
@@ -102,7 +103,7 @@ export const MOCK_ECONOMY_OPTIONS = {
   time_period: [
     { name: 2022, label: '2022' },
     { name: 2023, label: '2023' },
-    { name: 2024, label: '2024' },
+    { name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR },
   ],
   datasets: [
     { name: 'cps_2022', label: 'CPS 2022', title: 'Current Population Survey 2022', default: true },

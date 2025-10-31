@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 
 export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
@@ -5,11 +6,12 @@ export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
   id: '123',
   householdId: '123',
   userId: 'user-456',
+  countryId: 'us',
   label: 'My Test Household',
-  createdAt: '2024-01-15T10:00:00Z',
-  updatedAt: '2024-01-15T10:00:00Z',
+  createdAt: `${CURRENT_YEAR}-01-15T10:00:00Z`,
+  updatedAt: `${CURRENT_YEAR}-01-15T10:00:00Z`,
   isCreated: true,
-} as any;
+};
 
 export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
   {
@@ -17,32 +19,33 @@ export const mockUserHouseholdPopulationList: UserHouseholdPopulation[] = [
     id: '1',
     householdId: '1',
     userId: 'user-456',
+    countryId: 'us',
     label: 'First Household',
-    createdAt: '2024-01-10T10:00:00Z',
-    updatedAt: '2024-01-10T10:00:00Z',
+    createdAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-10T10:00:00Z`,
     isCreated: true,
-  } as any,
+  },
   {
     type: 'household',
     id: '2',
     householdId: '2',
     userId: 'user-456',
+    countryId: 'uk',
     label: 'Second Household',
-    createdAt: '2024-01-12T10:00:00Z',
-    updatedAt: '2024-01-12T10:00:00Z',
+    createdAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updatedAt: `${CURRENT_YEAR}-01-12T10:00:00Z`,
     isCreated: true,
-  } as any,
+  },
 ];
 
 export const mockApiResponse = {
   id: '123',
   household_id: '123',
   user_id: 'user-456',
-  user_label: 'My Test Household',
+  label: 'My Test Household',
   country_id: 'us',
-  created_at: '2024-01-15T10:00:00Z',
-  updated_at: '2024-01-15T10:00:00Z',
-  is_default: false,
+  created_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
+  updated_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
 };
 
 export const mockApiResponseList = [
@@ -50,28 +53,27 @@ export const mockApiResponseList = [
     id: '1',
     household_id: '1',
     user_id: 'user-456',
-    user_label: 'First Household',
+    label: 'First Household',
     country_id: 'us',
-    created_at: '2024-01-10T10:00:00Z',
-    updated_at: '2024-01-10T10:00:00Z',
-    is_default: true,
+    created_at: `${CURRENT_YEAR}-01-10T10:00:00Z`,
+    updated_at: `${CURRENT_YEAR}-01-10T10:00:00Z`,
   },
   {
     id: '2',
     household_id: '2',
     user_id: 'user-456',
-    user_label: 'Second Household',
+    label: 'Second Household',
     country_id: 'uk',
-    created_at: '2024-01-12T10:00:00Z',
-    updated_at: '2024-01-12T10:00:00Z',
-    is_default: false,
+    created_at: `${CURRENT_YEAR}-01-12T10:00:00Z`,
+    updated_at: `${CURRENT_YEAR}-01-12T10:00:00Z`,
   },
 ];
 
 export const mockCreationPayload = {
   household_id: '123',
   user_id: 'user-456',
-  user_label: 'My Test Household',
+  label: 'My Test Household',
   country_id: 'us',
-  is_default: false,
+  created_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
+  updated_at: `${CURRENT_YEAR}-01-15T10:00:00Z`,
 };

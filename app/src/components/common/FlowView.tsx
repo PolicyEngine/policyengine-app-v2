@@ -1,32 +1,13 @@
-import { IconCheck, IconChevronRight } from '@tabler/icons-react';
-import { Card, Container, Divider, Group, Stack, Text, Title } from '@mantine/core';
-import { spacing } from '@/designTokens';
+import { Container, Divider, Stack, Text, Title } from '@mantine/core';
+import {
+  ButtonPanelVariant,
+  CardListVariant,
+  SetupConditionsVariant,
+  type ButtonPanelCard,
+  type CardListItem,
+  type SetupConditionCard,
+} from '@/components/flowView';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
-
-interface SetupConditionCard {
-  title: string;
-  description: string;
-  onClick: () => void;
-  isSelected?: boolean;
-  isDisabled?: boolean;
-  isFulfilled?: boolean; // New property to track if the condition is satisfied
-}
-
-interface ButtonPanelCard {
-  title: string;
-  description: string;
-  onClick: () => void;
-  isSelected?: boolean;
-  isDisabled?: boolean;
-}
-
-interface CardListItem {
-  title: string;
-  subtitle?: string;
-  onClick: () => void;
-  isSelected?: boolean;
-  isDisabled?: boolean;
-}
 
 interface FlowViewProps {
   title: string;
@@ -44,6 +25,10 @@ interface FlowViewProps {
 
   // Card list variant props
   cardListItems?: CardListItem[];
+
+  // Pagination configuration for cardList variant
+  itemsPerPage?: number; // Default: 5
+  showPagination?: boolean; // Default: true (only shown if items > itemsPerPage)
 
   // Button configuration - can use explicit buttons or convenience props
   buttons?: ButtonConfig[];
@@ -77,6 +62,8 @@ export default function FlowView({
   setupConditionCards,
   buttonPanelCards,
   cardListItems,
+  itemsPerPage = 5,
+  showPagination = true,
 }: FlowViewProps) {
   // Generate buttons from convenience props if explicit buttons not provided
   function getButtons(): ButtonConfig[] {
@@ -128,102 +115,18 @@ export default function FlowView({
   const renderContent = () => {
     switch (variant) {
       case 'setupConditions':
-        return (
-          <Stack>
-            {setupConditionCards?.map((card: SetupConditionCard, index: number) => (
-              <Card
-                key={index}
-                withBorder
-                component="button"
-                onClick={card.onClick}
-                disabled={card.isDisabled}
-                variant={
-                  card.isSelected
-                    ? 'setupCondition--active'
-                    : card.isFulfilled
-                      ? 'setupCondition--fulfilled'
-                      : 'setupCondition--unfulfilled'
-                }
-              >
-                <Group gap={spacing.sm} align="center">
-                  {card.isFulfilled && (
-                    <IconCheck
-                      size={20}
-                      style={{
-                        color: 'var(--mantine-color-primary-6)',
-                        marginTop: '2px',
-                        flexShrink: 0,
-                      }}
-                    />
-                  )}
-                  <Stack gap={spacing.xs} style={{ flex: 1 }}>
-                    <Text fw={700}>{card.title}</Text>
-                    <Text size="sm" c="dimmed">
-                      {card.description}
-                    </Text>
-                  </Stack>
-                </Group>
-              </Card>
-            ))}
-          </Stack>
-        );
+        return <SetupConditionsVariant cards={setupConditionCards} />;
 
       case 'buttonPanel':
-        return (
-          <Stack>
-            {buttonPanelCards?.map((card: ButtonPanelCard, index: number) => (
-              <Card
-                key={index}
-                withBorder
-                component="button"
-                onClick={card.onClick}
-                disabled={card.isDisabled}
-                variant={card.isSelected ? 'buttonPanel--active' : 'buttonPanel--inactive'}
-              >
-                <Group justify="space-between" align="center">
-                  <Stack gap={spacing.xs} style={{ flex: 1 }}>
-                    <Text fw={700}>{card.title}</Text>
-                    <Text size="sm" c="dimmed">
-                      {card.description}
-                    </Text>
-                  </Stack>
-                  <IconChevronRight
-                    size={20}
-                    style={{
-                      color: 'var(--mantine-color-gray-6)',
-                      marginTop: '2px',
-                      flexShrink: 0,
-                    }}
-                  />
-                </Group>
-              </Card>
-            ))}
-          </Stack>
-        );
+        return <ButtonPanelVariant cards={buttonPanelCards} />;
 
       case 'cardList':
         return (
-          <Stack gap={spacing.sm}>
-            {cardListItems?.map((item: CardListItem, index: number) => (
-              <Card
-                key={index}
-                withBorder
-                component="button"
-                onClick={item.onClick}
-                disabled={item.isDisabled}
-                variant={item.isSelected ? 'cardList--active' : 'cardList--inactive'}
-              >
-                <Stack gap={spacing.xs}>
-                  <Text fw={600}>{item.title}</Text>
-                  {item.subtitle && (
-                    <Text size="sm" c="dimmed">
-                      {item.subtitle}
-                    </Text>
-                  )}
-                </Stack>
-              </Card>
-            ))}
-          </Stack>
+          <CardListVariant
+            items={cardListItems}
+            itemsPerPage={itemsPerPage}
+            showPagination={showPagination}
+          />
         );
 
       default:

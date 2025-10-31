@@ -1,7 +1,9 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { countryIds, DEFAULT_COUNTRY } from '@/libs/countries';
 import { RootState } from '@/store';
 import { Report, ReportOutput } from '@/types/ingredients/Report';
 
+// Local report state - countryId synced from URL via metadata state
 interface ReportState extends Report {
   activeSimulationPosition: 0 | 1;
   mode: 'standalone' | 'report';
@@ -10,9 +12,9 @@ interface ReportState extends Report {
 }
 
 const initialState: ReportState = {
-  reportId: '',
+  id: '',
   label: null,
-  countryId: 'us', // Default countryId, to be updated as needed
+  countryId: DEFAULT_COUNTRY, // Fallback until clearReport thunk sets actual country from URL
   simulationIds: [],
   apiVersion: null,
   status: 'pending',
@@ -22,6 +24,19 @@ const initialState: ReportState = {
   activeSimulationPosition: 0,
   mode: 'standalone',
 };
+
+/**
+ * Thunk to clear report and initialize with country from URL
+ * Accepts countryId directly from route parameters to avoid race conditions
+ * with metadata state synchronization
+ */
+export const clearReport = createAsyncThunk<
+  (typeof countryIds)[number],
+  (typeof countryIds)[number], // Accept countryId as parameter
+  { state: RootState }
+>('report/clearReport', async (countryId) => {
+  return countryId;
+});
 
 export const reportSlice = createSlice({
   name: 'report',
@@ -46,24 +61,9 @@ export const reportSlice = createSlice({
       state.apiVersion = action.payload;
     },
 
-    // Update country ID
+    // Update country ID (rarely used - clearReport thunk handles initialization)
     updateCountryId: (state, action: PayloadAction<typeof initialState.countryId>) => {
       state.countryId = action.payload;
-    },
-
-    // Clear the report
-    clearReport: (state) => {
-      state.reportId = '';
-      state.label = null;
-      state.simulationIds = [];
-      state.status = 'pending';
-      state.output = null;
-      state.createdAt = new Date().toISOString();
-      state.updatedAt = new Date().toISOString();
-      // Reset to initial position and mode
-      state.activeSimulationPosition = 0;
-      state.mode = 'standalone';
-      // Preserve countryId and apiVersion
     },
 
     // Update report label
@@ -74,7 +74,7 @@ export const reportSlice = createSlice({
 
     // Update report ID
     updateReportId: (state, action: PayloadAction<string>) => {
-      state.reportId = action.payload;
+      state.id = action.payload;
       state.updatedAt = new Date().toISOString();
     },
 
@@ -86,7 +86,7 @@ export const reportSlice = createSlice({
 
     // Update report output
     updateReportOutput: (state, action: PayloadAction<ReportOutput | null>) => {
-      state.output = action.payload;
+      state.output = action.payload as any; // Can be economy or household output
       state.updatedAt = new Date().toISOString();
     },
 
@@ -132,7 +132,7 @@ export const reportSlice = createSlice({
     // Initialize report for creation - sets up initial state for report creation flow
     initializeReport: (state) => {
       // Clear any existing report data
-      state.reportId = '';
+      state.id = '';
       state.label = null;
       state.simulationIds = [];
       state.status = 'pending';
@@ -150,6 +150,24 @@ export const reportSlice = createSlice({
       // Preserve countryId and apiVersion
     },
   },
+  extraReducers: (builder) => {
+    builder.addCase(clearReport.fulfilled, (state, action) => {
+      // Clear all report data
+      state.id = '';
+      state.label = null;
+      state.simulationIds = [];
+      state.status = 'pending';
+      state.output = null;
+      state.createdAt = new Date().toISOString();
+      state.updatedAt = new Date().toISOString();
+      // Reset to initial position and mode
+      state.activeSimulationPosition = 0;
+      state.mode = 'standalone';
+      // Set country from metadata (payload from thunk)
+      state.countryId = action.payload;
+      // Preserve apiVersion
+    });
+  },
 });
 
 // Action creators are generated for each case reducer function
@@ -158,7 +176,6 @@ export const {
   removeSimulationId,
   updateApiVersion,
   updateCountryId,
-  clearReport,
   updateLabel,
   updateReportId,
   updateReportStatus,

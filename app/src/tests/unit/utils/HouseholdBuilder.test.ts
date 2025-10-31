@@ -83,7 +83,7 @@ describe('HouseholdBuilder', () => {
     test('given no year when constructed then uses default year', () => {
       // Given
       builder = new HouseholdBuilder(COUNTRIES.US);
-      const DEFAULT_YEAR = '2024';
+      const DEFAULT_YEAR = '2025';
 
       // When
       builder.addAdult(PERSON_NAMES.ADULT_1, PERSON_AGES.ADULT_DEFAULT);

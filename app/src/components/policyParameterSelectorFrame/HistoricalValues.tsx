@@ -1,118 +1,237 @@
+import { memo, useMemo, useRef } from 'react';
 import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
+import { CHART_COLORS } from '@/constants/chartColors';
+import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import {
+  extendForDisplay,
+  filterInfiniteValues,
+  filterValidChartDates,
+  getAllChartDates,
+  getChartBoundaryDates,
+} from '@/utils/chartDateUtils';
+import { getReformPolicyLabel } from '@/utils/chartUtils';
+import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
+import { capitalize } from '@/utils/stringUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
   baseValues: ValueIntervalCollection;
   reformValues?: ValueIntervalCollection;
+  policyLabel?: string | null;
+  policyId?: string | null;
 }
 
 interface ParameterOverTimeChartProps {
   param: ParameterMetadata;
   baseValuesCollection: ValueIntervalCollection;
   reformValuesCollection?: ValueIntervalCollection;
+  policyLabel?: string | null;
+  policyId?: string | null;
 }
 
 export default function PolicyParameterSelectorHistoricalValues(
   props: PolicyParameterSelectorHistoricalValuesProps
 ) {
-  const { param, baseValues = new ValueIntervalCollection(), reformValues } = props;
+  const {
+    param,
+    baseValues = new ValueIntervalCollection(),
+    reformValues,
+    policyLabel,
+    policyId,
+  } = props;
 
   return (
-    <Stack>
+    <Stack mt="xl">
       <Text fw={700}>Historical values</Text>
-      <Text>{param.label} over time</Text>
+      <Text>{capitalize(param.label)} over time</Text>
       <ParameterOverTimeChart
         param={param}
         baseValuesCollection={baseValues}
         reformValuesCollection={reformValues}
+        policyLabel={policyLabel}
+        policyId={policyId}
       />
     </Stack>
   );
 }
 
-/*
-import { ChartLogo } from "../../../api/charts";
-import {
-  getPlotlyAxisFormat,
-  formatVariableValue,
-} from "../../../api/variables";
-import useMobile from "../../../layout/Responsive";
-import style from "../../../style";
-import { plotLayoutFont } from "pages/policy/output/utils";
-import { localeCode } from "lang/format";
-import { defaultPOTEndDate, defaultStartDate } from "../../../data/constants";
-import { useWindowHeight } from "../../../hooks/useWindow";
-import { useContext } from "react";
-import { ParamChartWidthContext } from "./ParameterEditor";
-*/
+export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) => {
+  const { param, baseValuesCollection, reformValuesCollection, policyLabel, policyId } = props;
 
-/**
- *
- * @param {object} policy the policy object
- * @returns the reform policy label
- */
-/*
-function getReformPolicyLabel(policy) {
-  if (policy.reform.label) return policy.reform.label;
-  const urlParams = new URLSearchParams(window.location.search);
-  const reformPolicyId = urlParams.get("reform");
-  return reformPolicyId ? `Policy #${reformPolicyId}` : "reform";
-}
-  */
+  // Responsive state
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const chartWidth = useChartWidth(chartContainerRef);
+  const isMobile = useIsMobile();
+  const windowHeight = useWindowHeight();
 
-export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
-  const { baseValuesCollection, reformValuesCollection } = props;
-  // const { baseMap, reformMap, parameter, policy, metadata } = props;
-  // const mobile = useMobile();
-  // const windowHeight = useWindowHeight();
+  // Memoize base data processing
+  const { x, y, hasInfiniteBase } = useMemo(() => {
+    try {
+      const dates = [...baseValuesCollection.getAllStartDates()];
+      const values = [...baseValuesCollection.getAllValues()];
 
-  // const paramChartWidth = useContext(ParamChartWidthContext);
+      // Validate data
+      if (dates.length === 0 || values.length === 0) {
+        return { x: [], y: [], hasInfiniteBase: false };
+      }
 
-  // Extend the last value to 2099 so that the line appears to extend to +inf in
-  // the chart
-  const extendForDisplay = (x: any[], y: any[]) => {
-    x.push('2099-12-31');
-    y.push(y[y.length - 1]);
-  };
+      if (dates.length !== values.length) {
+        console.warn('ParameterOverTimeChart: Mismatched dates and values length');
+        return { x: [], y: [], hasInfiniteBase: false };
+      }
 
-  const x = baseValuesCollection.getAllStartDates();
-  const y = baseValuesCollection.getAllValues();
-  extendForDisplay(x, y);
+      const { filteredDates, filteredValues } = filterInfiniteValues(dates, values);
+      const hasInfiniteBase = filteredDates.length < dates.length;
 
-  const reformedX = reformValuesCollection ? reformValuesCollection.getAllStartDates() : [];
-  const reformedY = reformValuesCollection ? reformValuesCollection.getAllValues() : [];
-  if (reformValuesCollection) {
-    extendForDisplay(reformedX, reformedY);
+      if (filteredDates.length === 0 || filteredValues.length === 0) {
+        return { x: [], y: [], hasInfiniteBase };
+      }
+
+      extendForDisplay(filteredDates, filteredValues);
+      return { x: filteredDates, y: filteredValues, hasInfiniteBase };
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error processing base data', error);
+      return { x: [], y: [], hasInfiniteBase: false };
+    }
+  }, [baseValuesCollection]);
+
+  // Memoize reform data processing
+  const { reformedX, reformedY, hasInfiniteReform } = useMemo(() => {
+    if (!reformValuesCollection) {
+      return { reformedX: [], reformedY: [], hasInfiniteReform: false };
+    }
+
+    try {
+      const dates = [...reformValuesCollection.getAllStartDates()];
+      const values = [...reformValuesCollection.getAllValues()];
+
+      // Validate data
+      if (dates.length === 0 || values.length === 0) {
+        return { reformedX: [], reformedY: [], hasInfiniteReform: false };
+      }
+
+      if (dates.length !== values.length) {
+        console.warn('ParameterOverTimeChart: Mismatched reform dates and values length');
+        return { reformedX: [], reformedY: [], hasInfiniteReform: false };
+      }
+
+      const { filteredDates, filteredValues } = filterInfiniteValues(dates, values);
+      const hasInfiniteReform = filteredDates.length < dates.length;
+
+      if (filteredDates.length === 0 || filteredValues.length === 0) {
+        return { reformedX: [], reformedY: [], hasInfiniteReform };
+      }
+
+      extendForDisplay(filteredDates, filteredValues);
+      return { reformedX: filteredDates, reformedY: filteredValues, hasInfiniteReform };
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error processing reform data', error);
+      return { reformedX: [], reformedY: [], hasInfiniteReform: false };
+    }
+  }, [reformValuesCollection]);
+
+  // Memoize axis calculations with buffer space
+  const { xaxisFormat, yaxisFormat } = useMemo(() => {
+    try {
+      let xaxisValues = getAllChartDates(x, reformedX);
+      xaxisValues = filterValidChartDates(xaxisValues);
+
+      const { minDate, maxDate } = getChartBoundaryDates();
+      xaxisValues.push(minDate);
+      xaxisValues.push(maxDate);
+
+      const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
+
+      // Calculate x-axis range starting at 2013 (earliest display date, with 2-year buffer)
+      const EARLIEST_DISPLAY_DATE = '2013-01-01';
+
+      // Calculate y-axis range with 10% buffer above and below
+      const numericYValues = yaxisValues.map((v) => Number(v)).filter((v) => !isNaN(v));
+      let minY = Math.min(...numericYValues);
+      let maxY = Math.max(...numericYValues);
+
+      // Ensure 0 is always visible for all value types
+      minY = Math.min(minY, 0);
+
+      // For percentages, also ensure 100% is always visible
+      if (param.unit === '/1') {
+        maxY = Math.max(maxY, 1);
+      }
+
+      const yRange = maxY - minY;
+      const yBuffer = yRange * 0.1;
+
+      const xaxisFormatWithRange = {
+        ...getPlotlyAxisFormat('date', xaxisValues),
+        range: [EARLIEST_DISPLAY_DATE, maxDate],
+      };
+
+      const yaxisFormatWithRange = {
+        ...getPlotlyAxisFormat(param.unit || '', yaxisValues),
+        range: [minY - yBuffer, maxY + yBuffer],
+      };
+
+      return {
+        xaxisFormat: xaxisFormatWithRange,
+        yaxisFormat: yaxisFormatWithRange,
+      };
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error calculating axis formats', error);
+      return {
+        xaxisFormat: { type: 'date' as const },
+        yaxisFormat: {},
+      };
+    }
+  }, [x, y, reformedX, reformedY, reformValuesCollection, param.unit]);
+
+  // Memoize custom data for hover tooltips
+  const customData = useMemo(() => {
+    try {
+      return y.map((value) => formatParameterValue(value, param.unit, { decimalPlaces: 2 }));
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error formatting custom data', error);
+      return [];
+    }
+  }, [y, param.unit]);
+
+  const reformedCustomData = useMemo(() => {
+    try {
+      return reformedY.map((value) =>
+        formatParameterValue(value, param.unit, { decimalPlaces: 2 })
+      );
+    } catch (error) {
+      console.error('ParameterOverTimeChart: Error formatting reform custom data', error);
+      return [];
+    }
+  }, [reformedY, param.unit]);
+
+  // Memoize reform label
+  const reformLabel = useMemo(() => {
+    return getReformPolicyLabel(policyLabel, policyId ? parseInt(policyId, 10) : null);
+  }, [policyLabel, policyId]);
+
+  // Check if any infinite values were filtered
+  const hasInfiniteValues = hasInfiniteBase || hasInfiniteReform;
+
+  // Early return if no valid data
+  if (x.length === 0 || y.length === 0) {
+    return (
+      <div ref={chartContainerRef}>
+        <Text c="dimmed" ta="center" py="xl">
+          No data available to display
+        </Text>
+      </div>
+    );
   }
 
-  // let xaxisValues = reformedX ? x.concat(reformedX) : x;
-  // xaxisValues = xaxisValues.filter((e) => e !== '0000-01-01' && e < '2099-12-31');
-
-  // xaxisValues.push(defaultStartDate);
-  // This value is used for preventing the chart from expanding
-  // beyond 10 years past the current date for policy changes
-  // defined until "forever" (i.e., 2100-12-31)
-  // xaxisValues.push(defaultPOTEndDate);
-  // const yaxisValues = reformedY ? y.concat(reformedY) : y;
-  // const xaxisFormat = getPlotlyAxisFormat("date", xaxisValues);
-  // const yaxisFormat = getPlotlyAxisFormat(param.unit, yaxisValues);
-
-  // const customData = y.map((value) => formatVariableValue(param, value, 2));
-  /*
-  const reformedCustomData = reformedY.map((value) =>
-    formatVariableValue(param, value, 2),
-  );
-  */
-
-  // TODO: Typing on Plotly is not good; improve the typing here
   return (
-    <>
+    <div ref={chartContainerRef}>
       <Plot
         data={[
-          ...(reformValuesCollection
+          ...(reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
             ? [
                 {
                   x: reformedX,
@@ -122,14 +241,14 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
                   line: {
                     shape: 'hv' as any,
                     dash: 'dot' as any,
+                    color: CHART_COLORS.REFORM_LINE,
                   },
-                  /*
-            marker: {
-              color: style.colors.BLUE,
-            },
-            */
-                  // name: getReformPolicyLabel(policy),
-                  // customdata: reformedCustomData,
+                  marker: {
+                    color: CHART_COLORS.REFORM_LINE,
+                    size: CHART_COLORS.MARKER_SIZE,
+                  },
+                  name: reformLabel,
+                  customdata: reformedCustomData,
                   hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
                 },
               ]
@@ -141,57 +260,67 @@ export function ParameterOverTimeChart(props: ParameterOverTimeChartProps) {
             mode: 'lines+markers' as any,
             line: {
               shape: 'hv' as any,
+              color:
+                reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
+                  ? CHART_COLORS.BASE_LINE_WITH_REFORM
+                  : CHART_COLORS.BASE_LINE_ALONE,
             },
-            /*
             marker: {
-              color: !reformValuesCollection
-                ? style.colors.DARK_GRAY
-                : style.colors.MEDIUM_LIGHT_GRAY,
+              color:
+                reformValuesCollection && reformedX.length > 0 && reformedY.length > 0
+                  ? CHART_COLORS.BASE_LINE_WITH_REFORM
+                  : CHART_COLORS.BASE_LINE_ALONE,
+              size: CHART_COLORS.MARKER_SIZE,
             },
-            */
             name: 'Current law',
-            // customdata: customData,
+            customdata: customData,
             hovertemplate: '%{x|%b, %Y}: %{customdata}<extra></extra>',
           },
         ].filter((x) => x)}
         layout={{
-          // xaxis: { ...xaxisFormat },
-          // yaxis: { ...yaxisFormat },
+          xaxis: {
+            ...xaxisFormat,
+            color: CHART_COLORS.CHART_TEXT,
+            gridcolor: '#E5E7EB',
+          },
+          yaxis: {
+            ...yaxisFormat,
+            color: CHART_COLORS.CHART_TEXT,
+            gridcolor: '#E5E7EB',
+          },
           legend: {
             // Position above the plot
             y: 1.2,
-            orientation: 'h',
+            orientation: 'h' as any,
+            font: {
+              color: CHART_COLORS.CHART_TEXT,
+            },
           },
-          // ...ChartLogo,
-          /*
           margin: {
-            t: mobile && 80,
-            r: mobile && 50,
-            l: mobile && 50,
-            b: mobile && 30,
+            t: isMobile ? 80 : 60,
+            r: isMobile ? 50 : 40,
+            l: isMobile ? 50 : 60,
+            b: isMobile ? 30 : 50,
           },
-          */
-          // ...plotLayoutFont,
-          title: {
-            // text: `${parameter.label} over time`,
-            xanchor: 'left',
-            // x: mobile ? 0.05 : 0.04,
-          },
-          // dragmode: mobile ? false : "zoom",
-          // width: paramChartWidth,
+          dragmode: isMobile ? (false as any) : ('zoom' as any),
+          width: chartWidth || undefined,
+          paper_bgcolor: CHART_COLORS.CHART_BACKGROUND,
+          plot_bgcolor: CHART_COLORS.PLOT_BACKGROUND,
         }}
-        // Note that plotly does not dynamically resize inside flexbox
-        /*
         style={{
-          height: mobile ? 0.5 * windowHeight : 400,
+          height: isMobile ? windowHeight * 0.5 : 400,
         }}
-          */
         config={{
           displayModeBar: false,
           responsive: true,
-          // locale: localeCode(metadata.countryId),
         }}
       />
-    </>
+      {hasInfiniteValues && (
+        <Text size="sm" c="gray.8" fs="italic" mt="xs">
+          Note: Charts do not currently display parameters with values of positive or negative
+          infinity.
+        </Text>
+      )}
+    </div>
   );
-}
+});

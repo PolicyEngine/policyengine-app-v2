@@ -1,4 +1,5 @@
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 
 // Mock selector functions
 export const mockSelectCurrentPosition = vi.fn();
@@ -17,7 +18,9 @@ export const MOCK_POLICY_WITH_PARAMS = {
     id: 123,
     country_id: 'us',
     policy_json: {
-      income_tax_rate: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 0.25 }],
+      income_tax_rate: [
+        { startDate: `${CURRENT_YEAR}-01-01`, endDate: `${CURRENT_YEAR}-12-31`, value: 0.25 },
+      ],
     },
   },
   association: { label: 'My Tax Reform' },
@@ -41,7 +44,11 @@ export const MOCK_HOUSEHOLD_FAMILY = {
     country_id: 'us',
     household_json: { people: {} },
   },
-  association: { label: 'My Family' },
+  association: {
+    label: 'My Family',
+    countryId: 'us',
+    isCreated: true,
+  },
 };
 
 export const mockHouseholdData = [MOCK_HOUSEHOLD_FAMILY];
@@ -55,7 +62,11 @@ export const MOCK_GEOGRAPHIC_US = {
     geographyId: 'us',
     name: 'United States',
   },
-  association: { label: 'US National' },
+  association: {
+    label: 'US National',
+    countryId: 'us',
+    isCreated: true,
+  },
 };
 
 export const mockGeographicData = [MOCK_GEOGRAPHIC_US];

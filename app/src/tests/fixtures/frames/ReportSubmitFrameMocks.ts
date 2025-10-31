@@ -34,7 +34,7 @@ export const mockSimulation2NoLabel: Simulation = {
 
 // Mock report state - must be complete Report, not Partial
 export const mockReportWithLabel: Report = {
-  reportId: '',
+  id: '',
   label: 'My Test Report',
   countryId: 'us' as const,
   simulationIds: ['1', '2'],
@@ -122,3 +122,25 @@ export const clearAllMocks = () => {
   mockOnNavigate.mockClear();
   mockOnReturn.mockClear();
 };
+
+// Mock report creation result data
+export const createMockReportCreationResult = (baseReportId: string, userReportId: string) => ({
+  report: {
+    id: baseReportId,
+    status: 'pending',
+    country_id: 'us',
+  },
+  userReport: {
+    id: userReportId,
+    label: 'Test Report',
+  },
+  metadata: {
+    baseReportId,
+    userReportId,
+    countryId: 'us',
+  },
+});
+
+export const MOCK_REPORT_123 = createMockReportCreationResult('report-123', 'sur-report-123');
+export const MOCK_REPORT_456 = createMockReportCreationResult('report-456', 'sur-report-456');
+export const MOCK_REPORT_789 = createMockReportCreationResult('report-789', 'sur-report-789');

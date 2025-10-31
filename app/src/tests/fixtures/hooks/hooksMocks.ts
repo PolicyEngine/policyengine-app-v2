@@ -1,5 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { vi } from 'vitest';
+import { CURRENT_YEAR } from '@/constants';
 import {
   UserGeographyPopulation,
   UserHouseholdPopulation,
@@ -16,12 +17,12 @@ export const TEST_IDS = {
   HOUSEHOLD_ID_2: '789',
   GEOGRAPHY_ID: 'geography-123',
   GEOGRAPHY_ID_2: 'geography-456',
-  TIMESTAMP: '2024-01-15T10:00:00Z',
+  TIMESTAMP: `${CURRENT_YEAR}-01-15T10:00:00Z`,
 } as const;
 
 // Labels and descriptions
 export const TEST_LABELS = {
-  HOUSEHOLD: 'Test Household 2024',
+  HOUSEHOLD: `Test Household ${CURRENT_YEAR}`,
   HOUSEHOLD_2: 'Second Test Household',
   GEOGRAPHY: 'California Region',
   GEOGRAPHY_2: 'New York Region',
@@ -99,8 +100,8 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   household_json: {
     people: {
       person1: {
-        age: { 2024: TEST_VALUES.AGE },
-        employment_income: { 2024: TEST_VALUES.INCOME },
+        age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
+        employment_income: { [CURRENT_YEAR]: TEST_VALUES.INCOME },
       },
     },
     tax_units: {
@@ -126,6 +127,7 @@ export const mockUserHouseholdPopulation: UserHouseholdPopulation = {
   id: TEST_IDS.HOUSEHOLD_ID,
   householdId: TEST_IDS.HOUSEHOLD_ID,
   userId: TEST_IDS.USER_ID,
+  countryId: 'us',
   label: TEST_LABELS.HOUSEHOLD,
   createdAt: TEST_IDS.TIMESTAMP,
   updatedAt: TEST_IDS.TIMESTAMP,
@@ -168,7 +170,7 @@ export const mockHouseholdCreationPayload: HouseholdCreationPayload = {
   data: {
     people: {
       person1: {
-        age: { 2024: TEST_VALUES.AGE },
+        age: { [CURRENT_YEAR]: TEST_VALUES.AGE },
       },
     },
     tax_units: {

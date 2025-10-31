@@ -1,7 +1,10 @@
 import { configureStore } from '@reduxjs/toolkit';
-import { render, screen, userEvent } from '@test-utils';
+import { screen, userEvent } from '@test-utils';
+import { render, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { MantineProvider } from '@mantine/core';
 import ReportCreationFrame from '@/frames/report/ReportCreationFrame';
 import flowReducer from '@/reducers/flowReducer';
 import metadataReducer from '@/reducers/metadataReducer';
@@ -11,10 +14,12 @@ import reportReducer, * as reportActions from '@/reducers/reportReducer';
 import simulationsReducer from '@/reducers/simulationsReducer';
 import {
   CREATE_REPORT_BUTTON_LABEL,
+  DEFAULT_YEAR,
   EMPTY_REPORT_LABEL,
   REPORT_CREATION_FRAME_TITLE,
   REPORT_NAME_INPUT_LABEL,
   TEST_REPORT_LABEL,
+  YEAR_INPUT_LABEL,
 } from '@/tests/fixtures/frames/ReportCreationFrame';
 
 describe('ReportCreationFrame', () => {
@@ -61,13 +66,24 @@ describe('ReportCreationFrame', () => {
     vi.spyOn(reportActions, 'updateLabel');
   });
 
-  test('given component mounts then clears report state', () => {
-    // Given/When
-    render(
+  // Helper to render with router context
+  const renderWithRouter = (component: React.ReactElement) => {
+    return render(
       <Provider store={store}>
-        <ReportCreationFrame {...defaultFlowProps} />
+        <MantineProvider>
+          <MemoryRouter initialEntries={['/us/reports']}>
+            <Routes>
+              <Route path="/:countryId/*" element={component} />
+            </Routes>
+          </MemoryRouter>
+        </MantineProvider>
       </Provider>
     );
+  };
+
+  test('given component mounts then clears report state', () => {
+    // Given/When
+    renderWithRouter(<ReportCreationFrame {...defaultFlowProps} />);
 
     // Then - should have cleared the report
     expect(reportActions.clearReport).toHaveBeenCalled();
@@ -75,22 +91,38 @@ describe('ReportCreationFrame', () => {
 
   test('given component renders then displays correct UI elements', () => {
     // Given/When
-    render(
+    renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
     );
 
-    // Then - should display title, input and button
+    // Then - should display title, inputs and button
     expect(screen.getByRole('heading', { name: REPORT_CREATION_FRAME_TITLE })).toBeInTheDocument();
     expect(screen.getByLabelText(REPORT_NAME_INPUT_LABEL)).toBeInTheDocument();
+    expect(screen.getByText(YEAR_INPUT_LABEL)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: CREATE_REPORT_BUTTON_LABEL })).toBeInTheDocument();
+  });
+
+  test('given year dropdown renders then it is disabled with default value', () => {
+    // Given/When
+    const { container } = renderWithRouter(
+      <Provider store={store}>
+        <ReportCreationFrame {...defaultFlowProps} />
+      </Provider>
+    );
+
+    // Then - year dropdown should be disabled
+    // Mantine Select with disabled prop adds data-disabled attribute to the input
+    const yearInput = container.querySelector('input[data-disabled="true"]');
+    expect(yearInput).toBeInTheDocument();
+    expect(yearInput).toHaveValue(DEFAULT_YEAR);
   });
 
   test('given user enters label then input value updates', async () => {
     // Given
     const user = userEvent.setup();
-    render(
+    renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
@@ -108,7 +140,7 @@ describe('ReportCreationFrame', () => {
   test('given user submits label then dispatches updateLabel action', async () => {
     // Given
     const user = userEvent.setup();
-    render(
+    renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
@@ -131,7 +163,7 @@ describe('ReportCreationFrame', () => {
   test('given user submits label then reducer state is updated', async () => {
     // Given
     const user = userEvent.setup();
-    render(
+    renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
@@ -152,7 +184,7 @@ describe('ReportCreationFrame', () => {
   test('given empty label then still dispatches to reducer', async () => {
     // Given
     const user = userEvent.setup();
-    render(
+    renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
@@ -172,7 +204,7 @@ describe('ReportCreationFrame', () => {
 
   test('given component mounts multiple times then clears report each time', () => {
     // Given
-    const { unmount } = render(
+    const { unmount } = renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
@@ -183,7 +215,7 @@ describe('ReportCreationFrame', () => {
 
     // When - unmount and mount a new instance
     unmount();
-    render(
+    renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
@@ -204,16 +236,14 @@ describe('ReportCreationFrame', () => {
     expect(state.report.simulationIds).toContain('123');
 
     // When
-    render(
-      <Provider store={store}>
-        <ReportCreationFrame {...defaultFlowProps} />
-      </Provider>
-    );
+    renderWithRouter(<ReportCreationFrame {...defaultFlowProps} />);
 
-    // Then - report should be cleared
+    // Then - report should be cleared (wait for async thunk)
     expect(reportActions.clearReport).toHaveBeenCalled();
-    state = store.getState();
-    expect(state.report.label).toBeNull();
-    expect(state.report.simulationIds).toHaveLength(0);
+    await waitFor(() => {
+      state = store.getState();
+      expect(state.report.label).toBeNull();
+      expect(state.report.simulationIds).toHaveLength(0);
+    });
   });
 });

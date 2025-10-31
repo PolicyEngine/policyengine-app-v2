@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import {
   Household,
   HouseholdData,
@@ -38,9 +39,9 @@ export const COUNTRIES = {
 
 // Years
 export const YEARS = {
-  CURRENT: '2024',
+  CURRENT: CURRENT_YEAR,
   PAST: '2023',
-  FUTURE: '2025',
+  FUTURE: CURRENT_YEAR,
   INVALID: '24',
   INVALID_TEXT: 'year',
 } as const;

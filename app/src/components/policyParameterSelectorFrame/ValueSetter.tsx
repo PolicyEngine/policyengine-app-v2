@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { Dispatch, SetStateAction, useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -13,22 +13,55 @@ import {
   NumberInput,
   SimpleGrid,
   Stack,
+  Switch,
   Text,
 } from '@mantine/core';
 import { DatePickerInput, YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { getDateRange } from '@/libs/metadataUtils';
-import { selectCurrentPosition } from '@/reducers/activeSelectors';
+import { selectActivePolicy, selectCurrentPosition } from '@/reducers/activeSelectors';
 import { addPolicyParamAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { getParameterByName } from '@/types/subIngredients/parameter';
+import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { fromISODateString, toISODateString } from '@/utils/dateUtils';
 
 enum ValueSetterMode {
   DEFAULT = 'default',
   YEARLY = 'yearly',
   DATE = 'date',
   MULTI_YEAR = 'multi-year',
+}
+
+/**
+ * Helper function to get default value for a parameter at a specific date
+ * Priority: 1) User's reform value, 2) Baseline current law value
+ */
+function getDefaultValueForParam(param: ParameterMetadata, activePolicy: any, date: string): any {
+  // First check if user has set a reform value for this parameter
+  if (activePolicy) {
+    const userParam = getParameterByName(activePolicy, param.parameter);
+    if (userParam && userParam.values && userParam.values.length > 0) {
+      const userCollection = new ValueIntervalCollection(userParam.values);
+      const userValue = userCollection.getValueAtDate(date);
+      if (userValue !== undefined) {
+        return userValue;
+      }
+    }
+  }
+
+  // Fall back to baseline current law value from metadata
+  if (param.values) {
+    const collection = new ValueIntervalCollection(param.values as any);
+    const value = collection.getValueAtDate(date);
+    if (value !== undefined) {
+      return value;
+    }
+  }
+
+  // Last resort: default based on unit type
+  return param.unit === 'bool' ? false : 0;
 }
 
 interface ValueSetterContainerProps {
@@ -42,6 +75,10 @@ interface ValueSetterProps {
   param: ParameterMetadata;
   intervals: ValueInterval[];
   setIntervals: Dispatch<SetStateAction<ValueInterval[]>>;
+  startDate: string;
+  setStartDate: Dispatch<SetStateAction<string>>;
+  endDate: string;
+  setEndDate: Dispatch<SetStateAction<string>>;
 }
 
 interface ValueInputBoxProps {
@@ -74,6 +111,10 @@ export default function PolicyParameterSelectorValueSetterContainer(
 
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
+  // Hoisted date state for all non-multi-year selectors
+  const [startDate, setStartDate] = useState<string>('2025-01-01');
+  const [endDate, setEndDate] = useState<string>('2025-12-31');
+
   function resetValueSettingState() {
     setIntervals([]);
   }
@@ -103,6 +144,10 @@ export default function PolicyParameterSelectorValueSetterContainer(
     param,
     intervals,
     setIntervals,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
   };
 
   return (
@@ -113,7 +158,6 @@ export default function PolicyParameterSelectorValueSetterContainer(
         <Group align="flex-end" w="100%">
           <ValueSetterToRender {...valueSetterProps} />
           <ModeSelectorButton setMode={handleModeChange} />
-          <Text>TODO: Reset button</Text>
           <Button onClick={handleSubmit}>Add</Button>
         </Group>
       </Stack>
@@ -141,28 +185,46 @@ export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => 
 }
 
 export function DefaultValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } =
+    props;
 
-  // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('');
-  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
+
+  // Local state for param value
+  const [paramValue, setParamValue] = useState<any>(
+    getDefaultValueForParam(param, activePolicy, startDate)
+  );
+
+  // Set endDate to 2100-12-31 for default mode
+  useEffect(() => {
+    setEndDate(FOREVER);
+  }, [setEndDate]);
+
+  // Update param value when startDate changes
+  useEffect(() => {
+    if (startDate) {
+      const newValue = getDefaultValueForParam(param, activePolicy, startDate);
+      setParamValue(newValue);
+    }
+  }, [startDate, param, activePolicy]);
 
   // Update intervals whenever local state changes
   useEffect(() => {
-    if (startDate) {
+    if (startDate && endDate) {
       const newInterval: ValueInterval = {
         startDate,
-        endDate: FOREVER,
+        endDate,
         value: paramValue,
       };
       setIntervals([newInterval]);
     } else {
       setIntervals([]);
     }
-  }, [startDate, paramValue, setIntervals]);
+  }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: string | null) {
-    setStartDate(value || '');
+  function handleStartDateChange(value: Date | string | null) {
+    setStartDate(toISODateString(value));
   }
 
   return (
@@ -170,8 +232,9 @@ export function DefaultValueSelector(props: ValueSetterProps) {
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
-        minDate={minDate}
-        maxDate={maxDate}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
@@ -181,12 +244,32 @@ export function DefaultValueSelector(props: ValueSetterProps) {
 }
 
 export function YearlyValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } =
+    props;
 
-  // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
+
+  // Local state for param value
+  const [paramValue, setParamValue] = useState<any>(
+    getDefaultValueForParam(param, activePolicy, startDate)
+  );
+
+  // Set endDate to end of year of startDate
+  useEffect(() => {
+    if (startDate) {
+      const endOfYearDate = dayjs(startDate).endOf('year').format('YYYY-MM-DD');
+      setEndDate(endOfYearDate);
+    }
+  }, [startDate, setEndDate]);
+
+  // Update param value when startDate changes
+  useEffect(() => {
+    if (startDate) {
+      const newValue = getDefaultValueForParam(param, activePolicy, startDate);
+      setParamValue(newValue);
+    }
+  }, [startDate, param, activePolicy]);
 
   // Update intervals whenever local state changes
   useEffect(() => {
@@ -202,15 +285,18 @@ export function YearlyValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: string | null) {
-    setStartDate(value || '');
+  function handleStartDateChange(value: Date | string | null) {
+    setStartDate(toISODateString(value));
   }
 
-  function handleEndDateChange(value: string | null) {
-    const endOfYearDate = dayjs(value || '')
-      .endOf('year')
-      .format('YYYY-MM-DD');
-    setEndDate(endOfYearDate);
+  function handleEndDateChange(value: Date | string | null) {
+    const isoString = toISODateString(value);
+    if (isoString) {
+      const endOfYearDate = dayjs(isoString).endOf('year').format('YYYY-MM-DD');
+      setEndDate(endOfYearDate);
+    } else {
+      setEndDate('');
+    }
   }
 
   return (
@@ -218,16 +304,18 @@ export function YearlyValueSelector(props: ValueSetterProps) {
       <YearPickerInput
         placeholder="Pick a year"
         label="From"
-        minDate={minDate}
-        maxDate={maxDate}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
       <YearPickerInput
         placeholder="Pick a year"
         label="To"
-        minDate={minDate}
-        maxDate={maxDate}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(endDate)}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
@@ -237,12 +325,32 @@ export function YearlyValueSelector(props: ValueSetterProps) {
 }
 
 export function DateValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } =
+    props;
 
-  // Local state for form inputs
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
-  const [paramValue, setParamValue] = useState<any>(param.unit === 'bool' ? false : 0);
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
+
+  // Local state for param value
+  const [paramValue, setParamValue] = useState<any>(
+    getDefaultValueForParam(param, activePolicy, startDate)
+  );
+
+  // Set endDate to end of year of startDate
+  useEffect(() => {
+    if (startDate) {
+      const endOfYearDate = dayjs(startDate).endOf('year').format('YYYY-MM-DD');
+      setEndDate(endOfYearDate);
+    }
+  }, [startDate, setEndDate]);
+
+  // Update param value when startDate changes
+  useEffect(() => {
+    if (startDate) {
+      const newValue = getDefaultValueForParam(param, activePolicy, startDate);
+      setParamValue(newValue);
+    }
+  }, [startDate, param, activePolicy]);
 
   // Update intervals whenever local state changes
   useEffect(() => {
@@ -258,29 +366,31 @@ export function DateValueSelector(props: ValueSetterProps) {
     }
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: string | null) {
-    setStartDate(value || '');
+  function handleStartDateChange(value: Date | string | null) {
+    setStartDate(toISODateString(value));
   }
 
-  function handleEndDateChange(value: string | null) {
-    setEndDate(value || '');
+  function handleEndDateChange(value: Date | string | null) {
+    setEndDate(toISODateString(value));
   }
 
   return (
-    <Group align="flex-end">
+    <Group align="flex-end" style={{ flex: 1 }}>
       <DatePickerInput
         placeholder="Pick a start date"
         label="From"
-        minDate={minDate}
-        maxDate={maxDate}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(startDate)}
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
       <DatePickerInput
         placeholder="Pick an end date"
         label="To"
-        minDate={minDate}
-        maxDate={maxDate}
+        minDate={fromISODateString(minDate)}
+        maxDate={fromISODateString(maxDate)}
+        value={fromISODateString(endDate)}
         onChange={handleEndDateChange}
         style={{ flex: 1 }}
       />
@@ -290,13 +400,16 @@ export function DateValueSelector(props: ValueSetterProps) {
 }
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, maxDate } = props;
+
+  // Get active policy to check for user-set reform values
+  const activePolicy = useSelector(selectActivePolicy);
 
   const MAX_YEARS = 10;
 
-  // Generate years from minDate to maxDate
+  // Generate years from minDate to maxDate, starting from 2025
   const generateYears = () => {
-    const startYear = dayjs(minDate).year();
+    const startYear = 2025;
     const endYear = dayjs(maxDate).year();
     const years = [];
     for (let year = startYear; year <= endYear; year++) {
@@ -307,13 +420,16 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   const years = generateYears();
 
-  const [yearValues, setYearValues] = useState<Record<string, any>>(() => {
+  // Get values for each year - check reform first, then baseline
+  const getInitialYearValues = useMemo(() => {
     const initialValues: Record<string, any> = {};
     years.forEach((year) => {
-      initialValues[year] = param.unit === 'bool' ? false : 0;
+      initialValues[year] = getDefaultValueForParam(param, activePolicy, `${year}-01-01`);
     });
     return initialValues;
-  });
+  }, [param, activePolicy, years]);
+
+  const [yearValues, setYearValues] = useState<Record<string, any>>(getInitialYearValues);
 
   // Update intervals whenever yearValues changes
   useEffect(() => {
@@ -387,6 +503,9 @@ export function ValueInputBox(props: ValueInputBoxProps) {
       ? '£'
       : '';
 
+  const isPercentage = param.unit === '/1';
+  const isBool = param.unit === 'bool';
+
   if (param.type !== 'parameter') {
     console.error("ValueInputBox expects a parameter type of 'parameter', got:", param.type);
     return <NumberInput disabled value={0} />;
@@ -394,20 +513,70 @@ export function ValueInputBox(props: ValueInputBoxProps) {
 
   const handleChange = (newValue: any) => {
     if (onChange) {
-      onChange(newValue);
+      // Convert percentage display value (0-100) to decimal (0-1) for storage
+      const valueToStore = isPercentage ? newValue / 100 : newValue;
+      onChange(valueToStore);
     }
   };
 
-  return param.unit === 'bool' ? (
-    <Text>TODO: Switch for boolean value</Text>
-  ) : (
+  const handleBoolChange = (checked: boolean) => {
+    if (onChange) {
+      onChange(checked);
+    }
+  };
+
+  // Convert decimal value (0-1) to percentage display value (0-100)
+  const displayValue = isPercentage
+    ? value !== undefined
+      ? value * 100
+      : 0
+    : value !== undefined
+      ? value
+      : 0;
+
+  if (isBool) {
+    return (
+      <Stack gap="xs" style={{ flex: 1 }}>
+        {label && (
+          <Text size="sm" fw={500}>
+            {label}
+          </Text>
+        )}
+        <Group
+          justify="space-between"
+          align="center"
+          style={{
+            border: '1px solid #ced4da',
+            borderRadius: '4px',
+            padding: '6px 12px',
+            height: '36px',
+            backgroundColor: 'white',
+          }}
+        >
+          <Text size="sm" c={value ? 'dimmed' : 'dark'} fw={value ? 400 : 600}>
+            False
+          </Text>
+          <Switch
+            checked={value || false}
+            onChange={(event) => handleBoolChange(event.currentTarget.checked)}
+            size="md"
+          />
+          <Text size="sm" c={value ? 'dark' : 'dimmed'} fw={value ? 600 : 400}>
+            True
+          </Text>
+        </Group>
+      </Stack>
+    );
+  }
+
+  return (
     <NumberInput
       label={label}
       placeholder="Enter value"
       min={0}
       prefix={prefix}
-      suffix={param.unit === '/1' ? '%' : ''}
-      value={value !== undefined ? value : 0}
+      suffix={isPercentage ? '%' : ''}
+      value={displayValue}
       onChange={handleChange}
       thousandSeparator=","
       style={{ flex: 1 }}

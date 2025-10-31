@@ -14,6 +14,7 @@ export class UserSimulationAdapter {
     return {
       userId: userSimulation.userId.toString(),
       simulationId: userSimulation.simulationId.toString(),
+      countryId: userSimulation.countryId,
       label: userSimulation.label,
       updatedAt: userSimulation.updatedAt || new Date().toISOString(),
     };
@@ -24,9 +25,10 @@ export class UserSimulationAdapter {
    */
   static fromApiResponse(apiData: any): UserSimulation {
     return {
-      id: apiData.simulationId,
+      id: apiData.id,
       userId: apiData.userId,
       simulationId: apiData.simulationId,
+      countryId: apiData.countryId,
       label: apiData.label,
       createdAt: apiData.createdAt,
       updatedAt: apiData.updatedAt,

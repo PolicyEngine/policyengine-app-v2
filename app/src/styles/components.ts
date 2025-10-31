@@ -1,5 +1,5 @@
 // Components submodule for Mantine theme
-import { AppShell, Card, Container, Title } from '@mantine/core';
+import { AppShell, Card, Container, Table, Title } from '@mantine/core';
 import { colors, spacing, typography } from '../designTokens';
 import { themeDefaults } from './defaults';
 
@@ -8,11 +8,88 @@ import { themeDefaults } from './defaults';
 export const themeComponents = {
   Text: {
     defaultProps: themeDefaults.Text,
-    styles: {
-      root: {
-        fontFamily: typography.fontFamily.primary,
-        color: colors.text.primary,
-      },
+    styles: (_theme: any, params: any) => {
+      if (params.variant === 'tab') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.gray[700],
+            fontWeight: typography.fontWeight.normal,
+          },
+        };
+      }
+
+      if (params.variant === 'metricLabel') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+          },
+        };
+      }
+
+      if (params.variant === 'metricValue') {
+        return {
+          root: {
+            fontSize: typography.fontSize.xl,
+            fontWeight: typography.fontWeight.semibold,
+            color: colors.text.primary,
+          },
+        };
+      }
+
+      if (params.variant === 'metricDescription') {
+        return {
+          root: {
+            fontSize: typography.fontSize.sm,
+            color: colors.text.secondary,
+          },
+        };
+      }
+
+      if (params.variant === 'richText') {
+        return {
+          root: {
+            fontFamily: typography.fontFamily.body,
+            fontSize: typography.fontSize.base,
+            lineHeight: typography.lineHeight.relaxed,
+            '& p': {
+              marginBottom: spacing.md,
+              marginTop: 0,
+            },
+            '& p:last-child': {
+              marginBottom: 0,
+            },
+            '& a': {
+              textDecoration: 'underline',
+              transition: 'opacity 0.2s ease',
+            },
+            '& a:hover': {
+              opacity: 0.8,
+            },
+            '& strong': {
+              fontWeight: typography.fontWeight.bold,
+            },
+            '& em': {
+              fontStyle: 'italic',
+            },
+            '& ul, & ol': {
+              marginBottom: spacing.md,
+              paddingLeft: spacing.xl,
+            },
+            '& li': {
+              marginBottom: spacing.xs,
+            },
+          },
+        };
+      }
+
+      return {
+        root: {
+          fontFamily: typography.fontFamily.primary,
+          color: colors.text.primary,
+        },
+      };
     },
   },
 
@@ -28,7 +105,7 @@ export const themeComponents = {
     },
   },
   Container: Container.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       if (params.variant === 'guttered') {
         return {
           root: {
@@ -43,7 +120,7 @@ export const themeComponents = {
     },
   }),
   Card: Card.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       // Card List variants - compact styling for variable-length lists
       if (params.variant === 'cardList--active') {
         return {
@@ -73,6 +150,18 @@ export const themeComponents = {
               backgroundColor: colors.gray[50],
               borderColor: colors.border.medium,
             },
+          },
+        };
+      }
+
+      if (params.variant === 'cardList--disabled') {
+        return {
+          root: {
+            padding: spacing.sm,
+            backgroundColor: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'not-allowed',
+            opacity: 0.6,
           },
         };
       }
@@ -129,6 +218,20 @@ export const themeComponents = {
         };
       }
 
+      if (params.variant === 'setupCondition--disabled') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'not-allowed',
+            opacity: 0.6,
+            pointerEvents: 'none',
+          },
+        };
+      }
+
       // Button Panel variants - for navigation/action panels with carets
       if (params.variant === 'buttonPanel--active') {
         return {
@@ -160,6 +263,19 @@ export const themeComponents = {
               backgroundColor: colors.gray[50],
               borderColor: colors.border.medium,
             },
+          },
+        };
+      }
+
+      if (params.variant === 'buttonPanel--disabled') {
+        return {
+          root: {
+            padding: spacing.md,
+            marginBottom: spacing.md,
+            backgroundColor: colors.gray[50],
+            border: `1px solid ${colors.border.light}`,
+            cursor: 'not-allowed',
+            opacity: 0.6,
           },
         };
       }
@@ -206,7 +322,7 @@ export const themeComponents = {
     defaultProps: themeDefaults.ActionIcon,
   },
   Title: Title.extend({
-    styles: (_theme, params) => {
+    styles: (_theme: any, params: any) => {
       if (params.variant === 'colored') {
         return {
           root: {
@@ -214,10 +330,18 @@ export const themeComponents = {
           },
         };
       }
+
+      if (params.variant === 'white') {
+        return {
+          root: {
+            color: colors.text.inverse,
+          },
+        };
+      }
+
       return {};
     },
   }),
-
   AppShell: AppShell.extend({
     defaultProps: {
       padding: spacing.appShell.main.padding,
@@ -231,6 +355,37 @@ export const themeComponents = {
       navbar: {
         padding: spacing.appShell.navbar.padding,
       },
+    },
+  }),
+  Table: Table.extend({
+    styles: (_theme: any, params: any) => {
+      // Parameter table variant - for policy/dynamics parameter tables
+      if (params.variant === 'parameterTable') {
+        return {
+          table: {
+            border: `1px solid ${colors.border.light}`,
+            borderRadius: spacing.radius.lg,
+            overflow: 'hidden',
+            backgroundColor: colors.white,
+          },
+          thead: {
+            backgroundColor: colors.gray[50],
+          },
+          th: {
+            fontSize: typography.fontSize.xs,
+            fontWeight: typography.fontWeight.medium,
+            color: colors.text.secondary,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            padding: `${spacing.md} ${spacing.lg}`,
+          },
+          td: {
+            padding: `${spacing.md} ${spacing.lg}`,
+          },
+        };
+      }
+
+      return {};
     },
   }),
 };

@@ -1,59 +1,31 @@
-import { useDispatch } from 'react-redux';
-import { Button } from '@mantine/core';
-import FlowContainer from '@/components/FlowContainer';
-import { PolicyCreationFlow } from '@/flows/policyCreationFlow';
-import { PolicyViewFlow } from '@/flows/policyViewFlow';
-import { PopulationCreationFlow } from '@/flows/populationCreationFlow';
-import { PopulationViewFlow } from '@/flows/populationViewFlow';
-import { ReportCreationFlow } from '@/flows/reportCreationFlow';
-import { ReportViewFlow } from '@/flows/reportViewFlow';
-import { SimulationCreationFlow } from '@/flows/simulationCreationFlow';
-import { SimulationViewFlow } from '@/flows/simulationViewFlow';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useFetchMetadata } from '@/hooks/useMetadata';
-import { clearFlow, setFlow } from '../reducers/flowReducer';
+import { Box } from '@mantine/core';
+import ActionCards from '@/components/home/ActionCards';
+import MainSection from '@/components/home/MainSection';
+import OrgLogos from '@/components/home/OrgLogos';
+import TransformationStatement from '@/components/home/TransformationStatement';
+import HeaderNavigation from '@/components/shared/HomeHeader';
+import { orgData } from '@/data/organizations';
+import { colors, spacing, typography } from '@/designTokens';
 
 export default function HomePage() {
-  const dispatch = useDispatch();
-
-  // Get current country from URL for UI formatting
-  const countryId = useCurrentCountry();
-
-  // Ensure metadata is fetched for current country
-  useFetchMetadata(countryId);
-
-  // Note: Below is for testing purposes only
   return (
-    <>
-      <h1>TODO: Home Page</h1>
-      <Button variant="default" onClick={() => dispatch(clearFlow())}>
-        Clear all flows
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PolicyCreationFlow))}>
-        Execute policy creation flow
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PolicyViewFlow))}>
-        Show Policy View
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(SimulationCreationFlow))}>
-        Execute simulation creation flow
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(SimulationViewFlow))}>
-        Show Simulation View
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PopulationCreationFlow))}>
-        Execute Population Flow
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(PopulationViewFlow))}>
-        View Populations
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(ReportCreationFlow))}>
-        Execute Report Creation Flow (TEST)
-      </Button>
-      <Button variant="default" onClick={() => dispatch(setFlow(ReportViewFlow))}>
-        Show Report View
-      </Button>
-      <FlowContainer />
-    </>
+    <Box
+      style={{
+        backgroundImage: `linear-gradient(180deg, ${colors.primary[50]}, #f2fcfaff, ${colors.white})`,
+        minHeight: '100vh',
+        fontFamily: typography.fontFamily.primary,
+        position: 'relative',
+        paddingTop: spacing['3xl'], // Fill the gap created by navbar's initial marginTop
+      }}
+    >
+      <HeaderNavigation enableScrollAnimation />
+
+      <Box pt={`calc(${spacing.layout.header} + ${spacing['4xl']})`}>
+        <MainSection />
+        <ActionCards />
+        <TransformationStatement />
+      </Box>
+      <OrgLogos logos={orgData} />
+    </Box>
   );
 }

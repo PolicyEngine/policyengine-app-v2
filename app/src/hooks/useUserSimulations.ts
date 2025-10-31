@@ -5,6 +5,7 @@ import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -27,7 +28,7 @@ import {
 /**
  * Enhanced result type that includes all relationships
  */
-interface EnhancedUserSimulation {
+export interface EnhancedUserSimulation {
   // Core associations
   userSimulation: UserSimulation;
   simulation?: Simulation;
@@ -58,7 +59,7 @@ interface EnhancedUserSimulation {
  * For simple lists or counts, use useSimulationAssociationsByUser instead
  */
 export const useUserSimulations = (userId: string) => {
-  const country = 'us'; // TODO: Replace with actual country ID retrieval logic
+  const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
 
   // Get geography data from metadata
@@ -147,7 +148,7 @@ export const useUserSimulations = (userId: string) => {
     queryKey: householdKeys.byId,
     queryFn: async (id) => {
       const metadata = await fetchHouseholdById(country, id);
-      return HouseholdAdapter.fromAPI(metadata);
+      return HouseholdAdapter.fromMetadata(metadata);
     },
     enabled: householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
@@ -275,7 +276,7 @@ export const useUserSimulations = (userId: string) => {
  */
 export const useUserSimulationById = (userId: string, simulationId: string) => {
   const queryNormalizer = useQueryNormalizer();
-  const country = 'us';
+  const country = useCurrentCountry();
 
   // Try to get from normalized cache first
   const cachedSimulation = queryNormalizer.getObjectById(simulationId) as Simulation | undefined;
@@ -320,7 +321,9 @@ export const useUserSimulationById = (userId: string, simulationId: string) => {
     retry: 1, // Only retry once if it's not a household
   });
 
-  const household = householdMetadata ? HouseholdAdapter.fromAPI(householdMetadata) : undefined;
+  const household = householdMetadata
+    ? HouseholdAdapter.fromMetadata(householdMetadata)
+    : undefined;
 
   // Get user associations
   const { data: policyAssociations } = usePolicyAssociationsByUser(userId);

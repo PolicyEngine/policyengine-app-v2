@@ -6,7 +6,7 @@ import Footer from '@/components/policyParameterSelectorFrame/Footer';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
-import HeaderBar from '@/components/shared/HeaderBar';
+import HeaderNavigation from '@/components/shared/HomeHeader';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -61,7 +61,7 @@ export default function PolicyParameterSelectorFrame({
       footer={{ height: parseInt(spacing.appShell.footer.height, 10) }}
     >
       <AppShell.Header p={0}>
-        <HeaderBar showLogo />
+        <HeaderNavigation />
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
@@ -72,11 +72,11 @@ export default function PolicyParameterSelectorFrame({
         )}
       </AppShell.Navbar>
 
-      <AppShell.Main>
+      <AppShell.Main bg="gray.0">
         {loading || !parameterTree ? (
           <MainEmpty />
         ) : selectedLeafParam ? (
-          <Main param={selectedLeafParam} />
+          <Main key={selectedLeafParam.parameter} param={selectedLeafParam} />
         ) : (
           <MainEmpty />
         )}

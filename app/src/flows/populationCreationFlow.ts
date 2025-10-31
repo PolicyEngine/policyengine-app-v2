@@ -9,6 +9,8 @@ export const PopulationCreationFlow: Flow = {
         household: 'SetPopulationLabelFrame',
         state: 'SetPopulationLabelFrame',
         national: 'SetPopulationLabelFrame',
+        country: 'SetPopulationLabelFrame',
+        constituency: 'SetPopulationLabelFrame',
       },
     },
     SetPopulationLabelFrame: {

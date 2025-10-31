@@ -54,7 +54,7 @@ export const TEST_PATHS = {
   // Valid paths
   US_POLICIES: '/us/policies',
   UK_HOUSEHOLD: '/uk/household/123',
-  CA_REPORTS: '/ca/reports/annual/2024',
+  CA_REPORTS: '/ca/reports/annual/2025',
 
   // Invalid country paths
   INVALID_SIMPLE: '/invalid/policies',
@@ -74,19 +74,21 @@ export const TEST_PATHS = {
 } as const;
 
 // Expected redirect paths
+// NOTE: After simplification, CountryGuard now redirects to '/' for all invalid countries,
+// letting the root route handler decide the country (instead of preserving paths)
 export const EXPECTED_REDIRECTS = {
   DEFAULT_COUNTRY: 'us',
 
-  // Preserve paths after redirect
-  POLICIES: '/us/policies',
-  HOUSEHOLD: '/us/household/123',
-  REPORTS: '/us/reports/annual/2024',
-  ROOT_REDIRECT: '/us/',
+  // All invalid countries now redirect to root
+  POLICIES: '/',
+  HOUSEHOLD: '/',
+  REPORTS: '/',
+  ROOT_REDIRECT: '/',
 
-  // Complex path preservation
-  NESTED_PATH: '/us/reports/123/edit',
-  WITH_QUERY: '/us/policies?filter=active&sort=date',
-  WITH_HASH: '/us/policies#section',
+  // Complex paths also redirect to root (no path preservation)
+  NESTED_PATH: '/',
+  WITH_QUERY: '/',
+  WITH_HASH: '/',
 } as const;
 
 // Helper function to create mock Navigate tracking
@@ -106,3 +108,15 @@ export function createNavigateMock() {
       navigateCalls.some((call) => call.to === to && call.replace === replace),
   };
 }
+
+/**
+ * Constants for test content
+ */
+export const TEST_CONTENT = {
+  PROTECTED: 'Protected Content',
+  SHOULD_NOT_RENDER: 'Should not render',
+} as const;
+
+export const TEST_IDS = {
+  PROTECTED_CONTENT: 'protected-content',
+} as const;
