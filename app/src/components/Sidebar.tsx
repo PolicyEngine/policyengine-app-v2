@@ -69,7 +69,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       <Stack gap={0}>
         <Box px={16} py={16}>
           <Button
-            leftSection={<IconPlus size={16} stroke={2} />}
+            rightSection={<IconPlus size={16} />}
             fullWidth
             variant="filled"
             size="sm"
@@ -82,7 +82,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
               },
             }}
           >
-            Create report
+            New report
           </Button>
         </Box>
       </Stack>

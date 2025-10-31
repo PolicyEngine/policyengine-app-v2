@@ -1,4 +1,4 @@
-import { IconCirclePlus, IconFilter, IconSearch } from '@tabler/icons-react';
+import { IconFilter, IconPlus, IconSearch } from '@tabler/icons-react';
 import {
   Box,
   Button,
@@ -72,8 +72,8 @@ export default function IngredientReadView({
           </Box>
 
           {onBuild && (
-            <Button rightSection={<IconCirclePlus size={16} />} onClick={onBuild} variant="filled">
-              Build {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+            <Button rightSection={<IconPlus size={16} />} onClick={onBuild} variant="filled">
+              New {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
             </Button>
           )}
         </Flex>
