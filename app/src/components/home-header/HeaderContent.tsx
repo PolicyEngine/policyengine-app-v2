@@ -27,7 +27,17 @@ export default function HeaderContent({
   onNavClick,
 }: HeaderContentProps) {
   return (
-    <Container size="xl" h="100%">
+    <Container
+      h="100%"
+      p={0}
+      m={0}
+      style={{
+        width: '100%',
+        maxWidth: '100%',
+        marginInlineStart: 0,
+        marginInlineEnd: 0,
+      }}
+    >
       <Group justify="space-between" h="100%">
         <Group>
           <HeaderLogo />

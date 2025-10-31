@@ -55,13 +55,14 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
   };
 
   // Common styles shared between both variants
+  // Padding set to 24px to match Mantine AppShell.Main padding
   const commonStyles = {
     position: 'sticky' as const,
     top: 0,
-    paddingLeft: spacing['2xl'],
-    paddingRight: spacing['2xl'],
     paddingTop: spacing.sm,
     paddingBottom: spacing.sm,
+    paddingLeft: "24px",
+    paddingRight: "24px",
     height: spacing.layout.header,
     backgroundColor: colors.primary[600],
     borderBottom: `0.5px solid ${colors.border.dark}`,
