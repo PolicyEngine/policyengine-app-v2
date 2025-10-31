@@ -1,4 +1,4 @@
-import { Anchor, Box, Burger, Button, Drawer, Group, Stack, Text } from '@mantine/core';
+import { Anchor, Burger, Drawer, Group, Stack } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface NavLink {
@@ -11,7 +11,6 @@ interface MobileMenuProps {
   onOpen: () => void;
   onClose: () => void;
   navLinks: NavLink[];
-  learnLinks: NavLink[];
   onNavClick: (path?: string) => void;
 }
 
@@ -20,7 +19,6 @@ export default function MobileMenu({
   onOpen,
   onClose,
   navLinks,
-  learnLinks,
   onNavClick,
 }: MobileMenuProps) {
   return (
@@ -56,33 +54,6 @@ export default function MobileMenu({
               {link.label}
             </Anchor>
           ))}
-
-          <Box>
-            <Text c={colors.text.inverse} fw={typography.fontWeight.semibold} mb={spacing.sm}>
-              Learn
-            </Text>
-
-            <Stack gap={spacing.xs} ml={spacing.md}>
-              {learnLinks.map((link) => (
-                <Text key={link.label} c={colors.text.inverse} size="sm" onClick={onClose}>
-                  {link.label}
-                </Text>
-              ))}
-            </Stack>
-          </Box>
-
-          <Box pt={spacing.lg} style={{ borderTop: `1px solid ${colors.border.light}` }}>
-            <Button
-              style={{ backgroundColor: colors.warning, borderRadius: spacing.radius.md }}
-              c={colors.text.primary}
-              fw={typography.fontWeight.semibold}
-              mb={spacing.sm}
-              fullWidth
-              onClick={onClose}
-            >
-              Sign Up
-            </Button>
-          </Box>
         </Stack>
       </Drawer>
     </>

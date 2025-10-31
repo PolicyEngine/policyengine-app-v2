@@ -33,18 +33,8 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
     : undefined;
 
   const navLinks: NavLink[] = [
-    { label: 'Research', path: `/${countryId}/research` },
     { label: 'About', path: `/${countryId}/about` },
     { label: 'Donate', path: `/${countryId}/donate` },
-  ];
-
-  const learnLinks: NavLink[] = [
-    { label: 'AI & ML' },
-    { label: 'API' },
-    { label: 'Microsimulation' },
-    { label: 'Benefit Access' },
-    { label: 'Educational Use' },
-    { label: 'Open Source' },
   ];
 
   const handleNavClick = (path?: string) => {
@@ -94,7 +84,6 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
           onOpen={open}
           onClose={close}
           navLinks={navLinks}
-          learnLinks={learnLinks}
           onNavClick={handleNavClick}
         />
       </motion.div>
@@ -118,7 +107,6 @@ export default function HeaderNavigation({ enableScrollAnimation = false }: Head
         onOpen={open}
         onClose={close}
         navLinks={navLinks}
-        learnLinks={learnLinks}
         onNavClick={handleNavClick}
       />
     </div>

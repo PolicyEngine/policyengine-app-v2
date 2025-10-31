@@ -1,5 +1,4 @@
-import { IconChevronDown } from '@tabler/icons-react';
-import { Anchor, Group, Menu, Text, UnstyledButton } from '@mantine/core';
+import { Anchor, Group } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface NavLink {
@@ -9,13 +8,11 @@ interface NavLink {
 
 interface DesktopNavigationProps {
   navLinks: NavLink[];
-  learnLinks: NavLink[];
   onNavClick: (path?: string) => void;
 }
 
 export default function DesktopNavigation({
   navLinks,
-  learnLinks,
   onNavClick,
 }: DesktopNavigationProps) {
   return (
@@ -33,24 +30,6 @@ export default function DesktopNavigation({
           {link.label}
         </Anchor>
       ))}
-
-      <Menu shadow="md" width={200} zIndex={1001} position="bottom" offset={10}>
-        <Menu.Target>
-          <UnstyledButton>
-            <Group gap={4}>
-              <Text c={colors.text.inverse} fw={typography.fontWeight.medium} size="md">
-                Learn
-              </Text>
-              <IconChevronDown size={16} color={colors.text.inverse} />
-            </Group>
-          </UnstyledButton>
-        </Menu.Target>
-        <Menu.Dropdown>
-          {learnLinks.map((link) => (
-            <Menu.Item key={link.label}>{link.label}</Menu.Item>
-          ))}
-        </Menu.Dropdown>
-      </Menu>
     </Group>
   );
 }
