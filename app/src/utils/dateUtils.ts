@@ -17,8 +17,12 @@ export type DateFormatType =
  * @returns ISO date string (YYYY-MM-DD) or empty string if null
  */
 export function toISODateString(value: Date | string | null): string {
-  if (!value) return '';
-  if (typeof value === 'string') return value; // Already ISO string
+  if (!value) {
+    return '';
+  }
+  if (typeof value === 'string') {
+    return value;
+  } // Already ISO string
   return value.toISOString().split('T')[0];
 }
 
@@ -29,7 +33,9 @@ export function toISODateString(value: Date | string | null): string {
  * @returns Date object or undefined
  */
 export function fromISODateString(isoString: string): Date | undefined {
-  if (!isoString) return undefined;
+  if (!isoString) {
+    return undefined;
+  }
   return new Date(isoString);
 }
 

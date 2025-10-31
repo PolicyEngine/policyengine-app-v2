@@ -4,7 +4,6 @@ import { Stack, Text } from '@mantine/core';
 import { CHART_COLORS } from '@/constants/chartColors';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { capitalize } from '@/utils/stringUtils';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   extendForDisplay,
@@ -15,6 +14,7 @@ import {
 } from '@/utils/chartDateUtils';
 import { getReformPolicyLabel } from '@/utils/chartUtils';
 import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
+import { capitalize } from '@/utils/stringUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;

@@ -2,7 +2,6 @@ import dayjs from 'dayjs';
 import { Dispatch, SetStateAction, useEffect, useMemo, useState } from 'react';
 import { IconSettings } from '@tabler/icons-react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
 import {
   ActionIcon,
   Box,
@@ -26,6 +25,7 @@ import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { fromISODateString, toISODateString } from '@/utils/dateUtils';
 
 enum ValueSetterMode {
   DEFAULT = 'default',
@@ -38,11 +38,7 @@ enum ValueSetterMode {
  * Helper function to get default value for a parameter at a specific date
  * Priority: 1) User's reform value, 2) Baseline current law value
  */
-function getDefaultValueForParam(
-  param: ParameterMetadata,
-  activePolicy: any,
-  date: string
-): any {
+function getDefaultValueForParam(param: ParameterMetadata, activePolicy: any, date: string): any {
   // First check if user has set a reform value for this parameter
   if (activePolicy) {
     const userParam = getParameterByName(activePolicy, param.parameter);
@@ -189,7 +185,8 @@ export function ModeSelectorButton(props: { setMode: (mode: ValueSetterMode) => 
 }
 
 export function DefaultValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } =
+    props;
 
   // Get active policy to check for user-set reform values
   const activePolicy = useSelector(selectActivePolicy);
@@ -247,7 +244,8 @@ export function DefaultValueSelector(props: ValueSetterProps) {
 }
 
 export function YearlyValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } =
+    props;
 
   // Get active policy to check for user-set reform values
   const activePolicy = useSelector(selectActivePolicy);
@@ -260,9 +258,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   // Set endDate to end of year of startDate
   useEffect(() => {
     if (startDate) {
-      const endOfYearDate = dayjs(startDate)
-        .endOf('year')
-        .format('YYYY-MM-DD');
+      const endOfYearDate = dayjs(startDate).endOf('year').format('YYYY-MM-DD');
       setEndDate(endOfYearDate);
     }
   }, [startDate, setEndDate]);
@@ -296,9 +292,7 @@ export function YearlyValueSelector(props: ValueSetterProps) {
   function handleEndDateChange(value: Date | string | null) {
     const isoString = toISODateString(value);
     if (isoString) {
-      const endOfYearDate = dayjs(isoString)
-        .endOf('year')
-        .format('YYYY-MM-DD');
+      const endOfYearDate = dayjs(isoString).endOf('year').format('YYYY-MM-DD');
       setEndDate(endOfYearDate);
     } else {
       setEndDate('');
@@ -331,7 +325,8 @@ export function YearlyValueSelector(props: ValueSetterProps) {
 }
 
 export function DateValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } = props;
+  const { param, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } =
+    props;
 
   // Get active policy to check for user-set reform values
   const activePolicy = useSelector(selectActivePolicy);
@@ -344,9 +339,7 @@ export function DateValueSelector(props: ValueSetterProps) {
   // Set endDate to end of year of startDate
   useEffect(() => {
     if (startDate) {
-      const endOfYearDate = dayjs(startDate)
-        .endOf('year')
-        .format('YYYY-MM-DD');
+      const endOfYearDate = dayjs(startDate).endOf('year').format('YYYY-MM-DD');
       setEndDate(endOfYearDate);
     }
   }, [startDate, setEndDate]);
@@ -407,7 +400,7 @@ export function DateValueSelector(props: ValueSetterProps) {
 }
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, minDate, maxDate } = props;
+  const { param, setIntervals, maxDate } = props;
 
   // Get active policy to check for user-set reform values
   const activePolicy = useSelector(selectActivePolicy);
