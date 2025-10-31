@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
 import StaticLayout from './components/StaticLayout';
