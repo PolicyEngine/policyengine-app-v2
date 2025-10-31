@@ -1,16 +1,31 @@
 import { Box, Flex } from '@mantine/core';
 import { spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+
+interface Organization {
+  name: string;
+  logo: string;
+  link: string;
+}
+
+interface OrgData {
+  uk: Record<string, Organization>;
+  us: Record<string, Organization>;
+}
 
 interface OrgLogosProps {
-  logos: {
-    id: string;
-    src: string;
-    alt: string;
-    onClick?: () => void;
-  }[];
+  logos: OrgData;
 }
 
 export default function OrgLogos({ logos }: OrgLogosProps) {
+  const countryId = useCurrentCountry();
+
+  // Get organizations for current country, limit to 7
+  const countryOrgs = logos[countryId as keyof OrgData];
+  if (!countryOrgs) return null;
+
+  const orgsArray = Object.values(countryOrgs).slice(0, 7);
+
   return (
     <Box mb={spacing['4xl']}>
       <Box
@@ -29,9 +44,9 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
           px={spacing['4xl']}
           style={{ minWidth: 'max-content' }}
         >
-          {logos.map((logo) => (
+          {orgsArray.map((org) => (
             <Box
-              key={logo.id}
+              key={org.name}
               w={120}
               h={100}
               style={{
@@ -45,15 +60,15 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
             >
               <button
                 type="button"
-                onClick={logo.onClick}
+                onClick={() => window.open(org.link, '_blank')}
                 style={{
                   all: 'unset',
                   cursor: 'pointer',
                 }}
               >
                 <img
-                  src={logo.src}
-                  alt={logo.alt}
+                  src={org.logo}
+                  alt={org.name}
                   style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
                 />
               </button>
