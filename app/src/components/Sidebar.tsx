@@ -1,8 +1,10 @@
 import {
   IconBook,
-  IconExternalLink,
+  IconBrandGithub,
+  IconBrandSlack,
   IconFileDescription,
   IconGitBranch,
+  IconMail,
   IconPlus,
   IconScale,
   IconSettings2,
@@ -36,18 +38,18 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const resourceItems = [
     {
       label: 'GitHub',
-      icon: IconGitBranch,
+      icon: IconBrandGithub,
       path: 'https://github.com/PolicyEngine',
       external: true,
     },
-    { label: 'Join Slack', icon: IconExternalLink, path: 'https://slack.com', external: true },
+    { label: 'Join Slack', icon: IconBrandSlack, path: 'https://slack.com', external: true },
     { label: 'Visit Blog', icon: IconBook, path: 'https://blog.example.com', external: true },
     { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
   ];
 
   const accountItems = [
     { label: 'Account Settings', icon: IconSettings2, path: `/${countryId}/account` },
-    { label: 'Contact Support', icon: IconExternalLink, path: `/${countryId}/support` },
+    { label: 'Contact Support', icon: IconMail, path: 'mailto:hello@policyengine.org', external: true },
   ];
 
   if (!isOpen) {
