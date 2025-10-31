@@ -8,6 +8,7 @@ import { capitalize } from '@/utils/stringUtils';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   extendForDisplay,
+  filterInfiniteValues,
   filterValidChartDates,
   getAllChartDates,
   getChartBoundaryDates,
@@ -53,6 +54,9 @@ export default function PolicyParameterSelectorHistoricalValues(
         policyLabel={policyLabel}
         policyId={policyId}
       />
+      <Text size="sm" c="gray.8" fs="italic">
+        Note: Charts do not currently display parameters with values of positive or negative infinity.
+      </Text>
     </Stack>
   );
 }
@@ -82,8 +86,14 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
         return { x: [], y: [] };
       }
 
-      extendForDisplay(dates, values);
-      return { x: dates, y: values };
+      const { filteredDates, filteredValues } = filterInfiniteValues(dates, values);
+
+      if (filteredDates.length === 0 || filteredValues.length === 0) {
+        return { x: [], y: [] };
+      }
+
+      extendForDisplay(filteredDates, filteredValues);
+      return { x: filteredDates, y: filteredValues };
     } catch (error) {
       console.error('ParameterOverTimeChart: Error processing base data', error);
       return { x: [], y: [] };
@@ -110,8 +120,14 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
         return { reformedX: [], reformedY: [] };
       }
 
-      extendForDisplay(dates, values);
-      return { reformedX: dates, reformedY: values };
+      const { filteredDates, filteredValues } = filterInfiniteValues(dates, values);
+
+      if (filteredDates.length === 0 || filteredValues.length === 0) {
+        return { reformedX: [], reformedY: [] };
+      }
+
+      extendForDisplay(filteredDates, filteredValues);
+      return { reformedX: filteredDates, reformedY: filteredValues };
     } catch (error) {
       console.error('ParameterOverTimeChart: Error processing reform data', error);
       return { reformedX: [], reformedY: [] };
@@ -130,22 +146,28 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
 
       const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
 
-      // Calculate x-axis range with 5 years before earliest date
-      const allDates = [...xaxisValues].sort();
-      const earliestDate = allDates[0] ? new Date(allDates[0]) : new Date();
-      const fiveYearsBefore = new Date(earliestDate);
-      fiveYearsBefore.setFullYear(fiveYearsBefore.getFullYear() - 5);
+      // Calculate x-axis range starting at 2013 (earliest display date, with 2-year buffer)
+      const EARLIEST_DISPLAY_DATE = '2013-01-01';
 
       // Calculate y-axis range with 10% buffer above and below
       const numericYValues = yaxisValues.map((v) => Number(v)).filter((v) => !isNaN(v));
-      const minY = Math.min(...numericYValues);
-      const maxY = Math.max(...numericYValues);
+      let minY = Math.min(...numericYValues);
+      let maxY = Math.max(...numericYValues);
+
+      // Ensure 0 is always visible for all value types
+      minY = Math.min(minY, 0);
+
+      // For percentages, also ensure 100% is always visible
+      if (param.unit === '/1') {
+        maxY = Math.max(maxY, 1);
+      }
+
       const yRange = maxY - minY;
       const yBuffer = yRange * 0.1;
 
       const xaxisFormatWithRange = {
         ...getPlotlyAxisFormat('date', xaxisValues),
-        range: [fiveYearsBefore.toISOString().split('T')[0], maxDate],
+        range: [EARLIEST_DISPLAY_DATE, maxDate],
       };
 
       const yaxisFormatWithRange = {
