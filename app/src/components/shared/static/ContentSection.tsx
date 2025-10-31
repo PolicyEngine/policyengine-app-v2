@@ -7,6 +7,7 @@ export interface ContentSectionProps {
   variant?: 'primary' | 'secondary' | 'accent';
   children: ReactNode;
   centerTitle?: boolean;
+  id?: string;
 }
 
 export default function ContentSection({
@@ -14,6 +15,7 @@ export default function ContentSection({
   variant = 'primary',
   children,
   centerTitle = false,
+  id,
 }: ContentSectionProps) {
   const backgrounds = {
     primary: colors.white,
@@ -29,6 +31,7 @@ export default function ContentSection({
 
   return (
     <Box
+      id={id}
       py={spacing['4xl']}
       style={{
         backgroundColor: backgrounds[variant],

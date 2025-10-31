@@ -7,6 +7,7 @@ import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DashboardPage from './pages/Dashboard.page';
+import APIPage from './pages/API.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
@@ -96,6 +97,21 @@ const router = createBrowserRouter(
                 {
                   path: 'account',
                   element: <div>Account settings page</div>,
+                },
+              ],
+            },
+          ],
+        },
+        // Static pages that need metadata - use MetadataLazyLoader + StaticLayout
+        {
+          element: <MetadataLazyLoader />,
+          children: [
+            {
+              element: <StaticLayout />,
+              children: [
+                {
+                  path: 'api',
+                  element: <APIPage />,
                 },
               ],
             },
