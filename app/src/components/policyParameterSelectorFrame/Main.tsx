@@ -6,13 +6,12 @@ import { selectActivePolicy } from '@/reducers/activeSelectors';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
+import { capitalize } from '@/utils/stringUtils';
 
 /* TODO:
 - Implement reset functionality
-- Implement a switch for boolean values
 - Implement a dropdown for selecting predefined values
 - Implement search feature
-- Properly fill default values based on pre-existing param values
 */
 
 interface PolicyParameterSelectorMainProps {
@@ -53,7 +52,7 @@ export default function PolicyParameterSelectorMain(props: PolicyParameterSelect
   return (
     <Container variant="guttered">
       <Title order={3} pb="xl">
-        {param.label || 'Label unavailable'}
+        {capitalize(param.label || 'Label unavailable')}
       </Title>
       {param.description && (
         <>
