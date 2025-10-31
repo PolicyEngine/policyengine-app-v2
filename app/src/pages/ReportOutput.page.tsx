@@ -142,9 +142,7 @@ export default function ReportOutputPage() {
   }
 
   // Determine if sidebar should be shown
-  const showSidebar =
-    activeTab === 'comparative-analysis' &&
-    (outputType === 'societyWide' || outputType === 'household');
+  const showSidebar = activeTab === 'comparative-analysis';
 
   // Handle sidebar navigation (absolute path)
   const handleSidebarNavigate = (viewName: string) => {
