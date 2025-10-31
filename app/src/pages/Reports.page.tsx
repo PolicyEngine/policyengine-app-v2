@@ -8,7 +8,7 @@ import {
   TextValue,
 } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
-import { MultiSimOutputTypeCell } from '@/components/report/OutputTypeCell';
+import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -117,8 +117,16 @@ export default function ReportsPage() {
               : '',
           } as TextValue,
           status: {
-            text: formatStatus(item.report?.status || 'initializing'),
-          } as TextValue,
+            custom: isHouseholdReport ? (
+              <MultiSimOutputTypeCell
+                simulationIds={simulationIds}
+                report={item.report}
+                simulations={item.simulations}
+              />
+            ) : (
+              <ReportOutputTypeCell reportId={item.userReport.reportId} report={item.report} />
+            ),
+          },
           simulations: {
             items: item.simulations?.map((sim, index) => ({
               text: item.userSimulations?.[index]?.label || `Simulation #${sim.id}`,
@@ -128,20 +136,9 @@ export default function ReportsPage() {
               },
             ],
           } as BulletsValue,
-          // Use appropriate cell component based on report type
-          // This cell will re-render independently when its CalcStatus updates
           outputType: {
-            custom: isHouseholdReport ? (
-              <MultiSimOutputTypeCell
-                simulationIds={simulationIds}
-                isHouseholdReport={isHouseholdReport}
-                simulations={item.simulations}
-                report={item.report}
-              />
-            ) : (
-              <ReportOutputTypeCell reportId={item.userReport.reportId} report={item.report} />
-            ),
-          },
+            text: isHouseholdReport ? 'Household' : 'Society-wide',
+          } as TextValue,
         };
       }) || [],
     [data, countryId]

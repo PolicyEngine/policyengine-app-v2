@@ -9,7 +9,7 @@ interface ReportOutputTypeCellProps {
 }
 
 /**
- * Cell component for displaying society-wide report output type with live calculation status
+ * Cell component for displaying society-wide report status with live calculation spinner
  *
  * This component subscribes to CalcStatus updates for the report
  * and re-renders only when its own CalcStatus changes, not when other reports update.
@@ -43,9 +43,10 @@ export const ReportOutputTypeCell = React.memo(
       );
     }
 
-    // Show output type for society-wide reports
-    const finalText = report?.output ? 'Society-wide' : 'Not generated';
-    console.log('[ReportOutputTypeCell] Displaying complete state:', finalText);
-    return <Text size="sm">{finalText}</Text>;
+    // Show status text
+    const status = report?.status || 'initializing';
+    const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+    console.log('[ReportOutputTypeCell] Displaying complete state:', formattedStatus);
+    return <Text size="sm">{formattedStatus}</Text>;
   }
 );

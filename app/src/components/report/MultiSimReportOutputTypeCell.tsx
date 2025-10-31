@@ -4,15 +4,14 @@ import { useMultiSimulationCalcStatus } from '@/hooks/useCalcStatusSubscription'
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
 
-interface OutputTypeCellProps {
+interface MultiSimReportOutputTypeCellProps {
   simulationIds: string[];
-  isHouseholdReport: boolean;
   simulations?: Simulation[];
   report?: Report;
 }
 
 /**
- * Cell component for displaying report output type with live calculation status
+ * Cell component for displaying report status with live calculation spinner
  * For household reports (multiple simulations)
  *
  * This component subscribes to CalcStatus updates for the report's simulations
@@ -21,7 +20,7 @@ interface OutputTypeCellProps {
  * Memoized to prevent unnecessary re-renders when parent component updates.
  */
 export const MultiSimOutputTypeCell = React.memo(
-  ({ simulationIds, isHouseholdReport, simulations, report }: OutputTypeCellProps) => {
+  ({ simulationIds, simulations, report }: MultiSimReportOutputTypeCellProps) => {
     // Subscribe to CalcStatus for this report's simulations
     const { isCalculating, progress } = useMultiSimulationCalcStatus(simulationIds);
 
@@ -29,7 +28,6 @@ export const MultiSimOutputTypeCell = React.memo(
       simulationIds,
       isCalculating,
       progress,
-      isHouseholdReport,
     });
 
     // Show calculating state with spinner and progress
@@ -42,14 +40,9 @@ export const MultiSimOutputTypeCell = React.memo(
       );
     }
 
-    // Show output type for household reports
-    if (isHouseholdReport) {
-      // Check if any simulation has output
-      const hasOutput = simulations?.some((sim) => sim.output);
-      return <Text size="sm">{hasOutput ? 'Household' : 'Not generated'}</Text>;
-    }
-
-    // Show output type for economy reports
-    return <Text size="sm">{report?.output ? 'Society-wide' : 'Not generated'}</Text>;
+    // Show status text
+    const status = report?.status || 'initializing';
+    const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
+    return <Text size="sm">{formattedStatus}</Text>;
   }
 );
