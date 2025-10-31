@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { IconChevronDown } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,6 +15,7 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -26,15 +27,15 @@ interface NavLink {
 
 export default function HeaderNavigation() {
   const [opened, { open, close }] = useDisclosure(false);
-  const [isScrolled, setIsScrolled] = useState(false);
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
+  const { scrollY } = useScroll();
 
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 50);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Smooth scroll-linked animations
+  // Maps scroll position 0-50px to smooth transitions
+  const marginTop = useTransform(scrollY, [0, 50], ['32px', '0px']);
+  const width = useTransform(scrollY, [0, 50], ['85%', '100%']);
+  const borderRadius = useTransform(scrollY, [0, 50], ['8px', '0px']);
 
   const navLinks: NavLink[] = [
     { label: 'Research', path: `/${countryId}/research` },
@@ -59,17 +60,21 @@ export default function HeaderNavigation() {
   };
 
   return (
-    <Box
-      px={{ xs: spacing.md, sm: spacing['2xl'] }}
-      py={spacing.sm}
+    <motion.div
       style={{
         position: 'sticky',
-        top: isScrolled ? 0 : spacing['3xl'],
-        margin: isScrolled ? 0 : '0 auto',
-        width: isScrolled ? '100%' : '85%',
+        top: 0,
+        marginTop,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+        width,
+        borderRadius,
+        paddingLeft: spacing['2xl'],
+        paddingRight: spacing['2xl'],
+        paddingTop: spacing.sm,
+        paddingBottom: spacing.sm,
         height: spacing.layout.header,
         backgroundColor: colors.primary[600],
-        borderRadius: isScrolled ? 0 : spacing.radius.lg,
         borderBottom: `0.5px solid ${colors.border.dark}`,
         boxShadow: `
           0px 2px 4px -1px rgba(0, 0, 0, 0.06),
@@ -78,7 +83,7 @@ export default function HeaderNavigation() {
         zIndex: 1000,
         fontFamily: typography.fontFamily.primary,
         opacity: opened ? 0 : 1,
-        transition: 'all 0.1s ease',
+        transition: 'opacity 0.1s ease',
       }}
     >
       <Container size="xl" h="100%">
@@ -206,6 +211,6 @@ export default function HeaderNavigation() {
           </Box>
         </Stack>
       </Drawer>
-    </Box>
+    </motion.div>
   );
 }
