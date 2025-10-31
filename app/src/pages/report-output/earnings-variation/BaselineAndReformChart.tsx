@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Radio, Stack } from '@mantine/core';
+import { Group, Radio, Stack } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
@@ -238,11 +238,11 @@ export default function BaselineAndReformChart({
   return (
     <Stack gap={spacing.md}>
       <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-        <Stack gap={spacing.xs}>
+        <Group gap={spacing.md}>
           <Radio value="both" label="Baseline and Reform" />
           <Radio value="absolute" label="Absolute Change" />
           <Radio value="relative" label="Relative Change" />
-        </Stack>
+        </Group>
       </Radio.Group>
 
       {renderChart()}
