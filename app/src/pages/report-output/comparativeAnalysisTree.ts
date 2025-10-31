@@ -131,9 +131,5 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
       name: 'inequality-impact',
       label: 'Inequality Impact',
     },
-    {
-      name: 'cliff-impact',
-      label: 'Cliff Impact',
-    },
   ];
 }
