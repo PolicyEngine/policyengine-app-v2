@@ -32,7 +32,6 @@ export function RelativeChangeByConstituency({ output }: RelativeChangeByConstit
     return transformConstituencyRelativeChange(constituencyData);
   }, [output]);
 
-
   if (!hexMapData.length) {
     return (
       <Stack align="center" justify="center" h={400}>

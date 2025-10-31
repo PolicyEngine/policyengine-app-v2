@@ -23,7 +23,6 @@ describe('RelativeChangeByConstituency', () => {
     ).toBeInTheDocument();
   });
 
-
   test('given no constituency data then shows no data message', () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY;

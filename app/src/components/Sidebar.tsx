@@ -49,7 +49,12 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
 
   const accountItems = [
     { label: 'Account Settings', icon: IconSettings2, path: `/${countryId}/account` },
-    { label: 'Contact Support', icon: IconMail, path: 'mailto:hello@policyengine.org', external: true },
+    {
+      label: 'Contact Support',
+      icon: IconMail,
+      path: 'mailto:hello@policyengine.org',
+      external: true,
+    },
   ];
 
   if (!isOpen) {

@@ -21,7 +21,6 @@ describe('AverageChangeByConstituency', () => {
     expect(screen.getByText('Average Household Income Change by Constituency')).toBeInTheDocument();
   });
 
-
   test('given no constituency data then shows no data message', () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY;

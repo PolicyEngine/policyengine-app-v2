@@ -49,11 +49,6 @@ export default function ReportsPage() {
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
-  // Helper function to format status text
-  const formatStatus = (status: string): string => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
   // Define column configurations for reports
   const reportColumns: ColumnConfig[] = [
     {

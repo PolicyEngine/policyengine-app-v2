@@ -32,7 +32,6 @@ export function AverageChangeByConstituency({ output }: AverageChangeByConstitue
     return transformConstituencyAverageChange(constituencyData);
   }, [output]);
 
-
   if (!hexMapData.length) {
     return (
       <Stack align="center" justify="center" h={400}>

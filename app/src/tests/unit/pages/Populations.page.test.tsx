@@ -297,7 +297,6 @@ describe('PopulationsPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('create');
     });
 
-
     test('given user selects population then updates selection state', async () => {
       // Given
       const user = userEvent.setup();

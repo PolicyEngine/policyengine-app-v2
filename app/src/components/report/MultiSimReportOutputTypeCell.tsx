@@ -20,7 +20,7 @@ interface MultiSimReportOutputTypeCellProps {
  * Memoized to prevent unnecessary re-renders when parent component updates.
  */
 export const MultiSimOutputTypeCell = React.memo(
-  ({ simulationIds, simulations, report }: MultiSimReportOutputTypeCellProps) => {
+  ({ simulationIds, simulations: _simulations, report }: MultiSimReportOutputTypeCellProps) => {
     // Subscribe to CalcStatus for this report's simulations
     const { isCalculating, progress } = useMultiSimulationCalcStatus(simulationIds);
 

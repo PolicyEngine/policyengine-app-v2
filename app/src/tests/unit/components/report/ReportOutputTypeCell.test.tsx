@@ -92,7 +92,10 @@ describe('ReportOutputTypeCell', () => {
 
   it('given pending report without output then displays Pending status', () => {
     // Given
-    const report = { ...createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_999), status: 'pending' as const };
+    const report = {
+      ...createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_999),
+      status: 'pending' as const,
+    };
 
     // When
     render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_999} report={report} />);
@@ -132,7 +135,10 @@ describe('ReportOutputTypeCell', () => {
       'societyWide',
       'Calculation failed'
     );
-    const errorReport = { ...createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_ERROR), status: 'error' as const };
+    const errorReport = {
+      ...createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_ERROR),
+      status: 'error' as const,
+    };
     queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_ERROR), errorStatus);
 
     // When

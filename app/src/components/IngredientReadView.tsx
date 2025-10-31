@@ -1,16 +1,5 @@
-import { IconFilter, IconPlus, IconSearch } from '@tabler/icons-react';
-import {
-  Box,
-  Button,
-  Checkbox,
-  Flex,
-  Loader,
-  Paper,
-  Table,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
+import { Box, Button, Checkbox, Flex, Loader, Paper, Table, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';
 import EmptyState from './common/EmptyState';
@@ -44,9 +33,9 @@ export default function IngredientReadView({
   error,
   data,
   columns,
-  searchValue = '',
-  onSearchChange,
-  onMoreFilters,
+  searchValue: _searchValue = '',
+  onSearchChange: _onSearchChange,
+  onMoreFilters: _onMoreFilters,
   enableSelection = true,
   isSelected = () => false,
   onSelectionChange,
