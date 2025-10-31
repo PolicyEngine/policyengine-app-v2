@@ -8,7 +8,7 @@ import {
   IconSettings2,
   IconUsers,
 } from '@tabler/icons-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Stack } from '@mantine/core';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, spacing, typography } from '../designTokens';
@@ -22,6 +22,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const countryId = useCurrentCountry();
 
   // All internal navigation paths include the country prefix for consistency with v1 app
@@ -81,6 +82,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
                 fontWeight: typography.fontWeight.medium,
               },
             }}
+            onClick={() => navigate(`/${countryId}/reports/create`)}
           >
             New report
           </Button>
