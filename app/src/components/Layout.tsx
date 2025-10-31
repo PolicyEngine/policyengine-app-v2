@@ -7,7 +7,7 @@ import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { clearFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
 import { cacheMonitor } from '@/utils/cacheMonitor';
-import HeaderBar from './shared/HeaderBar';
+import HeaderNavigation from './shared/HomeHeader';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
@@ -51,7 +51,7 @@ export default function Layout() {
       }}
     >
       <AppShell.Header p={0}>
-        <HeaderBar showLogo />
+        <HeaderNavigation />
       </AppShell.Header>
 
       <AppShell.Navbar>
