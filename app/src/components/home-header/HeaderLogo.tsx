@@ -22,7 +22,7 @@ export default function HeaderLogo() {
         src={PolicyEngineLogo}
         alt="PolicyEngine"
         style={{
-          height: spacing['3xl'],
+          height: '20px',
           width: 'auto',
           marginRight: 12,
         }}
