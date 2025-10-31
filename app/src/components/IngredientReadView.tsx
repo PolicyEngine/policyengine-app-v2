@@ -1,16 +1,5 @@
-import { IconCirclePlus, IconFilter, IconSearch } from '@tabler/icons-react';
-import {
-  Box,
-  Button,
-  Checkbox,
-  Flex,
-  Loader,
-  Paper,
-  Table,
-  Text,
-  TextInput,
-  Title,
-} from '@mantine/core';
+import { IconPlus } from '@tabler/icons-react';
+import { Box, Button, Checkbox, Flex, Loader, Paper, Table, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { ColumnConfig, ColumnRenderer, IngredientRecord } from './columns';
 import EmptyState from './common/EmptyState';
@@ -44,9 +33,9 @@ export default function IngredientReadView({
   error,
   data,
   columns,
-  searchValue = '',
-  onSearchChange,
-  onMoreFilters,
+  searchValue: _searchValue = '',
+  onSearchChange: _onSearchChange,
+  onMoreFilters: _onMoreFilters,
   enableSelection = true,
   isSelected = () => false,
   onSelectionChange,
@@ -72,14 +61,14 @@ export default function IngredientReadView({
           </Box>
 
           {onBuild && (
-            <Button rightSection={<IconCirclePlus size={16} />} onClick={onBuild} variant="filled">
-              Build {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+            <Button rightSection={<IconPlus size={16} />} onClick={onBuild} variant="filled">
+              New {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
             </Button>
           )}
         </Flex>
       </Box>
 
-      {/* Title and Filters Section */}
+      {/* Title Section */}
       <Box mb={spacing.xl}>
         <Title
           order={2}
@@ -90,33 +79,6 @@ export default function IngredientReadView({
         >
           {title}
         </Title>
-
-        {/* Filters and Search */}
-        <Flex gap={spacing.md} align="center" mb={spacing.lg}>
-          {/* TODO: Future filters */}
-
-          <Button
-            variant="outline"
-            disabled
-            leftSection={<IconFilter size={14} />}
-            size="sm"
-            onClick={onMoreFilters}
-          >
-            More filters
-          </Button>
-
-          {onSearchChange && (
-            <Box style={{ marginLeft: 'auto', width: '300px' }}>
-              <TextInput
-                disabled
-                placeholder="Search"
-                leftSection={<IconSearch size={16} />}
-                value={searchValue}
-                onChange={(e) => onSearchChange(e.currentTarget.value)}
-              />
-            </Box>
-          )}
-        </Flex>
       </Box>
 
       {/* Content Section */}

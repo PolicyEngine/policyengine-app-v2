@@ -297,32 +297,6 @@ describe('PopulationsPage', () => {
       expect(mockNavigate).toHaveBeenCalledWith('create');
     });
 
-    // NOTE: This behavior is a placeholder
-    test('given user clicks more filters then logs action', async () => {
-      // Given
-      userEvent.setup();
-      renderPage();
-
-      // When - The button is disabled in the component
-      const moreFiltersButton = screen.getByRole('button', { name: /filter/i });
-
-      // Then - Verify button is disabled (can't be clicked)
-      expect(moreFiltersButton).toBeDisabled();
-    });
-
-    test('given user searches then filters populations', async () => {
-      // Given
-      userEvent.setup();
-      renderPage();
-      const searchInput = screen.getByPlaceholderText(/search/i);
-
-      // When - Note that search is disabled in the component
-      // The input is disabled, so we can't type into it
-
-      // Then - Just verify the input exists and is disabled
-      expect(searchInput).toBeDisabled();
-    });
-
     test('given user selects population then updates selection state', async () => {
       // Given
       const user = userEvent.setup();

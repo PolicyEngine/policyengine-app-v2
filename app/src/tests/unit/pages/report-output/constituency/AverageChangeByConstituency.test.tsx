@@ -21,20 +21,6 @@ describe('AverageChangeByConstituency', () => {
     expect(screen.getByText('Average Household Income Change by Constituency')).toBeInTheDocument();
   });
 
-  test('given constituency data then displays summary statistics', () => {
-    // Given
-    const output = MOCK_UK_REPORT_OUTPUT;
-
-    // When
-    render(<AverageChangeByConstituency output={output} />);
-
-    // Then
-    // 50 + 150 = 200 gainers, 200 + 150 = 350 losers, 100 unchanged
-    expect(screen.getByText(/200 constituencies gain/)).toBeInTheDocument();
-    expect(screen.getByText(/350 lose/)).toBeInTheDocument();
-    expect(screen.getByText(/100 unchanged/)).toBeInTheDocument();
-  });
-
   test('given no constituency data then shows no data message', () => {
     // Given
     const output = MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY;

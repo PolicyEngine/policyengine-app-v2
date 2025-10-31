@@ -28,7 +28,7 @@ export const POPULATION_LABELS = {
   PAGE_TITLE: 'Your populations',
   PAGE_SUBTITLE:
     'Create a population configuration or find and save existing populations to use in your simulation configurations.',
-  BUILD_BUTTON: 'Build population',
+  BUILD_BUTTON: 'New population',
   SEARCH_PLACEHOLDER: 'Search populations',
   MORE_FILTERS: 'More filters',
   LOADING_TEXT: 'Loading...',

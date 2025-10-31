@@ -1,14 +1,16 @@
 import {
   IconBook,
-  IconExternalLink,
+  IconBrandGithub,
+  IconBrandSlack,
   IconFileDescription,
   IconGitBranch,
+  IconMail,
   IconPlus,
   IconScale,
   IconSettings2,
   IconUsers,
 } from '@tabler/icons-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Stack } from '@mantine/core';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { colors, spacing, typography } from '../designTokens';
@@ -22,6 +24,7 @@ interface SidebarProps {
 
 export default function Sidebar({ isOpen = true }: SidebarProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const countryId = useCurrentCountry();
 
   // All internal navigation paths include the country prefix for consistency with v1 app
@@ -35,18 +38,23 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   const resourceItems = [
     {
       label: 'GitHub',
-      icon: IconGitBranch,
+      icon: IconBrandGithub,
       path: 'https://github.com/PolicyEngine',
       external: true,
     },
-    { label: 'Join Slack', icon: IconExternalLink, path: 'https://slack.com', external: true },
+    { label: 'Join Slack', icon: IconBrandSlack, path: 'https://slack.com', external: true },
     { label: 'Visit Blog', icon: IconBook, path: 'https://blog.example.com', external: true },
     { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
   ];
 
   const accountItems = [
     { label: 'Account Settings', icon: IconSettings2, path: `/${countryId}/account` },
-    { label: 'Contact Support', icon: IconExternalLink, path: `/${countryId}/support` },
+    {
+      label: 'Contact Support',
+      icon: IconMail,
+      path: 'mailto:hello@policyengine.org',
+      external: true,
+    },
   ];
 
   if (!isOpen) {
@@ -69,7 +77,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       <Stack gap={0}>
         <Box px={16} py={16}>
           <Button
-            leftSection={<IconPlus size={16} stroke={2} />}
+            rightSection={<IconPlus size={16} />}
             fullWidth
             variant="filled"
             size="sm"
@@ -81,8 +89,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
                 fontWeight: typography.fontWeight.medium,
               },
             }}
+            onClick={() => navigate(`/${countryId}/reports/create`)}
           >
-            Create report
+            New report
           </Button>
         </Box>
       </Stack>

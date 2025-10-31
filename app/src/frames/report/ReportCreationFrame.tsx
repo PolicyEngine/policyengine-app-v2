@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { TextInput } from '@mantine/core';
+import { Select, TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { clearReport, updateLabel } from '@/reducers/reportReducer';
@@ -11,6 +11,8 @@ export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) 
   const dispatch = useDispatch<AppDispatch>();
   const countryId = useCurrentCountry();
   const [localLabel, setLocalLabel] = useState('');
+  // NOTE: Temporary hardcoded year dropdown - does nothing functionally, placeholder for future feature
+  const [year, setYear] = useState<string>('2025');
 
   // Clear any existing report data when mounting
   useEffect(() => {
@@ -27,12 +29,23 @@ export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) 
   }
 
   const formInputs = (
-    <TextInput
-      label="Report name"
-      placeholder="Enter report name"
-      value={localLabel}
-      onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
-    />
+    <>
+      <TextInput
+        label="Report name"
+        placeholder="Enter report name"
+        value={localLabel}
+        onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
+      />
+      {/* NOTE: Temporary hardcoded year dropdown - does nothing functionally */}
+      <Select
+        label="Year"
+        placeholder="Select year"
+        data={['2025']}
+        value={year}
+        onChange={(val) => setYear(val || '2025')}
+        disabled
+      />
+    </>
   );
 
   const primaryAction = {

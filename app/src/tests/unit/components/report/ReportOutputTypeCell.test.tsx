@@ -79,7 +79,7 @@ describe('ReportOutputTypeCell', () => {
     expect(screen.queryByText(/%/)).not.toBeInTheDocument();
   });
 
-  it('given complete report with output then displays Society-wide', () => {
+  it('given complete report with output then displays Complete status', () => {
     // Given
     const report = createMockReportWithOutput(TEST_REPORT_IDS.REPORT_789);
 
@@ -87,26 +87,29 @@ describe('ReportOutputTypeCell', () => {
     render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_789} report={report} />);
 
     // Then
-    expect(screen.getByText('Society-wide')).toBeInTheDocument();
+    expect(screen.getByText('Complete')).toBeInTheDocument();
   });
 
-  it('given complete report without output then displays Not generated', () => {
+  it('given pending report without output then displays Pending status', () => {
     // Given
-    const report = createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_999);
+    const report = {
+      ...createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_999),
+      status: 'pending' as const,
+    };
 
     // When
     render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_999} report={report} />);
 
     // Then
-    expect(screen.getByText('Not generated')).toBeInTheDocument();
+    expect(screen.getByText('Pending')).toBeInTheDocument();
   });
 
-  it('given no cached status then displays Not generated', () => {
+  it('given no cached status and no report then displays Initializing status', () => {
     // When
     render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_NO_CACHE} />);
 
     // Then
-    expect(screen.getByText('Not generated')).toBeInTheDocument();
+    expect(screen.getByText('Initializing')).toBeInTheDocument();
   });
 
   it('given progress at 95% then displays rounded percentage', () => {
@@ -125,19 +128,23 @@ describe('ReportOutputTypeCell', () => {
     expect(screen.getByText('95%')).toBeInTheDocument();
   });
 
-  it('given error status then displays Not generated', () => {
+  it('given error status then displays Error status', () => {
     // Given
     const errorStatus = createMockErrorStatus(
       TEST_REPORT_IDS.REPORT_ERROR,
       'societyWide',
       'Calculation failed'
     );
+    const errorReport = {
+      ...createMockReportWithoutOutput(TEST_REPORT_IDS.REPORT_ERROR),
+      status: 'error' as const,
+    };
     queryClient.setQueryData(calculationKeys.byReportId(TEST_REPORT_IDS.REPORT_ERROR), errorStatus);
 
     // When
-    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_ERROR} />);
+    render(<ReportOutputTypeCell reportId={TEST_REPORT_IDS.REPORT_ERROR} report={errorReport} />);
 
     // Then
-    expect(screen.getByText('Not generated')).toBeInTheDocument();
+    expect(screen.getByText('Error')).toBeInTheDocument();
   });
 });
