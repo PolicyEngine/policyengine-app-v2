@@ -17,7 +17,7 @@ export default function HomePage() {
         position: 'relative',
       }}
     >
-      <HeaderNavigation />
+      <HeaderNavigation enableScrollAnimation={true} />
 
       <Box pt={`calc(${spacing.layout.header} + ${spacing['4xl']})`}>
         <MainSection />
