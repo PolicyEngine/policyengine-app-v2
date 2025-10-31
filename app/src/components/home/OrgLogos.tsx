@@ -47,8 +47,6 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
           {orgsArray.map((org) => (
             <Box
               key={org.name}
-              w={120}
-              h={100}
               style={{
                 flex: '0 0 auto',
                 display: 'flex',
@@ -56,6 +54,8 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
                 justifyContent: 'center',
                 cursor: 'pointer',
                 scrollSnapAlign: 'start',
+                width: '120px',
+                height: '100px',
               }}
             >
               <button
@@ -64,12 +64,22 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
                 style={{
                   all: 'unset',
                   cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  width: '100%',
+                  height: '100%',
                 }}
               >
                 <img
                   src={org.logo}
                   alt={org.name}
-                  style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                  style={{
+                    maxWidth: '120px',
+                    maxHeight: '100px',
+                    width: 'auto',
+                    height: 'auto',
+                  }}
                 />
               </button>
             </Box>

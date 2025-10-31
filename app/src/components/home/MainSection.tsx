@@ -1,7 +1,11 @@
 import { Container, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function MainSection() {
+  const countryId = useCurrentCountry();
+  const analyze = countryId === 'uk' ? 'analyse' : 'analyze';
+
   return (
     <Container size="xl" py={spacing['5xl']}>
       <Stack
@@ -22,9 +26,9 @@ export default function MainSection() {
             fontFamily: typography.fontFamily.primary,
           }}
         >
-          Computing Public Policy
+          Computing public policy
           <br />
-          for Everyone
+          for everyone
         </Title>
 
         <Text
@@ -37,7 +41,7 @@ export default function MainSection() {
             fontFamily: typography.fontFamily.secondary,
           }}
         >
-          Understand and analyze the impacts of tax and benefit policies
+          Understand and {analyze} the impacts of tax and benefit policies
           <br /> on budgets, economic growth, poverty, and inequality.
         </Text>
       </Stack>
