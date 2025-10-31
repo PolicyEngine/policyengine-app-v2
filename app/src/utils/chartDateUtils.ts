@@ -5,6 +5,32 @@ import {
 } from '@/constants/chartConstants';
 
 /**
+ * TEMPORARY: Filters out infinite values from chart data until API v1 properly handles them
+ * Infinite values cannot be displayed on a Cartesian plane and break axis calculations
+ * @param dates - Array of ISO date strings
+ * @param values - Array of corresponding values
+ * @returns Object with filtered dates and values arrays
+ */
+export function filterInfiniteValues(
+  dates: string[],
+  values: any[]
+): { filteredDates: string[]; filteredValues: any[] } {
+  const filteredDates: string[] = [];
+  const filteredValues: any[] = [];
+
+  for (let i = 0; i < values.length; i++) {
+    const numValue = Number(values[i]);
+    if (!isFinite(numValue)) {
+      continue; // Skip infinite values
+    }
+    filteredDates.push(dates[i]);
+    filteredValues.push(values[i]);
+  }
+
+  return { filteredDates, filteredValues };
+}
+
+/**
  * Filters out invalid dates and dates beyond display extension
  * @param dates - Array of ISO date strings
  * @returns Filtered array of valid dates

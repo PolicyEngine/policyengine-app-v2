@@ -47,7 +47,7 @@ export const mockBaselinePolicy: Policy = {
       values: [
         {
           startDate: '2024-01-01',
-          endDate: '2024-12-31',
+          endDate: '2099-12-31',
           value: 1000,
         },
       ],
@@ -67,7 +67,7 @@ export const mockReformPolicy: Policy = {
       values: [
         {
           startDate: '2024-01-01',
-          endDate: '2024-12-31',
+          endDate: '2099-12-31',
           value: 1500,
         },
       ],
@@ -87,7 +87,7 @@ export const mockCurrentLawPolicy: Policy = {
       values: [
         {
           startDate: '2024-01-01',
-          endDate: '2024-12-31',
+          endDate: '2099-12-31',
           value: 800,
         },
       ],
@@ -108,7 +108,7 @@ export const mockBaselinePolicyClone: Policy = {
       values: [
         {
           startDate: '2024-01-01',
-          endDate: '2024-12-31',
+          endDate: '2099-12-31',
           value: 1000,
         },
       ],
@@ -129,7 +129,7 @@ export const mockPolicyWithMultipleParams: Policy = {
       values: [
         {
           startDate: '2024-01-01',
-          endDate: '2024-12-31',
+          endDate: '2099-12-31',
           value: 1000,
         },
       ],
@@ -139,7 +139,7 @@ export const mockPolicyWithMultipleParams: Policy = {
       values: [
         {
           startDate: '2024-01-01',
-          endDate: '2024-12-31',
+          endDate: '2099-12-31',
           value: 0.15,
         },
       ],

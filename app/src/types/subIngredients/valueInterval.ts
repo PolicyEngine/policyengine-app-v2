@@ -332,6 +332,27 @@ export class ValueIntervalCollection {
     return [...this.intervals];
   }
 
+  /**
+   * Gets the value at a specific date by finding the interval that contains it
+   * @param date - ISO date string (YYYY-MM-DD)
+   * @returns The value at that date, or undefined if no interval contains it
+   */
+  getValueAtDate(date: string): any {
+    this.validateISODateString(date);
+    const targetDate = this.parseDate(date);
+
+    for (const interval of this.intervals) {
+      const startDate = this.parseDate(interval.startDate);
+      const endDate = this.parseDate(interval.endDate);
+
+      if (targetDate >= startDate && targetDate <= endDate) {
+        return interval.value;
+      }
+    }
+
+    return undefined;
+  }
+
   clear(): void {
     this.intervals = [];
   }

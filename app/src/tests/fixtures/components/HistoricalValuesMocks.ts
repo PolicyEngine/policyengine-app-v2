@@ -207,3 +207,55 @@ export class MockErrorThrowingCollection extends ValueIntervalCollection {
 
 // Expected error messages
 export const EXPECTED_NO_DATA_MESSAGE = 'No data available to display';
+export const EXPECTED_INFINITY_WARNING_MESSAGE =
+  'Note: Charts do not currently display parameters with values of positive or negative infinity.';
+
+// Infinite value test data
+export const INTEGER_PARAMETER: ParameterMetadata = {
+  parameter: 'household.children.count',
+  label: 'Child count',
+  type: 'parameter',
+  unit: 'int',
+  description: 'Number of children in household',
+  economy: true,
+  household: true,
+};
+
+export const SAMPLE_BASE_VALUES_WITH_INFINITY = new ValueIntervalCollection([
+  {
+    parameter: 'household.children.count',
+    startDate: '2020-01-01',
+    endDate: '2022-12-31',
+    value: 2,
+  },
+  {
+    parameter: 'household.children.count',
+    startDate: '2023-01-01',
+    endDate: '2100-12-31',
+    value: Infinity,
+  },
+]);
+
+export const SAMPLE_REFORM_VALUES_WITH_INFINITY = new ValueIntervalCollection([
+  {
+    parameter: 'household.children.count',
+    startDate: '2020-01-01',
+    endDate: '2024-12-31',
+    value: -Infinity,
+  },
+  {
+    parameter: 'household.children.count',
+    startDate: '2025-01-01',
+    endDate: '2100-12-31',
+    value: 5,
+  },
+]);
+
+export const SAMPLE_BASE_VALUES_ALL_INFINITE = new ValueIntervalCollection([
+  {
+    parameter: 'household.children.count',
+    startDate: '2020-01-01',
+    endDate: '2100-12-31',
+    value: Infinity,
+  },
+]);

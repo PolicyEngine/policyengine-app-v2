@@ -7,12 +7,14 @@ import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   extendForDisplay,
+  filterInfiniteValues,
   filterValidChartDates,
   getAllChartDates,
   getChartBoundaryDates,
 } from '@/utils/chartDateUtils';
 import { getReformPolicyLabel } from '@/utils/chartUtils';
 import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
+import { capitalize } from '@/utils/stringUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
   param: ParameterMetadata;
@@ -44,7 +46,7 @@ export default function PolicyParameterSelectorHistoricalValues(
   return (
     <Stack mt="xl">
       <Text fw={700}>Historical values</Text>
-      <Text>{param.label} over time</Text>
+      <Text>{capitalize(param.label)} over time</Text>
       <ParameterOverTimeChart
         param={param}
         baseValuesCollection={baseValues}
@@ -66,33 +68,40 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
   const windowHeight = useWindowHeight();
 
   // Memoize base data processing
-  const { x, y } = useMemo(() => {
+  const { x, y, hasInfiniteBase } = useMemo(() => {
     try {
       const dates = [...baseValuesCollection.getAllStartDates()];
       const values = [...baseValuesCollection.getAllValues()];
 
       // Validate data
       if (dates.length === 0 || values.length === 0) {
-        return { x: [], y: [] };
+        return { x: [], y: [], hasInfiniteBase: false };
       }
 
       if (dates.length !== values.length) {
         console.warn('ParameterOverTimeChart: Mismatched dates and values length');
-        return { x: [], y: [] };
+        return { x: [], y: [], hasInfiniteBase: false };
       }
 
-      extendForDisplay(dates, values);
-      return { x: dates, y: values };
+      const { filteredDates, filteredValues } = filterInfiniteValues(dates, values);
+      const hasInfiniteBase = filteredDates.length < dates.length;
+
+      if (filteredDates.length === 0 || filteredValues.length === 0) {
+        return { x: [], y: [], hasInfiniteBase };
+      }
+
+      extendForDisplay(filteredDates, filteredValues);
+      return { x: filteredDates, y: filteredValues, hasInfiniteBase };
     } catch (error) {
       console.error('ParameterOverTimeChart: Error processing base data', error);
-      return { x: [], y: [] };
+      return { x: [], y: [], hasInfiniteBase: false };
     }
   }, [baseValuesCollection]);
 
   // Memoize reform data processing
-  const { reformedX, reformedY } = useMemo(() => {
+  const { reformedX, reformedY, hasInfiniteReform } = useMemo(() => {
     if (!reformValuesCollection) {
-      return { reformedX: [], reformedY: [] };
+      return { reformedX: [], reformedY: [], hasInfiniteReform: false };
     }
 
     try {
@@ -101,19 +110,26 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
 
       // Validate data
       if (dates.length === 0 || values.length === 0) {
-        return { reformedX: [], reformedY: [] };
+        return { reformedX: [], reformedY: [], hasInfiniteReform: false };
       }
 
       if (dates.length !== values.length) {
         console.warn('ParameterOverTimeChart: Mismatched reform dates and values length');
-        return { reformedX: [], reformedY: [] };
+        return { reformedX: [], reformedY: [], hasInfiniteReform: false };
       }
 
-      extendForDisplay(dates, values);
-      return { reformedX: dates, reformedY: values };
+      const { filteredDates, filteredValues } = filterInfiniteValues(dates, values);
+      const hasInfiniteReform = filteredDates.length < dates.length;
+
+      if (filteredDates.length === 0 || filteredValues.length === 0) {
+        return { reformedX: [], reformedY: [], hasInfiniteReform };
+      }
+
+      extendForDisplay(filteredDates, filteredValues);
+      return { reformedX: filteredDates, reformedY: filteredValues, hasInfiniteReform };
     } catch (error) {
       console.error('ParameterOverTimeChart: Error processing reform data', error);
-      return { reformedX: [], reformedY: [] };
+      return { reformedX: [], reformedY: [], hasInfiniteReform: false };
     }
   }, [reformValuesCollection]);
 
@@ -129,22 +145,28 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
 
       const yaxisValues = reformValuesCollection ? [...y, ...reformedY] : y;
 
-      // Calculate x-axis range with 5 years before earliest date
-      const allDates = [...xaxisValues].sort();
-      const earliestDate = allDates[0] ? new Date(allDates[0]) : new Date();
-      const fiveYearsBefore = new Date(earliestDate);
-      fiveYearsBefore.setFullYear(fiveYearsBefore.getFullYear() - 5);
+      // Calculate x-axis range starting at 2013 (earliest display date, with 2-year buffer)
+      const EARLIEST_DISPLAY_DATE = '2013-01-01';
 
       // Calculate y-axis range with 10% buffer above and below
       const numericYValues = yaxisValues.map((v) => Number(v)).filter((v) => !isNaN(v));
-      const minY = Math.min(...numericYValues);
-      const maxY = Math.max(...numericYValues);
+      let minY = Math.min(...numericYValues);
+      let maxY = Math.max(...numericYValues);
+
+      // Ensure 0 is always visible for all value types
+      minY = Math.min(minY, 0);
+
+      // For percentages, also ensure 100% is always visible
+      if (param.unit === '/1') {
+        maxY = Math.max(maxY, 1);
+      }
+
       const yRange = maxY - minY;
       const yBuffer = yRange * 0.1;
 
       const xaxisFormatWithRange = {
         ...getPlotlyAxisFormat('date', xaxisValues),
-        range: [fiveYearsBefore.toISOString().split('T')[0], maxDate],
+        range: [EARLIEST_DISPLAY_DATE, maxDate],
       };
 
       const yaxisFormatWithRange = {
@@ -190,6 +212,9 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
   const reformLabel = useMemo(() => {
     return getReformPolicyLabel(policyLabel, policyId ? parseInt(policyId, 10) : null);
   }, [policyLabel, policyId]);
+
+  // Check if any infinite values were filtered
+  const hasInfiniteValues = hasInfiniteBase || hasInfiniteReform;
 
   // Early return if no valid data
   if (x.length === 0 || y.length === 0) {
@@ -290,6 +315,12 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
           responsive: true,
         }}
       />
+      {hasInfiniteValues && (
+        <Text size="sm" c="gray.8" fs="italic" mt="xs">
+          Note: Charts do not currently display parameters with values of positive or negative
+          infinity.
+        </Text>
+      )}
     </div>
   );
 });

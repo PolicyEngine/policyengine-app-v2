@@ -11,6 +11,7 @@ import {
   EMPTY_VALUES_COLLECTION,
   EXPECTED_BASE_TRACE,
   EXPECTED_EXTENDED_BASE_DATES,
+  EXPECTED_INFINITY_WARNING_MESSAGE,
   EXPECTED_NO_DATA_MESSAGE,
   EXPECTED_REFORM_NAME_DEFAULT,
   EXPECTED_REFORM_NAME_WITH_ID,
@@ -18,11 +19,14 @@ import {
   EXPECTED_REFORM_NAME_WITH_SHORT_LABEL,
   EXPECTED_REFORM_NAME_WITH_SMALL_ID,
   EXPECTED_REFORM_TRACE,
+  INTEGER_PARAMETER,
   MockErrorThrowingCollection,
   MockMismatchedValueCollection,
   PERCENTAGE_PARAMETER,
+  SAMPLE_BASE_VALUES_ALL_INFINITE,
   SAMPLE_BASE_VALUES_COMPLEX,
   SAMPLE_BASE_VALUES_SIMPLE,
+  SAMPLE_BASE_VALUES_WITH_INFINITY,
   SAMPLE_BASE_VALUES_WITH_INVALID_DATES,
   SAMPLE_POLICY_ID_NUMERIC,
   SAMPLE_POLICY_ID_SMALL,
@@ -30,6 +34,7 @@ import {
   SAMPLE_POLICY_LABEL_SHORT,
   SAMPLE_REFORM_VALUES_COMPLEX,
   SAMPLE_REFORM_VALUES_SIMPLE,
+  SAMPLE_REFORM_VALUES_WITH_INFINITY,
 } from '@/tests/fixtures/components/HistoricalValuesMocks';
 
 // Mock Plotly to avoid rendering issues in tests
@@ -1122,7 +1127,7 @@ describe('HistoricalValues', () => {
   });
 
   describe('ParameterOverTimeChart axis buffer space', () => {
-    it('given chart then x-axis range extends 5 years before earliest date', () => {
+    it('given chart then x-axis range starts at 2013', () => {
       // Given
       const { getByTestId } = render(
         <ParameterOverTimeChart
@@ -1141,9 +1146,8 @@ describe('HistoricalValues', () => {
 
       const rangeStart = new Date(props.layout.xaxis.range[0]);
 
-      // The earliest date in the filtered dates (after applying DEFAULT_CHART_START_DATE filter)
-      // is 2015-01-01, so 5 years before that is 2010
-      expect(rangeStart.getFullYear()).toBe(2010);
+      // X-axis starts at 2013-01-01 (earliest display date with 2-year buffer)
+      expect(rangeStart.getFullYear()).toBe(2013);
     });
 
     it('given chart then y-axis range includes 10% buffer above max value', () => {
@@ -1237,6 +1241,210 @@ describe('HistoricalValues', () => {
       // Combined data: base has 12000-12500, reform has 15000
       expect(actualMin).toBeLessThan(12000); // Buffer below base minimum
       expect(actualMax).toBeGreaterThan(15000); // Buffer above reform maximum
+    });
+  });
+
+  describe('ParameterOverTimeChart infinite value filtering', () => {
+    it('given base values with infinity then filters out infinite values', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_WITH_INFINITY}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const baseTrace = props.data[0];
+
+      // Then - Should only have finite value (2), not Infinity
+      expect(baseTrace.y).toEqual([2, 2]); // Extended with duplicate
+      expect(baseTrace.y).not.toContain(Infinity);
+    });
+
+    it('given base values with infinity then displays warning message', () => {
+      // Given/When
+      render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_WITH_INFINITY}
+        />
+      );
+
+      // Then
+      expect(screen.getByText(EXPECTED_INFINITY_WARNING_MESSAGE)).toBeInTheDocument();
+    });
+
+    it('given reform values with infinity then filters out infinite values', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_WITH_INFINITY}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+      const reformTrace = props.data[0]; // Reform is first
+
+      // Then - Should only have finite value (5), not -Infinity
+      expect(reformTrace.y).not.toContain(-Infinity);
+      expect(reformTrace.y).toContain(5);
+    });
+
+    it('given reform values with infinity then displays warning message', () => {
+      // Given/When
+      render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_WITH_INFINITY}
+        />
+      );
+
+      // Then
+      expect(screen.getByText(EXPECTED_INFINITY_WARNING_MESSAGE)).toBeInTheDocument();
+    });
+
+    it('given both base and reform with infinity then displays warning message', () => {
+      // Given/When
+      render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_WITH_INFINITY}
+          reformValuesCollection={SAMPLE_REFORM_VALUES_WITH_INFINITY}
+        />
+      );
+
+      // Then
+      expect(screen.getByText(EXPECTED_INFINITY_WARNING_MESSAGE)).toBeInTheDocument();
+    });
+
+    it('given all infinite base values then displays no data message', () => {
+      // Given/When
+      render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_ALL_INFINITE}
+        />
+      );
+
+      // Then
+      expect(screen.getByText(EXPECTED_NO_DATA_MESSAGE)).toBeInTheDocument();
+      expect(screen.queryByText(EXPECTED_INFINITY_WARNING_MESSAGE)).not.toBeInTheDocument();
+    });
+
+    it('given no infinite values then does not display warning message', () => {
+      // Given/When
+      render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // Then
+      expect(screen.queryByText(EXPECTED_INFINITY_WARNING_MESSAGE)).not.toBeInTheDocument();
+    });
+
+    it('given base with infinity then y-axis includes 0', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_WITH_INFINITY}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Y-axis range should include 0 even though value is 2
+      const [minY] = props.layout.yaxis.range;
+      expect(minY).toBeLessThanOrEqual(0);
+    });
+  });
+
+  describe('ParameterOverTimeChart y-axis bounds', () => {
+    it('given numeric parameter then y-axis includes 0', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Y-axis range should include 0
+      const [minY] = props.layout.yaxis.range;
+      expect(minY).toBeLessThanOrEqual(0);
+    });
+
+    it('given percentage parameter then y-axis includes 0% and 100%', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={PERCENTAGE_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_COMPLEX}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Y-axis range should include 0 (0%) and 1 (100%)
+      const [minY, maxY] = props.layout.yaxis.range;
+      expect(minY).toBeLessThanOrEqual(0);
+      expect(maxY).toBeGreaterThanOrEqual(1);
+    });
+
+    it('given integer parameter then y-axis includes 0', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={INTEGER_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_WITH_INFINITY}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - Y-axis range should include 0
+      const [minY] = props.layout.yaxis.range;
+      expect(minY).toBeLessThanOrEqual(0);
+    });
+  });
+
+  describe('ParameterOverTimeChart x-axis starting date', () => {
+    it('given chart then x-axis starts at 2013', () => {
+      // Given
+      const { getByTestId } = render(
+        <ParameterOverTimeChart
+          param={CURRENCY_USD_PARAMETER}
+          baseValuesCollection={SAMPLE_BASE_VALUES_SIMPLE}
+        />
+      );
+
+      // When
+      const chart = getByTestId('plotly-chart');
+      const props = JSON.parse(chart.getAttribute('data-plotly-props') || '{}');
+
+      // Then - X-axis range should start at 2013-01-01
+      const [minDate] = props.layout.xaxis.range;
+      expect(minDate).toBe('2013-01-01');
     });
   });
 });

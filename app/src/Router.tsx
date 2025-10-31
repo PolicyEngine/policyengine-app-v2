@@ -8,17 +8,6 @@ import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DonatePage from './pages/Donate.page';
 import PoliciesPage from './pages/Policies.page';
-import PolicyDesign1Page from './pages/policy-designs/PolicyDesign1.page';
-import PolicyDesign2Page from './pages/policy-designs/PolicyDesign2.page';
-import PolicyDesign3Page from './pages/policy-designs/PolicyDesign3.page';
-import PolicyDesign4Page from './pages/policy-designs/PolicyDesign4.page';
-import PolicyDesign5Page from './pages/policy-designs/PolicyDesign5.page';
-import PolicyDesign6Page from './pages/policy-designs/PolicyDesign6.page';
-import PolicyDesign7Page from './pages/policy-designs/PolicyDesign7.page';
-import PolicyDesign8Page from './pages/policy-designs/PolicyDesign8.page';
-import PolicyDesign9Page from './pages/policy-designs/PolicyDesign9.page';
-import PolicyDesign10Page from './pages/policy-designs/PolicyDesign10.page';
-import PolicyDesign11Page from './pages/policy-designs/PolicyDesign11.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
@@ -52,51 +41,6 @@ const router = createBrowserRouter(
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
                   element: <ReportOutputPage />,
-                },
-                // Policy design mockups
-                {
-                  path: 'policy-design-1',
-                  element: <PolicyDesign1Page />,
-                },
-                {
-                  path: 'policy-design-2',
-                  element: <PolicyDesign2Page />,
-                },
-                {
-                  path: 'policy-design-3',
-                  element: <PolicyDesign3Page />,
-                },
-                {
-                  path: 'policy-design-4',
-                  element: <PolicyDesign4Page />,
-                },
-                {
-                  path: 'policy-design-5',
-                  element: <PolicyDesign5Page />,
-                },
-                {
-                  path: 'policy-design-6',
-                  element: <PolicyDesign6Page />,
-                },
-                {
-                  path: 'policy-design-7',
-                  element: <PolicyDesign7Page />,
-                },
-                {
-                  path: 'policy-design-8',
-                  element: <PolicyDesign8Page />,
-                },
-                {
-                  path: 'policy-design-9',
-                  element: <PolicyDesign9Page />,
-                },
-                {
-                  path: 'policy-design-10',
-                  element: <PolicyDesign10Page />,
-                },
-                {
-                  path: 'policy-design-11',
-                  element: <PolicyDesign11Page />,
                 },
               ],
             },

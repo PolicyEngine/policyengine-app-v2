@@ -32,13 +32,18 @@ export function collectUniqueParameterNames(policies: Policy[]): string[] {
 }
 
 /**
- * Get a formatted parameter value from a policy
+ * Get a formatted parameter value from a policy at a specific date
  * Returns em dash if parameter not found or no values
+ * @param policy - The policy to query
+ * @param paramName - The parameter name
+ * @param parameters - Parameter metadata collection
+ * @param date - ISO date string (YYYY-MM-DD) to query, defaults to UNCONFIRMED_PARAM_DEFINITION_DATE
  */
 export function getParameterValueFromPolicy(
   policy: Policy | undefined,
   paramName: string,
-  parameters: Record<string, ParameterMetadata>
+  parameters: Record<string, ParameterMetadata>,
+  date: string = UNCONFIRMED_PARAM_DEFINITION_DATE
 ): string {
   if (!policy) {
     return '—';
@@ -49,7 +54,14 @@ export function getParameterValueFromPolicy(
     return '—';
   }
 
-  const value = param.values[0].value;
+  // Use ValueIntervalCollection to get value at specific date
+  const intervalCollection = new ValueIntervalCollection(param.values);
+  const value = intervalCollection.getValueAtDate(date);
+
+  if (value === undefined) {
+    return '—';
+  }
+
   const metadata = parameters[paramName];
   const unit = metadata?.unit || '';
 
@@ -119,26 +131,17 @@ export function getCurrentLawParameterValue(
   // Create ValueIntervalCollection from the values list
   const intervalCollection = new ValueIntervalCollection(metadata.values);
 
-  // Get all intervals
-  const intervals = intervalCollection.getIntervals();
+  // Use getValueAtDate to find the value at the target date
+  const value = intervalCollection.getValueAtDate(date);
 
-  // Find the interval that contains the target date
-  const targetInterval = intervals.find((interval) => {
-    const startDate = new Date(interval.startDate).getTime();
-    const endDate = new Date(interval.endDate).getTime();
-    const targetDate = new Date(date).getTime();
-
-    return targetDate >= startDate && targetDate <= endDate;
-  });
-
-  // If no matching interval found, return dash
-  if (!targetInterval) {
+  // If no matching value found, return dash
+  if (value === undefined) {
     return '—';
   }
 
   // Format the value using existing formatter
   const unit = metadata.unit || '';
-  return formatParameterValue(targetInterval.value, unit);
+  return formatParameterValue(value, unit);
 }
 
 /**
