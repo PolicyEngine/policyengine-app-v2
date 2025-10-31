@@ -56,3 +56,22 @@ export function getExpectedBoundaryDates() {
     maxDate: `${currentYear + 10}-12-31`,
   };
 }
+
+// Infinite value test data
+export const datesWithInfiniteValues = ['2020-01-01', '2021-01-01', '2022-01-01', '2023-01-01'];
+
+export const valuesWithPositiveInfinity = [100, Infinity, 300, 400];
+
+export const valuesWithNegativeInfinity = [100, -Infinity, 300, 400];
+
+export const valuesWithBothInfinities = [Infinity, 200, -Infinity, 400];
+
+export const valuesAllInfinite = [Infinity, Infinity, -Infinity, Infinity];
+
+export const valuesAllFinite = [100, 200, 300, 400];
+
+export const valuesWithNaN = [100, NaN, 300, 400];
+
+export const expectedFilteredFiniteDates = ['2020-01-01', '2022-01-01', '2023-01-01'];
+
+export const expectedFilteredFiniteValues = [100, 300, 400];

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { CHART_DISPLAY_EXTENSION_DATE } from '@/constants/chartConstants';
 import {
+  datesWithInfiniteValues,
   emptyDates,
   emptyValues,
   expectedAllUniqueDates,
   expectedFilteredDates,
+  expectedFilteredFiniteDates,
+  expectedFilteredFiniteValues,
   getExpectedBoundaryDates,
   mixedValidInvalidDates,
   overlappingDates,
@@ -12,15 +15,99 @@ import {
   sampleReformDates,
   sampleSingleValue,
   sampleValues,
+  valuesAllFinite,
+  valuesAllInfinite,
+  valuesWithBothInfinities,
+  valuesWithNaN,
+  valuesWithNegativeInfinity,
+  valuesWithPositiveInfinity,
 } from '@/tests/fixtures/utils/chartDateUtilsMocks';
 import {
   extendForDisplay,
+  filterInfiniteValues,
   filterValidChartDates,
   getAllChartDates,
   getChartBoundaryDates,
 } from '@/utils/chartDateUtils';
 
 describe('chartDateUtils', () => {
+  describe('filterInfiniteValues', () => {
+    it('given values with positive infinity then filters out infinite value and corresponding date', () => {
+      // Given & When
+      const result = filterInfiniteValues(datesWithInfiniteValues, valuesWithPositiveInfinity);
+
+      // Then
+      expect(result.filteredDates).toEqual(expectedFilteredFiniteDates);
+      expect(result.filteredValues).toEqual(expectedFilteredFiniteValues);
+    });
+
+    it('given values with negative infinity then filters out infinite value and corresponding date', () => {
+      // Given & When
+      const result = filterInfiniteValues(datesWithInfiniteValues, valuesWithNegativeInfinity);
+
+      // Then
+      expect(result.filteredDates).toEqual(expectedFilteredFiniteDates);
+      expect(result.filteredValues).toEqual(expectedFilteredFiniteValues);
+    });
+
+    it('given values with both infinities then filters out both infinite values and corresponding dates', () => {
+      // Given & When
+      const result = filterInfiniteValues(datesWithInfiniteValues, valuesWithBothInfinities);
+
+      // Then
+      expect(result.filteredDates).toEqual(['2021-01-01', '2023-01-01']);
+      expect(result.filteredValues).toEqual([200, 400]);
+    });
+
+    it('given all infinite values then returns empty arrays', () => {
+      // Given & When
+      const result = filterInfiniteValues(datesWithInfiniteValues, valuesAllInfinite);
+
+      // Then
+      expect(result.filteredDates).toEqual([]);
+      expect(result.filteredValues).toEqual([]);
+    });
+
+    it('given all finite values then returns all dates and values unchanged', () => {
+      // Given & When
+      const result = filterInfiniteValues(datesWithInfiniteValues, valuesAllFinite);
+
+      // Then
+      expect(result.filteredDates).toEqual(datesWithInfiniteValues);
+      expect(result.filteredValues).toEqual(valuesAllFinite);
+    });
+
+    it('given values with NaN then filters out NaN value and corresponding date', () => {
+      // Given & When
+      const result = filterInfiniteValues(datesWithInfiniteValues, valuesWithNaN);
+
+      // Then
+      expect(result.filteredDates).toEqual(expectedFilteredFiniteDates);
+      expect(result.filteredValues).toEqual(expectedFilteredFiniteValues);
+    });
+
+    it('given empty arrays then returns empty arrays', () => {
+      // Given & When
+      const result = filterInfiniteValues([], []);
+
+      // Then
+      expect(result.filteredDates).toEqual([]);
+      expect(result.filteredValues).toEqual([]);
+    });
+
+    it('given string values then converts to numbers and filters correctly', () => {
+      // Given
+      const stringValues = ['100', 'Infinity', '300', '400'];
+
+      // When
+      const result = filterInfiniteValues(datesWithInfiniteValues, stringValues);
+
+      // Then
+      expect(result.filteredDates).toEqual(expectedFilteredFiniteDates);
+      expect(result.filteredValues).toEqual(stringValues.filter((_, i) => i !== 1));
+    });
+  });
+
   describe('filterValidChartDates', () => {
     it('should filter out invalid dates (0000-01-01)', () => {
       const result = filterValidChartDates(mixedValidInvalidDates);
