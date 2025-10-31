@@ -131,7 +131,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     const rows = [
       ...decileNumbers.map((d) => [
         d.toString(),
-        ...CATEGORIES.map((cat) => (deciles as any)[d]?.[cat]?.toString() || '0'),
+        ...CATEGORIES.map((cat) => (deciles as any)[cat]?.[d - 1]?.toString() || '0'),
       ]),
       ['All', ...CATEGORIES.map((cat) => all[cat].toString())],
     ];
@@ -141,7 +141,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   // Prepare data for stacked bar chart
   const chartData = CATEGORIES.map((category) => ({
     x: [...decileNumbers.map((d) => d.toString()), 'All'],
-    y: [...decileNumbers.map((d) => (deciles as any)[d]?.[category] || 0), all[category]],
+    y: [...decileNumbers.map((d) => (deciles as any)[category]?.[d - 1] || 0), all[category]],
     type: 'bar' as const,
     name: LEGEND_TEXT_MAP[category],
     marker: {
@@ -149,7 +149,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     },
     customdata: [
       ...decileNumbers.map((d) =>
-        hoverMessage((deciles as any)[d]?.[category] || 0, d.toString(), category)
+        hoverMessage((deciles as any)[category]?.[d - 1] || 0, d.toString(), category)
       ),
       hoverMessage(all[category], 'All', category),
     ] as any,
