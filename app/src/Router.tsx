@@ -6,7 +6,9 @@ import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
+import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
@@ -46,6 +48,10 @@ const router = createBrowserRouter(
             },
           ],
         },
+        {
+          index: true,
+          element: <HomePage />,
+        },
         // Routes that benefit from metadata but don't require it (lazy loader)
         {
           element: <MetadataLazyLoader />,
@@ -54,8 +60,9 @@ const router = createBrowserRouter(
               element: <Layout />,
               children: [
                 {
-                  index: true,
-                  element: <Navigate to="reports" replace />,
+                  path: 'dashboard',
+                  // TODO: Build dashboard page
+                  element: <DashboardPage />,
                 },
                 {
                   path: 'reports',
