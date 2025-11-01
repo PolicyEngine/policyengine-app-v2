@@ -105,7 +105,7 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
       fixedrange: true,
     },
     yaxis: {
-      title: { text: 'Average change in household income' },
+      title: { text: 'Absolute change in household income' },
       tickformat: `$,.${ytickPrecision}f`,
       fixedrange: true,
     },

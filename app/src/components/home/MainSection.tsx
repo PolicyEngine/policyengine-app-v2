@@ -38,7 +38,7 @@ export default function MainSection() {
           fw={typography.fontWeight.normal}
           style={{
             lineHeight: typography.lineHeight.normal,
-            fontFamily: typography.fontFamily.secondary,
+            fontFamily: typography.fontFamily.primary,
           }}
         >
           Understand and {analyze} the impacts of tax and benefit policies

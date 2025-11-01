@@ -13,6 +13,11 @@ export const colors = {
     700: '#285E61',
     800: '#234E52',
     900: '#1D4044', // Vector color from Figma
+    alpha: {
+      40: '#31979566', // 40% opacity of primary[500]
+      50: '#31979580', // 50% opacity of primary[500]
+      60: '#31979599', // 60% opacity of primary[500]
+    },
   },
 
   // Secondary colors - extracted from Figma design

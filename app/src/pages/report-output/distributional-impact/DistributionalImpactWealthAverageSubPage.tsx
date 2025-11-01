@@ -105,7 +105,7 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
       fixedrange: true,
     },
     yaxis: {
-      title: { text: 'Average change in net income' },
+      title: { text: 'Absolute change in net income' },
       tickformat: ytickPrecision > 0 ? `$,.${ytickPrecision}f` : `$,.${ytickPrecision}f`,
       fixedrange: true,
     },

@@ -43,7 +43,7 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
             },
             {
               name: 'distributional-impact-income-average',
-              label: 'Average',
+              label: 'Absolute',
             },
           ],
         },
@@ -59,7 +59,7 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
                   },
                   {
                     name: 'distributional-impact-wealth-average',
-                    label: 'Average',
+                    label: 'Absolute',
                   },
                 ],
               },

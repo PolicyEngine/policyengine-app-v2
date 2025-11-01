@@ -28,7 +28,7 @@ const CATEGORIES = [
 
 const COLOR_MAP: Record<string, string> = {
   'Gain more than 5%': colors.primary[700],
-  'Gain less than 5%': colors.primary[300],
+  'Gain less than 5%': colors.primary.alpha[60],
   'No change': colors.gray[200],
   'Lose less than 5%': colors.gray[400],
   'Lose more than 5%': colors.gray[600],

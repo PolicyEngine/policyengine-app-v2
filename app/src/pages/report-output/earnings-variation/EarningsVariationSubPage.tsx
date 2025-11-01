@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Select, Stack, Text } from '@mantine/core';
+import { Group, Select, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { CURRENT_YEAR } from '@/constants';
 import { spacing } from '@/designTokens';
@@ -141,14 +141,19 @@ export default function EarningsVariationSubPage({
 
   return (
     <Stack gap={spacing.lg}>
-      <Select
-        label="Select variable to display"
-        placeholder="Choose a variable"
-        data={variableOptions}
-        value={selectedVariable}
-        onChange={(value) => value && setSelectedVariable(value)}
-        searchable
-      />
+      <Group align="flex-end" gap={spacing.md}>
+        <Text fw={500} size="sm" style={{ whiteSpace: 'nowrap', paddingBottom: '8px' }}>
+          Select variable to display:
+        </Text>
+        <Select
+          placeholder="Choose a variable"
+          data={variableOptions}
+          value={selectedVariable}
+          onChange={(value) => value && setSelectedVariable(value)}
+          searchable
+          style={{ flex: 1 }}
+        />
+      </Group>
 
       {reform && reformVariation ? (
         <BaselineAndReformChart

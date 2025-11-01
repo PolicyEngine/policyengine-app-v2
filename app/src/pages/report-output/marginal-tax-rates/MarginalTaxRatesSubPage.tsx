@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Radio, Stack, Text } from '@mantine/core';
+import { Group, Radio, Stack, Text } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { CURRENT_YEAR } from '@/constants';
@@ -273,7 +273,7 @@ export default function MarginalTaxRatesSubPage({
         mode: 'lines' as const,
         line: { color: colors.primary[500], width: 2 },
         fill: 'tozeroy' as const,
-        fillcolor: colors.primary[100],
+        fillcolor: colors.primary.alpha[60],
         name: 'MTR Difference',
         hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y:.1%}<extra></extra>',
       },
@@ -320,10 +320,10 @@ export default function MarginalTaxRatesSubPage({
 
       {reform && (
         <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-          <Stack gap={spacing.xs}>
+          <Group gap={spacing.md}>
             <Radio value="both" label="Baseline and Reform" />
             <Radio value="difference" label="Difference" />
-          </Stack>
+          </Group>
         </Radio.Group>
       )}
 
