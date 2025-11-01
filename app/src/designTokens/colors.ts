@@ -18,11 +18,6 @@ export const colors = {
       50: '#31979580', // 50% opacity of primary[500]
       60: '#31979599', // 60% opacity of primary[500]
     },
-    alpha700: {
-      40: '#285E6166', // 40% opacity of primary[700]
-      50: '#285E6180', // 50% opacity of primary[700]
-      60: '#285E6199', // 60% opacity of primary[700]
-    },
   },
 
   // Secondary colors - extracted from Figma design
