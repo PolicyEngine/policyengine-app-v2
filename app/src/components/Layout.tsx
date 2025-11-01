@@ -23,12 +23,27 @@ export default function Layout() {
     const to = location.pathname;
 
     if (from !== to) {
+      console.log('[Layout] ========== NAVIGATION DETECTED ==========');
+      console.log('[Layout] From:', from);
+      console.log('[Layout] To:', to);
+      console.log('[Layout] currentFlow:', currentFlow);
       cacheMonitor.logNavigation(from, to);
 
       // Clear flow and all ingredients when navigating away from /create routes
       if (currentFlow && from.includes('/create') && !to.includes('/create')) {
+        console.log('[Layout] Condition met: clearing flow and ingredients');
+        console.log('[Layout] - currentFlow exists:', !!currentFlow);
+        console.log('[Layout] - from.includes("/create"):', from.includes('/create'));
+        console.log('[Layout] - !to.includes("/create"):', !to.includes('/create'));
         dispatch(clearFlow());
+        console.log('[Layout] Dispatched clearFlow()');
         resetIngredient('report'); // Cascades to clear all ingredients
+        console.log('[Layout] Called resetIngredient("report")');
+      } else {
+        console.log('[Layout] Condition NOT met - no clearing');
+        console.log('[Layout] - currentFlow exists:', !!currentFlow);
+        console.log('[Layout] - from.includes("/create"):', from.includes('/create'));
+        console.log('[Layout] - !to.includes("/create"):', !to.includes('/create'));
       }
 
       previousLocation.current = to;

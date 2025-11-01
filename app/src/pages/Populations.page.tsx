@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
@@ -16,6 +17,7 @@ export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
   const metadata = useSelector((state: RootState) => state.metadata);
+  const countryId = useCurrentCountry();
 
   // Fetch household associations
   const {
@@ -44,7 +46,7 @@ export default function PopulationsPage() {
   const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
-    navigate('create');
+    navigate(`/${countryId}/populations/create`);
   };
 
   const handleMoreFilters = () => {

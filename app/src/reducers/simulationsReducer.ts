@@ -78,7 +78,11 @@ export const simulationsSlice = createSlice({
 
     // Clear all
     clearAllSimulations: (state) => {
+      console.log('[SIMULATIONS REDUCER] ========== clearAllSimulations ==========');
+      console.log('[SIMULATIONS REDUCER] Before clear:', state.simulations);
       state.simulations = [null, null];
+      console.log('[SIMULATIONS REDUCER] After clear:', state.simulations);
+      console.log('[SIMULATIONS REDUCER] ========== COMPLETE ==========');
     },
   },
 });

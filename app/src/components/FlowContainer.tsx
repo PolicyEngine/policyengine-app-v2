@@ -92,7 +92,7 @@ export default function FlowContainer() {
     if (isTopLevel && returnPath) {
       console.log(`[FlowContainer] Navigating to returnPath: ${returnPath}`);
 
-      navigate(returnPath, { replace: true });
+      navigate(returnPath);
     }
   };
 

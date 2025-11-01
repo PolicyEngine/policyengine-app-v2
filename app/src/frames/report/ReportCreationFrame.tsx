@@ -8,6 +8,7 @@ import { AppDispatch } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) {
+  console.log('[ReportCreationFrame] ========== COMPONENT RENDER ==========');
   const dispatch = useDispatch<AppDispatch>();
   const countryId = useCurrentCountry();
   const [localLabel, setLocalLabel] = useState('');
@@ -16,6 +17,7 @@ export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) 
 
   // Clear any existing report data when mounting
   useEffect(() => {
+    console.log('[ReportCreationFrame] Mounting - clearing report for country:', countryId);
     dispatch(clearReport(countryId));
   }, [dispatch, countryId]);
 
@@ -24,7 +26,9 @@ export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) 
   }
 
   function submissionHandler() {
+    console.log('[ReportCreationFrame] Submit clicked - label:', localLabel);
     dispatch(updateLabel(localLabel));
+    console.log('[ReportCreationFrame] Navigating to next frame');
     onNavigate('next');
   }
 
