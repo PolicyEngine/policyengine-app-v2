@@ -238,7 +238,12 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward" />
+      <Box style={{ flex: 1, display: 'flex', alignItems: 'center', height: '36px' }}>
+        <Text size="sm" fw={500}>onward:</Text>
+      </Box>
+      <Box style={{ flex: 1 }}>
+        <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+      </Box>
     </Group>
   );
 }
