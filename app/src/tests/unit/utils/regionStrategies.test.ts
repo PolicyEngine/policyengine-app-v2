@@ -1,12 +1,5 @@
 import { describe, expect, test } from 'vitest';
 import {
-  createGeographyFromScope,
-  extractRegionDisplayValue,
-  getUKConstituencies,
-  getUKCountries,
-  getUSStates,
-} from '@/utils/regionStrategies';
-import {
   expectedUKConstituencies,
   expectedUKCountries,
   expectedUSStates,
@@ -14,6 +7,13 @@ import {
   mockUSRegions,
   TEST_REGIONS,
 } from '@/tests/fixtures/utils/regionStrategiesMocks';
+import {
+  createGeographyFromScope,
+  extractRegionDisplayValue,
+  getUKConstituencies,
+  getUKCountries,
+  getUSStates,
+} from '@/utils/regionStrategies';
 
 describe('regionStrategies', () => {
   describe('getUSStates', () => {
