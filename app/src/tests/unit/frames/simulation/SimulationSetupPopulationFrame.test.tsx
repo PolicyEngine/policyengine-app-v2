@@ -48,7 +48,7 @@ describe('SimulationSetupPopulationFrame', () => {
     render(<SimulationSetupPopulationFrame {...mockFlowProps} />);
 
     // When
-    const loadExistingButton = screen.getByText('Load Existing Population');
+    const loadExistingButton = screen.getByText('Load Existing Household(s)');
     await user.click(loadExistingButton);
 
     const nextButton = screen.getByRole('button', { name: /Next/i });
@@ -64,7 +64,7 @@ describe('SimulationSetupPopulationFrame', () => {
     render(<SimulationSetupPopulationFrame {...mockFlowProps} />);
 
     // When
-    const createNewButton = screen.getByText('Create New Population');
+    const createNewButton = screen.getByText('Create New Household(s)');
     await user.click(createNewButton);
 
     const nextButton = screen.getByRole('button', { name: /Next/i });

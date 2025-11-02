@@ -2,13 +2,13 @@
 
 // UI text constants
 export const UI_TEXT = {
-  ADD_POPULATION: 'Add Population',
+  ADD_POPULATION: 'Add household(s)',
   ADD_POLICY: 'Add Policy',
   FROM_BASELINE_SUFFIX: '(from baseline)',
-  INHERITED_HOUSEHOLD_PREFIX: 'Household population #',
-  INHERITED_GEOGRAPHY_PREFIX: 'Geographic population #',
+  INHERITED_HOUSEHOLD_PREFIX: 'Household #',
+  INHERITED_GEOGRAPHY_PREFIX: 'Household collection #',
   INHERITED_SUFFIX: '• Inherited from baseline simulation',
-  SELECT_GEOGRAPHIC_OR_HOUSEHOLD: 'Select a geographic scope or specific household',
+  SELECT_GEOGRAPHIC_OR_HOUSEHOLD: 'Select a household collection or custom household',
 };
 
 // Mock populations
