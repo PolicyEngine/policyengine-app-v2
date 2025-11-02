@@ -18,6 +18,7 @@ export const TEST_REGION_CODES = {
   CALIFORNIA: 'ca',
   TEXAS: 'tx',
   LONDON: 'E14000698',
+  WALES: 'wales',
   UK_CONSTITUENCY_PREFIXED: 'constituency/Sheffield Central',
   UK_COUNTRY_PREFIXED: 'country/england',
 } as const;
