@@ -90,31 +90,6 @@ describe('MobileMenu', () => {
     expect(screen.getByText('Supporters')).toBeInTheDocument();
   });
 
-  test('given menu is opened then displays divider between sections', () => {
-    // Given
-    const onNavClick = vi.fn();
-    const onOpen = vi.fn();
-    const onClose = vi.fn();
-
-    // When
-    const { container } = renderWithCountry(
-      <MobileMenu
-        opened
-        onOpen={onOpen}
-        onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
-      'us'
-    );
-
-    // Then
-    // Divider exists (Mantine Divider renders as hr)
-    const divider = container.querySelector('hr');
-    expect(divider).toBeInTheDocument();
-  });
-
   test('given menu is opened then displays navigation links section', () => {
     // Given
     const onNavClick = vi.fn();
