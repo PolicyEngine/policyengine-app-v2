@@ -19,7 +19,7 @@ import {
   DEFAULT_CHART_LAYOUT,
   getClampedChartHeight,
 } from '@/utils/chartUtils';
-import { localeCode } from '@/utils/formatters';
+import { currencySymbol, localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
 
@@ -230,7 +230,8 @@ export default function MarginalTaxRatesSubPage({
         ...DEFAULT_CHART_LAYOUT,
         xaxis: {
           title: { text: 'Employment income' },
-          tickformat: '$,.0f',
+          tickprefix: currencySymbol(countryId),
+          tickformat: ',.0f',
           fixedrange: true,
         },
         yaxis: {
@@ -288,7 +289,8 @@ export default function MarginalTaxRatesSubPage({
       ...DEFAULT_CHART_LAYOUT,
       xaxis: {
         title: { text: 'Employment income' },
-        tickformat: '$,.0f',
+        tickprefix: currencySymbol(countryId),
+        tickformat: ',.0f',
         fixedrange: true,
       },
       yaxis: {

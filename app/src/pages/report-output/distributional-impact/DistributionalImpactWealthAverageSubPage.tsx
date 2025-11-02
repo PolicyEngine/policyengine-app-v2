@@ -11,7 +11,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
-import { formatCurrency, localeCode, ordinal, precision } from '@/utils/formatters';
+import { currencySymbol, formatCurrency, localeCode, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -107,7 +107,8 @@ export default function DistributionalImpactWealthAverageSubPage({ output }: Pro
     },
     yaxis: {
       title: { text: 'Absolute change in net income' },
-      tickformat: ytickPrecision > 0 ? `$,.${ytickPrecision}f` : `$,.${ytickPrecision}f`,
+      tickprefix: currencySymbol(countryId),
+      tickformat: `,.${ytickPrecision}f`,
       fixedrange: true,
     },
     showlegend: false,

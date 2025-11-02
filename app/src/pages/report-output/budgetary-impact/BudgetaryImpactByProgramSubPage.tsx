@@ -11,7 +11,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
-import { formatCurrencyAbbr, localeCode } from '@/utils/formatters';
+import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -170,7 +170,8 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
     },
     yaxis: {
       title: { text: 'Budgetary impact (bn)' },
-      tickformat: '$,.1f',
+      tickprefix: currencySymbol(countryId),
+      tickformat: ',.1f',
       fixedrange: true,
     },
     uniformtext: {
