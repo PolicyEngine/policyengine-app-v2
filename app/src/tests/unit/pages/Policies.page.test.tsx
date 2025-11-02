@@ -16,6 +16,11 @@ vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
 }));
 
+// Mock useCurrentCountry
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: () => 'us',
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -27,6 +32,7 @@ vi.mock('react-router-dom', async () => {
 });
 
 // Mock IngredientReadView component
+// Note: Cannot use factory function in vi.mock due to hoisting, so we inline it
 vi.mock('@/components/IngredientReadView', () => ({
   default: vi.fn(
     ({
@@ -40,8 +46,7 @@ vi.mock('@/components/IngredientReadView', () => ({
       searchValue,
       onSearchChange,
       columns,
-    }) => {
-      // Extract menu action handler if columns are provided
+    }: any) => {
       const menuColumn = columns?.find((col: any) => col.type === 'split-menu');
       const handleMenuAction = menuColumn?.onAction;
 
@@ -132,7 +137,7 @@ describe('PoliciesPage', () => {
     await user.click(screen.getByRole('button', { name: /Build Policy/i }));
 
     // Then
-    expect(mockNavigate).toHaveBeenCalledWith('create');
+    expect(mockNavigate).toHaveBeenCalledWith('/us/policies/create');
   });
 
   test('given no policies when rendering then displays empty state', () => {

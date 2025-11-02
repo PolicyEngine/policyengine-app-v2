@@ -26,6 +26,11 @@ vi.mock('@/hooks/useUserGeographic', () => ({
   useGeographicAssociationsByUser: vi.fn(),
 }));
 
+// Mock useCurrentCountry
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: () => 'us',
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {

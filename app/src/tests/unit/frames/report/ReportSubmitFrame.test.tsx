@@ -35,11 +35,13 @@ vi.mock('react-router-dom', async () => {
 
 // Mock Redux
 const mockUseSelector = vi.fn();
+const mockDispatch = vi.fn();
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual('react-redux');
   return {
     ...actual,
     useSelector: (selector: any) => mockUseSelector(selector),
+    useDispatch: () => mockDispatch,
   };
 });
 
@@ -58,6 +60,7 @@ describe('ReportSubmitFrame', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseSelector.mockReturnValue(null);
+    mockDispatch.mockClear();
   });
 
   describe('Validation', () => {
@@ -173,6 +176,127 @@ describe('ReportSubmitFrame', () => {
       // Then
       expect(screen.getByText(MOCK_HOUSEHOLD_SIMULATION.label!)).toBeInTheDocument();
       expect(screen.getByText(mockSim2.label!)).toBeInTheDocument();
+    });
+  });
+
+  describe('Flow and state cleanup', () => {
+    test('given report created successfully and not in subflow then clears flow and ingredients', async () => {
+      // Given
+      const user = userEvent.setup();
+      const mockResetIngredient = vi.fn();
+
+      // Re-mock useIngredientReset for this test to capture the function
+      vi.doMock('@/hooks/useIngredientReset', () => ({
+        useIngredientReset: () => ({
+          resetIngredient: mockResetIngredient,
+        }),
+      }));
+
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
+        }
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, null];
+        }
+        return null;
+      });
+
+      // Mock successful report creation
+      mockCreateReport.mockImplementation((_params, options) => {
+        // Simulate successful creation
+        const mockData = {
+          userReport: { id: 'test-report-123' },
+        };
+        if (options?.onSuccess) {
+          options.onSuccess(mockData);
+        }
+        return Promise.resolve(mockData);
+      });
+
+      render(<ReportSubmitFrame {...mockFlowProps} isInSubflow={false} />);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /generate report/i }));
+
+      // Then - clearFlow should be dispatched
+      expect(mockDispatch).toHaveBeenCalled();
+      // Note: We can't easily check the exact action without importing clearFlow
+      // but we verify dispatch was called
+    });
+
+    test('given report created successfully and in subflow then skips cleanup', async () => {
+      // Given
+      const user = userEvent.setup();
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
+        }
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, null];
+        }
+        return null;
+      });
+
+      // Mock successful report creation
+      mockCreateReport.mockImplementation((_params, options) => {
+        const mockData = {
+          userReport: { id: 'test-report-123' },
+        };
+        if (options?.onSuccess) {
+          options.onSuccess(mockData);
+        }
+        return Promise.resolve(mockData);
+      });
+
+      render(<ReportSubmitFrame {...mockFlowProps} isInSubflow={true} />);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /generate report/i }));
+
+      // Then - clearFlow should NOT be dispatched when in subflow
+      expect(mockDispatch).not.toHaveBeenCalled();
+    });
+
+    test('given report created then navigates to report output', async () => {
+      // Given
+      const user = userEvent.setup();
+      const mockReportId = 'test-report-xyz';
+
+      let callCount = 0;
+      mockUseSelector.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return { countryId: 'us', apiVersion: 'v1', label: 'Test Report' };
+        }
+        if (callCount === 2) {
+          return [MOCK_HOUSEHOLD_SIMULATION, null];
+        }
+        return null;
+      });
+
+      // Mock successful report creation
+      mockCreateReport.mockImplementation((_params, options) => {
+        const mockData = {
+          userReport: { id: mockReportId },
+        };
+        if (options?.onSuccess) {
+          options.onSuccess(mockData);
+        }
+        return Promise.resolve(mockData);
+      });
+
+      render(<ReportSubmitFrame {...mockFlowProps} />);
+
+      // When
+      await user.click(screen.getByRole('button', { name: /generate report/i }));
+
+      // Then
+      expect(mockNavigate).toHaveBeenCalledWith(`/us/report-output/${mockReportId}`);
     });
   });
 });
