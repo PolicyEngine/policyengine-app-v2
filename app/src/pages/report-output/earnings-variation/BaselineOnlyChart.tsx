@@ -71,6 +71,7 @@ export default function BaselineOnlyChart({
   const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
   const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
 
+  const symbol = currencySymbol(countryId);
   const chartData = [
     {
       x: xValues,
@@ -79,7 +80,7 @@ export default function BaselineOnlyChart({
       mode: 'lines' as const,
       line: { color: colors.primary[500], width: 2 },
       name: 'Baseline',
-      hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>%{y}<extra></extra>',
+      hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>%{y}<extra></extra>`,
     },
     {
       x: [currentEarnings],
@@ -88,7 +89,7 @@ export default function BaselineOnlyChart({
       mode: 'markers' as const,
       marker: { color: colors.primary[700], size: 10 },
       name: 'Current',
-      hovertemplate: '<b>Your current position</b><br>Earnings: %{x:$,.0f}<br>%{y}<extra></extra>',
+      hovertemplate: `<b>Your current position</b><br>Earnings: %{x:${symbol},.0f}<br>%{y}<extra></extra>`,
     },
   ];
 

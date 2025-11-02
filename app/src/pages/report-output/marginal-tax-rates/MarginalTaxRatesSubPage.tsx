@@ -190,6 +190,7 @@ export default function MarginalTaxRatesSubPage({
 
   const renderChart = () => {
     if (!reform || !reformMTRClipped || viewMode === 'both') {
+      const symbol = currencySymbol(countryId);
       const chartData: any[] = [
         {
           x: xValues,
@@ -198,7 +199,7 @@ export default function MarginalTaxRatesSubPage({
           mode: 'lines' as const,
           line: { color: colors.gray[600], width: 2 },
           name: 'Baseline',
-          hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>MTR: %{y:.1%}<extra></extra>',
+          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>MTR: %{y:.1%}<extra></extra>`,
         },
       ];
 
@@ -210,7 +211,7 @@ export default function MarginalTaxRatesSubPage({
           mode: 'lines' as const,
           line: { color: colors.primary[500], width: 2 },
           name: 'Reform',
-          hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>MTR: %{y:.1%}<extra></extra>',
+          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>MTR: %{y:.1%}<extra></extra>`,
         });
       } else {
         // Add current MTR marker for single mode
@@ -221,8 +222,7 @@ export default function MarginalTaxRatesSubPage({
           mode: 'markers' as const,
           marker: { color: colors.primary[700], size: 10 },
           name: 'Current',
-          hovertemplate:
-            '<b>Your current position</b><br>Earnings: %{x:$,.0f}<br>MTR: %{y:.1%}<extra></extra>',
+          hovertemplate: `<b>Your current position</b><br>Earnings: %{x:${symbol},.0f}<br>MTR: %{y:.1%}<extra></extra>`,
         });
       }
 
@@ -271,6 +271,7 @@ export default function MarginalTaxRatesSubPage({
       return null;
     }
 
+    const symbol = currencySymbol(countryId);
     const chartData = [
       {
         x: xValues,
@@ -281,7 +282,7 @@ export default function MarginalTaxRatesSubPage({
         fill: 'tozeroy' as const,
         fillcolor: colors.primary.alpha[60],
         name: 'MTR Difference',
-        hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y:.1%}<extra></extra>',
+        hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>Change: %{y:.1%}<extra></extra>`,
       },
     ];
 

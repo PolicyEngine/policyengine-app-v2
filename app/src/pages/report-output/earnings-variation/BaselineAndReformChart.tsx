@@ -90,6 +90,7 @@ export default function BaselineAndReformChart({
   // Render different charts based on view mode
   const renderChart = () => {
     if (viewMode === 'both') {
+      const symbol = currencySymbol(countryId);
       const chartData = [
         {
           x: xValues,
@@ -98,7 +99,7 @@ export default function BaselineAndReformChart({
           mode: 'lines' as const,
           line: { color: colors.gray[600], width: 2 },
           name: 'Baseline',
-          hovertemplate: '<b>Baseline</b><br>Earnings: %{x:$,.0f}<br>Value: %{y}<extra></extra>',
+          hovertemplate: `<b>Baseline</b><br>Earnings: %{x:${symbol},.0f}<br>Value: %{y}<extra></extra>`,
         },
         {
           x: xValues,
@@ -107,7 +108,7 @@ export default function BaselineAndReformChart({
           mode: 'lines' as const,
           line: { color: colors.primary[500], width: 2 },
           name: 'Reform',
-          hovertemplate: '<b>Reform</b><br>Earnings: %{x:$,.0f}<br>Value: %{y}<extra></extra>',
+          hovertemplate: `<b>Reform</b><br>Earnings: %{x:${symbol},.0f}<br>Value: %{y}<extra></extra>`,
         },
       ];
 
@@ -149,6 +150,7 @@ export default function BaselineAndReformChart({
     }
 
     if (viewMode === 'absolute') {
+      const symbol = currencySymbol(countryId);
       const chartData = [
         {
           x: xValues,
@@ -159,7 +161,7 @@ export default function BaselineAndReformChart({
           fill: 'tozeroy' as const,
           fillcolor: colors.primary.alpha[60],
           name: 'Absolute change',
-          hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y}<extra></extra>',
+          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>Change: %{y}<extra></extra>`,
         },
       ];
 
@@ -195,6 +197,7 @@ export default function BaselineAndReformChart({
     }
 
     // viewMode === 'relative'
+    const symbol = currencySymbol(countryId);
     const chartData = [
       {
         x: xValues,
@@ -205,7 +208,7 @@ export default function BaselineAndReformChart({
         fill: 'tozeroy' as const,
         fillcolor: colors.primary.alpha[60],
         name: 'Relative change',
-        hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y:.1%}<extra></extra>',
+        hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>Change: %{y:.1%}<extra></extra>`,
       },
     ];
 
@@ -213,7 +216,8 @@ export default function BaselineAndReformChart({
       ...DEFAULT_CHART_LAYOUT,
       xaxis: {
         title: { text: 'Employment income' },
-        tickformat: '$,.0f',
+        tickprefix: symbol,
+        tickformat: ',.0f',
         fixedrange: true,
       },
       yaxis: {

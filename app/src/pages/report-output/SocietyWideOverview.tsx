@@ -1,7 +1,9 @@
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { colors, spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
+import { currencySymbol } from '@/utils/formatters';
 
 interface SocietyWideOverviewProps {
   output: SocietyWideReportOutput;
@@ -13,6 +15,8 @@ interface SocietyWideOverviewProps {
  * Follows the conditional display logic from the v1 PolicyBreakdown component
  */
 export default function SocietyWideOverview({ output }: SocietyWideOverviewProps) {
+  const countryId = useCurrentCountry();
+
   // Calculate budgetary impact
   const budgetaryImpact = output.budget.budgetary_impact;
 
@@ -101,7 +105,8 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
               textUnderlineOffset: '3px',
             }}
           >
-            ${formatted.display}
+            {currencySymbol(countryId)}
+            {formatted.display}
             {formatted.label && ` ${formatted.label}`}
           </Text>
         </Group>
