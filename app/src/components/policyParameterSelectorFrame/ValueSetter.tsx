@@ -239,7 +239,9 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         style={{ flex: 1 }}
       />
       <Box style={{ flex: 1, display: 'flex', alignItems: 'center', height: '36px' }}>
-        <Text size="sm" fw={500}>onward:</Text>
+        <Text size="sm" fw={500}>
+          onward:
+        </Text>
       </Box>
       <Box style={{ flex: 1 }}>
         <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />

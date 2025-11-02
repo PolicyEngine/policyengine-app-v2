@@ -67,7 +67,12 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       path: 'mailto:hello@policyengine.org',
       external: true,
     },
-    { label: 'Account settings', icon: IconSettings2, path: `/${countryId}/account`, disabled: true },
+    {
+      label: 'Account settings',
+      icon: IconSettings2,
+      path: `/${countryId}/account`,
+      disabled: true,
+    },
   ];
 
   if (!isOpen) {

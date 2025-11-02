@@ -52,7 +52,7 @@ describe('IngredientReadView', () => {
       <IngredientReadView
         ingredient={MOCK_INGREDIENT.NAME}
         title={MOCK_INGREDIENT.TITLE}
-        isLoading={true}
+        isLoading
         isError={false}
         data={EMPTY_DATA}
         columns={MOCK_COLUMNS}
@@ -72,7 +72,7 @@ describe('IngredientReadView', () => {
         ingredient={MOCK_INGREDIENT.NAME}
         title={MOCK_INGREDIENT.TITLE}
         isLoading={false}
-        isError={true}
+        isError
         error={error}
         data={EMPTY_DATA}
         columns={MOCK_COLUMNS}
@@ -137,7 +137,7 @@ describe('IngredientReadView', () => {
         isError={false}
         data={MOCK_DATA}
         columns={MOCK_COLUMNS}
-        enableSelection={true}
+        enableSelection
       />
     );
 
@@ -160,7 +160,7 @@ describe('IngredientReadView', () => {
         isError={false}
         data={MOCK_DATA}
         columns={MOCK_COLUMNS}
-        enableSelection={true}
+        enableSelection
         onSelectionChange={onSelectionChange}
       />
     );

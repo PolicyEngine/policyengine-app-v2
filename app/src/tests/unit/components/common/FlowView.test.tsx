@@ -354,28 +354,20 @@ describe('FlowView', () => {
       expect(submitButton).toHaveAttribute('data-loading', 'true');
     });
 
-    test('given no cancel action onClick then uses default console.log', async () => {
-      const user = userEvent.setup();
-
+    test('given cancel button then renders as disabled', () => {
       render(
         <FlowView title={FLOW_VIEW_STRINGS.MAIN_TITLE} buttonPreset={BUTTON_PRESETS.CANCEL_ONLY} />
       );
 
       const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
-      await user.click(cancelButton);
-
-      expect(vi.mocked(console.log)).toHaveBeenCalledWith(FLOW_VIEW_STRINGS.CANCEL_CLICKED_MSG);
+      expect(cancelButton).toBeDisabled();
     });
 
-    test('given user clicks cancel button then calls cancel handler', async () => {
-      const user = userEvent.setup();
-
+    test('given cancel action then renders disabled cancel button', () => {
       render(<FlowView title={FLOW_VIEW_STRINGS.MAIN_TITLE} cancelAction={mockCancelAction} />);
 
       const cancelButton = screen.getByRole('button', { name: FLOW_VIEW_STRINGS.CANCEL_BUTTON });
-      await user.click(cancelButton);
-
-      expect(mockCancelClick).toHaveBeenCalledTimes(1);
+      expect(cancelButton).toBeDisabled();
     });
 
     test('given user clicks primary button then calls primary handler', async () => {

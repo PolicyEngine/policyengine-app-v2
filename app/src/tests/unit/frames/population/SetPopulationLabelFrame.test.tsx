@@ -252,17 +252,15 @@ describe('SetPopulationLabelFrame', () => {
   });
 
   describe('Navigation', () => {
-    test('given back button clicked then navigates to back', async () => {
+    test('given back button then renders as disabled', () => {
       // Given
-      const mockOnNavigate = vi.fn();
-      renderComponent(null, { ...mockFlowProps, onNavigate: mockOnNavigate });
+      renderComponent(null, mockFlowProps);
 
       // When
       const backButton = screen.getByRole('button', { name: /Back/i });
-      await user.click(backButton);
 
       // Then
-      expect(mockOnNavigate).toHaveBeenCalledWith('back');
+      expect(backButton).toBeDisabled();
     });
   });
 });
