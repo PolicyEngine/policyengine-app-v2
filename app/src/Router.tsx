@@ -48,10 +48,6 @@ const router = createBrowserRouter(
             },
           ],
         },
-        {
-          index: true,
-          element: <HomePage />,
-        },
         // Routes that benefit from metadata but don't require it (lazy loader)
         {
           element: <MetadataLazyLoader />,
@@ -118,6 +114,10 @@ const router = createBrowserRouter(
         {
           element: <StaticLayout />,
           children: [
+            {
+              index: true,
+              element: <HomePage />,
+            },
             {
               path: 'donate',
               element: <DonatePage />,
