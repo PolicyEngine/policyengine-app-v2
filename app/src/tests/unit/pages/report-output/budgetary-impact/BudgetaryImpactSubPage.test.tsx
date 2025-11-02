@@ -54,7 +54,7 @@ describe('BudgetaryImpactSubPage', () => {
     render(<BudgetaryImpactSubPage output={MOCK_POSITIVE_IMPACT} />);
 
     // Then
-    expect(screen.getByRole('button', { name: /download csv/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/download csv/i)).toBeInTheDocument();
   });
 
   test('given user clicks download CSV then calls downloadCsv', async () => {
@@ -64,7 +64,7 @@ describe('BudgetaryImpactSubPage', () => {
     render(<BudgetaryImpactSubPage output={MOCK_POSITIVE_IMPACT} />);
 
     // When
-    await user.click(screen.getByRole('button', { name: /download csv/i }));
+    await user.click(screen.getByLabelText(/download csv/i));
 
     // Then
     expect(downloadCsv).toHaveBeenCalledWith(

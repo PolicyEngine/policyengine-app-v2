@@ -26,7 +26,13 @@ export function ChartContainer({ children, title, onDownloadCsv }: ChartContaine
           {title}
         </Text>
         <Tooltip label="Download CSV" position="left">
-          <ActionIcon variant="subtle" size="md" onClick={onDownloadCsv} style={{ flexShrink: 0 }}>
+          <ActionIcon
+            variant="subtle"
+            size="md"
+            onClick={onDownloadCsv}
+            aria-label="Download CSV"
+            style={{ flexShrink: 0 }}
+          >
             <IconDownload size={18} />
           </ActionIcon>
         </Tooltip>
