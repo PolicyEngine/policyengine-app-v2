@@ -253,7 +253,7 @@ describe('ReportSubmitFrame', () => {
         return Promise.resolve(mockData);
       });
 
-      render(<ReportSubmitFrame {...mockFlowProps} isInSubflow={true} />);
+      render(<ReportSubmitFrame {...mockFlowProps} isInSubflow />);
 
       // When
       await user.click(screen.getByRole('button', { name: /generate report/i }));
