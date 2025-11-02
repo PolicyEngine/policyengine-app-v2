@@ -7,18 +7,21 @@ import {
   IconBrandYoutube,
 } from '@tabler/icons-react';
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import type { CountryId } from '@/api/report';
 import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
-const CONTACT_LINKS = {
+const getContactLinks = (countryId: CountryId) => ({
   email: 'mailto:hello@policyengine.org',
-  about: '#',
-  donate: '#',
-  privacy: '#',
-  terms: '#',
-  developerTools: '#',
-};
+  about: `/${countryId}/team`,
+  donate: `/${countryId}/donate`,
+  privacy: `/${countryId}/privacy`,
+  terms: `/${countryId}/terms`,
+  // TODO: Add developer-tools page once it's built out
+  // developerTools: `/${countryId}/developer-tools`,
+});
 
 const SOCIAL_LINKS = [
   { icon: IconBrandTwitter, href: 'https://twitter.com/ThePolicyEngine' },
@@ -30,6 +33,8 @@ const SOCIAL_LINKS = [
 ];
 
 export default function Footer() {
+  const countryId = useCurrentCountry();
+  const CONTACT_LINKS = getContactLinks(countryId);
   return (
     <Box
       component="footer"
@@ -86,8 +91,9 @@ export default function Footer() {
                 underline="never"
                 ff={typography.fontFamily.primary}
               >
-                Terms and conditions
+                Terms and Conditions
               </Anchor>
+              {/* TODO: Uncomment when developer-tools page is built
               <Anchor
                 href={CONTACT_LINKS.developerTools}
                 c={colors.white}
@@ -97,6 +103,7 @@ export default function Footer() {
               >
                 Developer tools
               </Anchor>
+              */}
             </Stack>
 
             <Stack gap="md">
