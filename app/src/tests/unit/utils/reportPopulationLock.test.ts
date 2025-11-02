@@ -108,20 +108,20 @@ describe('reportPopulationLock', () => {
   });
 
   describe('getPopulationSelectionTitle', () => {
-    it('given shouldLock true then returns Apply Population', () => {
+    it('given shouldLock true then returns Apply Household(s)', () => {
       // When
       const result = getPopulationSelectionTitle(true);
 
       // Then
-      expect(result).toBe('Apply Population');
+      expect(result).toBe('Apply Household(s)');
     });
 
-    it('given shouldLock false then returns Select Population', () => {
+    it('given shouldLock false then returns Select Household(s)', () => {
       // When
       const result = getPopulationSelectionTitle(false);
 
       // Then
-      expect(result).toBe('Select Population');
+      expect(result).toBe('Select Household(s)');
     });
   });
 
@@ -131,7 +131,7 @@ describe('reportPopulationLock', () => {
       const result = getPopulationSelectionSubtitle(true);
 
       // Then
-      expect(result).toBe('This report requires using the same population as the other simulation');
+      expect(result).toBe('This report requires using the same household(s) as the other simulation');
     });
 
     it('given shouldLock false then returns undefined', () => {

@@ -43,11 +43,11 @@ export const POPULATION_SCOPES = {
 // Expected strings
 export const EXPECTED_LABELS = {
   HOUSEHOLD_DEFAULT: (id: string) => `Household ${id}`,
-  GEOGRAPHY_DEFAULT: (id: string) => `Geography: ${id}`,
+  GEOGRAPHY_DEFAULT: (id: string) => `All households in ${id}`,
   HOUSEHOLD_TYPE: 'Household',
-  GEOGRAPHY_TYPE: 'Geography',
-  NATIONAL_PREFIX: 'National',
-  REGIONAL_PREFIX: 'Regional',
+  GEOGRAPHY_TYPE: 'Household collection',
+  NATIONAL_PREFIX: 'National households',
+  REGIONAL_PREFIX: 'Households in',
 } as const;
 
 // Cache keys
@@ -182,8 +182,8 @@ export const expectedUserHouseholdDefaultLabel = EXPECTED_LABELS.HOUSEHOLD_DEFAU
   POPULATION_IDS.HOUSEHOLD_2
 );
 export const expectedUserGeographyLabel = POPULATION_LABELS.GEOGRAPHY_LABEL;
-export const expectedUserGeographyNationalLabel = `${EXPECTED_LABELS.NATIONAL_PREFIX}: ${POPULATION_IDS.GEOGRAPHY_2}`;
-export const expectedUserGeographyRegionalLabel = `${EXPECTED_LABELS.REGIONAL_PREFIX}: ${POPULATION_IDS.GEOGRAPHY_1}`;
+export const expectedUserGeographyNationalLabel = `${EXPECTED_LABELS.NATIONAL_PREFIX} ${POPULATION_IDS.GEOGRAPHY_2}`;
+export const expectedUserGeographyRegionalLabel = `${EXPECTED_LABELS.REGIONAL_PREFIX} ${POPULATION_IDS.GEOGRAPHY_1}`;
 
 // ============= TEST HELPERS =============
 

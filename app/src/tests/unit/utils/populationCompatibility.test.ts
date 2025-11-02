@@ -76,12 +76,12 @@ describe('populationCompatibility', () => {
   });
 
   describe('getPopulationLabel', () => {
-    it('given null population then returns Unknown Population', () => {
+    it('given null population then returns Unknown Household(s)', () => {
       // When
       const result = getPopulationLabel(null);
 
       // Then
-      expect(result).toBe('Unknown Population');
+      expect(result).toBe('Unknown Household(s)');
     });
 
     it('given population with label then returns label', () => {
@@ -144,7 +144,7 @@ describe('populationCompatibility', () => {
       expect(result).toBe('Custom Label');
     });
 
-    it('given empty population then returns Unknown Population', () => {
+    it('given empty population then returns Unknown Household(s)', () => {
       // Given
       const population = mockPopulationEmpty();
 
@@ -152,7 +152,7 @@ describe('populationCompatibility', () => {
       const result = getPopulationLabel(population);
 
       // Then
-      expect(result).toBe('Unknown Population');
+      expect(result).toBe('Unknown Household(s)');
     });
   });
 
