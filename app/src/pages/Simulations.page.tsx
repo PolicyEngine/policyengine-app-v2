@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { formatDate } from '@/utils/dateUtils';
 
@@ -10,12 +11,13 @@ export default function SimulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const navigate = useNavigate();
+  const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildSimulation = () => {
-    navigate('create');
+    navigate(`/${countryId}/simulations/create`);
   };
 
   const handleMoreFilters = () => {

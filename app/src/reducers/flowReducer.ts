@@ -26,10 +26,16 @@ export const flowSlice = createSlice({
   initialState,
   reducers: {
     clearFlow: (state) => {
+      console.log('[FLOW REDUCER] ========== clearFlow CALLED ==========');
+      console.log('[FLOW REDUCER] Before clear - currentFlow:', state.currentFlow);
+      console.log('[FLOW REDUCER] Before clear - currentFrame:', state.currentFrame);
+      console.log('[FLOW REDUCER] Before clear - flowStack length:', state.flowStack.length);
       state.currentFlow = null;
       state.currentFrame = null;
       state.flowStack = [];
       state.returnPath = null;
+      console.log('[FLOW REDUCER] After clear - all state nulled');
+      console.log('[FLOW REDUCER] ========== clearFlow COMPLETE ==========');
     },
     setFlow: (state, action: PayloadAction<{ flow: Flow; returnPath?: string }>) => {
       console.log('[FLOW REDUCER] ========== setFlow START ==========');

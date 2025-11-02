@@ -4,7 +4,6 @@ import { MOCK_USER_ID } from '@/constants';
 import { useUserReports } from '@/hooks/useUserReports';
 import ReportsPage from '@/pages/Reports.page';
 import {
-  createMockNavigate,
   ERROR_MESSAGES,
   mockDefaultHookReturn,
   mockEmptyHookReturn,
@@ -21,8 +20,13 @@ vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),
 }));
 
+// Mock useCurrentCountry
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: () => 'us',
+}));
+
 // Mock navigate
-const mockNavigate = createMockNavigate();
+const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
@@ -138,7 +142,7 @@ describe('ReportsPage', () => {
     expect(screen.getByText(`Error: ${ERROR_MESSAGES.FETCH_FAILED}`)).toBeInTheDocument();
   });
 
-  test('given user clicks build report button then dispatches report creation flow', async () => {
+  test('given user clicks build report button then navigates to report creation flow', async () => {
     // Given
     const user = userEvent.setup();
     render(<ReportsPage />);
@@ -147,7 +151,7 @@ describe('ReportsPage', () => {
     await user.click(screen.getByRole('button', { name: /Build Report/i }));
 
     // Then
-    expect(mockNavigate).toHaveBeenCalledWith('create');
+    expect(mockNavigate).toHaveBeenCalledWith('/us/reports/create');
   });
 
   test('given no reports when rendering then displays empty state', () => {

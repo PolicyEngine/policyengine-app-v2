@@ -17,23 +17,27 @@ import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function ReportsPage() {
+  console.log('[ReportsPage] ========== COMPONENT RENDER ==========');
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
   const cacheMonitor = useCacheMonitor();
+  const navigate = useNavigate();
+  const countryId = useCurrentCountry();
 
   // Log cache state when component mounts and when data changes
   useEffect(() => {
     console.log('📊 [ReportsPage] Component mounted/updated');
     cacheMonitor.getStats();
   }, [data]);
-  const navigate = useNavigate();
-  const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildReport = () => {
-    navigate('create');
+    console.log('[ReportsPage] ========== NEW REPORT CLICKED ==========');
+    const targetPath = `/${countryId}/reports/create`;
+    console.log('[ReportsPage] Navigating to:', targetPath);
+    navigate(targetPath);
   };
 
   const handleMoreFilters = () => {
