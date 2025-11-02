@@ -1,7 +1,10 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import MobileMenu from '@/components/home-header/MobileMenu';
-import { MOCK_ABOUT_LINKS, MOCK_NAV_LINKS } from '@/tests/fixtures/components/home-header/HeaderMocks';
+import {
+  MOCK_ABOUT_LINKS,
+  MOCK_NAV_LINKS,
+} from '@/tests/fixtures/components/home-header/HeaderMocks';
 
 describe('MobileMenu', () => {
   beforeEach(() => {
@@ -71,7 +74,7 @@ describe('MobileMenu', () => {
     // When
     renderWithCountry(
       <MobileMenu
-        opened={true}
+        opened
         onOpen={onOpen}
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}
@@ -96,7 +99,7 @@ describe('MobileMenu', () => {
     // When
     const { container } = renderWithCountry(
       <MobileMenu
-        opened={true}
+        opened
         onOpen={onOpen}
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}
@@ -121,7 +124,7 @@ describe('MobileMenu', () => {
     // When
     renderWithCountry(
       <MobileMenu
-        opened={true}
+        opened
         onOpen={onOpen}
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}
@@ -147,7 +150,7 @@ describe('MobileMenu', () => {
     // When
     renderWithCountry(
       <MobileMenu
-        opened={true}
+        opened
         onOpen={onOpen}
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}
@@ -174,7 +177,7 @@ describe('MobileMenu', () => {
     // When
     renderWithCountry(
       <MobileMenu
-        opened={true}
+        opened
         onOpen={onOpen}
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}

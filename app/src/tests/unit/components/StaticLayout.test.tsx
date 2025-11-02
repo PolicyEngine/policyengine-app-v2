@@ -42,8 +42,12 @@ describe('StaticLayout', () => {
     let contentIndex = -1;
 
     elements.forEach((el, index) => {
-      if (el.textContent?.includes(EXPECTED_LAYOUT_TEXT.ABOUT)) headerIndex = index;
-      if (el.textContent === EXPECTED_LAYOUT_TEXT.PAGE_CONTENT) contentIndex = index;
+      if (el.textContent?.includes(EXPECTED_LAYOUT_TEXT.ABOUT)) {
+        headerIndex = index;
+      }
+      if (el.textContent === EXPECTED_LAYOUT_TEXT.PAGE_CONTENT) {
+        contentIndex = index;
+      }
     });
 
     expect(headerIndex).toBeGreaterThan(-1);

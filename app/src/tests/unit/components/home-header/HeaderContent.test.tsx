@@ -1,7 +1,10 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HeaderContent from '@/components/home-header/HeaderContent';
-import { MOCK_ABOUT_LINKS, MOCK_NAV_LINKS } from '@/tests/fixtures/components/home-header/HeaderMocks';
+import {
+  MOCK_ABOUT_LINKS,
+  MOCK_NAV_LINKS,
+} from '@/tests/fixtures/components/home-header/HeaderMocks';
 
 describe('HeaderContent', () => {
   test('given component renders then displays logo and navigation', () => {
