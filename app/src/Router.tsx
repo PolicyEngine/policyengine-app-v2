@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
 import StaticLayout from './components/StaticLayout';
@@ -21,13 +21,14 @@ import TermsPage from './pages/Terms.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
+import { RedirectToCountry } from './routing/RedirectToCountry';
 
 const router = createBrowserRouter(
   [
     {
       path: '/',
-      // TODO: Replace with dynamic default country based on user location/preferences
-      element: <Navigate to="/us" replace />,
+      // Dynamically detect and redirect to user's country
+      element: <RedirectToCountry />,
     },
     {
       path: '/:countryId',
