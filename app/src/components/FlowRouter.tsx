@@ -11,9 +11,14 @@ interface FlowRouterProps {
 }
 
 export default function FlowRouter({ flow, returnPath }: FlowRouterProps) {
+  console.log('[FlowRouter] ========== COMPONENT RENDER ==========');
   const dispatch = useDispatch();
   const { countryId } = useParams<{ countryId: string }>();
   const currentFlow = useSelector((state: any) => state.flow.currentFlow);
+
+  console.log('[FlowRouter] currentFlow from Redux:', currentFlow);
+  console.log('[FlowRouter] flow prop:', flow);
+  console.log('[FlowRouter] returnPath prop:', returnPath);
 
   // Construct absolute path from countryId and returnPath
   const absoluteReturnPath = `/${countryId}/${returnPath}`;
@@ -21,6 +26,7 @@ export default function FlowRouter({ flow, returnPath }: FlowRouterProps) {
   // Initialize ONLY if there's no current flow set, to avoid resetting mid-flow;
   // relevant when a component above (Layout) causes re-render.
   useEffect(() => {
+    console.log('[FlowRouter] ========== useEffect RUNNING ==========');
     console.log('[FlowRouter] Effect running - currentFlow:', currentFlow);
     console.log('[FlowRouter] Expected flow:', flow);
     if (!currentFlow) {
@@ -29,9 +35,12 @@ export default function FlowRouter({ flow, returnPath }: FlowRouterProps) {
         absoluteReturnPath
       );
       dispatch(setFlow({ flow, returnPath: absoluteReturnPath }));
+      console.log('[FlowRouter] setFlow dispatched');
     } else {
       console.log('[FlowRouter] Flow already exists, skipping setFlow');
+      console.log('[FlowRouter] Existing flow initialFrame:', currentFlow.initialFrame);
     }
+    console.log('[FlowRouter] ========== useEffect COMPLETE ==========');
     // Initialize flow once on mount, hence empty deps array
     // This is not an anti-pattern; see
     // https://react.dev/reference/react/useEffect#specifying-reactive-dependencies,

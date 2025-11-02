@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { countParameterChanges } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
@@ -11,17 +12,13 @@ export default function PoliciesPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const navigate = useNavigate();
+  const countryId = useCurrentCountry();
 
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const handleBuildPolicy = () => {
-    navigate('create');
-  };
-
-  const handleMoreFilters = () => {
-    // TODO: Implement more filters modal/dropdown
-    console.log('More filters clicked');
+    navigate(`/${countryId}/policies/create`);
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -88,7 +85,6 @@ export default function PoliciesPage() {
       columns={policyColumns}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
-      onMoreFilters={handleMoreFilters}
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}

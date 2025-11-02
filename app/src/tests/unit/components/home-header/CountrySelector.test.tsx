@@ -18,22 +18,22 @@ describe('CountrySelector', () => {
     vi.clearAllMocks();
   });
 
-  test('given component renders then displays globe icon', () => {
+  test('given component renders then displays country selector button', () => {
     // When
     renderWithCountry(<CountrySelector />, 'us');
 
     // Then
-    expect(screen.getByRole('button')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /country selector/i })).toBeInTheDocument();
   });
 
-  test('given user clicks globe then shows country dropdown', async () => {
+  test('given user clicks selector then shows country dropdown', async () => {
     // Given
     const { userEvent } = await import('@test-utils');
     const user = userEvent.setup();
 
     // When
     renderWithCountry(<CountrySelector />, 'us');
-    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
 
     // Then
     expect(screen.getByText('United States')).toBeInTheDocument();
@@ -47,7 +47,7 @@ describe('CountrySelector', () => {
 
     // When
     renderWithCountry(<CountrySelector />, 'us');
-    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
     const usOption = screen.getByText('United States');
 
     // Then
@@ -61,7 +61,7 @@ describe('CountrySelector', () => {
 
     // When
     renderWithCountry(<CountrySelector />, 'uk');
-    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
     const ukOption = screen.getByText('United Kingdom');
 
     // Then
@@ -75,7 +75,7 @@ describe('CountrySelector', () => {
 
     // When
     renderWithCountry(<CountrySelector />, 'us', MOCK_PATHS.US_POLICY);
-    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
     await user.click(screen.getByText('United Kingdom'));
 
     // Then
@@ -89,7 +89,7 @@ describe('CountrySelector', () => {
 
     // When
     renderWithCountry(<CountrySelector />, 'uk', MOCK_PATHS.UK_POLICY);
-    await user.click(screen.getByRole('button'));
+    await user.click(screen.getByRole('button', { name: /country selector/i }));
     await user.click(screen.getByText('United States'));
 
     // Then

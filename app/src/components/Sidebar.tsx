@@ -42,18 +42,36 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       path: 'https://github.com/PolicyEngine',
       external: true,
     },
-    { label: 'Join Slack', icon: IconBrandSlack, path: 'https://slack.com', external: true },
-    { label: 'Visit Blog', icon: IconBook, path: 'https://blog.example.com', external: true },
-    { label: 'Methodology', icon: IconFileDescription, path: `/${countryId}/methodology` },
+    {
+      label: 'Join Slack',
+      icon: IconBrandSlack,
+      // NOTE: Temporary 30-day joining link added on November 2, 2025
+      // Will expire after 30 days OR after 100 people join the Slack
+      // TODO: Update this link when it expires
+      path: 'https://join.slack.com/t/policyengine-group/shared_invite/zt-3h69snorb-2MPNgFuRGucqGLG_15tijQ',
+      external: true,
+    },
+    {
+      label: 'Visit blog',
+      icon: IconBook,
+      path: 'https://blog.example.com',
+      external: true,
+      disabled: true,
+    },
   ];
 
   const accountItems = [
-    { label: 'Account Settings', icon: IconSettings2, path: `/${countryId}/account` },
     {
-      label: 'Contact Support',
+      label: 'Contact support',
       icon: IconMail,
       path: 'mailto:hello@policyengine.org',
       external: true,
+    },
+    {
+      label: 'Account settings',
+      icon: IconSettings2,
+      path: `/${countryId}/account`,
+      disabled: true,
     },
   ];
 

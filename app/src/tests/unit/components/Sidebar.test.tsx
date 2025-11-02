@@ -41,7 +41,7 @@ describe('Sidebar', () => {
     render(<Sidebar />);
 
     // Then
-    const contactLink = screen.getByText('Contact Support').closest('a');
+    const contactLink = screen.getByText('Contact support').closest('a');
     expect(contactLink).toHaveAttribute('href', 'mailto:hello@policyengine.org');
   });
 
@@ -52,5 +52,30 @@ describe('Sidebar', () => {
     // Then
     const githubLink = screen.getByText('GitHub').closest('a');
     expect(githubLink).toHaveAttribute('href', 'https://github.com/PolicyEngine');
+  });
+
+  test('given join slack link then has correct href', () => {
+    // When
+    render(<Sidebar />);
+
+    // Then
+    const slackLink = screen.getByText('Join Slack').closest('a');
+    expect(slackLink).toHaveAttribute(
+      'href',
+      'https://join.slack.com/t/policyengine-group/shared_invite/zt-3h69snorb-2MPNgFuRGucqGLG_15tijQ'
+    );
+  });
+
+  test('given disabled link then shows tooltip on hover', async () => {
+    // Given
+    const user = userEvent.setup();
+    render(<Sidebar />);
+
+    // When
+    const accountSettings = screen.getByText('Account settings');
+    await user.hover(accountSettings);
+
+    // Then
+    expect(await screen.findByText('Under development')).toBeInTheDocument();
   });
 });

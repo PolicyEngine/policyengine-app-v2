@@ -131,4 +131,3 @@ export const ERROR_MESSAGES = {
 // Note: These are factory functions that return mocked implementations
 // They cannot be called directly in vi.mock() due to Vitest hoisting restrictions
 export const createMockDispatch = () => vi.fn();
-export const createMockNavigate = () => vi.fn();

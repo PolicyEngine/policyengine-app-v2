@@ -26,6 +26,11 @@ vi.mock('@/hooks/useUserGeographic', () => ({
   useGeographicAssociationsByUser: vi.fn(),
 }));
 
+// Mock useCurrentCountry
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: () => 'us',
+}));
+
 // Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
@@ -294,7 +299,7 @@ describe('PopulationsPage', () => {
       await user.click(buildButton);
 
       // Then
-      expect(mockNavigate).toHaveBeenCalledWith('create');
+      expect(mockNavigate).toHaveBeenCalledWith('/us/populations/create');
     });
 
     test('given user selects population then updates selection state', async () => {

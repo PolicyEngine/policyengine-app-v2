@@ -44,7 +44,9 @@ export default function HeaderContent({
           <DesktopNavigation navLinks={navLinks} aboutLinks={aboutLinks} onNavClick={onNavClick} />
         </Group>
 
-        <HeaderActionButtons />
+        <Group visibleFrom="lg">
+          <HeaderActionButtons />
+        </Group>
 
         <MobileMenu
           opened={opened}

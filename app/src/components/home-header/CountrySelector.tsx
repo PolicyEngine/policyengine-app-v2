@@ -28,9 +28,9 @@ export default function CountrySelector() {
   return (
     <Menu shadow="md" width={200} zIndex={1001} position="bottom-end" offset={10}>
       <Menu.Target>
-        <UnstyledButton>
-          <Group gap={4}>
-            <IconWorld size={16} color={colors.text.inverse} />
+        <UnstyledButton aria-label="Country selector" style={{ lineHeight: 1 }}>
+          <Group gap={4} align="center">
+            <IconWorld size={18} color={colors.text.inverse} />
           </Group>
         </UnstyledButton>
       </Menu.Target>

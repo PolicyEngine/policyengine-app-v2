@@ -152,6 +152,8 @@ export const reportSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder.addCase(clearReport.fulfilled, (state, action) => {
+      console.log('[REPORT REDUCER] ========== clearReport.fulfilled ==========');
+      console.log('[REPORT REDUCER] Before clear - state:', state);
       // Clear all report data
       state.id = '';
       state.label = null;
@@ -165,6 +167,9 @@ export const reportSlice = createSlice({
       state.mode = 'standalone';
       // Set country from metadata (payload from thunk)
       state.countryId = action.payload;
+      console.log('[REPORT REDUCER] After clear - countryId:', state.countryId);
+      console.log('[REPORT REDUCER] After clear - mode:', state.mode);
+      console.log('[REPORT REDUCER] ========== clearReport COMPLETE ==========');
       // Preserve apiVersion
     });
   },

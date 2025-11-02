@@ -1,6 +1,6 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
-import { Group, Text, UnstyledButton } from '@mantine/core';
+import { Group, Text, Tooltip, UnstyledButton } from '@mantine/core';
 import { colors } from '../../designTokens';
 
 interface SidebarNavItemProps {
@@ -9,6 +9,7 @@ interface SidebarNavItemProps {
   path: string;
   isActive?: boolean;
   external?: boolean;
+  disabled?: boolean;
 }
 
 export default function SidebarNavItem({
@@ -17,19 +18,30 @@ export default function SidebarNavItem({
   path,
   isActive,
   external,
+  disabled,
 }: SidebarNavItemProps) {
   const content = (
     <Group gap={20} wrap="nowrap">
-      <Icon size={20} stroke={1.5} color={isActive ? colors.gray[700] : colors.text.secondary} />
+      <Icon
+        size={20}
+        stroke={1.5}
+        color={disabled ? colors.gray[400] : isActive ? colors.gray[700] : colors.text.secondary}
+      />
       <Text
         size="sm"
         fw={isActive ? 500 : 400}
-        c={isActive ? colors.gray[900] : colors.gray[700]}
+        c={disabled ? colors.gray[400] : isActive ? colors.gray[900] : colors.gray[700]}
         style={{ flex: 1 }}
       >
         {label}
       </Text>
-      {external && <IconExternalLink size={14} stroke={1.5} color={colors.text.secondary} />}
+      {external && (
+        <IconExternalLink
+          size={14}
+          stroke={1.5}
+          color={disabled ? colors.gray[400] : colors.text.secondary}
+        />
+      )}
     </Group>
   );
 
@@ -40,10 +52,22 @@ export default function SidebarNavItem({
     padding: '8px 12px',
     backgroundColor: isActive ? colors.gray[50] : 'transparent',
     textDecoration: 'none',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.6 : 1,
     '&:hover': {
-      backgroundColor: colors.gray[50],
+      backgroundColor: disabled ? 'transparent' : colors.gray[50],
     },
   };
+
+  if (disabled) {
+    return (
+      <Tooltip label="Under development" position="right" withArrow style={{ padding: '8px' }}>
+        <UnstyledButton style={buttonStyles} onClick={(e) => e.preventDefault()}>
+          {content}
+        </UnstyledButton>
+      </Tooltip>
+    );
+  }
 
   if (external) {
     return (

@@ -1,5 +1,6 @@
-import { Anchor, Box, Burger, Drawer, Group, Stack, Text } from '@mantine/core';
+import { Anchor, Box, Burger, Divider, Drawer, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import CountrySelector from './CountrySelector';
 
 interface NavLink {
   label: string;
@@ -25,8 +26,9 @@ export default function MobileMenu({
 }: MobileMenuProps) {
   return (
     <>
-      {/* Mobile Burger Menu */}
-      <Group hiddenFrom="lg">
+      {/* Mobile Burger Menu with Country Selector */}
+      <Group hiddenFrom="lg" gap={spacing.md}>
+        <CountrySelector />
         <Burger opened={opened} onClick={onOpen} color={colors.text.inverse} size="sm" />
       </Group>
 
@@ -43,6 +45,7 @@ export default function MobileMenu({
         closeButtonProps={{ style: { color: colors.text.inverse }, size: 'md' }}
       >
         <Stack gap={spacing.lg} p={spacing.lg}>
+          {/* About Section */}
           <Box>
             <Text
               c={colors.text.inverse}
@@ -71,20 +74,27 @@ export default function MobileMenu({
             </Stack>
           </Box>
 
-          {navLinks.map((link) => (
-            <Anchor
-              key={link.label}
-              c={colors.text.inverse}
-              variant="subtle"
-              td="none"
-              fw={typography.fontWeight.medium}
-              size="sm"
-              onClick={() => onNavClick(link.path)}
-              style={{ fontFamily: typography.fontFamily.primary }}
-            >
-              {link.label}
-            </Anchor>
-          ))}
+          <Divider color={colors.border.dark} />
+
+          {/* Navigation Links Section */}
+          <Box>
+            {navLinks.map((link) => (
+              <Anchor
+                key={link.label}
+                c={colors.text.inverse}
+                variant="subtle"
+                td="none"
+                fw={typography.fontWeight.medium}
+                size="sm"
+                onClick={() => onNavClick(link.path)}
+                style={{ fontFamily: typography.fontFamily.primary }}
+                display="block"
+                mb={spacing.xs}
+              >
+                {link.label}
+              </Anchor>
+            ))}
+          </Box>
         </Stack>
       </Drawer>
     </>

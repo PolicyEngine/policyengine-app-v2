@@ -9,7 +9,7 @@ export default function EmptyState({ ingredient }: EmptyStateProps) {
   return (
     <Stack align="center" justify="center" p="xl">
       <Text size="lg" c="dimmed">
-        No {ingredient} found.
+        No {ingredient.toLowerCase()} found.
         {/* <br/>Please create {ingredient} to get started. */}
       </Text>
       {/* <Button onClick={onAction}>Create {ingredient}</Button> */}

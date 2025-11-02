@@ -98,9 +98,11 @@ export default function ReportOutputPage() {
   // Redirect to overview if no subpage is specified and data is ready
   useEffect(() => {
     if (!subpage && report && simulations) {
-      navigate(DEFAULT_PAGE, { replace: true });
+      const targetPath = `/${countryId}/report-output/${userReportId}/${DEFAULT_PAGE}`;
+      console.log('[ReportOutputPage] Redirecting to overview:', targetPath);
+      navigate(targetPath);
     }
-  }, [subpage, navigate, report, simulations]);
+  }, [subpage, navigate, report, simulations, countryId, userReportId]);
 
   // Determine which tabs to show based on output type and country
   const tabs = outputType ? getTabsForOutputType(outputType, report?.countryId) : [];

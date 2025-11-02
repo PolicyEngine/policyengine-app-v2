@@ -1,9 +1,10 @@
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
+import { clearFlow } from '@/reducers/flowReducer';
 import { selectGeographyAtPosition, selectHouseholdAtPosition } from '@/reducers/populationReducer';
 import { selectBothSimulations } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
@@ -13,8 +14,11 @@ import { ReportCreationPayload } from '@/types/payloads';
 import { getReportOutputPath } from '@/utils/reportRouting';
 
 export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
+  console.log('[ReportSubmitFrame] ========== COMPONENT RENDER ==========');
+  console.log('[ReportSubmitFrame] isInSubflow:', isInSubflow);
   // Get navigation hook
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Get report state from Redux
   const reportState = useSelector((state: RootState) => state.report);
@@ -33,6 +37,10 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
   const { resetIngredient } = useIngredientReset();
 
   function handleSubmit() {
+    console.log('[ReportSubmitFrame] ========== SUBMIT CLICKED ==========');
+    console.log('[ReportSubmitFrame] Report state:', reportState);
+    console.log('[ReportSubmitFrame] Simulation1:', simulation1);
+    console.log('[ReportSubmitFrame] Simulation2:', simulation2);
     // TODO: This code isn't really correct. Simulations should be created in
     // the SimulationSubmitFrame, then their IDs should be passed over to the
     // simulation reducer, then used here. This will be dealt with in separate commit.
@@ -79,9 +87,18 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
       },
       {
         onSuccess: (data) => {
-          navigate(getReportOutputPath(reportState.countryId, data.userReport.id));
+          console.log('[ReportSubmitFrame] ========== REPORT CREATED SUCCESSFULLY ==========');
+          console.log('[ReportSubmitFrame] Created report:', data.userReport);
+          const outputPath = getReportOutputPath(reportState.countryId, data.userReport.id);
+          console.log('[ReportSubmitFrame] Navigating to:', outputPath);
+          navigate(outputPath);
+          console.log('[ReportSubmitFrame] isInSubflow:', isInSubflow);
           if (!isInSubflow) {
+            console.log('[ReportSubmitFrame] Calling clearFlow() and resetIngredient("report")');
+            dispatch(clearFlow());
             resetIngredient('report');
+          } else {
+            console.log('[ReportSubmitFrame] Skipping clearFlow and resetIngredient (in subflow)');
           }
         },
       }

@@ -55,8 +55,8 @@ export default function IngredientSubmissionView({
   const buttonConfig: ButtonConfig[] = [
     {
       label: 'Cancel',
-      variant: 'default' as const,
-      onClick: () => console.log('Cancel clicked'), // Placeholder for cancel action
+      variant: 'disabled' as const,
+      onClick: () => {},
     },
     {
       label: submitButtonText || title,

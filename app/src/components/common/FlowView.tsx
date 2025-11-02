@@ -81,8 +81,8 @@ export default function FlowView({
       return [
         {
           label: cancelAction?.label || 'Cancel',
-          variant: 'default',
-          onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
+          variant: 'disabled',
+          onClick: () => {},
         },
       ];
     }
@@ -93,8 +93,8 @@ export default function FlowView({
     // Always add cancel button unless explicitly disabled
     generatedButtons.push({
       label: cancelAction?.label || 'Cancel',
-      variant: 'default',
-      onClick: cancelAction?.onClick || (() => console.log('Cancel clicked')),
+      variant: 'disabled',
+      onClick: () => {},
     });
 
     // Add primary action if provided
