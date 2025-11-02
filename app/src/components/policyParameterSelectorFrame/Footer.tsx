@@ -34,7 +34,7 @@ export default function PolicyParameterSelectorFooter({
 
   return (
     <Group justify="space-between" align="center">
-      <Button variant="default" onClick={handleCancel}>
+      <Button variant="default" disabled>
         Cancel
       </Button>
       {modificationCount > 0 && (
