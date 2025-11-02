@@ -1,6 +1,7 @@
-import { IconChevronDown } from '@tabler/icons-react';
+import { IconChevronDown, IconHomeFilled } from '@tabler/icons-react';
 import { Anchor, Group, Menu, Text, UnstyledButton } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface NavLink {
   label: string;
@@ -18,21 +19,32 @@ export default function DesktopNavigation({
   aboutLinks,
   onNavClick,
 }: DesktopNavigationProps) {
+  const countryId = useCurrentCountry();
+
   return (
-    <Group gap={spacing['3xl']} visibleFrom="lg">
+    <Group gap={spacing['3xl']} visibleFrom="lg" align="center">
+      <UnstyledButton
+        onClick={() => onNavClick(`https://policyengine.org/${countryId}`)}
+        aria-label="Home"
+        h={18} // UnstyledButton automatically expands height to fill; we don't want that to ensure icon is correct size & position
+        style={{ lineHeight: 1, aspectRatio: '1 / 1' }}
+      >
+        <IconHomeFilled size={18} color={colors.text.inverse} />
+      </UnstyledButton>
+
       <Menu shadow="md" width={200} zIndex={1001} position="bottom" offset={10}>
         <Menu.Target>
           <UnstyledButton>
-            <Group gap={4}>
+            <Group gap={4} align="center">
               <Text
                 c={colors.text.inverse}
                 fw={typography.fontWeight.medium}
-                size="md"
+                size="18px"
                 style={{ fontFamily: typography.fontFamily.primary }}
               >
                 About
               </Text>
-              <IconChevronDown size={16} color={colors.text.inverse} />
+              <IconChevronDown size={18} color={colors.text.inverse} />
             </Group>
           </UnstyledButton>
         </Menu.Target>
@@ -52,7 +64,7 @@ export default function DesktopNavigation({
           variant="subtle"
           td="none"
           fw={typography.fontWeight.medium}
-          size="md"
+          size="18px"
           style={{ fontFamily: typography.fontFamily.primary }}
           onClick={() => onNavClick(link.path)}
         >
