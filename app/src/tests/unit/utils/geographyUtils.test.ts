@@ -98,6 +98,43 @@ describe('geographyUtils', () => {
       // Then
       expect(result).toBe(TEST_REGION_CODES.CALIFORNIA);
     });
+
+    it('given UK constituency with prefix then returns label via exact match', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+      const regionCode = TEST_REGION_CODES.UK_CONSTITUENCY_PREFIXED;
+
+      // When
+      const result = getRegionLabel(regionCode, metadata);
+
+      // Then
+      expect(result).toBe('Sheffield Central');
+    });
+
+    it('given UK country with prefix then returns label via exact match', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+      const regionCode = TEST_REGION_CODES.UK_COUNTRY_PREFIXED;
+
+      // When
+      const result = getRegionLabel(regionCode, metadata);
+
+      // Then
+      expect(result).toBe('England');
+    });
+
+    it('given unprefixed UK region then tries fallback with prefix', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+      const unprefixedCode = 'Sheffield Central';
+
+      // When
+      const result = getRegionLabel(unprefixedCode, metadata);
+
+      // Then
+      // Should find it by adding the constituency/ prefix
+      expect(result).toBe('Sheffield Central');
+    });
   });
 
   describe('getRegionType', () => {

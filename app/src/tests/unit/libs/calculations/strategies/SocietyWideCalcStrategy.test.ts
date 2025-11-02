@@ -143,6 +143,87 @@ describe('SocietyWideCalcStrategy', () => {
         })
       );
     });
+
+    it('given UK constituency with prefix then passes prefixed value to API', async () => {
+      // Given
+      const params = mockSocietyWideCalcParams({
+        countryId: 'uk',
+        region: 'constituency/Sheffield Central',
+      });
+      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+
+      // When
+      await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'societyWide',
+        targetType: 'report',
+        startedAt: Date.now(),
+      });
+
+      // Then
+      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
+        'uk',
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({
+          region: 'constituency/Sheffield Central', // Passes PREFIXED value
+        })
+      );
+    });
+
+    it('given UK country with prefix then passes prefixed value to API', async () => {
+      // Given
+      const params = mockSocietyWideCalcParams({
+        countryId: 'uk',
+        region: 'country/england',
+      });
+      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+
+      // When
+      await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'societyWide',
+        targetType: 'report',
+        startedAt: Date.now(),
+      });
+
+      // Then
+      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
+        'uk',
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({
+          region: 'country/england', // Passes PREFIXED value
+        })
+      );
+    });
+
+    it('given US state without prefix then passes value as-is to API', async () => {
+      // Given
+      const params = mockSocietyWideCalcParams({
+        countryId: 'us',
+        region: 'ca',
+      });
+      mockFetchSocietyWideCalculation.mockResolvedValue(mockSocietyWideComputingResponse());
+
+      // When
+      await strategy.execute(params, {
+        calcId: 'test',
+        calcType: 'societyWide',
+        targetType: 'report',
+        startedAt: Date.now(),
+      });
+
+      // Then
+      expect(mockFetchSocietyWideCalculation).toHaveBeenCalledWith(
+        'us',
+        expect.any(String),
+        expect.any(String),
+        expect.objectContaining({
+          region: 'ca', // No prefix for US
+        })
+      );
+    });
   });
 
   describe('getRefetchConfig', () => {

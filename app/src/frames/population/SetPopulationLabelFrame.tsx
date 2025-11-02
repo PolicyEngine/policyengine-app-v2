@@ -9,6 +9,7 @@ import {
 } from '@/reducers/populationReducer';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
+import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 
 export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -37,7 +38,9 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
       if (populationState.geography.scope === 'national') {
         return 'National Population';
       } else if (populationState.geography.geographyId) {
-        return `${populationState.geography.geographyId} Population`;
+        // Use display value (strip prefix for UK regions)
+        const displayValue = extractRegionDisplayValue(populationState.geography.geographyId);
+        return `${displayValue} Population`;
       }
       return 'Geographic Population';
     }
