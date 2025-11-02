@@ -316,8 +316,8 @@ describe('SelectGeographicScopeFrame', () => {
     });
   });
 
-  describe('Region value extraction', () => {
-    test('given US state when submitted then uses value as-is', async () => {
+  describe('Region value storage', () => {
+    test('given US state when submitted then stores value without prefix', async () => {
       // Given
       const props = { ...mockFlowProps };
       renderComponent(undefined, props);
@@ -335,12 +335,12 @@ describe('SelectGeographicScopeFrame', () => {
       const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
-      // Then - US values used as-is
+      // Then - US values stored without prefix
       const state = store.getState();
       expect(state.population.populations[0]?.geography?.geographyId).toBe('ca');
     });
 
-    test('given UK constituency when submitted then strips constituency prefix', async () => {
+    test('given UK constituency when submitted then stores full prefixed value', async () => {
       // Given
       const props = { ...mockFlowProps };
       renderComponent({ currentCountry: TEST_COUNTRIES.UK }, props);
@@ -358,12 +358,14 @@ describe('SelectGeographicScopeFrame', () => {
       const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
-      // Then - Should strip 'constituency/' prefix
+      // Then - Should store FULL prefixed value
       const state = store.getState();
-      expect(state.population.populations[0]?.geography?.geographyId).toBe('E14000639');
+      expect(state.population.populations[0]?.geography?.geographyId).toBe(
+        'constituency/E14000639'
+      );
     });
 
-    test('given UK country when submitted then strips country prefix', async () => {
+    test('given UK country when submitted then stores full prefixed value', async () => {
       // Given
       const props = { ...mockFlowProps };
       renderComponent({ currentCountry: TEST_COUNTRIES.UK }, props);
@@ -381,9 +383,9 @@ describe('SelectGeographicScopeFrame', () => {
       const submitButton = screen.getByRole('button', { name: /Select Scope/i });
       await user.click(submitButton);
 
-      // Then - Should strip 'country/' prefix
+      // Then - Should store FULL prefixed value
       const state = store.getState();
-      expect(state.population.populations[0]?.geography?.geographyId).toBe('england');
+      expect(state.population.populations[0]?.geography?.geographyId).toBe('country/england');
     });
   });
 
