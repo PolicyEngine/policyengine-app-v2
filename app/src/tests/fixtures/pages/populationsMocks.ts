@@ -25,11 +25,11 @@ export const POPULATION_LABELS = {
   HOUSEHOLD_2: `Family Household ${CURRENT_YEAR}`,
   GEOGRAPHIC_1: 'California Population',
   GEOGRAPHIC_2: 'United Kingdom National',
-  PAGE_TITLE: 'Your populations',
+  PAGE_TITLE: 'Your saved households',
   PAGE_SUBTITLE:
-    'Create a population configuration or find and save existing populations to use in your simulation configurations.',
-  BUILD_BUTTON: 'New population',
-  SEARCH_PLACEHOLDER: 'Search populations',
+    'Configure one or a collection of households to use in your simulation configurations.',
+  BUILD_BUTTON: 'New household(s)',
+  SEARCH_PLACEHOLDER: 'Search households',
   MORE_FILTERS: 'More filters',
   LOADING_TEXT: 'Loading...',
   ERROR_TEXT: 'Error loading data',
@@ -67,7 +67,7 @@ export const POPULATION_ACTION_LABELS = {
 
 // Column headers
 export const POPULATION_COLUMNS = {
-  NAME: 'Population name',
+  NAME: 'Household name',
   DATE: 'Date created',
   DETAILS: 'Details',
   CONNECTIONS: 'Connections',
