@@ -175,7 +175,11 @@ describe('geographyUtils', () => {
       const metadata = mockMetadataWithRegions();
 
       // When
-      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.US, TEST_REGION_CODES.CALIFORNIA, metadata);
+      const result = getRegionTypeLabel(
+        TEST_COUNTRY_CODES.US,
+        TEST_REGION_CODES.CALIFORNIA,
+        metadata
+      );
 
       // Then
       expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);

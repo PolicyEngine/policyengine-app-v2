@@ -175,7 +175,8 @@ export const UserPopulationOps = {
     p.label ||
     matchUserPopulation(p, {
       household: (h) => `Household ${h.householdId}`,
-      geography: (g) => `${g.scope === 'national' ? 'National households' : 'Households in'} ${g.geographyId}`,
+      geography: (g) =>
+        `${g.scope === 'national' ? 'National households' : 'Households in'} ${g.geographyId}`,
     }),
 
   /**

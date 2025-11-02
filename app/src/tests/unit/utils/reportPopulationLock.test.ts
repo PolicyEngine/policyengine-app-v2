@@ -131,7 +131,9 @@ describe('reportPopulationLock', () => {
       const result = getPopulationSelectionSubtitle(true);
 
       // Then
-      expect(result).toBe('This report requires using the same household(s) as the other simulation');
+      expect(result).toBe(
+        'This report requires using the same household(s) as the other simulation'
+      );
     });
 
     it('given shouldLock false then returns undefined', () => {

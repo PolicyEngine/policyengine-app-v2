@@ -126,7 +126,9 @@ export default function GeographicConfirmationFrame({
     const regionLabel = getRegionLabel(regionCode, metadata);
     const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, metadata);
 
-    console.log(`[GeographicConfirmationFrame] regionTypeName: ${regionTypeName}, regionLabel: ${regionLabel}`);
+    console.log(
+      `[GeographicConfirmationFrame] regionTypeName: ${regionTypeName}, regionLabel: ${regionLabel}`
+    );
 
     return (
       <Stack gap="md">

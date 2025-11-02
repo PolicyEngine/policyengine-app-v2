@@ -153,7 +153,9 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState);
 
       // Then
-      expect(screen.getByRole('heading', { name: 'Confirm household collection' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Confirm household collection' })
+      ).toBeInTheDocument();
       expect(screen.getByText('National')).toBeInTheDocument();
       expect(screen.getByText('United States')).toBeInTheDocument();
     });
@@ -188,7 +190,9 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState);
 
       // Then
-      expect(screen.getByRole('heading', { name: 'Confirm household collection' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Confirm household collection' })
+      ).toBeInTheDocument();
       expect(screen.getByText('State')).toBeInTheDocument();
       expect(screen.getByText('California')).toBeInTheDocument();
     });
