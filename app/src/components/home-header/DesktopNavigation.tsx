@@ -1,4 +1,4 @@
-import { IconChevronDown, IconHomeFilled } from '@tabler/icons-react';
+import { IconChevronDown } from '@tabler/icons-react';
 import { Anchor, Group, Menu, Text, UnstyledButton } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -23,14 +23,17 @@ export default function DesktopNavigation({
 
   return (
     <Group gap={spacing['3xl']} visibleFrom="lg" align="center">
-      <UnstyledButton
+      <Anchor
+        c={colors.text.inverse}
+        variant="subtle"
+        td="none"
+        fw={typography.fontWeight.medium}
+        size="18px"
+        style={{ fontFamily: typography.fontFamily.primary }}
         onClick={() => onNavClick(`https://policyengine.org/${countryId}`)}
-        aria-label="Home"
-        h={18} // UnstyledButton automatically expands height to fill; we don't want that to ensure icon is correct size & position
-        style={{ lineHeight: 1, aspectRatio: '1 / 1' }}
       >
-        <IconHomeFilled size={18} color={colors.text.inverse} />
-      </UnstyledButton>
+        Home
+      </Anchor>
 
       <Menu shadow="md" width={200} zIndex={1001} position="bottom" offset={10}>
         <Menu.Target>

@@ -86,4 +86,25 @@ describe('DesktopNavigation', () => {
     // Then
     expect(onNavClick).toHaveBeenCalledWith('/us/team');
   });
+
+  test('given user clicks Home then navigates to PolicyEngine homepage', async () => {
+    // Given
+    const { userEvent } = await import('@test-utils');
+    const onNavClick = vi.fn();
+    const user = userEvent.setup();
+
+    // When
+    renderWithCountry(
+      <DesktopNavigation
+        navLinks={MOCK_NAV_LINKS}
+        aboutLinks={MOCK_ABOUT_LINKS}
+        onNavClick={onNavClick}
+      />,
+      'us'
+    );
+    await user.click(screen.getByText('Home'));
+
+    // Then
+    expect(onNavClick).toHaveBeenCalledWith('https://policyengine.org/us');
+  });
 });
