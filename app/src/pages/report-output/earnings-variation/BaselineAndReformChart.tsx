@@ -3,13 +3,17 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Group, Radio, Stack } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
+import {
+  DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
 import { localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
@@ -40,8 +44,10 @@ export default function BaselineAndReformChart({
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery('(max-width: 768px)');
+  const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   const variable = metadata.variables[variableName];
   if (!variable) {
@@ -107,7 +113,6 @@ export default function BaselineAndReformChart({
 
       const layout = {
         ...DEFAULT_CHART_LAYOUT,
-        height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
           tickformat: '$,.0f',
@@ -137,7 +142,7 @@ export default function BaselineAndReformChart({
           data={chartData}
           layout={layout}
           config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
       );
     }
@@ -159,7 +164,6 @@ export default function BaselineAndReformChart({
 
       const layout = {
         ...DEFAULT_CHART_LAYOUT,
-        height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
           tickformat: '$,.0f',
@@ -183,7 +187,7 @@ export default function BaselineAndReformChart({
           data={chartData}
           layout={layout}
           config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
       );
     }
@@ -205,7 +209,6 @@ export default function BaselineAndReformChart({
 
     const layout = {
       ...DEFAULT_CHART_LAYOUT,
-      height: mobile ? 300 : 500,
       xaxis: {
         title: { text: 'Employment income' },
         tickformat: '$,.0f',
@@ -230,7 +233,7 @@ export default function BaselineAndReformChart({
         data={chartData}
         layout={layout}
         config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-        style={{ width: '100%' }}
+        style={{ width: '100%', height: chartHeight }}
       />
     );
   };
