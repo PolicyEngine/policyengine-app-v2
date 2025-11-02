@@ -82,7 +82,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
   const formInputs = (
     <Stack>
       <Text size="sm" c="dimmed">
-        Give your household(s) a descriptive name to help identify it later.
+        Give your household(s) a descriptive name.
       </Text>
 
       <TextInput

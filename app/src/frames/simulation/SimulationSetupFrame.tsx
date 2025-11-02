@@ -121,45 +121,45 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
 
   function generatePopulationCardTitle() {
     if (!population || !population.isCreated) {
-      return 'Add Population';
+      return 'Add household(s)';
     }
 
     // In simulation 2 of a report, indicate population is inherited from baseline
     if (isSimulation2InReport) {
-      return `${population.label || 'Population'} (from baseline)`;
+      return `${population.label || 'Household(s)'} (from baseline)`;
     }
 
     if (population.label) {
       return population.label;
     }
     if (population.household) {
-      return `Population #${population.household.id}`;
+      return `Household #${population.household.id}`;
     }
     // TODO: Add proper labelling for geographic populations here
     if (population.geography) {
-      return `Population #${population.geography.id}`;
+      return `Household(s) #${population.geography.id}`;
     }
     return '';
   }
 
   function generatePopulationCardDescription() {
     if (!population || !population.isCreated) {
-      return 'Select a geographic scope or specific household';
+      return 'Select a household collection or custom household';
     }
 
     // In simulation 2 of a report, indicate population is inherited from baseline
     if (isSimulation2InReport) {
       const popId = population.household?.id || population.geography?.id;
-      const popType = population.household ? 'Household' : 'Geographic';
-      return `${popType} population #${popId} • Inherited from baseline simulation`;
+      const popType = population.household ? 'Household' : 'Household collection';
+      return `${popType} #${popId} • Inherited from baseline simulation`;
     }
 
     if (population.label && population.household) {
-      return `Population #${population.household.id}`;
+      return `Household #${population.household.id}`;
     }
     // TODO: Add proper descriptions for geographic populations here
     if (population.label && population.geography) {
-      return `Population #${population.geography.id}`;
+      return `Household collection #${population.geography.id}`;
     }
     return '';
   }
@@ -210,7 +210,7 @@ export default function SimulationSetupFrame({ onNavigate }: FlowComponentProps)
   const getPrimaryAction = () => {
     if (selectedCard === 'population' && !population?.isCreated) {
       return {
-        label: 'Setup Population',
+        label: 'Setup household(s)',
         onClick: handleNext,
         isDisabled: false,
       };

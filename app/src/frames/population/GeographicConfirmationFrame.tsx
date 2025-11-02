@@ -12,7 +12,7 @@ import {
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
-import { getCountryLabel, getRegionLabel, getRegionType } from '@/utils/geographyUtils';
+import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
 
 export default function GeographicConfirmationFrame({
   onNavigate,
@@ -108,7 +108,7 @@ export default function GeographicConfirmationFrame({
       return (
         <Stack gap="md">
           <Text fw={600} fz="lg">
-            Confirm Geographic Selection
+            Confirm household collection
           </Text>
           <Text>
             <strong>Scope:</strong> National
@@ -124,18 +124,17 @@ export default function GeographicConfirmationFrame({
     // geographyId now contains full prefixed value like "constituency/Sheffield Central"
     const regionCode = populationState.geography.geographyId;
     const regionLabel = getRegionLabel(regionCode, metadata);
-    const regionTypeName = getRegionType(geographyCountryId) === 'state' ? 'State' : 'Constituency';
+    const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, metadata);
+
+    console.log(`[GeographicConfirmationFrame] regionTypeName: ${regionTypeName}, regionLabel: ${regionLabel}`);
 
     return (
       <Stack gap="md">
         <Text fw={600} fz="lg">
-          Confirm Geographic Selection
+          Confirm household collection
         </Text>
         <Text>
           <strong>Scope:</strong> {regionTypeName}
-        </Text>
-        <Text>
-          <strong>Country:</strong> {getCountryLabel(geographyCountryId)}
         </Text>
         <Text>
           <strong>{regionTypeName}:</strong> {regionLabel}
@@ -145,14 +144,14 @@ export default function GeographicConfirmationFrame({
   };
 
   const primaryAction = {
-    label: 'Create Household Collection',
+    label: 'Create household collection',
     onClick: handleSubmit,
     isLoading: isPending,
   };
 
   return (
     <FlowView
-      title="Confirm Geography"
+      title="Confirm household collection"
       content={buildDisplayContent()}
       primaryAction={primaryAction}
     />

@@ -23,7 +23,7 @@ export default function UKGeographicOptions({
       {/* UK-wide option */}
       <Radio
         value="national"
-        label="All households nationally"
+        label="All households UK-wide"
         checked={scope === 'national'}
         onChange={() => onScopeChange('national')}
       />
