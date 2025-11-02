@@ -10,7 +10,6 @@ import {
   FLOW_VIEW_VARIANTS,
   mockButtonPanelCards,
   mockCancelAction,
-  mockCancelClick,
   mockCardClick,
   mockCardListItems,
   MockCustomContent,
