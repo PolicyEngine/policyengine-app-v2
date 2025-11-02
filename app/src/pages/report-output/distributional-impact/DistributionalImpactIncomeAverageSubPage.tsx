@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
@@ -10,8 +10,8 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import { DEFAULT_CHART_CONFIG, downloadCsv } from '@/utils/chartUtils';
-import { formatCurrency, localeCode, ordinal, precision } from '@/utils/formatters';
+import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { currencySymbol, formatCurrency, localeCode, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -22,6 +22,8 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const { height: viewportHeight } = useViewportSize();
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data - object with keys "1", "2", ..., "10"
   const decileAverage = output.decile.average;
@@ -98,15 +100,15 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
   ];
 
   const layout = {
-    height: mobile ? 300 : 500,
     xaxis: {
       title: { text: 'Income decile' },
       tickvals: Object.keys(decileAverage),
       fixedrange: true,
     },
     yaxis: {
-      title: { text: 'Average change in household income' },
-      tickformat: `$,.${ytickPrecision}f`,
+      title: { text: 'Absolute change in household income' },
+      tickprefix: currencySymbol(countryId),
+      tickformat: `,.${ytickPrecision}f`,
       fixedrange: true,
     },
     showlegend: false,
@@ -140,7 +142,7 @@ export default function DistributionalImpactIncomeAverageSubPage({ output }: Pro
             ...DEFAULT_CHART_CONFIG,
             locale: localeCode(countryId),
           }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
 
         {description}

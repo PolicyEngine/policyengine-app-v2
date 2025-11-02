@@ -22,6 +22,13 @@ export function currencyCode(countryId: CountryId): string {
 }
 
 /**
+ * Get the currency symbol for the country
+ */
+export function currencySymbol(countryId: CountryId): string {
+  return countryId === 'uk' ? '£' : '$';
+}
+
+/**
  * Format a number according to locale
  */
 export function formatNumber(

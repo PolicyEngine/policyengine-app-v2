@@ -6,6 +6,11 @@ import { createMockSocietyWideOutput } from '@/tests/fixtures/pages/reportOutput
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 // Mock formatBudgetaryImpact utility
 vi.mock('@/utils/formatPowers', () => ({
   formatBudgetaryImpact: vi.fn((value: number) => {

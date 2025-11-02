@@ -2,8 +2,8 @@ import { useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Radio, Stack, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { Group, Radio, Stack, Text } from '@mantine/core';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
 import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing } from '@/designTokens';
@@ -14,8 +14,12 @@ import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
 import type { Simulation } from '@/types/ingredients/Simulation';
 import type { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
-import { localeCode } from '@/utils/formatters';
+import {
+  DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
+import { currencySymbol, localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 import LoadingPage from '../LoadingPage';
 
@@ -45,8 +49,10 @@ export default function MarginalTaxRatesSubPage({
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery('(max-width: 768px)');
+  const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Get policy data for variations
   const baselinePolicy = policies?.find((p) => p.id === simulations[0]?.policyId);
@@ -184,6 +190,7 @@ export default function MarginalTaxRatesSubPage({
 
   const renderChart = () => {
     if (!reform || !reformMTRClipped || viewMode === 'both') {
+      const symbol = currencySymbol(countryId);
       const chartData: any[] = [
         {
           x: xValues,
@@ -192,7 +199,7 @@ export default function MarginalTaxRatesSubPage({
           mode: 'lines' as const,
           line: { color: colors.gray[600], width: 2 },
           name: 'Baseline',
-          hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>MTR: %{y:.1%}<extra></extra>',
+          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>MTR: %{y:.1%}<extra></extra>`,
         },
       ];
 
@@ -204,7 +211,7 @@ export default function MarginalTaxRatesSubPage({
           mode: 'lines' as const,
           line: { color: colors.primary[500], width: 2 },
           name: 'Reform',
-          hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>MTR: %{y:.1%}<extra></extra>',
+          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>MTR: %{y:.1%}<extra></extra>`,
         });
       } else {
         // Add current MTR marker for single mode
@@ -215,17 +222,16 @@ export default function MarginalTaxRatesSubPage({
           mode: 'markers' as const,
           marker: { color: colors.primary[700], size: 10 },
           name: 'Current',
-          hovertemplate:
-            '<b>Your current position</b><br>Earnings: %{x:$,.0f}<br>MTR: %{y:.1%}<extra></extra>',
+          hovertemplate: `<b>Your current position</b><br>Earnings: %{x:${symbol},.0f}<br>MTR: %{y:.1%}<extra></extra>`,
         });
       }
 
       const layout = {
         ...DEFAULT_CHART_LAYOUT,
-        height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
-          tickformat: '$,.0f',
+          tickprefix: currencySymbol(countryId),
+          tickformat: ',.0f',
           fixedrange: true,
         },
         yaxis: {
@@ -254,7 +260,7 @@ export default function MarginalTaxRatesSubPage({
           data={chartData}
           layout={layout}
           config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
       );
     }
@@ -265,6 +271,7 @@ export default function MarginalTaxRatesSubPage({
       return null;
     }
 
+    const symbol = currencySymbol(countryId);
     const chartData = [
       {
         x: xValues,
@@ -273,18 +280,18 @@ export default function MarginalTaxRatesSubPage({
         mode: 'lines' as const,
         line: { color: colors.primary[500], width: 2 },
         fill: 'tozeroy' as const,
-        fillcolor: colors.primary[100],
+        fillcolor: colors.primary.alpha[60],
         name: 'MTR Difference',
-        hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y:.1%}<extra></extra>',
+        hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>Change: %{y:.1%}<extra></extra>`,
       },
     ];
 
     const layout = {
       ...DEFAULT_CHART_LAYOUT,
-      height: mobile ? 300 : 500,
       xaxis: {
         title: { text: 'Employment income' },
-        tickformat: '$,.0f',
+        tickprefix: currencySymbol(countryId),
+        tickformat: ',.0f',
         fixedrange: true,
       },
       yaxis: {
@@ -306,7 +313,7 @@ export default function MarginalTaxRatesSubPage({
         data={chartData}
         layout={layout}
         config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-        style={{ width: '100%' }}
+        style={{ width: '100%', height: chartHeight }}
       />
     );
   };
@@ -320,10 +327,10 @@ export default function MarginalTaxRatesSubPage({
 
       {reform && (
         <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-          <Stack gap={spacing.xs}>
+          <Group gap={spacing.md}>
             <Radio value="both" label="Baseline and Reform" />
             <Radio value="difference" label="Difference" />
-          </Stack>
+          </Group>
         </Radio.Group>
       )}
 

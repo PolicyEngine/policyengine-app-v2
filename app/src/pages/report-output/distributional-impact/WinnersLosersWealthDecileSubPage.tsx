@@ -2,14 +2,14 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import { DEFAULT_CHART_CONFIG, downloadCsv } from '@/utils/chartUtils';
+import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -28,7 +28,7 @@ const CATEGORIES = [
 
 const COLOR_MAP: Record<string, string> = {
   'Gain more than 5%': colors.primary[700],
-  'Gain less than 5%': colors.primary[300],
+  'Gain less than 5%': colors.primary.alpha[60],
   'No change': colors.gray[200],
   'Lose less than 5%': colors.gray[400],
   'Lose more than 5%': colors.gray[600],
@@ -54,6 +54,8 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const { height: viewportHeight } = useViewportSize();
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
   const deciles = output.intra_wealth_decile?.deciles || {};
@@ -131,7 +133,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     const rows = [
       ...decileNumbers.map((d) => [
         d.toString(),
-        ...CATEGORIES.map((cat) => (deciles as any)[d]?.[cat]?.toString() || '0'),
+        ...CATEGORIES.map((cat) => (deciles as any)[cat]?.[d - 1]?.toString() || '0'),
       ]),
       ['All', ...CATEGORIES.map((cat) => all[cat].toString())],
     ];
@@ -141,7 +143,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   // Prepare data for stacked bar chart
   const chartData = CATEGORIES.map((category) => ({
     x: [...decileNumbers.map((d) => d.toString()), 'All'],
-    y: [...decileNumbers.map((d) => (deciles as any)[d]?.[category] || 0), all[category]],
+    y: [...decileNumbers.map((d) => (deciles as any)[category]?.[d - 1] || 0), all[category]],
     type: 'bar' as const,
     name: LEGEND_TEXT_MAP[category],
     marker: {
@@ -149,7 +151,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     },
     customdata: [
       ...decileNumbers.map((d) =>
-        hoverMessage((deciles as any)[d]?.[category] || 0, d.toString(), category)
+        hoverMessage((deciles as any)[category]?.[d - 1] || 0, d.toString(), category)
       ),
       hoverMessage(all[category], 'All', category),
     ] as any,
@@ -157,7 +159,6 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   }));
 
   const layout = {
-    height: mobile ? 400 : 600,
     barmode: 'stack' as const,
     xaxis: {
       title: { text: 'Wealth decile' },
@@ -192,7 +193,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
             ...DEFAULT_CHART_CONFIG,
             locale: localeCode(countryId),
           }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
 
         <Text size="sm" c="dimmed">

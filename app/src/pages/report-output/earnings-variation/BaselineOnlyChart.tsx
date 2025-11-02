@@ -1,13 +1,17 @@
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
-import { localeCode } from '@/utils/formatters';
+import {
+  DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
+import { currencySymbol, localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
@@ -28,8 +32,10 @@ export default function BaselineOnlyChart({
   year,
 }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
+  const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   const variable = metadata.variables[variableName];
   if (!variable) {
@@ -65,6 +71,7 @@ export default function BaselineOnlyChart({
   const maxEarnings = Math.max(countryId === 'ng' ? 1_200_000 : 200_000, 2 * currentEarnings);
   const xValues = Array.from({ length: 401 }, (_, i) => (i * maxEarnings) / 400);
 
+  const symbol = currencySymbol(countryId);
   const chartData = [
     {
       x: xValues,
@@ -73,7 +80,7 @@ export default function BaselineOnlyChart({
       mode: 'lines' as const,
       line: { color: colors.primary[500], width: 2 },
       name: 'Baseline',
-      hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>%{y}<extra></extra>',
+      hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>%{y}<extra></extra>`,
     },
     {
       x: [currentEarnings],
@@ -82,16 +89,16 @@ export default function BaselineOnlyChart({
       mode: 'markers' as const,
       marker: { color: colors.primary[700], size: 10 },
       name: 'Current',
-      hovertemplate: '<b>Your current position</b><br>Earnings: %{x:$,.0f}<br>%{y}<extra></extra>',
+      hovertemplate: `<b>Your current position</b><br>Earnings: %{x:${symbol},.0f}<br>%{y}<extra></extra>`,
     },
   ];
 
   const layout = {
     ...DEFAULT_CHART_LAYOUT,
-    height: mobile ? 300 : 500,
     xaxis: {
       title: { text: 'Employment income' },
-      tickformat: '$,.0f',
+      tickprefix: currencySymbol(countryId),
+      tickformat: ',.0f',
       fixedrange: true,
     },
     yaxis: {
@@ -121,7 +128,7 @@ export default function BaselineOnlyChart({
         ...DEFAULT_CHART_CONFIG,
         locale: localeCode(countryId),
       }}
-      style={{ width: '100%' }}
+      style={{ width: '100%', height: chartHeight }}
     />
   );
 }

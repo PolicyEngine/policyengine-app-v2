@@ -2,15 +2,19 @@ import { useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
-import { Radio, Stack } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { Group, Radio, Stack } from '@mantine/core';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
-import { DEFAULT_CHART_CONFIG, DEFAULT_CHART_LAYOUT } from '@/utils/chartUtils';
-import { localeCode } from '@/utils/formatters';
+import {
+  DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
+import { currencySymbol, localeCode } from '@/utils/formatters';
 import { getValueFromHousehold } from '@/utils/householdValues';
 
 interface Props {
@@ -40,8 +44,10 @@ export default function BaselineAndReformChart({
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('both');
   const mobile = useMediaQuery('(max-width: 768px)');
+  const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   const variable = metadata.variables[variableName];
   if (!variable) {
@@ -84,6 +90,7 @@ export default function BaselineAndReformChart({
   // Render different charts based on view mode
   const renderChart = () => {
     if (viewMode === 'both') {
+      const symbol = currencySymbol(countryId);
       const chartData = [
         {
           x: xValues,
@@ -92,7 +99,7 @@ export default function BaselineAndReformChart({
           mode: 'lines' as const,
           line: { color: colors.gray[600], width: 2 },
           name: 'Baseline',
-          hovertemplate: '<b>Baseline</b><br>Earnings: %{x:$,.0f}<br>Value: %{y}<extra></extra>',
+          hovertemplate: `<b>Baseline</b><br>Earnings: %{x:${symbol},.0f}<br>Value: %{y}<extra></extra>`,
         },
         {
           x: xValues,
@@ -101,16 +108,16 @@ export default function BaselineAndReformChart({
           mode: 'lines' as const,
           line: { color: colors.primary[500], width: 2 },
           name: 'Reform',
-          hovertemplate: '<b>Reform</b><br>Earnings: %{x:$,.0f}<br>Value: %{y}<extra></extra>',
+          hovertemplate: `<b>Reform</b><br>Earnings: %{x:${symbol},.0f}<br>Value: %{y}<extra></extra>`,
         },
       ];
 
       const layout = {
         ...DEFAULT_CHART_LAYOUT,
-        height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
-          tickformat: '$,.0f',
+          tickprefix: currencySymbol(countryId),
+          tickformat: ',.0f',
           fixedrange: true,
         },
         yaxis: {
@@ -137,12 +144,13 @@ export default function BaselineAndReformChart({
           data={chartData}
           layout={layout}
           config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
       );
     }
 
     if (viewMode === 'absolute') {
+      const symbol = currencySymbol(countryId);
       const chartData = [
         {
           x: xValues,
@@ -151,18 +159,18 @@ export default function BaselineAndReformChart({
           mode: 'lines' as const,
           line: { color: colors.primary[500], width: 2 },
           fill: 'tozeroy' as const,
-          fillcolor: colors.primary[100],
+          fillcolor: colors.primary.alpha[60],
           name: 'Absolute change',
-          hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y}<extra></extra>',
+          hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>Change: %{y}<extra></extra>`,
         },
       ];
 
       const layout = {
         ...DEFAULT_CHART_LAYOUT,
-        height: mobile ? 300 : 500,
         xaxis: {
           title: { text: 'Employment income' },
-          tickformat: '$,.0f',
+          tickprefix: currencySymbol(countryId),
+          tickformat: ',.0f',
           fixedrange: true,
         },
         yaxis: {
@@ -183,12 +191,13 @@ export default function BaselineAndReformChart({
           data={chartData}
           layout={layout}
           config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
       );
     }
 
     // viewMode === 'relative'
+    const symbol = currencySymbol(countryId);
     const chartData = [
       {
         x: xValues,
@@ -197,18 +206,18 @@ export default function BaselineAndReformChart({
         mode: 'lines' as const,
         line: { color: colors.primary[500], width: 2 },
         fill: 'tozeroy' as const,
-        fillcolor: colors.primary[100],
+        fillcolor: colors.primary.alpha[60],
         name: 'Relative change',
-        hovertemplate: '<b>Earnings: %{x:$,.0f}</b><br>Change: %{y:.1%}<extra></extra>',
+        hovertemplate: `<b>Earnings: %{x:${symbol},.0f}</b><br>Change: %{y:.1%}<extra></extra>`,
       },
     ];
 
     const layout = {
       ...DEFAULT_CHART_LAYOUT,
-      height: mobile ? 300 : 500,
       xaxis: {
         title: { text: 'Employment income' },
-        tickformat: '$,.0f',
+        tickprefix: symbol,
+        tickformat: ',.0f',
         fixedrange: true,
       },
       yaxis: {
@@ -230,7 +239,7 @@ export default function BaselineAndReformChart({
         data={chartData}
         layout={layout}
         config={{ ...DEFAULT_CHART_CONFIG, locale: localeCode(countryId) }}
-        style={{ width: '100%' }}
+        style={{ width: '100%', height: chartHeight }}
       />
     );
   };
@@ -238,11 +247,11 @@ export default function BaselineAndReformChart({
   return (
     <Stack gap={spacing.md}>
       <Radio.Group value={viewMode} onChange={(value) => setViewMode(value as ViewMode)}>
-        <Stack gap={spacing.xs}>
+        <Group gap={spacing.md}>
           <Radio value="both" label="Baseline and Reform" />
           <Radio value="absolute" label="Absolute Change" />
           <Radio value="relative" label="Relative Change" />
-        </Stack>
+        </Group>
       </Radio.Group>
 
       {renderChart()}
