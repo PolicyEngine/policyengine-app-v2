@@ -49,11 +49,6 @@ export default function PopulationsPage() {
     navigate(`/${countryId}/populations/create`);
   };
 
-  const handleMoreFilters = () => {
-    // TODO: Implement more filters modal/dropdown
-    console.log('More filters clicked');
-  };
-
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>
       selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
@@ -213,7 +208,6 @@ export default function PopulationsPage() {
       columns={populationColumns}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
-      onMoreFilters={handleMoreFilters}
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}

@@ -21,11 +21,6 @@ export default function PoliciesPage() {
     navigate(`/${countryId}/policies/create`);
   };
 
-  const handleMoreFilters = () => {
-    // TODO: Implement more filters modal/dropdown
-    console.log('More filters clicked');
-  };
-
   const handleSelectionChange = (recordId: string, selected: boolean) => {
     setSelectedIds((prev) =>
       selected ? [...prev, recordId] : prev.filter((id) => id !== recordId)
@@ -90,7 +85,6 @@ export default function PoliciesPage() {
       columns={policyColumns}
       searchValue={searchValue}
       onSearchChange={setSearchValue}
-      onMoreFilters={handleMoreFilters}
       enableSelection
       isSelected={isSelected}
       onSelectionChange={handleSelectionChange}

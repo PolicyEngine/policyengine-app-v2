@@ -158,7 +158,7 @@ export default function PolicyParameterSelectorValueSetterContainer(
         <Group align="flex-end" w="100%">
           <ValueSetterToRender {...valueSetterProps} />
           <ModeSelectorButton setMode={handleModeChange} />
-          <Button onClick={handleSubmit}>Add</Button>
+          <Button onClick={handleSubmit}>Add parameter</Button>
         </Group>
       </Stack>
     </Container>
@@ -238,7 +238,14 @@ export function DefaultValueSelector(props: ValueSetterProps) {
         onChange={handleStartDateChange}
         style={{ flex: 1 }}
       />
-      <ValueInputBox param={param} value={paramValue} onChange={setParamValue} label="Onward" />
+      <Box style={{ flex: 1, display: 'flex', alignItems: 'center', height: '36px' }}>
+        <Text size="sm" fw={500}>
+          onward:
+        </Text>
+      </Box>
+      <Box style={{ flex: 1 }}>
+        <ValueInputBox param={param} value={paramValue} onChange={setParamValue} />
+      </Box>
     </Group>
   );
 }

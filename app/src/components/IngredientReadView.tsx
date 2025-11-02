@@ -62,7 +62,7 @@ export default function IngredientReadView({
 
           {onBuild && (
             <Button rightSection={<IconPlus size={16} />} onClick={onBuild} variant="filled">
-              New {ingredient.charAt(0).toUpperCase() + ingredient.slice(1)}
+              New {ingredient.toLowerCase()}
             </Button>
           )}
         </Flex>
