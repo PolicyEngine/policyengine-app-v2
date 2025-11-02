@@ -1,9 +1,10 @@
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
+import { clearFlow } from '@/reducers/flowReducer';
 import { selectGeographyAtPosition, selectHouseholdAtPosition } from '@/reducers/populationReducer';
 import { selectBothSimulations } from '@/reducers/simulationsReducer';
 import { RootState } from '@/store';
@@ -17,6 +18,7 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
   console.log('[ReportSubmitFrame] isInSubflow:', isInSubflow);
   // Get navigation hook
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   // Get report state from Redux
   const reportState = useSelector((state: RootState) => state.report);
@@ -92,10 +94,11 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
           navigate(outputPath);
           console.log('[ReportSubmitFrame] isInSubflow:', isInSubflow);
           if (!isInSubflow) {
-            console.log('[ReportSubmitFrame] Calling resetIngredient("report")');
+            console.log('[ReportSubmitFrame] Calling clearFlow() and resetIngredient("report")');
+            dispatch(clearFlow());
             resetIngredient('report');
           } else {
-            console.log('[ReportSubmitFrame] Skipping resetIngredient (in subflow)');
+            console.log('[ReportSubmitFrame] Skipping clearFlow and resetIngredient (in subflow)');
           }
         },
       }
