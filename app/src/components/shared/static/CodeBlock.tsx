@@ -1,19 +1,24 @@
-import { IconCheck, IconCopy } from '@tabler/icons-react';
-import { ActionIcon, Box, Code, CopyButton, Stack, Text } from '@mantine/core';
+import { useState } from 'react';
+import { IconCheck, IconChevronDown, IconChevronUp, IconCopy } from '@tabler/icons-react';
+import { Box, Button, Code, CopyButton, Flex, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface CodeBlockProps {
   code: string;
   language?: string;
   title?: string;
+  showExpand?: boolean;
 }
 
-export default function CodeBlock({ code, language: _language, title }: CodeBlockProps) {
+export default function CodeBlock({ code, language, title, showExpand = true }: CodeBlockProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
   return (
-    <Stack gap={spacing.xs}>
+    <Stack gap={0}>
       {title && (
         <Text
           fw={typography.fontWeight.semibold}
+          mb={spacing.xs}
           style={{
             fontSize: typography.fontSize.sm,
             color: colors.text.secondary,
@@ -22,42 +27,77 @@ export default function CodeBlock({ code, language: _language, title }: CodeBloc
           {title}
         </Text>
       )}
-      <Box pos="relative">
+      <Box
+        style={{
+          border: `1px solid ${colors.gray[200]}`,
+          borderRadius: spacing.radius.lg,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header bar */}
+        <Flex
+          justify="space-between"
+          align="center"
+          px={spacing.md}
+          py={spacing.sm}
+          style={{
+            backgroundColor: colors.gray[100],
+            borderBottom: `1px solid ${colors.gray[200]}`,
+          }}
+        >
+          <Text
+            size="sm"
+            fw={typography.fontWeight.medium}
+            style={{ color: colors.text.secondary }}
+          >
+            {language || 'code'}
+          </Text>
+          <Group gap={spacing.xs}>
+            {showExpand && (
+              <Button
+                variant="subtle"
+                size="compact-sm"
+                color="gray"
+                leftSection={
+                  isExpanded ? <IconChevronUp size={16} /> : <IconChevronDown size={16} />
+                }
+                onClick={() => setIsExpanded(!isExpanded)}
+              >
+                {isExpanded ? 'Shrink' : 'Expand'}
+              </Button>
+            )}
+            <CopyButton value={code} timeout={2000}>
+              {({ copied, copy }) => (
+                <Button
+                  variant="subtle"
+                  size="compact-sm"
+                  color={copied ? 'teal' : 'gray'}
+                  leftSection={copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
+                  onClick={copy}
+                >
+                  {copied ? 'Copied' : 'Copy'}
+                </Button>
+              )}
+            </CopyButton>
+          </Group>
+        </Flex>
+
+        {/* Code content */}
         <Code
           block
           style={{
             fontSize: typography.fontSize.sm,
             padding: spacing.md,
             backgroundColor: colors.gray[50],
-            border: `1px solid ${colors.gray[200]}`,
-            borderRadius: '8px',
+            border: 'none',
+            borderRadius: 0,
             overflowX: 'auto',
-            maxHeight: '400px',
+            maxHeight: isExpanded ? 'none' : '400px',
             overflowY: 'auto',
           }}
         >
           {code}
         </Code>
-        <Box
-          style={{
-            position: 'absolute',
-            top: spacing.sm,
-            right: spacing.sm,
-          }}
-        >
-          <CopyButton value={code} timeout={2000}>
-            {({ copied, copy }) => (
-              <ActionIcon
-                color={copied ? 'teal' : 'gray'}
-                variant="filled"
-                onClick={copy}
-                size="sm"
-              >
-                {copied ? <IconCheck size={16} /> : <IconCopy size={16} />}
-              </ActionIcon>
-            )}
-          </CopyButton>
-        </Box>
       </Box>
     </Stack>
   );

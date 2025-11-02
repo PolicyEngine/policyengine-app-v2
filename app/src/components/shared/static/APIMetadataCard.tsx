@@ -62,7 +62,7 @@ export default function APIMetadataCard({ metadata, onClick }: APIMetadataCardPr
       }}
     >
       <Stack gap={spacing.sm}>
-        <Badge color={isParameter ? 'green' : 'red'} size="sm">
+        <Badge color={isParameter ? 'primary' : 'blue'} variant="light" size="sm">
           {isParameter ? 'Parameter' : 'Variable'}
         </Badge>
 
@@ -105,7 +105,7 @@ export default function APIMetadataCard({ metadata, onClick }: APIMetadataCardPr
             fontSize: typography.fontSize.xs,
             color: colors.text.tertiary,
             wordBreak: 'break-all',
-            fontFamily: 'monospace',
+            fontFamily: typography.fontFamily.mono,
           }}
         >
           <strong>Python name:</strong> {pythonName}

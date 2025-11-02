@@ -1,10 +1,10 @@
 import { useSelector } from 'react-redux';
-import { Stack } from '@mantine/core';
+import { Anchor, Code, List, Stack, Text, Title } from '@mantine/core';
 import APIPlayground from '@/components/shared/static/APIPlayground';
 import CodeBlock from '@/components/shared/static/CodeBlock';
 import ContentSection from '@/components/shared/static/ContentSection';
+import CTASection from '@/components/shared/static/CTASection';
 import HeroSection from '@/components/shared/static/HeroSection';
-import RichTextBlock from '@/components/shared/static/RichTextBlock';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import VariableParameterExplorer from '@/components/shared/static/VariableParameterExplorer';
 import {
@@ -56,49 +56,65 @@ export default function APIPage() {
         description="Build tax and benefit policy analysis into your applications with our comprehensive API"
       />
 
-      <ContentSection title="Getting Started" variant="primary">
-        <RichTextBlock>
-          <p>
-            PolicyEngine's REST API (
-            <a
-              href="https://household.api.policyengine.org"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              https://household.api.policyengine.org
-            </a>
-            ) simulates tax-benefit policy outcomes and reform impacts for households. Access
-            requires a <b>Client ID</b> and <b>Client Secret</b> provided by PolicyEngine. For
-            access, contact us at <a href="mailto:hello@policyengine.org">hello@policyengine.org</a>
-            .
-          </p>
-          <h4>On this page:</h4>
-          <ul>
-            <li>
-              <a href="#fetch-token">Fetch an authentication token</a>
-            </li>
-            <li>
-              <a href="#calculate">Calculate household-level policy outcomes</a>
-            </li>
-            <li>
-              <a href="#variables">Variable and parameter metadata</a>
-            </li>
-            <li>
-              <a href="#playground">API playground</a>
-            </li>
-          </ul>
-        </RichTextBlock>
-      </ContentSection>
+      <CTASection
+        title="Getting Started"
+        variant="primary"
+        content={
+          <Stack gap={spacing.md}>
+            <Text>
+              PolicyEngine's REST API (
+              <Anchor
+                href="https://household.api.policyengine.org"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                https://household.api.policyengine.org
+              </Anchor>
+              ) simulates tax-benefit policy outcomes and reform impacts for households. Access
+              requires a{' '}
+              <Text component="span" fw={700}>
+                Client ID
+              </Text>{' '}
+              and{' '}
+              <Text component="span" fw={700}>
+                Client Secret
+              </Text>{' '}
+              provided by PolicyEngine. For access, contact us at{' '}
+              <Anchor href="mailto:hello@policyengine.org">hello@policyengine.org</Anchor>.
+            </Text>
+            <Title order={4} mt={spacing.md}>
+              On this page:
+            </Title>
+            <List>
+              <List.Item>
+                <Anchor href="#fetch-token">Fetch an authentication token</Anchor>
+              </List.Item>
+              <List.Item>
+                <Anchor href="#calculate">Calculate household-level policy outcomes</Anchor>
+              </List.Item>
+              <List.Item>
+                <Anchor href="#variables">Variable and parameter metadata</Anchor>
+              </List.Item>
+              <List.Item>
+                <Anchor href="#playground">API playground</Anchor>
+              </List.Item>
+            </List>
+          </Stack>
+        }
+        cta={{
+          text: 'Try API Playground',
+          href: '#playground',
+          target: '_self',
+        }}
+      />
 
       <ContentSection id="fetch-token" title="Fetch an authentication token" variant="secondary">
-        <RichTextBlock>
-          <p>
-            Execute a credentials exchange using your client ID and client secret to obtain an
-            authentication token. Include this token in the authorization header of every request as
-            "Bearer YOUR_TOKEN". Tokens expire monthly for security.
-          </p>
-        </RichTextBlock>
-        <Stack gap={spacing.lg} mt={spacing.lg}>
+        <Text mb={spacing.lg}>
+          Execute a credentials exchange using your client ID and client secret to obtain an
+          authentication token. Include this token in the authorization header of every request as
+          "Bearer YOUR_TOKEN". Tokens expire monthly for security.
+        </Text>
+        <Stack gap={spacing.lg}>
           <CodeBlock code={TOKEN_FETCH_CODE} language="python" title="Request" />
           <CodeBlock code={TOKEN_RESPONSE_CODE} language="json" title="Response" />
         </Stack>
@@ -109,16 +125,16 @@ export default function APIPage() {
         title="Calculate household-level policy outcomes"
         variant="primary"
       >
-        <RichTextBlock>
-          <p>
+        <Stack gap={spacing.md}>
+          <Text>
             Returns household-level policy outcomes. Pass in a household object defining people,
             groups and any variable values. Use null values for requested variables - these will be
             computed and returned.
-          </p>
-          <h5>
-            <code>POST /{countryId}/calculate</code>
-          </h5>
-        </RichTextBlock>
+          </Text>
+          <Title order={5}>
+            <Code>POST /{countryId}/calculate</Code>
+          </Title>
+        </Stack>
         <Stack gap={spacing.lg} mt={spacing.lg}>
           <CodeBlock code={getCalculateRequestCode(countryId)} language="python" title="Request" />
           <CodeBlock
@@ -130,21 +146,21 @@ export default function APIPage() {
       </ContentSection>
 
       <ContentSection id="variables" title="Variable and parameter metadata" variant="secondary">
-        <RichTextBlock>
-          <p>
+        <Stack gap={spacing.md}>
+          <Text>
             Access information about all available variables and parameters in the PolicyEngine API.
-          </p>
-          <h5>
-            <code>GET /{countryId}/metadata</code>
-          </h5>
-        </RichTextBlock>
+          </Text>
+          <Title order={5}>
+            <Code>GET /{countryId}/metadata</Code>
+          </Title>
+        </Stack>
         {metadata && <VariableParameterExplorer metadata={metadata} />}
       </ContentSection>
 
       <ContentSection id="playground" title="API Playground" variant="accent">
-        <RichTextBlock variant="inverted">
-          <p>Try out the API in this interactive demo.</p>
-        </RichTextBlock>
+        <Text c="white" mb={spacing.lg}>
+          Try out the API in this interactive demo.
+        </Text>
         <APIPlayground countryId={countryId} />
       </ContentSection>
     </StaticPageLayout>

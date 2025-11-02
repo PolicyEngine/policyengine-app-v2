@@ -152,9 +152,9 @@ export default function VariableParameterExplorer({ metadata }: VariableParamete
               style={{
                 width: '50px',
                 textAlign: 'center',
-                padding: '4px 8px',
+                padding: `${spacing.xs} ${spacing.sm}`,
                 border: `1px solid ${colors.gray[300]}`,
-                borderRadius: '4px',
+                borderRadius: spacing.radius.sm,
                 fontSize: typography.fontSize.sm,
               }}
             />
