@@ -4,7 +4,7 @@ import HeaderNavigation from '@/components/shared/HomeHeader';
 export default function StaticLayout() {
   return (
     <>
-      <HeaderNavigation enableScrollAnimation={false} />
+      <HeaderNavigation />
       <Outlet />
     </>
   );
