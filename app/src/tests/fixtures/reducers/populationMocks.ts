@@ -35,7 +35,7 @@ export const mockGeography2: Geography = {
   id: 'test-geography-2',
   countryId: 'uk',
   scope: 'subnational',
-  geographyId: 'scotland',
+  geographyId: 'country/scotland', // NOW USING PREFIXED VALUE
 };
 
 // Mock Populations

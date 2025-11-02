@@ -21,9 +21,17 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
     console.log('[SocietyWideCalcStrategy.execute] Starting with params:', params);
     console.log('[SocietyWideCalcStrategy.execute] metadata:', metadata);
 
+    // Pass the region value AS-IS to the API (NO prefix stripping)
+    // For UK: includes prefix like "constituency/Sheffield Central" or "country/england"
+    // For US: just state code like "ca" or "ny"
+    // For National: just country code like "uk" or "us"
+    const apiRegion = params.region || params.countryId;
+
+    console.log('[SocietyWideCalcStrategy.execute] API region parameter:', apiRegion);
+
     // Build API parameters
     const apiParams: SocietyWideCalculationParams = {
-      region: params.region || params.countryId,
+      region: apiRegion,
       time_period: CURRENT_YEAR,
     };
 

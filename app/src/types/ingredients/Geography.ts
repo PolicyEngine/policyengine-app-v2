@@ -9,5 +9,8 @@ export interface Geography {
   countryId: (typeof countryIds)[number];
   scope: 'national' | 'subnational';
   geographyId: string; // The geographic identifier from metadata options
+  // For UK: ALWAYS includes prefix ("constituency/Sheffield Central", "country/england")
+  // For US: NO prefix (just state code like "ca", "ny")
+  // National: Just country code ("uk", "us")
   name?: string; // Human-readable name
 }

@@ -53,18 +53,15 @@ export function getUKConstituencies(regions: MetadataRegion[]): RegionOption[] {
 }
 
 /**
- * Extract API value from a region selection
- * For UK: strips "constituency/" or "country/" prefix
- * For US: returns value as-is
+ * Extract display value from a region identifier
+ * Strips "constituency/" or "country/" prefix for UK regions for display purposes
+ * Returns value as-is for US regions
+ *
+ * @param fullValue - The full region value (e.g., "constituency/Sheffield Central", "ca")
+ * @returns The display value (e.g., "Sheffield Central", "ca")
  */
-export function extractRegionApiValue(
-  fullValue: string,
-  countryId: (typeof countryIds)[number]
-): string {
-  if (
-    countryId === 'uk' &&
-    (fullValue.startsWith('country/') || fullValue.startsWith('constituency/'))
-  ) {
+export function extractRegionDisplayValue(fullValue: string): string {
+  if (fullValue.includes('/')) {
     return fullValue.split('/').pop() || fullValue;
   }
   return fullValue;
@@ -107,12 +104,17 @@ export function createGeographyFromScope(
     return null;
   }
 
-  const apiValue = extractRegionApiValue(selectedRegion, countryId);
+  // CHANGED: Store the full prefixed value for UK regions
+  // For UK: selectedRegion is "constituency/Sheffield Central" or "country/england"
+  // For US: selectedRegion is just "ca", "ny", etc.
+  // We now store the FULL value with prefix
+
+  const displayValue = extractRegionDisplayValue(selectedRegion);
 
   return {
-    id: `${countryId}-${apiValue}`,
+    id: `${countryId}-${displayValue}`, // ID uses display value for backward compat
     countryId,
     scope: 'subnational',
-    geographyId: apiValue,
+    geographyId: selectedRegion, // STORE FULL PREFIXED VALUE
   };
 }

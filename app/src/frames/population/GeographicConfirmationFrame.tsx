@@ -121,6 +121,7 @@ export default function GeographicConfirmationFrame({
     }
 
     // Subnational
+    // geographyId now contains full prefixed value like "constituency/Sheffield Central"
     const regionCode = populationState.geography.geographyId;
     const regionLabel = getRegionLabel(regionCode, metadata);
     const regionTypeName = getRegionType(geographyCountryId) === 'state' ? 'State' : 'Constituency';
