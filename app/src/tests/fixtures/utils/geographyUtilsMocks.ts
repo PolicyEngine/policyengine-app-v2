@@ -18,6 +18,8 @@ export const TEST_REGION_CODES = {
   CALIFORNIA: 'ca',
   TEXAS: 'tx',
   LONDON: 'E14000698',
+  UK_CONSTITUENCY_PREFIXED: 'constituency/Sheffield Central',
+  UK_COUNTRY_PREFIXED: 'country/england',
 } as const;
 
 export const mockMetadataWithRegions = (): MetadataState => ({
@@ -31,6 +33,8 @@ export const mockMetadataWithRegions = (): MetadataState => ({
       { name: 'state/ca', label: 'California' },
       { name: 'state/tx', label: 'Texas' },
       { name: 'constituency/E14000698', label: 'Cities of London and Westminster' },
+      { name: 'constituency/Sheffield Central', label: 'Sheffield Central' },
+      { name: 'country/england', label: 'England' },
     ],
     time_period: [],
     datasets: [],

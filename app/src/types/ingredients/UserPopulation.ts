@@ -22,7 +22,10 @@ export interface UserHouseholdPopulation extends BaseUserPopulation {
 
 export interface UserGeographyPopulation extends BaseUserPopulation {
   type: 'geography';
-  geographyId: string; // References Geography.id
+  geographyId: string; // References Geography.geographyId
+  // For UK: ALWAYS includes prefix ("constituency/Sheffield Central", "country/england")
+  // For US: NO prefix (just state code like "ca", "ny")
+  // National: Just country code ("uk", "us")
   countryId: (typeof countryIds)[number];
   scope: 'national' | 'subnational';
 }

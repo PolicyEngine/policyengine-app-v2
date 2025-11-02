@@ -12,6 +12,7 @@ import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel } from '@/utils/geographyUtils';
+import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 
 export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
@@ -82,18 +83,32 @@ export default function PopulationsPage() {
 
     // Add region if subnational
     if (geography.scope === 'subnational' && geography.geographyId) {
-      // Look up the region label from metadata
+      // geography.geographyId now contains FULL prefixed value for UK regions
+      // e.g., "constituency/Sheffield Central" or "country/england"
       let regionLabel = geography.geographyId;
       if (metadata.economyOptions?.region) {
-        const region = metadata.economyOptions.region.find(
-          (r) =>
-            r.name === geography.geographyId ||
-            r.name === `state/${geography.geographyId}` ||
-            r.name === `constituency/${geography.geographyId}`
-        );
-        if (region?.label) {
+        // Try exact match first (handles prefixed UK values and US state codes)
+        const region = metadata.economyOptions.region.find((r) => r.name === geography.geographyId);
+
+        if (region) {
           regionLabel = region.label;
+        } else {
+          // Fallback: try adding prefixes for backward compatibility
+          const fallbackRegion = metadata.economyOptions.region.find(
+            (r) =>
+              r.name === `state/${geography.geographyId}` ||
+              r.name === `constituency/${geography.geographyId}` ||
+              r.name === `country/${geography.geographyId}`
+          );
+          if (fallbackRegion) {
+            regionLabel = fallbackRegion.label;
+          }
         }
+      }
+
+      // If still no label found, strip prefix for display
+      if (regionLabel === geography.geographyId) {
+        regionLabel = extractRegionDisplayValue(geography.geographyId);
       }
 
       // Determine region type based on country

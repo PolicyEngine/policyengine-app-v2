@@ -314,6 +314,7 @@ export class CalcOrchestrator {
       populationId = config.populations.household1?.id || sim1.populationId || '';
     } else {
       const geography = config.populations.geography1;
+      // geographyId now contains the FULL prefixed value like "constituency/Sheffield Central"
       populationId = geography?.geographyId || sim1.populationId || config.countryId;
       region = geography?.geographyId || config.countryId;
     }
