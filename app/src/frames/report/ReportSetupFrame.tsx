@@ -303,7 +303,7 @@ function getBaselineCardTitle(simulation: Simulation | null, isConfigured: boole
  */
 function getBaselineCardDescription(simulation: Simulation | null, isConfigured: boolean): string {
   if (isConfigured) {
-    return `Policy #${simulation?.policyId} • Population #${simulation?.populationId}`;
+    return `Policy #${simulation?.policyId} • Household(s) #${simulation?.populationId}`;
   }
   return 'Select your baseline simulation';
 }
@@ -347,7 +347,7 @@ function getComparisonCardDescription(
 ): string {
   // If configured, show simulation details
   if (isConfigured) {
-    return `Policy #${simulation?.policyId} • Population #${simulation?.populationId}`;
+    return `Policy #${simulation?.policyId} • Household(s) #${simulation?.populationId}`;
   }
 
   // If baseline not configured yet, show waiting message
@@ -357,7 +357,7 @@ function getComparisonCardDescription(
 
   // If baseline configured but data still loading, show loading message
   if (dataLoading && baselineConfigured && !isConfigured) {
-    return 'Loading population data...';
+    return 'Loading household data...';
   }
 
   // Baseline configured: show optional or required message

@@ -152,25 +152,25 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
   const lockedCards = [
     // Card 1: Load Existing Population (disabled)
     {
-      title: 'Load Existing Population',
+      title: 'Load Existing Household(s)',
       description:
-        'Cannot load a different population when another simulation is already configured',
+        'Cannot load different household(s) when another simulation is already configured',
       onClick: handleClickExisting,
       isSelected: false,
       isDisabled: true,
     },
     // Card 2: Create New Population (disabled)
     {
-      title: 'Create New Population',
-      description: 'Cannot create a new population when another simulation is already configured',
+      title: 'Create New Household(s)',
+      description: 'Cannot create new household(s) when another simulation is already configured',
       onClick: handleClickCreateNew,
       isSelected: false,
       isDisabled: true,
     },
     // Card 3: Use Population from Other Simulation (enabled)
     {
-      title: `Use population from ${getSimulationLabel(otherSimulation)}`,
-      description: `Population: ${getPopulationLabel(otherPopulation)}`,
+      title: `Use household(s) from ${getSimulationLabel(otherSimulation)}`,
+      description: `Household(s): ${getPopulationLabel(otherPopulation)}`,
       onClick: handleClickCopyExisting,
       isSelected: selectedAction === 'copyExisting',
       isDisabled: false,
@@ -179,14 +179,14 @@ export default function SimulationSetupPopulationFrame({ onNavigate }: FlowCompo
 
   const normalCards = [
     {
-      title: 'Load Existing Population',
-      description: 'Use a population you have already created',
+      title: 'Load Existing Household(s)',
+      description: 'Use household(s) you have already created',
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
     },
     {
-      title: 'Create New Population',
-      description: 'Build a new population',
+      title: 'Create New Household(s)',
+      description: 'Build new household(s)',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
     },

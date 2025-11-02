@@ -23,7 +23,7 @@ export default function UKGeographicOptions({
       {/* UK-wide option */}
       <Radio
         value="national"
-        label="UK-wide"
+        label="All households nationally"
         checked={scope === 'national'}
         onChange={() => onScopeChange('national')}
       />
@@ -32,7 +32,7 @@ export default function UKGeographicOptions({
       <Box>
         <Radio
           value="country"
-          label="Country"
+          label="All households in a country"
           checked={scope === 'country'}
           onChange={() => onScopeChange('country')}
         />
@@ -54,7 +54,7 @@ export default function UKGeographicOptions({
       <Box>
         <Radio
           value="constituency"
-          label="Parliamentary Constituency"
+          label="All households in a constituency"
           checked={scope === 'constituency'}
           onChange={() => onScopeChange('constituency')}
         />
@@ -75,7 +75,7 @@ export default function UKGeographicOptions({
       {/* Household option */}
       <Radio
         value="household"
-        label="Household"
+        label="Custom household"
         checked={scope === 'household'}
         onChange={() => onScopeChange('household')}
       />

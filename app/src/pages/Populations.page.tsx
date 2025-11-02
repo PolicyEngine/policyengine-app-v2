@@ -47,7 +47,7 @@ export default function PopulationsPage() {
   const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
-    navigate(`/${countryId}/populations/create`);
+    navigate(`/${countryId}/households/create`);
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -134,7 +134,7 @@ export default function PopulationsPage() {
   const populationColumns: ColumnConfig[] = [
     {
       key: 'populationName',
-      header: 'Population name',
+      header: 'Household name',
       type: 'text',
     },
     {
@@ -212,9 +212,9 @@ export default function PopulationsPage() {
 
   return (
     <IngredientReadView
-      ingredient="population"
-      title="Your saved populations"
-      subtitle="Create a population configuration or find and save existing populations to use in your simulation configurations."
+      ingredient="household"
+      title="Your saved households"
+      subtitle="Configure one or a collection of households to use in your simulation configurations."
       onBuild={handleBuildPopulation}
       isLoading={isLoading}
       isError={isError}

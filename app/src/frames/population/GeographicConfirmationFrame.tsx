@@ -145,7 +145,7 @@ export default function GeographicConfirmationFrame({
   };
 
   const primaryAction = {
-    label: 'Create Geographic Association',
+    label: 'Create Household Collection',
     onClick: handleSubmit,
     isLoading: isPending,
   };

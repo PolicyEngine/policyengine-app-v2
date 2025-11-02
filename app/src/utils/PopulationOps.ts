@@ -70,7 +70,7 @@ export const PopulationOps = {
   getLabel: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: (h) => `Household ${h.householdId}`,
-      geography: (g) => `Geography: ${g.geographyId}`,
+      geography: (g) => `All households in ${g.geographyId}`,
     }),
 
   /**
@@ -79,7 +79,7 @@ export const PopulationOps = {
   getTypeLabel: (p: PopulationRef): string =>
     matchPopulation(p, {
       household: () => 'Household',
-      geography: () => 'Geography',
+      geography: () => 'Household collection',
     }),
 
   /**
@@ -175,7 +175,7 @@ export const UserPopulationOps = {
     p.label ||
     matchUserPopulation(p, {
       household: (h) => `Household ${h.householdId}`,
-      geography: (g) => `${g.scope === 'national' ? 'National' : 'Regional'}: ${g.geographyId}`,
+      geography: (g) => `${g.scope === 'national' ? 'National households' : 'Households in'} ${g.geographyId}`,
     }),
 
   /**
