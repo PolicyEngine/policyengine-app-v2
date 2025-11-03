@@ -5,8 +5,15 @@ import * as policyReducer from '@/reducers/policyReducer';
 import * as reportReducer from '@/reducers/reportReducer';
 import {
   createMockFlowProps,
+  EXPECTED_BASELINE_POLICY_LABEL,
+  EXPECTED_BASELINE_WITH_REPORT_LABEL,
+  EXPECTED_REFORM_POLICY_LABEL,
+  EXPECTED_REFORM_WITH_REPORT_LABEL,
   mockDispatch,
   mockOnNavigate,
+  mockReportStateReportWithName,
+  mockReportStateReportWithoutName,
+  mockReportStateStandalone,
   mockSelectCurrentPosition,
 } from '@/tests/fixtures/frames/policyFrameMocks';
 
@@ -14,6 +21,8 @@ import {
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
 
 // Mock selectors
+let mockReportState: any = mockReportStateStandalone;
+
 vi.mock('@/reducers/activeSelectors', () => ({
   selectCurrentPosition: () => mockSelectCurrentPosition(),
 }));
@@ -34,7 +43,7 @@ vi.mock('react-redux', async () => {
   return {
     ...actual,
     useDispatch: () => mockDispatch,
-    useSelector: (selector: any) => selector({}),
+    useSelector: (selector: any) => selector({ report: mockReportState }),
   };
 });
 
@@ -95,10 +104,13 @@ describe('PolicyCreationFrame', () => {
   test('given user enters policy label and submits then updates policy at position and navigates', async () => {
     // Given
     const user = userEvent.setup();
+    mockReportState = mockReportStateStandalone;
+    mockSelectCurrentPosition.mockReturnValue(0);
     render(<PolicyCreationFrame {...mockFlowProps} />);
 
-    // When
+    // When - Clear prefilled label and type new one
     const input = screen.getByLabelText('Policy title');
+    await user.clear(input);
     await user.type(input, 'My New Tax Policy');
 
     const submitButton = screen.getByRole('button', { name: /Create a policy/i });
@@ -114,12 +126,17 @@ describe('PolicyCreationFrame', () => {
     expect(mockOnNavigate).toHaveBeenCalledWith('next');
   });
 
-  test('given empty label and user submits then updates with empty label and navigates', async () => {
+  test('given user clears label and submits then updates with empty label and navigates', async () => {
     // Given
     const user = userEvent.setup();
+    mockReportState = mockReportStateStandalone;
+    mockSelectCurrentPosition.mockReturnValue(0);
     render(<PolicyCreationFrame {...mockFlowProps} />);
 
-    // When
+    // When - Clear the prefilled label
+    const input = screen.getByLabelText('Policy title');
+    await user.clear(input);
+
     const submitButton = screen.getByRole('button', { name: /Create a policy/i });
     await user.click(submitButton);
 
@@ -144,5 +161,117 @@ describe('PolicyCreationFrame', () => {
     expect(mockDispatch).toHaveBeenCalledWith(
       policyReducer.createPolicyAtPosition({ position: 1 })
     );
+  });
+
+  describe('Auto-naming behavior', () => {
+    test('given standalone mode at position 0 then prefills with baseline policy label', () => {
+      // Given
+      mockReportState = mockReportStateStandalone;
+      mockSelectCurrentPosition.mockReturnValue(0);
+      mockSelectPolicyAtPosition.mockReturnValue(null);
+
+      // When
+      render(<PolicyCreationFrame {...mockFlowProps} />);
+
+      // Then
+      const input = screen.getByLabelText('Policy title') as HTMLInputElement;
+      expect(input.value).toBe(EXPECTED_BASELINE_POLICY_LABEL);
+    });
+
+    test('given standalone mode at position 1 then prefills with reform policy label', () => {
+      // Given
+      mockReportState = mockReportStateStandalone;
+      mockSelectCurrentPosition.mockReturnValue(1);
+      mockSelectPolicyAtPosition.mockReturnValue(null);
+
+      // When
+      render(<PolicyCreationFrame {...mockFlowProps} />);
+
+      // Then
+      const input = screen.getByLabelText('Policy title') as HTMLInputElement;
+      expect(input.value).toBe(EXPECTED_REFORM_POLICY_LABEL);
+    });
+
+    test('given report mode with report name at position 0 then prefills with report name and baseline', () => {
+      // Given
+      mockReportState = mockReportStateReportWithName;
+      mockSelectCurrentPosition.mockReturnValue(0);
+      mockSelectPolicyAtPosition.mockReturnValue(null);
+
+      // When
+      render(<PolicyCreationFrame {...mockFlowProps} />);
+
+      // Then
+      const input = screen.getByLabelText('Policy title') as HTMLInputElement;
+      expect(input.value).toBe(EXPECTED_BASELINE_WITH_REPORT_LABEL);
+    });
+
+    test('given report mode with report name at position 1 then prefills with report name and reform', () => {
+      // Given
+      mockReportState = mockReportStateReportWithName;
+      mockSelectCurrentPosition.mockReturnValue(1);
+      mockSelectPolicyAtPosition.mockReturnValue(null);
+
+      // When
+      render(<PolicyCreationFrame {...mockFlowProps} />);
+
+      // Then
+      const input = screen.getByLabelText('Policy title') as HTMLInputElement;
+      expect(input.value).toBe(EXPECTED_REFORM_WITH_REPORT_LABEL);
+    });
+
+    test('given report mode without report name at position 0 then prefills with baseline policy', () => {
+      // Given
+      mockReportState = mockReportStateReportWithoutName;
+      mockSelectCurrentPosition.mockReturnValue(0);
+      mockSelectPolicyAtPosition.mockReturnValue(null);
+
+      // When
+      render(<PolicyCreationFrame {...mockFlowProps} />);
+
+      // Then
+      const input = screen.getByLabelText('Policy title') as HTMLInputElement;
+      expect(input.value).toBe(EXPECTED_BASELINE_POLICY_LABEL);
+    });
+
+    test('given report mode without report name at position 1 then prefills with reform policy', () => {
+      // Given
+      mockReportState = mockReportStateReportWithoutName;
+      mockSelectCurrentPosition.mockReturnValue(1);
+      mockSelectPolicyAtPosition.mockReturnValue(null);
+
+      // When
+      render(<PolicyCreationFrame {...mockFlowProps} />);
+
+      // Then
+      const input = screen.getByLabelText('Policy title') as HTMLInputElement;
+      expect(input.value).toBe(EXPECTED_REFORM_POLICY_LABEL);
+    });
+
+    test('given user edits prefilled label then custom label is used', async () => {
+      // Given
+      const user = userEvent.setup();
+      mockReportState = mockReportStateReportWithName;
+      mockSelectCurrentPosition.mockReturnValue(0);
+      mockSelectPolicyAtPosition.mockReturnValue(null);
+
+      render(<PolicyCreationFrame {...mockFlowProps} />);
+
+      // When - Clear and type new label
+      const input = screen.getByLabelText('Policy title');
+      await user.clear(input);
+      await user.type(input, 'Custom Tax Reform');
+
+      const submitButton = screen.getByRole('button', { name: /Create a policy/i });
+      await user.click(submitButton);
+
+      // Then
+      expect(mockDispatch).toHaveBeenCalledWith(
+        policyReducer.updatePolicyAtPosition({
+          position: 0,
+          updates: { label: 'Custom Tax Reform' },
+        })
+      );
+    });
   });
 });
