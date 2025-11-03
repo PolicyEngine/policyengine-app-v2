@@ -5,6 +5,7 @@ import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideC
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUserReportById } from '@/hooks/useUserReports';
+import { formatReportTimestamp } from '@/utils/dateUtils';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
@@ -118,8 +119,8 @@ export default function ReportOutputPage() {
     navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
   };
 
-  // Format timestamp (placeholder for now)
-  const timestamp = 'Ran today at 05:23:41';
+  // Format timestamp from userReport createdAt
+  const timestamp = formatReportTimestamp(userReport?.createdAt);
 
   // Show loading state while fetching data
   if (dataLoading) {

@@ -114,3 +114,38 @@ function getFormatOptions(formatType: DateFormatType): Intl.DateTimeFormatOption
       };
   }
 }
+
+/**
+ * Formats a timestamp for display in report output pages
+ * Shows relative time (today) or absolute date with time
+ * @param dateString - ISO date string or timestamp
+ * @returns Formatted timestamp string (e.g., "Ran today at 14:23:41" or "Ran on Jan 15 at 14:23:41")
+ */
+export function formatReportTimestamp(dateString?: string): string {
+  if (!dateString) {
+    return 'Ran recently';
+  }
+
+  const date = new Date(dateString);
+  const now = new Date();
+  const isToday = date.toDateString() === now.toDateString();
+
+  const timeString = date.toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false,
+  });
+
+  if (isToday) {
+    return `Ran today at ${timeString}`;
+  }
+
+  const dateStr = date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+  });
+
+  return `Ran on ${dateStr} at ${timeString}`;
+}
