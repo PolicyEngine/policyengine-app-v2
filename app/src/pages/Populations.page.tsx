@@ -82,7 +82,7 @@ export default function PopulationsPage() {
       // geography.geographyId now contains FULL prefixed value for UK regions
       // e.g., "constituency/Sheffield Central" or "country/england"
       let regionLabel = geography.geographyId;
-      let fullRegionName = geography.geographyId; // Track the full name with prefix
+      const fullRegionName = geography.geographyId; // Track the full name with prefix
       if (metadata.economyOptions?.region) {
         // Try exact match first (handles prefixed UK values and US state codes)
         const region = metadata.economyOptions.region.find((r) => r.name === geography.geographyId);
