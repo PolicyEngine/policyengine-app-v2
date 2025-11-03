@@ -1,6 +1,8 @@
 import { ReactNode } from 'react';
 import { colors } from '@/designTokens';
 
+import '@/styles/stylesheets/RichTextBlock.css';
+
 export interface RichTextBlockProps {
   children: ReactNode;
   variant?: 'default' | 'inverted';
