@@ -19,6 +19,8 @@ export default function HeaderNavigation() {
     { label: 'Supporters', path: `/${countryId}/supporters` },
   ];
 
+  const learnLinks: NavLink[] = [{ label: 'API', path: `/${countryId}/api` }];
+
   const navLinks: NavLink[] = [{ label: 'Donate', path: `/${countryId}/donate` }];
 
   const handleNavClick = (path?: string) => {
@@ -61,6 +63,7 @@ export default function HeaderNavigation() {
         onClose={close}
         navLinks={navLinks}
         aboutLinks={aboutLinks}
+        learnLinks={learnLinks}
         onNavClick={handleNavClick}
       />
     </div>

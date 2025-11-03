@@ -5,6 +5,8 @@ export const MOCK_ABOUT_LINKS = [
   { label: 'Supporters', path: '/us/supporters' },
 ];
 
+export const MOCK_LEARN_LINKS = [{ label: 'API', path: '/us/api' }];
+
 export const EXPECTED_TEXT = {
   US: {
     HERO_TITLE: 'Computing public policy for everyone',

@@ -1,7 +1,11 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import DesktopNavigation from '@/components/home-header/DesktopNavigation';
-import { MOCK_ABOUT_LINKS, MOCK_NAV_LINKS } from '@/tests/fixtures/components/home/HomeMocks';
+import {
+  MOCK_ABOUT_LINKS,
+  MOCK_LEARN_LINKS,
+  MOCK_NAV_LINKS,
+} from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('DesktopNavigation', () => {
   test('given nav links then displays nav items', () => {
@@ -13,6 +17,7 @@ describe('DesktopNavigation', () => {
       <DesktopNavigation
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'
@@ -33,6 +38,7 @@ describe('DesktopNavigation', () => {
       <DesktopNavigation
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'
@@ -55,6 +61,7 @@ describe('DesktopNavigation', () => {
       <DesktopNavigation
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'
@@ -76,6 +83,7 @@ describe('DesktopNavigation', () => {
       <DesktopNavigation
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'
@@ -98,6 +106,7 @@ describe('DesktopNavigation', () => {
       <DesktopNavigation
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'

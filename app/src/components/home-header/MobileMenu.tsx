@@ -13,6 +13,7 @@ interface MobileMenuProps {
   onClose: () => void;
   navLinks: NavLink[];
   aboutLinks: NavLink[];
+  learnLinks: NavLink[];
   onNavClick: (path?: string) => void;
 }
 
@@ -22,6 +23,7 @@ export default function MobileMenu({
   onClose,
   navLinks,
   aboutLinks,
+  learnLinks,
   onNavClick,
 }: MobileMenuProps) {
   return (
@@ -94,6 +96,37 @@ export default function MobileMenu({
                 {link.label}
               </Anchor>
             ))}
+          </Box>
+
+          <Divider color={colors.border.dark} />
+
+          {/* Learn Section */}
+          <Box>
+            <Text
+              c={colors.text.inverse}
+              fw={typography.fontWeight.medium}
+              size="sm"
+              mb={spacing.xs}
+              style={{ fontFamily: typography.fontFamily.primary }}
+            >
+              Learn
+            </Text>
+            <Stack gap={spacing.xs} pl={spacing.md}>
+              {learnLinks.map((link) => (
+                <Anchor
+                  key={link.label}
+                  c={colors.text.inverse}
+                  variant="subtle"
+                  td="none"
+                  fw={typography.fontWeight.normal}
+                  size="sm"
+                  onClick={() => onNavClick(link.path)}
+                  style={{ fontFamily: typography.fontFamily.primary }}
+                >
+                  {link.label}
+                </Anchor>
+              ))}
+            </Stack>
           </Box>
         </Stack>
       </Drawer>

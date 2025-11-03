@@ -3,6 +3,7 @@ import { describe, expect, test, vi } from 'vitest';
 import HeaderContent from '@/components/home-header/HeaderContent';
 import {
   MOCK_ABOUT_LINKS,
+  MOCK_LEARN_LINKS,
   MOCK_NAV_LINKS,
 } from '@/tests/fixtures/components/home-header/HeaderMocks';
 
@@ -21,6 +22,7 @@ describe('HeaderContent', () => {
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'
@@ -45,6 +47,7 @@ describe('HeaderContent', () => {
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'
@@ -70,6 +73,7 @@ describe('HeaderContent', () => {
         onClose={onClose}
         navLinks={MOCK_NAV_LINKS}
         aboutLinks={MOCK_ABOUT_LINKS}
+        learnLinks={MOCK_LEARN_LINKS}
         onNavClick={onNavClick}
       />,
       'us'
