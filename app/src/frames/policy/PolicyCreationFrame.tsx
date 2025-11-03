@@ -13,12 +13,25 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function PolicyCreationFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
-  const [localLabel, setLocalLabel] = useState('');
   const dispatch = useDispatch();
 
   // Get the current position from the cross-cutting selector
   const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
   const policy = useSelector((state: RootState) => selectPolicyAtPosition(state, currentPosition));
+
+  // Get report state for auto-naming
+  const reportState = useSelector((state: RootState) => state.report);
+
+  // Generate default label based on context
+  const getDefaultLabel = () => {
+    if (reportState.mode === 'report') {
+      const baseName = currentPosition === 0 ? 'Baseline policy' : 'Reform policy';
+      return reportState.label ? `${reportState.label} ${baseName.toLowerCase()}` : baseName;
+    }
+    return ''; // Standalone mode - no default
+  };
+
+  const [localLabel, setLocalLabel] = useState(getDefaultLabel());
 
   console.log('[PolicyCreationFrame] RENDER - currentPosition:', currentPosition);
   console.log('[PolicyCreationFrame] RENDER - policy:', policy);

@@ -13,7 +13,6 @@ import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
 export default function SimulationCreationFrame({ onNavigate, isInSubflow }: FlowComponentProps) {
-  const [localLabel, setLocalLabel] = useState('');
   const dispatch = useDispatch();
 
   // Get the current position from the cross-cutting selector
@@ -21,6 +20,20 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
   const simulation = useSelector((state: RootState) =>
     selectSimulationAtPosition(state, currentPosition)
   );
+
+  // Get report state for auto-naming
+  const reportState = useSelector((state: RootState) => state.report);
+
+  // Generate default label based on context
+  const getDefaultLabel = () => {
+    if (reportState.mode === 'report') {
+      const baseName = currentPosition === 0 ? 'Baseline simulation' : 'Reform simulation';
+      return reportState.label ? `${reportState.label} ${baseName.toLowerCase()}` : baseName;
+    }
+    return ''; // Standalone mode - no default
+  };
+
+  const [localLabel, setLocalLabel] = useState(getDefaultLabel());
 
   console.log('[SimulationCreationFrame] RENDER - currentPosition:', currentPosition);
   console.log('[SimulationCreationFrame] RENDER - simulation:', simulation);
