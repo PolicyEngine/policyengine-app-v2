@@ -1,6 +1,9 @@
 import { useState } from 'react';
 import { IconCheck, IconChevronDown, IconChevronUp, IconCopy } from '@tabler/icons-react';
-import { Box, Button, Code, CopyButton, Flex, Group, Stack, Text } from '@mantine/core';
+import { langs } from '@uiw/codemirror-extensions-langs';
+import CodeMirror, { EditorView } from '@uiw/react-codemirror';
+import { espresso } from 'thememirror';
+import { Box, Button, CopyButton, Flex, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface CodeBlockProps {
@@ -12,6 +15,16 @@ interface CodeBlockProps {
 
 export default function CodeBlock({ code, language, title, showExpand = true }: CodeBlockProps) {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Map common language names to CodeMirror language extensions
+  const getLanguageExtension = () => {
+    if (!language) {
+      return langs.json();
+    }
+
+    const langKey = language.toLowerCase() as keyof typeof langs;
+    return langKey in langs ? langs[langKey]() : langs.json();
+  };
 
   return (
     <Stack gap={0}>
@@ -82,22 +95,14 @@ export default function CodeBlock({ code, language, title, showExpand = true }: 
           </Group>
         </Flex>
 
-        {/* Code content */}
-        <Code
-          block
-          style={{
-            fontSize: typography.fontSize.sm,
-            padding: spacing.md,
-            backgroundColor: colors.gray[50],
-            border: 'none',
-            borderRadius: 0,
-            overflowX: 'auto',
-            maxHeight: isExpanded ? 'none' : '400px',
-            overflowY: 'auto',
-          }}
-        >
-          {code}
-        </Code>
+        {/* Code content with syntax highlighting */}
+        <CodeMirror
+          value={code}
+          maxHeight={isExpanded ? undefined : '400px'}
+          editable={false}
+          extensions={[getLanguageExtension(), EditorView.lineWrapping]}
+          theme={espresso}
+        />
       </Box>
     </Stack>
   );

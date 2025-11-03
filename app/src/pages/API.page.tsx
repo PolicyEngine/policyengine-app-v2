@@ -1,5 +1,5 @@
 import { useSelector } from 'react-redux';
-import { Code, List, Stack, Text, Title } from '@mantine/core';
+import { Code, SimpleGrid, Title } from '@mantine/core';
 import APIPlayground from '@/components/shared/static/APIPlayground';
 import CodeBlock from '@/components/shared/static/CodeBlock';
 import ContentSection from '@/components/shared/static/ContentSection';
@@ -110,10 +110,10 @@ export default function APIPage() {
             "Bearer YOUR_TOKEN". Tokens expire monthly for security.
           </p>
         </RichTextBlock>
-        <Stack gap={spacing.lg} mt={spacing.lg}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={spacing.lg} mt={spacing.lg}>
           <CodeBlock code={TOKEN_FETCH_CODE} language="python" title="Request" />
           <CodeBlock code={TOKEN_RESPONSE_CODE} language="json" title="Response" />
-        </Stack>
+        </SimpleGrid>
       </ContentSection>
 
       <ContentSection
@@ -131,14 +131,14 @@ export default function APIPage() {
         <Title order={5} mt={spacing.md}>
           <Code>POST /{countryId}/calculate</Code>
         </Title>
-        <Stack gap={spacing.lg} mt={spacing.lg}>
+        <SimpleGrid cols={{ base: 1, md: 2 }} spacing={spacing.lg} mt={spacing.lg}>
           <CodeBlock code={getCalculateRequestCode(countryId)} language="python" title="Request" />
           <CodeBlock
             code={JSON.stringify(sampleResponse, null, 2)}
             language="json"
             title="Response"
           />
-        </Stack>
+        </SimpleGrid>
       </ContentSection>
 
       <ContentSection id="variables" title="Variable and parameter metadata" variant="secondary">
