@@ -3,6 +3,12 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationCreationFrame from '@/frames/simulation/SimulationCreationFrame';
 import * as simulationsReducer from '@/reducers/simulationsReducer';
 import {
+  EXPECTED_BASELINE_SIMULATION_LABEL,
+  EXPECTED_BASELINE_WITH_REPORT_LABEL,
+  EXPECTED_REFORM_SIMULATION_LABEL,
+  EXPECTED_REFORM_WITH_REPORT_LABEL,
+} from '@/tests/fixtures/frames/SimulationCreationFrame';
+import {
   mockDispatch,
   mockOnNavigate,
   mockReportStateReportWithName,
@@ -10,12 +16,6 @@ import {
   mockReportStateStandalone,
   mockSimulationEmpty,
 } from '@/tests/fixtures/frames/simulationFrameMocks';
-import {
-  EXPECTED_BASELINE_SIMULATION_LABEL,
-  EXPECTED_BASELINE_WITH_REPORT_LABEL,
-  EXPECTED_REFORM_SIMULATION_LABEL,
-  EXPECTED_REFORM_WITH_REPORT_LABEL,
-} from '@/tests/fixtures/frames/SimulationCreationFrame';
 
 // Mock Plotly
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
