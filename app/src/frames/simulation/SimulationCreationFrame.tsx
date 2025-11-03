@@ -26,11 +26,14 @@ export default function SimulationCreationFrame({ onNavigate, isInSubflow }: Flo
 
   // Generate default label based on context
   const getDefaultLabel = () => {
-    if (reportState.mode === 'report') {
-      const baseName = currentPosition === 0 ? 'Baseline simulation' : 'Reform simulation';
-      return reportState.label ? `${reportState.label} ${baseName.toLowerCase()}` : baseName;
+    if (reportState.mode === 'report' && reportState.label) {
+      // Report mode WITH report name: prefix with report name
+      const baseName = currentPosition === 0 ? 'baseline simulation' : 'reform simulation';
+      return `${reportState.label} ${baseName}`;
     }
-    return ''; // Standalone mode - no default
+    // All other cases: use standalone label
+    const baseName = currentPosition === 0 ? 'Baseline simulation' : 'Reform simulation';
+    return baseName;
   };
 
   const [localLabel, setLocalLabel] = useState(getDefaultLabel());
