@@ -100,10 +100,10 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent();
 
       // Then
-      expect(screen.getByRole('heading', { name: 'Select Scope' })).toBeInTheDocument();
-      expect(screen.getByLabelText('National')).toBeInTheDocument();
-      expect(screen.getByLabelText('State')).toBeInTheDocument();
-      expect(screen.getByLabelText('Household')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Select Household Scope' })).toBeInTheDocument();
+      expect(screen.getByLabelText('All households nationally')).toBeInTheDocument();
+      expect(screen.getByLabelText('All households in a state')).toBeInTheDocument();
+      expect(screen.getByLabelText('Custom household')).toBeInTheDocument();
     });
 
     test('given initial state then national is selected by default', () => {
@@ -111,7 +111,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent();
 
       // Then
-      const nationalRadio = screen.getByLabelText('National') as HTMLInputElement;
+      const nationalRadio = screen.getByLabelText('All households nationally') as HTMLInputElement;
       expect(nationalRadio.checked).toBe(true);
     });
   });
@@ -122,7 +122,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent();
 
       // When
-      const stateRadio = screen.getByLabelText('State');
+      const stateRadio = screen.getByLabelText('All households in a state');
       await user.click(stateRadio);
 
       // Then
@@ -146,10 +146,10 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent({ currentCountry: TEST_COUNTRIES.UK });
 
       // Then - Shows 4 UK options
-      expect(screen.getByLabelText('UK-wide')).toBeInTheDocument();
-      expect(screen.getByLabelText('Country')).toBeInTheDocument();
-      expect(screen.getByLabelText('Parliamentary Constituency')).toBeInTheDocument();
-      expect(screen.getByLabelText('Household')).toBeInTheDocument();
+      expect(screen.getByLabelText('All households UK-wide')).toBeInTheDocument();
+      expect(screen.getByLabelText('All households in a country')).toBeInTheDocument();
+      expect(screen.getByLabelText('All households in a constituency')).toBeInTheDocument();
+      expect(screen.getByLabelText('Custom household')).toBeInTheDocument();
     });
 
     test('given UK Country selected then shows country dropdown', async () => {
@@ -157,7 +157,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent({ currentCountry: TEST_COUNTRIES.UK });
 
       // When
-      const countryRadio = screen.getByLabelText('Country');
+      const countryRadio = screen.getByLabelText('All households in a country');
       await user.click(countryRadio);
 
       // Then - Shows country selector
@@ -178,7 +178,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent({ currentCountry: TEST_COUNTRIES.UK });
 
       // When
-      const constituencyRadio = screen.getByLabelText('Parliamentary Constituency');
+      const constituencyRadio = screen.getByLabelText('All households in a constituency');
       await user.click(constituencyRadio);
 
       // Then - Shows constituency selector
@@ -200,7 +200,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent();
 
       // First select state to show dropdown
-      const stateRadio = screen.getByLabelText('State');
+      const stateRadio = screen.getByLabelText('All households in a state');
       await user.click(stateRadio);
 
       await waitFor(() => {
@@ -208,7 +208,7 @@ describe('SelectGeographicScopeFrame', () => {
       });
 
       // When - Switch to household
-      const householdRadio = screen.getByLabelText('Household');
+      const householdRadio = screen.getByLabelText('Custom household');
       await user.click(householdRadio);
 
       // Then - Dropdown should be hidden
@@ -249,7 +249,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent(undefined, props);
 
       // When
-      const stateRadio = screen.getByLabelText('State');
+      const stateRadio = screen.getByLabelText('All households in a state');
       await user.click(stateRadio);
 
       const dropdown = await screen.findByPlaceholderText('Pick a state');
@@ -282,7 +282,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent(undefined, props);
 
       // When
-      const stateRadio = screen.getByLabelText('State');
+      const stateRadio = screen.getByLabelText('All households in a state');
       await user.click(stateRadio);
 
       const submitButton = screen.getByRole('button', { name: /Select Scope/i });
@@ -301,7 +301,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent(undefined, props);
 
       // When
-      const householdRadio = screen.getByLabelText('Household');
+      const householdRadio = screen.getByLabelText('Custom household');
       await user.click(householdRadio);
 
       const submitButton = screen.getByRole('button', { name: /Select Scope/i });
@@ -323,7 +323,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent(undefined, props);
 
       // When
-      const stateRadio = screen.getByLabelText('State');
+      const stateRadio = screen.getByLabelText('All households in a state');
       await user.click(stateRadio);
 
       const dropdown = await screen.findByPlaceholderText('Pick a state');
@@ -346,7 +346,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent({ currentCountry: TEST_COUNTRIES.UK }, props);
 
       // When
-      const constituencyRadio = screen.getByLabelText('Parliamentary Constituency');
+      const constituencyRadio = screen.getByLabelText('All households in a constituency');
       await user.click(constituencyRadio);
 
       // Select constituency
@@ -371,7 +371,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent({ currentCountry: TEST_COUNTRIES.UK }, props);
 
       // When
-      const countryRadio = screen.getByLabelText('Country');
+      const countryRadio = screen.getByLabelText('All households in a country');
       await user.click(countryRadio);
 
       // Select country
@@ -395,7 +395,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent({ currentCountry: null });
 
       // When
-      const stateRadio = screen.getByLabelText('State');
+      const stateRadio = screen.getByLabelText('All households in a state');
       stateRadio.click();
 
       // Then - Should show US states
@@ -409,7 +409,7 @@ describe('SelectGeographicScopeFrame', () => {
       renderComponent({ currentCountry: 'ca' }); // Canada not implemented
 
       // When
-      const stateRadio = screen.getByLabelText('State');
+      const stateRadio = screen.getByLabelText('All households in a state');
       stateRadio.click();
 
       // Then - Should show US states as fallback

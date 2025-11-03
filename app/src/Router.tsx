@@ -78,12 +78,12 @@ const router = createBrowserRouter(
                   element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
-                  path: 'populations',
+                  path: 'households',
                   element: <PopulationsPage />,
                 },
                 {
-                  path: 'populations/create',
-                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="populations" />,
+                  path: 'households/create',
+                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="households" />,
                 },
                 {
                   path: 'policies',

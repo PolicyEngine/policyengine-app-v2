@@ -47,7 +47,7 @@ export default function PopulationsPage() {
   const error = householdError || geographicError;
 
   const handleBuildPopulation = () => {
-    navigate(`/${countryId}/populations/create`);
+    navigate(`/${countryId}/households/create`);
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -77,15 +77,12 @@ export default function PopulationsPage() {
     const typeLabel = geography.scope === 'national' ? 'National' : 'Subnational';
     details.push({ text: typeLabel, badge: '' });
 
-    // Add country
-    const countryLabel = getCountryLabel(geography.countryId);
-    details.push({ text: countryLabel, badge: '' });
-
     // Add region if subnational
     if (geography.scope === 'subnational' && geography.geographyId) {
       // geography.geographyId now contains FULL prefixed value for UK regions
       // e.g., "constituency/Sheffield Central" or "country/england"
       let regionLabel = geography.geographyId;
+      const fullRegionName = geography.geographyId; // Track the full name with prefix
       if (metadata.economyOptions?.region) {
         // Try exact match first (handles prefixed UK values and US state codes)
         const region = metadata.economyOptions.region.find((r) => r.name === geography.geographyId);
@@ -111,9 +108,29 @@ export default function PopulationsPage() {
         regionLabel = extractRegionDisplayValue(geography.geographyId);
       }
 
-      // Determine region type based on country
-      const regionTypeLabel = geography.countryId === 'us' ? 'State' : 'Constituency';
+      // Determine region type based on country and prefix
+      let regionTypeLabel = 'Region';
+      if (geography.countryId === 'us') {
+        regionTypeLabel = 'State';
+      } else if (geography.countryId === 'uk') {
+        if (fullRegionName.startsWith('country/')) {
+          regionTypeLabel = 'Country';
+        } else if (fullRegionName.startsWith('constituency/')) {
+          regionTypeLabel = 'Constituency';
+        }
+      }
+
+      // For UK constituencies, show both country and constituency
+      if (geography.countryId === 'uk' && fullRegionName.startsWith('constituency/')) {
+        const countryLabel = getCountryLabel(geography.countryId);
+        details.push({ text: countryLabel, badge: '' });
+      }
+
       details.push({ text: `${regionTypeLabel}: ${regionLabel}`, badge: '' });
+    } else {
+      // National scope - just show country
+      const countryLabel = getCountryLabel(geography.countryId);
+      details.push({ text: countryLabel, badge: '' });
     }
 
     return details;
@@ -134,7 +151,7 @@ export default function PopulationsPage() {
   const populationColumns: ColumnConfig[] = [
     {
       key: 'populationName',
-      header: 'Population name',
+      header: 'Household name',
       type: 'text',
     },
     {
@@ -212,9 +229,10 @@ export default function PopulationsPage() {
 
   return (
     <IngredientReadView
-      ingredient="population"
-      title="Your saved populations"
-      subtitle="Create a population configuration or find and save existing populations to use in your simulation configurations."
+      ingredient="household"
+      title="Your saved households"
+      subtitle="Configure one or a collection of households to use in your simulation configurations."
+      buttonLabel="New household(s)"
       onBuild={handleBuildPopulation}
       isLoading={isLoading}
       isError={isError}

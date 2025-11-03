@@ -21,7 +21,7 @@ export default function USGeographicOptions({
       {/* National option */}
       <Radio
         value="national"
-        label="National"
+        label="All households nationally"
         checked={scope === 'national'}
         onChange={() => onScopeChange('national')}
       />
@@ -30,7 +30,7 @@ export default function USGeographicOptions({
       <Box>
         <Radio
           value="state"
-          label="State"
+          label="All households in a state"
           checked={scope === 'state'}
           onChange={() => onScopeChange('state')}
         />
@@ -51,7 +51,7 @@ export default function USGeographicOptions({
       {/* Household option */}
       <Radio
         value="household"
-        label="Household"
+        label="Custom household"
         checked={scope === 'household'}
         onChange={() => onScopeChange('household')}
       />

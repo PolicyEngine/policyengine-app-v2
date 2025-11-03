@@ -41,7 +41,7 @@ export function getPopulationLockConfig(
  * @returns The title text
  */
 export function getPopulationSelectionTitle(shouldLock: boolean): string {
-  return shouldLock ? 'Apply Population' : 'Select Population';
+  return shouldLock ? 'Apply Household(s)' : 'Select Household(s)';
 }
 
 /**
@@ -52,6 +52,6 @@ export function getPopulationSelectionTitle(shouldLock: boolean): string {
  */
 export function getPopulationSelectionSubtitle(shouldLock: boolean): string | undefined {
   return shouldLock
-    ? 'This report requires using the same population as the other simulation'
+    ? 'This report requires using the same household(s) as the other simulation'
     : undefined;
 }

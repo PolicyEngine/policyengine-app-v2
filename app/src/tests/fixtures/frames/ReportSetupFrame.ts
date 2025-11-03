@@ -136,4 +136,4 @@ export const PREFILL_CONSOLE_MESSAGES = {
 };
 
 // Loading messages
-export const LOADING_POPULATION_DATA_MESSAGE = 'Loading population data...';
+export const LOADING_POPULATION_DATA_MESSAGE = 'Loading household data...';

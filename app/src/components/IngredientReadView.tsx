@@ -9,6 +9,7 @@ interface IngredientReadViewProps {
   ingredient: string;
   title: string;
   subtitle?: string;
+  buttonLabel?: string;
   onBuild?: () => void;
   isLoading: boolean;
   isError: boolean;
@@ -27,6 +28,7 @@ export default function IngredientReadView({
   ingredient,
   title,
   subtitle,
+  buttonLabel,
   onBuild,
   isLoading,
   isError,
@@ -62,7 +64,7 @@ export default function IngredientReadView({
 
           {onBuild && (
             <Button rightSection={<IconPlus size={16} />} onClick={onBuild} variant="filled">
-              New {ingredient.toLowerCase()}
+              {buttonLabel || `New ${ingredient.toLowerCase()}`}
             </Button>
           )}
         </Flex>

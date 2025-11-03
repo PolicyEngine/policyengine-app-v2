@@ -59,16 +59,16 @@ export const UI_TEXT = {
   CONSTITUENCY_MANCHESTER: 'Manchester',
 
   // SetPopulationLabelFrame
-  NAME_POPULATION_TITLE: 'Name Your Population',
-  POPULATION_LABEL: 'Population Label',
-  LABEL_PLACEHOLDER: `e.g., My Family ${CURRENT_YEAR}, California Low Income, UK National Average`,
-  LABEL_DESCRIPTION: 'Give your population a descriptive name to help identify it later.',
-  LABEL_HELP_TEXT: 'This label will help you identify this population when creating simulations.',
-  ERROR_EMPTY_LABEL: 'Please enter a label for your population',
+  NAME_POPULATION_TITLE: 'Name Your Household(s)',
+  POPULATION_LABEL: 'Household Label',
+  LABEL_PLACEHOLDER: `e.g., My Family ${CURRENT_YEAR}, All California Households, UK National Households`,
+  LABEL_DESCRIPTION: 'Give your household(s) a descriptive name.',
+  LABEL_HELP_TEXT: 'This label will help you identify this household(s) when creating simulations.',
+  ERROR_EMPTY_LABEL: 'Please enter a label for your household(s)',
   ERROR_LONG_LABEL: 'Label must be less than 100 characters',
-  DEFAULT_NATIONAL_LABEL: 'National Population',
+  DEFAULT_NATIONAL_LABEL: 'National Households',
   DEFAULT_HOUSEHOLD_LABEL: 'Custom Household',
-  DEFAULT_STATE_LABEL: (state: string) => `${state} Population`,
+  DEFAULT_STATE_LABEL: (state: string) => `${state} Households`,
 } as const;
 
 // Error messages
