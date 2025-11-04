@@ -29,7 +29,7 @@ export function findMatchingPopulation(
   // Search in household data if it's a household population
   if (simulation.populationType === 'household' && householdData) {
     const match = householdData.find(
-      (h) => isHouseholdMetadataWithAssociation(h) && h.household?.id === simulation.populationId
+      (h) => isHouseholdMetadataWithAssociation(h) && String(h.household?.id) === String(simulation.populationId)
     );
     return match || null;
   }
@@ -37,7 +37,7 @@ export function findMatchingPopulation(
   // Search in geographic data if it's a geography population
   if (simulation.populationType === 'geography' && geographicData) {
     const match = geographicData.find(
-      (g) => isGeographicMetadataWithAssociation(g) && g.geography?.id === simulation.populationId
+      (g) => isGeographicMetadataWithAssociation(g) && String(g.geography?.id) === String(simulation.populationId)
     );
     return match || null;
   }
