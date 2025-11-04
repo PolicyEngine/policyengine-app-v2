@@ -23,7 +23,10 @@ export function RedirectToLegacy() {
   useEffect(() => {
     if (shouldRedirect) {
       // Redirect to legacy site with the original path
-      window.location.href = `https://legacy.policyengine.org${location.pathname}${location.search}${location.hash}`;
+      // Use replace to prevent back button from returning to this redirect page
+      window.location.replace(
+        `https://legacy.policyengine.org${location.pathname}${location.search}${location.hash}`
+      );
     }
   }, [shouldRedirect, location]);
 

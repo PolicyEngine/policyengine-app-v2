@@ -1,42 +1,27 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import DesktopNavigation from '@/components/home-header/DesktopNavigation';
-import { MOCK_ABOUT_LINKS, MOCK_NAV_LINKS } from '@/tests/fixtures/components/home/HomeMocks';
+import { MOCK_NAV_ITEMS } from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('DesktopNavigation', () => {
-  test('given nav links then displays nav items', () => {
-    // Given
-    const onNavClick = vi.fn();
-
-    // When
-    renderWithCountry(
-      <DesktopNavigation
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
-      'us'
-    );
+  test('given nav items then displays all nav labels', () => {
+    // Given/When
+    renderWithCountry(<DesktopNavigation navItems={MOCK_NAV_ITEMS} />, 'us');
 
     // Then
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('Research')).toBeInTheDocument();
+    expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByText('Donate')).toBeInTheDocument();
   });
 
-  test('given about links then displays About dropdown', async () => {
+  test('given about dropdown then displays dropdown items on click', async () => {
     // Given
     const { userEvent } = await import('@test-utils');
-    const onNavClick = vi.fn();
     const user = userEvent.setup();
 
     // When
-    renderWithCountry(
-      <DesktopNavigation
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
-      'us'
-    );
+    renderWithCountry(<DesktopNavigation navItems={MOCK_NAV_ITEMS} />, 'us');
     await user.click(screen.getByText('About'));
 
     // Then
@@ -47,64 +32,61 @@ describe('DesktopNavigation', () => {
   test('given user clicks nav link then callback is invoked', async () => {
     // Given
     const { userEvent } = await import('@test-utils');
-    const onNavClick = vi.fn();
     const user = userEvent.setup();
+    const onDonateClick = vi.fn();
+    const navItemsWithSpy = MOCK_NAV_ITEMS.map((item) =>
+      item.label === 'Donate' ? { ...item, onClick: onDonateClick } : item
+    );
 
     // When
-    renderWithCountry(
-      <DesktopNavigation
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
-      'us'
-    );
+    renderWithCountry(<DesktopNavigation navItems={navItemsWithSpy} />, 'us');
     await user.click(screen.getByText('Donate'));
 
     // Then
-    expect(onNavClick).toHaveBeenCalledWith('/us/donate');
+    expect(onDonateClick).toHaveBeenCalled();
   });
 
-  test('given user clicks about link then callback is invoked', async () => {
+  test('given user clicks about dropdown item then callback is invoked', async () => {
     // Given
     const { userEvent } = await import('@test-utils');
-    const onNavClick = vi.fn();
     const user = userEvent.setup();
+    const onTeamClick = vi.fn();
+    const navItemsWithSpy = MOCK_NAV_ITEMS.map((item) =>
+      item.label === 'About' && item.dropdownItems
+        ? {
+            ...item,
+            dropdownItems: item.dropdownItems.map((dropdownItem) =>
+              dropdownItem.label === 'Team'
+                ? { ...dropdownItem, onClick: onTeamClick }
+                : dropdownItem
+            ),
+          }
+        : item
+    );
 
     // When
-    renderWithCountry(
-      <DesktopNavigation
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
-      'us'
-    );
+    renderWithCountry(<DesktopNavigation navItems={navItemsWithSpy} />, 'us');
     await user.click(screen.getByText('About'));
     await user.click(screen.getByText('Team'));
 
     // Then
-    expect(onNavClick).toHaveBeenCalledWith('/us/team');
+    expect(onTeamClick).toHaveBeenCalled();
   });
 
-  test('given user clicks Home then navigates to PolicyEngine homepage', async () => {
+  test('given user clicks Home then callback is invoked', async () => {
     // Given
     const { userEvent } = await import('@test-utils');
-    const onNavClick = vi.fn();
     const user = userEvent.setup();
+    const onHomeClick = vi.fn();
+    const navItemsWithSpy = MOCK_NAV_ITEMS.map((item) =>
+      item.label === 'Home' ? { ...item, onClick: onHomeClick } : item
+    );
 
     // When
-    renderWithCountry(
-      <DesktopNavigation
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
-      'us'
-    );
+    renderWithCountry(<DesktopNavigation navItems={navItemsWithSpy} />, 'us');
     await user.click(screen.getByText('Home'));
 
     // Then
-    expect(onNavClick).toHaveBeenCalledWith('https://policyengine.org/us');
+    expect(onHomeClick).toHaveBeenCalled();
   });
 });
