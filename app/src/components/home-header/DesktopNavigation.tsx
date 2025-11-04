@@ -11,12 +11,14 @@ interface NavLink {
 interface DesktopNavigationProps {
   navLinks: NavLink[];
   aboutLinks: NavLink[];
+  learnLinks: NavLink[];
   onNavClick: (path?: string) => void;
 }
 
 export default function DesktopNavigation({
   navLinks,
   aboutLinks,
+  learnLinks,
   onNavClick,
 }: DesktopNavigationProps) {
   const countryId = useCurrentCountry();
@@ -74,6 +76,31 @@ export default function DesktopNavigation({
           {link.label}
         </Anchor>
       ))}
+
+      <Menu shadow="md" width={200} zIndex={1001} position="bottom" offset={10}>
+        <Menu.Target>
+          <UnstyledButton>
+            <Group gap={4} align="center">
+              <Text
+                c={colors.text.inverse}
+                fw={typography.fontWeight.medium}
+                size="18px"
+                style={{ fontFamily: typography.fontFamily.primary }}
+              >
+                Learn
+              </Text>
+              <IconChevronDown size={18} color={colors.text.inverse} />
+            </Group>
+          </UnstyledButton>
+        </Menu.Target>
+        <Menu.Dropdown>
+          {learnLinks.map((link) => (
+            <Menu.Item key={link.label} onClick={() => onNavClick(link.path)}>
+              {link.label}
+            </Menu.Item>
+          ))}
+        </Menu.Dropdown>
+      </Menu>
     </Group>
   );
 }

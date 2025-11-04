@@ -15,6 +15,7 @@ interface HeaderContentProps {
   onClose: () => void;
   navLinks: NavLink[];
   aboutLinks: NavLink[];
+  learnLinks: NavLink[];
   onNavClick: (path?: string) => void;
 }
 
@@ -24,6 +25,7 @@ export default function HeaderContent({
   onClose,
   navLinks,
   aboutLinks,
+  learnLinks,
   onNavClick,
 }: HeaderContentProps) {
   return (
@@ -41,7 +43,12 @@ export default function HeaderContent({
       <Group justify="space-between" h="100%">
         <Group>
           <HeaderLogo />
-          <DesktopNavigation navLinks={navLinks} aboutLinks={aboutLinks} onNavClick={onNavClick} />
+          <DesktopNavigation
+            navLinks={navLinks}
+            aboutLinks={aboutLinks}
+            learnLinks={learnLinks}
+            onNavClick={onNavClick}
+          />
         </Group>
 
         <Group visibleFrom="lg">
@@ -54,6 +61,7 @@ export default function HeaderContent({
           onClose={onClose}
           navLinks={navLinks}
           aboutLinks={aboutLinks}
+          learnLinks={learnLinks}
           onNavClick={onNavClick}
         />
       </Group>

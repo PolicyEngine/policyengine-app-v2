@@ -71,4 +71,20 @@ describe('ContentSection', () => {
     // Then
     expect(container.firstChild).toBeInTheDocument();
   });
+
+  test('given id prop then element has id attribute', () => {
+    // Given
+    const testId = 'test-section';
+
+    // When
+    render(
+      <ContentSection {...MOCK_CONTENT_SECTION_PROPS} id={testId}>
+        <div>Content</div>
+      </ContentSection>
+    );
+
+    // Then
+    const section = document.getElementById(testId);
+    expect(section).toBeInTheDocument();
+  });
 });

@@ -21,7 +21,7 @@ describe('ActionButton', () => {
     expect(link).toHaveAttribute('href', TEST_BUTTON_HREF);
   });
 
-  test('given href then link opens in new tab', () => {
+  test('given href then link opens in new tab by default', () => {
     // Given / When
     render(<ActionButton {...MOCK_ACTION_BUTTON_PROPS} />);
 
@@ -29,6 +29,16 @@ describe('ActionButton', () => {
     const link = screen.getByRole('link', { name: TEST_BUTTON_TEXT });
     expect(link).toHaveAttribute('target', '_blank');
     expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  test('given target prop _self then link opens in same tab', () => {
+    // Given / When
+    render(<ActionButton {...MOCK_ACTION_BUTTON_PROPS} target="_self" />);
+
+    // Then
+    const link = screen.getByRole('link', { name: TEST_BUTTON_TEXT });
+    expect(link).toHaveAttribute('target', '_self');
+    expect(link).not.toHaveAttribute('rel');
   });
 
   test('given caption then caption text is rendered', () => {

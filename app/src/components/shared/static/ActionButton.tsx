@@ -8,6 +8,7 @@ export interface ActionButtonProps {
   variant?: 'primary' | 'secondary' | 'inverted';
   multiline?: boolean;
   caption?: string;
+  target?: '_blank' | '_self';
 }
 
 export default function ActionButton({
@@ -16,6 +17,7 @@ export default function ActionButton({
   variant = 'primary',
   multiline = false,
   caption,
+  target = '_blank',
 }: ActionButtonProps) {
   const buttonRef = useRef<HTMLAnchorElement>(null);
   const [buttonWidth, setButtonWidth] = useState<number | null>(null);
@@ -64,8 +66,8 @@ export default function ActionButton({
         ref={buttonRef}
         component="a"
         href={href}
-        target="_blank"
-        rel="noopener noreferrer"
+        target={target}
+        rel={target === '_blank' ? 'noopener noreferrer' : undefined}
         size="lg"
         px={spacing.xl}
         py={spacing.lg}
