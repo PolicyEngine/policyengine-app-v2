@@ -22,6 +22,7 @@ import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+import { RedirectToLegacy } from './routing/RedirectToLegacy';
 
 const router = createBrowserRouter(
   [
@@ -146,6 +147,87 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+          ],
+        },
+        // Legacy routes - redirect to legacy.policyengine.org
+        {
+          children: [
+            // Research routes
+            {
+              path: 'research',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'research/:postName',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'blog/:postName',
+              element: <RedirectToLegacy />,
+            },
+            // Generic app routes
+            {
+              path: 'obbba-household-explorer',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'obbba-household-by-household',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'two-child-limit-comparison',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'rhode-island-ctc-calculator',
+              element: <RedirectToLegacy />,
+            },
+            // Country-specific legacy routes (must come before :appName catch-all)
+            {
+              path: 'cec',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: '2024-manifestos',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'trafwa-ctc-calculator',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'state-eitcs-ctcs',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'child-tax-credit-2024-election-calculator',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'child-tax-credit-calculator',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'givecalc',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'aca-calc',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: '2024-election-calculator',
+              element: <RedirectToLegacy />,
+            },
+            {
+              path: 'salternative',
+              element: <RedirectToLegacy />,
+            },
+            // Generic catch-all for any other app (must be last)
+            {
+              path: ':appName',
+              element: <RedirectToLegacy />,
             },
           ],
         },
