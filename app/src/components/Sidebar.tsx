@@ -52,11 +52,10 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       external: true,
     },
     {
-      label: 'Visit blog',
+      label: 'View research',
       icon: IconBook,
-      path: 'https://blog.example.com',
+      path: `/${countryId}/research`,
       external: true,
-      disabled: true,
     },
   ];
 

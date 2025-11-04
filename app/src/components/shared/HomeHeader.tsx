@@ -1,25 +1,14 @@
 import { useNavigate } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
 import HeaderContent from '@/components/home-header/HeaderContent';
+import { NavItemSetup } from '@/components/home-header/NavItem';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-
-interface NavLink {
-  label: string;
-  path?: string;
-}
 
 export default function HeaderNavigation() {
   const [opened, { open, close }] = useDisclosure(false);
   const navigate = useNavigate();
   const countryId = useCurrentCountry();
-
-  const aboutLinks: NavLink[] = [
-    { label: 'Team', path: `/${countryId}/team` },
-    { label: 'Supporters', path: `/${countryId}/supporters` },
-  ];
-
-  const navLinks: NavLink[] = [{ label: 'Donate', path: `/${countryId}/donate` }];
 
   const handleNavClick = (path?: string) => {
     if (path) {
@@ -27,6 +16,33 @@ export default function HeaderNavigation() {
       close();
     }
   };
+
+  const navItems: NavItemSetup[] = [
+    {
+      label: 'Home',
+      onClick: () => handleNavClick(`/${countryId}`),
+      hasDropdown: false,
+    },
+    {
+      label: 'Research',
+      onClick: () => handleNavClick(`/${countryId}/research`),
+      hasDropdown: false,
+    },
+    {
+      label: 'About',
+      onClick: () => {}, // No-op for dropdown parent
+      hasDropdown: true,
+      dropdownItems: [
+        { label: 'Team', onClick: () => handleNavClick(`/${countryId}/team`) },
+        { label: 'Supporters', onClick: () => handleNavClick(`/${countryId}/supporters`) },
+      ],
+    },
+    {
+      label: 'Donate',
+      onClick: () => handleNavClick(`/${countryId}/donate`),
+      hasDropdown: false,
+    },
+  ];
 
   return (
     <div
@@ -55,14 +71,7 @@ export default function HeaderNavigation() {
         borderRadius: '0px',
       }}
     >
-      <HeaderContent
-        opened={opened}
-        onOpen={open}
-        onClose={close}
-        navLinks={navLinks}
-        aboutLinks={aboutLinks}
-        onNavClick={handleNavClick}
-      />
+      <HeaderContent opened={opened} onOpen={open} onClose={close} navItems={navItems} />
     </div>
   );
 }

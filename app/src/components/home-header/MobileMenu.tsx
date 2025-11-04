@@ -1,29 +1,16 @@
-import { Anchor, Box, Burger, Divider, Drawer, Group, Stack, Text } from '@mantine/core';
+import { Anchor, Box, Burger, Drawer, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import CountrySelector from './CountrySelector';
-
-interface NavLink {
-  label: string;
-  path?: string;
-}
+import { NavItemSetup } from './NavItem';
 
 interface MobileMenuProps {
   opened: boolean;
   onOpen: () => void;
   onClose: () => void;
-  navLinks: NavLink[];
-  aboutLinks: NavLink[];
-  onNavClick: (path?: string) => void;
+  navItems: NavItemSetup[];
 }
 
-export default function MobileMenu({
-  opened,
-  onOpen,
-  onClose,
-  navLinks,
-  aboutLinks,
-  onNavClick,
-}: MobileMenuProps) {
+export default function MobileMenu({ opened, onOpen, onClose, navItems }: MobileMenuProps) {
   return (
     <>
       {/* Mobile Burger Menu with Country Selector */}
@@ -45,56 +32,53 @@ export default function MobileMenu({
         closeButtonProps={{ style: { color: colors.text.inverse }, size: 'md' }}
       >
         <Stack gap={spacing.lg} p={spacing.lg}>
-          {/* About Section */}
-          <Box>
-            <Text
-              c={colors.text.inverse}
-              fw={typography.fontWeight.medium}
-              size="sm"
-              mb={spacing.xs}
-              style={{ fontFamily: typography.fontFamily.primary }}
-            >
-              About
-            </Text>
-            <Stack gap={spacing.xs} pl={spacing.md}>
-              {aboutLinks.map((link) => (
-                <Anchor
-                  key={link.label}
+          {navItems.map((item) =>
+            item.hasDropdown && item.dropdownItems ? (
+              // Render dropdown as a section
+              <Box key={item.label}>
+                <Text
                   c={colors.text.inverse}
-                  variant="subtle"
-                  td="none"
-                  fw={typography.fontWeight.normal}
+                  fw={typography.fontWeight.medium}
                   size="sm"
-                  onClick={() => onNavClick(link.path)}
+                  mb={spacing.xs}
                   style={{ fontFamily: typography.fontFamily.primary }}
                 >
-                  {link.label}
-                </Anchor>
-              ))}
-            </Stack>
-          </Box>
-
-          <Divider color={colors.border.dark} />
-
-          {/* Navigation Links Section */}
-          <Box>
-            {navLinks.map((link) => (
+                  {item.label}
+                </Text>
+                <Stack gap={spacing.xs} pl={spacing.md}>
+                  {item.dropdownItems.map((dropdownItem) => (
+                    <Anchor
+                      key={dropdownItem.label}
+                      c={colors.text.inverse}
+                      variant="subtle"
+                      td="none"
+                      fw={typography.fontWeight.normal}
+                      size="sm"
+                      onClick={dropdownItem.onClick}
+                      style={{ fontFamily: typography.fontFamily.primary }}
+                    >
+                      {dropdownItem.label}
+                    </Anchor>
+                  ))}
+                </Stack>
+              </Box>
+            ) : (
+              // Render regular link
               <Anchor
-                key={link.label}
+                key={item.label}
                 c={colors.text.inverse}
                 variant="subtle"
                 td="none"
                 fw={typography.fontWeight.medium}
                 size="sm"
-                onClick={() => onNavClick(link.path)}
+                onClick={item.onClick}
                 style={{ fontFamily: typography.fontFamily.primary }}
                 display="block"
-                mb={spacing.xs}
               >
-                {link.label}
+                {item.label}
               </Anchor>
-            ))}
-          </Box>
+            )
+          )}
         </Stack>
       </Drawer>
     </>

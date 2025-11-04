@@ -3,29 +3,16 @@ import DesktopNavigation from './DesktopNavigation';
 import HeaderActionButtons from './HeaderActionButtons';
 import HeaderLogo from './HeaderLogo';
 import MobileMenu from './MobileMenu';
-
-interface NavLink {
-  label: string;
-  path?: string;
-}
+import { NavItemSetup } from './NavItem';
 
 interface HeaderContentProps {
   opened: boolean;
   onOpen: () => void;
   onClose: () => void;
-  navLinks: NavLink[];
-  aboutLinks: NavLink[];
-  onNavClick: (path?: string) => void;
+  navItems: NavItemSetup[];
 }
 
-export default function HeaderContent({
-  opened,
-  onOpen,
-  onClose,
-  navLinks,
-  aboutLinks,
-  onNavClick,
-}: HeaderContentProps) {
+export default function HeaderContent({ opened, onOpen, onClose, navItems }: HeaderContentProps) {
   return (
     <Container
       h="100%"
@@ -41,21 +28,14 @@ export default function HeaderContent({
       <Group justify="space-between" h="100%">
         <Group>
           <HeaderLogo />
-          <DesktopNavigation navLinks={navLinks} aboutLinks={aboutLinks} onNavClick={onNavClick} />
+          <DesktopNavigation navItems={navItems} />
         </Group>
 
         <Group visibleFrom="lg">
           <HeaderActionButtons />
         </Group>
 
-        <MobileMenu
-          opened={opened}
-          onOpen={onOpen}
-          onClose={onClose}
-          navLinks={navLinks}
-          aboutLinks={aboutLinks}
-          onNavClick={onNavClick}
-        />
+        <MobileMenu opened={opened} onOpen={onOpen} onClose={onClose} navItems={navItems} />
       </Group>
     </Container>
   );

@@ -31,9 +31,13 @@ describe('RedirectToLegacy', () => {
   const originalLocation = window.location;
 
   beforeEach(() => {
-    // Mock window.location.href
+    // Mock window.location with replace method
     delete (window as any).location;
-    (window as any).location = { ...originalLocation, href: '' };
+    (window as any).location = {
+      ...originalLocation,
+      href: '',
+      replace: vi.fn(),
+    };
     vi.useFakeTimers();
   });
 
