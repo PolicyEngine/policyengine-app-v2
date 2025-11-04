@@ -1,6 +1,6 @@
 import { IconChevronDown } from '@tabler/icons-react';
 import { Anchor, Group, Menu, Text, UnstyledButton } from '@mantine/core';
-import { colors, spacing, typography } from '@/designTokens';
+import { colors, typography } from '@/designTokens';
 
 export interface DropdownItem {
   label: string;
