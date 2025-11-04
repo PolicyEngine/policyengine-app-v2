@@ -11,12 +11,7 @@ describe('HeaderContent', () => {
 
     // When
     renderWithCountry(
-      <HeaderContent
-        opened={false}
-        onOpen={onOpen}
-        onClose={onClose}
-        navItems={MOCK_NAV_ITEMS}
-      />,
+      <HeaderContent opened={false} onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
       'us'
     );
 
@@ -34,12 +29,7 @@ describe('HeaderContent', () => {
 
     // When
     renderWithCountry(
-      <HeaderContent
-        opened={false}
-        onOpen={onOpen}
-        onClose={onClose}
-        navItems={MOCK_NAV_ITEMS}
-      />,
+      <HeaderContent opened={false} onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
       'us'
     );
 
@@ -56,12 +46,7 @@ describe('HeaderContent', () => {
 
     // When
     renderWithCountry(
-      <HeaderContent
-        opened={false}
-        onOpen={onOpen}
-        onClose={onClose}
-        navItems={MOCK_NAV_ITEMS}
-      />,
+      <HeaderContent opened={false} onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
       'us'
     );
 

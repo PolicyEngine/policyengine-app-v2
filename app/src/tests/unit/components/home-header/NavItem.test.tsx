@@ -2,8 +2,8 @@ import { render, screen, userEvent } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import NavItem from '@/components/home-header/NavItem';
 import {
-  MOCK_SIMPLE_NAV_ITEM,
   MOCK_DROPDOWN_NAV_ITEM,
+  MOCK_SIMPLE_NAV_ITEM,
 } from '@/tests/fixtures/components/home-header/NavItemMocks';
 
 describe('NavItem', () => {
