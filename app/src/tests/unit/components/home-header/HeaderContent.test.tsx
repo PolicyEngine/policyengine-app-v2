@@ -1,15 +1,11 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
 import HeaderContent from '@/components/home-header/HeaderContent';
-import {
-  MOCK_ABOUT_LINKS,
-  MOCK_NAV_LINKS,
-} from '@/tests/fixtures/components/home-header/HeaderMocks';
+import { MOCK_NAV_ITEMS } from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('HeaderContent', () => {
   test('given component renders then displays logo and navigation', () => {
     // Given
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
 
@@ -19,21 +15,20 @@ describe('HeaderContent', () => {
         opened={false}
         onOpen={onOpen}
         onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
+        navItems={MOCK_NAV_ITEMS}
       />,
       'us'
     );
 
     // Then
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('Research')).toBeInTheDocument();
     expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByText('Donate')).toBeInTheDocument();
   });
 
-  test('given desktop view then shows country selector', () => {
+  test('given desktop view then shows action buttons', () => {
     // Given
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
 
@@ -43,22 +38,19 @@ describe('HeaderContent', () => {
         opened={false}
         onOpen={onOpen}
         onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
+        navItems={MOCK_NAV_ITEMS}
       />,
       'us'
     );
 
     // Then
-    // Country selector button exists
+    // Action buttons exist (Log in/Sign up)
     const buttons = screen.getAllByRole('button');
     expect(buttons.length).toBeGreaterThan(0);
   });
 
   test('given component renders then displays mobile menu', () => {
     // Given
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
 
@@ -68,16 +60,14 @@ describe('HeaderContent', () => {
         opened={false}
         onOpen={onOpen}
         onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
+        navItems={MOCK_NAV_ITEMS}
       />,
       'us'
     );
 
     // Then
-    // Burger menu button exists (part of MobileMenu component)
+    // Burger menu button and country selector exist (part of MobileMenu component)
     const buttons = screen.getAllByRole('button');
-    expect(buttons.length).toBeGreaterThan(0);
+    expect(buttons.length).toBeGreaterThanOrEqual(2);
   });
 });

@@ -1,4 +1,4 @@
-import { Anchor, Box, Burger, Divider, Drawer, Group, Stack, Text } from '@mantine/core';
+import { Anchor, Box, Burger, Drawer, Group, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import CountrySelector from './CountrySelector';
 import { NavItemSetup } from './NavItem';
