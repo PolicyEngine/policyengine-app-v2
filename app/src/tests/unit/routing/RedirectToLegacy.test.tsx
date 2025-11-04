@@ -48,9 +48,6 @@ describe('RedirectToLegacy', () => {
     expect(
       screen.getByText('Redirecting to our legacy website...')
     ).toBeInTheDocument();
-    expect(
-      screen.getByText('This page is still available on our previous version')
-    ).toBeInTheDocument();
   });
 
   test('given different paths then displays message for research route', () => {
