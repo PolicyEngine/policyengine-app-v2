@@ -24,8 +24,11 @@ export default function HeaderNavigation() {
       hasDropdown: false,
     },
     {
-      label: 'Research',
-      onClick: () => handleNavClick(`/${countryId}/research`),
+      label: 'Blog',
+      onClick: () => {
+        window.open('https://blog.policyengine.org', '_blank', 'noopener,noreferrer');
+        close();
+      },
       hasDropdown: false,
     },
     {

@@ -8,7 +8,7 @@ export const MOCK_NAV_ITEMS: NavItemSetup[] = [
     hasDropdown: false,
   },
   {
-    label: 'Research',
+    label: 'Blog',
     onClick: vi.fn(),
     hasDropdown: false,
   },

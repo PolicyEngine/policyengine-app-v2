@@ -54,9 +54,8 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     {
       label: 'Visit blog',
       icon: IconBook,
-      path: 'https://blog.example.com',
+      path: `/${countryId}/research`,
       external: true,
-      disabled: true,
     },
   ];
 
