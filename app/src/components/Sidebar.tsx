@@ -52,7 +52,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       external: true,
     },
     {
-      label: 'Visit blog',
+      label: 'View research',
       icon: IconBook,
       path: `/${countryId}/research`,
       external: true,

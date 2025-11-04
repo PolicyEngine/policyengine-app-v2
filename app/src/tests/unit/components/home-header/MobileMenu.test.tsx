@@ -58,7 +58,7 @@ describe('MobileMenu', () => {
 
     // Then
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Blog')).toBeInTheDocument();
+    expect(screen.getByText('Research')).toBeInTheDocument();
     expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByText('Donate')).toBeInTheDocument();
   });
@@ -146,7 +146,7 @@ describe('MobileMenu', () => {
 
     // Then
     expect(screen.queryByText('Home')).not.toBeInTheDocument();
-    expect(screen.queryByText('Blog')).not.toBeInTheDocument();
+    expect(screen.queryByText('Research')).not.toBeInTheDocument();
   });
 
   test('given user clicks Home then callback is invoked', async () => {

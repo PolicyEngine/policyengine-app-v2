@@ -10,7 +10,7 @@ describe('DesktopNavigation', () => {
 
     // Then
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText('Blog')).toBeInTheDocument();
+    expect(screen.getByText('Research')).toBeInTheDocument();
     expect(screen.getByText('About')).toBeInTheDocument();
     expect(screen.getByText('Donate')).toBeInTheDocument();
   });

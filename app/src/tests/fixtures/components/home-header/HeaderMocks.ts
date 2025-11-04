@@ -5,7 +5,7 @@
 
 export const EXPECTED_HEADER_TEXT = {
   HOME: 'Home',
-  BLOG: 'Blog',
+  RESEARCH: 'Research',
   ABOUT: 'About',
   DONATE: 'Donate',
   TEAM: 'Team',
