@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useLocation, Navigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Box, Loader, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 

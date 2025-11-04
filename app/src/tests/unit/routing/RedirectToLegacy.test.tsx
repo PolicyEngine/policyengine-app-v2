@@ -1,10 +1,10 @@
-import { screen, waitFor } from '@test-utils';
-import { describe, test, expect, vi, beforeEach, afterEach } from 'vitest';
-import { createMemoryRouter, RouterProvider } from 'react-router-dom';
-import { MantineProvider } from '@mantine/core';
+import { screen } from '@test-utils';
 import { render as testingLibraryRender } from '@testing-library/react';
-import { policyEngineTheme } from '@/theme';
+import { createMemoryRouter, RouterProvider } from 'react-router-dom';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+import { MantineProvider } from '@mantine/core';
 import { RedirectToLegacy } from '@/routing/RedirectToLegacy';
+import { policyEngineTheme } from '@/theme';
 
 // Helper to render with a specific route
 function renderWithRoute(initialPath: string) {
@@ -45,32 +45,24 @@ describe('RedirectToLegacy', () => {
   test('given component renders then displays redirecting message', () => {
     renderWithRoute('/uk/research/test-post');
 
-    expect(
-      screen.getByText('Redirecting to our legacy website...')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Redirecting to our legacy website...')).toBeInTheDocument();
   });
 
   test('given different paths then displays message for research route', () => {
     renderWithRoute('/uk/research/test-post');
 
-    expect(
-      screen.getByText('Redirecting to our legacy website...')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Redirecting to our legacy website...')).toBeInTheDocument();
   });
 
   test('given US calculator route then displays redirecting message', () => {
     renderWithRoute('/us/aca-calc');
 
-    expect(
-      screen.getByText('Redirecting to our legacy website...')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Redirecting to our legacy website...')).toBeInTheDocument();
   });
 
   test('given UK-specific route then displays redirecting message', () => {
     renderWithRoute('/uk/cec');
 
-    expect(
-      screen.getByText('Redirecting to our legacy website...')
-    ).toBeInTheDocument();
+    expect(screen.getByText('Redirecting to our legacy website...')).toBeInTheDocument();
   });
 });
