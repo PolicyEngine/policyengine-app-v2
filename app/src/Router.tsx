@@ -15,12 +15,14 @@ import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
 import SimulationsPage from './pages/Simulations.page';
+import SNAPMapPage from './pages/SNAPMap.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
+import { USOnlyGuard } from './routing/guards/USOnlyGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 import { RedirectToLegacy } from './routing/RedirectToLegacy';
 
@@ -31,6 +33,7 @@ const router = createBrowserRouter(
       // Dynamically detect and redirect to user's country
       element: <RedirectToCountry />,
     },
+    // US-specific routes
     {
       path: '/:countryId',
       element: <CountryGuard />,
@@ -147,6 +150,21 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+          ],
+        },
+        // US-only routes
+        {
+          element: <USOnlyGuard />,
+          children: [
+            {
+              element: <StaticLayout />,
+              children: [
+                {
+                  path: 'snap-map',
+                  element: <SNAPMapPage />,
+                },
+              ],
             },
           ],
         },
