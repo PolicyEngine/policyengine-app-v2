@@ -5,10 +5,7 @@ interface IframeContentProps {
   title?: string;
 }
 
-export default function IframeContent({
-  url,
-  title = 'Embedded content',
-}: IframeContentProps) {
+export default function IframeContent({ url, title = 'Embedded content' }: IframeContentProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -41,9 +38,7 @@ export default function IframeContent({
                 animation: 'spin 1s linear infinite',
               }}
             />
-            <p style={{ color: '#6b7280', fontSize: '14px' }}>
-              Loading calculator...
-            </p>
+            <p style={{ color: '#6b7280', fontSize: '14px' }}>Loading calculator...</p>
           </div>
         </div>
       )}
@@ -69,12 +64,9 @@ export default function IframeContent({
               maxWidth: '500px',
             }}
           >
-            <h2 style={{ color: '#1f2937', marginBottom: '1rem' }}>
-              Unable to load calculator
-            </h2>
+            <h2 style={{ color: '#1f2937', marginBottom: '1rem' }}>Unable to load calculator</h2>
             <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
-              The embedded calculator could not be loaded. You can try opening
-              it directly:
+              The embedded calculator could not be loaded. You can try opening it directly:
             </p>
             <a
               href={url}
