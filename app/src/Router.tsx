@@ -14,6 +14,7 @@ import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
+import RICTCCalculatorPage from './pages/RICTCCalculator.page';
 import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
@@ -21,6 +22,7 @@ import TermsPage from './pages/Terms.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
+import { USOnlyGuard } from './routing/guards/USOnlyGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 import { RedirectToLegacy } from './routing/RedirectToLegacy';
 
@@ -150,6 +152,21 @@ const router = createBrowserRouter(
             },
           ],
         },
+        // US-only routes
+        {
+          element: <USOnlyGuard />,
+          children: [
+            {
+              element: <StaticLayout />,
+              children: [
+                {
+                  path: 'rhode-island-ctc-calculator',
+                  element: <RICTCCalculatorPage />,
+                },
+              ],
+            },
+          ],
+        },
         // Legacy routes - redirect to legacy.policyengine.org
         {
           children: [
@@ -177,10 +194,6 @@ const router = createBrowserRouter(
             },
             {
               path: 'two-child-limit-comparison',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'rhode-island-ctc-calculator',
               element: <RedirectToLegacy />,
             },
             // Country-specific legacy routes (must come before :appName catch-all)
