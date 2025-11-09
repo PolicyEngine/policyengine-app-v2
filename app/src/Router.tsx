@@ -101,10 +101,6 @@ const router = createBrowserRouter(
                   path: 'account',
                   element: <div>Account settings page</div>,
                 },
-                {
-                  path: 'microsim',
-                  element: <MicrosimPage />,
-                },
               ],
             },
           ],
@@ -154,6 +150,10 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+            {
+              path: 'microsim',
+              element: <MicrosimPage />,
             },
           ],
         },
