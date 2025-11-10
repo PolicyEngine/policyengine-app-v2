@@ -8,6 +8,7 @@ import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
+import EducationPage from './pages/Education.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -141,6 +142,10 @@ const router = createBrowserRouter(
             {
               path: 'terms',
               element: <TermsPage />,
+            },
+            {
+              path: 'education',
+              element: <EducationPage />,
             },
             {
               path: 'methodology',
