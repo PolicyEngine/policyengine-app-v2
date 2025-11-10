@@ -6,27 +6,35 @@ import { colors } from '@/designTokens/colors';
 import benefit_nav_Icon from '@/images/logos/orgs/benefit_navigator.png';
 import myfriendbenIcon from '@/images/logos/orgs/myfriendben.png';
 import navvy_Icon from '@/images/logos/orgs/SBNC.png';
+import { useNavigate } from "react-router-dom";
 
 export default function BenefitAccessPage() {
-  const handleButtonClick = (label: string) => {
-    switch (label) {
-      case 'Explore our API':
-        window.open('https://policyengine.org/us/api', '_blank');
-        break;
-      case 'Contact us':
-        window.location.href = 'mailto:hello@policyengine.org';
-        break;
-      default:
-        console.log('Unknown button clicked');
-    }
+  const navigate = useNavigate();
+  const handleExploreAPI = () => {
+    navigate("/us/api");
   };
+
+  const handleContactUs = () => {
+    window.location.href = "mailto:hello@policyengine.org";
+  };
+
+  const handleAboutPage = () => {
+    navigate("/about");
+  };
+
+  const handleButtonClick = (label: string) => {
+    if (label === "Explore our API") handleExploreAPI();
+    else if (label === "Contact us") handleContactUs();
+    else if (label === "Learn more about PolicyEngine") handleAboutPage();
+  };
+
   return (
     <>
       <PageHeader
         title="Benefit Access"
         description="Powering benefit eligibility screening tools through the PolicyEngine API"
       />
-      <Space mb={20} /> {}
+      <Space mb={20} />
       <TitleCardWithHeader
         title="Increasing access to public benefits"
         sections={[
@@ -60,9 +68,10 @@ export default function BenefitAccessPage() {
             image:
               'https://www.myfriendben.org/wp-content/uploads/2024/08/MFB-National-Site-Triple-Phone-1024x844.png',
             icon: (
-              <img src={myfriendbenIcon} alt="MyFriendBen" style={{ width: 130, height: 30 }} />
+              <img src={myfriendbenIcon} alt="MyFriendBen" style={{maxWidth: 150,maxHeight: 40,objectFit: 'contain',}} />
             ),
             footerText: 'Visit Website →',
+            onClick: () => window.open('https://www.myfriendben.org', '_blank'), 
             tags: ['Colorado', 'North Carolina', 'Massachusetts'],
           },
           {
@@ -76,9 +85,10 @@ export default function BenefitAccessPage() {
               <img
                 src={benefit_nav_Icon}
                 alt="Benefit Navigator"
-                style={{ width: 130, height: 40 }}
+                style={{maxWidth: 150,maxHeight: 40,objectFit: 'contain',}}
               />
             ),
+            onClick: () => window.open('https://www.benefitnavigator.org', '_blank'), 
             tags: ['Los Angeles County'],
           },
           {
@@ -88,11 +98,12 @@ export default function BenefitAccessPage() {
             image:
               'https://static.wixstatic.com/media/bc112d_b0a5a365b2ec4fa587724e776fa99934~mv2.png/v1/crop/x_0,y_10,w_1436,h_1322/fill/w_832,h_766,al_c,q_90,usm_0.66_1.00_0.01,enc_avif,quality_auto/unnamed-2_edited.png',
             footerText: 'Visit Website →',
-            icon: <img src={navvy_Icon} alt="Navvy" style={{ width: 130, height: 30 }} />,
+            icon: <img src={navvy_Icon} alt="Navvy" style={{maxWidth: 150,maxHeight: 40,objectFit: 'contain',}} />,
+            onClick: () => window.open('https://www.navvy.org', '_blank'),
             tags: ['National (US)'],
           },
         ]}
-        containerTitle=""
+        containerTitle="Partner organizations"
       />
       <Divider orientation="horizontal" size="xs" color={colors.border.dark} mt={60} mb={40} />
       <TitleCardWithHeader
