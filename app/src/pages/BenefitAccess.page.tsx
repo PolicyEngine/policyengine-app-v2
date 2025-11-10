@@ -23,11 +23,14 @@ export default function BenefitAccessPage() {
   };
 
   const handleButtonClick = (label: string) => {
-    if (label === 'Explore our API') handleExploreAPI();
-    else if (label === 'Contact us') handleContactUs();
-    else if (label === 'Learn more about PolicyEngine') handleAboutPage();
+    if (label === 'Explore our API') {
+      handleExploreAPI();
+    } else if (label === 'Contact us') {
+      handleContactUs();
+    } else if (label === 'Learn more about PolicyEngine') {
+      handleAboutPage();
+    }
   };
-
   return (
     <>
       <PageHeader
