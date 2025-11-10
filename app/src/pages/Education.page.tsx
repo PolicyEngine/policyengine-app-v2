@@ -1,9 +1,7 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { Container, Title, Text, Anchor, Center, Stack } from "@mantine/core";
-import { colors, spacing } from "@/designTokens";
-import { BulletsColumn } from "@/components/columns/BulletsColumn";
-import { BulletsValue } from "@/components/columns/types";
+import { Container, Title, Text, List, Anchor, Box, Stack } from "@mantine/core";
+import { colors, spacing, typography } from "@/designTokens";
 
 const EducationPage = () => {
   const location = useLocation();
@@ -13,58 +11,73 @@ const EducationPage = () => {
     window.scrollTo(0, 0);
   }, [location]);
 
-  const educationalContent: BulletsValue = {
-    items: [
-      {
-        text: "Classroom guides for teaching tax and benefit policies",
-      },
-      {
-        text: "University case studies of PolicyEngine in research and teaching",
-      },
-      {
-        text: "Educational resources for various learning levels",
-      },
-      {
-        text: "Integration with educational curricula",
-      },
-      {
-        text: "Workshop materials and lesson plans",
-      },
-    ],
-  };
-
   return (
-    <Container size="md" py="xl">
-      <Center>
-        <Stack align="center" gap="xl" maw={800}>
+    <>
+      <Container size="md" py="xl">
+        <Box
+          style={{
+            maxWidth: "800px",
+            margin: "0 auto",
+            textAlign: "center",
+            padding: "3rem 1rem",
+          }}
+        >
           <Title
-            order={1}
+            order={2}
             ta="center"
-            c={colors.blue[700]}
-            size="xl"
+            mb="lg"
+            style={{
+              color: colors.blue[700], 
+              marginBottom: "1.5rem",
+            }}
           >
             Coming soon
           </Title>
           
-          <Text ta="center" size="lg">
-            We&apos;re currently developing comprehensive content about how PolicyEngine can be used in educational settings. This page will include:
+          <Text ta="center" size="lg" mb="lg">
+            We&apos;re currently developing comprehensive content about how
+            PolicyEngine can be used in educational settings. This page will
+            include:
           </Text>
           
-          <BulletsColumn 
-            config={{ key: 'educational', header: '', type: 'bullets', items: [] }} 
-            value={educationalContent} 
-          />
+          <Box
+            style={{
+              textAlign: "left",
+              display: "inline-block",
+              margin: "1.5rem auto",
+            }}
+          >
+            <List spacing="sm" size="lg">
+              <List.Item style={{ marginBottom: "0.5rem" }}>
+                Classroom guides for teaching tax and benefit policies
+              </List.Item>
+              <List.Item style={{ marginBottom: "0.5rem" }}>
+                University case studies of PolicyEngine in research and teaching
+              </List.Item>
+              <List.Item style={{ marginBottom: "0.5rem" }}>
+                Educational resources for various learning levels
+              </List.Item>
+              <List.Item style={{ marginBottom: "0.5rem" }}>
+                Integration with educational curricula
+              </List.Item>
+              <List.Item style={{ marginBottom: "0.5rem" }}>
+                Workshop materials and lesson plans
+              </List.Item>
+            </List>
+          </Box>
           
           <Text ta="center" size="lg">
-            If you&apos;re using PolicyEngine in an educational setting and would like to contribute your story or resources, please contact us at{" "}
-            <Anchor href="mailto:hello@policyengine.org" c={colors.blue[700]} td="underline">
+            If you&apos;re using PolicyEngine in an educational setting and
+            would like to contribute your story or resources, please contact us
+            at{" "}
+            <Anchor href="mailto:hello@policyengine.org">
               hello@policyengine.org
             </Anchor>
             .
           </Text>
-        </Stack>
-      </Center>
-    </Container>
+        </Box>
+      </Container>
+    </>
   );
 };
 
