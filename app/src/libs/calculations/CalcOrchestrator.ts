@@ -315,8 +315,10 @@ export class CalcOrchestrator {
     } else {
       const geography = config.populations.geography1;
       // geographyId now contains the FULL prefixed value like "constituency/Sheffield Central"
+      // For region parameter, prioritize: geography.geographyId → sim1.populationId → countryId
+      // This ensures we use the stored populationId from the simulation if geography is not in config
       populationId = geography?.geographyId || sim1.populationId || config.countryId;
-      region = geography?.geographyId || config.countryId;
+      region = geography?.geographyId || sim1.populationId || config.countryId;
     }
 
     const calcType = populationType === 'household' ? 'household' : 'societyWide';
