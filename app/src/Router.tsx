@@ -9,7 +9,7 @@ import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
-import LearnAiMlPage from './pages/ML.page';
+import AIMLPage from './pages/ML.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
@@ -144,6 +144,10 @@ const router = createBrowserRouter(
               element: <TermsPage />,
             },
             {
+              path: 'ai-ml',
+              element: <AIMLPage />,
+            },
+            {
               path: 'methodology',
               element: <div>Methodology page</div>,
             },
@@ -244,10 +248,6 @@ const router = createBrowserRouter(
               element: <RedirectToLegacy />,
             },
           ],
-        },
-        {
-          path: 'learn-ai-ml',
-          element: <LearnAiMlPage />,
         },
       ],
     },

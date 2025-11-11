@@ -29,7 +29,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       textColor = colors.text.inverse;
       break;
     case 'gray':
-      resolvedBackgroundColor = colors.gray[200];
+      resolvedBackgroundColor = colors.gray[100];
       textColor = colors.text.primary;
       break;
     case 'white':
@@ -47,7 +47,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       </Title>
 
       {/* Card with content */}
-      <Card radius="lg" p="xl" bg={resolvedBackgroundColor}>
+      <Card radius="lg" p="xl" mt='md' bg={resolvedBackgroundColor}>
         <Stack gap="md">
           {sections.map((section, idx) => (
             <>
