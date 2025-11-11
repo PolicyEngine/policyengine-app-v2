@@ -7,6 +7,7 @@ import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import HeaderNavigation from '@/components/shared/HomeHeader';
 import LegacyBanner from '@/components/shared/LegacyBanner';
+import { CountryId } from '@/api/report';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
 import { Parameter } from '@/types/subIngredients/parameter';
@@ -14,7 +15,7 @@ import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 
 interface PolicyParameterFrameProps {
   parameters: Parameter[];
-  countryId: string;
+  countryId: CountryId;
   onParametersChange: (parameters: Parameter[]) => void;
   onNext: () => void;
   onBack: () => void;

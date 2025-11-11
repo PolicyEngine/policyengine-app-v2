@@ -12,7 +12,6 @@ export default function PolicyCreateFrame({
   label,
   onLabelChange,
   onNext,
-  onCancel,
 }: PolicyCreateFrameProps) {
   const formInputs = (
     <TextInput

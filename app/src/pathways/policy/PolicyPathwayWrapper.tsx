@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PolicyAdapter } from '@/adapters';
+import { CountryId } from '@/api/report';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
@@ -17,7 +18,7 @@ export default function PolicyPathwayWrapper() {
   const [state, setState] = useState<PolicyPathwayState>({
     label: '',
     parameters: [],
-    countryId: countryId || 'us',
+    countryId: (countryId as CountryId) || 'us',
     position: 0,
   });
 

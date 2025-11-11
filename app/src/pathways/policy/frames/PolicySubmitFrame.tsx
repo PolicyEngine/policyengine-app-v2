@@ -1,17 +1,17 @@
-import { PolicyAdapter } from '@/adapters';
 import IngredientSubmissionView, {
   DateIntervalValue,
   TextListItem,
   TextListSubItem,
 } from '@/components/IngredientSubmissionView';
+import { CountryId } from '@/api/report';
+import { FOREVER } from '@/constants';
 import { Parameter } from '@/types/subIngredients/parameter';
-import { Policy } from '@/types/ingredients/Policy';
 import { formatDate } from '@/utils/dateUtils';
 
 interface PolicySubmitFrameProps {
   label: string;
   parameters: Parameter[];
-  countryId: string;
+  countryId: CountryId;
   onSubmit: () => void;
   onBack: () => void;
   isSubmitting?: boolean;
@@ -29,7 +29,7 @@ export default function PolicySubmitFrame({
   const formatDateRange = (startDate: string, endDate: string): string => {
     const start = formatDate(startDate, 'short-month-day-year', countryId);
     const end =
-      endDate === '9999-12-31' ? 'Ongoing' : formatDate(endDate, 'short-month-day-year', countryId);
+      endDate === FOREVER ? 'Ongoing' : formatDate(endDate, 'short-month-day-year', countryId);
     return `${start} - ${end}`;
   };
 

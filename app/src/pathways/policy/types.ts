@@ -1,3 +1,4 @@
+import { CountryId } from '@/api/report';
 import { Parameter } from '@/types/subIngredients/parameter';
 
 export enum PolicyDisplayMode {
@@ -9,6 +10,6 @@ export enum PolicyDisplayMode {
 export interface PolicyPathwayState {
   label: string;
   parameters: Parameter[];
-  countryId: string;
+  countryId: CountryId;
   position: number;
 }
