@@ -47,7 +47,7 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
       </Title>
 
       {/* Card with content */}
-      <Card radius="lg" p="xl" mt='md' bg={resolvedBackgroundColor}>
+      <Card radius="lg" p="xl" mt="md" bg={resolvedBackgroundColor}>
         <Stack gap="md">
           {sections.map((section, idx) => (
             <>
