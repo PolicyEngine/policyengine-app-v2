@@ -134,17 +134,42 @@ export default function MarginalTaxRatesSubPage({
   }
 
   // Get MTR data (401-point arrays)
+  // Use first person's MTR (matches V1 behavior) - MTR should not be aggregated across people
+  const firstPersonName = Object.keys(baselineVariation.householdData?.people || {})[0];
+
+  console.log('[MTR DEBUG] First person name:', firstPersonName);
+  console.log(
+    '[MTR DEBUG] People in household:',
+    Object.keys(baselineVariation.householdData?.people || {})
+  );
 
   const baselineMTR = getValueFromHousehold(
     'marginal_tax_rate',
     CURRENT_YEAR,
-    null,
+    firstPersonName,
     baselineVariation,
     metadata
   );
+
+  console.log(
+    '[MTR DEBUG] Baseline MTR type:',
+    typeof baselineMTR,
+    'isArray:',
+    Array.isArray(baselineMTR)
+  );
+  console.log(
+    '[MTR DEBUG] Baseline MTR sample values:',
+    Array.isArray(baselineMTR) ? baselineMTR.slice(0, 5) : baselineMTR
+  );
   const reformMTR =
     reform && reformVariation
-      ? getValueFromHousehold('marginal_tax_rate', CURRENT_YEAR, null, reformVariation, metadata)
+      ? getValueFromHousehold(
+          'marginal_tax_rate',
+          CURRENT_YEAR,
+          firstPersonName,
+          reformVariation,
+          metadata
+        )
       : null;
 
   if (!Array.isArray(baselineMTR)) {
@@ -161,20 +186,22 @@ export default function MarginalTaxRatesSubPage({
   const baselineMTRClipped = clipMTR(baselineMTR);
   const reformMTRClipped = reformMTR ? clipMTR(reformMTR as number[]) : null;
 
-  // Get current earnings for marker
+  // Get current earnings for marker (first person only)
+  const firstPersonNameBaseline = Object.keys(baseline.householdData?.people || {})[0];
+
   const currentEarnings = getValueFromHousehold(
     'employment_income',
     CURRENT_YEAR,
-    null,
+    firstPersonNameBaseline,
     baseline,
     metadata
   ) as number;
 
-  // Get current MTR
+  // Get current MTR (first person only)
   const currentMTR = getValueFromHousehold(
     'marginal_tax_rate',
     CURRENT_YEAR,
-    null,
+    firstPersonNameBaseline,
     baseline,
     metadata
   ) as number;
