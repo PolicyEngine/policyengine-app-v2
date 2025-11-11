@@ -19,6 +19,7 @@ import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -95,6 +96,10 @@ const router = createBrowserRouter(
                 {
                   path: 'policies/create',
                   element: <FlowRouter flow={PolicyCreationFlow} returnPath="policies" />,
+                },
+                {
+                  path: 'test-pathway-policy',
+                  element: <PolicyPathwayWrapper />,
                 },
                 {
                   path: 'account',

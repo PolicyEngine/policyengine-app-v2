@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Button, Stack } from '@mantine/core';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
@@ -19,6 +20,10 @@ export default function PoliciesPage() {
 
   const handleBuildPolicy = () => {
     navigate(`/${countryId}/policies/create`);
+  };
+
+  const handleTestPathway = () => {
+    navigate(`/${countryId}/test-pathway-policy`);
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -73,21 +78,30 @@ export default function PoliciesPage() {
     })) || [];
 
   return (
-    <IngredientReadView
-      ingredient="policy"
-      title="Your saved policies"
-      subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
-      onBuild={handleBuildPolicy}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={policyColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <Stack gap="md">
+      <Button
+        variant="outline"
+        onClick={handleTestPathway}
+        style={{ alignSelf: 'flex-start', marginLeft: '1rem' }}
+      >
+        🧪 Test Policy Pathway
+      </Button>
+      <IngredientReadView
+        ingredient="policy"
+        title="Your saved policies"
+        subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
+        onBuild={handleBuildPolicy}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={transformedData}
+        columns={policyColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+      />
+    </Stack>
   );
 }
