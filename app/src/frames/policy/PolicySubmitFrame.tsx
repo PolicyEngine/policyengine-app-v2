@@ -96,7 +96,7 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
   return (
     <IngredientSubmissionView
       title="Review Policy"
-      subtitle="Review your policy configurations before submitting."
+      subtitle="Review your policy configuration before submitting."
       textList={provisions}
       submitButtonText="Submit Policy"
       submissionHandler={handleSubmit}
