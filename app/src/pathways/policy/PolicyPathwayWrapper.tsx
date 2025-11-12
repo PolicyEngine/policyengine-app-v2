@@ -75,8 +75,8 @@ export default function PolicyPathwayWrapper() {
 
       {mode === PolicyDisplayMode.SELECT_PARAMETERS && (
         <PolicyParameterFrame
+          label={state.label}
           parameters={state.parameters}
-          countryId={state.countryId}
           onParametersChange={(parameters) => setState({ ...state, parameters })}
           onNext={handleNext}
           onBack={handleBack}

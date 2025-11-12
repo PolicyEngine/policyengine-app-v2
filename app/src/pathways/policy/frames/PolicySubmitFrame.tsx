@@ -29,8 +29,33 @@ export default function PolicySubmitFrame({
   const formatDateRange = (startDate: string, endDate: string): string => {
     const start = formatDate(startDate, 'short-month-day-year', countryId);
     const end =
-      endDate === FOREVER ? 'Ongoing' : formatDate(endDate, 'short-month-day-year', countryId);
-    return `${start} - ${end}`;
+      endDate === FOREVER ? 'onward' : formatDate(endDate, 'short-month-day-year', countryId);
+    return endDate === FOREVER ? `${start} ${end}` : `${start} - ${end}`;
+  };
+
+  // Helper function to format value with currency symbol and proper formatting
+  const formatValue = (value: any): string => {
+    if (typeof value === 'boolean') {
+      return value ? 'True' : 'False';
+    }
+
+    const numValue = Number(value);
+    if (isNaN(numValue)) {
+      return String(value);
+    }
+
+    // Determine currency symbol based on country
+    const currencySymbol = countryId === 'us' ? '$' : countryId === 'uk' ? '£' : '';
+
+    // Check if value has decimals
+    const hasDecimals = numValue % 1 !== 0;
+
+    // Format with commas and optional decimals
+    const formattedNumber = hasDecimals
+      ? numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      : numValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
+
+    return `${currencySymbol}${formattedNumber}`;
   };
 
   // Create hierarchical provisions list with header and date intervals
@@ -41,7 +66,7 @@ export default function PolicySubmitFrame({
       subItems: parameters.map((param) => {
         const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
           dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-          value: valueInterval.value,
+          value: formatValue(valueInterval.value),
         }));
 
         return {
@@ -55,7 +80,7 @@ export default function PolicySubmitFrame({
   return (
     <IngredientSubmissionView
       title="Review Policy"
-      subtitle="Review your policy configurations before submitting."
+      subtitle="Review your policy configuration before submitting."
       textList={provisions}
       submitButtonText="Submit Policy"
       submissionHandler={onSubmit}
