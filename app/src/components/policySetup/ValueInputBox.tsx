@@ -1,21 +1,13 @@
 import { Group, NumberInput, Stack, Switch, Text } from '@mantine/core';
+import { getCurrencySymbolFromUnit, isBooleanUnit, isPercentageUnit } from '@/utils/formatters';
 import { ValueInputBoxProps } from './types';
 
 export function ValueInputBox(props: ValueInputBoxProps) {
   const { param, value, onChange, label } = props;
 
-  // US and UK packages use these type designations inconsistently
-  const USD_UNITS = ['currency-USD', 'currency_USD', 'USD'];
-  const GBP_UNITS = ['currency-GBP', 'currency_GBP', 'GBP'];
-
-  const prefix = USD_UNITS.includes(String(param.unit))
-    ? '$'
-    : GBP_UNITS.includes(String(param.unit))
-      ? '£'
-      : '';
-
-  const isPercentage = param.unit === '/1';
-  const isBool = param.unit === 'bool';
+  const prefix = getCurrencySymbolFromUnit(param.unit);
+  const isPercentage = isPercentageUnit(param.unit);
+  const isBool = isBooleanUnit(param.unit);
 
   if (param.type !== 'parameter') {
     console.error("ValueInputBox expects a parameter type of 'parameter', got:", param.type);

@@ -4,7 +4,7 @@ import { transformConstituencyAverageChange } from '@/adapters/constituency/cons
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
-import { formatParameterValue } from '@/utils/chartValueUtils';
+import { formatValueByUnit } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface AverageChangeByConstituencyProps {
@@ -55,7 +55,7 @@ export function AverageChangeByConstituency({ output }: AverageChangeByConstitue
             symmetric: true,
           },
           formatValue: (value) =>
-            formatParameterValue(value, 'currency-GBP', {
+            formatValueByUnit(value, 'currency-GBP', 'uk', {
               decimalPlaces: 0,
               includeSymbol: true,
             }),

@@ -13,7 +13,8 @@ import {
   getChartBoundaryDates,
 } from '@/utils/chartDateUtils';
 import { getReformPolicyLabel } from '@/utils/chartUtils';
-import { formatParameterValue, getPlotlyAxisFormat } from '@/utils/chartValueUtils';
+import { getPlotlyAxisFormat } from '@/utils/chartValueUtils';
+import { formatValueByUnit, getCountryFromUnit } from '@/utils/formatters';
 import { capitalize } from '@/utils/stringUtils';
 
 interface PolicyParameterSelectorHistoricalValuesProps {
@@ -190,7 +191,8 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
   // Memoize custom data for hover tooltips
   const customData = useMemo(() => {
     try {
-      return y.map((value) => formatParameterValue(value, param.unit, { decimalPlaces: 2 }));
+      const countryId = getCountryFromUnit(param.unit) || 'us';
+      return y.map((value) => formatValueByUnit(value, param.unit, countryId, { decimalPlaces: 2 }));
     } catch (error) {
       console.error('ParameterOverTimeChart: Error formatting custom data', error);
       return [];
@@ -199,8 +201,9 @@ export const ParameterOverTimeChart = memo((props: ParameterOverTimeChartProps) 
 
   const reformedCustomData = useMemo(() => {
     try {
+      const countryId = getCountryFromUnit(param.unit) || 'us';
       return reformedY.map((value) =>
-        formatParameterValue(value, param.unit, { decimalPlaces: 2 })
+        formatValueByUnit(value, param.unit, countryId, { decimalPlaces: 2 })
       );
     } catch (error) {
       console.error('ParameterOverTimeChart: Error formatting reform custom data', error);

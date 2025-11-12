@@ -1,5 +1,6 @@
 import { Household } from '@/types/ingredients/Household';
 import { MetadataState } from '@/types/metadata';
+import { formatValueByUnit, getCurrencySymbolFromUnit, CURRENCY_UNITS } from './formatters';
 
 /**
  * Extracts a value from household data for a specific variable
@@ -145,11 +146,8 @@ export function getInputFormattingProps(variable: any): {
   thousandSeparator: string;
   decimalScale?: number;
 } {
-  const currencyMap: Record<string, string> = {
-    'currency-USD': '$',
-    'currency-GBP': '£',
-    'currency-EUR': '€',
-  };
+  // Use centralized currency symbol getter
+  const currencySymbol = getCurrencySymbolFromUnit(variable.unit);
 
   // Determine decimal scale based on valueType
   let decimalScale: number | undefined;
@@ -157,7 +155,7 @@ export function getInputFormattingProps(variable: any): {
     decimalScale = 0;
   } else if (variable.valueType === 'float') {
     // For currency, use 2 decimals; for percentages use 2; otherwise use 0 for simplicity
-    if (variable.unit && currencyMap[variable.unit]) {
+    if (currencySymbol) {
       decimalScale = 2;
     } else if (variable.unit === '/1') {
       decimalScale = 2;
@@ -167,9 +165,9 @@ export function getInputFormattingProps(variable: any): {
   }
 
   // Currency formatting
-  if (variable.unit && currencyMap[variable.unit]) {
+  if (currencySymbol) {
     return {
-      prefix: currencyMap[variable.unit],
+      prefix: currencySymbol,
       thousandSeparator: ',',
       decimalScale,
     };
@@ -194,24 +192,25 @@ export function getInputFormattingProps(variable: any): {
 /**
  * Formats a variable value for display
  * Based on the v1 app's formatVariableValue function
+ * @deprecated Use formatVariableValueAbsolute instead - this function has legacy behavior
  *
  * @param variable - The variable metadata
  * @param value - The value to format
  * @param precision - Number of decimal places (default: 0 for household overview)
- * @returns Formatted string
+ * @returns Formatted string (absolute value, sign stripped)
  */
 export function formatVariableValue(variable: any, value: number, precision = 0): string {
-  const currencyMap: Record<string, string> = {
-    'currency-USD': '$',
-    'currency-GBP': '£',
-    'currency-EUR': '€',
-  };
+  // Note: Original implementation uses Math.abs() to strip sign
+  // We preserve this behavior for backward compatibility
+  const absValue = Math.abs(value);
 
-  if (variable.unit && currencyMap[variable.unit]) {
-    const symbol = currencyMap[variable.unit];
+  // Use centralized currency symbol getter
+  const currencySymbol = getCurrencySymbolFromUnit(variable.unit);
+
+  if (currencySymbol) {
     return (
-      symbol +
-      Math.abs(value).toLocaleString(undefined, {
+      currencySymbol +
+      absValue.toLocaleString(undefined, {
         minimumFractionDigits: precision,
         maximumFractionDigits: precision,
       })
@@ -220,15 +219,62 @@ export function formatVariableValue(variable: any, value: number, precision = 0)
 
   if (variable.unit === '/1') {
     // Percentage
-    return `${(value * 100).toLocaleString(undefined, {
+    return `${(absValue * 100).toLocaleString(undefined, {
       minimumFractionDigits: precision,
       maximumFractionDigits: precision,
     })}%`;
   }
 
-  return Math.abs(value).toLocaleString(undefined, {
+  return absValue.toLocaleString(undefined, {
     minimumFractionDigits: precision,
     maximumFractionDigits: precision,
+  });
+}
+
+/**
+ * Formats a variable value for display with absolute value (sign stripped)
+ * This is the intentional behavior for household displays where we show magnitude only
+ *
+ * @param variable - The variable metadata
+ * @param value - The value to format (will be converted to absolute value)
+ * @param countryId - The country ID for locale formatting
+ * @param precision - Number of decimal places (default: 0)
+ * @returns Formatted string with absolute value only
+ */
+export function formatVariableValueAbsolute(
+  variable: any,
+  value: number,
+  countryId: 'us' | 'uk',
+  precision = 0
+): string {
+  // Strip sign - this is intentional for household displays
+  const absValue = Math.abs(value);
+
+  // Use canonical formatter from formatters.ts
+  return formatValueByUnit(absValue, variable.unit, countryId, {
+    decimalPlaces: precision,
+  });
+}
+
+/**
+ * Formats a variable value for display preserving sign
+ * Use this when you need to show positive/negative values
+ *
+ * @param variable - The variable metadata
+ * @param value - The value to format (sign preserved)
+ * @param countryId - The country ID for locale formatting
+ * @param precision - Number of decimal places (default: 0)
+ * @returns Formatted string with sign preserved
+ */
+export function formatVariableValueSigned(
+  variable: any,
+  value: number,
+  countryId: 'us' | 'uk',
+  precision = 0
+): string {
+  // Use canonical formatter from formatters.ts - sign preserved
+  return formatValueByUnit(value, variable.unit, countryId, {
+    decimalPlaces: precision,
   });
 }
 

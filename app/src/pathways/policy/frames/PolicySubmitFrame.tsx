@@ -1,3 +1,4 @@
+import { useSelector } from 'react-redux';
 import IngredientSubmissionView, {
   DateIntervalValue,
   TextListItem,
@@ -5,8 +6,10 @@ import IngredientSubmissionView, {
 } from '@/components/IngredientSubmissionView';
 import { CountryId } from '@/api/report';
 import { FOREVER } from '@/constants';
+import { RootState } from '@/store';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { formatDate } from '@/utils/dateUtils';
+import { formatParameterValueFromMetadata } from '@/utils/formatters';
 
 interface PolicySubmitFrameProps {
   label: string;
@@ -25,37 +28,15 @@ export default function PolicySubmitFrame({
   onBack,
   isSubmitting = false,
 }: PolicySubmitFrameProps) {
+  // Get parameter metadata from Redux store
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
+
   // Helper function to format date range string (UTC timezone-agnostic)
   const formatDateRange = (startDate: string, endDate: string): string => {
     const start = formatDate(startDate, 'short-month-day-year', countryId);
     const end =
       endDate === FOREVER ? 'onward' : formatDate(endDate, 'short-month-day-year', countryId);
     return endDate === FOREVER ? `${start} ${end}` : `${start} - ${end}`;
-  };
-
-  // Helper function to format value with currency symbol and proper formatting
-  const formatValue = (value: any): string => {
-    if (typeof value === 'boolean') {
-      return value ? 'True' : 'False';
-    }
-
-    const numValue = Number(value);
-    if (isNaN(numValue)) {
-      return String(value);
-    }
-
-    // Determine currency symbol based on country
-    const currencySymbol = countryId === 'us' ? '$' : countryId === 'uk' ? '£' : '';
-
-    // Check if value has decimals
-    const hasDecimals = numValue % 1 !== 0;
-
-    // Format with commas and optional decimals
-    const formattedNumber = hasDecimals
-      ? numValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-      : numValue.toLocaleString('en-US', { maximumFractionDigits: 0 });
-
-    return `${currencySymbol}${formattedNumber}`;
   };
 
   // Create hierarchical provisions list with header and date intervals
@@ -66,7 +47,12 @@ export default function PolicySubmitFrame({
       subItems: parameters.map((param) => {
         const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
           dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-          value: formatValue(valueInterval.value),
+          value: formatParameterValueFromMetadata(
+            param.name,
+            valueInterval.value,
+            parameterMetadata,
+            countryId
+          ),
         }));
 
         return {

@@ -14,6 +14,7 @@ import { FlowComponentProps } from '@/types/flow';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { formatDate } from '@/utils/dateUtils';
+import { formatParameterValueFromMetadata } from '@/utils/formatters';
 
 export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowComponentProps) {
   const dispatch = useDispatch();
@@ -25,6 +26,9 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
   // Get the active policy at the current position
   const policyState = useSelector((state: RootState) => selectActivePolicy(state));
   const params = policyState?.parameters || [];
+
+  // Get parameter metadata from Redux store
+  const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
 
   const { createPolicy, isPending } = useCreatePolicy(policyState?.label || undefined);
 
@@ -82,7 +86,12 @@ export default function PolicySubmitFrame({ onReturn, isInSubflow }: FlowCompone
       subItems: params.map((param) => {
         const dateIntervals: DateIntervalValue[] = param.values.map((valueInterval) => ({
           dateRange: formatDateRange(valueInterval.startDate, valueInterval.endDate),
-          value: valueInterval.value,
+          value: formatParameterValueFromMetadata(
+            param.name,
+            valueInterval.value,
+            parameterMetadata,
+            countryId
+          ),
         }));
 
         return {

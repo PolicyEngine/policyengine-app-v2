@@ -4,7 +4,7 @@ import { transformConstituencyRelativeChange } from '@/adapters/constituency/con
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { HexagonalMap } from '@/components/visualization/HexagonalMap';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
-import { formatParameterValue } from '@/utils/chartValueUtils';
+import { formatValueByUnit } from '@/utils/formatters';
 import { DIVERGING_GRAY_TEAL } from '@/utils/visualization/colorScales';
 
 interface RelativeChangeByConstituencyProps {
@@ -55,7 +55,7 @@ export function RelativeChangeByConstituency({ output }: RelativeChangeByConstit
             symmetric: true,
           },
           formatValue: (value) =>
-            formatParameterValue(value, '/1', {
+            formatValueByUnit(value, '/1', 'uk', {
               decimalPlaces: 1,
               includeSymbol: true,
             }),

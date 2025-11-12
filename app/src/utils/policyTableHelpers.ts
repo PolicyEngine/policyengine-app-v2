@@ -2,6 +2,7 @@ import { UNCONFIRMED_PARAM_DEFINITION_DATE } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { formatParameterValueFromMetadata, getCountryFromUnit } from './formatters';
 
 export { determinePolicyColumns } from './policyComparison';
 export type { PolicyColumn } from './policyComparison';
@@ -62,46 +63,27 @@ export function getParameterValueFromPolicy(
     return '—';
   }
 
-  const metadata = parameters[paramName];
-  const unit = metadata?.unit || '';
+  // Use the canonical parameter formatter with metadata lookup
+  // This automatically determines unit, country, and appropriate precision
+  const countryId = getCountryFromUnit(parameters[paramName]?.unit) || 'us';
 
-  return formatParameterValue(value, unit);
-}
-
-/**
- * Format a parameter value with appropriate unit formatting
- */
-export function formatParameterValue(value: any, unit?: string): string {
+  // Auto-detect precision based on value type and unit
+  const unit = parameters[paramName]?.unit;
+  let decimalPlaces: number;
   if (typeof value === 'number') {
-    const DECIMAL_PRECISION = 1;
-    const INTEGER_PRECISION = 0;
-    const precision = Number.isInteger(value) ? INTEGER_PRECISION : DECIMAL_PRECISION;
-
     if (unit === '/1') {
-      const percentValue = value * 100;
-      const percentPrecision = Number.isInteger(percentValue)
-        ? INTEGER_PRECISION
-        : DECIMAL_PRECISION;
-      return `${percentValue.toFixed(percentPrecision)}%`;
+      // Percentage: check if value * 100 is an integer
+      const percentageValue = value * 100;
+      decimalPlaces = Number.isInteger(percentageValue) ? 0 : 1;
+    } else {
+      // Currency/numeric: check if raw value is an integer
+      decimalPlaces = Number.isInteger(value) ? 0 : 1;
     }
-    if (unit === 'currency-USD') {
-      return `$${value.toLocaleString('en-US', {
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision,
-      })}`;
-    }
-    if (unit === 'currency-GBP') {
-      return `£${value.toLocaleString('en-GB', {
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision,
-      })}`;
-    }
-    return value.toLocaleString('en-US', {
-      minimumFractionDigits: precision,
-      maximumFractionDigits: precision,
-    });
+  } else {
+    decimalPlaces = 1;
   }
-  return String(value);
+
+  return formatParameterValueFromMetadata(paramName, value, parameters, countryId, { decimalPlaces });
 }
 
 /**
@@ -139,9 +121,27 @@ export function getCurrentLawParameterValue(
     return '—';
   }
 
-  // Format the value using existing formatter
-  const unit = metadata.unit || '';
-  return formatParameterValue(value, unit);
+  // Use the canonical parameter formatter with metadata lookup
+  // This automatically determines unit, country, and appropriate precision
+  const countryId = getCountryFromUnit(metadata.unit) || 'us';
+
+  // Auto-detect precision based on value type and unit
+  const unit = metadata.unit;
+  let decimalPlaces: number;
+  if (typeof value === 'number') {
+    if (unit === '/1') {
+      // Percentage: check if value * 100 is an integer
+      const percentageValue = value * 100;
+      decimalPlaces = Number.isInteger(percentageValue) ? 0 : 1;
+    } else {
+      // Currency/numeric: check if raw value is an integer
+      decimalPlaces = Number.isInteger(value) ? 0 : 1;
+    }
+  } else {
+    decimalPlaces = 1;
+  }
+
+  return formatParameterValueFromMetadata(paramName, value, parameters, countryId, { decimalPlaces });
 }
 
 /**

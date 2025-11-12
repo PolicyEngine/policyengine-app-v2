@@ -1,11 +1,10 @@
 /**
- * Utility functions for formatting parameter values and chart axes
+ * Utility functions for chart axis configuration
+ *
+ * Note: For value formatting, use formatValueByUnit from formatters.ts
  */
 
-export interface FormatValueOptions {
-  decimalPlaces?: number;
-  includeSymbol?: boolean;
-}
+import { getCurrencySymbolFromUnit, isCurrencyUnit, isBooleanUnit } from './formatters';
 
 export interface PlotlyAxisFormat {
   tickformat?: string;
@@ -15,63 +14,6 @@ export interface PlotlyAxisFormat {
   ticktext?: string[];
   range?: [number | string, number | string];
   type?: 'linear' | 'log' | 'date' | 'category';
-}
-
-/**
- * Formats a parameter value for display based on its unit
- * @param value - The value to format
- * @param unit - The unit type (e.g., 'currency-USD', '/1', 'bool')
- * @param options - Formatting options (decimal places, include symbol)
- * @returns Formatted string representation of the value
- */
-export function formatParameterValue(
-  value: any,
-  unit: string | null | undefined,
-  options: FormatValueOptions = {}
-): string {
-  const { decimalPlaces = 2, includeSymbol = true } = options;
-
-  // Handle null/undefined
-  if (value === null || value === undefined) {
-    return 'N/A';
-  }
-
-  // Handle boolean
-  if (unit === 'bool' || unit === 'abolition') {
-    return value ? 'True' : 'False';
-  }
-
-  // Handle percentage
-  if (unit === '/1') {
-    const percentage = Number(value) * 100;
-    return `${percentage.toFixed(decimalPlaces)}%`;
-  }
-
-  // Handle currency
-  const currencyUnits = ['currency-USD', 'currency_USD', 'USD'];
-  const gbpUnits = ['currency-GBP', 'currency_GBP', 'GBP'];
-
-  if (currencyUnits.includes(unit || '')) {
-    const symbol = includeSymbol ? '$' : '';
-    return `${symbol}${Number(value).toLocaleString('en-US', {
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces,
-    })}`;
-  }
-
-  if (gbpUnits.includes(unit || '')) {
-    const symbol = includeSymbol ? '£' : '';
-    return `${symbol}${Number(value).toLocaleString('en-GB', {
-      minimumFractionDigits: decimalPlaces,
-      maximumFractionDigits: decimalPlaces,
-    })}`;
-  }
-
-  // Default numeric formatting
-  return Number(value).toLocaleString('en-US', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: decimalPlaces,
-  });
 }
 
 /**
@@ -124,26 +66,18 @@ export function getPlotlyAxisFormat(
     };
   }
 
-  const currencyUnits = ['currency-USD', 'currency_USD', 'USD'];
-  const gbpUnits = ['currency-GBP', 'currency_GBP', 'GBP'];
-
-  if (currencyUnits.includes(unit)) {
+  // Use centralized currency detection
+  if (isCurrencyUnit(unit)) {
+    const symbol = getCurrencySymbolFromUnit(unit);
     return {
-      tickprefix: '$',
+      tickprefix: symbol,
       tickformat: ',.0f',
       range: [minValue, maxValue],
     };
   }
 
-  if (gbpUnits.includes(unit)) {
-    return {
-      tickprefix: '£',
-      tickformat: ',.0f',
-      range: [minValue, maxValue],
-    };
-  }
-
-  if (unit === 'bool' || unit === 'abolition') {
+  // Use centralized boolean detection
+  if (isBooleanUnit(unit)) {
     return {
       tickvals: [0, 1],
       ticktext: ['False', 'True'],
