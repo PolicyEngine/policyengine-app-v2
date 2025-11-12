@@ -4,9 +4,9 @@ import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { Parameter, getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 import { capitalize } from '@/utils/stringUtils';
-import PathwayValueSetter from './PathwayValueSetter';
+import { ParameterValueSetter } from '@/components/policySetup';
 
-interface PathwayParameterMainProps {
+interface ParameterMainProps {
   param: ParameterMetadata;
   currentParameters: Parameter[];
   policyLabel: string;
@@ -14,13 +14,13 @@ interface PathwayParameterMainProps {
   onParameterAdd: (name: string, valueInterval: ValueInterval) => void;
 }
 
-export default function PathwayParameterMain({
+export default function ParameterMain({
   param,
   currentParameters,
   policyLabel,
   policyId,
   onParameterAdd,
-}: PathwayParameterMainProps) {
+}: ParameterMainProps) {
   const baseValues = new ValueIntervalCollection(param.values as ValuesList);
 
   // Always start reform with a copy of base values (reform line matches current law initially)
@@ -51,7 +51,7 @@ export default function PathwayParameterMain({
           <Text pb="sm">{param.description}</Text>
         </>
       )}
-      <PathwayValueSetter
+      <ParameterValueSetter
         param={param}
         currentParameters={currentParameters}
         onParameterAdd={onParameterAdd}

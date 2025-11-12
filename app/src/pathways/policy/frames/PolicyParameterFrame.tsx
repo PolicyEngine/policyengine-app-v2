@@ -13,7 +13,7 @@ import { RootState } from '@/store';
 import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import PathwayParameterMain from './components/PathwayParameterMain';
+import { ParameterMain } from '@/components/policySetup';
 
 interface PolicyParameterFrameProps {
   label: string;
@@ -121,7 +121,7 @@ export default function PolicyParameterFrame({
         {loading || !parameterTree ? (
           <MainEmpty />
         ) : selectedLeafParam ? (
-          <PathwayParameterMain
+          <ParameterMain
             key={`${selectedLeafParam.parameter}-${parameters.length}-${JSON.stringify(parameters.find(p => p.name === selectedLeafParam.parameter)?.values || [])}`}
             param={selectedLeafParam}
             currentParameters={parameters}
