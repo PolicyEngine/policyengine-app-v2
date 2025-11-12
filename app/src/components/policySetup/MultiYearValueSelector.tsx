@@ -1,22 +1,14 @@
-import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { ValueSetterProps } from './types';
-import { getDefaultValueForParam } from './utils';
+import {
+  createMultiYearValueIntervals,
+  generateYears,
+  getDefaultValueForParam,
+} from './utils';
 import { ValueInputBox } from './ValueInputBox';
 
 const MAX_YEARS = 10;
-
-function generateYears(maxDate: string, maxYears: number): number[] {
-  const startYear = 2025;
-  const endYear = dayjs(maxDate).year();
-  const years = [];
-  for (let year = startYear; year <= endYear; year++) {
-    years.push(year);
-  }
-  return years.slice(0, maxYears);
-}
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
   const { param, currentParameters, setIntervals, maxDate } = props;
@@ -36,12 +28,7 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   // Update intervals whenever yearValues changes
   useEffect(() => {
-    const newIntervals: ValueInterval[] = Object.keys(yearValues).map((year: string) => ({
-      startDate: `${year}-01-01`,
-      endDate: `${year}-12-31`,
-      value: yearValues[year],
-    }));
-
+    const newIntervals = createMultiYearValueIntervals(yearValues);
     setIntervals(newIntervals);
   }, [yearValues, setIntervals]);
 

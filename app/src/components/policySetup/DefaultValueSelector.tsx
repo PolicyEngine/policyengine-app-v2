@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import { Box, Group, Text } from '@mantine/core';
 import { YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { fromISODateString } from '@/utils/dateUtils';
 import { ValueSetterProps } from './types';
-import { getDefaultValueForParam } from './utils';
+import {
+  createDateChangeHandler,
+  createSingleValueInterval,
+  getDefaultValueForParam,
+} from './utils';
 import { ValueInputBox } from './ValueInputBox';
 
 export function DefaultValueSelector(props: ValueSetterProps) {
@@ -26,7 +29,7 @@ export function DefaultValueSelector(props: ValueSetterProps) {
     getDefaultValueForParam(param, currentParameters, startDate)
   );
 
-  // Set endDate to 2100-12-31 for default mode
+  // Set endDate to FOREVER for default mode
   useEffect(() => {
     setEndDate(FOREVER);
   }, [setEndDate]);
@@ -41,21 +44,11 @@ export function DefaultValueSelector(props: ValueSetterProps) {
 
   // Update intervals whenever local state changes
   useEffect(() => {
-    if (startDate && endDate) {
-      const newInterval: ValueInterval = {
-        startDate,
-        endDate,
-        value: paramValue,
-      };
-      setIntervals([newInterval]);
-    } else {
-      setIntervals([]);
-    }
+    const interval = createSingleValueInterval(startDate, endDate, paramValue);
+    setIntervals(interval ? [interval] : []);
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: Date | string | null) {
-    setStartDate(toISODateString(value));
-  }
+  const handleStartDateChange = createDateChangeHandler(setStartDate);
 
   return (
     <Group align="flex-end" style={{ flex: 1 }}>

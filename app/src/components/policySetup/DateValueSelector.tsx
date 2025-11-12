@@ -1,11 +1,14 @@
-import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 import { DatePickerInput } from '@mantine/dates';
 import { Group } from '@mantine/core';
-import { fromISODateString, toISODateString } from '@/utils/dateUtils';
-import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { fromISODateString } from '@/utils/dateUtils';
 import { ValueSetterProps } from './types';
-import { getDefaultValueForParam } from './utils';
+import {
+  createDateChangeHandler,
+  createSingleValueInterval,
+  getDefaultValueForParam,
+  getEndOfYear,
+} from './utils';
 import { ValueInputBox } from './ValueInputBox';
 
 export function DateValueSelector(props: ValueSetterProps) {
@@ -29,8 +32,7 @@ export function DateValueSelector(props: ValueSetterProps) {
   // Set endDate to end of year of startDate
   useEffect(() => {
     if (startDate) {
-      const endOfYearDate = dayjs(startDate).endOf('year').format('YYYY-MM-DD');
-      setEndDate(endOfYearDate);
+      setEndDate(getEndOfYear(startDate));
     }
   }, [startDate, setEndDate]);
 
@@ -44,25 +46,12 @@ export function DateValueSelector(props: ValueSetterProps) {
 
   // Update intervals whenever local state changes
   useEffect(() => {
-    if (startDate && endDate) {
-      const newInterval: ValueInterval = {
-        startDate,
-        endDate,
-        value: paramValue,
-      };
-      setIntervals([newInterval]);
-    } else {
-      setIntervals([]);
-    }
+    const interval = createSingleValueInterval(startDate, endDate, paramValue);
+    setIntervals(interval ? [interval] : []);
   }, [startDate, endDate, paramValue, setIntervals]);
 
-  function handleStartDateChange(value: Date | string | null) {
-    setStartDate(toISODateString(value));
-  }
-
-  function handleEndDateChange(value: Date | string | null) {
-    setEndDate(toISODateString(value));
-  }
+  const handleStartDateChange = createDateChangeHandler(setStartDate);
+  const handleEndDateChange = createDateChangeHandler(setEndDate);
 
   return (
     <Group align="flex-end" style={{ flex: 1 }}>
