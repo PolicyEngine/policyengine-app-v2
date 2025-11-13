@@ -64,7 +64,7 @@ export class ApiPolicyStore implements UserPolicyStore {
     return UserPolicyAdapter.fromApiResponse(apiData);
   }
 
-  async update(userPolicyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
+  async update(_userPolicyId: string, _updates: Partial<UserPolicy>): Promise<UserPolicy> {
     // TODO: Implement when backend API endpoint is available
     // Expected endpoint: PUT /api/user-policy-associations/:userPolicyId
     // Expected payload: UserPolicyUpdatePayload (to be created)
@@ -75,7 +75,8 @@ export class ApiPolicyStore implements UserPolicyStore {
     );
 
     throw new Error(
-      'Policy updates via API are not yet supported. ' + 'Please ensure you are using localStorage mode.'
+      'Policy updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
     );
   }
 

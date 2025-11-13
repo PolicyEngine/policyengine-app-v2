@@ -49,7 +49,9 @@ export default function PoliciesPage() {
   };
 
   const handleRename = async (newLabel: string) => {
-    if (!renamingPolicyId) return;
+    if (!renamingPolicyId) {
+      return;
+    }
 
     try {
       await updateAssociation.mutateAsync({

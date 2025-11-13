@@ -180,9 +180,9 @@ describe('ApiGeographicStore', () => {
   describe('update', () => {
     it('given update called then throws not supported error', async () => {
       // Given & When & Then
-      await expect(
-        store.update('user-123', 'geo-456', { label: 'Updated Label' })
-      ).rejects.toThrow('Please ensure you are using localStorage mode');
+      await expect(store.update('user-123', 'geo-456', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
     });
 
     it('given update called then logs warning', async () => {

@@ -1,12 +1,12 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import {
+  createClosedModalProps,
   createDefaultModalProps,
   createLoadingModalProps,
-  createClosedModalProps,
-  TEST_LABELS,
   INGREDIENT_TYPES,
+  TEST_LABELS,
 } from '@/tests/fixtures/components/common/RenameIngredientModalFixtures';
 
 describe('RenameIngredientModal', () => {
@@ -291,19 +291,8 @@ describe('RenameIngredientModal', () => {
       const { rerender } = render(<RenameIngredientModal {...props} />);
 
       // When - reopen with new label
-      rerender(
-        <RenameIngredientModal
-          {...props}
-          opened={false}
-        />
-      );
-      rerender(
-        <RenameIngredientModal
-          {...props}
-          currentLabel={TEST_LABELS.NEW}
-          opened={true}
-        />
-      );
+      rerender(<RenameIngredientModal {...props} opened={false} />);
+      rerender(<RenameIngredientModal {...props} currentLabel={TEST_LABELS.NEW} opened />);
 
       // Then
       const input = screen.getByRole('textbox', { name: /report name/i });
@@ -316,18 +305,8 @@ describe('RenameIngredientModal', () => {
       const { rerender } = render(<RenameIngredientModal {...props} />);
 
       // When - close modal (errors should clear on reopen)
-      rerender(
-        <RenameIngredientModal
-          {...props}
-          opened={false}
-        />
-      );
-      rerender(
-        <RenameIngredientModal
-          {...props}
-          opened={true}
-        />
-      );
+      rerender(<RenameIngredientModal {...props} opened={false} />);
+      rerender(<RenameIngredientModal {...props} opened />);
 
       // Then
       const input = screen.getByRole('textbox', { name: /report name/i });

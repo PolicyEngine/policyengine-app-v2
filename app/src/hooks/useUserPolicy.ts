@@ -90,7 +90,10 @@ export const useUpdatePolicyAssociation = () => {
     onSuccess: (updatedAssociation) => {
       // Invalidate all related queries to trigger refetch
       queryClient.invalidateQueries({
-        queryKey: policyAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId),
+        queryKey: policyAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
       });
 
       queryClient.invalidateQueries({

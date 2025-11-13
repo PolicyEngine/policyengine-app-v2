@@ -132,7 +132,9 @@ export default function ReportOutputPage() {
 
   // Add rename handler
   const handleRename = async (newLabel: string) => {
-    if (!userReportId) return;
+    if (!userReportId) {
+      return;
+    }
 
     try {
       await updateAssociation.mutateAsync({

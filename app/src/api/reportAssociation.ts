@@ -83,7 +83,7 @@ export class ApiReportStore implements UserReportStore {
     return UserReportAdapter.fromApiResponse(apiData);
   }
 
-  async update(userReportId: string, updates: Partial<UserReport>): Promise<UserReport> {
+  async update(_userReportId: string, _updates: Partial<UserReport>): Promise<UserReport> {
     // TODO: Implement when backend API endpoint is available
     // Expected endpoint: PUT /api/user-report-associations/:userReportId
     // Expected payload: UserReportUpdatePayload (to be created)
