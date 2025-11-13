@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useDisclosure } from '@mantine/hooks';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
@@ -41,6 +43,13 @@ export default function PopulationsPage() {
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Rename modal state
+  const [renamingHouseholdId, setRenamingHouseholdId] = useState<string | null>(null);
+  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+
+  // Rename mutation hook
+  const updateAssociation = useUpdateHouseholdAssociation();
+
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
   const isError = isHouseholdError || isGeographicError;
@@ -57,6 +66,37 @@ export default function PopulationsPage() {
   };
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
+
+  const handleOpenRename = (userHouseholdId: string) => {
+    setRenamingHouseholdId(userHouseholdId);
+    openRename();
+  };
+
+  const handleCloseRename = () => {
+    closeRename();
+    setRenamingHouseholdId(null);
+  };
+
+  const handleRename = async (newLabel: string) => {
+    if (!renamingHouseholdId) return;
+
+    try {
+      await updateAssociation.mutateAsync({
+        userHouseholdId: renamingHouseholdId,
+        updates: { label: newLabel },
+      });
+      handleCloseRename();
+    } catch (error) {
+      console.error('[PopulationsPage] Failed to rename household:', error);
+    }
+  };
+
+  // Find the household being renamed for current label
+  const renamingHousehold = householdData?.find(
+    (item) => item.association.id === renamingHouseholdId
+  );
+  const currentLabel =
+    renamingHousehold?.association.label || `Household #${renamingHousehold?.association.householdId}`;
 
   // We have separate sources of data for household vs geographies. Can we remove this?
   // // Helper function to determine if an item is geographic or household
@@ -170,6 +210,17 @@ export default function PopulationsPage() {
         },
       ],
     },
+    {
+      key: 'actions',
+      header: '',
+      type: 'menu',
+      actions: [{ label: 'Rename', action: 'rename' }],
+      onAction: (action: string, recordId: string) => {
+        if (action === 'rename') {
+          handleOpenRename(recordId);
+        }
+      },
+    },
   ];
 
   // Transform household data
@@ -178,7 +229,7 @@ export default function PopulationsPage() {
       const detailsItems = getHouseholdDetails(item.household);
 
       return {
-        id: item.association.householdId.toString(),
+        id: item.association.id || item.association.householdId.toString(),
         populationName: {
           text: item.association.label || `Household #${item.association.householdId}`,
         } as TextValue,
@@ -228,22 +279,33 @@ export default function PopulationsPage() {
   const transformedData: IngredientRecord[] = [...householdRecords, ...geographicRecords];
 
   return (
-    <IngredientReadView
-      ingredient="household"
-      title="Your saved households"
-      subtitle="Configure one or a collection of households to use in your simulation configurations."
-      buttonLabel="New household(s)"
-      onBuild={handleBuildPopulation}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={populationColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <>
+      <IngredientReadView
+        ingredient="household"
+        title="Your saved households"
+        subtitle="Configure one or a collection of households to use in your simulation configurations."
+        buttonLabel="New household(s)"
+        onBuild={handleBuildPopulation}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={transformedData}
+        columns={populationColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+      />
+
+      <RenameIngredientModal
+        opened={renameOpened}
+        onClose={handleCloseRename}
+        currentLabel={currentLabel}
+        onRename={handleRename}
+        isLoading={updateAssociation.isPending}
+        ingredientType="household"
+      />
+    </>
   );
 }

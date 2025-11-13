@@ -86,30 +86,40 @@ export const useCreateHouseholdAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useUpdateAssociation = () => {
+export const useUpdateHouseholdAssociation = () => {
   const store = useUserHouseholdStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, householdId, updates }: {
-      userId: string;
-      householdId: string;
-      updates: Partial<UserHousehold>;
-    }) => store.update(userId, householdId, updates),
+    mutationFn: ({
+      userHouseholdId,
+      updates,
+    }: {
+      userHouseholdId: string;
+      updates: Partial<UserHouseholdPopulation>;
+    }) => store.update(userHouseholdId, updates),
+
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: associationKeys.byUser(updatedAssociation.userId) });
-      queryClient.invalidateQueries({ queryKey: associationKeys.byHousehold(updatedAssociation.householdId) });
-      
+      // Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: householdAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: householdAssociationKeys.byHousehold(updatedAssociation.householdId),
+      });
+
+      // Optimistically update caches
       queryClient.setQueryData(
-        associationKeys.specific(updatedAssociation.userId, updatedAssociation.householdId),
+        householdAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.householdId),
         updatedAssociation
       );
     },
   });
 };
-*/
 
 // Not yet implemented, but keeping for future use
 /*

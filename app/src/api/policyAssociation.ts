@@ -6,9 +6,9 @@ export interface UserPolicyStore {
   create: (policy: Omit<UserPolicy, 'id' | 'createdAt'>) => Promise<UserPolicy>;
   findByUser: (userId: string, countryId?: string) => Promise<UserPolicy[]>;
   findById: (userId: string, policyId: string) => Promise<UserPolicy | null>;
+  update: (userPolicyId: string, updates: Partial<UserPolicy>) => Promise<UserPolicy>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy>;
-  // delete(userId: string, policyId: string): Promise<void>;
+  // delete(userPolicyId: string): Promise<void>;
 }
 
 export class ApiPolicyStore implements UserPolicyStore {
@@ -64,22 +64,20 @@ export class ApiPolicyStore implements UserPolicyStore {
     return UserPolicyAdapter.fromApiResponse(apiData);
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
-    const response = await fetch(`/api/user-policy-associations/${userId}/${policyId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
+  async update(userPolicyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-policy-associations/:userPolicyId
+    // Expected payload: UserPolicyUpdatePayload (to be created)
 
-    if (!response.ok) {
-      throw new Error('Failed to update association');
-    }
+    console.warn(
+      '[ApiPolicyStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
 
-    return response.json();
+    throw new Error(
+      'Policy updates via API are not yet supported. ' + 'Please ensure you are using localStorage mode.'
+    );
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*
@@ -155,25 +153,28 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(policies));
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, policyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
+  async update(userPolicyId: string, updates: Partial<UserPolicy>): Promise<UserPolicy> {
     const policies = this.getStoredPolicies();
-    const index = policies.findIndex(
-      a => a.userId === userId && a.policyId === policyId
-    );
+
+    // Find by userPolicy.id (the "sup-" prefixed ID), NOT policyId
+    const index = policies.findIndex((p) => p.id === userPolicyId);
 
     if (index === -1) {
-      throw new Error('Association not found');
+      throw new Error(`UserPolicy with id ${userPolicyId} not found`);
     }
 
-    const updated = { ...policies[index], ...updates };
+    // Merge updates and set timestamp
+    const updated: UserPolicy = {
+      ...policies[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
     policies[index] = updated;
     this.setStoredPolicies(policies);
 
     return updated;
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*
