@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { ReportRenameModal } from '@/components/report/ReportRenameModal';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
@@ -121,6 +124,27 @@ export default function ReportOutputPage() {
   // Format timestamp (placeholder for now)
   const timestamp = 'Ran today at 05:23:41';
 
+  // Add modal state for rename
+  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+
+  // Add mutation hook for rename
+  const updateAssociation = useUpdateReportAssociation();
+
+  // Add rename handler
+  const handleRename = async (newLabel: string) => {
+    if (!userReportId) return;
+
+    try {
+      await updateAssociation.mutateAsync({
+        userReportId,
+        updates: { label: newLabel },
+      });
+      closeRename();
+    } catch (error) {
+      console.error('[ReportOutputPage] Failed to rename report:', error);
+    }
+  };
+
   // Show loading state while fetching data
   if (dataLoading) {
     return (
@@ -193,21 +217,32 @@ export default function ReportOutputPage() {
   };
 
   return (
-    <ReportOutputLayout
-      reportId={userReportId}
-      reportLabel={userReport?.label}
-      reportYear={report?.year}
-      timestamp={timestamp}
-      tabs={tabs}
-      activeTab={activeTab}
-      onTabChange={handleTabClick}
-      showSidebar={showSidebar}
-      outputType={outputType}
-      activeView={activeView}
-      onSidebarNavigate={handleSidebarNavigate}
-    >
-      {renderContent()}
-    </ReportOutputLayout>
+    <>
+      <ReportOutputLayout
+        reportId={userReportId}
+        reportLabel={userReport?.label}
+        reportYear={report?.year}
+        timestamp={timestamp}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabClick}
+        onEditName={openRename}
+        showSidebar={showSidebar}
+        outputType={outputType}
+        activeView={activeView}
+        onSidebarNavigate={handleSidebarNavigate}
+      >
+        {renderContent()}
+      </ReportOutputLayout>
+
+      <ReportRenameModal
+        opened={renameOpened}
+        onClose={closeRename}
+        currentLabel={userReport?.label || `Report #${userReportId}`}
+        onRename={handleRename}
+        isLoading={updateAssociation.isPending}
+      />
+    </>
   );
 }
 
