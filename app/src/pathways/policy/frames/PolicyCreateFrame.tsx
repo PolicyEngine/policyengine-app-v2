@@ -8,6 +8,13 @@ interface PolicyCreateFrameProps {
   onCancel: () => void;
 }
 
+/**
+ * PolicyCreateFrame is wrapped in a standard AppShell by PolicyPathwayWrapper.
+ *
+ * This frame does not manage its own layout - it's rendered inside the
+ * AppShell.Main section provided by PolicyPathwayWrapper.
+ */
+
 export default function PolicyCreateFrame({
   label,
   onLabelChange,

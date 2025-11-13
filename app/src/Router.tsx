@@ -98,14 +98,22 @@ const router = createBrowserRouter(
                   element: <FlowRouter flow={PolicyCreationFlow} returnPath="policies" />,
                 },
                 {
-                  path: 'test-pathway-policy',
-                  element: <PolicyPathwayWrapper />,
-                },
-                {
                   path: 'account',
                   element: <div>Account settings page</div>,
                 },
               ],
+            },
+          ],
+        },
+        // Policy pathway - manages its own layout (not a child of Layout)
+        // This is outside Layout because it needs to conditionally switch between
+        // different AppShell configurations without causing re-render loops
+        {
+          element: <MetadataLazyLoader />,
+          children: [
+            {
+              path: 'test-pathway-policy',
+              element: <PolicyPathwayWrapper />,
             },
           ],
         },

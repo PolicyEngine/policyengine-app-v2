@@ -23,6 +23,18 @@ interface PolicyParameterFrameProps {
   onBack: () => void;
 }
 
+/**
+ * PolicyParameterFrame renders its own custom AppShell.
+ *
+ * IMPORTANT: This frame has a custom AppShell with a parameter tree navbar
+ * and footer showing parameter count. It differs from the standard app layout.
+ *
+ * Because PolicyPathwayWrapper is not rendered inside Layout (to avoid re-render
+ * loops), this frame manages its own AppShell completely. The parent wrapper
+ * detects when this frame is active and renders it directly without wrapping
+ * it in another AppShell.
+ */
+
 export default function PolicyParameterFrame({
   label,
   parameters,
