@@ -69,6 +69,43 @@ export const useCreateGeographicAssociation = () => {
   });
 };
 
+export const useUpdateGeographicAssociation = () => {
+  const store = useUserGeographicStore();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userId,
+      geographyId,
+      updates,
+    }: {
+      userId: string;
+      geographyId: string;
+      updates: Partial<UserGeographyPopulation>;
+    }) => store.update(userId, geographyId, updates),
+
+    onSuccess: (updatedAssociation) => {
+      // Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: geographicAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: geographicAssociationKeys.byGeography(updatedAssociation.geographyId),
+      });
+
+      // Optimistically update caches
+      queryClient.setQueryData(
+        geographicAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.geographyId),
+        updatedAssociation
+      );
+    },
+  });
+};
+
 // Type for the combined data structure
 export interface UserGeographicMetadataWithAssociation {
   association: UserGeographyPopulation;

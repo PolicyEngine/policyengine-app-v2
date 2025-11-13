@@ -7,7 +7,7 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
+import { useUpdateGeographicAssociation, useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
@@ -44,11 +44,14 @@ export default function PopulationsPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   // Rename modal state
-  const [renamingHouseholdId, setRenamingHouseholdId] = useState<string | null>(null);
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renamingType, setRenamingType] = useState<'household' | 'geography' | null>(null);
+  const [renamingUserId, setRenamingUserId] = useState<string | null>(null);
   const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
 
-  // Rename mutation hook
-  const updateAssociation = useUpdateHouseholdAssociation();
+  // Rename mutation hooks
+  const updateHouseholdAssociation = useUpdateHouseholdAssociation();
+  const updateGeographicAssociation = useUpdateGeographicAssociation();
 
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
@@ -67,47 +70,67 @@ export default function PopulationsPage() {
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
-  const handleOpenRename = (userHouseholdId: string) => {
-    setRenamingHouseholdId(userHouseholdId);
+  const handleOpenRename = (recordId: string) => {
+    // Determine type by looking up in the original data
+    // Households use their association.id, geographies use geographyId
+    const household = householdData?.find(item =>
+      (item.association.id || item.association.householdId.toString()) === recordId
+    );
+    const geography = geographicData?.find(item => item.geographyId === recordId);
+
+    if (!household && !geography) return;
+
+    const type: 'household' | 'geography' = household ? 'household' : 'geography';
+    const userIdValue = household ? household.association.userId : geography!.userId;
+
+    setRenamingId(recordId);
+    setRenamingType(type);
+    setRenamingUserId(userIdValue);
     openRename();
   };
 
   const handleCloseRename = () => {
     closeRename();
-    setRenamingHouseholdId(null);
+    setRenamingId(null);
+    setRenamingType(null);
+    setRenamingUserId(null);
   };
 
   const handleRename = async (newLabel: string) => {
-    if (!renamingHouseholdId) return;
+    if (!renamingId || !renamingType || !renamingUserId) return;
 
     try {
-      await updateAssociation.mutateAsync({
-        userHouseholdId: renamingHouseholdId,
-        updates: { label: newLabel },
-      });
+      if (renamingType === 'household') {
+        await updateHouseholdAssociation.mutateAsync({
+          userHouseholdId: renamingId,
+          updates: { label: newLabel },
+        });
+      } else {
+        // For geographies, renamingId is the geographyId
+        await updateGeographicAssociation.mutateAsync({
+          userId: renamingUserId,
+          geographyId: renamingId,
+          updates: { label: newLabel },
+        });
+      }
       handleCloseRename();
     } catch (error) {
-      console.error('[PopulationsPage] Failed to rename household:', error);
+      console.error(`[PopulationsPage] Failed to rename ${renamingType}:`, error);
     }
   };
 
-  // Find the household being renamed for current label
+  // Find the item being renamed for current label
   const renamingHousehold = householdData?.find(
-    (item) => item.association.id === renamingHouseholdId
+    (item) => item.association.id === renamingId
   );
-  const currentLabel =
-    renamingHousehold?.association.label || `Household #${renamingHousehold?.association.householdId}`;
+  const renamingGeography = geographicData?.find(
+    (item) => item.id === renamingId
+  );
 
-  // We have separate sources of data for household vs geographies. Can we remove this?
-  // // Helper function to determine if an item is geographic or household
-  // const getDetailsType = (item: any): 'geographic' | 'household' => {
-  //   // If item has geographyType, it's a geographic association
-  //   if (item.geographyType) {
-  //     return 'geographic';
-  //   }
-  //   // Otherwise it's a household
-  //   return 'household';
-  // };
+  const currentLabel =
+    renamingType === 'household'
+      ? renamingHousehold?.association.label || `Household #${renamingHousehold?.association.householdId}`
+      : renamingGeography?.label || '';
 
   // Helper function to get geographic scope details
   const getGeographicDetails = (geography: UserGeographyPopulation) => {
@@ -230,6 +253,8 @@ export default function PopulationsPage() {
 
       return {
         id: item.association.id || item.association.householdId.toString(),
+        type: 'household',
+        userId: item.association.userId,
         populationName: {
           text: item.association.label || `Household #${item.association.householdId}`,
         } as TextValue,
@@ -255,7 +280,10 @@ export default function PopulationsPage() {
       const detailsItems = getGeographicDetails(association);
 
       return {
-        id: association.id || '',
+        id: association.geographyId,
+        type: 'geography',
+        userId: association.userId,
+        geographyId: association.geographyId,
         populationName: {
           text: association.label,
         } as TextValue,
@@ -303,8 +331,12 @@ export default function PopulationsPage() {
         onClose={handleCloseRename}
         currentLabel={currentLabel}
         onRename={handleRename}
-        isLoading={updateAssociation.isPending}
-        ingredientType="household"
+        isLoading={
+          renamingType === 'household'
+            ? updateHouseholdAssociation.isPending
+            : updateGeographicAssociation.isPending
+        }
+        ingredientType={renamingType || 'household'}
       />
     </>
   );
