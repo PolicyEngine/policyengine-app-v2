@@ -20,10 +20,18 @@ import {
 // Mock the hooks first
 vi.mock('@/hooks/useUserHousehold', () => ({
   useUserHouseholds: vi.fn(),
+  useUpdateHouseholdAssociation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 vi.mock('@/hooks/useUserGeographic', () => ({
   useGeographicAssociationsByUser: vi.fn(),
+  useUpdateGeographicAssociation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 // Mock useCurrentCountry

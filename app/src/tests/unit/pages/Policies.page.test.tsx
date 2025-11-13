@@ -14,6 +14,10 @@ import {
 // Mock the hooks
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
+  useUpdatePolicyAssociation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
 }));
 
 // Mock useCurrentCountry
