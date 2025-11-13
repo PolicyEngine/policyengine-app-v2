@@ -6,9 +6,9 @@ export interface UserSimulationStore {
   create: (simulation: Omit<UserSimulation, 'id' | 'createdAt'>) => Promise<UserSimulation>;
   findByUser: (userId: string, countryId?: string) => Promise<UserSimulation[]>;
   findById: (userId: string, simulationId: string) => Promise<UserSimulation | null>;
+  update: (userSimulationId: string, updates: Partial<UserSimulation>) => Promise<UserSimulation>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation>;
-  // delete(userId: string, simulationId: string): Promise<void>;
+  // delete(userSimulationId: string): Promise<void>;
 }
 
 export class ApiSimulationStore implements UserSimulationStore {
@@ -69,22 +69,24 @@ export class ApiSimulationStore implements UserSimulationStore {
     return UserSimulationAdapter.fromApiResponse(apiData);
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation> {
-    const response = await fetch(`/api/user-simulation-associations/${userId}/${simulationId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
+  async update(
+    userSimulationId: string,
+    updates: Partial<UserSimulation>
+  ): Promise<UserSimulation> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-simulation-associations/:userSimulationId
+    // Expected payload: UserSimulationUpdatePayload (to be created)
 
-    if (!response.ok) {
-      throw new Error('Failed to update association');
-    }
+    console.warn(
+      '[ApiSimulationStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
 
-    return response.json();
+    throw new Error(
+      'Simulation updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
+    );
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*
@@ -151,25 +153,31 @@ export class LocalStorageSimulationStore implements UserSimulationStore {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(simulations));
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, simulationId: string, updates: Partial<UserSimulation>): Promise<UserSimulation> {
+  async update(
+    userSimulationId: string,
+    updates: Partial<UserSimulation>
+  ): Promise<UserSimulation> {
     const simulations = this.getStoredSimulations();
-    const index = simulations.findIndex(
-      a => a.userId === userId && a.simulationId === simulationId
-    );
+
+    // Find by userSimulation.id (the "sus-" prefixed ID), NOT simulationId
+    const index = simulations.findIndex((s) => s.id === userSimulationId);
 
     if (index === -1) {
-      throw new Error('Association not found');
+      throw new Error(`UserSimulation with id ${userSimulationId} not found`);
     }
 
-    const updated = { ...simulations[index], ...updates };
+    // Merge updates and set timestamp
+    const updated: UserSimulation = {
+      ...simulations[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
     simulations[index] = updated;
     this.setStoredSimulations(simulations);
 
     return updated;
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*

@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
-import { ReportRenameModal } from '@/components/report/ReportRenameModal';
+import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -235,12 +235,13 @@ export default function ReportOutputPage() {
         {renderContent()}
       </ReportOutputLayout>
 
-      <ReportRenameModal
+      <RenameIngredientModal
         opened={renameOpened}
         onClose={closeRename}
         currentLabel={userReport?.label || `Report #${userReportId}`}
         onRename={handleRename}
         isLoading={updateAssociation.isPending}
+        ingredientType="report"
       />
     </>
   );

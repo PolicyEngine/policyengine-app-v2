@@ -11,7 +11,7 @@ import {
 import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
-import { ReportRenameModal } from '@/components/report/ReportRenameModal';
+import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -129,16 +129,10 @@ export default function ReportsPage() {
       key: 'actions',
       header: '',
       type: 'menu',
-      actions: [
-        { label: 'Rename', action: 'rename' },
-        { label: 'Delete', action: 'delete', color: 'red' },
-      ],
+      actions: [{ label: 'Rename', action: 'rename' }],
       onAction: (action: string, recordId: string) => {
         if (action === 'rename') {
           handleOpenRename(recordId);
-        } else if (action === 'delete') {
-          // TODO: Implement delete
-          console.log('Delete not yet implemented for:', recordId);
         }
       },
     },
@@ -221,12 +215,13 @@ export default function ReportsPage() {
         onSelectionChange={handleSelectionChange}
       />
 
-      <ReportRenameModal
+      <RenameIngredientModal
         opened={renameOpened}
         onClose={handleCloseRename}
         currentLabel={currentLabel}
         onRename={handleRename}
         isLoading={updateAssociation.isPending}
+        ingredientType="report"
       />
     </>
   );

@@ -2,21 +2,23 @@ import { useEffect, useState } from 'react';
 import { Button, Grid, Modal, Stack, TextInput } from '@mantine/core';
 import { spacing } from '@/designTokens';
 
-interface ReportRenameModalProps {
+interface RenameIngredientModalProps {
   opened: boolean;
   onClose: () => void;
   currentLabel: string;
   onRename: (newLabel: string) => void;
   isLoading?: boolean;
+  ingredientType: 'report' | 'simulation' | 'policy' | 'household';
 }
 
-export function ReportRenameModal({
+export function RenameIngredientModal({
   opened,
   onClose,
   currentLabel,
   onRename,
   isLoading = false,
-}: ReportRenameModalProps) {
+  ingredientType,
+}: RenameIngredientModalProps) {
   const [localLabel, setLocalLabel] = useState(currentLabel);
   const [error, setError] = useState<string | null>(null);
 
@@ -33,12 +35,12 @@ export function ReportRenameModal({
     const trimmed = localLabel.trim();
 
     if (!trimmed) {
-      setError('Report name cannot be empty');
+      setError(`${capitalize(ingredientType)} name cannot be empty`);
       return;
     }
 
     if (trimmed.length > 100) {
-      setError('Report name must be 100 characters or less');
+      setError(`${capitalize(ingredientType)} name must be 100 characters or less`);
       return;
     }
 
@@ -59,11 +61,16 @@ export function ReportRenameModal({
   };
 
   return (
-    <Modal opened={opened} onClose={onClose} title={<strong>Rename report</strong>} centered>
+    <Modal
+      opened={opened}
+      onClose={onClose}
+      title={<strong>Rename {ingredientType}</strong>}
+      centered
+    >
       <Stack gap={spacing.md}>
         <TextInput
-          label="Report name"
-          placeholder="Enter new report name"
+          label={`${capitalize(ingredientType)} name`}
+          placeholder={`Enter new ${ingredientType} name`}
           value={localLabel}
           onChange={(e) => {
             setLocalLabel(e.currentTarget.value);
@@ -96,4 +103,8 @@ export function ReportRenameModal({
       </Stack>
     </Modal>
   );
+}
+
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
 }
