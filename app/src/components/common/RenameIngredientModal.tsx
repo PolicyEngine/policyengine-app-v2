@@ -8,7 +8,7 @@ interface RenameIngredientModalProps {
   currentLabel: string;
   onRename: (newLabel: string) => void;
   isLoading?: boolean;
-  ingredientType: 'report' | 'simulation' | 'policy' | 'household';
+  ingredientType: 'report' | 'simulation' | 'policy' | 'household' | 'geography';
 }
 
 export function RenameIngredientModal({
