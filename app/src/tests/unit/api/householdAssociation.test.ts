@@ -179,6 +179,34 @@ describe('ApiHouseholdStore', () => {
       );
     });
   });
+
+  describe('update', () => {
+    test('given update called then throws not supported error', async () => {
+      // Given & When & Then
+      await expect(store.update('suh-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
+    });
+
+    test('given update called then logs warning', async () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      try {
+        await store.update('suh-abc123', { label: 'Updated Label' });
+      } catch {
+        // Expected to throw
+      }
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('API endpoint not yet implemented')
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
 });
 
 describe('LocalStorageHouseholdStore', () => {
@@ -379,6 +407,93 @@ describe('LocalStorageHouseholdStore', () => {
 
       // Then
       expect(result).toBeNull();
+    });
+  });
+
+  describe('update', () => {
+    test('given existing household then update succeeds and returns updated household', async () => {
+      // Given
+      const household = mockUserHouseholdPopulationList[0];
+      const created = await store.create(household);
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.id).toBe(created.id);
+      expect(result.householdId).toBe(household.householdId);
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    test('given nonexistent household then update throws error', async () => {
+      // Given - no household created
+
+      // When & Then
+      await expect(store.update('suh-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+        'UserHousehold with id suh-nonexistent not found'
+      );
+    });
+
+    test('given existing household then updatedAt timestamp is set', async () => {
+      // Given
+      const household = mockUserHouseholdPopulationList[0];
+      const created = await store.create(household);
+      const beforeUpdate = new Date().toISOString();
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.updatedAt).toBeDefined();
+      expect(result.updatedAt! >= beforeUpdate).toBe(true);
+    });
+
+    test('given existing household then update persists to localStorage', async () => {
+      // Given
+      const household = mockUserHouseholdPopulationList[0];
+      const created = await store.create(household);
+
+      // When
+      await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      const persisted = await store.findById(household.userId, household.householdId);
+      expect(persisted?.label).toBe('Updated Label');
+    });
+
+    test('given multiple households then updates correct one by ID', async () => {
+      // Given
+      const created1 = await store.create(mockUserHouseholdPopulationList[0]);
+      await store.create(mockUserHouseholdPopulationList[1]);
+
+      // When
+      await store.update(created1.id!, { label: 'Updated Label' });
+
+      // Then
+      const updated = await store.findById(
+        mockUserHouseholdPopulationList[0].userId,
+        mockUserHouseholdPopulationList[0].householdId
+      );
+      const unchanged = await store.findById(
+        mockUserHouseholdPopulationList[1].userId,
+        mockUserHouseholdPopulationList[1].householdId
+      );
+      expect(updated?.label).toBe('Updated Label');
+      expect(unchanged?.label).toBe(mockUserHouseholdPopulationList[1].label);
+    });
+
+    test('given update with partial data then only specified fields are updated', async () => {
+      // Given
+      const household = mockUserHouseholdPopulationList[0];
+      const created = await store.create(household);
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.countryId).toBe(household.countryId); // unchanged
     });
   });
 

@@ -5,8 +5,11 @@ export interface UserHouseholdStore {
   create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
   findByUser: (userId: string, countryId?: string) => Promise<UserHouseholdPopulation[]>;
   findById: (userId: string, householdId: string) => Promise<UserHouseholdPopulation | null>;
+  update: (
+    userHouseholdId: string,
+    updates: Partial<UserHouseholdPopulation>
+  ) => Promise<UserHouseholdPopulation>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, householdId: string, updates: Partial<UserHouseholdPopulation>): Promise<UserHouseholdPopulation>;
   // delete(userId: string, householdId: string): Promise<void>;
 }
 
@@ -64,22 +67,24 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     return UserHouseholdAdapter.fromApiResponse(apiData);
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, householdId: string, updates: Partial<UserHousehold>): Promise<UserHousehold> {
-    const response = await fetch(`/api/user-population-households/${userId}/${householdId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
+  async update(
+    _userHouseholdId: string,
+    _updates: Partial<UserHouseholdPopulation>
+  ): Promise<UserHouseholdPopulation> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-household-associations/:userHouseholdId
+    // Expected payload: UserHouseholdUpdatePayload (to be created)
 
-    if (!response.ok) {
-      throw new Error('Failed to update association');
-    }
+    console.warn(
+      '[ApiHouseholdStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
 
-    return response.json();
+    throw new Error(
+      'Household updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
+    );
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*
@@ -134,23 +139,31 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
     return households.find((h) => h.userId === userId && h.householdId === householdId) || null;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, householdId: string, updates: Partial<UserHousehold>): Promise<UserHousehold> {
+  async update(
+    userHouseholdId: string,
+    updates: Partial<UserHouseholdPopulation>
+  ): Promise<UserHouseholdPopulation> {
     const households = this.getStoredHouseholds();
-    const index = households.findIndex(a => a.userId === userId && a.householdId === householdId);
-    
+
+    // Find by userHousehold.id (the "suh-" prefixed ID), NOT householdId
+    const index = households.findIndex((h) => h.id === userHouseholdId);
+
     if (index === -1) {
-      throw new Error('Association not found');
+      throw new Error(`UserHousehold with id ${userHouseholdId} not found`);
     }
 
-    const updatedAssociation = { ...households[index], ...updates };
-    households[index] = updatedAssociation;
-    
+    // Merge updates and set timestamp
+    const updated: UserHouseholdPopulation = {
+      ...households[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    households[index] = updated;
     this.setStoredHouseholds(households);
-    return updatedAssociation;
+
+    return updated;
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*

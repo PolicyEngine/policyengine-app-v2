@@ -5,8 +5,12 @@ export interface UserGeographicStore {
   create: (population: UserGeographyPopulation) => Promise<UserGeographyPopulation>;
   findByUser: (userId: string, countryId?: string) => Promise<UserGeographyPopulation[]>;
   findById: (userId: string, geographyId: string) => Promise<UserGeographyPopulation | null>;
+  update: (
+    userId: string,
+    geographyId: string,
+    updates: Partial<UserGeographyPopulation>
+  ) => Promise<UserGeographyPopulation>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation>;
   // delete(userId: string, geographyId: string): Promise<void>;
 }
 
@@ -67,22 +71,25 @@ export class ApiGeographicStore implements UserGeographicStore {
     return UserGeographicAdapter.fromApiResponse(apiData);
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation> {
-    const response = await fetch(`/api/user-geographic-associations/${userId}/${geographyId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
+  async update(
+    _userId: string,
+    _geographyId: string,
+    _updates: Partial<UserGeographyPopulation>
+  ): Promise<UserGeographyPopulation> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-geographic-associations/:userId/:geographyId
+    // Expected payload: UserGeographicUpdatePayload (to be created)
 
-    if (!response.ok) {
-      throw new Error('Failed to update association');
-    }
+    console.warn(
+      '[ApiGeographicStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
 
-    return response.json();
+    throw new Error(
+      'Geographic population updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
+    );
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*
@@ -136,23 +143,36 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
     return populations.find((p) => p.userId === userId && p.geographyId === geographyId) || null;
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation> {
+  async update(
+    userId: string,
+    geographyId: string,
+    updates: Partial<UserGeographyPopulation>
+  ): Promise<UserGeographyPopulation> {
     const populations = this.getStoredPopulations();
-    const index = populations.findIndex(p => p.userId === userId && p.geographyId === geographyId);
-    
+
+    // Find by userId and geographyId composite key
+    const index = populations.findIndex(
+      (g) => g.userId === userId && g.geographyId === geographyId
+    );
+
     if (index === -1) {
-      throw new Error('Geographic population not found');
+      throw new Error(
+        `UserGeography with userId ${userId} and geographyId ${geographyId} not found`
+      );
     }
 
-    const updatedPopulation = { ...populations[index], ...updates };
-    populations[index] = updatedPopulation;
-    
+    // Merge updates and set timestamp
+    const updated: UserGeographyPopulation = {
+      ...populations[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
+    populations[index] = updated;
     this.setStoredPopulations(populations);
-    return updatedPopulation;
+
+    return updated;
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*

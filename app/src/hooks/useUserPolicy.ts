@@ -74,22 +74,33 @@ export const useCreatePolicyAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useUpdateAssociation = () => {
+export const useUpdatePolicyAssociation = () => {
   const store = useUserPolicyStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, policyId, updates }: {
-      userId: string;
-      policyId: string;
-      updates: Partial<UserPolicyAssociation>;
-    }) => store.update(userId, policyId, updates),
-    onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId) });
-      queryClient.invalidateQueries({ queryKey: policyAssociationKeys.byPolicy(updatedAssociation.policyId) });
+    mutationFn: ({
+      userPolicyId,
+      updates,
+    }: {
+      userPolicyId: string;
+      updates: Partial<UserPolicy>;
+    }) => store.update(userPolicyId, updates),
 
+    onSuccess: (updatedAssociation) => {
+      // Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: policyAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: policyAssociationKeys.byPolicy(updatedAssociation.policyId),
+      });
+
+      // Optimistically update caches
       queryClient.setQueryData(
         policyAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.policyId),
         updatedAssociation
@@ -97,7 +108,6 @@ export const useUpdateAssociation = () => {
     },
   });
 };
-*/
 
 // Not yet implemented, but keeping for future use
 /*

@@ -16,6 +16,13 @@ vi.mock('@/hooks/useUserSimulations', () => ({
   useUserSimulations: vi.fn(),
 }));
 
+vi.mock('@/hooks/useUserSimulationAssociations', () => ({
+  useUpdateSimulationAssociation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
+}));
+
 // Mock useCurrentCountry
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
