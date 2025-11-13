@@ -1,7 +1,10 @@
-import { UserGeographyPopulation, UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
-import { UserSimulation } from '@/types/ingredients/UserSimulation';
+import {
+  UserGeographyPopulation,
+  UserHouseholdPopulation,
+} from '@/types/ingredients/UserPopulation';
 import { UserReport } from '@/types/ingredients/UserReport';
+import { UserSimulation } from '@/types/ingredients/UserSimulation';
 
 // Test IDs
 export const TEST_IDS = {
@@ -71,9 +74,7 @@ export const createMockGeographyAssociation = (
 });
 
 // Mock UserPolicy
-export const createMockPolicyAssociation = (
-  overrides?: Partial<UserPolicy>
-): UserPolicy => ({
+export const createMockPolicyAssociation = (overrides?: Partial<UserPolicy>): UserPolicy => ({
   id: TEST_IDS.USER_POLICY_ID,
   userId: TEST_IDS.USER_ID,
   policyId: TEST_IDS.POLICY_ID,
@@ -99,9 +100,7 @@ export const createMockSimulationAssociation = (
 });
 
 // Mock UserReport
-export const createMockReportAssociation = (
-  overrides?: Partial<UserReport>
-): UserReport => ({
+export const createMockReportAssociation = (overrides?: Partial<UserReport>): UserReport => ({
   id: TEST_IDS.USER_REPORT_ID,
   userId: TEST_IDS.USER_ID,
   reportId: TEST_IDS.REPORT_ID,

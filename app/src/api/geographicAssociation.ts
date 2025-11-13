@@ -5,7 +5,11 @@ export interface UserGeographicStore {
   create: (population: UserGeographyPopulation) => Promise<UserGeographyPopulation>;
   findByUser: (userId: string, countryId?: string) => Promise<UserGeographyPopulation[]>;
   findById: (userId: string, geographyId: string) => Promise<UserGeographyPopulation | null>;
-  update: (userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>) => Promise<UserGeographyPopulation>;
+  update: (
+    userId: string,
+    geographyId: string,
+    updates: Partial<UserGeographyPopulation>
+  ) => Promise<UserGeographyPopulation>;
   // The below are not yet implemented, but keeping for future use
   // delete(userId: string, geographyId: string): Promise<void>;
 }
@@ -67,7 +71,11 @@ export class ApiGeographicStore implements UserGeographicStore {
     return UserGeographicAdapter.fromApiResponse(apiData);
   }
 
-  async update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation> {
+  async update(
+    _userId: string,
+    _geographyId: string,
+    _updates: Partial<UserGeographyPopulation>
+  ): Promise<UserGeographyPopulation> {
     // TODO: Implement when backend API endpoint is available
     // Expected endpoint: PUT /api/user-geographic-associations/:userId/:geographyId
     // Expected payload: UserGeographicUpdatePayload (to be created)
@@ -78,7 +86,8 @@ export class ApiGeographicStore implements UserGeographicStore {
     );
 
     throw new Error(
-      'Geographic population updates via API are not yet supported. ' + 'Please ensure you are using localStorage mode.'
+      'Geographic population updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
     );
   }
 
@@ -134,14 +143,22 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
     return populations.find((p) => p.userId === userId && p.geographyId === geographyId) || null;
   }
 
-  async update(userId: string, geographyId: string, updates: Partial<UserGeographyPopulation>): Promise<UserGeographyPopulation> {
+  async update(
+    userId: string,
+    geographyId: string,
+    updates: Partial<UserGeographyPopulation>
+  ): Promise<UserGeographyPopulation> {
     const populations = this.getStoredPopulations();
 
     // Find by userId and geographyId composite key
-    const index = populations.findIndex((g) => g.userId === userId && g.geographyId === geographyId);
+    const index = populations.findIndex(
+      (g) => g.userId === userId && g.geographyId === geographyId
+    );
 
     if (index === -1) {
-      throw new Error(`UserGeography with userId ${userId} and geographyId ${geographyId} not found`);
+      throw new Error(
+        `UserGeography with userId ${userId} and geographyId ${geographyId} not found`
+      );
     }
 
     // Merge updates and set timestamp

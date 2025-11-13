@@ -153,9 +153,9 @@ describe('ApiSimulationStore', () => {
   describe('update', () => {
     it('given update called then throws not supported error', async () => {
       // Given & When & Then
-      await expect(
-        store.update('sus-abc123', { label: 'Updated Label' })
-      ).rejects.toThrow('Please ensure you are using localStorage mode');
+      await expect(store.update('sus-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
     });
 
     it('given update called then logs warning', async () => {
@@ -317,7 +317,9 @@ describe('LocalStorageSimulationStore', () => {
   describe('update', () => {
     it('given existing simulation then update succeeds and returns updated simulation', async () => {
       // Given
-      const created = await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
+      const created = await store.create(
+        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+      );
 
       // When
       const result = await store.update(created.id!, { label: 'Updated Label' });
@@ -333,14 +335,16 @@ describe('LocalStorageSimulationStore', () => {
       // Given - no simulation created
 
       // When & Then
-      await expect(
-        store.update('sus-nonexistent', { label: 'Updated Label' })
-      ).rejects.toThrow('UserSimulation with id sus-nonexistent not found');
+      await expect(store.update('sus-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+        'UserSimulation with id sus-nonexistent not found'
+      );
     });
 
     it('given existing simulation then updatedAt timestamp is set', async () => {
       // Given
-      const created = await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
+      const created = await store.create(
+        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+      );
       const beforeUpdate = new Date().toISOString();
 
       // When
@@ -353,7 +357,9 @@ describe('LocalStorageSimulationStore', () => {
 
     it('given existing simulation then update persists to localStorage', async () => {
       // Given
-      const created = await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
+      const created = await store.create(
+        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+      );
 
       // When
       await store.update(created.id!, { label: 'Updated Label' });
@@ -365,7 +371,9 @@ describe('LocalStorageSimulationStore', () => {
 
     it('given multiple simulations then updates correct one by ID', async () => {
       // Given
-      const created1 = await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
+      const created1 = await store.create(
+        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+      );
       const created2 = await store.create(
         mockSimulationInput({
           simulationId: TEST_SIM_IDS.SIM_999,
@@ -385,7 +393,9 @@ describe('LocalStorageSimulationStore', () => {
 
     it('given update with partial data then only specified fields are updated', async () => {
       // Given
-      const created = await store.create(mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 }));
+      const created = await store.create(
+        mockSimulationInput({ label: TEST_LABELS.TEST_SIMULATION_1 })
+      );
 
       // When
       const result = await store.update(created.id!, { label: 'Updated Label' });

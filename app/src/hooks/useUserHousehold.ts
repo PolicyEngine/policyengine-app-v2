@@ -114,7 +114,10 @@ export const useUpdateHouseholdAssociation = () => {
 
       // Optimistically update caches
       queryClient.setQueryData(
-        householdAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.householdId),
+        householdAssociationKeys.specific(
+          updatedAssociation.userId,
+          updatedAssociation.householdId
+        ),
         updatedAssociation
       );
     },

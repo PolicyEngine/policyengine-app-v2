@@ -183,9 +183,9 @@ describe('ApiHouseholdStore', () => {
   describe('update', () => {
     test('given update called then throws not supported error', async () => {
       // Given & When & Then
-      await expect(
-        store.update('suh-abc123', { label: 'Updated Label' })
-      ).rejects.toThrow('Please ensure you are using localStorage mode');
+      await expect(store.update('suh-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
     });
 
     test('given update called then logs warning', async () => {
@@ -430,9 +430,9 @@ describe('LocalStorageHouseholdStore', () => {
       // Given - no household created
 
       // When & Then
-      await expect(
-        store.update('suh-nonexistent', { label: 'Updated Label' })
-      ).rejects.toThrow('UserHousehold with id suh-nonexistent not found');
+      await expect(store.update('suh-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+        'UserHousehold with id suh-nonexistent not found'
+      );
     });
 
     test('given existing household then updatedAt timestamp is set', async () => {
@@ -465,7 +465,7 @@ describe('LocalStorageHouseholdStore', () => {
     test('given multiple households then updates correct one by ID', async () => {
       // Given
       const created1 = await store.create(mockUserHouseholdPopulationList[0]);
-      const created2 = await store.create(mockUserHouseholdPopulationList[1]);
+      await store.create(mockUserHouseholdPopulationList[1]);
 
       // When
       await store.update(created1.id!, { label: 'Updated Label' });

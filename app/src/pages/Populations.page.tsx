@@ -7,7 +7,10 @@ import { RenameIngredientModal } from '@/components/common/RenameIngredientModal
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useUpdateGeographicAssociation, useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
+import {
+  useGeographicAssociationsByUser,
+  useUpdateGeographicAssociation,
+} from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
@@ -73,12 +76,14 @@ export default function PopulationsPage() {
   const handleOpenRename = (recordId: string) => {
     // Determine type by looking up in the original data
     // Households use their association.id, geographies use geographyId
-    const household = householdData?.find(item =>
-      (item.association.id || item.association.householdId.toString()) === recordId
+    const household = householdData?.find(
+      (item) => (item.association.id || item.association.householdId.toString()) === recordId
     );
-    const geography = geographicData?.find(item => item.geographyId === recordId);
+    const geography = geographicData?.find((item) => item.geographyId === recordId);
 
-    if (!household && !geography) return;
+    if (!household && !geography) {
+      return;
+    }
 
     const type: 'household' | 'geography' = household ? 'household' : 'geography';
     const userIdValue = household ? household.association.userId : geography!.userId;
@@ -97,7 +102,9 @@ export default function PopulationsPage() {
   };
 
   const handleRename = async (newLabel: string) => {
-    if (!renamingId || !renamingType || !renamingUserId) return;
+    if (!renamingId || !renamingType || !renamingUserId) {
+      return;
+    }
 
     try {
       if (renamingType === 'household') {
@@ -120,16 +127,13 @@ export default function PopulationsPage() {
   };
 
   // Find the item being renamed for current label
-  const renamingHousehold = householdData?.find(
-    (item) => item.association.id === renamingId
-  );
-  const renamingGeography = geographicData?.find(
-    (item) => item.id === renamingId
-  );
+  const renamingHousehold = householdData?.find((item) => item.association.id === renamingId);
+  const renamingGeography = geographicData?.find((item) => item.id === renamingId);
 
   const currentLabel =
     renamingType === 'household'
-      ? renamingHousehold?.association.label || `Household #${renamingHousehold?.association.householdId}`
+      ? renamingHousehold?.association.label ||
+        `Household #${renamingHousehold?.association.householdId}`
       : renamingGeography?.label || '';
 
   // Helper function to get geographic scope details

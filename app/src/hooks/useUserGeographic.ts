@@ -99,7 +99,10 @@ export const useUpdateGeographicAssociation = () => {
 
       // Optimistically update caches
       queryClient.setQueryData(
-        geographicAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.geographyId),
+        geographicAssociationKeys.specific(
+          updatedAssociation.userId,
+          updatedAssociation.geographyId
+        ),
         updatedAssociation
       );
     },

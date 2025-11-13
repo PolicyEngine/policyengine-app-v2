@@ -5,7 +5,10 @@ export interface UserHouseholdStore {
   create: (association: UserHouseholdPopulation) => Promise<UserHouseholdPopulation>;
   findByUser: (userId: string, countryId?: string) => Promise<UserHouseholdPopulation[]>;
   findById: (userId: string, householdId: string) => Promise<UserHouseholdPopulation | null>;
-  update: (userHouseholdId: string, updates: Partial<UserHouseholdPopulation>) => Promise<UserHouseholdPopulation>;
+  update: (
+    userHouseholdId: string,
+    updates: Partial<UserHouseholdPopulation>
+  ) => Promise<UserHouseholdPopulation>;
   // The below are not yet implemented, but keeping for future use
   // delete(userId: string, householdId: string): Promise<void>;
 }
@@ -64,7 +67,10 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     return UserHouseholdAdapter.fromApiResponse(apiData);
   }
 
-  async update(userHouseholdId: string, updates: Partial<UserHouseholdPopulation>): Promise<UserHouseholdPopulation> {
+  async update(
+    _userHouseholdId: string,
+    _updates: Partial<UserHouseholdPopulation>
+  ): Promise<UserHouseholdPopulation> {
     // TODO: Implement when backend API endpoint is available
     // Expected endpoint: PUT /api/user-household-associations/:userHouseholdId
     // Expected payload: UserHouseholdUpdatePayload (to be created)
@@ -75,7 +81,8 @@ export class ApiHouseholdStore implements UserHouseholdStore {
     );
 
     throw new Error(
-      'Household updates via API are not yet supported. ' + 'Please ensure you are using localStorage mode.'
+      'Household updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
     );
   }
 
@@ -132,7 +139,10 @@ export class LocalStorageHouseholdStore implements UserHouseholdStore {
     return households.find((h) => h.userId === userId && h.householdId === householdId) || null;
   }
 
-  async update(userHouseholdId: string, updates: Partial<UserHouseholdPopulation>): Promise<UserHouseholdPopulation> {
+  async update(
+    userHouseholdId: string,
+    updates: Partial<UserHouseholdPopulation>
+  ): Promise<UserHouseholdPopulation> {
     const households = this.getStoredHouseholds();
 
     // Find by userHousehold.id (the "suh-" prefixed ID), NOT householdId

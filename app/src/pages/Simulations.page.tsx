@@ -49,7 +49,9 @@ export default function SimulationsPage() {
   };
 
   const handleRename = async (newLabel: string) => {
-    if (!renamingSimulationId) return;
+    if (!renamingSimulationId) {
+      return;
+    }
 
     try {
       await updateAssociation.mutateAsync({
@@ -63,9 +65,7 @@ export default function SimulationsPage() {
   };
 
   // Find the simulation being renamed for current label
-  const renamingSimulation = data?.find(
-    (item) => item.userSimulation.id === renamingSimulationId
-  );
+  const renamingSimulation = data?.find((item) => item.userSimulation.id === renamingSimulationId);
   const currentLabel =
     renamingSimulation?.userSimulation.label ||
     `Simulation #${renamingSimulation?.userSimulation.simulationId}`;

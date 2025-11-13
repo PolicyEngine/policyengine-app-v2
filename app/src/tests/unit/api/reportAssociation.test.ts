@@ -301,9 +301,9 @@ describe('ApiReportStore', () => {
   describe('update', () => {
     it('given update called then throws not supported error', async () => {
       // Given & When & Then
-      await expect(
-        store.update('sur-abc123', { label: 'Updated Label' })
-      ).rejects.toThrow('Please ensure you are using localStorage mode');
+      await expect(store.update('sur-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
     });
 
     it('given update called then logs warning', async () => {
@@ -568,9 +568,9 @@ describe('LocalStorageReportStore', () => {
       // Given - no report created
 
       // When & Then
-      await expect(
-        store.update('sur-nonexistent', { label: 'Updated Label' })
-      ).rejects.toThrow('UserReport with id sur-nonexistent not found');
+      await expect(store.update('sur-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+        'UserReport with id sur-nonexistent not found'
+      );
     });
 
     it('given existing report then updatedAt timestamp is set', async () => {

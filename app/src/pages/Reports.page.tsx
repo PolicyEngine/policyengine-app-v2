@@ -8,10 +8,10 @@ import {
   LinkValue,
   TextValue,
 } from '@/components/columns';
+import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
-import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -69,7 +69,9 @@ export default function ReportsPage() {
   };
 
   const handleRename = async (newLabel: string) => {
-    if (!renamingReportId) return;
+    if (!renamingReportId) {
+      return;
+    }
 
     try {
       await updateAssociation.mutateAsync({

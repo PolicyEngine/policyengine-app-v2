@@ -70,8 +70,8 @@ export class ApiSimulationStore implements UserSimulationStore {
   }
 
   async update(
-    userSimulationId: string,
-    updates: Partial<UserSimulation>
+    _userSimulationId: string,
+    _updates: Partial<UserSimulation>
   ): Promise<UserSimulation> {
     // TODO: Implement when backend API endpoint is available
     // Expected endpoint: PUT /api/user-simulation-associations/:userSimulationId

@@ -175,9 +175,9 @@ describe('ApiPolicyStore', () => {
   describe('update', () => {
     it('given update called then throws not supported error', async () => {
       // Given & When & Then
-      await expect(
-        store.update('sup-abc123', { label: 'Updated Label' })
-      ).rejects.toThrow('Please ensure you are using localStorage mode');
+      await expect(store.update('sup-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
     });
 
     it('given update called then logs warning', async () => {
@@ -347,9 +347,9 @@ describe('LocalStoragePolicyStore', () => {
       // Given - no policy created
 
       // When & Then
-      await expect(
-        store.update('sup-nonexistent', { label: 'Updated Label' })
-      ).rejects.toThrow('UserPolicy with id sup-nonexistent not found');
+      await expect(store.update('sup-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+        'UserPolicy with id sup-nonexistent not found'
+      );
     });
 
     it('given existing policy then updatedAt timestamp is set', async () => {
@@ -380,7 +380,7 @@ describe('LocalStoragePolicyStore', () => {
     it('given multiple policies then updates correct one by ID', async () => {
       // Given
       const created1 = await store.create(mockPolicyInput1);
-      const created2 = await store.create(mockPolicyInput2);
+      await store.create(mockPolicyInput2);
 
       // When
       await store.update(created1.id!, { label: 'Updated Label' });
