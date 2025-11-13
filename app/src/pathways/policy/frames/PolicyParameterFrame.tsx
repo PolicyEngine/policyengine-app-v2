@@ -10,17 +10,17 @@ import LegacyBanner from '@/components/shared/LegacyBanner';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
-import { Parameter } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ParameterMain } from '@/components/policySetup';
+import { PolicyState } from '../types';
 
 interface PolicyParameterFrameProps {
-  label: string;
-  parameters: Parameter[];
-  onParametersChange: (parameters: Parameter[]) => void;
+  state: PolicyState;
+  onStateChange: (newState: Partial<PolicyState>) => void;
   onNext: () => void;
   onBack: () => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -36,9 +36,8 @@ interface PolicyParameterFrameProps {
  */
 
 export default function PolicyParameterFrame({
-  label,
-  parameters,
-  onParametersChange,
+  state,
+  onStateChange,
   onNext,
   onBack,
 }: PolicyParameterFrameProps) {
@@ -75,21 +74,21 @@ export default function PolicyParameterFrame({
     console.log(`[PolicyParameterFrame] Adding parameter interval`, { name, valueInterval });
 
     // Find existing parameter or create new one
-    const existingParamIndex = parameters.findIndex((p) => p.name === name);
+    const existingParamIndex = state.parameters.findIndex((p) => p.name === name);
 
     if (existingParamIndex >= 0) {
       // Update existing parameter using ValueIntervalCollection to handle overlaps
-      const existingParam = parameters[existingParamIndex];
+      const existingParam = state.parameters[existingParamIndex];
       const paramCollection = new ValueIntervalCollection(existingParam.values);
       paramCollection.addInterval(valueInterval);
       const newValues = paramCollection.getIntervals();
 
-      const updatedParameters = [...parameters];
+      const updatedParameters = [...state.parameters];
       updatedParameters[existingParamIndex] = {
         ...existingParam,
         values: newValues,
       };
-      onParametersChange(updatedParameters);
+      onStateChange({ parameters: updatedParameters });
       console.log(`[PolicyParameterFrame] Updated parameters`, updatedParameters);
     } else {
       // Create new parameter with ValueIntervalCollection
@@ -97,11 +96,11 @@ export default function PolicyParameterFrame({
       paramCollection.addInterval(valueInterval);
       const newValues = paramCollection.getIntervals();
 
-      const newParameter: Parameter = {
+      const newParameter = {
         name,
         values: newValues,
       };
-      onParametersChange([...parameters, newParameter]);
+      onStateChange({ parameters: [...state.parameters, newParameter] });
     }
   };
 
@@ -134,10 +133,10 @@ export default function PolicyParameterFrame({
           <MainEmpty />
         ) : selectedLeafParam ? (
           <ParameterMain
-            key={`${selectedLeafParam.parameter}-${parameters.length}-${JSON.stringify(parameters.find(p => p.name === selectedLeafParam.parameter)?.values || [])}`}
+            key={`${selectedLeafParam.parameter}-${state.parameters.length}-${JSON.stringify(state.parameters.find(p => p.name === selectedLeafParam.parameter)?.values || [])}`}
             param={selectedLeafParam}
-            currentParameters={parameters}
-            policyLabel={label}
+            currentParameters={state.parameters}
+            policyLabel={state.label}
             policyId={null}
             onParameterAdd={handleParameterAdd}
           />
@@ -151,7 +150,7 @@ export default function PolicyParameterFrame({
           <Button variant="default" onClick={onBack}>
             Back
           </Button>
-          {parameters.length > 0 && (
+          {state.parameters.length > 0 && (
             <Group gap="xs">
               <Box
                 style={{
@@ -162,8 +161,8 @@ export default function PolicyParameterFrame({
                 }}
               />
               <Text size="sm" c="gray.5">
-                {parameters.reduce((sum, p) => sum + p.values.length, 0)} parameter modification
-                {parameters.reduce((sum, p) => sum + p.values.length, 0) !== 1 ? 's' : ''}
+                {state.parameters.reduce((sum, p) => sum + p.values.length, 0)} parameter modification
+                {state.parameters.reduce((sum, p) => sum + p.values.length, 0) !== 1 ? 's' : ''}
               </Text>
             </Group>
           )}

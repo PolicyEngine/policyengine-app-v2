@@ -1,13 +1,15 @@
 import { CountryId } from '@/api/report';
 import { Parameter } from '@/types/subIngredients/parameter';
 
-export enum PolicyDisplayMode {
-  CREATE = 'create',
-  SELECT_PARAMETERS = 'select_parameters',
-  SUBMIT = 'submit',
-}
+/**
+ * Valid view keys for the policy pathway.
+ */
+export type PolicyViewKey = 'create' | 'select-parameters' | 'submit';
 
-export interface PolicyPathwayState {
+/**
+ * State managed by the policy pathway.
+ */
+export interface PolicyState {
   label: string;
   parameters: Parameter[];
   countryId: CountryId;

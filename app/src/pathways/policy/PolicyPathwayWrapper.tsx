@@ -10,10 +10,9 @@ import { spacing } from '@/designTokens';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
-import { PolicyDisplayMode, PolicyPathwayState } from './types';
-import PolicyCreateFrame from './frames/PolicyCreateFrame';
-import PolicyParameterFrame from './frames/PolicyParameterFrame';
-import PolicySubmitFrame from './frames/PolicySubmitFrame';
+import { POLICY_PATHWAY_CONFIG } from './config';
+import { PolicyState, PolicyViewKey } from './types';
+import { POLICY_VIEWS } from './views';
 
 /**
  * PolicyPathwayWrapper manages the policy creation pathway.
@@ -22,9 +21,12 @@ import PolicySubmitFrame from './frames/PolicySubmitFrame';
  * AppShell switching to avoid re-render loops that occur when trying to use
  * context or URL state to communicate layout mode to a parent Layout component.
  *
- * When mode is SELECT_PARAMETERS, PolicyParameterFrame renders with its own
- * custom AppShell. For CREATE and SUBMIT modes, we wrap those frames in a
- * standard AppShell here.
+ * This wrapper uses the pathway configuration system:
+ * - POLICY_VIEWS: Defines the individual view components and their layout requirements
+ * - POLICY_PATHWAY_CONFIG: Defines the navigation flow between views
+ *
+ * When a view's layoutType is 'custom', the view component renders with its own
+ * AppShell. For 'standard' layout views, this wrapper provides the AppShell.
  *
  * This approach duplicates some AppShell code from Layout, but avoids the
  * fundamental issue where any state change in a parent causes child components
@@ -34,8 +36,8 @@ export default function PolicyPathwayWrapper() {
   const navigate = useNavigate();
   const { countryId } = useParams<{ countryId: string }>();
 
-  const [mode, setMode] = useState<PolicyDisplayMode>(PolicyDisplayMode.CREATE);
-  const [state, setState] = useState<PolicyPathwayState>({
+  const [currentView, setCurrentView] = useState<PolicyViewKey>(POLICY_PATHWAY_CONFIG.initialView);
+  const [state, setState] = useState<PolicyState>({
     label: '',
     parameters: [],
     countryId: (countryId as CountryId) || 'us',
@@ -44,20 +46,32 @@ export default function PolicyPathwayWrapper() {
 
   const { createPolicy, isPending } = useCreatePolicy(state.label);
 
+  // Get current view configuration
+  const view = POLICY_VIEWS[currentView];
+  const transitions = POLICY_PATHWAY_CONFIG.transitions[currentView];
+
   const handleNext = () => {
-    if (mode === PolicyDisplayMode.CREATE) {
-      setMode(PolicyDisplayMode.SELECT_PARAMETERS);
-    } else if (mode === PolicyDisplayMode.SELECT_PARAMETERS) {
-      setMode(PolicyDisplayMode.SUBMIT);
+    // Check if we can proceed (validation)
+    if (view.canProceed && !view.canProceed(state)) {
+      return;
+    }
+
+    if (transitions?.next) {
+      setCurrentView(transitions.next);
+    } else {
+      // End of pathway - submit
+      handleSubmit();
     }
   };
 
   const handleBack = () => {
-    if (mode === PolicyDisplayMode.SELECT_PARAMETERS) {
-      setMode(PolicyDisplayMode.CREATE);
-    } else if (mode === PolicyDisplayMode.SUBMIT) {
-      setMode(PolicyDisplayMode.SELECT_PARAMETERS);
+    if (transitions?.back) {
+      setCurrentView(transitions.back);
     }
+  };
+
+  const handleStateChange = (newState: Partial<PolicyState>) => {
+    setState((prev) => ({ ...prev, ...newState }));
   };
 
   const handleCancel = () => {
@@ -82,20 +96,22 @@ export default function PolicyPathwayWrapper() {
     });
   };
 
-  // PolicyParameterFrame has its own custom AppShell, render it directly
-  if (mode === PolicyDisplayMode.SELECT_PARAMETERS) {
+  const ViewComponent = view.component;
+
+  // Custom layout - view component manages its own AppShell
+  if (view.layoutType === 'custom') {
     return (
-      <PolicyParameterFrame
-        label={state.label}
-        parameters={state.parameters}
-        onParametersChange={(parameters) => setState({ ...state, parameters })}
+      <ViewComponent
+        state={state}
+        onStateChange={handleStateChange}
         onNext={handleNext}
         onBack={handleBack}
+        onCancel={handleCancel}
       />
     );
   }
 
-  // For CREATE and SUBMIT modes, wrap in standard AppShell
+  // Standard layout - wrap view in AppShell
   return (
     <AppShell
       layout="default"
@@ -115,25 +131,13 @@ export default function PolicyPathwayWrapper() {
       </AppShell.Navbar>
 
       <AppShell.Main>
-        {mode === PolicyDisplayMode.CREATE && (
-          <PolicyCreateFrame
-            label={state.label}
-            onLabelChange={(label) => setState({ ...state, label })}
-            onNext={handleNext}
-            onCancel={handleCancel}
-          />
-        )}
-
-        {mode === PolicyDisplayMode.SUBMIT && (
-          <PolicySubmitFrame
-            label={state.label}
-            parameters={state.parameters}
-            countryId={state.countryId}
-            onSubmit={handleSubmit}
-            onBack={handleBack}
-            isSubmitting={isPending}
-          />
-        )}
+        <ViewComponent
+          state={state}
+          onStateChange={handleStateChange}
+          onNext={handleNext}
+          onBack={handleBack}
+          onCancel={handleCancel}
+        />
       </AppShell.Main>
     </AppShell>
   );

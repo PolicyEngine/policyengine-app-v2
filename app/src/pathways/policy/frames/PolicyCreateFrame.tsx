@@ -1,11 +1,13 @@
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { PolicyState } from '../types';
 
 interface PolicyCreateFrameProps {
-  label: string;
-  onLabelChange: (label: string) => void;
+  state: PolicyState;
+  onStateChange: (newState: Partial<PolicyState>) => void;
   onNext: () => void;
-  onCancel: () => void;
+  onBack: () => void;
+  onCancel?: () => void;
 }
 
 /**
@@ -16,16 +18,16 @@ interface PolicyCreateFrameProps {
  */
 
 export default function PolicyCreateFrame({
-  label,
-  onLabelChange,
+  state,
+  onStateChange,
   onNext,
 }: PolicyCreateFrameProps) {
   const formInputs = (
     <TextInput
       label="Policy title"
       placeholder="Policy name"
-      value={label}
-      onChange={(e) => onLabelChange(e.currentTarget.value)}
+      value={state.label}
+      onChange={(e) => onStateChange({ label: e.currentTarget.value })}
     />
   );
 
