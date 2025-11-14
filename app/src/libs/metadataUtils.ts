@@ -5,11 +5,17 @@ import { MetadataApiPayload, MetadataState } from '@/types/metadata';
 // Memoized selectors to prevent unnecessary re-renders
 export const getTaxYears = createSelector(
   (state: RootState) => state.metadata.economyOptions.time_period,
-  (timePeriods) =>
-    timePeriods?.map((tp) => ({
-      value: tp.name.toString(),
-      label: tp.label,
-    })) || []
+  (timePeriods) => {
+    if (!timePeriods) return [];
+
+    // Sort by year in ascending order (2025, 2026, 2027, etc.)
+    return timePeriods
+      .map((tp) => ({
+        value: tp.name.toString(),
+        label: tp.label,
+      }))
+      .sort((a, b) => parseInt(a.value, 10) - parseInt(b.value, 10));
+  }
 );
 
 export const getDateRange = createSelector(
