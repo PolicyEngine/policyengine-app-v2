@@ -39,6 +39,7 @@ export class ReportAdapter {
     return {
       id: String(metadata.id),
       countryId: metadata.country_id,
+      year: metadata.year,
       apiVersion: metadata.api_version,
       simulationIds,
       status: this.mapApiStatusToReportStatus(metadata.status),
@@ -48,7 +49,7 @@ export class ReportAdapter {
 
   /**
    * Converts Report to format for API POST request
-   * API expects snake_case format - only simulation IDs needed for creation
+   * API expects snake_case format - simulation IDs and year needed for creation
    */
   static toCreationPayload(report: Report): ReportCreationPayload {
     // Extract simulation IDs from array
@@ -57,6 +58,7 @@ export class ReportAdapter {
     return {
       simulation_1_id: parseInt(simulation1Id, 10),
       simulation_2_id: simulation2Id ? parseInt(simulation2Id, 10) : null,
+      year: report.year,
     };
   }
 

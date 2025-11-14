@@ -61,6 +61,7 @@ export default function ReportSubmitFrame({ isInSubflow }: FlowComponentProps) {
     // Prepare the report data for creation
     const reportData: Partial<Report> = {
       countryId: reportState.countryId,
+      year: reportState.year,
       simulationIds: [sim1Id, sim2Id].filter(Boolean) as string[],
       apiVersion: reportState.apiVersion,
     };
