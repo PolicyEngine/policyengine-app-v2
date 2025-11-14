@@ -10,7 +10,8 @@ import LegacyBanner from '@/components/shared/LegacyBanner';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
-import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
+import { ValueInterval } from '@/types/subIngredients/valueInterval';
+import { addParameterInterval } from '@/types/subIngredients/parameter';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ParameterMain } from '@/components/policySetup';
 import { PolicyState } from '../types';
@@ -69,39 +70,10 @@ export default function PolicyParameterView({
     }
   }
 
-  // Handle adding a parameter interval - matches Redux reducer logic exactly
+  // Handle adding a parameter interval using the utility function
   const handleParameterAdd = (name: string, valueInterval: ValueInterval) => {
-    console.log(`[PolicyParameterView] Adding parameter interval`, { name, valueInterval });
-
-    // Find existing parameter or create new one
-    const existingParamIndex = state.parameters.findIndex((p) => p.name === name);
-
-    if (existingParamIndex >= 0) {
-      // Update existing parameter using ValueIntervalCollection to handle overlaps
-      const existingParam = state.parameters[existingParamIndex];
-      const paramCollection = new ValueIntervalCollection(existingParam.values);
-      paramCollection.addInterval(valueInterval);
-      const newValues = paramCollection.getIntervals();
-
-      const updatedParameters = [...state.parameters];
-      updatedParameters[existingParamIndex] = {
-        ...existingParam,
-        values: newValues,
-      };
-      onStateChange({ parameters: updatedParameters });
-      console.log(`[PolicyParameterView] Updated parameters`, updatedParameters);
-    } else {
-      // Create new parameter with ValueIntervalCollection
-      const paramCollection = new ValueIntervalCollection([]);
-      paramCollection.addInterval(valueInterval);
-      const newValues = paramCollection.getIntervals();
-
-      const newParameter = {
-        name,
-        values: newValues,
-      };
-      onStateChange({ parameters: [...state.parameters, newParameter] });
-    }
+    const updatedParameters = addParameterInterval(state.parameters, name, valueInterval);
+    onStateChange({ parameters: updatedParameters });
   };
 
   return (
