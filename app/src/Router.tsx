@@ -26,6 +26,7 @@ import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
+import ReportPathwayWrapperRoute from './pathways/report/ReportPathwayWrapperRoute';
 
 const router = createBrowserRouter(
   [
@@ -72,6 +73,10 @@ const router = createBrowserRouter(
                 {
                   path: 'reports/create',
                   element: <FlowRouter flow={ReportCreationFlow} returnPath="reports" />,
+                },
+                {
+                  path: 'reports/create-v2',
+                  element: <ReportPathwayWrapperRoute />,
                 },
                 {
                   path: 'simulations',
