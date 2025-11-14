@@ -18,7 +18,7 @@ import {
 } from '@mantine/core';
 import { DatePickerInput, YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
-import { getDateRange } from '@/libs/metadataUtils';
+import { getDateRange, getTaxYears } from '@/libs/metadataUtils';
 import { selectActivePolicy, selectCurrentPosition } from '@/reducers/activeSelectors';
 import { addPolicyParamAtPosition } from '@/reducers/policyReducer';
 import { RootState } from '@/store';
@@ -408,22 +408,34 @@ export function DateValueSelector(props: ValueSetterProps) {
 }
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, maxDate } = props;
+  const { param, setIntervals, maxDate: _maxDate } = props;
 
   // Get active policy to check for user-set reform values
   const activePolicy = useSelector(selectActivePolicy);
 
-  const MAX_YEARS = 10;
+  // Get available years from metadata
+  const availableYears = useSelector(getTaxYears);
+  const countryId = useSelector((state: RootState) => state.metadata.currentCountry);
 
-  // Generate years from minDate to maxDate, starting from current year
+  // Country-specific max years configuration
+  const MAX_YEARS_BY_COUNTRY: Record<string, number> = {
+    us: 10,
+    uk: 5,
+  };
+
+  // Generate years from metadata, starting from current year
   const generateYears = () => {
-    const startYear = new Date().getFullYear();
-    const endYear = dayjs(maxDate).year();
-    const years = [];
-    for (let year = startYear; year <= endYear; year++) {
-      years.push(year);
-    }
-    return years.slice(0, MAX_YEARS);
+    const currentYear = new Date().getFullYear();
+    const maxYears = MAX_YEARS_BY_COUNTRY[countryId || 'us'] || 10;
+
+    // Filter available years from metadata to only include current year onwards
+    const futureYears = availableYears
+      .map(option => parseInt(option.value, 10))
+      .filter(year => year >= currentYear)
+      .sort((a, b) => a - b);
+
+    // Take only the configured max years for this country
+    return futureYears.slice(0, maxYears);
   };
 
   const years = generateYears();
