@@ -23,18 +23,12 @@ export const POPULATION_VIEWS: ViewList<PopulationViewKey, PopulationState> = {
     key: 'select-scope',
     component: SelectGeographicScopeView,
     layoutType: 'standard',
-    canProceed: (state) => {
-      // Must have either geography or household scope selected
-      // For household scope, geography will be null
-      return state.geography !== undefined;
-    },
   },
 
   'set-label': {
     key: 'set-label',
     component: SetPopulationLabelView,
     layoutType: 'standard',
-    canProceed: (state) => state.label.trim().length > 0,
   },
 
   'build-household': {

@@ -48,8 +48,8 @@ export default function PopulationPathwayWrapper() {
       const nextView = typeof transitions.next === 'function' ? transitions.next(state) : transitions.next;
       setCurrentView(nextView);
     } else {
-      // End of pathway - navigate back to populations page
-      navigate(`/${countryId}/populations`);
+      // End of pathway - navigate back to households page
+      navigate(`/${countryId}/households`);
     }
   };
 
@@ -66,7 +66,7 @@ export default function PopulationPathwayWrapper() {
   };
 
   const handleCancel = () => {
-    navigate(`/${countryId}/populations`);
+    navigate(`/${countryId}/households`);
   };
 
   const ViewComponent = view.component;
