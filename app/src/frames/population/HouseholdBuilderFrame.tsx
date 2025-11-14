@@ -337,7 +337,7 @@ export default function HouseholdBuilderFrame({
     );
 
     // Validate household
-    const validation = HouseholdValidation.isReadyForSimulation(household);
+    const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
     if (!validation.isValid) {
       console.error('Household validation failed:', validation.errors);
       return;
@@ -590,7 +590,7 @@ export default function HouseholdBuilderFrame({
     );
   };
 
-  const validation = HouseholdValidation.isReadyForSimulation(household);
+  const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
   const canProceed = validation.isValid;
 
   const primaryAction = {

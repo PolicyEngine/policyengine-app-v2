@@ -1,4 +1,3 @@
-import { CURRENT_YEAR } from '@/constants';
 import { countryIds } from '@/libs/countries';
 import {
   Household,
@@ -52,7 +51,7 @@ export class HouseholdBuilder {
   private household: Household;
   private currentYear: string;
 
-  constructor(countryId: (typeof countryIds)[number], currentYear: string = CURRENT_YEAR) {
+  constructor(countryId: (typeof countryIds)[number], currentYear: string) {
     // Validate year format
     if (!/^\d{4}$/.test(currentYear)) {
       throw new Error('currentYear must be a four-digit year string');

@@ -112,8 +112,9 @@ export default function PolicyParameterSelectorValueSetterContainer(
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 
   // Hoisted date state for all non-multi-year selectors
-  const [startDate, setStartDate] = useState<string>('2025-01-01');
-  const [endDate, setEndDate] = useState<string>('2025-12-31');
+  const currentYear = new Date().getFullYear();
+  const [startDate, setStartDate] = useState<string>(`${currentYear}-01-01`);
+  const [endDate, setEndDate] = useState<string>(`${currentYear}-12-31`);
 
   function resetValueSettingState() {
     setIntervals([]);
@@ -414,9 +415,9 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
   const MAX_YEARS = 10;
 
-  // Generate years from minDate to maxDate, starting from 2025
+  // Generate years from minDate to maxDate, starting from current year
   const generateYears = () => {
-    const startYear = 2025;
+    const startYear = new Date().getFullYear();
     const endYear = dayjs(maxDate).year();
     const years = [];
     for (let year = startYear; year <= endYear; year++) {

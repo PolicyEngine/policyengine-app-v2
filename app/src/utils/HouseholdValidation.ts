@@ -1,4 +1,3 @@
-import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
 import * as HouseholdQueries from './HouseholdQueries';
@@ -47,8 +46,9 @@ export interface VariableMetadata {
 export const HouseholdValidation = {
   /**
    * Validate a household for a specific country
+   * @param year - Year to validate against (required - should come from report context)
    */
-  validateForCountry(household: Household, countryId: string): ValidationResult {
+  validateForCountry(household: Household, countryId: string, year: string): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -61,8 +61,8 @@ export const HouseholdValidation = {
       });
     }
 
-    // Generic validation (use current year as default)
-    this.validateGenericHousehold(household, errors, warnings, CURRENT_YEAR);
+    // Generic validation with report year
+    this.validateGenericHousehold(household, errors, warnings, year);
 
     // Country-specific validation
     switch (countryId) {
@@ -83,12 +83,13 @@ export const HouseholdValidation = {
 
   /**
    * Generic household validation applicable to all countries
+   * @param year - Year to validate against (required - should come from report context)
    */
   validateGenericHousehold(
     household: Household,
     errors: ValidationError[],
     warnings: ValidationWarning[],
-    year: string = CURRENT_YEAR
+    year: string
   ): void {
     // Check that all people have required fields based on metadata
     const currentYear = year;
@@ -269,8 +270,9 @@ export const HouseholdValidation = {
 
   /**
    * Check if household structure is complete enough for simulation
+   * @param year - Year to validate against (required - should come from report context)
    */
-  isReadyForSimulation(household: Household): ValidationResult {
+  isReadyForSimulation(household: Household, year: string): ValidationResult {
     const errors: ValidationError[] = [];
     const warnings: ValidationWarning[] = [];
 
@@ -284,7 +286,7 @@ export const HouseholdValidation = {
     }
 
     // Validate structure
-    const structureValidation = this.validateForCountry(household, household.countryId);
+    const structureValidation = this.validateForCountry(household, household.countryId, year);
     errors.push(...structureValidation.errors);
     warnings.push(...structureValidation.warnings);
 
