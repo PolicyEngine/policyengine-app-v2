@@ -1,8 +1,8 @@
 import { ViewList } from '@/pathways/core/types';
 import { PolicyState, PolicyViewKey } from './types';
-import PolicyCreateFrame from './frames/PolicyCreateFrame';
-import PolicyParameterFrame from './frames/PolicyParameterFrame';
-import PolicySubmitFrame from './frames/PolicySubmitFrame';
+import PolicyCreateView from './views/PolicyCreateView';
+import PolicyParameterView from './views/PolicyParameterView';
+import PolicySubmitView from './views/PolicySubmitView';
 
 /**
  * All views available in the policy pathway.
@@ -20,20 +20,20 @@ import PolicySubmitFrame from './frames/PolicySubmitFrame';
 export const POLICY_VIEWS: ViewList<PolicyViewKey, PolicyState> = {
   create: {
     key: 'create',
-    component: PolicyCreateFrame,
+    component: PolicyCreateView,
     layoutType: 'standard',
     canProceed: (state) => state.label.trim().length > 0,
   },
 
   'select-parameters': {
     key: 'select-parameters',
-    component: PolicyParameterFrame,
-    layoutType: 'custom', // This frame has its own AppShell with parameter tree
+    component: PolicyParameterView,
+    layoutType: 'custom', // This view has its own AppShell with parameter tree
   },
 
   submit: {
     key: 'submit',
-    component: PolicySubmitFrame,
+    component: PolicySubmitView,
     layoutType: 'standard',
   },
 };

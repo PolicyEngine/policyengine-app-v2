@@ -15,7 +15,7 @@ import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ParameterMain } from '@/components/policySetup';
 import { PolicyState } from '../types';
 
-interface PolicyParameterFrameProps {
+interface PolicyParameterViewProps {
   state: PolicyState;
   onStateChange: (newState: Partial<PolicyState>) => void;
   onNext: () => void;
@@ -24,7 +24,7 @@ interface PolicyParameterFrameProps {
 }
 
 /**
- * PolicyParameterFrame renders its own custom AppShell.
+ * PolicyParameterView renders its own custom AppShell.
  *
  * IMPORTANT: This frame has a custom AppShell with a parameter tree navbar
  * and footer showing parameter count. It differs from the standard app layout.
@@ -35,12 +35,12 @@ interface PolicyParameterFrameProps {
  * it in another AppShell.
  */
 
-export default function PolicyParameterFrame({
+export default function PolicyParameterView({
   state,
   onStateChange,
   onNext,
   onBack,
-}: PolicyParameterFrameProps) {
+}: PolicyParameterViewProps) {
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
 
@@ -71,7 +71,7 @@ export default function PolicyParameterFrame({
 
   // Handle adding a parameter interval - matches Redux reducer logic exactly
   const handleParameterAdd = (name: string, valueInterval: ValueInterval) => {
-    console.log(`[PolicyParameterFrame] Adding parameter interval`, { name, valueInterval });
+    console.log(`[PolicyParameterView] Adding parameter interval`, { name, valueInterval });
 
     // Find existing parameter or create new one
     const existingParamIndex = state.parameters.findIndex((p) => p.name === name);
@@ -89,7 +89,7 @@ export default function PolicyParameterFrame({
         values: newValues,
       };
       onStateChange({ parameters: updatedParameters });
-      console.log(`[PolicyParameterFrame] Updated parameters`, updatedParameters);
+      console.log(`[PolicyParameterView] Updated parameters`, updatedParameters);
     } else {
       // Create new parameter with ValueIntervalCollection
       const paramCollection = new ValueIntervalCollection([]);

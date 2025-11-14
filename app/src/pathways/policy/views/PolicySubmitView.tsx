@@ -10,7 +10,7 @@ import { formatDate } from '@/utils/dateUtils';
 import { formatParameterValueFromMetadata } from '@/utils/formatters';
 import { PolicyState } from '../types';
 
-interface PolicySubmitFrameProps {
+interface PolicySubmitViewProps {
   state: PolicyState;
   onStateChange: (newState: Partial<PolicyState>) => void;
   onNext: () => void;
@@ -19,17 +19,17 @@ interface PolicySubmitFrameProps {
 }
 
 /**
- * PolicySubmitFrame is wrapped in a standard AppShell by PolicyPathwayWrapper.
+ * PolicySubmitView is wrapped in a standard AppShell by PolicyPathwayWrapper.
  *
  * This frame does not manage its own layout - it's rendered inside the
  * AppShell.Main section provided by PolicyPathwayWrapper.
  */
 
-export default function PolicySubmitFrame({
+export default function PolicySubmitView({
   state,
   onNext,
   onBack,
-}: PolicySubmitFrameProps) {
+}: PolicySubmitViewProps) {
   // Get parameter metadata from Redux store
   const parameterMetadata = useSelector((state: RootState) => state.metadata.parameters);
 

@@ -57,7 +57,9 @@ export default function PolicyPathwayWrapper() {
     }
 
     if (transitions?.next) {
-      setCurrentView(transitions.next);
+      // Handle dynamic transitions (functions)
+      const nextView = typeof transitions.next === 'function' ? transitions.next(state) : transitions.next;
+      setCurrentView(nextView);
     } else {
       // End of pathway - submit
       handleSubmit();
@@ -66,7 +68,9 @@ export default function PolicyPathwayWrapper() {
 
   const handleBack = () => {
     if (transitions?.back) {
-      setCurrentView(transitions.back);
+      // Handle dynamic transitions (functions)
+      const backView = typeof transitions.back === 'function' ? transitions.back(state) : transitions.back;
+      setCurrentView(backView);
     }
   };
 
@@ -97,9 +101,10 @@ export default function PolicyPathwayWrapper() {
   };
 
   const ViewComponent = view.component;
+  const layoutType = view.layoutType || 'standard'; // Default to standard if not specified
 
   // Custom layout - view component manages its own AppShell
-  if (view.layoutType === 'custom') {
+  if (layoutType === 'custom') {
     return (
       <ViewComponent
         state={state}

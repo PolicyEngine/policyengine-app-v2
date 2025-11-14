@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Button, Stack } from '@mantine/core';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
@@ -48,6 +49,10 @@ export default function PopulationsPage() {
 
   const handleBuildPopulation = () => {
     navigate(`/${countryId}/households/create`);
+  };
+
+  const handleTestPathway = () => {
+    navigate(`/${countryId}/test-pathway-population`);
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -228,22 +233,31 @@ export default function PopulationsPage() {
   const transformedData: IngredientRecord[] = [...householdRecords, ...geographicRecords];
 
   return (
-    <IngredientReadView
-      ingredient="household"
-      title="Your saved households"
-      subtitle="Configure one or a collection of households to use in your simulation configurations."
-      buttonLabel="New household(s)"
-      onBuild={handleBuildPopulation}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={populationColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <Stack gap="md">
+      <Button
+        variant="outline"
+        onClick={handleTestPathway}
+        style={{ alignSelf: 'flex-start', marginLeft: '1rem' }}
+      >
+        🧪 Test Population Pathway
+      </Button>
+      <IngredientReadView
+        ingredient="household"
+        title="Your saved households"
+        subtitle="Configure one or a collection of households to use in your simulation configurations."
+        buttonLabel="New household(s)"
+        onBuild={handleBuildPopulation}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={transformedData}
+        columns={populationColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+      />
+    </Stack>
   );
 }

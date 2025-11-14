@@ -2,7 +2,7 @@ import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { PolicyState } from '../types';
 
-interface PolicyCreateFrameProps {
+interface PolicyCreateViewProps {
   state: PolicyState;
   onStateChange: (newState: Partial<PolicyState>) => void;
   onNext: () => void;
@@ -11,17 +11,17 @@ interface PolicyCreateFrameProps {
 }
 
 /**
- * PolicyCreateFrame is wrapped in a standard AppShell by PolicyPathwayWrapper.
+ * PolicyCreateView is wrapped in a standard AppShell by PolicyPathwayWrapper.
  *
  * This frame does not manage its own layout - it's rendered inside the
  * AppShell.Main section provided by PolicyPathwayWrapper.
  */
 
-export default function PolicyCreateFrame({
+export default function PolicyCreateView({
   state,
   onStateChange,
   onNext,
-}: PolicyCreateFrameProps) {
+}: PolicyCreateViewProps) {
   const formInputs = (
     <TextInput
       label="Policy title"

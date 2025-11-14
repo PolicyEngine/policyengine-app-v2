@@ -25,8 +25,8 @@ export interface View<TKey extends string, TState> {
     onCancel?: () => void;
   }>;
 
-  /** Layout type for this view */
-  layoutType: 'standard' | 'custom';
+  /** Layout type for this view (defaults to 'standard') */
+  layoutType?: 'standard' | 'custom';
 
   /** Optional validation function to check if user can proceed to next view */
   canProceed?: (state: TState) => boolean;
@@ -45,18 +45,19 @@ export type ViewList<TKey extends string, TState> = {
  * Defines the initial view and transitions between views.
  *
  * @template TKey - The view key type
+ * @template TState - The state type (optional, only needed for dynamic transitions)
  */
-export interface PathwayConfig<TKey extends string> {
+export interface PathwayConfig<TKey extends string, TState = any> {
   /** The view to show when the pathway starts */
   initialView: TKey;
 
   /** Transition rules for each view */
   transitions: {
     [K in TKey]?: {
-      /** The view to navigate to when clicking "Next" */
-      next?: TKey;
-      /** The view to navigate to when clicking "Back" */
-      back?: TKey;
+      /** The view to navigate to when clicking "Next" (can be static or dynamic) */
+      next?: TKey | ((state: TState) => TKey);
+      /** The view to navigate to when clicking "Back" (can be static or dynamic) */
+      back?: TKey | ((state: TState) => TKey);
     };
   };
 }

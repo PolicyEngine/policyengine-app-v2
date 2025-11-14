@@ -20,6 +20,7 @@ import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
 import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
+import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -100,6 +101,10 @@ const router = createBrowserRouter(
                 {
                   path: 'account',
                   element: <div>Account settings page</div>,
+                },
+                {
+                  path: 'test-pathway-population',
+                  element: <PopulationPathwayWrapper />,
                 },
               ],
             },
