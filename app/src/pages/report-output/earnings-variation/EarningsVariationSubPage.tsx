@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Group, Select, Stack, Text } from '@mantine/core';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
-import { CURRENT_YEAR } from '@/constants';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
@@ -40,6 +40,7 @@ export default function EarningsVariationSubPage({
 }: Props) {
   const [selectedVariable, setSelectedVariable] = useState('household_net_income');
   const countryId = useCurrentCountry();
+  const reportYear = useReportYear();
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // Get policy data for variations
@@ -61,7 +62,7 @@ export default function EarningsVariationSubPage({
     householdId: simulations[0]?.populationId || 'baseline',
     policyId: simulations[0]?.policyId || 'baseline-policy',
     policyData: baselinePolicyData,
-    year: CURRENT_YEAR,
+    year: reportYear,
     countryId,
     enabled: !!simulations[0]?.populationId && !!baselinePolicy,
   });
@@ -75,7 +76,7 @@ export default function EarningsVariationSubPage({
     householdId: simulations[1]?.populationId || 'reform',
     policyId: simulations[1]?.policyId || 'reform-policy',
     policyData: reformPolicyData,
-    year: CURRENT_YEAR,
+    year: reportYear,
     countryId,
     enabled: !!reform && !!simulations[1]?.populationId && !!reformPolicy,
   });
@@ -131,7 +132,7 @@ export default function EarningsVariationSubPage({
       }
 
       // Check if baseline variation has array values for this variable
-      const value = getValueFromHousehold(varName, CURRENT_YEAR, null, baselineVariation, metadata);
+      const value = getValueFromHousehold(varName, reportYear, null, baselineVariation, metadata);
       return Array.isArray(value);
     })
     .map((varName) => ({
@@ -162,14 +163,14 @@ export default function EarningsVariationSubPage({
           reform={reform}
           reformVariation={reformVariation}
           variableName={selectedVariable}
-          year={CURRENT_YEAR}
+          year={reportYear}
         />
       ) : (
         <BaselineOnlyChart
           baseline={baseline}
           baselineVariation={baselineVariation}
           variableName={selectedVariable}
-          year={CURRENT_YEAR}
+          year={reportYear}
         />
       )}
     </Stack>
