@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Badge, Button, Group, Stack } from '@mantine/core';
 import {
   BulletsValue,
   ColumnConfig,
@@ -36,6 +37,13 @@ export default function ReportsPage() {
   const handleBuildReport = () => {
     console.log('[ReportsPage] ========== NEW REPORT CLICKED ==========');
     const targetPath = `/${countryId}/reports/create`;
+    console.log('[ReportsPage] Navigating to:', targetPath);
+    navigate(targetPath);
+  };
+
+  const handleBuildReportV2 = () => {
+    console.log('[ReportsPage] ========== NEW REPORT V2 CLICKED ==========');
+    const targetPath = `/${countryId}/reports/create-v2`;
     console.log('[ReportsPage] Navigating to:', targetPath);
     navigate(targetPath);
   };
@@ -139,21 +147,33 @@ export default function ReportsPage() {
   );
 
   return (
-    <IngredientReadView
-      ingredient="report"
-      title="Your saved reports"
-      subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
-      onBuild={handleBuildReport}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={reportColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <Stack gap="md">
+      {/* TEMPORARY: Test button for new PathwayWrapper system */}
+      <Group justify="center" p="md" style={{ backgroundColor: '#f0f0ff', borderRadius: '8px' }}>
+        <Badge color="purple" size="lg">
+          NEW
+        </Badge>
+        <Button variant="outline" color="purple" onClick={handleBuildReportV2}>
+          🧪 Test New Report Pathway (PathwayWrapper)
+        </Button>
+      </Group>
+
+      <IngredientReadView
+        ingredient="report"
+        title="Your saved reports"
+        subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
+        onBuild={handleBuildReport}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={transformedData}
+        columns={reportColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+      />
+    </Stack>
   );
 }
