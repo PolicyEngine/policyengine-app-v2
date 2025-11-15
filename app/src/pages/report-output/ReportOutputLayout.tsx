@@ -1,22 +1,5 @@
-import {
-  IconChevronLeft,
-  IconClock,
-  IconPencil,
-  IconRefresh,
-  IconShare,
-  IconStack2,
-} from '@tabler/icons-react';
-import {
-  ActionIcon,
-  Anchor,
-  Box,
-  Button,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { IconClock, IconStack2 } from '@tabler/icons-react';
+import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
@@ -30,9 +13,10 @@ interface ReportOutputLayoutProps {
   tabs: Array<{ value: string; label: string }>;
   activeTab: string;
   onTabChange: (tabValue: string) => void;
-  onRunAgain?: () => void;
-  onShare?: () => void;
-  onEditName?: () => void;
+  // TODO: Re-enable when functionality is implemented
+  // onRunAgain?: () => void;
+  // onShare?: () => void;
+  // onEditName?: () => void;
   showSidebar?: boolean;
   outputType?: 'household' | 'societyWide';
   activeView?: string;
@@ -58,9 +42,10 @@ export default function ReportOutputLayout({
   tabs,
   activeTab,
   onTabChange,
-  onRunAgain,
-  onShare,
-  onEditName,
+  // TODO: Re-enable when functionality is implemented
+  // onRunAgain,
+  // onShare,
+  // onEditName,
   showSidebar = false,
   outputType = 'societyWide',
   activeView = '',
@@ -75,13 +60,13 @@ export default function ReportOutputLayout({
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
-        {/* Back navigation */}
-        <Group gap={spacing.xs} align="center">
+        {/* TODO: Re-enable back navigation once Reports list page is implemented */}
+        {/* <Group gap={spacing.xs} align="center">
           <IconChevronLeft size={20} color={colors.text.secondary} />
           <Text size="md" c={colors.text.secondary}>
             Reports
           </Text>
-        </Group>
+        </Group> */}
 
         {/* Header Section */}
         <Box>
@@ -96,7 +81,8 @@ export default function ReportOutputLayout({
               >
                 {reportLabel || reportId}
               </Title>
-              <ActionIcon
+              {/* TODO: Re-enable edit name button once functionality is implemented */}
+              {/* <ActionIcon
                 variant="subtle"
                 color="gray"
                 size="lg"
@@ -104,10 +90,11 @@ export default function ReportOutputLayout({
                 onClick={onEditName}
               >
                 <IconPencil size={18} />
-              </ActionIcon>
+              </ActionIcon> */}
             </Group>
 
-            <Group gap={spacing.sm}>
+            {/* TODO: Re-enable "Run Again" and "Share" buttons once functionality is implemented */}
+            {/* <Group gap={spacing.sm}>
               <Button
                 variant="filled"
                 leftSection={<IconRefresh size={18} />}
@@ -128,7 +115,7 @@ export default function ReportOutputLayout({
               <Button variant="default" leftSection={<IconShare size={18} />} onClick={onShare}>
                 Share
               </Button>
-            </Group>
+            </Group> */}
           </Group>
 
           {/* Timestamp and View All */}
@@ -137,9 +124,10 @@ export default function ReportOutputLayout({
             <Text size="sm" c="dimmed">
               {timestamp}
             </Text>
-            <Anchor size="sm" underline="always" c={colors.blue[700]}>
+            {/* TODO: Re-enable "View All" link once functionality is implemented */}
+            {/* <Anchor size="sm" underline="always" c={colors.blue[700]}>
               View All
-            </Anchor>
+            </Anchor> */}
           </Group>
         </Box>
 
