@@ -1,4 +1,6 @@
 import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
+import { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
+import { UserGeographicMetadataWithAssociation } from '@/hooks/useUserGeographic';
 
 /**
  * Validation utilities for ingredient configuration state
@@ -69,4 +71,70 @@ export function isSimulationReadyToSubmit(simulation: SimulationStateProps | nul
  */
 export function isSimulationPersisted(simulation: SimulationStateProps | null | undefined): boolean {
   return !!simulation?.id;
+}
+
+/**
+ * Checks if a UserHouseholdMetadataWithAssociation has fully loaded household data
+ *
+ * A household association is considered "ready" when:
+ * 1. The household metadata exists (not undefined)
+ * 2. The household metadata has household_json populated
+ * 3. The query is not still loading
+ *
+ * @param association - The household association to check
+ * @returns true if household data is fully loaded and ready to use
+ */
+export function isHouseholdAssociationReady(
+  association: UserHouseholdMetadataWithAssociation | null | undefined
+): boolean {
+  if (!association) {
+    return false;
+  }
+
+  // Still loading individual household data
+  if (association.isLoading) {
+    return false;
+  }
+
+  // Household metadata not loaded
+  if (!association.household) {
+    return false;
+  }
+
+  // Household metadata missing household_json (the actual data)
+  if (!association.household.household_json) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Checks if a UserGeographicMetadataWithAssociation has fully loaded geography data
+ *
+ * A geographic association is considered "ready" when:
+ * 1. The geography metadata exists (not undefined)
+ * 2. The query is not still loading
+ *
+ * @param association - The geographic association to check
+ * @returns true if geography data is fully loaded and ready to use
+ */
+export function isGeographicAssociationReady(
+  association: UserGeographicMetadataWithAssociation | null | undefined
+): boolean {
+  if (!association) {
+    return false;
+  }
+
+  // Still loading individual geography data
+  if (association.isLoading) {
+    return false;
+  }
+
+  // Geography data not loaded
+  if (!association.geography) {
+    return false;
+  }
+
+  return true;
 }
