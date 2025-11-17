@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
-import Layout from './components/Layout';
+import AppLayout from './components/AppLayout';
+import PathwayLayout from './components/PathwayLayout';
 import StaticLayout from './components/StaticLayout';
 import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
@@ -44,7 +45,7 @@ const router = createBrowserRouter(
           element: <MetadataGuard />,
           children: [
             {
-              element: <Layout />,
+              element: <AppLayout />,
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
@@ -58,8 +59,9 @@ const router = createBrowserRouter(
         {
           element: <MetadataLazyLoader />,
           children: [
+            // Regular routes with standard layout
             {
-              element: <Layout />,
+              element: <AppLayout />,
               children: [
                 {
                   path: 'dashboard',
@@ -73,10 +75,6 @@ const router = createBrowserRouter(
                 {
                   path: 'reports/create',
                   element: <FlowRouter flow={ReportCreationFlow} returnPath="reports" />,
-                },
-                {
-                  path: 'reports/create-v2',
-                  element: <ReportPathwayWrapperRoute />,
                 },
                 {
                   path: 'simulations',
@@ -108,11 +106,21 @@ const router = createBrowserRouter(
                 },
               ],
             },
+            // V2 Pathway routes that manage their own layouts
+            {
+              element: <PathwayLayout />,
+              children: [
+                {
+                  path: 'reports/create-v2',
+                  element: <ReportPathwayWrapperRoute />,
+                },
+              ],
+            },
           ],
         },
         // Routes that don't need metadata at all (no guard)
         {
-          element: <Layout />,
+          element: <AppLayout />,
           children: [
             {
               path: 'configurations',
