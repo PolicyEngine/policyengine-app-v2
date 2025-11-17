@@ -33,6 +33,7 @@ import SimulationPopulationSetupView from './views/simulation/SimulationPopulati
 import PolicyLabelView from './views/policy/PolicyLabelView';
 import PolicyParameterSelectorView from './views/policy/PolicyParameterSelectorView';
 import PolicySubmitView from './views/policy/PolicySubmitView';
+import PolicyExistingView from './views/policy/PolicyExistingView';
 
 // Population views
 import PopulationScopeView from './views/population/PopulationScopeView';
@@ -185,6 +186,22 @@ export default function ReportPathwayWrapper({
       const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
       newSimulations[activeSimulationIndex].policy.id = policyId;
       newSimulations[activeSimulationIndex].policy.isCreated = true;
+      return { ...prev, simulations: newSimulations };
+    });
+    // Return to simulation setup
+    navigateToMode(ReportViewMode.SIMULATION_SETUP);
+  }, [activeSimulationIndex, navigateToMode]);
+
+  const handleSelectExistingPolicy = useCallback((policyId: string, label: string, parameters: any[]) => {
+    console.log('[ReportPathwayWrapper] Selecting existing policy:', policyId, label);
+    setReportState((prev) => {
+      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
+      newSimulations[activeSimulationIndex].policy = {
+        id: policyId,
+        label,
+        parameters,
+        isCreated: true,
+      };
       return { ...prev, simulations: newSimulations };
     });
     // Return to simulation setup
@@ -489,7 +506,12 @@ export default function ReportPathwayWrapper({
       );
 
     case ReportViewMode.SELECT_EXISTING_POLICY:
-      return <div>SELECT_EXISTING_POLICY - TODO: Implement policy selection view</div>;
+      return (
+        <PolicyExistingView
+          onSelectPolicy={handleSelectExistingPolicy}
+          onReturn={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
+        />
+      );
 
     // ========== POPULATION CREATION VIEWS ==========
     case ReportViewMode.POPULATION_SCOPE:
