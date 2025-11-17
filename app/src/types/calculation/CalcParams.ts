@@ -41,6 +41,12 @@ export interface CalcParams {
   region?: string;
 
   /**
+   * Year for the calculation (e.g., '2025')
+   * Used to specify which year's policy rules to apply
+   */
+  year: string;
+
+  /**
    * Calculation ID for tracking
    * Used to correlate calculation with report/simulation
    */
