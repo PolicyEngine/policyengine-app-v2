@@ -153,6 +153,15 @@ export default function ReportPathwayWrapper({
     });
   }, [activeSimulationIndex]);
 
+  const updatePolicy = useCallback((updatedPolicy: PolicyStateProps) => {
+    console.log('[ReportPathwayWrapper] Updating policy with:', updatedPolicy);
+    setReportState((prev) => {
+      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
+      newSimulations[activeSimulationIndex].policy = updatedPolicy;
+      return { ...prev, simulations: newSimulations };
+    });
+  }, [activeSimulationIndex]);
+
   const handleSelectCurrentLaw = useCallback(() => {
     console.log('[ReportPathwayWrapper] Selecting current law');
     setReportState((prev) => {
@@ -435,6 +444,7 @@ export default function ReportPathwayWrapper({
       return (
         <PolicyParameterSelectorView
           policy={activeSimulation.policy}
+          onPolicyUpdate={updatePolicy}
           onNext={() => navigateToMode(ReportViewMode.POLICY_SUBMIT)}
           onReturn={() => navigateToMode(ReportViewMode.POLICY_LABEL)}
         />
