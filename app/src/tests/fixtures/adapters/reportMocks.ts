@@ -109,6 +109,7 @@ export const mockReportOutput: ReportOutputSocietyWideUS = {
 export const mockReport: Report = {
   id: '123',
   countryId: 'us',
+  year: '2024',
   apiVersion: 'v1',
   simulationIds: ['456', '789'],
   status: 'complete',
@@ -118,6 +119,7 @@ export const mockReport: Report = {
 export const mockPendingReport: Report = {
   id: '1',
   countryId: 'us',
+  year: '2025',
   apiVersion: 'v1',
   simulationIds: ['111'],
   status: 'pending',
@@ -127,6 +129,7 @@ export const mockPendingReport: Report = {
 export const mockErrorReport: Report = {
   id: '2',
   countryId: 'us',
+  year: '2024',
   apiVersion: 'v1',
   simulationIds: ['222', '333'],
   status: 'error',
@@ -136,6 +139,7 @@ export const mockErrorReport: Report = {
 export const mockReportMetadata: ReportMetadata = {
   id: 123,
   country_id: 'us',
+  year: '2024',
   api_version: 'v1',
   simulation_1_id: '456',
   simulation_2_id: '789',
@@ -146,6 +150,7 @@ export const mockReportMetadata: ReportMetadata = {
 export const mockReportMetadataSingleSimulation: ReportMetadata = {
   id: 1,
   country_id: 'us',
+  year: '2024',
   api_version: 'v1',
   simulation_1_id: '999',
   simulation_2_id: null,
@@ -156,6 +161,7 @@ export const mockReportMetadataSingleSimulation: ReportMetadata = {
 export const mockReportCreationPayload: ReportCreationPayload = {
   simulation_1_id: 456,
   simulation_2_id: 789,
+  year: '2024',
 };
 
 export const mockCompletedReportPayload: ReportSetOutputPayload = {

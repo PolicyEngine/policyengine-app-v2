@@ -35,6 +35,7 @@ export const mockSocietyWideCalcParams = (overrides?: Partial<CalcParams>): Calc
   },
   populationId: 'us',
   region: 'us',
+  year: '2024',
   calcId: 'test-calc-id',
   ...overrides,
 });
@@ -49,6 +50,7 @@ export const mockHouseholdCalcParams = (overrides?: Partial<CalcParams>): CalcPa
     baseline: '1',
   },
   populationId: 'test-household-id',
+  year: '2024',
   calcId: 'test-calc-id',
   ...overrides,
 });

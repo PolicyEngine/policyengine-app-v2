@@ -78,6 +78,7 @@ export class ResultPersister {
     const report: Report = {
       id: reportId,
       countryId: countryId as any,
+      year: '2024', // TODO: Get year from calculation metadata
       apiVersion: null,
       simulationIds: [],
       status: 'complete',

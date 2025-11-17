@@ -37,6 +37,7 @@ export const mockReportWithLabel: Report = {
   id: '',
   label: 'My Test Report',
   countryId: 'us' as const,
+  year: '2024',
   simulationIds: ['1', '2'],
   apiVersion: 'v1',
   status: 'pending' as const,

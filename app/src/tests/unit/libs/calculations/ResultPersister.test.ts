@@ -193,6 +193,7 @@ describe('ResultPersister', () => {
       const report: Report = {
         id: TEST_CALC_IDS.REPORT_123,
         countryId: TEST_COUNTRIES.US,
+        year: '2024',
         apiVersion: '1.0',
         simulationIds: [TEST_CALC_IDS.SIM_1, TEST_CALC_IDS.SIM_2],
         status: 'pending',
@@ -242,6 +243,7 @@ describe('ResultPersister', () => {
       const report: Report = {
         id: TEST_CALC_IDS.REPORT_123,
         countryId: TEST_COUNTRIES.US,
+        year: '2024',
         apiVersion: '1.0',
         simulationIds: [TEST_CALC_IDS.SIM_1, TEST_CALC_IDS.SIM_2],
         status: 'pending',

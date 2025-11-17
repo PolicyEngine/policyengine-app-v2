@@ -58,6 +58,7 @@ export const mockSocietyWideParams = (calcId: string = TEST_CALC_IDS.REPORT_123)
   },
   populationId: TEST_POPULATION_IDS.US,
   region: TEST_POPULATION_IDS.US,
+  year: '2024',
   calcId,
 });
 
@@ -68,5 +69,6 @@ export const mockHouseholdParams = (calcId: string = TEST_CALC_IDS.SIM_456): Cal
     baseline: TEST_POLICY_IDS.POLICY_1,
   },
   populationId: TEST_POPULATION_IDS.HOUSEHOLD_123,
+  year: '2024',
   calcId,
 });

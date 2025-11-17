@@ -256,6 +256,7 @@ export const MOCK_ECONOMY_RESULT: ReportOutputSocietyWideUS = {
 export const createMockReport = (overrides?: Partial<Report>): Report => ({
   id: EXISTING_REPORT_ID,
   countryId: TEST_COUNTRIES.US,
+  year: '2024',
   apiVersion: '1.0.0',
   simulationIds: ['sim-1', 'sim-2'],
   status: 'pending',
@@ -283,6 +284,7 @@ export const MOCK_PENDING_REPORT = createMockReport({
 export const createMockReportMetadata = (overrides?: Partial<ReportMetadata>): ReportMetadata => ({
   id: 123,
   country_id: TEST_COUNTRIES.US,
+  year: '2024',
   simulation_1_id: 'sim-1',
   simulation_2_id: 'sim-2',
   api_version: '1.0.0',
