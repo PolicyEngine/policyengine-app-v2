@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box, Button, Card, CloseButton, Group, Text, Title } from '@mantine/core';
+import { Box, Card, CloseButton, Group, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -203,58 +203,6 @@ export default function AutumnBudgetBanner() {
             ))}
           </Box>
         )}
-
-        {/* Dashboard CTA Section */}
-        <Box
-          mb={spacing.xl}
-          style={{
-            textAlign: 'center',
-          }}
-        >
-          <Text
-            size={typography.fontSize.lg}
-            c={colors.white}
-            fw={typography.fontWeight.medium}
-            mb={spacing.md}
-            style={{
-              textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            See PolicyEngine's analysis of the UK Autumn Budget 2025
-          </Text>
-
-          {/* Dashboard Button - Ready for image background */}
-          <Button
-            size="xl"
-            style={{
-              backgroundColor: colors.white,
-              color: colors.primary[700],
-              fontWeight: typography.fontWeight.bold,
-              fontSize: typography.fontSize.lg,
-              padding: `${spacing.lg} ${spacing['2xl']}`,
-              borderRadius: '10px',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.3s ease',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
-            }}
-            styles={{
-              root: {
-                '&:hover': {
-                  backgroundColor: colors.primary[50],
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
-                },
-              },
-            }}
-            onClick={() => {
-              // TODO: Add dashboard link here
-              console.log('Navigate to dashboard');
-            }}
-          >
-            View dashboard →
-          </Button>
-        </Box>
 
         {/* Pre-Autumn Budget Analysis Cards */}
         <Box>
