@@ -14,7 +14,6 @@ import reportReducer, * as reportActions from '@/reducers/reportReducer';
 import simulationsReducer from '@/reducers/simulationsReducer';
 import {
   CREATE_REPORT_BUTTON_LABEL,
-  DEFAULT_YEAR,
   EMPTY_REPORT_LABEL,
   REPORT_CREATION_FRAME_TITLE,
   REPORT_NAME_INPUT_LABEL,

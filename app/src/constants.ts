@@ -24,8 +24,8 @@ export function getParamDefinitionDate(year?: string): string {
   if (!year) {
     console.error(
       '[getParamDefinitionDate] No year provided - this is likely a bug. ' +
-      `Falling back to CURRENT_YEAR (${CURRENT_YEAR}). ` +
-      'Please ensure year is passed from report context.'
+        `Falling back to CURRENT_YEAR (${CURRENT_YEAR}). ` +
+        'Please ensure year is passed from report context.'
     );
     return `${CURRENT_YEAR}-01-01`;
   }

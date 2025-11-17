@@ -158,8 +158,8 @@ export const populationSlice = createSlice({
       if (!year) {
         console.error(
           '[populationReducer.initializeHouseholdAtPosition] No year provided - this is likely a bug. ' +
-          `Falling back to CURRENT_YEAR (${CURRENT_YEAR}). ` +
-          'Please ensure year is passed from report state.'
+            `Falling back to CURRENT_YEAR (${CURRENT_YEAR}). ` +
+            'Please ensure year is passed from report state.'
         );
       }
       const builder = new HouseholdBuilder(countryId as any, householdYear);

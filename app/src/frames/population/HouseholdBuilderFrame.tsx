@@ -67,8 +67,8 @@ export default function HouseholdBuilderFrame({
               Configuration Error
             </Text>
             <Text c="dimmed" ta="center">
-              No report year available. Please return to the report creation page and select a
-              year before creating a household.
+              No report year available. Please return to the report creation page and select a year
+              before creating a household.
             </Text>
           </Stack>
         }
@@ -476,8 +476,12 @@ export default function HouseholdBuilderFrame({
           />
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', reportYear) ||
-              0
+              HouseholdQueries.getPersonVariable(
+                household,
+                'you',
+                'employment_income',
+                reportYear
+              ) || 0
             }
             onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
             min={0}

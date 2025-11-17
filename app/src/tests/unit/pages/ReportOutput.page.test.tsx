@@ -1,5 +1,5 @@
-import { describe, expect, test, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportOutputPage from '@/pages/ReportOutput.page';
 import {
   MOCK_REPORT_WITH_YEAR,

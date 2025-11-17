@@ -6,7 +6,9 @@ import { MetadataApiPayload, MetadataState } from '@/types/metadata';
 export const getTaxYears = createSelector(
   (state: RootState) => state.metadata.economyOptions.time_period,
   (timePeriods) => {
-    if (!timePeriods) return [];
+    if (!timePeriods) {
+      return [];
+    }
 
     // Sort by year in ascending order (2025, 2026, 2027, etc.)
     return timePeriods

@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { fetchCalculationWithMeta } from '@/api/reportCalculations';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
-import { CURRENT_YEAR } from '@/constants';
 import {
   mockEconomyCalcResult,
   mockEconomyMeta,

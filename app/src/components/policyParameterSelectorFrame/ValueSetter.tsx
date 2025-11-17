@@ -408,7 +408,7 @@ export function DateValueSelector(props: ValueSetterProps) {
 }
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
-  const { param, setIntervals, maxDate: _maxDate } = props;
+  const { param, setIntervals } = props;
 
   // Get active policy to check for user-set reform values
   const activePolicy = useSelector(selectActivePolicy);
@@ -430,8 +430,8 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
 
     // Filter available years from metadata to only include current year onwards
     const futureYears = availableYears
-      .map(option => parseInt(option.value, 10))
-      .filter(year => year >= currentYear)
+      .map((option) => parseInt(option.value, 10))
+      .filter((year) => year >= currentYear)
       .sort((a, b) => a - b);
 
     // Take only the configured max years for this country
