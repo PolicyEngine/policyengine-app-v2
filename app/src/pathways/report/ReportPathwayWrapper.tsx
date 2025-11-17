@@ -39,6 +39,7 @@ import PopulationScopeView from './views/population/PopulationScopeView';
 import PopulationLabelView from './views/population/PopulationLabelView';
 import HouseholdBuilderView from './views/population/HouseholdBuilderView';
 import GeographicConfirmationView from './views/population/GeographicConfirmationView';
+import PopulationExistingView from './views/population/PopulationExistingView';
 
 import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
 import { useCreateReport } from '@/hooks/useCreateReport';
@@ -255,6 +256,34 @@ export default function ReportPathwayWrapper({
       newSimulations[activeSimulationIndex].population = {
         ...prev.simulations[otherIndex].population
       };
+      return { ...prev, simulations: newSimulations };
+    });
+    // Return to simulation setup
+    navigateToMode(ReportViewMode.SIMULATION_SETUP);
+  }, [activeSimulationIndex, navigateToMode]);
+
+  const handleSelectExistingHousehold = useCallback((householdId: string, household: Household, label: string) => {
+    console.log('[ReportPathwayWrapper] Selecting existing household:', householdId, label);
+    setReportState((prev) => {
+      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
+      newSimulations[activeSimulationIndex].population.household = { ...household, id: householdId };
+      newSimulations[activeSimulationIndex].population.label = label;
+      newSimulations[activeSimulationIndex].population.type = 'household';
+      newSimulations[activeSimulationIndex].population.isCreated = true;
+      return { ...prev, simulations: newSimulations };
+    });
+    // Return to simulation setup
+    navigateToMode(ReportViewMode.SIMULATION_SETUP);
+  }, [activeSimulationIndex, navigateToMode]);
+
+  const handleSelectExistingGeography = useCallback((geographyId: string, geography: Geography, label: string) => {
+    console.log('[ReportPathwayWrapper] Selecting existing geography:', geographyId, label);
+    setReportState((prev) => {
+      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
+      newSimulations[activeSimulationIndex].population.geography = { ...geography, id: geographyId };
+      newSimulations[activeSimulationIndex].population.label = label;
+      newSimulations[activeSimulationIndex].population.type = 'geography';
+      newSimulations[activeSimulationIndex].population.isCreated = true;
       return { ...prev, simulations: newSimulations };
     });
     // Return to simulation setup
@@ -510,7 +539,13 @@ export default function ReportPathwayWrapper({
       );
 
     case ReportViewMode.SELECT_EXISTING_POPULATION:
-      return <div>SELECT_EXISTING_POPULATION - TODO: Implement population selection view</div>;
+      return (
+        <PopulationExistingView
+          onSelectHousehold={handleSelectExistingHousehold}
+          onSelectGeography={handleSelectExistingGeography}
+          onReturn={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
+        />
+      );
 
     default:
       return <div>Unknown view mode: {currentMode}</div>;
