@@ -16,13 +16,13 @@
  */
 export enum ReportViewMode {
   // ========== Report-level views ==========
-  LABEL = 'LABEL', // ReportCreationFrame
-  SETUP = 'SETUP', // ReportSetupFrame (shows two simulation cards)
-  SUBMIT = 'SUBMIT', // ReportSubmitFrame
+  REPORT_LABEL = 'REPORT_LABEL', // ReportCreationFrame
+  REPORT_SETUP = 'REPORT_SETUP', // ReportSetupFrame (shows two simulation cards)
+  REPORT_SUBMIT = 'REPORT_SUBMIT', // ReportSubmitFrame
 
   // ========== Simulation selection/creation views ==========
-  SELECT_SIMULATION = 'SELECT_SIMULATION', // ReportSelectSimulationFrame (create new vs load existing)
-  SELECT_EXISTING_SIMULATION = 'SELECT_EXISTING_SIMULATION', // ReportSelectExistingSimulationFrame
+  REPORT_SELECT_SIMULATION = 'REPORT_SELECT_SIMULATION', // ReportSelectSimulationFrame (create new vs load existing)
+  REPORT_SELECT_EXISTING_SIMULATION = 'REPORT_SELECT_EXISTING_SIMULATION', // ReportSelectExistingSimulationFrame
 
   // ========== Simulation setup views (inline) ==========
   SIMULATION_LABEL = 'SIMULATION_LABEL', // SimulationCreationFrame
