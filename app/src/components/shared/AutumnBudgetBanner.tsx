@@ -137,7 +137,7 @@ export default function AutumnBudgetBanner() {
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {isBeforeBudget ? 'Autumn budget 2025 coming soon' : 'Autumn budget 2025'}
+          {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025'}
         </Title>
 
         {/* Countdown Timer - Only show before budget */}
@@ -220,7 +220,7 @@ export default function AutumnBudgetBanner() {
               textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             }}
           >
-            See the PolicyEngine analysis on autumn budget UK 2025
+            See PolicyEngine's analysis of the UK Autumn Budget 2025
           </Text>
 
           {/* Dashboard Button - Ready for image background */}
