@@ -1,3 +1,9 @@
+import {
+  PolicyViewMode,
+  PopulationViewMode,
+  SimulationViewMode,
+} from './SharedViewModes';
+
 /**
  * ReportViewMode - Enum for report creation pathway view states
  *
@@ -6,43 +12,42 @@
  * complete report creation experience.
  *
  * Grouped by pathway level:
- * - Report-level views (LABEL, SETUP, SUBMIT)
- * - Simulation setup views (inline, replaces SimulationCreationFlow subflow)
- * - Policy setup views (inline, nested within simulation setup)
- * - Population setup views (inline, nested within simulation setup)
+ * - Report-level views (REPORT_*)
+ * - Simulation setup views (inline, from SimulationViewMode)
+ * - Policy setup views (inline, from PolicyViewMode)
+ * - Population setup views (inline, from PopulationViewMode)
  * - Selection views (for loading existing ingredients)
  *
  * Note: This enum is large (~20+ modes) which is acceptable per the plan's Option A.
+ * It composes shared view modes to maximize reusability across pathways.
  */
 export enum ReportViewMode {
-  // ========== Report-level views ==========
+  // ========== Report-level views (report-specific) ==========
   REPORT_LABEL = 'REPORT_LABEL', // ReportCreationFrame
   REPORT_SETUP = 'REPORT_SETUP', // ReportSetupFrame (shows two simulation cards)
   REPORT_SUBMIT = 'REPORT_SUBMIT', // ReportSubmitFrame
 
-  // ========== Simulation selection/creation views ==========
+  // ========== Simulation selection/creation views (report-specific) ==========
   REPORT_SELECT_SIMULATION = 'REPORT_SELECT_SIMULATION', // ReportSelectSimulationFrame (create new vs load existing)
   REPORT_SELECT_EXISTING_SIMULATION = 'REPORT_SELECT_EXISTING_SIMULATION', // ReportSelectExistingSimulationFrame
 
-  // ========== Simulation setup views (inline) ==========
-  SIMULATION_LABEL = 'SIMULATION_LABEL', // SimulationCreationFrame
-  SIMULATION_SETUP = 'SIMULATION_SETUP', // SimulationSetupFrame (choose policy/population)
-  SIMULATION_SUBMIT = 'SIMULATION_SUBMIT', // SimulationSubmitFrame
+  // ========== Simulation setup views (shared) ==========
+  SIMULATION_LABEL = SimulationViewMode.SIMULATION_LABEL,
+  SIMULATION_SETUP = SimulationViewMode.SIMULATION_SETUP,
+  SIMULATION_SUBMIT = SimulationViewMode.SIMULATION_SUBMIT,
 
-  // ========== Policy setup views (inline, nested in simulation) ==========
-  POLICY_LABEL = 'POLICY_LABEL', // PolicyCreationFrame
-  POLICY_PARAMETER_SELECTOR = 'POLICY_PARAMETER_SELECTOR', // PolicyParameterSelectorFrame
-  POLICY_SUBMIT = 'POLICY_SUBMIT', // PolicySubmitFrame
-  SELECT_EXISTING_POLICY = 'SELECT_EXISTING_POLICY', // SimulationSelectExistingPolicyFrame
+  // ========== Policy setup views (shared) ==========
+  POLICY_LABEL = PolicyViewMode.POLICY_LABEL,
+  POLICY_PARAMETER_SELECTOR = PolicyViewMode.POLICY_PARAMETER_SELECTOR,
+  POLICY_SUBMIT = PolicyViewMode.POLICY_SUBMIT,
+  SELECT_EXISTING_POLICY = PolicyViewMode.SELECT_EXISTING_POLICY,
+  SETUP_POLICY = PolicyViewMode.SETUP_POLICY,
 
-  // ========== Population setup views (inline, nested in simulation) ==========
-  POPULATION_SCOPE = 'POPULATION_SCOPE', // SelectGeographicScopeFrame
-  POPULATION_LABEL = 'POPULATION_LABEL', // SetPopulationLabelFrame
-  POPULATION_HOUSEHOLD_BUILDER = 'POPULATION_HOUSEHOLD_BUILDER', // HouseholdBuilderFrame
-  POPULATION_GEOGRAPHIC_CONFIRM = 'POPULATION_GEOGRAPHIC_CONFIRM', // GeographicConfirmationFrame
-  SELECT_EXISTING_POPULATION = 'SELECT_EXISTING_POPULATION', // SimulationSelectExistingPopulationFrame
-
-  // ========== Setup coordination views (nested in simulation) ==========
-  SETUP_POLICY = 'SETUP_POLICY', // SimulationSetupPolicyFrame (create new vs load existing choice)
-  SETUP_POPULATION = 'SETUP_POPULATION', // SimulationSetupPopulationFrame (create new vs load existing choice)
+  // ========== Population setup views (shared) ==========
+  POPULATION_SCOPE = PopulationViewMode.POPULATION_SCOPE,
+  POPULATION_LABEL = PopulationViewMode.POPULATION_LABEL,
+  POPULATION_HOUSEHOLD_BUILDER = PopulationViewMode.POPULATION_HOUSEHOLD_BUILDER,
+  POPULATION_GEOGRAPHIC_CONFIRM = PopulationViewMode.POPULATION_GEOGRAPHIC_CONFIRM,
+  SELECT_EXISTING_POPULATION = PopulationViewMode.SELECT_EXISTING_POPULATION,
+  SETUP_POPULATION = PopulationViewMode.SETUP_POPULATION,
 }
