@@ -18,7 +18,7 @@ export default function ReportPathwayWrapperRoute() {
 
   const handleComplete = () => {
     console.log('[ReportPathwayWrapperRoute] Pathway completed');
-    navigate(`/${countryId}/reports`);
+    // Don't navigate - the wrapper already navigated to the report output page
   };
 
   const handleCancel = () => {
