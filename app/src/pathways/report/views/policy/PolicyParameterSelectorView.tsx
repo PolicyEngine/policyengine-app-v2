@@ -16,7 +16,7 @@ import LegacyBanner from '@/components/shared/LegacyBanner';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
-import { ParameterMetadata, ParameterTreeNode } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import PolicyParameterSelectorMain from '../../components/PolicyParameterSelectorMain';

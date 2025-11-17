@@ -7,6 +7,7 @@
 
 import { useNavigate, useParams } from 'react-router-dom';
 import ReportPathwayWrapper from './ReportPathwayWrapper';
+import { countryIds } from '@/libs/countries';
 
 export default function ReportPathwayWrapperRoute() {
   const { countryId } = useParams<{ countryId: string }>();
@@ -14,6 +15,11 @@ export default function ReportPathwayWrapperRoute() {
 
   if (!countryId) {
     return <div>Error: Country ID not found</div>;
+  }
+
+  // Validate countryId is a valid country
+  if (!countryIds.includes(countryId as any)) {
+    return <div>Error: Invalid country ID</div>;
   }
 
   const handleComplete = () => {
@@ -28,7 +34,7 @@ export default function ReportPathwayWrapperRoute() {
 
   return (
     <ReportPathwayWrapper
-      countryId={countryId}
+      countryId={countryId as (typeof countryIds)[number]}
       onComplete={handleComplete}
       onCancel={handleCancel}
     />

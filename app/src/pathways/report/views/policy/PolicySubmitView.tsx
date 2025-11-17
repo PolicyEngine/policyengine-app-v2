@@ -15,10 +15,11 @@ import { PolicyStateProps } from '@/types/pathwayState';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { formatDate } from '@/utils/dateUtils';
+import { countryIds } from '@/libs/countries';
 
 interface PolicySubmitViewProps {
   policy: PolicyStateProps;
-  countryId: string;
+  countryId: (typeof countryIds)[number];
   onSubmitSuccess: (policyId: string) => void;
 }
 
