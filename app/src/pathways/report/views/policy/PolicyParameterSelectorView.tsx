@@ -9,7 +9,6 @@ import { useSelector } from 'react-redux';
 import { AppShell, Box, Button, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { IconChevronRight } from '@tabler/icons-react';
-import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import HeaderNavigation from '@/components/shared/HomeHeader';
@@ -20,15 +19,18 @@ import { RootState } from '@/store';
 import { ParameterMetadata, ParameterTreeNode } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
+import PolicyParameterSelectorMain from '../../components/PolicyParameterSelectorMain';
 
 interface PolicyParameterSelectorViewProps {
   policy: PolicyStateProps;
+  onPolicyUpdate: (updatedPolicy: PolicyStateProps) => void;
   onNext: () => void;
   onReturn: () => void;
 }
 
 export default function PolicyParameterSelectorView({
   policy,
+  onPolicyUpdate,
   onNext,
   onReturn,
 }: PolicyParameterSelectorViewProps) {
@@ -119,7 +121,12 @@ export default function PolicyParameterSelectorView({
         {loading || !parameterTree ? (
           <MainEmpty />
         ) : selectedLeafParam ? (
-          <Main key={selectedLeafParam.parameter} param={selectedLeafParam} />
+          <PolicyParameterSelectorMain
+            key={selectedLeafParam.parameter}
+            param={selectedLeafParam}
+            policy={policy}
+            onPolicyUpdate={onPolicyUpdate}
+          />
         ) : (
           <MainEmpty />
         )}
