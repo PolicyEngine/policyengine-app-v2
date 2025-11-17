@@ -22,11 +22,13 @@ app/src/
 │   │   ├── populationCallbacks.ts
 │   │   ├── simulationCallbacks.ts
 │   │   └── reportCallbacks.ts
-│   └── ingredientReconstruction/        # API data reconstruction
-│       ├── index.ts
-│       ├── reconstructSimulation.ts
-│       ├── reconstructPolicy.ts
-│       └── reconstructPopulation.ts
+│   ├── ingredientReconstruction/        # API data reconstruction
+│   │   ├── index.ts
+│   │   ├── reconstructSimulation.ts
+│   │   ├── reconstructPolicy.ts
+│   │   └── reconstructPopulation.ts
+│   └── validation/                      # Ingredient validation utilities
+│       └── ingredientValidation.ts      # Configuration state validation
 └── pathways/
     └── report/
         └── views/                        # Fully reusable view components
@@ -63,7 +65,70 @@ All view components are already fully reusable across pathways:
 
 **Usage**: Import directly into any pathway wrapper.
 
-## 🔧 2. Callback Factories
+## ✅ 2. Ingredient Validation Utilities
+
+**Location**: `app/src/utils/validation/ingredientValidation.ts`
+
+**Purpose**: Provides validation functions to determine if ingredients are fully configured and ready for use. Replaces the deprecated `isCreated` flag pattern with ID-based validation.
+
+### Key Functions
+
+#### `isPolicyConfigured(policy: PolicyStateProps | null | undefined): boolean`
+
+Checks if a policy is configured by verifying it has an ID. A policy gets an ID when:
+- User creates custom policy and submits to API
+- User selects current law (ID = currentLawId)
+- User loads existing policy from database
+
+```typescript
+import { isPolicyConfigured } from '@/utils/validation/ingredientValidation';
+
+if (isPolicyConfigured(policy)) {
+  // Policy is ready to use
+}
+```
+
+#### `isPopulationConfigured(population: PopulationStateProps | null | undefined): boolean`
+
+Checks if a population is configured by verifying it has either a household ID or geography ID.
+
+```typescript
+import { isPopulationConfigured } from '@/utils/validation/ingredientValidation';
+
+if (isPopulationConfigured(population)) {
+  // Population is ready to use
+}
+```
+
+#### `isSimulationConfigured(simulation: SimulationStateProps | null | undefined): boolean`
+
+Checks if a simulation is configured by checking:
+1. If simulation has an ID (fully persisted), OR
+2. If both policy and population are configured (ready to submit)
+
+```typescript
+import { isSimulationConfigured } from '@/utils/validation/ingredientValidation';
+
+if (isSimulationConfigured(simulation)) {
+  // Simulation is either persisted or ready to submit
+}
+```
+
+#### Additional Utilities
+
+- `isSimulationReadyToSubmit(simulation)` - Specifically checks if ingredients are ready for submission
+- `isSimulationPersisted(simulation)` - Specifically checks if simulation has database ID
+
+### Benefits
+
+- **Single Source of Truth**: Configuration state is determined by ID presence, not a separate flag
+- **No Stale State**: Copy/prefill operations automatically work correctly (IDs are copied with data)
+- **Clear Semantics**: Function names explicitly state what they check
+- **Type Safe**: Handles null/undefined gracefully
+
+**Note**: The `isCreated` flag has been removed from all StateProps interfaces. Use these validation functions instead.
+
+## 🔧 3. Callback Factories
 
 **Location**: `app/src/utils/pathwayCallbacks/`
 

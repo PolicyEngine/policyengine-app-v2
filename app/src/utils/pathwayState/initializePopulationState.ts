@@ -9,7 +9,6 @@ import { PopulationStateProps } from '@/types/pathwayState';
 export function initializePopulationState(): PopulationStateProps {
   return {
     label: null,
-    isCreated: false,
     type: null,
     household: null,
     geography: null,

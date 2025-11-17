@@ -21,7 +21,6 @@ export function reconstructPopulationFromHousehold(
     geography: null,
     label,
     type: 'household',
-    isCreated: true,
   };
 }
 
@@ -44,6 +43,5 @@ export function reconstructPopulationFromGeography(
     geography: { ...geography, id: geographyId },
     label,
     type: 'geography',
-    isCreated: true,
   };
 }
