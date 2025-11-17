@@ -317,7 +317,7 @@ export default function AutumnBudgetBanner() {
                   size={typography.fontSize.base}
                   fw={typography.fontWeight.bold}
                   c={colors.primary[700]}
-                  mb={spacing.xxs}
+                  mb={spacing.xs}
                 >
                   Two-child benefit limit
                 </Text>
@@ -370,7 +370,7 @@ export default function AutumnBudgetBanner() {
                   size={typography.fontSize.base}
                   fw={typography.fontWeight.bold}
                   c={colors.primary[700]}
-                  mb={spacing.xxs}
+                  mb={spacing.xs}
                 >
                   VAT thresholds
                 </Text>
@@ -411,7 +411,7 @@ export default function AutumnBudgetBanner() {
                   size={typography.fontSize.base}
                   fw={typography.fontWeight.bold}
                   c={colors.gray[700]}
-                  mb={spacing.xxs}
+                  mb={spacing.xs}
                 >
                   Income tax & NI reforms
                 </Text>
