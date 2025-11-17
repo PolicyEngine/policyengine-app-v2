@@ -25,14 +25,14 @@ interface PolicyParameterSelectorViewProps {
   policy: PolicyStateProps;
   onPolicyUpdate: (updatedPolicy: PolicyStateProps) => void;
   onNext: () => void;
-  onReturn: () => void;
+  onBack: () => void;
 }
 
 export default function PolicyParameterSelectorView({
   policy,
   onPolicyUpdate,
   onNext,
-  onReturn,
+  onBack,
 }: PolicyParameterSelectorViewProps) {
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
@@ -69,7 +69,7 @@ export default function PolicyParameterSelectorView({
   // Custom footer component for this view
   const PolicyParameterFooter = () => (
     <Group justify="space-between" align="center">
-      <Button variant="default" onClick={onReturn}>
+      <Button variant="default" onClick={onBack}>
         Back
       </Button>
       {modificationCount > 0 && (

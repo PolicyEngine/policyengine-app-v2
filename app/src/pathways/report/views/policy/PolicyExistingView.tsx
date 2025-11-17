@@ -18,10 +18,10 @@ import { Parameter } from '@/types/subIngredients/parameter';
 
 interface PolicyExistingViewProps {
   onSelectPolicy: (policyId: string, label: string, parameters: Parameter[]) => void;
-  onReturn: () => void;
+  onBack: () => void;
 }
 
-export default function PolicyExistingView({ onSelectPolicy, onReturn }: PolicyExistingViewProps) {
+export default function PolicyExistingView({ onSelectPolicy, onBack }: PolicyExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
@@ -146,7 +146,7 @@ export default function PolicyExistingView({ onSelectPolicy, onReturn }: PolicyE
       <FlowView
         title="Select an Existing Policy"
         content={<Text>No policies available. Please create a new policy.</Text>}
-        cancelAction={{ onClick: onReturn }}
+        cancelAction={{ onClick: onBack }}
         buttonPreset="cancel-only"
       />
     );

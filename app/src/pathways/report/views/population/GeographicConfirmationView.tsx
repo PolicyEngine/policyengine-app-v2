@@ -16,14 +16,14 @@ interface GeographicConfirmationViewProps {
   population: PopulationStateProps;
   metadata: any;
   onSubmitSuccess: (geographyId: string, label: string) => void;
-  onReturn: () => void;
+  onBack: () => void;
 }
 
 export default function GeographicConfirmationView({
   population,
   metadata,
   onSubmitSuccess,
-  onReturn,
+  onBack,
 }: GeographicConfirmationViewProps) {
   const { mutateAsync: createGeographicAssociation, isPending } = useCreateGeographicAssociation();
   const currentUserId = MOCK_USER_ID;

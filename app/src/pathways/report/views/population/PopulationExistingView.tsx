@@ -32,13 +32,13 @@ import {
 interface PopulationExistingViewProps {
   onSelectHousehold: (householdId: string, household: Household, label: string) => void;
   onSelectGeography: (geographyId: string, geography: Geography, label: string) => void;
-  onReturn: () => void;
+  onBack: () => void;
 }
 
 export default function PopulationExistingView({
   onSelectHousehold,
   onSelectGeography,
-  onReturn,
+  onBack,
 }: PopulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -83,136 +83,66 @@ export default function PopulationExistingView({
   const error = householdError || geographicError;
 
   function canProceed() {
-    console.log('[POPEXIST] ========== canProceed CHECK ==========');
-    console.log('[POPEXIST] localPopulation:', localPopulation);
-
     if (!localPopulation) {
-      console.log('[POPEXIST] canProceed: false (no localPopulation)');
       return false;
     }
 
     if (isHouseholdMetadataWithAssociation(localPopulation)) {
-      const isReady = isHouseholdAssociationReady(localPopulation);
-      console.log('[POPEXIST] Household association check:');
-      console.log('[POPEXIST]   - isLoading:', localPopulation.isLoading);
-      console.log('[POPEXIST]   - household exists:', !!localPopulation.household);
-      console.log('[POPEXIST]   - household.id:', localPopulation.household?.id);
-      console.log('[POPEXIST]   - household.household_json exists:', !!localPopulation.household?.household_json);
-      console.log('[POPEXIST]   - isHouseholdAssociationReady:', isReady);
-      console.log('[POPEXIST] canProceed:', isReady);
-      return isReady;
+      return isHouseholdAssociationReady(localPopulation);
     }
 
     if (isGeographicMetadataWithAssociation(localPopulation)) {
-      const isReady = isGeographicAssociationReady(localPopulation);
-      console.log('[POPEXIST] Geographic association check:');
-      console.log('[POPEXIST]   - isLoading:', localPopulation.isLoading);
-      console.log('[POPEXIST]   - geography exists:', !!localPopulation.geography);
-      console.log('[POPEXIST]   - geography.id:', localPopulation.geography?.id);
-      console.log('[POPEXIST]   - isGeographicAssociationReady:', isReady);
-      console.log('[POPEXIST] canProceed:', isReady);
-      return isReady;
+      return isGeographicAssociationReady(localPopulation);
     }
 
-    console.log('[POPEXIST] canProceed: false (neither household nor geographic)');
     return false;
   }
 
   function handleHouseholdPopulationSelect(association: UserHouseholdMetadataWithAssociation) {
-    console.log('[POPEXIST] ========== handleHouseholdPopulationSelect ==========');
-    console.log('[POPEXIST] Association received:', association);
-    console.log('[POPEXIST]   - association.household:', association?.household);
-    console.log('[POPEXIST]   - association.household?.id:', association?.household?.id);
-    console.log('[POPEXIST]   - association.household?.household_json:', association?.household?.household_json);
-    console.log('[POPEXIST]   - association.isLoading:', association?.isLoading);
-
     if (!association) {
-      console.log('[POPEXIST] No association provided, returning');
       return;
     }
 
     setLocalPopulation(association);
-    console.log('[POPEXIST] Set localPopulation to:', association);
   }
 
   function handleGeographicPopulationSelect(association: UserGeographicMetadataWithAssociation) {
-    console.log('[POPEXIST] ========== handleGeographicPopulationSelect ==========');
-    console.log('[POPEXIST] Association received:', association);
-    console.log('[POPEXIST]   - association.geography:', association?.geography);
-    console.log('[POPEXIST]   - association.geography?.id:', association?.geography?.id);
-    console.log('[POPEXIST]   - association.isLoading:', association?.isLoading);
-
     if (!association) {
-      console.log('[POPEXIST] No association provided, returning');
       return;
     }
 
     setLocalPopulation(association);
-    console.log('[POPEXIST] Set localPopulation to:', association);
   }
 
   function handleSubmit() {
-    console.log('[POPEXIST] ========== handleSubmit ==========');
-    console.log('[POPEXIST] localPopulation:', localPopulation);
-
     if (!localPopulation) {
-      console.log('[POPEXIST] No localPopulation, returning');
       return;
     }
 
     if (isHouseholdMetadataWithAssociation(localPopulation)) {
-      console.log('[POPEXIST] Type: Household, calling handleSubmitHouseholdPopulation');
       handleSubmitHouseholdPopulation();
     } else if (isGeographicMetadataWithAssociation(localPopulation)) {
-      console.log('[POPEXIST] Type: Geographic, calling handleSubmitGeographicPopulation');
       handleSubmitGeographicPopulation();
-    } else {
-      console.log('[POPEXIST] Unknown type, not submitting');
     }
   }
 
   function handleSubmitHouseholdPopulation() {
-    console.log('[POPEXIST] ========== handleSubmitHouseholdPopulation ==========');
-    console.log('[POPEXIST] localPopulation:', localPopulation);
-    console.log('[POPEXIST] Type check:', isHouseholdMetadataWithAssociation(localPopulation));
-
     if (!localPopulation || !isHouseholdMetadataWithAssociation(localPopulation)) {
-      console.log('[POPEXIST] Type guard failed, returning');
       return;
     }
 
-    console.log('[POPEXIST] Association:', localPopulation.association);
-    console.log('[POPEXIST] Association.countryId:', localPopulation.association?.countryId);
-    console.log('[POPEXIST] Association.householdId:', localPopulation.association?.householdId);
-    console.log('[POPEXIST] Association.label:', localPopulation.association?.label);
-    console.log('[POPEXIST] Household metadata:', localPopulation.household);
-    console.log('[POPEXIST] Household metadata type:', typeof localPopulation.household);
-    console.log('[POPEXIST] Household metadata is null/undefined:', localPopulation.household == null);
-
-    if (localPopulation.household) {
-      console.log('[POPEXIST] Household.id:', localPopulation.household.id);
-      console.log('[POPEXIST] Household.household_json:', localPopulation.household.household_json);
-      console.log('[POPEXIST] Household.household_json type:', typeof localPopulation.household.household_json);
-    } else {
-      console.log('[POPEXIST] ⚠️ ERROR: Household metadata is undefined!');
+    // Guard: ensure household data is fully loaded before calling adapter
+    if (!localPopulation.household) {
+      console.error('[PopulationExistingView] Household metadata is undefined');
       return;
     }
 
-    console.log('[POPEXIST] About to call HouseholdAdapter.fromMetadata...');
     const householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household);
-    console.log('[POPEXIST] ✓ Successfully converted household:', householdToSet);
-    console.log('[POPEXIST] Household ID:', householdToSet.id);
-
     const label = localPopulation.association?.label || '';
     const householdId = householdToSet.id!;
 
-    console.log('[POPEXIST] Calling onSelectHousehold with:');
-    console.log('[POPEXIST]   - householdId:', householdId);
-    console.log('[POPEXIST]   - label:', label);
-
     // Call parent callback instead of dispatching to Redux
     onSelectHousehold(householdId, householdToSet, label);
-    console.log('[POPEXIST] ========== handleSubmitHouseholdPopulation END ==========');
   }
 
   function handleSubmitGeographicPopulation() {
@@ -270,7 +200,7 @@ export default function PopulationExistingView({
       <FlowView
         title="Select Existing Household(s)"
         content={<Text>No households available. Please create new household(s).</Text>}
-        cancelAction={{ onClick: onReturn }}
+        cancelAction={{ onClick: onBack }}
         buttonPreset="cancel-only"
       />
     );
@@ -292,37 +222,23 @@ export default function PopulationExistingView({
   const allPopulations = [...filteredHouseholds, ...geographicPopulations];
 
   // Build card list items from ALL household populations
-  console.log('[POPEXIST] ========== BUILDING HOUSEHOLD CARD ITEMS ==========');
-  console.log('[POPEXIST] allPopulations:', allPopulations);
-  console.log('[POPEXIST] allPopulations.length:', allPopulations.length);
-
   const householdCardItems = allPopulations
     .filter((association) => isHouseholdMetadataWithAssociation(association))
-    .map((association, index) => {
-      console.log(`[POPEXIST] Building card for household ${index}:`, association);
-      console.log(`[POPEXIST]   - association.household:`, association.household);
-      console.log(`[POPEXIST]   - association.household?.id:`, association.household?.id);
-      console.log(`[POPEXIST]   - association.household?.household_json:`, association.household?.household_json);
-      console.log(`[POPEXIST]   - association.isLoading:`, association.isLoading);
-      console.log(`[POPEXIST]   - isHouseholdAssociationReady:`, isHouseholdAssociationReady(association));
-
+    .map((association) => {
       const isReady = isHouseholdAssociationReady(association);
       let title = '';
       let subtitle = '';
 
       if (!isReady) {
-        // NOT LOADED YET - show loading indicator for testing
+        // NOT LOADED YET - show loading indicator
         title = '⏳ Loading...';
         subtitle = 'Household data not loaded yet';
-        console.log(`[POPEXIST]   - ⚠️ Household ${index} NOT READY`);
       } else if ('label' in association.association && association.association.label) {
         title = association.association.label;
         subtitle = `Population #${association.household!.id}`;
-        console.log(`[POPEXIST]   - ✓ Household ${index} READY with label`);
       } else {
         title = `Population #${association.household!.id}`;
         subtitle = '';
-        console.log(`[POPEXIST]   - ✓ Household ${index} READY without label`);
       }
 
       return {
@@ -334,8 +250,6 @@ export default function PopulationExistingView({
           localPopulation.household?.id === association.household?.id,
       };
     });
-
-  console.log('[POPEXIST] Built householdCardItems.length:', householdCardItems.length);
 
   // Helper function to get geographic label from metadata
   const getGeographicLabel = (geography: Geography) => {
