@@ -52,7 +52,8 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
-        VALIDATION_COUNTRIES.US
+        VALIDATION_COUNTRIES.US,
+        VALIDATION_YEARS.DEFAULT
       );
 
       // Then
@@ -67,7 +68,8 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUKHousehold,
-        VALIDATION_COUNTRIES.UK
+        VALIDATION_COUNTRIES.UK,
+        VALIDATION_YEARS.DEFAULT
       );
 
       // Then
@@ -78,7 +80,8 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockHouseholdCountryMismatch,
-        VALIDATION_COUNTRIES.UK
+        VALIDATION_COUNTRIES.UK,
+        VALIDATION_YEARS.DEFAULT
       );
 
       // Then
@@ -92,7 +95,8 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockHouseholdMissingAge,
-        VALIDATION_COUNTRIES.US
+        VALIDATION_COUNTRIES.US,
+        VALIDATION_YEARS.DEFAULT
       );
 
       // Then
@@ -109,7 +113,8 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockHouseholdInvalidGroupStructure,
-        VALIDATION_COUNTRIES.US
+        VALIDATION_COUNTRIES.US,
+        VALIDATION_YEARS.DEFAULT
       );
 
       // Then
@@ -125,7 +130,8 @@ describe('HouseholdValidation', () => {
       // When
       const result = HouseholdValidation.validateForCountry(
         mockValidUSHousehold,
-        VALIDATION_COUNTRIES.CA
+        VALIDATION_COUNTRIES.CA,
+        VALIDATION_YEARS.DEFAULT
       );
 
       // Then
@@ -218,7 +224,12 @@ describe('HouseholdValidation', () => {
       const warnings: any[] = [];
 
       // When
-      HouseholdValidation.validateGenericHousehold(mockValidUSHousehold, errors, warnings);
+      HouseholdValidation.validateGenericHousehold(
+        mockValidUSHousehold,
+        errors,
+        warnings,
+        VALIDATION_YEARS.DEFAULT
+      );
 
       // Then
       expect(errors).toHaveLength(0);
@@ -525,7 +536,10 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
-      const result = HouseholdValidation.isReadyForSimulation(mockValidUSHousehold);
+      const result = HouseholdValidation.isReadyForSimulation(
+        mockValidUSHousehold,
+        VALIDATION_YEARS.DEFAULT
+      );
 
       // Then
       verifyNoErrors(result);
@@ -536,7 +550,10 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(0);
 
       // When
-      const result = HouseholdValidation.isReadyForSimulation(mockEmptyHousehold);
+      const result = HouseholdValidation.isReadyForSimulation(
+        mockEmptyHousehold,
+        VALIDATION_YEARS.DEFAULT
+      );
 
       // Then
       verifyHasErrors(result, 1);
@@ -548,7 +565,10 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(1);
 
       // When
-      const result = HouseholdValidation.isReadyForSimulation(mockHouseholdInvalidGroupStructure);
+      const result = HouseholdValidation.isReadyForSimulation(
+        mockHouseholdInvalidGroupStructure,
+        VALIDATION_YEARS.DEFAULT
+      );
 
       // Then
       verifyHasErrors(result, 1);
@@ -560,7 +580,10 @@ describe('HouseholdValidation', () => {
       vi.mocked(HouseholdQueries.getPersonCount).mockReturnValue(2);
 
       // When
-      const result = HouseholdValidation.isReadyForSimulation(mockHouseholdMissingAge);
+      const result = HouseholdValidation.isReadyForSimulation(
+        mockHouseholdMissingAge,
+        VALIDATION_YEARS.DEFAULT
+      );
 
       // Then
       verifyNoErrors(result);

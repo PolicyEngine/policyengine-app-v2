@@ -56,6 +56,7 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
   calcId: TEST_CALC_IDS.SIM_1,
   targetType: 'simulation',
   countryId: TEST_COUNTRIES.US,
+  year: '2024',
   simulations: {
     simulation1: {
       policyId: TEST_POLICY_IDS.POLICY_1,
@@ -95,6 +96,7 @@ export const mockSocietyWideCalcConfig = (
   calcId: TEST_CALC_IDS.REPORT_1,
   targetType: 'report',
   countryId: TEST_COUNTRIES.US,
+  year: '2024',
   simulations: {
     simulation1: {
       policyId: TEST_POLICY_IDS.POLICY_1,

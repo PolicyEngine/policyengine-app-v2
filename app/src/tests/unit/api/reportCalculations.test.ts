@@ -91,7 +91,7 @@ describe('reportCalculations', () => {
           TEST_POLICY_IDS.POLICY_1, // baseline
           {
             region: TEST_REGIONS.ENHANCED_CPS,
-            time_period: CURRENT_YEAR,
+            time_period: meta.year,
           }
         );
         expect(result).toEqual(mockResult);
@@ -113,7 +113,7 @@ describe('reportCalculations', () => {
           TEST_POLICY_IDS.POLICY_1,
           {
             region: TEST_COUNTRIES.US, // Falls back to countryId
-            time_period: CURRENT_YEAR,
+            time_period: meta.year,
           }
         );
       });

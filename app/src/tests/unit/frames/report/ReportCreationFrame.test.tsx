@@ -104,19 +104,21 @@ describe('ReportCreationFrame', () => {
     expect(screen.getByRole('button', { name: CREATE_REPORT_BUTTON_LABEL })).toBeInTheDocument();
   });
 
-  test('given year dropdown renders then it is disabled with default value', () => {
+  test('given year dropdown renders then shows year label', () => {
     // Given/When
-    const { container } = renderWithRouter(
+    renderWithRouter(
       <Provider store={store}>
         <ReportCreationFrame {...defaultFlowProps} />
       </Provider>
     );
 
-    // Then - year dropdown should be disabled
-    // Mantine Select with disabled prop adds data-disabled attribute to the input
-    const yearInput = container.querySelector('input[data-disabled="true"]');
+    // Then - year dropdown should show the year label
+    expect(screen.getByText(YEAR_INPUT_LABEL)).toBeInTheDocument();
+
+    // And - the Select component should be rendered (verified by presence of input)
+    const yearLabel = screen.getByText(YEAR_INPUT_LABEL);
+    const yearInput = yearLabel.parentElement?.querySelector('input');
     expect(yearInput).toBeInTheDocument();
-    expect(yearInput).toHaveValue(DEFAULT_YEAR);
   });
 
   test('given user enters label then input value updates', async () => {
