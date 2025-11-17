@@ -20,7 +20,8 @@ app/src/
 │   │   ├── index.ts
 │   │   ├── policyCallbacks.ts
 │   │   ├── populationCallbacks.ts
-│   │   └── simulationCallbacks.ts
+│   │   ├── simulationCallbacks.ts
+│   │   └── reportCallbacks.ts
 │   └── ingredientReconstruction/        # API data reconstruction
 │       ├── index.ts
 │       ├── reconstructSimulation.ts
@@ -137,6 +138,37 @@ const policyCallbacks = createPolicyCallbacks(
   handleSubmitSuccess: (simulationId: string) => void
   handleSelectExisting: (enhancedSimulation: EnhancedUserSimulation) => void
 }
+```
+
+### `createReportCallbacks<TMode>`
+
+**Parameters**:
+- `setState`: State setter function for report state
+- `navigateToMode`: Navigation function
+- `activeSimulationIndex`: Currently active simulation (0 or 1)
+- `simulationSelectionMode`: Mode to navigate to for simulation selection
+- `setupMode`: Mode to return to after operations (typically REPORT_SETUP)
+
+**Returns**:
+```typescript
+{
+  updateLabel: (label: string) => void
+  navigateToSimulationSelection: (simulationIndex: 0 | 1) => void
+  handleSelectExistingSimulation: (enhancedSimulation: EnhancedUserSimulation) => void
+  copyPopulationFromOtherSimulation: () => void
+  prefillPopulation2FromSimulation1: () => void
+}
+```
+
+**Example**:
+```typescript
+const reportCallbacks = createReportCallbacks(
+  setReportState,
+  navigateToMode,
+  activeSimulationIndex,
+  ReportViewMode.REPORT_SELECT_SIMULATION,
+  ReportViewMode.REPORT_SETUP
+);
 ```
 
 ## 🧭 3. Navigation Hook
@@ -272,7 +304,12 @@ To create a new pathway (e.g., `SimulationPathwayWrapper`):
 
 ```typescript
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
-import { createPolicyCallbacks, createPopulationCallbacks } from '@/utils/pathwayCallbacks';
+import {
+  createPolicyCallbacks,
+  createPopulationCallbacks,
+  createSimulationCallbacks,
+  createReportCallbacks // Only for report pathways
+} from '@/utils/pathwayCallbacks';
 import { PolicyViewMode, PopulationViewMode, SimulationViewMode } from '@/types/pathwayModes/SharedViewModes';
 
 // Import reusable views

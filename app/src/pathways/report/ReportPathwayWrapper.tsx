@@ -15,6 +15,9 @@ import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
 import { initializeReportState } from '@/utils/pathwayState/initializeReportState';
 import { RootState } from '@/store';
 import StandardLayout from '@/components/StandardLayout';
+import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { createPolicyCallbacks, createPopulationCallbacks, createSimulationCallbacks, createReportCallbacks } from '@/utils/pathwayCallbacks';
+import { reconstructSimulationFromEnhanced } from '@/utils/ingredientReconstruction';
 
 // Report-level views
 import ReportLabelView from './views/ReportLabelView';
@@ -51,12 +54,13 @@ import { ReportCreationPayload } from '@/types/payloads';
 import { getReportOutputPath } from '@/utils/reportRouting';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
+import { countryIds } from '@/libs/countries';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
 const MODES_WITH_OWN_LAYOUT = new Set([ReportViewMode.POLICY_PARAMETER_SELECTOR]);
 
 interface ReportPathwayWrapperProps {
-  countryId: string;
+  countryId: (typeof countryIds)[number];
   onComplete?: () => void;
   onCancel?: () => void;
 }
@@ -73,7 +77,6 @@ export default function ReportPathwayWrapper({
   const [reportState, setReportState] = useState<ReportStateProps>(() =>
     initializeReportState(countryId)
   );
-  const [currentMode, setCurrentMode] = useState<ReportViewMode>(ReportViewMode.REPORT_LABEL);
   const [activeSimulationIndex, setActiveSimulationIndex] = useState<0 | 1>(0);
 
   const navigate = useNavigate();
@@ -83,287 +86,76 @@ export default function ReportPathwayWrapper({
   const metadata = useSelector((state: RootState) => state.metadata);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
 
-  // ========== NAVIGATION HELPERS ==========
-  const navigateToMode = useCallback((mode: ReportViewMode) => {
-    console.log('[ReportPathwayWrapper] Navigating to mode:', mode);
-    setCurrentMode(mode);
-  }, []);
+  // ========== NAVIGATION ==========
+  const { currentMode, navigateToMode } = usePathwayNavigation(ReportViewMode.REPORT_LABEL);
 
-  // ========== REPORT-LEVEL STATE UPDATES ==========
-  const updateReportLabel = useCallback((label: string) => {
-    console.log('[ReportPathwayWrapper] Updating label:', label);
-    setReportState((prev) => ({ ...prev, label }));
-  }, []);
+  // ========== HELPER: Get active simulation ==========
+  const activeSimulation = reportState.simulations[activeSimulationIndex];
+  const otherSimulation = reportState.simulations[activeSimulationIndex === 0 ? 1 : 0];
 
+  // ========== SHARED CALLBACK FACTORIES ==========
+  // Report-level callbacks
+  const reportCallbacks = createReportCallbacks(
+    setReportState,
+    navigateToMode,
+    activeSimulationIndex,
+    ReportViewMode.REPORT_SELECT_SIMULATION,
+    ReportViewMode.REPORT_SETUP
+  );
+
+  // Policy callbacks for active simulation
+  const policyCallbacks = createPolicyCallbacks(
+    setReportState,
+    (state) => state.simulations[activeSimulationIndex].policy,
+    (state, policy) => {
+      const newSimulations = [...state.simulations] as [typeof state.simulations[0], typeof state.simulations[1]];
+      newSimulations[activeSimulationIndex].policy = policy;
+      return { ...state, simulations: newSimulations };
+    },
+    navigateToMode,
+    ReportViewMode.SIMULATION_SETUP
+  );
+
+  // Population callbacks for active simulation
+  const populationCallbacks = createPopulationCallbacks(
+    setReportState,
+    (state) => state.simulations[activeSimulationIndex].population,
+    (state, population) => {
+      const newSimulations = [...state.simulations] as [typeof state.simulations[0], typeof state.simulations[1]];
+      newSimulations[activeSimulationIndex].population = population;
+      return { ...state, simulations: newSimulations };
+    },
+    navigateToMode,
+    ReportViewMode.SIMULATION_SETUP,
+    ReportViewMode.POPULATION_LABEL
+  );
+
+  // Simulation callbacks for active simulation
+  const simulationCallbacks = createSimulationCallbacks(
+    setReportState,
+    (state) => state.simulations[activeSimulationIndex],
+    (state, simulation) => {
+      const newSimulations = [...state.simulations] as [typeof state.simulations[0], typeof state.simulations[1]];
+      newSimulations[activeSimulationIndex] = simulation;
+      return { ...state, simulations: newSimulations };
+    },
+    navigateToMode,
+    ReportViewMode.REPORT_SETUP
+  );
+
+  // ========== CUSTOM WRAPPERS FOR SPECIFIC REPORT LOGIC ==========
+  // Wrapper for navigating to simulation selection (needs to update active index)
   const handleNavigateToSimulationSelection = useCallback((simulationIndex: 0 | 1) => {
     console.log('[ReportPathwayWrapper] Setting active simulation index:', simulationIndex);
     setActiveSimulationIndex(simulationIndex);
-    setCurrentMode(ReportViewMode.REPORT_SELECT_SIMULATION);
-  }, []);
+    reportCallbacks.navigateToSimulationSelection(simulationIndex);
+  }, [reportCallbacks]);
 
-  const handlePrefillPopulation2 = useCallback(() => {
-    console.log('[ReportPathwayWrapper] Pre-filling population 2 from simulation 1');
-    setReportState((prev) => {
-      const sim1Population = prev.simulations[0].population;
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[1] = {
-        ...newSimulations[1],
-        population: { ...sim1Population },
-      };
-      return {
-        ...prev,
-        simulations: newSimulations,
-      };
-    });
-  }, []);
-
-  const handleSelectExistingSimulation = useCallback((enhancedSimulation: EnhancedUserSimulation) => {
-    console.log('[ReportPathwayWrapper] Selecting existing simulation:', enhancedSimulation);
-
-    if (!enhancedSimulation.simulation) {
-      console.error('[ReportPathwayWrapper] No simulation data in enhancedSimulation');
-      return;
-    }
-
-    const simulation = enhancedSimulation.simulation;
-    const label = enhancedSimulation.userSimulation?.label || simulation.label || '';
-
-    // Reconstruct PolicyStateProps from enhanced data
-    const policy: PolicyStateProps = {
-      id: enhancedSimulation.policy?.id || simulation.policyId,
-      label: enhancedSimulation.userPolicy?.label || enhancedSimulation.policy?.label || null,
-      parameters: enhancedSimulation.policy?.parameters || [],
-      isCreated: true,
-    };
-
-    // Reconstruct PopulationStateProps from enhanced data
-    let population: PopulationStateProps;
-
-    if (simulation.populationType === 'household' && enhancedSimulation.household) {
-      population = {
-        household: enhancedSimulation.household,
-        geography: null,
-        label: enhancedSimulation.userHousehold?.label || null,
-        type: 'household',
-        isCreated: true,
-      };
-    } else if (simulation.populationType === 'geography' && enhancedSimulation.geography) {
-      population = {
-        household: null,
-        geography: enhancedSimulation.geography,
-        label: enhancedSimulation.userHousehold?.label || null,
-        type: 'geography',
-        isCreated: true,
-      };
-    } else {
-      console.error('[ReportPathwayWrapper] Unable to determine population type or missing population data');
-      return;
-    }
-
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-
-      // Update the simulation with the loaded data
-      newSimulations[activeSimulationIndex] = {
-        ...newSimulations[activeSimulationIndex],
-        id: simulation.id,
-        label,
-        isCreated: true,
-        policy,
-        population,
-      };
-
-      return { ...prev, simulations: newSimulations };
-    });
-  }, [activeSimulationIndex]);
-
-  // ========== SIMULATION-LEVEL STATE UPDATES ==========
-  const updateSimulationLabel = useCallback((label: string) => {
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex] = {
-        ...newSimulations[activeSimulationIndex],
-        label,
-      };
-      return { ...prev, simulations: newSimulations };
-    });
-  }, [activeSimulationIndex]);
-
-  const handleSimulationSubmitSuccess = useCallback((simulationId: string) => {
-    console.log('[ReportPathwayWrapper] Simulation created with ID:', simulationId);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex] = {
-        ...newSimulations[activeSimulationIndex],
-        id: simulationId,
-        isCreated: true,
-      };
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to setup view
-    navigateToMode(ReportViewMode.REPORT_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
-
-  // ========== POLICY-LEVEL STATE UPDATES ==========
-  const updatePolicyLabel = useCallback((label: string) => {
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].policy.label = label;
-      return { ...prev, simulations: newSimulations };
-    });
-  }, [activeSimulationIndex]);
-
-  const updatePolicy = useCallback((updatedPolicy: PolicyStateProps) => {
-    console.log('[ReportPathwayWrapper] Updating policy with:', updatedPolicy);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].policy = updatedPolicy;
-      return { ...prev, simulations: newSimulations };
-    });
-  }, [activeSimulationIndex]);
-
+  // Wrapper for current law selection with custom logging
   const handleSelectCurrentLaw = useCallback(() => {
     console.log('[ReportPathwayWrapper] Selecting current law');
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].policy = {
-        id: currentLawId.toString(),
-        label: 'Current law',
-        parameters: [],
-        isCreated: true,
-      };
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, currentLawId, navigateToMode]);
-
-  const handlePolicySubmitSuccess = useCallback((policyId: string) => {
-    console.log('[ReportPathwayWrapper] Policy created with ID:', policyId);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].policy.id = policyId;
-      newSimulations[activeSimulationIndex].policy.isCreated = true;
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
-
-  const handleSelectExistingPolicy = useCallback((policyId: string, label: string, parameters: any[]) => {
-    console.log('[ReportPathwayWrapper] Selecting existing policy:', policyId, label);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].policy = {
-        id: policyId,
-        label,
-        parameters,
-        isCreated: true,
-      };
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
-
-  // ========== POPULATION-LEVEL STATE UPDATES ==========
-  const handlePopulationScopeSelected = useCallback((geography: Geography | null, scopeType: string) => {
-    console.log('[ReportPathwayWrapper] Population scope selected:', scopeType, geography);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      if (geography) {
-        newSimulations[activeSimulationIndex].population.geography = geography;
-        newSimulations[activeSimulationIndex].population.type = 'geography';
-      } else {
-        newSimulations[activeSimulationIndex].population.type = 'household';
-      }
-      return { ...prev, simulations: newSimulations };
-    });
-
-    // Navigate based on scope type
-    if (scopeType === 'household') {
-      navigateToMode(ReportViewMode.POPULATION_LABEL);
-    } else {
-      navigateToMode(ReportViewMode.POPULATION_LABEL);
-    }
-  }, [activeSimulationIndex, navigateToMode]);
-
-  const updatePopulationLabel = useCallback((label: string) => {
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].population.label = label;
-      return { ...prev, simulations: newSimulations };
-    });
-  }, [activeSimulationIndex]);
-
-  const handleHouseholdSubmitSuccess = useCallback((householdId: string, household: Household) => {
-    console.log('[ReportPathwayWrapper] Household created with ID:', householdId);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].population.household = { ...household, id: householdId };
-      newSimulations[activeSimulationIndex].population.isCreated = true;
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
-
-  const handleGeographicSubmitSuccess = useCallback((geographyId: string, label: string) => {
-    console.log('[ReportPathwayWrapper] Geography created with ID:', geographyId);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      if (newSimulations[activeSimulationIndex].population.geography) {
-        newSimulations[activeSimulationIndex].population.geography.id = geographyId;
-      }
-      newSimulations[activeSimulationIndex].population.label = label;
-      newSimulations[activeSimulationIndex].population.isCreated = true;
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
-
-  const handleCopyPopulationFromOtherSim = useCallback(() => {
-    console.log('[ReportPathwayWrapper] Copying population from other simulation');
-    const otherIndex = activeSimulationIndex === 0 ? 1 : 0;
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].population = {
-        ...prev.simulations[otherIndex].population
-      };
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
-
-  const handleSelectExistingHousehold = useCallback((householdId: string, household: Household, label: string) => {
-    console.log('[ReportPathwayWrapper] Selecting existing household:', householdId, label);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].population.household = { ...household, id: householdId };
-      newSimulations[activeSimulationIndex].population.label = label;
-      newSimulations[activeSimulationIndex].population.type = 'household';
-      newSimulations[activeSimulationIndex].population.isCreated = true;
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
-
-  const handleSelectExistingGeography = useCallback((geographyId: string, geography: Geography, label: string) => {
-    console.log('[ReportPathwayWrapper] Selecting existing geography:', geographyId, label);
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex].population.geography = { ...geography, id: geographyId };
-      newSimulations[activeSimulationIndex].population.label = label;
-      newSimulations[activeSimulationIndex].population.type = 'geography';
-      newSimulations[activeSimulationIndex].population.isCreated = true;
-      return { ...prev, simulations: newSimulations };
-    });
-    // Return to simulation setup
-    navigateToMode(ReportViewMode.SIMULATION_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
+    policyCallbacks.handleSelectCurrentLaw(currentLawId, 'Current law');
+  }, [currentLawId, policyCallbacks]);
 
   // ========== REPORT SUBMISSION ==========
   const handleSubmitReport = useCallback(() => {
@@ -423,10 +215,6 @@ export default function ReportPathwayWrapper({
   // ========== RENDER CURRENT VIEW ==========
   console.log('[ReportPathwayWrapper] Current mode:', currentMode);
 
-  const activeSimulation = reportState.simulations[activeSimulationIndex];
-  const otherSimulationIndex = activeSimulationIndex === 0 ? 1 : 0;
-  const otherSimulation = reportState.simulations[otherSimulationIndex];
-
   // Determine which view to render based on current mode
   let currentView: React.ReactNode;
 
@@ -436,7 +224,7 @@ export default function ReportPathwayWrapper({
       currentView = (
         <ReportLabelView
           label={reportState.label}
-          onUpdateLabel={updateReportLabel}
+          onUpdateLabel={reportCallbacks.updateLabel}
           onNext={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
         />
       );
@@ -448,7 +236,7 @@ export default function ReportPathwayWrapper({
           reportState={reportState}
           onNavigateToSimulationSelection={handleNavigateToSimulationSelection}
           onNext={() => navigateToMode(ReportViewMode.REPORT_SUBMIT)}
-          onPrefillPopulation2={handlePrefillPopulation2}
+          onPrefillPopulation2={reportCallbacks.prefillPopulation2FromSimulation1}
         />
       );
       break;
@@ -467,7 +255,7 @@ export default function ReportPathwayWrapper({
         <ReportSimulationExistingView
           activeSimulationIndex={activeSimulationIndex}
           otherSimulation={otherSimulation}
-          onSelectSimulation={handleSelectExistingSimulation}
+          onSelectSimulation={reportCallbacks.handleSelectExistingSimulation}
           onNext={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
         />
       );
@@ -490,7 +278,7 @@ export default function ReportPathwayWrapper({
           label={activeSimulation.label}
           simulationIndex={activeSimulationIndex}
           reportLabel={reportState.label}
-          onUpdateLabel={updateSimulationLabel}
+          onUpdateLabel={simulationCallbacks.updateLabel}
           onNext={() => navigateToMode(ReportViewMode.SIMULATION_SETUP)}
         />
       );
@@ -513,7 +301,7 @@ export default function ReportPathwayWrapper({
       currentView = (
         <SimulationSubmitView
           simulation={activeSimulation}
-          onSubmitSuccess={handleSimulationSubmitSuccess}
+          onSubmitSuccess={simulationCallbacks.handleSubmitSuccess}
         />
       );
       break;
@@ -540,7 +328,7 @@ export default function ReportPathwayWrapper({
           otherPopulation={otherSimulation.population}
           onCreateNew={() => navigateToMode(ReportViewMode.POPULATION_SCOPE)}
           onLoadExisting={() => navigateToMode(ReportViewMode.SELECT_EXISTING_POPULATION)}
-          onCopyExisting={handleCopyPopulationFromOtherSim}
+          onCopyExisting={reportCallbacks.copyPopulationFromOtherSimulation}
         />
       );
       break;
@@ -552,7 +340,7 @@ export default function ReportPathwayWrapper({
           label={activeSimulation.policy.label}
           simulationIndex={activeSimulationIndex}
           reportLabel={reportState.label}
-          onUpdateLabel={updatePolicyLabel}
+          onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(ReportViewMode.POLICY_PARAMETER_SELECTOR)}
         />
       );
@@ -562,7 +350,7 @@ export default function ReportPathwayWrapper({
       currentView = (
         <PolicyParameterSelectorView
           policy={activeSimulation.policy}
-          onPolicyUpdate={updatePolicy}
+          onPolicyUpdate={policyCallbacks.updatePolicy}
           onNext={() => navigateToMode(ReportViewMode.POLICY_SUBMIT)}
           onReturn={() => navigateToMode(ReportViewMode.POLICY_LABEL)}
         />
@@ -574,7 +362,7 @@ export default function ReportPathwayWrapper({
         <PolicySubmitView
           policy={activeSimulation.policy}
           countryId={countryId}
-          onSubmitSuccess={handlePolicySubmitSuccess}
+          onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
         />
       );
       break;
@@ -582,7 +370,7 @@ export default function ReportPathwayWrapper({
     case ReportViewMode.SELECT_EXISTING_POLICY:
       currentView = (
         <PolicyExistingView
-          onSelectPolicy={handleSelectExistingPolicy}
+          onSelectPolicy={policyCallbacks.handleSelectExisting}
           onReturn={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
         />
       );
@@ -594,7 +382,7 @@ export default function ReportPathwayWrapper({
         <PopulationScopeView
           countryId={countryId}
           regionData={metadata.economyOptions?.region || []}
-          onScopeSelected={handlePopulationScopeSelected}
+          onScopeSelected={populationCallbacks.handleScopeSelected}
         />
       );
       break;
@@ -603,7 +391,7 @@ export default function ReportPathwayWrapper({
       currentView = (
         <PopulationLabelView
           population={activeSimulation.population}
-          onUpdateLabel={updatePopulationLabel}
+          onUpdateLabel={populationCallbacks.updateLabel}
           onNext={() => {
             // Navigate based on population type
             if (activeSimulation.population.type === 'household') {
@@ -622,7 +410,7 @@ export default function ReportPathwayWrapper({
         <HouseholdBuilderView
           population={activeSimulation.population}
           countryId={countryId}
-          onSubmitSuccess={handleHouseholdSubmitSuccess}
+          onSubmitSuccess={populationCallbacks.handleHouseholdSubmitSuccess}
           onReturn={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
         />
       );
@@ -633,7 +421,7 @@ export default function ReportPathwayWrapper({
         <GeographicConfirmationView
           population={activeSimulation.population}
           metadata={metadata}
-          onSubmitSuccess={handleGeographicSubmitSuccess}
+          onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
           onReturn={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
         />
       );
@@ -642,8 +430,8 @@ export default function ReportPathwayWrapper({
     case ReportViewMode.SELECT_EXISTING_POPULATION:
       currentView = (
         <PopulationExistingView
-          onSelectHousehold={handleSelectExistingHousehold}
-          onSelectGeography={handleSelectExistingGeography}
+          onSelectHousehold={populationCallbacks.handleSelectExistingHousehold}
+          onSelectGeography={populationCallbacks.handleSelectExistingGeography}
           onReturn={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
         />
       );

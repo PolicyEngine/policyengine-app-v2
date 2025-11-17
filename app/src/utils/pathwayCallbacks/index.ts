@@ -6,3 +6,4 @@
 export { createPolicyCallbacks } from './policyCallbacks';
 export { createPopulationCallbacks } from './populationCallbacks';
 export { createSimulationCallbacks } from './simulationCallbacks';
+export { createReportCallbacks } from './reportCallbacks';

@@ -19,11 +19,12 @@ import {
 } from '@/utils/regionStrategies';
 import UKGeographicOptions from '@/frames/population/UKGeographicOptions';
 import USGeographicOptions from '@/frames/population/USGeographicOptions';
+import { countryIds } from '@/libs/countries';
 
 type ScopeType = 'national' | 'country' | 'constituency' | 'state' | 'household';
 
 interface PopulationScopeViewProps {
-  countryId: string;
+  countryId: (typeof countryIds)[number];
   regionData: any[];
   onScopeSelected: (geography: Geography | null, scopeType: ScopeType) => void;
 }
