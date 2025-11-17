@@ -99,8 +99,12 @@ export default function ReportSimulationExistingView({
   console.log('[ReportSimulationExistingView] ========== AFTER FILTERING ==========');
   console.log('[ReportSimulationExistingView] Filtered simulations count:', filteredSimulations.length);
 
-  // Get other simulation's population ID for compatibility check
-  const otherPopulationId = otherSimulation?.population.household?.id || otherSimulation?.population.geography?.id;
+  // Get other simulation's population ID (base ingredient ID) for compatibility check
+  // For household populations, use household.id
+  // For geography populations, use geography.geographyId (the base geography identifier)
+  const otherPopulationId = otherSimulation?.population.household?.id
+    || otherSimulation?.population.geography?.geographyId
+    || otherSimulation?.population.geography?.id;
 
   // Sort simulations to show compatible first, then incompatible
   const sortedSimulations = [...filteredSimulations].sort((a, b) => {

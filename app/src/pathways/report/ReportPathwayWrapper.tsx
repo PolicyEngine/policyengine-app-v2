@@ -119,9 +119,63 @@ export default function ReportPathwayWrapper({
 
   const handleSelectExistingSimulation = useCallback((enhancedSimulation: EnhancedUserSimulation) => {
     console.log('[ReportPathwayWrapper] Selecting existing simulation:', enhancedSimulation);
-    // TODO: Map EnhancedUserSimulation to SimulationStateProps
-    alert('Selecting existing simulations not yet fully implemented');
-  }, []);
+
+    if (!enhancedSimulation.simulation) {
+      console.error('[ReportPathwayWrapper] No simulation data in enhancedSimulation');
+      return;
+    }
+
+    const simulation = enhancedSimulation.simulation;
+    const label = enhancedSimulation.userSimulation?.label || simulation.label || '';
+
+    // Reconstruct PolicyStateProps from enhanced data
+    const policy: PolicyStateProps = {
+      id: enhancedSimulation.policy?.id || simulation.policyId,
+      label: enhancedSimulation.userPolicy?.label || enhancedSimulation.policy?.label || null,
+      parameters: enhancedSimulation.policy?.parameters || [],
+      isCreated: true,
+    };
+
+    // Reconstruct PopulationStateProps from enhanced data
+    let population: PopulationStateProps;
+
+    if (simulation.populationType === 'household' && enhancedSimulation.household) {
+      population = {
+        household: enhancedSimulation.household,
+        geography: null,
+        label: enhancedSimulation.userHousehold?.label || null,
+        type: 'household',
+        isCreated: true,
+      };
+    } else if (simulation.populationType === 'geography' && enhancedSimulation.geography) {
+      population = {
+        household: null,
+        geography: enhancedSimulation.geography,
+        label: enhancedSimulation.userHousehold?.label || null,
+        type: 'geography',
+        isCreated: true,
+      };
+    } else {
+      console.error('[ReportPathwayWrapper] Unable to determine population type or missing population data');
+      return;
+    }
+
+    setReportState((prev) => {
+      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
+
+      // Update the simulation with the loaded data
+      newSimulations[activeSimulationIndex] = {
+        ...newSimulations[activeSimulationIndex],
+        id: simulation.id,
+        label,
+        isCreated: true,
+        policy,
+        population,
+      };
+
+      return { ...prev, simulations: newSimulations };
+    });
+  }, [activeSimulationIndex]);
 
   // ========== SIMULATION-LEVEL STATE UPDATES ==========
   const updateSimulationLabel = useCallback((label: string) => {
