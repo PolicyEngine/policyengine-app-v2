@@ -1,0 +1,137 @@
+/**
+ * Post Data Transformers
+ *
+ * Processes raw posts.json data to generate slugs, extract tags,
+ * and create label mappings for filtering and display.
+ *
+ * This file maintains the exact logic from the old app's postTransformers.js
+ */
+
+import type { BlogPost, TagLabels } from '@/types/blog';
+import postsData from './posts.json';
+
+// Type assertion for imported JSON (Vite handles this)
+const postsRaw = postsData as BlogPost[];
+
+// Sort posts by date (newest first)
+const postsSorted = [...postsRaw].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+// Generate slugs for all posts
+for (const post of postsSorted) {
+  if (post.filename) {
+    // Extract slug from filename (remove extension), lowercase, and normalize
+    const filenameWithoutExt = post.filename.substring(0, post.filename.indexOf('.'));
+    post.slug = filenameWithoutExt
+      .toLowerCase()
+      .replace(/_/g, '-'); // Replace underscores with hyphens
+  } else if (post.external_url) {
+    // For external URLs, generate a slug from the title
+    post.slug = post.title
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+  } else {
+    // Fallback: generate slug from title
+    post.slug = post.title
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+  }
+}
+
+// Extract all tags from all posts
+const tags = postsSorted.map((post) => post.tags);
+const uniqueTags = [...new Set(tags.flat())].sort();
+
+// Categorize tags into locations and topics
+const COUNTRY_IDS = ['us', 'uk', 'ng', 'ca', 'global'] as const;
+
+const locationTags = uniqueTags.filter((tag) =>
+  COUNTRY_IDS.some((countryId) => tag.startsWith(countryId + '-') || tag === countryId)
+);
+
+const topicTags = uniqueTags.filter((tag) => !locationTags.includes(tag)).sort();
+
+// Topic labels for display
+const topicLabels: TagLabels = {
+  featured: 'Featured',
+  impact: 'Impact',
+  policy: 'Policy analysis',
+  technical: 'Technical report',
+  api: 'API',
+  'benefit-access': 'Benefit access',
+  reconciliation: 'Reconciliation',
+};
+
+// Location labels for display (all US states + countries)
+const locationLabels: TagLabels = {
+  ca: 'Canada',
+  us: 'United States',
+  uk: 'United Kingdom',
+  global: 'Global',
+  ng: 'Nigeria',
+  'us-dc': 'District of Columbia, U.S.',
+  'us-ak': 'Alaska, U.S.',
+  'us-al': 'Alabama, U.S.',
+  'us-ar': 'Arkansas, U.S.',
+  'us-az': 'Arizona, U.S.',
+  'us-ca': 'California, U.S.',
+  'us-co': 'Colorado, U.S.',
+  'us-ct': 'Connecticut, U.S.',
+  'us-de': 'Delaware, U.S.',
+  'us-fl': 'Florida, U.S.',
+  'us-ga': 'Georgia, U.S.',
+  'us-hi': 'Hawaii, U.S.',
+  'us-ia': 'Iowa, U.S.',
+  'us-id': 'Idaho, U.S.',
+  'us-il': 'Illinois, U.S.',
+  'us-in': 'Indiana, U.S.',
+  'us-ks': 'Kansas, U.S.',
+  'us-ky': 'Kentucky, U.S.',
+  'us-la': 'Louisiana, U.S.',
+  'us-ma': 'Massachusetts, U.S.',
+  'us-md': 'Maryland, U.S.',
+  'us-me': 'Maine, U.S.',
+  'us-mi': 'Michigan, U.S.',
+  'us-mn': 'Minnesota, U.S.',
+  'us-mo': 'Missouri, U.S.',
+  'us-ms': 'Mississippi, U.S.',
+  'us-mt': 'Montana, U.S.',
+  'us-nc': 'North Carolina, U.S.',
+  'us-nd': 'North Dakota, U.S.',
+  'us-ne': 'Nebraska, U.S.',
+  'us-nh': 'New Hampshire, U.S.',
+  'us-nj': 'New Jersey, U.S.',
+  'us-nm': 'New Mexico, U.S.',
+  'us-nv': 'Nevada, U.S.',
+  'us-ny': 'New York, U.S.',
+  'us-oh': 'Ohio, U.S.',
+  'us-ok': 'Oklahoma, U.S.',
+  'us-or': 'Oregon, U.S.',
+  'us-pa': 'Pennsylvania, U.S.',
+  'us-ri': 'Rhode Island, U.S.',
+  'us-sc': 'South Carolina, U.S.',
+  'us-sd': 'South Dakota, U.S.',
+  'us-tn': 'Tennessee, U.S.',
+  'us-tx': 'Texas, U.S.',
+  'us-ut': 'Utah, U.S.',
+  'us-va': 'Virginia, U.S.',
+  'us-vt': 'Vermont, U.S.',
+  'us-wa': 'Washington, U.S.',
+  'us-wi': 'Wisconsin, U.S.',
+  'us-wv': 'West Virginia, U.S.',
+  'us-wy': 'Wyoming, U.S.',
+};
+
+// Export processed data
+export { postsSorted as posts, locationTags, uniqueTags, topicTags, locationLabels, topicLabels };
+
+// Export default for convenience
+export default {
+  posts: postsSorted,
+  locationTags,
+  uniqueTags,
+  topicTags,
+  locationLabels,
+  topicLabels,
+};
