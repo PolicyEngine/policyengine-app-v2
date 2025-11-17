@@ -49,7 +49,6 @@ export function createPopulationCallbacks<TState, TMode>(
           geography: null,
           label,
           type: 'household',
-          isCreated: true,
         })
       );
       navigateToMode(returnMode);
@@ -65,7 +64,6 @@ export function createPopulationCallbacks<TState, TMode>(
           geography: { ...geography, id: geographyId },
           label,
           type: 'geography',
-          isCreated: true,
         })
       );
       navigateToMode(returnMode);
@@ -80,7 +78,6 @@ export function createPopulationCallbacks<TState, TMode>(
         return populationUpdater(prev, {
           ...population,
           household: { ...household, id: householdId },
-          isCreated: true,
         });
       });
       navigateToMode(returnMode);
@@ -97,7 +94,6 @@ export function createPopulationCallbacks<TState, TMode>(
           updatedPopulation.geography.id = geographyId;
         }
         updatedPopulation.label = label;
-        updatedPopulation.isCreated = true;
         return populationUpdater(prev, updatedPopulation);
       });
       navigateToMode(returnMode);

@@ -11,6 +11,5 @@ export function initializePolicyState(): PolicyStateProps {
     id: undefined,
     label: null,
     parameters: [],
-    isCreated: false,
   };
 }

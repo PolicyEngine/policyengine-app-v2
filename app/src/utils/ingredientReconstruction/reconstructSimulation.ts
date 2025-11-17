@@ -24,7 +24,6 @@ export function reconstructSimulationFromEnhanced(
     id: enhancedSimulation.policy?.id || simulation.policyId,
     label: enhancedSimulation.userPolicy?.label || enhancedSimulation.policy?.label || null,
     parameters: enhancedSimulation.policy?.parameters || [],
-    isCreated: true,
   };
 
   // Reconstruct PopulationStateProps from enhanced data
@@ -36,7 +35,6 @@ export function reconstructSimulationFromEnhanced(
       geography: null,
       label: enhancedSimulation.userHousehold?.label || null,
       type: 'household',
-      isCreated: true,
     };
   } else if (simulation.populationType === 'geography' && enhancedSimulation.geography) {
     population = {
@@ -44,7 +42,6 @@ export function reconstructSimulationFromEnhanced(
       geography: enhancedSimulation.geography,
       label: enhancedSimulation.userHousehold?.label || null,
       type: 'geography',
-      isCreated: true,
     };
   } else {
     throw new Error('[reconstructSimulation] Unable to determine population type or missing population data');
@@ -53,7 +50,6 @@ export function reconstructSimulationFromEnhanced(
   return {
     id: simulation.id,
     label,
-    isCreated: true,
     countryId: simulation.countryId,
     apiVersion: simulation.apiVersion,
     status: simulation.status,

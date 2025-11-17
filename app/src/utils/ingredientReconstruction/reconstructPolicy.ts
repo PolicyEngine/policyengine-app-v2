@@ -33,7 +33,6 @@ export function reconstructPolicyFromJson(
     id: policyId,
     label,
     parameters,
-    isCreated: true,
   };
 }
 
@@ -55,6 +54,5 @@ export function reconstructPolicyFromParameters(
     id: policyId,
     label,
     parameters,
-    isCreated: true,
   };
 }

@@ -7,6 +7,7 @@ import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { Simulation } from '@/types/ingredients/Simulation';
 import { findMatchingPopulation } from '@/utils/populationMatching';
 import { HouseholdAdapter } from '@/adapters';
+import { isSimulationConfigured } from '@/utils/validation/ingredientValidation';
 
 type SimulationCard = 'simulation1' | 'simulation2';
 
@@ -35,8 +36,8 @@ export default function ReportSetupView({
   const { data: geographicData } = useUserGeographics(userId);
 
   // Check if simulations are fully configured
-  const simulation1Configured = !!(simulation1?.policy.id && simulation1?.population.isCreated);
-  const simulation2Configured = !!(simulation2?.policy.id && simulation2?.population.isCreated);
+  const simulation1Configured = isSimulationConfigured(simulation1);
+  const simulation2Configured = isSimulationConfigured(simulation2);
 
   // Check if population data is loaded (needed for simulation2 prefill)
   const isPopulationDataLoaded = householdData !== undefined && geographicData !== undefined;

@@ -35,7 +35,6 @@ export function createPolicyCallbacks<TState, TMode>(
       id: currentLawId.toString(),
       label,
       parameters: [],
-      isCreated: true,
     }));
     navigateToMode(returnMode);
   }, [setState, policyUpdater, navigateToMode, returnMode]);
@@ -45,7 +44,6 @@ export function createPolicyCallbacks<TState, TMode>(
       id: policyId,
       label,
       parameters,
-      isCreated: true,
     }));
     navigateToMode(returnMode);
   }, [setState, policyUpdater, navigateToMode, returnMode]);
@@ -56,7 +54,6 @@ export function createPolicyCallbacks<TState, TMode>(
       return policyUpdater(prev, {
         ...policy,
         id: policyId,
-        isCreated: true
       });
     });
     navigateToMode(returnMode);

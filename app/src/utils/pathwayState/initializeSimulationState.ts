@@ -16,7 +16,6 @@ export function initializeSimulationState(): SimulationStateProps {
     label: null,
     countryId: undefined,
     apiVersion: undefined,
-    isCreated: false,
     status: undefined,
     output: null,
     policy: initializePolicyState(),

@@ -32,7 +32,6 @@ export function createSimulationCallbacks<TState, TMode>(
       return simulationUpdater(prev, {
         ...simulation,
         id: simulationId,
-        isCreated: true,
       });
     });
     navigateToMode(returnMode);
@@ -52,7 +51,6 @@ export function createSimulationCallbacks<TState, TMode>(
       id: enhancedSimulation.policy?.id || simulation.policyId,
       label: enhancedSimulation.userPolicy?.label || enhancedSimulation.policy?.label || null,
       parameters: enhancedSimulation.policy?.parameters || [],
-      isCreated: true,
     };
 
     // Reconstruct PopulationStateProps from enhanced data
@@ -64,7 +62,6 @@ export function createSimulationCallbacks<TState, TMode>(
         geography: null,
         label: enhancedSimulation.userHousehold?.label || null,
         type: 'household',
-        isCreated: true,
       };
     } else if (simulation.populationType === 'geography' && enhancedSimulation.geography) {
       population = {
@@ -72,7 +69,6 @@ export function createSimulationCallbacks<TState, TMode>(
         geography: enhancedSimulation.geography,
         label: enhancedSimulation.userHousehold?.label || null,
         type: 'geography',
-        isCreated: true,
       };
     } else {
       console.error('[simulationCallbacks] Unable to determine population type or missing population data');
@@ -84,7 +80,6 @@ export function createSimulationCallbacks<TState, TMode>(
         ...simulationSelector(prev),
         id: simulation.id,
         label,
-        isCreated: true,
         countryId: simulation.countryId,
         apiVersion: simulation.apiVersion,
         policy,

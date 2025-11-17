@@ -7,6 +7,7 @@
 import { useState } from 'react';
 import FlowView from '@/components/common/FlowView';
 import { SimulationStateProps } from '@/types/pathwayState';
+import { isPolicyConfigured, isPopulationConfigured } from '@/utils/validation/ingredientValidation';
 
 type SetupCard = 'population' | 'policy';
 
@@ -44,20 +45,20 @@ export default function SimulationSetupView({
   };
 
   const handleNext = () => {
-    if (selectedCard === 'population' && !population?.isCreated) {
+    if (selectedCard === 'population' && !isPopulationConfigured(population)) {
       onNavigateToPopulation();
-    } else if (selectedCard === 'policy' && !policy?.isCreated) {
+    } else if (selectedCard === 'policy' && !isPolicyConfigured(policy)) {
       onNavigateToPolicy();
-    } else if (policy?.isCreated && population?.isCreated) {
+    } else if (isPolicyConfigured(policy) && isPopulationConfigured(population)) {
       // Both are fulfilled, proceed to next step
       onNext();
     }
   };
 
-  const canProceed: boolean = !!(policy?.isCreated && population?.isCreated);
+  const canProceed: boolean = isPolicyConfigured(policy) && isPopulationConfigured(population);
 
   function generatePopulationCardTitle() {
-    if (!population || !population.isCreated) {
+    if (!isPopulationConfigured(population)) {
       return 'Add household(s)';
     }
 
@@ -79,7 +80,7 @@ export default function SimulationSetupView({
   }
 
   function generatePopulationCardDescription() {
-    if (!population || !population.isCreated) {
+    if (!isPopulationConfigured(population)) {
       return 'Select a household collection or custom household';
     }
 
@@ -100,7 +101,7 @@ export default function SimulationSetupView({
   }
 
   function generatePolicyCardTitle() {
-    if (!policy || !policy.isCreated) {
+    if (!isPolicyConfigured(policy)) {
       return 'Add Policy';
     }
     if (policy.label) {
@@ -113,7 +114,7 @@ export default function SimulationSetupView({
   }
 
   function generatePolicyCardDescription() {
-    if (!policy || !policy.isCreated) {
+    if (!isPolicyConfigured(policy)) {
       return 'Select a policy to apply to the simulation';
     }
     if (policy.label && policy.id) {
@@ -128,7 +129,7 @@ export default function SimulationSetupView({
       description: generatePopulationCardDescription(),
       onClick: handlePopulationSelect,
       isSelected: selectedCard === 'population',
-      isFulfilled: population?.isCreated || false,
+      isFulfilled: isPopulationConfigured(population),
       isDisabled: false,
     },
     {
@@ -136,20 +137,20 @@ export default function SimulationSetupView({
       description: generatePolicyCardDescription(),
       onClick: handlePolicySelect,
       isSelected: selectedCard === 'policy',
-      isFulfilled: policy?.isCreated || false,
+      isFulfilled: isPolicyConfigured(policy),
       isDisabled: false,
     },
   ];
 
   // Determine the primary action label and state
   const getPrimaryAction = () => {
-    if (selectedCard === 'population' && !population?.isCreated) {
+    if (selectedCard === 'population' && !isPopulationConfigured(population)) {
       return {
         label: 'Setup household(s)',
         onClick: handleNext,
         isDisabled: false,
       };
-    } else if (selectedCard === 'policy' && !policy?.isCreated) {
+    } else if (selectedCard === 'policy' && !isPolicyConfigured(policy)) {
       return {
         label: 'Setup Policy',
         onClick: handleNext,

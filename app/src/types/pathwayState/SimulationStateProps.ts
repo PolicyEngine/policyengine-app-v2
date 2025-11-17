@@ -9,13 +9,16 @@ import { PopulationStateProps } from './PopulationStateProps';
  *
  * This structure allows a SimulationPathwayWrapper OR a parent ReportPathwayWrapper
  * to manage complete simulation state including its dependencies.
+ *
+ * Configuration state is determined by presence of `id` field OR by checking
+ * if both nested ingredients are configured.
+ * Use `isSimulationConfigured()` utility to check if simulation is ready.
  */
 export interface SimulationStateProps {
   id?: string; // Populated after API creation
   label: string | null; // Required field, can be null
   countryId?: string; // Optional - may be inherited from parent
   apiVersion?: string; // Optional - may be inherited from parent
-  isCreated: boolean; // Tracks whether simulation has been successfully created
   status?: 'pending' | 'complete' | 'error'; // Calculation status
   output?: unknown | null; // Calculation result (for household simulations)
 
