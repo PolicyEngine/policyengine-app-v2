@@ -6,6 +6,7 @@ import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import BlogTestPage from './pages/BlogTest.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
@@ -149,6 +150,10 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+            {
+              path: 'blog-test',
+              element: <BlogTestPage />,
             },
           ],
         },
