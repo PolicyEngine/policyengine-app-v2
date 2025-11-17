@@ -332,6 +332,7 @@ export class CalcOrchestrator {
       },
       populationId,
       region,
+      year: config.year,
       calcId: config.calcId,
     };
   }

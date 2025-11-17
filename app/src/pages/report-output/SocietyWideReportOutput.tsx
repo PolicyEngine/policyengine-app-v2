@@ -88,6 +88,7 @@ export function SocietyWideReportOutput({
         calcId: report.id,
         targetType: 'report' as const,
         countryId: report.countryId,
+        year: report.year,
         simulations: {
           simulation1,
           simulation2,
