@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ReportPathwayWrapper from './ReportPathwayWrapper';
 
 export default function ReportPathwayWrapperRoute() {
-  const { countryId } = useParams<{ countryId: string}>();
+  const { countryId } = useParams<{ countryId: string }>();
   const navigate = useNavigate();
 
   if (!countryId) {

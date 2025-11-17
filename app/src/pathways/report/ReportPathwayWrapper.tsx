@@ -14,6 +14,7 @@ import { ReportStateProps, SimulationStateProps, PolicyStateProps, PopulationSta
 import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
 import { initializeReportState } from '@/utils/pathwayState/initializeReportState';
 import { RootState } from '@/store';
+import StandardLayout from '@/components/StandardLayout';
 
 // Report-level views
 import ReportLabelView from './views/ReportLabelView';
@@ -50,6 +51,9 @@ import { ReportCreationPayload } from '@/types/payloads';
 import { getReportOutputPath } from '@/utils/reportRouting';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
+
+// View modes that manage their own AppShell (don't need StandardLayout wrapper)
+const MODES_WITH_OWN_LAYOUT = new Set([ReportViewMode.POLICY_PARAMETER_SELECTOR]);
 
 interface ReportPathwayWrapperProps {
   countryId: string;
@@ -369,19 +373,23 @@ export default function ReportPathwayWrapper({
   const otherSimulationIndex = activeSimulationIndex === 0 ? 1 : 0;
   const otherSimulation = reportState.simulations[otherSimulationIndex];
 
+  // Determine which view to render based on current mode
+  let currentView: React.ReactNode;
+
   switch (currentMode) {
     // ========== REPORT-LEVEL VIEWS ==========
     case ReportViewMode.LABEL:
-      return (
+      currentView = (
         <ReportLabelView
           label={reportState.label}
           onUpdateLabel={updateReportLabel}
           onNext={() => navigateToMode(ReportViewMode.SETUP)}
         />
       );
+      break;
 
     case ReportViewMode.SETUP:
-      return (
+      currentView = (
         <ReportSetupView
           reportState={reportState}
           onNavigateToSimulationSelection={handleNavigateToSimulationSelection}
@@ -389,17 +397,19 @@ export default function ReportPathwayWrapper({
           onPrefillPopulation2={handlePrefillPopulation2}
         />
       );
+      break;
 
     case ReportViewMode.SELECT_SIMULATION:
-      return (
+      currentView = (
         <ReportSimulationSelectionView
           onCreateNew={() => navigateToMode(ReportViewMode.SIMULATION_LABEL)}
           onLoadExisting={() => navigateToMode(ReportViewMode.SELECT_EXISTING_SIMULATION)}
         />
       );
+      break;
 
     case ReportViewMode.SELECT_EXISTING_SIMULATION:
-      return (
+      currentView = (
         <ReportSimulationExistingView
           activeSimulationIndex={activeSimulationIndex}
           otherSimulation={otherSimulation}
@@ -407,19 +417,21 @@ export default function ReportPathwayWrapper({
           onNext={() => navigateToMode(ReportViewMode.SETUP)}
         />
       );
+      break;
 
     case ReportViewMode.SUBMIT:
-      return (
+      currentView = (
         <ReportSubmitView
           reportState={reportState}
           onSubmit={handleSubmitReport}
           isSubmitting={isSubmitting}
         />
       );
+      break;
 
     // ========== SIMULATION-LEVEL VIEWS ==========
     case ReportViewMode.SIMULATION_LABEL:
-      return (
+      currentView = (
         <SimulationLabelView
           label={activeSimulation.label}
           simulationIndex={activeSimulationIndex}
@@ -428,9 +440,10 @@ export default function ReportPathwayWrapper({
           onNext={() => navigateToMode(ReportViewMode.SIMULATION_SETUP)}
         />
       );
+      break;
 
     case ReportViewMode.SIMULATION_SETUP:
-      return (
+      currentView = (
         <SimulationSetupView
           simulation={activeSimulation}
           simulationIndex={activeSimulationIndex}
@@ -440,18 +453,20 @@ export default function ReportPathwayWrapper({
           onNext={() => navigateToMode(ReportViewMode.SIMULATION_SUBMIT)}
         />
       );
+      break;
 
     case ReportViewMode.SIMULATION_SUBMIT:
-      return (
+      currentView = (
         <SimulationSubmitView
           simulation={activeSimulation}
           onSubmitSuccess={handleSimulationSubmitSuccess}
         />
       );
+      break;
 
     // ========== POLICY SETUP COORDINATION ==========
     case ReportViewMode.SETUP_POLICY:
-      return (
+      currentView = (
         <SimulationPolicySetupView
           currentLawId={currentLawId}
           countryId={countryId}
@@ -460,10 +475,11 @@ export default function ReportPathwayWrapper({
           onLoadExisting={() => navigateToMode(ReportViewMode.SELECT_EXISTING_POLICY)}
         />
       );
+      break;
 
     // ========== POPULATION SETUP COORDINATION ==========
     case ReportViewMode.SETUP_POPULATION:
-      return (
+      currentView = (
         <SimulationPopulationSetupView
           isReportMode={true}
           otherSimulation={otherSimulation}
@@ -473,10 +489,11 @@ export default function ReportPathwayWrapper({
           onCopyExisting={handleCopyPopulationFromOtherSim}
         />
       );
+      break;
 
     // ========== POLICY CREATION VIEWS ==========
     case ReportViewMode.POLICY_LABEL:
-      return (
+      currentView = (
         <PolicyLabelView
           label={activeSimulation.policy.label}
           simulationIndex={activeSimulationIndex}
@@ -485,9 +502,10 @@ export default function ReportPathwayWrapper({
           onNext={() => navigateToMode(ReportViewMode.POLICY_PARAMETER_SELECTOR)}
         />
       );
+      break;
 
     case ReportViewMode.POLICY_PARAMETER_SELECTOR:
-      return (
+      currentView = (
         <PolicyParameterSelectorView
           policy={activeSimulation.policy}
           onPolicyUpdate={updatePolicy}
@@ -495,36 +513,40 @@ export default function ReportPathwayWrapper({
           onReturn={() => navigateToMode(ReportViewMode.POLICY_LABEL)}
         />
       );
+      break;
 
     case ReportViewMode.POLICY_SUBMIT:
-      return (
+      currentView = (
         <PolicySubmitView
           policy={activeSimulation.policy}
           countryId={countryId}
           onSubmitSuccess={handlePolicySubmitSuccess}
         />
       );
+      break;
 
     case ReportViewMode.SELECT_EXISTING_POLICY:
-      return (
+      currentView = (
         <PolicyExistingView
           onSelectPolicy={handleSelectExistingPolicy}
           onReturn={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
         />
       );
+      break;
 
     // ========== POPULATION CREATION VIEWS ==========
     case ReportViewMode.POPULATION_SCOPE:
-      return (
+      currentView = (
         <PopulationScopeView
           countryId={countryId}
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={handlePopulationScopeSelected}
         />
       );
+      break;
 
     case ReportViewMode.POPULATION_LABEL:
-      return (
+      currentView = (
         <PopulationLabelView
           population={activeSimulation.population}
           onUpdateLabel={updatePopulationLabel}
@@ -539,9 +561,10 @@ export default function ReportPathwayWrapper({
           onBack={() => navigateToMode(ReportViewMode.POPULATION_SCOPE)}
         />
       );
+      break;
 
     case ReportViewMode.POPULATION_HOUSEHOLD_BUILDER:
-      return (
+      currentView = (
         <HouseholdBuilderView
           population={activeSimulation.population}
           countryId={countryId}
@@ -549,9 +572,10 @@ export default function ReportPathwayWrapper({
           onReturn={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
         />
       );
+      break;
 
     case ReportViewMode.POPULATION_GEOGRAPHIC_CONFIRM:
-      return (
+      currentView = (
         <GeographicConfirmationView
           population={activeSimulation.population}
           metadata={metadata}
@@ -559,17 +583,26 @@ export default function ReportPathwayWrapper({
           onReturn={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
         />
       );
+      break;
 
     case ReportViewMode.SELECT_EXISTING_POPULATION:
-      return (
+      currentView = (
         <PopulationExistingView
           onSelectHousehold={handleSelectExistingHousehold}
           onSelectGeography={handleSelectExistingGeography}
           onReturn={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
         />
       );
+      break;
 
     default:
-      return <div>Unknown view mode: {currentMode}</div>;
+      currentView = <div>Unknown view mode: {currentMode}</div>;
   }
+
+  // Conditionally wrap with StandardLayout
+  // Views in MODES_WITH_OWN_LAYOUT manage their own AppShell
+  const needsStandardLayout = !MODES_WITH_OWN_LAYOUT.has(currentMode);
+
+  // This is a workaround to allow the param setter to manage its own AppShell
+  return needsStandardLayout ? <StandardLayout>{currentView}</StandardLayout> : currentView;
 }
