@@ -5,37 +5,43 @@
  */
 
 import { useState } from 'react';
-import { AppShell, Text } from '@mantine/core';
+import { useSelector } from 'react-redux';
+import { AppShell, Box, Button, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import Footer from '@/components/policyParameterSelectorFrame/Footer';
+import { IconChevronRight } from '@tabler/icons-react';
 import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import HeaderNavigation from '@/components/shared/HomeHeader';
 import LegacyBanner from '@/components/shared/LegacyBanner';
+import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
-import { ParameterTreeNode } from '@/types/metadata/parameterMetadata';
+import { RootState } from '@/store';
+import { ParameterMetadata, ParameterTreeNode } from '@/types/metadata/parameterMetadata';
+import { PolicyStateProps } from '@/types/pathwayState';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
 
 interface PolicyParameterSelectorViewProps {
-  parameterTree: ParameterTreeNode | null;
-  parameters: Record<string, ParameterMetadata>;
-  loading: boolean;
-  error: string | null;
+  policy: PolicyStateProps;
   onNext: () => void;
   onReturn: () => void;
 }
 
 export default function PolicyParameterSelectorView({
-  parameterTree,
-  parameters,
-  loading,
-  error,
+  policy,
   onNext,
   onReturn,
 }: PolicyParameterSelectorViewProps) {
   const [selectedLeafParam, setSelectedLeafParam] = useState<ParameterMetadata | null>(null);
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
+
+  // Get metadata from Redux state
+  const { parameterTree, parameters, loading, error } = useSelector(
+    (state: RootState) => state.metadata
+  );
+
+  // Count modifications from policy prop
+  const modificationCount = countPolicyModifications(policy);
 
   // Show error if metadata failed to load
   if (error) {
@@ -57,6 +63,33 @@ export default function PolicyParameterSelectorView({
       }
     }
   }
+
+  // Custom footer component for this view
+  const PolicyParameterFooter = () => (
+    <Group justify="space-between" align="center">
+      <Button variant="default" onClick={onReturn}>
+        Back
+      </Button>
+      {modificationCount > 0 && (
+        <Group gap="xs">
+          <Box
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: colors.primary[600],
+            }}
+          />
+          <Text size="sm" c="gray.5">
+            {modificationCount} parameter modification{modificationCount !== 1 ? 's' : ''}
+          </Text>
+        </Group>
+      )}
+      <Button variant="filled" onClick={onNext} rightSection={<IconChevronRight size={16} />}>
+        Review my policy
+      </Button>
+    </Group>
+  );
 
   return (
     <AppShell
@@ -93,13 +126,7 @@ export default function PolicyParameterSelectorView({
       </AppShell.Main>
 
       <AppShell.Footer p="md">
-        <Footer
-          onNavigate={onNext}
-          onReturn={onReturn}
-          flowConfig={null}
-          isInSubflow={true}
-          flowDepth={3}
-        />
+        <PolicyParameterFooter />
       </AppShell.Footer>
     </AppShell>
   );
