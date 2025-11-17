@@ -9,9 +9,13 @@ import { Stack, Text, TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { extractRegionDisplayValue } from '@/utils/regionStrategies';
+import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 
 interface PopulationLabelViewProps {
   population: PopulationStateProps;
+  mode: PathwayMode;
+  simulationIndex?: 0 | 1; // Required if mode='report', ignored if mode='standalone'
+  reportLabel?: string | null; // Optional for report context
   onUpdateLabel: (label: string) => void;
   onNext: () => void;
   onBack: () => void;
@@ -19,10 +23,18 @@ interface PopulationLabelViewProps {
 
 export default function PopulationLabelView({
   population,
+  mode,
+  simulationIndex,
+  reportLabel = null,
   onUpdateLabel,
   onNext,
   onBack,
 }: PopulationLabelViewProps) {
+  // Validate that required props are present in report mode
+  if (mode === 'report' && simulationIndex === undefined) {
+    throw new Error('[PopulationLabelView] simulationIndex is required when mode is "report"');
+  }
+
   // Initialize with existing label or generate a default based on population type
   const getDefaultLabel = () => {
     if (population?.label) {

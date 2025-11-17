@@ -290,6 +290,7 @@ export default function ReportPathwayWrapper({
       currentView = (
         <SimulationLabelView
           label={activeSimulation.label}
+          mode="report"
           simulationIndex={activeSimulationIndex}
           reportLabel={reportState.label}
           onUpdateLabel={simulationCallbacks.updateLabel}
@@ -352,6 +353,7 @@ export default function ReportPathwayWrapper({
       currentView = (
         <PolicyLabelView
           label={activeSimulation.policy.label}
+          mode="report"
           simulationIndex={activeSimulationIndex}
           reportLabel={reportState.label}
           onUpdateLabel={policyCallbacks.updateLabel}
@@ -366,7 +368,7 @@ export default function ReportPathwayWrapper({
           policy={activeSimulation.policy}
           onPolicyUpdate={policyCallbacks.updatePolicy}
           onNext={() => navigateToMode(ReportViewMode.POLICY_SUBMIT)}
-          onReturn={() => navigateToMode(ReportViewMode.POLICY_LABEL)}
+          onBack={() => navigateToMode(ReportViewMode.POLICY_LABEL)}
         />
       );
       break;
@@ -385,7 +387,7 @@ export default function ReportPathwayWrapper({
       currentView = (
         <PolicyExistingView
           onSelectPolicy={policyCallbacks.handleSelectExisting}
-          onReturn={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
+          onBack={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
         />
       );
       break;
@@ -405,6 +407,9 @@ export default function ReportPathwayWrapper({
       currentView = (
         <PopulationLabelView
           population={activeSimulation.population}
+          mode="report"
+          simulationIndex={activeSimulationIndex}
+          reportLabel={reportState.label}
           onUpdateLabel={populationCallbacks.updateLabel}
           onNext={() => {
             // Navigate based on population type
@@ -425,7 +430,7 @@ export default function ReportPathwayWrapper({
           population={activeSimulation.population}
           countryId={countryId}
           onSubmitSuccess={populationCallbacks.handleHouseholdSubmitSuccess}
-          onReturn={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
+          onBack={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
         />
       );
       break;
@@ -436,7 +441,7 @@ export default function ReportPathwayWrapper({
           population={activeSimulation.population}
           metadata={metadata}
           onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
-          onReturn={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
+          onBack={() => navigateToMode(ReportViewMode.POPULATION_LABEL)}
         />
       );
       break;
@@ -446,7 +451,7 @@ export default function ReportPathwayWrapper({
         <PopulationExistingView
           onSelectHousehold={populationCallbacks.handleSelectExistingHousehold}
           onSelectGeography={populationCallbacks.handleSelectExistingGeography}
-          onReturn={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
+          onBack={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
         />
       );
       break;

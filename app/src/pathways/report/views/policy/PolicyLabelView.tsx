@@ -7,32 +7,38 @@
 import { useState } from 'react';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 
 interface PolicyLabelViewProps {
   label: string | null;
-  simulationIndex: 0 | 1;
-  reportLabel: string | null;
+  mode: PathwayMode;
+  simulationIndex?: 0 | 1; // Required if mode='report', ignored if mode='standalone'
+  reportLabel?: string | null; // Optional for report context
   onUpdateLabel: (label: string) => void;
   onNext: () => void;
 }
 
 export default function PolicyLabelView({
   label,
+  mode,
   simulationIndex,
-  reportLabel,
+  reportLabel = null,
   onUpdateLabel,
   onNext,
 }: PolicyLabelViewProps) {
+  // Validate that required props are present in report mode
+  if (mode === 'report' && simulationIndex === undefined) {
+    throw new Error('[PolicyLabelView] simulationIndex is required when mode is "report"');
+  }
+
   // Generate default label based on context
   const getDefaultLabel = () => {
-    if (reportLabel) {
-      // Report mode WITH report name: prefix with report name
-      const baseName = simulationIndex === 0 ? 'baseline policy' : 'reform policy';
-      return `${reportLabel} ${baseName}`;
+    if (mode === 'standalone') {
+      return 'My policy';
     }
-    // All other cases: use standalone label
-    const baseName = simulationIndex === 0 ? 'Baseline policy' : 'Reform policy';
-    return baseName;
+    // mode === 'report'
+    const baseName = simulationIndex === 0 ? 'baseline policy' : 'reform policy';
+    return reportLabel ? `${reportLabel} ${baseName}` : `${baseName.charAt(0).toUpperCase()}${baseName.slice(1)}`;
   };
 
   const [localLabel, setLocalLabel] = useState(label || getDefaultLabel());

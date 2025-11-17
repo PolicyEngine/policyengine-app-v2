@@ -27,6 +27,7 @@ import { USOnlyGuard } from './routing/guards/USOnlyGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 import { RedirectToLegacy } from './routing/RedirectToLegacy';
 import ReportPathwayWrapperRoute from './pathways/report/ReportPathwayWrapperRoute';
+import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 
 const router = createBrowserRouter(
   [
@@ -82,6 +83,10 @@ const router = createBrowserRouter(
                 {
                   path: 'simulations/create',
                   element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
+                },
+                {
+                  path: 'simulations/create-v2',
+                  element: <SimulationPathwayWrapper />,
                 },
                 {
                   path: 'households',
