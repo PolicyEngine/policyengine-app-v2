@@ -66,6 +66,11 @@ export default function ReportsPage() {
       type: 'text',
     },
     {
+      key: 'year',
+      header: 'Year',
+      type: 'text',
+    },
+    {
       key: 'simulations',
       header: 'Simulations',
       type: 'bullets',
@@ -100,6 +105,9 @@ export default function ReportsPage() {
             text: item.userReport.label || `Report #${item.userReport.reportId}`,
             url: `/${countryId}/report-output/${item.userReport.id}`,
           } as LinkValue,
+          year: {
+            text: item.report?.year || '',
+          } as TextValue,
           dateCreated: {
             text: item.userReport.createdAt
               ? formatDate(
