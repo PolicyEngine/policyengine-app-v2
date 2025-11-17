@@ -73,7 +73,7 @@ export default function ReportPathwayWrapper({
   const [reportState, setReportState] = useState<ReportStateProps>(() =>
     initializeReportState(countryId)
   );
-  const [currentMode, setCurrentMode] = useState<ReportViewMode>(ReportViewMode.LABEL);
+  const [currentMode, setCurrentMode] = useState<ReportViewMode>(ReportViewMode.REPORT_LABEL);
   const [activeSimulationIndex, setActiveSimulationIndex] = useState<0 | 1>(0);
 
   const navigate = useNavigate();
@@ -98,7 +98,7 @@ export default function ReportPathwayWrapper({
   const handleNavigateToSimulationSelection = useCallback((simulationIndex: 0 | 1) => {
     console.log('[ReportPathwayWrapper] Setting active simulation index:', simulationIndex);
     setActiveSimulationIndex(simulationIndex);
-    setCurrentMode(ReportViewMode.SELECT_SIMULATION);
+    setCurrentMode(ReportViewMode.REPORT_SELECT_SIMULATION);
   }, []);
 
   const handlePrefillPopulation2 = useCallback(() => {
@@ -201,7 +201,7 @@ export default function ReportPathwayWrapper({
       return { ...prev, simulations: newSimulations };
     });
     // Return to setup view
-    navigateToMode(ReportViewMode.SETUP);
+    navigateToMode(ReportViewMode.REPORT_SETUP);
   }, [activeSimulationIndex, navigateToMode]);
 
   // ========== POLICY-LEVEL STATE UPDATES ==========
@@ -432,48 +432,48 @@ export default function ReportPathwayWrapper({
 
   switch (currentMode) {
     // ========== REPORT-LEVEL VIEWS ==========
-    case ReportViewMode.LABEL:
+    case ReportViewMode.REPORT_LABEL:
       currentView = (
         <ReportLabelView
           label={reportState.label}
           onUpdateLabel={updateReportLabel}
-          onNext={() => navigateToMode(ReportViewMode.SETUP)}
+          onNext={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
         />
       );
       break;
 
-    case ReportViewMode.SETUP:
+    case ReportViewMode.REPORT_SETUP:
       currentView = (
         <ReportSetupView
           reportState={reportState}
           onNavigateToSimulationSelection={handleNavigateToSimulationSelection}
-          onNext={() => navigateToMode(ReportViewMode.SUBMIT)}
+          onNext={() => navigateToMode(ReportViewMode.REPORT_SUBMIT)}
           onPrefillPopulation2={handlePrefillPopulation2}
         />
       );
       break;
 
-    case ReportViewMode.SELECT_SIMULATION:
+    case ReportViewMode.REPORT_SELECT_SIMULATION:
       currentView = (
         <ReportSimulationSelectionView
           onCreateNew={() => navigateToMode(ReportViewMode.SIMULATION_LABEL)}
-          onLoadExisting={() => navigateToMode(ReportViewMode.SELECT_EXISTING_SIMULATION)}
+          onLoadExisting={() => navigateToMode(ReportViewMode.REPORT_SELECT_EXISTING_SIMULATION)}
         />
       );
       break;
 
-    case ReportViewMode.SELECT_EXISTING_SIMULATION:
+    case ReportViewMode.REPORT_SELECT_EXISTING_SIMULATION:
       currentView = (
         <ReportSimulationExistingView
           activeSimulationIndex={activeSimulationIndex}
           otherSimulation={otherSimulation}
           onSelectSimulation={handleSelectExistingSimulation}
-          onNext={() => navigateToMode(ReportViewMode.SETUP)}
+          onNext={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
         />
       );
       break;
 
-    case ReportViewMode.SUBMIT:
+    case ReportViewMode.REPORT_SUBMIT:
       currentView = (
         <ReportSubmitView
           reportState={reportState}
