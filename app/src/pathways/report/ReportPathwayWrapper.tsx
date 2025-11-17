@@ -17,7 +17,7 @@ import { RootState } from '@/store';
 import StandardLayout from '@/components/StandardLayout';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { createPolicyCallbacks, createPopulationCallbacks, createSimulationCallbacks, createReportCallbacks } from '@/utils/pathwayCallbacks';
-import { reconstructSimulationFromEnhanced } from '@/utils/ingredientReconstruction';
+import { reconstructSimulationFromEnhanced, convertSimulationStateToApi } from '@/utils/ingredientReconstruction';
 
 // Report-level views
 import ReportLabelView from './views/ReportLabelView';
@@ -182,20 +182,34 @@ export default function ReportPathwayWrapper({
       reportData as Report
     );
 
+    // Convert SimulationStateProps to Simulation format for CalcOrchestrator
+    const simulation1Api = convertSimulationStateToApi(reportState.simulations[0]);
+    const simulation2Api = convertSimulationStateToApi(reportState.simulations[1]);
+
+    if (!simulation1Api) {
+      console.error('[ReportPathwayWrapper] Failed to convert simulation1 to API format');
+      return;
+    }
+
+    console.log('[ReportPathwayWrapper] Converted simulations to API format:', {
+      simulation1: { id: simulation1Api.id, policyId: simulation1Api.policyId, populationId: simulation1Api.populationId },
+      simulation2: simulation2Api ? { id: simulation2Api.id, policyId: simulation2Api.policyId, populationId: simulation2Api.populationId } : null,
+    });
+
     // Submit report
     createReport(
       {
         countryId: reportState.countryId,
         payload: serializedPayload,
         simulations: {
-          simulation1: reportState.simulations[0] as any,
-          simulation2: reportState.simulations[1] as any,
+          simulation1: simulation1Api,
+          simulation2: simulation2Api,
         },
         populations: {
           household1: reportState.simulations[0].population.household,
-          household2: reportState.simulations[1].population.household,
+          household2: reportState.simulations[1]?.population.household,
           geography1: reportState.simulations[0].population.geography,
-          geography2: reportState.simulations[1].population.geography,
+          geography2: reportState.simulations[1]?.population.geography,
         },
       },
       {
