@@ -25,7 +25,7 @@ interface PolicyParameterSelectorViewProps {
   policy: PolicyStateProps;
   onPolicyUpdate: (updatedPolicy: PolicyStateProps) => void;
   onNext: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export default function PolicyParameterSelectorView({
@@ -69,9 +69,11 @@ export default function PolicyParameterSelectorView({
   // Custom footer component for this view
   const PolicyParameterFooter = () => (
     <Group justify="space-between" align="center">
-      <Button variant="default" onClick={onBack}>
-        Back
-      </Button>
+      {onBack && (
+        <Button variant="default" onClick={onBack}>
+          Back
+        </Button>
+      )}
       {modificationCount > 0 && (
         <Group gap="xs">
           <Box

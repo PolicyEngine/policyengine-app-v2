@@ -16,7 +16,7 @@ interface GeographicConfirmationViewProps {
   population: PopulationStateProps;
   metadata: any;
   onSubmitSuccess: (geographyId: string, label: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export default function GeographicConfirmationView({
@@ -118,6 +118,7 @@ export default function GeographicConfirmationView({
       title="Confirm household collection"
       content={buildDisplayContent()}
       primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
     />
   );
 }

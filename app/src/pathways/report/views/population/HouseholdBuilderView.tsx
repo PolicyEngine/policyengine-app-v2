@@ -39,7 +39,7 @@ interface HouseholdBuilderViewProps {
   population: PopulationStateProps;
   countryId: string;
   onSubmitSuccess: (householdId: string, household: Household) => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export default function HouseholdBuilderView({
@@ -588,10 +588,7 @@ export default function HouseholdBuilderView({
       title="Build your household"
       content={content}
       primaryAction={primaryAction}
-      cancelAction={{
-        onClick: onBack,
-      }}
-      buttonPreset="cancel-primary"
+      backAction={onBack ? { onClick: onBack } : undefined}
     />
   );
 }

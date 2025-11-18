@@ -38,7 +38,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
   });
 
   // ========== NAVIGATION ==========
-  const { currentMode, navigateToMode } = usePathwayNavigation(PolicyViewMode.LABEL);
+  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(PolicyViewMode.LABEL);
 
   // ========== CALLBACKS ==========
   const updateLabel = useCallback((label: string) => {
@@ -76,6 +76,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           mode="standalone"
           onUpdateLabel={updateLabel}
           onNext={() => navigateToMode(PolicyViewMode.PARAMETER_SELECTOR)}
+          onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/policies`)}
         />
       );
@@ -87,7 +88,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           policy={policyState}
           onPolicyUpdate={updatePolicy}
           onNext={() => navigateToMode(PolicyViewMode.SUBMIT)}
-          onBack={() => navigateToMode(PolicyViewMode.LABEL)}
+          onBack={canGoBack ? goBack : undefined}
         />
       );
       break;
@@ -98,6 +99,8 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           policy={policyState}
           countryId={countryId}
           onSubmitSuccess={handleSubmitSuccess}
+          onBack={canGoBack ? goBack : undefined}
+          onCancel={() => navigate(`/${countryId}/policies`)}
         />
       );
       break;

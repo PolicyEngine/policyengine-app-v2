@@ -43,7 +43,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
   const metadata = useSelector((state: RootState) => state.metadata);
 
   // ========== NAVIGATION ==========
-  const { currentMode, navigateToMode } = usePathwayNavigation(PopulationViewMode.SCOPE);
+  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(PopulationViewMode.SCOPE);
 
   // ========== CALLBACKS ==========
   const updateLabel = useCallback((label: string) => {
@@ -105,6 +105,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           countryId={countryId}
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={handleScopeSelected}
+          onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/households`)}
         />
       );
@@ -124,7 +125,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
               navigateToMode(PopulationViewMode.GEOGRAPHIC_CONFIRM);
             }
           }}
-          onBack={() => navigateToMode(PopulationViewMode.SCOPE)}
+          onBack={canGoBack ? goBack : undefined}
         />
       );
       break;
@@ -135,7 +136,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           population={populationState}
           countryId={countryId}
           onSubmitSuccess={handleHouseholdSubmitSuccess}
-          onBack={() => navigateToMode(PopulationViewMode.LABEL)}
+          onBack={canGoBack ? goBack : undefined}
         />
       );
       break;
@@ -146,7 +147,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           population={populationState}
           metadata={metadata}
           onSubmitSuccess={handleGeographicSubmitSuccess}
-          onBack={() => navigateToMode(PopulationViewMode.LABEL)}
+          onBack={canGoBack ? goBack : undefined}
         />
       );
       break;
