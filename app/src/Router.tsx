@@ -85,10 +85,6 @@ const router = createBrowserRouter(
                   element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
-                  path: 'simulations/create-v2',
-                  element: <SimulationPathwayWrapper />,
-                },
-                {
                   path: 'households',
                   element: <PopulationsPage />,
                 },
@@ -117,6 +113,10 @@ const router = createBrowserRouter(
                 {
                   path: 'reports/create-v2',
                   element: <ReportPathwayWrapper />,
+                },
+                {
+                  path: 'simulations/create-v2',
+                  element: <SimulationPathwayWrapper />,
                 },
               ],
             },
