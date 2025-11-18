@@ -8,7 +8,7 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { ReportStateProps, SimulationStateProps, PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
@@ -18,6 +18,7 @@ import StandardLayout from '@/components/StandardLayout';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { createPolicyCallbacks, createPopulationCallbacks, createSimulationCallbacks, createReportCallbacks } from '@/utils/pathwayCallbacks';
 import { reconstructSimulationFromEnhanced, convertSimulationStateToApi } from '@/utils/ingredientReconstruction';
+import { countryIds } from '@/libs/countries';
 
 // Report-level views
 import ReportLabelView from './views/ReportLabelView';
@@ -54,22 +55,29 @@ import { ReportCreationPayload } from '@/types/payloads';
 import { getReportOutputPath } from '@/utils/reportRouting';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
-import { countryIds } from '@/libs/countries';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
 const MODES_WITH_OWN_LAYOUT = new Set([ReportViewMode.POLICY_PARAMETER_SELECTOR]);
 
 interface ReportPathwayWrapperProps {
-  countryId: (typeof countryIds)[number];
   onComplete?: () => void;
-  onCancel?: () => void;
 }
 
-export default function ReportPathwayWrapper({
-  countryId,
-  onComplete,
-  onCancel,
-}: ReportPathwayWrapperProps) {
+export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrapperProps) {
+  const { countryId: countryIdParam } = useParams<{ countryId: string }>();
+  const navigate = useNavigate();
+
+  // Validate countryId from URL params
+  if (!countryIdParam) {
+    return <div>Error: Country ID not found</div>;
+  }
+
+  if (!countryIds.includes(countryIdParam as any)) {
+    return <div>Error: Invalid country ID</div>;
+  }
+
+  const countryId = countryIdParam as (typeof countryIds)[number];
+
   console.log('[ReportPathwayWrapper] ========== RENDER ==========');
   console.log('[ReportPathwayWrapper] countryId:', countryId);
 
@@ -79,7 +87,6 @@ export default function ReportPathwayWrapper({
   );
   const [activeSimulationIndex, setActiveSimulationIndex] = useState<0 | 1>(0);
 
-  const navigate = useNavigate();
   const { createReport, isPending: isSubmitting } = useCreateReport(reportState.label || undefined);
 
   // Get metadata for population views
