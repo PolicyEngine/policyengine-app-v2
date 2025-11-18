@@ -6,9 +6,9 @@
  */
 
 /**
- * Represents a single blog post/research article entry
+ * Base fields shared by all post types
  */
-export interface BlogPost {
+interface BasePost {
   /** Post title */
   title: string;
 
@@ -24,18 +24,39 @@ export interface BlogPost {
   /** Array of tags (topics and locations) */
   tags: string[];
 
-  /** Filename of the markdown or notebook file (optional for external posts) */
-  filename?: string;
-
-  /** External URL if post is hosted elsewhere (optional) */
-  external_url?: string;
-
   /** Filename of the cover image */
   image: string;
 
   /** URL-friendly slug generated from filename or title */
   slug: string;
 }
+
+/**
+ * Represents a standard article/research post
+ */
+export interface ArticlePost extends BasePost {
+  /** Post type discriminator */
+  type: 'article';
+
+  /** Filename of the markdown or notebook file */
+  filename: string;
+}
+
+/**
+ * Represents an interactive calculator post
+ */
+export interface InteractivePost extends BasePost {
+  /** Post type discriminator */
+  type: 'interactive';
+
+  /** Route/URL to iframe as the interactive content */
+  source: string;
+}
+
+/**
+ * Union type for all post types
+ */
+export type BlogPost = ArticlePost | InteractivePost;
 
 /**
  * Represents an author profile

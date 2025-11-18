@@ -21,6 +21,8 @@ describe('postTransformers', () => {
       expect(post.tags).toBeDefined();
       expect(post.image).toBeDefined();
       expect(post.slug).toBeDefined();
+      expect(post.type).toBeDefined();
+      expect(['article', 'interactive']).toContain(post.type);
     });
   });
 
@@ -80,23 +82,73 @@ describe('postTransformers', () => {
     expect(locationLabels['us-ca']).toBe('California, U.S.');
   });
 
-  test('posts with external_url have slugs', () => {
-    const externalPosts = posts.filter((p) => p.external_url);
-    if (externalPosts.length > 0) {
-      externalPosts.forEach((post) => {
-        expect(post.slug).toBeTruthy();
-      });
-    }
+  test('article posts have filename field', () => {
+    const articlePosts = posts.filter((p) => p.type === 'article');
+    articlePosts.forEach((post) => {
+      expect(post.filename).toBeDefined();
+      expect(typeof post.filename).toBe('string');
+      expect(post.filename.length).toBeGreaterThan(0);
+    });
   });
 
-  test('posts with filename have correct slugs', () => {
-    const filenamePost = posts.find((p) => p.filename);
-    if (filenamePost && filenamePost.filename) {
-      const expectedSlug = filenamePost.filename.substring(
-        0,
-        filenamePost.filename.indexOf('.')
-      );
-      expect(filenamePost.slug).toBe(expectedSlug);
-    }
+  test('interactive posts have source field', () => {
+    const interactivePosts = posts.filter((p) => p.type === 'interactive');
+    interactivePosts.forEach((post) => {
+      expect(post.source).toBeDefined();
+      expect(typeof post.source).toBe('string');
+      expect(post.source.length).toBeGreaterThan(0);
+      // Source should be a valid URL (absolute or relative)
+      expect(post.source).toMatch(/^(https?:\/\/|\/)/);
+    });
+  });
+
+  test('article posts have correct slugs from filename', () => {
+    const articlePosts = posts.filter((p) => p.type === 'article');
+    articlePosts.forEach((post) => {
+      const expectedSlug = post.filename
+        .substring(0, post.filename.indexOf('.'))
+        .toLowerCase()
+        .replace(/_/g, '-');
+      expect(post.slug).toBe(expectedSlug);
+    });
+  });
+
+  test('interactive posts have slugs generated from title', () => {
+    const interactivePosts = posts.filter((p) => p.type === 'interactive');
+    interactivePosts.forEach((post) => {
+      // Slug should be lowercase, alphanumeric with hyphens
+      expect(post.slug).toMatch(/^[a-z0-9-]+$/);
+      // Slug should not be empty
+      expect(post.slug.length).toBeGreaterThan(0);
+    });
+  });
+
+  test('all interactive posts are properly configured', () => {
+    const interactivePosts = posts.filter((p) => p.type === 'interactive');
+
+    interactivePosts.forEach((post) => {
+      // Must have type 'interactive'
+      expect(post.type).toBe('interactive');
+
+      // Must have source URL (absolute or relative)
+      expect(post.source).toBeDefined();
+      expect(typeof post.source).toBe('string');
+      expect(post.source).toMatch(/^(https?:\/\/|\/)/);
+
+      // Must have all base fields
+      expect(post.title).toBeDefined();
+      expect(post.description).toBeDefined();
+      expect(post.date).toBeDefined();
+      expect(post.authors).toBeDefined();
+      expect(post.tags).toBeDefined();
+      expect(post.image).toBeDefined();
+      expect(post.slug).toBeDefined();
+
+      // Should typically have 'interactives' tag
+      // (This is a soft recommendation, not a requirement)
+      if (post.tags.includes('interactives')) {
+        expect(post.tags).toContain('interactives');
+      }
+    });
   });
 });
