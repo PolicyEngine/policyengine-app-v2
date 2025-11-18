@@ -10,7 +10,6 @@ import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
 import { posts, topicLabels, locationLabels } from '@/data/posts/postTransformers';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import { colors, spacing } from '@/designTokens';
-import IframeContent from '@/components/IframeContent';
 
 export default function BlogTestPage() {
   const [selectedPostIndex, setSelectedPostIndex] = useState<number>(0);
@@ -22,15 +21,7 @@ export default function BlogTestPage() {
   const post = posts[selectedPostIndex];
 
   const loadMarkdown = async () => {
-    // Skip loading for interactive posts
-    if (post?.type === 'interactive') {
-      setMarkdown('');
-      setLoading(false);
-      setError('');
-      return;
-    }
-
-    if (post?.type !== 'article' || !post.filename) {
+    if (!post?.filename) {
       setError('No post with markdown file found');
       return;
     }
@@ -67,7 +58,7 @@ export default function BlogTestPage() {
 
   const postOptions = posts.map((p, index) => ({
     value: String(index),
-    label: `${p.title} (${p.date}) ${p.type === 'interactive' ? '[INTERACTIVE]' : ''}`,
+    label: `${p.title} (${p.date})`,
   }));
 
   return (
@@ -108,23 +99,14 @@ export default function BlogTestPage() {
           {post && (
             <Box>
               <Text size="sm" c="dimmed">
-                <strong>Type:</strong> {post.type}
-              </Text>
-              <Text size="sm" c="dimmed">
                 <strong>Title:</strong> {post.title}
               </Text>
               <Text size="sm" c="dimmed">
                 <strong>Date:</strong> {post.date}
               </Text>
-              {post.type === 'article' ? (
-                <Text size="sm" c="dimmed">
-                  <strong>File:</strong> {post.filename}
-                </Text>
-              ) : (
-                <Text size="sm" c="dimmed">
-                  <strong>Source:</strong> {post.source}
-                </Text>
-              )}
+              <Text size="sm" c="dimmed">
+                <strong>File:</strong> {post.filename}
+              </Text>
             </Box>
           )}
         </Container>
@@ -152,21 +134,8 @@ export default function BlogTestPage() {
           </Box>
         )}
 
-        {/* Render interactive posts */}
-        {post?.type === 'interactive' && !loading && (
-          <Box
-            style={{
-              width: '100%',
-              height: 'calc(100vh - 400px)',
-              minHeight: '600px',
-            }}
-          >
-            <IframeContent url={post.source} title={post.title} />
-          </Box>
-        )}
-
         {/* Render article posts with markdown */}
-        {post?.type === 'article' && markdown && !loading && (
+        {markdown && !loading && (
           <Box
             style={{
               display: 'flex',
