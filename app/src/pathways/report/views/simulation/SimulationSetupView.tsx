@@ -18,6 +18,8 @@ interface SimulationSetupViewProps {
   onNavigateToPolicy: () => void;
   onNavigateToPopulation: () => void;
   onNext: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function SimulationSetupView({
@@ -27,6 +29,8 @@ export default function SimulationSetupView({
   onNavigateToPolicy,
   onNavigateToPopulation,
   onNext,
+  onBack,
+  onCancel,
 }: SimulationSetupViewProps) {
   const [selectedCard, setSelectedCard] = useState<SetupCard | null>(null);
 
@@ -102,7 +106,7 @@ export default function SimulationSetupView({
 
   function generatePolicyCardTitle() {
     if (!isPolicyConfigured(policy)) {
-      return 'Add Policy';
+      return 'Add policy';
     }
     if (policy.label) {
       return policy.label;
@@ -146,25 +150,26 @@ export default function SimulationSetupView({
   const getPrimaryAction = () => {
     if (selectedCard === 'population' && !isPopulationConfigured(population)) {
       return {
-        label: 'Setup household(s)',
+        label: 'Configure household(s) ',
         onClick: handleNext,
         isDisabled: false,
       };
     } else if (selectedCard === 'policy' && !isPolicyConfigured(policy)) {
       return {
-        label: 'Setup Policy',
+        label: 'Configure policy ',
         onClick: handleNext,
         isDisabled: false,
       };
     } else if (canProceed) {
       return {
-        label: 'Next',
+        label: 'Next ',
         onClick: handleNext,
         isDisabled: false,
       };
     }
+    // Default disabled state - show uppermost option (household(s))
     return {
-      label: 'Next',
+      label: 'Configure household(s) ',
       onClick: handleNext,
       isDisabled: true,
     };
@@ -174,10 +179,12 @@ export default function SimulationSetupView({
 
   return (
     <FlowView
-      title="Setup Simulation"
+      title="Configure simulation"
       variant="setupConditions"
       setupConditionCards={setupConditionCards}
       primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
     />
   );
 }

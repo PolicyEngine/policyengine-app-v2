@@ -6,6 +6,9 @@
 
 import { useState } from 'react';
 import FlowView from '@/components/common/FlowView';
+import { MOCK_USER_ID } from '@/constants';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { SimulationStateProps, PopulationStateProps } from '@/types/pathwayState';
 import { getPopulationLabel, getSimulationLabel } from '@/utils/populationCompatibility';
 import {
@@ -23,6 +26,8 @@ interface SimulationPopulationSetupViewProps {
   onCreateNew: () => void;
   onLoadExisting: () => void;
   onCopyExisting: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function SimulationPopulationSetupView({
@@ -32,7 +37,14 @@ export default function SimulationPopulationSetupView({
   onCreateNew,
   onLoadExisting,
   onCopyExisting,
+  onBack,
+  onCancel,
 }: SimulationPopulationSetupViewProps) {
+  const userId = MOCK_USER_ID.toString();
+  const { data: userHouseholds } = useUserHouseholds(userId);
+  const { data: userGeographics } = useUserGeographics(userId);
+  const hasExistingPopulations = ((userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0)) > 0;
+
   const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
 
   // Determine if population selection should be locked
@@ -48,7 +60,9 @@ export default function SimulationPopulationSetupView({
   }
 
   function handleClickExisting() {
-    setSelectedAction('loadExisting');
+    if (hasExistingPopulations) {
+      setSelectedAction('loadExisting');
+    }
   }
 
   function handleClickCopyExisting() {
@@ -69,7 +83,7 @@ export default function SimulationPopulationSetupView({
   const lockedCards = [
     // Card 1: Load Existing Population (disabled)
     {
-      title: 'Load Existing Household(s)',
+      title: 'Load existing household(s)',
       description:
         'Cannot load different household(s) when another simulation is already configured',
       onClick: handleClickExisting,
@@ -78,7 +92,7 @@ export default function SimulationPopulationSetupView({
     },
     // Card 2: Create New Population (disabled)
     {
-      title: 'Create New Household(s)',
+      title: 'Create new household(s)',
       description: 'Cannot create new household(s) when another simulation is already configured',
       onClick: handleClickCreateNew,
       isSelected: false,
@@ -96,13 +110,16 @@ export default function SimulationPopulationSetupView({
 
   const normalCards = [
     {
-      title: 'Load Existing Household(s)',
-      description: 'Use household(s) you have already created',
+      title: 'Load existing household(s)',
+      description: hasExistingPopulations
+        ? 'Use household(s) you have already created'
+        : 'No existing household(s) available',
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
+      isDisabled: !hasExistingPopulations,
     },
     {
-      title: 'Create New Household(s)',
+      title: 'Create new household(s)',
       description: 'Build new household(s)',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
@@ -116,7 +133,7 @@ export default function SimulationPopulationSetupView({
   const viewSubtitle = getPopulationSelectionSubtitle(shouldLockToOtherPopulation);
 
   const primaryAction = {
-    label: 'Next',
+    label: 'Next ',
     onClick: handleClickSubmit,
     isDisabled: shouldLockToOtherPopulation ? false : !selectedAction,
   };
@@ -128,6 +145,8 @@ export default function SimulationPopulationSetupView({
       variant="buttonPanel"
       buttonPanelCards={buttonPanelCards}
       primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
     />
   );
 }

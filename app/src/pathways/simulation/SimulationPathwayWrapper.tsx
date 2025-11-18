@@ -111,7 +111,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       policy: {
         ...prev.policy,
         id: currentLawId.toString(),
-        label: 'Current Law',
+        label: 'Current law',
         parameters: [],
       },
     }));
@@ -152,6 +152,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           mode="standalone"
           onUpdateLabel={simulationCallbacks.updateLabel}
           onNext={() => navigateToMode(SimulationViewMode.SETUP)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -165,6 +166,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onNavigateToPolicy={() => navigateToMode(SimulationViewMode.SETUP_POLICY)}
           onNavigateToPopulation={() => navigateToMode(SimulationViewMode.SETUP_POPULATION)}
           onNext={() => navigateToMode(SimulationViewMode.SUBMIT)}
+          onBack={() => navigateToMode(SimulationViewMode.LABEL)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -174,6 +177,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
         <SimulationSubmitView
           simulation={simulationState}
           onSubmitSuccess={handleSimulationSubmitSuccess}
+          onBack={() => navigateToMode(SimulationViewMode.SETUP)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -187,6 +192,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onSelectCurrentLaw={handleSelectCurrentLaw}
           onCreateNew={() => navigateToMode(SimulationViewMode.POLICY_LABEL)}
           onLoadExisting={() => navigateToMode(SimulationViewMode.SELECT_EXISTING_POLICY)}
+          onBack={() => navigateToMode(SimulationViewMode.SETUP)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -204,6 +211,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
             // Not applicable in standalone mode
             console.warn('[SimulationPathwayWrapper] Copy existing not applicable in standalone mode');
           }}
+          onBack={() => navigateToMode(SimulationViewMode.SETUP)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -216,6 +225,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           mode="standalone"
           onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(SimulationViewMode.POLICY_PARAMETER_SELECTOR)}
+          onBack={() => navigateToMode(SimulationViewMode.SETUP_POLICY)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -237,6 +248,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           policy={simulationState.policy}
           countryId={countryId}
           onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
+          onBack={() => navigateToMode(SimulationViewMode.POLICY_PARAMETER_SELECTOR)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -246,6 +259,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
         <PolicyExistingView
           onSelectPolicy={policyCallbacks.handleSelectExisting}
           onBack={() => navigateToMode(SimulationViewMode.SETUP_POLICY)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -257,6 +271,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           countryId={countryId}
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={populationCallbacks.handleScopeSelected}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;
@@ -308,6 +323,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onSelectHousehold={populationCallbacks.handleSelectExistingHousehold}
           onSelectGeography={populationCallbacks.handleSelectExistingGeography}
           onBack={() => navigateToMode(SimulationViewMode.SETUP_POPULATION)}
+          onCancel={() => navigate(`/${countryId}/simulations`)}
         />
       );
       break;

@@ -41,7 +41,7 @@ export function getPopulationLockConfig(
  * @returns The title text
  */
 export function getPopulationSelectionTitle(shouldLock: boolean): string {
-  return shouldLock ? 'Apply Household(s)' : 'Select Household(s)';
+  return shouldLock ? 'Apply household(s)' : 'Select household(s)';
 }
 
 /**

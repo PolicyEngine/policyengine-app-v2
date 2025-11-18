@@ -19,9 +19,10 @@ import { Parameter } from '@/types/subIngredients/parameter';
 interface PolicyExistingViewProps {
   onSelectPolicy: (policyId: string, label: string, parameters: Parameter[]) => void;
   onBack: () => void;
+  onCancel?: () => void;
 }
 
-export default function PolicyExistingView({ onSelectPolicy, onBack }: PolicyExistingViewProps) {
+export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }: PolicyExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
@@ -122,7 +123,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack }: PolicyExi
   if (isLoading) {
     return (
       <FlowView
-        title="Select an Existing Policy"
+        title="Select an existing policy"
         content={<Text>Loading policies...</Text>}
         buttonPreset="none"
       />
@@ -132,7 +133,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack }: PolicyExi
   if (isError) {
     return (
       <FlowView
-        title="Select an Existing Policy"
+        title="Select an existing policy"
         content={
           <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
         }
@@ -144,10 +145,15 @@ export default function PolicyExistingView({ onSelectPolicy, onBack }: PolicyExi
   if (userPolicies.length === 0) {
     return (
       <FlowView
-        title="Select an Existing Policy"
+        title="Select an existing policy"
         content={<Text>No policies available. Please create a new policy.</Text>}
-        cancelAction={{ onClick: onBack }}
-        buttonPreset="cancel-only"
+        primaryAction={{
+          label: 'Next',
+          onClick: () => {},
+          isDisabled: true,
+        }}
+        backAction={{ onClick: onBack }}
+        cancelAction={onCancel ? { onClick: onCancel } : undefined}
       />
     );
   }
@@ -187,17 +193,19 @@ export default function PolicyExistingView({ onSelectPolicy, onBack }: PolicyExi
   });
 
   const primaryAction = {
-    label: 'Next',
+    label: 'Next ',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };
 
   return (
     <FlowView
-      title="Select an Existing Policy"
+      title="Select an existing policy"
       variant="cardList"
       cardListItems={policyCardItems}
       primaryAction={primaryAction}
+      backAction={{ onClick: onBack }}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
       itemsPerPage={5}
     />
   );

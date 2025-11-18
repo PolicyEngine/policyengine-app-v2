@@ -1,4 +1,5 @@
-import { Button, Grid } from '@mantine/core';
+import { Button, Group } from '@mantine/core';
+import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 
 export interface ButtonConfig {
   label: string;
@@ -9,36 +10,94 @@ export interface ButtonConfig {
 
 export interface MultiButtonFooterProps {
   buttons: ButtonConfig[];
+  /** New layout: Cancel on left, Back/Next on right with responsive stacking */
+  cancelAction?: {
+    label: string;
+    onClick: () => void;
+  };
+  backAction?: {
+    label: string;
+    onClick: () => void;
+  };
+  primaryAction?: {
+    label: string;
+    onClick: () => void;
+    isLoading?: boolean;
+    isDisabled?: boolean;
+  };
 }
 
 export default function MultiButtonFooter(props: MultiButtonFooterProps) {
-  const { buttons } = props;
+  const { buttons, cancelAction, backAction, primaryAction } = props;
 
-  // Determine grid size based on number of buttons
-  const GRID_WIDTH = 12;
-  const DESIRED_COLS_FOR_TWO_BUTTONS = 2;
-  const DESIRED_COLS_OTHERWISE = 3;
+  // New layout: Cancel left, Back/Next right
+  if (cancelAction || backAction || primaryAction) {
+    return (
+      <Group
+        justify="space-between"
+        wrap="wrap"
+        gap="md"
+        style={{
+          flexDirection: 'row',
+        }}
+      >
+        {/* Left side: Cancel button */}
+        <Group gap="sm">
+          {cancelAction && (
+            <Button
+              variant="outline"
+              onClick={cancelAction.onClick}
+            >
+              {cancelAction.label}
+            </Button>
+          )}
+        </Group>
 
-  const gridSize =
-    buttons.length <= 2
-      ? GRID_WIDTH / DESIRED_COLS_FOR_TWO_BUTTONS
-      : GRID_WIDTH / DESIRED_COLS_OTHERWISE;
+        {/* Right side: Back and Primary buttons */}
+        <Group gap="sm" wrap="nowrap">
+          {backAction && (
+            <Button
+              variant="outline"
+              onClick={backAction.onClick}
+              leftSection={<IconChevronLeft size={16} />}
+            >
+              {backAction.label}
+            </Button>
+          )}
+          {primaryAction && (
+            <Button
+              variant="filled"
+              onClick={primaryAction.onClick}
+              loading={primaryAction.isLoading}
+              disabled={primaryAction.isDisabled}
+              rightSection={<IconChevronRight size={16} />}
+            >
+              {primaryAction.label}
+            </Button>
+          )}
+        </Group>
+      </Group>
+    );
+  }
+
+  // Legacy layout for backward compatibility
+  if (buttons.length === 0) {
+    return null;
+  }
 
   return (
-    <Grid>
+    <Group justify="flex-end" gap="sm">
       {buttons.map((button, index) => (
-        <Grid.Col span={gridSize} key={index}>
-          <Button
-            variant={button.variant}
-            disabled={button.variant === 'disabled'}
-            onClick={button.onClick}
-            fullWidth
-            loading={button.isLoading}
-          >
-            {button.label}
-          </Button>
-        </Grid.Col>
+        <Button
+          key={index}
+          variant={button.variant === 'disabled' ? 'outline' : button.variant}
+          disabled={button.variant === 'disabled'}
+          onClick={button.onClick}
+          loading={button.isLoading}
+        >
+          {button.label}
+        </Button>
       ))}
-    </Grid>
+    </Group>
   );
 }

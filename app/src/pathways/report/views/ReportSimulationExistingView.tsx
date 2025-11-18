@@ -11,6 +11,8 @@ interface ReportSimulationExistingViewProps {
   otherSimulation: SimulationStateProps | null;
   onSelectSimulation: (enhancedSimulation: EnhancedUserSimulation) => void;
   onNext: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function ReportSimulationExistingView({
@@ -18,6 +20,8 @@ export default function ReportSimulationExistingView({
   otherSimulation,
   onSelectSimulation,
   onNext,
+  onBack,
+  onCancel,
 }: ReportSimulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
 
@@ -66,7 +70,7 @@ export default function ReportSimulationExistingView({
   if (isLoading) {
     return (
       <FlowView
-        title="Select an Existing Simulation"
+        title="Select an existing simulation"
         content={<Text>Loading simulations...</Text>}
         buttonPreset="none"
       />
@@ -76,7 +80,7 @@ export default function ReportSimulationExistingView({
   if (isError) {
     return (
       <FlowView
-        title="Select an Existing Simulation"
+        title="Select an existing simulation"
         content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttonPreset="none"
       />
@@ -86,9 +90,15 @@ export default function ReportSimulationExistingView({
   if (userSimulations.length === 0) {
     return (
       <FlowView
-        title="Select an Existing Simulation"
+        title="Select an existing simulation"
         content={<Text>No simulations available. Please create a new simulation.</Text>}
-        buttonPreset="cancel-only"
+        primaryAction={{
+          label: 'Next',
+          onClick: () => {},
+          isDisabled: true,
+        }}
+        backAction={onBack ? { onClick: onBack } : undefined}
+        cancelAction={onCancel ? { onClick: onCancel } : undefined}
       />
     );
   }
@@ -173,17 +183,19 @@ export default function ReportSimulationExistingView({
   });
 
   const primaryAction = {
-    label: 'Next',
+    label: 'Next ',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };
 
   return (
     <FlowView
-      title="Select an Existing Simulation"
+      title="Select an existing simulation"
       variant="cardList"
       cardListItems={simulationCardItems}
       primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
       itemsPerPage={5}
     />
   );

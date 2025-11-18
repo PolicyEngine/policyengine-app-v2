@@ -33,12 +33,14 @@ interface PopulationExistingViewProps {
   onSelectHousehold: (householdId: string, household: Household, label: string) => void;
   onSelectGeography: (geographyId: string, geography: Geography, label: string) => void;
   onBack: () => void;
+  onCancel?: () => void;
 }
 
 export default function PopulationExistingView({
   onSelectHousehold,
   onSelectGeography,
   onBack,
+  onCancel,
 }: PopulationExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -186,7 +188,7 @@ export default function PopulationExistingView({
   if (isLoading) {
     return (
       <FlowView
-        title="Select Existing Household(s)"
+        title="Select existing household(s)"
         content={<Text>Loading households...</Text>}
         buttonPreset="none"
       />
@@ -196,7 +198,7 @@ export default function PopulationExistingView({
   if (isError) {
     return (
       <FlowView
-        title="Select Existing Household(s)"
+        title="Select existing household(s)"
         content={
           <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
         }
@@ -208,10 +210,15 @@ export default function PopulationExistingView({
   if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
     return (
       <FlowView
-        title="Select Existing Household(s)"
+        title="Select existing household(s)"
         content={<Text>No households available. Please create new household(s).</Text>}
-        cancelAction={{ onClick: onBack }}
-        buttonPreset="cancel-only"
+        primaryAction={{
+          label: 'Next',
+          onClick: () => {},
+          isDisabled: true,
+        }}
+        backAction={{ onClick: onBack }}
+        cancelAction={onCancel ? { onClick: onCancel } : undefined}
       />
     );
   }
@@ -318,17 +325,19 @@ export default function PopulationExistingView({
   const cardListItems = [...householdCardItems, ...geographicCardItems];
 
   const primaryAction = {
-    label: 'Next',
+    label: 'Next ',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };
 
   return (
     <FlowView
-      title="Select Existing Household(s)"
+      title="Select existing household(s)"
       variant="cardList"
       cardListItems={cardListItems}
       primaryAction={primaryAction}
+      backAction={{ onClick: onBack }}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
       itemsPerPage={5}
     />
   );

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface PolicyLabelViewProps {
   label: string | null;
@@ -16,6 +17,8 @@ interface PolicyLabelViewProps {
   reportLabel?: string | null; // Optional for report context
   onUpdateLabel: (label: string) => void;
   onNext: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function PolicyLabelView({
@@ -25,11 +28,16 @@ export default function PolicyLabelView({
   reportLabel = null,
   onUpdateLabel,
   onNext,
+  onBack,
+  onCancel,
 }: PolicyLabelViewProps) {
   // Validate that required props are present in report mode
   if (mode === 'report' && simulationIndex === undefined) {
     throw new Error('[PolicyLabelView] simulationIndex is required when mode is "report"');
   }
+
+  const countryId = useCurrentCountry();
+  const initializeText = countryId === 'uk' ? 'Initialise' : 'Initialize';
 
   // Generate default label based on context
   const getDefaultLabel = () => {
@@ -62,9 +70,17 @@ export default function PolicyLabelView({
   );
 
   const primaryAction = {
-    label: 'Create a policy',
+    label: `${initializeText} policy`,
     onClick: submissionHandler,
   };
 
-  return <FlowView title="Create a policy" content={formInputs} primaryAction={primaryAction} />;
+  return (
+    <FlowView
+      title="Create policy"
+      content={formInputs}
+      primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
+    />
+  );
 }

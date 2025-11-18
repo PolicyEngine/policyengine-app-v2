@@ -76,6 +76,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
           mode="standalone"
           onUpdateLabel={updateLabel}
           onNext={() => navigateToMode(PolicyViewMode.PARAMETER_SELECTOR)}
+          onCancel={() => navigate(`/${countryId}/policies`)}
         />
       );
       break;

@@ -6,6 +6,8 @@
 
 import { useState } from 'react';
 import FlowView from '@/components/common/FlowView';
+import { MOCK_USER_ID } from '@/constants';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
 
 type SetupAction = 'createNew' | 'loadExisting' | 'selectCurrentLaw';
 
@@ -15,6 +17,8 @@ interface SimulationPolicySetupViewProps {
   onSelectCurrentLaw: () => void;
   onCreateNew: () => void;
   onLoadExisting: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function SimulationPolicySetupView({
@@ -23,7 +27,13 @@ export default function SimulationPolicySetupView({
   onSelectCurrentLaw,
   onCreateNew,
   onLoadExisting,
+  onBack,
+  onCancel,
 }: SimulationPolicySetupViewProps) {
+  const userId = MOCK_USER_ID.toString();
+  const { data: userPolicies } = useUserPolicies(userId);
+  const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
+
   const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
 
   function handleClickCreateNew() {
@@ -31,7 +41,9 @@ export default function SimulationPolicySetupView({
   }
 
   function handleClickExisting() {
-    setSelectedAction('loadExisting');
+    if (hasExistingPolicies) {
+      setSelectedAction('loadExisting');
+    }
   }
 
   function handleClickCurrentLaw() {
@@ -50,37 +62,42 @@ export default function SimulationPolicySetupView({
 
   const buttonPanelCards = [
     {
-      title: 'Current Law',
-      description: 'Use the baseline tax-benefit system with no reforms',
-      onClick: handleClickCurrentLaw,
-      isSelected: selectedAction === 'selectCurrentLaw',
-    },
-    {
-      title: 'Load Existing Policy',
-      description: 'Use a policy you have already created',
+      title: 'Load existing policy',
+      description: hasExistingPolicies
+        ? 'Use a policy you have already created'
+        : 'No existing policies available',
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
+      isDisabled: !hasExistingPolicies,
     },
     {
-      title: 'Create New Policy',
+      title: 'Create new policy',
       description: 'Build a new policy',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
     },
+    {
+      title: 'Current law',
+      description: 'Use the baseline tax-benefit system with no reforms',
+      onClick: handleClickCurrentLaw,
+      isSelected: selectedAction === 'selectCurrentLaw',
+    },
   ];
 
   const primaryAction = {
-    label: 'Next',
+    label: 'Next ',
     onClick: handleClickSubmit,
     isDisabled: !selectedAction,
   };
 
   return (
     <FlowView
-      title="Select Policy"
+      title="Select policy"
       variant="buttonPanel"
       buttonPanelCards={buttonPanelCards}
       primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
     />
   );
 }

@@ -5,12 +5,16 @@ interface ReportSubmitViewProps {
   reportState: ReportStateProps;
   onSubmit: () => void;
   isSubmitting: boolean;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function ReportSubmitView({
   reportState,
   onSubmit,
   isSubmitting,
+  onBack,
+  onCancel,
 }: ReportSubmitViewProps) {
   console.log('[ReportSubmitView] ========== COMPONENT RENDER ==========');
 
@@ -42,12 +46,14 @@ export default function ReportSubmitView({
 
   return (
     <IngredientSubmissionView
-      title="Review Report Configuration"
+      title="Review report configuration"
       subtitle="Review your selected simulations before generating the report."
       summaryBoxes={summaryBoxes}
-      submitButtonText="Generate Report"
+      submitButtonText="Create report"
       submissionHandler={onSubmit}
       submitButtonLoading={isSubmitting}
+      onBack={onBack}
+      onCancel={onCancel}
     />
   );
 }

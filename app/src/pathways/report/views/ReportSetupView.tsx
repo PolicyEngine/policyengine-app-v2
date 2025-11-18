@@ -16,6 +16,8 @@ interface ReportSetupViewProps {
   onNavigateToSimulationSelection: (simulationIndex: 0 | 1) => void;
   onNext: () => void;
   onPrefillPopulation2: () => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function ReportSetupView({
@@ -23,6 +25,8 @@ export default function ReportSetupView({
   onNavigateToSimulationSelection,
   onNext,
   onPrefillPopulation2,
+  onBack,
+  onCancel,
 }: ReportSetupViewProps) {
   const [selectedCard, setSelectedCard] = useState<SimulationCard | null>(null);
 
@@ -110,7 +114,7 @@ export default function ReportSetupView({
     // Allow setting up simulation1 if selected and not configured
     if (selectedCard === 'simulation1' && !simulation1Configured) {
       return {
-        label: 'Setup baseline simulation',
+        label: 'Configure baseline simulation ',
         onClick: handleNext,
         isDisabled: false,
       };
@@ -118,7 +122,7 @@ export default function ReportSetupView({
     // Allow setting up simulation2 if selected and not configured
     else if (selectedCard === 'simulation2' && !simulation2Configured) {
       return {
-        label: 'Setup comparison simulation',
+        label: 'Configure comparison simulation ',
         onClick: handleNext,
         isDisabled: !isPopulationDataLoaded, // Disable if data not loaded
       };
@@ -126,14 +130,14 @@ export default function ReportSetupView({
     // Allow proceeding if requirements met
     else if (canProceed) {
       return {
-        label: 'Review report',
+        label: 'Review report ',
         onClick: handleNext,
         isDisabled: false,
       };
     }
-    // Disable if requirements not met
+    // Disable if requirements not met - show uppermost option (baseline)
     return {
-      label: 'Review report',
+      label: 'Configure baseline simulation ',
       onClick: handleNext,
       isDisabled: true,
     };
@@ -143,10 +147,12 @@ export default function ReportSetupView({
 
   return (
     <FlowView
-      title="Setup Report"
+      title="Configure report"
       variant="setupConditions"
       setupConditionCards={setupConditionCards}
       primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
     />
   );
 }
