@@ -9,6 +9,7 @@ import { useEffect, useState } from 'react';
 import { useParams, Navigate, Link } from 'react-router-dom';
 import { Box, Container, Text, Loader, Center } from '@mantine/core';
 import { colors } from '@/designTokens';
+import { blogSpacing } from '@/components/blog/blogStyles';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
@@ -107,7 +108,7 @@ export default function BlogPage() {
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
       <Box style={{ backgroundColor: colors.gray[50] }}>
-        <Container size="lg" py="xl">
+        <Container size="xl" py="xl">
           <PostHeadingSection
             post={post}
             markdown={content}
@@ -119,7 +120,7 @@ export default function BlogPage() {
       </Box>
 
       {/* Body Section */}
-      <Container size="lg" py="xl">
+      <Container size="xl" py="xl">
         <PostBodySection
           post={post}
           markdown={content}
@@ -277,7 +278,7 @@ function PostBodySection({
       <div style={{ display: 'flex' }}>
         {/* Left sidebar - Contents */}
         <div style={{ flex: 1, marginRight: 30 }}>
-          <div style={{ position: 'sticky', top: 150 }}>
+          <div style={{ position: 'sticky', top: 150, marginTop: blogSpacing.marginTop.paragraph }}>
             <Text
               size="sm"
               tt="uppercase"
@@ -299,7 +300,7 @@ function PostBodySection({
 
         {/* Right sidebar - More On */}
         <div style={{ flex: 1, marginLeft: 20 }}>
-          <div style={{ position: 'sticky', top: 150 }}>
+          <div style={{ position: 'sticky', top: 150, marginTop: blogSpacing.marginTop.paragraph }}>
             <MoreOn post={post} countryId={countryId} />
           </div>
         </div>
@@ -473,20 +474,22 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
       if (!label) return null;
 
       return (
-        <div key={tag} style={{ marginBottom: 4 }}>
+        <div key={tag} style={{ marginBottom: 2 }}>
           <Link
             to={`/${countryId}/research?${isLocation ? 'locations' : 'topics'}=${tag}`}
             style={{
-              color: colors.primary[600],
+              color: colors.gray[700],
               textDecoration: 'none',
               fontSize: '0.95rem',
               transition: 'color 0.2s ease',
+              display: 'block',
+              padding: '2px 0',
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.textDecoration = 'underline';
+              e.currentTarget.style.color = colors.primary[600];
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.textDecoration = 'none';
+              e.currentTarget.style.color = colors.gray[700];
             }}
           >
             {label}

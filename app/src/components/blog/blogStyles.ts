@@ -115,6 +115,7 @@ export const blogSpacing = {
     code: 24,
   },
   marginTop: {
+    paragraph: 18,
     image: 25,
     heading1: 32,
     heading2: 28,

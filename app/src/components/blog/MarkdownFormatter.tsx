@@ -316,6 +316,7 @@ export function MarkdownFormatter({
           fontSize: mobile ? blogTypography.bodyMobile : blogTypography.bodyDesktop,
           backgroundColor: backgroundColor,
           lineHeight: blogTypography.bodyLineHeight,
+          marginTop: blogSpacing.marginTop.paragraph,
           marginBottom: blogSpacing.marginBottom.paragraph,
           color: blogColors.textPrimary,
         }}
