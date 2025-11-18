@@ -137,7 +137,17 @@ export default function PopulationExistingView({
       return;
     }
 
-    const householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household);
+    // Handle both API format (household_json) and transformed format (householdData)
+    // The cache might contain transformed data from useUserSimulations
+    let householdToSet;
+    if ('household_json' in localPopulation.household) {
+      // API format - needs transformation
+      householdToSet = HouseholdAdapter.fromMetadata(localPopulation.household);
+    } else {
+      // Already transformed format from cache
+      householdToSet = localPopulation.household as any;
+    }
+
     const label = localPopulation.association?.label || '';
     const householdId = householdToSet.id!;
 
@@ -226,6 +236,7 @@ export default function PopulationExistingView({
     .filter((association) => isHouseholdMetadataWithAssociation(association))
     .map((association) => {
       const isReady = isHouseholdAssociationReady(association);
+
       let title = '';
       let subtitle = '';
 
