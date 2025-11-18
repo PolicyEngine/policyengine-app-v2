@@ -1,0 +1,143 @@
+[
+  {
+    "type": "streamlit",
+    "slug": "aca-calc",
+    "title": "ACA-Calc",
+    "description": "Calculate your household's premium tax credits under the Affordable Care Act",
+    "url": "https://policyengine-aca-calc.streamlit.app",
+    "tags": ["us", "featured", "healthcare", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "streamlit",
+    "slug": "cec",
+    "title": "Citizens' Economic Council reform simulator",
+    "description": "Interactive tool to simulate UK economic reforms",
+    "url": "https://policyengine-cec-simulator.streamlit.app",
+    "tags": ["uk", "featured", "policy"],
+    "countryId": "uk"
+  },
+  {
+    "type": "streamlit",
+    "slug": "child-tax-credit-calculator",
+    "title": "Child Tax Credit Calculator",
+    "description": "Calculate child tax credit benefits",
+    "url": "https://ctc-calculator.streamlit.app",
+    "tags": ["us", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "streamlit",
+    "slug": "child-tax-credit-2024-election-calculator",
+    "title": "2024 Election CTC Comparison",
+    "description": "Compare Vance vs Harris child tax credit proposals",
+    "url": "https://vance-harris-ctc-comparison.streamlit.app",
+    "tags": ["us", "featured", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "streamlit",
+    "slug": "givecalc",
+    "title": "GiveCalc",
+    "description": "Calculate charitable giving tax benefits",
+    "url": "https://givecalc.streamlit.app",
+    "tags": ["us", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "streamlit",
+    "slug": "2024-manifestos",
+    "title": "UK 2024 Manifestos Comparison",
+    "description": "Compare UK party manifestos for 2024 election",
+    "url": "https://manifestos.streamlit.app",
+    "tags": ["uk", "featured", "policy"],
+    "countryId": "uk"
+  },
+  {
+    "type": "streamlit",
+    "slug": "state-eitcs-ctcs",
+    "title": "State EITCs and CTCs",
+    "description": "Explore state-level earned income and child tax credits",
+    "url": "https://us-state-eitcs-ctcs.streamlit.app",
+    "tags": ["us", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "streamlit",
+    "slug": "trafwa-ctc-calculator",
+    "title": "TRAFWA Child Tax Credit Calculator",
+    "description": "Calculate benefits under the TRAFWA proposal",
+    "url": "https://policyengine-trafwa-child-tax-credit.streamlit.app",
+    "tags": ["us", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "streamlit",
+    "slug": "2024-election-calculator",
+    "title": "2024 Election Personal Impact Calculator",
+    "description": "See how Trump vs Harris tax plans affect your household",
+    "url": "https://trump-harris-tax.streamlit.app",
+    "tags": ["us", "featured", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "streamlit",
+    "slug": "obbba-household-explorer",
+    "title": "OBBBA household impact explorer",
+    "description": "Interactive scatter plot to explore household-level impacts of the One Big Beautiful Bill Act",
+    "url": "https://obbba-household-explorer.streamlit.app",
+    "tags": ["us", "featured", "policy", "reconciliation"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
+    "slug": "salternative",
+    "title": "The SALTernative",
+    "description": "SALT deduction and AMT calculator",
+    "url": "https://salt-amt-calculator-578039519715.us-central1.run.app/?embedded=true",
+    "tags": ["us", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
+    "slug": "two-child-limit-comparison",
+    "title": "UK two-child limit policy comparison",
+    "description": "Compare multiple policy scenarios for the UK two-child benefit limit",
+    "url": "https://uk-two-child-limit-app.vercel.app",
+    "tags": ["uk", "featured", "policy"],
+    "countryId": "uk"
+  },
+  {
+    "type": "iframe",
+    "slug": "rhode-island-ctc-calculator",
+    "title": "Rhode Island Child Tax Credit calculator",
+    "description": "Interactive calculator for estimating Rhode Island Child Tax Credit benefits",
+    "url": "https://frontend-neon-seven.vercel.app/",
+    "tags": ["us", "policy"],
+    "countryId": "us"
+  },
+  {
+    "type": "custom",
+    "slug": "obbba-household-by-household",
+    "title": "OBBBA household-by-household analysis",
+    "description": "Detailed household-by-household impact analysis of the One Big Beautiful Bill Act",
+    "url": "https://policyengine.github.io/obbba-household-by-household",
+    "component": "OBBBAEmbed",
+    "postMessage": true,
+    "urlSync": true,
+    "tags": ["us", "featured", "policy", "reconciliation"],
+    "countryId": "us"
+  },
+  {
+    "type": "custom",
+    "slug": "obbba-scatter",
+    "title": "OBBBA scatter plot explorer",
+    "description": "Interactive scatter plot visualization of OBBBA household impacts",
+    "url": "https://policyengine.github.io/obbba-scatter",
+    "component": "OBBBAEmbed",
+    "postMessage": true,
+    "urlSync": true,
+    "tags": ["us", "featured", "policy", "reconciliation"],
+    "countryId": "us"
+  }
+]
