@@ -4,6 +4,7 @@ import { ActionIcon, Card, Group, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
 
 export interface CardListItem {
+  id?: string; // Unique identifier for React key
   title: string;
   subtitle?: string;
   onClick: () => void;
@@ -58,7 +59,7 @@ export default function CardListVariant({
 
           return (
             <Card
-              key={index}
+              key={item.id || index}
               withBorder
               component="button"
               onClick={item.isDisabled ? undefined : item.onClick}

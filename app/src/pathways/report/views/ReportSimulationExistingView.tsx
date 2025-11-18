@@ -163,6 +163,7 @@ export default function ReportSimulationExistingView({
     }
 
     return {
+      id: enhancedSim.userSimulation?.id?.toString() || simulation.id, // Use user simulation association ID for unique key
       title,
       subtitle,
       onClick: () => handleSimulationSelect(enhancedSim),

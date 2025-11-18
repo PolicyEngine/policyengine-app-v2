@@ -176,6 +176,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack }: PolicyExi
     }
 
     return {
+      id: association.association.id?.toString() || association.policy!.id?.toString(), // Use association ID for unique key
       title,
       subtitle,
       onClick: () => handlePolicySelect(association),

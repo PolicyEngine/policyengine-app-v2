@@ -242,6 +242,7 @@ export default function PopulationExistingView({
       }
 
       return {
+        id: association.association.id?.toString() || association.household?.id?.toString(), // Use association ID for unique key
         title,
         subtitle,
         onClick: () => handleHouseholdPopulationSelect(association!),
@@ -292,6 +293,7 @@ export default function PopulationExistingView({
       }
 
       return {
+        id: association.association.id?.toString() || association.geography?.id?.toString(), // Use association ID for unique key
         title,
         subtitle,
         onClick: () => handleGeographicPopulationSelect(association!),
