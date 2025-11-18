@@ -5,14 +5,16 @@
  * special handling (no sleep state, no postMessage).
  */
 
+import { spacing } from '@/designTokens';
 import type { IframeContentProps } from '@/types/apps';
 
 export default function SimpleIframe({
   url,
   title = 'Interactive App',
-  height = 'calc(100vh - var(--header-height, 64px))',
+  height,
   width = '100%',
 }: IframeContentProps) {
+  const iframeHeight = height || `calc(100vh - ${spacing.appShell.header.height})`;
   return (
     <div
       style={{
@@ -27,7 +29,7 @@ export default function SimpleIframe({
         title={title}
         style={{
           width,
-          height,
+          height: iframeHeight,
           border: 'none',
           display: 'block',
         }}

@@ -10,6 +10,7 @@
 
 import { useEffect, useRef, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { spacing } from '@/designTokens';
 
 interface OBBBAEmbedProps {
   url: string;
@@ -66,7 +67,7 @@ export default function OBBBAEmbed({ url, title }: OBBBAEmbedProps) {
         title={title}
         style={{
           width: '100%',
-          height: 'calc(100vh - var(--header-height, 64px))',
+          height: `calc(100vh - ${spacing.appShell.header.height})`,
           border: 'none',
           overflow: 'hidden',
         }}

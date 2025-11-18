@@ -9,6 +9,7 @@
  */
 
 import { useState } from 'react';
+import { spacing } from '@/designTokens';
 import type { StreamlitEmbedProps } from '@/types/apps';
 
 export default function StreamlitEmbed({
@@ -37,7 +38,7 @@ export default function StreamlitEmbed({
   };
 
   // Calculate iframe dimensions
-  const iframeHeight = height || 'calc(100vh - var(--header-height, 64px))';
+  const iframeHeight = height || `calc(100vh - ${spacing.appShell.header.height})`;
   const iframeWidth = width || '100%';
 
   return (

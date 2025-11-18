@@ -6,6 +6,7 @@ import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import AppPage from './pages/AppPage';
 import BlogTestPage from './pages/BlogTest.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
@@ -172,6 +173,16 @@ const router = createBrowserRouter(
             },
           ],
         },
+        // Interactive app routes - use StaticLayout
+        {
+          element: <StaticLayout />,
+          children: [
+            {
+              path: ':slug',
+              element: <AppPage />,
+            },
+          ],
+        },
         // Legacy routes - redirect to legacy.policyengine.org
         {
           children: [
@@ -186,65 +197,6 @@ const router = createBrowserRouter(
             },
             {
               path: 'blog/:postName',
-              element: <RedirectToLegacy />,
-            },
-            // Generic app routes
-            {
-              path: 'obbba-household-explorer',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'obbba-household-by-household',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'two-child-limit-comparison',
-              element: <RedirectToLegacy />,
-            },
-            // Country-specific legacy routes (must come before :appName catch-all)
-            {
-              path: 'cec',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: '2024-manifestos',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'trafwa-ctc-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'state-eitcs-ctcs',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'child-tax-credit-2024-election-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'child-tax-credit-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'givecalc',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'aca-calc',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: '2024-election-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'salternative',
-              element: <RedirectToLegacy />,
-            },
-            // Generic catch-all for any other app (must be last)
-            {
-              path: ':appName',
               element: <RedirectToLegacy />,
             },
           ],
