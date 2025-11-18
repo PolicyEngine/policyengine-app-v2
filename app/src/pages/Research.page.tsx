@@ -121,6 +121,7 @@ export default function ResearchPage() {
               position: displayCategory === 'desktop' ? 'sticky' : 'static',
               top: displayCategory === 'desktop' ? '100px' : 'auto',
               alignSelf: 'flex-start',
+              height: displayCategory === 'desktop' ? 'calc(100vh - 120px)' : 'auto',
             }}
           >
             <ResearchFilters
@@ -138,7 +139,7 @@ export default function ResearchPage() {
           </Box>
 
           {/* Results */}
-          <Box style={{ flex: 1 }}>
+          <Box style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
             <Text size="sm" c="dimmed" mb="md">
               {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'}
             </Text>

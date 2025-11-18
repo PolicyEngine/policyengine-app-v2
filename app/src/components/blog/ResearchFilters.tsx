@@ -3,11 +3,11 @@
  *
  * Sidebar filters for the Research page.
  * Includes search, topics, locations, and authors.
+ * Filter menu extends to bottom of viewport with scroll in expanded section.
  */
 
-import { useState } from 'react';
-import { Box, TextInput, Button, Checkbox, Text, Collapse, Group, Stack } from '@mantine/core';
-import { colors, spacing } from '@/designTokens';
+import { useState, useRef, useEffect } from 'react';
+import { Box, TextInput, Button, Checkbox, Text, Group, Stack } from '@mantine/core';
 import { topicLabels, locationLabels, topicTags, locationTags } from '@/data/posts/postTransformers';
 
 interface ResearchFiltersProps {
@@ -38,6 +38,31 @@ export function ResearchFilters({
   availableAuthors,
 }: ResearchFiltersProps) {
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
+  const [availableHeight, setAvailableHeight] = useState<number>(400);
+  const filterContainerRef = useRef<HTMLDivElement>(null);
+
+  // Calculate available height for the tag container
+  useEffect(() => {
+    const calculateHeight = () => {
+      if (filterContainerRef.current) {
+        const rect = filterContainerRef.current.getBoundingClientRect();
+        const viewportHeight = window.innerHeight;
+        const topOffset = rect.top;
+        const padding = 20; // Bottom padding
+        const newHeight = viewportHeight - topOffset - padding;
+        setAvailableHeight(Math.max(newHeight, 100)); // Minimum 100px
+      }
+    };
+
+    calculateHeight();
+    window.addEventListener('resize', calculateHeight);
+    window.addEventListener('scroll', calculateHeight);
+
+    return () => {
+      window.removeEventListener('resize', calculateHeight);
+      window.removeEventListener('scroll', calculateHeight);
+    };
+  }, []);
 
   const toggleSection = (section: ExpandedSection) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -67,10 +92,69 @@ export function ResearchFilters({
     }
   };
 
+  // Render the tags for a section
+  const renderTopicTags = () => (
+    <Stack gap={4}>
+      {topicTags.map((tag) => (
+        <Checkbox
+          key={tag}
+          label={topicLabels[tag] || tag}
+          checked={selectedTopics.includes(tag)}
+          onChange={() => handleTopicToggle(tag)}
+          size="sm"
+        />
+      ))}
+    </Stack>
+  );
+
+  const renderLocationTags = () => (
+    <Stack gap={4}>
+      {/* Show countries first, then states */}
+      {locationTags
+        .filter((tag) => !tag.includes('-'))
+        .map((tag) => (
+          <Checkbox
+            key={tag}
+            label={locationLabels[tag] || tag}
+            checked={selectedLocations.includes(tag)}
+            onChange={() => handleLocationToggle(tag)}
+            size="sm"
+          />
+        ))}
+      {/* States */}
+      {locationTags
+        .filter((tag) => tag.includes('-'))
+        .map((tag) => (
+          <Checkbox
+            key={tag}
+            label={locationLabels[tag] || tag}
+            checked={selectedLocations.includes(tag)}
+            onChange={() => handleLocationToggle(tag)}
+            size="sm"
+            ml="md"
+          />
+        ))}
+    </Stack>
+  );
+
+  const renderAuthorTags = () => (
+    <Stack gap={4}>
+      {availableAuthors.map((author) => (
+        <Checkbox
+          key={author.key}
+          label={author.name}
+          checked={selectedAuthors.includes(author.key)}
+          onChange={() => handleAuthorToggle(author.key)}
+          size="sm"
+        />
+      ))}
+    </Stack>
+  );
+
   return (
-    <Box>
-      {/* Search */}
-      <Box mb="lg">
+    <Box style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {/* Search - fixed at top */}
+      <Box mb="lg" style={{ flexShrink: 0 }}>
         <TextInput
           placeholder="Search posts..."
           value={searchQuery}
@@ -82,22 +166,29 @@ export function ResearchFilters({
           }}
           mb="xs"
         />
-        <Button
-          fullWidth
-          variant="outline"
-          onClick={onSearchSubmit}
-        >
+        <Button fullWidth variant="outline" onClick={onSearchSubmit}>
           Search
         </Button>
       </Box>
 
-      {/* Topics Filter */}
-      <Box mb="md">
+      {/* Filter sections container - extends to bottom of viewport */}
+      <Box
+        ref={filterContainerRef}
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0, // Important for flex child scrolling
+          maxHeight: availableHeight,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Topics Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('topics')}
-          style={{ cursor: 'pointer' }}
-          mb="xs"
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
         >
           <Text fw={600} size="sm">
             Topic
@@ -106,30 +197,20 @@ export function ResearchFilters({
             {expandedSection === 'topics' ? '−' : '+'}
           </Text>
         </Group>
-        <Collapse in={expandedSection === 'topics'}>
-          <Box style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
-            <Stack gap="xs">
-              {topicTags.map((tag) => (
-                <Checkbox
-                  key={tag}
-                  label={topicLabels[tag] || tag}
-                  checked={selectedTopics.includes(tag)}
-                  onChange={() => handleTopicToggle(tag)}
-                  size="sm"
-                />
-              ))}
-            </Stack>
-          </Box>
-        </Collapse>
-      </Box>
 
-      {/* Locations Filter */}
-      <Box mb="md">
+        {/* Topics Content */}
+        {expandedSection === 'topics' && (
+          <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 8 }}>
+            {renderTopicTags()}
+          </Box>
+        )}
+
+        {/* Locations Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('locations')}
-          style={{ cursor: 'pointer' }}
-          mb="xs"
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
         >
           <Text fw={600} size="sm">
             Location
@@ -138,46 +219,20 @@ export function ResearchFilters({
             {expandedSection === 'locations' ? '−' : '+'}
           </Text>
         </Group>
-        <Collapse in={expandedSection === 'locations'}>
-          <Box style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
-            <Stack gap="xs">
-              {/* Show countries first, then states */}
-              {locationTags
-                .filter((tag) => !tag.includes('-'))
-                .map((tag) => (
-                  <Checkbox
-                    key={tag}
-                    label={locationLabels[tag] || tag}
-                    checked={selectedLocations.includes(tag)}
-                    onChange={() => handleLocationToggle(tag)}
-                    size="sm"
-                  />
-                ))}
-              {/* States */}
-              {locationTags
-                .filter((tag) => tag.includes('-'))
-                .map((tag) => (
-                  <Checkbox
-                    key={tag}
-                    label={locationLabels[tag] || tag}
-                    checked={selectedLocations.includes(tag)}
-                    onChange={() => handleLocationToggle(tag)}
-                    size="sm"
-                    ml="md"
-                  />
-                ))}
-            </Stack>
-          </Box>
-        </Collapse>
-      </Box>
 
-      {/* Authors Filter */}
-      <Box mb="md">
+        {/* Locations Content */}
+        {expandedSection === 'locations' && (
+          <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 8 }}>
+            {renderLocationTags()}
+          </Box>
+        )}
+
+        {/* Authors Header */}
         <Group
           justify="space-between"
           onClick={() => toggleSection('authors')}
-          style={{ cursor: 'pointer' }}
-          mb="xs"
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
         >
           <Text fw={600} size="sm">
             Author
@@ -186,21 +241,13 @@ export function ResearchFilters({
             {expandedSection === 'authors' ? '−' : '+'}
           </Text>
         </Group>
-        <Collapse in={expandedSection === 'authors'}>
-          <Box style={{ maxHeight: 'calc(100vh - 400px)', overflowY: 'auto' }}>
-            <Stack gap="xs">
-              {availableAuthors.map((author) => (
-                <Checkbox
-                  key={author.key}
-                  label={author.name}
-                  checked={selectedAuthors.includes(author.key)}
-                  onChange={() => handleAuthorToggle(author.key)}
-                  size="sm"
-                />
-              ))}
-            </Stack>
+
+        {/* Authors Content */}
+        {expandedSection === 'authors' && (
+          <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 8 }}>
+            {renderAuthorTags()}
           </Box>
-        </Collapse>
+        )}
       </Box>
     </Box>
   );
