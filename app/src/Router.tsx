@@ -27,7 +27,7 @@ import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
-import ReportPathwayWrapperRoute from './pathways/report/ReportPathwayWrapperRoute';
+import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 
 const router = createBrowserRouter(
@@ -117,7 +117,7 @@ const router = createBrowserRouter(
               children: [
                 {
                   path: 'reports/create-v2',
-                  element: <ReportPathwayWrapperRoute />,
+                  element: <ReportPathwayWrapper />,
                 },
               ],
             },

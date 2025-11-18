@@ -41,7 +41,6 @@ import PopulationExistingView from '../report/views/population/PopulationExistin
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Parameter } from '@/types/subIngredients/parameter';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
 const MODES_WITH_OWN_LAYOUT = new Set([SimulationViewMode.POLICY_PARAMETER_SELECTOR]);
@@ -62,8 +61,6 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
     state.countryId = countryId;
     return state;
   });
-
-  const { createSimulation, isPending: isSubmitting } = useCreateSimulation();
 
   // Get metadata for population views
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -122,44 +119,26 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
     navigateToMode(SimulationViewMode.SETUP);
   }, [currentLawId, navigateToMode]);
 
-  // Handle final simulation submission
-  const handleSubmitSimulation = useCallback(async () => {
-    console.log('[SimulationPathwayWrapper] Submitting simulation:', simulationState);
+  // Handle successful simulation creation (called by SimulationSubmitView after creating the base simulation)
+  // This mirrors the old Redux flow's behavior where the view creates the simulation,
+  // then the parent updates state and navigates
+  const handleSimulationSubmitSuccess = useCallback((simulationId: string) => {
+    console.log('[SimulationPathwayWrapper] Simulation created with ID:', simulationId);
 
-    // Build the payload for simulation creation
-    const policyId = simulationState.policy.id;
-    const populationId = simulationState.population.household?.id || simulationState.population.geography?.id;
-    const populationType = simulationState.population.type;
+    // Update simulation state with the returned ID
+    setSimulationState((prev) => ({
+      ...prev,
+      id: simulationId,
+      status: 'complete',
+    }));
 
-    if (!policyId || !populationId || !populationType) {
-      console.error('[SimulationPathwayWrapper] Missing required fields for simulation creation', {
-        policyId,
-        populationId,
-        populationType,
-      });
-      return;
+    // Navigate back to simulations list page
+    navigate(`/${countryId}/simulations`);
+
+    if (onComplete) {
+      onComplete();
     }
-
-    const payload = {
-      policy_id: parseInt(policyId, 10),
-      population_id: populationId,
-      population_type: populationType as 'household' | 'geography',
-    };
-
-    try {
-      const result = await createSimulation(payload);
-      console.log('[SimulationPathwayWrapper] Simulation created successfully:', result);
-
-      // Navigate back to simulations list page
-      navigate(`/${countryId}/simulations`);
-
-      if (onComplete) {
-        onComplete();
-      }
-    } catch (error) {
-      console.error('[SimulationPathwayWrapper] Failed to create simulation:', error);
-    }
-  }, [simulationState, createSimulation, navigate, countryId, onComplete]);
+  }, [navigate, countryId, onComplete]);
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;
@@ -194,7 +173,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = (
         <SimulationSubmitView
           simulation={simulationState}
-          onSubmitSuccess={handleSubmitSimulation}
+          onSubmitSuccess={handleSimulationSubmitSuccess}
         />
       );
       break;
