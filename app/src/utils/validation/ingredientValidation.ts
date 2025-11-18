@@ -101,8 +101,13 @@ export function isHouseholdAssociationReady(
     return false;
   }
 
-  // Household metadata missing household_json (the actual data)
-  if (!association.household.household_json) {
+  // Check for household data in EITHER format:
+  // - API format: household_json (from direct API fetch)
+  // - Transformed format: householdData (from HouseholdAdapter.fromMetadata, which may be in cache)
+  // This handles the case where React Query cache contains transformed data from useUserSimulations
+  const hasHouseholdData = !!(association.household.household_json || (association.household as any).householdData);
+
+  if (!hasHouseholdData) {
     return false;
   }
 
