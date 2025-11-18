@@ -18,19 +18,11 @@ const postsSorted = [...postsRaw].sort((a, b) => (a.date < b.date ? 1 : -1));
 
 // Generate slugs for all posts
 for (const post of postsSorted) {
-  if (post.type === 'article') {
-    // For articles, extract slug from filename (remove extension)
-    const filenameWithoutExt = post.filename.substring(0, post.filename.indexOf('.'));
-    post.slug = filenameWithoutExt
-      .toLowerCase()
-      .replace(/_/g, '-'); // Replace underscores with hyphens
-  } else {
-    // For interactives, generate slug from title
-    post.slug = post.title
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
-  }
+  // Extract slug from filename (remove extension)
+  const filenameWithoutExt = post.filename.substring(0, post.filename.indexOf('.'));
+  post.slug = filenameWithoutExt
+    .toLowerCase()
+    .replace(/_/g, '-'); // Replace underscores with hyphens
 }
 
 // Extract all tags from all posts
