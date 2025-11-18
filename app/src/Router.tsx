@@ -29,6 +29,7 @@ import { RedirectToLegacy } from './routing/RedirectToLegacy';
 import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
+import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
 
 const router = createBrowserRouter(
   [
@@ -122,6 +123,10 @@ const router = createBrowserRouter(
                 {
                   path: 'households/create-v2',
                   element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create-v2',
+                  element: <PolicyPathwayWrapper />,
                 },
               ],
             },
