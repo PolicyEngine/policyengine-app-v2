@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
 import StaticLayout from './components/StaticLayout';
@@ -7,10 +7,12 @@ import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import AppPage from './pages/AppPage';
+import BlogPage from './pages/Blog.page';
 import BlogTestPage from './pages/BlogTest.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
+import ResearchPage from './pages/Research.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
@@ -156,6 +158,14 @@ const router = createBrowserRouter(
               path: 'blog-test',
               element: <BlogTestPage />,
             },
+            {
+              path: 'research',
+              element: <ResearchPage />,
+            },
+            {
+              path: 'research/:slug',
+              element: <BlogPage />,
+            },
           ],
         },
         // US-only routes
@@ -183,21 +193,12 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // Legacy routes - redirect to legacy.policyengine.org
+        // Legacy routes - redirect old blog URLs to new research URLs
         {
           children: [
-            // Research routes
-            {
-              path: 'research',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'research/:postName',
-              element: <RedirectToLegacy />,
-            },
             {
               path: 'blog/:postName',
-              element: <RedirectToLegacy />,
+              element: <Navigate to={`research/:postName`} replace />,
             },
           ],
         },

@@ -7,8 +7,10 @@
  * This file maintains the exact logic from the old app's postTransformers.js
  */
 
-import type { BlogPost, TagLabels } from '@/types/blog';
+import type { BlogPost, TagLabels, ResearchItem } from '@/types/blog';
+import type { App } from '@/types/apps';
 import postsData from './posts.json';
+import { apps } from '@/data/apps/appTransformers';
 
 // Type assertion for imported JSON (Vite handles this)
 const postsRaw = postsData as BlogPost[];
@@ -109,6 +111,44 @@ const locationLabels: TagLabels = {
   'us-wy': 'Wyoming, U.S.',
 };
 
+/**
+ * Get combined research items (posts + apps with displayWithResearch)
+ * sorted by date (newest first)
+ */
+export function getResearchItems(): ResearchItem[] {
+  // Convert posts to ResearchItem format
+  const postItems: ResearchItem[] = postsSorted.map((post) => ({
+    title: post.title,
+    description: post.description,
+    date: post.date,
+    authors: post.authors,
+    tags: post.tags,
+    image: post.image,
+    slug: post.slug,
+    isApp: false,
+    // Determine country from tags
+    countryId: post.tags.find((tag) => ['us', 'uk', 'ca', 'ng'].includes(tag)) || 'us',
+  }));
+
+  // Get apps with displayWithResearch: true and convert to ResearchItem format
+  const appItems: ResearchItem[] = apps
+    .filter((app) => app.displayWithResearch)
+    .map((app) => ({
+      title: app.title,
+      description: app.description,
+      date: app.date || '1970-01-01', // fallback for sorting
+      authors: app.authors || [],
+      tags: app.tags,
+      image: app.image || '',
+      slug: app.slug,
+      isApp: true,
+      countryId: app.countryId,
+    }));
+
+  // Combine and sort by date (newest first)
+  return [...postItems, ...appItems].sort((a, b) => (a.date < b.date ? 1 : -1));
+}
+
 // Export processed data
 export { postsSorted as posts, locationTags, uniqueTags, topicTags, locationLabels, topicLabels };
 
@@ -120,4 +160,5 @@ export default {
   topicTags,
   locationLabels,
   topicLabels,
+  getResearchItems,
 };

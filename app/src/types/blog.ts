@@ -282,3 +282,35 @@ export interface ProcessedBlogData {
   /** Display labels for locations */
   locationLabels: TagLabels;
 }
+
+/**
+ * Unified item for research listing (posts + apps with displayWithResearch)
+ */
+export interface ResearchItem {
+  /** Item title */
+  title: string;
+
+  /** Brief description */
+  description: string;
+
+  /** Publication/release date */
+  date: string;
+
+  /** Author IDs */
+  authors: string[];
+
+  /** Tags for filtering */
+  tags: string[];
+
+  /** Cover image filename */
+  image: string;
+
+  /** URL slug */
+  slug: string;
+
+  /** Whether this is an app (vs blog post) */
+  isApp: boolean;
+
+  /** Country ID for routing */
+  countryId: string;
+}
