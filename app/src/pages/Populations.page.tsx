@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
+import { Badge, Button, Group, Stack } from '@mantine/core';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -63,6 +64,13 @@ export default function PopulationsPage() {
 
   const handleBuildPopulation = () => {
     navigate(`/${countryId}/households/create`);
+  };
+
+  const handleBuildPopulationV2 = () => {
+    console.log('[PopulationsPage] ========== NEW POPULATION V2 CLICKED ==========');
+    const targetPath = `/${countryId}/households/create-v2`;
+    console.log('[PopulationsPage] Navigating to:', targetPath);
+    navigate(targetPath);
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -311,24 +319,36 @@ export default function PopulationsPage() {
   const transformedData: IngredientRecord[] = [...householdRecords, ...geographicRecords];
 
   return (
-    <>
+    <Stack gap="md">
+      {/* TEMPORARY: Test button for new PathwayWrapper system */}
+      <Group justify="center" p="md" style={{ backgroundColor: '#f0f0ff', borderRadius: '8px' }}>
+        <Badge color="purple" size="lg">
+          NEW
+        </Badge>
+        <Button variant="outline" color="purple" onClick={handleBuildPopulationV2}>
+          Test New Population Pathway (PathwayWrapper)
+        </Button>
+      </Group>
+
+      <>
       <IngredientReadView
-        ingredient="household"
-        title="Your saved households"
-        subtitle="Configure one or a collection of households to use in your simulation configurations."
-        buttonLabel="New household(s)"
-        onBuild={handleBuildPopulation}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={transformedData}
-        columns={populationColumns}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        enableSelection
-        isSelected={isSelected}
-        onSelectionChange={handleSelectionChange}
-      />
+          ingredient="household"
+          title="Your saved households"
+          subtitle="Configure one or a collection of households to use in your simulation configurations."
+          buttonLabel="New household(s)"
+          onBuild={handleBuildPopulation}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          data={transformedData}
+          columns={populationColumns}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          enableSelection
+          isSelected={isSelected}
+          onSelectionChange={handleSelectionChange}
+        />
+    </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}

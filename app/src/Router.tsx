@@ -29,6 +29,7 @@ import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
+import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
 
 const router = createBrowserRouter(
   [
@@ -118,6 +119,10 @@ const router = createBrowserRouter(
                 {
                   path: 'simulations/create-v2',
                   element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create-v2',
+                  element: <PopulationPathwayWrapper />,
                 },
               ],
             },
