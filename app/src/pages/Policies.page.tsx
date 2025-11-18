@@ -112,7 +112,7 @@ export default function PoliciesPage() {
 
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.association.id.toString() || item.association.policyId.toString(),
+      id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
       policyName: {
         text: item.association.label || `Policy #${item.association.policyId}`,
       } as TextValue,

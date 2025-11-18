@@ -113,7 +113,7 @@ export default function SimulationsPage() {
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.userSimulation.id || item.userSimulation.simulationId.toString(),
+      id: item.userSimulation.id?.toString() || item.userSimulation.simulationId.toString(), // Use user association ID, not base simulation ID
       simulation: {
         text: item.userSimulation.label || `Simulation #${item.userSimulation.simulationId}`,
       } as TextValue,

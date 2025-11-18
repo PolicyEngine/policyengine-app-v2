@@ -10,6 +10,7 @@ import FlowView from '@/components/common/FlowView';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface PopulationLabelViewProps {
   population: PopulationStateProps;
@@ -34,6 +35,9 @@ export default function PopulationLabelView({
   if (mode === 'report' && simulationIndex === undefined) {
     throw new Error('[PopulationLabelView] simulationIndex is required when mode is "report"');
   }
+
+  const countryId = useCurrentCountry();
+  const initializeText = countryId === 'uk' ? 'Initialise' : 'Initialize';
 
   // Initialize with existing label or generate a default based on population type
   const getDefaultLabel = () => {
@@ -101,21 +105,16 @@ export default function PopulationLabelView({
   );
 
   const primaryAction = {
-    label: 'Continue',
+    label: `${initializeText} household(s)`,
     onClick: handleSubmit,
-  };
-
-  const cancelAction = {
-    label: 'Back',
-    onClick: onBack,
   };
 
   return (
     <FlowView
-      title="Name Your Household(s)"
+      title="Name your household(s)"
       content={formInputs}
       primaryAction={primaryAction}
-      cancelAction={cancelAction}
+      backAction={{ onClick: onBack }}
     />
   );
 }

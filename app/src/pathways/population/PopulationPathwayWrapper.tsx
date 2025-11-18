@@ -105,6 +105,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           countryId={countryId}
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={handleScopeSelected}
+          onCancel={() => navigate(`/${countryId}/households`)}
         />
       );
       break;

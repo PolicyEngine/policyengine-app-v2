@@ -264,7 +264,7 @@ export default function HouseholdBuilderView({
   if (error) {
     return (
       <FlowView
-        title="Create Household"
+        title="Create household"
         content={
           <Stack align="center" gap="md" p="xl">
             <Text c="red" fw={600}>
@@ -521,7 +521,7 @@ export default function HouseholdBuilderView({
   const canProceed = validation.isValid;
 
   const primaryAction = {
-    label: 'Create household',
+    label: 'Create household ',
     onClick: handleSubmit,
     isLoading: isPending,
     isDisabled: !canProceed,
@@ -585,7 +585,7 @@ export default function HouseholdBuilderView({
 
   return (
     <FlowView
-      title="Build Your Household"
+      title="Build your household"
       content={content}
       primaryAction={primaryAction}
       cancelAction={{

@@ -35,6 +35,8 @@ interface IngredientSubmissionViewProps {
   submitButtonText?: string; // Defaults to title
   submissionHandler: CallableFunction; // Function to handle form submission
   submitButtonLoading?: boolean;
+  onBack?: () => void;
+  onCancel?: () => void;
 
   // Content modes - only one should be provided
   content?: React.ReactNode; // Original free-form content
@@ -51,20 +53,11 @@ export default function IngredientSubmissionView({
   submitButtonText,
   submissionHandler,
   submitButtonLoading,
+  onBack,
+  onCancel,
 }: IngredientSubmissionViewProps) {
-  const buttonConfig: ButtonConfig[] = [
-    {
-      label: 'Cancel',
-      variant: 'disabled' as const,
-      onClick: () => {},
-    },
-    {
-      label: submitButtonText || title,
-      variant: 'filled' as const,
-      onClick: () => submissionHandler(),
-      isLoading: submitButtonLoading,
-    },
-  ];
+  // Use new layout if back or cancel provided
+  const useNewLayout = onBack || onCancel;
 
   // Render content based on the provided content type
   const renderContent = () => {
@@ -173,6 +166,34 @@ export default function IngredientSubmissionView({
     return content;
   };
 
+  // Build footer props
+  const footerProps = useNewLayout
+    ? {
+        buttons: [] as ButtonConfig[],
+        cancelAction: onCancel ? { label: 'Cancel', onClick: onCancel } : undefined,
+        backAction: onBack ? { label: 'Back', onClick: onBack } : undefined,
+        primaryAction: {
+          label: submitButtonText || title,
+          onClick: () => submissionHandler(),
+          isLoading: submitButtonLoading,
+        },
+      }
+    : {
+        buttons: [
+          {
+            label: 'Cancel',
+            variant: 'disabled' as const,
+            onClick: () => {},
+          },
+          {
+            label: submitButtonText || title,
+            variant: 'filled' as const,
+            onClick: () => submissionHandler(),
+            isLoading: submitButtonLoading,
+          },
+        ] as ButtonConfig[],
+      };
+
   return (
     <>
       <Container variant="guttered">
@@ -188,7 +209,7 @@ export default function IngredientSubmissionView({
         <Stack gap="md" pb="lg">
           {renderContent()}
         </Stack>
-        <MultiButtonFooter buttons={buttonConfig} />
+        <MultiButtonFooter {...footerProps} />
       </Container>
     </>
   );

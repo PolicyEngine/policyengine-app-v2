@@ -14,11 +14,15 @@ import { SimulationCreationPayload } from '@/types/payloads';
 interface SimulationSubmitViewProps {
   simulation: SimulationStateProps;
   onSubmitSuccess: (simulationId: string) => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function SimulationSubmitView({
   simulation,
   onSubmitSuccess,
+  onBack,
+  onCancel,
 }: SimulationSubmitViewProps) {
   const { createSimulation, isPending } = useCreateSimulation(simulation?.label || undefined);
 
@@ -57,7 +61,7 @@ export default function SimulationSubmitView({
   // Create summary boxes based on the current simulation state
   const summaryBoxes: SummaryBoxItem[] = [
     {
-      title: 'Population Added',
+      title: 'Population added',
       description:
         simulation.population.label ||
         `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
@@ -69,7 +73,7 @@ export default function SimulationSubmitView({
         `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
     },
     {
-      title: 'Policy Reform Added',
+      title: 'Policy reform added',
       description: simulation.policy.label || `Policy #${simulation.policy.id}`,
       isFulfilled: !!simulation.policy.id,
       badge: simulation.policy.label || `Policy #${simulation.policy.id}`,
@@ -78,12 +82,14 @@ export default function SimulationSubmitView({
 
   return (
     <IngredientSubmissionView
-      title="Summary of Selections"
+      title="Summary of selections"
       subtitle="Review your configurations and add additional criteria before running your simulation."
       summaryBoxes={summaryBoxes}
-      submitButtonText="Save Simulation"
+      submitButtonText="Create simulation"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
+      onBack={onBack}
+      onCancel={onCancel}
     />
   );
 }

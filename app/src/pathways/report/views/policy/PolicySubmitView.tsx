@@ -21,12 +21,16 @@ interface PolicySubmitViewProps {
   policy: PolicyStateProps;
   countryId: (typeof countryIds)[number];
   onSubmitSuccess: (policyId: string) => void;
+  onBack?: () => void;
+  onCancel?: () => void;
 }
 
 export default function PolicySubmitView({
   policy,
   countryId,
   onSubmitSuccess,
+  onBack,
+  onCancel,
 }: PolicySubmitViewProps) {
   const { createPolicy, isPending } = useCreatePolicy(policy?.label || undefined);
 
@@ -82,12 +86,14 @@ export default function PolicySubmitView({
 
   return (
     <IngredientSubmissionView
-      title="Review Policy"
+      title="Review policy"
       subtitle="Review your policy configurations before submitting."
       textList={provisions}
-      submitButtonText="Submit Policy"
+      submitButtonText="Create policy"
       submissionHandler={handleSubmit}
       submitButtonLoading={isPending}
+      onBack={onBack}
+      onCancel={onCancel}
     />
   );
 }

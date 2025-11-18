@@ -27,12 +27,14 @@ interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
   regionData: any[];
   onScopeSelected: (geography: Geography | null, scopeType: ScopeType) => void;
+  onCancel?: () => void;
 }
 
 export default function PopulationScopeView({
   countryId,
   regionData,
   onScopeSelected,
+  onCancel,
 }: PopulationScopeViewProps) {
   const [scope, setScope] = useState<ScopeType>('national');
   const [selectedRegion, setSelectedRegion] = useState('');
@@ -85,11 +87,16 @@ export default function PopulationScopeView({
   );
 
   const primaryAction = {
-    label: 'Select Scope',
+    label: 'Select scope ',
     onClick: submissionHandler,
   };
 
   return (
-    <FlowView title="Select Household Scope" content={formInputs} primaryAction={primaryAction} />
+    <FlowView
+      title="Select household scope"
+      content={formInputs}
+      primaryAction={primaryAction}
+      cancelAction={onCancel ? { onClick: onCancel } : undefined}
+    />
   );
 }

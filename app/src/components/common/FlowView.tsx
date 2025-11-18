@@ -43,7 +43,12 @@ interface FlowViewProps {
 
   cancelAction?: {
     label?: string; // defaults to "Cancel"
-    onClick?: () => void; // defaults to console.log placeholder
+    onClick?: () => void;
+  };
+
+  backAction?: {
+    label?: string; // defaults to "Back"
+    onClick: () => void;
   };
 
   // Preset configurations
@@ -57,6 +62,7 @@ export default function FlowView({
   buttons,
   primaryAction,
   cancelAction,
+  backAction,
   buttonPreset,
   content,
   setupConditionCards,
@@ -65,53 +71,6 @@ export default function FlowView({
   itemsPerPage = 5,
   showPagination = true,
 }: FlowViewProps) {
-  // Generate buttons from convenience props if explicit buttons not provided
-  function getButtons(): ButtonConfig[] {
-    // If explicit buttons provided, use them
-    if (buttons) {
-      return buttons;
-    }
-
-    // Handle preset configurations
-    if (buttonPreset === 'none') {
-      return [];
-    }
-
-    if (buttonPreset === 'cancel-only') {
-      return [
-        {
-          label: cancelAction?.label || 'Cancel',
-          variant: 'disabled',
-          onClick: () => {},
-        },
-      ];
-    }
-
-    // Default behavior: cancel + primary (or just cancel if no primary action)
-    const generatedButtons: ButtonConfig[] = [];
-
-    // Always add cancel button unless explicitly disabled
-    generatedButtons.push({
-      label: cancelAction?.label || 'Cancel',
-      variant: 'disabled',
-      onClick: () => {},
-    });
-
-    // Add primary action if provided
-    if (primaryAction) {
-      generatedButtons.push({
-        label: primaryAction.label,
-        variant: primaryAction.isDisabled ? 'disabled' : 'filled',
-        onClick: primaryAction.onClick,
-        isLoading: primaryAction.isLoading,
-      });
-    }
-
-    return generatedButtons;
-  }
-
-  const finalButtons = getButtons();
-
   const renderContent = () => {
     switch (variant) {
       case 'setupConditions':
@@ -134,6 +93,60 @@ export default function FlowView({
     }
   };
 
+  // Build footer props based on configuration
+  const getFooterProps = () => {
+    if (buttonPreset === 'none') {
+      return { buttons: [] as ButtonConfig[] };
+    }
+
+    // Use new layout if any of the new action props are provided
+    const useNewLayout = cancelAction?.onClick || backAction || primaryAction;
+    if (useNewLayout) {
+      return {
+        buttons: [] as ButtonConfig[],
+        cancelAction: cancelAction?.onClick ? {
+          label: cancelAction.label || 'Cancel',
+          onClick: cancelAction.onClick,
+        } : undefined,
+        backAction: backAction ? {
+          label: backAction.label || 'Back',
+          onClick: backAction.onClick,
+        } : undefined,
+        primaryAction: primaryAction ? {
+          label: primaryAction.label,
+          onClick: primaryAction.onClick,
+          isLoading: primaryAction.isLoading,
+          isDisabled: primaryAction.isDisabled,
+        } : undefined,
+      };
+    }
+
+    // Legacy button array support
+    if (buttons) {
+      return { buttons };
+    }
+
+    // Generate legacy buttons from convenience props
+    const generatedButtons: ButtonConfig[] = [];
+
+    if (buttonPreset === 'cancel-only') {
+      generatedButtons.push({
+        label: cancelAction?.label || 'Cancel',
+        variant: 'disabled',
+        onClick: () => {},
+      });
+      return { buttons: generatedButtons };
+    }
+
+    return { buttons: generatedButtons };
+  };
+
+  const footerProps = getFooterProps();
+  const hasFooter = footerProps.buttons?.length > 0 ||
+    footerProps.cancelAction ||
+    footerProps.backAction ||
+    footerProps.primaryAction;
+
   const containerContent = (
     <>
       <Title order={2} variant="colored">
@@ -150,7 +163,7 @@ export default function FlowView({
         {renderContent()}
       </Stack>
 
-      {finalButtons.length > 0 && <MultiButtonFooter buttons={finalButtons} />}
+      {hasFooter && <MultiButtonFooter {...footerProps} />}
     </>
   );
 

@@ -108,7 +108,7 @@ export default function GeographicConfirmationView({
   };
 
   const primaryAction = {
-    label: 'Create household collection',
+    label: 'Create household collection ',
     onClick: handleSubmit,
     isLoading: isPending,
   };

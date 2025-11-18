@@ -247,6 +247,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           label={reportState.label}
           onUpdateLabel={reportCallbacks.updateLabel}
           onNext={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -258,6 +259,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           onNavigateToSimulationSelection={handleNavigateToSimulationSelection}
           onNext={() => navigateToMode(ReportViewMode.REPORT_SUBMIT)}
           onPrefillPopulation2={reportCallbacks.prefillPopulation2FromSimulation1}
+          onBack={() => navigateToMode(ReportViewMode.REPORT_LABEL)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -267,6 +270,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
         <ReportSimulationSelectionView
           onCreateNew={() => navigateToMode(ReportViewMode.SIMULATION_LABEL)}
           onLoadExisting={() => navigateToMode(ReportViewMode.REPORT_SELECT_EXISTING_SIMULATION)}
+          onBack={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -278,6 +283,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           otherSimulation={otherSimulation}
           onSelectSimulation={reportCallbacks.handleSelectExistingSimulation}
           onNext={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
+          onBack={() => navigateToMode(ReportViewMode.REPORT_SELECT_SIMULATION)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -288,6 +295,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           reportState={reportState}
           onSubmit={handleSubmitReport}
           isSubmitting={isSubmitting}
+          onBack={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -302,6 +311,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           reportLabel={reportState.label}
           onUpdateLabel={simulationCallbacks.updateLabel}
           onNext={() => navigateToMode(ReportViewMode.SIMULATION_SETUP)}
+          onBack={() => navigateToMode(ReportViewMode.REPORT_SELECT_SIMULATION)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -315,6 +326,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           onNavigateToPolicy={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
           onNavigateToPopulation={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
           onNext={() => navigateToMode(ReportViewMode.SIMULATION_SUBMIT)}
+          onBack={() => navigateToMode(ReportViewMode.SIMULATION_LABEL)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -324,6 +337,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
         <SimulationSubmitView
           simulation={activeSimulation}
           onSubmitSuccess={simulationCallbacks.handleSubmitSuccess}
+          onBack={() => navigateToMode(ReportViewMode.SIMULATION_SETUP)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -337,6 +352,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           onSelectCurrentLaw={handleSelectCurrentLaw}
           onCreateNew={() => navigateToMode(ReportViewMode.POLICY_LABEL)}
           onLoadExisting={() => navigateToMode(ReportViewMode.SELECT_EXISTING_POLICY)}
+          onBack={() => navigateToMode(ReportViewMode.SIMULATION_SETUP)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -351,6 +368,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           onCreateNew={() => navigateToMode(ReportViewMode.POPULATION_SCOPE)}
           onLoadExisting={() => navigateToMode(ReportViewMode.SELECT_EXISTING_POPULATION)}
           onCopyExisting={reportCallbacks.copyPopulationFromOtherSimulation}
+          onBack={() => navigateToMode(ReportViewMode.SIMULATION_SETUP)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -365,6 +384,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           reportLabel={reportState.label}
           onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(ReportViewMode.POLICY_PARAMETER_SELECTOR)}
+          onBack={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -386,6 +407,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           policy={activeSimulation.policy}
           countryId={countryId}
           onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
+          onBack={() => navigateToMode(ReportViewMode.POLICY_PARAMETER_SELECTOR)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -395,6 +418,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
         <PolicyExistingView
           onSelectPolicy={policyCallbacks.handleSelectExisting}
           onBack={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -406,6 +430,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           countryId={countryId}
           regionData={metadata.economyOptions?.region || []}
           onScopeSelected={populationCallbacks.handleScopeSelected}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
@@ -459,6 +484,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           onSelectHousehold={populationCallbacks.handleSelectExistingHousehold}
           onSelectGeography={populationCallbacks.handleSelectExistingGeography}
           onBack={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
+          onCancel={() => navigate(`/${countryId}/reports`)}
         />
       );
       break;
