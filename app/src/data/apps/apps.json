@@ -101,11 +101,15 @@
   {
     "type": "iframe",
     "slug": "two-child-limit-comparison",
-    "title": "UK two-child limit policy comparison",
-    "description": "Compare multiple policy scenarios for the UK two-child benefit limit",
+    "title": "Two-child limit calculator",
+    "description": "Explore policy reforms to the two-child benefit limit and their impacts on households, government spending, and child poverty.",
     "url": "https://uk-two-child-limit-app.vercel.app",
-    "tags": ["uk", "featured", "policy"],
-    "countryId": "uk"
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "young-child-exemption-two-child-limit.jpg",
+    "date": "2025-10-28",
+    "authors": ["vahid-ahmadi"]
   },
   {
     "type": "iframe",
@@ -119,14 +123,18 @@
   {
     "type": "custom",
     "slug": "obbba-household-by-household",
-    "title": "OBBBA household-by-household analysis",
-    "description": "Detailed household-by-household impact analysis of the One Big Beautiful Bill Act",
+    "title": "The One Big Beautiful Bill Act, household by household",
+    "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
     "url": "https://policyengine.github.io/obbba-household-by-household",
     "component": "OBBBAEmbed",
     "postMessage": true,
     "urlSync": true,
-    "tags": ["us", "featured", "policy", "reconciliation"],
-    "countryId": "us"
+    "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
+    "countryId": "us",
+    "displayWithResearch": true,
+    "image": "obbba-household-by-household.png",
+    "date": "2025-08-11",
+    "authors": ["max-ghenis", "pavel-makarchuk", "ben-ogorek", "nikhil-woodruff"]
   },
   {
     "type": "custom",

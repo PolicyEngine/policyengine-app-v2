@@ -77,4 +77,26 @@ describe('appTransformers', () => {
       }
     });
   });
+
+  test('apps with displayWithResearch have required fields', () => {
+    const researchApps = apps.filter((a) => a.displayWithResearch);
+
+    expect(researchApps.length).toBeGreaterThan(0);
+
+    researchApps.forEach((app) => {
+      expect(app.displayWithResearch).toBe(true);
+      expect(app.image).toBeDefined();
+      expect(typeof app.image).toBe('string');
+      expect(app.date).toBeDefined();
+      expect(app.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(app.authors).toBeDefined();
+      expect(Array.isArray(app.authors)).toBe(true);
+      expect(app.authors!.length).toBeGreaterThan(0);
+    });
+  });
+
+  test('correct number of apps are configured for research display', () => {
+    const researchApps = apps.filter((a) => a.displayWithResearch);
+    expect(researchApps.length).toBe(2);
+  });
 });

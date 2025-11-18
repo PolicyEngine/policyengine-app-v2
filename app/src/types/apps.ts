@@ -31,6 +31,18 @@ interface BaseApp {
 
   /** Country ID (us, uk, etc.) */
   countryId: string;
+
+  /** Optional: Display this app in research/blog listing */
+  displayWithResearch?: boolean;
+
+  /** Optional: Cover image filename for research listing */
+  image?: string;
+
+  /** Optional: Publication/release date (ISO format) for sorting */
+  date?: string;
+
+  /** Optional: Author IDs for attribution */
+  authors?: string[];
 }
 
 /**
