@@ -150,8 +150,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       const result = await createSimulation(payload);
       console.log('[SimulationPathwayWrapper] Simulation created successfully:', result);
 
-      // Navigate to simulation results page
-      navigate(`/${countryId}/simulation/${result.result.simulation_id}`);
+      // Navigate back to simulations list page
+      navigate(`/${countryId}/simulations`);
 
       if (onComplete) {
         onComplete();
