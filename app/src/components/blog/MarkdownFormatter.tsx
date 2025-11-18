@@ -325,6 +325,7 @@ export function MarkdownFormatter({
     ),
 
     // Images with captions
+    // Note: Using span instead of div to avoid "p cannot contain div" error
     img: ({ src, alt }) => {
       if (!src) {
         console.warn('Image with no src:', { alt });
@@ -338,19 +339,13 @@ export function MarkdownFormatter({
         ? src.replace('/images/', '/assets/')
         : src;
 
-      console.log('Rendering image:', { originalSrc: src, transformedSrc, alt }); // Debug log
-
       return (
-        <div
+        <span
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
+            display: 'block',
             padding: 0,
             marginTop: blogSpacing.marginTop.image,
             marginBottom: blogSpacing.marginBottom.image,
-            paddingTop: blogSpacing.marginTop.image,
-            paddingBottom: blogSpacing.marginBottom.image,
           }}
         >
           <img
@@ -359,15 +354,12 @@ export function MarkdownFormatter({
             loading="lazy"
             style={{
               width: '100%',
-              height: 'auto', // Ensure height scales with width
+              height: 'auto',
               maxWidth: '100%',
               objectFit: 'contain',
               borderRadius: blogRadius.md,
               boxShadow: blogShadows.image,
-              display: 'block', // Remove inline spacing
-            }}
-            onLoad={(e) => {
-              console.log('Image loaded successfully:', src);
+              display: 'block',
             }}
             onError={(e) => {
               console.error('Failed to load image:', transformedSrc);
@@ -377,8 +369,9 @@ export function MarkdownFormatter({
             }}
           />
           {alt && (
-            <p
+            <span
               style={{
+                display: 'block',
                 fontFamily: blogTypography.bodyFont,
                 color: blogColors.anchorLink,
                 fontStyle: 'italic',
@@ -388,9 +381,9 @@ export function MarkdownFormatter({
               }}
             >
               {alt}
-            </p>
+            </span>
           )}
-        </div>
+        </span>
       );
     },
 
