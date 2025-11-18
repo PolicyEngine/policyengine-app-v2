@@ -32,7 +32,7 @@ import {
 interface PopulationExistingViewProps {
   onSelectHousehold: (householdId: string, household: Household, label: string) => void;
   onSelectGeography: (geographyId: string, geography: Geography, label: string) => void;
-  onBack: () => void;
+  onBack?: () => void;
   onCancel?: () => void;
 }
 
@@ -217,7 +217,7 @@ export default function PopulationExistingView({
           onClick: () => {},
           isDisabled: true,
         }}
-        backAction={{ onClick: onBack }}
+        backAction={onBack ? { onClick: onBack } : undefined}
         cancelAction={onCancel ? { onClick: onCancel } : undefined}
       />
     );
@@ -336,7 +336,7 @@ export default function PopulationExistingView({
       variant="cardList"
       cardListItems={cardListItems}
       primaryAction={primaryAction}
-      backAction={{ onClick: onBack }}
+      backAction={onBack ? { onClick: onBack } : undefined}
       cancelAction={onCancel ? { onClick: onCancel } : undefined}
       itemsPerPage={5}
     />

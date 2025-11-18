@@ -27,6 +27,7 @@ interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
   regionData: any[];
   onScopeSelected: (geography: Geography | null, scopeType: ScopeType) => void;
+  onBack?: () => void;
   onCancel?: () => void;
 }
 
@@ -34,6 +35,7 @@ export default function PopulationScopeView({
   countryId,
   regionData,
   onScopeSelected,
+  onBack,
   onCancel,
 }: PopulationScopeViewProps) {
   const [scope, setScope] = useState<ScopeType>('national');
@@ -96,6 +98,7 @@ export default function PopulationScopeView({
       title="Select household scope"
       content={formInputs}
       primaryAction={primaryAction}
+      backAction={onBack ? { onClick: onBack } : undefined}
       cancelAction={onCancel ? { onClick: onCancel } : undefined}
     />
   );

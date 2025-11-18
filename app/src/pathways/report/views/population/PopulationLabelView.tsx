@@ -19,7 +19,7 @@ interface PopulationLabelViewProps {
   reportLabel?: string | null; // Optional for report context
   onUpdateLabel: (label: string) => void;
   onNext: () => void;
-  onBack: () => void;
+  onBack?: () => void;
 }
 
 export default function PopulationLabelView({
@@ -114,7 +114,7 @@ export default function PopulationLabelView({
       title="Name your household(s)"
       content={formInputs}
       primaryAction={primaryAction}
-      backAction={{ onClick: onBack }}
+      backAction={onBack ? { onClick: onBack } : undefined}
     />
   );
 }

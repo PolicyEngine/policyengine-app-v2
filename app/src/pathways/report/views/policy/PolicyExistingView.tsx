@@ -18,7 +18,7 @@ import { Parameter } from '@/types/subIngredients/parameter';
 
 interface PolicyExistingViewProps {
   onSelectPolicy: (policyId: string, label: string, parameters: Parameter[]) => void;
-  onBack: () => void;
+  onBack?: () => void;
   onCancel?: () => void;
 }
 
@@ -152,7 +152,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
           onClick: () => {},
           isDisabled: true,
         }}
-        backAction={{ onClick: onBack }}
+        backAction={onBack ? { onClick: onBack } : undefined}
         cancelAction={onCancel ? { onClick: onCancel } : undefined}
       />
     );
@@ -204,7 +204,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
       variant="cardList"
       cardListItems={policyCardItems}
       primaryAction={primaryAction}
-      backAction={{ onClick: onBack }}
+      backAction={onBack ? { onClick: onBack } : undefined}
       cancelAction={onCancel ? { onClick: onCancel } : undefined}
       itemsPerPage={5}
     />
