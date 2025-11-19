@@ -552,6 +552,7 @@
     "date": "2022-11-04",
     "tags": [
       "us",
+      "us-or",
       "policy"
     ],
     "filename": "oregons-nonrefundable-exemption-credit.md",
@@ -1096,20 +1097,6 @@
     "authors": [
       "nikhil-woodruff",
       "chat-gpt"
-    ]
-  },
-  {
-    "title": "Oregon's nonrefundable exemption credit: a closer look",
-    "description": "PolicyEngine computes the program's impact on Oregon and individual households.",
-    "date": "2023-03-15",
-    "tags": [
-      "us",
-      "policy"
-    ],
-    "filename": "oregons-nonrefundable-exemption-credit.md",
-    "image": "oregons-nonrefundable-exemption-credit.jpeg",
-    "authors": [
-      "kevin-foster"
     ]
   },
   {
