@@ -47,7 +47,10 @@ import HouseholdBuilderView from './views/population/HouseholdBuilderView';
 import GeographicConfirmationView from './views/population/GeographicConfirmationView';
 import PopulationExistingView from './views/population/PopulationExistingView';
 
-import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
+import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { ReportAdapter } from '@/adapters';
 import { Report } from '@/types/ingredients/Report';
@@ -55,6 +58,7 @@ import { ReportCreationPayload } from '@/types/payloads';
 import { getReportOutputPath } from '@/utils/reportRouting';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
+import { MOCK_USER_ID } from '@/constants';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
 const MODES_WITH_OWN_LAYOUT = new Set([ReportViewMode.POLICY_PARAMETER_SELECTOR]);
@@ -95,6 +99,17 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(ReportViewMode.REPORT_LABEL);
+
+  // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
+  const userId = MOCK_USER_ID.toString();
+  const { data: userSimulations } = useUserSimulations(userId);
+  const { data: userPolicies } = useUserPolicies(userId);
+  const { data: userHouseholds } = useUserHouseholds(userId);
+  const { data: userGeographics } = useUserGeographics(userId);
+
+  const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
+  const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
+  const hasExistingPopulations = ((userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0)) > 0;
 
   // ========== HELPER: Get active simulation ==========
   const activeSimulation = reportState.simulations[activeSimulationIndex];
@@ -152,11 +167,37 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   // ========== CUSTOM WRAPPERS FOR SPECIFIC REPORT LOGIC ==========
   // Wrapper for navigating to simulation selection (needs to update active index)
+  // Skips selection view if user has no existing simulations
   const handleNavigateToSimulationSelection = useCallback((simulationIndex: 0 | 1) => {
     console.log('[ReportPathwayWrapper] Setting active simulation index:', simulationIndex);
     setActiveSimulationIndex(simulationIndex);
-    reportCallbacks.navigateToSimulationSelection(simulationIndex);
-  }, [reportCallbacks]);
+    if (hasExistingSimulations) {
+      reportCallbacks.navigateToSimulationSelection(simulationIndex);
+    } else {
+      // Skip selection view, go directly to create new
+      navigateToMode(ReportViewMode.SIMULATION_LABEL);
+    }
+  }, [reportCallbacks, hasExistingSimulations, navigateToMode]);
+
+  // Conditional navigation to policy setup - skip if no existing policies
+  const handleNavigateToPolicy = useCallback(() => {
+    if (hasExistingPolicies) {
+      navigateToMode(ReportViewMode.SETUP_POLICY);
+    } else {
+      // Skip selection view, go directly to create new
+      navigateToMode(ReportViewMode.POLICY_LABEL);
+    }
+  }, [hasExistingPolicies, navigateToMode]);
+
+  // Conditional navigation to population setup - skip if no existing populations
+  const handleNavigateToPopulation = useCallback(() => {
+    if (hasExistingPopulations) {
+      navigateToMode(ReportViewMode.SETUP_POPULATION);
+    } else {
+      // Skip selection view, go directly to create new
+      navigateToMode(ReportViewMode.POPULATION_SCOPE);
+    }
+  }, [hasExistingPopulations, navigateToMode]);
 
   // Wrapper for current law selection with custom logging
   const handleSelectCurrentLaw = useCallback(() => {
@@ -324,8 +365,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
           simulation={activeSimulation}
           simulationIndex={activeSimulationIndex}
           isReportMode={true}
-          onNavigateToPolicy={() => navigateToMode(ReportViewMode.SETUP_POLICY)}
-          onNavigateToPopulation={() => navigateToMode(ReportViewMode.SETUP_POPULATION)}
+          onNavigateToPolicy={handleNavigateToPolicy}
+          onNavigateToPopulation={handleNavigateToPopulation}
           onNext={() => navigateToMode(ReportViewMode.SIMULATION_SUBMIT)}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/reports`)}

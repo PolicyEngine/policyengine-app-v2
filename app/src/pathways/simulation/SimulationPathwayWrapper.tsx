@@ -41,6 +41,10 @@ import PopulationExistingView from '../report/views/population/PopulationExistin
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Parameter } from '@/types/subIngredients/parameter';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { MOCK_USER_ID } from '@/constants';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
 const MODES_WITH_OWN_LAYOUT = new Set([SimulationViewMode.POLICY_PARAMETER_SELECTOR]);
@@ -68,6 +72,33 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(SimulationViewMode.LABEL);
+
+  // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
+  const userId = MOCK_USER_ID.toString();
+  const { data: userPolicies } = useUserPolicies(userId);
+  const { data: userHouseholds } = useUserHouseholds(userId);
+  const { data: userGeographics } = useUserGeographics(userId);
+
+  const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
+  const hasExistingPopulations = ((userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0)) > 0;
+
+  // ========== CONDITIONAL NAVIGATION HANDLERS ==========
+  // Skip selection view if user has no existing items
+  const handleNavigateToPolicy = useCallback(() => {
+    if (hasExistingPolicies) {
+      navigateToMode(SimulationViewMode.SETUP_POLICY);
+    } else {
+      navigateToMode(SimulationViewMode.POLICY_LABEL);
+    }
+  }, [hasExistingPolicies, navigateToMode]);
+
+  const handleNavigateToPopulation = useCallback(() => {
+    if (hasExistingPopulations) {
+      navigateToMode(SimulationViewMode.SETUP_POPULATION);
+    } else {
+      navigateToMode(SimulationViewMode.POPULATION_SCOPE);
+    }
+  }, [hasExistingPopulations, navigateToMode]);
 
   // ========== CALLBACK FACTORIES ==========
   // Simulation-level callbacks
@@ -164,8 +195,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           simulation={simulationState}
           simulationIndex={0}
           isReportMode={false}
-          onNavigateToPolicy={() => navigateToMode(SimulationViewMode.SETUP_POLICY)}
-          onNavigateToPopulation={() => navigateToMode(SimulationViewMode.SETUP_POPULATION)}
+          onNavigateToPolicy={handleNavigateToPolicy}
+          onNavigateToPopulation={handleNavigateToPopulation}
           onNext={() => navigateToMode(SimulationViewMode.SUBMIT)}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/simulations`)}
