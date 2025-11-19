@@ -62,25 +62,23 @@ export default function SimulationPolicySetupView({
 
   const buttonPanelCards = [
     {
+      title: 'Current law',
+      description: 'Use the baseline tax-benefit system with no reforms',
+      onClick: handleClickCurrentLaw,
+      isSelected: selectedAction === 'selectCurrentLaw',
+    },
+    // Only show "Load existing" if user has existing policies
+    ...(hasExistingPolicies ? [{
       title: 'Load existing policy',
-      description: hasExistingPolicies
-        ? 'Use a policy you have already created'
-        : 'No existing policies available',
+      description: 'Use a policy you have already created',
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
-      isDisabled: !hasExistingPolicies,
-    },
+    }] : []),
     {
       title: 'Create new policy',
       description: 'Build a new policy',
       onClick: handleClickCreateNew,
       isSelected: selectedAction === 'createNew',
-    },
-    {
-      title: 'Current law',
-      description: 'Use the baseline tax-benefit system with no reforms',
-      onClick: handleClickCurrentLaw,
-      isSelected: selectedAction === 'selectCurrentLaw',
     },
   ];
 
