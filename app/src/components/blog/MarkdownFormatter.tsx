@@ -47,8 +47,13 @@ if (!document.head.querySelector(`link[href="${fontLinkElement.href}"]`)) {
 function safeJsonParse(data: string | string[]): any {
   try {
     const jsonString = Array.isArray(data) ? data[0] : data;
-    return JSON.parse(jsonString);
-  } catch {
+    console.log('[PLOTLY] Attempting to parse data, length:', jsonString?.length);
+    const parsed = JSON.parse(jsonString);
+    console.log('[PLOTLY] Successfully parsed, has data:', !!parsed?.data);
+    return parsed;
+  } catch (err) {
+    console.error('[PLOTLY] Failed to parse JSON:', err);
+    console.error('[PLOTLY] Data was:', Array.isArray(data) ? data[0]?.substring(0, 200) : data?.substring(0, 200));
     return null;
   }
 }
@@ -473,6 +478,7 @@ export function MarkdownFormatter({
             width: mobile ? '100%' : width,
             objectFit: 'contain',
             height: height,
+            border: 'none',
           }}
         />
       </div>
