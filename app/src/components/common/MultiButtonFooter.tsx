@@ -1,4 +1,4 @@
-import { Button, Group } from '@mantine/core';
+import { Box, Button, Group, SimpleGrid } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
 import PaginationControls, { PaginationConfig } from './PaginationControls';
 
@@ -35,19 +35,12 @@ export interface MultiButtonFooterProps {
 export default function MultiButtonFooter(props: MultiButtonFooterProps) {
   const { buttons, cancelAction, backAction, primaryAction, pagination } = props;
 
-  // New layout: Cancel left, Back/Next right
+  // New layout: Grid with equal spacing - Cancel left, Pagination center, Back/Next right
   if (cancelAction || backAction || primaryAction) {
     return (
-      <Group
-        justify="space-between"
-        wrap="wrap"
-        gap="md"
-        style={{
-          flexDirection: 'row',
-        }}
-      >
+      <SimpleGrid cols={3} spacing="md">
         {/* Left side: Cancel button */}
-        <Group gap="sm">
+        <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
           {cancelAction && (
             <Button
               variant="outline"
@@ -56,35 +49,39 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
               {cancelAction.label}
             </Button>
           )}
-        </Group>
+        </Box>
 
         {/* Center: Pagination controls (if provided) */}
-        {pagination && <PaginationControls pagination={pagination} />}
+        <Box style={{ display: 'flex', justifyContent: 'center' }}>
+          {pagination && <PaginationControls pagination={pagination} />}
+        </Box>
 
         {/* Right side: Back and Primary buttons */}
-        <Group gap="sm" wrap="nowrap">
-          {backAction && (
-            <Button
-              variant="outline"
-              onClick={backAction.onClick}
-              leftSection={<IconChevronLeft size={16} />}
-            >
-              {backAction.label}
-            </Button>
-          )}
-          {primaryAction && (
-            <Button
-              variant="filled"
-              onClick={primaryAction.onClick}
-              loading={primaryAction.isLoading}
-              disabled={primaryAction.isDisabled}
-              rightSection={<IconChevronRight size={16} />}
-            >
-              {primaryAction.label}
-            </Button>
-          )}
-        </Group>
-      </Group>
+        <Box style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Group gap="sm" wrap="nowrap">
+            {backAction && (
+              <Button
+                variant="outline"
+                onClick={backAction.onClick}
+                leftSection={<IconChevronLeft size={16} />}
+              >
+                {backAction.label}
+              </Button>
+            )}
+            {primaryAction && (
+              <Button
+                variant="filled"
+                onClick={primaryAction.onClick}
+                loading={primaryAction.isLoading}
+                disabled={primaryAction.isDisabled}
+                rightSection={<IconChevronRight size={16} />}
+              >
+                {primaryAction.label}
+              </Button>
+            )}
+          </Group>
+        </Box>
+      </SimpleGrid>
     );
   }
 
