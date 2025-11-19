@@ -1,5 +1,6 @@
 import { Button, Group } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import PaginationControls, { PaginationConfig } from './PaginationControls';
 
 export interface ButtonConfig {
   label: string;
@@ -7,6 +8,8 @@ export interface ButtonConfig {
   onClick: () => void;
   isLoading?: boolean;
 }
+
+export type { PaginationConfig };
 
 export interface MultiButtonFooterProps {
   buttons: ButtonConfig[];
@@ -25,10 +28,12 @@ export interface MultiButtonFooterProps {
     isLoading?: boolean;
     isDisabled?: boolean;
   };
+  /** Pagination controls to show in the center */
+  pagination?: PaginationConfig;
 }
 
 export default function MultiButtonFooter(props: MultiButtonFooterProps) {
-  const { buttons, cancelAction, backAction, primaryAction } = props;
+  const { buttons, cancelAction, backAction, primaryAction, pagination } = props;
 
   // New layout: Cancel left, Back/Next right
   if (cancelAction || backAction || primaryAction) {
@@ -52,6 +57,9 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
             </Button>
           )}
         </Group>
+
+        {/* Center: Pagination controls (if provided) */}
+        {pagination && <PaginationControls pagination={pagination} />}
 
         {/* Right side: Back and Primary buttons */}
         <Group gap="sm" wrap="nowrap">

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Container, Divider, Stack, Text, Title } from '@mantine/core';
 import {
   ButtonPanelVariant,
@@ -71,6 +72,14 @@ export default function FlowView({
   itemsPerPage = 5,
   showPagination = true,
 }: FlowViewProps) {
+  // Pagination state for cardList variant
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Calculate pagination info for cardList
+  const totalItems = cardListItems?.length ?? 0;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const shouldShowPaginationInFooter = variant === 'cardList' && showPagination && totalPages > 1;
+
   const renderContent = () => {
     switch (variant) {
       case 'setupConditions':
@@ -84,7 +93,7 @@ export default function FlowView({
           <CardListVariant
             items={cardListItems}
             itemsPerPage={itemsPerPage}
-            showPagination={showPagination}
+            currentPage={currentPage}
           />
         );
 
@@ -117,6 +126,13 @@ export default function FlowView({
           onClick: primaryAction.onClick,
           isLoading: primaryAction.isLoading,
           isDisabled: primaryAction.isDisabled,
+        } : undefined,
+        pagination: shouldShowPaginationInFooter ? {
+          currentPage,
+          totalPages,
+          totalItems,
+          itemsPerPage,
+          onPageChange: setCurrentPage,
         } : undefined,
       };
     }
