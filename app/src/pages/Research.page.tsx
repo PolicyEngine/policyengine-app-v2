@@ -5,7 +5,7 @@
  * Displays both blog posts and apps with displayWithResearch: true.
  */
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Box, Container, Text } from '@mantine/core';
 import Fuse from 'fuse.js';
@@ -28,6 +28,42 @@ const mockAuthors = [
   { key: 'ben-ogorek', name: 'Ben Ogorek' },
 ];
 
+// Helper to parse comma-separated URL param into array
+function parseArrayParam(value: string | null, defaultValue: string[] = []): string[] {
+  return value ? value.split(',') : defaultValue;
+}
+
+// Helper to build URL params from filter state
+function buildFilterParams(
+  filters: {
+    search: string;
+    topics: string[];
+    locations: string[];
+    authors: string[];
+  },
+  defaultLocations: string[]
+): URLSearchParams {
+  const params = new URLSearchParams();
+
+  if (filters.search) {
+    params.set('search', filters.search);
+  }
+  if (filters.topics.length) {
+    params.set('topics', filters.topics.join(','));
+  }
+  // Only set locations if different from default
+  const sortedDefault = [...defaultLocations].sort().join(',');
+  const sortedCurrent = [...filters.locations].sort().join(',');
+  if (sortedCurrent !== sortedDefault) {
+    params.set('locations', filters.locations.join(','));
+  }
+  if (filters.authors.length) {
+    params.set('authors', filters.authors.join(','));
+  }
+
+  return params;
+}
+
 export default function ResearchPage() {
   const { countryId = 'us' } = useParams<{ countryId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -36,20 +72,34 @@ export default function ResearchPage() {
   // Get all research items
   const allItems = useMemo(() => getResearchItems(), []);
 
-  // Filter state
+  // Default locations based on country
+  const defaultLocations = useMemo(() => [countryId, 'global'], [countryId]);
+
+  // Filter state - initialize from URL params
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
-  const [selectedTopics, setSelectedTopics] = useState<string[]>(() => {
-    const topics = searchParams.get('topics');
-    return topics ? topics.split(',') : [];
-  });
-  const [selectedLocations, setSelectedLocations] = useState<string[]>(() => {
-    const locations = searchParams.get('locations');
-    return locations ? locations.split(',') : [countryId, 'global'];
-  });
-  const [selectedAuthors, setSelectedAuthors] = useState<string[]>(() => {
-    const authors = searchParams.get('authors');
-    return authors ? authors.split(',') : [];
-  });
+  const [selectedTopics, setSelectedTopics] = useState<string[]>(() =>
+    parseArrayParam(searchParams.get('topics'))
+  );
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(() =>
+    parseArrayParam(searchParams.get('locations'), defaultLocations)
+  );
+  const [selectedAuthors, setSelectedAuthors] = useState<string[]>(() =>
+    parseArrayParam(searchParams.get('authors'))
+  );
+
+  // Sync URL params when filters change
+  useEffect(() => {
+    const params = buildFilterParams(
+      {
+        search: searchQuery,
+        topics: selectedTopics,
+        locations: selectedLocations,
+        authors: selectedAuthors,
+      },
+      defaultLocations
+    );
+    setSearchParams(params, { replace: true });
+  }, [selectedTopics, selectedLocations, selectedAuthors, searchQuery, defaultLocations, setSearchParams]);
 
   // Filter items
   const filteredItems = useMemo(() => {
@@ -88,14 +138,10 @@ export default function ResearchPage() {
     return items;
   }, [allItems, selectedTopics, selectedLocations, selectedAuthors, searchQuery]);
 
-  // Update URL params
+  // Handle search submit (just triggers the useEffect via state change)
   const handleSearchSubmit = () => {
-    const params = new URLSearchParams();
-    if (searchQuery) params.set('search', searchQuery);
-    if (selectedTopics.length) params.set('topics', selectedTopics.join(','));
-    if (selectedLocations.length) params.set('locations', selectedLocations.join(','));
-    if (selectedAuthors.length) params.set('authors', selectedAuthors.join(','));
-    setSearchParams(params);
+    // URL params are already synced via useEffect
+    // This function exists for the search button/enter key
   };
 
   return (
