@@ -12,6 +12,7 @@ import {
 } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import FlowView from '@/components/common/FlowView';
+import AdvancedSettings from '@/components/household/AdvancedSettings';
 import { CURRENT_YEAR } from '@/constants';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -37,6 +38,7 @@ import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getInputFormattingProps } from '@/utils/householdValues';
+import { getValue, setValue, resolveEntity } from '@/utils/VariableResolver';
 
 export default function HouseholdBuilderFrame({
   onNavigate,
@@ -65,6 +67,7 @@ export default function HouseholdBuilderFrame({
   const variables = useSelector((state: RootState) => state.metadata.variables);
 
   const { loading, error } = useSelector((state: RootState) => state.metadata);
+  const metadata = useSelector((state: RootState) => state.metadata);
 
   // Helper to get default value for a variable from metadata
   const getVariableDefault = (variableName: string): any => {
@@ -269,9 +272,10 @@ export default function HouseholdBuilderFrame({
     setLocalHousehold(updatedHousehold);
   };
 
-  // Convenience function for household-level fields
-  const handleHouseholdFieldChange = (field: string, value: string | null) => {
-    handleGroupEntityChange('households', 'your household', field, value);
+  // Entity-aware field change handler using VariableResolver
+  const handleFieldChange = (field: string, value: any, entityName?: string) => {
+    const newHousehold = setValue(household, field, value, metadata, taxYear, entityName);
+    setLocalHousehold(newHousehold);
   };
 
   // Show error state if metadata failed to load
@@ -294,10 +298,17 @@ export default function HouseholdBuilderFrame({
     );
   }
 
-  // Get field options for all household fields at once
+  // Get field options for all non-person fields at once
   const fieldOptionsMap = useSelector((state: RootState) => {
     const options: Record<string, Array<{ value: string; label: string }>> = {};
-    basicInputFields.household.forEach((field) => {
+    const nonPersonFields = [
+      ...basicInputFields.household,
+      ...basicInputFields.taxUnit,
+      ...basicInputFields.spmUnit,
+      ...basicInputFields.family,
+      ...basicInputFields.maritalUnit,
+    ];
+    nonPersonFields.forEach((field) => {
       if (isDropdownField(state, field)) {
         options[field] = getFieldOptions(state, field);
       }
@@ -366,9 +377,18 @@ export default function HouseholdBuilderFrame({
     }
   };
 
-  // Render household-level fields dynamically
-  const renderHouseholdFields = () => {
-    if (!basicInputFields.household.length) {
+  // Render non-person fields dynamically (household, tax_unit, spm_unit, etc.)
+  const renderNonPersonFields = () => {
+    // Collect all non-person fields
+    const nonPersonFields = [
+      ...basicInputFields.household,
+      ...basicInputFields.taxUnit,
+      ...basicInputFields.spmUnit,
+      ...basicInputFields.family,
+      ...basicInputFields.maritalUnit,
+    ];
+
+    if (!nonPersonFields.length) {
       return null;
     }
 
@@ -377,7 +397,7 @@ export default function HouseholdBuilderFrame({
         <Text fw={500} size="sm" c="dimmed">
           Location & Geographic Information
         </Text>
-        {basicInputFields.household.map((field) => {
+        {nonPersonFields.map((field) => {
           const fieldVariable = variables?.[field];
           const isDropdown = !!(
             fieldVariable &&
@@ -385,8 +405,8 @@ export default function HouseholdBuilderFrame({
             Array.isArray(fieldVariable.possibleValues)
           );
           const fieldLabel = getFieldLabel(field);
-          const fieldValue =
-            household.householdData.households?.['your household']?.[field]?.[taxYear] || '';
+          // Use VariableResolver to get value from correct entity
+          const fieldValue = getValue(household, field, metadata, taxYear) || '';
 
           if (isDropdown) {
             const options = fieldOptionsMap[field] || [];
@@ -395,7 +415,7 @@ export default function HouseholdBuilderFrame({
                 key={field}
                 label={fieldLabel}
                 value={fieldValue?.toString() || ''}
-                onChange={(val) => handleHouseholdFieldChange(field, val)}
+                onChange={(val) => handleFieldChange(field, val)}
                 data={options}
                 placeholder={`Select ${fieldLabel}`}
                 searchable
@@ -408,7 +428,7 @@ export default function HouseholdBuilderFrame({
               key={field}
               label={fieldLabel}
               value={fieldValue?.toString() || ''}
-              onChange={(e) => handleHouseholdFieldChange(field, e.currentTarget.value)}
+              onChange={(e) => handleFieldChange(field, e.currentTarget.value)}
               placeholder={`Enter ${fieldLabel}`}
             />
           );
@@ -619,8 +639,8 @@ export default function HouseholdBuilderFrame({
         />
       </Group>
 
-      {/* Household-level fields */}
-      {renderHouseholdFields()}
+      {/* Non-person fields (household, tax_unit, spm_unit, etc.) */}
+      {renderNonPersonFields()}
 
       <Divider />
 
@@ -631,6 +651,17 @@ export default function HouseholdBuilderFrame({
 
       {/* Children section */}
       {renderChildren()}
+
+      <Divider />
+
+      {/* Advanced Settings for custom variables */}
+      <AdvancedSettings
+        household={household}
+        metadata={metadata}
+        year={taxYear}
+        onChange={setLocalHousehold}
+        disabled={loading || isPending}
+      />
     </Stack>
   );
 

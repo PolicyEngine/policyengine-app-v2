@@ -42,20 +42,51 @@ export const getRegions = createSelector(
 );
 
 export const getBasicInputFields = createSelector(
-  (state: RootState) => state.metadata.basicInputs,
-  (basicInputs) => {
+  [
+    (state: RootState) => state.metadata.basicInputs,
+    (state: RootState) => state.metadata.variables,
+    (state: RootState) => state.metadata.entities,
+  ],
+  (basicInputs, variables, entities) => {
     const inputs = basicInputs || [];
 
-    // Person-level fields that apply to each individual
-    const personFields = inputs.filter((field) => ['age', 'employment_income'].includes(field));
-
-    // Household-level fields that apply once per household
-    const householdFields = inputs.filter((field) => !['age', 'employment_income'].includes(field));
-
-    return {
-      person: personFields,
-      household: householdFields,
+    // Categorize fields by their actual entity from metadata
+    const categorized: Record<string, string[]> = {
+      person: [],
+      household: [],
+      taxUnit: [],
+      spmUnit: [],
+      family: [],
+      maritalUnit: [],
     };
+
+    for (const field of inputs) {
+      const variable = variables?.[field];
+      if (!variable) continue;
+
+      const entityType = variable.entity;
+      const entityInfo = entities?.[entityType];
+
+      // Map entity to category
+      if (entityInfo?.is_person || entityType === 'person') {
+        categorized.person.push(field);
+      } else if (entityType === 'household') {
+        categorized.household.push(field);
+      } else if (entityType === 'tax_unit') {
+        categorized.taxUnit.push(field);
+      } else if (entityType === 'spm_unit') {
+        categorized.spmUnit.push(field);
+      } else if (entityType === 'family') {
+        categorized.family.push(field);
+      } else if (entityType === 'marital_unit') {
+        categorized.maritalUnit.push(field);
+      } else {
+        // Default to household for unknown entities
+        categorized.household.push(field);
+      }
+    }
+
+    return categorized;
   }
 );
 

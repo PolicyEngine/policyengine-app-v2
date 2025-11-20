@@ -129,8 +129,8 @@ The household builder redo will fix the entity resolution bug by removing hardco
 
 **5. Add custom variables UI**
 - Collapsible "Advanced Settings" section in HouseholdBuilderFrame
-- Render custom variables categorized by type (Income, Benefits, Demographics)
-- Initial set: self_employment_income, social_security, ssi, is_disabled
+- Search bar + categorized browser for variable selection
+- Render selected variables with entity-aware inputs
 
 **6. Testing**
 - Test entity resolution with variables from different entities
@@ -139,8 +139,60 @@ The household builder redo will fix the entity resolution bug by removing hardco
 
 ## UI Design
 
-**Organization Approach:**
-Two options for organizing 50+ custom variables: (1) Flat list with search (V1's approach - simple but hard to browse), or (2) Nested accordions based on `moduleName` hierarchy (e.g., `gov.usda.snap.*` → Benefits > SNAP). Nested accordions are recommended because the backend already encodes this hierarchy, making variables more discoverable through logical grouping (Income, Benefits > SNAP/SSI, Demographics) while keeping search available for power users who know exact variable names.
+**Chosen Design: Inline Search with Stacked Variables**
+
+After evaluating multiple approaches, we chose a simple inline search with variables stacking above the search bar. This design mirrors V1's flat dropdown approach while providing better visual feedback.
+
+**Layout Structure:**
+```
+▼ Advanced Settings
+  ─────────────────────────────────────
+  [Selected variables stack here, oldest at top]
+
+  Employment Income ⓘ              [✕]
+    You: [$50,000]
+    Your partner: [$30,000]
+
+  Utilities Included in Rent ⓘ     [✕]
+    Your tax unit: [Yes]
+
+  ─────────────────────────────────────
+  ┌─────────────────────────────────────┐
+  │ 🔍 Search for a variable...         │
+  └─────────────────────────────────────┘
+  [Dropdown appears on focus with flat list]
+```
+
+**Why This Design:**
+
+We explored several alternatives before settling on this approach:
+
+1. **"Add Variable" button with separate input mode** - Required clicking "Add another variable" after each selection. This created confusion about where the current variable's inputs appeared vs previously added ones, and the UI jumped between search and input modes unpredictably.
+
+2. **Categorized accordion browser** - While good for discoverability, nested accordions added visual complexity. With 3,000+ variables, even categorized lists become unwieldy. Power users prefer direct search.
+
+3. **Modal variable selector** - Added unnecessary friction (extra click to open, context switch away from form). Users can't see existing inputs while selecting new variables.
+
+**The chosen inline approach is simplest because:**
+- Single interaction pattern: click search → select variable → input appears above
+- Variables stack in order added, newest closest to search (natural reading flow)
+- Search bar always visible at bottom as the "add more" action
+- No mode switching or "Add another" buttons
+- User can see all selected variables and their values at once
+- Matches V1's familiar flat dropdown pattern
 
 **Design Elements:**
-Use Mantine `Accordion` for progressive disclosure: Level 1 = "Advanced Settings" (collapsed by default), Level 2 = Categories (Income, Benefits, Demographics parsed from `moduleName`), Level 3 = Sub-categories (SNAP, SSI within Benefits). Maximum 3 levels to avoid confusion. Include search TextInput at bottom for direct variable access. Entity-aware inputs show fields for relevant people/units using `VariableResolver`.
+- Mantine `TextInput` with search icon, dropdown appears on focus
+- Flat list of variables filtered as user types (like V1)
+- Info icon (ⓘ) on variable labels shows documentation tooltip
+- Remove button (✕) to deselect variables
+- Entity-aware inputs render per-instance fields (person-level variables show inputs for each person)
+
+**Search Behavior:**
+- Show first 50 variables when empty, filter as user types
+- Only show `isInputVariable: true` variables (not computed outputs)
+- Exclude `hidden_input: true` variables
+- Click outside dropdown to close
+
+**Person-Level Custom Variables Placement:**
+Custom variables that are person-level (like `self_employment_income`, `is_disabled`) remain in the Advanced Settings section with inputs for each person, NOT merged into the basic inputs Adults section. This keeps a clear separation between essential (basic) and optional (custom) inputs.
