@@ -1,20 +1,32 @@
 import { useState } from 'react';
+import { Stack } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { ButtonPanelVariant } from '@/components/flowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
+import { SimulationStateProps } from '@/types/pathwayState';
+import DefaultBaselineOption from '../components/DefaultBaselineOption';
 
-type SetupAction = 'createNew' | 'loadExisting';
+type SetupAction = 'createNew' | 'loadExisting' | 'defaultBaseline';
 
 interface ReportSimulationSelectionViewProps {
+  simulationIndex: 0 | 1;
+  countryId: string;
+  currentLawId: number;
   onCreateNew: () => void;
   onLoadExisting: () => void;
+  onSelectDefaultBaseline?: (simulationState: SimulationStateProps, simulationId: string) => void;
   onBack?: () => void;
   onCancel?: () => void;
 }
 
 export default function ReportSimulationSelectionView({
+  simulationIndex,
+  countryId,
+  currentLawId,
   onCreateNew,
   onLoadExisting,
+  onSelectDefaultBaseline,
   onBack,
   onCancel,
 }: ReportSimulationSelectionViewProps) {
@@ -23,6 +35,8 @@ export default function ReportSimulationSelectionView({
   const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
 
   const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
+
+  const isBaseline = simulationIndex === 0;
 
   function handleClickCreateNew() {
     setSelectedAction('createNew');
@@ -34,24 +48,30 @@ export default function ReportSimulationSelectionView({
     }
   }
 
+  // DefaultBaselineOption handles its own creation - this just passes through
+  function handleSelectDefaultBaseline(simulationState: SimulationStateProps, simulationId: string) {
+    if (onSelectDefaultBaseline) {
+      onSelectDefaultBaseline(simulationState, simulationId);
+    }
+  }
+
   function handleClickSubmit() {
     if (selectedAction === 'createNew') {
       onCreateNew();
     } else if (selectedAction === 'loadExisting') {
       onLoadExisting();
     }
+    // Note: defaultBaseline is handled directly by DefaultBaselineOption
   }
 
   const buttonPanelCards = [
-    {
+    // Only show "Load existing" if user has existing simulations
+    ...(hasExistingSimulations ? [{
       title: 'Load existing simulation',
-      description: hasExistingSimulations
-        ? 'Use a simulation you have already created'
-        : 'No existing simulations available',
+      description: 'Use a simulation you have already created',
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
-      isDisabled: !hasExistingSimulations,
-    },
+    }] : []),
     {
       title: 'Create new simulation',
       description: 'Build a new simulation',
@@ -61,11 +81,34 @@ export default function ReportSimulationSelectionView({
   ];
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleClickSubmit,
     isDisabled: !selectedAction,
   };
 
+  // For baseline simulation, combine default baseline option with other cards
+  if (isBaseline) {
+    return (
+      <FlowView
+        title="Select simulation"
+        content={
+          <Stack>
+            <DefaultBaselineOption
+              countryId={countryId}
+              currentLawId={currentLawId}
+              onSelect={handleSelectDefaultBaseline}
+            />
+            <ButtonPanelVariant cards={buttonPanelCards} />
+          </Stack>
+        }
+        primaryAction={primaryAction}
+        backAction={onBack ? { onClick: onBack } : undefined}
+        cancelAction={onCancel ? { onClick: onCancel } : undefined}
+      />
+    );
+  }
+
+  // For reform simulation, just show the standard button panel
   return (
     <FlowView
       title="Select simulation"

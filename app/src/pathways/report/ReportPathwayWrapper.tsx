@@ -205,6 +205,24 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     policyCallbacks.handleSelectCurrentLaw(currentLawId, 'Current law');
   }, [currentLawId, policyCallbacks]);
 
+  // Handler for selecting default baseline simulation
+  // This is called after the simulation has been created by DefaultBaselineOption
+  const handleSelectDefaultBaseline = useCallback((simulationState: SimulationStateProps, simulationId: string) => {
+    console.log('[ReportPathwayWrapper] Default baseline simulation created');
+    console.log('[ReportPathwayWrapper] Simulation state:', simulationState);
+    console.log('[ReportPathwayWrapper] Simulation ID:', simulationId);
+
+    // Update the active simulation with the created simulation
+    setReportState((prev) => {
+      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
+      newSimulations[activeSimulationIndex] = simulationState;
+      return { ...prev, simulations: newSimulations };
+    });
+
+    // Navigate back to report setup
+    navigateToMode(ReportViewMode.REPORT_SETUP);
+  }, [activeSimulationIndex, navigateToMode]);
+
   // ========== REPORT SUBMISSION ==========
   const handleSubmitReport = useCallback(() => {
     console.log('[ReportPathwayWrapper] ========== SUBMIT REPORT ==========');
@@ -310,8 +328,12 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     case ReportViewMode.REPORT_SELECT_SIMULATION:
       currentView = (
         <ReportSimulationSelectionView
+          simulationIndex={activeSimulationIndex}
+          countryId={countryId}
+          currentLawId={currentLawId}
           onCreateNew={() => navigateToMode(ReportViewMode.SIMULATION_LABEL)}
           onLoadExisting={() => navigateToMode(ReportViewMode.REPORT_SELECT_EXISTING_SIMULATION)}
+          onSelectDefaultBaseline={handleSelectDefaultBaseline}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/reports`)}
         />
