@@ -25,6 +25,7 @@ import { Report } from '@/types/ingredients/Report';
 import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
 import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { ReportCreationPayload } from '@/types/payloads';
+import { convertSimulationStateToApi } from '@/utils/ingredientReconstruction';
 import {
   createPolicyCallbacks,
   createPopulationCallbacks,
