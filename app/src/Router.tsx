@@ -18,12 +18,12 @@ import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
-import RICTCCalculatorPage from './pages/RICTCCalculator.page';
 import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
 import { CountryGuard } from './routing/guards/CountryGuard';
+import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { USOnlyGuard } from './routing/guards/USOnlyGuard';
@@ -168,28 +168,18 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // US-only routes
+        // Interactive app routes - use StaticLayout with CountryAppGuard
         {
-          element: <USOnlyGuard />,
+          element: <CountryAppGuard />,
           children: [
             {
               element: <StaticLayout />,
               children: [
                 {
-                  path: 'rhode-island-ctc-calculator',
-                  element: <RICTCCalculatorPage />,
+                  path: ':slug',
+                  element: <AppPage />,
                 },
               ],
-            },
-          ],
-        },
-        // Interactive app routes - use StaticLayout
-        {
-          element: <StaticLayout />,
-          children: [
-            {
-              path: ':slug',
-              element: <AppPage />,
             },
           ],
         },

@@ -116,7 +116,7 @@
     "slug": "rhode-island-ctc-calculator",
     "title": "Rhode Island Child Tax Credit calculator",
     "description": "Interactive calculator for estimating Rhode Island Child Tax Credit benefits",
-    "source": "https://frontend-neon-seven.vercel.app/",
+    "source": "https://ri-ctc-calculator-policy-engine.vercel.app/",
     "tags": ["us", "policy"],
     "countryId": "us"
   },
