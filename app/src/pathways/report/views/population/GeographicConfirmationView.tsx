@@ -5,7 +5,7 @@
  */
 
 import { Stack, Text } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -114,7 +114,7 @@ export default function GeographicConfirmationView({
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Confirm household collection"
       content={buildDisplayContent()}
       primaryAction={primaryAction}

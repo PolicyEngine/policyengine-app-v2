@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { Text } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import {
   isPolicyMetadataWithAssociation,
@@ -122,7 +122,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
 
   if (isLoading) {
     return (
-      <FlowView
+      <PathwayView
         title="Select an existing policy"
         content={<Text>Loading policies...</Text>}
         buttonPreset="none"
@@ -132,7 +132,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
 
   if (isError) {
     return (
-      <FlowView
+      <PathwayView
         title="Select an existing policy"
         content={
           <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
@@ -144,7 +144,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
 
   if (userPolicies.length === 0) {
     return (
-      <FlowView
+      <PathwayView
         title="Select an existing policy"
         content={<Text>No policies available. Please create a new policy.</Text>}
         primaryAction={{
@@ -170,7 +170,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
   );
   console.log('[PolicyExistingView] Filtered policies:', filteredPolicies);
 
-  // Build card list items from ALL filtered policies (pagination handled by FlowView)
+  // Build card list items from ALL filtered policies (pagination handled by PathwayView)
   const policyCardItems = filteredPolicies.map((association) => {
     let title = '';
     let subtitle = '';
@@ -199,7 +199,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Select an existing policy"
       variant="cardList"
       cardListItems={policyCardItems}

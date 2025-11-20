@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
@@ -139,7 +139,7 @@ export default function SimulationPopulationSetupView({
   };
 
   return (
-    <FlowView
+    <PathwayView
       title={viewTitle}
       subtitle={viewSubtitle}
       variant="buttonPanel"

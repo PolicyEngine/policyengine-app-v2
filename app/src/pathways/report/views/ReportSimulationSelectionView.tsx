@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Stack } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { ButtonPanelVariant } from '@/components/flowView';
 import { MOCK_USER_ID } from '@/constants';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
@@ -89,7 +89,7 @@ export default function ReportSimulationSelectionView({
   // For baseline simulation, combine default baseline option with other cards
   if (isBaseline) {
     return (
-      <FlowView
+      <PathwayView
         title="Select simulation"
         content={
           <Stack>
@@ -110,7 +110,7 @@ export default function ReportSimulationSelectionView({
 
   // For reform simulation, just show the standard button panel
   return (
-    <FlowView
+    <PathwayView
       title="Select simulation"
       variant="buttonPanel"
       buttonPanelCards={buttonPanelCards}

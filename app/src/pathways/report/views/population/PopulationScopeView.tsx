@@ -9,7 +9,7 @@
 
 import { useState } from 'react';
 import { Stack } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { Geography } from '@/types/ingredients/Geography';
 import {
   createGeographyFromScope,
@@ -94,7 +94,7 @@ export default function PopulationScopeView({
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Select household scope"
       content={formInputs}
       primaryAction={primaryAction}

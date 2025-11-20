@@ -1,11 +1,5 @@
-/**
- * HouseholdBuilderView - View for building custom household
- * Duplicated from HouseholdBuilderFrame
- * Props-based instead of Redux-based
- */
-
 import { useEffect, useState } from 'react';
-import { shallowEqual, useSelector } from 'react-redux';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 import {
   Divider,
   Group,
@@ -17,8 +11,10 @@ import {
   TextInput,
 } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { useReportYear } from '@/hooks/useReportYear';
 import {
   getBasicInputFields,
@@ -26,33 +22,38 @@ import {
   getFieldOptions,
   isDropdownField,
 } from '@/libs/metadataUtils';
+import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
+import {
+  initializeHouseholdAtPosition,
+  setHouseholdAtPosition,
+  updatePopulationAtPosition,
+  updatePopulationIdAtPosition,
+} from '@/reducers/populationReducer';
 import { RootState } from '@/store';
-import { PopulationStateProps } from '@/types/pathwayState';
+import { FlowComponentProps } from '@/types/flow';
 import { Household } from '@/types/ingredients/Household';
 import { HouseholdBuilder } from '@/utils/HouseholdBuilder';
 import * as HouseholdQueries from '@/utils/HouseholdQueries';
 import { HouseholdValidation } from '@/utils/HouseholdValidation';
 import { getInputFormattingProps } from '@/utils/householdValues';
 
-interface HouseholdBuilderViewProps {
-  population: PopulationStateProps;
-  countryId: string;
-  onSubmitSuccess: (householdId: string, household: Household) => void;
-  onBack?: () => void;
-}
-
-export default function HouseholdBuilderView({
-  population,
-  countryId,
-  onSubmitSuccess,
-  onBack,
-}: HouseholdBuilderViewProps) {
-  const { createHousehold, isPending } = useCreateHousehold(population?.label || '');
+export default function HouseholdBuilderFrame({
+  onNavigate,
+  onReturn,
+  isInSubflow,
+}: FlowComponentProps) {
+  const dispatch = useDispatch();
+  const currentPosition = useSelector((state: RootState) => selectCurrentPosition(state));
+  const populationState = useSelector((state: RootState) => selectActivePopulation(state));
+  const { createHousehold, isPending } = useCreateHousehold(populationState?.label || '');
+  const { resetIngredient } = useIngredientReset();
+  const countryId = useCurrentCountry();
   const reportYear = useReportYear();
 
   // Get metadata-driven options
   const basicInputFields = useSelector(getBasicInputFields);
   const variables = useSelector((state: RootState) => state.metadata.variables);
+
   const { loading, error } = useSelector((state: RootState) => state.metadata);
 
   // Error boundary: Show error if no report year available
@@ -73,7 +74,7 @@ export default function HouseholdBuilderView({
         }
         buttonPreset="cancel-only"
         cancelAction={{
-          onClick: onBack,
+          onClick: onReturn,
         }}
       />
     );
@@ -81,8 +82,8 @@ export default function HouseholdBuilderView({
 
   // Initialize with empty household if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {
-    if (population?.household) {
-      return population.household;
+    if (populationState?.household) {
+      return populationState.household;
     }
     const builder = new HouseholdBuilder(countryId as any, reportYear);
     return builder.build();
@@ -98,6 +99,19 @@ export default function HouseholdBuilderView({
   // State for form controls
   const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
   const [numChildren, setNumChildren] = useState<number>(0);
+
+  // Initialize household on mount if not exists
+  useEffect(() => {
+    if (!populationState?.household) {
+      dispatch(
+        initializeHouseholdAtPosition({
+          position: currentPosition,
+          countryId,
+          year: reportYear,
+        })
+      );
+    }
+  }, [populationState?.household, countryId, dispatch, currentPosition, reportYear]);
 
   // Build household based on form values
   useEffect(() => {
@@ -285,7 +299,7 @@ export default function HouseholdBuilderView({
   // Show error state if metadata failed to load
   if (error) {
     return (
-      <FlowView
+      <PathwayView
         title="Create household"
         content={
           <Stack align="center" gap="md" p="xl">
@@ -314,6 +328,14 @@ export default function HouseholdBuilderView({
   }, shallowEqual);
 
   const handleSubmit = async () => {
+    // Sync final household to Redux before submit
+    dispatch(
+      setHouseholdAtPosition({
+        position: currentPosition,
+        household,
+      })
+    );
+
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
     if (!validation.isValid) {
@@ -331,7 +353,36 @@ export default function HouseholdBuilderView({
       console.log('Household created successfully:', result);
 
       const householdId = result.result.household_id;
-      onSubmitSuccess(householdId, household);
+      const label = populationState?.label || '';
+
+      // Update population state with the created household ID
+      dispatch(
+        updatePopulationIdAtPosition({
+          position: currentPosition,
+          id: householdId,
+        })
+      );
+      dispatch(
+        updatePopulationAtPosition({
+          position: currentPosition,
+          updates: {
+            label,
+            isCreated: true,
+          },
+        })
+      );
+
+      // If standalone flow, reset
+      if (!isInSubflow) {
+        resetIngredient('population');
+      }
+
+      // Navigate
+      if (onReturn) {
+        onReturn();
+      } else {
+        onNavigate('next');
+      }
     } catch (err) {
       console.error('Failed to create household:', err);
     }
@@ -425,8 +476,12 @@ export default function HouseholdBuilderView({
           />
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', reportYear) ||
-              0
+              HouseholdQueries.getPersonVariable(
+                household,
+                'you',
+                'employment_income',
+                reportYear
+              ) || 0
             }
             onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
             min={0}
@@ -543,7 +598,7 @@ export default function HouseholdBuilderView({
   const canProceed = validation.isValid;
 
   const primaryAction = {
-    label: 'Create household ',
+    label: 'Create household',
     onClick: handleSubmit,
     isLoading: isPending,
     isDisabled: !canProceed,
@@ -596,11 +651,14 @@ export default function HouseholdBuilderView({
   );
 
   return (
-    <FlowView
+    <PathwayView
       title="Build your household"
       content={content}
       primaryAction={primaryAction}
-      backAction={onBack ? { onClick: onBack } : undefined}
+      cancelAction={{
+        onClick: onReturn,
+      }}
+      buttonPreset="cancel-primary"
     />
   );
 }

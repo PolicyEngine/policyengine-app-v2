@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { Stack, Text, TextInput } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
@@ -110,7 +110,7 @@ export default function PopulationLabelView({
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Name your household(s)"
       content={formInputs}
       primaryAction={primaryAction}

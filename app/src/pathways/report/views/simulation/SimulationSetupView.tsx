@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { SimulationStateProps } from '@/types/pathwayState';
 import { isPolicyConfigured, isPopulationConfigured } from '@/utils/validation/ingredientValidation';
 
@@ -178,7 +178,7 @@ export default function SimulationSetupView({
   const primaryAction = getPrimaryAction();
 
   return (
-    <FlowView
+    <PathwayView
       title="Configure simulation"
       variant="setupConditions"
       setupConditionCards={setupConditionCards}

@@ -10,7 +10,7 @@ import {
 } from '@/components/flowView';
 import MultiButtonFooter, { ButtonConfig } from './MultiButtonFooter';
 
-interface FlowViewProps {
+interface PathwayViewProps {
   title: string;
   subtitle?: string;
   variant?: 'setupConditions' | 'buttonPanel' | 'cardList';
@@ -56,7 +56,7 @@ interface FlowViewProps {
   buttonPreset?: 'cancel-only' | 'cancel-primary' | 'none';
 }
 
-export default function FlowView({
+export default function PathwayView({
   title,
   subtitle,
   variant,
@@ -71,7 +71,7 @@ export default function FlowView({
   cardListItems,
   itemsPerPage = 5,
   showPagination = true,
-}: FlowViewProps) {
+}: PathwayViewProps) {
   // Pagination state for cardList variant
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -186,4 +186,4 @@ export default function FlowView({
   return <Container variant="guttered">{containerContent}</Container>;
 }
 
-export type { FlowViewProps, ButtonConfig };
+export type { PathwayViewProps, ButtonConfig };
