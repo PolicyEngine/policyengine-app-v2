@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Badge, Button, Group, Stack } from '@mantine/core';
+import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
@@ -29,13 +29,6 @@ export default function PoliciesPage() {
 
   const handleBuildPolicy = () => {
     navigate(`/${countryId}/policies/create`);
-  };
-
-  const handleBuildPolicyV2 = () => {
-    console.log('[PoliciesPage] ========== NEW POLICY V2 CLICKED ==========');
-    const targetPath = `/${countryId}/policies/create-v2`;
-    console.log('[PoliciesPage] Navigating to:', targetPath);
-    navigate(targetPath);
   };
 
   const handleSelectionChange = (recordId: string, selected: boolean) => {
@@ -132,18 +125,9 @@ export default function PoliciesPage() {
     })) || [];
 
   return (
+    <>
+    
     <Stack gap="md">
-      {/* TEMPORARY: Test button for new PathwayWrapper system */}
-      <Group justify="center" p="md" style={{ backgroundColor: '#f0f0ff', borderRadius: '8px' }}>
-        <Badge color="purple" size="lg">
-          NEW
-        </Badge>
-        <Button variant="outline" color="purple" onClick={handleBuildPolicyV2}>
-          Test New Policy Pathway (PathwayWrapper)
-        </Button>
-      </Group>
-
-      <>
       <IngredientReadView
           ingredient="policy"
           title="Your saved policies"
