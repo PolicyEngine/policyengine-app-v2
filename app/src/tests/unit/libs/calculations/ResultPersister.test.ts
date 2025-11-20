@@ -121,9 +121,9 @@ describe('ResultPersister', () => {
       (markReportCompleted as any).mockRejectedValue(new Error('Network error'));
 
       // When/Then
-      await expect(persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)).rejects.toThrow(
-        'Failed to persist report after retry'
-      );
+      await expect(
+        persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)
+      ).rejects.toThrow('Failed to persist report after retry');
       expect(markReportCompleted).toHaveBeenCalledTimes(2);
     });
   });
@@ -300,9 +300,9 @@ describe('ResultPersister', () => {
       };
 
       // When/Then
-      await expect(persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)).rejects.toThrow(
-        'Cannot persist: result is missing from CalcStatus'
-      );
+      await expect(
+        persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)
+      ).rejects.toThrow('Cannot persist: result is missing from CalcStatus');
     });
 
     it('given undefined result then throws error', async () => {
@@ -319,9 +319,9 @@ describe('ResultPersister', () => {
       };
 
       // When/Then
-      await expect(persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)).rejects.toThrow(
-        'Cannot persist: result is missing from CalcStatus'
-      );
+      await expect(
+        persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)
+      ).rejects.toThrow('Cannot persist: result is missing from CalcStatus');
     });
   });
 });

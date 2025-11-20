@@ -39,6 +39,10 @@ export const TEST_COUNTRIES = {
   UK: 'uk',
 } as const;
 
+export const TEST_YEARS = {
+  DEFAULT: '2024',
+} as const;
+
 export const TEST_POLICY_IDS = {
   POLICY_1: 'policy-1',
   POLICY_2: 'policy-2',
