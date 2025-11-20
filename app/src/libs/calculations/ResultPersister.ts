@@ -16,9 +16,10 @@ export class ResultPersister {
    * Persist calculation result based on target type
    * @param status - The completed calculation status with result
    * @param countryId - Country ID for API calls
+   * @param year - Report year for persistence
    * @throws Error if persistence fails after retry
    */
-  async persist(status: CalcStatus, countryId: string): Promise<void> {
+  async persist(status: CalcStatus, countryId: string, year: string): Promise<void> {
     const timestamp = Date.now();
     console.log(`[ResultPersister][${timestamp}] ========================================`);
     console.log(`[ResultPersister][${timestamp}] ⚠️  PERSIST CALLED ⚠️`);
@@ -35,7 +36,7 @@ export class ResultPersister {
 
     try {
       if (status.metadata.targetType === 'report') {
-        await this.persistToReport(status.metadata.calcId, status.result, countryId);
+        await this.persistToReport(status.metadata.calcId, status.result, countryId, year);
       } else {
         await this.persistToSimulation(
           status.metadata.calcId,
@@ -51,7 +52,7 @@ export class ResultPersister {
       await this.sleep(1000);
       try {
         if (status.metadata.targetType === 'report') {
-          await this.persistToReport(status.metadata.calcId, status.result, countryId);
+          await this.persistToReport(status.metadata.calcId, status.result, countryId, year);
         } else {
           await this.persistToSimulation(
             status.metadata.calcId,
@@ -73,12 +74,17 @@ export class ResultPersister {
   /**
    * Persist result to a report
    */
-  private async persistToReport(reportId: string, result: any, countryId: string): Promise<void> {
+  private async persistToReport(
+    reportId: string,
+    result: any,
+    countryId: string,
+    year: string
+  ): Promise<void> {
     // Create a Report object with the result
     const report: Report = {
       id: reportId,
       countryId: countryId as any,
-      year: '2024', // TODO: Get year from calculation metadata
+      year,
       apiVersion: null,
       simulationIds: [],
       status: 'complete',
@@ -148,11 +154,17 @@ export class ResultPersister {
           `[ResultPersister][${timestamp}] ✓ All simulations complete! Marking report as complete...`
         );
 
+        // Fetch the report to get its year
+        const report = this.queryClient.getQueryData<any>(reportKeys.byId(reportId));
+        if (!report?.year) {
+          throw new Error(`Cannot persist report ${reportId}: year is missing from report data`);
+        }
+
         // Aggregate outputs from all simulations
         const aggregatedOutput = await this.aggregateSimulationOutputs(reportId);
 
         // Mark report as complete with aggregated output
-        await this.persistToReport(reportId, aggregatedOutput, countryId);
+        await this.persistToReport(reportId, aggregatedOutput, countryId, report.year);
 
         console.log(`[ResultPersister][${timestamp}] ✓ Report ${reportId} marked as complete`);
       } else {

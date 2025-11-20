@@ -124,7 +124,7 @@ export class CalcOrchestrator {
       console.log(`[CalcOrchestrator][${timestamp}]   Duration: ${duration}ms`);
       console.log(`[CalcOrchestrator][${timestamp}] → Persisting result...`);
 
-      await this.resultPersister.persist(initialStatus, config.countryId);
+      await this.resultPersister.persist(initialStatus, config.countryId, config.year);
       console.log(`[CalcOrchestrator][${timestamp}] ✓ Result persisted`);
 
       // Notify manager to cleanup this orchestrator
@@ -142,7 +142,7 @@ export class CalcOrchestrator {
     console.log(
       `[CalcOrchestrator][${timestamp}] 🌍 ECONOMY: Starting polling (async calculation)`
     );
-    this.startPolling(queryOptions, metadata, config.countryId, config.calcId);
+    this.startPolling(queryOptions, metadata, config.countryId, config.calcId, config.year);
 
     console.log(`[CalcOrchestrator][${timestamp}] ✓ Polling started`);
     console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
@@ -158,6 +158,7 @@ export class CalcOrchestrator {
    * @param metadata - Calculation metadata
    * @param countryId - Country ID for persistence
    * @param calcId - Calculation ID for cleanup
+   * @param year - Report year for persistence
    */
   private startPolling(
     queryOptions: ReturnType<
@@ -165,7 +166,8 @@ export class CalcOrchestrator {
     >,
     _metadata: CalcMetadata,
     countryId: string,
-    calcId: string
+    calcId: string,
+    year: string
   ): void {
     const { queryKey, queryFn, refetchInterval } = queryOptions;
     const timestamp = Date.now();
@@ -222,7 +224,7 @@ export class CalcOrchestrator {
         console.log(`[CalcOrchestrator][${completionTime}] → Persisting result...`);
 
         this.resultPersister
-          .persist(status, countryId)
+          .persist(status, countryId, year)
           .then(() => {
             console.log(`[CalcOrchestrator][${completionTime}] ✓ Result persisted for ${calcId}`);
           })
