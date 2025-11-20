@@ -292,4 +292,33 @@ describe('SocietyWideReportOutput', () => {
     // Then
     expect(screen.getByTestId('not-found-page')).toBeInTheDocument();
   });
+
+  test('given report with year then year is included in calculation config', () => {
+    // Given
+    mockUseCalculationStatus.mockReturnValue(MOCK_CALC_STATUS_IDLE);
+
+    // When
+    render(
+      <SocietyWideReportOutput
+        reportId="test-report-123"
+        report={MOCK_REPORT}
+        simulations={[MOCK_SIMULATION_BASELINE]}
+      />
+    );
+
+    // Then
+    expect(mockUseStartCalculationOnLoad).toHaveBeenCalledWith(
+      expect.objectContaining({
+        enabled: true,
+        configs: expect.arrayContaining([
+          expect.objectContaining({
+            calcId: 'test-report-123',
+            targetType: 'report',
+            countryId: 'us',
+            year: '2024',
+          }),
+        ]),
+      })
+    );
+  });
 });

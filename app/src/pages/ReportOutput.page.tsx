@@ -196,6 +196,7 @@ export default function ReportOutputPage() {
     <ReportOutputLayout
       reportId={userReportId}
       reportLabel={userReport?.label}
+      reportYear={report?.year}
       timestamp={timestamp}
       tabs={tabs}
       activeTab={activeTab}

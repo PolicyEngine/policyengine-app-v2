@@ -1,4 +1,4 @@
-import { UNCONFIRMED_PARAM_DEFINITION_DATE } from '@/constants';
+import { getParamDefinitionDate } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
@@ -37,13 +37,13 @@ export function collectUniqueParameterNames(policies: Policy[]): string[] {
  * @param policy - The policy to query
  * @param paramName - The parameter name
  * @param parameters - Parameter metadata collection
- * @param date - ISO date string (YYYY-MM-DD) to query, defaults to UNCONFIRMED_PARAM_DEFINITION_DATE
+ * @param date - ISO date string (YYYY-MM-DD) to query, defaults to current year via getParamDefinitionDate()
  */
 export function getParameterValueFromPolicy(
   policy: Policy | undefined,
   paramName: string,
   parameters: Record<string, ParameterMetadata>,
-  date: string = UNCONFIRMED_PARAM_DEFINITION_DATE
+  date: string = getParamDefinitionDate()
 ): string {
   if (!policy) {
     return '—';
@@ -108,13 +108,13 @@ export function formatParameterValue(value: any, unit?: string): string {
  * Gets the current law parameter value for a given parameter on a specific date
  * @param paramName - The parameter identifier (e.g., "gov.hmrc.income_tax.rates.uk[0].rate")
  * @param parameters - The parameter metadata collection
- * @param date - ISO date string (YYYY-MM-DD) to query, defaults to UNCONFIRMED_PARAM_DEFINITION_DATE
+ * @param date - ISO date string (YYYY-MM-DD) to query, defaults to current year via getParamDefinitionDate()
  * @returns Formatted string value or '—' if not found
  */
 export function getCurrentLawParameterValue(
   paramName: string,
   parameters: Record<string, ParameterMetadata>,
-  date: string = UNCONFIRMED_PARAM_DEFINITION_DATE
+  date: string = getParamDefinitionDate()
 ): string {
   const metadata = parameters[paramName];
 

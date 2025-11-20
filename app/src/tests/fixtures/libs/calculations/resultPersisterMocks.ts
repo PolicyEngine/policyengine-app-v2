@@ -23,6 +23,13 @@ export const TEST_COUNTRIES = {
 } as const;
 
 /**
+ * Test constants for years
+ */
+export const TEST_YEARS = {
+  DEFAULT: '2024',
+} as const;
+
+/**
  * Create a test QueryClient
  */
 export const createTestQueryClient = () =>

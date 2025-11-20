@@ -12,15 +12,14 @@ import {
 } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import FlowView from '@/components/common/FlowView';
-import { CURRENT_YEAR } from '@/constants';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
+import { useReportYear } from '@/hooks/useReportYear';
 import {
   getBasicInputFields,
   getFieldLabel,
   getFieldOptions,
-  getTaxYears,
   isDropdownField,
 } from '@/libs/metadataUtils';
 import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
@@ -49,22 +48,46 @@ export default function HouseholdBuilderFrame({
   const { createHousehold, isPending } = useCreateHousehold(populationState?.label || '');
   const { resetIngredient } = useIngredientReset();
   const countryId = useCurrentCountry();
+  const reportYear = useReportYear();
+
+  // Get metadata-driven options
+  const basicInputFields = useSelector(getBasicInputFields);
+  const variables = useSelector((state: RootState) => state.metadata.variables);
+
+  const { loading, error } = useSelector((state: RootState) => state.metadata);
+
+  // Error boundary: Show error if no report year available
+  if (!reportYear) {
+    return (
+      <FlowView
+        title="Create Household"
+        content={
+          <Stack align="center" gap="md" p="xl">
+            <Text c="red" fw={600}>
+              Configuration Error
+            </Text>
+            <Text c="dimmed" ta="center">
+              No report year available. Please return to the report creation page and select a year
+              before creating a household.
+            </Text>
+          </Stack>
+        }
+        buttonPreset="cancel-only"
+        cancelAction={{
+          onClick: onReturn,
+        }}
+      />
+    );
+  }
 
   // Initialize with empty household if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {
     if (populationState?.household) {
       return populationState.household;
     }
-    const builder = new HouseholdBuilder(countryId as any, CURRENT_YEAR);
+    const builder = new HouseholdBuilder(countryId as any, reportYear);
     return builder.build();
   });
-
-  // Get metadata-driven options
-  const taxYears = useSelector(getTaxYears);
-  const basicInputFields = useSelector(getBasicInputFields);
-  const variables = useSelector((state: RootState) => state.metadata.variables);
-
-  const { loading, error } = useSelector((state: RootState) => state.metadata);
 
   // Helper to get default value for a variable from metadata
   const getVariableDefault = (variableName: string): any => {
@@ -74,7 +97,6 @@ export default function HouseholdBuilderFrame({
   };
 
   // State for form controls
-  const [taxYear, setTaxYear] = useState<string>(CURRENT_YEAR);
   const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
   const [numChildren, setNumChildren] = useState<number>(0);
 
@@ -85,15 +107,15 @@ export default function HouseholdBuilderFrame({
         initializeHouseholdAtPosition({
           position: currentPosition,
           countryId,
-          year: taxYear,
+          year: reportYear,
         })
       );
     }
-  }, [populationState?.household, countryId, dispatch, currentPosition, taxYear]);
+  }, [populationState?.household, countryId, dispatch, currentPosition, reportYear]);
 
   // Build household based on form values
   useEffect(() => {
-    const builder = new HouseholdBuilder(countryId as any, taxYear);
+    const builder = new HouseholdBuilder(countryId as any, reportYear);
 
     // Get current people to preserve their data
     const currentPeople = Object.keys(household.householdData.people);
@@ -136,10 +158,10 @@ export default function HouseholdBuilderFrame({
     }
 
     // Handle children
-    const currentChildCount = HouseholdQueries.getChildCount(household, taxYear);
+    const currentChildCount = HouseholdQueries.getChildCount(household, reportYear);
     if (numChildren !== currentChildCount) {
       // Remove all existing children
-      const children = HouseholdQueries.getChildren(household, taxYear);
+      const children = HouseholdQueries.getChildren(household, reportYear);
       children.forEach((child) => builder.removePerson(child.name));
 
       // Add new children with defaults (age 10, other variables from metadata)
@@ -208,7 +230,7 @@ export default function HouseholdBuilderFrame({
     }
 
     setLocalHousehold(builder.build());
-  }, [maritalStatus, numChildren, taxYear, countryId]);
+  }, [maritalStatus, numChildren, reportYear, countryId]);
 
   // Handle adult field changes
   const handleAdultChange = (person: string, field: string, value: number | string) => {
@@ -223,7 +245,7 @@ export default function HouseholdBuilderFrame({
       updatedHousehold.householdData.people[person][field] = {};
     }
 
-    updatedHousehold.householdData.people[person][field][taxYear] = numValue;
+    updatedHousehold.householdData.people[person][field][reportYear] = numValue;
     setLocalHousehold(updatedHousehold);
   };
 
@@ -240,7 +262,7 @@ export default function HouseholdBuilderFrame({
       updatedHousehold.householdData.people[childKey][field] = {};
     }
 
-    updatedHousehold.householdData.people[childKey][field][taxYear] = numValue;
+    updatedHousehold.householdData.people[childKey][field][reportYear] = numValue;
     setLocalHousehold(updatedHousehold);
   };
 
@@ -265,7 +287,7 @@ export default function HouseholdBuilderFrame({
       entities[groupKey] = { members: [] };
     }
 
-    entities[groupKey][field] = { [taxYear]: value || '' };
+    entities[groupKey][field] = { [reportYear]: value || '' };
     setLocalHousehold(updatedHousehold);
   };
 
@@ -315,7 +337,7 @@ export default function HouseholdBuilderFrame({
     );
 
     // Validate household
-    const validation = HouseholdValidation.isReadyForSimulation(household);
+    const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
     if (!validation.isValid) {
       console.error('Household validation failed:', validation.errors);
       return;
@@ -386,7 +408,7 @@ export default function HouseholdBuilderFrame({
           );
           const fieldLabel = getFieldLabel(field);
           const fieldValue =
-            household.householdData.households?.['your household']?.[field]?.[taxYear] || '';
+            household.householdData.households?.['your household']?.[field]?.[reportYear] || '';
 
           if (isDropdown) {
             const options = fieldOptionsMap[field] || [];
@@ -442,7 +464,7 @@ export default function HouseholdBuilderFrame({
           </Text>
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'you', 'age', taxYear) ||
+              HouseholdQueries.getPersonVariable(household, 'you', 'age', reportYear) ||
               getVariableDefault('age')
             }
             onChange={(val) => handleAdultChange('you', 'age', val || 0)}
@@ -454,8 +476,12 @@ export default function HouseholdBuilderFrame({
           />
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', taxYear) ||
-              0
+              HouseholdQueries.getPersonVariable(
+                household,
+                'you',
+                'employment_income',
+                reportYear
+              ) || 0
             }
             onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
             min={0}
@@ -473,7 +499,7 @@ export default function HouseholdBuilderFrame({
             </Text>
             <NumberInput
               value={
-                HouseholdQueries.getPersonVariable(household, 'your partner', 'age', taxYear) ||
+                HouseholdQueries.getPersonVariable(household, 'your partner', 'age', reportYear) ||
                 getVariableDefault('age')
               }
               onChange={(val) => handleAdultChange('your partner', 'age', val || 0)}
@@ -489,7 +515,7 @@ export default function HouseholdBuilderFrame({
                   household,
                   'your partner',
                   'employment_income',
-                  taxYear
+                  reportYear
                 ) || 0
               }
               onChange={(val) => handleAdultChange('your partner', 'employment_income', val || 0)}
@@ -537,7 +563,7 @@ export default function HouseholdBuilderFrame({
               </Text>
               <NumberInput
                 value={
-                  HouseholdQueries.getPersonVariable(household, childKey, 'age', taxYear) || 10
+                  HouseholdQueries.getPersonVariable(household, childKey, 'age', reportYear) || 10
                 }
                 onChange={(val) => handleChildChange(childKey, 'age', val || 0)}
                 min={0}
@@ -552,7 +578,7 @@ export default function HouseholdBuilderFrame({
                     household,
                     childKey,
                     'employment_income',
-                    taxYear
+                    reportYear
                   ) || 0
                 }
                 onChange={(val) => handleChildChange(childKey, 'employment_income', val || 0)}
@@ -568,7 +594,7 @@ export default function HouseholdBuilderFrame({
     );
   };
 
-  const validation = HouseholdValidation.isReadyForSimulation(household);
+  const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
   const canProceed = validation.isValid;
 
   const primaryAction = {
@@ -581,16 +607,6 @@ export default function HouseholdBuilderFrame({
   const content = (
     <Stack gap="lg" pos="relative">
       <LoadingOverlay visible={loading || isPending} />
-
-      {/* Tax Year Selection */}
-      <Select
-        label="Tax Year"
-        value={taxYear}
-        onChange={(val) => setTaxYear(val || CURRENT_YEAR)}
-        data={taxYears}
-        placeholder="Select Tax Year"
-        required
-      />
 
       {/* Core household configuration */}
       <Group grow>

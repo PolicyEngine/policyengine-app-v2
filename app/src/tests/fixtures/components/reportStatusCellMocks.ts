@@ -32,6 +32,7 @@ export const PROGRESS = {
 export const mockPendingReport: Report = {
   id: TEST_REPORT_ID,
   countryId: 'us',
+  year: '2024',
   apiVersion: null,
   simulationIds: [],
   status: 'pending',
@@ -41,6 +42,7 @@ export const mockPendingReport: Report = {
 export const mockCompleteReport: Report = {
   id: TEST_REPORT_ID,
   countryId: 'us',
+  year: '2024',
   apiVersion: null,
   simulationIds: [],
   status: 'complete',
@@ -50,6 +52,7 @@ export const mockCompleteReport: Report = {
 export const mockErrorReport: Report = {
   id: TEST_REPORT_ID,
   countryId: 'us',
+  year: '2024',
   apiVersion: null,
   simulationIds: [],
   status: 'error',

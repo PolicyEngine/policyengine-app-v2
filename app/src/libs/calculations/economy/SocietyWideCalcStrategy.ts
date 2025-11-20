@@ -4,7 +4,6 @@ import {
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
-import { CURRENT_YEAR } from '@/constants';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
 
@@ -29,11 +28,13 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
 
     console.log('[SocietyWideCalcStrategy.execute] API region parameter:', apiRegion);
 
-    // Build API parameters
+    // Build API parameters - use year from params
     const apiParams: SocietyWideCalculationParams = {
       region: apiRegion,
-      time_period: CURRENT_YEAR,
+      time_period: params.year,
     };
+
+    console.log('[SocietyWideCalcStrategy.execute] Using year:', params.year);
 
     // Call society-wide calculation API
     const response = await fetchSocietyWideCalculation(

@@ -45,6 +45,7 @@ describe('useStartCalculationOnLoad', () => {
     calcId: CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.WITH_OUTPUT,
     targetType: 'report',
     countryId: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
+    year: '2024',
     simulations: {
       simulation1: {
         id: 'sim-1',
