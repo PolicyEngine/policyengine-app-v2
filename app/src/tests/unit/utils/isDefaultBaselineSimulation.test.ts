@@ -1,22 +1,21 @@
-import { describe, test, expect } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import {
-  isDefaultBaselineSimulation,
-  getDefaultBaselineLabel,
-  countryNames,
-} from '@/utils/isDefaultBaselineSimulation';
-import {
-  TEST_CURRENT_LAW_ID,
-  TEST_CUSTOM_POLICY_ID,
-  TEST_COUNTRIES,
   EXPECTED_LABELS,
-  mockDefaultBaselineSimulation,
   mockCustomPolicySimulation,
-  mockSubnationalSimulation,
+  mockDefaultBaselineSimulation,
   mockHouseholdSimulation,
-  mockWrongLabelSimulation,
   mockIncompleteSimulation,
+  mockSubnationalSimulation,
   mockUKDefaultBaselineSimulation,
+  mockWrongLabelSimulation,
+  TEST_COUNTRIES,
+  TEST_CURRENT_LAW_ID,
 } from '@/tests/fixtures/utils/isDefaultBaselineSimulationMocks';
+import {
+  countryNames,
+  getDefaultBaselineLabel,
+  isDefaultBaselineSimulation,
+} from '@/utils/isDefaultBaselineSimulation';
 
 describe('isDefaultBaselineSimulation', () => {
   describe('Matching default baseline', () => {

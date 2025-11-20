@@ -4,13 +4,22 @@ import { YearPickerInput } from '@mantine/dates';
 import { FOREVER } from '@/constants';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { fromISODateString, toISODateString } from '@/utils/dateUtils';
-import { ValueSetterProps } from './ValueSetterProps';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
+import { ValueSetterProps } from './ValueSetterProps';
 
 export function DefaultValueSelector(props: ValueSetterProps) {
-  const { param, policy, setIntervals, minDate, maxDate, startDate, setStartDate, endDate, setEndDate } =
-    props;
+  const {
+    param,
+    policy,
+    setIntervals,
+    minDate,
+    maxDate,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+  } = props;
 
   // Local state for param value
   const [paramValue, setParamValue] = useState<any>(

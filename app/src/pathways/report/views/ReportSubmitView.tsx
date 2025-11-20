@@ -23,23 +23,30 @@ export default function ReportSubmitView({
 
   // Helper to get badge text for a simulation
   const getSimulationBadge = (simulation: typeof simulation1) => {
-    if (!simulation) return undefined;
+    if (!simulation) {
+      return undefined;
+    }
 
     // Get policy label - use label if available, otherwise fall back to ID
     const policyLabel = simulation.policy.label || `Policy #${simulation.policy.id}`;
 
     // Get population label - use label if available, otherwise fall back to ID
-    const populationLabel = simulation.population.label ||
+    const populationLabel =
+      simulation.population.label ||
       `Population #${simulation.population.household?.id || simulation.population.geography?.id}`;
 
     return `${policyLabel} • ${populationLabel}`;
   };
 
   // Check if simulation is configured (has either ID or configured ingredients)
-  const isSimulation1Configured = !!simulation1?.id ||
-    (!!simulation1?.policy?.id && !!(simulation1?.population?.household?.id || simulation1?.population?.geography?.id));
-  const isSimulation2Configured = !!simulation2?.id ||
-    (!!simulation2?.policy?.id && !!(simulation2?.population?.household?.id || simulation2?.population?.geography?.id));
+  const isSimulation1Configured =
+    !!simulation1?.id ||
+    (!!simulation1?.policy?.id &&
+      !!(simulation1?.population?.household?.id || simulation1?.population?.geography?.id));
+  const isSimulation2Configured =
+    !!simulation2?.id ||
+    (!!simulation2?.policy?.id &&
+      !!(simulation2?.population?.household?.id || simulation2?.population?.geography?.id));
 
   // Create summary boxes based on the simulations
   const summaryBoxes: SummaryBoxItem[] = [

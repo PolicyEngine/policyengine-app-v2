@@ -1,6 +1,7 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import PopulationPathwayWrapper from '@/pathways/population/PopulationPathwayWrapper';
 
 const mockNavigate = vi.fn();
@@ -15,9 +16,6 @@ vi.mock('react-router-dom', async () => {
     useParams: vi.fn(),
   };
 });
-
-import { useParams } from 'react-router-dom';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 vi.mock('react-redux', async () => {
   const actual = await vi.importActual('react-redux');
@@ -67,10 +65,14 @@ describe('PopulationPathwayWrapper', () => {
     // Given
     vi.mocked(useParams).mockReturnValue({});
     vi.mocked(useCurrentCountry).mockImplementation(() => {
-      throw new Error('useCurrentCountry must be used within country routes (protected by CountryGuard). Got countryId: undefined');
+      throw new Error(
+        'useCurrentCountry must be used within country routes (protected by CountryGuard). Got countryId: undefined'
+      );
     });
 
     // When/Then - Should throw error since CountryGuard would prevent this in real app
-    expect(() => render(<PopulationPathwayWrapper />)).toThrow('useCurrentCountry must be used within country routes');
+    expect(() => render(<PopulationPathwayWrapper />)).toThrow(
+      'useCurrentCountry must be used within country routes'
+    );
   });
 });

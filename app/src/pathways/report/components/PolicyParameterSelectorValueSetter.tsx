@@ -8,15 +8,11 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Button, Container, Divider, Group, Stack, Text } from '@mantine/core';
 import { getDateRange } from '@/libs/metadataUtils';
-import { PolicyStateProps } from '@/types/pathwayState';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
-import {
-  ValueSetterMode,
-  ValueSetterComponents,
-  ModeSelectorButton,
-} from './valueSetters';
+import { ModeSelectorButton, ValueSetterComponents, ValueSetterMode } from './valueSetters';
 
 interface PolicyParameterSelectorValueSetterProps {
   param: ParameterMetadata;

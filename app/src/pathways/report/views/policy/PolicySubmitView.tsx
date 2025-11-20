@@ -11,11 +11,11 @@ import IngredientSubmissionView, {
   TextListSubItem,
 } from '@/components/IngredientSubmissionView';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { PolicyStateProps } from '@/types/pathwayState';
+import { countryIds } from '@/libs/countries';
 import { Policy } from '@/types/ingredients/Policy';
+import { PolicyStateProps } from '@/types/pathwayState';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { formatDate } from '@/utils/dateUtils';
-import { countryIds } from '@/libs/countries';
 
 interface PolicySubmitViewProps {
   policy: PolicyStateProps;

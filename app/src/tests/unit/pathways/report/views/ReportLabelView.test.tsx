@@ -1,21 +1,20 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import ReportLabelView from '@/pathways/report/views/ReportLabelView';
 import {
-  TEST_REPORT_LABEL,
-  TEST_COUNTRY_ID,
-  mockOnUpdateLabel,
-  mockOnNext,
   mockOnBack,
   mockOnCancel,
+  mockOnNext,
+  mockOnUpdateLabel,
   resetAllMocks,
+  TEST_COUNTRY_ID,
+  TEST_REPORT_LABEL,
 } from '@/tests/fixtures/pathways/report/views/ReportViewMocks';
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
 }));
-
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 describe('ReportLabelView', () => {
   beforeEach(() => {
@@ -28,11 +27,7 @@ describe('ReportLabelView', () => {
     test('given component renders then displays title', () => {
       // When
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then
@@ -42,11 +37,7 @@ describe('ReportLabelView', () => {
     test('given component renders then displays report name input', () => {
       // When
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then
@@ -56,17 +47,13 @@ describe('ReportLabelView', () => {
     test('given component renders then displays year select', () => {
       // When
       const { container } = render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then - Year select exists as a disabled input
       const yearInputs = container.querySelectorAll('input[disabled]');
-      const hasYearInput = Array.from(yearInputs).some(input =>
-        input.getAttribute('aria-haspopup') === 'listbox'
+      const hasYearInput = Array.from(yearInputs).some(
+        (input) => input.getAttribute('aria-haspopup') === 'listbox'
       );
       expect(hasYearInput).toBe(true);
     });
@@ -74,11 +61,7 @@ describe('ReportLabelView', () => {
     test('given component renders then year select is disabled', () => {
       // When
       const { container } = render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then - Find the Select input (has aria-haspopup="listbox")
@@ -94,11 +77,7 @@ describe('ReportLabelView', () => {
 
       // When
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then
@@ -113,11 +92,7 @@ describe('ReportLabelView', () => {
 
       // When
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then
@@ -143,11 +118,7 @@ describe('ReportLabelView', () => {
     test('given null label then input is empty', () => {
       // When
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then
@@ -160,11 +131,7 @@ describe('ReportLabelView', () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
       const input = screen.getByLabelText(/report name/i);
 
@@ -179,11 +146,7 @@ describe('ReportLabelView', () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
       const input = screen.getByLabelText(/report name/i);
       const submitButton = screen.getByRole('button', { name: /initialize report/i });
@@ -200,11 +163,7 @@ describe('ReportLabelView', () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
       const submitButton = screen.getByRole('button', { name: /initialize report/i });
 
@@ -219,11 +178,7 @@ describe('ReportLabelView', () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
       const submitButton = screen.getByRole('button', { name: /initialize report/i });
 
@@ -255,11 +210,7 @@ describe('ReportLabelView', () => {
     test('given onBack not provided then no back button', () => {
       // When
       render(
-        <ReportLabelView
-          label={null}
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
+        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
       );
 
       // Then

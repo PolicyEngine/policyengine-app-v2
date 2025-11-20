@@ -1,5 +1,5 @@
 import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
-import { SimulationStateProps, PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
+import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 
 /**
  * Reconstructs a SimulationStateProps object from an EnhancedUserSimulation
@@ -44,7 +44,9 @@ export function reconstructSimulationFromEnhanced(
       type: 'geography',
     };
   } else {
-    throw new Error('[reconstructSimulation] Unable to determine population type or missing population data');
+    throw new Error(
+      '[reconstructSimulation] Unable to determine population type or missing population data'
+    );
   }
 
   return {

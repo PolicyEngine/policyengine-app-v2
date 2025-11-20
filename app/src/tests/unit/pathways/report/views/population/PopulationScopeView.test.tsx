@@ -1,13 +1,13 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import PopulationScopeView from '@/pathways/report/views/population/PopulationScopeView';
 import {
-  TEST_COUNTRY_ID,
-  mockRegionData,
-  mockOnScopeSelected,
   mockOnBack,
   mockOnCancel,
+  mockOnScopeSelected,
+  mockRegionData,
   resetAllMocks,
+  TEST_COUNTRY_ID,
 } from '@/tests/fixtures/pathways/report/views/PopulationViewMocks';
 
 describe('PopulationScopeView', () => {

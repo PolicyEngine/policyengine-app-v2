@@ -16,7 +16,15 @@ interface ReportLabelViewProps {
   onCancel?: () => void;
 }
 
-export default function ReportLabelView({ label, year, onUpdateLabel, onUpdateYear, onNext, onBack, onCancel }: ReportLabelViewProps) {
+export default function ReportLabelView({
+  label,
+  year, 
+  onUpdateLabel,
+  onUpdateYear, 
+  onNext,
+  onBack,
+  onCancel,
+}: ReportLabelViewProps) {
   console.log('[ReportLabelView] ========== COMPONENT RENDER ==========');
   const countryId = useCurrentCountry();
   const [localLabel, setLocalLabel] = useState(label || '');

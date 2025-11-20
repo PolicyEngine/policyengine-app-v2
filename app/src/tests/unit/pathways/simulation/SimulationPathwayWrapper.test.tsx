@@ -1,17 +1,23 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
+import { useParams } from 'react-router-dom';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCreateSimulation } from '@/hooks/useCreateSimulation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
 import SimulationPathwayWrapper from '@/pathways/simulation/SimulationPathwayWrapper';
 import {
-  TEST_COUNTRY_ID,
+  mockMetadata,
   mockNavigate,
   mockOnComplete,
-  mockUseParams,
-  mockMetadata,
   mockUseCreateSimulation,
-  mockUseUserPolicies,
-  mockUseUserHouseholds,
+  mockUseParams,
   mockUseUserGeographics,
+  mockUseUserHouseholds,
+  mockUseUserPolicies,
   resetAllMocks,
+  TEST_COUNTRY_ID,
 } from '@/tests/fixtures/pathways/simulation/SimulationPathwayWrapperMocks';
 
 // Mock dependencies
@@ -66,13 +72,6 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
 }));
 
-import { useParams } from 'react-router-dom';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-
 describe('SimulationPathwayWrapper', () => {
   beforeEach(() => {
     resetAllMocks();
@@ -91,11 +90,15 @@ describe('SimulationPathwayWrapper', () => {
       // Given
       vi.mocked(useParams).mockReturnValue({});
       vi.mocked(useCurrentCountry).mockImplementation(() => {
-        throw new Error('useCurrentCountry must be used within country routes (protected by CountryGuard). Got countryId: undefined');
+        throw new Error(
+          'useCurrentCountry must be used within country routes (protected by CountryGuard). Got countryId: undefined'
+        );
       });
 
       // When/Then - Should throw error since CountryGuard would prevent this in real app
-      expect(() => render(<SimulationPathwayWrapper />)).toThrow('useCurrentCountry must be used within country routes');
+      expect(() => render(<SimulationPathwayWrapper />)).toThrow(
+        'useCurrentCountry must be used within country routes'
+      );
     });
   });
 

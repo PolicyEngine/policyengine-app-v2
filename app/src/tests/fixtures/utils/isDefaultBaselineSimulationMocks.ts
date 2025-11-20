@@ -1,8 +1,5 @@
-import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
-
 // Test constants
 export const TEST_CURRENT_LAW_ID = 1;
-export const TEST_CUSTOM_POLICY_ID = 999;
 
 export const TEST_COUNTRIES = {
   US: 'us',

@@ -1,5 +1,5 @@
-import { Box, Button, Group, SimpleGrid } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { Box, Button, Group, SimpleGrid } from '@mantine/core';
 import PaginationControls, { PaginationConfig } from './PaginationControls';
 
 export interface ButtonConfig {
@@ -42,10 +42,7 @@ export default function MultiButtonFooter(props: MultiButtonFooterProps) {
         {/* Left side: Cancel button */}
         <Box style={{ display: 'flex', justifyContent: 'flex-start' }}>
           {cancelAction && (
-            <Button
-              variant="outline"
-              onClick={cancelAction.onClick}
-            >
+            <Button variant="outline" onClick={cancelAction.onClick}>
               {cancelAction.label}
             </Button>
           )}

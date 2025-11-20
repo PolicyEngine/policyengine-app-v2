@@ -10,6 +10,7 @@
 import { useState } from 'react';
 import { Stack } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
+import { countryIds } from '@/libs/countries';
 import { Geography } from '@/types/ingredients/Geography';
 import {
   createGeographyFromScope,
@@ -19,7 +20,6 @@ import {
 } from '@/utils/regionStrategies';
 import UKGeographicOptions from '../../components/geographicOptions/UKGeographicOptions';
 import USGeographicOptions from '../../components/geographicOptions/USGeographicOptions';
-import { countryIds } from '@/libs/countries';
 
 type ScopeType = 'national' | 'country' | 'constituency' | 'state' | 'household';
 

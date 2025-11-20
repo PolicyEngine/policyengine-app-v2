@@ -5,12 +5,12 @@
  */
 
 import { Container, Text, Title } from '@mantine/core';
-import HistoricalValues from './policyParameterSelector/HistoricalValues';
-import { PolicyStateProps } from '@/types/pathwayState';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
 import { capitalize } from '@/utils/stringUtils';
+import HistoricalValues from './policyParameterSelector/HistoricalValues';
 import PolicyParameterSelectorValueSetter from './PolicyParameterSelectorValueSetter';
 
 interface PolicyParameterSelectorMainProps {

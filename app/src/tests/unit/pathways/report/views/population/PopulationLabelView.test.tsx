@@ -1,23 +1,22 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import PopulationLabelView from '@/pathways/report/views/population/PopulationLabelView';
 import {
-  TEST_POPULATION_LABEL,
-  TEST_COUNTRY_ID,
-  mockPopulationStateEmpty,
-  mockPopulationStateWithHousehold,
-  mockPopulationStateWithGeography,
-  mockOnUpdateLabel,
-  mockOnNext,
   mockOnBack,
+  mockOnNext,
+  mockOnUpdateLabel,
+  mockPopulationStateEmpty,
+  mockPopulationStateWithGeography,
+  mockPopulationStateWithHousehold,
   resetAllMocks,
+  TEST_COUNTRY_ID,
+  TEST_POPULATION_LABEL,
 } from '@/tests/fixtures/pathways/report/views/PopulationViewMocks';
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
 }));
-
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 describe('PopulationLabelView', () => {
   beforeEach(() => {
@@ -108,14 +107,16 @@ describe('PopulationLabelView', () => {
   describe('Report mode validation', () => {
     test('given report mode without simulationIndex then throws error', () => {
       // Given/When/Then
-      expect(() => render(
-        <PopulationLabelView
-          population={mockPopulationStateEmpty}
-          mode="report"
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
-      )).toThrow('simulationIndex is required');
+      expect(() =>
+        render(
+          <PopulationLabelView
+            population={mockPopulationStateEmpty}
+            mode="report"
+            onUpdateLabel={mockOnUpdateLabel}
+            onNext={mockOnNext}
+          />
+        )
+      ).toThrow('simulationIndex is required');
     });
 
     test('given report mode with simulationIndex then renders without error', () => {

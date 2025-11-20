@@ -1,20 +1,24 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@test-utils';
+import { useParams } from 'react-router-dom';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCreateReport } from '@/hooks/useCreateReport';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 import ReportPathwayWrapper from '@/pathways/report/ReportPathwayWrapper';
 import {
-  TEST_COUNTRY_ID,
-  TEST_INVALID_COUNTRY_ID,
+  mockMetadata,
   mockNavigate,
   mockOnComplete,
+  mockUseCreateReport,
   mockUseParams,
   mockUseParamsInvalid,
   mockUseParamsMissing,
-  mockMetadata,
-  mockUseCreateReport,
-  mockUseUserSimulations,
-  mockUseUserPolicies,
-  mockUseUserHouseholds,
   mockUseUserGeographics,
+  mockUseUserHouseholds,
+  mockUseUserPolicies,
+  mockUseUserSimulations,
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/ReportPathwayWrapperMocks';
 
@@ -69,13 +73,6 @@ vi.mock('@/hooks/usePathwayNavigation', () => ({
     getBackMode: vi.fn(),
   })),
 }));
-
-import { useParams } from 'react-router-dom';
-import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
-import { useCreateReport } from '@/hooks/useCreateReport';
 
 describe('ReportPathwayWrapper', () => {
   beforeEach(() => {

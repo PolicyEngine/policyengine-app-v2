@@ -16,7 +16,7 @@ interface ReportSimulationExistingViewProps {
 }
 
 export default function ReportSimulationExistingView({
-  activeSimulationIndex,
+  activeSimulationIndex: _activeSimulationIndex,
   otherSimulation,
   onSelectSimulation,
   onNext,
@@ -107,25 +107,23 @@ export default function ReportSimulationExistingView({
   const filteredSimulations = userSimulations.filter((enhancedSim) => enhancedSim.simulation?.id);
 
   console.log('[ReportSimulationExistingView] ========== AFTER FILTERING ==========');
-  console.log('[ReportSimulationExistingView] Filtered simulations count:', filteredSimulations.length);
+  console.log(
+    '[ReportSimulationExistingView] Filtered simulations count:',
+    filteredSimulations.length
+  );
 
   // Get other simulation's population ID (base ingredient ID) for compatibility check
   // For household populations, use household.id
   // For geography populations, use geography.geographyId (the base geography identifier)
-  const otherPopulationId = otherSimulation?.population.household?.id
-    || otherSimulation?.population.geography?.geographyId
-    || otherSimulation?.population.geography?.id;
+  const otherPopulationId =
+    otherSimulation?.population.household?.id ||
+    otherSimulation?.population.geography?.geographyId ||
+    otherSimulation?.population.geography?.id;
 
   // Sort simulations to show compatible first, then incompatible
   const sortedSimulations = [...filteredSimulations].sort((a, b) => {
-    const aCompatible = arePopulationsCompatible(
-      otherPopulationId,
-      a.simulation!.populationId
-    );
-    const bCompatible = arePopulationsCompatible(
-      otherPopulationId,
-      b.simulation!.populationId
-    );
+    const aCompatible = arePopulationsCompatible(otherPopulationId, a.simulation!.populationId);
+    const bCompatible = arePopulationsCompatible(otherPopulationId, b.simulation!.populationId);
 
     return bCompatible === aCompatible ? 0 : aCompatible ? -1 : 1;
   });
@@ -138,10 +136,7 @@ export default function ReportSimulationExistingView({
     const simulation = enhancedSim.simulation!;
 
     // Check compatibility with other simulation
-    const isCompatible = arePopulationsCompatible(
-      otherPopulationId,
-      simulation.populationId
-    );
+    const isCompatible = arePopulationsCompatible(otherPopulationId, simulation.populationId);
 
     let title = '';
     let subtitle = '';

@@ -11,11 +11,14 @@ export function usePathwayNavigation<TMode>(initialMode: TMode) {
   const [currentMode, setCurrentMode] = useState<TMode>(initialMode);
   const [history, setHistory] = useState<TMode[]>([]);
 
-  const navigateToMode = useCallback((mode: TMode) => {
-    console.log('[usePathwayNavigation] Navigating to mode:', mode);
-    setHistory((prev) => [...prev, currentMode]);
-    setCurrentMode(mode);
-  }, [currentMode]);
+  const navigateToMode = useCallback(
+    (mode: TMode) => {
+      console.log('[usePathwayNavigation] Navigating to mode:', mode);
+      setHistory((prev) => [...prev, currentMode]);
+      setCurrentMode(mode);
+    },
+    [currentMode]
+  );
 
   const goBack = useCallback(() => {
     if (history.length > 0) {

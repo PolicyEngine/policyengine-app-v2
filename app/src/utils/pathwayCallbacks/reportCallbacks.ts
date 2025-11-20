@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
-import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
+import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { reconstructSimulationFromEnhanced } from '@/utils/ingredientReconstruction';
 
 /**
@@ -24,9 +24,12 @@ export function createReportCallbacks<TMode>(
   /**
    * Updates the report label
    */
-  const updateLabel = useCallback((label: string) => {
-    setState((prev) => ({ ...prev, label }));
-  }, [setState]);
+  const updateLabel = useCallback(
+    (label: string) => {
+      setState((prev) => ({ ...prev, label }));
+    },
+    [setState]
+  );
 
   /**
    * Updates the report year
@@ -38,31 +41,40 @@ export function createReportCallbacks<TMode>(
   /**
    * Navigates to simulation selection for a specific simulation slot
    */
-  const navigateToSimulationSelection = useCallback((simulationIndex: 0 | 1) => {
-    // Note: activeSimulationIndex must be updated by caller before navigation
-    navigateToMode(simulationSelectionMode);
-  }, [navigateToMode, simulationSelectionMode]);
+  const navigateToSimulationSelection = useCallback(
+    (_simulationIndex: 0 | 1) => {
+      // Note: activeSimulationIndex must be updated by caller before navigation
+      navigateToMode(simulationSelectionMode);
+    },
+    [navigateToMode, simulationSelectionMode]
+  );
 
   /**
    * Handles selecting an existing simulation
    * Reconstructs the simulation from enhanced format and updates state
    */
-  const handleSelectExistingSimulation = useCallback((enhancedSimulation: EnhancedUserSimulation) => {
-    try {
-      const reconstructedSimulation = reconstructSimulationFromEnhanced(enhancedSimulation);
+  const handleSelectExistingSimulation = useCallback(
+    (enhancedSimulation: EnhancedUserSimulation) => {
+      try {
+        const reconstructedSimulation = reconstructSimulationFromEnhanced(enhancedSimulation);
 
-      setState((prev) => {
-        const newSimulations = [...prev.simulations] as [SimulationStateProps, SimulationStateProps];
-        newSimulations[activeSimulationIndex] = reconstructedSimulation;
-        return { ...prev, simulations: newSimulations };
-      });
+        setState((prev) => {
+          const newSimulations = [...prev.simulations] as [
+            SimulationStateProps,
+            SimulationStateProps,
+          ];
+          newSimulations[activeSimulationIndex] = reconstructedSimulation;
+          return { ...prev, simulations: newSimulations };
+        });
 
-      navigateToMode(setupMode);
-    } catch (error) {
-      console.error('[ReportCallbacks] Error reconstructing simulation:', error);
-      throw error;
-    }
-  }, [setState, activeSimulationIndex, navigateToMode, setupMode]);
+        navigateToMode(setupMode);
+      } catch (error) {
+        console.error('[ReportCallbacks] Error reconstructing simulation:', error);
+        throw error;
+      }
+    },
+    [setState, activeSimulationIndex, navigateToMode, setupMode]
+  );
 
   /**
    * Copies population from the other simulation to the active simulation
@@ -74,7 +86,7 @@ export function createReportCallbacks<TMode>(
     setState((prev) => {
       const newSimulations = [...prev.simulations] as [SimulationStateProps, SimulationStateProps];
       newSimulations[activeSimulationIndex].population = {
-        ...prev.simulations[otherIndex].population
+        ...prev.simulations[otherIndex].population,
       };
       return { ...prev, simulations: newSimulations };
     });

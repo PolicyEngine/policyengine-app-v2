@@ -1,5 +1,5 @@
-import { ActionIcon, Group, Text } from '@mantine/core';
 import { IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import { ActionIcon, Group, Text } from '@mantine/core';
 
 export interface PaginationConfig {
   currentPage: number;
@@ -33,7 +33,9 @@ export default function PaginationControls({ pagination }: PaginationControlsPro
       </Text>
       <ActionIcon
         variant="default"
-        onClick={() => pagination.onPageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))}
+        onClick={() =>
+          pagination.onPageChange(Math.min(pagination.totalPages, pagination.currentPage + 1))
+        }
         disabled={pagination.currentPage === pagination.totalPages}
         aria-label="Next page"
       >

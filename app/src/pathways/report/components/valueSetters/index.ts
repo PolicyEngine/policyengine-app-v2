@@ -1,3 +1,9 @@
+import { DateValueSelector } from './DateValueSelector';
+import { DefaultValueSelector } from './DefaultValueSelector';
+import { ValueSetterMode } from './ModeSelectorButton';
+import { MultiYearValueSelector } from './MultiYearValueSelector';
+import { YearlyValueSelector } from './YearlyValueSelector';
+
 export { ModeSelectorButton, ValueSetterMode } from './ModeSelectorButton';
 export { getDefaultValueForParam } from './getDefaultValueForParam';
 export { ValueInputBox } from './ValueInputBox';
@@ -6,12 +12,6 @@ export { YearlyValueSelector } from './YearlyValueSelector';
 export { DateValueSelector } from './DateValueSelector';
 export { MultiYearValueSelector } from './MultiYearValueSelector';
 export type { ValueSetterProps } from './ValueSetterProps';
-
-import { ValueSetterMode } from './ModeSelectorButton';
-import { DefaultValueSelector } from './DefaultValueSelector';
-import { YearlyValueSelector } from './YearlyValueSelector';
-import { DateValueSelector } from './DateValueSelector';
-import { MultiYearValueSelector } from './MultiYearValueSelector';
 
 export const ValueSetterComponents = {
   [ValueSetterMode.DEFAULT]: DefaultValueSelector,

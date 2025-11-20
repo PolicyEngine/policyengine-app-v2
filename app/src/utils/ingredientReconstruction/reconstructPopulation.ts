@@ -1,6 +1,6 @@
-import { PopulationStateProps } from '@/types/pathwayState';
-import { Household } from '@/types/ingredients/Household';
 import { Geography } from '@/types/ingredients/Geography';
+import { Household } from '@/types/ingredients/Household';
+import { PopulationStateProps } from '@/types/pathwayState';
 
 /**
  * Reconstructs a PopulationStateProps object from a household

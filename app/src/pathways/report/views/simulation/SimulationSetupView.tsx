@@ -7,7 +7,10 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { SimulationStateProps } from '@/types/pathwayState';
-import { isPolicyConfigured, isPopulationConfigured } from '@/utils/validation/ingredientValidation';
+import {
+  isPolicyConfigured,
+  isPopulationConfigured,
+} from '@/utils/validation/ingredientValidation';
 
 type SetupCard = 'population' | 'policy';
 

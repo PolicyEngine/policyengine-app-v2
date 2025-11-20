@@ -1,14 +1,15 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
 import PolicyExistingView from '@/pathways/report/views/policy/PolicyExistingView';
 import {
-  mockOnSelectPolicy,
   mockOnBack,
   mockOnCancel,
+  mockOnSelectPolicy,
   mockUseUserPoliciesEmpty,
-  mockUseUserPoliciesWithData,
-  mockUseUserPoliciesLoading,
   mockUseUserPoliciesError,
+  mockUseUserPoliciesLoading,
+  mockUseUserPoliciesWithData,
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/views/PolicyViewMocks';
 
@@ -16,8 +17,6 @@ vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
   isPolicyMetadataWithAssociation: vi.fn((val) => val && val.policy && val.association),
 }));
-
-import { useUserPolicies } from '@/hooks/useUserPolicy';
 
 describe('PolicyExistingView', () => {
   beforeEach(() => {

@@ -8,22 +8,22 @@
  */
 
 import { useState } from 'react';
-import { Card, Group, Loader, Stack, Text } from '@mantine/core';
 import { IconChevronRight } from '@tabler/icons-react';
-import { MOCK_USER_ID } from '@/constants';
-import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { SimulationStateProps, PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
+import { Card, Group, Loader, Stack, Text } from '@mantine/core';
 import { SimulationAdapter } from '@/adapters';
+import { MOCK_USER_ID } from '@/constants';
+import { spacing } from '@/designTokens';
+import { useCreateSimulation } from '@/hooks/useCreateSimulation';
+import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { Simulation } from '@/types/ingredients/Simulation';
+import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { SimulationCreationPayload } from '@/types/payloads';
 import {
-  isDefaultBaselineSimulation,
+  countryNames,
   getDefaultBaselineLabel,
-  countryNames
+  isDefaultBaselineSimulation,
 } from '@/utils/isDefaultBaselineSimulation';
-import { spacing } from '@/designTokens';
 
 interface DefaultBaselineOptionProps {
   countryId: string;
@@ -52,7 +52,9 @@ export default function DefaultBaselineOption({
   const existingSimulationId = existingBaseline?.userSimulation?.simulationId;
 
   const handleClick = async () => {
-    if (isCreating) return; // Prevent double-click
+    if (isCreating) {
+      return;
+    } // Prevent double-click
 
     setIsCreating(true);
     const countryName = countryNames[countryId] || countryId.toUpperCase();
@@ -102,7 +104,7 @@ export default function DefaultBaselineOption({
       console.log('[DefaultBaselineOption] Creating geographic association');
       const geographyResult = await createGeographicAssociation({
         id: `${userId}-${Date.now()}`,
-        userId: userId,
+        userId,
         countryId: countryId as any,
         geographyId: countryId,
         scope: 'national',

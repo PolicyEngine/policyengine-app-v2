@@ -1,25 +1,24 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 import ReportSimulationExistingView from '@/pathways/report/views/ReportSimulationExistingView';
 import {
-  mockSimulationState,
   mockEnhancedUserSimulation,
-  mockOnSelectSimulation,
-  mockOnNext,
   mockOnBack,
   mockOnCancel,
+  mockOnNext,
+  mockOnSelectSimulation,
+  mockSimulationState,
   mockUseUserSimulationsEmpty,
-  mockUseUserSimulationsWithData,
-  mockUseUserSimulationsLoading,
   mockUseUserSimulationsError,
+  mockUseUserSimulationsLoading,
+  mockUseUserSimulationsWithData,
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/views/ReportViewMocks';
 
 vi.mock('@/hooks/useUserSimulations', () => ({
   useUserSimulations: vi.fn(),
 }));
-
-import { useUserSimulations } from '@/hooks/useUserSimulations';
 
 describe('ReportSimulationExistingView', () => {
   beforeEach(() => {
@@ -197,7 +196,11 @@ describe('ReportSimulationExistingView', () => {
         ...mockSimulationState,
         population: {
           ...mockSimulationState.population,
-          household: { id: 'different-household-999', label: 'Different Household', people: {} },
+          household: {
+            id: 'different-household-999',
+            countryId: 'us' as const,
+            householdData: { people: {} },
+          },
         },
       };
       vi.mocked(useUserSimulations).mockReturnValue(mockUseUserSimulationsWithData as any);

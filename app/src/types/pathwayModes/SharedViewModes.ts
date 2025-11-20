@@ -50,10 +50,7 @@ export enum SimulationViewMode {
  * Helper type to get all shared view mode values
  * Useful for type narrowing and validation
  */
-export type SharedViewModeValue =
-  | PolicyViewMode
-  | PopulationViewMode
-  | SimulationViewMode;
+export type SharedViewModeValue = PolicyViewMode | PopulationViewMode | SimulationViewMode;
 
 /**
  * Helper to check if a mode is a policy mode

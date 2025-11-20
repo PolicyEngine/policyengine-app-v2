@@ -1,21 +1,20 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import SimulationLabelView from '@/pathways/report/views/simulation/SimulationLabelView';
 import {
-  TEST_SIMULATION_LABEL,
-  TEST_COUNTRY_ID,
-  mockOnUpdateLabel,
-  mockOnNext,
   mockOnBack,
   mockOnCancel,
+  mockOnNext,
+  mockOnUpdateLabel,
   resetAllMocks,
+  TEST_COUNTRY_ID,
+  TEST_SIMULATION_LABEL,
 } from '@/tests/fixtures/pathways/report/views/SimulationViewMocks';
 
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: vi.fn(),
 }));
-
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 describe('SimulationLabelView', () => {
   beforeEach(() => {
@@ -74,14 +73,16 @@ describe('SimulationLabelView', () => {
   describe('Report mode', () => {
     test('given report mode without simulationIndex then throws error', () => {
       // Given/When/Then
-      expect(() => render(
-        <SimulationLabelView
-          label={null}
-          mode="report"
-          onUpdateLabel={mockOnUpdateLabel}
-          onNext={mockOnNext}
-        />
-      )).toThrow('simulationIndex is required');
+      expect(() =>
+        render(
+          <SimulationLabelView
+            label={null}
+            mode="report"
+            onUpdateLabel={mockOnUpdateLabel}
+            onNext={mockOnNext}
+          />
+        )
+      ).toThrow('simulationIndex is required');
     });
 
     test('given report mode baseline then shows baseline simulation default label', () => {
@@ -130,7 +131,9 @@ describe('SimulationLabelView', () => {
       );
 
       // Then
-      expect(screen.getByLabelText(/simulation name/i)).toHaveValue('My Report baseline simulation');
+      expect(screen.getByLabelText(/simulation name/i)).toHaveValue(
+        'My Report baseline simulation'
+      );
     });
   });
 

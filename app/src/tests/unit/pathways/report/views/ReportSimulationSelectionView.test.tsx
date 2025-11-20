@@ -1,17 +1,18 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 import ReportSimulationSelectionView from '@/pathways/report/views/ReportSimulationSelectionView';
 import {
-  TEST_COUNTRY_ID,
-  TEST_CURRENT_LAW_ID,
+  mockOnBack,
+  mockOnCancel,
   mockOnCreateNew,
   mockOnLoadExisting,
   mockOnSelectDefaultBaseline,
-  mockOnBack,
-  mockOnCancel,
   mockUseUserSimulationsEmpty,
   mockUseUserSimulationsWithData,
   resetAllMocks,
+  TEST_COUNTRY_ID,
+  TEST_CURRENT_LAW_ID,
 } from '@/tests/fixtures/pathways/report/views/ReportViewMocks';
 
 vi.mock('@/hooks/useUserSimulations', () => ({
@@ -41,8 +42,6 @@ vi.mock('@/hooks/useUserPolicy', () => ({
 }));
 
 vi.mock('react-plotly.js', () => ({ default: vi.fn(() => null) }));
-
-import { useUserSimulations } from '@/hooks/useUserSimulations';
 
 describe('ReportSimulationSelectionView', () => {
   beforeEach(() => {
@@ -146,7 +145,9 @@ describe('ReportSimulationSelectionView', () => {
       );
 
       // Then
-      expect(screen.queryByText(/current law for all households nationwide/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/current law for all households nationwide/i)
+      ).not.toBeInTheDocument();
     });
 
     test('given comparison simulation then only shows standard options', () => {
@@ -185,7 +186,9 @@ describe('ReportSimulationSelectionView', () => {
         />
       );
       const cards = screen.getAllByRole('button');
-      const createNewCard = cards.find(card => card.textContent?.includes('Create new simulation'));
+      const createNewCard = cards.find((card) =>
+        card.textContent?.includes('Create new simulation')
+      );
 
       // When
       await user.click(createNewCard!);
@@ -209,7 +212,9 @@ describe('ReportSimulationSelectionView', () => {
         />
       );
       const cards = screen.getAllByRole('button');
-      const loadExistingCard = cards.find(card => card.textContent?.includes('Load existing simulation'));
+      const loadExistingCard = cards.find((card) =>
+        card.textContent?.includes('Load existing simulation')
+      );
 
       // When
       await user.click(loadExistingCard!);

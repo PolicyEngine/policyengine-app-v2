@@ -18,7 +18,6 @@ export const mockSimulationStateEmpty: SimulationStateProps = {
   policy: {
     id: undefined,
     label: null,
-    countryId: TEST_COUNTRY_ID,
     parameters: [],
   },
   population: {
@@ -27,7 +26,7 @@ export const mockSimulationStateEmpty: SimulationStateProps = {
     household: null,
     geography: null,
   },
-  apiVersion: null,
+  apiVersion: undefined,
   status: 'pending',
 };
 
@@ -38,7 +37,6 @@ export const mockSimulationStateConfigured: SimulationStateProps = {
   policy: {
     id: '456',
     label: 'Current Law',
-    countryId: TEST_COUNTRY_ID,
     parameters: [],
   },
   population: {
@@ -46,13 +44,15 @@ export const mockSimulationStateConfigured: SimulationStateProps = {
     type: 'household',
     household: {
       id: '789',
-      label: 'My Household',
-      people: {},
+      countryId: 'us',
+      householdData: {
+        people: {},
+      },
     },
     geography: null,
   },
   apiVersion: '0.1.0',
-  status: 'completed',
+  status: 'complete',
 };
 
 export const mockSimulationStateWithPolicy: SimulationStateProps = {
@@ -60,7 +60,6 @@ export const mockSimulationStateWithPolicy: SimulationStateProps = {
   policy: {
     id: '456',
     label: 'Current Law',
-    countryId: TEST_COUNTRY_ID,
     parameters: [],
   },
 };
@@ -72,8 +71,10 @@ export const mockSimulationStateWithPopulation: SimulationStateProps = {
     type: 'household',
     household: {
       id: '789',
-      label: 'My Household',
-      people: {},
+      countryId: 'us',
+      householdData: {
+        people: {},
+      },
     },
     geography: null,
   },
