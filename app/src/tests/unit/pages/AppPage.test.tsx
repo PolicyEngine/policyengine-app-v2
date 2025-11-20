@@ -2,15 +2,16 @@
  * Tests for AppPage component
  */
 
-import { describe, test, expect, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
+import { describe, expect, test, vi } from 'vitest';
+import AppPage from '@/pages/AppPage';
 import {
-  MOCK_STREAMLIT_APP,
+  MOCK_APPS,
   MOCK_IFRAME_APP,
   MOCK_OBBBA_APP,
   MOCK_RESEARCH_IFRAME_APP,
-  MOCK_APPS,
+  MOCK_STREAMLIT_APP,
   renderWithRouter,
 } from '@/tests/fixtures/pages/appPageHelpers';
 
@@ -28,10 +29,7 @@ vi.mock('@/components/IframeContent', () => ({
   default: vi.fn(({ title }) => <div data-testid="iframe-content">{title}</div>),
 }));
 
-import AppPage from '@/pages/AppPage';
-
 describe('AppPage', () => {
-
   test('given streamlit app then renders StreamlitEmbed', () => {
     // Given: Streamlit app route
     renderWithRouter(
@@ -101,6 +99,8 @@ describe('AppPage', () => {
 
     // Then: 404 message is displayed
     expect(screen.getByText('App not found')).toBeInTheDocument();
-    expect(screen.getByText(`The app "${nonExistentSlug}" could not be found.`)).toBeInTheDocument();
+    expect(
+      screen.getByText(`The app "${nonExistentSlug}" could not be found.`)
+    ).toBeInTheDocument();
   });
 });

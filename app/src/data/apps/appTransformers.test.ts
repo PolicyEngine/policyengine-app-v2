@@ -62,9 +62,7 @@ describe('appTransformers', () => {
   });
 
   test('OBBBA iframe apps are configured correctly', () => {
-    const obbbaApps = apps.filter((a) =>
-      a.slug.includes('obbba') && a.type === 'obbba-iframe'
-    );
+    const obbbaApps = apps.filter((a) => a.slug.includes('obbba') && a.type === 'obbba-iframe');
 
     expect(obbbaApps.length).toBeGreaterThan(0);
 

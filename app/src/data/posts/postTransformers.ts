@@ -7,10 +7,9 @@
  * This file maintains the exact logic from the old app's postTransformers.js
  */
 
-import type { BlogPost, TagLabels, ResearchItem } from '@/types/blog';
-import type { App } from '@/types/apps';
-import postsData from './posts.json';
 import { apps } from '@/data/apps/appTransformers';
+import type { BlogPost, ResearchItem, TagLabels } from '@/types/blog';
+import postsData from './posts.json';
 
 // Type assertion for imported JSON (Vite handles this)
 const postsRaw = postsData as BlogPost[];
@@ -22,9 +21,7 @@ const postsSorted = [...postsRaw].sort((a, b) => (a.date < b.date ? 1 : -1));
 for (const post of postsSorted) {
   // Extract slug from filename (remove extension)
   const filenameWithoutExt = post.filename.substring(0, post.filename.indexOf('.'));
-  post.slug = filenameWithoutExt
-    .toLowerCase()
-    .replace(/_/g, '-'); // Replace underscores with hyphens
+  post.slug = filenameWithoutExt.toLowerCase().replace(/_/g, '-'); // Replace underscores with hyphens
 }
 
 // Extract all tags from all posts
@@ -35,7 +32,7 @@ const uniqueTags = [...new Set(tags.flat())].sort();
 const COUNTRY_IDS = ['us', 'uk', 'ng', 'ca', 'global'] as const;
 
 const locationTags = uniqueTags.filter((tag) =>
-  COUNTRY_IDS.some((countryId) => tag.startsWith(countryId + '-') || tag === countryId)
+  COUNTRY_IDS.some((countryId) => tag.startsWith(`${countryId}-`) || tag === countryId)
 );
 
 const topicTags = uniqueTags.filter((tag) => !locationTags.includes(tag)).sort();

@@ -4,11 +4,11 @@
  * Mirrors the structure of BlogPage from the old app
  */
 
-import { useState, useEffect } from 'react';
-import { Box, Container, Title, Text, Button, Select } from '@mantine/core';
+import { useEffect, useState } from 'react';
+import { Box, Container, Select, Text, Title } from '@mantine/core';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
-import { posts, topicLabels, locationLabels } from '@/data/posts/postTransformers';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
+import { locationLabels, posts, topicLabels } from '@/data/posts/postTransformers';
 import { colors, spacing } from '@/designTokens';
 
 export default function BlogTestPage() {
@@ -233,16 +233,20 @@ function LeftContents({ markdown }: { markdown: string }) {
     // Generate slug using the EXACT same logic as old app and MarkdownFormatter
     // This must match the slug generation in MarkdownFormatter's h1/h2/h3/h4 components
     const slug = header
-      .replace(/[#,/]/g, '')  // Remove #, comma, forward slash
+      .replace(/[#,/]/g, '') // Remove #, comma, forward slash
       .trim()
-      .replace(/\s+/g, '-')   // Replace spaces with hyphens
-      .toLowerCase();         // Convert to lowercase
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .toLowerCase(); // Convert to lowercase
 
     return { level, text, slug };
   });
 
   if (headerData.length === 0) {
-    return <Text size="sm" c="dimmed">No headings found</Text>;
+    return (
+      <Text size="sm" c="dimmed">
+        No headings found
+      </Text>
+    );
   }
 
   return (
@@ -271,7 +275,10 @@ function LeftContents({ markdown }: { markdown: string }) {
               console.error('Could not find element with id:', slug);
               // Log all heading IDs on the page for debugging
               const allHeadings = document.querySelectorAll('h1[id], h2[id], h3[id], h4[id]');
-              console.log('Available heading IDs:', Array.from(allHeadings).map(h => h.id));
+              console.log(
+                'Available heading IDs:',
+                Array.from(allHeadings).map((h) => h.id)
+              );
             }
           }}
         >

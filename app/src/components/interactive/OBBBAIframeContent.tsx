@@ -11,8 +11,8 @@
  * - Origin validation for security
  */
 
-import { useEffect, useRef, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import type { OBBBAIframeProps } from '@/types/apps';
 
 export default function OBBBAIframeContent({
@@ -51,12 +51,16 @@ export default function OBBBAIframeContent({
 
   // Listen for postMessage events from iframe
   useEffect(() => {
-    if (!enablePostMessage) return;
+    if (!enablePostMessage) {
+      return;
+    }
 
     const handleMessage = (event: MessageEvent) => {
       // Verify the message origin
       if (allowedOrigins) {
-        if (!allowedOrigins.includes(event.origin)) return;
+        if (!allowedOrigins.includes(event.origin)) {
+          return;
+        }
       } else if (event.origin !== iframeOrigin) {
         return;
       }

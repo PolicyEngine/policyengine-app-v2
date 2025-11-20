@@ -4,14 +4,8 @@
  * Tests for post data transformation and tag label validation.
  */
 
-import { describe, it, expect } from 'vitest';
-import {
-  posts,
-  topicLabels,
-  locationLabels,
-  topicTags,
-  locationTags,
-} from '@/data/posts/postTransformers';
+import { describe, expect, it } from 'vitest';
+import { locationLabels, locationTags, posts, topicLabels } from '@/data/posts/postTransformers';
 
 describe('postTransformers', () => {
   describe('tag labels', () => {

@@ -5,11 +5,11 @@
  * Styled with v2 design tokens.
  */
 
-import { Box, Text, Badge, Group } from '@mantine/core';
 import { Link } from 'react-router-dom';
+import { Badge, Box, Group, Text } from '@mantine/core';
+import { locationLabels, topicLabels } from '@/data/posts/postTransformers';
 import { colors, spacing } from '@/designTokens';
 import type { ResearchItem } from '@/types/blog';
-import { topicLabels, locationLabels } from '@/data/posts/postTransformers';
 
 interface BlogPostCardProps {
   item: ResearchItem;
@@ -67,92 +67,76 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
         e.currentTarget.style.boxShadow = 'none';
       }}
     >
-        {/* Image */}
-        <Box
-          style={{
-            height: '200px',
-            overflow: 'hidden',
-            backgroundColor: colors.gray[100],
-          }}
-        >
-          {item.image && (
-            <img
-              src={`/assets/posts/${item.image}`}
-              alt={item.title}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-              onError={(e) => {
-                // Hide broken images
-                e.currentTarget.style.display = 'none';
-              }}
-            />
-          )}
-        </Box>
-
-        {/* Content */}
-        <Box
-          style={{
-            padding: spacing.md,
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-        >
-          {/* Tags and Date */}
-          <Group justify="space-between" mb="xs">
-            <Group gap="xs">
-              {displayTags.map((tag) => (
-                <Badge
-                  key={tag}
-                  size="xs"
-                  variant="light"
-                  color={item.isApp ? 'teal' : 'blue'}
-                >
-                  {tag}
-                </Badge>
-              ))}
-            </Group>
-            <Text size="xs" c="dimmed" tt="uppercase">
-              {formattedDate}
-            </Text>
-          </Group>
-
-          {/* Title */}
-          <Text
-            fw={600}
-            size="md"
-            mb="xs"
-            lineClamp={2}
-            style={{ color: colors.gray[900] }}
-          >
-            {item.title}
-          </Text>
-
-          {/* Description */}
-          <Text
-            size="sm"
-            c="dimmed"
-            lineClamp={3}
-            style={{ flex: 1 }}
-          >
-            {item.description}
-          </Text>
-
-          {/* Read link */}
-          <Text
-            size="sm"
-            mt="sm"
+      {/* Image */}
+      <Box
+        style={{
+          height: '200px',
+          overflow: 'hidden',
+          backgroundColor: colors.gray[100],
+        }}
+      >
+        {item.image && (
+          <img
+            src={`/assets/posts/${item.image}`}
+            alt={item.title}
             style={{
-              color: colors.primary[600],
-              textAlign: 'right',
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
             }}
-          >
-            {item.isApp ? 'Open →' : 'Read →'}
+            onError={(e) => {
+              // Hide broken images
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        )}
+      </Box>
+
+      {/* Content */}
+      <Box
+        style={{
+          padding: spacing.md,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Tags and Date */}
+        <Group justify="space-between" mb="xs">
+          <Group gap="xs">
+            {displayTags.map((tag) => (
+              <Badge key={tag} size="xs" variant="light" color={item.isApp ? 'teal' : 'blue'}>
+                {tag}
+              </Badge>
+            ))}
+          </Group>
+          <Text size="xs" c="dimmed" tt="uppercase">
+            {formattedDate}
           </Text>
-        </Box>
+        </Group>
+
+        {/* Title */}
+        <Text fw={600} size="md" mb="xs" lineClamp={2} style={{ color: colors.gray[900] }}>
+          {item.title}
+        </Text>
+
+        {/* Description */}
+        <Text size="sm" c="dimmed" lineClamp={3} style={{ flex: 1 }}>
+          {item.description}
+        </Text>
+
+        {/* Read link */}
+        <Text
+          size="sm"
+          mt="sm"
+          style={{
+            color: colors.primary[600],
+            textAlign: 'right',
+          }}
+        >
+          {item.isApp ? 'Open →' : 'Read →'}
+        </Text>
+      </Box>
     </Box>
   );
 

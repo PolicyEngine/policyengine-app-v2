@@ -15,7 +15,7 @@ import type { StreamlitEmbedProps } from '@/types/apps';
 export default function StreamlitEmbed({
   embedUrl,
   directUrl,
-  title,
+  title: _title,
   iframeTitle,
   height,
   width,
@@ -25,7 +25,9 @@ export default function StreamlitEmbed({
 
   // Check if user has previously dismissed this notice in this session
   const [alertVisible, setAlertVisible] = useState(() => {
-    if (typeof window === 'undefined') return true;
+    if (typeof window === 'undefined') {
+      return true;
+    }
     return !sessionStorage.getItem(storageKey);
   });
 
@@ -108,6 +110,7 @@ export default function StreamlitEmbed({
             </a>
           </div>
           <button
+            type="button"
             onClick={handleAlertClose}
             style={{
               background: 'none',

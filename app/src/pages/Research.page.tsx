@@ -5,19 +5,17 @@
  * Displays both blog posts and apps with displayWithResearch: true.
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import Fuse from 'fuse.js';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Box, Container, Text } from '@mantine/core';
-import Fuse from 'fuse.js';
-import { colors, spacing } from '@/designTokens';
-import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import { BlogPostGrid } from '@/components/blog/BlogPostGrid';
 import { ResearchFilters } from '@/components/blog/ResearchFilters';
+import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import {
-  getResearchItems,
-} from '@/data/posts/postTransformers';
+import { getResearchItems } from '@/data/posts/postTransformers';
+import { colors, spacing } from '@/designTokens';
 
 // Mock authors for now - in production, import from authors.json
 const mockAuthors = [
@@ -107,7 +105,15 @@ export default function ResearchPage() {
       defaultLocations
     );
     setSearchParams(params, { replace: true });
-  }, [selectedTypes, selectedTopics, selectedLocations, selectedAuthors, searchQuery, defaultLocations, setSearchParams]);
+  }, [
+    selectedTypes,
+    selectedTopics,
+    selectedLocations,
+    selectedAuthors,
+    searchQuery,
+    defaultLocations,
+    setSearchParams,
+  ]);
 
   // Filter items
   const filteredItems = useMemo(() => {
@@ -123,9 +129,7 @@ export default function ResearchPage() {
 
     // Filter by topics
     if (selectedTopics.length > 0) {
-      items = items.filter((item) =>
-        selectedTopics.some((topic) => item.tags.includes(topic))
-      );
+      items = items.filter((item) => selectedTopics.some((topic) => item.tags.includes(topic)));
     }
 
     // Filter by locations

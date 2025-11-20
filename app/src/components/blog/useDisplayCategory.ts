@@ -18,7 +18,11 @@ export function useDisplayCategory(): DisplayCategory {
   const isMobile = useMediaQuery(`(max-width: ${blogBreakpoints.mobile}px)`);
   const isTablet = useMediaQuery(`(max-width: ${blogBreakpoints.tablet}px)`);
 
-  if (isMobile) return 'mobile';
-  if (isTablet) return 'tablet';
+  if (isMobile) {
+    return 'mobile';
+  }
+  if (isTablet) {
+    return 'tablet';
+  }
   return 'desktop';
 }

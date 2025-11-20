@@ -8,8 +8,8 @@
  * AppPage.jsx OBBBA-specific logic.
  */
 
-import { useEffect, useRef, useMemo } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useMemo, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { spacing } from '@/designTokens';
 
 interface OBBBAEmbedProps {
@@ -29,15 +29,15 @@ export default function OBBBAEmbed({ url, title }: OBBBAEmbedProps) {
   const urlParams = new URLSearchParams(location.search);
 
   // Construct iframe URL with forwarded parameters
-  const iframeUrl = urlParams.toString()
-    ? `${url}?${urlParams.toString()}`
-    : url;
+  const iframeUrl = urlParams.toString() ? `${url}?${urlParams.toString()}` : url;
 
   // Listen for messages from the iframe
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       // Verify the message is from our iframe
-      if (event.origin !== iframeOrigin) return;
+      if (event.origin !== iframeOrigin) {
+        return;
+      }
 
       // Handle URL update messages from the iframe
       if (event.data?.type === 'urlUpdate' && event.data?.params) {

@@ -6,16 +6,22 @@
  */
 
 import { useEffect, useState } from 'react';
-import { useParams, Navigate, Link } from 'react-router-dom';
-import { Box, Container, Text, Loader, Center } from '@mantine/core';
-import { colors } from '@/designTokens';
+import { Link, Navigate, useParams } from 'react-router-dom';
+import { Box, Center, Container, Loader, Text } from '@mantine/core';
 import { blogSpacing } from '@/components/blog/blogStyles';
-import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
+import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import { posts, topicLabels, locationLabels, topicTags, locationTags } from '@/data/posts/postTransformers';
 import authorsData from '@/data/posts/authors.json';
-import type { BlogPost, AuthorsCollection } from '@/types/blog';
+import {
+  locationLabels,
+  locationTags,
+  posts,
+  topicLabels,
+  topicTags,
+} from '@/data/posts/postTransformers';
+import { colors } from '@/designTokens';
+import type { AuthorsCollection, BlogPost } from '@/types/blog';
 
 // Import all markdown files as raw strings using Vite's glob import
 const articleModules = import.meta.glob('../data/posts/articles/*.md', {
@@ -395,13 +401,15 @@ function Authorship({ post, countryId }: { post: BlogPost; countryId: string }) 
     const last = authorNames.pop();
     content = (
       <>
-        By {authorNames.reduce((prev, curr, i) => (
+        By{' '}
+        {authorNames.reduce((prev, curr, i) => (
           <>
             {prev}
             {i > 0 ? ', ' : ''}
             {curr}
           </>
-        ))}, and {last}
+        ))}
+        , and {last}
       </>
     );
   }
@@ -419,7 +427,9 @@ function AuthorSection({ post, countryId }: { post: BlogPost; countryId: string 
     <div style={{ marginTop: 50 }}>
       {post.authors.map((authorId) => {
         const author = authors[authorId];
-        if (!author) return null;
+        if (!author) {
+          return null;
+        }
 
         return (
           <div
@@ -474,7 +484,9 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
     .map((tag) => {
       const isLocation = locationTags.includes(tag);
       const label = isLocation ? locationLabels[tag] : topicLabels[tag];
-      if (!label) return null;
+      if (!label) {
+        return null;
+      }
 
       return (
         <div key={tag} style={{ marginBottom: 2 }}>
@@ -501,7 +513,9 @@ function MoreOn({ post, countryId }: { post: BlogPost; countryId: string }) {
       );
     });
 
-  if (categoryLinks.filter(Boolean).length === 0) return null;
+  if (categoryLinks.filter(Boolean).length === 0) {
+    return null;
+  }
 
   return (
     <>
@@ -601,12 +615,16 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
 
 // Left Contents (table of contents)
 function LeftContents({ markdown }: { markdown: string }) {
-  if (!markdown) return null;
+  if (!markdown) {
+    return null;
+  }
 
   const lines = markdown.split('\n');
   const headers = lines.filter((line) => line.startsWith('##'));
 
-  if (headers.length === 0) return null;
+  if (headers.length === 0) {
+    return null;
+  }
 
   const contents = headers.map((header, index) => {
     const level = header.split('#').length - 1;
@@ -617,11 +635,7 @@ function LeftContents({ markdown }: { markdown: string }) {
       text = text.split('[').slice(1).join('[').split(']')[0];
     }
 
-    const slug = header
-      .replace(/[#,/]/g, '')
-      .trim()
-      .replace(/\s+/g, '-')
-      .toLowerCase();
+    const slug = header.replace(/[#,/]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
 
     return (
       <div

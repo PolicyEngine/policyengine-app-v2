@@ -6,9 +6,14 @@
  * Filter menu extends to bottom of viewport with scroll in expanded section.
  */
 
-import { useState, useRef, useEffect } from 'react';
-import { Box, TextInput, Button, Checkbox, Text, Group, Stack } from '@mantine/core';
-import { getTopicLabel, locationLabels, topicTags, locationTags } from '@/data/posts/postTransformers';
+import { useEffect, useRef, useState } from 'react';
+import { Box, Button, Checkbox, Group, Stack, Text, TextInput } from '@mantine/core';
+import {
+  getTopicLabel,
+  locationLabels,
+  locationTags,
+  topicTags,
+} from '@/data/posts/postTransformers';
 
 interface ResearchFiltersProps {
   searchQuery: string;
@@ -266,7 +271,14 @@ export function ResearchFilters({
 
         {/* Type Content */}
         {expandedSection === 'type' && (
-          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
+          <Box
+            style={{
+              overflowY: 'auto',
+              minHeight: 0,
+              maxHeight: availableHeight - 16,
+              paddingBottom: 8,
+            }}
+          >
             {renderTypeOptions()}
           </Box>
         )}
@@ -288,7 +300,14 @@ export function ResearchFilters({
 
         {/* Topics Content */}
         {expandedSection === 'topics' && (
-          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
+          <Box
+            style={{
+              overflowY: 'auto',
+              minHeight: 0,
+              maxHeight: availableHeight - 16,
+              paddingBottom: 8,
+            }}
+          >
             {renderTopicTags()}
           </Box>
         )}
@@ -310,7 +329,14 @@ export function ResearchFilters({
 
         {/* Locations Content */}
         {expandedSection === 'locations' && (
-          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
+          <Box
+            style={{
+              overflowY: 'auto',
+              minHeight: 0,
+              maxHeight: availableHeight - 16,
+              paddingBottom: 8,
+            }}
+          >
             {renderLocationTags()}
           </Box>
         )}
@@ -332,7 +358,14 @@ export function ResearchFilters({
 
         {/* Authors Content */}
         {expandedSection === 'authors' && (
-          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
+          <Box
+            style={{
+              overflowY: 'auto',
+              minHeight: 0,
+              maxHeight: availableHeight - 16,
+              paddingBottom: 8,
+            }}
+          >
             {renderAuthorTags()}
           </Box>
         )}

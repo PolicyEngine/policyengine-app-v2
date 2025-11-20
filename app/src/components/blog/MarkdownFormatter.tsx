@@ -17,12 +17,11 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
+import Plot from 'react-plotly.js';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
-import type { Components } from 'react-markdown';
-import Plot from 'react-plotly.js';
-import { useDisplayCategory } from './useDisplayCategory';
+import type { MarkdownFormatterProps } from '@/types/blog';
 import {
   blogColors,
   blogFontWeights,
@@ -31,12 +30,13 @@ import {
   blogSpacing,
   blogTypography,
 } from './blogStyles';
-import type { MarkdownFormatterProps } from '@/types/blog';
+import { useDisplayCategory } from './useDisplayCategory';
 
 // Import Google Fonts for Roboto Serif
 const fontLinkElement = document.createElement('link');
 fontLinkElement.rel = 'stylesheet';
-fontLinkElement.href = 'https://fonts.googleapis.com/css2?family=Roboto+Serif:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap';
+fontLinkElement.href =
+  'https://fonts.googleapis.com/css2?family=Roboto+Serif:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap';
 if (!document.head.querySelector(`link[href="${fontLinkElement.href}"]`)) {
   document.head.appendChild(fontLinkElement);
 }
@@ -53,7 +53,10 @@ function safeJsonParse(data: string | string[]): any {
     return parsed;
   } catch (err) {
     console.error('[PLOTLY] Failed to parse JSON:', err);
-    console.error('[PLOTLY] Data was:', Array.isArray(data) ? data[0]?.substring(0, 200) : data?.substring(0, 200));
+    console.error(
+      '[PLOTLY] Data was:',
+      Array.isArray(data) ? data[0]?.substring(0, 200) : data?.substring(0, 200)
+    );
     return null;
   }
 }
@@ -104,7 +107,8 @@ function Tr({ children }: { children?: React.ReactNode }) {
     <tr
       ref={ref}
       style={{
-        backgroundColor: rowIndex % 2 === 0 ? blogColors.backgroundPrimary : blogColors.backgroundTable,
+        backgroundColor:
+          rowIndex % 2 === 0 ? blogColors.backgroundPrimary : blogColors.backgroundTable,
       }}
     >
       {children}
@@ -131,7 +135,9 @@ export function HighlightedBlock({
     const content = data[0];
     const parts = content.split('&&&');
     left = <MarkdownFormatter markdown={parts[0]} />;
-    right = <MarkdownFormatter markdown={parts[1]} backgroundColor={blogColors.backgroundSecondary} />;
+    right = (
+      <MarkdownFormatter markdown={parts[1]} backgroundColor={blogColors.backgroundSecondary} />
+    );
   }
 
   const ref = useRef<HTMLDivElement>(null);
@@ -185,7 +191,7 @@ export function HighlightedBlock({
       </div>
       <div
         style={{
-          height: height,
+          height,
           marginBottom: blogSpacing.xxl + 18,
           marginTop: blogSpacing.xxl + 18,
         }}
@@ -212,7 +218,12 @@ export function PlotlyChartCode({
     return null;
   }
 
-  const defaultMargins = { l: blogSpacing.lg, r: blogSpacing.lg, t: blogSpacing.lg, b: blogSpacing.lg };
+  const defaultMargins = {
+    l: blogSpacing.lg,
+    r: blogSpacing.lg,
+    t: blogSpacing.lg,
+    b: blogSpacing.lg,
+  };
   const margins = { ...defaultMargins, ...(plotlyData.layout?.margin || {}) };
 
   return (
@@ -256,7 +267,11 @@ export function MarkdownFormatter({
   markdown,
   backgroundColor,
   displayCategory: propDisplayCategory,
-}: MarkdownFormatterProps & { backgroundColor?: string; dict?: Record<string, any>; pSize?: number }) {
+}: MarkdownFormatterProps & {
+  backgroundColor?: string;
+  dict?: Record<string, any>;
+  pSize?: number;
+}) {
   const hookDisplayCategory = useDisplayCategory();
   const displayCategory = propDisplayCategory || hookDisplayCategory;
   const mobile = displayCategory === 'mobile';
@@ -270,8 +285,8 @@ export function MarkdownFormatter({
     blockquote: ({ children }) => {
       // Check if this is a Twitter embed
       const childArray = React.Children.toArray(children);
-      const anchorTag = childArray.find(
-        (child: any) => child?.props?.href?.startsWith('https://twitter.com/')
+      const anchorTag = childArray.find((child: any) =>
+        child?.props?.href?.startsWith('https://twitter.com/')
       );
       const tweetId = (anchorTag as any)?.props?.href?.split('/')?.pop()?.split('?')[0];
 
@@ -319,7 +334,7 @@ export function MarkdownFormatter({
         style={{
           fontFamily: blogTypography.bodyFont,
           fontSize: mobile ? blogTypography.bodyMobile : blogTypography.bodyDesktop,
-          backgroundColor: backgroundColor,
+          backgroundColor,
           lineHeight: blogTypography.bodyLineHeight,
           marginTop: blogSpacing.marginTop.paragraph,
           marginBottom: blogSpacing.marginBottom.paragraph,
@@ -341,9 +356,7 @@ export function MarkdownFormatter({
       // Transform /images/ paths to /assets/ paths
       // Old markdown references /images/posts/ and /images/authors/
       // But we store them in /assets/posts/ and /assets/authors/
-      const transformedSrc = src.startsWith('/images/')
-        ? src.replace('/images/', '/assets/')
-        : src;
+      const transformedSrc = src.startsWith('/images/') ? src.replace('/images/', '/assets/') : src;
 
       return (
         <span
@@ -453,7 +466,7 @@ export function MarkdownFormatter({
             marginBottom: blogSpacing.xs,
             lineHeight: 1.5,
           }}
-          value={validValue && value ? parseInt(value) : undefined}
+          value={validValue && value ? parseInt(value, 10) : undefined}
         >
           {children}
         </li>
@@ -477,7 +490,7 @@ export function MarkdownFormatter({
           style={{
             width: mobile ? '100%' : width,
             objectFit: 'contain',
-            height: height,
+            height,
             border: 'none',
           }}
         />
@@ -486,7 +499,9 @@ export function MarkdownFormatter({
 
     // Strong/bold text
     strong: ({ children }) => (
-      <span style={{ fontWeight: blogFontWeights.semiBold, color: blogColors.textHeading }}>{children}</span>
+      <span style={{ fontWeight: blogFontWeights.semiBold, color: blogColors.textHeading }}>
+        {children}
+      </span>
     ),
 
     // Links with footnote support
@@ -496,7 +511,7 @@ export function MarkdownFormatter({
 
       if (href?.startsWith('#user-content-fn-')) {
         id = href.replace('#user-content-fn-', 'user-content-fnref-');
-        footnoteNumber = parseInt(id?.split('-').pop() || '0');
+        footnoteNumber = parseInt(id?.split('-').pop() || '0', 10);
       } else if (href?.startsWith('#user-content-fnref-')) {
         id = href.replace('#user-content-fnref-', 'user-content-fn-');
       } else {
@@ -803,8 +818,8 @@ export function MarkdownFormatter({
 
     // Pre (code blocks)
     pre: ({ children }) => {
-      const codeChild = React.Children.toArray(children).find(
-        (child: any) => child.props?.className?.includes('language-')
+      const codeChild = React.Children.toArray(children).find((child: any) =>
+        child.props?.className?.includes('language-')
       );
       const language = (codeChild as any)?.props?.className?.replace('language-', '');
 

@@ -12,23 +12,21 @@ import BlogTestPage from './pages/BlogTest.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
-import ResearchPage from './pages/Research.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
+import ResearchPage from './pages/Research.page';
 import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
-import { CountryGuard } from './routing/guards/CountryGuard';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
+import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
-import { USOnlyGuard } from './routing/guards/USOnlyGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
-import { RedirectToLegacy } from './routing/RedirectToLegacy';
 
 const router = createBrowserRouter(
   [
@@ -188,7 +186,7 @@ const router = createBrowserRouter(
           children: [
             {
               path: 'blog/:postName',
-              element: <Navigate to={`research/:postName`} replace />,
+              element: <Navigate to="research/:postName" replace />,
             },
           ],
         },

@@ -2,14 +2,15 @@
  * Tests for CountryAppGuard component
  */
 
-import { describe, test, expect, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
+import { describe, expect, test, vi } from 'vitest';
+import { CountryAppGuard } from '@/routing/guards/CountryAppGuard';
 import {
-  TEST_COUNTRIES,
-  TEST_APP_SLUGS,
   MOCK_APPS,
   renderWithRouter,
+  TEST_APP_SLUGS,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/routing/guards/countryAppGuardHelpers';
 
 // Mock must be at top level before imports
@@ -17,10 +18,7 @@ vi.mock('@/data/apps/appTransformers', () => ({
   apps: MOCK_APPS,
 }));
 
-import { CountryAppGuard } from '@/routing/guards/CountryAppGuard';
-
 describe('CountryAppGuard', () => {
-
   test('given matching country then renders outlet', () => {
     // Given: US app accessed from US route
     renderWithRouter(
@@ -38,12 +36,15 @@ describe('CountryAppGuard', () => {
 
   test('given mismatched country then redirects to correct country', async () => {
     // Given: US app accessed from UK route
-    const { container } = renderWithRouter(
+    renderWithRouter(
       <Routes>
         <Route path="/:countryId/:slug" element={<CountryAppGuard />}>
           <Route index element={<div>Wrong Country Content</div>} />
         </Route>
-        <Route path={`/${TEST_COUNTRIES.US}/${TEST_APP_SLUGS.US_APP}`} element={<div>Correct Country Content</div>} />
+        <Route
+          path={`/${TEST_COUNTRIES.US}/${TEST_APP_SLUGS.US_APP}`}
+          element={<div>Correct Country Content</div>}
+        />
       </Routes>,
       `/${TEST_COUNTRIES.UK}/${TEST_APP_SLUGS.US_APP}`
     );
@@ -92,7 +93,10 @@ describe('CountryAppGuard', () => {
         <Route path="/:countryId/:slug" element={<CountryAppGuard />}>
           <Route index element={<div>Wrong Country Content</div>} />
         </Route>
-        <Route path={`/${TEST_COUNTRIES.UK}/${TEST_APP_SLUGS.UK_APP}`} element={<div>UK Correct Content</div>} />
+        <Route
+          path={`/${TEST_COUNTRIES.UK}/${TEST_APP_SLUGS.UK_APP}`}
+          element={<div>UK Correct Content</div>}
+        />
       </Routes>,
       `/${TEST_COUNTRIES.US}/${TEST_APP_SLUGS.UK_APP}`
     );

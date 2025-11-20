@@ -3,10 +3,10 @@
  * Loads and displays a recent blog article for styling assessment
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Box, Button, Container, Stack, Title } from '@mantine/core';
-import { MarkdownFormatter } from './MarkdownFormatter';
 import { posts } from '@/data/posts/postTransformers';
+import { MarkdownFormatter } from './MarkdownFormatter';
 
 export function MarkdownFormatterTest() {
   const [markdown, setMarkdown] = useState<string>('');
@@ -54,7 +54,7 @@ export function MarkdownFormatterTest() {
           <strong>File:</strong> {recentPost?.filename || 'N/A'}
         </Box>
 
-        <Button onClick={loadMarkdown} loading={loading}>
+        <Button type="button" onClick={loadMarkdown} loading={loading}>
           Load and Render Markdown
         </Button>
 

@@ -2,10 +2,10 @@
  * Test fixtures for CountryAppGuard component
  */
 
-import { vi } from 'vitest';
 import { render as rtlRender } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
+import { vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import { store } from '@/store';
 import { policyEngineTheme } from '@/theme';
@@ -45,14 +45,14 @@ export const MOCK_UK_APP: App = {
   type: 'iframe',
 };
 
-export const MOCK_APPLET: App = {
-  slug: 'test-applet',
-  title: 'Test Applet',
-  description: 'A test applet',
-  source: 'https://example.com/applet',
+export const MOCK_RESEARCH_APP: App = {
+  slug: 'test-research-app',
+  title: 'Test Research App',
+  description: 'A test app with research display',
+  source: 'https://example.com/research-app',
   tags: ['us', 'test'],
   countryId: TEST_COUNTRIES.US,
-  type: 'applet',
+  type: 'iframe',
   displayWithResearch: true,
   image: 'test-image.jpg',
   date: '2025-01-01',
@@ -60,7 +60,7 @@ export const MOCK_APPLET: App = {
 };
 
 // Mock apps list for testing
-export const MOCK_APPS: App[] = [MOCK_US_APP, MOCK_UK_APP, MOCK_APPLET];
+export const MOCK_APPS: App[] = [MOCK_US_APP, MOCK_UK_APP, MOCK_RESEARCH_APP];
 
 // Mock app transformers at module level
 vi.mock('@/data/apps/appTransformers', () => ({
@@ -72,9 +72,7 @@ export const renderWithRouter = (ui: React.ReactElement, initialPath: string) =>
   return rtlRender(
     <Provider store={store}>
       <MantineProvider theme={policyEngineTheme} env="test">
-        <MemoryRouter initialEntries={[initialPath]}>
-          {ui}
-        </MemoryRouter>
+        <MemoryRouter initialEntries={[initialPath]}>{ui}</MemoryRouter>
       </MantineProvider>
     </Provider>
   );

@@ -77,7 +77,9 @@ export default function IframeContent({
               maxWidth: '500px',
             }}
           >
-            <h2 style={{ color: colors.gray[900], marginBottom: '1rem' }}>Unable to load calculator</h2>
+            <h2 style={{ color: colors.gray[900], marginBottom: '1rem' }}>
+              Unable to load calculator
+            </h2>
             <p style={{ color: colors.gray[500], marginBottom: '1rem' }}>
               The embedded calculator could not be loaded. You can try opening it directly:
             </p>

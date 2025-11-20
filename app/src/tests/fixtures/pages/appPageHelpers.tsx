@@ -2,7 +2,6 @@
  * Test fixtures for AppPage component
  */
 
-import { vi } from 'vitest';
 import { render as rtlRender } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
@@ -87,9 +86,7 @@ export const renderWithRouter = (ui: React.ReactElement, initialPath: string) =>
   return rtlRender(
     <Provider store={store}>
       <MantineProvider theme={policyEngineTheme} env="test">
-        <MemoryRouter initialEntries={[initialPath]}>
-          {ui}
-        </MemoryRouter>
+        <MemoryRouter initialEntries={[initialPath]}>{ui}</MemoryRouter>
       </MantineProvider>
     </Provider>
   );

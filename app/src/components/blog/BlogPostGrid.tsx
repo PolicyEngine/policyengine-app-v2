@@ -6,8 +6,8 @@
  */
 
 import { SimpleGrid } from '@mantine/core';
-import { BlogPostCard } from './BlogPostCard';
 import type { ResearchItem } from '@/types/blog';
+import { BlogPostCard } from './BlogPostCard';
 
 interface BlogPostGridProps {
   items: ResearchItem[];
@@ -16,10 +16,7 @@ interface BlogPostGridProps {
 
 export function BlogPostGrid({ items, countryId }: BlogPostGridProps) {
   return (
-    <SimpleGrid
-      cols={{ base: 1, sm: 2 }}
-      spacing="lg"
-    >
+    <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="lg">
       {items.map((item) => (
         <BlogPostCard
           key={`${item.isApp ? 'app' : 'post'}-${item.slug}`}

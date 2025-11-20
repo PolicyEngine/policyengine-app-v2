@@ -6,9 +6,9 @@
  */
 
 import { useParams } from 'react-router-dom';
-import { apps } from '@/data/apps/appTransformers';
-import { StreamlitEmbed, OBBBAIframeContent } from '@/components/interactive';
 import IframeContent from '@/components/IframeContent';
+import { OBBBAIframeContent, StreamlitEmbed } from '@/components/interactive';
+import { apps } from '@/data/apps/appTransformers';
 
 export default function AppPage() {
   const { slug } = useParams<{ slug: string }>();
