@@ -1,25 +1,39 @@
-import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import { getTaxYears } from '@/libs/metadataUtils';
+import { RootState } from '@/store';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { ValueSetterProps } from './ValueSetterProps';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
-  const { param, policy, setIntervals, maxDate } = props;
+  const { param, policy, setIntervals } = props;
 
-  const MAX_YEARS = 10;
+  // Get available years from metadata
+  const availableYears = useSelector(getTaxYears);
+  const countryId = useSelector((state: RootState) => state.metadata.currentCountry);
 
-  // Generate years from minDate to maxDate, starting from 2025
+  // Country-specific max years configuration
+  const MAX_YEARS_BY_COUNTRY: Record<string, number> = {
+    us: 10,
+    uk: 5,
+  };
+
+  // Generate years from metadata, starting from current year
   const generateYears = () => {
-    const startYear = 2025;
-    const endYear = dayjs(maxDate).year();
-    const years = [];
-    for (let year = startYear; year <= endYear; year++) {
-      years.push(year);
-    }
-    return years.slice(0, MAX_YEARS);
+    const currentYear = new Date().getFullYear();
+    const maxYears = MAX_YEARS_BY_COUNTRY[countryId || 'us'] || 10;
+
+    // Filter available years from metadata to only include current year onwards
+    const futureYears = availableYears
+      .map((option) => parseInt(option.value, 10))
+      .filter((year) => year >= currentYear)
+      .sort((a, b) => a - b);
+
+    // Take only the configured max years for this country
+    return futureYears.slice(0, maxYears);
   };
 
   const years = generateYears();

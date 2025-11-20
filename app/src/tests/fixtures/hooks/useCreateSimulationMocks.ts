@@ -1,12 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
-import flowReducer from '@/reducers/flowReducer';
 import metadataReducer from '@/reducers/metadataReducer';
-import policyReducer from '@/reducers/policyReducer';
-import populationReducer from '@/reducers/populationReducer';
-import reportReducer from '@/reducers/reportReducer';
-import simulationsReducer from '@/reducers/simulationsReducer';
 import { SIMULATION_IDS, TEST_COUNTRIES } from '../api/simulationMocks';
 
 // ============= TEST CONSTANTS =============
@@ -74,18 +69,12 @@ export const mockResponseWithoutId = {
 
 /**
  * Creates a test Redux store with custom initial state
- * Uses the same structure as the main store
+ * Uses only metadataReducer since other reducers were removed
  */
 export function createTestStore(initialState?: any) {
   const storeConfig = {
     reducer: {
-      policy: policyReducer,
-      flow: flowReducer,
-      household: populationReducer,
-      simulations: simulationsReducer,
-      population: populationReducer,
       metadata: metadataReducer,
-      report: reportReducer,
     },
   };
 

@@ -240,6 +240,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     // Prepare report data
     const reportData: Partial<Report> = {
       countryId: reportState.countryId,
+      year: reportState.year,
       simulationIds: [sim1Id, sim2Id].filter(Boolean) as string[],
       apiVersion: reportState.apiVersion,
     };
@@ -304,7 +305,9 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       currentView = (
         <ReportLabelView
           label={reportState.label}
+          year={reportState.year}
           onUpdateLabel={reportCallbacks.updateLabel}
+          onUpdateYear={reportCallbacks.updateYear}
           onNext={() => navigateToMode(ReportViewMode.REPORT_SETUP)}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/reports`)}

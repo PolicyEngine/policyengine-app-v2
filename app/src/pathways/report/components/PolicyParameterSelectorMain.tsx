@@ -5,7 +5,7 @@
  */
 
 import { Container, Text, Title } from '@mantine/core';
-import HistoricalValues from '@/components/policyParameterSelectorFrame/HistoricalValues';
+import HistoricalValues from './policyParameterSelector/HistoricalValues';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { getParameterByName } from '@/types/subIngredients/parameter';

@@ -1,12 +1,7 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import FlowRouter from './components/FlowRouter';
 import AppLayout from './components/AppLayout';
 import PathwayLayout from './components/PathwayLayout';
 import StaticLayout from './components/StaticLayout';
-import { PolicyCreationFlow } from './flows/policyCreationFlow';
-import { PopulationCreationFlow } from './flows/populationCreationFlow';
-import { ReportCreationFlow } from './flows/reportCreationFlow';
-import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
@@ -75,32 +70,16 @@ const router = createBrowserRouter(
                   element: <ReportsPage />,
                 },
                 {
-                  path: 'reports/create',
-                  element: <FlowRouter flow={ReportCreationFlow} returnPath="reports" />,
-                },
-                {
                   path: 'simulations',
                   element: <SimulationsPage />,
-                },
-                {
-                  path: 'simulations/create',
-                  element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
                   path: 'households',
                   element: <PopulationsPage />,
                 },
                 {
-                  path: 'households/create',
-                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="households" />,
-                },
-                {
                   path: 'policies',
                   element: <PoliciesPage />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <FlowRouter flow={PolicyCreationFlow} returnPath="policies" />,
                 },
                 {
                   path: 'account',
@@ -108,37 +87,27 @@ const router = createBrowserRouter(
                 },
               ],
             },
-            // V2 Pathway routes that manage their own layouts
+            // Pathway routes that manage their own layouts
             {
               element: <PathwayLayout />,
               children: [
                 {
-                  path: 'reports/create-v2',
+                  path: 'reports/create',
                   element: <ReportPathwayWrapper />,
                 },
                 {
-                  path: 'simulations/create-v2',
+                  path: 'simulations/create',
                   element: <SimulationPathwayWrapper />,
                 },
                 {
-                  path: 'households/create-v2',
+                  path: 'households/create',
                   element: <PopulationPathwayWrapper />,
                 },
                 {
-                  path: 'policies/create-v2',
+                  path: 'policies/create',
                   element: <PolicyPathwayWrapper />,
                 },
               ],
-            },
-          ],
-        },
-        // Routes that don't need metadata at all (no guard)
-        {
-          element: <AppLayout />,
-          children: [
-            {
-              path: 'configurations',
-              element: <div>Configurations page</div>,
             },
           ],
         },
