@@ -59,7 +59,7 @@ export const mockCustomPolicySimulation: any = {
     label: 'test',
     isCreated: true,
     id: 'sim-456',
-    policyId: TEST_CUSTOM_POLICY_ID.toString(),
+    policyId: '999',
     populationType: 'geography',
     populationId: TEST_COUNTRIES.US,
   },

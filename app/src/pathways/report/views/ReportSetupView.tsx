@@ -3,7 +3,7 @@ import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { ReportStateProps } from '@/types/pathwayState';
+import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { isSimulationConfigured } from '@/utils/validation/ingredientValidation';
 
 type SimulationCard = 'simulation1' | 'simulation2';
