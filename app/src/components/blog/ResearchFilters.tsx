@@ -8,7 +8,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Box, TextInput, Button, Checkbox, Text, Group, Stack } from '@mantine/core';
-import { topicLabels, locationLabels, topicTags, locationTags } from '@/data/posts/postTransformers';
+import { getTopicLabel, locationLabels, topicTags, locationTags } from '@/data/posts/postTransformers';
 
 interface ResearchFiltersProps {
   searchQuery: string;
@@ -21,6 +21,7 @@ interface ResearchFiltersProps {
   selectedAuthors: string[];
   onAuthorsChange: (authors: string[]) => void;
   availableAuthors: { key: string; name: string }[];
+  countryId?: string;
 }
 
 type ExpandedSection = 'topics' | 'locations' | 'authors' | null;
@@ -36,8 +37,10 @@ export function ResearchFilters({
   selectedAuthors,
   onAuthorsChange,
   availableAuthors,
+  countryId = 'us',
 }: ResearchFiltersProps) {
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
+  const [usStatesExpanded, setUsStatesExpanded] = useState(false);
   const [availableHeight, setAvailableHeight] = useState<number>(400);
   const filterContainerRef = useRef<HTMLDivElement>(null);
 
@@ -98,7 +101,7 @@ export function ResearchFilters({
       {topicTags.map((tag) => (
         <Checkbox
           key={tag}
-          label={topicLabels[tag] || tag}
+          label={getTopicLabel(tag, countryId)}
           checked={selectedTopics.includes(tag)}
           onChange={() => handleTopicToggle(tag)}
           size="sm"
@@ -107,35 +110,66 @@ export function ResearchFilters({
     </Stack>
   );
 
-  const renderLocationTags = () => (
-    <Stack gap={4}>
-      {/* Show countries first, then states */}
-      {locationTags
-        .filter((tag) => !tag.includes('-'))
-        .map((tag) => (
-          <Checkbox
-            key={tag}
-            label={locationLabels[tag] || tag}
-            checked={selectedLocations.includes(tag)}
-            onChange={() => handleLocationToggle(tag)}
-            size="sm"
-          />
+  const renderLocationTags = () => {
+    // Separate countries from US states
+    const countries = locationTags.filter((tag) => !tag.startsWith('us-'));
+    const usStates = locationTags.filter((tag) => tag.startsWith('us-'));
+
+    return (
+      <Stack gap={4}>
+        {/* Show countries */}
+        {countries.map((tag) => (
+          <Box key={tag}>
+            {tag === 'us' ? (
+              // US with expandable +/-
+              <Checkbox
+                label={
+                  <span>
+                    {locationLabels[tag] || tag}
+                    <Text
+                      component="span"
+                      size="sm"
+                      c="dimmed"
+                      style={{ cursor: 'pointer', userSelect: 'none', marginLeft: 12 }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setUsStatesExpanded(!usStatesExpanded);
+                      }}
+                    >
+                      {usStatesExpanded ? '−' : '+'}
+                    </Text>
+                  </span>
+                }
+                checked={selectedLocations.includes(tag)}
+                onChange={() => handleLocationToggle(tag)}
+                size="sm"
+              />
+            ) : (
+              <Checkbox
+                label={locationLabels[tag] || tag}
+                checked={selectedLocations.includes(tag)}
+                onChange={() => handleLocationToggle(tag)}
+                size="sm"
+              />
+            )}
+          </Box>
         ))}
-      {/* States */}
-      {locationTags
-        .filter((tag) => tag.includes('-'))
-        .map((tag) => (
-          <Checkbox
-            key={tag}
-            label={locationLabels[tag] || tag}
-            checked={selectedLocations.includes(tag)}
-            onChange={() => handleLocationToggle(tag)}
-            size="sm"
-            ml="md"
-          />
-        ))}
-    </Stack>
-  );
+        {/* US States - only show when expanded */}
+        {usStatesExpanded &&
+          usStates.map((tag) => (
+            <Checkbox
+              key={tag}
+              label={locationLabels[tag] || tag}
+              checked={selectedLocations.includes(tag)}
+              onChange={() => handleLocationToggle(tag)}
+              size="sm"
+              ml="md"
+            />
+          ))}
+      </Stack>
+    );
+  };
 
   const renderAuthorTags = () => (
     <Stack gap={4}>
@@ -200,7 +234,7 @@ export function ResearchFilters({
 
         {/* Topics Content */}
         {expandedSection === 'topics' && (
-          <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 8 }}>
+          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
             {renderTopicTags()}
           </Box>
         )}
@@ -222,7 +256,7 @@ export function ResearchFilters({
 
         {/* Locations Content */}
         {expandedSection === 'locations' && (
-          <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 8 }}>
+          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
             {renderLocationTags()}
           </Box>
         )}
@@ -244,7 +278,7 @@ export function ResearchFilters({
 
         {/* Authors Content */}
         {expandedSection === 'authors' && (
-          <Box style={{ flex: 1, overflowY: 'auto', minHeight: 0, paddingBottom: 8 }}>
+          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
             {renderAuthorTags()}
           </Box>
         )}

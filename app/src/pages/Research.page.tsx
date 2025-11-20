@@ -181,6 +181,7 @@ export default function ResearchPage() {
               selectedAuthors={selectedAuthors}
               onAuthorsChange={setSelectedAuthors}
               availableAuthors={mockAuthors}
+              countryId={countryId}
             />
           </Box>
 

@@ -40,7 +40,7 @@ const locationTags = uniqueTags.filter((tag) =>
 
 const topicTags = uniqueTags.filter((tag) => !locationTags.includes(tag)).sort();
 
-// Topic labels for display
+// Topic labels for display (base labels - use getTopicLabel for country-specific spelling)
 const topicLabels: TagLabels = {
   featured: 'Featured',
   impact: 'Impact',
@@ -49,7 +49,62 @@ const topicLabels: TagLabels = {
   api: 'API',
   'benefit-access': 'Benefit access',
   reconciliation: 'Reconciliation',
+  '2024-election': '2024 Election',
+  ai: 'AI',
+  'april-fools': 'April Fools',
+  'autumn-budget': 'Autumn Budget',
+  'behavioral-responses': 'Behavioral responses', // UK variant: Behavioural responses
+  benefit: 'Benefits',
+  'child-tax-credit': 'Child Tax Credit',
+  conferences: 'Conferences',
+  data: 'Data',
+  'donald-trump': 'Donald Trump',
+  election: 'Election',
+  event: 'Events',
+  giving: 'Giving',
+  healthcare: 'Healthcare',
+  inflation: 'Inflation',
+  interactives: 'Interactives',
+  'kamala-harris': 'Kamala Harris',
+  louisiana: 'Louisiana',
+  minnesota: 'Minnesota',
+  org: 'Organization', // UK variant: Organisation
+  tariffs: 'Tariffs',
+  tax: 'Tax',
+  technology: 'Technology',
+  vat: 'VAT',
+  'year-in-review': 'Year in review',
 };
+
+// Tags with country-specific spelling variants
+// Maps internal tag to country-specific display labels
+const countryVariantTags: Record<string, Record<string, string>> = {
+  'behavioral-responses': {
+    uk: 'Behavioural responses',
+    default: 'Behavioral responses',
+  },
+  org: {
+    uk: 'Organisation',
+    default: 'Organization',
+  },
+};
+
+/**
+ * Get topic label with country-specific spelling
+ * UK uses British spelling (behavioural, organisation)
+ * US/other uses American spelling (behavioral, organization)
+ */
+export function getTopicLabel(tag: string, countryId: string): string {
+  // Check if this tag has country-specific variants
+  const variants = countryVariantTags[tag];
+  if (variants) {
+    return variants[countryId] || variants.default;
+  }
+
+  // Fall back to base label
+  const baseLabel = topicLabels[tag];
+  return baseLabel || tag;
+}
 
 // Location labels for display (all US states + countries)
 const locationLabels: TagLabels = {
@@ -58,57 +113,58 @@ const locationLabels: TagLabels = {
   uk: 'United Kingdom',
   global: 'Global',
   ng: 'Nigeria',
-  'us-dc': 'District of Columbia, U.S.',
-  'us-ak': 'Alaska, U.S.',
-  'us-al': 'Alabama, U.S.',
-  'us-ar': 'Arkansas, U.S.',
-  'us-az': 'Arizona, U.S.',
-  'us-ca': 'California, U.S.',
-  'us-co': 'Colorado, U.S.',
-  'us-ct': 'Connecticut, U.S.',
-  'us-de': 'Delaware, U.S.',
-  'us-fl': 'Florida, U.S.',
-  'us-ga': 'Georgia, U.S.',
-  'us-hi': 'Hawaii, U.S.',
-  'us-ia': 'Iowa, U.S.',
-  'us-id': 'Idaho, U.S.',
-  'us-il': 'Illinois, U.S.',
-  'us-in': 'Indiana, U.S.',
-  'us-ks': 'Kansas, U.S.',
-  'us-ky': 'Kentucky, U.S.',
-  'us-la': 'Louisiana, U.S.',
-  'us-ma': 'Massachusetts, U.S.',
-  'us-md': 'Maryland, U.S.',
-  'us-me': 'Maine, U.S.',
-  'us-mi': 'Michigan, U.S.',
-  'us-mn': 'Minnesota, U.S.',
-  'us-mo': 'Missouri, U.S.',
-  'us-ms': 'Mississippi, U.S.',
-  'us-mt': 'Montana, U.S.',
-  'us-nc': 'North Carolina, U.S.',
-  'us-nd': 'North Dakota, U.S.',
-  'us-ne': 'Nebraska, U.S.',
-  'us-nh': 'New Hampshire, U.S.',
-  'us-nj': 'New Jersey, U.S.',
-  'us-nm': 'New Mexico, U.S.',
-  'us-nv': 'Nevada, U.S.',
-  'us-ny': 'New York, U.S.',
-  'us-oh': 'Ohio, U.S.',
-  'us-ok': 'Oklahoma, U.S.',
-  'us-or': 'Oregon, U.S.',
-  'us-pa': 'Pennsylvania, U.S.',
-  'us-ri': 'Rhode Island, U.S.',
-  'us-sc': 'South Carolina, U.S.',
-  'us-sd': 'South Dakota, U.S.',
-  'us-tn': 'Tennessee, U.S.',
-  'us-tx': 'Texas, U.S.',
-  'us-ut': 'Utah, U.S.',
-  'us-va': 'Virginia, U.S.',
-  'us-vt': 'Vermont, U.S.',
-  'us-wa': 'Washington, U.S.',
-  'us-wi': 'Wisconsin, U.S.',
-  'us-wv': 'West Virginia, U.S.',
-  'us-wy': 'Wyoming, U.S.',
+  'us-dc': 'District of Columbia',
+  'us-ak': 'Alaska',
+  'us-al': 'Alabama',
+  'us-ar': 'Arkansas',
+  'us-az': 'Arizona',
+  'us-ca': 'California',
+  'us-co': 'Colorado',
+  'us-ct': 'Connecticut',
+  'us-de': 'Delaware',
+  'us-fl': 'Florida',
+  'us-ga': 'Georgia',
+  'us-hi': 'Hawaii',
+  'us-ia': 'Iowa',
+  'us-id': 'Idaho',
+  'us-il': 'Illinois',
+  'us-in': 'Indiana',
+  'us-ks': 'Kansas',
+  'us-ky': 'Kentucky',
+  'us-la': 'Louisiana',
+  'us-ma': 'Massachusetts',
+  'us-md': 'Maryland',
+  'us-me': 'Maine',
+  'us-mi': 'Michigan',
+  'us-mn': 'Minnesota',
+  'us-mo': 'Missouri',
+  'us-ms': 'Mississippi',
+  'us-mt': 'Montana',
+  'us-nc': 'North Carolina',
+  'us-nd': 'North Dakota',
+  'us-ne': 'Nebraska',
+  'us-nh': 'New Hampshire',
+  'us-nj': 'New Jersey',
+  'us-nm': 'New Mexico',
+  'us-nv': 'Nevada',
+  'us-ny': 'New York',
+  'us-ny-nyc': 'New York City',
+  'us-oh': 'Ohio',
+  'us-ok': 'Oklahoma',
+  'us-or': 'Oregon',
+  'us-pa': 'Pennsylvania',
+  'us-ri': 'Rhode Island',
+  'us-sc': 'South Carolina',
+  'us-sd': 'South Dakota',
+  'us-tn': 'Tennessee',
+  'us-tx': 'Texas',
+  'us-ut': 'Utah',
+  'us-va': 'Virginia',
+  'us-vt': 'Vermont',
+  'us-wa': 'Washington',
+  'us-wi': 'Wisconsin',
+  'us-wv': 'West Virginia',
+  'us-wy': 'Wyoming',
 };
 
 /**
