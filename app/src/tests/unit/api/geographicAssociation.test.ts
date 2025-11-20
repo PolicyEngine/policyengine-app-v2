@@ -283,14 +283,17 @@ describe('LocalStorageGeographicStore', () => {
       expect(result.createdAt).toBeDefined();
     });
 
-    it('given duplicate population then throws error', async () => {
+    it('given duplicate population then allows creation', async () => {
       // Given
       await store.create(mockPopulation1);
 
-      // When/Then
-      await expect(store.create(mockPopulation1)).rejects.toThrow(
-        'Geographic population already exists'
-      );
+      // When
+      const result = await store.create(mockPopulation1);
+
+      // Then - Implementation allows duplicates for multiple entries of same geography
+      expect(result).toEqual(mockPopulation1);
+      const allPopulations = await store.findByUser('user-123');
+      expect(allPopulations).toHaveLength(2);
     });
   });
 

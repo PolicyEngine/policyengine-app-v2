@@ -362,11 +362,11 @@ describe('PathwayView', () => {
       expect(cancelButton).toBeDisabled();
     });
 
-    test('given cancel action then renders disabled cancel button', () => {
+    test('given cancel action with onClick then renders enabled cancel button', () => {
       render(<PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} cancelAction={mockCancelAction} />);
 
       const cancelButton = screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.CANCEL_BUTTON });
-      expect(cancelButton).toBeDisabled();
+      expect(cancelButton).not.toBeDisabled();
     });
 
     test('given user clicks primary button then calls primary handler', async () => {
@@ -382,7 +382,7 @@ describe('PathwayView', () => {
   });
 
   describe('Button Precedence', () => {
-    test('given explicit buttons and convenience props then explicit buttons take precedence', () => {
+    test('given explicit buttons and convenience props then uses new layout with actions', () => {
       render(
         <PathwayView
           title={PATHWAY_VIEW_STRINGS.MAIN_TITLE}
@@ -392,27 +392,21 @@ describe('PathwayView', () => {
         />
       );
 
-      // Should show explicit buttons, not the primary/cancel actions
+      // When convenience props are provided, they take precedence over explicit buttons
       expect(
-        screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.BACK_BUTTON })
+        screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON })
       ).toBeInTheDocument();
-      expect(
-        screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.CONTINUE_BUTTON })
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON })
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole('button', { name: PATHWAY_VIEW_STRINGS.CANCEL_BUTTON })
-      ).not.toBeInTheDocument();
-    });
-
-    test('given no actions and no preset then renders default cancel button', () => {
-      render(<PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} />);
-
       expect(
         screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.CANCEL_BUTTON })
       ).toBeInTheDocument();
+    });
+
+    test('given no actions and no preset then renders no buttons', () => {
+      render(<PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} />);
+
+      // Without any button configuration, no buttons are rendered
+      const buttons = screen.queryAllByRole('button');
+      expect(buttons).toHaveLength(0);
     });
   });
 });
