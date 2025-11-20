@@ -332,19 +332,32 @@ export default function AutumnBudgetBanner() {
               </Box>
             </Card>
 
-            {/* Card 3: Income Tax & NI (Coming Soon) */}
+            {/* Card 3: Income Tax & NI */}
             <Card
+              component="a"
+              href="https://legacy.policyengine.org/uk/research/uk-income-tax-ni-reforms-2025"
+              target="_blank"
+              rel="noopener noreferrer"
               style={{
                 flex: '1 1 280px',
                 maxWidth: '320px',
                 minHeight: '80px',
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 borderRadius: '12px',
                 padding: spacing.md,
-                cursor: 'not-allowed',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
                 textDecoration: 'none',
-                border: `2px solid rgba(255, 255, 255, 0.8)`,
+                border: `2px solid ${colors.white}`,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              }}
+              styles={{
+                root: {
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                  },
+                },
               }}
             >
               <Box
@@ -352,23 +365,22 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
-                  opacity: 0.7,
                 }}
               >
                 <Text
                   size={typography.fontSize.base}
                   fw={typography.fontWeight.bold}
-                  c={colors.gray[700]}
+                  c={colors.primary[700]}
                   mb={spacing.xs}
                 >
                   Income tax & NI reforms
                 </Text>
                 <Text
                   size={typography.fontSize.xs}
-                  c={colors.gray[600]}
+                  c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Analysis coming soon
+                  Analysis of alternative tax reform options
                 </Text>
               </Box>
             </Card>
