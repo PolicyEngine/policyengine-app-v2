@@ -21,8 +21,10 @@ export const mockPopulationStateWithHousehold: PopulationStateProps = {
   type: 'household',
   household: {
     id: '789',
-    label: 'My Household',
-    people: {},
+    countryId: 'us',
+    householdData: {
+      people: {},
+    },
   },
   geography: null,
 };
@@ -32,7 +34,8 @@ export const mockPopulationStateWithGeography: PopulationStateProps = {
   type: 'geography',
   household: null,
   geography: {
-    id: undefined,
+    id: 'us-us',
+    countryId: 'us',
     geographyId: 'us',
     scope: 'national',
     name: 'United States',

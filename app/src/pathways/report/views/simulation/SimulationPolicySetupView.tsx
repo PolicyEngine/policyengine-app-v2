@@ -22,8 +22,8 @@ interface SimulationPolicySetupViewProps {
 }
 
 export default function SimulationPolicySetupView({
-  currentLawId,
-  countryId,
+  currentLawId: _currentLawId,
+  countryId: _countryId,
   onSelectCurrentLaw,
   onCreateNew,
   onLoadExisting,
@@ -68,12 +68,16 @@ export default function SimulationPolicySetupView({
       isSelected: selectedAction === 'selectCurrentLaw',
     },
     // Only show "Load existing" if user has existing policies
-    ...(hasExistingPolicies ? [{
-      title: 'Load existing policy',
-      description: 'Use a policy you have already created',
-      onClick: handleClickExisting,
-      isSelected: selectedAction === 'loadExisting',
-    }] : []),
+    ...(hasExistingPolicies
+      ? [
+          {
+            title: 'Load existing policy',
+            description: 'Use a policy you have already created',
+            onClick: handleClickExisting,
+            isSelected: selectedAction === 'loadExisting',
+          },
+        ]
+      : []),
     {
       title: 'Create new policy',
       description: 'Build a new policy',

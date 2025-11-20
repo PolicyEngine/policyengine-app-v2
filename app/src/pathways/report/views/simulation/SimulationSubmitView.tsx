@@ -7,8 +7,8 @@
 import { SimulationAdapter } from '@/adapters';
 import IngredientSubmissionView, { SummaryBoxItem } from '@/components/IngredientSubmissionView';
 import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { SimulationStateProps } from '@/types/pathwayState';
 import { Simulation } from '@/types/ingredients/Simulation';
+import { SimulationStateProps } from '@/types/pathwayState';
 import { SimulationCreationPayload } from '@/types/payloads';
 
 interface SimulationSubmitViewProps {
@@ -65,9 +65,7 @@ export default function SimulationSubmitView({
       description:
         simulation.population.label ||
         `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,
-      isFulfilled: !!(
-        simulation.population.household?.id || simulation.population.geography?.id
-      ),
+      isFulfilled: !!(simulation.population.household?.id || simulation.population.geography?.id),
       badge:
         simulation.population.label ||
         `Household #${simulation.population.household?.id || simulation.population.geography?.id}`,

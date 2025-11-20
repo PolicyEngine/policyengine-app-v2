@@ -5,20 +5,20 @@
  */
 
 import { useState } from 'react';
+import { IconChevronRight } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { AppShell, Box, Button, Group, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconChevronRight } from '@tabler/icons-react';
-import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
-import Menu from '../../components/policyParameterSelector/Menu';
 import HeaderNavigation from '@/components/shared/HomeHeader';
 import LegacyBanner from '@/components/shared/LegacyBanner';
-import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens';
+import { colors } from '@/designTokens/colors';
 import { RootState } from '@/store';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
+import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
+import Menu from '../../components/policyParameterSelector/Menu';
 import PolicyParameterSelectorMain from '../../components/PolicyParameterSelectorMain';
 
 interface PolicyParameterSelectorViewProps {

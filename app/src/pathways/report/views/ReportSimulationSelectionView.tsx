@@ -49,7 +49,10 @@ export default function ReportSimulationSelectionView({
   }
 
   // DefaultBaselineOption handles its own creation - this just passes through
-  function handleSelectDefaultBaseline(simulationState: SimulationStateProps, simulationId: string) {
+  function handleSelectDefaultBaseline(
+    simulationState: SimulationStateProps,
+    simulationId: string
+  ) {
     if (onSelectDefaultBaseline) {
       onSelectDefaultBaseline(simulationState, simulationId);
     }
@@ -66,12 +69,16 @@ export default function ReportSimulationSelectionView({
 
   const buttonPanelCards = [
     // Only show "Load existing" if user has existing simulations
-    ...(hasExistingSimulations ? [{
-      title: 'Load existing simulation',
-      description: 'Use a simulation you have already created',
-      onClick: handleClickExisting,
-      isSelected: selectedAction === 'loadExisting',
-    }] : []),
+    ...(hasExistingSimulations
+      ? [
+          {
+            title: 'Load existing simulation',
+            description: 'Use a simulation you have already created',
+            onClick: handleClickExisting,
+            isSelected: selectedAction === 'loadExisting',
+          },
+        ]
+      : []),
     {
       title: 'Create new simulation',
       description: 'Build a new simulation',

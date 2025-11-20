@@ -6,45 +6,41 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { SimulationStateProps, PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
-import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
-import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
-import { RootState } from '@/store';
+import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
-import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
-import { createPolicyCallbacks, createPopulationCallbacks, createSimulationCallbacks } from '@/utils/pathwayCallbacks';
-import { convertSimulationStateToApi } from '@/utils/ingredientReconstruction';
+import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-
-// Simulation views
-import SimulationLabelView from '../report/views/simulation/SimulationLabelView';
-import SimulationSetupView from '../report/views/simulation/SimulationSetupView';
-import SimulationSubmitView from '../report/views/simulation/SimulationSubmitView';
-import SimulationPolicySetupView from '../report/views/simulation/SimulationPolicySetupView';
-import SimulationPopulationSetupView from '../report/views/simulation/SimulationPopulationSetupView';
-
+import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { RootState } from '@/store';
+import { SimulationViewMode } from '@/types/pathwayModes/SimulationViewMode';
+import { SimulationStateProps } from '@/types/pathwayState';
+import {
+  createPolicyCallbacks,
+  createPopulationCallbacks,
+  createSimulationCallbacks,
+} from '@/utils/pathwayCallbacks';
+import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
+import PolicyExistingView from '../report/views/policy/PolicyExistingView';
 // Policy views
 import PolicyLabelView from '../report/views/policy/PolicyLabelView';
 import PolicyParameterSelectorView from '../report/views/policy/PolicyParameterSelectorView';
 import PolicySubmitView from '../report/views/policy/PolicySubmitView';
-import PolicyExistingView from '../report/views/policy/PolicyExistingView';
-
+import GeographicConfirmationView from '../report/views/population/GeographicConfirmationView';
+import HouseholdBuilderView from '../report/views/population/HouseholdBuilderView';
+import PopulationExistingView from '../report/views/population/PopulationExistingView';
+import PopulationLabelView from '../report/views/population/PopulationLabelView';
 // Population views
 import PopulationScopeView from '../report/views/population/PopulationScopeView';
-import PopulationLabelView from '../report/views/population/PopulationLabelView';
-import HouseholdBuilderView from '../report/views/population/HouseholdBuilderView';
-import GeographicConfirmationView from '../report/views/population/GeographicConfirmationView';
-import PopulationExistingView from '../report/views/population/PopulationExistingView';
-
-import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
-import { Parameter } from '@/types/subIngredients/parameter';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
-import { MOCK_USER_ID } from '@/constants';
+// Simulation views
+import SimulationLabelView from '../report/views/simulation/SimulationLabelView';
+import SimulationPolicySetupView from '../report/views/simulation/SimulationPolicySetupView';
+import SimulationPopulationSetupView from '../report/views/simulation/SimulationPopulationSetupView';
+import SimulationSetupView from '../report/views/simulation/SimulationSetupView';
+import SimulationSubmitView from '../report/views/simulation/SimulationSubmitView';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
 const MODES_WITH_OWN_LAYOUT = new Set([SimulationViewMode.POLICY_PARAMETER_SELECTOR]);
@@ -71,7 +67,9 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
 
   // ========== NAVIGATION ==========
-  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(SimulationViewMode.LABEL);
+  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
+    SimulationViewMode.LABEL
+  );
 
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
   const userId = MOCK_USER_ID.toString();
@@ -80,7 +78,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   const { data: userGeographics } = useUserGeographics(userId);
 
   const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
-  const hasExistingPopulations = ((userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0)) > 0;
+  const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
 
   // ========== CONDITIONAL NAVIGATION HANDLERS ==========
   // Skip selection view if user has no existing items
@@ -105,7 +103,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   const simulationCallbacks = createSimulationCallbacks(
     setSimulationState,
     (state) => state,
-    (state, simulation) => simulation,
+    (_state, simulation) => simulation,
     navigateToMode,
     SimulationViewMode.SETUP
   );
@@ -153,23 +151,26 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   // Handle successful simulation creation (called by SimulationSubmitView after creating the base simulation)
   // This mirrors the old Redux flow's behavior where the view creates the simulation,
   // then the parent updates state and navigates
-  const handleSimulationSubmitSuccess = useCallback((simulationId: string) => {
-    console.log('[SimulationPathwayWrapper] Simulation created with ID:', simulationId);
+  const handleSimulationSubmitSuccess = useCallback(
+    (simulationId: string) => {
+      console.log('[SimulationPathwayWrapper] Simulation created with ID:', simulationId);
 
-    // Update simulation state with the returned ID
-    setSimulationState((prev) => ({
-      ...prev,
-      id: simulationId,
-      status: 'complete',
-    }));
+      // Update simulation state with the returned ID
+      setSimulationState((prev) => ({
+        ...prev,
+        id: simulationId,
+        status: 'complete',
+      }));
 
-    // Navigate back to simulations list page
-    navigate(`/${countryId}/simulations`);
+      // Navigate back to simulations list page
+      navigate(`/${countryId}/simulations`);
 
-    if (onComplete) {
-      onComplete();
-    }
-  }, [navigate, countryId, onComplete]);
+      if (onComplete) {
+        onComplete();
+      }
+    },
+    [navigate, countryId, onComplete]
+  );
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;
@@ -241,7 +242,9 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
           onLoadExisting={() => navigateToMode(SimulationViewMode.SELECT_EXISTING_POPULATION)}
           onCopyExisting={() => {
             // Not applicable in standalone mode
-            console.warn('[SimulationPathwayWrapper] Copy existing not applicable in standalone mode');
+            console.warn(
+              '[SimulationPathwayWrapper] Copy existing not applicable in standalone mode'
+            );
           }}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/simulations`)}

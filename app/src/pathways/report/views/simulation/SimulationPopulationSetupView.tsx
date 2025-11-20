@@ -9,7 +9,7 @@ import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { SimulationStateProps, PopulationStateProps } from '@/types/pathwayState';
+import { PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 import { getPopulationLabel, getSimulationLabel } from '@/utils/populationCompatibility';
 import {
   getPopulationLockConfig,
@@ -43,7 +43,7 @@ export default function SimulationPopulationSetupView({
   const userId = MOCK_USER_ID.toString();
   const { data: userHouseholds } = useUserHouseholds(userId);
   const { data: userGeographics } = useUserGeographics(userId);
-  const hasExistingPopulations = ((userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0)) > 0;
+  const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
 
   const [selectedAction, setSelectedAction] = useState<SetupAction | null>(null);
 

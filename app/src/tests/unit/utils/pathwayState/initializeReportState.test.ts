@@ -1,9 +1,9 @@
-import { describe, test, expect } from 'vitest';
-import { initializeReportState } from '@/utils/pathwayState/initializeReportState';
+import { describe, expect, test } from 'vitest';
 import {
-  TEST_COUNTRIES,
   EXPECTED_REPORT_STATE_STRUCTURE,
+  TEST_COUNTRIES,
 } from '@/tests/fixtures/utils/pathwayState/initializeStateMocks';
+import { initializeReportState } from '@/utils/pathwayState/initializeReportState';
 
 describe('initializeReportState', () => {
   describe('Basic structure', () => {

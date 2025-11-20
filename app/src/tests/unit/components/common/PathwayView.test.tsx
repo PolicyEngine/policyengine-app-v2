@@ -6,8 +6,6 @@ import {
   createButtonPanelCard,
   createCardListItem,
   createSetupConditionCard,
-  PATHWAY_VIEW_STRINGS,
-  PATHWAY_VIEW_VARIANTS,
   mockButtonPanelCards,
   mockCancelAction,
   mockCardClick,
@@ -20,6 +18,8 @@ import {
   mockPrimaryActionLoading,
   mockPrimaryClick,
   mockSetupConditionCards,
+  PATHWAY_VIEW_STRINGS,
+  PATHWAY_VIEW_VARIANTS,
   resetAllMocks,
 } from '@/tests/fixtures/components/common/PathwayViewMocks';
 
@@ -32,7 +32,10 @@ describe('PathwayView', () => {
   describe('Basic Rendering', () => {
     test('given title and subtitle then renders both correctly', () => {
       render(
-        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} subtitle={PATHWAY_VIEW_STRINGS.SUBTITLE} />
+        <PathwayView
+          title={PATHWAY_VIEW_STRINGS.MAIN_TITLE}
+          subtitle={PATHWAY_VIEW_STRINGS.SUBTITLE}
+        />
       );
 
       expect(screen.getByText(PATHWAY_VIEW_STRINGS.MAIN_TITLE)).toBeInTheDocument();
@@ -47,7 +50,9 @@ describe('PathwayView', () => {
     });
 
     test('given custom content then renders content', () => {
-      render(<PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} content={<MockCustomContent />} />);
+      render(
+        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} content={<MockCustomContent />} />
+      );
 
       expect(screen.getByTestId('custom-content')).toBeInTheDocument();
       expect(screen.getByText(PATHWAY_VIEW_STRINGS.CUSTOM_CONTENT)).toBeInTheDocument();
@@ -313,7 +318,9 @@ describe('PathwayView', () => {
     });
 
     test('given none preset then renders no buttons', () => {
-      render(<PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} buttonPreset={BUTTON_PRESETS.NONE} />);
+      render(
+        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} buttonPreset={BUTTON_PRESETS.NONE} />
+      );
 
       expect(screen.queryByTestId('multi-button-footer')).not.toBeInTheDocument();
     });
@@ -337,7 +344,10 @@ describe('PathwayView', () => {
 
     test('given disabled primary action then renders disabled button', () => {
       render(
-        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} primaryAction={mockPrimaryActionDisabled} />
+        <PathwayView
+          title={PATHWAY_VIEW_STRINGS.MAIN_TITLE}
+          primaryAction={mockPrimaryActionDisabled}
+        />
       );
 
       const submitButton = screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON });
@@ -346,7 +356,10 @@ describe('PathwayView', () => {
 
     test('given loading primary action then passes loading state', () => {
       render(
-        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} primaryAction={mockPrimaryActionLoading} />
+        <PathwayView
+          title={PATHWAY_VIEW_STRINGS.MAIN_TITLE}
+          primaryAction={mockPrimaryActionLoading}
+        />
       );
 
       const submitButton = screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON });
@@ -355,7 +368,10 @@ describe('PathwayView', () => {
 
     test('given cancel button then renders as disabled', () => {
       render(
-        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} buttonPreset={BUTTON_PRESETS.CANCEL_ONLY} />
+        <PathwayView
+          title={PATHWAY_VIEW_STRINGS.MAIN_TITLE}
+          buttonPreset={BUTTON_PRESETS.CANCEL_ONLY}
+        />
       );
 
       const cancelButton = screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.CANCEL_BUTTON });
@@ -363,7 +379,9 @@ describe('PathwayView', () => {
     });
 
     test('given cancel action with onClick then renders enabled cancel button', () => {
-      render(<PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} cancelAction={mockCancelAction} />);
+      render(
+        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} cancelAction={mockCancelAction} />
+      );
 
       const cancelButton = screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.CANCEL_BUTTON });
       expect(cancelButton).not.toBeDisabled();
@@ -372,7 +390,9 @@ describe('PathwayView', () => {
     test('given user clicks primary button then calls primary handler', async () => {
       const user = userEvent.setup();
 
-      render(<PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} primaryAction={mockPrimaryAction} />);
+      render(
+        <PathwayView title={PATHWAY_VIEW_STRINGS.MAIN_TITLE} primaryAction={mockPrimaryAction} />
+      );
 
       const submitButton = screen.getByRole('button', { name: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON });
       await user.click(submitButton);

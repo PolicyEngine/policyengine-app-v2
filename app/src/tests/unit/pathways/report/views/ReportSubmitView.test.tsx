@@ -1,13 +1,13 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import ReportSubmitView from '@/pathways/report/views/ReportSubmitView';
 import {
-  mockReportState,
-  mockReportStateWithConfiguredBaseline,
-  mockReportStateWithBothConfigured,
-  mockOnSubmit,
   mockOnBack,
   mockOnCancel,
+  mockOnSubmit,
+  mockReportState,
+  mockReportStateWithBothConfigured,
+  mockReportStateWithConfiguredBaseline,
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/views/ReportViewMocks';
 
@@ -29,7 +29,9 @@ describe('ReportSubmitView', () => {
       );
 
       // Then
-      expect(screen.getByRole('heading', { name: /review report configuration/i })).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: /review report configuration/i })
+      ).toBeInTheDocument();
     });
 
     test('given component renders then displays subtitle', () => {
@@ -179,7 +181,7 @@ describe('ReportSubmitView', () => {
         <ReportSubmitView
           reportState={mockReportStateWithBothConfigured}
           onSubmit={mockOnSubmit}
-          isSubmitting={true}
+          isSubmitting
         />
       );
 

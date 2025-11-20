@@ -1,8 +1,4 @@
-import {
-  PolicyViewMode,
-  PopulationViewMode,
-  SimulationViewMode,
-} from './SharedViewModes';
+import { PolicyViewMode, PopulationViewMode, SimulationViewMode } from './SharedViewModes';
 
 /**
  * ReportViewMode - Enum for report creation pathway view states

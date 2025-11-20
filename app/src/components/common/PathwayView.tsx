@@ -113,27 +113,35 @@ export default function PathwayView({
     if (useNewLayout) {
       return {
         buttons: [] as ButtonConfig[],
-        cancelAction: cancelAction?.onClick ? {
-          label: cancelAction.label || 'Cancel',
-          onClick: cancelAction.onClick,
-        } : undefined,
-        backAction: backAction ? {
-          label: backAction.label || 'Back',
-          onClick: backAction.onClick,
-        } : undefined,
-        primaryAction: primaryAction ? {
-          label: primaryAction.label,
-          onClick: primaryAction.onClick,
-          isLoading: primaryAction.isLoading,
-          isDisabled: primaryAction.isDisabled,
-        } : undefined,
-        pagination: shouldShowPaginationInFooter ? {
-          currentPage,
-          totalPages,
-          totalItems,
-          itemsPerPage,
-          onPageChange: setCurrentPage,
-        } : undefined,
+        cancelAction: cancelAction?.onClick
+          ? {
+              label: cancelAction.label || 'Cancel',
+              onClick: cancelAction.onClick,
+            }
+          : undefined,
+        backAction: backAction
+          ? {
+              label: backAction.label || 'Back',
+              onClick: backAction.onClick,
+            }
+          : undefined,
+        primaryAction: primaryAction
+          ? {
+              label: primaryAction.label,
+              onClick: primaryAction.onClick,
+              isLoading: primaryAction.isLoading,
+              isDisabled: primaryAction.isDisabled,
+            }
+          : undefined,
+        pagination: shouldShowPaginationInFooter
+          ? {
+              currentPage,
+              totalPages,
+              totalItems,
+              itemsPerPage,
+              onPageChange: setCurrentPage,
+            }
+          : undefined,
       };
     }
 
@@ -158,7 +166,8 @@ export default function PathwayView({
   };
 
   const footerProps = getFooterProps();
-  const hasFooter = footerProps.buttons?.length > 0 ||
+  const hasFooter =
+    footerProps.buttons?.length > 0 ||
     footerProps.cancelAction ||
     footerProps.backAction ||
     footerProps.primaryAction;

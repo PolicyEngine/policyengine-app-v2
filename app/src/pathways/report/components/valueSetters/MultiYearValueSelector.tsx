@@ -4,9 +4,9 @@ import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { getTaxYears } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
-import { ValueSetterProps } from './ValueSetterProps';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
+import { ValueSetterProps } from './ValueSetterProps';
 
 export function MultiYearValueSelector(props: ValueSetterProps) {
   const { param, policy, setIntervals } = props;
@@ -45,7 +45,6 @@ export function MultiYearValueSelector(props: ValueSetterProps) {
       initialValues[year] = getDefaultValueForParam(param, policy, `${year}-01-01`);
     });
     return initialValues;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [param, policy]);
 
   const [yearValues, setYearValues] = useState<Record<string, any>>(getInitialYearValues);

@@ -1,12 +1,9 @@
 import { useState } from 'react';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
-import { isGeographicMetadataWithAssociation, useUserGeographics } from '@/hooks/useUserGeographic';
-import { isHouseholdMetadataWithAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
-import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { findMatchingPopulation } from '@/utils/populationMatching';
-import { HouseholdAdapter } from '@/adapters';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { ReportStateProps } from '@/types/pathwayState';
 import { isSimulationConfigured } from '@/utils/validation/ingredientValidation';
 
 type SimulationCard = 'simulation1' | 'simulation2';
@@ -160,7 +157,10 @@ export default function ReportSetupView({
 /**
  * Get title for baseline simulation card
  */
-function getBaselineCardTitle(simulation: SimulationStateProps | null, isConfigured: boolean): string {
+function getBaselineCardTitle(
+  simulation: SimulationStateProps | null,
+  isConfigured: boolean
+): string {
   if (isConfigured) {
     const label = simulation?.label || simulation?.id || 'Configured';
     return `Baseline: ${label}`;
@@ -171,10 +171,14 @@ function getBaselineCardTitle(simulation: SimulationStateProps | null, isConfigu
 /**
  * Get description for baseline simulation card
  */
-function getBaselineCardDescription(simulation: SimulationStateProps | null, isConfigured: boolean): string {
+function getBaselineCardDescription(
+  simulation: SimulationStateProps | null,
+  isConfigured: boolean
+): string {
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
-    const populationId = simulation?.population.household?.id || simulation?.population.geography?.id || 'N/A';
+    const populationId =
+      simulation?.population.household?.id || simulation?.population.geography?.id || 'N/A';
     return `Policy #${policyId} • Household(s) #${populationId}`;
   }
   return 'Select your baseline simulation';
@@ -220,7 +224,8 @@ function getComparisonCardDescription(
   // If configured, show simulation details
   if (isConfigured) {
     const policyId = simulation?.policy.id || 'N/A';
-    const populationId = simulation?.population.household?.id || simulation?.population.geography?.id || 'N/A';
+    const populationId =
+      simulation?.population.household?.id || simulation?.population.geography?.id || 'N/A';
     return `Policy #${policyId} • Household(s) #${populationId}`;
   }
 

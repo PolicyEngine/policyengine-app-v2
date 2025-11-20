@@ -8,8 +8,8 @@ import { Stack, Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { PopulationStateProps } from '@/types/pathwayState';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { PopulationStateProps } from '@/types/pathwayState';
 import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
 
 interface GeographicConfirmationViewProps {

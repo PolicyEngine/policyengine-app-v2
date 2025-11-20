@@ -1,6 +1,6 @@
 import { Box, Divider, ScrollArea, Stack, Text } from '@mantine/core';
-import { ParameterTreeNode } from '@/types/metadata';
 import NestedMenu from '@/components/common/NestedMenu';
+import { ParameterTreeNode } from '@/types/metadata';
 
 interface PolicyParameterSelectorMenuProps {
   setSelectedParamLabel: (param: string) => void;

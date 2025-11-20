@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { PopulationStateProps } from '@/types/pathwayState';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
+import { PopulationStateProps } from '@/types/pathwayState';
 
 /**
  * Factory for creating reusable population-related callbacks
@@ -22,24 +22,30 @@ export function createPopulationCallbacks<TState, TMode>(
   returnMode: TMode,
   labelMode: TMode
 ) {
-  const updateLabel = useCallback((label: string) => {
-    setState((prev) => {
-      const population = populationSelector(prev);
-      return populationUpdater(prev, { ...population, label });
-    });
-  }, [setState, populationSelector, populationUpdater]);
-
-  const handleScopeSelected = useCallback((geography: Geography | null, scopeType: string) => {
-    setState((prev) => {
-      const population = populationSelector(prev);
-      return populationUpdater(prev, {
-        ...population,
-        geography: geography || null,
-        type: geography ? 'geography' : 'household',
+  const updateLabel = useCallback(
+    (label: string) => {
+      setState((prev) => {
+        const population = populationSelector(prev);
+        return populationUpdater(prev, { ...population, label });
       });
-    });
-    navigateToMode(labelMode);
-  }, [setState, populationSelector, populationUpdater, navigateToMode, labelMode]);
+    },
+    [setState, populationSelector, populationUpdater]
+  );
+
+  const handleScopeSelected = useCallback(
+    (geography: Geography | null, _scopeType: string) => {
+      setState((prev) => {
+        const population = populationSelector(prev);
+        return populationUpdater(prev, {
+          ...population,
+          geography: geography || null,
+          type: geography ? 'geography' : 'household',
+        });
+      });
+      navigateToMode(labelMode);
+    },
+    [setState, populationSelector, populationUpdater, navigateToMode, labelMode]
+  );
 
   const handleSelectExistingHousehold = useCallback(
     (householdId: string, household: Household, label: string) => {

@@ -13,7 +13,6 @@ import {
   UserPolicyMetadataWithAssociation,
   useUserPolicies,
 } from '@/hooks/useUserPolicy';
-import { PolicyStateProps } from '@/types/pathwayState';
 import { Parameter } from '@/types/subIngredients/parameter';
 
 interface PolicyExistingViewProps {
@@ -22,7 +21,11 @@ interface PolicyExistingViewProps {
   onCancel?: () => void;
 }
 
-export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }: PolicyExistingViewProps) {
+export default function PolicyExistingView({
+  onSelectPolicy,
+  onBack,
+  onCancel,
+}: PolicyExistingViewProps) {
   const userId = MOCK_USER_ID.toString();
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
@@ -86,7 +89,10 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
 
     if (localPolicy.policy?.policy_json) {
       const policyJson = localPolicy.policy.policy_json;
-      console.log('[PolicyExistingView] Converting parameters from policy_json:', Object.keys(policyJson));
+      console.log(
+        '[PolicyExistingView] Converting parameters from policy_json:',
+        Object.keys(policyJson)
+      );
 
       Object.entries(policyJson).forEach(([paramName, valueIntervals]) => {
         if (Array.isArray(valueIntervals) && valueIntervals.length > 0) {
@@ -134,9 +140,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
     return (
       <PathwayView
         title="Select an existing policy"
-        content={
-          <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
-        }
+        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttonPreset="none"
       />
     );
@@ -165,9 +169,7 @@ export default function PolicyExistingView({ onSelectPolicy, onBack, onCancel }:
 
   console.log('[PolicyExistingView] ========== AFTER FILTERING ==========');
   console.log('[PolicyExistingView] Filtered policies count:', filteredPolicies.length);
-  console.log(
-    '[PolicyExistingView] Filter criteria: isPolicyMetadataWithAssociation(association)'
-  );
+  console.log('[PolicyExistingView] Filter criteria: isPolicyMetadataWithAssociation(association)');
   console.log('[PolicyExistingView] Filtered policies:', filteredPolicies);
 
   // Build card list items from ALL filtered policies (pagination handled by PathwayView)

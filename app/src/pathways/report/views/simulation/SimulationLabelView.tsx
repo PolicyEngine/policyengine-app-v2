@@ -7,8 +7,8 @@
 import { useState } from 'react';
 import { TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
-import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 
 interface SimulationLabelViewProps {
   label: string | null;
@@ -46,7 +46,9 @@ export default function SimulationLabelView({
     }
     // mode === 'report'
     const baseName = simulationIndex === 0 ? 'baseline simulation' : 'reform simulation';
-    return reportLabel ? `${reportLabel} ${baseName}` : `${baseName.charAt(0).toUpperCase()}${baseName.slice(1)}`;
+    return reportLabel
+      ? `${reportLabel} ${baseName}`
+      : `${baseName.charAt(0).toUpperCase()}${baseName.slice(1)}`;
   };
 
   const [localLabel, setLocalLabel] = useState(label || getDefaultLabel());

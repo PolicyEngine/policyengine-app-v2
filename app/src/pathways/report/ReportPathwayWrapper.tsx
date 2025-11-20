@@ -8,57 +8,54 @@
  */
 
 import { useCallback, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { ReportStateProps, SimulationStateProps, PolicyStateProps, PopulationStateProps } from '@/types/pathwayState';
-import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
-import { initializeReportState } from '@/utils/pathwayState/initializeReportState';
-import { RootState } from '@/store';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ReportAdapter } from '@/adapters';
 import StandardLayout from '@/components/StandardLayout';
+import { MOCK_USER_ID } from '@/constants';
+import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
-import { createPolicyCallbacks, createPopulationCallbacks, createSimulationCallbacks, createReportCallbacks } from '@/utils/pathwayCallbacks';
-import { reconstructSimulationFromEnhanced, convertSimulationStateToApi } from '@/utils/ingredientReconstruction';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
-
-// Report-level views
-import ReportLabelView from './views/ReportLabelView';
-import ReportSetupView from './views/ReportSetupView';
-import ReportSimulationSelectionView from './views/ReportSimulationSelectionView';
-import ReportSimulationExistingView from './views/ReportSimulationExistingView';
-import ReportSubmitView from './views/ReportSubmitView';
-
-// Simulation views
-import SimulationLabelView from './views/simulation/SimulationLabelView';
-import SimulationSetupView from './views/simulation/SimulationSetupView';
-import SimulationSubmitView from './views/simulation/SimulationSubmitView';
-import SimulationPolicySetupView from './views/simulation/SimulationPolicySetupView';
-import SimulationPopulationSetupView from './views/simulation/SimulationPopulationSetupView';
-
+import { RootState } from '@/store';
+import { Report } from '@/types/ingredients/Report';
+import { ReportViewMode } from '@/types/pathwayModes/ReportViewMode';
+import { ReportStateProps, SimulationStateProps } from '@/types/pathwayState';
+import { ReportCreationPayload } from '@/types/payloads';
+import {
+  createPolicyCallbacks,
+  createPopulationCallbacks,
+  createReportCallbacks,
+  createSimulationCallbacks,
+} from '@/utils/pathwayCallbacks';
+import { initializeReportState } from '@/utils/pathwayState/initializeReportState';
+import { getReportOutputPath } from '@/utils/reportRouting';
+import PolicyExistingView from './views/policy/PolicyExistingView';
 // Policy views
 import PolicyLabelView from './views/policy/PolicyLabelView';
 import PolicyParameterSelectorView from './views/policy/PolicyParameterSelectorView';
 import PolicySubmitView from './views/policy/PolicySubmitView';
-import PolicyExistingView from './views/policy/PolicyExistingView';
-
+import GeographicConfirmationView from './views/population/GeographicConfirmationView';
+import HouseholdBuilderView from './views/population/HouseholdBuilderView';
+import PopulationExistingView from './views/population/PopulationExistingView';
+import PopulationLabelView from './views/population/PopulationLabelView';
 // Population views
 import PopulationScopeView from './views/population/PopulationScopeView';
-import PopulationLabelView from './views/population/PopulationLabelView';
-import HouseholdBuilderView from './views/population/HouseholdBuilderView';
-import GeographicConfirmationView from './views/population/GeographicConfirmationView';
-import PopulationExistingView from './views/population/PopulationExistingView';
-
-import { EnhancedUserSimulation, useUserSimulations } from '@/hooks/useUserSimulations';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
-import { useCreateReport } from '@/hooks/useCreateReport';
-import { ReportAdapter } from '@/adapters';
-import { Report } from '@/types/ingredients/Report';
-import { ReportCreationPayload } from '@/types/payloads';
-import { getReportOutputPath } from '@/utils/reportRouting';
-import { Geography } from '@/types/ingredients/Geography';
-import { Household } from '@/types/ingredients/Household';
-import { MOCK_USER_ID } from '@/constants';
+// Report-level views
+import ReportLabelView from './views/ReportLabelView';
+import ReportSetupView from './views/ReportSetupView';
+import ReportSimulationExistingView from './views/ReportSimulationExistingView';
+import ReportSimulationSelectionView from './views/ReportSimulationSelectionView';
+import ReportSubmitView from './views/ReportSubmitView';
+// Simulation views
+import SimulationLabelView from './views/simulation/SimulationLabelView';
+import SimulationPolicySetupView from './views/simulation/SimulationPolicySetupView';
+import SimulationPopulationSetupView from './views/simulation/SimulationPopulationSetupView';
+import SimulationSetupView from './views/simulation/SimulationSetupView';
+import SimulationSubmitView from './views/simulation/SimulationSubmitView';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
 const MODES_WITH_OWN_LAYOUT = new Set([ReportViewMode.POLICY_PARAMETER_SELECTOR]);
@@ -98,7 +95,9 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
 
   // ========== NAVIGATION ==========
-  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(ReportViewMode.REPORT_LABEL);
+  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
+    ReportViewMode.REPORT_LABEL
+  );
 
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
   const userId = MOCK_USER_ID.toString();
@@ -109,7 +108,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
   const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
-  const hasExistingPopulations = ((userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0)) > 0;
+  const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
 
   // ========== HELPER: Get active simulation ==========
   const activeSimulation = reportState.simulations[activeSimulationIndex];
@@ -130,7 +129,10 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     setReportState,
     (state) => state.simulations[activeSimulationIndex].policy,
     (state, policy) => {
-      const newSimulations = [...state.simulations] as [typeof state.simulations[0], typeof state.simulations[1]];
+      const newSimulations = [...state.simulations] as [
+        (typeof state.simulations)[0],
+        (typeof state.simulations)[1],
+      ];
       newSimulations[activeSimulationIndex].policy = policy;
       return { ...state, simulations: newSimulations };
     },
@@ -143,7 +145,10 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     setReportState,
     (state) => state.simulations[activeSimulationIndex].population,
     (state, population) => {
-      const newSimulations = [...state.simulations] as [typeof state.simulations[0], typeof state.simulations[1]];
+      const newSimulations = [...state.simulations] as [
+        (typeof state.simulations)[0],
+        (typeof state.simulations)[1],
+      ];
       newSimulations[activeSimulationIndex].population = population;
       return { ...state, simulations: newSimulations };
     },
@@ -157,7 +162,10 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     setReportState,
     (state) => state.simulations[activeSimulationIndex],
     (state, simulation) => {
-      const newSimulations = [...state.simulations] as [typeof state.simulations[0], typeof state.simulations[1]];
+      const newSimulations = [...state.simulations] as [
+        (typeof state.simulations)[0],
+        (typeof state.simulations)[1],
+      ];
       newSimulations[activeSimulationIndex] = simulation;
       return { ...state, simulations: newSimulations };
     },
@@ -168,16 +176,19 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   // ========== CUSTOM WRAPPERS FOR SPECIFIC REPORT LOGIC ==========
   // Wrapper for navigating to simulation selection (needs to update active index)
   // Skips selection view if user has no existing simulations
-  const handleNavigateToSimulationSelection = useCallback((simulationIndex: 0 | 1) => {
-    console.log('[ReportPathwayWrapper] Setting active simulation index:', simulationIndex);
-    setActiveSimulationIndex(simulationIndex);
-    if (hasExistingSimulations) {
-      reportCallbacks.navigateToSimulationSelection(simulationIndex);
-    } else {
-      // Skip selection view, go directly to create new
-      navigateToMode(ReportViewMode.SIMULATION_LABEL);
-    }
-  }, [reportCallbacks, hasExistingSimulations, navigateToMode]);
+  const handleNavigateToSimulationSelection = useCallback(
+    (simulationIndex: 0 | 1) => {
+      console.log('[ReportPathwayWrapper] Setting active simulation index:', simulationIndex);
+      setActiveSimulationIndex(simulationIndex);
+      if (hasExistingSimulations) {
+        reportCallbacks.navigateToSimulationSelection(simulationIndex);
+      } else {
+        // Skip selection view, go directly to create new
+        navigateToMode(ReportViewMode.SIMULATION_LABEL);
+      }
+    },
+    [reportCallbacks, hasExistingSimulations, navigateToMode]
+  );
 
   // Conditional navigation to policy setup - skip if no existing policies
   const handleNavigateToPolicy = useCallback(() => {
@@ -207,21 +218,27 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   // Handler for selecting default baseline simulation
   // This is called after the simulation has been created by DefaultBaselineOption
-  const handleSelectDefaultBaseline = useCallback((simulationState: SimulationStateProps, simulationId: string) => {
-    console.log('[ReportPathwayWrapper] Default baseline simulation created');
-    console.log('[ReportPathwayWrapper] Simulation state:', simulationState);
-    console.log('[ReportPathwayWrapper] Simulation ID:', simulationId);
+  const handleSelectDefaultBaseline = useCallback(
+    (simulationState: SimulationStateProps, simulationId: string) => {
+      console.log('[ReportPathwayWrapper] Default baseline simulation created');
+      console.log('[ReportPathwayWrapper] Simulation state:', simulationState);
+      console.log('[ReportPathwayWrapper] Simulation ID:', simulationId);
 
-    // Update the active simulation with the created simulation
-    setReportState((prev) => {
-      const newSimulations = [...prev.simulations] as [typeof prev.simulations[0], typeof prev.simulations[1]];
-      newSimulations[activeSimulationIndex] = simulationState;
-      return { ...prev, simulations: newSimulations };
-    });
+      // Update the active simulation with the created simulation
+      setReportState((prev) => {
+        const newSimulations = [...prev.simulations] as [
+          (typeof prev.simulations)[0],
+          (typeof prev.simulations)[1],
+        ];
+        newSimulations[activeSimulationIndex] = simulationState;
+        return { ...prev, simulations: newSimulations };
+      });
 
-    // Navigate back to report setup
-    navigateToMode(ReportViewMode.REPORT_SETUP);
-  }, [activeSimulationIndex, navigateToMode]);
+      // Navigate back to report setup
+      navigateToMode(ReportViewMode.REPORT_SETUP);
+    },
+    [activeSimulationIndex, navigateToMode]
+  );
 
   // ========== REPORT SUBMISSION ==========
   const handleSubmitReport = useCallback(() => {
@@ -259,8 +276,18 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     }
 
     console.log('[ReportPathwayWrapper] Converted simulations to API format:', {
-      simulation1: { id: simulation1Api.id, policyId: simulation1Api.policyId, populationId: simulation1Api.populationId },
-      simulation2: simulation2Api ? { id: simulation2Api.id, policyId: simulation2Api.policyId, populationId: simulation2Api.populationId } : null,
+      simulation1: {
+        id: simulation1Api.id,
+        policyId: simulation1Api.policyId,
+        populationId: simulation1Api.populationId,
+      },
+      simulation2: simulation2Api
+        ? {
+            id: simulation2Api.id,
+            policyId: simulation2Api.policyId,
+            populationId: simulation2Api.populationId,
+          }
+        : null,
     });
 
     // Submit report
@@ -389,7 +416,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
         <SimulationSetupView
           simulation={activeSimulation}
           simulationIndex={activeSimulationIndex}
-          isReportMode={true}
+          isReportMode
           onNavigateToPolicy={handleNavigateToPolicy}
           onNavigateToPopulation={handleNavigateToPopulation}
           onNext={() => navigateToMode(ReportViewMode.SIMULATION_SUBMIT)}
@@ -429,7 +456,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     case ReportViewMode.SETUP_POPULATION:
       currentView = (
         <SimulationPopulationSetupView
-          isReportMode={true}
+          isReportMode
           otherSimulation={otherSimulation}
           otherPopulation={otherSimulation.population}
           onCreateNew={() => navigateToMode(ReportViewMode.POPULATION_SCOPE)}

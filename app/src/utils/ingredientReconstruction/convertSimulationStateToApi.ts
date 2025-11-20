@@ -23,10 +23,7 @@ export function convertSimulationStateToApi(
   // Extract policyId from nested policy object
   const policyId = stateProps.policy?.id;
   if (!policyId) {
-    console.warn(
-      '[convertSimulationStateToApi] Simulation missing policy.id:',
-      stateProps
-    );
+    console.warn('[convertSimulationStateToApi] Simulation missing policy.id:', stateProps);
     return null;
   }
 
@@ -44,10 +41,7 @@ export function convertSimulationStateToApi(
   }
 
   if (!populationId || !populationType) {
-    console.warn(
-      '[convertSimulationStateToApi] Simulation missing population ID:',
-      stateProps
-    );
+    console.warn('[convertSimulationStateToApi] Simulation missing population ID:', stateProps);
     return null;
   }
 

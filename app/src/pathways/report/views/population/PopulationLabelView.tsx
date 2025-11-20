@@ -7,10 +7,10 @@
 import { useState } from 'react';
 import { Stack, Text, TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { extractRegionDisplayValue } from '@/utils/regionStrategies';
-import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
-import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 interface PopulationLabelViewProps {
   population: PopulationStateProps;
@@ -26,7 +26,7 @@ export default function PopulationLabelView({
   population,
   mode,
   simulationIndex,
-  reportLabel = null,
+  reportLabel: _reportLabel = null,
   onUpdateLabel,
   onNext,
   onBack,

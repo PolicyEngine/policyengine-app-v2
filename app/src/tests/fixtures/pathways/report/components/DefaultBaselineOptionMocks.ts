@@ -1,5 +1,4 @@
 import { vi } from 'vitest';
-import { EnhancedUserSimulation } from '@/hooks/useUserSimulations';
 
 // Test constants
 export const TEST_COUNTRIES = {

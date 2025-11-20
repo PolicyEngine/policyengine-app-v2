@@ -1,6 +1,6 @@
-import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
-import { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
 import { UserGeographicMetadataWithAssociation } from '@/hooks/useUserGeographic';
+import { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHousehold';
+import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
 
 /**
  * Validation utilities for ingredient configuration state
@@ -29,8 +29,12 @@ export function isPolicyConfigured(policy: PolicyStateProps | null | undefined):
  * - A household with an ID (from API creation)
  * - A geography with an ID (from scope selection via createGeographyFromScope)
  */
-export function isPopulationConfigured(population: PopulationStateProps | null | undefined): boolean {
-  if (!population) return false;
+export function isPopulationConfigured(
+  population: PopulationStateProps | null | undefined
+): boolean {
+  if (!population) {
+    return false;
+  }
   return !!(population.household?.id || population.geography?.id);
 }
 
@@ -41,11 +45,17 @@ export function isPopulationConfigured(population: PopulationStateProps | null |
  * - It has a simulation ID from API (fully persisted), OR
  * - Both its policy and population are configured (ready to submit)
  */
-export function isSimulationConfigured(simulation: SimulationStateProps | null | undefined): boolean {
-  if (!simulation) return false;
+export function isSimulationConfigured(
+  simulation: SimulationStateProps | null | undefined
+): boolean {
+  if (!simulation) {
+    return false;
+  }
 
   // Fully persisted simulation
-  if (simulation.id) return true;
+  if (simulation.id) {
+    return true;
+  }
 
   // Pre-submission: check if ingredients are ready
   return isPolicyConfigured(simulation.policy) && isPopulationConfigured(simulation.population);
@@ -58,8 +68,12 @@ export function isSimulationConfigured(simulation: SimulationStateProps | null |
  * if the ingredients are ready, regardless of whether simulation ID exists.
  * Useful for enabling "Submit" buttons.
  */
-export function isSimulationReadyToSubmit(simulation: SimulationStateProps | null | undefined): boolean {
-  if (!simulation) return false;
+export function isSimulationReadyToSubmit(
+  simulation: SimulationStateProps | null | undefined
+): boolean {
+  if (!simulation) {
+    return false;
+  }
   return isPolicyConfigured(simulation.policy) && isPopulationConfigured(simulation.population);
 }
 
@@ -69,7 +83,9 @@ export function isSimulationReadyToSubmit(simulation: SimulationStateProps | nul
  * Different from isSimulationConfigured in that it only checks for
  * simulation ID existence, not ingredient readiness.
  */
-export function isSimulationPersisted(simulation: SimulationStateProps | null | undefined): boolean {
+export function isSimulationPersisted(
+  simulation: SimulationStateProps | null | undefined
+): boolean {
   return !!simulation?.id;
 }
 
@@ -105,7 +121,9 @@ export function isHouseholdAssociationReady(
   // - API format: household_json (from direct API fetch)
   // - Transformed format: householdData (from HouseholdAdapter.fromMetadata, which may be in cache)
   // This handles the case where React Query cache contains transformed data from useUserSimulations
-  const hasHouseholdData = !!(association.household.household_json || (association.household as any).householdData);
+  const hasHouseholdData = !!(
+    association.household.household_json || (association.household as any).householdData
+  );
 
   if (!hasHouseholdData) {
     return false;

@@ -1,16 +1,19 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useCreateSimulation } from '@/hooks/useCreateSimulation';
+import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
+import { useUserSimulations } from '@/hooks/useUserSimulations';
 import DefaultBaselineOption from '@/pathways/report/components/DefaultBaselineOption';
 import {
-  TEST_COUNTRIES,
-  TEST_CURRENT_LAW_ID,
   DEFAULT_BASELINE_LABELS,
   mockOnSelect,
-  mockUseUserSimulationsEmpty,
-  mockUseUserSimulationsWithExisting,
   mockUseCreateGeographicAssociation,
   mockUseCreateSimulation,
+  mockUseUserSimulationsEmpty,
+  mockUseUserSimulationsWithExisting,
   resetAllMocks,
+  TEST_COUNTRIES,
+  TEST_CURRENT_LAW_ID,
 } from '@/tests/fixtures/pathways/report/components/DefaultBaselineOptionMocks';
 
 // Mock hooks
@@ -25,10 +28,6 @@ vi.mock('@/hooks/useUserGeographic', () => ({
 vi.mock('@/hooks/useCreateSimulation', () => ({
   useCreateSimulation: vi.fn(),
 }));
-
-import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
 
 describe('DefaultBaselineOption', () => {
   beforeEach(() => {

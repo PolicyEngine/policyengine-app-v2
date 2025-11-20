@@ -25,8 +25,8 @@ import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { getCountryLabel, getRegionLabel } from '@/utils/geographyUtils';
 import {
-  isHouseholdAssociationReady,
   isGeographicAssociationReady,
+  isHouseholdAssociationReady,
 } from '@/utils/validation/ingredientValidation';
 
 interface PopulationExistingViewProps {
@@ -163,7 +163,10 @@ export default function PopulationExistingView({
     }
 
     console.log('[PopulationExistingView] Local Geographic Population on Submit:', localPopulation);
-    console.log('[PopulationExistingView] Setting geography in population:', localPopulation.geography);
+    console.log(
+      '[PopulationExistingView] Setting geography in population:',
+      localPopulation.geography
+    );
 
     const label = localPopulation.association?.label || '';
     const geography = localPopulation.geography!;
@@ -199,9 +202,7 @@ export default function PopulationExistingView({
     return (
       <PathwayView
         title="Select existing household(s)"
-        content={
-          <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
-        }
+        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttonPreset="none"
       />
     );

@@ -24,7 +24,6 @@ export const mockSimulationState: SimulationStateProps = {
   policy: {
     id: undefined,
     label: null,
-    countryId: TEST_COUNTRY_ID,
     parameters: [],
   },
   population: {
@@ -33,7 +32,7 @@ export const mockSimulationState: SimulationStateProps = {
     household: null,
     geography: null,
   },
-  apiVersion: null,
+  apiVersion: undefined,
   status: 'pending',
 };
 
@@ -44,7 +43,6 @@ export const mockConfiguredSimulation: SimulationStateProps = {
   policy: {
     id: '456',
     label: 'Current Law',
-    countryId: TEST_COUNTRY_ID,
     parameters: [],
   },
   population: {
@@ -52,13 +50,15 @@ export const mockConfiguredSimulation: SimulationStateProps = {
     type: 'household',
     household: {
       id: '789',
-      label: 'My Household',
-      people: {},
+      countryId: 'us',
+      householdData: {
+        people: {},
+      },
     },
     geography: null,
   },
   apiVersion: '0.1.0',
-  status: 'completed',
+  status: 'complete',
 };
 
 export const mockReportState: ReportStateProps = {
@@ -79,7 +79,10 @@ export const mockReportStateWithConfiguredBaseline: ReportStateProps = {
 
 export const mockReportStateWithBothConfigured: ReportStateProps = {
   ...mockReportState,
-  simulations: [mockConfiguredSimulation, { ...mockConfiguredSimulation, id: '124', label: 'Reform Simulation' }],
+  simulations: [
+    mockConfiguredSimulation,
+    { ...mockConfiguredSimulation, id: '124', label: 'Reform Simulation' },
+  ],
 };
 
 export const mockUseCurrentCountry = vi.fn(() => TEST_COUNTRY_ID);
@@ -131,11 +134,17 @@ export const mockUseUserSimulationsError = {
 export const mockUseUserHouseholdsEmpty = {
   data: [],
   isLoading: false,
+  isError: false,
+  error: null,
+  associations: [],
 };
 
 export const mockUseUserGeographicsEmpty = {
   data: [],
   isLoading: false,
+  isError: false,
+  error: null,
+  associations: [],
 };
 
 export function resetAllMocks() {

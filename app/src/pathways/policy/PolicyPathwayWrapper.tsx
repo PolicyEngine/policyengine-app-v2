@@ -7,13 +7,12 @@
 
 import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PolicyStateProps } from '@/types/pathwayState';
-import { PolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
-import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 import StandardLayout from '@/components/StandardLayout';
-import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-
+import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { PolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
+import { PolicyStateProps } from '@/types/pathwayState';
+import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 // Policy views (reusing from report pathway)
 import PolicyLabelView from '../report/views/policy/PolicyLabelView';
 import PolicyParameterSelectorView from '../report/views/policy/PolicyParameterSelectorView';
@@ -38,7 +37,9 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
   });
 
   // ========== NAVIGATION ==========
-  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(PolicyViewMode.LABEL);
+  const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
+    PolicyViewMode.LABEL
+  );
 
   // ========== CALLBACKS ==========
   const updateLabel = useCallback((label: string) => {
@@ -49,21 +50,24 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
     setPolicyState(updatedPolicy);
   }, []);
 
-  const handleSubmitSuccess = useCallback((policyId: string) => {
-    console.log('[PolicyPathwayWrapper] Policy created with ID:', policyId);
+  const handleSubmitSuccess = useCallback(
+    (policyId: string) => {
+      console.log('[PolicyPathwayWrapper] Policy created with ID:', policyId);
 
-    setPolicyState((prev) => ({
-      ...prev,
-      id: policyId,
-    }));
+      setPolicyState((prev) => ({
+        ...prev,
+        id: policyId,
+      }));
 
-    // Navigate back to policies list page
-    navigate(`/${countryId}/policies`);
+      // Navigate back to policies list page
+      navigate(`/${countryId}/policies`);
 
-    if (onComplete) {
-      onComplete();
-    }
-  }, [navigate, countryId, onComplete]);
+      if (onComplete) {
+        onComplete();
+      }
+    },
+    [navigate, countryId, onComplete]
+  );
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;

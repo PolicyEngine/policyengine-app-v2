@@ -73,9 +73,9 @@ export const resetAllMocks = () => {
 
 // Expected view modes
 export const REPORT_VIEW_MODES = {
-  LABEL: ReportViewMode.LABEL,
-  SETUP: ReportViewMode.SETUP,
-  SIMULATION_SELECTION: ReportViewMode.SIMULATION_SELECTION,
-  SIMULATION_EXISTING: ReportViewMode.SIMULATION_EXISTING,
-  SUBMIT: ReportViewMode.SUBMIT,
+  LABEL: ReportViewMode.REPORT_LABEL,
+  SETUP: ReportViewMode.REPORT_SETUP,
+  SIMULATION_SELECTION: ReportViewMode.REPORT_SELECT_SIMULATION,
+  SIMULATION_EXISTING: ReportViewMode.REPORT_SELECT_EXISTING_SIMULATION,
+  SUBMIT: ReportViewMode.REPORT_SUBMIT,
 } as const;

@@ -1,16 +1,16 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import SimulationSetupView from '@/pathways/report/views/simulation/SimulationSetupView';
 import {
-  mockSimulationStateEmpty,
-  mockSimulationStateConfigured,
-  mockSimulationStateWithPolicy,
-  mockSimulationStateWithPopulation,
+  mockOnBack,
+  mockOnCancel,
   mockOnNavigateToPolicy,
   mockOnNavigateToPopulation,
   mockOnNext,
-  mockOnBack,
-  mockOnCancel,
+  mockSimulationStateConfigured,
+  mockSimulationStateEmpty,
+  mockSimulationStateWithPolicy,
+  mockSimulationStateWithPopulation,
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/views/SimulationViewMocks';
 
@@ -142,7 +142,9 @@ describe('SimulationSetupView', () => {
 
       // Then
       const buttons = screen.getAllByRole('button');
-      const configureButton = buttons.find(btn => btn.textContent?.includes('Configure household'));
+      const configureButton = buttons.find((btn) =>
+        btn.textContent?.includes('Configure household')
+      );
       expect(configureButton).toBeDisabled();
     });
 
@@ -161,7 +163,9 @@ describe('SimulationSetupView', () => {
 
       // Then
       const buttons = screen.getAllByRole('button');
-      const configureButton = buttons.find(btn => btn.textContent?.includes('Configure household'));
+      const configureButton = buttons.find((btn) =>
+        btn.textContent?.includes('Configure household')
+      );
       expect(configureButton).toBeDisabled();
     });
   });
@@ -173,7 +177,7 @@ describe('SimulationSetupView', () => {
         <SimulationSetupView
           simulation={mockSimulationStateWithPopulation}
           simulationIndex={1}
-          isReportMode={true}
+          isReportMode
           onNavigateToPolicy={mockOnNavigateToPolicy}
           onNavigateToPopulation={mockOnNavigateToPopulation}
           onNext={mockOnNext}
@@ -190,7 +194,7 @@ describe('SimulationSetupView', () => {
         <SimulationSetupView
           simulation={mockSimulationStateWithPopulation}
           simulationIndex={1}
-          isReportMode={true}
+          isReportMode
           onNavigateToPolicy={mockOnNavigateToPolicy}
           onNavigateToPopulation={mockOnNavigateToPopulation}
           onNext={mockOnNext}
@@ -217,7 +221,7 @@ describe('SimulationSetupView', () => {
         />
       );
       const cards = screen.getAllByRole('button');
-      const populationCard = cards.find(card => card.textContent?.includes('Add household'));
+      const populationCard = cards.find((card) => card.textContent?.includes('Add household'));
 
       // When
       await user.click(populationCard!);
@@ -241,7 +245,7 @@ describe('SimulationSetupView', () => {
         />
       );
       const cards = screen.getAllByRole('button');
-      const populationCard = cards.find(card => card.textContent?.includes('Add household'));
+      const populationCard = cards.find((card) => card.textContent?.includes('Add household'));
 
       // When
       await user.click(populationCard!);

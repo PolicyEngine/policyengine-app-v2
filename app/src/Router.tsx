@@ -17,15 +17,15 @@ import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
+import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
+import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
+import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
-import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
-import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
-import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
-import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
 
 const router = createBrowserRouter(
   [

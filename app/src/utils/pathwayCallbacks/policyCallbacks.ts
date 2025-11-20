@@ -19,45 +19,64 @@ export function createPolicyCallbacks<TState, TMode>(
   navigateToMode: (mode: TMode) => void,
   returnMode: TMode
 ) {
-  const updateLabel = useCallback((label: string) => {
-    setState((prev) => {
-      const policy = policySelector(prev);
-      return policyUpdater(prev, { ...policy, label });
-    });
-  }, [setState, policySelector, policyUpdater]);
-
-  const updatePolicy = useCallback((updatedPolicy: PolicyStateProps) => {
-    setState((prev) => policyUpdater(prev, updatedPolicy));
-  }, [setState, policyUpdater]);
-
-  const handleSelectCurrentLaw = useCallback((currentLawId: number, label: string = 'Current law') => {
-    setState((prev) => policyUpdater(prev, {
-      id: currentLawId.toString(),
-      label,
-      parameters: [],
-    }));
-    navigateToMode(returnMode);
-  }, [setState, policyUpdater, navigateToMode, returnMode]);
-
-  const handleSelectExisting = useCallback((policyId: string, label: string, parameters: Parameter[]) => {
-    setState((prev) => policyUpdater(prev, {
-      id: policyId,
-      label,
-      parameters,
-    }));
-    navigateToMode(returnMode);
-  }, [setState, policyUpdater, navigateToMode, returnMode]);
-
-  const handleSubmitSuccess = useCallback((policyId: string) => {
-    setState((prev) => {
-      const policy = policySelector(prev);
-      return policyUpdater(prev, {
-        ...policy,
-        id: policyId,
+  const updateLabel = useCallback(
+    (label: string) => {
+      setState((prev) => {
+        const policy = policySelector(prev);
+        return policyUpdater(prev, { ...policy, label });
       });
-    });
-    navigateToMode(returnMode);
-  }, [setState, policySelector, policyUpdater, navigateToMode, returnMode]);
+    },
+    [setState, policySelector, policyUpdater]
+  );
+
+  const updatePolicy = useCallback(
+    (updatedPolicy: PolicyStateProps) => {
+      setState((prev) => policyUpdater(prev, updatedPolicy));
+    },
+    [setState, policyUpdater]
+  );
+
+  const handleSelectCurrentLaw = useCallback(
+    (currentLawId: number, label: string = 'Current law') => {
+      setState((prev) =>
+        policyUpdater(prev, {
+          id: currentLawId.toString(),
+          label,
+          parameters: [],
+        })
+      );
+      navigateToMode(returnMode);
+    },
+    [setState, policyUpdater, navigateToMode, returnMode]
+  );
+
+  const handleSelectExisting = useCallback(
+    (policyId: string, label: string, parameters: Parameter[]) => {
+      setState((prev) =>
+        policyUpdater(prev, {
+          id: policyId,
+          label,
+          parameters,
+        })
+      );
+      navigateToMode(returnMode);
+    },
+    [setState, policyUpdater, navigateToMode, returnMode]
+  );
+
+  const handleSubmitSuccess = useCallback(
+    (policyId: string) => {
+      setState((prev) => {
+        const policy = policySelector(prev);
+        return policyUpdater(prev, {
+          ...policy,
+          id: policyId,
+        });
+      });
+      navigateToMode(returnMode);
+    },
+    [setState, policySelector, policyUpdater, navigateToMode, returnMode]
+  );
 
   return {
     updateLabel,

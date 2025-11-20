@@ -1,17 +1,19 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { useUserGeographics } from '@/hooks/useUserGeographic';
+import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import ReportSetupView from '@/pathways/report/views/ReportSetupView';
 import {
-  mockReportState,
-  mockReportStateWithConfiguredBaseline,
-  mockReportStateWithBothConfigured,
+  mockOnBack,
+  mockOnCancel,
   mockOnNavigateToSimulationSelection,
   mockOnNext,
   mockOnPrefillPopulation2,
-  mockOnBack,
-  mockOnCancel,
-  mockUseUserHouseholdsEmpty,
+  mockReportState,
+  mockReportStateWithBothConfigured,
+  mockReportStateWithConfiguredBaseline,
   mockUseUserGeographicsEmpty,
+  mockUseUserHouseholdsEmpty,
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/views/ReportViewMocks';
 
@@ -24,9 +26,6 @@ vi.mock('@/hooks/useUserGeographic', () => ({
   useUserGeographics: vi.fn(),
   isGeographicMetadataWithAssociation: vi.fn(),
 }));
-
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useUserGeographics } from '@/hooks/useUserGeographic';
 
 describe('ReportSetupView', () => {
   beforeEach(() => {
@@ -112,7 +111,7 @@ describe('ReportSetupView', () => {
 
       // Then - Find card by looking for the disabled state in the Card component
       const cards = container.querySelectorAll('[data-variant^="setupCondition"]');
-      const comparisonCard = Array.from(cards).find(card =>
+      const comparisonCard = Array.from(cards).find((card) =>
         card.textContent?.includes('Comparison simulation')
       );
       // The card should have disabled styling or be marked as disabled
@@ -133,9 +132,10 @@ describe('ReportSetupView', () => {
 
       // Then
       const buttons = screen.getAllByRole('button');
-      const primaryButton = buttons.find(btn =>
-        btn.textContent?.includes('Configure baseline simulation') &&
-        btn.className?.includes('Button')
+      const primaryButton = buttons.find(
+        (btn) =>
+          btn.textContent?.includes('Configure baseline simulation') &&
+          btn.className?.includes('Button')
       );
       expect(primaryButton).toBeDisabled();
     });
@@ -170,7 +170,9 @@ describe('ReportSetupView', () => {
 
       // Then
       const cards = screen.getAllByRole('button');
-      const comparisonCard = cards.find(card => card.textContent?.includes('Comparison simulation'));
+      const comparisonCard = cards.find((card) =>
+        card.textContent?.includes('Comparison simulation')
+      );
       expect(comparisonCard).not.toHaveAttribute('data-disabled', 'true');
     });
 
@@ -187,7 +189,7 @@ describe('ReportSetupView', () => {
 
       // Then
       const buttons = screen.getAllByRole('button');
-      const reviewButton = buttons.find(btn => btn.textContent?.includes('Review report'));
+      const reviewButton = buttons.find((btn) => btn.textContent?.includes('Review report'));
       expect(reviewButton).not.toBeDisabled();
     });
   });
@@ -237,11 +239,13 @@ describe('ReportSetupView', () => {
         />
       );
       const cards = screen.getAllByRole('button');
-      const baselineCard = cards.find(card => card.textContent?.includes('Baseline simulation'));
+      const baselineCard = cards.find((card) => card.textContent?.includes('Baseline simulation'));
 
       // When
       await user.click(baselineCard!);
-      const configureButton = screen.getByRole('button', { name: /configure baseline simulation/i });
+      const configureButton = screen.getByRole('button', {
+        name: /configure baseline simulation/i,
+      });
       await user.click(configureButton);
 
       // Then
@@ -260,11 +264,15 @@ describe('ReportSetupView', () => {
         />
       );
       const cards = screen.getAllByRole('button');
-      const comparisonCard = cards.find(card => card.textContent?.includes('Comparison simulation'));
+      const comparisonCard = cards.find((card) =>
+        card.textContent?.includes('Comparison simulation')
+      );
 
       // When
       await user.click(comparisonCard!);
-      const configureButton = screen.getByRole('button', { name: /configure comparison simulation/i });
+      const configureButton = screen.getByRole('button', {
+        name: /configure comparison simulation/i,
+      });
       await user.click(configureButton);
 
       // Then

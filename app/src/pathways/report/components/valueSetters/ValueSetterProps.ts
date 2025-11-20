@@ -1,6 +1,6 @@
 import { Dispatch, SetStateAction } from 'react';
-import { PolicyStateProps } from '@/types/pathwayState';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { PolicyStateProps } from '@/types/pathwayState';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 
 export interface ValueSetterProps {
