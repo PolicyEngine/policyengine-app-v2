@@ -132,6 +132,9 @@ export default function BlogPage() {
   );
 }
 
+// Scroll offset for TOC navigation (accounts for fixed header)
+const SCROLL_OFFSET_PX = 72;
+
 // Calculate reading time
 function calculateReadingTime(text: string): string {
   const wordsPerMinute = 200;
@@ -640,8 +643,9 @@ function LeftContents({ markdown }: { markdown: string }) {
           onClick={() => {
             const element = document.getElementById(slug);
             if (element) {
+              const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
               window.scrollTo({
-                top: element.offsetTop - 200,
+                top: elementPosition - SCROLL_OFFSET_PX,
                 behavior: 'smooth',
               });
             }
