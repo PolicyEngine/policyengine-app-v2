@@ -108,7 +108,7 @@ export default function BlogPage() {
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
       <Box style={{ backgroundColor: colors.gray[50] }}>
-        <Container size="xl" py="xl">
+        <Container size="xl" py={80}>
           <PostHeadingSection
             post={post}
             markdown={content}
@@ -535,7 +535,7 @@ function ShareLinks({ post, displayCategory }: { post: BlogPost; displayCategory
     {
       name: 'LinkedIn',
       icon: 'in',
-      url: `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(currentUrl)}&title=${encodeURIComponent(post.title)}&summary=${encodeURIComponent(post.description)}`,
+      url: `https://www.linkedin.com/shareArticle?mini=true&url=${currentUrl}&title=${post.title}&summary=${post.description}`,
     },
     {
       name: 'Email',
