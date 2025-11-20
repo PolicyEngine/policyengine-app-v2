@@ -8,7 +8,7 @@
 /**
  * App type discriminator
  */
-export type AppType = 'streamlit' | 'iframe' | 'custom';
+export type AppType = 'streamlit' | 'iframe' | 'obbba-iframe' | 'custom';
 
 /**
  * Base fields shared by all app types
@@ -62,6 +62,14 @@ export interface IframeApp extends BaseApp {
 }
 
 /**
+ * OBBBA iframe with postMessage support
+ */
+export interface OBBBAIframeApp extends BaseApp {
+  /** App type discriminator */
+  type: 'obbba-iframe';
+}
+
+/**
  * Custom app with specialized render logic
  */
 export interface CustomApp extends BaseApp {
@@ -81,7 +89,7 @@ export interface CustomApp extends BaseApp {
 /**
  * Union type for all app types
  */
-export type App = StreamlitApp | IframeApp | CustomApp;
+export type App = StreamlitApp | IframeApp | OBBBAIframeApp | CustomApp;
 
 /**
  * Props for app page component
@@ -132,9 +140,9 @@ export interface IframeContentProps {
 }
 
 /**
- * Props for advanced iframe with postMessage support
+ * Props for OBBBA iframe with postMessage support
  */
-export interface AdvancedIframeProps extends IframeContentProps {
+export interface OBBBAIframeProps extends IframeContentProps {
   /** Enable URL parameter forwarding */
   forwardUrlParams?: boolean;
 
