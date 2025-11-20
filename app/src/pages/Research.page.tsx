@@ -37,6 +37,7 @@ function parseArrayParam(value: string | null, defaultValue: string[] = []): str
 function buildFilterParams(
   filters: {
     search: string;
+    types: string[];
     topics: string[];
     locations: string[];
     authors: string[];
@@ -47,6 +48,9 @@ function buildFilterParams(
 
   if (filters.search) {
     params.set('search', filters.search);
+  }
+  if (filters.types.length) {
+    params.set('types', filters.types.join(','));
   }
   if (filters.topics.length) {
     params.set('topics', filters.topics.join(','));
@@ -77,6 +81,9 @@ export default function ResearchPage() {
 
   // Filter state - initialize from URL params
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(() =>
+    parseArrayParam(searchParams.get('types'))
+  );
   const [selectedTopics, setSelectedTopics] = useState<string[]>(() =>
     parseArrayParam(searchParams.get('topics'))
   );
@@ -92,6 +99,7 @@ export default function ResearchPage() {
     const params = buildFilterParams(
       {
         search: searchQuery,
+        types: selectedTypes,
         topics: selectedTopics,
         locations: selectedLocations,
         authors: selectedAuthors,
@@ -99,11 +107,19 @@ export default function ResearchPage() {
       defaultLocations
     );
     setSearchParams(params, { replace: true });
-  }, [selectedTopics, selectedLocations, selectedAuthors, searchQuery, defaultLocations, setSearchParams]);
+  }, [selectedTypes, selectedTopics, selectedLocations, selectedAuthors, searchQuery, defaultLocations, setSearchParams]);
 
   // Filter items
   const filteredItems = useMemo(() => {
     let items = allItems;
+
+    // Filter by type
+    if (selectedTypes.length > 0) {
+      items = items.filter((item) => {
+        const itemType = item.isApp ? 'interactive' : 'article';
+        return selectedTypes.includes(itemType);
+      });
+    }
 
     // Filter by topics
     if (selectedTopics.length > 0) {
@@ -136,7 +152,7 @@ export default function ResearchPage() {
     }
 
     return items;
-  }, [allItems, selectedTopics, selectedLocations, selectedAuthors, searchQuery]);
+  }, [allItems, selectedTypes, selectedTopics, selectedLocations, selectedAuthors, searchQuery]);
 
   // Handle search submit (just triggers the useEffect via state change)
   const handleSearchSubmit = () => {
@@ -174,6 +190,8 @@ export default function ResearchPage() {
               searchQuery={searchQuery}
               onSearchChange={setSearchQuery}
               onSearchSubmit={handleSearchSubmit}
+              selectedTypes={selectedTypes}
+              onTypesChange={setSelectedTypes}
               selectedTopics={selectedTopics}
               onTopicsChange={setSelectedTopics}
               selectedLocations={selectedLocations}

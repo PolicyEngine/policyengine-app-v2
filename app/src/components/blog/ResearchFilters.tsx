@@ -20,11 +20,18 @@ interface ResearchFiltersProps {
   onLocationsChange: (locations: string[]) => void;
   selectedAuthors: string[];
   onAuthorsChange: (authors: string[]) => void;
+  selectedTypes: string[];
+  onTypesChange: (types: string[]) => void;
   availableAuthors: { key: string; name: string }[];
   countryId?: string;
 }
 
-type ExpandedSection = 'topics' | 'locations' | 'authors' | null;
+type ExpandedSection = 'type' | 'topics' | 'locations' | 'authors' | null;
+
+const typeOptions = [
+  { value: 'article', label: 'Article' },
+  { value: 'interactive', label: 'Interactive' },
+];
 
 export function ResearchFilters({
   searchQuery,
@@ -36,6 +43,8 @@ export function ResearchFilters({
   onLocationsChange,
   selectedAuthors,
   onAuthorsChange,
+  selectedTypes,
+  onTypesChange,
   availableAuthors,
   countryId = 'us',
 }: ResearchFiltersProps) {
@@ -94,6 +103,29 @@ export function ResearchFilters({
       onAuthorsChange([...selectedAuthors, key]);
     }
   };
+
+  const handleTypeToggle = (type: string) => {
+    if (selectedTypes.includes(type)) {
+      onTypesChange(selectedTypes.filter((t) => t !== type));
+    } else {
+      onTypesChange([...selectedTypes, type]);
+    }
+  };
+
+  // Render type options
+  const renderTypeOptions = () => (
+    <Stack gap={4}>
+      {typeOptions.map((option) => (
+        <Checkbox
+          key={option.value}
+          label={option.label}
+          checked={selectedTypes.includes(option.value)}
+          onChange={() => handleTypeToggle(option.value)}
+          size="sm"
+        />
+      ))}
+    </Stack>
+  );
 
   // Render the tags for a section
   const renderTopicTags = () => (
@@ -217,6 +249,28 @@ export function ResearchFilters({
           overflow: 'hidden',
         }}
       >
+        {/* Type Header */}
+        <Group
+          justify="space-between"
+          onClick={() => toggleSection('type')}
+          style={{ cursor: 'pointer', flexShrink: 0 }}
+          py="xs"
+        >
+          <Text fw={600} size="sm">
+            Type
+          </Text>
+          <Text size="sm" c="dimmed">
+            {expandedSection === 'type' ? '−' : '+'}
+          </Text>
+        </Group>
+
+        {/* Type Content */}
+        {expandedSection === 'type' && (
+          <Box style={{ overflowY: 'auto', minHeight: 0, maxHeight: availableHeight - 16, paddingBottom: 8 }}>
+            {renderTypeOptions()}
+          </Box>
+        )}
+
         {/* Topics Header */}
         <Group
           justify="space-between"

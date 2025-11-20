@@ -1,15 +1,5 @@
 [
   {
-    "_comment": "INTERACTIVE - Will be migrated to apps.json. This is a placeholder blog entry.",
-    "title": "Two-child limit calculator",
-    "description": "Explore policy reforms to the two-child benefit limit and their impacts on households, government spending, and child poverty.",
-    "date": "2025-10-28",
-    "tags": ["uk", "featured", "policy", "interactives"],
-    "filename": "two-child-limit-calculator-dummy.md",
-    "image": "young-child-exemption-two-child-limit.jpg",
-    "authors": ["vahid-ahmadi"]
-  },
-  {
     "title": "Marginal tax rates in California's proposed billionaire tax",
     "description": "The 5% tax creates marginal tax rates between 50% and 60% on wealth between $1 billion and $1.1 billion.",
     "date": "2025-10-25",
@@ -178,16 +168,6 @@
     "authors": [
       "david-trimmer"
     ]
-  },
-  {
-    "_comment": "INTERACTIVE - Will be migrated to apps.json. This is a placeholder blog entry.",
-    "title": "The One Big Beautiful Bill Act, household by household",
-    "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",
-    "date": "2025-08-11",
-    "tags": ["us", "policy", "featured", "reconciliation", "interactives"],
-    "filename": "obbba-household-by-household-dummy.md",
-    "image": "obbba-household-by-household.png",
-    "authors": ["max-ghenis", "pavel-makarchuk", "ben-ogorek", "nikhil-woodruff"]
   },
   {
     "title": "Enhanced CPS full launch: Comprehensive microdata for policy analysis",
