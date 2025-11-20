@@ -108,20 +108,20 @@ describe('reportPopulationLock', () => {
   });
 
   describe('getPopulationSelectionTitle', () => {
-    it('given shouldLock true then returns Apply Household(s)', () => {
+    it('given shouldLock true then returns Apply household(s)', () => {
       // When
       const result = getPopulationSelectionTitle(true);
 
       // Then
-      expect(result).toBe('Apply Household(s)');
+      expect(result).toBe('Apply household(s)');
     });
 
-    it('given shouldLock false then returns Select Household(s)', () => {
+    it('given shouldLock false then returns Select household(s)', () => {
       // When
       const result = getPopulationSelectionTitle(false);
 
       // Then
-      expect(result).toBe('Select Household(s)');
+      expect(result).toBe('Select household(s)');
     });
   });
 
