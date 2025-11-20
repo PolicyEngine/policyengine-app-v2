@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { TextInput } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { PathwayMode } from '@/types/pathwayModes/PathwayMode';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
@@ -75,7 +75,7 @@ export default function SimulationLabelView({
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Create simulation"
       content={formInputs}
       primaryAction={primaryAction}

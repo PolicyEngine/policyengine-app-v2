@@ -5,7 +5,7 @@
  */
 
 import { useState } from 'react';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 
@@ -89,7 +89,7 @@ export default function SimulationPolicySetupView({
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Select policy"
       variant="buttonPanel"
       buttonPanelCards={buttonPanelCards}

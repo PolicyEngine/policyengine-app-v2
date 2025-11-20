@@ -1,6 +1,6 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import AppLayout from './components/AppLayout';
+import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
+import StandardLayout from './components/StandardLayout';
 import StaticLayout from './components/StaticLayout';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
@@ -42,7 +42,11 @@ const router = createBrowserRouter(
           element: <MetadataGuard />,
           children: [
             {
-              element: <AppLayout />,
+              element: (
+                <StandardLayout>
+                  <Outlet />
+                </StandardLayout>
+              ),
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
@@ -58,7 +62,11 @@ const router = createBrowserRouter(
           children: [
             // Regular routes with standard layout
             {
-              element: <AppLayout />,
+              element: (
+                <StandardLayout>
+                  <Outlet />
+                </StandardLayout>
+              ),
               children: [
                 {
                   path: 'dashboard',

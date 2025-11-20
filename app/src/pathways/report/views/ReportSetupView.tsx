@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { isGeographicMetadataWithAssociation, useUserGeographics } from '@/hooks/useUserGeographic';
 import { isHouseholdMetadataWithAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
@@ -146,7 +146,7 @@ export default function ReportSetupView({
   const primaryAction = getPrimaryAction();
 
   return (
-    <FlowView
+    <PathwayView
       title="Configure report"
       variant="setupConditions"
       setupConditionCards={setupConditionCards}

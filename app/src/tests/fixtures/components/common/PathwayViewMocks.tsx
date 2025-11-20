@@ -1,10 +1,10 @@
 import { vi } from 'vitest';
-import { ButtonConfig } from '@/components/common/FlowView';
+import { ButtonConfig } from '@/components/common/PathwayView';
 
 // Test constants for strings
-export const FLOW_VIEW_STRINGS = {
+export const PATHWAY_VIEW_STRINGS = {
   // Titles
-  MAIN_TITLE: 'Test Flow Title',
+  MAIN_TITLE: 'Test Pathway Title',
   SUBTITLE: 'This is a test subtitle',
 
   // Button labels
@@ -42,7 +42,7 @@ export const FLOW_VIEW_STRINGS = {
 } as const;
 
 // Test constants for variants
-export const FLOW_VIEW_VARIANTS = {
+export const PATHWAY_VIEW_VARIANTS = {
   SETUP_CONDITIONS: 'setupConditions' as const,
   BUTTON_PANEL: 'buttonPanel' as const,
   CARD_LIST: 'cardList' as const,
@@ -72,24 +72,24 @@ export const mockItemClick = vi.fn();
 // Mock setup condition cards
 export const mockSetupConditionCards = [
   {
-    title: FLOW_VIEW_STRINGS.SETUP_CARD_1_TITLE,
-    description: FLOW_VIEW_STRINGS.SETUP_CARD_1_DESC,
+    title: PATHWAY_VIEW_STRINGS.SETUP_CARD_1_TITLE,
+    description: PATHWAY_VIEW_STRINGS.SETUP_CARD_1_DESC,
     onClick: mockCardClick,
     isSelected: false,
     isDisabled: false,
     isFulfilled: false,
   },
   {
-    title: FLOW_VIEW_STRINGS.SETUP_CARD_2_TITLE,
-    description: FLOW_VIEW_STRINGS.SETUP_CARD_2_DESC,
+    title: PATHWAY_VIEW_STRINGS.SETUP_CARD_2_TITLE,
+    description: PATHWAY_VIEW_STRINGS.SETUP_CARD_2_DESC,
     onClick: mockCardClick,
     isSelected: true,
     isDisabled: false,
     isFulfilled: false,
   },
   {
-    title: FLOW_VIEW_STRINGS.SETUP_CARD_3_TITLE,
-    description: FLOW_VIEW_STRINGS.SETUP_CARD_3_DESC,
+    title: PATHWAY_VIEW_STRINGS.SETUP_CARD_3_TITLE,
+    description: PATHWAY_VIEW_STRINGS.SETUP_CARD_3_DESC,
     onClick: mockCardClick,
     isSelected: false,
     isDisabled: false,
@@ -100,15 +100,15 @@ export const mockSetupConditionCards = [
 // Mock button panel cards
 export const mockButtonPanelCards = [
   {
-    title: FLOW_VIEW_STRINGS.PANEL_CARD_1_TITLE,
-    description: FLOW_VIEW_STRINGS.PANEL_CARD_1_DESC,
+    title: PATHWAY_VIEW_STRINGS.PANEL_CARD_1_TITLE,
+    description: PATHWAY_VIEW_STRINGS.PANEL_CARD_1_DESC,
     onClick: mockCardClick,
     isSelected: false,
     isDisabled: false,
   },
   {
-    title: FLOW_VIEW_STRINGS.PANEL_CARD_2_TITLE,
-    description: FLOW_VIEW_STRINGS.PANEL_CARD_2_DESC,
+    title: PATHWAY_VIEW_STRINGS.PANEL_CARD_2_TITLE,
+    description: PATHWAY_VIEW_STRINGS.PANEL_CARD_2_DESC,
     onClick: mockCardClick,
     isSelected: true,
     isDisabled: false,
@@ -118,21 +118,21 @@ export const mockButtonPanelCards = [
 // Mock card list items
 export const mockCardListItems = [
   {
-    title: FLOW_VIEW_STRINGS.LIST_ITEM_1_TITLE,
-    subtitle: FLOW_VIEW_STRINGS.LIST_ITEM_1_SUBTITLE,
+    title: PATHWAY_VIEW_STRINGS.LIST_ITEM_1_TITLE,
+    subtitle: PATHWAY_VIEW_STRINGS.LIST_ITEM_1_SUBTITLE,
     onClick: mockItemClick,
     isSelected: false,
     isDisabled: false,
   },
   {
-    title: FLOW_VIEW_STRINGS.LIST_ITEM_2_TITLE,
-    subtitle: FLOW_VIEW_STRINGS.LIST_ITEM_2_SUBTITLE,
+    title: PATHWAY_VIEW_STRINGS.LIST_ITEM_2_TITLE,
+    subtitle: PATHWAY_VIEW_STRINGS.LIST_ITEM_2_SUBTITLE,
     onClick: mockItemClick,
     isSelected: true,
     isDisabled: false,
   },
   {
-    title: FLOW_VIEW_STRINGS.LIST_ITEM_3_TITLE,
+    title: PATHWAY_VIEW_STRINGS.LIST_ITEM_3_TITLE,
     onClick: mockItemClick,
     isSelected: false,
     isDisabled: true,
@@ -142,46 +142,46 @@ export const mockCardListItems = [
 // Mock button configurations
 export const mockExplicitButtons: ButtonConfig[] = [
   {
-    label: FLOW_VIEW_STRINGS.BACK_BUTTON,
+    label: PATHWAY_VIEW_STRINGS.BACK_BUTTON,
     variant: BUTTON_VARIANTS.DEFAULT,
     onClick: mockOnClick,
   },
   {
-    label: FLOW_VIEW_STRINGS.CONTINUE_BUTTON,
+    label: PATHWAY_VIEW_STRINGS.CONTINUE_BUTTON,
     variant: BUTTON_VARIANTS.FILLED,
     onClick: mockOnClick,
   },
 ];
 
 export const mockPrimaryAction = {
-  label: FLOW_VIEW_STRINGS.SUBMIT_BUTTON,
+  label: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON,
   onClick: mockPrimaryClick,
   isLoading: false,
   isDisabled: false,
 };
 
 export const mockPrimaryActionDisabled = {
-  label: FLOW_VIEW_STRINGS.SUBMIT_BUTTON,
+  label: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON,
   onClick: mockPrimaryClick,
   isLoading: false,
   isDisabled: true,
 };
 
 export const mockPrimaryActionLoading = {
-  label: FLOW_VIEW_STRINGS.SUBMIT_BUTTON,
+  label: PATHWAY_VIEW_STRINGS.SUBMIT_BUTTON,
   onClick: mockPrimaryClick,
   isLoading: true,
   isDisabled: false,
 };
 
 export const mockCancelAction = {
-  label: FLOW_VIEW_STRINGS.CANCEL_BUTTON,
+  label: PATHWAY_VIEW_STRINGS.CANCEL_BUTTON,
   onClick: mockCancelClick,
 };
 
 // Mock custom content component
 export const MockCustomContent = () => (
-  <div data-testid="custom-content">{FLOW_VIEW_STRINGS.CUSTOM_CONTENT}</div>
+  <div data-testid="custom-content">{PATHWAY_VIEW_STRINGS.CUSTOM_CONTENT}</div>
 );
 
 // Helper function to reset all mocks
@@ -214,8 +214,8 @@ vi.mock('@/components/common/MultiButtonFooter', () => ({
 
 // Test data generators
 export const createSetupConditionCard = (overrides = {}) => ({
-  title: FLOW_VIEW_STRINGS.SETUP_CARD_1_TITLE,
-  description: FLOW_VIEW_STRINGS.SETUP_CARD_1_DESC,
+  title: PATHWAY_VIEW_STRINGS.SETUP_CARD_1_TITLE,
+  description: PATHWAY_VIEW_STRINGS.SETUP_CARD_1_DESC,
   onClick: mockCardClick,
   isSelected: false,
   isDisabled: false,
@@ -224,8 +224,8 @@ export const createSetupConditionCard = (overrides = {}) => ({
 });
 
 export const createButtonPanelCard = (overrides = {}) => ({
-  title: FLOW_VIEW_STRINGS.PANEL_CARD_1_TITLE,
-  description: FLOW_VIEW_STRINGS.PANEL_CARD_1_DESC,
+  title: PATHWAY_VIEW_STRINGS.PANEL_CARD_1_TITLE,
+  description: PATHWAY_VIEW_STRINGS.PANEL_CARD_1_DESC,
   onClick: mockCardClick,
   isSelected: false,
   isDisabled: false,
@@ -233,8 +233,8 @@ export const createButtonPanelCard = (overrides = {}) => ({
 });
 
 export const createCardListItem = (overrides = {}) => ({
-  title: FLOW_VIEW_STRINGS.LIST_ITEM_1_TITLE,
-  subtitle: FLOW_VIEW_STRINGS.LIST_ITEM_1_SUBTITLE,
+  title: PATHWAY_VIEW_STRINGS.LIST_ITEM_1_TITLE,
+  subtitle: PATHWAY_VIEW_STRINGS.LIST_ITEM_1_SUBTITLE,
   onClick: mockItemClick,
   isSelected: false,
   isDisabled: false,

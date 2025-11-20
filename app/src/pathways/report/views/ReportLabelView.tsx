@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Select, TextInput } from '@mantine/core';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getTaxYears } from '@/libs/metadataUtils';
@@ -71,7 +71,7 @@ export default function ReportLabelView({ label, year, onUpdateLabel, onUpdateYe
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Create report"
       content={formInputs}
       primaryAction={primaryAction}

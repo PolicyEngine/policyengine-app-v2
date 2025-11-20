@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters';
-import FlowView from '@/components/common/FlowView';
+import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import {
   isGeographicMetadataWithAssociation,
@@ -187,7 +187,7 @@ export default function PopulationExistingView({
 
   if (isLoading) {
     return (
-      <FlowView
+      <PathwayView
         title="Select existing household(s)"
         content={<Text>Loading households...</Text>}
         buttonPreset="none"
@@ -197,7 +197,7 @@ export default function PopulationExistingView({
 
   if (isError) {
     return (
-      <FlowView
+      <PathwayView
         title="Select existing household(s)"
         content={
           <Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>
@@ -209,7 +209,7 @@ export default function PopulationExistingView({
 
   if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
     return (
-      <FlowView
+      <PathwayView
         title="Select existing household(s)"
         content={<Text>No households available. Please create new household(s).</Text>}
         primaryAction={{
@@ -235,7 +235,7 @@ export default function PopulationExistingView({
   );
   console.log('[PopulationExistingView] Filtered households:', filteredHouseholds);
 
-  // Combine all populations (pagination handled by FlowView)
+  // Combine all populations (pagination handled by PathwayView)
   const allPopulations = [...filteredHouseholds, ...geographicPopulations];
 
   // Build card list items from ALL household populations
@@ -331,7 +331,7 @@ export default function PopulationExistingView({
   };
 
   return (
-    <FlowView
+    <PathwayView
       title="Select existing household(s)"
       variant="cardList"
       cardListItems={cardListItems}
