@@ -7,15 +7,46 @@ import { Route, Routes } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
 import { CountryAppGuard } from '@/routing/guards/CountryAppGuard';
 import {
-  MOCK_APPS,
   renderWithRouter,
   TEST_APP_SLUGS,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/routing/guards/countryAppGuardHelpers';
 
-// Mock must be at top level before imports
+// Mock must be at top level before imports - define inline to avoid hoisting issues
 vi.mock('@/data/apps/appTransformers', () => ({
-  apps: MOCK_APPS,
+  apps: [
+    {
+      slug: 'test-us-app',
+      title: 'Test US App',
+      description: 'A test app for US',
+      source: 'https://example.com/us-app',
+      tags: ['us', 'test'],
+      countryId: 'us',
+      type: 'streamlit',
+    },
+    {
+      slug: 'test-uk-app',
+      title: 'Test UK App',
+      description: 'A test app for UK',
+      source: 'https://example.com/uk-app',
+      tags: ['uk', 'test'],
+      countryId: 'uk',
+      type: 'iframe',
+    },
+    {
+      slug: 'test-research-app',
+      title: 'Test Research App',
+      description: 'A test app with research display',
+      source: 'https://example.com/research-app',
+      tags: ['us', 'test'],
+      countryId: 'us',
+      type: 'iframe',
+      displayWithResearch: true,
+      image: 'test-image.jpg',
+      date: '2025-01-01',
+      authors: ['test-author'],
+    },
+  ],
 }));
 
 describe('CountryAppGuard', () => {

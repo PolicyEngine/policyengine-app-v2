@@ -5,7 +5,6 @@
 import { render as rtlRender } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { MemoryRouter } from 'react-router-dom';
-import { vi } from 'vitest';
 import { MantineProvider } from '@mantine/core';
 import { store } from '@/store';
 import { policyEngineTheme } from '@/theme';
@@ -61,11 +60,6 @@ export const MOCK_RESEARCH_APP: App = {
 
 // Mock apps list for testing
 export const MOCK_APPS: App[] = [MOCK_US_APP, MOCK_UK_APP, MOCK_RESEARCH_APP];
-
-// Mock app transformers at module level
-vi.mock('@/data/apps/appTransformers', () => ({
-  apps: MOCK_APPS,
-}));
 
 // Helper to render with router for guard tests
 export const renderWithRouter = (ui: React.ReactElement, initialPath: string) => {

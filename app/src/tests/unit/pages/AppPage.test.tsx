@@ -6,19 +6,74 @@ import { screen } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { describe, expect, test, vi } from 'vitest';
 import AppPage from '@/pages/AppPage';
-import {
-  MOCK_APPS,
-  MOCK_IFRAME_APP,
-  MOCK_OBBBA_APP,
-  MOCK_RESEARCH_IFRAME_APP,
-  MOCK_STREAMLIT_APP,
-  renderWithRouter,
-} from '@/tests/fixtures/pages/appPageHelpers';
+import { renderWithRouter } from '@/tests/fixtures/pages/appPageHelpers';
 
 // Mocks must be at top level before component imports
 vi.mock('@/data/apps/appTransformers', () => ({
-  apps: MOCK_APPS,
+  apps: [
+    {
+      slug: 'test-streamlit-app',
+      title: 'Test Streamlit App',
+      description: 'A test Streamlit application',
+      source: 'https://example.com/streamlit-app',
+      tags: ['us', 'test'],
+      countryId: 'us',
+      type: 'streamlit',
+    },
+    {
+      slug: 'test-iframe-app',
+      title: 'Test Iframe App',
+      description: 'A test iframe application',
+      source: 'https://example.com/iframe-app',
+      tags: ['us', 'test'],
+      countryId: 'us',
+      type: 'iframe',
+    },
+    {
+      slug: 'test-obbba-app',
+      title: 'Test OBBBA App',
+      description: 'A test OBBBA iframe application',
+      source: 'https://example.com/obbba-app',
+      tags: ['us', 'test'],
+      countryId: 'us',
+      type: 'obbba-iframe',
+    },
+    {
+      slug: 'test-research-iframe',
+      title: 'Test Research Iframe',
+      description: 'A test iframe application displayed on research page',
+      source: 'https://example.com/research-iframe',
+      tags: ['us', 'test'],
+      countryId: 'us',
+      type: 'iframe',
+      displayWithResearch: true,
+      image: 'test-research-iframe.jpg',
+      date: '2025-01-15',
+      authors: ['test-author'],
+    },
+  ],
 }));
+
+// Define test constants after imports
+const MOCK_STREAMLIT_APP = {
+  slug: 'test-streamlit-app',
+  title: 'Test Streamlit App',
+};
+
+const MOCK_IFRAME_APP = {
+  slug: 'test-iframe-app',
+  title: 'Test Iframe App',
+};
+
+const MOCK_OBBBA_APP = {
+  slug: 'test-obbba-app',
+  title: 'Test OBBBA App',
+};
+
+const MOCK_RESEARCH_IFRAME_APP = {
+  slug: 'test-research-iframe',
+  title: 'Test Research Iframe',
+};
 
 vi.mock('@/components/interactive', () => ({
   StreamlitEmbed: vi.fn(({ title }) => <div data-testid="streamlit-embed">{title}</div>),
