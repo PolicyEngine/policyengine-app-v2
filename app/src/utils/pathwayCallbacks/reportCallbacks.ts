@@ -29,6 +29,13 @@ export function createReportCallbacks<TMode>(
   }, [setState]);
 
   /**
+   * Updates the report year
+   */
+  const updateYear = useCallback((year: string) => {
+    setState((prev) => ({ ...prev, year }));
+  }, [setState]);
+
+  /**
    * Navigates to simulation selection for a specific simulation slot
    */
   const navigateToSimulationSelection = useCallback((simulationIndex: 0 | 1) => {
@@ -96,6 +103,7 @@ export function createReportCallbacks<TMode>(
 
   return {
     updateLabel,
+    updateYear,
     navigateToSimulationSelection,
     handleSelectExistingSimulation,
     copyPopulationFromOtherSimulation,

@@ -3,10 +3,6 @@ import { useDispatch } from 'react-redux';
 import { Navigate, Outlet, useParams } from 'react-router-dom';
 import { countryIds } from '@/libs/countries';
 import { setCurrentCountry } from '@/reducers/metadataReducer';
-import { clearAllPolicies } from '@/reducers/policyReducer';
-import { clearAllPopulations } from '@/reducers/populationReducer';
-import { clearReport } from '@/reducers/reportReducer';
-import { clearAllSimulations } from '@/reducers/simulationsReducer';
 import { AppDispatch } from '@/store';
 
 /**
@@ -16,15 +12,12 @@ import { AppDispatch } from '@/store';
  * - URL parameter is the single source of truth for country
  * - This guard validates the country parameter
  * - Components read country directly from URL via useCurrentCountry() hook
- * - Syncs to Redux state for metadata loading and session-scoped state management
+ * - Syncs to Redux state for metadata loading
  *
  * Flow:
  * 1. Validates countryId from URL parameter
  * 2. If valid, syncs to Redux metadata state
- * 3. Clears all ingredient state for new country (session-scoped behavior)
- *    - Policies, simulations, populations, and reports are all cleared
- *    - This prevents cross-country data contamination
- * 4. If invalid, redirects to root path
+ * 3. If invalid, redirects to root path
  *
  * Acts as a layout component that either redirects or renders child routes.
  */
@@ -35,18 +28,10 @@ export function CountryGuard() {
   // Validation logic
   const isValid = countryId && countryIds.includes(countryId as any);
 
-  // Sync country to Redux and clear all ingredient state (session-scoped)
-  // This ensures all state is tied to the current country session and prevents
-  // cross-country data contamination (e.g., US policy used with UK simulation)
+  // Sync country to Redux for metadata loading
   useEffect(() => {
     if (isValid && countryId) {
       dispatch(setCurrentCountry(countryId));
-      // Clear all ingredient state when country changes
-      // Pass countryId directly from URL to avoid race conditions
-      dispatch(clearReport(countryId as (typeof countryIds)[number]));
-      dispatch(clearAllPolicies());
-      dispatch(clearAllSimulations());
-      dispatch(clearAllPopulations());
     }
   }, [countryId, isValid, dispatch]);
 

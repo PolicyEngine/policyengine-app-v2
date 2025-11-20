@@ -17,8 +17,8 @@ import {
   getUKCountries,
   getUSStates,
 } from '@/utils/regionStrategies';
-import UKGeographicOptions from '@/frames/population/UKGeographicOptions';
-import USGeographicOptions from '@/frames/population/USGeographicOptions';
+import UKGeographicOptions from '../../components/geographicOptions/UKGeographicOptions';
+import USGeographicOptions from '../../components/geographicOptions/USGeographicOptions';
 import { countryIds } from '@/libs/countries';
 
 type ScopeType = 'national' | 'country' | 'constituency' | 'state' | 'household';

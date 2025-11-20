@@ -15,6 +15,7 @@ import { SimulationStateProps } from './SimulationStateProps';
 export interface ReportStateProps {
   id?: string; // Populated after API creation
   label: string | null; // Required field, can be null
+  year: string; // Tax/simulation year for the report
   countryId: (typeof countryIds)[number]; // Required - determines which API to use
   apiVersion: string | null; // API version for calculations
   status: 'pending' | 'complete' | 'error'; // Report generation status

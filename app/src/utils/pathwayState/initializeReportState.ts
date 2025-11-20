@@ -1,3 +1,4 @@
+import { CURRENT_YEAR } from '@/constants';
 import { ReportStateProps } from '@/types/pathwayState';
 import { initializeSimulationState } from './initializeSimulationState';
 
@@ -16,6 +17,7 @@ export function initializeReportState(countryId: string): ReportStateProps {
   return {
     id: undefined,
     label: null,
+    year: CURRENT_YEAR,
     countryId: countryId as any, // Type assertion for countryIds type
     apiVersion: null,
     status: 'pending',
