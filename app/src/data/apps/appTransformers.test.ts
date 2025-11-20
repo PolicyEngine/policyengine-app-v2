@@ -17,25 +17,25 @@ describe('appTransformers', () => {
       expect(app.slug).toBeDefined();
       expect(app.title).toBeDefined();
       expect(app.description).toBeDefined();
-      expect(app.url).toBeDefined();
+      expect(app.source).toBeDefined();
       expect(app.type).toBeDefined();
-      expect(['streamlit', 'iframe', 'custom']).toContain(app.type);
+      expect(['streamlit', 'iframe', 'obbba-iframe', 'custom']).toContain(app.type);
       expect(app.tags).toBeDefined();
       expect(Array.isArray(app.tags)).toBe(true);
       expect(app.countryId).toBeDefined();
     });
   });
 
-  test('all apps have valid URLs', () => {
+  test('all apps have valid source URLs', () => {
     apps.forEach((app) => {
-      expect(app.url).toMatch(/^https?:\/\//);
+      expect(app.source).toMatch(/^https?:\/\//);
     });
   });
 
-  test('all streamlit apps have streamlit.app URLs', () => {
+  test('all streamlit apps have streamlit.app source URLs', () => {
     const streamlitApps = apps.filter((a) => a.type === 'streamlit');
     streamlitApps.forEach((app) => {
-      expect(app.url).toMatch(/\.streamlit\.app/);
+      expect(app.source).toMatch(/\.streamlit\.app/);
     });
   });
 
@@ -61,20 +61,15 @@ describe('appTransformers', () => {
     expect(uniqueSlugs.size).toBe(slugs.length);
   });
 
-  test('OBBBA custom apps are configured correctly', () => {
+  test('OBBBA iframe apps are configured correctly', () => {
     const obbbaApps = apps.filter((a) =>
-      a.slug.includes('obbba') && a.type === 'custom'
+      a.slug.includes('obbba') && a.type === 'obbba-iframe'
     );
 
     expect(obbbaApps.length).toBeGreaterThan(0);
 
     obbbaApps.forEach((app) => {
-      if (app.type === 'custom') {
-        expect(app.component).toBe('OBBBAEmbed');
-        expect(app.postMessage).toBe(true);
-        expect(app.urlSync).toBe(true);
-        expect(app.url).toMatch(/policyengine\.github\.io/);
-      }
+      expect(app.source).toMatch(/policyengine\.github\.io/);
     });
   });
 

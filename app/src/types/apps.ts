@@ -23,8 +23,8 @@ interface BaseApp {
   /** Brief description of the app */
   description: string;
 
-  /** External URL where the app is hosted */
-  url: string;
+  /** External source URL where the app is hosted */
+  source: string;
 
   /** Array of tags (topics and locations) */
   tags: string[];

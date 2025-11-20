@@ -7,9 +7,8 @@
 
 import { useParams } from 'react-router-dom';
 import { apps } from '@/data/apps/appTransformers';
-import StreamlitEmbed from '@/components/interactive/StreamlitEmbed';
-import SimpleIframe from '@/components/interactive/SimpleIframe';
-import OBBBAEmbed from '@/components/interactive/OBBBAEmbed';
+import { StreamlitEmbed, OBBBAIframeContent } from '@/components/interactive';
+import IframeContent from '@/components/IframeContent';
 
 export default function AppPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -29,21 +28,18 @@ export default function AppPage() {
   if (app.type === 'streamlit') {
     return (
       <StreamlitEmbed
-        embedUrl={`${app.url}?embedded=true`}
-        directUrl={app.url}
+        embedUrl={`${app.source}?embedded=true`}
+        directUrl={app.source}
         title={app.title}
         iframeTitle={app.description}
       />
     );
   }
 
-  if (app.type === 'custom') {
-    // Currently only OBBBA apps use custom components
-    if (app.component === 'OBBBAEmbed') {
-      return <OBBBAEmbed url={app.url} title={app.title} />;
-    }
+  if (app.type === 'obbba-iframe') {
+    return <OBBBAIframeContent url={app.source} title={app.title} />;
   }
 
-  // Default: simple iframe
-  return <SimpleIframe url={app.url} title={app.title} />;
+  // Default: standard iframe (for 'iframe' type)
+  return <IframeContent url={app.source} title={app.title} />;
 }
