@@ -99,7 +99,7 @@
     "countryId": "us"
   },
   {
-    "type": "applet",
+    "type": "iframe",
     "slug": "two-child-limit-comparison",
     "title": "Two-child limit calculator",
     "description": "Explore policy reforms to the two-child benefit limit and their impacts on households, government spending, and child poverty.",
@@ -121,7 +121,7 @@
     "countryId": "us"
   },
   {
-    "type": "applet",
+    "type": "iframe",
     "slug": "obbba-household-by-household",
     "title": "The One Big Beautiful Bill Act, household by household",
     "description": "Our latest interactive shows how the reconciliation bill affects each of 20,000 representative households across income levels, states, and provisions.",

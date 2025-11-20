@@ -3,6 +3,12 @@
  */
 
 import { vi } from 'vitest';
+import { render as rtlRender } from '@testing-library/react';
+import { Provider } from 'react-redux';
+import { MemoryRouter } from 'react-router-dom';
+import { MantineProvider } from '@mantine/core';
+import { store } from '@/store';
+import { policyEngineTheme } from '@/theme';
 import type { App } from '@/types/apps';
 
 // Test app types
@@ -10,7 +16,6 @@ export const APP_TYPES = {
   STREAMLIT: 'streamlit',
   IFRAME: 'iframe',
   OBBBA_IFRAME: 'obbba-iframe',
-  APPLET: 'applet',
 } as const;
 
 // Mock Streamlit app
@@ -46,17 +51,17 @@ export const MOCK_OBBBA_APP: App = {
   type: APP_TYPES.OBBBA_IFRAME,
 };
 
-// Mock applet
-export const MOCK_APPLET_APP: App = {
-  slug: 'test-applet',
-  title: 'Test Applet',
-  description: 'A test applet application',
-  source: 'https://example.com/applet',
+// Mock iframe app with research display
+export const MOCK_RESEARCH_IFRAME_APP: App = {
+  slug: 'test-research-iframe',
+  title: 'Test Research Iframe',
+  description: 'A test iframe application displayed on research page',
+  source: 'https://example.com/research-iframe',
   tags: ['us', 'test'],
   countryId: 'us',
-  type: APP_TYPES.APPLET,
+  type: APP_TYPES.IFRAME,
   displayWithResearch: true,
-  image: 'test-applet.jpg',
+  image: 'test-research-iframe.jpg',
   date: '2025-01-15',
   authors: ['test-author'],
 };
@@ -66,7 +71,7 @@ export const MOCK_APPS: App[] = [
   MOCK_STREAMLIT_APP,
   MOCK_IFRAME_APP,
   MOCK_OBBBA_APP,
-  MOCK_APPLET_APP,
+  MOCK_RESEARCH_IFRAME_APP,
 ];
 
 // Expected embed URLs
@@ -74,22 +79,18 @@ export const EXPECTED_EMBED_URLS = {
   STREAMLIT: `${MOCK_STREAMLIT_APP.source}?embedded=true`,
   IFRAME: MOCK_IFRAME_APP.source,
   OBBBA: MOCK_OBBBA_APP.source,
-  APPLET: MOCK_APPLET_APP.source,
+  RESEARCH_IFRAME: MOCK_RESEARCH_IFRAME_APP.source,
 } as const;
 
-// Mock setup for app transformers
-export const setupAppPageMocks = () => {
-  vi.mock('@/data/apps/appTransformers', () => ({
-    apps: MOCK_APPS,
-  }));
-
-  // Mock embed components
-  vi.mock('@/components/interactive', () => ({
-    StreamlitEmbed: vi.fn(({ title }) => <div data-testid="streamlit-embed">{title}</div>),
-    OBBBAIframeContent: vi.fn(({ title }) => <div data-testid="obbba-embed">{title}</div>),
-  }));
-
-  vi.mock('@/components/IframeContent', () => ({
-    default: vi.fn(({ title }) => <div data-testid="iframe-content">{title}</div>),
-  }));
+// Helper to render with router for app tests
+export const renderWithRouter = (ui: React.ReactElement, initialPath: string) => {
+  return rtlRender(
+    <Provider store={store}>
+      <MantineProvider theme={policyEngineTheme} env="test">
+        <MemoryRouter initialEntries={[initialPath]}>
+          {ui}
+        </MemoryRouter>
+      </MantineProvider>
+    </Provider>
+  );
 };

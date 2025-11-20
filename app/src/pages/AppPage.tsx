@@ -40,10 +40,6 @@ export default function AppPage() {
     return <OBBBAIframeContent url={app.source} title={app.title} />;
   }
 
-  if (app.type === 'applet') {
-    return <IframeContent url={app.source} title={app.title} />;
-  }
-
-  // Default: standard iframe (for 'iframe' type)
+  // Default: standard iframe (for 'iframe' type and any other types)
   return <IframeContent url={app.source} title={app.title} />;
 }
