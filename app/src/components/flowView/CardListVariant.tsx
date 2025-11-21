@@ -30,7 +30,7 @@ export default function CardListVariant({
   const paginatedItems = items.slice(startIndex, endIndex);
 
   return (
-    <Stack gap={spacing.sm}>
+    <Stack>
       {paginatedItems.map((item: CardListItem, index: number) => {
         // Determine variant based on disabled state first, then selection
         let variant = 'cardList--inactive';
