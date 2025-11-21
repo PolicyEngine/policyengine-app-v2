@@ -2,7 +2,7 @@
  * HouseholdBuilderForm - Pure presentation component for household building UI
  *
  * Implements the Mockup 3 design with:
- * - Marital Status, Number of Children controls (year comes from report context)
+ * - Tax Year (read-only, from report context), Marital Status, Number of Children controls
  * - Individuals accordion with basic inputs (age, employment_income) + custom variables
  * - Household Variables accordion with basic inputs (state_name, etc.) + custom variables
  * - Inline search for adding custom variables per person or household-level
@@ -242,6 +242,21 @@ export default function HouseholdBuilderForm({
     <Stack gap="lg">
       {/* Household Information */}
       <Stack gap="md">
+        {/* Tax Year - read-only, shows year from report context */}
+        <TextInput
+          label="Tax Year"
+          value={year}
+          readOnly
+          disabled
+          description="Year is determined by the report you're creating"
+          styles={{
+            input: {
+              cursor: 'not-allowed',
+              backgroundColor: 'var(--mantine-color-gray-1)',
+            },
+          }}
+        />
+
         {/* Marital Status and Children - side by side */}
         <Group grow>
           <Select
