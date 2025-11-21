@@ -97,14 +97,12 @@ export const useUpdateGeographicAssociation = () => {
         queryKey: geographicAssociationKeys.byGeography(updatedAssociation.geographyId),
       });
 
-      // Optimistically update caches
-      queryClient.setQueryData(
-        geographicAssociationKeys.specific(
+      queryClient.invalidateQueries({
+        queryKey: geographicAssociationKeys.specific(
           updatedAssociation.userId,
           updatedAssociation.geographyId
         ),
-        updatedAssociation
-      );
+      });
     },
   });
 };
