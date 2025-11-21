@@ -6,6 +6,7 @@ export const TEST_COUNTRY_ID = 'us';
 export const TEST_CURRENT_LAW_ID = 1;
 
 export const mockOnUpdateLabel = vi.fn();
+export const mockOnUpdateYear = vi.fn();
 export const mockOnNext = vi.fn();
 export const mockOnBack = vi.fn();
 export const mockOnCancel = vi.fn();
@@ -64,6 +65,7 @@ export const mockConfiguredSimulation: SimulationStateProps = {
 export const mockReportState: ReportStateProps = {
   id: undefined,
   label: null,
+  year: '2025',
   countryId: TEST_COUNTRY_ID,
   simulations: [mockSimulationState, mockSimulationState],
   apiVersion: null,
@@ -149,6 +151,7 @@ export const mockUseUserGeographicsEmpty = {
 
 export function resetAllMocks() {
   mockOnUpdateLabel.mockClear();
+  mockOnUpdateYear.mockClear();
   mockOnNext.mockClear();
   mockOnBack.mockClear();
   mockOnCancel.mockClear();
