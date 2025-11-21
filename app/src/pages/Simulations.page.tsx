@@ -136,10 +136,8 @@ export default function SimulationsPage() {
 
   return (
     <>
-    
-    <Stack gap="md">
-
-      <IngredientReadView
+      <Stack gap="md">
+        <IngredientReadView
           ingredient="simulation"
           title="Your saved simulations"
           subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
@@ -155,7 +153,7 @@ export default function SimulationsPage() {
           isSelected={isSelected}
           onSelectionChange={handleSelectionChange}
         />
-    </Stack>
+      </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}

@@ -18,9 +18,9 @@ interface ReportLabelViewProps {
 
 export default function ReportLabelView({
   label,
-  year, 
+  year,
   onUpdateLabel,
-  onUpdateYear, 
+  onUpdateYear,
   onNext,
   onBack,
   onCancel,

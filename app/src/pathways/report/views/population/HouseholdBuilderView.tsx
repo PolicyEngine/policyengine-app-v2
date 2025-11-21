@@ -425,8 +425,12 @@ export default function HouseholdBuilderView({
           />
           <NumberInput
             value={
-              HouseholdQueries.getPersonVariable(household, 'you', 'employment_income', reportYear) ||
-              0
+              HouseholdQueries.getPersonVariable(
+                household,
+                'you',
+                'employment_income',
+                reportYear
+              ) || 0
             }
             onChange={(val) => handleAdultChange('you', 'employment_income', val || 0)}
             min={0}

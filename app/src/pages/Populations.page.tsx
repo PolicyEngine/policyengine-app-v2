@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { useDisclosure } from '@mantine/hooks';
 import { Stack } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
@@ -313,10 +313,8 @@ export default function PopulationsPage() {
 
   return (
     <>
-    
-    <Stack gap="md">
-
-      <IngredientReadView
+      <Stack gap="md">
+        <IngredientReadView
           ingredient="household"
           title="Your saved households"
           subtitle="Configure one or a collection of households to use in your simulation configurations."
@@ -333,7 +331,7 @@ export default function PopulationsPage() {
           isSelected={isSelected}
           onSelectionChange={handleSelectionChange}
         />
-    </Stack>
+      </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}

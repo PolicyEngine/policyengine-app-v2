@@ -201,10 +201,8 @@ export default function ReportsPage() {
 
   return (
     <>
-    
-    <Stack gap="md">
-
-      <IngredientReadView
+      <Stack gap="md">
+        <IngredientReadView
           ingredient="report"
           title="Your saved reports"
           subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
@@ -220,7 +218,7 @@ export default function ReportsPage() {
           isSelected={isSelected}
           onSelectionChange={handleSelectionChange}
         />
-    </Stack>
+      </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}

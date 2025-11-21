@@ -13,6 +13,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ReportAdapter } from '@/adapters';
 import StandardLayout from '@/components/StandardLayout';
 import { MOCK_USER_ID } from '@/constants';
+import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
@@ -593,6 +594,11 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   // Views in MODES_WITH_OWN_LAYOUT manage their own AppShell
   const needsStandardLayout = !MODES_WITH_OWN_LAYOUT.has(currentMode);
 
+  // Wrap with ReportYearProvider so child components can access the year
+  const wrappedView = (
+    <ReportYearProvider year={reportState.year}>{currentView}</ReportYearProvider>
+  );
+
   // This is a workaround to allow the param setter to manage its own AppShell
-  return needsStandardLayout ? <StandardLayout>{currentView}</StandardLayout> : currentView;
+  return needsStandardLayout ? <StandardLayout>{wrappedView}</StandardLayout> : wrappedView;
 }
