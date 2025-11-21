@@ -1,0 +1,173 @@
+{
+  "daphne-hansell": {
+    "name": "Daphne Hansell",
+    "email": "daphne@policyengine.org",
+    "bio": "Daphne is a research analyst at PolicyEngine.",
+    "github": "https://github.com/daphnehanse11",
+    "linkedin": "https://www.linkedin.com/in/daphne-hansell/",
+    "headshot": "daphne-hansell.jpeg",
+    "title": "Research Analyst at PolicyEngine"
+  },
+  "nikhil-woodruff": {
+    "name": "Nikhil Woodruff",
+    "email": "nikhil@policyengine.org",
+    "twitter": "https://twitter.com/nikhil_woodruff",
+    "github": "https://github.com/nikhilwoodruff",
+    "linkedin": "https://www.linkedin.com/in/nikhil-woodruff/",
+    "headshot": "nikhil-woodruff.png",
+    "bio": "Nikhil is PolicyEngine's co-founder and CTO.",
+    "title": "PolicyEngine's Co-founder and CTO"
+  },
+  "max-ghenis": {
+    "name": "Max Ghenis",
+    "email": "max@policyengine.org",
+    "twitter": "https://twitter.com/maxghenis",
+    "github": "https://github.com/MaxGhenis",
+    "linkedin": "https://www.linkedin.com/in/maxghenis/",
+    "headshot": "max-ghenis.png",
+    "bio": "Max is PolicyEngine's co-founder and CEO.",
+    "title": "PolicyEngine's Co-founder and CEO"
+  },
+  "kevin-foster": {
+    "name": "Kevin Foster",
+    "headshot": "kevin-foster.jpeg",
+    "email": "newforza@gmail.com",
+    "github": "https://github.com/kfoster19",
+    "linkedin": "https://www.linkedin.com/in/kevin-h-foster/",
+    "bio": "Kevin was a researcher at PolicyEngine.",
+    "title": "Researcher at PolicyEngine"
+  },
+  "nicholas-rodelo": {
+    "name": "Nicholas Rodelo",
+    "headshot": "nicholas-rodelo.jpg",
+    "email": "nick@policyengine.org",
+    "github": "https://github.com/nmrodelo",
+    "linkedin": "https://www.linkedin.com/in/nicholas-rodelo-aaaa18159/",
+    "twitter": "https://twitter.com/NicholasRodelo",
+    "bio": "Nicholas was a researcher at PolicyEngine.",
+    "title": "Researcher at PolicyEngine"
+  },
+  "chat-gpt": {
+    "name": "ChatGPT",
+    "headshot": "chat-gpt.png",
+    "bio": "ChatGPT is a contributing writer at PolicyEngine",
+    "title": "Contributing writer at PolicyEngine"
+  },
+  "arthur-wright": {
+    "name": "Arthur Wright",
+    "headshot": "arthur-wright.jpg",
+    "email": "awrigh46@gmu.edu",
+    "github": "awrigh46",
+    "bio": "Arthur was a researcher at PolicyEngine.",
+    "twitter": "https://twitter.com/Arthur_Wright_",
+    "title": "Researcher at PolicyEngine"
+  },
+  "donglai-xu": {
+    "name": "Donglai Xu",
+    "headshot": "donglai-xu.jpeg",
+    "email": "donglaixu99@gmail.com",
+    "github": "xudonglai0426",
+    "linkedin": "https://www.linkedin.com/in/donglaixu11101",
+    "bio": "Donglai was a data analyst at PolicyEngine.",
+    "title": "Data Analyst at PolicyEngine"
+  },
+  "lin-tao": {
+    "name": "Lin Tao",
+    "headshot": "lin-tao.jpeg",
+    "email": "tao.lin1@northeastern.edu",
+    "github": "Kim1277",
+    "linkedin": "https://www.linkedin.com/in/lin-tao-384203207",
+    "bio": "Lin was a data analyst at PolicyEngine.",
+    "title": "Data Analyst at PolicyEngine"
+  },
+  "anthony-volk": {
+    "name": "Anthony Volk",
+    "email": "anthony@policyengine.org",
+    "bio": "is a full-stack engineer at PolicyEngine.",
+    "headshot": "anthony-volk.jpg",
+    "title": "Full-Stack Engineer at PolicyEngine"
+  },
+  "pavel-makarchuk": {
+    "name": "Pavel Makarchuk",
+    "email": "pavel@policyengine.org",
+    "bio": "Pavel is the policy modeling manager at PolicyEngine.",
+    "linkedin": "https://www.linkedin.com/in/pavel-makarchuk-170989203/",
+    "github": "https://github.com/PavelMakarchuk",
+    "twitter": "https://twitter.com/PavelMakarchuk3",
+    "headshot": "pavel-makarchuk.png",
+    "title": "Economist at PolicyEngine"
+  },
+  "ben-gross": {
+    "name": "Ben Gross",
+    "email": "ben@policyengine.org",
+    "bio": "Ben is a communications intern at PolicyEngine.",
+    "linkedin": "https://www.linkedin.com/in/ben-gross-146330178/",
+    "twitter": "twitter.com/bengrossbg",
+    "headshot": "ben-gross.png",
+    "title": "Communications Intern at PolicyEngine"
+  },
+  "david-trimmer": {
+    "name": "David Trimmer",
+    "email": "david@policyengine.org",
+    "bio": "David is a policy research fellow at PolicyEngine.",
+    "linkedin": "https://www.linkedin.com/in/david-trimmer99/",
+    "twitter": "twitter.com/DTrim_99",
+    "headshot": "david-trimmer.jpeg",
+    "title": "Policy Research Fellow at PolicyEngine"
+  },
+  "vahid-ahmadi": {
+    "name": "Vahid Ahmadi",
+    "email": "vahid@policyengine.org",
+    "bio": "Vahid is a research associate at PolicyEngine.",
+    "linkedin": "https://www.linkedin.com/in/vahidahmadi/",
+    "github": "https://github.com/vahid-ahmadi",
+    "twitter": "twitter.com/vahiidahmadi",
+    "headshot": "vahid-ahmadi.jpeg",
+    "title": "Research Associate at PolicyEngine"
+  },
+  "jason-debacker": {
+    "name": "Jason DeBacker",
+    "email": "jason.debacker@moore.sc.edu",
+    "bio": "Jason is an Associate Professor of Economics at the University of South Carolina.",
+    "linkedin": "https://www.linkedin.com/in/jason-debacker-08a037a/",
+    "github": "https://github.com/jdebacker",
+    "twitter": "twitter.com/jasondebacker",
+    "headshot": "jason-debacker.jpeg",
+    "title": "Associate Professor of Economics at the University of South Carolina"
+  },
+  "michael-smit": {
+    "name": "Michael Smit",
+    "email": "michael@policyengine.org",
+    "bio": "Michael is a Software Engineer volunteering at PolicyEngine",
+    "linkedin": "https://www.linkedin.com/in/michaeldsmit/",
+    "headshot": "michael-smit.jpeg",
+    "title": "Volunteer Software Engineer for PolicyEngine"
+  },
+  "elena-cura": {
+    "name": "Elena Cura",
+    "email": "elena@policyengine.org",
+    "bio": "Elena is a data science intern at PolicyEngine.",
+    "linkedin": "https://www.linkedin.com/in/elena-cura",
+    "github": "https://github.com/eccuraa",
+    "headshot": "elena-cura.png",
+    "title": "Data Science Intern at PolicyEngine"
+  },
+  "ben-ogorek": {
+    "name": "Ben Ogorek",
+    "email": "ben.ogorek@policyengine.org",
+    "bio": "Ben is a data scientist at PolicyEngine.",
+    "linkedin": "https://www.linkedin.com/in/benogorek/",
+    "github": "https://github.com/baogorek",
+    "headshot": "ben-ogorek.jpeg",
+    "title": "Data Scientist at PolicyEngine"
+  },
+  "maria-juaristi": {
+    "name": "Maria Juaristi",
+    "email": "maria@policyengine.org",
+    "bio": "Maria is a data scientist at PolicyEngine.",
+    "linkedin": "https://www.linkedin.com/in/mariajuaristi/",
+    "github": "https://github.com/juaristi22",
+    "headshot": "maria-juaristi.jpeg",
+    "title": "Data Scientist at PolicyEngine"
+  }
+}

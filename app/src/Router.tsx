@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
 import FlowRouter from './components/FlowRouter';
 import Layout from './components/Layout';
 import StaticLayout from './components/StaticLayout';
@@ -6,6 +6,9 @@ import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import AppPage from './pages/AppPage';
+import BlogPage from './pages/Blog.page';
+import BlogTestPage from './pages/BlogTest.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
@@ -14,17 +17,16 @@ import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
-import RICTCCalculatorPage from './pages/RICTCCalculator.page';
+import ResearchPage from './pages/Research.page';
 import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
-import { USOnlyGuard } from './routing/guards/USOnlyGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
-import { RedirectToLegacy } from './routing/RedirectToLegacy';
 
 const router = createBrowserRouter(
   [
@@ -150,97 +152,41 @@ const router = createBrowserRouter(
               path: 'support',
               element: <div>Support page</div>,
             },
+            {
+              path: 'blog-test',
+              element: <BlogTestPage />,
+            },
+            {
+              path: 'research',
+              element: <ResearchPage />,
+            },
+            {
+              path: 'research/:slug',
+              element: <BlogPage />,
+            },
           ],
         },
-        // US-only routes
+        // Interactive app routes - use StaticLayout with CountryAppGuard
         {
-          element: <USOnlyGuard />,
+          element: <CountryAppGuard />,
           children: [
             {
               element: <StaticLayout />,
               children: [
                 {
-                  path: 'rhode-island-ctc-calculator',
-                  element: <RICTCCalculatorPage />,
+                  path: ':slug',
+                  element: <AppPage />,
                 },
               ],
             },
           ],
         },
-        // Legacy routes - redirect to legacy.policyengine.org
+        // Legacy routes - redirect old blog URLs to new research URLs
         {
           children: [
-            // Research routes
-            {
-              path: 'research',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'research/:postName',
-              element: <RedirectToLegacy />,
-            },
             {
               path: 'blog/:postName',
-              element: <RedirectToLegacy />,
-            },
-            // Generic app routes
-            {
-              path: 'obbba-household-explorer',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'obbba-household-by-household',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'two-child-limit-comparison',
-              element: <RedirectToLegacy />,
-            },
-            // Country-specific legacy routes (must come before :appName catch-all)
-            {
-              path: 'cec',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: '2024-manifestos',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'trafwa-ctc-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'state-eitcs-ctcs',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'child-tax-credit-2024-election-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'child-tax-credit-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'givecalc',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'aca-calc',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: '2024-election-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'salternative',
-              element: <RedirectToLegacy />,
-            },
-            // Generic catch-all for any other app (must be last)
-            {
-              path: ':appName',
-              element: <RedirectToLegacy />,
+              element: <Navigate to="research/:postName" replace />,
             },
           ],
         },

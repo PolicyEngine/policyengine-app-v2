@@ -1,13 +1,26 @@
+/**
+ * IframeContent Component
+ *
+ * Basic iframe embed with loading and error states.
+ * For advanced features like postMessage or Streamlit handling,
+ * use AdvancedIframeContent or StreamlitEmbed respectively.
+ */
+
 import { useState } from 'react';
+import { colors } from '@/designTokens';
+import type { IframeContentProps } from '@/types/apps';
 
-interface IframeContentProps {
-  url: string;
-  title?: string;
-}
-
-export default function IframeContent({ url, title = 'Embedded content' }: IframeContentProps) {
+export default function IframeContent({
+  url,
+  title = 'Embedded content',
+  height,
+  width,
+}: IframeContentProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+
+  const iframeHeight = height || 'calc(100vh - var(--header-height, 58px))';
+  const iframeWidth = width || '100%';
 
   return (
     <div style={{ position: 'relative', height: '100%' }}>
@@ -31,14 +44,14 @@ export default function IframeContent({ url, title = 'Embedded content' }: Ifram
               style={{
                 width: '48px',
                 height: '48px',
-                border: '4px solid #e5e7eb',
-                borderTop: '4px solid #2c6496',
+                border: `4px solid ${colors.gray[200]}`,
+                borderTop: `4px solid ${colors.primary[600]}`,
                 borderRadius: '50%',
                 margin: '0 auto 1rem',
                 animation: 'spin 1s linear infinite',
               }}
             />
-            <p style={{ color: '#6b7280', fontSize: '14px' }}>Loading calculator...</p>
+            <p style={{ color: colors.gray[500], fontSize: '14px' }}>Loading calculator...</p>
           </div>
         </div>
       )}
@@ -64,8 +77,10 @@ export default function IframeContent({ url, title = 'Embedded content' }: Ifram
               maxWidth: '500px',
             }}
           >
-            <h2 style={{ color: '#1f2937', marginBottom: '1rem' }}>Unable to load calculator</h2>
-            <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+            <h2 style={{ color: colors.gray[900], marginBottom: '1rem' }}>
+              Unable to load calculator
+            </h2>
+            <p style={{ color: colors.gray[500], marginBottom: '1rem' }}>
               The embedded calculator could not be loaded. You can try opening it directly:
             </p>
             <a
@@ -75,8 +90,8 @@ export default function IframeContent({ url, title = 'Embedded content' }: Ifram
               style={{
                 display: 'inline-block',
                 padding: '0.5rem 1rem',
-                backgroundColor: '#2c6496',
-                color: 'white',
+                backgroundColor: colors.primary[600],
+                color: colors.white,
                 textDecoration: 'none',
                 borderRadius: '4px',
               }}
@@ -89,8 +104,8 @@ export default function IframeContent({ url, title = 'Embedded content' }: Ifram
       <iframe
         src={url}
         style={{
-          width: '100%',
-          height: 'calc(100vh - var(--header-height, 58px))',
+          width: iframeWidth,
+          height: iframeHeight,
           border: 'none',
           display: 'block',
         }}
