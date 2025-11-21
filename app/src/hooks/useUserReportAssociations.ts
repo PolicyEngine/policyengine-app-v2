@@ -92,30 +92,50 @@ export const useCreateReportAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
 export const useUpdateReportAssociation = () => {
   const store = useUserReportStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, reportId, updates }: {
-      userId: string;
-      reportId: string;
+    mutationFn: ({
+      userReportId,
+      updates,
+    }: {
+      userReportId: string;
       updates: Partial<UserReport>;
-    }) => store.update(userId, reportId, updates),
-    onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId) });
-      queryClient.invalidateQueries({ queryKey: reportAssociationKeys.byReport(updatedAssociation.reportId) });
+    }) => store.update(userReportId, updates),
 
+    onSuccess: (updatedAssociation) => {
+      // Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: reportAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: reportAssociationKeys.byReport(updatedAssociation.reportId),
+      });
+
+      // CRITICAL: Also invalidate the byUserReportId query (this is what the UI uses!)
+      queryClient.invalidateQueries({
+        queryKey: reportAssociationKeys.byUserReportId(updatedAssociation.id),
+      });
+
+      // Optimistically update caches
       queryClient.setQueryData(
         reportAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.reportId),
+        updatedAssociation
+      );
+
+      queryClient.setQueryData(
+        reportAssociationKeys.byUserReportId(updatedAssociation.id),
         updatedAssociation
       );
     },
   });
 };
-*/
 
 // Not yet implemented, but keeping for future use
 /*

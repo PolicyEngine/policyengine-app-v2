@@ -1,8 +1,8 @@
 import { useSelector } from 'react-redux';
 import { Stack, Text, Title } from '@mantine/core';
 import VariableArithmetic from '@/components/household/VariableArithmetic';
-import { CURRENT_YEAR } from '@/constants';
 import { spacing } from '@/designTokens';
+import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import { formatVariableValue, getValueFromHousehold } from '@/utils/householdValues';
@@ -19,6 +19,7 @@ interface Props {
  */
 export default function NetIncomeSubPage({ baseline, reform }: Props) {
   const metadata = useSelector((state: RootState) => state.metadata);
+  const reportYear = useReportYear();
 
   // Check if we have the household_net_income variable
   const netIncomeVariable = metadata.variables.household_net_income;
@@ -33,14 +34,14 @@ export default function NetIncomeSubPage({ baseline, reform }: Props) {
   // Extract net income values
   const baselineValue = getValueFromHousehold(
     'household_net_income',
-    CURRENT_YEAR,
+    reportYear,
     null,
     baseline,
     metadata
   );
 
   const reformValue = reform
-    ? getValueFromHousehold('household_net_income', CURRENT_YEAR, null, reform, metadata)
+    ? getValueFromHousehold('household_net_income', reportYear, null, reform, metadata)
     : null;
 
   // Calculate comparison
@@ -53,18 +54,18 @@ export default function NetIncomeSubPage({ baseline, reform }: Props) {
   // Generate title
   const getTitle = () => {
     if (!isComparison) {
-      return `Your household would have a net income of ${formatValue(baselineValue as number)} in ${CURRENT_YEAR}`;
+      return `Your household would have a net income of ${formatValue(baselineValue as number)} in ${reportYear}`;
     }
 
     if (difference === 0) {
-      return `This reform would have no effect on your household net income in ${CURRENT_YEAR}`;
+      return `This reform would have no effect on your household net income in ${reportYear}`;
     }
 
     const sign = difference > 0 ? 'increase' : 'decrease';
     const absChange = formatValue(Math.abs(difference));
     const reformFormatted = formatValue(reformValue as number);
 
-    return `This reform would ${sign} your household net income by ${absChange} to ${reformFormatted} in ${CURRENT_YEAR}`;
+    return `This reform would ${sign} your household net income by ${absChange} to ${reformFormatted} in ${reportYear}`;
   };
 
   return (

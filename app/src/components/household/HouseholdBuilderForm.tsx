@@ -2,7 +2,7 @@
  * HouseholdBuilderForm - Pure presentation component for household building UI
  *
  * Implements the Mockup 3 design with:
- * - Tax Year, Marital Status, Number of Children controls
+ * - Marital Status, Number of Children controls (year comes from report context)
  * - Individuals accordion with basic inputs (age, employment_income) + custom variables
  * - Household Variables accordion with basic inputs (state_name, etc.) + custom variables
  * - Inline search for adding custom variables per person or household-level
@@ -35,13 +35,11 @@ export interface HouseholdBuilderFormProps {
   household: Household;
   metadata: any;
   year: string;
-  taxYears: Array<{ value: string; label: string }>;
   maritalStatus: 'single' | 'married';
   numChildren: number;
   basicPersonFields: string[]; // Basic inputs for person entity (e.g., age, employment_income)
   basicNonPersonFields: string[]; // Basic inputs for household-level entities
   onChange: (household: Household) => void;
-  onTaxYearChange: (year: string) => void;
   onMaritalStatusChange: (status: 'single' | 'married') => void;
   onNumChildrenChange: (num: number) => void;
   disabled?: boolean;
@@ -51,13 +49,11 @@ export default function HouseholdBuilderForm({
   household,
   metadata,
   year,
-  taxYears,
   maritalStatus,
   numChildren,
   basicPersonFields,
   basicNonPersonFields,
   onChange,
-  onTaxYearChange,
   onMaritalStatusChange,
   onNumChildrenChange,
   disabled = false,
@@ -246,17 +242,6 @@ export default function HouseholdBuilderForm({
     <Stack gap="lg">
       {/* Household Information */}
       <Stack gap="md">
-        {/* Tax Year - full width */}
-        <Select
-          label="Tax Year"
-          value={year}
-          onChange={(val) => onTaxYearChange(val || year)}
-          data={taxYears}
-          placeholder="Select Tax Year"
-          required
-          disabled={disabled}
-        />
-
         {/* Marital Status and Children - side by side */}
         <Group grow>
           <Select

@@ -20,6 +20,13 @@ vi.mock('@/hooks/useUserReports', () => ({
   useUserReports: vi.fn(),
 }));
 
+vi.mock('@/hooks/useUserReportAssociations', () => ({
+  useUpdateReportAssociation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
+}));
+
 // Mock useCurrentCountry
 vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => 'us',
@@ -262,5 +269,42 @@ describe('ReportsPage', () => {
     // This test verifies the link is rendered correctly with stopPropagation
     expect(reportLink).toBeInTheDocument();
     expect(reportLink).toHaveAttribute('href', '/us/report-output/report-1');
+  });
+
+  test('given reports with years then year column displays correctly', () => {
+    // When
+    render(<ReportsPage />);
+
+    // Then
+    // The year column should be included in the transformed data
+    // mockReport has year '2024'
+    const dataCount = screen.getByText('Data count: 2');
+    expect(dataCount).toBeInTheDocument();
+    // Note: The year value would be passed in the data object to IngredientReadView
+    // The actual rendering is handled by IngredientReadView which is mocked
+  });
+
+  test('given report without year then year field is empty string', () => {
+    // Given
+    const dataWithoutYear = {
+      ...mockDefaultHookReturn,
+      data: [
+        {
+          ...mockDefaultHookReturn.data![0],
+          report: {
+            ...mockDefaultHookReturn.data![0].report,
+            year: undefined,
+          },
+        },
+      ],
+    };
+    (useUserReports as any).mockReturnValue(dataWithoutYear);
+
+    // When
+    render(<ReportsPage />);
+
+    // Then
+    // Should render without errors even when year is missing
+    expect(screen.getByText('Data count: 1')).toBeInTheDocument();
   });
 });

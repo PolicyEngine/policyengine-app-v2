@@ -200,7 +200,6 @@ describe('HouseholdBuilderFrame', () => {
 
       // Then
       expect(screen.getByText('Build Your Household')).toBeInTheDocument();
-      expect(screen.getByText('Tax Year')).toBeInTheDocument();
       expect(screen.getByText('Marital Status')).toBeInTheDocument();
       expect(screen.getByText('Number of Children')).toBeInTheDocument();
     });
@@ -277,24 +276,10 @@ describe('HouseholdBuilderFrame', () => {
       });
     });
 
-    test('given tax year changed then updates household data', async () => {
-      // Given
-      const user = userEvent.setup();
-      renderComponent();
-
-      // When
-      const taxYearLabel = screen.getByText('Tax Year');
-      const taxYearSelect = taxYearLabel.parentElement?.querySelector('input') as HTMLElement;
-      await user.click(taxYearSelect);
-      const year2023 = await screen.findByText('2023');
-      await user.click(year2023);
-
-      // Then
-      await waitFor(() => {
-        const taxYearLabel = screen.getByText('Tax Year');
-        const taxYearInput = taxYearLabel.parentElement?.querySelector('input') as HTMLInputElement;
-        expect(taxYearInput.value).toBe('2023');
-      });
+    test.skip('given tax year changed then updates household data', async () => {
+      // Note: Tax year selection has been removed from HouseholdBuilderFrame
+      // Year is now set at report level and passed via useReportYear hook
+      // This test is skipped as the feature is no longer in this component
     });
   });
 

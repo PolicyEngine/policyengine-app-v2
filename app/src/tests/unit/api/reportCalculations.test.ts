@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fetchHouseholdCalculation } from '@/api/householdCalculation';
 import { fetchCalculationWithMeta } from '@/api/reportCalculations';
 import { fetchSocietyWideCalculation } from '@/api/societyWideCalculation';
-import { CURRENT_YEAR } from '@/constants';
 import {
   mockEconomyCalcResult,
   mockEconomyMeta,
@@ -91,7 +90,7 @@ describe('reportCalculations', () => {
           TEST_POLICY_IDS.POLICY_1, // baseline
           {
             region: TEST_REGIONS.ENHANCED_CPS,
-            time_period: CURRENT_YEAR,
+            time_period: meta.year,
           }
         );
         expect(result).toEqual(mockResult);
@@ -113,7 +112,7 @@ describe('reportCalculations', () => {
           TEST_POLICY_IDS.POLICY_1,
           {
             region: TEST_COUNTRIES.US, // Falls back to countryId
-            time_period: CURRENT_YEAR,
+            time_period: meta.year,
           }
         );
       });

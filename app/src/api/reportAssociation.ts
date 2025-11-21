@@ -7,9 +7,9 @@ export interface UserReportStore {
   findByUser: (userId: string, countryId?: string) => Promise<UserReport[]>;
   findById: (userId: string, reportId: string) => Promise<UserReport | null>;
   findByUserReportId: (userReportId: string) => Promise<UserReport | null>;
+  update: (userReportId: string, updates: Partial<UserReport>) => Promise<UserReport>;
   // The below are not yet implemented, but keeping for future use
-  // update(userId: string, reportId: string, updates: Partial<UserReport>): Promise<UserReport>;
-  // delete(userId: string, reportId: string): Promise<void>;
+  // delete(userReportId: string): Promise<void>;
 }
 
 export class ApiReportStore implements UserReportStore {
@@ -83,22 +83,21 @@ export class ApiReportStore implements UserReportStore {
     return UserReportAdapter.fromApiResponse(apiData);
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, reportId: string, updates: Partial<UserReport>): Promise<UserReport> {
-    const response = await fetch(`/api/user-report-associations/${userId}/${reportId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(updates),
-    });
+  async update(_userReportId: string, _updates: Partial<UserReport>): Promise<UserReport> {
+    // TODO: Implement when backend API endpoint is available
+    // Expected endpoint: PUT /api/user-report-associations/:userReportId
+    // Expected payload: UserReportUpdatePayload (to be created)
 
-    if (!response.ok) {
-      throw new Error('Failed to update association');
-    }
+    console.warn(
+      '[ApiReportStore.update] API endpoint not yet implemented. ' +
+        'This method will be activated when user authentication is added.'
+    );
 
-    return response.json();
+    throw new Error(
+      'Report updates via API are not yet supported. ' +
+        'Please ensure you are using localStorage mode.'
+    );
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*
@@ -168,25 +167,28 @@ export class LocalStorageReportStore implements UserReportStore {
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(reports));
   }
 
-  // Not yet implemented, but keeping for future use
-  /*
-  async update(userId: string, reportId: string, updates: Partial<UserReport>): Promise<UserReport> {
+  async update(userReportId: string, updates: Partial<UserReport>): Promise<UserReport> {
     const reports = this.getStoredReports();
-    const index = reports.findIndex(
-      a => a.userId === userId && a.reportId === reportId
-    );
+
+    // Find by userReport.id (the "sur-" prefixed ID), NOT reportId
+    const index = reports.findIndex((r) => r.id === userReportId);
 
     if (index === -1) {
-      throw new Error('Association not found');
+      throw new Error(`UserReport with id ${userReportId} not found`);
     }
 
-    const updated = { ...reports[index], ...updates };
+    // Merge updates and set timestamp
+    const updated: UserReport = {
+      ...reports[index],
+      ...updates,
+      updatedAt: new Date().toISOString(),
+    };
+
     reports[index] = updated;
     this.setStoredReports(reports);
 
     return updated;
   }
-  */
 
   // Not yet implemented, but keeping for future use
   /*

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Select, TextInput } from '@mantine/core';
 import FlowView from '@/components/common/FlowView';
+import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { clearReport, updateLabel } from '@/reducers/reportReducer';
+import { getTaxYears } from '@/libs/metadataUtils';
+import { clearReport, updateLabel, updateYear } from '@/reducers/reportReducer';
 import { AppDispatch } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
 
@@ -12,21 +14,33 @@ export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) 
   const dispatch = useDispatch<AppDispatch>();
   const countryId = useCurrentCountry();
   const [localLabel, setLocalLabel] = useState('');
-  // NOTE: Temporary hardcoded year dropdown - does nothing functionally, placeholder for future feature
-  const [year, setYear] = useState<string>('2025');
 
-  // Clear any existing report data when mounting
+  // Get available years from metadata
+  const availableYears = useSelector(getTaxYears);
+  const [localYear, setLocalYear] = useState<string>(CURRENT_YEAR);
+
+  // Clear any existing report data when mounting and initialize with current year
   useEffect(() => {
     console.log('[ReportCreationFrame] Mounting - clearing report for country:', countryId);
     dispatch(clearReport(countryId));
+    // Initialize report year to current year
+    dispatch(updateYear(CURRENT_YEAR));
+    setLocalYear(CURRENT_YEAR);
   }, [dispatch, countryId]);
 
   function handleLocalLabelChange(value: string) {
     setLocalLabel(value);
   }
 
+  function handleYearChange(value: string | null) {
+    const newYear = value || CURRENT_YEAR;
+    console.log('[ReportCreationFrame] Year changed to:', newYear);
+    setLocalYear(newYear);
+    dispatch(updateYear(newYear));
+  }
+
   function submissionHandler() {
-    console.log('[ReportCreationFrame] Submit clicked - label:', localLabel);
+    console.log('[ReportCreationFrame] Submit clicked - label:', localLabel, 'year:', localYear);
     dispatch(updateLabel(localLabel));
     console.log('[ReportCreationFrame] Navigating to next frame');
     onNavigate('next');
@@ -40,14 +54,13 @@ export default function ReportCreationFrame({ onNavigate }: FlowComponentProps) 
         value={localLabel}
         onChange={(e) => handleLocalLabelChange(e.currentTarget.value)}
       />
-      {/* NOTE: Temporary hardcoded year dropdown - does nothing functionally */}
       <Select
         label="Year"
         placeholder="Select year"
-        data={['2025']}
-        value={year}
-        onChange={(val) => setYear(val || '2025')}
-        disabled
+        data={availableYears}
+        value={localYear}
+        onChange={handleYearChange}
+        searchable
       />
     </>
   );

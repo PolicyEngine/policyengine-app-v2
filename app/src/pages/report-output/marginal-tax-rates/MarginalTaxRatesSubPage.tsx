@@ -5,10 +5,10 @@ import { useSelector } from 'react-redux';
 import { Group, Radio, Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { PolicyAdapter } from '@/adapters/PolicyAdapter';
-import { CURRENT_YEAR } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useHouseholdVariation } from '@/hooks/useHouseholdVariation';
+import { useReportYear } from '@/hooks/useReportYear';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import type { Policy } from '@/types/ingredients/Policy';
@@ -51,6 +51,7 @@ export default function MarginalTaxRatesSubPage({
   const mobile = useMediaQuery('(max-width: 768px)');
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
+  const reportYear = useReportYear();
   const metadata = useSelector((state: RootState) => state.metadata);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
@@ -73,7 +74,7 @@ export default function MarginalTaxRatesSubPage({
     householdId: simulations[0]?.populationId || 'baseline',
     policyId: simulations[0]?.policyId || 'baseline-policy',
     policyData: baselinePolicyData,
-    year: CURRENT_YEAR,
+    year: reportYear,
     countryId,
     enabled: !!simulations[0]?.populationId && !!baselinePolicy,
   });
@@ -87,7 +88,7 @@ export default function MarginalTaxRatesSubPage({
     householdId: simulations[1]?.populationId || 'reform',
     policyId: simulations[1]?.policyId || 'reform-policy',
     policyData: reformPolicyData,
-    year: CURRENT_YEAR,
+    year: reportYear,
     countryId,
     enabled: !!reform && !!simulations[1]?.populationId && !!reformPolicy,
   });
@@ -145,7 +146,7 @@ export default function MarginalTaxRatesSubPage({
 
   const baselineMTR = getValueFromHousehold(
     'marginal_tax_rate',
-    CURRENT_YEAR,
+    reportYear,
     firstPersonName,
     baselineVariation,
     metadata
@@ -165,7 +166,7 @@ export default function MarginalTaxRatesSubPage({
     reform && reformVariation
       ? getValueFromHousehold(
           'marginal_tax_rate',
-          CURRENT_YEAR,
+          reportYear,
           firstPersonName,
           reformVariation,
           metadata
@@ -191,7 +192,7 @@ export default function MarginalTaxRatesSubPage({
 
   const currentEarnings = getValueFromHousehold(
     'employment_income',
-    CURRENT_YEAR,
+    reportYear,
     firstPersonNameBaseline,
     baseline,
     metadata
@@ -200,7 +201,7 @@ export default function MarginalTaxRatesSubPage({
   // Get current MTR (first person only)
   const currentMTR = getValueFromHousehold(
     'marginal_tax_rate',
-    CURRENT_YEAR,
+    reportYear,
     firstPersonNameBaseline,
     baseline,
     metadata

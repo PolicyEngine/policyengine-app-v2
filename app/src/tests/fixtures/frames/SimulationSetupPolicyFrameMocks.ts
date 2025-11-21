@@ -74,6 +74,7 @@ export const createMockSimulationSetupPolicyState = (overrides?: {
       id: '',
       label: null,
       countryId: countryId as any,
+      year: '2024',
       apiVersion: null,
       simulationIds: [],
       status: 'pending',

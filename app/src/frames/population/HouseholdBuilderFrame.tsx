@@ -16,11 +16,11 @@ import { LoadingOverlay, Stack, Text } from '@mantine/core';
 import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import FlowView from '@/components/common/FlowView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
-import { CURRENT_YEAR } from '@/constants';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useIngredientReset } from '@/hooks/useIngredientReset';
-import { getBasicInputFields, getTaxYears } from '@/libs/metadataUtils';
+import { useReportYear } from '@/hooks/useReportYear';
+import { getBasicInputFields } from '@/libs/metadataUtils';
 import { selectActivePopulation, selectCurrentPosition } from '@/reducers/activeSelectors';
 import {
   initializeHouseholdAtPosition,
@@ -45,9 +45,9 @@ export default function HouseholdBuilderFrame({
   const { createHousehold, isPending } = useCreateHousehold(populationState?.label || '');
   const { resetIngredient } = useIngredientReset();
   const countryId = useCurrentCountry();
+  const reportYear = useReportYear();
 
   // Get metadata-driven options
-  const taxYears = useSelector(getTaxYears);
   const basicInputFields = useSelector(getBasicInputFields);
   const { loading, error } = useSelector((state: RootState) => state.metadata);
   const metadata = useSelector((state: RootState) => state.metadata);
@@ -62,16 +62,39 @@ export default function HouseholdBuilderFrame({
   ];
 
   // State for form controls
-  const [taxYear, setTaxYear] = useState<string>(CURRENT_YEAR);
   const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
   const [numChildren, setNumChildren] = useState<number>(0);
+
+  // Error boundary: Show error if no report year available
+  if (!reportYear) {
+    return (
+      <FlowView
+        title="Create Household"
+        content={
+          <Stack align="center" gap="md" p="xl">
+            <Text c="red" fw={600}>
+              Configuration Error
+            </Text>
+            <Text c="dimmed" ta="center">
+              No report year available. Please return to the report creation page and select a year
+              before creating a household.
+            </Text>
+          </Stack>
+        }
+        buttonPreset="cancel-only"
+        cancelAction={{
+          onClick: onReturn,
+        }}
+      />
+    );
+  }
 
   // Initialize with empty household if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {
     if (populationState?.household) {
       return populationState.household;
     }
-    const builder = new HouseholdBuilder(countryId as any, CURRENT_YEAR);
+    const builder = new HouseholdBuilder(countryId as any, reportYear);
     return builder.build();
   });
 
@@ -82,15 +105,15 @@ export default function HouseholdBuilderFrame({
         initializeHouseholdAtPosition({
           position: currentPosition,
           countryId,
-          year: taxYear,
+          year: reportYear,
         })
       );
     }
-  }, [populationState?.household, countryId, dispatch, currentPosition, taxYear]);
+  }, [populationState?.household, countryId, dispatch, currentPosition, reportYear]);
 
   // Rebuild household structure when marital status or children count changes
   useEffect(() => {
-    const builder = new HouseholdBuilder(countryId as any, taxYear);
+    const builder = new HouseholdBuilder(countryId as any, reportYear);
 
     // Get current people to preserve their data
     const currentPeople = Object.keys(household.householdData.people);
@@ -156,7 +179,7 @@ export default function HouseholdBuilderFrame({
     }
 
     setLocalHousehold(builder.build());
-  }, [maritalStatus, numChildren, taxYear, countryId]);
+  }, [maritalStatus, numChildren, reportYear, countryId]);
 
   // Handle submit
   const handleSubmit = async () => {
@@ -169,7 +192,7 @@ export default function HouseholdBuilderFrame({
     );
 
     // Validate household
-    const validation = HouseholdValidation.isReadyForSimulation(household);
+    const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
     if (!validation.isValid) {
       console.error('[HOUSEHOLD_API] ❌ Validation failed:', validation.errors);
       return;
@@ -256,7 +279,7 @@ export default function HouseholdBuilderFrame({
     );
   }
 
-  const validation = HouseholdValidation.isReadyForSimulation(household);
+  const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
   const canProceed = validation.isValid;
 
   const primaryAction = {
@@ -273,14 +296,12 @@ export default function HouseholdBuilderFrame({
       <HouseholdBuilderForm
         household={household}
         metadata={metadata}
-        year={taxYear}
-        taxYears={taxYears}
+        year={reportYear}
         maritalStatus={maritalStatus}
         numChildren={numChildren}
         basicPersonFields={basicInputFields.person}
         basicNonPersonFields={basicNonPersonFields}
         onChange={setLocalHousehold}
-        onTaxYearChange={setTaxYear}
         onMaritalStatusChange={setMaritalStatus}
         onNumChildrenChange={setNumChildren}
         disabled={loading || isPending}
