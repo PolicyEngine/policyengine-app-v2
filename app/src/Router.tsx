@@ -9,6 +9,7 @@ import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
+import MicrosimPage from './pages/Microsim.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
@@ -149,6 +150,10 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+            {
+              path: 'microsim',
+              element: <MicrosimPage />,
             },
           ],
         },
