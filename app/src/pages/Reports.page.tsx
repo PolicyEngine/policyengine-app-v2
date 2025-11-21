@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useDisclosure } from '@mantine/hooks';
 import {
   BulletsValue,
   ColumnConfig,
@@ -7,11 +8,13 @@ import {
   LinkValue,
   TextValue,
 } from '@/components/columns';
+import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MultiSimOutputTypeCell } from '@/components/report/MultiSimReportOutputTypeCell';
 import { ReportOutputTypeCell } from '@/components/report/ReportOutputTypeCell';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReports } from '@/hooks/useUserReports';
 import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
@@ -33,6 +36,13 @@ export default function ReportsPage() {
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Rename modal state
+  const [renamingReportId, setRenamingReportId] = useState<string | null>(null);
+  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+
+  // Rename mutation hook
+  const updateAssociation = useUpdateReportAssociation();
+
   const handleBuildReport = () => {
     console.log('[ReportsPage] ========== NEW REPORT CLICKED ==========');
     const targetPath = `/${countryId}/reports/create`;
@@ -47,6 +57,37 @@ export default function ReportsPage() {
   };
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
+
+  const handleOpenRename = (userReportId: string) => {
+    setRenamingReportId(userReportId);
+    openRename();
+  };
+
+  const handleCloseRename = () => {
+    closeRename();
+    setRenamingReportId(null);
+  };
+
+  const handleRename = async (newLabel: string) => {
+    if (!renamingReportId) {
+      return;
+    }
+
+    try {
+      await updateAssociation.mutateAsync({
+        userReportId: renamingReportId,
+        updates: { label: newLabel },
+      });
+      handleCloseRename();
+    } catch (error) {
+      console.error('[ReportsPage] Failed to rename report:', error);
+    }
+  };
+
+  // Find the report being renamed for current label
+  const renamingReport = data?.find((item) => item.userReport.id === renamingReportId);
+  const currentLabel =
+    renamingReport?.userReport.label || `Report #${renamingReport?.userReport.reportId}`;
 
   // Define column configurations for reports
   const reportColumns: ColumnConfig[] = [
@@ -85,6 +126,17 @@ export default function ReportsPage() {
       key: 'outputType',
       header: 'Output Type',
       type: 'text',
+    },
+    {
+      key: 'actions',
+      header: '',
+      type: 'menu',
+      actions: [{ label: 'Rename', action: 'rename' }],
+      onAction: (action: string, recordId: string) => {
+        if (action === 'rename') {
+          handleOpenRename(recordId);
+        }
+      },
     },
   ];
 
@@ -147,21 +199,32 @@ export default function ReportsPage() {
   );
 
   return (
-    <IngredientReadView
-      ingredient="report"
-      title="Your saved reports"
-      subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
-      onBuild={handleBuildReport}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={reportColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <>
+      <IngredientReadView
+        ingredient="report"
+        title="Your saved reports"
+        subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
+        onBuild={handleBuildReport}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={transformedData}
+        columns={reportColumns}
+        searchValue={searchValue}
+        onSearchChange={setSearchValue}
+        enableSelection
+        isSelected={isSelected}
+        onSelectionChange={handleSelectionChange}
+      />
+
+      <RenameIngredientModal
+        opened={renameOpened}
+        onClose={handleCloseRename}
+        currentLabel={currentLabel}
+        onRename={handleRename}
+        isLoading={updateAssociation.isPending}
+        ingredientType="report"
+      />
+    </>
   );
 }

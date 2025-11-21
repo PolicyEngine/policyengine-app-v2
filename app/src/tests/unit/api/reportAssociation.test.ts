@@ -297,6 +297,34 @@ describe('ApiReportStore', () => {
       );
     });
   });
+
+  describe('update', () => {
+    it('given update called then throws not supported error', async () => {
+      // Given & When & Then
+      await expect(store.update('sur-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
+    });
+
+    it('given update called then logs warning', async () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      try {
+        await store.update('sur-abc123', { label: 'Updated Label' });
+      } catch {
+        // Expected to throw
+      }
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('API endpoint not yet implemented')
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
 });
 
 describe('LocalStorageReportStore', () => {
@@ -518,6 +546,88 @@ describe('LocalStorageReportStore', () => {
       const result = await store.findByUserReportId('nonexistent');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('update', () => {
+    it('given existing report then update succeeds and returns updated report', async () => {
+      // Given
+      const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.id).toBe(created.id);
+      expect(result.reportId).toBe(created.reportId);
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    it('given nonexistent report then update throws error', async () => {
+      // Given - no report created
+
+      // When & Then
+      await expect(store.update('sur-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+        'UserReport with id sur-nonexistent not found'
+      );
+    });
+
+    it('given existing report then updatedAt timestamp is set', async () => {
+      // Given
+      const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+      const beforeUpdate = new Date().toISOString();
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.updatedAt).toBeDefined();
+      expect(result.updatedAt! >= beforeUpdate).toBe(true);
+    });
+
+    it('given existing report then update persists to localStorage', async () => {
+      // Given
+      const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+
+      // When
+      await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      const persisted = await store.findById(created.userId, created.reportId);
+      expect(persisted?.label).toBe('Updated Label');
+    });
+
+    it('given multiple reports then updates correct one by ID', async () => {
+      // Given
+      const created1 = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+      const created2 = await store.create(
+        mockReportInput({
+          reportId: TEST_REPORT_IDS.REPORT_789,
+          label: TEST_LABELS.TEST_REPORT_2,
+        })
+      );
+
+      // When
+      await store.update(created1.id!, { label: 'Updated Label' });
+
+      // Then
+      const updated = await store.findById(created1.userId, created1.reportId);
+      const unchanged = await store.findById(created2.userId, created2.reportId);
+      expect(updated?.label).toBe('Updated Label');
+      expect(unchanged?.label).toBe(TEST_LABELS.TEST_REPORT_2);
+    });
+
+    it('given update with partial data then only specified fields are updated', async () => {
+      // Given
+      const created = await store.create(mockReportInput({ label: TEST_LABELS.TEST_REPORT_1 }));
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.countryId).toBe(created.countryId); // unchanged
     });
   });
 
