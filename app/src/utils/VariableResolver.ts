@@ -94,14 +94,6 @@ export function getGroupName(entityPlural: string, _personName?: string): string
 }
 
 /**
- * Get all entity instance names for a given entity type in the household
- */
-export function getEntityInstances(household: Household, entityPlural: string): string[] {
-  const entityData = getEntityData(household, entityPlural);
-  return entityData ? Object.keys(entityData) : [];
-}
-
-/**
  * Get the entity data object from household based on plural name
  */
 function getEntityData(household: Household, entityPlural: string): Record<string, any> | null {
@@ -247,6 +239,7 @@ export function setValue(
 
 /**
  * Add a variable to all applicable entity instances with default value
+ * Note: Currently unused. Kept for potential future use if we add "Add variable to all members" functionality
  */
 export function addVariable(
   household: Household,
@@ -369,125 +362,3 @@ export function getInputVariables(metadata: any): VariableInfo[] {
     }));
 }
 
-/**
- * Group variables by category based on moduleName
- */
-export function groupVariablesByCategory(
-  variables: VariableInfo[]
-): Record<string, VariableInfo[]> {
-  const groups: Record<string, VariableInfo[]> = {};
-
-  for (const variable of variables) {
-    const category = getCategoryFromModuleName(variable.moduleName);
-    if (!groups[category]) {
-      groups[category] = [];
-    }
-    groups[category].push(variable);
-  }
-
-  return groups;
-}
-
-/**
- * Nested category structure for deeper organization
- */
-export interface NestedCategory {
-  name: string;
-  variables: VariableInfo[];
-  subcategories: Record<string, NestedCategory>;
-}
-
-/**
- * Group variables into nested categories based on full moduleName path
- * e.g., "gov.usda.snap.income" -> Benefits > USDA > SNAP
- */
-export function groupVariablesNested(variables: VariableInfo[]): Record<string, NestedCategory> {
-  const root: Record<string, NestedCategory> = {};
-
-  for (const variable of variables) {
-    const parts = variable.moduleName?.split('.') || ['other'];
-
-    // Map first part to friendly category name
-    let topCategory = parts[0]?.toLowerCase() || 'other';
-    if (topCategory === 'gov') {
-      topCategory = 'Benefits';
-    } else if (topCategory === 'income') {
-      topCategory = 'Income';
-    } else if (topCategory === 'demographics') {
-      topCategory = 'Demographics';
-    } else if (topCategory === 'household') {
-      topCategory = 'Household';
-    } else {
-      topCategory = 'Other';
-    }
-
-    // Initialize top-level category
-    if (!root[topCategory]) {
-      root[topCategory] = {
-        name: topCategory,
-        variables: [],
-        subcategories: {},
-      };
-    }
-
-    // For gov/Benefits, create subcategories from remaining parts
-    if (parts[0]?.toLowerCase() === 'gov' && parts.length > 1) {
-      // Use second level as subcategory (e.g., "usda", "ssa", "hud")
-      const subName = parts[1]?.toUpperCase() || 'Other';
-
-      if (!root[topCategory].subcategories[subName]) {
-        root[topCategory].subcategories[subName] = {
-          name: subName,
-          variables: [],
-          subcategories: {},
-        };
-      }
-
-      // If there's a third level, use it (e.g., "snap", "ssi")
-      if (parts.length > 2) {
-        const subSubName = parts[2]?.toUpperCase() || 'Other';
-
-        if (!root[topCategory].subcategories[subName].subcategories[subSubName]) {
-          root[topCategory].subcategories[subName].subcategories[subSubName] = {
-            name: subSubName,
-            variables: [],
-            subcategories: {},
-          };
-        }
-        root[topCategory].subcategories[subName].subcategories[subSubName].variables.push(variable);
-      } else {
-        root[topCategory].subcategories[subName].variables.push(variable);
-      }
-    } else {
-      // For other categories, just add to top level
-      root[topCategory].variables.push(variable);
-    }
-  }
-
-  return root;
-}
-
-/**
- * Extract category from moduleName
- * e.g., "gov.usda.snap.gross_income" -> "Benefits"
- *       "income.employment" -> "Income"
- */
-function getCategoryFromModuleName(moduleName: string): string {
-  if (!moduleName) {
-    return 'Other';
-  }
-
-  const parts = moduleName.split('.');
-  const firstPart = parts[0]?.toLowerCase();
-
-  if (firstPart === 'income') {
-    return 'Income';
-  } else if (firstPart === 'gov') {
-    return 'Benefits';
-  } else if (firstPart === 'demographics') {
-    return 'Demographics';
-  } else if (firstPart === 'household') {
-    return 'Household';
-  }
-  return 'Other';
-}
