@@ -44,6 +44,13 @@ vi.mock('@/hooks/useUserReports', () => ({
   })),
 }));
 
+vi.mock('@/hooks/useUserReportAssociations', () => ({
+  useUpdateReportAssociation: vi.fn(() => ({
+    mutate: vi.fn(),
+    isPending: false,
+  })),
+}));
+
 // Mock calculation hooks
 vi.mock('@/hooks/useCalculationStatus', () => ({
   useCalculationStatus: vi.fn(() => ({
