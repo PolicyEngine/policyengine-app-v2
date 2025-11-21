@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import {
   BulletsValue,
@@ -200,22 +201,24 @@ export default function ReportsPage() {
 
   return (
     <>
-      <IngredientReadView
-        ingredient="report"
-        title="Your saved reports"
-        subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
-        onBuild={handleBuildReport}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={transformedData}
-        columns={reportColumns}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        enableSelection
-        isSelected={isSelected}
-        onSelectionChange={handleSelectionChange}
-      />
+      <Stack gap="md">
+        <IngredientReadView
+          ingredient="report"
+          title="Your saved reports"
+          subtitle="Generate comprehensive impact analyses comparing tax policy scenarios. Reports show distributional effects, budget impacts, and poverty outcomes across demographics"
+          onBuild={handleBuildReport}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          data={transformedData}
+          columns={reportColumns}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          enableSelection
+          isSelected={isSelected}
+          onSelectionChange={handleSelectionChange}
+        />
+      </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
@@ -108,7 +109,7 @@ export default function SimulationsPage() {
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.userSimulation.id || item.userSimulation.simulationId.toString(),
+      id: item.userSimulation.id?.toString() || item.userSimulation.simulationId.toString(), // Use user association ID, not base simulation ID
       simulation: {
         text: item.userSimulation.label || `Simulation #${item.userSimulation.simulationId}`,
       } as TextValue,
@@ -135,22 +136,24 @@ export default function SimulationsPage() {
 
   return (
     <>
-      <IngredientReadView
-        ingredient="simulation"
-        title="Your saved simulations"
-        subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
-        onBuild={handleBuildSimulation}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={transformedData}
-        columns={simulationColumns}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        enableSelection
-        isSelected={isSelected}
-        onSelectionChange={handleSelectionChange}
-      />
+      <Stack gap="md">
+        <IngredientReadView
+          ingredient="simulation"
+          title="Your saved simulations"
+          subtitle="Build and save tax policy scenarios for quick access when creating impact reports. Pre-configured simulations accelerate report generation by up to X%"
+          onBuild={handleBuildSimulation}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          data={transformedData}
+          columns={simulationColumns}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          enableSelection
+          isSelected={isSelected}
+          onSelectionChange={handleSelectionChange}
+        />
+      </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}

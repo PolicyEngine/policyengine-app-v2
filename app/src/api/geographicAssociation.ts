@@ -116,15 +116,8 @@ export class LocalStorageGeographicStore implements UserGeographicStore {
 
     const populations = this.getStoredPopulations();
 
-    // Check for duplicates
-    const exists = populations.some(
-      (p) => p.userId === population.userId && p.geographyId === population.geographyId
-    );
-
-    if (exists) {
-      throw new Error('Geographic population already exists');
-    }
-
+    // Allow duplicates - users can create multiple entries for the same geography
+    // Each entry has a unique ID from the caller
     const updatedPopulations = [...populations, newPopulation];
     this.setStoredPopulations(updatedPopulations);
 

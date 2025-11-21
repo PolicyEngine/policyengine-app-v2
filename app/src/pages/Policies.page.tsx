@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
@@ -104,7 +105,7 @@ export default function PoliciesPage() {
 
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
-      id: item.association.id || item.association.policyId.toString(),
+      id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
       policyName: {
         text: item.association.label || `Policy #${item.association.policyId}`,
       } as TextValue,
@@ -125,22 +126,24 @@ export default function PoliciesPage() {
 
   return (
     <>
-      <IngredientReadView
-        ingredient="policy"
-        title="Your saved policies"
-        subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
-        onBuild={handleBuildPolicy}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={transformedData}
-        columns={policyColumns}
-        searchValue={searchValue}
-        onSearchChange={setSearchValue}
-        enableSelection
-        isSelected={isSelected}
-        onSelectionChange={handleSelectionChange}
-      />
+      <Stack gap="md">
+        <IngredientReadView
+          ingredient="policy"
+          title="Your saved policies"
+          subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
+          onBuild={handleBuildPolicy}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          data={transformedData}
+          columns={policyColumns}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          enableSelection
+          isSelected={isSelected}
+          onSelectionChange={handleSelectionChange}
+        />
+      </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}
