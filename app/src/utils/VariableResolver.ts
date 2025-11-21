@@ -361,4 +361,3 @@ export function getInputVariables(metadata: any): VariableInfo[] {
       documentation: v.documentation || v.description,
     }));
 }
-

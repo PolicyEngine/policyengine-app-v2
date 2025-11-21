@@ -87,6 +87,14 @@ export default function HouseholdBuilderForm({
     return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
   };
 
+  // Helper to capitalize label
+  const capitalizeLabel = (label: string): string => {
+    return label
+      .split(' ')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   // Filter person-level variables for search
   const filteredPersonVariables = useMemo(() => {
     const personVars = allInputVariables.filter((v) => {
@@ -284,7 +292,7 @@ export default function HouseholdBuilderForm({
         {/* Individuals / Members Section */}
         <Accordion.Item value="individuals">
           <Accordion.Control>
-            <Text fw={500}>Individuals / Members</Text>
+            <Text fw={500}>Household Members</Text>
           </Accordion.Control>
           <Accordion.Panel>
             <Accordion defaultValue={people} multiple>
@@ -326,7 +334,7 @@ export default function HouseholdBuilderForm({
                           return (
                             <Group key={fieldName} gap="xs" align="flex-end" wrap="nowrap">
                               <Box style={{ minWidth: 180, maxWidth: 180 }}>
-                                <Text size="sm">{variable.label}</Text>
+                                <Text size="sm">{capitalizeLabel(variable.label)}</Text>
                               </Box>
                               <Box style={{ flex: 1, minWidth: 120 }}>
                                 <VariableInput
@@ -354,7 +362,7 @@ export default function HouseholdBuilderForm({
                             <Group key={varName} gap="xs" align="flex-end" wrap="nowrap">
                               <Box style={{ minWidth: 180, maxWidth: 180 }}>
                                 <Text size="sm" lineClamp={2}>
-                                  {variable.label}
+                                  {capitalizeLabel(variable.label)}
                                 </Text>
                               </Box>
                               <Box style={{ flex: 1, minWidth: 120 }}>
@@ -498,7 +506,7 @@ export default function HouseholdBuilderForm({
                   <Group key={fieldName} gap="xs" align="flex-end" wrap="nowrap">
                     <Box style={{ minWidth: 180, maxWidth: 180 }}>
                       <Text size="sm" lineClamp={2}>
-                        {variable.label}
+                        {capitalizeLabel(variable.label)}
                       </Text>
                     </Box>
                     <Box style={{ flex: 1, minWidth: 120 }}>
@@ -526,7 +534,7 @@ export default function HouseholdBuilderForm({
                   <Group key={`${entity}-${varName}`} gap="xs" align="flex-end" wrap="nowrap">
                     <Box style={{ minWidth: 180, maxWidth: 180 }}>
                       <Text size="sm" lineClamp={2}>
-                        {variable.label}
+                        {capitalizeLabel(variable.label)}
                       </Text>
                     </Box>
                     <Box style={{ flex: 1, minWidth: 120 }}>
