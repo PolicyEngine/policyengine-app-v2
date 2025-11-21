@@ -7,6 +7,7 @@ import {
   mockOnCancel,
   mockOnNext,
   mockOnUpdateLabel,
+  mockOnUpdateYear,
   resetAllMocks,
   TEST_COUNTRY_ID,
   TEST_REPORT_LABEL,
@@ -27,7 +28,13 @@ describe('ReportLabelView', () => {
     test('given component renders then displays title', () => {
       // When
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
 
       // Then
@@ -37,7 +44,13 @@ describe('ReportLabelView', () => {
     test('given component renders then displays report name input', () => {
       // When
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
 
       // Then
@@ -47,26 +60,18 @@ describe('ReportLabelView', () => {
     test('given component renders then displays year select', () => {
       // When
       const { container } = render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
 
-      // Then - Year select exists as a disabled input
-      const yearInputs = container.querySelectorAll('input[disabled]');
-      const hasYearInput = Array.from(yearInputs).some(
-        (input) => input.getAttribute('aria-haspopup') === 'listbox'
-      );
-      expect(hasYearInput).toBe(true);
-    });
-
-    test('given component renders then year select is disabled', () => {
-      // When
-      const { container } = render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
-      );
-
-      // Then - Find the Select input (has aria-haspopup="listbox")
-      const selectInput = container.querySelector('input[aria-haspopup="listbox"]');
-      expect(selectInput).toBeDisabled();
+      // Then - Year select exists as a searchable input
+      const yearInput = container.querySelector('input[aria-haspopup="listbox"]');
+      expect(yearInput).toBeInTheDocument();
     });
   });
 
@@ -77,7 +82,13 @@ describe('ReportLabelView', () => {
 
       // When
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
 
       // Then
@@ -92,7 +103,13 @@ describe('ReportLabelView', () => {
 
       // When
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
 
       // Then
@@ -106,7 +123,9 @@ describe('ReportLabelView', () => {
       render(
         <ReportLabelView
           label={TEST_REPORT_LABEL}
+          year="2025"
           onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
           onNext={mockOnNext}
         />
       );
@@ -118,7 +137,13 @@ describe('ReportLabelView', () => {
     test('given null label then input is empty', () => {
       // When
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
 
       // Then
@@ -131,7 +156,13 @@ describe('ReportLabelView', () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
       const input = screen.getByLabelText(/report name/i);
 
@@ -146,7 +177,13 @@ describe('ReportLabelView', () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
       const input = screen.getByLabelText(/report name/i);
       const submitButton = screen.getByRole('button', { name: /initialize report/i });
@@ -159,11 +196,38 @@ describe('ReportLabelView', () => {
       expect(mockOnUpdateLabel).toHaveBeenCalledWith('Test Report');
     });
 
+    test('given user clicks submit then calls onUpdateYear with year value', async () => {
+      // Given
+      const user = userEvent.setup();
+      render(
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
+      );
+      const submitButton = screen.getByRole('button', { name: /initialize report/i });
+
+      // When
+      await user.click(submitButton);
+
+      // Then
+      expect(mockOnUpdateYear).toHaveBeenCalledWith('2025');
+    });
+
     test('given user clicks submit then calls onNext', async () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
       const submitButton = screen.getByRole('button', { name: /initialize report/i });
 
@@ -178,7 +242,13 @@ describe('ReportLabelView', () => {
       // Given
       const user = userEvent.setup();
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
       const submitButton = screen.getByRole('button', { name: /initialize report/i });
 
@@ -197,7 +267,9 @@ describe('ReportLabelView', () => {
       render(
         <ReportLabelView
           label={null}
+          year="2025"
           onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
           onNext={mockOnNext}
           onBack={mockOnBack}
         />
@@ -210,7 +282,13 @@ describe('ReportLabelView', () => {
     test('given onBack not provided then no back button', () => {
       // When
       render(
-        <ReportLabelView label={null} onUpdateLabel={mockOnUpdateLabel} onNext={mockOnNext} />
+        <ReportLabelView
+          label={null}
+          year="2025"
+          onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
+          onNext={mockOnNext}
+        />
       );
 
       // Then
@@ -222,7 +300,9 @@ describe('ReportLabelView', () => {
       render(
         <ReportLabelView
           label={null}
+          year="2025"
           onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
           onNext={mockOnNext}
           onCancel={mockOnCancel}
         />
@@ -238,7 +318,9 @@ describe('ReportLabelView', () => {
       render(
         <ReportLabelView
           label={null}
+          year="2025"
           onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
           onNext={mockOnNext}
           onBack={mockOnBack}
         />
@@ -257,7 +339,9 @@ describe('ReportLabelView', () => {
       render(
         <ReportLabelView
           label={null}
+          year="2025"
           onUpdateLabel={mockOnUpdateLabel}
+          onUpdateYear={mockOnUpdateYear}
           onNext={mockOnNext}
           onCancel={mockOnCancel}
         />
