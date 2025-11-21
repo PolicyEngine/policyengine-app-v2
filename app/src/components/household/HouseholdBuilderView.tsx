@@ -82,7 +82,9 @@ export default function HouseholdBuilderView({
       ...basicInputFields.maritalUnit,
     ];
 
-    if (!nonPersonFields.length) return null;
+    if (!nonPersonFields.length) {
+      return null;
+    }
 
     return (
       <Stack gap="xs">
@@ -135,7 +137,9 @@ export default function HouseholdBuilderView({
     const ageVariable = variables?.age;
     const employmentIncomeVariable = variables?.employment_income;
     const ageFormatting = ageVariable ? getInputFormatting(ageVariable) : {};
-    const incomeFormatting = employmentIncomeVariable ? getInputFormatting(employmentIncomeVariable) : {};
+    const incomeFormatting = employmentIncomeVariable
+      ? getInputFormatting(employmentIncomeVariable)
+      : {};
 
     return (
       <Stack gap="md">
@@ -187,7 +191,9 @@ export default function HouseholdBuilderView({
             />
             <NumberInput
               value={getPersonVariable('your partner', 'employment_income') || 0}
-              onChange={(val) => onPersonFieldChange('your partner', 'employment_income', Number(val) || 0)}
+              onChange={(val) =>
+                onPersonFieldChange('your partner', 'employment_income', Number(val) || 0)
+              }
               min={0}
               placeholder="Employment Income"
               style={{ flex: 2 }}
@@ -202,12 +208,16 @@ export default function HouseholdBuilderView({
 
   // Render children section
   const renderChildren = () => {
-    if (numChildren === 0) return null;
+    if (numChildren === 0) {
+      return null;
+    }
 
     const ageVariable = variables?.age;
     const employmentIncomeVariable = variables?.employment_income;
     const ageFormatting = ageVariable ? getInputFormatting(ageVariable) : {};
-    const incomeFormatting = employmentIncomeVariable ? getInputFormatting(employmentIncomeVariable) : {};
+    const incomeFormatting = employmentIncomeVariable
+      ? getInputFormatting(employmentIncomeVariable)
+      : {};
 
     const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
     const children = Array.from({ length: numChildren }, (_, i) => {
@@ -223,7 +233,10 @@ export default function HouseholdBuilderView({
         {children.map((childName) => (
           <Group key={childName} gap="xs">
             <Text size="sm" fw={500} style={{ flex: 0, minWidth: 100 }}>
-              {childName.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+              {childName
+                .split(' ')
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' ')}
             </Text>
             <NumberInput
               value={getPersonVariable(childName, 'age') || 0}
@@ -237,7 +250,9 @@ export default function HouseholdBuilderView({
             />
             <NumberInput
               value={getPersonVariable(childName, 'employment_income') || 0}
-              onChange={(val) => onPersonFieldChange(childName, 'employment_income', Number(val) || 0)}
+              onChange={(val) =>
+                onPersonFieldChange(childName, 'employment_income', Number(val) || 0)
+              }
               min={0}
               placeholder="Employment Income"
               style={{ flex: 2 }}
@@ -276,7 +291,7 @@ export default function HouseholdBuilderView({
         <Select
           label="Number of Children"
           value={numChildren.toString()}
-          onChange={(val) => val && onNumChildrenChange(parseInt(val))}
+          onChange={(val) => val && onNumChildrenChange(parseInt(val, 10))}
           data={[
             { value: '0', label: '0' },
             { value: '1', label: '1' },

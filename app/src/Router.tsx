@@ -25,7 +25,6 @@ import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { USOnlyGuard } from './routing/guards/USOnlyGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 import { RedirectToLegacy } from './routing/RedirectToLegacy';
-import MockupsIndex from './mockups';
 
 const router = createBrowserRouter(
   [
@@ -100,10 +99,6 @@ const router = createBrowserRouter(
                 {
                   path: 'account',
                   element: <div>Account settings page</div>,
-                },
-                {
-                  path: 'mockups',
-                  element: <MockupsIndex />,
                 },
               ],
             },

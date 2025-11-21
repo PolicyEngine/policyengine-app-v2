@@ -62,7 +62,9 @@ export const getBasicInputFields = createSelector(
 
     for (const field of inputs) {
       const variable = variables?.[field];
-      if (!variable) continue;
+      if (!variable) {
+        continue;
+      }
 
       const entityType = variable.entity;
       const entityInfo = entities?.[entityType];

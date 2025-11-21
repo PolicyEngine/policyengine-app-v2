@@ -196,3 +196,46 @@ We explored several alternatives before settling on this approach:
 
 **Person-Level Custom Variables Placement:**
 Custom variables that are person-level (like `self_employment_income`, `is_disabled`) remain in the Advanced Settings section with inputs for each person, NOT merged into the basic inputs Adults section. This keeps a clear separation between essential (basic) and optional (custom) inputs.
+
+## Final Implementation
+
+**Mockup 3 Design (Implemented)**
+
+The household builder now uses Mockup 3's per-person variable assignment pattern:
+
+**Structure:**
+- **Household Information Section**: Tax Year, Marital Status, Number of Children
+- **Individuals / Members Accordion**:
+  - Each person (You, Your Partner, dependents) has their own panel
+  - Basic inputs (age, employment_income) shown permanently at top
+  - Custom variables added individually per person
+  - Inline search with "Add variable to [Person]" link
+- **Household Variables Accordion**:
+  - Basic household inputs (state_name, etc.) shown permanently at top
+  - Custom household-level variables (tax_unit, spm_unit, household, family, marital_unit)
+  - Inline search with "Add variable" link
+
+**Key Features:**
+1. **Per-Person Variable Assignment**: Custom variables added to specific individuals, not all members
+2. **Inline Search Pattern**: Search bar appears on clicking "Add variable" link, disappears after selection
+3. **Entity-Aware Resolution**: All variables correctly resolved to their entity (person, tax_unit, spm_unit, household)
+4. **Basic Inputs Permanent**: Core inputs like age, employment_income, state_name always visible
+5. **Metadata-Driven**: Basic inputs read directly from `metadata.variables` (not filtered by `isInputVariable`)
+
+**Component Architecture:**
+- `HouseholdBuilderFrame.tsx`: Redux integration, API calls, flow navigation, household structure management
+- `HouseholdBuilderForm.tsx`: Pure presentation component with all UI logic
+- `AdvancedSettings.tsx`: Collapsible section for power users (currently unused in Mockup 3)
+- `VariableInput.tsx`: Entity-aware input rendering for any variable
+- `VariableResolver.ts`: Entity resolution, getValue/setValue utilities
+
+**Mockup History:**
+The implementation went through three design iterations:
+
+**Mockup 1: Current Design** - Baseline with Advanced Settings collapsed at bottom
+
+**Mockup 2: Inline Variables (All Members)** - Global search adding variables to all members at once
+
+**Mockup 3: Individual Variable Assignment** - Per-person variable assignment (CHOSEN DESIGN)
+
+Mockup files archived at: `app/src/_archived/household-builder-mockups/`

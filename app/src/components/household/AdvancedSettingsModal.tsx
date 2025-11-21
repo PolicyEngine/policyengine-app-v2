@@ -5,18 +5,10 @@
  * This provides a cleaner main form and focused selection experience.
  */
 
-import { useState, useEffect } from 'react';
-import {
-  ActionIcon,
-  Box,
-  Button,
-  Group,
-  Stack,
-  Text,
-  Tooltip,
-} from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { useEffect, useState } from 'react';
 import { IconPlus, IconX } from '@tabler/icons-react';
+import { ActionIcon, Box, Button, Group, Stack, Text, Tooltip } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { Household } from '@/types/ingredients/Household';
 import {
   addVariable,
@@ -50,19 +42,24 @@ export default function AdvancedSettingsModal({
 
   // Sync selected variables when household structure changes (e.g., marital status, children)
   useEffect(() => {
-    if (selectedVariables.length === 0) return;
+    if (selectedVariables.length === 0) {
+      return;
+    }
 
     let updatedHousehold = household;
     let needsUpdate = false;
 
     for (const variableName of selectedVariables) {
       const entityInfo = resolveEntity(variableName, metadata);
-      if (!entityInfo) continue;
+      if (!entityInfo) {
+        continue;
+      }
 
       const instances = getEntityInstances(household, entityInfo.plural);
 
       for (const instanceName of instances) {
-        const entityData = household.householdData[entityInfo.plural as keyof typeof household.householdData];
+        const entityData =
+          household.householdData[entityInfo.plural as keyof typeof household.householdData];
         if (entityData && typeof entityData === 'object') {
           const instance = (entityData as Record<string, any>)[instanceName];
           if (instance && !instance[variableName]) {
@@ -108,10 +105,14 @@ export default function AdvancedSettingsModal({
   // Render inputs for a selected variable
   const renderVariableInputs = (variableName: string) => {
     const variable = allInputVariables.find((v) => v.name === variableName);
-    if (!variable) return null;
+    if (!variable) {
+      return null;
+    }
 
     const entityInfo = resolveEntity(variableName, metadata);
-    if (!entityInfo) return null;
+    if (!entityInfo) {
+      return null;
+    }
 
     const instances = getEntityInstances(household, entityInfo.plural);
 
@@ -199,8 +200,7 @@ export default function AdvancedSettingsModal({
 
           {selectedVariables.length === 0 && (
             <Text size="sm" c="dimmed" ta="center">
-              No custom variables selected. Click &quot;Add Variable&quot; to add more
-              inputs.
+              No custom variables selected. Click &quot;Add Variable&quot; to add more inputs.
             </Text>
           )}
         </Stack>

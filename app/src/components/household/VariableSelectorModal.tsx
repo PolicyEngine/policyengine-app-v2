@@ -5,7 +5,8 @@
  * browsing, allowing users to select multiple variables at once.
  */
 
-import { useState, useMemo, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { IconSearch } from '@tabler/icons-react';
 import {
   Accordion,
   Box,
@@ -17,7 +18,6 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
-import { IconSearch } from '@tabler/icons-react';
 import {
   getInputVariables,
   groupVariablesNested,
@@ -60,20 +60,19 @@ export default function VariableSelectorModal({
 
   // Filter variables based on search
   const filteredVariables = useMemo(() => {
-    if (!searchValue.trim()) return null;
+    if (!searchValue.trim()) {
+      return null;
+    }
     const search = searchValue.toLowerCase();
     return allInputVariables.filter(
-      (v) =>
-        v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
+      (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
     );
   }, [allInputVariables, searchValue]);
 
   // Toggle variable selection
   const toggleVariable = (variableName: string) => {
     setTempSelection((prev) =>
-      prev.includes(variableName)
-        ? prev.filter((v) => v !== variableName)
-        : [...prev, variableName]
+      prev.includes(variableName) ? prev.filter((v) => v !== variableName) : [...prev, variableName]
     );
   };
 
@@ -155,12 +154,7 @@ export default function VariableSelectorModal({
   const newSelectionCount = tempSelection.filter((v) => !selectedVariables.includes(v)).length;
 
   return (
-    <Modal
-      opened={opened}
-      onClose={onClose}
-      title="Add Variables"
-      size="lg"
-    >
+    <Modal opened={opened} onClose={onClose} title="Add Variables" size="lg">
       <Stack gap="md">
         {/* Search bar */}
         <TextInput
@@ -186,9 +180,7 @@ export default function VariableSelectorModal({
           ) : (
             // Nested categorized browser
             <Accordion variant="separated" multiple>
-              {Object.values(nestedCategories).map((category) =>
-                renderNestedCategory(category)
-              )}
+              {Object.values(nestedCategories).map((category) => renderNestedCategory(category))}
             </Accordion>
           )}
         </Box>

@@ -8,9 +8,9 @@
 import { Household } from '@/types/ingredients/Household';
 
 export interface EntityInfo {
-  entity: string;        // e.g., "person", "tax_unit", "spm_unit"
-  plural: string;        // e.g., "people", "tax_units", "spm_units"
-  label: string;         // e.g., "Person", "Tax Unit", "SPM Unit"
+  entity: string; // e.g., "person", "tax_unit", "spm_unit"
+  plural: string; // e.g., "people", "tax_units", "spm_units"
+  label: string; // e.g., "Person", "Tax Unit", "SPM Unit"
   isPerson: boolean;
 }
 
@@ -18,7 +18,7 @@ export interface VariableInfo {
   name: string;
   label: string;
   entity: string;
-  valueType: string;     // "float", "int", "bool", "Enum"
+  valueType: string; // "float", "int", "bool", "Enum"
   unit?: string;
   defaultValue: any;
   isInputVariable: boolean;
@@ -81,7 +81,7 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
  */
 export function getGroupName(entityPlural: string, _personName?: string): string {
   const groupNameMap: Record<string, string> = {
-    people: 'you',  // Will be overridden by personName if provided
+    people: 'you', // Will be overridden by personName if provided
     households: 'your household',
     tax_units: 'your tax unit',
     spm_units: 'your spm unit',
@@ -96,10 +96,7 @@ export function getGroupName(entityPlural: string, _personName?: string): string
 /**
  * Get all entity instance names for a given entity type in the household
  */
-export function getEntityInstances(
-  household: Household,
-  entityPlural: string
-): string[] {
+export function getEntityInstances(household: Household, entityPlural: string): string[] {
   const entityData = getEntityData(household, entityPlural);
   return entityData ? Object.keys(entityData) : [];
 }
@@ -284,6 +281,41 @@ export function addVariable(
 }
 
 /**
+ * Add a variable to a single specific entity instance with default value
+ * Use this for per-person variable assignment
+ */
+export function addVariableToEntity(
+  household: Household,
+  variableName: string,
+  metadata: any,
+  year: string,
+  entityName: string
+): Household {
+  const entityInfo = resolveEntity(variableName, metadata);
+  const variableInfo = getVariableInfo(variableName, metadata);
+
+  if (!entityInfo || !variableInfo) {
+    return household;
+  }
+
+  const newHousehold = JSON.parse(JSON.stringify(household)) as Household;
+  const entityData = getEntityData(newHousehold, entityInfo.plural);
+
+  if (!entityData) {
+    return household;
+  }
+
+  // Add variable only to the specified entity instance
+  if (entityData[entityName] && !entityData[entityName][variableName]) {
+    entityData[entityName][variableName] = {
+      [year]: variableInfo.defaultValue,
+    };
+  }
+
+  return newHousehold;
+}
+
+/**
  * Remove a variable from all entity instances
  */
 export function removeVariable(
@@ -340,7 +372,9 @@ export function getInputVariables(metadata: any): VariableInfo[] {
 /**
  * Group variables by category based on moduleName
  */
-export function groupVariablesByCategory(variables: VariableInfo[]): Record<string, VariableInfo[]> {
+export function groupVariablesByCategory(
+  variables: VariableInfo[]
+): Record<string, VariableInfo[]> {
   const groups: Record<string, VariableInfo[]> = {};
 
   for (const variable of variables) {
@@ -375,11 +409,17 @@ export function groupVariablesNested(variables: VariableInfo[]): Record<string, 
 
     // Map first part to friendly category name
     let topCategory = parts[0]?.toLowerCase() || 'other';
-    if (topCategory === 'gov') topCategory = 'Benefits';
-    else if (topCategory === 'income') topCategory = 'Income';
-    else if (topCategory === 'demographics') topCategory = 'Demographics';
-    else if (topCategory === 'household') topCategory = 'Household';
-    else topCategory = 'Other';
+    if (topCategory === 'gov') {
+      topCategory = 'Benefits';
+    } else if (topCategory === 'income') {
+      topCategory = 'Income';
+    } else if (topCategory === 'demographics') {
+      topCategory = 'Demographics';
+    } else if (topCategory === 'household') {
+      topCategory = 'Household';
+    } else {
+      topCategory = 'Other';
+    }
 
     // Initialize top-level category
     if (!root[topCategory]) {
@@ -448,7 +488,6 @@ function getCategoryFromModuleName(moduleName: string): string {
     return 'Demographics';
   } else if (firstPart === 'household') {
     return 'Household';
-  } else {
-    return 'Other';
   }
+  return 'Other';
 }
