@@ -126,9 +126,8 @@ export default function PoliciesPage() {
 
   return (
     <>
-    
-    <Stack gap="md">
-      <IngredientReadView
+      <Stack gap="md">
+        <IngredientReadView
           ingredient="policy"
           title="Your saved policies"
           subtitle="Create a policy reform or find and save existing policies to use in your simulation configurations."
@@ -144,7 +143,7 @@ export default function PoliciesPage() {
           isSelected={isSelected}
           onSelectionChange={handleSelectionChange}
         />
-    </Stack>
+      </Stack>
 
       <RenameIngredientModal
         opened={renameOpened}
