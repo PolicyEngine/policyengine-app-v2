@@ -15,6 +15,7 @@ import SimulationDetailPage from './pages/SimulationDetail.page';
 import UserDetailPage from './pages/UserDetail.page';
 import VariableDetailPage from './pages/VariableDetail.page';
 import ModelVersionDetailPage from './pages/ModelVersionDetail.page';
+import GiveCalcPage from './pages/GiveCalc.page';
 
 const router = createBrowserRouter(
   [
@@ -81,6 +82,10 @@ const router = createBrowserRouter(
         {
           path: 'model-version/:modelVersionId',
           element: <ModelVersionDetailPage />,
+        },
+        {
+          path: 'givecalc',
+          element: <GiveCalcPage />,
         },
       ],
     },
