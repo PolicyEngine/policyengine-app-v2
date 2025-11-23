@@ -1,10 +1,9 @@
-import StreamlitEmbed from '@/components/StreamlitEmbed';
+import IframeContent from '@/components/IframeContent';
 
 export default function GiveCalcPage() {
   return (
-    <StreamlitEmbed
-      embedUrl="https://givecalc.streamlit.app?embedded=true"
-      directUrl="https://givecalc.streamlit.app"
+    <IframeContent
+      url="https://givecalc.streamlit.app?embedded=true"
       title="GiveCalc"
     />
   );
