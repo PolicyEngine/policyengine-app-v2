@@ -8,6 +8,7 @@ import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
+import GiveCalcPage from './pages/GiveCalc.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -111,6 +112,10 @@ const router = createBrowserRouter(
             {
               path: 'configurations',
               element: <div>Configurations page</div>,
+            },
+            {
+              path: 'givecalc',
+              element: <GiveCalcPage />,
             },
           ],
         },
@@ -219,10 +224,6 @@ const router = createBrowserRouter(
             },
             {
               path: 'child-tax-credit-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'givecalc',
               element: <RedirectToLegacy />,
             },
             {
