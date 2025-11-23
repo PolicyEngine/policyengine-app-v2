@@ -45,7 +45,10 @@ export default function StreamlitEmbed({
           mb="xs"
         >
           <Group justify="space-between" align="center">
-            <Text size="sm">Streamlit apps may go to sleep when inactive.</Text>
+            <Text size="sm">
+              This app may go to sleep when inactive (the below blue wake-up button will not
+              work).
+            </Text>
             <Button
               component="a"
               href={directUrl}
