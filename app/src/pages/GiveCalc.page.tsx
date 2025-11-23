@@ -28,22 +28,23 @@ export default function GiveCalcPage() {
           icon={<IconInfoCircle />}
           withCloseButton
           onClose={handleAlertClose}
-          style={{ flexShrink: 0, margin: '8px' }}
+          style={{ flexShrink: 0, margin: '8px', padding: '12px' }}
         >
-          <Text size="sm" component="span">
-            If the app is sleeping, the below blue wake-up button will not work.{' '}
+          <Group gap="sm" align="center" wrap="nowrap">
+            <Text size="sm" style={{ flex: 1 }}>
+              Calculator not loading? It may have gone to sleep.
+            </Text>
             <Button
               component="a"
               href="https://givecalc.streamlit.app"
               target="_blank"
               rel="noopener noreferrer"
               size="xs"
-              variant="outline"
-              style={{ verticalAlign: 'baseline' }}
+              variant="filled"
             >
-              Wake it up
+              Open directly
             </Button>
-          </Text>
+          </Group>
         </Alert>
       )}
       <div style={{ flex: 1, minHeight: 0 }}>
