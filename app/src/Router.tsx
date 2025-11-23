@@ -113,10 +113,6 @@ const router = createBrowserRouter(
               path: 'configurations',
               element: <div>Configurations page</div>,
             },
-            {
-              path: 'givecalc',
-              element: <GiveCalcPage />,
-            },
           ],
         },
         // Static pages - use StaticLayout, no metadata needed
@@ -154,6 +150,10 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+            {
+              path: 'givecalc',
+              element: <GiveCalcPage />,
             },
           ],
         },
