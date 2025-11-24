@@ -35,7 +35,7 @@ Single filers with earnings between $8,000 and $37,000 would see their net incom
 
 ![](https://cdn-images-1.medium.com/max/3044/0*rozC7JqH_bOzaUD_)
 
-For more examples of the policy’s household impacts, see our [2023 article](https://legacy.policyengine.org/us/research/restoring-arpa-eitc) on the ARPA EITC expansion. That article’s estimates preceded our [Enhanced Current Population Survey](https://legacy.policyengine.org/us/research/enhanced-cps-beta) launch.
+For more examples of the policy’s household impacts, see our [2023 article](https://policyengine.org/us/research/restoring-arpa-eitc) on the ARPA EITC expansion. That article’s estimates preceded our [Enhanced Current Population Survey](https://policyengine.org/us/research/enhanced-cps-beta) launch.
 
 ## Nationwide impacts
 

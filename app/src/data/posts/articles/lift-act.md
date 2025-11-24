@@ -54,4 +54,4 @@ The LIFT Act proposed by then-Senator Kamala Harris includes a Middle Class Tax 
 
 Incorporating behavioral responses adds about 10% to the cost, due to about 1% less labor supply. This results from income effects and substitution effects for those in the phase-out range, though some low-income earners would be projected to work more due to substitution effects.
 
-As Vice President Harris pursues her 2024 presidential campaign, she may balance her prior proposals like the LIFT Act with newer policies in [President Biden's budget](https://legacy.policyengine.org/us/research/biden-budget-2025). PolicyEngine stands ready to support evidence-based evaluation of potential reforms like these and those from across the political spectrum.
+As Vice President Harris pursues her 2024 presidential campaign, she may balance her prior proposals like the LIFT Act with newer policies in [President Biden's budget](https://policyengine.org/us/research/biden-budget-2025). PolicyEngine stands ready to support evidence-based evaluation of potential reforms like these and those from across the political spectrum.

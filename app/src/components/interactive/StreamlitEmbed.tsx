@@ -40,16 +40,16 @@ export default function StreamlitEmbed({
   };
 
   // Calculate iframe dimensions
-  const iframeHeight = height || `calc(100vh - ${spacing.appShell.header.height})`;
   const iframeWidth = width || '100%';
+  const containerHeight = `calc(100vh - ${spacing.appShell.header.height})`;
 
   return (
     <div
       style={{
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100vh',
+        position: 'relative',
+        height: containerHeight,
         width: '100vw',
+        overflow: 'hidden',
       }}
     >
       <style>{`
@@ -62,6 +62,11 @@ export default function StreamlitEmbed({
       {alertVisible && (
         <div
           style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
             backgroundColor: '#f0f2f5',
             borderBottom: '1px solid #d9d9d9',
             padding: '8px 16px',
@@ -128,26 +133,16 @@ export default function StreamlitEmbed({
         </div>
       )}
 
-      <div
+      <iframe
+        src={embedUrl}
+        title={iframeTitle}
         style={{
-          display: 'flex',
-          justifyContent: 'center',
-          flex: 1,
-          width: '100vw',
-          overflow: 'hidden',
+          width: iframeWidth,
+          height: height || '100%',
+          border: 'none',
+          display: 'block',
         }}
-      >
-        <iframe
-          src={embedUrl}
-          title={iframeTitle}
-          style={{
-            width: iframeWidth,
-            height: iframeHeight,
-            border: 'none',
-            overflow: 'hidden',
-          }}
-        />
-      </div>
+      />
     </div>
   );
 }

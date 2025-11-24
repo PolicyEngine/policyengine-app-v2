@@ -30,6 +30,6 @@ Our [distributional analysis](https://legacy.policyengine.org/uk/policy?focus=po
 
 Read more of PolicyEngine’s Autumn Budget 2024 coverage:
 
-- [Employer National Insurance reforms](https://legacy.policyengine.org/uk/research/autumn-budget-24-employer-ni)
-- [Private school VAT changes](https://legacy.policyengine.org/uk/research/vat-school-comparison)
-- [Fuel Duty freeze](https://legacy.policyengine.org/uk/research/autumn-budget-24-fuel-duty)
+- [Employer National Insurance reforms](https://policyengine.org/uk/research/autumn-budget-24-employer-ni)
+- [Private school VAT changes](https://policyengine.org/uk/research/vat-school-comparison)
+- [Fuel Duty freeze](https://policyengine.org/uk/research/autumn-budget-24-fuel-duty)

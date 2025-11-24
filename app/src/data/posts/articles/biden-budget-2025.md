@@ -24,7 +24,7 @@ For example, this reform would provide an additional $3,600 to a single parent o
 
 ![](https://cdn-images-1.medium.com/max/2972/0*b4iPi1yq5BgsTHux)
 
-To learn more, read our [**2023 report on restoring the ARPA CTC.**](https://legacy.policyengine.org/us/research/restoration-of-the-american-rescue-plan-acts-expanded-child-tax-credit)
+To learn more, read our [**2023 report on restoring the ARPA CTC.**](https://policyengine.org/us/research/restoration-of-the-american-rescue-plan-acts-expanded-child-tax-credit)
 
 ### Restoring the 2021 Earned Income Tax Credit expansion for filers without qualifying children
 
@@ -46,7 +46,7 @@ Producing a net benefit of up to $1,360 at $13,500 earnings, phasing out until e
 
 ![](https://cdn-images-1.medium.com/max/3000/0*8yOkbR3oWf6mNbRM)
 
-To learn more, read our [2023 report on restoring the ARPA EITC.](https://legacy.policyengine.org/us/research/restoring-arpa-eitc)
+To learn more, read our [2023 report on restoring the ARPA EITC.](https://policyengine.org/us/research/restoring-arpa-eitc)
 
 ### Increasing the top marginal rate to 39.6%
 

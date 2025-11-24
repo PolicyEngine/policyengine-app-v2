@@ -229,7 +229,7 @@ export default function AutumnBudgetBanner() {
             {/* Card 1: Two-Child Benefit Limit */}
             <Card
               component="a"
-              href="https://legacy.policyengine.org/uk/research/uk-two-child-limit"
+              href="/uk/research/uk-two-child-limit"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -282,7 +282,7 @@ export default function AutumnBudgetBanner() {
             {/* Card 2: VAT Thresholds */}
             <Card
               component="a"
-              href="https://legacy.policyengine.org/uk/research/uk-vat-thresholds"
+              href="/uk/research/uk-vat-thresholds"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -335,7 +335,7 @@ export default function AutumnBudgetBanner() {
             {/* Card 3: Income Tax & NI */}
             <Card
               component="a"
-              href="https://legacy.policyengine.org/uk/research/uk-income-tax-ni-reforms-2025"
+              href="/uk/research/uk-income-tax-ni-reforms-2025"
               target="_blank"
               rel="noopener noreferrer"
               style={{

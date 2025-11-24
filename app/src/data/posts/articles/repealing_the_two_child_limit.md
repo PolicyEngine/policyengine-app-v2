@@ -232,7 +232,7 @@ to 1.7 million.
     Group](https://cpag.org.uk/sites/default/files/files/policypost/CPAG_Budget_Submission_March_2023.pdf),
     drawn from the UKMOD microsimulation model. PolicyEngine [applies
     machine learning-based algorithms to survey
-    microdata](https://legacy.policyengine.org/uk/blog/how-machine-learning-tools-make-policyengine-more-accurate)
+    microdata](https://policyengine.org/uk/research/how-machine-learning-tools-make-policyengine-more-accurate)
     to counter measurement and sampling bias present in the input data,
     which could explain some of the disparity.
 

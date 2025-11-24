@@ -20,7 +20,7 @@ In the past decade, Democratic lawmakers have supported several proposals to exp
 
 ## The American Family Act’s Provisions
 
-The 2025 American Family Act makes several changes to the Child Tax Credit (CTC). While the 2025 AFA shares a structure with previous versions and [Harris’s CTC plan](https://legacy.policyengine.org/us/research/harris-ctc) and the [American Rescue Plan Act CTC](https://legacy.policyengine.org/us/research/restoration-of-the-american-rescue-plan-acts-expanded-child-tax-credit), it offers larger benefits than these other CTC proposals.
+The 2025 American Family Act makes several changes to the Child Tax Credit (CTC). While the 2025 AFA shares a structure with previous versions and [Harris’s CTC plan](https://policyengine.org/us/research/harris-ctc) and the [American Rescue Plan Act CTC](https://policyengine.org/us/research/restoration-of-the-american-rescue-plan-acts-expanded-child-tax-credit), it offers larger benefits than these other CTC proposals.
 
 Under the 2025 AFA, children under the age of six are eligible for a maximum credit of $4,320 ($360 per month), while children aged 6 to 17 would receive $3,600 ($300 per month). The 2025 AFA also contains a baby bonus where parents of newborns can claim $2,400 for the first month instead of the standard $360 monthly credit for young children. This means families with newborn children would receive a total of $6,360 during the baby’s first year. Additionally, the 2025 AFA extends the $500 nonrefundable adult dependent credit beyond its scheduled 2026 expiration date, preserving a benefit that was originally enacted in the Tax Cuts and Jobs Act of 2017.
 

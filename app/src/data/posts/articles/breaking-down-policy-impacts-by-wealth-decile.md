@@ -1,6 +1,6 @@
 _A UK mansion. Credit: DALLE-2._
 
-Since our earliest days, we’ve broken the impact of policy reforms by income decile. For example, our [very first report](https://legacy.policyengine.org/uk/blog/2021-10-30-analysing-autumn-budget-universal-credit-reforms-with-policyengine) found that the 2021 Autumn Budget Universal Credit reforms would raise the net income of households in the third income decile by 1.6%, more than any other decile.
+Since our earliest days, we’ve broken the impact of policy reforms by income decile. For example, our [very first report](https://policyengine.org/uk/research/analysing-autumn-budget-universal-credit-reforms-with-policyengine) found that the 2021 Autumn Budget Universal Credit reforms would raise the net income of households in the third income decile by 1.6%, more than any other decile.
 
 ![](https://cdn-images-1.medium.com/max/2432/0*YvFdT6fnE10-nRUR)
 

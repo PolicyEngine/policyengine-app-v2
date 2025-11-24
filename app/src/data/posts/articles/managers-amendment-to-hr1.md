@@ -40,7 +40,7 @@ The manager's amendment further revised these policies, while also revising othe
 
 In sum, the manager's amendment:
 
-1. **Expanded the SALT deduction** between the [Ways and Means SALT cap](https://legacy.policyengine.org/us/research/ways-and-means-salt-cap) and the [SALT Caucus's proposed SALT cap](https://legacy.policyengine.org/us/research/salt-caucus-62k-cap)
+1. **Expanded the SALT deduction** between the [Ways and Means SALT cap](https://policyengine.org/us/research/ways-and-means-salt-cap) and the [SALT Caucus's proposed SALT cap](https://policyengine.org/us/research/salt-caucus-62k-cap)
 
 1. **Reduced the AMT exemption amount and exemption phase-out start** by changing the base year from 2017 to 2025 for inflation indexing
 
@@ -58,7 +58,7 @@ Under the new compromise, households could claim up to $40,000 in SALT ($20,000 
 
 ![](https://cdn-images-1.medium.com/max/3200/0*WWW4GvxooQQxEr1-)
 
-In addition to these changes, the manager's amendment increased the overall limitation on itemized deductions to 5/37 of the lesser of a household's total SALT deduction or the difference between their taxable income and the top income bracket's threshold. The 2/37 limitation remains for all other itemized deductions. Furthermore, the manager's amendment sets 2025 as the base year for alternative minimum tax inflation adjustments, lowering the AMT exemption amount and phase-out start. Each change will affect a household's eligible SALT deduction and [effective SALT cap](https://legacy.policyengine.org/us/research/introducing-salternative).
+In addition to these changes, the manager's amendment increased the overall limitation on itemized deductions to 5/37 of the lesser of a household's total SALT deduction or the difference between their taxable income and the top income bracket's threshold. The 2/37 limitation remains for all other itemized deductions. Furthermore, the manager's amendment sets 2025 as the base year for alternative minimum tax inflation adjustments, lowering the AMT exemption amount and phase-out start. Each change will affect a household's eligible SALT deduction and [effective SALT cap](https://policyengine.org/us/research/introducing-salternative).
 
 ## Household Impacts
 
