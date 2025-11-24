@@ -32,7 +32,7 @@ export default function GiveCalcPage() {
         >
           <Group gap="sm" align="center" wrap="nowrap">
             <Text size="sm" style={{ flex: 1 }}>
-              Calculator not loading? It may have gone to sleep.
+              If the app shows a sleep screen, the button below won't work in this embed.
             </Text>
             <Button
               component="a"
@@ -42,7 +42,7 @@ export default function GiveCalcPage() {
               size="xs"
               variant="filled"
             >
-              Open directly
+              Open to wake up
             </Button>
           </Group>
         </Alert>
