@@ -31,9 +31,7 @@ describe('StreamlitEmbed', () => {
 
     // Then
     expect(screen.getByText(/if the app is sleeping/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole('link', { name: /wake it up/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /wake it up/i })).toBeInTheDocument();
   });
 
   test('given wake up link then opens in new tab with correct URL', () => {
@@ -56,9 +54,7 @@ describe('StreamlitEmbed', () => {
     await user.click(screen.getByRole('button', { name: /close notice/i }));
 
     // Then
-    expect(
-      screen.queryByText(/if the app is sleeping/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/if the app is sleeping/i)).not.toBeInTheDocument();
   });
 
   test('given user dismisses alert then stores dismissal in session storage', async () => {
@@ -81,9 +77,7 @@ describe('StreamlitEmbed', () => {
     render(<StreamlitEmbed {...MOCK_STREAMLIT_PROPS} />);
 
     // Then
-    expect(
-      screen.queryByText(/if the app is sleeping/i)
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/if the app is sleeping/i)).not.toBeInTheDocument();
   });
 
   test('given custom dimensions then iframe uses specified height and width', () => {

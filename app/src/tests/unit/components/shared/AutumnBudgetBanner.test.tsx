@@ -1,4 +1,4 @@
-import { render, screen, userEvent } from '@test-utils';
+import { render, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import AutumnBudgetBanner from '@/components/shared/AutumnBudgetBanner';
 import {
@@ -34,9 +34,7 @@ describe('AutumnBudgetBanner', () => {
     render(<AutumnBudgetBanner />);
 
     // Then
-    expect(
-      screen.getByText(/The Autumn Budget 2025 is coming soon/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/The Autumn Budget 2025 is coming soon/i)).toBeInTheDocument();
   });
 
   test('given after end date then banner does not display', () => {
@@ -84,15 +82,9 @@ describe('AutumnBudgetBanner', () => {
     render(<AutumnBudgetBanner />);
 
     // Then
-    expect(
-      screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(BANNER_CARD_TITLES.VAT_THRESHOLDS)
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText(BANNER_CARD_TITLES.INCOME_TAX_NI)
-    ).toBeInTheDocument();
+    expect(screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT)).toBeInTheDocument();
+    expect(screen.getByText(BANNER_CARD_TITLES.VAT_THRESHOLDS)).toBeInTheDocument();
+    expect(screen.getByText(BANNER_CARD_TITLES.INCOME_TAX_NI)).toBeInTheDocument();
   });
 
   test('given analysis cards then link to correct URLs', () => {
@@ -103,15 +95,9 @@ describe('AutumnBudgetBanner', () => {
     render(<AutumnBudgetBanner />);
 
     // Then
-    const twoChildLink = screen
-      .getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT)
-      .closest('a');
-    const vatLink = screen
-      .getByText(BANNER_CARD_TITLES.VAT_THRESHOLDS)
-      .closest('a');
-    const incomeTaxLink = screen
-      .getByText(BANNER_CARD_TITLES.INCOME_TAX_NI)
-      .closest('a');
+    const twoChildLink = screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT).closest('a');
+    const vatLink = screen.getByText(BANNER_CARD_TITLES.VAT_THRESHOLDS).closest('a');
+    const incomeTaxLink = screen.getByText(BANNER_CARD_TITLES.INCOME_TAX_NI).closest('a');
 
     expect(twoChildLink).toHaveAttribute('href', BANNER_LINKS.TWO_CHILD_LIMIT);
     expect(vatLink).toHaveAttribute('href', BANNER_LINKS.VAT_THRESHOLDS);
@@ -126,9 +112,7 @@ describe('AutumnBudgetBanner', () => {
     render(<AutumnBudgetBanner />);
 
     // Then
-    const twoChildLink = screen
-      .getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT)
-      .closest('a');
+    const twoChildLink = screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT).closest('a');
     expect(twoChildLink).toHaveAttribute('target', '_blank');
     expect(twoChildLink).toHaveAttribute('rel', 'noopener noreferrer');
   });
@@ -176,9 +160,7 @@ describe('AutumnBudgetBanner', () => {
     render(<AutumnBudgetBanner />);
 
     // Then
-    expect(
-      screen.getByText('The Autumn Budget 2025 is coming soon')
-    ).toBeInTheDocument();
+    expect(screen.getByText('The Autumn Budget 2025 is coming soon')).toBeInTheDocument();
   });
 
   test('given after budget date then title shows without coming soon', () => {
@@ -190,8 +172,6 @@ describe('AutumnBudgetBanner', () => {
 
     // Then
     expect(screen.getByText('The Autumn Budget 2025')).toBeInTheDocument();
-    expect(
-      screen.queryByText('The Autumn Budget 2025 is coming soon')
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText('The Autumn Budget 2025 is coming soon')).not.toBeInTheDocument();
   });
 });

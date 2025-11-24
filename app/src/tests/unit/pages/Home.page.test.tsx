@@ -12,9 +12,7 @@ vi.mock('@/components/home/ActionCards', () => ({
 }));
 
 vi.mock('@/components/home/TransformationStatement', () => ({
-  default: () => (
-    <div data-testid="transformation-statement">Transformation Statement</div>
-  ),
+  default: () => <div data-testid="transformation-statement">Transformation Statement</div>,
 }));
 
 vi.mock('@/components/home/OrgLogos', () => ({
@@ -40,9 +38,9 @@ describe('HomePage', () => {
     const { container } = render(<HomePage />);
 
     // Then
-    const sections = Array.from(
-      container.querySelectorAll('[data-testid]')
-    ).map((el) => el.getAttribute('data-testid'));
+    const sections = Array.from(container.querySelectorAll('[data-testid]')).map((el) =>
+      el.getAttribute('data-testid')
+    );
 
     expect(sections).toEqual([
       'main-section',
