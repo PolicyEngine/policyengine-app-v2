@@ -13,7 +13,7 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
-import { PopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
+import { StandalonePopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { createPopulationCallbacks } from '@/utils/pathwayCallbacks';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
@@ -43,7 +43,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
-    PopulationViewMode.SCOPE
+    StandalonePopulationViewMode.SCOPE
   );
 
   // ========== CALLBACKS ==========
@@ -53,8 +53,8 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     (state) => state, // populationSelector: return the state itself (PopulationStateProps)
     (_state, population) => population, // populationUpdater: replace entire state
     navigateToMode,
-    PopulationViewMode.GEOGRAPHIC_CONFIRM, // returnMode (not used in standalone mode)
-    PopulationViewMode.LABEL, // labelMode
+    StandalonePopulationViewMode.GEOGRAPHIC_CONFIRM, // returnMode (not used in standalone mode)
+    StandalonePopulationViewMode.LABEL, // labelMode
     {
       // Custom navigation for standalone pathway: exit to households list
       onHouseholdComplete: (householdId: string, _household: Household) => {
@@ -74,7 +74,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
   let currentView: React.ReactElement;
 
   switch (currentMode) {
-    case PopulationViewMode.SCOPE:
+    case StandalonePopulationViewMode.SCOPE:
       currentView = (
         <PopulationScopeView
           countryId={countryId}
@@ -86,7 +86,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       );
       break;
 
-    case PopulationViewMode.LABEL:
+    case StandalonePopulationViewMode.LABEL:
       currentView = (
         <PopulationLabelView
           population={populationState}
@@ -95,9 +95,9 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
           onNext={() => {
             // Navigate based on population type
             if (populationState.type === 'household') {
-              navigateToMode(PopulationViewMode.HOUSEHOLD_BUILDER);
+              navigateToMode(StandalonePopulationViewMode.HOUSEHOLD_BUILDER);
             } else {
-              navigateToMode(PopulationViewMode.GEOGRAPHIC_CONFIRM);
+              navigateToMode(StandalonePopulationViewMode.GEOGRAPHIC_CONFIRM);
             }
           }}
           onBack={canGoBack ? goBack : undefined}
@@ -105,7 +105,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       );
       break;
 
-    case PopulationViewMode.HOUSEHOLD_BUILDER:
+    case StandalonePopulationViewMode.HOUSEHOLD_BUILDER:
       currentView = (
         <HouseholdBuilderView
           population={populationState}
@@ -116,7 +116,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       );
       break;
 
-    case PopulationViewMode.GEOGRAPHIC_CONFIRM:
+    case StandalonePopulationViewMode.GEOGRAPHIC_CONFIRM:
       currentView = (
         <GeographicConfirmationView
           population={populationState}

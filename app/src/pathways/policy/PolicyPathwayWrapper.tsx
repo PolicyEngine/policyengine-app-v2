@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
-import { PolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
+import { StandalonePolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { createPolicyCallbacks } from '@/utils/pathwayCallbacks';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
@@ -20,7 +20,7 @@ import PolicyParameterSelectorView from '../report/views/policy/PolicyParameterS
 import PolicySubmitView from '../report/views/policy/PolicySubmitView';
 
 // View modes that manage their own AppShell (don't need StandardLayout wrapper)
-const MODES_WITH_OWN_LAYOUT = new Set([PolicyViewMode.PARAMETER_SELECTOR]);
+const MODES_WITH_OWN_LAYOUT = new Set([StandalonePolicyViewMode.PARAMETER_SELECTOR]);
 
 interface PolicyPathwayWrapperProps {
   onComplete?: () => void;
@@ -39,7 +39,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
-    PolicyViewMode.LABEL
+    StandalonePolicyViewMode.LABEL
   );
 
   // ========== CALLBACKS ==========
@@ -49,7 +49,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
     (state) => state, // policySelector: return the state itself (PolicyStateProps)
     (_state, policy) => policy, // policyUpdater: replace entire state with new policy
     navigateToMode,
-    PolicyViewMode.SUBMIT, // returnMode (not used in standalone mode)
+    StandalonePolicyViewMode.SUBMIT, // returnMode (not used in standalone mode)
     (policyId: string) => {
       // onPolicyComplete: custom navigation for standalone pathway
       console.log('[PolicyPathwayWrapper] Policy created with ID:', policyId);
@@ -62,31 +62,31 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
   let currentView: React.ReactElement;
 
   switch (currentMode) {
-    case PolicyViewMode.LABEL:
+    case StandalonePolicyViewMode.LABEL:
       currentView = (
         <PolicyLabelView
           label={policyState.label}
           mode="standalone"
           onUpdateLabel={policyCallbacks.updateLabel}
-          onNext={() => navigateToMode(PolicyViewMode.PARAMETER_SELECTOR)}
+          onNext={() => navigateToMode(StandalonePolicyViewMode.PARAMETER_SELECTOR)}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/policies`)}
         />
       );
       break;
 
-    case PolicyViewMode.PARAMETER_SELECTOR:
+    case StandalonePolicyViewMode.PARAMETER_SELECTOR:
       currentView = (
         <PolicyParameterSelectorView
           policy={policyState}
           onPolicyUpdate={policyCallbacks.updatePolicy}
-          onNext={() => navigateToMode(PolicyViewMode.SUBMIT)}
+          onNext={() => navigateToMode(StandalonePolicyViewMode.SUBMIT)}
           onBack={canGoBack ? goBack : undefined}
         />
       );
       break;
 
-    case PolicyViewMode.SUBMIT:
+    case StandalonePolicyViewMode.SUBMIT:
       currentView = (
         <PolicySubmitView
           policy={policyState}
@@ -104,7 +104,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
 
   // Conditionally wrap with StandardLayout
   // PolicyParameterSelectorView manages its own AppShell
-  if (MODES_WITH_OWN_LAYOUT.has(currentMode as PolicyViewMode)) {
+  if (MODES_WITH_OWN_LAYOUT.has(currentMode as StandalonePolicyViewMode)) {
     return currentView;
   }
 
