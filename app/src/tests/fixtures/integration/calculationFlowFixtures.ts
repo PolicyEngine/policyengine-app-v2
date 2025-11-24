@@ -163,7 +163,6 @@ export const mockIntegrationComputingStatus = (
   progress,
   message: 'Computing...',
   queuePosition: 2,
-  estimatedTimeRemaining: 5000,
   metadata: {
     calcId,
     calcType: 'societyWide',

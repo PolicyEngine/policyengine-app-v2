@@ -4,6 +4,7 @@ import {
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
+import { getDurationForCountry } from '@/constants/calculationDurations';
 import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
 
@@ -96,7 +97,6 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
         status: 'pending',
         progress,
         queuePosition: response.queue_position,
-        estimatedTimeRemaining: response.average_time ? response.average_time * 1000 : undefined,
         message: this.getComputingMessage(response.queue_position),
         metadata,
       };
@@ -148,16 +148,9 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
 
   /**
    * Get estimated duration for society-wide calculations based on country
-   * US: 5 minutes, UK: 3 minutes
+   * Uses shared constants from calculationDurations
    */
   private getEstimatedDuration(countryId?: string): number {
-    if (countryId === 'us') {
-      return 5 * 60 * 1000; // 5 minutes in milliseconds
-    }
-    if (countryId === 'uk') {
-      return 3 * 60 * 1000; // 3 minutes in milliseconds
-    }
-    // Default fallback to 5 minutes
-    return 5 * 60 * 1000;
+    return getDurationForCountry(countryId || 'us');
   }
 }
