@@ -1,4 +1,8 @@
 import { useEffect, useState } from 'react';
+import {
+  HOUSEHOLD_DURATION_MS,
+  US_SOCIETY_WIDE_DURATION_MS,
+} from '@/constants/calculationDurations';
 
 /**
  * Server progress data for blending with synthetic progress
@@ -20,8 +24,8 @@ interface SyntheticProgress {
  * Configuration constants for synthetic progress
  */
 const SYNTHETIC_PROGRESS_CONFIG = {
-  HOUSEHOLD_DURATION_MS: 45000, // 45 seconds
-  SOCIETY_WIDE_DURATION_MS: 720000, // 12 minutes
+  HOUSEHOLD_DURATION_MS, // 1 minute (imported from shared constants)
+  SOCIETY_WIDE_DURATION_MS: US_SOCIETY_WIDE_DURATION_MS, // 6 minutes (imported from shared constants)
   UPDATE_INTERVAL_MS: 500, // Update every 500ms
   MAX_PROGRESS: 95, // Cap at 95% (never show 100% until actually complete)
   SERVER_WEIGHT: 0.7, // 70% server data when blending

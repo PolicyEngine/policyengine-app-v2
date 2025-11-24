@@ -333,8 +333,8 @@ describe('SocietyWideCalcStrategy', () => {
       expect(result.status).toBe('pending');
       expect(result.progress).toBeDefined();
       expect(result.progress).toBeGreaterThan(0);
-      // 1 minute elapsed / 5 minute estimate = 20%
-      expect(result.progress).toBeCloseTo(20, 0);
+      // 1 minute elapsed / 6 minute estimate = 16.67%
+      expect(result.progress).toBeCloseTo(16.67, 0);
     });
 
     it('given computing response with UK country then uses UK duration estimate', () => {
@@ -373,8 +373,8 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('pending');
       expect(result.progress).toBeDefined();
-      // Uses default (5 minutes): 1 minute / 5 minutes = 20%
-      expect(result.progress).toBeCloseTo(20, 0);
+      // Uses default (6 minutes for US): 1 minute / 6 minutes = 16.67%
+      expect(result.progress).toBeCloseTo(16.67, 0);
     });
 
     it('given computing response with no country then uses default duration', () => {
@@ -393,8 +393,8 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('pending');
       expect(result.progress).toBeDefined();
-      // Uses default (5 minutes): 2.5 minutes / 5 minutes = 50%
-      expect(result.progress).toBeCloseTo(50, 0);
+      // Uses default (6 minutes for US): 2.5 minutes / 6 minutes = 41.67%
+      expect(result.progress).toBeCloseTo(41.67, 0);
     });
 
     it('given long-running calculation then caps progress at 95%', () => {
