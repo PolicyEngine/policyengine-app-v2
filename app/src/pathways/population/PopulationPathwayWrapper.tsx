@@ -5,17 +5,17 @@
  * Reuses shared views from the report pathway with mode="standalone".
  */
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { RootState } from '@/store';
-import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
 import { PopulationStateProps } from '@/types/pathwayState';
+import { createPopulationCallbacks } from '@/utils/pathwayCallbacks';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
 import GeographicConfirmationView from '../report/views/population/GeographicConfirmationView';
 import HouseholdBuilderView from '../report/views/population/HouseholdBuilderView';
@@ -47,62 +47,27 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
   );
 
   // ========== CALLBACKS ==========
-  const updateLabel = useCallback((label: string) => {
-    setPopulationState((prev) => ({ ...prev, label }));
-  }, []);
-
-  const handleScopeSelected = useCallback(
-    (geography: Geography | null, _scopeType: string) => {
-      setPopulationState((prev) => ({
-        ...prev,
-        geography: geography || null,
-        type: geography ? 'geography' : 'household',
-      }));
-      navigateToMode(PopulationViewMode.LABEL);
-    },
-    [navigateToMode]
-  );
-
-  const handleHouseholdSubmitSuccess = useCallback(
-    (householdId: string, household: Household) => {
-      console.log('[PopulationPathwayWrapper] Household created with ID:', householdId);
-
-      setPopulationState((prev) => ({
-        ...prev,
-        household: { ...household, id: householdId },
-      }));
-
-      // Navigate back to populations list page
-      navigate(`/${countryId}/households`);
-
-      if (onComplete) {
-        onComplete();
-      }
-    },
-    [navigate, countryId, onComplete]
-  );
-
-  const handleGeographicSubmitSuccess = useCallback(
-    (geographyId: string, label: string) => {
-      console.log('[PopulationPathwayWrapper] Geographic population created with ID:', geographyId);
-
-      setPopulationState((prev) => {
-        const updatedPopulation = { ...prev };
-        if (updatedPopulation.geography) {
-          updatedPopulation.geography.id = geographyId;
-        }
-        updatedPopulation.label = label;
-        return updatedPopulation;
-      });
-
-      // Navigate back to populations list page
-      navigate(`/${countryId}/households`);
-
-      if (onComplete) {
-        onComplete();
-      }
-    },
-    [navigate, countryId, onComplete]
+  // Use shared callback factory with onPopulationComplete for standalone navigation
+  const populationCallbacks = createPopulationCallbacks(
+    setPopulationState,
+    (state) => state, // populationSelector: return the state itself (PopulationStateProps)
+    (_state, population) => population, // populationUpdater: replace entire state
+    navigateToMode,
+    PopulationViewMode.GEOGRAPHIC_CONFIRM, // returnMode (not used in standalone mode)
+    PopulationViewMode.LABEL, // labelMode
+    {
+      // Custom navigation for standalone pathway: exit to households list
+      onHouseholdComplete: (householdId: string, _household: Household) => {
+        console.log('[PopulationPathwayWrapper] Household created with ID:', householdId);
+        navigate(`/${countryId}/households`);
+        onComplete?.();
+      },
+      onGeographyComplete: (geographyId: string, _label: string) => {
+        console.log('[PopulationPathwayWrapper] Geographic population created with ID:', geographyId);
+        navigate(`/${countryId}/households`);
+        onComplete?.();
+      },
+    }
   );
 
   // ========== VIEW RENDERING ==========
@@ -114,7 +79,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
         <PopulationScopeView
           countryId={countryId}
           regionData={metadata.economyOptions?.region || []}
-          onScopeSelected={handleScopeSelected}
+          onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/households`)}
         />
@@ -126,7 +91,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
         <PopulationLabelView
           population={populationState}
           mode="standalone"
-          onUpdateLabel={updateLabel}
+          onUpdateLabel={populationCallbacks.updateLabel}
           onNext={() => {
             // Navigate based on population type
             if (populationState.type === 'household') {
@@ -145,7 +110,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
         <HouseholdBuilderView
           population={populationState}
           countryId={countryId}
-          onSubmitSuccess={handleHouseholdSubmitSuccess}
+          onSubmitSuccess={populationCallbacks.handleHouseholdSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
         />
       );
@@ -156,7 +121,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
         <GeographicConfirmationView
           population={populationState}
           metadata={metadata}
-          onSubmitSuccess={handleGeographicSubmitSuccess}
+          onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
         />
       );

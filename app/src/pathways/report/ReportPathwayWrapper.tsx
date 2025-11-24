@@ -139,7 +139,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       return { ...state, simulations: newSimulations };
     },
     navigateToMode,
-    ReportViewMode.SIMULATION_SETUP
+    ReportViewMode.SIMULATION_SETUP,
+    undefined // No onPolicyComplete - stays within report pathway
   );
 
   // Population callbacks for active simulation
@@ -156,7 +157,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     },
     navigateToMode,
     ReportViewMode.SIMULATION_SETUP,
-    ReportViewMode.POPULATION_LABEL
+    ReportViewMode.POPULATION_LABEL,
+    undefined // No onPopulationComplete - stays within report pathway
   );
 
   // Simulation callbacks for active simulation
@@ -172,7 +174,8 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       return { ...state, simulations: newSimulations };
     },
     navigateToMode,
-    ReportViewMode.REPORT_SETUP
+    ReportViewMode.REPORT_SETUP,
+    undefined // No onSimulationComplete - stays within report pathway
   );
 
   // ========== CUSTOM WRAPPERS FOR SPECIFIC REPORT LOGIC ==========

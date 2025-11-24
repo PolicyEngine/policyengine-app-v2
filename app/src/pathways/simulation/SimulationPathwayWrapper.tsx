@@ -99,32 +99,40 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
   }, [hasExistingPopulations, navigateToMode]);
 
   // ========== CALLBACK FACTORIES ==========
-  // Simulation-level callbacks
+  // Simulation-level callbacks with custom completion handler
   const simulationCallbacks = createSimulationCallbacks(
     setSimulationState,
     (state) => state,
     (_state, simulation) => simulation,
     navigateToMode,
-    SimulationViewMode.SETUP
+    SimulationViewMode.SETUP,
+    (simulationId: string) => {
+      // onSimulationComplete: custom navigation for standalone pathway
+      console.log('[SimulationPathwayWrapper] Simulation created with ID:', simulationId);
+      navigate(`/${countryId}/simulations`);
+      onComplete?.();
+    }
   );
 
-  // Policy callbacks
+  // Policy callbacks - no custom completion (stays within simulation pathway)
   const policyCallbacks = createPolicyCallbacks(
     setSimulationState,
     (state) => state.policy,
     (state, policy) => ({ ...state, policy }),
     navigateToMode,
-    SimulationViewMode.SETUP
+    SimulationViewMode.SETUP,
+    undefined // No onPolicyComplete - stays within simulation pathway
   );
 
-  // Population callbacks
+  // Population callbacks - no custom completion (stays within simulation pathway)
   const populationCallbacks = createPopulationCallbacks(
     setSimulationState,
     (state) => state.population,
     (state, population) => ({ ...state, population }),
     navigateToMode,
     SimulationViewMode.SETUP,
-    SimulationViewMode.POPULATION_LABEL
+    SimulationViewMode.POPULATION_LABEL,
+    undefined // No onPopulationComplete - stays within simulation pathway
   );
 
   // ========== SPECIAL HANDLERS ==========
@@ -147,30 +155,6 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
 
     navigateToMode(SimulationViewMode.SETUP);
   }, [currentLawId, navigateToMode]);
-
-  // Handle successful simulation creation (called by SimulationSubmitView after creating the base simulation)
-  // This mirrors the old Redux flow's behavior where the view creates the simulation,
-  // then the parent updates state and navigates
-  const handleSimulationSubmitSuccess = useCallback(
-    (simulationId: string) => {
-      console.log('[SimulationPathwayWrapper] Simulation created with ID:', simulationId);
-
-      // Update simulation state with the returned ID
-      setSimulationState((prev) => ({
-        ...prev,
-        id: simulationId,
-        status: 'complete',
-      }));
-
-      // Navigate back to simulations list page
-      navigate(`/${countryId}/simulations`);
-
-      if (onComplete) {
-        onComplete();
-      }
-    },
-    [navigate, countryId, onComplete]
-  );
 
   // ========== VIEW RENDERING ==========
   let currentView: React.ReactElement;
@@ -209,7 +193,7 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
       currentView = (
         <SimulationSubmitView
           simulation={simulationState}
-          onSubmitSuccess={handleSimulationSubmitSuccess}
+          onSubmitSuccess={simulationCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/simulations`)}
         />

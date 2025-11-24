@@ -13,6 +13,7 @@ import { PopulationStateProps } from '@/types/pathwayState';
  * @param navigateToMode - Navigation function
  * @param returnMode - Mode to navigate to after completing population operations
  * @param labelMode - Mode to navigate to for labeling
+ * @param onPopulationComplete - Optional callbacks for custom navigation after population submission
  */
 export function createPopulationCallbacks<TState, TMode>(
   setState: React.Dispatch<React.SetStateAction<TState>>,
@@ -20,7 +21,11 @@ export function createPopulationCallbacks<TState, TMode>(
   populationUpdater: (state: TState, population: PopulationStateProps) => TState,
   navigateToMode: (mode: TMode) => void,
   returnMode: TMode,
-  labelMode: TMode
+  labelMode: TMode,
+  onPopulationComplete?: {
+    onHouseholdComplete?: (householdId: string, household: Household) => void;
+    onGeographyComplete?: (geographyId: string, label: string) => void;
+  }
 ) {
   const updateLabel = useCallback(
     (label: string) => {
@@ -86,9 +91,15 @@ export function createPopulationCallbacks<TState, TMode>(
           household: { ...household, id: householdId },
         });
       });
-      navigateToMode(returnMode);
+
+      // Use custom navigation if provided, otherwise use default
+      if (onPopulationComplete?.onHouseholdComplete) {
+        onPopulationComplete.onHouseholdComplete(householdId, household);
+      } else {
+        navigateToMode(returnMode);
+      }
     },
-    [setState, populationSelector, populationUpdater, navigateToMode, returnMode]
+    [setState, populationSelector, populationUpdater, navigateToMode, returnMode, onPopulationComplete]
   );
 
   const handleGeographicSubmitSuccess = useCallback(
@@ -102,9 +113,15 @@ export function createPopulationCallbacks<TState, TMode>(
         updatedPopulation.label = label;
         return populationUpdater(prev, updatedPopulation);
       });
-      navigateToMode(returnMode);
+
+      // Use custom navigation if provided, otherwise use default
+      if (onPopulationComplete?.onGeographyComplete) {
+        onPopulationComplete.onGeographyComplete(geographyId, label);
+      } else {
+        navigateToMode(returnMode);
+      }
     },
-    [setState, populationSelector, populationUpdater, navigateToMode, returnMode]
+    [setState, populationSelector, populationUpdater, navigateToMode, returnMode, onPopulationComplete]
   );
 
   return {

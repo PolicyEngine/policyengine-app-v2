@@ -5,13 +5,14 @@
  * Reuses shared views from the report pathway with mode="standalone".
  */
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { PolicyViewMode } from '@/types/pathwayModes/PolicyViewMode';
 import { PolicyStateProps } from '@/types/pathwayState';
+import { createPolicyCallbacks } from '@/utils/pathwayCallbacks';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 // Policy views (reusing from report pathway)
 import PolicyLabelView from '../report/views/policy/PolicyLabelView';
@@ -42,31 +43,19 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
   );
 
   // ========== CALLBACKS ==========
-  const updateLabel = useCallback((label: string) => {
-    setPolicyState((prev) => ({ ...prev, label }));
-  }, []);
-
-  const updatePolicy = useCallback((updatedPolicy: PolicyStateProps) => {
-    setPolicyState(updatedPolicy);
-  }, []);
-
-  const handleSubmitSuccess = useCallback(
+  // Use shared callback factory with onPolicyComplete for standalone navigation
+  const policyCallbacks = createPolicyCallbacks(
+    setPolicyState,
+    (state) => state, // policySelector: return the state itself (PolicyStateProps)
+    (_state, policy) => policy, // policyUpdater: replace entire state with new policy
+    navigateToMode,
+    PolicyViewMode.SUBMIT, // returnMode (not used in standalone mode)
     (policyId: string) => {
+      // onPolicyComplete: custom navigation for standalone pathway
       console.log('[PolicyPathwayWrapper] Policy created with ID:', policyId);
-
-      setPolicyState((prev) => ({
-        ...prev,
-        id: policyId,
-      }));
-
-      // Navigate back to policies list page
       navigate(`/${countryId}/policies`);
-
-      if (onComplete) {
-        onComplete();
-      }
-    },
-    [navigate, countryId, onComplete]
+      onComplete?.();
+    }
   );
 
   // ========== VIEW RENDERING ==========
@@ -78,7 +67,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
         <PolicyLabelView
           label={policyState.label}
           mode="standalone"
-          onUpdateLabel={updateLabel}
+          onUpdateLabel={policyCallbacks.updateLabel}
           onNext={() => navigateToMode(PolicyViewMode.PARAMETER_SELECTOR)}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/policies`)}
@@ -90,7 +79,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
       currentView = (
         <PolicyParameterSelectorView
           policy={policyState}
-          onPolicyUpdate={updatePolicy}
+          onPolicyUpdate={policyCallbacks.updatePolicy}
           onNext={() => navigateToMode(PolicyViewMode.SUBMIT)}
           onBack={canGoBack ? goBack : undefined}
         />
@@ -102,7 +91,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
         <PolicySubmitView
           policy={policyState}
           countryId={countryId}
-          onSubmitSuccess={handleSubmitSuccess}
+          onSubmitSuccess={policyCallbacks.handleSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/policies`)}
         />

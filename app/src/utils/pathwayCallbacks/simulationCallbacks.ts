@@ -11,13 +11,15 @@ import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/
  * @param simulationUpdater - Function to update simulation in state
  * @param navigateToMode - Navigation function
  * @param returnMode - Mode to navigate to after completing simulation operations
+ * @param onSimulationComplete - Optional callback for custom navigation after simulation submission
  */
 export function createSimulationCallbacks<TState, TMode>(
   setState: React.Dispatch<React.SetStateAction<TState>>,
   simulationSelector: (state: TState) => SimulationStateProps,
   simulationUpdater: (state: TState, simulation: SimulationStateProps) => TState,
   navigateToMode: (mode: TMode) => void,
-  returnMode: TMode
+  returnMode: TMode,
+  onSimulationComplete?: (simulationId: string) => void
 ) {
   const updateLabel = useCallback(
     (label: string) => {
@@ -38,9 +40,15 @@ export function createSimulationCallbacks<TState, TMode>(
           id: simulationId,
         });
       });
-      navigateToMode(returnMode);
+
+      // Use custom navigation if provided, otherwise use default
+      if (onSimulationComplete) {
+        onSimulationComplete(simulationId);
+      } else {
+        navigateToMode(returnMode);
+      }
     },
-    [setState, simulationSelector, simulationUpdater, navigateToMode, returnMode]
+    [setState, simulationSelector, simulationUpdater, navigateToMode, returnMode, onSimulationComplete]
   );
 
   const handleSelectExisting = useCallback(

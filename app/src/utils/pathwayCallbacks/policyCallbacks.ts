@@ -11,13 +11,15 @@ import { Parameter } from '@/types/subIngredients/parameter';
  * @param policyUpdater - Function to update policy in state
  * @param navigateToMode - Navigation function
  * @param returnMode - Mode to navigate to after completing policy operations
+ * @param onPolicyComplete - Optional callback for custom navigation after policy submission (e.g., exit to list page)
  */
 export function createPolicyCallbacks<TState, TMode>(
   setState: React.Dispatch<React.SetStateAction<TState>>,
   policySelector: (state: TState) => PolicyStateProps,
   policyUpdater: (state: TState, policy: PolicyStateProps) => TState,
   navigateToMode: (mode: TMode) => void,
-  returnMode: TMode
+  returnMode: TMode,
+  onPolicyComplete?: (policyId: string) => void
 ) {
   const updateLabel = useCallback(
     (label: string) => {
@@ -73,9 +75,15 @@ export function createPolicyCallbacks<TState, TMode>(
           id: policyId,
         });
       });
-      navigateToMode(returnMode);
+
+      // Use custom navigation if provided, otherwise use default
+      if (onPolicyComplete) {
+        onPolicyComplete(policyId);
+      } else {
+        navigateToMode(returnMode);
+      }
     },
-    [setState, policySelector, policyUpdater, navigateToMode, returnMode]
+    [setState, policySelector, policyUpdater, navigateToMode, returnMode, onPolicyComplete]
   );
 
   return {
