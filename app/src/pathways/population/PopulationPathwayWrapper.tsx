@@ -63,7 +63,10 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
         onComplete?.();
       },
       onGeographyComplete: (geographyId: string, _label: string) => {
-        console.log('[PopulationPathwayWrapper] Geographic population created with ID:', geographyId);
+        console.log(
+          '[PopulationPathwayWrapper] Geographic population created with ID:',
+          geographyId
+        );
         navigate(`/${countryId}/households`);
         onComplete?.();
       },

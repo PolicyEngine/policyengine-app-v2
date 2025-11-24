@@ -1,4 +1,4 @@
-import { createBrowserRouter, Outlet, Navigate, RouterProvider } from 'react-router-dom';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import StaticLayout from './components/StaticLayout';

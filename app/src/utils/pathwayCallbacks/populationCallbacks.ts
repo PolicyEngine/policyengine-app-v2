@@ -99,7 +99,14 @@ export function createPopulationCallbacks<TState, TMode>(
         navigateToMode(returnMode);
       }
     },
-    [setState, populationSelector, populationUpdater, navigateToMode, returnMode, onPopulationComplete]
+    [
+      setState,
+      populationSelector,
+      populationUpdater,
+      navigateToMode,
+      returnMode,
+      onPopulationComplete,
+    ]
   );
 
   const handleGeographicSubmitSuccess = useCallback(
@@ -121,7 +128,14 @@ export function createPopulationCallbacks<TState, TMode>(
         navigateToMode(returnMode);
       }
     },
-    [setState, populationSelector, populationUpdater, navigateToMode, returnMode, onPopulationComplete]
+    [
+      setState,
+      populationSelector,
+      populationUpdater,
+      navigateToMode,
+      returnMode,
+      onPopulationComplete,
+    ]
   );
 
   return {

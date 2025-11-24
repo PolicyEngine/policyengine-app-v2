@@ -48,7 +48,14 @@ export function createSimulationCallbacks<TState, TMode>(
         navigateToMode(returnMode);
       }
     },
-    [setState, simulationSelector, simulationUpdater, navigateToMode, returnMode, onSimulationComplete]
+    [
+      setState,
+      simulationSelector,
+      simulationUpdater,
+      navigateToMode,
+      returnMode,
+      onSimulationComplete,
+    ]
   );
 
   const handleSelectExisting = useCallback(
