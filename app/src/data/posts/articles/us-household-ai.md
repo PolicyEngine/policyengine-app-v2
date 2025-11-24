@@ -2,7 +2,7 @@ PolicyEngine has developed a new artificial intelligence feature that transforms
 
 <center><iframe width="560" height="315" src="https://www.youtube.com/embed/fnuDyLKpt90" frameborder="0" allowfullscreen></iframe></center>
 
-Users frequently encounter intricate calculations spanning multiple programs, each with distinct thresholds, phase-outs, and dependencies. Our solution combines PolicyEngine’s open-source rules engine with artificial intelligence to explain these calculations in plain language, building on our [previous work applying AI to policy analysis](https://legacy.policyengine.org/us/research/gpt-analysis).
+Users frequently encounter intricate calculations spanning multiple programs, each with distinct thresholds, phase-outs, and dependencies. Our solution combines PolicyEngine’s open-source rules engine with artificial intelligence to explain these calculations in plain language, building on our [previous work applying AI to policy analysis](https://policyengine.org/us/research/gpt-analysis).
 
 # Technical architecture
 

@@ -63,7 +63,7 @@ We're developing [`microcalibrate`](https://github.com/PolicyEngine/microcalibra
 
 We currently integrate data from the Survey of Consumer Finances (for auto loan interest) and American Community Survey (for housing costs). Future enhancements will expand these integrations:
 
-- **Wealth modeling from SCF**: Comprehensive asset and debt data for modeling asset limits in SNAP, SSI, and other means-tested programs, similar to our [wealth modeling in the UK](https://legacy.policyengine.org/uk/research/uk-the-new-policyengine)
+- **Wealth modeling from SCF**: Comprehensive asset and debt data for modeling asset limits in SNAP, SSI, and other means-tested programs, similar to our [wealth modeling in the UK](https://policyengine.org/uk/research/uk-the-new-policyengine)
 - **Consumer Expenditure Survey**: Consumption patterns for modeling sales taxes, carbon pricing, and other consumption-based policies
 - **Expanded ACS integration**: Additional geographic and demographic detail for state and local policy analysis
 

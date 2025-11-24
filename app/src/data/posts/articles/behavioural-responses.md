@@ -46,7 +46,7 @@ By default, the PolicyEngine web app assumes no behavioural responses. When user
 
 ## Comparing static and dynamic analysis
 
-Here we demonstrate how incorporating behavioural responses affects policy analysis by examining a tax reform proposed by the UK government in October 2024: change to Capital Gains Tax. For a detailed analysis of this and other reforms proposed in the Autumn Budget, see [PolicyEngine's reform impact analysis](https://legacy.policyengine.org/uk/research/autumn-budget-2024-policy-choices).
+Here we demonstrate how incorporating behavioural responses affects policy analysis by examining a tax reform proposed by the UK government in October 2024: change to Capital Gains Tax. For a detailed analysis of this and other reforms proposed in the Autumn Budget, see [PolicyEngine's reform impact analysis](https://policyengine.org/uk/research/autumn-budget-2024-policy-choices).
 
 In estimating the impacts of this reform, we model how individuals with capital gains respond to changes in their marginal tax rate. The table below compares the five-year revenue impacts under both static and dynamic scenarios.
 
@@ -62,7 +62,7 @@ In this report, we present how PolicyEngine models three behavioural responses:
 2. **Substitution effect for labour supply: 0.25 elasticity** (a 10% increase to the net marginal wage increases work hours by 2.5%)
 3. **Capital gains response: \-0.7 elasticity** (a 10% increase in the marginal tax rate with respect to capital gains reduces capital gains by 7%)
 
-While this report focuses on these three core elasticities, PolicyEngine is expanding its behavioural modelling capabilities. For instance, we developed responses to [employer National Insurance contributions](https://legacy.policyengine.org/uk/research/autumn-budget-24-employer-ni), indicating the extent to which employers pass on the burden to lower wages. Using the CGT reform as an example demonstrates the importance of these behavioural responses. PolicyEngine's flexibility allows users to adjust behavioural response assumptions such as labour elasticities and capital gains elasticity to analyse the impact of public policies.
+While this report focuses on these three core elasticities, PolicyEngine is expanding its behavioural modelling capabilities. For instance, we developed responses to [employer National Insurance contributions](https://policyengine.org/uk/research/autumn-budget-24-employer-ni), indicating the extent to which employers pass on the burden to lower wages. Using the CGT reform as an example demonstrates the importance of these behavioural responses. PolicyEngine's flexibility allows users to adjust behavioural response assumptions such as labour elasticities and capital gains elasticity to analyse the impact of public policies.
 
 [^1]: Chetty, R., Guren, A., Manoli, D., & Weber, A. (2011). Are Micro and Macro Labor Supply Elasticities Consistent? A Review of Evidence on the Intensive and Extensive Margins. American Economic Review, 101(3), 471–475.
 
