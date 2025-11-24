@@ -4,10 +4,29 @@ import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyW
 
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
+/**
+ * Determines the dataset to use for a society-wide calculation.
+ * Returns 'enhanced_cps' for US nationwide calculations, undefined otherwise.
+ * This ensures Enhanced CPS is only used for US nationwide impacts, not for UK or US state-level calculations.
+ *
+ * @param countryId - The country ID (e.g., 'us', 'uk')
+ * @param region - The region (e.g., 'us', 'ca', 'uk')
+ * @returns The dataset name or undefined to use API default
+ */
+export function getDatasetForRegion(countryId: string, region: string): string | undefined {
+  // Only use enhanced_cps for US nationwide
+  if (countryId === 'us' && region === 'us') {
+    return 'enhanced_cps';
+  }
+  // Return undefined for all other cases (UK, US states, etc.)
+  return undefined;
+}
+
 // NOTE: Need to add other params at later point
 export interface SocietyWideCalculationParams {
   region: string; // Must include a region; "us" for US nationwide, two-letter state code for US states
   time_period: string; // Four-digit year
+  dataset?: string; // Optional dataset parameter; defaults to API's default dataset
 }
 
 export interface SocietyWideCalculationResponse {
@@ -30,9 +49,13 @@ export async function fetchSocietyWideCalculation(
   console.log('  - baselinePolicyId:', baselinePolicyId);
   console.log('  - params:', JSON.stringify(params, null, 2));
 
+  // Automatically set dataset for US nationwide if not explicitly provided
+  const dataset = params.dataset ?? getDatasetForRegion(countryId, params.region);
+  const paramsWithDataset = dataset ? { ...params, dataset } : params;
+
   const queryParams = new URLSearchParams();
 
-  Object.entries(params).forEach(([key, value]) => {
+  Object.entries(paramsWithDataset).forEach(([key, value]) => {
     if (value !== undefined) {
       queryParams.append(key, value);
     }
