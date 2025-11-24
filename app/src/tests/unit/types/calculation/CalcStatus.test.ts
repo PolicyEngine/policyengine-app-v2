@@ -25,14 +25,12 @@ describe('CalcStatus types', () => {
         progress: 45,
         message: 'Running simulation...',
         queuePosition: 3,
-        estimatedTimeRemaining: 60000,
       });
 
       expect(status.status).toBe('pending');
       expect(status.progress).toBe(45);
       expect(status.message).toBe('Running simulation...');
       expect(status.queuePosition).toBe(3);
-      expect(status.estimatedTimeRemaining).toBe(60000);
     });
 
     it('should accept complete status with result', () => {

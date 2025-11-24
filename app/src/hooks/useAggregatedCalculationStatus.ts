@@ -122,14 +122,6 @@ export interface AggregatedCalcStatus {
   queuePosition?: number;
 
   /**
-   * Estimated seconds remaining from the first computing calculation
-   *
-   * Example: 45000 (45 seconds until completion)
-   * Undefined if no calculations report an estimate.
-   */
-  estimatedTimeRemaining?: number;
-
-  /**
    * True if any underlying query is actively fetching data
    *
    * Usually false since calculations read from cache.
@@ -273,8 +265,6 @@ export function useAggregatedCalculationStatus(
   // Generate synthetic progress
   const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {
     queuePosition: calculations.find((calc) => calc.queuePosition)?.queuePosition,
-    estimatedTimeRemaining: calculations.find((calc) => calc.estimatedTimeRemaining)
-      ?.estimatedTimeRemaining,
   });
 
   // Check if any are initializing
@@ -365,7 +355,6 @@ export function useAggregatedCalculationStatus(
       isError: false,
       message,
       queuePosition: firstComputing?.queuePosition,
-      estimatedTimeRemaining: firstComputing?.estimatedTimeRemaining,
       isLoading: anyLoading,
     };
   }

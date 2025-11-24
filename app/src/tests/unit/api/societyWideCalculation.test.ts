@@ -1,8 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import {
-  fetchSocietyWideCalculation,
-  getDatasetForRegion,
-} from '@/api/societyWideCalculation';
+import { fetchSocietyWideCalculation, getDatasetForRegion } from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   ERROR_MESSAGES,

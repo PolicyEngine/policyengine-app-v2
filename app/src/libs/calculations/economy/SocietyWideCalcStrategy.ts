@@ -4,8 +4,8 @@ import {
   SocietyWideCalculationParams,
   SocietyWideCalculationResponse,
 } from '@/api/societyWideCalculation';
-import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { getDurationForCountry } from '@/constants/calculationDurations';
+import { CalcMetadata, CalcParams, CalcStatus } from '@/types/calculation';
 import { CalcExecutionStrategy, RefetchConfig } from '../strategies/types';
 
 /**
