@@ -1,5 +1,35 @@
 [
   {
+    "title": "Analysing alternative income tax and National Insurance reform options for the UK",
+    "description": "PolicyEngine analysis of alternative tax reform options: raising basic and higher income tax rates, cutting NI, and extending the threshold freeze.",
+    "date": "2025-11-20 11:00:00",
+    "tags": [
+      "uk",
+      "policy",
+      "featured"
+    ],
+    "filename": "uk-income-tax-ni-reforms-2025.md",
+    "image": "uk-income-tax-ni-reforms-2025.jpg",
+    "authors": [
+      "vahid-ahmadi"
+    ]
+  },
+  {
+    "title": "PolicyEngine London event 2025",
+    "description": "PolicyEngine hosted an event in London that presented new updates and capabilities, real-world policy research applications, local area modelling, and how to use AI in policy research.",
+    "date": "2025-11-10",
+    "tags": [
+      "uk",
+      "event",
+      "featured"
+    ],
+    "filename": "policyengine-2-event-report.md",
+    "image": "policyengine-2-event-report.jpeg",
+    "authors": [
+      "vahid-ahmadi"
+    ]
+  },
+  {
     "title": "Marginal tax rates in California's proposed billionaire tax",
     "description": "The 5% tax creates marginal tax rates between 50% and 60% on wealth between $1 billion and $1.1 billion.",
     "date": "2025-10-25",
