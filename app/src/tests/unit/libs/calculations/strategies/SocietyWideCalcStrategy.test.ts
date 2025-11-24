@@ -73,9 +73,6 @@ describe('SocietyWideCalcStrategy', () => {
       // Then
       expect(result.status).toBe('pending');
       expect(result.queuePosition).toBe(STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION);
-      expect(result.estimatedTimeRemaining).toBe(
-        STRATEGY_TEST_CONSTANTS.SOCIETY_WIDE_AVERAGE_TIME_MS
-      );
       expect(result.message).toContain(`position ${STRATEGY_TEST_CONSTANTS.TEST_QUEUE_POSITION}`);
     });
 

@@ -132,37 +132,12 @@ export function useSyntheticProgress(
     const interval = setInterval(() => {
       const elapsed = Date.now() - startTime;
 
-      // Calculate progress differently based on type
-      let progress: number;
-
-      if (calcType === 'household') {
-        // Pure time-based synthetic progress for household
-        progress = Math.min(
-          (elapsed / estimatedDuration) * 100,
-          SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
-        );
-      } else if (serverProgress?.estimatedTimeRemaining) {
-        // For society-wide: Use server's estimate, but smooth it with synthetic progress
-        const serverProgressPct =
-          100 - (serverProgress.estimatedTimeRemaining / estimatedDuration) * 100;
-        const syntheticProgressPct = Math.min(
-          (elapsed / estimatedDuration) * 100,
-          SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
-        );
-        // Weighted blend: keeps bar moving even if server estimate stalls
-        progress =
-          serverProgressPct * SYNTHETIC_PROGRESS_CONFIG.SERVER_WEIGHT +
-          syntheticProgressPct * SYNTHETIC_PROGRESS_CONFIG.SYNTHETIC_WEIGHT;
-      } else if (serverProgress?.queuePosition !== undefined) {
-        // For society-wide in queue: show minimal progress
-        progress = Math.max(5, 20 - serverProgress.queuePosition * 2);
-      } else {
-        // Fallback to pure synthetic for society-wide
-        progress = Math.min(
-          (elapsed / estimatedDuration) * 100,
-          SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
-        );
-      }
+      // Pure time-based synthetic progress (for both household and society-wide)
+      // This provides consistent linear progress that users expect
+      const progress = Math.min(
+        (elapsed / estimatedDuration) * 100,
+        SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS
+      );
 
       setSynthetic({
         progress: Math.min(progress, SYNTHETIC_PROGRESS_CONFIG.MAX_PROGRESS),

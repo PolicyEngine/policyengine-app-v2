@@ -97,7 +97,6 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
         status: 'pending',
         progress,
         queuePosition: response.queue_position,
-        estimatedTimeRemaining: response.average_time ? response.average_time * 1000 : undefined,
         message: this.getComputingMessage(response.queue_position),
         metadata,
       };
