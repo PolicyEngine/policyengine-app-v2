@@ -24,7 +24,7 @@ Under a £1.5 million threshold, 15,300 properties would be affected in 2026-27,
 
 **Figure 1: Mansion tax impact by constituency (£1.5m threshold)**
 
-<center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_interactive_1m.html" width="100%" height="650" style="border:none;"></iframe></center>
+<center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_1m.html" width="100%" height="750" style="border:none;"></iframe></center>
 
 **Table 1: Top 10 constituencies by % households affected (£1.5m threshold)**
 
@@ -47,7 +47,7 @@ Under a £2 million threshold, 8,500 properties would be affected in 2026-27, ge
 
 **Figure 2: Mansion tax impact by constituency (£2m threshold)**
 
-<center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_interactive_2m.html" width="100%" height="650" style="border:none;"></iframe></center>
+<center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_2m.html" width="100%" height="750" style="border:none;"></iframe></center>
 
 **Table 2: Top 10 constituencies by % households affected (£2m threshold)**
 
