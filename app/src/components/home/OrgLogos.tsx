@@ -130,7 +130,9 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
         mb={spacing.xl}
         style={{ fontFamily: typography.fontFamily.primary }}
       >
-        Trusted by researchers, policy organizations, and benefit platforms
+        {countryId === 'us'
+          ? 'Trusted by researchers, policy organizations, and benefit platforms'
+          : 'Trusted by researchers and policy organizations'}
       </Text>
 
       <Box
