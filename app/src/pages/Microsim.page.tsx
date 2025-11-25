@@ -6,12 +6,13 @@ import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { TitleCardWithHeader } from '@/components/shared/static/TextCardWithHeader';
 import TwoColumnView from '@/components/TwoColumnView';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import heroImage from '@/images/posts/how-machine-learning-tools-make-policyengine-more-accurate.png';
 
 export default function MicrosimPage() {
   const navigate = useNavigate();
-  const { countryId } = useParams<{ countryId: string }>();
-  const isUK = countryId?.toLowerCase() === 'uk';
+  const countryId = useCurrentCountry();
+  const isUK = countryId === 'uk';
   const optimize = isUK ? 'optimise' : 'optimize';
   const analyze = isUK ? 'analyse' : 'analyze';
   const modeling = isUK ? 'modelling' : 'modeling';
@@ -25,7 +26,7 @@ export default function MicrosimPage() {
       <Container size="l">
         <Box mt="3xl">
           <CalloutWithImage
-            title="Tax-Benefit Microsimulation"
+            title="Tax-benefit microsimulation"
             description={`PolicyEngine uses microsimulation models to ${analyze} the impact of policy reforms on real households`}
             buttonLabel="TRY POLICY ANALYSIS"
             onButtonClick={() => countryId && navigate(`/${countryId}/policies`)}
@@ -36,7 +37,7 @@ export default function MicrosimPage() {
 
         <Box p="xl" mt="3xl">
           <TitleCardWithHeader
-            title="What is Microsimulation?"
+            title="What is microsimulation?"
             sections={[
               {
                 body: (
@@ -81,7 +82,7 @@ export default function MicrosimPage() {
             leftColumn={
               <>
                 <Title order={3} mt="md">
-                  Open-Source Foundation
+                  Open-source foundation
                 </Title>
                 <Text mt="xs">
                   PolicyEngine builds on OpenFisca, an open-source microsimulation framework
@@ -91,7 +92,7 @@ export default function MicrosimPage() {
                 </Text>
 
                 <Title order={3} mt="xl">
-                  Data-Driven Approach
+                  Data-driven approach
                 </Title>
                 <Text mt="xs">
                   Our models use nationally representative household surveys enhanced with
@@ -107,7 +108,7 @@ export default function MicrosimPage() {
                 </List>
 
                 <Title order={3} mt="xl">
-                  Machine Learning Enhancement
+                  Machine learning enhancement
                 </Title>
                 <Text mt="xs">
                   We apply machine learning techniques to {optimize} our population samples:
@@ -140,7 +141,7 @@ export default function MicrosimPage() {
 
         <Box p="xl" mt="3xl">
           <TitleCardWithHeader
-            title="Model Accuracy and Validation"
+            title="Model accuracy and validation"
             sections={[
               {
                 body: (
@@ -179,13 +180,13 @@ export default function MicrosimPage() {
 
         <Box mt="3xl">
           <CardsWithHeader
-            containerTitle="Technical Documentation"
+            containerTitle="Technical documentation"
             cards={[
               {
-                title: 'US Model Documentation',
+                title: 'US model documentation',
                 description:
                   'Technical details about the US Enhanced Current Population Survey (ECPS), tax and benefit calculators, and validation methodology.',
-                footerText: 'Enhanced CPS Documentation →',
+                footerText: 'Enhanced CPS documentation →',
                 onClick: ((e: React.MouseEvent | undefined) => {
                   e?.stopPropagation();
                   window.open(
@@ -197,10 +198,10 @@ export default function MicrosimPage() {
                 background: 'gray',
               },
               {
-                title: 'UK Model Validation',
+                title: 'UK model validation',
                 description:
                   'Detailed information about the UK tax and benefit model, including data sources, calibration methodology, and validation results.',
-                footerText: 'UK Model Validation →',
+                footerText: 'UK model validation →',
                 onClick: ((e: React.MouseEvent | undefined) => {
                   e?.stopPropagation();
                   window.open(
@@ -212,7 +213,7 @@ export default function MicrosimPage() {
                 background: 'gray',
               },
               {
-                title: 'GitHub Repositories',
+                title: 'GitHub repositories',
                 description:
                   'Access our open-source code repositories for all PolicyEngine models, including tax-benefit rules, data processing pipelines, and web interface.',
                 footerText: 'PolicyEngine on GitHub →',
