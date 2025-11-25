@@ -12,7 +12,8 @@
       "daphne-hansell"
     ],
     "filename": "uk-mansion-tax-autumn-budget.md",
-    "image": "uk-mansion-tax/mansion_tax_map_1m.png"
+    "image": "uk-mansion-tax/mansion_tax_map_1m.png",
+    "hideHeaderImage": true
   },
   {
     "title": "Analysing alternative income tax and National Insurance reform options for the UK",
