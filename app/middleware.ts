@@ -201,5 +201,4 @@ export default async function middleware(request: Request) {
   }
 
   // For other pages, let them pass through
-  return;
 }
