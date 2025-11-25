@@ -1,6 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-// Posts data - co-located with the serverless function for reliable bundling
-import posts from './posts.json';
+
+// Post type definition
+interface Post {
+  title: string;
+  description: string;
+  filename: string;
+  image?: string;
+}
+
+// Posts data - using require for reliable Node.js serverless bundling
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const posts: Post[] = require('./posts.json');
 
 // Generate slug from filename (same logic as postTransformers.ts)
 export function getSlugFromFilename(filename: string): string {
