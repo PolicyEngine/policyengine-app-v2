@@ -5,6 +5,7 @@ import {
   IconBrandLinkedin,
   IconBrandTwitter,
   IconBrandYoutube,
+  IconMail,
 } from '@tabler/icons-react';
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import type { CountryId } from '@/api/report';
@@ -14,7 +15,6 @@ import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const getContactLinks = (countryId: CountryId) => ({
-  email: 'mailto:hello@policyengine.org',
   about: `/${countryId}/team`,
   donate: `/${countryId}/donate`,
   privacy: `/${countryId}/privacy`,
@@ -24,6 +24,7 @@ const getContactLinks = (countryId: CountryId) => ({
 });
 
 const SOCIAL_LINKS = [
+  { icon: IconMail, href: 'mailto:hello@policyengine.org' },
   { icon: IconBrandTwitter, href: 'https://twitter.com/ThePolicyEngine' },
   { icon: IconBrandFacebook, href: 'https://www.facebook.com/PolicyEngine' },
   { icon: IconBrandLinkedin, href: 'https://www.linkedin.com/company/thepolicyengine' },
@@ -54,9 +55,6 @@ export default function Footer() {
           {/* Left Section */}
           <Stack gap="2xl" align="flex-start">
             <Stack gap="xs">
-              <Anchor href={CONTACT_LINKS.email} c={colors.white} fz="md" underline="never">
-                Email us
-              </Anchor>
               <Anchor
                 href={CONTACT_LINKS.about}
                 c={colors.white}
@@ -91,7 +89,7 @@ export default function Footer() {
                 underline="never"
                 ff={typography.fontFamily.primary}
               >
-                Terms and Conditions
+                Terms and conditions
               </Anchor>
               {/* TODO: Uncomment when developer-tools page is built
               <Anchor
@@ -110,17 +108,7 @@ export default function Footer() {
               <Group gap="md">
                 {SOCIAL_LINKS.map(({ icon: Icon, href }, index) => (
                   <Anchor key={index} href={href} target="_blank">
-                    <Box
-                      p={6}
-                      style={{
-                        backgroundColor: colors.primary[500],
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Icon size={18} color={colors.white} />
-                    </Box>
+                    <Icon size={24} color={colors.white} />
                   </Anchor>
                 ))}
               </Group>
