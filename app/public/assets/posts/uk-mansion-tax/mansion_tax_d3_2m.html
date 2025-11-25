@@ -432,11 +432,11 @@
             tooltip.innerHTML = `
                 <h4>${name}</h4>
                 <div class="tooltip-row">
-                    <span>Properties</span>
+                    <span>Number</span>
                     <span>${data.num.toLocaleString()}</span>
                 </div>
                 <div class="tooltip-row">
-                    <span>% of constituency</span>
+                    <span>Percent</span>
                     <span>${data.pct.toFixed(2)}%</span>
                 </div>
                 <div class="tooltip-row">
@@ -596,7 +596,7 @@
                 return `
                     <button class="search-result-item" data-name="${name}">
                         <div class="result-name">${name}</div>
-                        <div class="result-value">${data.num.toLocaleString()} properties · ${data.pct.toFixed(2)}%</div>
+                        <div class="result-value">${data.num.toLocaleString()} · ${data.pct.toFixed(2)}%</div>
                     </button>
                 `;
             }).join('');
@@ -615,8 +615,8 @@
                     const data = impactData[name] || { pct: 0, num: 0, rev: 0 };
                     tooltip.innerHTML = `
                         <h4>${name}</h4>
-                        <div class="tooltip-row"><span>Properties</span><span>${data.num.toLocaleString()}</span></div>
-                        <div class="tooltip-row"><span>% of constituency</span><span>${data.pct.toFixed(2)}%</span></div>
+                        <div class="tooltip-row"><span>Number</span><span>${data.num.toLocaleString()}</span></div>
+                        <div class="tooltip-row"><span>Percent</span><span>${data.pct.toFixed(2)}%</span></div>
                         <div class="tooltip-row"><span>Est. revenue</span><span>£${data.rev.toLocaleString()}</span></div>
                     `;
 

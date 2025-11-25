@@ -28,8 +28,8 @@ Under a £1.5 million threshold, 15,300 properties would be affected in 2026-27,
 
 **Table 1: Top 10 constituencies by properties affected (£1.5m threshold)**
 
-| Constituency | Properties | % of constituency |
-|:-------------|:----------:|:-----------------:|
+| Constituency | Number of properties | Percent of properties |
+|:-------------|:--------------------:|:---------------------:|
 | Cities of London and Westminster | 990 | 1.67% |
 | Kensington and Bayswater | 783 | 1.25% |
 | Chelsea and Fulham | 637 | 1.17% |
@@ -51,8 +51,8 @@ Under a £2 million threshold, 8,500 properties would be affected in 2026-27, ge
 
 **Table 2: Top 10 constituencies by properties affected (£2m threshold)**
 
-| Constituency | Properties | % of constituency |
-|:-------------|:----------:|:-----------------:|
+| Constituency | Number of properties | Percent of properties |
+|:-------------|:--------------------:|:---------------------:|
 | Cities of London and Westminster | 782 | 1.32% |
 | Kensington and Bayswater | 583 | 0.93% |
 | Chelsea and Fulham | 401 | 0.74% |
