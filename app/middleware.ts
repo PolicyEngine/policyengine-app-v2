@@ -16,7 +16,9 @@ const CRAWLER_USER_AGENTS = [
 
 // Check if request is from a social media crawler
 function isCrawler(userAgent: string | null): boolean {
-  if (!userAgent) return false;
+  if (!userAgent) {
+    return false;
+  }
   return CRAWLER_USER_AGENTS.some((crawler) =>
     userAgent.toLowerCase().includes(crawler.toLowerCase())
   );
