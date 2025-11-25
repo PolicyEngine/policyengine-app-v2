@@ -1,48 +1,9 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-
-// Post type definition
-interface Post {
-  title: string;
-  description: string;
-  filename: string;
-  image?: string;
-}
-
-// Posts data - loaded lazily on first request
-let posts: Post[] | null = null;
-
-async function getPosts(): Promise<Post[]> {
-  if (posts !== null) {
-    return posts;
-  }
-  try {
-    // Fetch from the deployed static assets
-    const response = await fetch('https://policyengine.org/data/posts.json');
-    if (response.ok) {
-      posts = await response.json();
-      return posts!;
-    }
-  } catch (e) {
-    console.error('Failed to fetch posts.json:', e);
-  }
-  posts = [];
-  return posts;
-}
-
-// Generate slug from filename (same logic as postTransformers.ts)
-export function getSlugFromFilename(filename: string): string {
-  const filenameWithoutExt = filename.substring(0, filename.indexOf('.'));
-  return filenameWithoutExt.toLowerCase().replace(/_/g, '-');
-}
-
-// Find post by slug
-export async function findPostBySlug(slug: string): Promise<Post | undefined> {
-  const allPosts = await getPosts();
-  return allPosts.find((post) => getSlugFromFilename(post.filename) === slug);
-}
+export const config = {
+  runtime: 'edge',
+};
 
 // Default OG tags
-export const DEFAULT_OG = {
+const DEFAULT_OG = {
   title: 'PolicyEngine',
   description:
     'Free, open-source tools to understand tax and benefit policies. Calculate your taxes and benefits, or analyze policy reforms.',
@@ -50,7 +11,7 @@ export const DEFAULT_OG = {
 };
 
 // Static page OG configs
-export const STATIC_PAGES: Record<string, { title: string; description: string }> = {
+const STATIC_PAGES: Record<string, { title: string; description: string }> = {
   research: {
     title: 'Research',
     description: 'Policy analysis and research from PolicyEngine.',
@@ -71,7 +32,7 @@ export const STATIC_PAGES: Record<string, { title: string; description: string }
 };
 
 // Generate HTML with Open Graph meta tags
-export function generateOgHtml(
+function generateOgHtml(
   title: string,
   description: string,
   image: string,
@@ -81,7 +42,6 @@ export function generateOgHtml(
   const siteName = 'PolicyEngine';
   const twitterHandle = '@ThePolicyEngine';
 
-  // Escape HTML entities
   const escapeHtml = (str: string) =>
     str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
@@ -95,16 +55,12 @@ export function generateOgHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>${safeTitle} | ${siteName}</title>
   <meta name="description" content="${safeDescription}" />
-
-  <!-- Open Graph -->
   <meta property="og:title" content="${safeTitle}" />
   <meta property="og:description" content="${safeDescription}" />
   <meta property="og:image" content="${image}" />
   <meta property="og:url" content="${url}" />
   <meta property="og:type" content="${type}" />
   <meta property="og:site_name" content="${siteName}" />
-
-  <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:site" content="${twitterHandle}" />
   <meta name="twitter:title" content="${safeTitle}" />
@@ -119,92 +75,83 @@ export function generateOgHtml(
 </html>`;
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { path } = req.query;
-  const pathname = Array.isArray(path) ? `/${path.join('/')}` : `/${path || ''}`;
-
-  // Parse path: /:countryId/research/:slug or /:countryId/:page
+export default async function handler(request: Request) {
+  const url = new URL(request.url);
+  const pathname = url.searchParams.get('path') || '/';
   const pathParts = pathname.split('/').filter(Boolean);
 
+  const baseUrl = 'https://policyengine.org';
+  const fullUrl = `${baseUrl}${pathname}`;
+
+  let html: string;
+
   if (pathParts.length < 1) {
-    // Homepage
-    const html = generateOgHtml(
-      DEFAULT_OG.title,
-      DEFAULT_OG.description,
-      DEFAULT_OG.image,
-      'https://policyengine.org',
-      'website'
-    );
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    return res.status(200).send(html);
+    html = generateOgHtml(DEFAULT_OG.title, DEFAULT_OG.description, DEFAULT_OG.image, baseUrl, 'website');
+    return new Response(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
+    });
   }
 
   const countryId = pathParts[0];
   const section = pathParts[1];
   const slug = pathParts[2];
 
-  const baseUrl = 'https://policyengine.org';
-  const fullUrl = `${baseUrl}${pathname}`;
-
   // Blog post: /:countryId/research/:slug
   if (section === 'research' && slug) {
-    const post = await findPostBySlug(slug);
+    try {
+      const postsResponse = await fetch(`${baseUrl}/data/posts.json`);
+      if (postsResponse.ok) {
+        const posts = await postsResponse.json();
+        const post = posts.find((p: { filename: string }) => {
+          const filenameWithoutExt = p.filename.substring(0, p.filename.indexOf('.'));
+          return filenameWithoutExt.toLowerCase().replace(/_/g, '-') === slug;
+        });
 
-    if (post) {
-      const imageUrl = post.image ? `${baseUrl}/assets/posts/${post.image}` : DEFAULT_OG.image;
-
-      const html = generateOgHtml(post.title, post.description, imageUrl, fullUrl, 'article');
-
-      res.setHeader('Content-Type', 'text/html');
-      res.setHeader('Cache-Control', 'public, max-age=3600');
-      return res.status(200).send(html);
+        if (post) {
+          const imageUrl = post.image ? `${baseUrl}/assets/posts/${post.image}` : DEFAULT_OG.image;
+          html = generateOgHtml(post.title, post.description, imageUrl, fullUrl, 'article');
+          return new Response(html, {
+            status: 200,
+            headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
+          });
+        }
+      }
+    } catch {
+      // Fall through to default
     }
   }
 
   // Static pages
   const staticPage = STATIC_PAGES[section];
   if (staticPage && !slug) {
-    const html = generateOgHtml(
-      staticPage.title,
-      staticPage.description,
-      DEFAULT_OG.image,
-      fullUrl,
-      'website'
-    );
-
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    return res.status(200).send(html);
+    html = generateOgHtml(staticPage.title, staticPage.description, DEFAULT_OG.image, fullUrl, 'website');
+    return new Response(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
+    });
   }
 
   // Country homepage
   if (pathParts.length === 1) {
-    const countryName =
-      countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
-    const html = generateOgHtml(
+    const countryName = countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
+    html = generateOgHtml(
       `PolicyEngine ${countryName}`,
       DEFAULT_OG.description,
       DEFAULT_OG.image,
       fullUrl,
       'website'
     );
-
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Cache-Control', 'public, max-age=3600');
-    return res.status(200).send(html);
+    return new Response(html, {
+      status: 200,
+      headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
+    });
   }
 
   // Default fallback
-  const html = generateOgHtml(
-    DEFAULT_OG.title,
-    DEFAULT_OG.description,
-    DEFAULT_OG.image,
-    fullUrl,
-    'website'
-  );
-
-  res.setHeader('Content-Type', 'text/html');
-  res.setHeader('Cache-Control', 'public, max-age=3600');
-  return res.status(200).send(html);
+  html = generateOgHtml(DEFAULT_OG.title, DEFAULT_OG.description, DEFAULT_OG.image, fullUrl, 'website');
+  return new Response(html, {
+    status: 200,
+    headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
+  });
 }
