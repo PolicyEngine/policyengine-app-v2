@@ -19,8 +19,7 @@ interface OrgLogosProps {
 }
 
 const NUM_VISIBLE = 7;
-const MIN_DURATION = 3000; // 3 seconds
-const MAX_DURATION = 6000; // 6 seconds
+const CYCLE_INTERVAL = 2000; // 2 seconds between each change
 
 // Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
@@ -30,10 +29,6 @@ function shuffleArray<T>(array: T[]): T[] {
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
-}
-
-function getRandomDuration() {
-  return MIN_DURATION + Math.random() * (MAX_DURATION - MIN_DURATION);
 }
 
 export default function OrgLogos({ logos }: OrgLogosProps) {
@@ -50,7 +45,8 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
 
   // Track which logo index each slot is showing and its transition state
   const [slotIndices, setSlotIndices] = useState<number[]>([]);
-  const [transitioning, setTransitioning] = useState<boolean[]>([]);
+  const [transitioningSlot, setTransitioningSlot] = useState<number | null>(null);
+  const [nextLogoIndex, setNextLogoIndex] = useState(NUM_VISIBLE);
 
   // Initialize slots with first N logos
   useEffect(() => {
@@ -59,75 +55,47 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
     }
     const initial = shuffledOrgs.slice(0, NUM_VISIBLE).map((_, i) => i);
     setSlotIndices(initial);
-    setTransitioning(new Array(NUM_VISIBLE).fill(false));
+    setNextLogoIndex(NUM_VISIBLE);
   }, [shuffledOrgs]);
 
-  // Cycle a single slot to the next available logo
-  const cycleSlot = useCallback(
-    (slotIndex: number) => {
-      if (shuffledOrgs.length <= NUM_VISIBLE) {
-        return;
-      }
+  // Cycle a random slot
+  const cycleRandomSlot = useCallback(() => {
+    if (shuffledOrgs.length <= NUM_VISIBLE) {
+      return;
+    }
 
-      setTransitioning((prev) => {
+    // Pick a random slot
+    const randomSlot = Math.floor(Math.random() * NUM_VISIBLE);
+
+    // Start fade out
+    setTransitioningSlot(randomSlot);
+
+    setTimeout(() => {
+      // Update the slot with next logo in queue
+      setSlotIndices((prev) => {
         const next = [...prev];
-        next[slotIndex] = true;
+        setNextLogoIndex((prevNext) => {
+          next[randomSlot] = prevNext % shuffledOrgs.length;
+          return prevNext + 1;
+        });
         return next;
       });
 
-      setTimeout(() => {
-        setSlotIndices((prev) => {
-          const next = [...prev];
-          // Find the next logo that isn't currently visible
-          const currentlyVisible = new Set(prev);
-          let nextIndex = (Math.max(...prev) + 1) % shuffledOrgs.length;
+      // Fade back in
+      setTransitioningSlot(null);
+    }, 300);
+  }, [shuffledOrgs.length]);
 
-          // Keep looking until we find one not in current view
-          let attempts = 0;
-          while (currentlyVisible.has(nextIndex) && attempts < shuffledOrgs.length) {
-            nextIndex = (nextIndex + 1) % shuffledOrgs.length;
-            attempts++;
-          }
-
-          next[slotIndex] = nextIndex;
-          return next;
-        });
-
-        setTransitioning((prev) => {
-          const next = [...prev];
-          next[slotIndex] = false;
-          return next;
-        });
-      }, 300);
-    },
-    [shuffledOrgs.length]
-  );
-
-  // Set up independent timers for each slot
+  // Set up single interval timer
   useEffect(() => {
     if (shuffledOrgs.length <= NUM_VISIBLE || slotIndices.length === 0) {
       return;
     }
 
-    const timers: NodeJS.Timeout[] = [];
+    const interval = setInterval(cycleRandomSlot, CYCLE_INTERVAL);
 
-    const scheduleSlot = (slotIndex: number) => {
-      const timer = setTimeout(() => {
-        cycleSlot(slotIndex);
-        scheduleSlot(slotIndex); // Reschedule with new random duration
-      }, getRandomDuration());
-      timers[slotIndex] = timer;
-    };
-
-    // Stagger initial starts
-    for (let i = 0; i < NUM_VISIBLE; i++) {
-      setTimeout(() => scheduleSlot(i), i * 500 + Math.random() * 1000);
-    }
-
-    return () => {
-      timers.forEach((timer) => clearTimeout(timer));
-    };
-  }, [shuffledOrgs.length, slotIndices.length, cycleSlot]);
+    return () => clearInterval(interval);
+  }, [shuffledOrgs.length, slotIndices.length, cycleRandomSlot]);
 
   if (!countryOrgs || shuffledOrgs.length === 0 || slotIndices.length === 0) {
     return null;
@@ -174,7 +142,7 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
                 cursor: 'pointer',
                 width: '120px',
                 height: '100px',
-                opacity: transitioning[i] ? 0 : 1,
+                opacity: transitioningSlot === i ? 0 : 1,
                 transition: 'opacity 0.3s ease-in-out',
               }}
             >
