@@ -1,43 +1,17 @@
 import { render, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { useUserSimulations } from '@/hooks/useUserSimulations';
 import DefaultBaselineOption from '@/pathways/report/components/DefaultBaselineOption';
 import {
   DEFAULT_BASELINE_LABELS,
-  mockOnSelect,
-  mockUseCreateGeographicAssociation,
-  mockUseCreateSimulation,
-  mockUseUserSimulationsEmpty,
-  mockUseUserSimulationsWithExisting,
+  mockOnClick,
   resetAllMocks,
   TEST_COUNTRIES,
-  TEST_CURRENT_LAW_ID,
 } from '@/tests/fixtures/pathways/report/components/DefaultBaselineOptionMocks';
-
-// Mock hooks
-vi.mock('@/hooks/useUserSimulations', () => ({
-  useUserSimulations: vi.fn(),
-}));
-
-vi.mock('@/hooks/useUserGeographic', () => ({
-  useCreateGeographicAssociation: vi.fn(),
-}));
-
-vi.mock('@/hooks/useCreateSimulation', () => ({
-  useCreateSimulation: vi.fn(),
-}));
 
 describe('DefaultBaselineOption', () => {
   beforeEach(() => {
     resetAllMocks();
     vi.clearAllMocks();
-
-    // Default mock implementations
-    vi.mocked(useUserSimulations).mockReturnValue(mockUseUserSimulationsEmpty);
-    vi.mocked(useCreateGeographicAssociation).mockReturnValue(mockUseCreateGeographicAssociation);
-    vi.mocked(useCreateSimulation).mockReturnValue(mockUseCreateSimulation);
   });
 
   describe('Rendering', () => {
@@ -46,8 +20,8 @@ describe('DefaultBaselineOption', () => {
       render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockOnClick}
         />
       );
 
@@ -63,8 +37,8 @@ describe('DefaultBaselineOption', () => {
       render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.UK}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockOnClick}
         />
       );
 
@@ -77,8 +51,8 @@ describe('DefaultBaselineOption', () => {
       render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockOnClick}
         />
       );
 
@@ -93,8 +67,8 @@ describe('DefaultBaselineOption', () => {
       const { container } = render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockOnClick}
         />
       );
 
@@ -104,96 +78,49 @@ describe('DefaultBaselineOption', () => {
     });
   });
 
-  describe('Detecting existing simulations', () => {
-    test('given existing default baseline simulation then detects it', () => {
-      // Given
-      vi.mocked(useUserSimulations).mockReturnValue(mockUseUserSimulationsWithExisting);
-
+  describe('Selection state', () => {
+    test('given isSelected is false then shows inactive variant', () => {
       // When
-      render(
+      const { container } = render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
-        />
-      );
-
-      // Then - component renders successfully with existing simulation detected
-      expect(screen.getByText(DEFAULT_BASELINE_LABELS.US)).toBeInTheDocument();
-    });
-
-    test('given no existing simulation then component renders correctly', () => {
-      // Given
-      vi.mocked(useUserSimulations).mockReturnValue(mockUseUserSimulationsEmpty);
-
-      // When
-      render(
-        <DefaultBaselineOption
-          countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockOnClick}
         />
       );
 
       // Then
-      expect(screen.getByText(DEFAULT_BASELINE_LABELS.US)).toBeInTheDocument();
+      const button = container.querySelector('[data-variant="buttonPanel--inactive"]');
+      expect(button).toBeInTheDocument();
+    });
+
+    test('given isSelected is true then shows active variant', () => {
+      // When
+      const { container } = render(
+        <DefaultBaselineOption
+          countryId={TEST_COUNTRIES.US}
+          isSelected={true}
+          onClick={mockOnClick}
+        />
+      );
+
+      // Then
+      const button = container.querySelector('[data-variant="buttonPanel--active"]');
+      expect(button).toBeInTheDocument();
     });
   });
 
   describe('User interactions', () => {
-    test('given button is clicked then becomes disabled', async () => {
+    test('given button is clicked then onClick callback is invoked', async () => {
       // Given
       const user = userEvent.setup();
+      const mockCallback = vi.fn();
 
       render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
-        />
-      );
-
-      const button = screen.getByRole('button');
-
-      // When
-      await user.click(button);
-
-      // Then - button should be disabled to prevent double-clicks
-      expect(button).toBeDisabled();
-    });
-
-    test('given button is clicked then displays loading text', async () => {
-      // Given
-      const user = userEvent.setup();
-
-      render(
-        <DefaultBaselineOption
-          countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
-        />
-      );
-
-      const button = screen.getByRole('button');
-
-      // When
-      await user.click(button);
-
-      // Then - should show either "Creating simulation..." or "Applying simulation..."
-      const loadingText = screen.queryByText(/Creating simulation...|Applying simulation.../);
-      expect(loadingText).toBeInTheDocument();
-    });
-
-    test('given existing simulation and button clicked then shows applying text', async () => {
-      // Given
-      const user = userEvent.setup();
-      vi.mocked(useUserSimulations).mockReturnValue(mockUseUserSimulationsWithExisting);
-
-      render(
-        <DefaultBaselineOption
-          countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockCallback}
         />
       );
 
@@ -203,19 +130,19 @@ describe('DefaultBaselineOption', () => {
       await user.click(button);
 
       // Then
-      expect(screen.getByText('Applying simulation...')).toBeInTheDocument();
+      expect(mockCallback).toHaveBeenCalledOnce();
     });
 
-    test('given no existing simulation and button clicked then shows creating text', async () => {
+    test('given button is clicked multiple times then onClick is called each time', async () => {
       // Given
       const user = userEvent.setup();
-      vi.mocked(useUserSimulations).mockReturnValue(mockUseUserSimulationsEmpty);
+      const mockCallback = vi.fn();
 
       render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockCallback}
         />
       );
 
@@ -223,9 +150,11 @@ describe('DefaultBaselineOption', () => {
 
       // When
       await user.click(button);
+      await user.click(button);
+      await user.click(button);
 
       // Then
-      expect(screen.getByText('Creating simulation...')).toBeInTheDocument();
+      expect(mockCallback).toHaveBeenCalledTimes(3);
     });
   });
 
@@ -235,8 +164,8 @@ describe('DefaultBaselineOption', () => {
       const { rerender } = render(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockOnClick}
         />
       );
       expect(screen.getByText(DEFAULT_BASELINE_LABELS.US)).toBeInTheDocument();
@@ -245,28 +174,11 @@ describe('DefaultBaselineOption', () => {
       rerender(
         <DefaultBaselineOption
           countryId={TEST_COUNTRIES.UK}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={mockOnSelect}
+          isSelected={false}
+          onClick={mockOnClick}
         />
       );
       expect(screen.getByText(DEFAULT_BASELINE_LABELS.UK)).toBeInTheDocument();
-    });
-
-    test('given onSelect callback then passes it through', () => {
-      // Given
-      const customCallback = vi.fn();
-
-      // When
-      render(
-        <DefaultBaselineOption
-          countryId={TEST_COUNTRIES.US}
-          currentLawId={TEST_CURRENT_LAW_ID}
-          onSelect={customCallback}
-        />
-      );
-
-      // Then - component renders with callback (testing it's accepted as prop)
-      expect(screen.getByRole('button')).toBeInTheDocument();
     });
   });
 });

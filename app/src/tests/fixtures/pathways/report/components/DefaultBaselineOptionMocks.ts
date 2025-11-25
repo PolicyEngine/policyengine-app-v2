@@ -73,6 +73,7 @@ export const mockNonDefaultSimulation: any = {
 
 // Mock callbacks
 export const mockOnSelect = vi.fn();
+export const mockOnClick = vi.fn();
 
 // Mock API responses
 export const mockGeographyCreationResponse = {
@@ -95,6 +96,7 @@ export const mockSimulationCreationResponse = {
 // Helper to reset all mocks
 export const resetAllMocks = () => {
   mockOnSelect.mockClear();
+  mockOnClick.mockClear();
 };
 
 // Mock hook return values

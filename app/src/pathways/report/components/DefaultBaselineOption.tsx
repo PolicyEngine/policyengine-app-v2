@@ -1,198 +1,44 @@
 /**
  * DefaultBaselineOption - Option card for selecting default baseline simulation
  *
- * This is a standalone component that renders an option for "Current law + Nationwide population"
+ * This is a selectable card that renders an option for "Current law + Nationwide population"
  * as a quick-select for the baseline simulation in a report.
  *
- * It checks if the user already has a matching simulation and reuses that ID if found.
+ * Unlike other cards, this one doesn't navigate anywhere - it just marks itself as selected
+ * and the parent view handles creation when "Next" is clicked.
  */
 
-import { useState } from 'react';
+import { Card, Group, Stack, Text } from '@mantine/core';
 import { IconChevronRight } from '@tabler/icons-react';
-import { Card, Group, Loader, Stack, Text } from '@mantine/core';
-import { SimulationAdapter } from '@/adapters';
-import { MOCK_USER_ID } from '@/constants';
 import { spacing } from '@/designTokens';
-import { useCreateSimulation } from '@/hooks/useCreateSimulation';
-import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
-import { useUserSimulations } from '@/hooks/useUserSimulations';
-import { Simulation } from '@/types/ingredients/Simulation';
-import { PolicyStateProps, PopulationStateProps, SimulationStateProps } from '@/types/pathwayState';
-import { SimulationCreationPayload } from '@/types/payloads';
-import {
-  countryNames,
-  getDefaultBaselineLabel,
-  isDefaultBaselineSimulation,
-} from '@/utils/isDefaultBaselineSimulation';
+import { getDefaultBaselineLabel } from '@/utils/isDefaultBaselineSimulation';
 
 interface DefaultBaselineOptionProps {
   countryId: string;
-  currentLawId: number;
-  onSelect: (simulationState: SimulationStateProps, simulationId: string) => void;
+  isSelected: boolean;
+  onClick: () => void;
 }
 
 export default function DefaultBaselineOption({
   countryId,
-  currentLawId,
-  onSelect,
+  isSelected,
+  onClick,
 }: DefaultBaselineOptionProps) {
-  const userId = MOCK_USER_ID.toString();
-  const { data: userSimulations } = useUserSimulations(userId);
-  const { mutateAsync: createGeographicAssociation } = useCreateGeographicAssociation();
   const simulationLabel = getDefaultBaselineLabel(countryId);
-  const { createSimulation } = useCreateSimulation(simulationLabel);
-  const [isCreating, setIsCreating] = useState(false);
-
-  // Find existing default baseline simulation for this country
-  const existingBaseline = userSimulations?.find((sim) =>
-    isDefaultBaselineSimulation(sim, countryId, currentLawId)
-  );
-
-  // Get the simulation ID from the nested structure
-  const existingSimulationId = existingBaseline?.userSimulation?.simulationId;
-
-  const handleClick = async () => {
-    if (isCreating) {
-      return;
-    } // Prevent double-click
-
-    setIsCreating(true);
-    const countryName = countryNames[countryId] || countryId.toUpperCase();
-
-    // If exact simulation already exists, reuse it
-    if (existingBaseline && existingSimulationId) {
-      // Build the simulation state from existing data
-      const policy: PolicyStateProps = {
-        id: currentLawId.toString(),
-        label: 'Current law',
-        parameters: [],
-      };
-
-      const population: PopulationStateProps = {
-        label: `${countryName} nationwide`,
-        type: 'geography',
-        household: null,
-        geography: {
-          id: existingBaseline.geography?.geographyId || countryId,
-          countryId: countryId as any,
-          scope: 'national',
-          geographyId: countryId,
-          name: 'National',
-        },
-      };
-
-      const simulationState: SimulationStateProps = {
-        id: existingSimulationId,
-        label: simulationLabel,
-        countryId,
-        apiVersion: undefined,
-        status: undefined,
-        output: null,
-        policy,
-        population,
-      };
-
-      onSelect(simulationState, existingSimulationId);
-      return;
-    }
-
-    // Otherwise, create new geography and simulation
-    try {
-      // Step 1: Create geography association
-      const geographyResult = await createGeographicAssociation({
-        id: `${userId}-${Date.now()}`,
-        userId,
-        countryId: countryId as any,
-        geographyId: countryId,
-        scope: 'national',
-        label: `${countryName} nationwide`,
-      });
-
-      // Step 2: Create simulation with the new geography
-      const simulationData: Partial<Simulation> = {
-        populationId: geographyResult.geographyId,
-        policyId: currentLawId.toString(),
-        populationType: 'geography',
-      };
-
-      const serializedPayload: SimulationCreationPayload =
-        SimulationAdapter.toCreationPayload(simulationData);
-
-      createSimulation(serializedPayload, {
-        onSuccess: (data) => {
-          const simulationId = data.result.simulation_id;
-
-          // Build the simulation state with the created IDs
-          const policy: PolicyStateProps = {
-            id: currentLawId.toString(),
-            label: 'Current law',
-            parameters: [],
-          };
-
-          const population: PopulationStateProps = {
-            label: `${countryName} nationwide`,
-            type: 'geography',
-            household: null,
-            geography: {
-              id: geographyResult.geographyId,
-              countryId: countryId as any,
-              scope: 'national',
-              geographyId: countryId,
-              name: 'National',
-            },
-          };
-
-          const simulationState: SimulationStateProps = {
-            id: simulationId,
-            label: simulationLabel,
-            countryId,
-            apiVersion: undefined,
-            status: undefined,
-            output: null,
-            policy,
-            population,
-          };
-
-          onSelect(simulationState, simulationId);
-        },
-        onError: (error) => {
-          console.error('[DefaultBaselineOption] Failed to create simulation:', error);
-          setIsCreating(false);
-        },
-      });
-    } catch (error) {
-      console.error('[DefaultBaselineOption] Failed to create geographic association:', error);
-      setIsCreating(false);
-    }
-  };
-
-  const hasExisting = !!(existingBaseline && existingSimulationId);
-  const loadingText = hasExisting ? 'Applying simulation...' : 'Creating simulation...';
 
   return (
     <Card
       withBorder
       component="button"
-      onClick={handleClick}
-      variant={isCreating ? 'buttonPanel--active' : 'buttonPanel--inactive'}
-      disabled={isCreating}
+      onClick={onClick}
+      variant={isSelected ? 'buttonPanel--active' : 'buttonPanel--inactive'}
       style={{
-        cursor: isCreating ? 'not-allowed' : 'pointer',
-        opacity: isCreating ? 0.6 : 1,
+        cursor: 'pointer',
       }}
     >
       <Group justify="space-between" align="center">
         <Stack gap={spacing.xs} style={{ flex: 1 }}>
-          <Text fw={700}>
-            {isCreating ? (
-              <>
-                <Loader size="xs" mr="xs" style={{ verticalAlign: 'middle' }} />
-                {loadingText}
-              </>
-            ) : (
-              simulationLabel
-            )}
-          </Text>
+          <Text fw={700}>{simulationLabel}</Text>
           <Text size="sm" c="dimmed">
             Use current law with all households nationwide as baseline
           </Text>
