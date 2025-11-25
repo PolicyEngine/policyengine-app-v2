@@ -258,7 +258,7 @@
     <div class="map-wrapper">
         <div class="map-header">
             <h2>Mansion tax impact by constituency (£2m threshold)</h2>
-            <p>Percentage of households affected in each UK parliamentary constituency</p>
+            <p>Number of properties affected in each UK parliamentary constituency</p>
         </div>
 
         <div class="map-top-bar">
@@ -278,8 +278,8 @@
             <div class="map-legend">
                 <div class="legend-gradient"></div>
                 <div class="legend-labels">
-                    <span>0%</span>
-                    <span>More affected</span>
+                    <span>Fewer</span>
+                    <span>More properties</span>
                 </div>
             </div>
         </div>
@@ -384,11 +384,11 @@
             return 'M' + points.map(p => p.join(',')).join('L') + 'Z';
         }
 
-        // Color scale - sequential teal
-        const maxPct = Math.max(...Object.values(impactData).map(d => d.pct));
+        // Color scale - sequential teal based on number of properties
+        const maxNum = Math.max(...Object.values(impactData).map(d => d.num));
         const colorScale = d3.scaleSequential()
-            .domain([0, maxPct])
-            .interpolator(t => d3.interpolate('#e0e7ed', '#1a4a6e')(Math.pow(t, 0.5)));
+            .domain([0, maxNum])
+            .interpolator(t => d3.interpolate('#e0e7ed', '#1a4a6e')(Math.pow(t, 0.4)));
 
         // Calculate centroids for geo view
         const centroids = {};
@@ -408,7 +408,7 @@
             .attr('class', 'constituency-path')
             .attr('fill', d => {
                 const data = impactData[d.properties.Name];
-                return data ? colorScale(data.pct) : '#e0e7ed';
+                return data ? colorScale(data.num) : '#e0e7ed';
             })
             .attr('stroke', '#fff')
             .attr('stroke-width', 0.3)
@@ -431,16 +431,12 @@
         function showTooltip(name, data, event) {
             tooltip.innerHTML = `
                 <h4>${name}</h4>
-                <div class="tooltip-value">${data.pct.toFixed(2)}%</div>
                 <div class="tooltip-row">
-                    <span>Households affected</span>
-                </div>
-                <div class="tooltip-row">
-                    <span>Properties:</span>
+                    <span>Properties</span>
                     <span>${data.num.toLocaleString()}</span>
                 </div>
                 <div class="tooltip-row">
-                    <span>Est. revenue:</span>
+                    <span>Est. revenue</span>
                     <span>£${data.rev.toLocaleString()}</span>
                 </div>
             `;
@@ -523,7 +519,7 @@
                 })
                 .attr('fill', d => {
                     const data = impactData[d.name];
-                    return data ? colorScale(data.pct) : '#e0e7ed';
+                    return data ? colorScale(data.num) : '#e0e7ed';
                 })
                 .attr('stroke', '#fff')
                 .attr('stroke-width', 1)
@@ -560,7 +556,7 @@
                 .attr('class', 'constituency-path')
                 .attr('fill', d => {
                     const data = impactData[d.properties.Name];
-                    return data ? colorScale(data.pct) : '#e0e7ed';
+                    return data ? colorScale(data.num) : '#e0e7ed';
                 })
                 .attr('stroke', '#fff')
                 .attr('stroke-width', 0.3)
@@ -596,7 +592,7 @@
                 return `
                     <button class="search-result-item" data-name="${name}">
                         <div class="result-name">${name}</div>
-                        <div class="result-value">${data.pct.toFixed(2)}% affected · ${data.num} properties</div>
+                        <div class="result-value">${data.num.toLocaleString()} properties · £${data.rev.toLocaleString()} revenue</div>
                     </button>
                 `;
             }).join('');
@@ -615,10 +611,8 @@
                     const data = impactData[name] || { pct: 0, num: 0, rev: 0 };
                     tooltip.innerHTML = `
                         <h4>${name}</h4>
-                        <div class="tooltip-value">${data.pct.toFixed(2)}%</div>
-                        <div class="tooltip-row"><span>Households affected</span></div>
-                        <div class="tooltip-row"><span>Properties:</span><span>${data.num.toLocaleString()}</span></div>
-                        <div class="tooltip-row"><span>Est. revenue:</span><span>£${data.rev.toLocaleString()}</span></div>
+                        <div class="tooltip-row"><span>Properties</span><span>${data.num.toLocaleString()}</span></div>
+                        <div class="tooltip-row"><span>Est. revenue</span><span>£${data.rev.toLocaleString()}</span></div>
                     `;
 
                     if (currentView === 'geo') {

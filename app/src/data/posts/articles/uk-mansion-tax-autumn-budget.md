@@ -14,7 +14,7 @@ We use Land Registry price paid data to identify property sales above £1.5 mill
 | 2026-27 HPI forecast | 154.03 |
 | Uprating factor | 1.0355 (+3.55%) |
 
-For each constituency, we calculate the number of properties exceeding each threshold after uprating, the percentage of households affected, and estimated annual revenue assuming a £2,000 annual charge per property.
+For each constituency, we calculate the number of properties exceeding each threshold after uprating and estimated annual revenue assuming a £2,000 annual charge per property.
 
 [Download the full constituency dataset (CSV)](/assets/posts/uk-mansion-tax/mansion_tax_constituency_data.csv)
 
@@ -26,20 +26,20 @@ Under a £1.5 million threshold, 15,300 properties would be affected in 2026-27,
 
 <center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_1m.html" width="100%" height="750" style="border:none;"></iframe></center>
 
-**Table 1: Top 10 constituencies by % households affected (£1.5m threshold)**
+**Table 1: Top 10 constituencies by properties affected (£1.5m threshold)**
 
-| Constituency | % Households affected | Properties |
-|:-------------|:---------------------:|:----------:|
-| Cities of London and Westminster | 1.67% | 990 |
-| Kensington and Bayswater | 1.25% | 783 |
-| Chelsea and Fulham | 1.17% | 637 |
-| Hampstead and Highgate | 0.77% | 406 |
-| Battersea | 0.76% | 362 |
-| Richmond Park | 0.66% | 301 |
-| Islington South and Finsbury | 0.53% | 277 |
-| Hammersmith and Chiswick | 0.50% | 260 |
-| Holborn and St Pancras | 0.48% | 219 |
-| Runnymede and Weybridge | 0.42% | 184 |
+| Constituency | Properties |
+|:-------------|:----------:|
+| Cities of London and Westminster | 990 |
+| Kensington and Bayswater | 783 |
+| Chelsea and Fulham | 637 |
+| Hampstead and Highgate | 406 |
+| Battersea | 362 |
+| Richmond Park | 301 |
+| Islington South and Finsbury | 277 |
+| Hammersmith and Chiswick | 260 |
+| Holborn and St Pancras | 219 |
+| Runnymede and Weybridge | 184 |
 
 ## £2 million threshold
 
@@ -49,20 +49,20 @@ Under a £2 million threshold, 8,500 properties would be affected in 2026-27, ge
 
 <center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_2m.html" width="100%" height="750" style="border:none;"></iframe></center>
 
-**Table 2: Top 10 constituencies by % households affected (£2m threshold)**
+**Table 2: Top 10 constituencies by properties affected (£2m threshold)**
 
-| Constituency | % Households affected | Properties |
-|:-------------|:---------------------:|:----------:|
-| Cities of London and Westminster | 1.32% | 782 |
-| Kensington and Bayswater | 0.93% | 583 |
-| Chelsea and Fulham | 0.74% | 401 |
-| Hampstead and Highgate | 0.46% | 242 |
-| Richmond Park | 0.34% | 153 |
-| Holborn and St Pancras | 0.32% | 147 |
-| Battersea | 0.30% | 144 |
-| Islington South and Finsbury | 0.28% | 146 |
-| Hammersmith and Chiswick | 0.24% | 127 |
-| Runnymede and Weybridge | 0.24% | 103 |
+| Constituency | Properties |
+|:-------------|:----------:|
+| Cities of London and Westminster | 782 |
+| Kensington and Bayswater | 583 |
+| Chelsea and Fulham | 401 |
+| Hampstead and Highgate | 242 |
+| Richmond Park | 153 |
+| Holborn and St Pancras | 147 |
+| Islington South and Finsbury | 146 |
+| Battersea | 144 |
+| Hammersmith and Chiswick | 127 |
+| Runnymede and Weybridge | 103 |
 
 ## Revenue concentration
 
