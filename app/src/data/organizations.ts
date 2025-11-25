@@ -1,6 +1,6 @@
 // Organization logos
 import arnoldVentures from '@/images/logos/orgs/arnold-ventures.png';
-import asi from '@/images/logos/orgs/asi.webp';
+import asi from '@/images/logos/orgs/asi.png';
 import cec from '@/images/logos/orgs/cec.svg';
 import dpga from '@/images/logos/orgs/dpga.svg';
 import centre from '@/images/logos/orgs/centre.png';
@@ -102,11 +102,6 @@ export const orgData: OrgData = {
       logo: cec,
       link: 'https://citizenseconomiccouncil.org/',
     },
-    ppp: {
-      name: "People's Policy Project",
-      logo: ppp,
-      link: 'https://www.peoplespolicyproject.org/',
-    },
   },
   us: {
     dpga: {
@@ -198,6 +193,11 @@ export const orgData: OrgData = {
       name: 'Starlight',
       logo: starlight,
       link: 'https://www.get-starlight.com/',
+    },
+    ppp: {
+      name: "People's Policy Project",
+      logo: ppp,
+      link: 'https://www.peoplespolicyproject.org/',
     },
   },
 };
