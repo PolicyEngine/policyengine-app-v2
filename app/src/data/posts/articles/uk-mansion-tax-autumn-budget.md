@@ -1,6 +1,6 @@
 ## Introduction
 
-The Treasury is [reportedly considering](https://www.baggette.co.uk/accumulation/mansion-tax-uk-2025-what-homeowners-need-to-know/) a mansion tax for the [Autumn Budget 2025](https://cms-lawnow.com/en/ealerts/2025/11/autumn-budget-2025-expectations-and-speculation-regarding-tax-measures). The proposed tax would charge around 1% annually on property values above £2 million.
+The Financial Times [reports](https://www.ft.com/content/8e375410-dde2-43bc-8cc3-c6ae37c1aef3) that the Treasury is considering a mansion tax for the Autumn Budget 2025. The proposed tax would charge around 1% annually on property values above £2 million.
 
 This analysis estimates which UK parliamentary constituencies would be most affected by a mansion tax.
 
@@ -28,18 +28,18 @@ Under a £1.5 million threshold, 13,884 properties would be affected in 2026-27,
 
 **Table 1: Top 10 constituencies by properties affected (£1.5m threshold)**
 
-| Constituency | Number of properties | Percent of properties |
+| Constituency | Number of properties | Share of total |
 |:-------------|:--------------------:|:---------------------:|
-| Cities of London and Westminster | 929 | 6.69% |
-| Kensington and Bayswater | 757 | 5.45% |
-| Chelsea and Fulham | 578 | 4.16% |
-| Hampstead and Highgate | 380 | 2.74% |
-| Battersea | 309 | 2.23% |
-| Richmond Park | 281 | 2.02% |
-| Islington South and Finsbury | 242 | 1.74% |
-| Hammersmith and Chiswick | 239 | 1.72% |
-| Holborn and St Pancras | 203 | 1.46% |
-| Finchley and Golders Green | 185 | 1.33% |
+| Cities of London and Westminster | 929 | 6.7% |
+| Kensington and Bayswater | 757 | 5.5% |
+| Chelsea and Fulham | 578 | 4.2% |
+| Hampstead and Highgate | 380 | 2.7% |
+| Battersea | 309 | 2.2% |
+| Richmond Park | 281 | 2.0% |
+| Islington South and Finsbury | 242 | 1.7% |
+| Hammersmith and Chiswick | 239 | 1.7% |
+| Holborn and St Pancras | 203 | 1.5% |
+| Finchley and Golders Green | 185 | 1.3% |
 
 ## £2 million threshold
 
@@ -51,18 +51,18 @@ Under a £2 million threshold, 7,849 properties would be affected in 2026-27, ge
 
 **Table 2: Top 10 constituencies by properties affected (£2m threshold)**
 
-| Constituency | Number of properties | Percent of properties |
+| Constituency | Number of properties | Share of total |
 |:-------------|:--------------------:|:---------------------:|
-| Cities of London and Westminster | 742 | 9.45% |
-| Kensington and Bayswater | 553 | 7.05% |
-| Chelsea and Fulham | 364 | 4.64% |
-| Hampstead and Highgate | 237 | 3.02% |
-| Richmond Park | 147 | 1.87% |
-| Islington South and Finsbury | 137 | 1.75% |
-| Holborn and St Pancras | 135 | 1.72% |
-| Battersea | 131 | 1.67% |
-| Hammersmith and Chiswick | 123 | 1.57% |
-| Finchley and Golders Green | 107 | 1.36% |
+| Cities of London and Westminster | 742 | 9.5% |
+| Kensington and Bayswater | 553 | 7.0% |
+| Chelsea and Fulham | 364 | 4.6% |
+| Hampstead and Highgate | 237 | 3.0% |
+| Richmond Park | 147 | 1.9% |
+| Islington South and Finsbury | 137 | 1.7% |
+| Holborn and St Pancras | 135 | 1.7% |
+| Battersea | 131 | 1.7% |
+| Hammersmith and Chiswick | 123 | 1.6% |
+| Finchley and Golders Green | 107 | 1.4% |
 
 ## Revenue concentration
 
