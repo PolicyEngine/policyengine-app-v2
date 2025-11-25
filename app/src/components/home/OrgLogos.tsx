@@ -166,6 +166,7 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
               <button
                 type="button"
                 onClick={() => window.open(org.link, '_blank')}
+                title={org.name}
                 style={{
                   all: 'unset',
                   cursor: 'pointer',
