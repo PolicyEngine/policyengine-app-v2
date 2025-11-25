@@ -2,6 +2,7 @@
 // This intercepts requests from social media crawlers and returns proper OG tags
 
 import postsData from './src/data/posts/posts.json';
+import appsData from './src/data/apps/apps.json';
 
 // Crawler user agents that need OG tags
 export const CRAWLER_USER_AGENTS = [
@@ -152,6 +153,31 @@ export default async function middleware(request: Request) {
           'Cache-Control': 'public, max-age=3600',
         },
       });
+    }
+  }
+
+  // Interactive app: /:countryId/:slug
+  // Generate OG tags for all apps
+  if (pathParts.length === 2 && section) {
+    // Check if it's NOT a static page
+    if (!STATIC_PAGES[section]) {
+      const appSlug = section;
+      const app = appsData.find(
+        (a: { slug: string; countryId: string }) => a.slug === appSlug && a.countryId === countryId
+      );
+
+      if (app) {
+        // Use app's image if available, otherwise use default
+        const imageUrl = app.image ? `${baseUrl}/assets/posts/${app.image}` : DEFAULT_OG.image;
+        html = generateOgHtml(app.title, app.description, imageUrl, fullUrl, 'website');
+        return new Response(html, {
+          status: 200,
+          headers: {
+            'Content-Type': 'text/html',
+            'Cache-Control': 'public, max-age=3600',
+          },
+        });
+      }
     }
   }
 
