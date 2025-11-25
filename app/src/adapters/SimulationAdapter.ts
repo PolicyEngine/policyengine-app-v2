@@ -19,14 +19,6 @@ export class SimulationAdapter {
    * Converts SimulationMetadata from API GET response to Simulation type
    */
   static fromMetadata(metadata: SimulationMetadata): Simulation {
-    console.log('[SimulationAdapter.fromMetadata] RAW API METADATA:', {
-      id: metadata.id,
-      status: metadata.status,
-      hasOutput: !!metadata.output,
-      outputType: typeof metadata.output,
-      metadataKeys: Object.keys(metadata),
-    });
-
     if (!metadata.population_id) {
       throw new Error('Simulation metadata missing population_id');
     }
@@ -45,13 +37,7 @@ export class SimulationAdapter {
     if (metadata.output && typeof metadata.output === 'string') {
       try {
         parsedOutput = JSON.parse(metadata.output);
-        console.log('[SimulationAdapter.fromMetadata] Parsed stringified output:', {
-          originalType: 'string',
-          parsedType: typeof parsedOutput,
-          parsedKeys: parsedOutput ? Object.keys(parsedOutput) : [],
-        });
-      } catch (error) {
-        console.error('[SimulationAdapter.fromMetadata] Failed to parse output:', error);
+      } catch {
         // Keep original value if parsing fails
         parsedOutput = metadata.output;
       }
@@ -69,14 +55,6 @@ export class SimulationAdapter {
       output: parsedOutput,
       status: metadata.status,
     };
-
-    console.log('[SimulationAdapter.fromMetadata] TRANSFORMED SIMULATION:', {
-      id: simulation.id,
-      status: simulation.status,
-      hasOutput: !!simulation.output,
-      outputType: typeof simulation.output,
-      simulationKeys: Object.keys(simulation),
-    });
 
     return simulation;
   }

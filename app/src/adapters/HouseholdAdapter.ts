@@ -85,9 +85,8 @@ export class HouseholdAdapter {
         // Convert snake_case to camelCase for internal representation
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
         householdData[camelKey] = value as any;
-      } catch (error) {
-        // If entity not found in metadata, still include it but log warning
-        console.warn(`Entity "${key}" not found in metadata, including anyway`);
+      } catch {
+        // If entity not found in metadata, still include it
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
         householdData[camelKey] = value as any;
       }
@@ -125,7 +124,6 @@ export class HouseholdAdapter {
       } else {
         // If not found in metadata, try snake_case conversion
         const snakeKey = key.replace(/([A-Z])/g, '_$1').toLowerCase();
-        console.warn(`Entity "${key}" not found in metadata, using snake_case "${snakeKey}"`);
         household_json[snakeKey] = value as any;
       }
     }
