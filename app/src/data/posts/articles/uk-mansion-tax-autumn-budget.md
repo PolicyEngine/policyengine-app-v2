@@ -107,6 +107,7 @@ Most affected constituencies have only a small number of properties above the th
 
 | Properties | Constituencies |
 |:-----------|:--------------:|
+| 0 | 82 |
 | 1-10 | 292 |
 | 11-50 | 216 |
 | 51-100 | 35 |
