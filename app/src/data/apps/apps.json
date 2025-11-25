@@ -154,5 +154,14 @@
     "source": "https://policyengine.github.io/obbba-scatter",
     "tags": ["us", "featured", "policy", "reconciliation"],
     "countryId": "us"
+  },
+  {
+    "type": "iframe",
+    "slug": "snap-district-map",
+    "title": "SNAP district map",
+    "description": "Interactive map showing SNAP (food stamps) data by congressional district",
+    "source": "https://policyengine.github.io/snap-district-map/",
+    "tags": ["us", "policy"],
+    "countryId": "us"
   }
 ]
