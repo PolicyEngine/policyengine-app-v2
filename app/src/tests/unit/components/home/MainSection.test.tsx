@@ -1,7 +1,7 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import MainSection from '@/components/home/MainSection';
-import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/home-header/CountrySelectorMocks';
+import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
 
 describe('MainSection', () => {
   test('given US country then displays US-specific text', () => {

@@ -1,7 +1,7 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import OrgLogos from '@/components/home/OrgLogos';
-import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/home-header/CountrySelectorMocks';
+import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
 
 // Mock the organizations module
 vi.mock('@/data/organizations', () => ({

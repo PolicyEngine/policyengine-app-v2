@@ -1,6 +1,6 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import DesktopNavigation from '@/components/home-header/DesktopNavigation';
+import DesktopNavigation from '@/components/homeHeader/DesktopNavigation';
 import { MOCK_NAV_ITEMS } from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('DesktopNavigation', () => {

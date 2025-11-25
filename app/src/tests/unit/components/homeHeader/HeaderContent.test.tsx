@@ -1,6 +1,6 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import HeaderContent from '@/components/home-header/HeaderContent';
+import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { MOCK_NAV_ITEMS } from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('HeaderContent', () => {

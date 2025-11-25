@@ -1,7 +1,7 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import CountrySelector from '@/components/home-header/CountrySelector';
-import { MOCK_PATHS } from '@/tests/fixtures/components/home-header/CountrySelectorMocks';
+import CountrySelector from '@/components/homeHeader/CountrySelector';
+import { MOCK_PATHS } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
 
 const mockNavigate = vi.fn();
 

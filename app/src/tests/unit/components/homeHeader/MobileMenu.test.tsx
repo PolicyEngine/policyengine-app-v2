@@ -1,6 +1,6 @@
 import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import MobileMenu from '@/components/home-header/MobileMenu';
+import MobileMenu from '@/components/homeHeader/MobileMenu';
 import { MOCK_NAV_ITEMS } from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('MobileMenu', () => {
