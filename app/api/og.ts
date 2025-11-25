@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-
 // Posts data - imported from posts.json at build time
 // We inline a simplified version here for the serverless function
 import posts from '../src/data/posts/posts.json';
@@ -57,11 +56,7 @@ function generateOgHtml(
 
   // Escape HTML entities
   const escapeHtml = (str: string) =>
-    str
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;');
+    str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
   const safeTitle = escapeHtml(title);
   const safeDescription = escapeHtml(description);
@@ -158,7 +153,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   // Country homepage
   if (pathParts.length === 1) {
-    const countryName = countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
+    const countryName =
+      countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
     const html = generateOgHtml(
       `PolicyEngine ${countryName}`,
       DEFAULT_OG.description,
@@ -173,7 +169,13 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Default fallback
-  const html = generateOgHtml(DEFAULT_OG.title, DEFAULT_OG.description, DEFAULT_OG.image, fullUrl, 'website');
+  const html = generateOgHtml(
+    DEFAULT_OG.title,
+    DEFAULT_OG.description,
+    DEFAULT_OG.image,
+    fullUrl,
+    'website'
+  );
 
   res.setHeader('Content-Type', 'text/html');
   res.setHeader('Cache-Control', 'public, max-age=3600');
