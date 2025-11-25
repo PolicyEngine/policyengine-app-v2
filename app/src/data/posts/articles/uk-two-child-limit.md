@@ -70,7 +70,7 @@ The reform would increase Universal Credit or Child Tax Credit payments for affe
       {
         "sizex": 0.15,
         "sizey": 0.15,
-        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app/master/src/images/logos/policyengine/blue.png",
+        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
         "x": 1.1,
         "xanchor": "right",
         "xref": "paper",
@@ -154,7 +154,7 @@ By income decile, removing the two-child limit would provide the largest relativ
     },
     "images": [
       {
-        "source": "https://legacy.policyengine.org/images/logos/policyengine/blue.png",
+        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
         "x": 1,
         "y": -0.15,
         "xref": "paper",
