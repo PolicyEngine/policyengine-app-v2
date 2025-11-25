@@ -19,7 +19,7 @@ const founders: TeamMember[] = [
 const staff: TeamMember[] = [
   {
     name: 'Pavel Makarchuk',
-    bio: "is the Director of Growth at PolicyEngine. He earned a bachelor's degree in Economics from Marist College where he researched the economic implications of forced migration.",
+    bio: "is the Director of Growth at PolicyEngine. He earned a bachelor's degree in Economics from Marist College.",
     image: '/assets/team/pavel-makarchuk.jpeg',
   },
   {
