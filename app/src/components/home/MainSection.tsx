@@ -4,7 +4,6 @@ import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function MainSection() {
   const countryId = useCurrentCountry();
-  const analyze = countryId === 'uk' ? 'analyse' : 'analyze';
 
   return (
     <Container size="xl" py={spacing['5xl']}>
@@ -26,9 +25,7 @@ export default function MainSection() {
             fontFamily: typography.fontFamily.primary,
           }}
         >
-          Computing public policy
-          <br />
-          for everyone
+          Start simulating
         </Title>
 
         <Text
@@ -41,8 +38,13 @@ export default function MainSection() {
             fontFamily: typography.fontFamily.primary,
           }}
         >
-          Understand and {analyze} the impacts of tax and benefit policies
-          <br /> on budgets, economic growth, poverty, and inequality.
+          Free, open-source tax and benefit analysis.
+          <br />
+          {countryId === 'uk'
+            ? 'Model policy reforms across the UK.'
+            : 'Model policy reforms across all 50 states.'}
+          <br />
+          Power benefit access tools with accurate rules.
         </Text>
       </Stack>
     </Container>

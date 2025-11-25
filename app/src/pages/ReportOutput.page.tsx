@@ -4,6 +4,7 @@ import { Container, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
+import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
@@ -219,7 +220,7 @@ export default function ReportOutputPage() {
   };
 
   return (
-    <>
+    <ReportYearProvider year={report?.year ?? null}>
       <ReportOutputLayout
         reportId={userReportId}
         reportLabel={userReport?.label}
@@ -245,7 +246,7 @@ export default function ReportOutputPage() {
         isLoading={updateAssociation.isPending}
         ingredientType="report"
       />
-    </>
+    </ReportYearProvider>
   );
 }
 
