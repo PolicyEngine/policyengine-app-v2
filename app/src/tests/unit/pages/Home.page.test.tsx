@@ -11,10 +11,6 @@ vi.mock('@/components/home/ActionCards', () => ({
   default: () => <div data-testid="action-cards">Action Cards</div>,
 }));
 
-vi.mock('@/components/home/TransformationStatement', () => ({
-  default: () => <div data-testid="transformation-statement">Transformation Statement</div>,
-}));
-
 vi.mock('@/components/home/OrgLogos', () => ({
   default: ({ logos }: { logos: unknown[] }) => (
     <div data-testid="org-logos">Org Logos ({logos.length})</div>
@@ -29,7 +25,6 @@ describe('HomePage', () => {
     // Then
     expect(screen.getByTestId('main-section')).toBeInTheDocument();
     expect(screen.getByTestId('action-cards')).toBeInTheDocument();
-    expect(screen.getByTestId('transformation-statement')).toBeInTheDocument();
     expect(screen.getByTestId('org-logos')).toBeInTheDocument();
   });
 
@@ -42,12 +37,7 @@ describe('HomePage', () => {
       el.getAttribute('data-testid')
     );
 
-    expect(sections).toEqual([
-      'main-section',
-      'action-cards',
-      'transformation-statement',
-      'org-logos',
-    ]);
+    expect(sections).toEqual(['main-section', 'action-cards', 'org-logos']);
   });
 
   test('given page renders then passes orgData to OrgLogos component', () => {
