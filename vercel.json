@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "buildCommand": "cd app && npm run build",
+  "outputDirectory": "app/dist",
+  "framework": null,
+  "functions": {
+    "app/api/*.ts": {
+      "runtime": "@vercel/node@3"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/app/api/$1" },
+    { "source": "/(.*)", "destination": "/app/dist/$1" }
+  ]
+}
