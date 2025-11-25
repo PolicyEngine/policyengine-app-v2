@@ -9,10 +9,11 @@ import {
 } from '@tabler/icons-react';
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import type { CountryId } from '@/api/report';
-import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+
+const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
 const getContactLinks = (countryId: CountryId) => ({
   about: `/${countryId}/team`,

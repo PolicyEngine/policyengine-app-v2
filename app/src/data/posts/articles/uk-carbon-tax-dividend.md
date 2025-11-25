@@ -113,7 +113,7 @@ This section examines how carbon dividend policies affect households across the 
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -218,7 +218,7 @@ This section examines how carbon dividend policies affect households across the 
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -353,7 +353,7 @@ This section analyses the population distribution across different income change
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -482,7 +482,7 @@ This section analyses the population distribution across different income change
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -648,7 +648,7 @@ The regional breakdown shows that England benefits most from the £100/tonne car
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -780,7 +780,7 @@ At the £200/tonne rate, 294 constituencies gain compared to 265 at the £100/to
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",

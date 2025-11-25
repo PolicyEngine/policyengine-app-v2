@@ -165,7 +165,7 @@ PolicyEngine [projects](https://legacy.policyengine.org/uk/policy?reform=1&focus
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -265,7 +265,7 @@ Figure 3 shows our estimation of [the number of children](https://gist.github.co
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -414,7 +414,7 @@ PolicyEngine [projects](https://legacy.policyengine.org/uk/policy?focus=policyOu
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -514,7 +514,7 @@ Figure 7 shows our estimation of [the number of children](https://gist.github.co
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -638,7 +638,7 @@ PolicyEngine [projects](https://legacy.policyengine.org/uk/policy?reform=1&focus
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -738,7 +738,7 @@ Figure 11 shows our estimation of [the number of children](https://gist.github.c
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -872,7 +872,7 @@ PolicyEngine [projects](https://legacy.policyengine.org/uk/policy?focus=policyOu
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -972,7 +972,7 @@ Figure 15 shows our estimation of [the number of children](https://gist.github.c
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",

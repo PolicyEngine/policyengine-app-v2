@@ -132,7 +132,7 @@ PolicyEngine projects that Universal Credit will cost £79.4 billion in 2025-26,
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -248,7 +248,7 @@ PolicyEngine projects that Housing Benefit will cost [£7.6 billion](https://leg
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -402,7 +402,7 @@ PolicyEngine projects that Pension Credit will cost [£7.4 billion](https://lega
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -527,7 +527,7 @@ PolicyEngine projects that PIP will cost [£30.6 billion](https://legacy.policye
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -648,7 +648,7 @@ PolicyEngine projects that Disability Living Allowance will cost [£9.3 billion]
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -768,7 +768,7 @@ PolicyEngine projects that Attendance Allowance will cost [£10.2 billion](https
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -890,7 +890,7 @@ PolicyEngine projects that Child Benefit will cost [£12.3 billion](https://lega
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -1043,7 +1043,7 @@ PolicyEngine projects that tax-free childcare will cost [£0.6 billion](https://
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -1165,7 +1165,7 @@ PolicyEngine projects that universal childcare entitlement will cost [£1.6 bill
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -1288,7 +1288,7 @@ PolicyEngine projects that extended childcare entitlement will cost [£2.6 billi
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",
@@ -1409,7 +1409,7 @@ PolicyEngine projects that targeted childcare entitlement will cost [£0.5 billi
    ],
    "images": [
      {
-       "source": "/logo512.png",
+       "source": "/assets/logos/policyengine/teal-square.png",
        "x": 1,
        "y": -0.18,
        "xref": "paper",

@@ -1,6 +1,7 @@
 import { Box, Text } from '@mantine/core';
-import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import { colors, spacing } from '@/designTokens';
+
+const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
 interface HeaderBarProps {
   title?: string;

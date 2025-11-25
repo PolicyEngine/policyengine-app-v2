@@ -90,7 +90,7 @@ Figure 1 shows the distribution of UK firms by turnover band in 2024 according t
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -189,7 +189,7 @@ Figure 2 presents the distribution of VAT-registered firms by turnover band in 2
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -335,7 +335,7 @@ Figure 3 shows the resulting distribution of UK firms by annual turnover in 2024
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -516,7 +516,7 @@ HMRC published revenue projections for raising the VAT threshold from [£85,000 
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -646,7 +646,7 @@ Figure 7 shows revenue impacts for different thresholds in 2026-27.
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -776,7 +776,7 @@ Figure 5 shows how different threshold levels change the number of VAT-paying fi
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",

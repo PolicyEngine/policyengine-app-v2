@@ -110,7 +110,7 @@ The extension of the freeze would affect taxpayers across the income distributio
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.20,
         "xref": "paper",
@@ -198,7 +198,7 @@ The extension of the freeze would affect taxpayers across the income distributio
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.20,
         "xref": "paper",
