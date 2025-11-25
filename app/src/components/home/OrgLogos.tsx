@@ -60,14 +60,17 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
     lastSlotRef.current = -1;
   }, [shuffledOrgs]);
 
-  // Cycle the next slot in sequence (not the same as last time)
+  // Cycle slots using golden ratio step for visually scattered but deterministic pattern
+  // Step of 4 with 7 slots creates: 0, 4, 1, 5, 2, 6, 3, 0, 4...
+  const GOLDEN_STEP = 4;
+
   const cycleNextSlot = useCallback(() => {
     if (shuffledOrgs.length <= NUM_VISIBLE) {
       return;
     }
 
-    // Pick next slot (cycling through, but skip if same as last)
-    let nextSlot = (lastSlotRef.current + 1) % NUM_VISIBLE;
+    // Use golden ratio stepping for an unexpected but non-random pattern
+    const nextSlot = (lastSlotRef.current + GOLDEN_STEP) % NUM_VISIBLE;
     lastSlotRef.current = nextSlot;
 
     // Start fade out
@@ -76,12 +79,16 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
     setTimeout(() => {
       setSlotIndices((prev) => {
         const next = [...prev];
+        const oldLogoIndex = prev[nextSlot]; // The logo being replaced
         const currentlyVisible = new Set(prev);
 
-        // Find next logo that isn't already visible
+        // Find next logo that isn't already visible AND isn't the one being replaced
         let newLogoIndex = nextLogoRef.current % shuffledOrgs.length;
         let attempts = 0;
-        while (currentlyVisible.has(newLogoIndex) && attempts < shuffledOrgs.length) {
+        while (
+          (currentlyVisible.has(newLogoIndex) || newLogoIndex === oldLogoIndex) &&
+          attempts < shuffledOrgs.length
+        ) {
           newLogoIndex = (newLogoIndex + 1) % shuffledOrgs.length;
           attempts++;
         }
