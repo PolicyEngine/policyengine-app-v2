@@ -5,22 +5,26 @@ import {
   IconBrandLinkedin,
   IconBrandTwitter,
   IconBrandYoutube,
+  IconMail,
 } from '@tabler/icons-react';
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import type { CountryId } from '@/api/report';
 import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import FooterSubscribe from '@/components/FooterSubscribe';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
-const CONTACT_LINKS = {
-  email: 'mailto:hello@policyengine.org',
-  about: '#',
-  donate: '#',
-  privacy: '#',
-  terms: '#',
-  developerTools: '#',
-};
+const getContactLinks = (countryId: CountryId) => ({
+  about: `/${countryId}/team`,
+  donate: `/${countryId}/donate`,
+  privacy: `/${countryId}/privacy`,
+  terms: `/${countryId}/terms`,
+  // TODO: Add developer-tools page once it's built out
+  // developerTools: `/${countryId}/developer-tools`,
+});
 
 const SOCIAL_LINKS = [
+  { icon: IconMail, href: 'mailto:hello@policyengine.org' },
   { icon: IconBrandTwitter, href: 'https://twitter.com/ThePolicyEngine' },
   { icon: IconBrandFacebook, href: 'https://www.facebook.com/PolicyEngine' },
   { icon: IconBrandLinkedin, href: 'https://www.linkedin.com/company/thepolicyengine' },
@@ -30,6 +34,8 @@ const SOCIAL_LINKS = [
 ];
 
 export default function Footer() {
+  const countryId = useCurrentCountry();
+  const CONTACT_LINKS = getContactLinks(countryId);
   return (
     <Box
       component="footer"
@@ -49,9 +55,6 @@ export default function Footer() {
           {/* Left Section */}
           <Stack gap="2xl" align="flex-start">
             <Stack gap="xs">
-              <Anchor href={CONTACT_LINKS.email} c={colors.white} fz="md" underline="never">
-                Email us
-              </Anchor>
               <Anchor
                 href={CONTACT_LINKS.about}
                 c={colors.white}
@@ -88,6 +91,7 @@ export default function Footer() {
               >
                 Terms and conditions
               </Anchor>
+              {/* TODO: Uncomment when developer-tools page is built
               <Anchor
                 href={CONTACT_LINKS.developerTools}
                 c={colors.white}
@@ -97,23 +101,14 @@ export default function Footer() {
               >
                 Developer tools
               </Anchor>
+              */}
             </Stack>
 
             <Stack gap="md">
               <Group gap="md">
                 {SOCIAL_LINKS.map(({ icon: Icon, href }, index) => (
                   <Anchor key={index} href={href} target="_blank">
-                    <Box
-                      p={6}
-                      style={{
-                        backgroundColor: colors.primary[500],
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <Icon size={18} color={colors.white} />
-                    </Box>
+                    <Icon size={24} color={colors.white} />
                   </Anchor>
                 ))}
               </Group>
