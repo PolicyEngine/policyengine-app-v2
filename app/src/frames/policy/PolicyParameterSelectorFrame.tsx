@@ -7,6 +7,7 @@ import Main from '@/components/policyParameterSelectorFrame/Main';
 import MainEmpty from '@/components/policyParameterSelectorFrame/MainEmpty';
 import Menu from '@/components/policyParameterSelectorFrame/Menu';
 import HeaderNavigation from '@/components/shared/HomeHeader';
+import LegacyBanner from '@/components/shared/LegacyBanner';
 import { spacing } from '@/designTokens';
 import { RootState } from '@/store';
 import { FlowComponentProps } from '@/types/flow';
@@ -62,6 +63,7 @@ export default function PolicyParameterSelectorFrame({
     >
       <AppShell.Header p={0}>
         <HeaderNavigation />
+        <LegacyBanner />
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">

@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
@@ -10,8 +10,8 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
-import { DEFAULT_CHART_CONFIG, downloadCsv } from '@/utils/chartUtils';
-import { formatCurrencyAbbr, localeCode } from '@/utils/formatters';
+import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
 interface Props {
@@ -29,6 +29,8 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
   const variables = metadata.variables;
+  const { height: viewportHeight } = useViewportSize();
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Check if detailed_budget exists (UK only feature)
   if (!output.detailed_budget || typeof output.detailed_budget !== 'object') {
@@ -162,14 +164,14 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
   ];
 
   const layout = {
-    height: mobile ? 300 : 500,
     xaxis: {
       title: { text: 'Program' },
       fixedrange: true,
     },
     yaxis: {
       title: { text: 'Budgetary impact (bn)' },
-      tickformat: '$,.1f',
+      tickprefix: currencySymbol(countryId),
+      tickformat: ',.1f',
       fixedrange: true,
     },
     uniformtext: {
@@ -194,7 +196,7 @@ export default function BudgetaryImpactByProgramSubPage({ output }: Props) {
             ...DEFAULT_CHART_CONFIG,
             locale: localeCode(countryId),
           }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
       </Stack>
     </ChartContainer>

@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
@@ -10,7 +10,7 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import { DEFAULT_CHART_CONFIG, downloadCsv } from '@/utils/chartUtils';
+import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -22,6 +22,8 @@ export default function DistributionalImpactIncomeRelativeSubPage({ output }: Pr
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const { height: viewportHeight } = useViewportSize();
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data - object with keys "1", "2", ..., "10"
   const decileRelative = output.decile.relative;
@@ -93,7 +95,6 @@ export default function DistributionalImpactIncomeRelativeSubPage({ output }: Pr
   ];
 
   const layout = {
-    height: mobile ? 300 : 500,
     xaxis: {
       title: { text: 'Income decile' },
       tickvals: Object.keys(decileRelative),
@@ -135,7 +136,7 @@ export default function DistributionalImpactIncomeRelativeSubPage({ output }: Pr
             ...DEFAULT_CHART_CONFIG,
             locale: localeCode(countryId),
           }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
 
         {description}

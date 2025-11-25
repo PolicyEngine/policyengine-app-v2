@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
-import { Box, Button, Group, Stack, Text } from '@mantine/core';
+import { IconDownload } from '@tabler/icons-react';
+import { ActionIcon, Box, Group, Stack, Text, Tooltip } from '@mantine/core';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 
@@ -11,7 +12,7 @@ interface ChartContainerProps {
 
 /**
  * A consistent container for charts with standard border, padding, and background styling.
- * Automatically renders a header with title and CSV download button.
+ * Automatically renders a header with title and CSV download icon button.
  *
  * @param title - Chart title text
  * @param onDownloadCsv - Callback function for CSV download
@@ -19,14 +20,22 @@ interface ChartContainerProps {
  */
 export function ChartContainer({ children, title, onDownloadCsv }: ChartContainerProps) {
   return (
-    <Stack gap={spacing.md}>
+    <Stack gap={spacing.sm}>
       <Group justify="space-between" align="flex-start" wrap="nowrap">
         <Text size="lg" fw={500} style={{ flex: 1, wordWrap: 'break-word' }}>
           {title}
         </Text>
-        <Button variant="outline" size="sm" onClick={onDownloadCsv} style={{ flexShrink: 0 }}>
-          Download CSV
-        </Button>
+        <Tooltip label="Download CSV" position="left">
+          <ActionIcon
+            variant="subtle"
+            size="md"
+            onClick={onDownloadCsv}
+            aria-label="Download CSV"
+            style={{ flexShrink: 0 }}
+          >
+            <IconDownload size={18} />
+          </ActionIcon>
+        </Tooltip>
       </Group>
 
       <Box

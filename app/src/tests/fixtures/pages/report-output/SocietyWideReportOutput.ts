@@ -10,6 +10,7 @@ import type { UserPolicy } from '@/types/ingredients/UserPolicy';
 export const MOCK_REPORT: Report = {
   id: 'test-report-123',
   countryId: 'us',
+  year: '2024',
   label: 'Test Society-Wide Report',
   simulationIds: ['sim-1', 'sim-2'],
   apiVersion: '1.0.0',

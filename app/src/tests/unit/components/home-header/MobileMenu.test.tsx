@@ -1,10 +1,7 @@
-import { renderWithCountry, screen } from '@test-utils';
+import { renderWithCountry, screen, userEvent } from '@test-utils';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import MobileMenu from '@/components/home-header/MobileMenu';
-import {
-  MOCK_ABOUT_LINKS,
-  MOCK_NAV_LINKS,
-} from '@/tests/fixtures/components/home-header/HeaderMocks';
+import { MOCK_NAV_ITEMS } from '@/tests/fixtures/components/home/HomeMocks';
 
 describe('MobileMenu', () => {
   beforeEach(() => {
@@ -13,20 +10,12 @@ describe('MobileMenu', () => {
 
   test('given component renders then displays burger button and country selector', () => {
     // Given
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
 
     // When
     renderWithCountry(
-      <MobileMenu
-        opened={false}
-        onOpen={onOpen}
-        onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
+      <MobileMenu opened={false} onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
       'us'
     );
 
@@ -38,22 +27,13 @@ describe('MobileMenu', () => {
 
   test('given user clicks burger then onOpen is called', async () => {
     // Given
-    const { userEvent } = await import('@test-utils');
     const user = userEvent.setup();
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
 
     // When
     renderWithCountry(
-      <MobileMenu
-        opened={false}
-        onOpen={onOpen}
-        onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
+      <MobileMenu opened={false} onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
       'us'
     );
 
@@ -65,22 +45,32 @@ describe('MobileMenu', () => {
     expect(onOpen).toHaveBeenCalled();
   });
 
-  test('given menu is opened then displays about section with links', () => {
+  test('given menu is opened then displays all nav items', () => {
     // Given
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
 
     // When
     renderWithCountry(
-      <MobileMenu
-        opened
-        onOpen={onOpen}
-        onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
+      <MobileMenu opened onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
+      'us'
+    );
+
+    // Then
+    expect(screen.getByText('Home')).toBeInTheDocument();
+    expect(screen.getByText('Research')).toBeInTheDocument();
+    expect(screen.getByText('About')).toBeInTheDocument();
+    expect(screen.getByText('Donate')).toBeInTheDocument();
+  });
+
+  test('given menu is opened then displays dropdown section with items', () => {
+    // Given
+    const onOpen = vi.fn();
+    const onClose = vi.fn();
+
+    // When
+    renderWithCountry(
+      <MobileMenu opened onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
       'us'
     );
 
@@ -90,82 +80,94 @@ describe('MobileMenu', () => {
     expect(screen.getByText('Supporters')).toBeInTheDocument();
   });
 
-  test('given menu is opened then displays navigation links section', () => {
+  test('given user clicks simple nav item then callback is invoked', async () => {
     // Given
-    const onNavClick = vi.fn();
+    const user = userEvent.setup();
     const onOpen = vi.fn();
     const onClose = vi.fn();
+    const onDonateClick = vi.fn();
+    const navItemsWithSpy = MOCK_NAV_ITEMS.map((item) =>
+      item.label === 'Donate' ? { ...item, onClick: onDonateClick } : item
+    );
 
     // When
     renderWithCountry(
-      <MobileMenu
-        opened
-        onOpen={onOpen}
-        onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
+      <MobileMenu opened onOpen={onOpen} onClose={onClose} navItems={navItemsWithSpy} />,
       'us'
     );
 
+    await user.click(screen.getByText('Donate'));
+
     // Then
-    const donateLinks = screen.getAllByText('Donate');
-    expect(donateLinks.length).toBeGreaterThan(0);
+    expect(onDonateClick).toHaveBeenCalled();
   });
 
-  test('given user clicks about link then onNavClick is called', async () => {
+  test('given user clicks dropdown item then callback is invoked', async () => {
     // Given
-    const { userEvent } = await import('@test-utils');
     const user = userEvent.setup();
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
+    const onTeamClick = vi.fn();
+    const navItemsWithSpy = MOCK_NAV_ITEMS.map((item) =>
+      item.label === 'About' && item.dropdownItems
+        ? {
+            ...item,
+            dropdownItems: item.dropdownItems.map((dropdownItem) =>
+              dropdownItem.label === 'Team'
+                ? { ...dropdownItem, onClick: onTeamClick }
+                : dropdownItem
+            ),
+          }
+        : item
+    );
 
     // When
     renderWithCountry(
-      <MobileMenu
-        opened
-        onOpen={onOpen}
-        onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
+      <MobileMenu opened onOpen={onOpen} onClose={onClose} navItems={navItemsWithSpy} />,
       'us'
     );
 
     await user.click(screen.getByText('Team'));
 
     // Then
-    expect(onNavClick).toHaveBeenCalledWith('/us/team');
+    expect(onTeamClick).toHaveBeenCalled();
   });
 
-  test('given user clicks nav link then onNavClick is called', async () => {
+  test('given menu closed then does not display nav items', () => {
     // Given
-    const { userEvent } = await import('@test-utils');
-    const user = userEvent.setup();
-    const onNavClick = vi.fn();
     const onOpen = vi.fn();
     const onClose = vi.fn();
 
     // When
     renderWithCountry(
-      <MobileMenu
-        opened
-        onOpen={onOpen}
-        onClose={onClose}
-        navLinks={MOCK_NAV_LINKS}
-        aboutLinks={MOCK_ABOUT_LINKS}
-        onNavClick={onNavClick}
-      />,
+      <MobileMenu opened={false} onOpen={onOpen} onClose={onClose} navItems={MOCK_NAV_ITEMS} />,
       'us'
     );
 
-    const donateLinks = screen.getAllByText('Donate');
-    await user.click(donateLinks[0]);
+    // Then
+    expect(screen.queryByText('Home')).not.toBeInTheDocument();
+    expect(screen.queryByText('Research')).not.toBeInTheDocument();
+  });
+
+  test('given user clicks Home then callback is invoked', async () => {
+    // Given
+    const user = userEvent.setup();
+    const onOpen = vi.fn();
+    const onClose = vi.fn();
+    const onHomeClick = vi.fn();
+    const navItemsWithSpy = MOCK_NAV_ITEMS.map((item) =>
+      item.label === 'Home' ? { ...item, onClick: onHomeClick } : item
+    );
+
+    // When
+    renderWithCountry(
+      <MobileMenu opened onOpen={onOpen} onClose={onClose} navItems={navItemsWithSpy} />,
+      'us'
+    );
+
+    await user.click(screen.getByText('Home'));
 
     // Then
-    expect(onNavClick).toHaveBeenCalledWith('/us/donate');
+    expect(onHomeClick).toHaveBeenCalled();
   });
 });

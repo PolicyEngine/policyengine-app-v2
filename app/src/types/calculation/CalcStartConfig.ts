@@ -41,6 +41,12 @@ export interface CalcStartConfig {
   countryId: string;
 
   /**
+   * Report calculation year (e.g., '2025')
+   * Used for economy calculations as time_period parameter
+   */
+  year: string;
+
+  /**
    * Parent report ID (only for household simulation-level calculations)
    * Used to mark the parent report as complete after all simulations finish
    */

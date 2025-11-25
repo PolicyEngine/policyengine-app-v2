@@ -1,12 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import {
   EXPECTED_COUNTRY_LABELS,
+  EXPECTED_REGION_TYPE_LABELS,
   mockMetadataEmptyRegions,
   mockMetadataWithRegions,
   TEST_COUNTRY_CODES,
   TEST_REGION_CODES,
 } from '@/tests/fixtures/utils/geographyUtilsMocks';
-import { getCountryLabel, getRegionLabel, getRegionType } from '@/utils/geographyUtils';
+import {
+  getCountryLabel,
+  getRegionLabel,
+  getRegionType,
+  getRegionTypeLabel,
+} from '@/utils/geographyUtils';
 
 describe('geographyUtils', () => {
   describe('getCountryLabel', () => {
@@ -160,6 +166,80 @@ describe('geographyUtils', () => {
 
       // Then
       expect(result).toBe('constituency');
+    });
+  });
+
+  describe('getRegionTypeLabel', () => {
+    it('given US state then returns State', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+
+      // When
+      const result = getRegionTypeLabel(
+        TEST_COUNTRY_CODES.US,
+        TEST_REGION_CODES.CALIFORNIA,
+        metadata
+      );
+
+      // Then
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);
+    });
+
+    it('given UK country then returns Country', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+
+      // When
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, TEST_REGION_CODES.WALES, metadata);
+
+      // Then
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.COUNTRY);
+    });
+
+    it('given UK constituency then returns Constituency', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+
+      // When
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, TEST_REGION_CODES.LONDON, metadata);
+
+      // Then
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.CONSTITUENCY);
+    });
+
+    it('given UK region not in metadata then returns Constituency as fallback', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+
+      // When
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, 'unknown-region', metadata);
+
+      // Then
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.CONSTITUENCY);
+    });
+
+    it('given unknown country then returns Region as fallback', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+
+      // When
+      const result = getRegionTypeLabel('zz', 'some-region', metadata);
+
+      // Then
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.REGION);
+    });
+
+    it('given empty metadata then returns appropriate fallback', () => {
+      // Given
+      const metadata = mockMetadataEmptyRegions();
+
+      // When
+      const resultUS = getRegionTypeLabel(TEST_COUNTRY_CODES.US, 'ca', metadata);
+      const resultUK = getRegionTypeLabel(TEST_COUNTRY_CODES.UK, 'wales', metadata);
+
+      // Then
+      expect(resultUS).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);
+      expect(resultUK).toBe(EXPECTED_REGION_TYPE_LABELS.CONSTITUENCY);
     });
   });
 });

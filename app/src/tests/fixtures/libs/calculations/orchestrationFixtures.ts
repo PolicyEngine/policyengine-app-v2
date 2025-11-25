@@ -81,6 +81,7 @@ export const mockReportCalcStartConfig = (
     geography2: null,
   },
   countryId: ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID,
+  year: '2024',
   ...overrides,
 });
 
@@ -106,6 +107,7 @@ export const mockSimulationCalcStartConfig = (
     geography2: null,
   },
   countryId: ORCHESTRATION_TEST_CONSTANTS.TEST_COUNTRY_ID,
+  year: '2024',
   ...overrides,
 });
 

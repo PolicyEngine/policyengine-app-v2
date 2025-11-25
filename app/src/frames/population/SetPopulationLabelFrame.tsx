@@ -36,13 +36,13 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
     if (populationState?.geography) {
       // Geographic population
       if (populationState.geography.scope === 'national') {
-        return 'National Population';
+        return 'National Households';
       } else if (populationState.geography.geographyId) {
         // Use display value (strip prefix for UK regions)
         const displayValue = extractRegionDisplayValue(populationState.geography.geographyId);
-        return `${displayValue} Population`;
+        return `${displayValue} Households`;
       }
-      return 'Geographic Population';
+      return 'Regional Households';
     }
     // Household population
     return 'Custom Household';
@@ -54,7 +54,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
   const handleSubmit = () => {
     // Validate label
     if (!label.trim()) {
-      setError('Please enter a label for your population');
+      setError('Please enter a label for your household(s)');
       return;
     }
 
@@ -82,12 +82,12 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
   const formInputs = (
     <Stack>
       <Text size="sm" c="dimmed">
-        Give your population a descriptive name to help identify it later.
+        Give your household(s) a descriptive name.
       </Text>
 
       <TextInput
-        label="Population Label"
-        placeholder="e.g., My Family 2025, California Low Income, UK National Average"
+        label="Household Label"
+        placeholder="e.g., My Family 2025, All California Households, UK National Households"
         value={label}
         onChange={(event) => {
           setLabel(event.currentTarget.value);
@@ -99,7 +99,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
       />
 
       <Text size="xs" c="dimmed">
-        This label will help you identify this population when creating simulations.
+        This label will help you identify this household(s) when creating simulations.
       </Text>
     </Stack>
   );
@@ -116,7 +116,7 @@ export default function SetPopulationLabelFrame({ onNavigate }: FlowComponentPro
 
   return (
     <FlowView
-      title="Name Your Population"
+      title="Name Your Household(s)"
       content={formInputs}
       primaryAction={primaryAction}
       cancelAction={cancelAction}

@@ -7,7 +7,9 @@ import { useIngredientReset } from '@/hooks/useIngredientReset';
 import { clearFlow } from '@/reducers/flowReducer';
 import { RootState } from '@/store';
 import { cacheMonitor } from '@/utils/cacheMonitor';
+import AutumnBudgetBanner from './shared/AutumnBudgetBanner';
 import HeaderNavigation from './shared/HomeHeader';
+import LegacyBanner from './shared/LegacyBanner';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
@@ -67,6 +69,8 @@ export default function Layout() {
     >
       <AppShell.Header p={0}>
         <HeaderNavigation />
+        <LegacyBanner />
+        <AutumnBudgetBanner />
       </AppShell.Header>
 
       <AppShell.Navbar>

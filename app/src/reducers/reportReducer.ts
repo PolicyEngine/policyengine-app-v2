@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { CURRENT_YEAR } from '@/constants';
 import { countryIds, DEFAULT_COUNTRY } from '@/libs/countries';
 import { RootState } from '@/store';
 import { Report, ReportOutput } from '@/types/ingredients/Report';
@@ -15,6 +16,7 @@ const initialState: ReportState = {
   id: '',
   label: null,
   countryId: DEFAULT_COUNTRY, // Fallback until clearReport thunk sets actual country from URL
+  year: CURRENT_YEAR, // Default to current year until set by ReportCreationFrame
   simulationIds: [],
   apiVersion: null,
   status: 'pending',
@@ -64,6 +66,12 @@ export const reportSlice = createSlice({
     // Update country ID (rarely used - clearReport thunk handles initialization)
     updateCountryId: (state, action: PayloadAction<typeof initialState.countryId>) => {
       state.countryId = action.payload;
+    },
+
+    // Update report year
+    updateYear: (state, action: PayloadAction<string>) => {
+      state.year = action.payload;
+      state.updatedAt = new Date().toISOString();
     },
 
     // Update report label
@@ -134,6 +142,7 @@ export const reportSlice = createSlice({
       // Clear any existing report data
       state.id = '';
       state.label = null;
+      state.year = CURRENT_YEAR; // Reset to current year
       state.simulationIds = [];
       state.status = 'pending';
       state.output = null;
@@ -157,6 +166,7 @@ export const reportSlice = createSlice({
       // Clear all report data
       state.id = '';
       state.label = null;
+      state.year = CURRENT_YEAR; // Reset to current year
       state.simulationIds = [];
       state.status = 'pending';
       state.output = null;
@@ -181,6 +191,7 @@ export const {
   removeSimulationId,
   updateApiVersion,
   updateCountryId,
+  updateYear,
   updateLabel,
   updateReportId,
   updateReportStatus,
@@ -198,5 +209,7 @@ export const selectActiveSimulationPosition = (state: RootState): 0 | 1 =>
   state.report.activeSimulationPosition;
 
 export const selectMode = (state: RootState): 'standalone' | 'report' => state.report.mode;
+
+export const selectReportYear = (state: RootState): string => state.report.year;
 
 export default reportSlice.reducer;

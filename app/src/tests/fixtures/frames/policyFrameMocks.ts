@@ -84,3 +84,47 @@ export const mockParameterMetadata = {
   maxValue: 1,
   scale: 100,
 };
+
+// Mock report states for auto-naming tests
+export const mockReportStateStandalone = {
+  id: '',
+  label: null,
+  countryId: 'us' as const,
+  apiVersion: null,
+  simulationIds: [],
+  status: 'pending' as const,
+  output: null,
+  mode: 'standalone' as const,
+  activeSimulationPosition: 0 as const,
+};
+
+export const mockReportStateReportWithName = {
+  id: '456',
+  label: '2025 Tax Analysis',
+  countryId: 'us' as const,
+  apiVersion: null,
+  simulationIds: [],
+  status: 'pending' as const,
+  output: null,
+  mode: 'report' as const,
+  activeSimulationPosition: 0 as const,
+};
+
+export const mockReportStateReportWithoutName = {
+  id: '789',
+  label: null,
+  countryId: 'us' as const,
+  apiVersion: null,
+  simulationIds: [],
+  status: 'pending' as const,
+  output: null,
+  mode: 'report' as const,
+  activeSimulationPosition: 0 as const,
+};
+
+// Auto-naming test constants
+export const TEST_REPORT_NAME = '2025 Tax Analysis';
+export const EXPECTED_BASELINE_POLICY_LABEL = 'Baseline policy';
+export const EXPECTED_REFORM_POLICY_LABEL = 'Reform policy';
+export const EXPECTED_BASELINE_WITH_REPORT_LABEL = '2025 Tax Analysis baseline policy';
+export const EXPECTED_REFORM_WITH_REPORT_LABEL = '2025 Tax Analysis reform policy';

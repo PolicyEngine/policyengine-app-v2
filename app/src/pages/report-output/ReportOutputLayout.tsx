@@ -1,4 +1,5 @@
 import {
+  IconCalendar,
   IconChevronLeft,
   IconClock,
   IconPencil,
@@ -26,6 +27,7 @@ import { ReportSidebar } from './ReportSidebar';
 interface ReportOutputLayoutProps {
   reportId: string;
   reportLabel?: string;
+  reportYear?: string;
   timestamp?: string;
   tabs: Array<{ value: string; label: string }>;
   activeTab: string;
@@ -54,6 +56,7 @@ interface ReportOutputLayoutProps {
 export default function ReportOutputLayout({
   reportId,
   reportLabel,
+  reportYear,
   timestamp = 'Ran today at 05:23:41',
   tabs,
   activeTab,
@@ -133,6 +136,17 @@ export default function ReportOutputLayout({
 
           {/* Timestamp and View All */}
           <Group gap={spacing.xs} align="center">
+            {reportYear && (
+              <>
+                <IconCalendar size={16} color={colors.text.secondary} />
+                <Text size="sm" c="dimmed">
+                  Year: {reportYear}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  •
+                </Text>
+              </>
+            )}
             <IconClock size={16} color={colors.text.secondary} />
             <Text size="sm" c="dimmed">
               {timestamp}

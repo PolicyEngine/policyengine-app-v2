@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { formatPercent, ordinal, precision } from '@/utils/formatters';
+import { currencySymbol, formatPercent, ordinal, precision } from '@/utils/formatters';
 
 describe('formatters utilities', () => {
   describe('ordinal', () => {
@@ -66,6 +66,16 @@ describe('formatters utilities', () => {
         maximumFractionDigits: 1,
       });
       expect(result).toBe('5.3%');
+    });
+  });
+
+  describe('currencySymbol', () => {
+    test('given US then returns dollar sign', () => {
+      expect(currencySymbol('us')).toBe('$');
+    });
+
+    test('given UK then returns pound sign', () => {
+      expect(currencySymbol('uk')).toBe('£');
     });
   });
 });

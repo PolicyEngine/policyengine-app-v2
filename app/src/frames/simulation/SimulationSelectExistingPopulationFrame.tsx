@@ -239,8 +239,8 @@ export default function SimulationSelectExistingPopulationFrame({
   if (isLoading) {
     return (
       <FlowView
-        title="Select an Existing Population"
-        content={<Text>Loading populations...</Text>}
+        title="Select Existing Household(s)"
+        content={<Text>Loading households...</Text>}
         buttonPreset="none"
       />
     );
@@ -249,7 +249,7 @@ export default function SimulationSelectExistingPopulationFrame({
   if (isError) {
     return (
       <FlowView
-        title="Select an Existing Population"
+        title="Select Existing Household(s)"
         content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
         buttonPreset="none"
       />
@@ -259,8 +259,8 @@ export default function SimulationSelectExistingPopulationFrame({
   if (householdPopulations.length === 0 && geographicPopulations.length === 0) {
     return (
       <FlowView
-        title="Select an Existing Population"
-        content={<Text>No populations available. Please create a new population.</Text>}
+        title="Select Existing Household(s)"
+        content={<Text>No households available. Please create new household(s).</Text>}
         buttonPreset="cancel-only"
       />
     );
@@ -368,7 +368,7 @@ export default function SimulationSelectExistingPopulationFrame({
 
   return (
     <FlowView
-      title="Select an Existing Population"
+      title="Select Existing Household(s)"
       variant="cardList"
       cardListItems={cardListItems}
       primaryAction={primaryAction}

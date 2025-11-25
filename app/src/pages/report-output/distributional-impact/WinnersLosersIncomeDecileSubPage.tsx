@@ -2,14 +2,14 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import { DEFAULT_CHART_CONFIG, downloadCsv } from '@/utils/chartUtils';
+import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -28,7 +28,7 @@ const CATEGORIES = [
 
 const COLOR_MAP: Record<string, string> = {
   'Gain more than 5%': colors.primary[700],
-  'Gain less than 5%': colors.primary[300],
+  'Gain less than 5%': colors.primary.alpha[60],
   'No change': colors.gray[200],
   'Lose less than 5%': colors.gray[400],
   'Lose more than 5%': colors.gray[600],
@@ -54,6 +54,8 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const { height: viewportHeight } = useViewportSize();
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
   const deciles = output.intra_decile.deciles;
@@ -192,7 +194,6 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   }
 
   const layout = {
-    height: mobile ? 300 : 450,
     barmode: 'stack',
     grid: {
       rows: 2,
@@ -261,7 +262,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
             ...DEFAULT_CHART_CONFIG,
             locale: localeCode(countryId),
           }}
-          style={{ width: '100%', marginBottom: mobile ? 0 : 50 }}
+          style={{ width: '100%', height: chartHeight, marginBottom: mobile ? 0 : 50 }}
         />
 
         {description}

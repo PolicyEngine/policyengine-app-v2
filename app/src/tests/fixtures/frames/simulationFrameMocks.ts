@@ -59,6 +59,7 @@ export const mockDispatch = vi.fn();
 export const createMockSimulationState = (overrides?: {
   mode?: 'standalone' | 'report';
   activeSimulationPosition?: 0 | 1;
+  reportLabel?: string | null;
   simulation?: Simulation | null;
   policy?: any; // Old structure
   population?: any; // Old structure
@@ -66,6 +67,7 @@ export const createMockSimulationState = (overrides?: {
   const {
     mode = 'standalone',
     activeSimulationPosition = 0,
+    reportLabel = null,
     simulation = null,
     policy = {},
     population = {},
@@ -74,7 +76,7 @@ export const createMockSimulationState = (overrides?: {
   return {
     report: {
       reportId: undefined,
-      label: null,
+      label: reportLabel,
       countryId: 'us',
       apiVersion: null,
       simulationIds: [],
@@ -91,4 +93,41 @@ export const createMockSimulationState = (overrides?: {
     policy,
     population,
   };
+};
+
+// Mock report states for auto-naming tests
+export const mockReportStateStandalone = {
+  id: '',
+  label: null,
+  countryId: 'us' as const,
+  apiVersion: null,
+  simulationIds: [],
+  status: 'pending' as const,
+  output: null,
+  mode: 'standalone' as const,
+  activeSimulationPosition: 0 as const,
+};
+
+export const mockReportStateReportWithName = {
+  id: '456',
+  label: '2025 Tax Analysis',
+  countryId: 'us' as const,
+  apiVersion: null,
+  simulationIds: [],
+  status: 'pending' as const,
+  output: null,
+  mode: 'report' as const,
+  activeSimulationPosition: 0 as const,
+};
+
+export const mockReportStateReportWithoutName = {
+  id: '789',
+  label: null,
+  countryId: 'us' as const,
+  apiVersion: null,
+  simulationIds: [],
+  status: 'pending' as const,
+  output: null,
+  mode: 'report' as const,
+  activeSimulationPosition: 0 as const,
 };

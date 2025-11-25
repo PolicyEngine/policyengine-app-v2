@@ -1,20 +1,11 @@
-export const MOCK_NAV_LINKS = [{ label: 'Donate', path: '/us/donate' }];
-
-export const MOCK_ABOUT_LINKS = [
-  { label: 'Team', path: '/us/team' },
-  { label: 'Supporters', path: '/us/supporters' },
-];
-
-export const MOCK_HEADER_PROPS = {
-  opened: false,
-  onOpen: () => {},
-  onClose: () => {},
-  navLinks: MOCK_NAV_LINKS,
-  aboutLinks: MOCK_ABOUT_LINKS,
-  onNavClick: () => {},
-} as const;
+/**
+ * Legacy header mocks - kept for backwards compatibility
+ * New tests should use MOCK_NAV_ITEMS from HomeMocks.ts
+ */
 
 export const EXPECTED_HEADER_TEXT = {
+  HOME: 'Home',
+  RESEARCH: 'Research',
   ABOUT: 'About',
   DONATE: 'Donate',
   TEAM: 'Team',

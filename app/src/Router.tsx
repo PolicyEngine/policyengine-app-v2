@@ -6,6 +6,8 @@ import { PolicyCreationFlow } from './flows/policyCreationFlow';
 import { PopulationCreationFlow } from './flows/populationCreationFlow';
 import { ReportCreationFlow } from './flows/reportCreationFlow';
 import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import AppPage from './pages/AppPage';
+import BlogPage from './pages/Blog.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
@@ -14,20 +16,23 @@ import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
+import ResearchPage from './pages/Research.page';
 import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
+import { RedirectToCountry } from './routing/RedirectToCountry';
 
 const router = createBrowserRouter(
   [
     {
       path: '/',
-      // TODO: Replace with dynamic default country based on user location/preferences
-      element: <Navigate to="/us" replace />,
+      // Dynamically detect and redirect to user's country
+      element: <RedirectToCountry />,
     },
     {
       path: '/:countryId',
@@ -77,12 +82,12 @@ const router = createBrowserRouter(
                   element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
-                  path: 'populations',
+                  path: 'households',
                   element: <PopulationsPage />,
                 },
                 {
-                  path: 'populations/create',
-                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="populations" />,
+                  path: 'households/create',
+                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="households" />,
                 },
                 {
                   path: 'policies',
@@ -145,6 +150,38 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+            {
+              path: 'research',
+              element: <ResearchPage />,
+            },
+            {
+              path: 'research/:slug',
+              element: <BlogPage />,
+            },
+          ],
+        },
+        // Interactive app routes - use StaticLayout with CountryAppGuard
+        {
+          element: <CountryAppGuard />,
+          children: [
+            {
+              element: <StaticLayout />,
+              children: [
+                {
+                  path: ':slug',
+                  element: <AppPage />,
+                },
+              ],
+            },
+          ],
+        },
+        // Legacy routes - redirect old blog URLs to new research URLs
+        {
+          children: [
+            {
+              path: 'blog/:postName',
+              element: <Navigate to="research/:postName" replace />,
             },
           ],
         },

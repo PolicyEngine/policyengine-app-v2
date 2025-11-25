@@ -1,8 +1,31 @@
-export const MOCK_NAV_LINKS = [{ label: 'Donate', path: '/us/donate' }];
+import { vi } from 'vitest';
+import { NavItemSetup } from '@/components/home-header/NavItem';
 
-export const MOCK_ABOUT_LINKS = [
-  { label: 'Team', path: '/us/team' },
-  { label: 'Supporters', path: '/us/supporters' },
+export const MOCK_NAV_ITEMS: NavItemSetup[] = [
+  {
+    label: 'Home',
+    onClick: vi.fn(),
+    hasDropdown: false,
+  },
+  {
+    label: 'Research',
+    onClick: vi.fn(),
+    hasDropdown: false,
+  },
+  {
+    label: 'About',
+    onClick: vi.fn(),
+    hasDropdown: true,
+    dropdownItems: [
+      { label: 'Team', onClick: vi.fn() },
+      { label: 'Supporters', onClick: vi.fn() },
+    ],
+  },
+  {
+    label: 'Donate',
+    onClick: vi.fn(),
+    hasDropdown: false,
+  },
 ];
 
 export const EXPECTED_TEXT = {

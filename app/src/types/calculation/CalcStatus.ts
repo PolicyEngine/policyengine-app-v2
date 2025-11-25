@@ -81,11 +81,6 @@ export interface CalcStatus {
   queuePosition?: number;
 
   /**
-   * Estimated time remaining in milliseconds
-   */
-  estimatedTimeRemaining?: number;
-
-  /**
    * The calculation result (only present when status is 'complete')
    */
   result?: CalcResult;

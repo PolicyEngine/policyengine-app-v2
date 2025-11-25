@@ -24,14 +24,14 @@ export function arePopulationsCompatible(
 
 /**
  * Gets a human-readable label for a population.
- * Priority: population.label → household ID → geography name → 'Unknown Population'
+ * Priority: population.label → household ID → geography name → 'Unknown Household(s)'
  *
  * @param population - The population object
  * @returns A human-readable label
  */
 export function getPopulationLabel(population: Population | null): string {
   if (!population) {
-    return 'Unknown Population';
+    return 'Unknown Household(s)';
   }
 
   // First priority: user-defined label
@@ -54,7 +54,7 @@ export function getPopulationLabel(population: Population | null): string {
     return population.geography.id;
   }
 
-  return 'Unknown Population';
+  return 'Unknown Household(s)';
 }
 
 /**

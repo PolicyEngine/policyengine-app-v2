@@ -153,7 +153,9 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState);
 
       // Then
-      expect(screen.getByText('Confirm Geographic Selection')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Confirm household collection' })
+      ).toBeInTheDocument();
       expect(screen.getByText('National')).toBeInTheDocument();
       expect(screen.getByText('United States')).toBeInTheDocument();
     });
@@ -188,7 +190,9 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState);
 
       // Then
-      expect(screen.getByText('Confirm Geographic Selection')).toBeInTheDocument();
+      expect(
+        screen.getByRole('heading', { name: 'Confirm household collection' })
+      ).toBeInTheDocument();
       expect(screen.getByText('State')).toBeInTheDocument();
       expect(screen.getByText('California')).toBeInTheDocument();
     });
@@ -224,7 +228,7 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState);
 
       // When
-      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
+      const submitButton = screen.getByRole('button', { name: /Create household collection/i });
       await user.click(submitButton);
 
       // Then
@@ -249,7 +253,7 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState);
 
       // When
-      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
+      const submitButton = screen.getByRole('button', { name: /Create household collection/i });
       await user.click(submitButton);
 
       // Then
@@ -274,7 +278,7 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState, {}, { ...mockFlowProps, isInSubflow: false });
 
       // When
-      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
+      const submitButton = screen.getByRole('button', { name: /Create household collection/i });
       await user.click(submitButton);
 
       // Then
@@ -292,7 +296,7 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState, {}, { ...mockFlowProps, isInSubflow: true });
 
       // When
-      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
+      const submitButton = screen.getByRole('button', { name: /Create household collection/i });
       await user.click(submitButton);
 
       // Then
@@ -314,7 +318,7 @@ describe('GeographicConfirmationFrame', () => {
       renderComponent(populationState);
 
       // When
-      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
+      const submitButton = screen.getByRole('button', { name: /Create household collection/i });
       await user.click(submitButton);
 
       // Then
@@ -365,7 +369,7 @@ describe('GeographicConfirmationFrame', () => {
       );
 
       // When
-      const submitButton = screen.getByRole('button', { name: /Create Geographic Association/i });
+      const submitButton = screen.getByRole('button', { name: /Create household collection/i });
       await user.click(submitButton);
 
       // Then

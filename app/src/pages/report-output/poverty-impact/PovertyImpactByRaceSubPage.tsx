@@ -2,7 +2,7 @@ import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
-import { useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
 import { colors } from '@/designTokens/colors';
@@ -10,7 +10,7 @@ import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
 import { relativeChangeMessage } from '@/utils/chartMessages';
-import { DEFAULT_CHART_CONFIG, downloadCsv } from '@/utils/chartUtils';
+import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
 import { formatNumber, formatPercent, localeCode, precision } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -22,6 +22,8 @@ export default function PovertyImpactByRaceSubPage({ output }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
   const metadata = useSelector((state: RootState) => state.metadata);
+  const { height: viewportHeight } = useViewportSize();
+  const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
   type RaceData = Record<string, { baseline: number; reform: number }>;
@@ -126,7 +128,6 @@ export default function PovertyImpactByRaceSubPage({ output }: Props) {
   ];
 
   const layout = {
-    height: mobile ? 300 : 500,
     yaxis: {
       title: { text: 'Relative change in poverty rate' },
       tickformat: `+,.${ytickPrecision}%`,
@@ -169,7 +170,7 @@ export default function PovertyImpactByRaceSubPage({ output }: Props) {
             ...DEFAULT_CHART_CONFIG,
             locale: localeCode(countryId),
           }}
-          style={{ width: '100%' }}
+          style={{ width: '100%', height: chartHeight }}
         />
 
         <Text size="sm" c="dimmed">

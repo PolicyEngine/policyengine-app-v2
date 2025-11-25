@@ -85,3 +85,17 @@ export function getBaseChartLayout(mobile: boolean) {
     yaxis: { fixedrange: true },
   };
 }
+
+/**
+ * Calculate responsive chart height with min/max constraints
+ * @param viewportHeight - Current viewport height in pixels
+ * @param mobile - Whether the chart is being rendered on mobile
+ * @returns Clamped chart height in pixels
+ */
+export function getClampedChartHeight(viewportHeight: number, mobile: boolean): number {
+  const targetHeight = mobile ? viewportHeight * 0.4 : viewportHeight * 0.5;
+  const minHeight = mobile ? 250 : 400;
+  const maxHeight = mobile ? 400 : 700;
+
+  return Math.max(minHeight, Math.min(maxHeight, targetHeight));
+}

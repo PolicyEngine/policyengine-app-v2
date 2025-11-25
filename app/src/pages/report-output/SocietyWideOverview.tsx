@@ -1,7 +1,9 @@
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { colors, spacing } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { formatBudgetaryImpact } from '@/utils/formatPowers';
+import { currencySymbol } from '@/utils/formatters';
 
 interface SocietyWideOverviewProps {
   output: SocietyWideReportOutput;
@@ -13,6 +15,8 @@ interface SocietyWideOverviewProps {
  * Follows the conditional display logic from the v1 PolicyBreakdown component
  */
 export default function SocietyWideOverview({ output }: SocietyWideOverviewProps) {
+  const countryId = useCurrentCountry();
+
   // Calculate budgetary impact
   const budgetaryImpact = output.budget.budgetary_impact;
 
@@ -76,6 +80,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
 
     const formatted = formatBudgetaryImpact(budgetaryImpact);
     const action = budgetaryImpact > 0 ? 'Raises' : 'Costs';
+    const isPositive = budgetaryImpact > 0;
 
     return (
       <Box>
@@ -88,17 +93,22 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
           Budgetary impact
         </Text>
         <Group gap={spacing.xs} align="baseline" mt={spacing.sm}>
-          <Text variant="metricValue" c={colors.primary[700]}>
-            {action}
+          <Text variant="metricValue" c={isPositive ? colors.primary[700] : colors.gray[700]}>
+            {action}{' '}
           </Text>
-          <Text variant="metricValue" c={colors.primary[700]}>
-            ${formatted.display}
+          <Text
+            variant="metricValue"
+            c={isPositive ? colors.primary[700] : colors.gray[700]}
+            style={{
+              textDecoration: 'underline',
+              textDecorationThickness: '1px',
+              textUnderlineOffset: '3px',
+            }}
+          >
+            {currencySymbol(countryId)}
+            {formatted.display}
+            {formatted.label && ` ${formatted.label}`}
           </Text>
-          {formatted.label && (
-            <Text variant="metricValue" c={colors.primary[700]}>
-              {formatted.label}
-            </Text>
-          )}
         </Group>
       </Box>
     );
@@ -143,23 +153,43 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
           <Stack gap={spacing.xs} mt={spacing.sm}>
             <Group gap={spacing.xs} align="baseline">
               <Text variant="metricValue" c={colors.primary[700]}>
-                Raises
+                Raises net income for{' '}
               </Text>
-              <Text variant="metricLabel">net income for</Text>
-              <Text variant="metricValue" c={colors.primary[700]}>
+              <Text
+                variant="metricValue"
+                c={colors.primary[700]}
+                style={{
+                  textDecoration: 'underline',
+                  textDecorationThickness: '1px',
+                  textUnderlineOffset: '3px',
+                }}
+              >
                 {winnersFormatted}%
               </Text>
-              <Text variant="metricDescription">of people</Text>
+              <Text variant="metricValue" c={colors.primary[700]}>
+                {' '}
+                of people
+              </Text>
             </Group>
             <Group gap={spacing.xs} align="baseline">
-              <Text variant="metricValue" c={colors.primary[700]}>
-                Lowers
+              <Text variant="metricValue" c={colors.gray[700]}>
+                Lowers net income for{' '}
               </Text>
-              <Text variant="metricLabel">net income for</Text>
-              <Text variant="metricValue" c={colors.primary[700]}>
+              <Text
+                variant="metricValue"
+                c={colors.gray[700]}
+                style={{
+                  textDecoration: 'underline',
+                  textDecorationThickness: '1px',
+                  textUnderlineOffset: '3px',
+                }}
+              >
                 {losersFormatted}%
               </Text>
-              <Text variant="metricDescription">of people</Text>
+              <Text variant="metricValue" c={colors.gray[700]}>
+                {' '}
+                of people
+              </Text>
             </Group>
           </Stack>
         </Box>
@@ -182,14 +212,24 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
           Net income
         </Text>
         <Group gap={spacing.xs} align="baseline" mt={spacing.sm}>
-          <Text variant="metricValue" c={colors.primary[700]}>
-            {action}
+          <Text variant="metricValue" c={hasWinners ? colors.primary[700] : colors.gray[700]}>
+            {action} net income for{' '}
           </Text>
-          <Text variant="metricLabel">net income for</Text>
-          <Text variant="metricValue" c={colors.primary[700]}>
+          <Text
+            variant="metricValue"
+            c={hasWinners ? colors.primary[700] : colors.gray[700]}
+            style={{
+              textDecoration: 'underline',
+              textDecorationThickness: '1px',
+              textUnderlineOffset: '3px',
+            }}
+          >
             {value}%
           </Text>
-          <Text variant="metricDescription">of people</Text>
+          <Text variant="metricValue" c={hasWinners ? colors.primary[700] : colors.gray[700]}>
+            {' '}
+            of people
+          </Text>
         </Group>
       </Box>
     );
@@ -253,11 +293,21 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
           Poverty
         </Text>
         <Group gap={spacing.xs} align="baseline" mt={spacing.sm}>
-          <Text variant="metricValue" c={colors.primary[700]}>
-            {action}
+          <Text
+            variant="metricValue"
+            c={povertyRateChange < 0 ? colors.primary[700] : colors.gray[700]}
+          >
+            {action} poverty by{' '}
           </Text>
-          <Text variant="metricLabel">poverty by</Text>
-          <Text variant="metricValue" c={colors.primary[700]}>
+          <Text
+            variant="metricValue"
+            c={povertyRateChange < 0 ? colors.primary[700] : colors.gray[700]}
+            style={{
+              textDecoration: 'underline',
+              textDecorationThickness: '1px',
+              textUnderlineOffset: '3px',
+            }}
+          >
             {formatted}%
           </Text>
         </Group>

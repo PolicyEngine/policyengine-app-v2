@@ -73,6 +73,7 @@ describe('Single Simulation Report Flow Integration', () => {
         report: {
           id: '',
           countryId: 'us' as const,
+          year: '2024',
           apiVersion: 'v1',
           label: null,
           simulationIds: [],

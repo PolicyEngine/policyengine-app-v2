@@ -98,7 +98,7 @@ describe('SimulationSelectExistingPopulationFrame', () => {
     render(<SimulationSelectExistingPopulationFrame {...mockFlowProps} />);
 
     // Then
-    expect(screen.getByText('Loading populations...')).toBeInTheDocument();
+    expect(screen.getByText('Loading households...')).toBeInTheDocument();
   });
 
   test('given error loading populations then displays error message', () => {
@@ -125,7 +125,7 @@ describe('SimulationSelectExistingPopulationFrame', () => {
 
     // Then
     expect(
-      screen.getByText('No populations available. Please create a new population.')
+      screen.getByText('No households available. Please create new household(s).')
     ).toBeInTheDocument();
   });
 

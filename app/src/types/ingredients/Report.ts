@@ -16,6 +16,7 @@ export interface Report {
   id?: string; // Optional - populated after creation like Policy
   label?: string | null; // Optional - user-defined name for the report
   countryId: (typeof countryIds)[number];
+  year: string; // Report calculation year (e.g., '2025')
   apiVersion: string | null;
   simulationIds: string[];
   status: 'pending' | 'complete' | 'error';

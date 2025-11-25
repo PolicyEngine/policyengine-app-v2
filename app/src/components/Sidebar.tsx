@@ -32,7 +32,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
     { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
     { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
-    { label: 'Populations', icon: IconUsers, path: `/${countryId}/populations` },
+    { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
   ];
 
   const resourceItems = [
@@ -52,11 +52,10 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       external: true,
     },
     {
-      label: 'Visit blog',
+      label: 'View research',
       icon: IconBook,
-      path: 'https://blog.example.com',
+      path: `/${countryId}/research`,
       external: true,
-      disabled: true,
     },
   ];
 

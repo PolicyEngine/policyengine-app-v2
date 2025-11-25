@@ -438,7 +438,7 @@ describe('UserPopulationOps', () => {
       const result = UserPopulationOps.getLabel(subNationalPop);
 
       // Then
-      expect(result).toBe(`Regional: ${POPULATION_IDS.GEOGRAPHY_1}`);
+      expect(result).toBe(`${EXPECTED_LABELS.REGIONAL_PREFIX} ${POPULATION_IDS.GEOGRAPHY_1}`);
     });
   });
 

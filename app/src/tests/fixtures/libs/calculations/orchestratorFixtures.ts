@@ -21,6 +21,7 @@ export const createMockCalcConfig = (overrides?: Partial<CalcStartConfig>): Calc
   calcId: ORCHESTRATOR_TEST_CONSTANTS.CALC_IDS.REPORT,
   targetType: 'report',
   countryId: ORCHESTRATOR_TEST_CONSTANTS.COUNTRY_IDS.US,
+  year: '2024',
   simulations: {
     simulation1: {
       id: 'sim-1',

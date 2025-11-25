@@ -9,10 +9,28 @@ export const CURRENT_YEAR = '2025';
 export const TEMP_REPORT_TIME = 2025;
 
 /**
- * Default date for parameter definition lookups when no specific date is provided
- * Used for querying current law parameter values from metadata
+ * Get parameter definition date for a given year
+ * Used for querying parameter values from metadata at a specific point in time
+ *
+ * @param year - The year to get the parameter definition date for (e.g., '2025')
+ * @returns Date string in format 'YYYY-01-01' for querying parameters
+ *
+ * @example
+ * ```typescript
+ * const date = getParamDefinitionDate('2025'); // Returns '2025-01-01'
+ * ```
  */
-export const UNCONFIRMED_PARAM_DEFINITION_DATE = '2025-01-01';
+export function getParamDefinitionDate(year?: string): string {
+  if (!year) {
+    console.error(
+      '[getParamDefinitionDate] No year provided - this is likely a bug. ' +
+        `Falling back to CURRENT_YEAR (${CURRENT_YEAR}). ` +
+        'Please ensure year is passed from report context.'
+    );
+    return `${CURRENT_YEAR}-01-01`;
+  }
+  return `${year}-01-01`;
+}
 
 /**
  * Mock user ID used for anonymous/unauthenticated users

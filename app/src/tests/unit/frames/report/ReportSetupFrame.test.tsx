@@ -135,7 +135,7 @@ describe('ReportSetupFrame', () => {
       ).toBeInTheDocument();
       expect(
         screen.getByText(
-          `Policy #${MOCK_HOUSEHOLD_SIMULATION.policyId} • Population #${MOCK_HOUSEHOLD_SIMULATION.populationId}`
+          `Policy #${MOCK_HOUSEHOLD_SIMULATION.policyId} • Household(s) #${MOCK_HOUSEHOLD_SIMULATION.populationId}`
         )
       ).toBeInTheDocument();
     });
