@@ -1,24 +1,39 @@
 // UK logos
+
+// US logos
+import aei from '@/images/logos/orgs/aei.png';
+import amplifi from '@/images/logos/orgs/amplifi.png';
 import asi from '@/images/logos/orgs/asi.webp';
+import atlantaFed from '@/images/logos/orgs/atlanta-fed.png';
 import cec from '@/images/logos/orgs/cec.svg';
 import centre from '@/images/logos/orgs/centre.png';
-// US logos
+import cfi from '@/images/logos/orgs/cfi.png';
 import cgo from '@/images/logos/orgs/cgo.jpg';
 import cps from '@/images/logos/orgs/cps.png';
+import dpga from '@/images/logos/orgs/dpga.png';
 import epmt from '@/images/logos/orgs/epmt.jpg';
 import f4gi from '@/images/logos/orgs/f4gi.jpg';
+import gary from '@/images/logos/orgs/gary-community-ventures.png';
+import georgetown from '@/images/logos/orgs/georgetown.png';
 import gpew from '@/images/logos/orgs/gpew.png';
+import iea from '@/images/logos/orgs/iea.png';
+import jec from '@/images/logos/orgs/jec.png';
 import liberalParty from '@/images/logos/orgs/liberal-party.jpeg';
 import mca from '@/images/logos/orgs/mca.jpg';
+import mirza from '@/images/logos/orgs/mirza.png';
 import mothersOutreach from '@/images/logos/orgs/mothers-outreach-network.png';
 import myfriendben from '@/images/logos/orgs/myfriendben.png';
+import nber from '@/images/logos/orgs/nber.png';
 import niesr from '@/images/logos/orgs/niesr.jpeg';
 import nisk from '@/images/logos/orgs/niskanen-center.png';
+import ppp from '@/images/logos/orgs/peoples-policy-project.png';
 import pn3policy from '@/images/logos/orgs/pn3policy.png';
 import smf from '@/images/logos/orgs/smf.png';
 import ubicenterLogo from '@/images/logos/orgs/ubicenter.png';
 import ubilabs from '@/images/logos/orgs/ubilabs.png';
+import uhero from '@/images/logos/orgs/uhero.png';
 import ukeu from '@/images/logos/orgs/ukeu.svg';
+import umich from '@/images/logos/orgs/umich.png';
 
 interface Organization {
   name: string;
@@ -88,8 +103,98 @@ export const orgData: OrgData = {
       logo: cec,
       link: 'https://citizenseconomiccouncil.org/',
     },
+    iea: {
+      name: 'Institute of Economic Affairs',
+      logo: iea,
+      link: 'https://iea.org.uk/',
+    },
+    ppp: {
+      name: "People's Policy Project",
+      logo: ppp,
+      link: 'https://www.peoplespolicyproject.org/',
+    },
   },
   us: {
+    nber: {
+      name: 'National Bureau of Economic Research',
+      logo: nber,
+      link: 'https://www.nber.org/',
+    },
+    atlanta_fed: {
+      name: 'Federal Reserve Bank of Atlanta',
+      logo: atlantaFed,
+      link: 'https://www.atlantafed.org/',
+    },
+    umich: {
+      name: 'University of Michigan',
+      logo: umich,
+      link: 'https://umich.edu/',
+    },
+    georgetown: {
+      name: 'Georgetown University',
+      logo: georgetown,
+      link: 'https://www.georgetown.edu/',
+    },
+    uhero: {
+      name: 'UHERO',
+      logo: uhero,
+      link: 'https://uhero.hawaii.edu/',
+    },
+    jec: {
+      name: 'Joint Economic Committee',
+      logo: jec,
+      link: 'https://www.jec.senate.gov/',
+    },
+    aei: {
+      name: 'American Enterprise Institute',
+      logo: aei,
+      link: 'https://www.aei.org/',
+    },
+    niskanen_center: {
+      name: 'Niskanen Center',
+      logo: nisk,
+      link: 'https://www.niskanencenter.org/',
+    },
+    cfi: {
+      name: 'Colorado Fiscal Institute',
+      logo: cfi,
+      link: 'https://www.coloradofiscal.org/',
+    },
+    pn3policy: {
+      name: 'Prenatal-to-3 Policy Impact Center',
+      logo: pn3policy,
+      link: 'https://www.pn3policy.org/',
+    },
+    mothers_outreach_network: {
+      name: 'Mothers Outreach Network',
+      logo: mothersOutreach,
+      link: 'https://www.mothersoutreachnetwork.org/',
+    },
+    dpga: {
+      name: 'Digital Public Goods Alliance',
+      logo: dpga,
+      link: 'https://digitalpublicgoods.net/',
+    },
+    mfb: {
+      name: 'MyFriendBen',
+      logo: myfriendben,
+      link: 'https://www.myfriendben.org/',
+    },
+    amplifi: {
+      name: 'Amplifi',
+      logo: amplifi,
+      link: 'https://www.amplifibenefit.com/',
+    },
+    mirza: {
+      name: 'Mirza',
+      logo: mirza,
+      link: 'https://www.mirza.com/',
+    },
+    gary: {
+      name: 'Gary Community Ventures',
+      logo: gary,
+      link: 'https://garycommunity.org/',
+    },
     f4gi: {
       name: 'Fund for Guaranteed Income',
       logo: f4gi,
@@ -98,42 +203,22 @@ export const orgData: OrgData = {
     mca: {
       name: 'Maryland Child Alliance',
       logo: mca,
-      link: 'https://www.marylandchildalliance.org/revenue-raisers',
+      link: 'https://www.marylandchildalliance.org/',
     },
     epmt: {
       name: 'End Poverty Make Trillions',
       logo: epmt,
       link: 'https://endpovertymaketrillions.com/',
     },
-    pn3policy: {
-      name: 'Prenatal-to-3 Policy Impact Center',
-      logo: pn3policy,
-      link: 'https://www.pn3policy.org/',
-    },
-    mfb: {
-      name: 'MyFriendBen',
-      logo: myfriendben,
-      link: 'https://www.myfriendben.org/',
-    },
-    niskanen_center: {
-      name: 'Niskanen Center',
-      logo: nisk,
-      link: 'https://www.niskanencenter.org/building-a-stronger-foundation-for-american-families-options-for-child-tax-credit-reform/',
-    },
     cgo: {
       name: 'Center for Growth and Opportunity',
       logo: cgo,
-      link: 'https://www.thecgo.org/research/how-does-targeted-cash-assistance-affect-incentives-to-work/',
+      link: 'https://www.thecgo.org/',
     },
     ubicenter: {
       name: 'UBI Center',
       logo: ubicenterLogo,
       link: 'https://www.ubicenter.org/',
-    },
-    mothers_outreach_network: {
-      name: 'Mothers Outreach Network',
-      logo: mothersOutreach,
-      link: 'https://www.mothersoutreachnetwork.org/',
     },
   },
 };

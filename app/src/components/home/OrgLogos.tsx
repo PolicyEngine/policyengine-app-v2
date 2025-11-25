@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Box, Flex } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -17,16 +18,42 @@ interface OrgLogosProps {
   logos: OrgData;
 }
 
+const LOGOS_PER_PAGE = 7;
+const CYCLE_INTERVAL = 4000;
+
 export default function OrgLogos({ logos }: OrgLogosProps) {
   const countryId = useCurrentCountry();
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Get organizations for current country, limit to 7
   const countryOrgs = logos[countryId as keyof OrgData];
   if (!countryOrgs) {
     return null;
   }
 
-  const orgsArray = Object.values(countryOrgs).slice(0, 7);
+  const orgsArray = Object.values(countryOrgs);
+  const totalPages = Math.ceil(orgsArray.length / LOGOS_PER_PAGE);
+
+  // Get current page of logos
+  const startIdx = currentPage * LOGOS_PER_PAGE;
+  const currentLogos = orgsArray.slice(startIdx, startIdx + LOGOS_PER_PAGE);
+
+  // Auto-cycle through pages
+  useEffect(() => {
+    if (totalPages <= 1) {
+      return;
+    }
+
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setCurrentPage((prev) => (prev + 1) % totalPages);
+        setIsTransitioning(false);
+      }, 300);
+    }, CYCLE_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [totalPages]);
 
   return (
     <Box mb={spacing['4xl']}>
@@ -34,8 +61,7 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
         style={{
           width: '100vw',
           marginLeft: 'calc(-50vw + 50%)',
-          overflowX: 'auto',
-          scrollSnapType: 'x mandatory',
+          overflowX: 'hidden',
         }}
       >
         <Flex
@@ -44,9 +70,13 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
           gap={spacing['5xl']}
           wrap="nowrap"
           px={spacing['4xl']}
-          style={{ minWidth: 'max-content' }}
+          style={{
+            minWidth: 'max-content',
+            opacity: isTransitioning ? 0 : 1,
+            transition: 'opacity 0.3s ease-in-out',
+          }}
         >
-          {orgsArray.map((org) => (
+          {currentLogos.map((org) => (
             <Box
               key={org.name}
               style={{
@@ -55,7 +85,6 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
                 alignItems: 'center',
                 justifyContent: 'center',
                 cursor: 'pointer',
-                scrollSnapAlign: 'start',
                 width: '120px',
                 height: '100px',
               }}
@@ -88,6 +117,32 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
           ))}
         </Flex>
       </Box>
+
+      {/* Pagination dots */}
+      {totalPages > 1 && (
+        <Flex justify="center" gap={spacing.xs} mt={spacing.lg}>
+          {Array.from({ length: totalPages }).map((_, idx) => (
+            <Box
+              key={idx}
+              onClick={() => {
+                setIsTransitioning(true);
+                setTimeout(() => {
+                  setCurrentPage(idx);
+                  setIsTransitioning(false);
+                }, 300);
+              }}
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                backgroundColor: idx === currentPage ? '#132F46' : '#D1D5DB',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+              }}
+            />
+          ))}
+        </Flex>
+      )}
     </Box>
   );
 }

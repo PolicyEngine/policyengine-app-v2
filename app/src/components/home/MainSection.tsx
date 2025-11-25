@@ -38,13 +38,13 @@ export default function MainSection() {
             fontFamily: typography.fontFamily.primary,
           }}
         >
-          Calculate taxes and benefits for any household.
+          Free, open-source tax and benefit analysis.
           <br />
           {countryId === 'uk'
             ? 'Model policy reforms across the UK.'
             : 'Model policy reforms across all 50 states.'}
           <br />
-          Power benefit screeners with accurate, up-to-date rules.
+          Power benefit access tools with accurate rules.
         </Text>
       </Stack>
     </Container>
