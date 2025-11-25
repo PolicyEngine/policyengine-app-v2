@@ -2,6 +2,7 @@
 import arnoldVentures from '@/images/logos/orgs/arnold-ventures.png';
 import asi from '@/images/logos/orgs/asi.webp';
 import cec from '@/images/logos/orgs/cec.svg';
+import dpga from '@/images/logos/orgs/dpga.svg';
 import centre from '@/images/logos/orgs/centre.png';
 import cfi from '@/images/logos/orgs/cfi.png';
 import cgo from '@/images/logos/orgs/cgo.png';
@@ -41,6 +42,11 @@ interface OrgData {
 
 export const orgData: OrgData = {
   uk: {
+    dpga: {
+      name: 'Digital Public Goods Alliance',
+      logo: dpga,
+      link: 'https://digitalpublicgoods.net/',
+    },
     ukeu: {
       name: 'UK in a Changing Europe',
       logo: ukeu,
@@ -103,6 +109,11 @@ export const orgData: OrgData = {
     },
   },
   us: {
+    dpga: {
+      name: 'Digital Public Goods Alliance',
+      logo: dpga,
+      link: 'https://digitalpublicgoods.net/',
+    },
     arnold_ventures: {
       name: 'Arnold Ventures',
       logo: arnoldVentures,
