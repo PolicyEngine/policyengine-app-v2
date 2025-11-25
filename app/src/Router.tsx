@@ -1,11 +1,9 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import FlowRouter from './components/FlowRouter';
-import Layout from './components/Layout';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import PathwayLayout from './components/PathwayLayout';
+import StandardLayout from './components/StandardLayout';
 import StaticLayout from './components/StaticLayout';
-import { PolicyCreationFlow } from './flows/policyCreationFlow';
-import { PopulationCreationFlow } from './flows/populationCreationFlow';
-import { ReportCreationFlow } from './flows/reportCreationFlow';
-import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import AppPage from './pages/AppPage';
+import BlogPage from './pages/Blog.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
@@ -15,17 +13,20 @@ import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
-import RICTCCalculatorPage from './pages/RICTCCalculator.page';
+import ResearchPage from './pages/Research.page';
 import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
+import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
+import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
+import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
+import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
-import { USOnlyGuard } from './routing/guards/USOnlyGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
-import { RedirectToLegacy } from './routing/RedirectToLegacy';
 
 const router = createBrowserRouter(
   [
@@ -43,7 +44,11 @@ const router = createBrowserRouter(
           element: <MetadataGuard />,
           children: [
             {
-              element: <Layout />,
+              element: (
+                <StandardLayout>
+                  <Outlet />
+                </StandardLayout>
+              ),
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
@@ -57,8 +62,13 @@ const router = createBrowserRouter(
         {
           element: <MetadataLazyLoader />,
           children: [
+            // Regular routes with standard layout
             {
-              element: <Layout />,
+              element: (
+                <StandardLayout>
+                  <Outlet />
+                </StandardLayout>
+              ),
               children: [
                 {
                   path: 'dashboard',
@@ -70,32 +80,16 @@ const router = createBrowserRouter(
                   element: <ReportsPage />,
                 },
                 {
-                  path: 'reports/create',
-                  element: <FlowRouter flow={ReportCreationFlow} returnPath="reports" />,
-                },
-                {
                   path: 'simulations',
                   element: <SimulationsPage />,
-                },
-                {
-                  path: 'simulations/create',
-                  element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
                   path: 'households',
                   element: <PopulationsPage />,
                 },
                 {
-                  path: 'households/create',
-                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="households" />,
-                },
-                {
                   path: 'policies',
                   element: <PoliciesPage />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <FlowRouter flow={PolicyCreationFlow} returnPath="policies" />,
                 },
                 {
                   path: 'account',
@@ -103,15 +97,27 @@ const router = createBrowserRouter(
                 },
               ],
             },
-          ],
-        },
-        // Routes that don't need metadata at all (no guard)
-        {
-          element: <Layout />,
-          children: [
+            // Pathway routes that manage their own layouts
             {
-              path: 'configurations',
-              element: <div>Configurations page</div>,
+              element: <PathwayLayout />,
+              children: [
+                {
+                  path: 'reports/create',
+                  element: <ReportPathwayWrapper />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create',
+                  element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <PolicyPathwayWrapper />,
+                },
+              ],
             },
           ],
         },
@@ -155,97 +161,37 @@ const router = createBrowserRouter(
               path: 'microsim',
               element: <MicrosimPage />,
             },
+            {
+              path: 'research',
+              element: <ResearchPage />,
+            },
+            {
+              path: 'research/:slug',
+              element: <BlogPage />,
+            },
           ],
         },
-        // US-only routes
+        // Interactive app routes - use StaticLayout with CountryAppGuard
         {
-          element: <USOnlyGuard />,
+          element: <CountryAppGuard />,
           children: [
             {
               element: <StaticLayout />,
               children: [
                 {
-                  path: 'rhode-island-ctc-calculator',
-                  element: <RICTCCalculatorPage />,
+                  path: ':slug',
+                  element: <AppPage />,
                 },
               ],
             },
           ],
         },
-        // Legacy routes - redirect to legacy.policyengine.org
+        // Legacy routes - redirect old blog URLs to new research URLs
         {
           children: [
-            // Research routes
-            {
-              path: 'research',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'research/:postName',
-              element: <RedirectToLegacy />,
-            },
             {
               path: 'blog/:postName',
-              element: <RedirectToLegacy />,
-            },
-            // Generic app routes
-            {
-              path: 'obbba-household-explorer',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'obbba-household-by-household',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'two-child-limit-comparison',
-              element: <RedirectToLegacy />,
-            },
-            // Country-specific legacy routes (must come before :appName catch-all)
-            {
-              path: 'cec',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: '2024-manifestos',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'trafwa-ctc-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'state-eitcs-ctcs',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'child-tax-credit-2024-election-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'child-tax-credit-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'givecalc',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'aca-calc',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: '2024-election-calculator',
-              element: <RedirectToLegacy />,
-            },
-            {
-              path: 'salternative',
-              element: <RedirectToLegacy />,
-            },
-            // Generic catch-all for any other app (must be last)
-            {
-              path: ':appName',
-              element: <RedirectToLegacy />,
+              element: <Navigate to="research/:postName" replace />,
             },
           ],
         },

@@ -7,24 +7,23 @@ import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 
 const differenceItems: BulletItem[] = [
   {
-    title: 'Comprehensive Policy Analysis:',
+    title: 'Policy analysis',
     description:
-      'Funds enhance our ability to create robust policy simulations that align policymaking with societal goals.',
+      'Your donation funds policy simulations that help lawmakers understand the real-world impacts of their decisions.',
   },
   {
-    title: 'Streamlined Benefit Access:',
+    title: 'Benefit access',
     description:
-      'Your support simplifies the process of determining eligibility, ensuring vital benefits reach those in need.',
+      'We build tools that help people discover benefits they qualify for and navigate application processes.',
   },
   {
-    title: 'Open-Source Development:',
+    title: 'Open-source development',
     description:
-      'Contributions support a transparent, collaborative approach, amplifying the impact of each donation.',
+      'All our code is public, letting researchers and developers worldwide build on our work.',
   },
   {
-    title: 'Global Impact:',
-    description:
-      'Donations fuel our work across the US and the UK, with plans to grow our policy tools globally.',
+    title: 'Global reach',
+    description: 'We operate in the US and UK, with plans to expand to more countries.',
   },
 ];
 
@@ -33,7 +32,7 @@ export default function DonatePage() {
     <StaticPageLayout title="Donate">
       <HeroSection
         title="Donate"
-        description="Your donation to PolicyEngine isn't just a gift — it's an investment in a transparent, open-source approach to public policy analysis and benefit access in the US and UK. By supporting our work, you're helping to extend the reach of our software, allowing a global community of contributors to continually enrich and expand its capabilities."
+        description="PolicyEngine is a nonprofit building free, open-source tools that help people understand tax and benefit policies. Your donation directly funds software development, research, and expansion to new countries."
       />
 
       <ContentSection title="The difference your support makes" variant="secondary">
@@ -41,15 +40,13 @@ export default function DonatePage() {
       </ContentSection>
 
       <CTASection
-        title="How to Donate"
+        title="How to donate"
         variant="accent"
         content={
           <RichTextBlock variant="inverted">
             <p>
-              Donate securely through our fiscal sponsor, the PSL Foundation. We accept credit card,
-              bank transfer, or check. After contributing, please email{' '}
-              <a href="mailto:hello@policyengine.org">hello@policyengine.org</a> to ensure we route
-              and acknowledge your gift.
+              Donate securely through our fiscal sponsor, the PSL Foundation. We accept credit
+              cards, bank transfers, and checks.
             </p>
             <p>
               Send checks to PolicyEngine, c/o PSL Foundation, 2108 Greene St., PO Box 50932,
@@ -59,11 +56,10 @@ export default function DonatePage() {
           </RichTextBlock>
         }
         cta={{
-          text: 'Support Transparent\nPolicy Access',
+          text: 'Donate now',
           href: 'https://opencollective.com/policyengine',
-          multiline: true,
         }}
-        caption="Donate on Open Collective through our fiscal sponsor, the PSL Foundation"
+        caption="Donate via Open Collective"
       />
     </StaticPageLayout>
   );

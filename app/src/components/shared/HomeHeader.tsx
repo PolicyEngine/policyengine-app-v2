@@ -19,11 +19,6 @@ export default function HeaderNavigation() {
 
   const navItems: NavItemSetup[] = [
     {
-      label: 'Home',
-      onClick: () => handleNavClick(`/${countryId}`),
-      hasDropdown: false,
-    },
-    {
       label: 'Research',
       onClick: () => handleNavClick(`/${countryId}/research`),
       hasDropdown: false,

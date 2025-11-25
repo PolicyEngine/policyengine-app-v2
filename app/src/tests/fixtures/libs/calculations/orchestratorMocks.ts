@@ -39,6 +39,10 @@ export const TEST_COUNTRIES = {
   UK: 'uk',
 } as const;
 
+export const TEST_YEARS = {
+  DEFAULT: '2024',
+} as const;
+
 export const TEST_POLICY_IDS = {
   POLICY_1: 'policy-1',
   POLICY_2: 'policy-2',
@@ -56,6 +60,7 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
   calcId: TEST_CALC_IDS.SIM_1,
   targetType: 'simulation',
   countryId: TEST_COUNTRIES.US,
+  year: '2024',
   simulations: {
     simulation1: {
       policyId: TEST_POLICY_IDS.POLICY_1,
@@ -95,6 +100,7 @@ export const mockSocietyWideCalcConfig = (
   calcId: TEST_CALC_IDS.REPORT_1,
   targetType: 'report',
   countryId: TEST_COUNTRIES.US,
+  year: '2024',
   simulations: {
     simulation1: {
       policyId: TEST_POLICY_IDS.POLICY_1,

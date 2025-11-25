@@ -16,6 +16,7 @@ import {
   TEST_CALC_IDS,
   TEST_COUNTRIES,
   TEST_POPULATION_IDS,
+  TEST_YEARS,
 } from '@/tests/fixtures/libs/calculations/orchestratorMocks';
 
 // Mock dependencies
@@ -57,7 +58,11 @@ describe('CalcOrchestrator', () => {
 
       // Then
       expect(mockQueryFn).toHaveBeenCalledTimes(1);
-      expect(mockResultPersister.persist).toHaveBeenCalledWith(completeStatus, TEST_COUNTRIES.US);
+      expect(mockResultPersister.persist).toHaveBeenCalledWith(
+        completeStatus,
+        TEST_COUNTRIES.US,
+        TEST_YEARS.DEFAULT
+      );
       expect(mockManager.cleanup).toHaveBeenCalledWith(TEST_CALC_IDS.SIM_1);
     });
 

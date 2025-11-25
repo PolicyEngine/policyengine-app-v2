@@ -86,6 +86,7 @@ export function useCreateReport(reportLabel?: string) {
         console.log(`[useCreateReport][${timestamp}] Report type:`, typeof report.id);
         console.log(`[useCreateReport][${timestamp}] Report object:`, report);
         console.log(`[useCreateReport][${timestamp}] Report.countryId:`, report.countryId);
+        console.log(`[useCreateReport][${timestamp}] Report.year:`, report.year);
         console.log(
           `[useCreateReport][${timestamp}] Report.country_id:`,
           (report as any).country_id
@@ -152,6 +153,7 @@ export function useCreateReport(reportLabel?: string) {
                 calcId: sim.id, // Each simulation uses its own ID
                 targetType: 'simulation', // Simulation-level calculation
                 countryId: report.countryId,
+                year: report.year,
                 simulations: {
                   simulation1: sim, // Only this specific simulation
                   simulation2: null,
@@ -185,6 +187,7 @@ export function useCreateReport(reportLabel?: string) {
             calcId: reportIdStr,
             targetType: 'report',
             countryId: report.countryId,
+            year: report.year,
             simulations: {
               simulation1,
               simulation2: simulation2 || null,

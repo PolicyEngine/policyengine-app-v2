@@ -81,30 +81,43 @@ export const useCreateSimulationAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useUpdateAssociation = () => {
+export const useUpdateSimulationAssociation = () => {
   const store = useUserSimulationStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, simulationId, updates }: {
-      userId: string;
-      simulationId: string;
+    mutationFn: ({
+      userSimulationId,
+      updates,
+    }: {
+      userSimulationId: string;
       updates: Partial<UserSimulation>;
-    }) => store.update(userId, simulationId, updates),
+    }) => store.update(userSimulationId, updates),
+
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.byUser(updatedAssociation.userId, updatedAssociation.countryId) });
-      queryClient.invalidateQueries({ queryKey: simulationAssociationKeys.bySimulation(updatedAssociation.simulationId) });
-      
+      // Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: simulationAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: simulationAssociationKeys.bySimulation(updatedAssociation.simulationId),
+      });
+
+      // Optimistically update caches
       queryClient.setQueryData(
-        simulationAssociationKeys.specific(updatedAssociation.userId, updatedAssociation.simulationId),
+        simulationAssociationKeys.specific(
+          updatedAssociation.userId,
+          updatedAssociation.simulationId
+        ),
         updatedAssociation
       );
     },
   });
 };
-*/
 
 // Not yet implemented, but keeping for future use
 /*

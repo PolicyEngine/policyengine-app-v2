@@ -8,6 +8,7 @@ import {
   mockCompleteSocietyWideStatus,
   TEST_CALC_IDS,
   TEST_COUNTRIES,
+  TEST_YEARS,
 } from '@/tests/fixtures/libs/calculations/resultPersisterMocks';
 import {
   mockHouseholdResult,
@@ -41,7 +42,7 @@ describe('ResultPersister', () => {
       (markReportCompleted as any).mockResolvedValue(undefined);
 
       // When
-      await persister.persist(status, TEST_COUNTRIES.US);
+      await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then
       expect(markReportCompleted).toHaveBeenCalledWith(
@@ -72,7 +73,7 @@ describe('ResultPersister', () => {
       const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
       // When
-      await persister.persist(status, TEST_COUNTRIES.US);
+      await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then
       expect(invalidateSpy).toHaveBeenCalledWith({
@@ -98,7 +99,7 @@ describe('ResultPersister', () => {
         .mockResolvedValueOnce(undefined);
 
       // When
-      await persister.persist(status, TEST_COUNTRIES.US);
+      await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then
       expect(markReportCompleted).toHaveBeenCalledTimes(2);
@@ -120,9 +121,9 @@ describe('ResultPersister', () => {
       (markReportCompleted as any).mockRejectedValue(new Error('Network error'));
 
       // When/Then
-      await expect(persister.persist(status, TEST_COUNTRIES.US)).rejects.toThrow(
-        'Failed to persist report after retry'
-      );
+      await expect(
+        persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)
+      ).rejects.toThrow('Failed to persist report after retry');
       expect(markReportCompleted).toHaveBeenCalledTimes(2);
     });
   });
@@ -144,7 +145,7 @@ describe('ResultPersister', () => {
       (updateSimulationOutput as any).mockResolvedValue(undefined);
 
       // When
-      await persister.persist(status, TEST_COUNTRIES.US);
+      await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then
       expect(updateSimulationOutput).toHaveBeenCalledWith(TEST_COUNTRIES.US, 'sim-456', result);
@@ -167,7 +168,7 @@ describe('ResultPersister', () => {
       const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
 
       // When
-      await persister.persist(status, TEST_COUNTRIES.US);
+      await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then
       expect(invalidateSpy).toHaveBeenCalledWith({
@@ -193,6 +194,7 @@ describe('ResultPersister', () => {
       const report: Report = {
         id: TEST_CALC_IDS.REPORT_123,
         countryId: TEST_COUNTRIES.US,
+        year: '2024',
         apiVersion: '1.0',
         simulationIds: [TEST_CALC_IDS.SIM_1, TEST_CALC_IDS.SIM_2],
         status: 'pending',
@@ -217,7 +219,7 @@ describe('ResultPersister', () => {
       (updateSimulationOutput as any).mockResolvedValue(undefined);
 
       // When
-      await persister.persist(status, TEST_COUNTRIES.US);
+      await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then - Should not mark report complete yet since sim-2 is still pending
       expect(markReportCompleted).not.toHaveBeenCalled();
@@ -242,6 +244,7 @@ describe('ResultPersister', () => {
       const report: Report = {
         id: TEST_CALC_IDS.REPORT_123,
         countryId: TEST_COUNTRIES.US,
+        year: '2024',
         apiVersion: '1.0',
         simulationIds: [TEST_CALC_IDS.SIM_1, TEST_CALC_IDS.SIM_2],
         status: 'pending',
@@ -268,7 +271,7 @@ describe('ResultPersister', () => {
       (markReportCompleted as any).mockResolvedValue(undefined);
 
       // When
-      await persister.persist(status, TEST_COUNTRIES.US);
+      await persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT);
 
       // Then - Should mark report complete with aggregated outputs
       expect(markReportCompleted).toHaveBeenCalledWith(
@@ -297,9 +300,9 @@ describe('ResultPersister', () => {
       };
 
       // When/Then
-      await expect(persister.persist(status, TEST_COUNTRIES.US)).rejects.toThrow(
-        'Cannot persist: result is missing from CalcStatus'
-      );
+      await expect(
+        persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)
+      ).rejects.toThrow('Cannot persist: result is missing from CalcStatus');
     });
 
     it('given undefined result then throws error', async () => {
@@ -316,9 +319,9 @@ describe('ResultPersister', () => {
       };
 
       // When/Then
-      await expect(persister.persist(status, TEST_COUNTRIES.US)).rejects.toThrow(
-        'Cannot persist: result is missing from CalcStatus'
-      );
+      await expect(
+        persister.persist(status, TEST_COUNTRIES.US, TEST_YEARS.DEFAULT)
+      ).rejects.toThrow('Cannot persist: result is missing from CalcStatus');
     });
   });
 });

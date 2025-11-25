@@ -1,12 +1,18 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { Stack } from '@mantine/core';
+import { useDisclosure } from '@mantine/hooks';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
+import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { useGeographicAssociationsByUser } from '@/hooks/useUserGeographic';
-import { useUserHouseholds } from '@/hooks/useUserHousehold';
+import {
+  useGeographicAssociationsByUser,
+  useUpdateGeographicAssociation,
+} from '@/hooks/useUserGeographic';
+import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
@@ -41,6 +47,16 @@ export default function PopulationsPage() {
   const [searchValue, setSearchValue] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  // Rename modal state
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [renamingType, setRenamingType] = useState<'household' | 'geography' | null>(null);
+  const [renamingUserId, setRenamingUserId] = useState<string | null>(null);
+  const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+
+  // Rename mutation hooks
+  const updateHouseholdAssociation = useUpdateHouseholdAssociation();
+  const updateGeographicAssociation = useUpdateGeographicAssociation();
+
   // Combined loading and error states
   const isLoading = isHouseholdLoading || isGeographicLoading;
   const isError = isHouseholdError || isGeographicError;
@@ -58,16 +74,68 @@ export default function PopulationsPage() {
 
   const isSelected = (recordId: string) => selectedIds.includes(recordId);
 
-  // We have separate sources of data for household vs geographies. Can we remove this?
-  // // Helper function to determine if an item is geographic or household
-  // const getDetailsType = (item: any): 'geographic' | 'household' => {
-  //   // If item has geographyType, it's a geographic association
-  //   if (item.geographyType) {
-  //     return 'geographic';
-  //   }
-  //   // Otherwise it's a household
-  //   return 'household';
-  // };
+  const handleOpenRename = (recordId: string) => {
+    // Determine type by looking up in the original data
+    // Households use their association.id, geographies use geographyId
+    const household = householdData?.find(
+      (item) => (item.association.id || item.association.householdId.toString()) === recordId
+    );
+    const geography = geographicData?.find((item) => item.geographyId === recordId);
+
+    if (!household && !geography) {
+      return;
+    }
+
+    const type: 'household' | 'geography' = household ? 'household' : 'geography';
+    const userIdValue = household ? household.association.userId : geography!.userId;
+
+    setRenamingId(recordId);
+    setRenamingType(type);
+    setRenamingUserId(userIdValue);
+    openRename();
+  };
+
+  const handleCloseRename = () => {
+    closeRename();
+    setRenamingId(null);
+    setRenamingType(null);
+    setRenamingUserId(null);
+  };
+
+  const handleRename = async (newLabel: string) => {
+    if (!renamingId || !renamingType || !renamingUserId) {
+      return;
+    }
+
+    try {
+      if (renamingType === 'household') {
+        await updateHouseholdAssociation.mutateAsync({
+          userHouseholdId: renamingId,
+          updates: { label: newLabel },
+        });
+      } else {
+        // For geographies, renamingId is the geographyId
+        await updateGeographicAssociation.mutateAsync({
+          userId: renamingUserId,
+          geographyId: renamingId,
+          updates: { label: newLabel },
+        });
+      }
+      handleCloseRename();
+    } catch (error) {
+      console.error(`[PopulationsPage] Failed to rename ${renamingType}:`, error);
+    }
+  };
+
+  // Find the item being renamed for current label
+  const renamingHousehold = householdData?.find((item) => item.association.id === renamingId);
+  const renamingGeography = geographicData?.find((item) => item.id === renamingId);
+
+  const currentLabel =
+    renamingType === 'household'
+      ? renamingHousehold?.association.label ||
+        `Household #${renamingHousehold?.association.householdId}`
+      : renamingGeography?.label || '';
 
   // Helper function to get geographic scope details
   const getGeographicDetails = (geography: UserGeographyPopulation) => {
@@ -170,6 +238,17 @@ export default function PopulationsPage() {
         },
       ],
     },
+    {
+      key: 'actions',
+      header: '',
+      type: 'menu',
+      actions: [{ label: 'Rename', action: 'rename' }],
+      onAction: (action: string, recordId: string) => {
+        if (action === 'rename') {
+          handleOpenRename(recordId);
+        }
+      },
+    },
   ];
 
   // Transform household data
@@ -178,7 +257,9 @@ export default function PopulationsPage() {
       const detailsItems = getHouseholdDetails(item.household);
 
       return {
-        id: item.association.householdId.toString(),
+        id: item.association.id || item.association.householdId.toString(),
+        type: 'household',
+        userId: item.association.userId,
         populationName: {
           text: item.association.label || `Household #${item.association.householdId}`,
         } as TextValue,
@@ -204,7 +285,10 @@ export default function PopulationsPage() {
       const detailsItems = getGeographicDetails(association);
 
       return {
-        id: association.id || '',
+        id: association.geographyId,
+        type: 'geography',
+        userId: association.userId,
+        geographyId: association.geographyId,
         populationName: {
           text: association.label,
         } as TextValue,
@@ -228,22 +312,39 @@ export default function PopulationsPage() {
   const transformedData: IngredientRecord[] = [...householdRecords, ...geographicRecords];
 
   return (
-    <IngredientReadView
-      ingredient="household"
-      title="Your saved households"
-      subtitle="Configure one or a collection of households to use in your simulation configurations."
-      buttonLabel="New household(s)"
-      onBuild={handleBuildPopulation}
-      isLoading={isLoading}
-      isError={isError}
-      error={error}
-      data={transformedData}
-      columns={populationColumns}
-      searchValue={searchValue}
-      onSearchChange={setSearchValue}
-      enableSelection
-      isSelected={isSelected}
-      onSelectionChange={handleSelectionChange}
-    />
+    <>
+      <Stack gap="md">
+        <IngredientReadView
+          ingredient="household"
+          title="Your saved households"
+          subtitle="Configure one or a collection of households to use in your simulation configurations."
+          buttonLabel="New household(s)"
+          onBuild={handleBuildPopulation}
+          isLoading={isLoading}
+          isError={isError}
+          error={error}
+          data={transformedData}
+          columns={populationColumns}
+          searchValue={searchValue}
+          onSearchChange={setSearchValue}
+          enableSelection
+          isSelected={isSelected}
+          onSelectionChange={handleSelectionChange}
+        />
+      </Stack>
+
+      <RenameIngredientModal
+        opened={renameOpened}
+        onClose={handleCloseRename}
+        currentLabel={currentLabel}
+        onRename={handleRename}
+        isLoading={
+          renamingType === 'household'
+            ? updateHouseholdAssociation.isPending
+            : updateGeographicAssociation.isPending
+        }
+        ingredientType={renamingType || 'household'}
+      />
+    </>
   );
 }

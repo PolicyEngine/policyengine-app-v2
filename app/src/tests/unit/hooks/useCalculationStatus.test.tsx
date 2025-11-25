@@ -29,8 +29,8 @@ vi.mock('@/hooks/useSyntheticProgress', () => ({
   }),
   getProgressMessage: vi.fn(),
   SYNTHETIC_PROGRESS_CONFIG: {
-    HOUSEHOLD_DURATION_MS: 45000,
-    SOCIETY_WIDE_DURATION_MS: 720000,
+    HOUSEHOLD_DURATION_MS: 60000,
+    SOCIETY_WIDE_DURATION_MS: 360000,
     UPDATE_INTERVAL_MS: 500,
     MAX_PROGRESS: 95,
     SERVER_WEIGHT: 0.7,

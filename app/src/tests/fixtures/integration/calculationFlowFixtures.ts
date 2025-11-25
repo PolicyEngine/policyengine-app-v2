@@ -33,6 +33,7 @@ export const mockHouseholdCalcConfig = (overrides?: Partial<CalcStartConfig>): C
   calcId: INTEGRATION_TEST_CONSTANTS.CALC_IDS.HOUSEHOLD_REPORT,
   targetType: 'report',
   countryId: 'us',
+  year: '2024',
   simulations: {
     simulation1: {
       id: INTEGRATION_TEST_CONSTANTS.CALC_IDS.SIMULATION_1,
@@ -77,6 +78,7 @@ export const mockSocietyWideCalcConfig = (
   calcId: INTEGRATION_TEST_CONSTANTS.CALC_IDS.ECONOMY_REPORT,
   targetType: 'report',
   countryId: 'us',
+  year: '2024',
   simulations: {
     simulation1: {
       id: INTEGRATION_TEST_CONSTANTS.CALC_IDS.SIMULATION_1,
@@ -161,7 +163,6 @@ export const mockIntegrationComputingStatus = (
   progress,
   message: 'Computing...',
   queuePosition: 2,
-  estimatedTimeRemaining: 5000,
   metadata: {
     calcId,
     calcType: 'societyWide',

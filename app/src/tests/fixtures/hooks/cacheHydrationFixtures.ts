@@ -24,6 +24,7 @@ export const createMockReportWithOutput = (
 ): ReportMetadata => ({
   id: 123,
   country_id: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
+  year: '2024',
   simulation_1_id: 'sim-1',
   simulation_2_id: 'sim-2',
   api_version: '1.0.0',
@@ -48,6 +49,7 @@ export const createMockReportWithoutOutput = (
 ): ReportMetadata => ({
   id: 456,
   country_id: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
+  year: '2024',
   simulation_1_id: 'sim-1',
   simulation_2_id: null,
   api_version: '1.0.0',

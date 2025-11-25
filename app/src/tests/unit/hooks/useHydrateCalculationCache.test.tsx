@@ -34,6 +34,7 @@ describe('useHydrateCalculationCache', () => {
       : CACHE_HYDRATION_TEST_CONSTANTS.REPORT_IDS.WITHOUT_OUTPUT,
     label: 'Test Report',
     countryId: CACHE_HYDRATION_TEST_CONSTANTS.COUNTRY_IDS.US,
+    year: '2024',
     apiVersion: '1.0.0',
     simulationIds: ['sim-1', 'sim-2'],
     status: withOutput ? 'complete' : 'pending',

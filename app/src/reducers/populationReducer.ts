@@ -153,8 +153,16 @@ export const populationSlice = createSlice({
           geography: null,
         };
       }
-      const { countryId, year = CURRENT_YEAR } = action.payload;
-      const builder = new HouseholdBuilder(countryId as any, year);
+      const { countryId, year } = action.payload;
+      const householdYear = year || CURRENT_YEAR;
+      if (!year) {
+        console.error(
+          '[populationReducer.initializeHouseholdAtPosition] No year provided - this is likely a bug. ' +
+            `Falling back to CURRENT_YEAR (${CURRENT_YEAR}). ` +
+            'Please ensure year is passed from report state.'
+        );
+      }
+      const builder = new HouseholdBuilder(countryId as any, householdYear);
       state.populations[action.payload.position]!.household = builder.build();
       state.populations[action.payload.position]!.geography = null;
     },
