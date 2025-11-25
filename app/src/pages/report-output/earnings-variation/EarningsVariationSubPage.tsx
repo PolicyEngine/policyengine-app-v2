@@ -43,6 +43,15 @@ export default function EarningsVariationSubPage({
   const reportYear = useReportYear();
   const metadata = useSelector((state: RootState) => state.metadata);
 
+  // Early return if no report year available (shouldn't happen in report output context)
+  if (!reportYear) {
+    return (
+      <Stack gap={spacing.md}>
+        <Text c="red">Error: Report year not available</Text>
+      </Stack>
+    );
+  }
+
   // Get policy data for variations
   const baselinePolicy = policies?.find((p) => p.id === simulations[0]?.policyId);
   const reformPolicy = simulations[1] && policies?.find((p) => p.id === simulations[1].policyId);

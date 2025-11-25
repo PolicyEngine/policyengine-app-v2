@@ -206,13 +206,17 @@ export const useUserHouseholds = (userId: string) => {
   const householdsWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
     associations
       ?.filter((association) => association.householdId)
-      .map((association, index) => ({
-        association,
-        household: householdQueries[index]?.data,
-        isLoading: householdQueries[index]?.isLoading ?? false,
-        error: householdQueries[index]?.error ?? null,
-        isError: !!householdQueries[index]?.error,
-      }));
+      .map((association, index) => {
+        const queryResult = householdQueries[index];
+
+        return {
+          association,
+          household: queryResult?.data,
+          isLoading: queryResult?.isLoading ?? false,
+          error: queryResult?.error ?? null,
+          isError: !!queryResult?.error,
+        };
+      });
 
   return {
     data: householdsWithAssociations,
