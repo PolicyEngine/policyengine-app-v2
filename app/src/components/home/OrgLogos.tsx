@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -18,8 +18,9 @@ interface OrgLogosProps {
   logos: OrgData;
 }
 
-const LOGOS_PER_PAGE = 7;
-const CYCLE_INTERVAL = 4000;
+const NUM_VISIBLE = 7;
+const MIN_DURATION = 3000; // 3 seconds
+const MAX_DURATION = 6000; // 6 seconds
 
 // Fisher-Yates shuffle
 function shuffleArray<T>(array: T[]): T[] {
@@ -31,14 +32,15 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+function getRandomDuration() {
+  return MIN_DURATION + Math.random() * (MAX_DURATION - MIN_DURATION);
+}
+
 export default function OrgLogos({ logos }: OrgLogosProps) {
   const countryId = useCurrentCountry();
-  const [currentPage, setCurrentPage] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
   const countryOrgs = logos[countryId as keyof OrgData];
 
-  // Shuffle logos once on mount and memoize
+  // Shuffle logos once on mount
   const shuffledOrgs = useMemo(() => {
     if (!countryOrgs) {
       return [];
@@ -46,35 +48,92 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
     return shuffleArray(Object.values(countryOrgs));
   }, [countryOrgs]);
 
-  // Only show complete pages (no partial last row)
-  const totalFullPages = Math.floor(shuffledOrgs.length / LOGOS_PER_PAGE);
-  const displayableOrgs = shuffledOrgs.slice(0, totalFullPages * LOGOS_PER_PAGE);
-  const totalPages = totalFullPages;
+  // Track which logo index each slot is showing and its transition state
+  const [slotIndices, setSlotIndices] = useState<number[]>([]);
+  const [transitioning, setTransitioning] = useState<boolean[]>([]);
 
-  // Get current page of logos
-  const startIdx = currentPage * LOGOS_PER_PAGE;
-  const currentLogos = displayableOrgs.slice(startIdx, startIdx + LOGOS_PER_PAGE);
-
-  // Auto-cycle through pages
+  // Initialize slots with first N logos
   useEffect(() => {
-    if (totalPages <= 1) {
+    if (shuffledOrgs.length === 0) {
+      return;
+    }
+    const initial = shuffledOrgs.slice(0, NUM_VISIBLE).map((_, i) => i);
+    setSlotIndices(initial);
+    setTransitioning(new Array(NUM_VISIBLE).fill(false));
+  }, [shuffledOrgs]);
+
+  // Cycle a single slot to the next available logo
+  const cycleSlot = useCallback(
+    (slotIndex: number) => {
+      if (shuffledOrgs.length <= NUM_VISIBLE) {
+        return;
+      }
+
+      setTransitioning((prev) => {
+        const next = [...prev];
+        next[slotIndex] = true;
+        return next;
+      });
+
+      setTimeout(() => {
+        setSlotIndices((prev) => {
+          const next = [...prev];
+          // Find the next logo that isn't currently visible
+          const currentlyVisible = new Set(prev);
+          let nextIndex = (Math.max(...prev) + 1) % shuffledOrgs.length;
+
+          // Keep looking until we find one not in current view
+          let attempts = 0;
+          while (currentlyVisible.has(nextIndex) && attempts < shuffledOrgs.length) {
+            nextIndex = (nextIndex + 1) % shuffledOrgs.length;
+            attempts++;
+          }
+
+          next[slotIndex] = nextIndex;
+          return next;
+        });
+
+        setTransitioning((prev) => {
+          const next = [...prev];
+          next[slotIndex] = false;
+          return next;
+        });
+      }, 300);
+    },
+    [shuffledOrgs.length]
+  );
+
+  // Set up independent timers for each slot
+  useEffect(() => {
+    if (shuffledOrgs.length <= NUM_VISIBLE || slotIndices.length === 0) {
       return;
     }
 
-    const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setCurrentPage((prev) => (prev + 1) % totalPages);
-        setIsTransitioning(false);
-      }, 300);
-    }, CYCLE_INTERVAL);
+    const timers: NodeJS.Timeout[] = [];
 
-    return () => clearInterval(interval);
-  }, [totalPages]);
+    const scheduleSlot = (slotIndex: number) => {
+      const timer = setTimeout(() => {
+        cycleSlot(slotIndex);
+        scheduleSlot(slotIndex); // Reschedule with new random duration
+      }, getRandomDuration());
+      timers[slotIndex] = timer;
+    };
 
-  if (!countryOrgs || currentLogos.length === 0) {
+    // Stagger initial starts
+    for (let i = 0; i < NUM_VISIBLE; i++) {
+      setTimeout(() => scheduleSlot(i), i * 500 + Math.random() * 1000);
+    }
+
+    return () => {
+      timers.forEach((timer) => clearTimeout(timer));
+    };
+  }, [shuffledOrgs.length, slotIndices.length, cycleSlot]);
+
+  if (!countryOrgs || shuffledOrgs.length === 0 || slotIndices.length === 0) {
     return null;
   }
+
+  const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean);
 
   return (
     <Box mt={spacing['4xl']} mb={spacing['4xl']}>
@@ -102,15 +161,11 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
           gap={spacing['5xl']}
           wrap="nowrap"
           px={spacing['4xl']}
-          style={{
-            minWidth: 'max-content',
-            opacity: isTransitioning ? 0 : 1,
-            transition: 'opacity 0.3s ease-in-out',
-          }}
+          style={{ minWidth: 'max-content' }}
         >
-          {currentLogos.map((org) => (
+          {visibleOrgs.map((org, i) => (
             <Box
-              key={org.name}
+              key={`slot-${i}`}
               style={{
                 flex: '0 0 auto',
                 display: 'flex',
@@ -119,6 +174,8 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
                 cursor: 'pointer',
                 width: '120px',
                 height: '100px',
+                opacity: transitioning[i] ? 0 : 1,
+                transition: 'opacity 0.3s ease-in-out',
               }}
             >
               <button
@@ -149,32 +206,6 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
           ))}
         </Flex>
       </Box>
-
-      {/* Pagination dots */}
-      {totalPages > 1 && (
-        <Flex justify="center" gap={spacing.xs} mt={spacing.lg}>
-          {Array.from({ length: totalPages }).map((_, idx) => (
-            <Box
-              key={idx}
-              onClick={() => {
-                setIsTransitioning(true);
-                setTimeout(() => {
-                  setCurrentPage(idx);
-                  setIsTransitioning(false);
-                }, 300);
-              }}
-              style={{
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                backgroundColor: idx === currentPage ? '#132F46' : '#D1D5DB',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s ease',
-              }}
-            />
-          ))}
-        </Flex>
-      )}
     </Box>
   );
 }

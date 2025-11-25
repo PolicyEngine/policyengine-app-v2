@@ -12,6 +12,7 @@ import gpew from '@/images/logos/orgs/gpew.png';
 import jacobin from '@/images/logos/orgs/jacobin.png';
 import liberalParty from '@/images/logos/orgs/liberal-party.png';
 import mca from '@/images/logos/orgs/mca.png';
+import mirza from '@/images/logos/orgs/mirza.png';
 import mothersOutreach from '@/images/logos/orgs/mothers-outreach-network.png';
 import myfriendben from '@/images/logos/orgs/myfriendben.png';
 import niesr from '@/images/logos/orgs/niesr.png';
@@ -19,6 +20,7 @@ import nisk from '@/images/logos/orgs/niskanen-center.png';
 import ppp from '@/images/logos/orgs/peoples-policy-project.png';
 import pn3policy from '@/images/logos/orgs/pn3policy.png';
 import smf from '@/images/logos/orgs/smf.png';
+import starlight from '@/images/logos/orgs/starlight.png';
 import ubicenterLogo from '@/images/logos/orgs/ubicenter.png';
 import ubilabs from '@/images/logos/orgs/ubilabs.png';
 import ukeu from '@/images/logos/orgs/ukeu.svg';
@@ -169,6 +171,16 @@ export const orgData: OrgData = {
       name: 'Jacobin',
       logo: jacobin,
       link: 'https://jacobin.com/',
+    },
+    mirza: {
+      name: 'Mirza',
+      logo: mirza,
+      link: 'https://heymirza.com/',
+    },
+    starlight: {
+      name: 'Starlight',
+      logo: starlight,
+      link: 'https://www.get-starlight.com/',
     },
   },
 };
