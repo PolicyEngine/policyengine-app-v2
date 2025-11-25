@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-// Posts data - imported from posts.json at build time
-// We inline a simplified version here for the serverless function
-import posts from '../src/data/posts/posts.json';
+// Posts data - co-located with the serverless function for reliable bundling
+import posts from './posts.json';
 
 // Generate slug from filename (same logic as postTransformers.ts)
 export function getSlugFromFilename(filename: string): string {
