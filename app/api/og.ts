@@ -4,18 +4,18 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import posts from '../src/data/posts/posts.json';
 
 // Generate slug from filename (same logic as postTransformers.ts)
-function getSlugFromFilename(filename: string): string {
+export function getSlugFromFilename(filename: string): string {
   const filenameWithoutExt = filename.substring(0, filename.indexOf('.'));
   return filenameWithoutExt.toLowerCase().replace(/_/g, '-');
 }
 
 // Find post by slug
-function findPostBySlug(slug: string) {
+export function findPostBySlug(slug: string) {
   return posts.find((post) => getSlugFromFilename(post.filename) === slug);
 }
 
 // Default OG tags
-const DEFAULT_OG = {
+export const DEFAULT_OG = {
   title: 'PolicyEngine',
   description:
     'Free, open-source tools to understand tax and benefit policies. Calculate your taxes and benefits, or analyze policy reforms.',
@@ -23,7 +23,7 @@ const DEFAULT_OG = {
 };
 
 // Static page OG configs
-const STATIC_PAGES: Record<string, { title: string; description: string }> = {
+export const STATIC_PAGES: Record<string, { title: string; description: string }> = {
   research: {
     title: 'Research',
     description: 'Policy analysis and research from PolicyEngine.',
@@ -44,7 +44,7 @@ const STATIC_PAGES: Record<string, { title: string; description: string }> = {
 };
 
 // Generate HTML with Open Graph meta tags
-function generateOgHtml(
+export function generateOgHtml(
   title: string,
   description: string,
   image: string,
