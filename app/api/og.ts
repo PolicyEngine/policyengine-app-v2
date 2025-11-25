@@ -1,4 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
 // Post type definition
 interface Post {
@@ -8,9 +10,8 @@ interface Post {
   image?: string;
 }
 
-// Posts data - using require for reliable Node.js serverless bundling
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const posts: Post[] = require('./posts.json');
+// Posts data - read from file at cold start
+const posts: Post[] = JSON.parse(readFileSync(join(__dirname, 'posts.json'), 'utf-8'));
 
 // Generate slug from filename (same logic as postTransformers.ts)
 export function getSlugFromFilename(filename: string): string {
