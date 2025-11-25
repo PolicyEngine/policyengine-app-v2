@@ -137,7 +137,7 @@
             justify-content: center;
         }
         .map-canvas svg {
-            background: #f9fafb;
+            background: #ffffff;
             border-radius: 6px;
             width: 100%;
             height: auto;
@@ -319,7 +319,7 @@
             .attr('class', 'constituency-path')
             .attr('fill', d => {
                 const data = impactData[d.properties.Name];
-                return data ? colorScale(data.pct) : '#f5f5f5';
+                return data ? colorScale(data.pct) : '#e0e7ed';
             })
             .attr('stroke', '#fff')
             .attr('stroke-width', 0.3)
