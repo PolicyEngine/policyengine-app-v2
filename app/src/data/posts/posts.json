@@ -1,5 +1,20 @@
 [
   {
+    "title": "UK mansion tax impact by constituency",
+    "description": "Mapping which constituencies would be most affected by a mansion tax on properties above £1.5m or £2m thresholds.",
+    "date": "2025-11-25 12:00:00",
+    "tags": [
+      "uk",
+      "policy",
+      "tax"
+    ],
+    "authors": [
+      "daphne-hansell"
+    ],
+    "filename": "uk-mansion-tax-autumn-budget.md",
+    "image": "uk-mansion-tax/mansion_tax_map_1m.png"
+  },
+  {
     "title": "Analysing alternative income tax and National Insurance reform options for the UK",
     "description": "PolicyEngine analysis of alternative tax reform options: raising basic and higher income tax rates, cutting NI, and extending the threshold freeze.",
     "date": "2025-11-20 11:00:00",
