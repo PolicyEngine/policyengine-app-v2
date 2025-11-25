@@ -145,7 +145,7 @@ PolicyEngine projects that the UK will collect [£322.2 billion](https://gist.gi
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -267,7 +267,7 @@ PolicyEngine projects that the UK will collect [£179.7 billion](https://gist.gi
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -382,7 +382,7 @@ PolicyEngine projects that the UK will collect [£17.3 billion](https://legacy.p
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -504,7 +504,7 @@ PolicyEngine projects that the UK will collect [£198.6 billion](https://legacy.
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -611,7 +611,7 @@ PolicyEngine projects that the UK will collect [£28.3 billion](https://legacy.p
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -736,7 +736,7 @@ PolicyEngine projects that the UK will collect [£11.4 billion](https://legacy.p
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -854,7 +854,7 @@ PolicyEngine projects that the UK will collect [£669.0 million](https://legacy.
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -971,7 +971,7 @@ PolicyEngine projects that the UK will collect [£388.3 million](https://legacy.
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -1078,7 +1078,7 @@ PolicyEngine projects that the UK will collect [£24.3 billion](https://legacy.p
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",

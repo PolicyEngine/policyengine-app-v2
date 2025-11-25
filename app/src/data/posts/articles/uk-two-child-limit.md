@@ -294,7 +294,7 @@ Figure 3 shows that 4.6% of the population would see income gains from removing 
     "paper_bgcolor": "#ebf2fa",
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",

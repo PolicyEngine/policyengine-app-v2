@@ -1,8 +1,9 @@
 import { useNavigate } from 'react-router-dom';
 import { Box } from '@mantine/core';
-import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+
+const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
 export default function HeaderLogo() {
   const navigate = useNavigate();

@@ -86,7 +86,7 @@ The combined reform creates different outcomes for households depending on their
     },
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -224,7 +224,7 @@ Figure 2 shows the change in government revenue from each reform across fiscal y
     },
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -313,7 +313,7 @@ Figure 3 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
     "paper_bgcolor": "#ebf2fa",
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -396,7 +396,7 @@ Figure 4 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
     "paper_bgcolor": "#ebf2fa",
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -479,7 +479,7 @@ Figure 5 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
     "paper_bgcolor": "#ebf2fa",
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -695,7 +695,7 @@ Figure 6 shows the relative change in household income by income decile from eac
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -1014,7 +1014,7 @@ Figure 7 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -1285,7 +1285,7 @@ Figure 8 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -1556,7 +1556,7 @@ Figure 9 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",
@@ -1827,7 +1827,7 @@ Figure 10 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.w
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.18,
         "xref": "paper",

@@ -133,7 +133,7 @@ Figure 1 shows the impact of these reforms on average in each household income d
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.20,
         "xref": "paper",
@@ -225,7 +225,7 @@ Figure 2 shows the median tax rise by region.
     ],
     "images": [
       {
-        "source": "/logo512.png",
+        "source": "/assets/logos/policyengine/teal-square.png",
         "x": 1,
         "y": -0.35,
         "xref": "paper",
