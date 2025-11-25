@@ -2,21 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-
-interface Organization {
-  name: string;
-  logo: string;
-  link: string;
-}
-
-interface OrgData {
-  uk: Record<string, Organization>;
-  us: Record<string, Organization>;
-}
-
-interface OrgLogosProps {
-  logos: OrgData;
-}
+import {
+  getOrgsForCountry,
+  Organization,
+  CountryId,
+} from '@/data/organizations';
 
 const NUM_VISIBLE = 7;
 const CYCLE_INTERVAL = 2000; // 2 seconds between each change
@@ -31,21 +21,20 @@ function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-export default function OrgLogos({ logos }: OrgLogosProps) {
-  const countryId = useCurrentCountry();
-  const countryOrgs = logos[countryId as keyof OrgData];
+export default function OrgLogos() {
+  const countryId = useCurrentCountry() as CountryId;
 
-  // Shuffle logos once on mount
+  // Get and shuffle logos for current country
   const shuffledOrgs = useMemo(() => {
-    if (!countryOrgs) {
-      return [];
-    }
-    return shuffleArray(Object.values(countryOrgs));
-  }, [countryOrgs]);
+    const orgs = getOrgsForCountry(countryId);
+    return shuffleArray(orgs);
+  }, [countryId]);
 
   // Track which logo index each slot is showing and its transition state
   const [slotIndices, setSlotIndices] = useState<number[]>([]);
-  const [transitioningSlot, setTransitioningSlot] = useState<number | null>(null);
+  const [transitioningSlot, setTransitioningSlot] = useState<number | null>(
+    null
+  );
   const lastSlotRef = useRef<number>(-1);
   const nextLogoRef = useRef<number>(NUM_VISIBLE);
 
@@ -114,11 +103,13 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
     return () => clearInterval(interval);
   }, [shuffledOrgs.length, slotIndices.length, cycleNextSlot]);
 
-  if (!countryOrgs || shuffledOrgs.length === 0 || slotIndices.length === 0) {
+  if (shuffledOrgs.length === 0 || slotIndices.length === 0) {
     return null;
   }
 
-  const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean);
+  const visibleOrgs = slotIndices
+    .map((idx) => shuffledOrgs[idx])
+    .filter(Boolean) as Organization[];
 
   return (
     <Box mt={spacing['4xl']} mb={spacing['4xl']}>

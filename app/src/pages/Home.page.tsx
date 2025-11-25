@@ -2,7 +2,6 @@ import { Box } from '@mantine/core';
 import ActionCards from '@/components/home/ActionCards';
 import MainSection from '@/components/home/MainSection';
 import OrgLogos from '@/components/home/OrgLogos';
-import { orgData } from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 
 export default function HomePage() {
@@ -19,7 +18,7 @@ export default function HomePage() {
         <MainSection />
         <ActionCards />
       </Box>
-      <OrgLogos logos={orgData} />
+      <OrgLogos />
     </Box>
   );
 }

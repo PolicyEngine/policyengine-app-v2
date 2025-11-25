@@ -12,9 +12,7 @@ vi.mock('@/components/home/ActionCards', () => ({
 }));
 
 vi.mock('@/components/home/OrgLogos', () => ({
-  default: ({ logos }: { logos: unknown[] }) => (
-    <div data-testid="org-logos">Org Logos ({logos.length})</div>
-  ),
+  default: () => <div data-testid="org-logos">Org Logos</div>,
 }));
 
 describe('HomePage', () => {
