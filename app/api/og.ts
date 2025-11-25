@@ -86,7 +86,13 @@ export default async function handler(request: Request) {
   let html: string;
 
   if (pathParts.length < 1) {
-    html = generateOgHtml(DEFAULT_OG.title, DEFAULT_OG.description, DEFAULT_OG.image, baseUrl, 'website');
+    html = generateOgHtml(
+      DEFAULT_OG.title,
+      DEFAULT_OG.description,
+      DEFAULT_OG.image,
+      baseUrl,
+      'website'
+    );
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
@@ -125,7 +131,13 @@ export default async function handler(request: Request) {
   // Static pages
   const staticPage = STATIC_PAGES[section];
   if (staticPage && !slug) {
-    html = generateOgHtml(staticPage.title, staticPage.description, DEFAULT_OG.image, fullUrl, 'website');
+    html = generateOgHtml(
+      staticPage.title,
+      staticPage.description,
+      DEFAULT_OG.image,
+      fullUrl,
+      'website'
+    );
     return new Response(html, {
       status: 200,
       headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
@@ -134,7 +146,8 @@ export default async function handler(request: Request) {
 
   // Country homepage
   if (pathParts.length === 1) {
-    const countryName = countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
+    const countryName =
+      countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
     html = generateOgHtml(
       `PolicyEngine ${countryName}`,
       DEFAULT_OG.description,
@@ -149,7 +162,13 @@ export default async function handler(request: Request) {
   }
 
   // Default fallback
-  html = generateOgHtml(DEFAULT_OG.title, DEFAULT_OG.description, DEFAULT_OG.image, fullUrl, 'website');
+  html = generateOgHtml(
+    DEFAULT_OG.title,
+    DEFAULT_OG.description,
+    DEFAULT_OG.image,
+    fullUrl,
+    'website'
+  );
   return new Response(html, {
     status: 200,
     headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },

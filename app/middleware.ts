@@ -164,7 +164,13 @@ export default async function middleware(request: Request) {
   // Static pages
   const staticPage = STATIC_PAGES[section];
   if (staticPage && !slug) {
-    html = generateOgHtml(staticPage.title, staticPage.description, DEFAULT_OG.image, fullUrl, 'website');
+    html = generateOgHtml(
+      staticPage.title,
+      staticPage.description,
+      DEFAULT_OG.image,
+      fullUrl,
+      'website'
+    );
     return new Response(html, {
       status: 200,
       headers: {
@@ -176,8 +182,15 @@ export default async function middleware(request: Request) {
 
   // Country homepage
   if (pathParts.length === 1) {
-    const countryName = countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
-    html = generateOgHtml(`PolicyEngine ${countryName}`, DEFAULT_OG.description, DEFAULT_OG.image, fullUrl, 'website');
+    const countryName =
+      countryId === 'uk' ? 'UK' : countryId === 'us' ? 'US' : countryId.toUpperCase();
+    html = generateOgHtml(
+      `PolicyEngine ${countryName}`,
+      DEFAULT_OG.description,
+      DEFAULT_OG.image,
+      fullUrl,
+      'website'
+    );
     return new Response(html, {
       status: 200,
       headers: {
