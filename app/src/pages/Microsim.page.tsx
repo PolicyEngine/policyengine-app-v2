@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Box, Container, List, Text, Title } from '@mantine/core';
 import CalloutWithImage from '@/components/shared/static/CalloutWithImage';
 import { CardsWithHeader } from '@/components/shared/static/CardsWithHeader';
