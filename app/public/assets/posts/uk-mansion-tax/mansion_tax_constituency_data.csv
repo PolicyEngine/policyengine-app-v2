@@ -1,0 +1,569 @@
+constituency,properties_1.5m,revenue_1.5m,properties_2m,revenue_2m
+Cities of London and Westminster,990,1980000,782,1564000
+Kensington and Bayswater,783,1566000,583,1166000
+Chelsea and Fulham,637,1274000,401,802000
+Hampstead and Highgate,406,812000,242,484000
+Battersea,362,724000,144,288000
+Richmond Park,301,602000,153,306000
+Islington South and Finsbury,277,554000,146,292000
+Hammersmith and Chiswick,260,520000,127,254000
+Holborn and St Pancras,219,438000,147,294000
+Finchley and Golders Green,200,400000,115,230000
+Ealing Central and Acton,194,388000,88,176000
+Runnymede and Weybridge,184,368000,103,206000
+Wimbledon,166,332000,94,188000
+Queen's Park and Maida Vale,166,332000,90,180000
+Esher and Walton,165,330000,78,156000
+Hornsey and Friern Barnet,165,330000,53,106000
+Twickenham,150,300000,55,110000
+Putney,145,290000,51,102000
+Windsor,135,270000,80,160000
+Harpenden and Berkhamsted,131,262000,61,122000
+Tooting,128,256000,59,118000
+Chesham and Amersham,127,254000,55,110000
+Dulwich and West Norwood,120,240000,55,110000
+Beaconsfield,119,238000,57,114000
+Islington North,103,206000,47,94000
+Reigate,95,190000,35,70000
+Hackney South and Shoreditch,91,182000,49,98000
+Guildford,89,178000,38,76000
+Bath,89,178000,40,80000
+Sevenoaks,88,176000,32,64000
+Winchester,87,174000,33,66000
+Hertsmere,81,162000,46,92000
+Maidenhead,81,162000,43,86000
+South West Hertfordshire,81,162000,39,78000
+Clapham and Brixton Hill,80,160000,37,74000
+Godalming and Ash,79,158000,36,72000
+North Cotswolds,78,156000,43,86000
+Oxford West and Abingdon,76,152000,40,80000
+Arundel and South Downs,75,150000,33,66000
+Bermondsey and Old Southwark,75,150000,47,94000
+Tatton,72,144000,35,70000
+Hackney North and Stoke Newington,71,142000,21,42000
+Epping Forest,70,140000,38,76000
+Poole,69,138000,33,66000
+St Albans,68,136000,23,46000
+Henley and Thame,67,134000,30,60000
+Poplar and Limehouse,66,132000,29,58000
+Brentwood and Ongar,65,130000,34,68000
+Farnham and Bordon,63,126000,28,56000
+Woking,63,126000,27,54000
+Vauxhall and Camberwell Green,61,122000,36,72000
+Chipping Barnet,60,120000,23,46000
+Hove and Portslade,59,118000,26,52000
+Dorking and Horley,58,116000,17,34000
+Brent East,56,112000,23,46000
+Hendon,55,110000,26,52000
+Lewisham West and East Dulwich,54,108000,11,22000
+Greenwich and Woolwich,53,106000,31,62000
+East Hampshire,51,102000,26,52000
+South Cotswolds,51,102000,25,50000
+Tunbridge Wells,50,100000,21,42000
+Chichester,50,100000,26,52000
+Kingston and Surbiton,49,98000,19,38000
+Banbury,49,98000,35,70000
+Southgate and Wood Green,48,96000,25,50000
+Altrincham and Sale West,47,94000,18,36000
+East Surrey,46,92000,19,38000
+New Forest East,46,92000,25,50000
+"Ruislip, Northwood and Pinner",45,90000,16,32000
+Cambridge,45,90000,27,54000
+Bromley and Biggin Hill,44,88000,27,54000
+Newbury,43,86000,28,56000
+Epsom and Ewell,42,84000,18,36000
+East Grinstead and Uckfield,42,84000,23,46000
+Bristol Central,41,82000,29,58000
+Wycombe,41,82000,28,56000
+North West Essex,41,82000,16,32000
+Mid Sussex,40,80000,19,38000
+Streatham and Croydon North,40,80000,22,44000
+Reading Central,40,80000,30,60000
+Mid Buckinghamshire,40,80000,13,26000
+South Cambridgeshire,39,78000,20,40000
+South Devon,39,78000,14,28000
+Leyton and Wanstead,39,78000,17,34000
+North East Hampshire,38,76000,12,24000
+Reading West and Mid Berkshire,38,76000,23,46000
+Cheltenham,38,76000,12,24000
+Lewisham North,37,74000,18,36000
+Manchester Central,36,72000,33,66000
+New Forest West,36,72000,10,20000
+Eltham and Chislehurst,36,72000,11,22000
+Wokingham,36,72000,15,30000
+Daventry,35,70000,23,46000
+Welwyn Hatfield,35,70000,18,36000
+Romsey and Southampton North,34,68000,15,30000
+Tonbridge,34,68000,12,24000
+North Cornwall,32,64000,22,44000
+Witney,31,62000,17,34000
+Sussex Weald,31,62000,12,24000
+Meriden and Solihull East,30,60000,15,30000
+Bethnal Green and Stepney,30,60000,18,36000
+Truro and Falmouth,30,60000,14,28000
+Ealing Southall,30,60000,9,18000
+Kenilworth and Southam,30,60000,11,22000
+Wetherby and Easingwold,30,60000,16,32000
+Beckenham and Penge,30,60000,10,20000
+Stratford-on-Avon,29,58000,18,36000
+Harrow East,29,58000,9,18000
+Harrogate and Knaresborough,29,58000,19,38000
+Salisbury,29,58000,14,28000
+North East Hertfordshire,29,58000,10,20000
+Croydon West,28,56000,19,38000
+Didcot and Wantage,28,56000,9,18000
+Surrey Heath,28,56000,12,24000
+North West Hampshire,27,54000,15,30000
+Birmingham Ladywood,27,54000,23,46000
+York Central,27,54000,17,34000
+Macclesfield,26,52000,15,30000
+Frome and East Somerset,26,52000,13,26000
+Exmouth and Exeter East,26,52000,9,18000
+Hertford and Stortford,26,52000,14,28000
+East Wiltshire,26,52000,11,22000
+South Northamptonshire,25,50000,13,26000
+Horsham,25,50000,10,20000
+Basildon and Billericay,25,50000,16,32000
+Cardiff South and Penarth,24,48000,20,40000
+Croydon South,24,48000,13,26000
+Hitchin,24,48000,10,20000
+Salford,23,46000,20,40000
+Edmonton and Winchmore Hill,23,46000,9,18000
+Tottenham,23,46000,13,26000
+Enfield North,22,44000,12,24000
+Sutton and Cheam,22,44000,4,8000
+Peckham,22,44000,10,20000
+Chingford and Woodford Green,22,44000,7,14000
+Exeter,22,44000,17,34000
+Canterbury,22,44000,13,26000
+North West Norfolk,21,42000,11,22000
+Watford,21,42000,14,28000
+Bicester and Woodstock,21,42000,13,26000
+Bristol North West,21,42000,9,18000
+Liverpool Riverside,21,42000,17,34000
+Lewes,20,40000,8,16000
+Rutland and Stamford,20,40000,12,24000
+Warwick and Leamington,20,40000,12,24000
+Hamble Valley,19,38000,10,20000
+Luton South and South Bedfordshire,19,38000,13,26000
+Maldon,19,38000,8,16000
+Newcastle upon Tyne Central and West,19,38000,18,36000
+Droitwich and Evesham,19,38000,12,24000
+Weald of Kent,19,38000,7,14000
+North Somerset,19,38000,7,14000
+Tewkesbury,19,38000,11,22000
+Thornbury and Yate,19,38000,14,28000
+Spelthorne,19,38000,11,22000
+Bury St Edmunds and Stowmarket,19,38000,10,20000
+Orpington,19,38000,8,16000
+St Austell and Newquay,18,36000,8,16000
+Skipton and Ripon,18,36000,10,20000
+Hemel Hempstead,18,36000,11,22000
+Westmorland and Lonsdale,18,36000,10,20000
+Sheffield Central,18,36000,12,24000
+Christchurch,18,36000,5,10000
+Hornchurch and Upminster,18,36000,10,20000
+Stretford and Urmston,18,36000,15,30000
+Eastbourne,17,34000,15,30000
+Bexhill and Battle,17,34000,11,22000
+West Dorset,17,34000,9,18000
+Tamworth,17,34000,9,18000
+Buckingham and Bletchley,17,34000,8,16000
+Broxbourne,17,34000,9,18000
+Loughborough,17,34000,4,8000
+Bromsgrove,17,34000,8,16000
+Oxford East,17,34000,9,18000
+Brighton Pavilion,17,34000,7,14000
+Ealing North,17,34000,9,18000
+Honiton and Sidmouth,17,34000,6,12000
+North Northumberland,17,34000,12,24000
+Rushcliffe,17,34000,7,14000
+South Dorset,16,32000,6,12000
+St Ives,16,32000,9,18000
+Leeds South,16,32000,13,26000
+Manchester Rusholme,16,32000,13,26000
+Sutton Coldfield,16,32000,7,14000
+Mid Bedfordshire,16,32000,12,24000
+Manchester Withington,16,32000,10,20000
+Chester South and Eddisbury,16,32000,8,16000
+Ely and East Cambridgeshire,16,32000,7,14000
+Wells and Mendip Hills,16,32000,8,16000
+Brentford and Isleworth,15,30000,7,14000
+Knowsley,15,30000,15,30000
+Romford,15,30000,10,20000
+Leeds Central and Headingley,15,30000,10,20000
+South Suffolk,15,30000,13,26000
+Harlow,15,30000,7,14000
+Worcester,15,30000,11,22000
+Stratford and Bow,15,30000,8,16000
+North West Cambridgeshire,15,30000,7,14000
+North Devon,15,30000,8,16000
+Broadland and Fakenham,15,30000,5,10000
+Nottingham South,15,30000,11,22000
+North Dorset,15,30000,5,10000
+South West Norfolk,14,28000,12,24000
+Coventry East,14,28000,13,26000
+Isle of Wight East,14,28000,10,20000
+Nottingham East,14,28000,11,22000
+Camborne and Redruth,14,28000,7,14000
+Witham,14,28000,6,12000
+Bournemouth West,14,28000,4,8000
+North Herefordshire,14,28000,9,18000
+Suffolk Coastal,14,28000,4,8000
+West Lancashire,14,28000,8,16000
+Cheadle,14,28000,6,12000
+Fylde,14,28000,8,16000
+Braintree,14,28000,8,16000
+Glastonbury and Somerton,14,28000,9,18000
+Hayes and Harlington,14,28000,13,26000
+Melksham and Devizes,14,28000,8,16000
+Herne Bay and Sandwich,13,26000,10,20000
+Stourbridge,13,26000,9,18000
+Aylesbury,13,26000,8,16000
+Ashford,13,26000,8,16000
+Hexham,13,26000,6,12000
+Keighley and Ilkley,13,26000,8,16000
+Stroud,13,26000,7,14000
+Doncaster Central,13,26000,10,20000
+North Norfolk,13,26000,4,8000
+Leicester South,13,26000,9,18000
+Thirsk and Malton,13,26000,6,12000
+Lewisham East,13,26000,3,6000
+Bury South,13,26000,10,20000
+Filton and Bradley Stoke,13,26000,11,22000
+Central Devon,13,26000,3,6000
+Scarborough and Whitby,13,26000,10,20000
+Melton and Syston,13,26000,10,20000
+Dover and Deal,13,26000,6,12000
+Birmingham Edgbaston,13,26000,5,10000
+Congleton,13,26000,9,18000
+Corby and East Northamptonshire,13,26000,8,16000
+Chelmsford,13,26000,8,16000
+Isle of Wight West,13,26000,10,20000
+Newcastle-under-Lyme,12,24000,10,20000
+Torbay,12,24000,11,22000
+Tiverton and Minehead,12,24000,7,14000
+Maidstone and Malling,12,24000,7,14000
+Portsmouth South,12,24000,11,22000
+Telford,12,24000,9,18000
+Thurrock,12,24000,12,24000
+Wirral West,12,24000,8,16000
+Newark,12,24000,7,14000
+Milton Keynes North,12,24000,9,18000
+Neath and Swansea East,12,24000,1,2000
+Northampton North,12,24000,12,24000
+York Outer,12,24000,7,14000
+Huntingdon,12,24000,5,10000
+Bognor Regis and Littlehampton,12,24000,8,16000
+Hereford and South Herefordshire,12,24000,8,16000
+Central Suffolk and North Ipswich,12,24000,8,16000
+Rugby,11,22000,9,18000
+Milton Keynes Central,11,22000,7,14000
+Southend East and Rochford,11,22000,3,6000
+Stockport,11,22000,9,18000
+Gower,11,22000,11,22000
+Gloucester,11,22000,6,12000
+Shrewsbury,11,22000,4,8000
+Sheffield South East,11,22000,8,16000
+Mid Leicestershire,11,22000,9,18000
+Mid Norfolk,11,22000,6,12000
+Rossendale and Darwen,11,22000,8,16000
+Derbyshire Dales,11,22000,5,10000
+Rayleigh and Wickford,11,22000,3,6000
+Yeovil,11,22000,7,14000
+Wyre Forest,11,22000,8,16000
+Newcastle upon Tyne North,11,22000,6,12000
+Dartford,11,22000,9,18000
+Worthing West,11,22000,5,10000
+Sittingbourne and Sheppey,10,20000,9,18000
+Southampton Itchen,10,20000,9,18000
+South West Devon,10,20000,2,4000
+South Ribble,10,20000,6,12000
+North Bedfordshire,10,20000,8,16000
+South East Cornwall,10,20000,2,4000
+Ribble Valley,10,20000,6,12000
+Richmond and Northallerton,10,20000,3,6000
+North West Leicestershire,10,20000,4,8000
+Mid Dorset and North Poole,10,20000,4,8000
+Nuneaton,10,20000,6,12000
+Peterborough,10,20000,8,16000
+Portsmouth North,10,20000,7,14000
+St Neots and Mid Cambridgeshire,10,20000,5,10000
+"Harborough, Oadby and Wigston",10,20000,4,8000
+South West Wiltshire,10,20000,6,12000
+"Brecon, Radnor and Cwm Tawe",10,20000,3,6000
+Bedford,10,20000,7,14000
+Stafford,10,20000,5,10000
+Hastings and Rye,10,20000,3,6000
+Bracknell,10,20000,8,16000
+West Worcestershire,10,20000,8,16000
+Wakefield and Rothwell,10,20000,7,14000
+Walthamstow,10,20000,3,6000
+Clwyd North,9,18000,6,12000
+Monmouthshire,9,18000,5,10000
+Feltham and Heston,9,18000,8,16000
+Hinckley and Bosworth,9,18000,6,12000
+West Suffolk,9,18000,6,12000
+Wolverhampton West,9,18000,5,10000
+Rochester and Strood,9,18000,6,12000
+Ashfield,9,18000,8,16000
+Waveney Valley,9,18000,6,12000
+Chester North and Neston,9,18000,4,8000
+Dunstable and Leighton Buzzard,9,18000,5,10000
+St Helens North,9,18000,8,16000
+Washington and Gateshead South,9,18000,5,10000
+Earley and Woodley,9,18000,7,14000
+Swindon South,9,18000,6,12000
+Gravesham,9,18000,7,14000
+Lichfield,9,18000,3,6000
+Brent West,9,18000,5,10000
+Solihull West and Shirley,9,18000,1,2000
+Harrow West,9,18000,6,12000
+Bristol South,8,16000,7,14000
+Plymouth Sutton and Devonport,8,16000,4,8000
+Derby South,8,16000,7,14000
+North Shropshire,8,16000,5,10000
+Brighton Kemptown and Peacehaven,8,16000,2,4000
+Wrexham,8,16000,6,12000
+Barking,8,16000,6,12000
+Basingstoke,8,16000,7,14000
+Crawley,8,16000,7,14000
+Bassetlaw,8,16000,5,10000
+Cardiff West,8,16000,5,10000
+"Pontefract, Castleford and Knottingley",8,16000,4,8000
+Uxbridge and South Ruislip,8,16000,6,12000
+Widnes and Halewood,8,16000,5,10000
+Broxtowe,8,16000,4,8000
+Bradford South,8,16000,7,14000
+South Leicestershire,8,16000,5,10000
+Birmingham Erdington,8,16000,8,16000
+Bolsover,8,16000,7,14000
+Torridge and Tavistock,8,16000,6,12000
+Sheffield Hallam,8,16000,3,6000
+Cardiff North,8,16000,7,14000
+East Worthing and Shoreham,8,16000,6,12000
+Aberafan Maesteg,8,16000,3,6000
+Heywood and Middleton North,8,16000,3,6000
+Llanelli,8,16000,8,16000
+East Thanet,7,14000,4,8000
+"Oldham West, Chadderton and Royton",7,14000,4,8000
+Bournemouth East,7,14000,1,2000
+Harwich and North Essex,7,14000,2,4000
+Preston,7,14000,5,10000
+Lincoln,7,14000,3,6000
+Redditch,7,14000,5,10000
+Clacton,7,14000,5,10000
+Stevenage,7,14000,4,8000
+Southampton Test,7,14000,6,12000
+Middlesbrough and Thornaby East,7,14000,5,10000
+Makerfield,7,14000,3,6000
+Ilford South,7,14000,5,10000
+Mid and South Pembrokeshire,7,14000,5,10000
+Burton and Uttoxeter,7,14000,5,10000
+Bury North,7,14000,3,6000
+Sefton Central,7,14000,5,10000
+South Holland and The Deepings,7,14000,4,8000
+Mid Derbyshire,7,14000,5,10000
+South Derbyshire,7,14000,3,6000
+Sheffield Heeley,7,14000,4,8000
+Mansfield,7,14000,5,10000
+Slough,7,14000,4,8000
+Penrith and Solway,7,14000,4,8000
+Folkestone and Hythe,7,14000,4,8000
+Sleaford and North Hykeham,7,14000,6,12000
+Ilford North,7,14000,6,12000
+Doncaster East and the Isle of Axholme,7,14000,5,10000
+Newport East,7,14000,4,8000
+Leeds North East,7,14000,4,8000
+Ynys Môn,7,14000,1,2000
+South Basildon and East Thurrock,6,12000,5,10000
+Chesterfield,6,12000,4,8000
+Wigan,6,12000,2,4000
+Warrington South,6,12000,5,10000
+Bristol East,6,12000,5,10000
+Chorley,6,12000,2,4000
+Chippenham,6,12000,5,10000
+Halesowen,6,12000,3,6000
+Worsley and Eccles,6,12000,5,10000
+Runcorn and Helsby,6,12000,4,8000
+Grantham and Bourne,6,12000,4,8000
+Derby North,6,12000,5,10000
+Carlisle,6,12000,5,10000
+Dwyfor Meirionnydd,6,12000,4,8000
+North East Somerset and Hanham,6,12000,2,4000
+Gorton and Denton,6,12000,5,10000
+Caerfyrddin,6,12000,5,10000
+Wythenshawe and Sale East,6,12000,5,10000
+Normanton and Hemsworth,6,12000,5,10000
+Leeds North West,6,12000,4,8000
+Taunton and Wellington,6,12000,3,6000
+Leicester West,6,12000,5,10000
+Morecambe and Lunesdale,6,12000,3,6000
+Bridgwater,6,12000,4,8000
+Erith and Thamesmead,6,12000,2,4000
+Kingswinford and South Staffordshire,6,12000,3,6000
+Birmingham Selly Oak,6,12000,3,6000
+Vale of Glamorgan,6,12000,3,6000
+Pendle and Clitheroe,6,12000,3,6000
+Blackburn,5,10000,2,4000
+South Norfolk,5,10000,3,6000
+Leeds East,5,10000,4,8000
+Stoke-on-Trent Central,5,10000,4,8000
+Amber Valley,5,10000,3,6000
+Tynemouth,5,10000,3,6000
+South Shropshire,5,10000,1,2000
+Walsall and Bloxwich,5,10000,4,8000
+Alyn and Deeside,5,10000,4,8000
+Leicester East,5,10000,4,8000
+Huddersfield,5,10000,4,8000
+Jarrow and Gateshead East,5,10000,3,6000
+Stoke-on-Trent South,5,10000,3,6000
+Havant,5,10000,1,2000
+Swindon North,5,10000,4,8000
+Birkenhead,5,10000,4,8000
+Kettering,5,10000,3,6000
+Burnley,5,10000,4,8000
+Goole and Pocklington,5,10000,2,4000
+Lancaster and Wyre,5,10000,4,8000
+Weston-super-Mare,5,10000,4,8000
+Bradford East,5,10000,5,10000
+Bangor Aberconwy,5,10000,2,4000
+Louth and Horncastle,5,10000,5,10000
+"Stone, Great Wyrley and Penkridge",5,10000,3,6000
+Kingston upon Hull West and Haltemprice,5,10000,3,6000
+Halifax,5,10000,4,8000
+Darlington,5,10000,4,8000
+Carshalton and Wallington,5,10000,5,10000
+Nottingham North and Kimberley,5,10000,5,10000
+Mitcham and Morden,5,10000,3,6000
+Old Bexley and Sidcup,5,10000,1,2000
+Oldham East and Saddleworth,5,10000,4,8000
+Norwich North,5,10000,2,4000
+Rochdale,5,10000,3,6000
+Colchester,5,10000,5,10000
+Ossett and Denby Dale,5,10000,3,6000
+Gainsborough,5,10000,3,6000
+Chatham and Aylesford,5,10000,3,6000
+North East Derbyshire,5,10000,2,4000
+Faversham and Mid Kent,5,10000,3,6000
+Gillingham and Rainham,5,10000,3,6000
+Eastleigh,5,10000,2,4000
+Croydon East,4,8000,2,4000
+Rawmarsh and Conisbrough,4,8000,2,4000
+Rhondda and Ogmore,4,8000,1,2000
+Hazel Grove,4,8000,3,6000
+Newcastle upon Tyne East and Wallsend,4,8000,3,6000
+Plymouth Moor View,4,8000,3,6000
+Stoke-on-Trent North,4,8000,3,6000
+Birmingham Perry Barr,4,8000,3,6000
+Warrington North,4,8000,3,6000
+Bolton South and Walkden,4,8000,3,6000
+Boston and Skegness,4,8000,3,6000
+Bishop Auckland,4,8000,2,4000
+Hartlepool,4,8000,4,8000
+Bradford West,4,8000,3,6000
+Dagenham and Rainham,4,8000,4,8000
+Sunderland Central,4,8000,3,6000
+Staffordshire Moorlands,4,8000,3,6000
+Bolton West,4,8000,2,4000
+Crewe and Nantwich,4,8000,3,6000
+Coventry South,4,8000,3,6000
+Wellingborough and Rushden,4,8000,4,8000
+Blackpool South,4,8000,2,4000
+Merthyr Tydfil and Aberdare,4,8000,2,4000
+Barnsley North,4,8000,3,6000
+Gedling,4,8000,1,2000
+Rother Valley,4,8000,0,0
+Newport West and Islwyn,4,8000,3,6000
+Northampton South,4,8000,2,4000
+Doncaster North,4,8000,4,8000
+Kingston upon Hull North and Cottingham,4,8000,3,6000
+Luton North,4,8000,4,8000
+Southport,4,8000,4,8000
+Ceredigion Preseli,4,8000,1,2000
+Bristol North East,4,8000,4,8000
+Dewsbury and Batley,4,8000,3,6000
+Forest of Dean,4,8000,3,6000
+Easington,4,8000,4,8000
+Smethwick,4,8000,2,4000
+Wolverhampton South East,4,8000,3,6000
+St Helens South and Whiston,4,8000,3,6000
+West Bromwich,4,8000,1,2000
+Blaenau Gwent and Rhymney,3,6000,1,2000
+Erewash,3,6000,2,4000
+Penistone and Stocksbridge,3,6000,2,4000
+Blackley and Middleton South,3,6000,2,4000
+Torfaen,3,6000,3,6000
+Houghton and Sunderland South,3,6000,1,2000
+Leeds West and Pudsey,3,6000,1,2000
+North Warwickshire and Bedworth,3,6000,3,6000
+Newton Abbot,3,6000,2,4000
+Whitehaven and Workington,3,6000,1,2000
+Leeds South West and Morley,3,6000,1,2000
+Norwich South,3,6000,2,4000
+Ellesmere Port and Bromborough,3,6000,2,4000
+Birmingham Northfield,3,6000,3,6000
+West Ham and Beckton,3,6000,3,6000
+Birmingham Hodge Hill and Solihull North,3,6000,2,4000
+Cardiff East,3,6000,2,4000
+Ipswich,3,6000,3,6000
+Blaydon and Consett,3,6000,2,4000
+Aldershot,3,6000,3,6000
+Shipley,3,6000,1,2000
+Sherwood Forest,3,6000,2,4000
+Cannock Chase,3,6000,1,2000
+Caerphilly,3,6000,2,4000
+Scunthorpe,3,6000,3,6000
+East Ham,3,6000,0,0
+Southend West and Leigh,3,6000,2,4000
+Stalybridge and Hyde,3,6000,3,6000
+Liverpool Garston,3,6000,2,4000
+Stockton West,3,6000,1,2000
+Bridlington and The Wolds,3,6000,3,6000
+Spen Valley,3,6000,3,6000
+Bootle,3,6000,3,6000
+Colne Valley,3,6000,2,4000
+Tipton and Wednesbury,3,6000,3,6000
+Fareham and Waterlooville,3,6000,2,4000
+Swansea West,3,6000,0,0
+Sheffield Brightside and Hillsborough,2,4000,0,0
+Bridgend,2,4000,1,2000
+Rotherham,2,4000,2,4000
+Barrow and Furness,2,4000,0,0
+Kingston upon Hull East,2,4000,1,2000
+Selby,2,4000,1,2000
+Great Yarmouth,2,4000,1,2000
+Gateshead Central and Whickham,2,4000,1,2000
+High Peak,2,4000,0,0
+Calder Valley,2,4000,2,4000
+Newton Aycliffe and Spennymoor,2,4000,2,4000
+Leigh and Atherton,2,4000,0,0
+Blyth and Ashington,2,4000,2,4000
+North Durham,2,4000,1,2000
+The Wrekin,2,4000,2,4000
+Bolton North East,2,4000,2,4000
+Liverpool Wavertree,2,4000,1,2000
+Stockton North,2,4000,1,2000
+Beverley and Holderness,2,4000,1,2000
+Lowestoft,2,4000,2,4000
+Blackpool North and Fleetwood,2,4000,0,0
+Montgomeryshire and Glyndwr,2,4000,0,0
+Clwyd East,2,4000,2,4000
+City of Durham,2,4000,1,2000
+Brigg and Immingham,2,4000,1,2000
+Coventry North West,2,4000,2,4000
+Birmingham Hall Green and Moseley,2,4000,1,2000
+Cramlington and Killingworth,2,4000,2,4000
+North East Cambridgeshire,1,2000,0,0
+Redcar,1,2000,1,2000
+Hyndburn,1,2000,0,0
+Dudley,1,2000,1,2000
+Birmingham Yardley,1,2000,1,2000
+Liverpool Walton,1,2000,1,2000
+Middlesbrough South and East Cleveland,1,2000,0,0
+Wolverhampton North East,1,2000,1,2000
+Ashton-under-Lyne,1,2000,1,2000
+Gosport,1,2000,0,0
+Barnsley South,1,2000,1,2000
+Bexleyheath and Crayford,1,2000,1,2000
+Wallasey,1,2000,1,2000

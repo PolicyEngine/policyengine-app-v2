@@ -16,6 +16,8 @@ We use Land Registry price paid data to identify property sales above £1.5 mill
 
 For each constituency, we calculate the number of properties exceeding each threshold after uprating, the percentage of households affected, and estimated annual revenue assuming a £2,000 annual charge per property.
 
+[Download the full constituency dataset (CSV)](/assets/posts/uk-mansion-tax/mansion_tax_constituency_data.csv)
+
 ## £1.5 million threshold
 
 Under a £1.5 million threshold, 15,300 properties would be affected in 2026-27, generating £30.6 million in annual revenue.
