@@ -52,9 +52,6 @@ const staff: TeamMember[] = [
     bio: "is a policy modeling fellow at PolicyEngine. He focuses on implementing and analyzing tax and benefit systems. He develops simulation models to evaluate the impacts of policy reforms. Ziming holds a bachelor's degree in mathematical finance from the University of California, Irvine, and a master's degree in business analytics from Boston University.",
     image: '/assets/team/ziming-hua.jpg',
   },
-];
-
-const contractors: TeamMember[] = [
   {
     name: 'Ben Ogorek',
     bio: "is a data scientist at PolicyEngine. He co-founded Google's People Analytics Data Science team and previously held data science leadership positions at Spencer Health Solutions and Nationwide Insurance. Ben holds a PhD in Statistics from North Carolina State University.",
@@ -73,8 +70,6 @@ export default function TeamPage() {
       <TeamSection title="Founders" members={founders} variant="primary" />
 
       <TeamSection title="Team" members={staff} variant="accent" />
-
-      <TeamSection title="Contractors" members={contractors} variant="primary" />
     </StaticPageLayout>
   );
 }
