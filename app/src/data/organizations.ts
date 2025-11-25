@@ -1,4 +1,5 @@
 // Organization logos
+import arnoldVentures from '@/images/logos/orgs/arnold-ventures.png';
 import asi from '@/images/logos/orgs/asi.webp';
 import cec from '@/images/logos/orgs/cec.svg';
 import centre from '@/images/logos/orgs/centre.png';
@@ -102,6 +103,11 @@ export const orgData: OrgData = {
     },
   },
   us: {
+    arnold_ventures: {
+      name: 'Arnold Ventures',
+      logo: arnoldVentures,
+      link: 'https://www.arnoldventures.org/',
+    },
     niskanen_center: {
       name: 'Niskanen Center',
       logo: nisk,
