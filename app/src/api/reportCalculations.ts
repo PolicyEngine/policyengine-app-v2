@@ -25,58 +25,22 @@ export interface CalculationMeta {
  * Fetch calculation for a report using metadata
  */
 export async function fetchCalculationWithMeta(meta: CalculationMeta) {
-  console.log('[fetchCalculationWithMeta] Called with meta:', JSON.stringify(meta, null, 2));
-
   if (meta.type === 'household') {
-    console.log('[fetchCalculationWithMeta] Type is household');
     const policyId = meta.policyIds.reform || meta.policyIds.baseline;
-    console.log('[fetchCalculationWithMeta] Household calculation params:');
-    console.log('  - countryId:', meta.countryId);
-    console.log('  - populationId:', meta.populationId);
-    console.log('  - policyId:', policyId);
-
-    try {
-      const result = await fetchHouseholdCalculation(meta.countryId, meta.populationId, policyId);
-      console.log('[fetchCalculationWithMeta] Household calculation result:', result);
-      return result;
-    } catch (error) {
-      console.error('[fetchCalculationWithMeta] Household calculation failed:', error);
-      throw error;
-    }
-  } else {
-    console.log('[fetchCalculationWithMeta] Type is economy');
-    console.log(
-      `[fetchCalculationWithMeta] Using year ${meta.year} as time_period for economy calculation`
-    );
-    const params: SocietyWideCalculationParams = {
-      region: meta.region || meta.countryId,
-      time_period: meta.year,
-    };
-
-    console.log('[fetchCalculationWithMeta] Society-wide calculation params:');
-    console.log('  - countryId:', meta.countryId);
-    console.log('  - reformPolicyId:', meta.policyIds.reform || meta.policyIds.baseline);
-    console.log('  - baselinePolicyId:', meta.policyIds.baseline);
-    console.log('  - params:', JSON.stringify(params, null, 2));
-
-    try {
-      const result = await fetchSocietyWideCalculation(
-        meta.countryId,
-        meta.policyIds.reform || meta.policyIds.baseline,
-        meta.policyIds.baseline,
-        params
-      );
-      console.log('[fetchCalculationWithMeta] Society-wide calculation result:');
-      console.log('  - status:', result?.status);
-      console.log('  - has result?', !!result?.result);
-      console.log('  - queue_position:', result?.queue_position);
-      console.log('  - average_time:', result?.average_time);
-      console.log('  - error:', result?.error);
-      console.log('  - full result:', result);
-      return result;
-    } catch (error) {
-      console.error('[fetchCalculationWithMeta] Society-wide calculation failed:', error);
-      throw error;
-    }
+    const result = await fetchHouseholdCalculation(meta.countryId, meta.populationId, policyId);
+    return result;
   }
+
+  const params: SocietyWideCalculationParams = {
+    region: meta.region || meta.countryId,
+    time_period: meta.year,
+  };
+
+  const result = await fetchSocietyWideCalculation(
+    meta.countryId,
+    meta.policyIds.reform || meta.policyIds.baseline,
+    meta.policyIds.baseline,
+    params
+  );
+  return result;
 }
