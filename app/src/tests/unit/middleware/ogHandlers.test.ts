@@ -1,12 +1,15 @@
 import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { CRAWLER_USER_AGENTS } from '@/tests/fixtures/middleware/crawlerMocks';
 import {
-  MOCK_APP_WITHOUT_IMAGE,
   MOCK_APP_WITH_IMAGE,
+  MOCK_APP_WITHOUT_IMAGE,
   MOCK_POST,
   MOCK_POST_WITHOUT_IMAGE,
   TEST_URLS,
 } from '@/tests/fixtures/middleware/ogMocks';
-import { CRAWLER_USER_AGENTS } from '@/tests/fixtures/middleware/crawlerMocks';
+// Import after mocks
+// @ts-ignore - importing from root middleware file
+import middleware from '../../../../middleware';
 
 // Mock the JSON imports
 vi.mock('../../../../src/data/posts/posts.json', () => ({
@@ -16,10 +19,6 @@ vi.mock('../../../../src/data/posts/posts.json', () => ({
 vi.mock('../../../../src/data/apps/apps.json', () => ({
   default: [MOCK_APP_WITH_IMAGE, MOCK_APP_WITHOUT_IMAGE],
 }));
-
-// Import after mocks
-// @ts-ignore - importing from root middleware file
-import middleware from '../../../../middleware';
 
 describe('middleware route handlers', () => {
   beforeEach(() => {

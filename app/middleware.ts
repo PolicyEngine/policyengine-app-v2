@@ -1,8 +1,8 @@
 // Vercel Edge Middleware for social media preview support
 // This intercepts requests from social media crawlers and returns proper OG tags
 
-import postsData from './src/data/posts/posts.json';
 import appsData from './src/data/apps/apps.json';
+import postsData from './src/data/posts/posts.json';
 
 // Types
 type PathParts = {
@@ -62,7 +62,9 @@ const STATIC_PAGES: Record<string, { title: string; description: string }> = {
 
 // Helper functions
 export function isCrawler(userAgent: string | null): boolean {
-  if (!userAgent) return false;
+  if (!userAgent) {
+    return false;
+  }
   return CRAWLER_USER_AGENTS.some((crawler) =>
     userAgent.toLowerCase().includes(crawler.toLowerCase())
   );
@@ -70,7 +72,9 @@ export function isCrawler(userAgent: string | null): boolean {
 
 function parsePathParts(pathname: string): PathParts | null {
   const parts = pathname.split('/').filter(Boolean);
-  if (parts.length < 1) return null;
+  if (parts.length < 1) {
+    return null;
+  }
 
   return {
     countryId: parts[0],
@@ -153,10 +157,14 @@ function findAppBySlugAndCountry(slug: string, countryId: string): any {
 }
 
 function handleBlogPost(parts: PathParts, fullUrl: string): Response | null {
-  if (parts.section !== 'research' || !parts.slug) return null;
+  if (parts.section !== 'research' || !parts.slug) {
+    return null;
+  }
 
   const post = findPostBySlug(parts.slug);
-  if (!post) return null;
+  if (!post) {
+    return null;
+  }
 
   const metadata: OgMetadata = {
     title: post.title,
@@ -169,11 +177,17 @@ function handleBlogPost(parts: PathParts, fullUrl: string): Response | null {
 }
 
 function handleApp(parts: PathParts, fullUrl: string): Response | null {
-  if (!parts.section || parts.slug) return null;
-  if (STATIC_PAGES[parts.section]) return null;
+  if (!parts.section || parts.slug) {
+    return null;
+  }
+  if (STATIC_PAGES[parts.section]) {
+    return null;
+  }
 
   const app = findAppBySlugAndCountry(parts.section, parts.countryId);
-  if (!app) return null;
+  if (!app) {
+    return null;
+  }
 
   const metadata: OgMetadata = {
     title: app.title,
@@ -186,10 +200,14 @@ function handleApp(parts: PathParts, fullUrl: string): Response | null {
 }
 
 function handleStaticPage(parts: PathParts, fullUrl: string): Response | null {
-  if (!parts.section || parts.slug) return null;
+  if (!parts.section || parts.slug) {
+    return null;
+  }
 
   const staticPage = STATIC_PAGES[parts.section];
-  if (!staticPage) return null;
+  if (!staticPage) {
+    return null;
+  }
 
   const metadata: OgMetadata = {
     title: staticPage.title,
@@ -202,7 +220,9 @@ function handleStaticPage(parts: PathParts, fullUrl: string): Response | null {
 }
 
 function handleCountryHomepage(parts: PathParts, fullUrl: string): Response | null {
-  if (parts.section) return null;
+  if (parts.section) {
+    return null;
+  }
 
   const countryName =
     parts.countryId === 'uk'
@@ -228,11 +248,15 @@ export const config = {
 
 export default async function middleware(request: Request) {
   const userAgent = request.headers.get('user-agent');
-  if (!isCrawler(userAgent)) return;
+  if (!isCrawler(userAgent)) {
+    return;
+  }
 
   const url = new URL(request.url);
   const parts = parsePathParts(url.pathname);
-  if (!parts) return;
+  if (!parts) {
+    return;
+  }
 
   const fullUrl = `${BASE_URL}${url.pathname}`;
 
