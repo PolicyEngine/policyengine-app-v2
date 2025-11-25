@@ -278,8 +278,8 @@
             <div class="map-legend">
                 <div class="legend-gradient"></div>
                 <div class="legend-labels">
-                    <span>Fewer</span>
-                    <span>More properties</span>
+                    <span>Lower %</span>
+                    <span>Higher %</span>
                 </div>
             </div>
         </div>
@@ -384,11 +384,11 @@
             return 'M' + points.map(p => p.join(',')).join('L') + 'Z';
         }
 
-        // Color scale - sequential teal based on number of properties
-        const maxNum = Math.max(...Object.values(impactData).map(d => d.num));
+        // Color scale - sequential teal based on % of constituency
+        const maxPct = Math.max(...Object.values(impactData).map(d => d.pct));
         const colorScale = d3.scaleSequential()
-            .domain([0, maxNum])
-            .interpolator(t => d3.interpolate('#e0e7ed', '#1a4a6e')(Math.pow(t, 0.4)));
+            .domain([0, maxPct])
+            .interpolator(t => d3.interpolate('#e0e7ed', '#1a4a6e')(Math.pow(t, 0.5)));
 
         // Calculate centroids for geo view
         const centroids = {};
@@ -408,7 +408,7 @@
             .attr('class', 'constituency-path')
             .attr('fill', d => {
                 const data = impactData[d.properties.Name];
-                return data ? colorScale(data.num) : '#e0e7ed';
+                return data ? colorScale(data.pct) : '#e0e7ed';
             })
             .attr('stroke', '#fff')
             .attr('stroke-width', 0.3)
@@ -434,6 +434,10 @@
                 <div class="tooltip-row">
                     <span>Properties</span>
                     <span>${data.num.toLocaleString()}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span>% of constituency</span>
+                    <span>${data.pct.toFixed(2)}%</span>
                 </div>
                 <div class="tooltip-row">
                     <span>Est. revenue</span>
@@ -519,7 +523,7 @@
                 })
                 .attr('fill', d => {
                     const data = impactData[d.name];
-                    return data ? colorScale(data.num) : '#e0e7ed';
+                    return data ? colorScale(data.pct) : '#e0e7ed';
                 })
                 .attr('stroke', '#fff')
                 .attr('stroke-width', 1)
@@ -556,7 +560,7 @@
                 .attr('class', 'constituency-path')
                 .attr('fill', d => {
                     const data = impactData[d.properties.Name];
-                    return data ? colorScale(data.num) : '#e0e7ed';
+                    return data ? colorScale(data.pct) : '#e0e7ed';
                 })
                 .attr('stroke', '#fff')
                 .attr('stroke-width', 0.3)
@@ -592,7 +596,7 @@
                 return `
                     <button class="search-result-item" data-name="${name}">
                         <div class="result-name">${name}</div>
-                        <div class="result-value">${data.num.toLocaleString()} properties · £${data.rev.toLocaleString()} revenue</div>
+                        <div class="result-value">${data.num.toLocaleString()} properties · ${data.pct.toFixed(2)}%</div>
                     </button>
                 `;
             }).join('');
@@ -612,6 +616,7 @@
                     tooltip.innerHTML = `
                         <h4>${name}</h4>
                         <div class="tooltip-row"><span>Properties</span><span>${data.num.toLocaleString()}</span></div>
+                        <div class="tooltip-row"><span>% of constituency</span><span>${data.pct.toFixed(2)}%</span></div>
                         <div class="tooltip-row"><span>Est. revenue</span><span>£${data.rev.toLocaleString()}</span></div>
                     `;
 

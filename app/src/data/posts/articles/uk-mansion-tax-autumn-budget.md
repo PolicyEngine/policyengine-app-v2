@@ -28,18 +28,18 @@ Under a £1.5 million threshold, 15,300 properties would be affected in 2026-27,
 
 **Table 1: Top 10 constituencies by properties affected (£1.5m threshold)**
 
-| Constituency | Properties |
-|:-------------|:----------:|
-| Cities of London and Westminster | 990 |
-| Kensington and Bayswater | 783 |
-| Chelsea and Fulham | 637 |
-| Hampstead and Highgate | 406 |
-| Battersea | 362 |
-| Richmond Park | 301 |
-| Islington South and Finsbury | 277 |
-| Hammersmith and Chiswick | 260 |
-| Holborn and St Pancras | 219 |
-| Runnymede and Weybridge | 184 |
+| Constituency | Properties | % of constituency |
+|:-------------|:----------:|:-----------------:|
+| Cities of London and Westminster | 990 | 1.67% |
+| Kensington and Bayswater | 783 | 1.25% |
+| Chelsea and Fulham | 637 | 1.17% |
+| Hampstead and Highgate | 406 | 0.77% |
+| Battersea | 362 | 0.76% |
+| Richmond Park | 301 | 0.66% |
+| Islington South and Finsbury | 277 | 0.53% |
+| Hammersmith and Chiswick | 260 | 0.50% |
+| Holborn and St Pancras | 219 | 0.48% |
+| Runnymede and Weybridge | 184 | 0.42% |
 
 ## £2 million threshold
 
@@ -51,18 +51,18 @@ Under a £2 million threshold, 8,500 properties would be affected in 2026-27, ge
 
 **Table 2: Top 10 constituencies by properties affected (£2m threshold)**
 
-| Constituency | Properties |
-|:-------------|:----------:|
-| Cities of London and Westminster | 782 |
-| Kensington and Bayswater | 583 |
-| Chelsea and Fulham | 401 |
-| Hampstead and Highgate | 242 |
-| Richmond Park | 153 |
-| Holborn and St Pancras | 147 |
-| Islington South and Finsbury | 146 |
-| Battersea | 144 |
-| Hammersmith and Chiswick | 127 |
-| Runnymede and Weybridge | 103 |
+| Constituency | Properties | % of constituency |
+|:-------------|:----------:|:-----------------:|
+| Cities of London and Westminster | 782 | 1.32% |
+| Kensington and Bayswater | 583 | 0.93% |
+| Chelsea and Fulham | 401 | 0.74% |
+| Hampstead and Highgate | 242 | 0.46% |
+| Richmond Park | 153 | 0.34% |
+| Holborn and St Pancras | 147 | 0.32% |
+| Battersea | 144 | 0.30% |
+| Islington South and Finsbury | 146 | 0.28% |
+| Hammersmith and Chiswick | 127 | 0.24% |
+| Runnymede and Weybridge | 103 | 0.24% |
 
 ## Revenue concentration
 
