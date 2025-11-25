@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from 'react';
+import { ReactNode } from 'react';
 import { Box } from '@mantine/core';
 
 export interface StaticPageLayoutProps {
@@ -7,9 +7,10 @@ export interface StaticPageLayoutProps {
 }
 
 export default function StaticPageLayout({ title, children }: StaticPageLayoutProps) {
-  useEffect(() => {
-    document.title = `${title} | PolicyEngine`;
-  }, [title]);
-
-  return <Box>{children}</Box>;
+  return (
+    <>
+      <title>{title} | PolicyEngine</title>
+      <Box>{children}</Box>
+    </>
+  );
 }
