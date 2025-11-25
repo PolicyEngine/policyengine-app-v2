@@ -97,11 +97,7 @@ describe('DefaultBaselineOption', () => {
     test('given isSelected is true then shows active variant', () => {
       // When
       const { container } = render(
-        <DefaultBaselineOption
-          countryId={TEST_COUNTRIES.US}
-          isSelected={true}
-          onClick={mockOnClick}
-        />
+        <DefaultBaselineOption countryId={TEST_COUNTRIES.US} isSelected onClick={mockOnClick} />
       );
 
       // Then

@@ -8,8 +8,8 @@
  * and the parent view handles creation when "Next" is clicked.
  */
 
-import { Card, Group, Stack, Text } from '@mantine/core';
 import { IconChevronRight } from '@tabler/icons-react';
+import { Card, Group, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
 import { getDefaultBaselineLabel } from '@/utils/isDefaultBaselineSimulation';
 
