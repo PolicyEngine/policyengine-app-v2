@@ -319,23 +319,21 @@
             .attr('class', 'constituency-path')
             .attr('fill', d => {
                 const data = impactData[d.properties.Name];
-                return data ? colorScale(data.pct) : '#ddd';
+                return data ? colorScale(data.pct) : '#f5f5f5';
             })
             .attr('stroke', '#fff')
             .attr('stroke-width', 0.3)
             .on('click', function(event, d) {
                 event.stopPropagation();
-                const data = impactData[d.properties.Name];
-                if (data) {
-                    showTooltip(d.properties.Name, data, event);
-                    // Highlight
-                    g.selectAll('.constituency-path')
-                        .attr('stroke', '#fff')
-                        .attr('stroke-width', 0.3);
-                    d3.select(this)
-                        .attr('stroke', '#277674')
-                        .attr('stroke-width', 1.5);
-                }
+                const data = impactData[d.properties.Name] || { pct: 0, num: 0, rev: 0 };
+                showTooltip(d.properties.Name, data, event);
+                // Highlight
+                g.selectAll('.constituency-path')
+                    .attr('stroke', '#fff')
+                    .attr('stroke-width', 0.3);
+                d3.select(this)
+                    .attr('stroke', '#277674')
+                    .attr('stroke-width', 1.5);
             });
 
         function showTooltip(name, data, event) {
