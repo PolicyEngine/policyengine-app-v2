@@ -180,15 +180,17 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   // ========== CUSTOM WRAPPERS FOR SPECIFIC REPORT LOGIC ==========
   // Wrapper for navigating to simulation selection (needs to update active index)
-  // Skips selection view if user has no existing simulations
+  // Skips selection view if user has no existing simulations (except for baseline, which has DefaultBaselineOption)
   const handleNavigateToSimulationSelection = useCallback(
     (simulationIndex: 0 | 1) => {
       console.log('[ReportPathwayWrapper] Setting active simulation index:', simulationIndex);
       setActiveSimulationIndex(simulationIndex);
-      if (hasExistingSimulations) {
+      // Always show selection view for baseline (index 0) because it has DefaultBaselineOption
+      // For reform (index 1), skip if no existing simulations
+      if (simulationIndex === 0 || hasExistingSimulations) {
         reportCallbacks.navigateToSimulationSelection(simulationIndex);
       } else {
-        // Skip selection view, go directly to create new
+        // Skip selection view, go directly to create new (reform simulation only)
         navigateToMode(ReportViewMode.SIMULATION_LABEL);
       }
     },

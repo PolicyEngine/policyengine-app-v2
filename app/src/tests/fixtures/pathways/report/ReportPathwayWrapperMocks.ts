@@ -79,3 +79,21 @@ export const REPORT_VIEW_MODES = {
   SIMULATION_EXISTING: ReportViewMode.REPORT_SELECT_EXISTING_SIMULATION,
   SUBMIT: ReportViewMode.REPORT_SUBMIT,
 } as const;
+
+/**
+ * Test constants for simulation indices
+ */
+export const SIMULATION_INDEX = {
+  BASELINE: 0 as const,
+  REFORM: 1 as const,
+} as const;
+
+/**
+ * Mock user simulations data with existing simulations
+ */
+export const mockUserSimulationsWithData = {
+  data: [{ id: 'sim-1', label: 'Test Simulation' }],
+  isLoading: false,
+  isError: false,
+  error: null,
+} as any;

@@ -61,8 +61,6 @@ export default function DefaultBaselineOption({
 
     // If exact simulation already exists, reuse it
     if (existingBaseline && existingSimulationId) {
-      console.log('[DefaultBaselineOption] Reusing existing simulation:', existingSimulationId);
-
       // Build the simulation state from existing data
       const policy: PolicyStateProps = {
         id: currentLawId.toString(),
@@ -101,7 +99,6 @@ export default function DefaultBaselineOption({
     // Otherwise, create new geography and simulation
     try {
       // Step 1: Create geography association
-      console.log('[DefaultBaselineOption] Creating geographic association');
       const geographyResult = await createGeographicAssociation({
         id: `${userId}-${Date.now()}`,
         userId,
@@ -110,10 +107,8 @@ export default function DefaultBaselineOption({
         scope: 'national',
         label: `${countryName} nationwide`,
       });
-      console.log('[DefaultBaselineOption] Geography created:', geographyResult);
 
       // Step 2: Create simulation with the new geography
-      console.log('[DefaultBaselineOption] Creating simulation');
       const simulationData: Partial<Simulation> = {
         populationId: geographyResult.geographyId,
         policyId: currentLawId.toString(),
@@ -125,7 +120,6 @@ export default function DefaultBaselineOption({
 
       createSimulation(serializedPayload, {
         onSuccess: (data) => {
-          console.log('[DefaultBaselineOption] Simulation created:', data);
           const simulationId = data.result.simulation_id;
 
           // Build the simulation state with the created IDs
