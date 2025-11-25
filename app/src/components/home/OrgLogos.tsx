@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -46,7 +46,8 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
   // Track which logo index each slot is showing and its transition state
   const [slotIndices, setSlotIndices] = useState<number[]>([]);
   const [transitioningSlot, setTransitioningSlot] = useState<number | null>(null);
-  const [nextLogoIndex, setNextLogoIndex] = useState(NUM_VISIBLE);
+  const lastSlotRef = useRef<number>(-1);
+  const nextLogoRef = useRef<number>(NUM_VISIBLE);
 
   // Initialize slots with first N logos
   useEffect(() => {
@@ -55,29 +56,38 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
     }
     const initial = shuffledOrgs.slice(0, NUM_VISIBLE).map((_, i) => i);
     setSlotIndices(initial);
-    setNextLogoIndex(NUM_VISIBLE);
+    nextLogoRef.current = NUM_VISIBLE;
+    lastSlotRef.current = -1;
   }, [shuffledOrgs]);
 
-  // Cycle a random slot
-  const cycleRandomSlot = useCallback(() => {
+  // Cycle the next slot in sequence (not the same as last time)
+  const cycleNextSlot = useCallback(() => {
     if (shuffledOrgs.length <= NUM_VISIBLE) {
       return;
     }
 
-    // Pick a random slot
-    const randomSlot = Math.floor(Math.random() * NUM_VISIBLE);
+    // Pick next slot (cycling through, but skip if same as last)
+    let nextSlot = (lastSlotRef.current + 1) % NUM_VISIBLE;
+    lastSlotRef.current = nextSlot;
 
     // Start fade out
-    setTransitioningSlot(randomSlot);
+    setTransitioningSlot(nextSlot);
 
     setTimeout(() => {
-      // Update the slot with next logo in queue
       setSlotIndices((prev) => {
         const next = [...prev];
-        setNextLogoIndex((prevNext) => {
-          next[randomSlot] = prevNext % shuffledOrgs.length;
-          return prevNext + 1;
-        });
+        const currentlyVisible = new Set(prev);
+
+        // Find next logo that isn't already visible
+        let newLogoIndex = nextLogoRef.current % shuffledOrgs.length;
+        let attempts = 0;
+        while (currentlyVisible.has(newLogoIndex) && attempts < shuffledOrgs.length) {
+          newLogoIndex = (newLogoIndex + 1) % shuffledOrgs.length;
+          attempts++;
+        }
+
+        next[nextSlot] = newLogoIndex;
+        nextLogoRef.current = newLogoIndex + 1;
         return next;
       });
 
@@ -92,10 +102,10 @@ export default function OrgLogos({ logos }: OrgLogosProps) {
       return;
     }
 
-    const interval = setInterval(cycleRandomSlot, CYCLE_INTERVAL);
+    const interval = setInterval(cycleNextSlot, CYCLE_INTERVAL);
 
     return () => clearInterval(interval);
-  }, [shuffledOrgs.length, slotIndices.length, cycleRandomSlot]);
+  }, [shuffledOrgs.length, slotIndices.length, cycleNextSlot]);
 
   if (!countryOrgs || shuffledOrgs.length === 0 || slotIndices.length === 0) {
     return null;
