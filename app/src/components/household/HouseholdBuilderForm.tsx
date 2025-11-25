@@ -9,12 +9,15 @@
  */
 
 import { useMemo, useState } from 'react';
-import { IconPlus, IconSearch, IconX } from '@tabler/icons-react';
+import { IconInfoCircle, IconPlus, IconSearch, IconX } from '@tabler/icons-react';
 import {
   Accordion,
   ActionIcon,
-  Anchor,
+  Alert,
+  Badge,
   Box,
+  Button,
+  Divider,
   Group,
   Select,
   Stack,
@@ -23,7 +26,9 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { Household } from '@/types/ingredients/Household';
+import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
+  addVariable,
   addVariableToEntity,
   getInputVariables,
   removeVariable,
@@ -71,11 +76,17 @@ export default function HouseholdBuilderForm({
   const [householdSearchValue, setHouseholdSearchValue] = useState('');
   const [isHouseholdSearchFocused, setIsHouseholdSearchFocused] = useState(false);
 
+  // Warning message state (shown when variable added to different entity than expected)
+  const [warningMessage, setWarningMessage] = useState<string | null>(null);
+
   // Get all input variables from metadata
   const allInputVariables = useMemo(() => getInputVariables(metadata), [metadata]);
 
-  // Get list of people
-  const people = useMemo(() => Object.keys(household.householdData.people || {}), [household]);
+  // Get list of people, sorted in display order (you, partner, dependents)
+  const people = useMemo(
+    () => sortPeopleKeys(Object.keys(household.householdData.people || {})),
+    [household]
+  );
 
   // Helper to get person display name
   const getPersonDisplayName = (personKey: string): string => {
@@ -91,43 +102,45 @@ export default function HouseholdBuilderForm({
       .join(' ');
   };
 
-  // Filter person-level variables for search
+  // Filter ALL variables for person search (no entity filtering - shows all)
   const filteredPersonVariables = useMemo(() => {
-    const personVars = allInputVariables.filter((v) => {
-      const entityInfo = resolveEntity(v.name, metadata);
-      return entityInfo?.isPerson;
-    });
-
     if (!personSearchValue.trim()) {
-      return personVars.slice(0, 50);
+      return allInputVariables.slice(0, 50);
     }
 
     const search = personSearchValue.toLowerCase();
-    return personVars
+    return allInputVariables
       .filter(
         (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
       )
       .slice(0, 50);
-  }, [allInputVariables, personSearchValue, metadata]);
+  }, [allInputVariables, personSearchValue]);
 
-  // Filter non-person variables for household search
+  // Filter ALL variables for household search (no entity filtering - shows all)
   const filteredHouseholdVariables = useMemo(() => {
-    const householdVars = allInputVariables.filter((v) => {
-      const entityInfo = resolveEntity(v.name, metadata);
-      return !entityInfo?.isPerson;
-    });
-
     if (!householdSearchValue.trim()) {
-      return householdVars.slice(0, 50);
+      return allInputVariables.slice(0, 50);
     }
 
     const search = householdSearchValue.toLowerCase();
-    return householdVars
+    return allInputVariables
       .filter(
         (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
       )
       .slice(0, 50);
-  }, [allInputVariables, householdSearchValue, metadata]);
+  }, [allInputVariables, householdSearchValue]);
+
+  // Helper to get entity display info for a variable
+  const getVariableEntityInfo = (variableName: string): { isPerson: boolean; label: string } => {
+    const entityInfo = resolveEntity(variableName, metadata);
+    if (!entityInfo) {
+      return { isPerson: true, label: 'unknown' };
+    }
+    return {
+      isPerson: entityInfo.isPerson,
+      label: entityInfo.isPerson ? 'person' : entityInfo.label?.toLowerCase() || 'household',
+    };
+  };
 
   // Get variables for a specific person (custom only, not basic inputs)
   const getPersonVariables = (personName: string): string[] => {
@@ -172,6 +185,20 @@ export default function HouseholdBuilderForm({
     variable: { name: string; label: string },
     person: string
   ) => {
+    const { isPerson, label: entityLabel } = getVariableEntityInfo(variable.name);
+
+    // If non-person variable selected from person context, show warning
+    if (!isPerson) {
+      setWarningMessage(
+        `"${variable.label}" is a ${entityLabel}-level variable and was added to household variables.`
+      );
+      // Auto-dismiss warning after 5 seconds
+      setTimeout(() => setWarningMessage(null), 5000);
+    } else {
+      setWarningMessage(null);
+    }
+
+    // addVariableToEntity handles routing to correct entity based on metadata
     const newHousehold = addVariableToEntity(household, variable.name, metadata, year, person);
     onChange(newHousehold);
 
@@ -214,15 +241,42 @@ export default function HouseholdBuilderForm({
 
   // Handle household variable selection
   const handleHouseholdVariableSelect = (variable: { name: string; label: string }) => {
-    if (!selectedVariables.includes(variable.name)) {
-      const newHousehold = addVariableToEntity(
+    const { isPerson } = getVariableEntityInfo(variable.name);
+
+    // If person variable selected from household context, show warning
+    if (isPerson) {
+      setWarningMessage(
+        `"${variable.label}" is a person-level variable and was added to all household members.`
+      );
+      // Auto-dismiss warning after 5 seconds
+      setTimeout(() => setWarningMessage(null), 5000);
+    } else {
+      setWarningMessage(null);
+    }
+
+    let newHousehold: Household;
+    if (isPerson) {
+      // For person-level variables selected from household, add to ALL people
+      // Always call addVariable to ensure new members get it too
+      newHousehold = addVariable(household, variable.name, metadata, year);
+    } else {
+      // For non-person variables, only add if not already present
+      if (selectedVariables.includes(variable.name)) {
+        setIsHouseholdSearchActive(false);
+        setHouseholdSearchValue('');
+        setIsHouseholdSearchFocused(false);
+        return;
+      }
+      newHousehold = addVariableToEntity(
         household,
         variable.name,
         metadata,
         year,
         'your household'
       );
-      onChange(newHousehold);
+    }
+    onChange(newHousehold);
+    if (!selectedVariables.includes(variable.name)) {
       setSelectedVariables([...selectedVariables, variable.name]);
     }
 
@@ -240,23 +294,28 @@ export default function HouseholdBuilderForm({
 
   return (
     <Stack gap="lg">
+      {/* Floating notification when variable added to different entity */}
+      {warningMessage && (
+        <Alert
+          icon={<IconInfoCircle size={16} />}
+          color="blue"
+          withCloseButton
+          onClose={() => setWarningMessage(null)}
+          style={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            maxWidth: 400,
+            zIndex: 1000,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          }}
+        >
+          {warningMessage}
+        </Alert>
+      )}
+
       {/* Household Information */}
       <Stack gap="md">
-        {/* Tax Year - read-only, shows year from report context */}
-        <TextInput
-          label="Tax Year"
-          value={year}
-          readOnly
-          disabled
-          description="Year is determined by the report you're creating"
-          styles={{
-            input: {
-              cursor: 'not-allowed',
-              backgroundColor: 'var(--mantine-color-gray-1)',
-            },
-          }}
-        />
-
         {/* Marital Status and Children - side by side */}
         <Group grow>
           <Select
@@ -287,15 +346,17 @@ export default function HouseholdBuilderForm({
         </Group>
       </Stack>
 
-      {/* Main Accordion Sections */}
+      <Divider />
+
+      {/* Main Accordion Sections - all open by default */}
       <Accordion defaultValue={['individuals', 'household-vars']} multiple>
         {/* Individuals / Members Section */}
         <Accordion.Item value="individuals">
           <Accordion.Control>
-            <Text fw={500}>Household Members</Text>
+            <Text fw={500}>Individuals</Text>
           </Accordion.Control>
           <Accordion.Panel>
-            <Accordion defaultValue={people} multiple>
+            <Accordion key={people.join(',')} defaultValue={people} multiple>
               {people.map((person) => {
                 const personVars = getPersonVariables(person);
 
@@ -417,27 +478,38 @@ export default function HouseholdBuilderForm({
                               >
                                 {filteredPersonVariables.length > 0 ? (
                                   <Stack gap={0}>
-                                    {filteredPersonVariables.map((variable) => (
-                                      <Box
-                                        key={variable.name}
-                                        p="sm"
-                                        onMouseDown={() =>
-                                          handlePersonVariableSelect(variable, person)
-                                        }
-                                        style={{
-                                          cursor: 'pointer',
-                                          borderBottom:
-                                            '1px solid var(--mantine-color-default-border)',
-                                        }}
-                                      >
-                                        <Text size="sm">{variable.label}</Text>
-                                        {variable.documentation && (
-                                          <Text size="xs" c="dimmed" lineClamp={1}>
-                                            {variable.documentation}
-                                          </Text>
-                                        )}
-                                      </Box>
-                                    ))}
+                                    {filteredPersonVariables.map((variable) => {
+                                      const { isPerson, label: entityLabel } =
+                                        getVariableEntityInfo(variable.name);
+                                      return (
+                                        <Box
+                                          key={variable.name}
+                                          p="sm"
+                                          onMouseDown={() =>
+                                            handlePersonVariableSelect(variable, person)
+                                          }
+                                          style={{
+                                            cursor: 'pointer',
+                                            borderBottom:
+                                              '1px solid var(--mantine-color-default-border)',
+                                          }}
+                                        >
+                                          <Group gap="xs" justify="space-between">
+                                            <Text size="sm">{variable.label}</Text>
+                                            {!isPerson && (
+                                              <Badge size="xs" variant="light" color="gray">
+                                                {entityLabel}
+                                              </Badge>
+                                            )}
+                                          </Group>
+                                          {variable.documentation && (
+                                            <Text size="xs" c="dimmed" lineClamp={1}>
+                                              {variable.documentation}
+                                            </Text>
+                                          )}
+                                        </Box>
+                                      );
+                                    })}
                                   </Stack>
                                 ) : (
                                   <Text size="sm" c="dimmed" p="md" ta="center">
@@ -448,20 +520,15 @@ export default function HouseholdBuilderForm({
                             )}
                           </Box>
                         ) : (
-                          <Box>
-                            <Anchor
-                              size="sm"
-                              onClick={() => handleOpenPersonSearch(person)}
-                              style={{ cursor: 'pointer', fontStyle: 'italic' }}
-                            >
-                              <Group gap={4}>
-                                <IconPlus size={14} />
-                                <Text size="sm">
-                                  Add variable to {getPersonDisplayName(person)}
-                                </Text>
-                              </Group>
-                            </Anchor>
-                          </Box>
+                          <Button
+                            variant="subtle"
+                            size="compact-sm"
+                            leftSection={<IconPlus size={14} />}
+                            onClick={() => handleOpenPersonSearch(person)}
+                            styles={{ label: { fontStyle: 'italic' } }}
+                          >
+                            Add variable to {getPersonDisplayName(person)}
+                          </Button>
                         )}
                       </Stack>
                     </Accordion.Panel>
@@ -475,7 +542,7 @@ export default function HouseholdBuilderForm({
         {/* Household Variables Section */}
         <Accordion.Item value="household-vars">
           <Accordion.Control>
-            <Text fw={500}>Household Variables</Text>
+            <Text fw={500}>Household</Text>
           </Accordion.Control>
           <Accordion.Panel>
             <Stack gap="md">
@@ -588,24 +655,34 @@ export default function HouseholdBuilderForm({
                     >
                       {filteredHouseholdVariables.length > 0 ? (
                         <Stack gap={0}>
-                          {filteredHouseholdVariables.map((variable) => (
-                            <Box
-                              key={variable.name}
-                              p="sm"
-                              onMouseDown={() => handleHouseholdVariableSelect(variable)}
-                              style={{
-                                cursor: 'pointer',
-                                borderBottom: '1px solid var(--mantine-color-default-border)',
-                              }}
-                            >
-                              <Text size="sm">{variable.label}</Text>
-                              {variable.documentation && (
-                                <Text size="xs" c="dimmed" lineClamp={1}>
-                                  {variable.documentation}
-                                </Text>
-                              )}
-                            </Box>
-                          ))}
+                          {filteredHouseholdVariables.map((variable) => {
+                            const { isPerson } = getVariableEntityInfo(variable.name);
+                            return (
+                              <Box
+                                key={variable.name}
+                                p="sm"
+                                onMouseDown={() => handleHouseholdVariableSelect(variable)}
+                                style={{
+                                  cursor: 'pointer',
+                                  borderBottom: '1px solid var(--mantine-color-default-border)',
+                                }}
+                              >
+                                <Group gap="xs" justify="space-between">
+                                  <Text size="sm">{variable.label}</Text>
+                                  {isPerson && (
+                                    <Badge size="xs" variant="light" color="gray">
+                                      person
+                                    </Badge>
+                                  )}
+                                </Group>
+                                {variable.documentation && (
+                                  <Text size="xs" c="dimmed" lineClamp={1}>
+                                    {variable.documentation}
+                                  </Text>
+                                )}
+                              </Box>
+                            );
+                          })}
                         </Stack>
                       ) : (
                         <Text size="sm" c="dimmed" p="md" ta="center">
@@ -616,18 +693,15 @@ export default function HouseholdBuilderForm({
                   )}
                 </Box>
               ) : (
-                <Box>
-                  <Anchor
-                    size="sm"
-                    onClick={handleOpenHouseholdSearch}
-                    style={{ cursor: 'pointer', fontStyle: 'italic' }}
-                  >
-                    <Group gap={4}>
-                      <IconPlus size={14} />
-                      <Text size="sm">Add variable</Text>
-                    </Group>
-                  </Anchor>
-                </Box>
+                <Button
+                  variant="subtle"
+                  size="compact-sm"
+                  leftSection={<IconPlus size={14} />}
+                  onClick={handleOpenHouseholdSearch}
+                  styles={{ label: { fontStyle: 'italic' } }}
+                >
+                  Add variable
+                </Button>
               )}
             </Stack>
           </Accordion.Panel>

@@ -58,16 +58,20 @@ export const getBasicInputFields = createSelector(
   (basicInputs, variables, entities) => {
     const inputs = basicInputs || [];
 
-    // Categorize fields by their actual entity from metadata
-    const categorized: Record<string, string[]> = {
-      person: [],
-      household: [],
-      taxUnit: [],
-      spmUnit: [],
-      family: [],
-      maritalUnit: [],
-    };
+    // Dynamically build categories from metadata entities (country-agnostic)
+    // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically
+    const categorized: Record<string, string[]> = {};
 
+    // Initialize categories from available entities in metadata
+    if (entities) {
+      for (const [entityType, entityInfo] of Object.entries(entities)) {
+        // Use 'person' as the key for person entities, otherwise use the entity type
+        const key = (entityInfo as any).is_person ? 'person' : entityType;
+        categorized[key] = [];
+      }
+    }
+
+    // Categorize each field by looking up its entity in metadata
     for (const field of inputs) {
       const variable = variables?.[field];
       if (!variable) {
@@ -77,23 +81,19 @@ export const getBasicInputFields = createSelector(
       const entityType = variable.entity;
       const entityInfo = entities?.[entityType];
 
-      // Map entity to category
-      if (entityInfo?.is_person || entityType === 'person') {
-        categorized.person.push(field);
-      } else if (entityType === 'household') {
-        categorized.household.push(field);
-      } else if (entityType === 'tax_unit') {
-        categorized.taxUnit.push(field);
-      } else if (entityType === 'spm_unit') {
-        categorized.spmUnit.push(field);
-      } else if (entityType === 'family') {
-        categorized.family.push(field);
-      } else if (entityType === 'marital_unit') {
-        categorized.maritalUnit.push(field);
-      } else {
-        // Default to household for unknown entities
-        categorized.household.push(field);
+      if (!entityInfo) {
+        // Unknown entity - skip field with warning
+        console.warn(`[metadataUtils] Unknown entity type "${entityType}" for field "${field}"`);
+        continue;
       }
+
+      // Use 'person' as the key for person entities, otherwise use the entity type
+      const key = entityInfo.is_person ? 'person' : entityType;
+
+      if (!categorized[key]) {
+        categorized[key] = [];
+      }
+      categorized[key].push(field);
     }
 
     return categorized;

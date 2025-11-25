@@ -204,13 +204,12 @@ export default function PopulationsPage() {
   };
 
   // Helper function to get household configuration details
-  // TODO: Improve this placeholder function
   const getHouseholdDetails = (household: any) => {
     const peopleCount = Object.keys(household?.household_json?.people || {}).length;
     const familiesCount = Object.keys(household?.household_json?.families || {}).length;
     return [
       { text: `${peopleCount} person${peopleCount !== 1 ? 's' : ''}`, badge: '' },
-      { text: `${familiesCount} household${familiesCount !== 1 ? 's' : ''}`, badge: '' },
+      { text: `${familiesCount} family${familiesCount !== 1 ? 'ies' : ''}`, badge: '' },
     ];
   };
 

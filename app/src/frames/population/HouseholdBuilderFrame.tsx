@@ -52,14 +52,11 @@ export default function HouseholdBuilderFrame({
   const { loading, error } = useSelector((state: RootState) => state.metadata);
   const metadata = useSelector((state: RootState) => state.metadata);
 
-  // Get all basic non-person fields (household, taxUnit, spmUnit, etc.)
-  const basicNonPersonFields = [
-    ...basicInputFields.household,
-    ...basicInputFields.taxUnit,
-    ...basicInputFields.spmUnit,
-    ...basicInputFields.family,
-    ...basicInputFields.maritalUnit,
-  ];
+  // Get all basic non-person fields dynamically (country-agnostic)
+  // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically
+  const basicNonPersonFields = Object.entries(basicInputFields)
+    .filter(([key]) => key !== 'person')
+    .flatMap(([, fields]) => fields);
 
   // State for form controls
   const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
@@ -159,22 +156,34 @@ export default function HouseholdBuilderFrame({
       }
     }
 
-    // Add required group entities for US
-    if (countryId === 'us') {
-      const allPeople = ['you'];
-      if (maritalStatus === 'married') {
-        allPeople.push('your partner');
-      }
-      for (let i = 0; i < numChildren; i++) {
-        const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
-        allPeople.push(`your ${ordinals[i] || `${i + 1}th`} dependent`);
-      }
+    // Build list of all people in household (common to all countries)
+    const allPeople = ['you'];
+    if (maritalStatus === 'married') {
+      allPeople.push('your partner');
+    }
+    const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
+    for (let i = 0; i < numChildren; i++) {
+      allPeople.push(`your ${ordinals[i] || `${i + 1}th`} dependent`);
+    }
 
+    // Assign people to group entities based on country
+    // Each country has different entity structures
+    if (countryId === 'us') {
       allPeople.forEach((person) => {
         builder.assignToGroupEntity(person, 'households', 'your household');
         builder.assignToGroupEntity(person, 'families', 'your family');
         builder.assignToGroupEntity(person, 'taxUnits', 'your tax unit');
         builder.assignToGroupEntity(person, 'spmUnits', 'your household');
+      });
+    } else if (countryId === 'uk') {
+      allPeople.forEach((person) => {
+        builder.assignToGroupEntity(person, 'households', 'your household');
+        builder.assignToGroupEntity(person, 'benunits', 'your benefit unit');
+      });
+    } else {
+      // Default for other countries (CA, NG, IL, etc.) - just households
+      allPeople.forEach((person) => {
+        builder.assignToGroupEntity(person, 'households', 'your household');
       });
     }
 
@@ -299,7 +308,7 @@ export default function HouseholdBuilderFrame({
         year={reportYear}
         maritalStatus={maritalStatus}
         numChildren={numChildren}
-        basicPersonFields={basicInputFields.person}
+        basicPersonFields={basicInputFields.person || []}
         basicNonPersonFields={basicNonPersonFields}
         onChange={setLocalHousehold}
         onMaritalStatusChange={setMaritalStatus}
