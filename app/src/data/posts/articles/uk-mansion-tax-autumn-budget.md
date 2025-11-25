@@ -16,7 +16,7 @@ We use Land Registry price paid data to identify property sales above £1.5 mill
 
 For each constituency, we calculate the number of properties exceeding each threshold after uprating and estimated annual revenue assuming a £2,000 annual charge per property.
 
-[Download the full constituency dataset (CSV)](/assets/posts/uk-mansion-tax/mansion_tax_constituency_data.csv)
+[Download the full constituency dataset (CSV)](/assets/posts/uk-mansion-tax/mansion_tax_constituency_data.csv) | [View analysis code on GitHub](https://github.com/PolicyEngine/uk-mansion-tax)
 
 ## £1.5 million threshold
 
