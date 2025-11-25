@@ -65,6 +65,7 @@
     "@types/react-plotly.js": "^2.6.3",
     "@types/react-syntax-highlighter": "^15.5.0",
     "@types/wordwrapjs": "^5.1.2",
+    "@vercel/node": "^5.5.10",
     "@vitejs/plugin-react": "^4.5.2",
     "eslint": "^9.29.0",
     "eslint-config-mantine": "^4.0.3",
