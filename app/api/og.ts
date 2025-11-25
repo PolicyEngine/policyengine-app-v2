@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { readFileSync } from 'fs';
+import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
 
 // Post type definition
@@ -11,7 +11,24 @@ interface Post {
 }
 
 // Posts data - read from file at cold start
-const posts: Post[] = JSON.parse(readFileSync(join(__dirname, 'posts.json'), 'utf-8'));
+// Try multiple paths since Vercel bundling can vary
+function loadPosts(): Post[] {
+  const paths = [
+    join(__dirname, 'posts.json'),
+    join(process.cwd(), 'api', 'posts.json'),
+    '/var/task/api/posts.json',
+  ];
+  for (const p of paths) {
+    if (existsSync(p)) {
+      return JSON.parse(readFileSync(p, 'utf-8'));
+    }
+  }
+  // Fallback to empty array if file not found
+  console.error('posts.json not found in any expected location');
+  return [];
+}
+
+const posts: Post[] = loadPosts();
 
 // Generate slug from filename (same logic as postTransformers.ts)
 export function getSlugFromFilename(filename: string): string {
