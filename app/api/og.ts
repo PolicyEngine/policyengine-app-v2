@@ -1,6 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
 
 // Post type definition
 interface Post {
@@ -10,25 +8,26 @@ interface Post {
   image?: string;
 }
 
-// Posts data - read from file at cold start
-// Try multiple paths since Vercel bundling can vary
-function loadPosts(): Post[] {
-  const paths = [
-    join(__dirname, 'posts.json'),
-    join(process.cwd(), 'api', 'posts.json'),
-    '/var/task/api/posts.json',
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) {
-      return JSON.parse(readFileSync(p, 'utf-8'));
-    }
-  }
-  // Fallback to empty array if file not found
-  console.error('posts.json not found in any expected location');
-  return [];
-}
+// Posts data - loaded lazily on first request
+let posts: Post[] | null = null;
 
-const posts: Post[] = loadPosts();
+async function getPosts(): Promise<Post[]> {
+  if (posts !== null) {
+    return posts;
+  }
+  try {
+    // Fetch from the deployed static assets
+    const response = await fetch('https://policyengine.org/data/posts.json');
+    if (response.ok) {
+      posts = await response.json();
+      return posts!;
+    }
+  } catch (e) {
+    console.error('Failed to fetch posts.json:', e);
+  }
+  posts = [];
+  return posts;
+}
 
 // Generate slug from filename (same logic as postTransformers.ts)
 export function getSlugFromFilename(filename: string): string {
@@ -37,8 +36,9 @@ export function getSlugFromFilename(filename: string): string {
 }
 
 // Find post by slug
-export function findPostBySlug(slug: string) {
-  return posts.find((post) => getSlugFromFilename(post.filename) === slug);
+export async function findPostBySlug(slug: string): Promise<Post | undefined> {
+  const allPosts = await getPosts();
+  return allPosts.find((post) => getSlugFromFilename(post.filename) === slug);
 }
 
 // Default OG tags
@@ -119,7 +119,7 @@ export function generateOgHtml(
 </html>`;
 }
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { path } = req.query;
   const pathname = Array.isArray(path) ? `/${path.join('/')}` : `/${path || ''}`;
 
@@ -149,7 +149,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
 
   // Blog post: /:countryId/research/:slug
   if (section === 'research' && slug) {
-    const post = findPostBySlug(slug);
+    const post = await findPostBySlug(slug);
 
     if (post) {
       const imageUrl = post.image ? `${baseUrl}/assets/posts/${post.image}` : DEFAULT_OG.image;
