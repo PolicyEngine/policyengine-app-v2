@@ -1,5 +1,5 @@
-import postsData from '../src/data/posts/posts.json';
 import appsData from '../src/data/apps/apps.json';
+import postsData from '../src/data/posts/posts.json';
 
 export const config = {
   runtime: 'edge',
@@ -52,7 +52,9 @@ const STATIC_PAGES: Record<string, { title: string; description: string }> = {
 // Helper functions
 function parsePathParts(pathname: string): PathParts | null {
   const parts = pathname.split('/').filter(Boolean);
-  if (parts.length < 1) return null;
+  if (parts.length < 1) {
+    return null;
+  }
 
   return {
     countryId: parts[0],
@@ -128,10 +130,14 @@ function findAppBySlugAndCountry(slug: string, countryId: string): any {
 }
 
 function handleBlogPost(parts: PathParts, fullUrl: string): Response | null {
-  if (parts.section !== 'research' || !parts.slug) return null;
+  if (parts.section !== 'research' || !parts.slug) {
+    return null;
+  }
 
   const post = findPostBySlug(parts.slug);
-  if (!post) return null;
+  if (!post) {
+    return null;
+  }
 
   const metadata: OgMetadata = {
     title: post.title,
@@ -144,11 +150,17 @@ function handleBlogPost(parts: PathParts, fullUrl: string): Response | null {
 }
 
 function handleApp(parts: PathParts, fullUrl: string): Response | null {
-  if (!parts.section || parts.slug) return null;
-  if (STATIC_PAGES[parts.section]) return null;
+  if (!parts.section || parts.slug) {
+    return null;
+  }
+  if (STATIC_PAGES[parts.section]) {
+    return null;
+  }
 
   const app = findAppBySlugAndCountry(parts.section, parts.countryId);
-  if (!app) return null;
+  if (!app) {
+    return null;
+  }
 
   const metadata: OgMetadata = {
     title: app.title,
@@ -161,10 +173,14 @@ function handleApp(parts: PathParts, fullUrl: string): Response | null {
 }
 
 function handleStaticPage(parts: PathParts, fullUrl: string): Response | null {
-  if (!parts.section || parts.slug) return null;
+  if (!parts.section || parts.slug) {
+    return null;
+  }
 
   const staticPage = STATIC_PAGES[parts.section];
-  if (!staticPage) return null;
+  if (!staticPage) {
+    return null;
+  }
 
   const metadata: OgMetadata = {
     title: staticPage.title,
@@ -177,7 +193,9 @@ function handleStaticPage(parts: PathParts, fullUrl: string): Response | null {
 }
 
 function handleCountryHomepage(parts: PathParts, fullUrl: string): Response | null {
-  if (parts.section) return null;
+  if (parts.section) {
+    return null;
+  }
 
   const countryName =
     parts.countryId === 'uk'

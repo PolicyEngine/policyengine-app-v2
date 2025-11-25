@@ -2,11 +2,10 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   EXPECTED_OG_METADATA,
   HTML_EXPECTATIONS,
-  MOCK_APP_WITHOUT_IMAGE,
   MOCK_APP_WITH_IMAGE,
+  MOCK_APP_WITHOUT_IMAGE,
   MOCK_POST,
   MOCK_POST_WITHOUT_IMAGE,
-  TEST_PATH_PARTS,
   TEST_URLS,
 } from '@/tests/fixtures/middleware/ogMocks';
 
@@ -27,10 +26,6 @@ vi.mock('../../../../src/data/apps/apps.json', () => ({
   default: [MOCK_APP_WITH_IMAGE, MOCK_APP_WITHOUT_IMAGE],
 }));
 
-// Import after mocks
-// @ts-ignore - importing from root middleware file
-import middleware from '../../../../middleware';
-
 describe('middleware OG tag helpers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,7 +37,6 @@ describe('middleware OG tag helpers', () => {
       const pathname = '/us/research/test-blog-post';
 
       // When
-      const url = new URL(pathname, 'https://policyengine.org');
       const parts = pathname.split('/').filter(Boolean);
 
       // Then
@@ -164,7 +158,9 @@ describe('middleware OG tag helpers', () => {
       const defaultImage = 'https://policyengine.org/assets/logos/policyengine/teal.png';
 
       // When
-      const imageUrl = imageName ? `https://policyengine.org/assets/posts/${imageName}` : defaultImage;
+      const imageUrl = imageName
+        ? `https://policyengine.org/assets/posts/${imageName}`
+        : defaultImage;
 
       // Then
       expect(imageUrl).toBe(defaultImage);
