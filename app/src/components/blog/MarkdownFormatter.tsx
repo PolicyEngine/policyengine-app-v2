@@ -529,7 +529,6 @@ export function MarkdownFormatter({
             textDecoration: 'none',
             borderBottom: `1px solid ${blogColors.link}`,
             fontWeight: href?.startsWith('#') ? 'normal' : blogFontWeights.medium,
-            padding: blogSpacing.padding.code,
             transition: 'background-color 0.2s ease, color 0.2s ease',
             borderRadius: blogRadius.sm,
           }}
@@ -542,7 +541,7 @@ export function MarkdownFormatter({
             e.currentTarget.style.color = blogColors.link;
           }}
         >
-          <span style={{ whiteSpace: 'nowrap' }}>{footnoteNumber || children}</span>
+          {footnoteNumber || children}
         </a>
       );
     },
