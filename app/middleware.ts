@@ -1,6 +1,8 @@
 // Vercel Edge Middleware for social media preview support
 // This intercepts requests from social media crawlers and returns proper OG tags
 
+import postsData from './src/data/posts/posts.json';
+
 // Crawler user agents that need OG tags
 export const CRAWLER_USER_AGENTS = [
   'facebookexternalhit',
@@ -134,30 +136,22 @@ export default async function middleware(request: Request) {
 
   // Blog post: /:countryId/research/:slug
   if (section === 'research' && slug) {
-    // For blog posts, fetch post data from static JSON
-    try {
-      const postsResponse = await fetch(`${baseUrl}/data/posts.json`);
-      if (postsResponse.ok) {
-        const posts = await postsResponse.json();
-        const post = posts.find((p: { filename: string }) => {
-          const filenameWithoutExt = p.filename.substring(0, p.filename.indexOf('.'));
-          return filenameWithoutExt.toLowerCase().replace(/_/g, '-') === slug;
-        });
+    // For blog posts, use imported post data
+    const post = postsData.find((p: { filename: string }) => {
+      const filenameWithoutExt = p.filename.substring(0, p.filename.indexOf('.'));
+      return filenameWithoutExt.toLowerCase().replace(/_/g, '-') === slug;
+    });
 
-        if (post) {
-          const imageUrl = post.image ? `${baseUrl}/assets/posts/${post.image}` : DEFAULT_OG.image;
-          html = generateOgHtml(post.title, post.description, imageUrl, fullUrl, 'article');
-          return new Response(html, {
-            status: 200,
-            headers: {
-              'Content-Type': 'text/html',
-              'Cache-Control': 'public, max-age=3600',
-            },
-          });
-        }
-      }
-    } catch (e) {
-      // Fall through to default
+    if (post) {
+      const imageUrl = post.image ? `${baseUrl}/assets/posts/${post.image}` : DEFAULT_OG.image;
+      html = generateOgHtml(post.title, post.description, imageUrl, fullUrl, 'article');
+      return new Response(html, {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/html',
+          'Cache-Control': 'public, max-age=3600',
+        },
+      });
     }
   }
 

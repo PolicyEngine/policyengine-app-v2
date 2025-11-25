@@ -1,3 +1,5 @@
+import postsData from '../src/data/posts/posts.json';
+
 export const config = {
   runtime: 'edge',
 };
@@ -105,26 +107,19 @@ export default async function handler(request: Request) {
 
   // Blog post: /:countryId/research/:slug
   if (section === 'research' && slug) {
-    try {
-      const postsResponse = await fetch(`${baseUrl}/data/posts.json`);
-      if (postsResponse.ok) {
-        const posts = await postsResponse.json();
-        const post = posts.find((p: { filename: string }) => {
-          const filenameWithoutExt = p.filename.substring(0, p.filename.indexOf('.'));
-          return filenameWithoutExt.toLowerCase().replace(/_/g, '-') === slug;
-        });
+    // Use imported post data
+    const post = postsData.find((p: { filename: string }) => {
+      const filenameWithoutExt = p.filename.substring(0, p.filename.indexOf('.'));
+      return filenameWithoutExt.toLowerCase().replace(/_/g, '-') === slug;
+    });
 
-        if (post) {
-          const imageUrl = post.image ? `${baseUrl}/assets/posts/${post.image}` : DEFAULT_OG.image;
-          html = generateOgHtml(post.title, post.description, imageUrl, fullUrl, 'article');
-          return new Response(html, {
-            status: 200,
-            headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
-          });
-        }
-      }
-    } catch {
-      // Fall through to default
+    if (post) {
+      const imageUrl = post.image ? `${baseUrl}/assets/posts/${post.image}` : DEFAULT_OG.image;
+      html = generateOgHtml(post.title, post.description, imageUrl, fullUrl, 'article');
+      return new Response(html, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=3600' },
+      });
     }
   }
 
