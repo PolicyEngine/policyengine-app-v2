@@ -1,12 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
+import { CountryId, getOrgsForCountry, Organization } from '@/data/organizations';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import {
-  getOrgsForCountry,
-  Organization,
-  CountryId,
-} from '@/data/organizations';
 
 const NUM_VISIBLE = 7;
 const CYCLE_INTERVAL = 2000; // 2 seconds between each change
@@ -32,9 +28,7 @@ export default function OrgLogos() {
 
   // Track which logo index each slot is showing and its transition state
   const [slotIndices, setSlotIndices] = useState<number[]>([]);
-  const [transitioningSlot, setTransitioningSlot] = useState<number | null>(
-    null
-  );
+  const [transitioningSlot, setTransitioningSlot] = useState<number | null>(null);
   const lastSlotRef = useRef<number>(-1);
   const nextLogoRef = useRef<number>(NUM_VISIBLE);
 
@@ -107,9 +101,7 @@ export default function OrgLogos() {
     return null;
   }
 
-  const visibleOrgs = slotIndices
-    .map((idx) => shuffledOrgs[idx])
-    .filter(Boolean) as Organization[];
+  const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean) as Organization[];
 
   return (
     <Box mt={spacing['4xl']} mb={spacing['4xl']}>

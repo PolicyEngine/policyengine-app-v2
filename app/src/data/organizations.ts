@@ -19,8 +19,8 @@ import mothersOutreach from '@/images/logos/orgs/mothers-outreach-network.png';
 import myfriendben from '@/images/logos/orgs/myfriendben.png';
 import niesr from '@/images/logos/orgs/niesr.png';
 import nisk from '@/images/logos/orgs/niskanen-center.png';
-import pn3policy from '@/images/logos/orgs/pn3policy.png';
 import ppp from '@/images/logos/orgs/peoples-policy-project.png';
+import pn3policy from '@/images/logos/orgs/pn3policy.png';
 import smf from '@/images/logos/orgs/smf.png';
 import starlight from '@/images/logos/orgs/starlight.png';
 import ubicenterLogo from '@/images/logos/orgs/ubicenter.png';
@@ -222,6 +222,4 @@ export const organizations: Record<string, Organization> = {
 
 // Helper to get orgs for a specific country
 export const getOrgsForCountry = (countryId: CountryId): Organization[] =>
-  Object.values(organizations).filter((org) =>
-    org.countries.includes(countryId)
-  );
+  Object.values(organizations).filter((org) => org.countries.includes(countryId));
