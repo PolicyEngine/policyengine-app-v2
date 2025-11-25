@@ -19,8 +19,8 @@ const founders: TeamMember[] = [
 const staff: TeamMember[] = [
   {
     name: 'Pavel Makarchuk',
-    bio: "is a Policy Modeling Manager at PolicyEngine. He earned a bachelor's degree in Economics from Marist College where he researched the economic implications of forced migration.",
-    image: '/assets/team/pavel-makarchuk.png',
+    bio: "is the Director of Growth at PolicyEngine. He earned a bachelor's degree in Economics from Marist College where he researched the economic implications of forced migration.",
+    image: '/assets/team/pavel-makarchuk.jpeg',
   },
   {
     name: 'Anthony Volk',
@@ -54,6 +54,14 @@ const staff: TeamMember[] = [
   },
 ];
 
+const contractors: TeamMember[] = [
+  {
+    name: 'Ben Ogorek',
+    bio: "is a data scientist at PolicyEngine. He co-founded Google's People Analytics Data Science team and previously held data science leadership positions at Spencer Health Solutions and Nationwide Insurance. Ben holds a PhD in Statistics from North Carolina State University.",
+    image: '/assets/team/ben-ogorek.jpeg',
+  },
+];
+
 export default function TeamPage() {
   return (
     <StaticPageLayout title="Team">
@@ -65,6 +73,8 @@ export default function TeamPage() {
       <TeamSection title="Founders" members={founders} variant="primary" />
 
       <TeamSection title="Team" members={staff} variant="accent" />
+
+      <TeamSection title="Contractors" members={contractors} variant="primary" />
     </StaticPageLayout>
   );
 }
