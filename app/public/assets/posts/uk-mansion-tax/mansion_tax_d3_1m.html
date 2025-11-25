@@ -369,7 +369,8 @@
 
         function getHexPosition(q, r) {
             const x = hexOffsetX + (q - hexQMin) * hexWidth * 0.75 + hexWidth / 2;
-            const y = hexOffsetY + (r - hexRMin) * hexHeight + (q % 2 !== 0 ? hexHeight / 2 : 0) + hexHeight / 2;
+            // Flip y-axis so south (London) is at the bottom
+            const y = hexOffsetY + (hexRMax - r) * hexHeight + (q % 2 !== 0 ? hexHeight / 2 : 0) + hexHeight / 2;
             return { x, y };
         }
 
