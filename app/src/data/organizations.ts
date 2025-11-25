@@ -1,30 +1,19 @@
-// UK logos
-
-// US logos
-import aei from '@/images/logos/orgs/aei.png';
-import amplifi from '@/images/logos/orgs/amplifi.png';
+// Organization logos
 import asi from '@/images/logos/orgs/asi.webp';
-import atlantaFed from '@/images/logos/orgs/atlanta-fed.png';
 import cec from '@/images/logos/orgs/cec.svg';
 import centre from '@/images/logos/orgs/centre.png';
 import cfi from '@/images/logos/orgs/cfi.png';
 import cgo from '@/images/logos/orgs/cgo.png';
 import cps from '@/images/logos/orgs/cps.png';
-import dpga from '@/images/logos/orgs/dpga.png';
 import epmt from '@/images/logos/orgs/epmt.png';
 import f4gi from '@/images/logos/orgs/f4gi.png';
 import gary from '@/images/logos/orgs/gary-community-ventures.png';
-import georgetown from '@/images/logos/orgs/georgetown.png';
 import gpew from '@/images/logos/orgs/gpew.png';
-import iea from '@/images/logos/orgs/iea.png';
 import jacobin from '@/images/logos/orgs/jacobin.png';
-import jec from '@/images/logos/orgs/jec.png';
 import liberalParty from '@/images/logos/orgs/liberal-party.png';
 import mca from '@/images/logos/orgs/mca.png';
-import mirza from '@/images/logos/orgs/mirza.png';
 import mothersOutreach from '@/images/logos/orgs/mothers-outreach-network.png';
 import myfriendben from '@/images/logos/orgs/myfriendben.png';
-import nber from '@/images/logos/orgs/nber.png';
 import niesr from '@/images/logos/orgs/niesr.png';
 import nisk from '@/images/logos/orgs/niskanen-center.png';
 import ppp from '@/images/logos/orgs/peoples-policy-project.png';
@@ -32,7 +21,6 @@ import pn3policy from '@/images/logos/orgs/pn3policy.png';
 import smf from '@/images/logos/orgs/smf.png';
 import ubicenterLogo from '@/images/logos/orgs/ubicenter.png';
 import ubilabs from '@/images/logos/orgs/ubilabs.png';
-import uhero from '@/images/logos/orgs/uhero.png';
 import ukeu from '@/images/logos/orgs/ukeu.svg';
 import umich from '@/images/logos/orgs/umich.png';
 import usc from '@/images/logos/orgs/usc.png';
@@ -105,11 +93,6 @@ export const orgData: OrgData = {
       logo: cec,
       link: 'https://citizenseconomiccouncil.org/',
     },
-    iea: {
-      name: 'Institute of Economic Affairs',
-      logo: iea,
-      link: 'https://iea.org.uk/',
-    },
     ppp: {
       name: "People's Policy Project",
       logo: ppp,
@@ -117,41 +100,6 @@ export const orgData: OrgData = {
     },
   },
   us: {
-    nber: {
-      name: 'National Bureau of Economic Research',
-      logo: nber,
-      link: 'https://www.nber.org/',
-    },
-    atlanta_fed: {
-      name: 'Federal Reserve Bank of Atlanta',
-      logo: atlantaFed,
-      link: 'https://www.atlantafed.org/',
-    },
-    umich: {
-      name: 'University of Michigan',
-      logo: umich,
-      link: 'https://umich.edu/',
-    },
-    georgetown: {
-      name: 'Georgetown University',
-      logo: georgetown,
-      link: 'https://www.georgetown.edu/',
-    },
-    uhero: {
-      name: 'UHERO',
-      logo: uhero,
-      link: 'https://uhero.hawaii.edu/',
-    },
-    jec: {
-      name: 'Joint Economic Committee',
-      logo: jec,
-      link: 'https://www.jec.senate.gov/',
-    },
-    aei: {
-      name: 'American Enterprise Institute',
-      logo: aei,
-      link: 'https://www.aei.org/',
-    },
     niskanen_center: {
       name: 'Niskanen Center',
       logo: nisk,
@@ -172,25 +120,10 @@ export const orgData: OrgData = {
       logo: mothersOutreach,
       link: 'https://www.mothersoutreachnetwork.org/',
     },
-    dpga: {
-      name: 'Digital Public Goods Alliance',
-      logo: dpga,
-      link: 'https://digitalpublicgoods.net/',
-    },
     mfb: {
       name: 'MyFriendBen',
       logo: myfriendben,
       link: 'https://www.myfriendben.org/',
-    },
-    amplifi: {
-      name: 'Amplifi',
-      logo: amplifi,
-      link: 'https://www.amplifibenefit.com/',
-    },
-    mirza: {
-      name: 'Mirza',
-      logo: mirza,
-      link: 'https://www.mirza.com/',
     },
     gary: {
       name: 'Gary Community Ventures',
@@ -221,6 +154,11 @@ export const orgData: OrgData = {
       name: 'UBI Center',
       logo: ubicenterLogo,
       link: 'https://www.ubicenter.org/',
+    },
+    umich: {
+      name: 'University of Michigan',
+      logo: umich,
+      link: 'https://umich.edu/',
     },
     usc: {
       name: 'University of Southern California',
