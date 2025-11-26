@@ -12,7 +12,7 @@ We use Land Registry price paid data to identify property sales above £1.5 mill
 |:----------|:------|
 | 2024 HPI | 148.74 |
 | 2026-27 HPI forecast | 154.03 |
-| Uprating factor | 1.0355 (+3.55%) |
+| Uprating factor | 1.0356 (+3.56%) |
 
 For each constituency, we calculate the number of properties exceeding each threshold after uprating and estimated annual revenue assuming a £2,000 annual charge per property.
 
@@ -20,7 +20,7 @@ For each constituency, we calculate the number of properties exceeding each thre
 
 ## £1.5 million threshold
 
-Under a £1.5 million threshold, 13,884 properties would be affected in 2026-27, generating £27.8 million in annual revenue.
+Under a £1.5 million threshold, 14,820 properties would be affected in 2026-27, generating £29.6 million in annual revenue.
 
 **Figure 1: Mansion tax impact by constituency (£1.5m threshold)**
 
@@ -30,20 +30,20 @@ Under a £1.5 million threshold, 13,884 properties would be affected in 2026-27,
 
 | Constituency | Number of properties | Share of total |
 |:-------------|:--------------------:|:---------------------:|
-| Cities of London and Westminster | 929 | 6.7% |
-| Kensington and Bayswater | 757 | 5.5% |
-| Chelsea and Fulham | 578 | 4.2% |
-| Hampstead and Highgate | 380 | 2.7% |
-| Battersea | 309 | 2.2% |
-| Richmond Park | 281 | 2.0% |
-| Islington South and Finsbury | 242 | 1.7% |
-| Hammersmith and Chiswick | 239 | 1.7% |
-| Holborn and St Pancras | 203 | 1.5% |
-| Finchley and Golders Green | 185 | 1.3% |
+| Cities of London and Westminster | 951 | 6.4% |
+| Kensington and Bayswater | 778 | 5.2% |
+| Chelsea and Fulham | 603 | 4.1% |
+| Hampstead and Highgate | 408 | 2.8% |
+| Battersea | 339 | 2.3% |
+| Richmond Park | 301 | 2.0% |
+| Islington South and Finsbury | 260 | 1.8% |
+| Hammersmith and Chiswick | 255 | 1.7% |
+| Holborn and St Pancras | 211 | 1.4% |
+| Finchley and Golders Green | 197 | 1.3% |
 
 ## £2 million threshold
 
-Under a £2 million threshold, 7,849 properties would be affected in 2026-27, generating £15.7 million in annual revenue.
+Under a £2 million threshold, 8,213 properties would be affected in 2026-27, generating £16.4 million in annual revenue.
 
 **Figure 2: Mansion tax impact by constituency (£2m threshold)**
 
@@ -53,16 +53,16 @@ Under a £2 million threshold, 7,849 properties would be affected in 2026-27, ge
 
 | Constituency | Number of properties | Share of total |
 |:-------------|:--------------------:|:---------------------:|
-| Cities of London and Westminster | 742 | 9.5% |
-| Kensington and Bayswater | 553 | 7.0% |
-| Chelsea and Fulham | 364 | 4.6% |
-| Hampstead and Highgate | 237 | 3.0% |
-| Richmond Park | 147 | 1.9% |
-| Islington South and Finsbury | 137 | 1.7% |
-| Holborn and St Pancras | 135 | 1.7% |
-| Battersea | 131 | 1.7% |
-| Hammersmith and Chiswick | 123 | 1.6% |
-| Finchley and Golders Green | 107 | 1.4% |
+| Cities of London and Westminster | 755 | 9.2% |
+| Kensington and Bayswater | 577 | 7.0% |
+| Chelsea and Fulham | 376 | 4.6% |
+| Hampstead and Highgate | 244 | 3.0% |
+| Richmond Park | 153 | 1.9% |
+| Islington South and Finsbury | 143 | 1.7% |
+| Holborn and St Pancras | 142 | 1.7% |
+| Battersea | 138 | 1.7% |
+| Hammersmith and Chiswick | 125 | 1.5% |
+| Finchley and Golders Green | 112 | 1.4% |
 
 ## Revenue concentration
 
@@ -72,8 +72,8 @@ The tax revenue is highly concentrated in a small number of constituencies.
 
 | Metric | £1.5m threshold | £2m threshold |
 |:-------|:---------------:|:-------------:|
-| Constituencies with 0 affected properties | 0 (0%) | 14 (2%) |
-| Constituencies with 1+ affected properties | 567 (100%) | 553 (98%) |
+| Constituencies with 0 affected properties | 82 (13%) | 97 (15%) |
+| Constituencies with 1+ affected properties | 568 (87%) | 553 (85%) |
 | Top constituencies for 50% of revenue | 36 | 33 |
 | Top constituencies for 75% of revenue | 127 | 135 |
 | Top constituencies for 90% of revenue | 278 | 285 |
@@ -82,13 +82,13 @@ The tax revenue is highly concentrated in a small number of constituencies.
 
 | Constituency | Est. revenue | % of total |
 |:-------------|:------------:|:----------:|
-| Cities of London and Westminster | £1,858,000 | 6.7% |
-| Kensington and Bayswater | £1,514,000 | 5.5% |
-| Chelsea and Fulham | £1,156,000 | 4.2% |
-| Hampstead and Highgate | £760,000 | 2.7% |
-| Battersea | £618,000 | 2.2% |
+| Cities of London and Westminster | £1,902,000 | 6.4% |
+| Kensington and Bayswater | £1,556,000 | 5.3% |
+| Chelsea and Fulham | £1,206,000 | 4.1% |
+| Hampstead and Highgate | £816,000 | 2.8% |
+| Battersea | £678,000 | 2.3% |
 
-The top 5 constituencies alone account for 21.3% of total revenue.
+The top 5 constituencies alone account for 20.8% of total revenue.
 
 ## London dominance
 
@@ -98,8 +98,8 @@ London constituencies account for nearly half of all affected properties and rev
 
 | Metric | £1.5m threshold | £2m threshold |
 |:-------|:---------------:|:-------------:|
-| Properties in London | 6,739 (49%) | 3,899 (50%) |
-| Revenue from London | £13.5m (49%) | £7.8m (50%) |
+| Properties in London | 7,187 (48%) | 4,089 (50%) |
+| Revenue from London | £14.4m (48%) | £8.2m (50%) |
 
 ## Distribution of impact
 
@@ -109,11 +109,11 @@ Most affected constituencies have only a small number of properties above the th
 
 | Properties | Constituencies |
 |:-----------|:--------------:|
-| 0 | 0 |
-| 1-10 | 318 |
-| 11-50 | 197 |
-| 51-100 | 28 |
-| 101-500 | 21 |
+| 0 | 82 |
+| 1-10 | 307 |
+| 11-50 | 203 |
+| 51-100 | 33 |
+| 101-500 | 22 |
 | 500+ | 3 |
 
 ## Limitations
@@ -124,4 +124,4 @@ Most affected constituencies have only a small number of properties above the th
 
 ## Conclusion
 
-A mansion tax would primarily affect constituencies in London and the South East. Under a £1.5 million threshold, 13,884 properties would be affected in 2026-27, falling to 7,849 under a £2 million threshold. Half of all revenue would come from just 33-36 constituencies, and London alone would account for nearly half of all revenue. 0-14 constituencies (0-2%) would see zero impact.
+A mansion tax would primarily affect constituencies in London and the South East. Under a £1.5 million threshold, 14,820 properties would be affected in 2026-27, falling to 8,213 under a £2 million threshold. Half of all revenue would come from just 33-36 constituencies, and London alone would account for nearly half of all revenue. 82-97 constituencies (13-15%) would see zero impact.
