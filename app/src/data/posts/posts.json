@@ -12,8 +12,8 @@
       "max-ghenis"
     ],
     "filename": "obr-november-2025-projections.md",
-    "image": "obr-november-2025-projections/obr-logo.png",
-    "hideHeaderImage": true
+    "image": "obr-november-2025-projections/cover.png",
+    "hideHeaderImage": false
   },
   {
     "title": "Estimating the constituency distribution of a mansion tax",
