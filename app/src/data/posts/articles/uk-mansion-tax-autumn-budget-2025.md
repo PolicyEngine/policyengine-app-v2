@@ -1,4 +1,4 @@
-In the November 2025 Autumn Budget, the UK government announced a new high value council tax surcharge on properties valued over £2 million. The Office for Budget Responsibility (OBR) [estimates](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) this measure will raise £400 million in 2029-30.
+In the [November 2025 Autumn Budget](https://www.gov.uk/government/collections/budget-2025), the UK government announced a new high value council tax surcharge on properties valued over £2 million. The Office for Budget Responsibility (OBR) [estimates](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) this measure will raise £400 million in 2029-30.
 
 Using 2024 Land Registry sales data, we estimate how this revenue will be distributed across Westminster constituencies.
 
@@ -8,11 +8,11 @@ Key findings:
 - Cities of London and Westminster alone accounts for 10% (£42 million)
 - London constituencies account for 47% of total revenue
 
-[Explore the interactive map](#map) | [Download the data](https://github.com/PolicyEngine/uk-mansion-tax)
+[Explore the interactive map](#geographic-distribution) | [Download the data](https://github.com/PolicyEngine/uk-mansion-tax)
 
 ## The policy
 
-From April 2028, owners of properties valued over £2 million (in 2026 prices) will pay an annual surcharge in addition to their existing council tax. According to the [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/):
+From April 2028, owners of properties in England and Wales valued over £2 million (in 2026 prices) will pay an annual surcharge in addition to their existing council tax. The policy applies to properties valued by the Valuation Office Agency; it does not apply to Scotland or Northern Ireland, which have separate property tax systems. According to the [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/):
 
 > There will be four price bands with the surcharge rising from £2,500 for a property valued in the lowest £2 million to £2.5 million band, to £7,500 for a property valued in the highest band of £5 million or more, all uprated by CPI inflation each year.
 
@@ -60,7 +60,7 @@ We estimate each constituency's share of the £400 million total by analysing 20
 
 The top 20 constituencies account for 43% of the estimated revenue while comprising 3% of all constituencies.
 
-## Geographic distribution {#map}
+## Geographic distribution
 
 The map below shows the estimated revenue allocation by constituency. Darker shading indicates higher estimated revenue from the surcharge.
 
