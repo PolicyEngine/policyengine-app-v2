@@ -1,5 +1,6 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
+import HomePage from '@/pages/Home.page';
 
 // Mock hooks before importing components
 vi.mock('@/hooks/useCurrentCountry', () => ({
@@ -22,8 +23,6 @@ vi.mock('@/components/home/OrgLogos', () => ({
 vi.mock('@/components/shared/AutumnBudgetBanner', () => ({
   default: () => <div data-testid="autumn-budget-banner">Autumn Budget Banner</div>,
 }));
-
-import HomePage from '@/pages/Home.page';
 
 describe('HomePage', () => {
   test('given page renders then all main sections display', () => {
