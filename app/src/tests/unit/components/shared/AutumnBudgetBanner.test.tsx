@@ -6,6 +6,7 @@ import {
   BANNER_DISMISSED_KEY,
   BANNER_LINKS,
   CONTACT_EMAIL,
+  DASHBOARD_BOX_TEXT,
   MOCK_DATE_AFTER_BUDGET,
   MOCK_DATE_AFTER_END,
   MOCK_DATE_BEFORE_BUDGET,
@@ -163,7 +164,7 @@ describe('AutumnBudgetBanner', () => {
     expect(screen.getByText('The Autumn Budget 2025 is coming soon')).toBeInTheDocument();
   });
 
-  test('given after budget date then title shows without coming soon', () => {
+  test('given after budget date then title shows has been released', () => {
     // Given
     vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
@@ -171,7 +172,41 @@ describe('AutumnBudgetBanner', () => {
     render(<AutumnBudgetBanner />);
 
     // Then
-    expect(screen.getByText('The Autumn Budget 2025')).toBeInTheDocument();
+    expect(screen.getByText('The Autumn Budget 2025 has been released')).toBeInTheDocument();
     expect(screen.queryByText('The Autumn Budget 2025 is coming soon')).not.toBeInTheDocument();
+  });
+
+  test('given after budget date then dashboard box displays', () => {
+    // Given
+    vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
+
+    // When
+    render(<AutumnBudgetBanner />);
+
+    // Then
+    expect(screen.getByText(DASHBOARD_BOX_TEXT.BUTTON_TEXT)).toBeInTheDocument();
+  });
+
+  test('given before budget date then dashboard box does not display', () => {
+    // Given
+    vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
+
+    // When
+    render(<AutumnBudgetBanner />);
+
+    // Then
+    expect(screen.queryByText(DASHBOARD_BOX_TEXT.BUTTON_TEXT)).not.toBeInTheDocument();
+  });
+
+  test('given dashboard box then links to correct URL', () => {
+    // Given
+    vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
+
+    // When
+    render(<AutumnBudgetBanner />);
+
+    // Then
+    const dashboardLink = screen.getByText(DASHBOARD_BOX_TEXT.BUTTON_TEXT).closest('a');
+    expect(dashboardLink).toHaveAttribute('href', BANNER_LINKS.AUTUMN_BUDGET_DASHBOARD);
   });
 });

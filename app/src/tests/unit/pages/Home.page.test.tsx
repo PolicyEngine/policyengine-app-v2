@@ -1,6 +1,10 @@
 import { render, screen } from '@test-utils';
 import { describe, expect, test, vi } from 'vitest';
-import HomePage from '@/pages/Home.page';
+
+// Mock hooks before importing components
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'uk'),
+}));
 
 // Mock child components to test that HomePage renders them
 vi.mock('@/components/home/MainSection', () => ({
@@ -14,6 +18,12 @@ vi.mock('@/components/home/ActionCards', () => ({
 vi.mock('@/components/home/OrgLogos', () => ({
   default: () => <div data-testid="org-logos">Org Logos</div>,
 }));
+
+vi.mock('@/components/shared/AutumnBudgetBanner', () => ({
+  default: () => <div data-testid="autumn-budget-banner">Autumn Budget Banner</div>,
+}));
+
+import HomePage from '@/pages/Home.page';
 
 describe('HomePage', () => {
   test('given page renders then all main sections display', () => {
@@ -35,7 +45,7 @@ describe('HomePage', () => {
       el.getAttribute('data-testid')
     );
 
-    expect(sections).toEqual(['main-section', 'action-cards', 'org-logos']);
+    expect(sections).toEqual(['autumn-budget-banner', 'main-section', 'action-cards', 'org-logos']);
   });
 
   test('given page renders then passes orgData to OrgLogos component', () => {
