@@ -6,7 +6,7 @@ PolicyEngine uses these OBR projections to uprate monetary values across our UK 
 
 The November 2025 forecast shows notably higher inflation and earnings growth in the near term compared to March:
 
-- **2024 outturn higher than forecast**: The 2024 figures are now actual recorded data rather than forecasts. CPI, RPI, and earnings all came in higher than the OBR projected in March—CPI was 2.5% versus a forecast of 2.3%, and earnings growth was 4.9% versus 4.7%.
+- **2024 data revised upward**: The 2024 figures were already outturn (actual data) in March, but have been revised upward by the ONS since then. CPI is now recorded at 2.5% versus 2.3% in March, and earnings growth at 4.9% versus 4.7%.
 - **Higher CPI inflation in 2025-26**: CPI revised up from 3.2% to 3.5% in 2025, and from 1.9% to 2.5% in 2026. The OBR attributes this to higher energy prices and the inflationary impact of the employer National Insurance increases announced in the Budget.
 - **Higher earnings growth through 2026**: Average earnings growth revised up significantly, with 2025 now at 5.2% versus 3.7% previously—a 1.5 percentage point increase. This reflects stronger-than-expected wage growth and the impact of the National Living Wage increase.
 - **Higher RPI through 2027**: RPI projections revised upward, reflecting the CPI revisions plus continued housing cost pressures. RPI matters particularly for student loan repayments and some pension uprating.
