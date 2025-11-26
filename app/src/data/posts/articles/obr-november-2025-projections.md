@@ -17,7 +17,7 @@ _Note: The OBR also revised historical outturn data back to 2022 as final ONS es
 
 Explore how the OBR's projections changed between March and November 2025:
 
-<center><iframe src="/assets/posts/obr-november-2025-projections/chart.html" width="100%" height="500" style="border:none;"></iframe></center>
+<center><iframe src="https://policyengine.github.io/forecast-sources/uk/obr-comparison.html" width="100%" height="500" style="border:none;"></iframe></center>
 
 ## What we updated in PolicyEngine
 
