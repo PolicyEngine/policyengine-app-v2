@@ -153,7 +153,7 @@ export default function AutumnBudgetBanner() {
           >
             <Box
               component="a"
-              href="/uk/autumn-budget-dashboard"
+              href="/uk/uk-autumn-budget-2025"
               style={{
                 display: 'inline-block',
                 backgroundColor: 'rgba(255, 255, 255, 0.25)',

@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "uk-autumn-budget-2025",
+    "title": "UK Autumn Budget 2025 analysis dashboard",
+    "description": "Interactive tool to explore revenue and distributional impacts of UK Autumn Budget 2025 policies across income deciles, constituencies, and household types",
+    "source": "https://uk-autumn-budget-dashboard.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-autumn-budget-2025.jpg",
+    "date": "2025-11-26 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "public-services-spending",
     "title": "UK public services spending analysis dashboard",
     "description": "Explore how public services spending varies across demographic groups and regions in the UK, including NHS healthcare, education, and transport subsidies",
