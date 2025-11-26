@@ -1,16 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Box, Card, CloseButton, Group, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const BANNER_DISMISSED_KEY = 'autumn-budget-2025-banner-dismissed';
-
-interface TimeRemaining {
-  days: number;
-  hours: number;
-  minutes: number;
-  seconds: number;
-}
 
 export default function AutumnBudgetBanner() {
   const countryId = useCurrentCountry();
@@ -20,33 +13,6 @@ export default function AutumnBudgetBanner() {
     }
     return true;
   });
-
-  // Budget date: November 26, 2025 at 12:30 PM UK time (GMT)
-  const budgetDate = new Date('2025-11-26T12:30:00Z');
-  const [timeRemaining, setTimeRemaining] = useState<TimeRemaining | null>(null);
-
-  useEffect(() => {
-    const calculateTimeRemaining = () => {
-      const now = new Date();
-      const difference = budgetDate.getTime() - now.getTime();
-
-      if (difference > 0) {
-        const days = Math.floor(difference / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((difference % (1000 * 60)) / 1000);
-
-        setTimeRemaining({ days, hours, minutes, seconds });
-      } else {
-        setTimeRemaining(null);
-      }
-    };
-
-    calculateTimeRemaining();
-    const interval = setInterval(calculateTimeRemaining, 1000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   // Only show for UK users
   if (countryId !== 'uk' || !visible) {
@@ -67,8 +33,6 @@ export default function AutumnBudgetBanner() {
       sessionStorage.setItem(BANNER_DISMISSED_KEY, 'true');
     }
   };
-
-  const isBeforeBudget = currentDate < budgetDate;
 
   return (
     <Box
@@ -131,78 +95,49 @@ export default function AutumnBudgetBanner() {
           size={typography.fontSize['3xl']}
           fw={typography.fontWeight.bold}
           c={colors.white}
-          mb={spacing.lg}
+          mb={spacing.xl}
           style={{
             textAlign: 'center',
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025'}
+          The Autumn Budget 2025 has been released
         </Title>
 
-        {/* Countdown Timer - Only show before budget */}
-        {isBeforeBudget && timeRemaining && (
+        {/* Analysis Dashboard Box */}
+        <Box
+          mb={spacing['2xl']}
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+          }}
+        >
           <Box
-            mb={spacing.xl}
             style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.25)',
+              borderRadius: '16px',
+              padding: `${spacing.lg} ${spacing.xl}`,
+              backdropFilter: 'blur(10px)',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+              boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
               display: 'flex',
+              alignItems: 'center',
               justifyContent: 'center',
-              gap: spacing.xl,
-              flexWrap: 'wrap',
             }}
           >
-            {[
-              { label: 'Days', value: timeRemaining.days },
-              { label: 'Hours', value: timeRemaining.hours },
-              { label: 'Minutes', value: timeRemaining.minutes },
-              { label: 'Seconds', value: timeRemaining.seconds },
-            ].map((item) => (
-              <Box
-                key={item.label}
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                  borderRadius: '16px',
-                  padding: `${spacing.xl} ${spacing.xl}`,
-                  minWidth: '120px',
-                  backdropFilter: 'blur(10px)',
-                  border: '2px solid rgba(255, 255, 255, 0.3)',
-                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <Text
-                  size={typography.fontSize['3xl']}
-                  fw={typography.fontWeight.bold}
-                  c={colors.white}
-                  style={{
-                    lineHeight: 1,
-                    textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                    textAlign: 'center',
-                  }}
-                >
-                  {String(item.value).padStart(2, '0')}
-                </Text>
-                <Text
-                  size={typography.fontSize.sm}
-                  c={colors.white}
-                  fw={typography.fontWeight.medium}
-                  mt={spacing.xs}
-                  style={{
-                    opacity: 0.95,
-                    letterSpacing: '0.5px',
-                    textTransform: 'uppercase',
-                    textAlign: 'center',
-                  }}
-                >
-                  {item.label}
-                </Text>
-              </Box>
-            ))}
+            <Text
+              fw={typography.fontWeight.bold}
+              c={colors.white}
+              style={{
+                fontSize: '1.3rem',
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                textAlign: 'center',
+              }}
+            >
+              View the PolicyEngine analysis dashboard
+            </Text>
           </Box>
-        )}
+        </Box>
 
         {/* Pre-Autumn Budget Analysis Cards */}
         <Box>
@@ -210,7 +145,7 @@ export default function AutumnBudgetBanner() {
             size={typography.fontSize.lg}
             c={colors.white}
             fw={typography.fontWeight.semibold}
-            mb={spacing.md}
+            mb={spacing.lg}
             style={{
               textAlign: 'center',
               textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -259,6 +194,7 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -312,6 +248,7 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -365,6 +302,7 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -418,6 +356,7 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -442,12 +381,12 @@ export default function AutumnBudgetBanner() {
 
         {/* Contact CTA */}
         <Box
-          mt={spacing.lg}
+          mt={spacing.xl}
           style={{
             textAlign: 'center',
           }}
         >
-          <Text size={typography.fontSize.base} c={colors.white} fw={typography.fontWeight.medium}>
+          <Text size={typography.fontSize.lg} c={colors.white} fw={typography.fontWeight.medium}>
             Want custom analysis?{' '}
             <Text
               component="a"
