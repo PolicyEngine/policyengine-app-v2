@@ -8,7 +8,7 @@ Key findings:
 - Cities of London and Westminster alone accounts for 10% (£42 million)
 - London constituencies account for 47% of total revenue
 
-[Explore the interactive map](#map) | [Download the data](https://github.com/PolicyEngine/uk-mansion-tax)
+[Explore the interactive map](#geographic-distribution) | [Download the data](https://github.com/PolicyEngine/uk-mansion-tax)
 
 ## The policy
 
@@ -60,7 +60,7 @@ We estimate each constituency's share of the £400 million total by analysing 20
 
 The top 20 constituencies account for 43% of the estimated revenue while comprising 3% of all constituencies.
 
-## Geographic distribution {#map}
+## Geographic distribution
 
 The map below shows the estimated revenue allocation by constituency. Darker shading indicates higher estimated revenue from the surcharge.
 
