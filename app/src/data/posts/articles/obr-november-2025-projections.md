@@ -9,9 +9,10 @@ The November 2025 forecast shows higher inflation and earnings growth in the nea
 - **Higher CPI inflation in 2025-26**: CPI revised up from 3.2% to 3.5% in 2025, and from 2.1% to 2.5% in 2026. The OBR attributes this to higher energy prices and the inflationary impact of the employer National Insurance increases announced in the Budget.
 - **Higher earnings growth through 2026**: Average earnings growth revised up from 4.3% to 5.2% in 2025—a 0.9 percentage point increase. This reflects stronger-than-expected wage growth and the impact of the National Living Wage increase.
 - **Higher RPI through 2027**: RPI projections revised upward, reflecting the CPI revisions plus continued housing cost pressures. RPI matters particularly for student loan repayments and some pension uprating.
-- **Convergence to long-run assumptions by 2030**: Despite near-term revisions, both forecasts converge toward the same long-run equilibrium: 2% CPI (the Bank of England's target) and around 2.3% RPI.
+- **Lower private rent growth, mixed mortgage outlook**: Private rent growth revised down from 6.5% to 5.5% in 2025 and from 3.9% to 3.3% in 2026. Mortgage interest costs show a mixed picture: lower in 2025 (11.0% vs 14.2%) but higher in 2026 (14.4% vs 13.3%), reflecting expectations about Bank of England rate decisions. Social rent, which follows CPI+1% with a one-year lag, rises to 4.5% in 2026 (up from 4.2% projected in March).
+- **Convergence to long-run assumptions by 2030**: Despite near-term revisions, both forecasts converge toward the same long-run equilibrium: 2% CPI (the Bank of England's target) and around 2.3% RPI.[^1]
 
-_Note: The OBR also revised historical outturn data back to 2022 as final ONS estimates became available (e.g., 2023 CPI from 5.7% to 7.3%). The March 2025 forecast only projected housing, income, and council tax variables through 2029, while November 2025 extends these to 2030. We updated all values in [policyengine-uk PR #1377](https://github.com/PolicyEngine/policyengine-uk/pull/1377)._
+[^1]: The OBR also revised historical outturn data back to 2022 as final ONS estimates became available (e.g., 2023 CPI from 5.7% to 7.3%). The March 2025 forecast only projected housing, income, and council tax variables through 2029, while November 2025 extends these to 2030. We updated all values in [policyengine-uk PR #1377](https://github.com/PolicyEngine/policyengine-uk/pull/1377).
 
 ## Interactive comparison
 
