@@ -1,5 +1,6 @@
 import { Box } from '@mantine/core';
-import PolicyEngineLogo from '@/assets/policyengine-logo.svg';
+
+const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
 export default function SidebarLogo() {
   return (

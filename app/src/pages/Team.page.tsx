@@ -19,8 +19,8 @@ const founders: TeamMember[] = [
 const staff: TeamMember[] = [
   {
     name: 'Pavel Makarchuk',
-    bio: "is a Policy Modeling Manager at PolicyEngine. He earned a bachelor's degree in Economics from Marist College where he researched the economic implications of forced migration.",
-    image: '/assets/team/pavel-makarchuk.png',
+    bio: "is the Director of Growth at PolicyEngine. He earned a bachelor's degree in Economics from Marist College.",
+    image: '/assets/team/pavel-makarchuk.jpeg',
   },
   {
     name: 'Anthony Volk',
@@ -51,6 +51,11 @@ const staff: TeamMember[] = [
     name: 'Ziming Hua',
     bio: "is a policy modeling fellow at PolicyEngine. He focuses on implementing and analyzing tax and benefit systems. He develops simulation models to evaluate the impacts of policy reforms. Ziming holds a bachelor's degree in mathematical finance from the University of California, Irvine, and a master's degree in business analytics from Boston University.",
     image: '/assets/team/ziming-hua.jpg',
+  },
+  {
+    name: 'Ben Ogorek',
+    bio: "is a data scientist at PolicyEngine. He co-founded Google's People Analytics Data Science team and previously held data science leadership positions at Spencer Health Solutions and Nationwide Insurance. Ben holds a PhD in Statistics from North Carolina State University.",
+    image: '/assets/team/ben-ogorek.jpeg',
   },
 ];
 

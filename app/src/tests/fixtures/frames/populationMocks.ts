@@ -1,3 +1,7 @@
+/**
+ * @deprecated REFERENCE ONLY - Remove before merging PR
+ */
+
 import { vi } from 'vitest';
 import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';

@@ -131,19 +131,72 @@ export default function AutumnBudgetBanner() {
           size={typography.fontSize['3xl']}
           fw={typography.fontWeight.bold}
           c={colors.white}
-          mb={spacing.lg}
+          mb={spacing.xl}
           style={{
             textAlign: 'center',
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025'}
+          {isBeforeBudget
+            ? 'The Autumn Budget 2025 is coming soon'
+            : 'The Autumn Budget 2025 has been released'}
         </Title>
+
+        {/* Autumn Budget Dashboard Box - Only show after budget */}
+        {!isBeforeBudget && (
+          <Box
+            mb={spacing['2xl']}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <Box
+              component="a"
+              href="/uk/uk-autumn-budget-2025"
+              style={{
+                display: 'inline-block',
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                borderRadius: '14px',
+                padding: `${spacing.lg} ${spacing['2xl']}`,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textDecoration: 'none',
+                border: `3px solid rgba(255, 255, 255, 0.4)`,
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(10px)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.35)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
+              }}
+            >
+              <Text
+                size={typography.fontSize.xl}
+                fw={typography.fontWeight.semibold}
+                c={colors.white}
+                style={{
+                  textAlign: 'center',
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                View the PolicyEngine analysis dashboard
+              </Text>
+            </Box>
+          </Box>
+        )}
 
         {/* Countdown Timer - Only show before budget */}
         {isBeforeBudget && timeRemaining && (
           <Box
-            mb={spacing.xl}
+            mb={spacing['2xl']}
             style={{
               display: 'flex',
               justifyContent: 'center',
@@ -210,7 +263,7 @@ export default function AutumnBudgetBanner() {
             size={typography.fontSize.lg}
             c={colors.white}
             fw={typography.fontWeight.semibold}
-            mb={spacing.md}
+            mb={spacing.lg}
             style={{
               textAlign: 'center',
               textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -229,12 +282,12 @@ export default function AutumnBudgetBanner() {
             {/* Card 1: Two-Child Benefit Limit */}
             <Card
               component="a"
-              href="https://legacy.policyengine.org/uk/research/uk-two-child-limit"
+              href="/uk/research/uk-two-child-limit"
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                flex: '1 1 280px',
-                maxWidth: '320px',
+                flex: '1 1 220px',
+                maxWidth: '260px',
                 minHeight: '80px',
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 borderRadius: '12px',
@@ -259,6 +312,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -282,12 +337,12 @@ export default function AutumnBudgetBanner() {
             {/* Card 2: VAT Thresholds */}
             <Card
               component="a"
-              href="https://legacy.policyengine.org/uk/research/uk-vat-thresholds"
+              href="/uk/research/uk-vat-thresholds"
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                flex: '1 1 280px',
-                maxWidth: '320px',
+                flex: '1 1 220px',
+                maxWidth: '260px',
                 minHeight: '80px',
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 borderRadius: '12px',
@@ -312,6 +367,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -335,12 +392,12 @@ export default function AutumnBudgetBanner() {
             {/* Card 3: Income Tax & NI */}
             <Card
               component="a"
-              href="https://legacy.policyengine.org/uk/research/uk-income-tax-ni-reforms-2025"
+              href="/uk/research/uk-income-tax-ni-reforms-2025"
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                flex: '1 1 280px',
-                maxWidth: '320px',
+                flex: '1 1 220px',
+                maxWidth: '260px',
                 minHeight: '80px',
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 borderRadius: '12px',
@@ -365,6 +422,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -384,17 +443,72 @@ export default function AutumnBudgetBanner() {
                 </Text>
               </Box>
             </Card>
+
+            {/* Card 4: Mansion Tax */}
+            <Card
+              component="a"
+              href="/uk/research/uk-mansion-tax-autumn-budget"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                flex: '1 1 220px',
+                maxWidth: '260px',
+                minHeight: '80px',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '12px',
+                padding: spacing.md,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textDecoration: 'none',
+                border: `2px solid ${colors.white}`,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              }}
+              styles={{
+                root: {
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                  },
+                },
+              }}
+            >
+              <Box
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                }}
+              >
+                <Text
+                  size={typography.fontSize.base}
+                  fw={typography.fontWeight.bold}
+                  c={colors.primary[700]}
+                  mb={spacing.xs}
+                >
+                  Mansion tax
+                </Text>
+                <Text
+                  size={typography.fontSize.xs}
+                  c={colors.gray[700]}
+                  style={{ lineHeight: 1.4 }}
+                >
+                  Constituency distribution of high-value property sales
+                </Text>
+              </Box>
+            </Card>
           </Group>
         </Box>
 
         {/* Contact CTA */}
         <Box
-          mt={spacing.lg}
+          mt={spacing.xl}
           style={{
             textAlign: 'center',
           }}
         >
-          <Text size={typography.fontSize.base} c={colors.white} fw={typography.fontWeight.medium}>
+          <Text size={typography.fontSize.lg} c={colors.white} fw={typography.fontWeight.semibold}>
             Want custom analysis?{' '}
             <Text
               component="a"

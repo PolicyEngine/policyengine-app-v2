@@ -2,20 +2,23 @@ import { SYNTHETIC_PROGRESS_CONFIG } from '@/hooks/useSyntheticProgress';
 
 /**
  * Test constants for synthetic progress tests
+ * Note: These are calculated based on the shared constants in calculationDurations.ts
+ * - HOUSEHOLD_DURATION_MS: 60 seconds (1 minute)
+ * - SOCIETY_WIDE_DURATION_MS: 360 seconds (6 minutes)
  */
 export const SYNTHETIC_PROGRESS_TEST_CONSTANTS = {
   // Household timing tests
   HOUSEHOLD: {
-    // 10 seconds is 22.2% of 45 second duration
+    // 10 seconds is 16.67% of 60 second duration
     TIME_10_SECONDS: 10000,
-    PROGRESS_AT_10_SEC_MIN: 20,
-    PROGRESS_AT_10_SEC_MAX: 25,
+    PROGRESS_AT_10_SEC_MIN: 15,
+    PROGRESS_AT_10_SEC_MAX: 18,
 
-    // 2 seconds is 4.4% of 45 second duration
+    // 2 seconds is 3.33% of 60 second duration
     TIME_2_SECONDS: 2000,
     EXPECTED_MESSAGE_AT_2_SEC: 'Initializing calculation...',
 
-    // 20 seconds is 44.4% of 45 second duration
+    // 20 seconds is 33.33% of 60 second duration
     TIME_20_SECONDS: 20000,
     EXPECTED_MESSAGE_AT_20_SEC: 'Running policy simulation...',
 
@@ -25,25 +28,25 @@ export const SYNTHETIC_PROGRESS_TEST_CONSTANTS = {
 
   // Economy timing tests
   ECONOMY: {
-    // 2 minutes is 16.67% of 12 minute duration (120000ms / 720000ms)
+    // 2 minutes is 33.33% of 6 minute duration (120000ms / 360000ms)
     TIME_2_MINUTES: 120000,
-    PROGRESS_AT_2_MIN_MIN: 16,
-    PROGRESS_AT_2_MIN_MAX: 17,
+    PROGRESS_AT_2_MIN_MIN: 32,
+    PROGRESS_AT_2_MIN_MAX: 34,
 
-    // 30 seconds is 0.69% of 12 minute duration
+    // 30 seconds is 8.33% of 6 minute duration
     TIME_30_SECONDS: 30000,
     EXPECTED_MESSAGE_AT_30_SEC: 'Initializing society-wide calculation...',
 
-    // 1 minute elapsed with 6 minutes remaining server estimate
+    // 1 minute elapsed with 3 minutes remaining server estimate
     TIME_1_MINUTE: 60000,
-    SERVER_ESTIMATE_6_MIN_REMAINING: 360000, // 6 minutes = 50% complete
-    // Server: 50% (6 min remaining), Synthetic: ~8.33% (1 min elapsed)
-    // Blend: (50 * 0.7) + (8.33 * 0.3) = 37.5%
-    BLENDED_PROGRESS_MIN: 37,
-    BLENDED_PROGRESS_MAX: 38,
+    SERVER_ESTIMATE_6_MIN_REMAINING: 180000, // 3 minutes remaining = 50% complete
+    // Server: 50% (3 min remaining), Synthetic: ~16.67% (1 min elapsed)
+    // Blend: (50 * 0.7) + (16.67 * 0.3) = 40%
+    BLENDED_PROGRESS_MIN: 39,
+    BLENDED_PROGRESS_MAX: 41,
 
-    // Server says 3 minutes remaining = 75% complete
-    SERVER_ESTIMATE_3_MIN_REMAINING: 180000,
+    // Server says 1.5 minutes remaining = 75% complete
+    SERVER_ESTIMATE_3_MIN_REMAINING: 90000,
     EXPECTED_MESSAGE_AT_75_PERCENT: 'Simulating reform scenario...',
 
     // For testing state transitions

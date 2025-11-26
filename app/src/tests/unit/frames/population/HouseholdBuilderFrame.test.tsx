@@ -1,3 +1,10 @@
+/**
+ * @deprecated REFERENCE ONLY - Remove before merging PR
+ *
+ * This test file is kept as a reference. The app now uses HouseholdBuilderView.
+ * Delete this file before final PR merge.
+ */
+
 import { configureStore } from '@reduxjs/toolkit';
 import { screen, waitFor } from '@test-utils';
 import { render } from '@testing-library/react';

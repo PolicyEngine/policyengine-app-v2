@@ -4,21 +4,20 @@ import MainSection from '@/components/home/MainSection';
 import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/home-header/CountrySelectorMocks';
 
 describe('MainSection', () => {
-  test('given US country then displays analyze with z', () => {
+  test('given US country then displays US-specific text', () => {
     // When
     renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.US);
 
     // Then
-    expect(screen.getByText(/analyze/i)).toBeInTheDocument();
-    expect(screen.queryByText(/analyse/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/all 50 states/i)).toBeInTheDocument();
   });
 
-  test('given UK country then displays analyse with s', () => {
+  test('given UK country then displays UK-specific text', () => {
     // When
     renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.UK);
 
     // Then
-    expect(screen.getByText(/analyse/i)).toBeInTheDocument();
+    expect(screen.getByText(/across the UK/i)).toBeInTheDocument();
   });
 
   test('given component renders then displays hero title', () => {
@@ -26,9 +25,7 @@ describe('MainSection', () => {
     renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.US);
 
     // Then
-    expect(
-      screen.getByRole('heading', { name: /computing public policy for everyone/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /start simulating/i })).toBeInTheDocument();
   });
 
   test('given component renders then displays subtitle text', () => {
@@ -36,7 +33,7 @@ describe('MainSection', () => {
     renderWithCountry(<MainSection />, TEST_COUNTRY_IDS.US);
 
     // Then
-    expect(screen.getByText(/understand and/i)).toBeInTheDocument();
-    expect(screen.getByText(/the impacts of tax and benefit policies/i)).toBeInTheDocument();
+    expect(screen.getByText(/free, open-source tax and benefit analysis/i)).toBeInTheDocument();
+    expect(screen.getByText(/benefit access tools/i)).toBeInTheDocument();
   });
 });

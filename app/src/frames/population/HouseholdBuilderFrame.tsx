@@ -1,4 +1,12 @@
 /**
+ * @deprecated REFERENCE ONLY - Remove before merging PR
+ *
+ * This file is kept as a reference for the HouseholdBuilderForm component pattern.
+ * The app now uses HouseholdBuilderView in src/pathways/ instead.
+ * Delete this file and its test before final PR merge.
+ */
+
+/**
  * HouseholdBuilderFrame - Orchestrator for household creation flow
  *
  * Responsibilities:

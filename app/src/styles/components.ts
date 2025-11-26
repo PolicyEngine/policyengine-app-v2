@@ -171,7 +171,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.secondary[100],
             border: `1px solid ${colors.primary[500]}`,
             cursor: 'pointer',
@@ -188,7 +187,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
@@ -205,7 +203,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
@@ -222,7 +219,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.gray[50],
             border: `1px solid ${colors.border.light}`,
             cursor: 'not-allowed',
@@ -237,7 +233,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.secondary[100],
             border: `1px solid ${colors.primary[500]}`,
             cursor: 'pointer',
@@ -254,7 +249,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
@@ -271,7 +265,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.gray[50],
             border: `1px solid ${colors.border.light}`,
             cursor: 'not-allowed',
@@ -285,7 +278,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.secondary[100],
             border: `1px solid ${colors.primary[500]}`,
             cursor: 'pointer',
@@ -302,7 +294,6 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            marginBottom: spacing.md,
             backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
