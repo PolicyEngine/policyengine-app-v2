@@ -137,7 +137,9 @@ export default function AutumnBudgetBanner() {
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025 has been released'}
+          {isBeforeBudget
+            ? 'The Autumn Budget 2025 is coming soon'
+            : 'The Autumn Budget 2025 has been released'}
         </Title>
 
         {/* Autumn Budget Dashboard Box - Only show after budget */}
