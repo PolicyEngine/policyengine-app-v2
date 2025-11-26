@@ -14,18 +14,22 @@ Key findings:
 
 ## The policy
 
-From April 2028, owners of properties valued over £2 million (in 2026 prices) will pay an annual surcharge in addition to their existing council tax. The surcharge rises with property value across four bands:
+From April 2028, owners of properties valued over £2 million (in 2026 prices) will pay an annual surcharge in addition to their existing council tax. According to the [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/):
 
-| Property value | Annual surcharge |
-|----------------|------------------|
-| £2m - £2.5m | £2,500 |
-| £2.5m - £3m | £3,500 |
-| £3m - £5m | £5,000 |
-| £5m+ | £7,500 |
+> There will be four price bands with the surcharge rising from £2,500 for a property valued in the lowest £2 million to £2.5 million band, to £7,500 for a property valued in the highest band of £5 million or more, all uprated by CPI inflation each year.
 
-The OBR [explicitly states](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) only the lowest band rate (£2,500) and highest band rate (£7,500). [Bloomberg reports](https://www.bloomberg.com/news/articles/2025-11-26/reeves-hits-uk-property-with-mansion-tax-on-2-million-homes) the middle band rates as £3,500 and £5,000, though does not cite a source.
+The OBR does not specify the thresholds or surcharge amounts for the two middle bands. [Bloomberg reports](https://www.bloomberg.com/news/articles/2025-11-26/reeves-hits-uk-property-with-mansion-tax-on-2-million-homes) the middle threshold as either £3 million or £3.5 million (the article contains a typo with overlapping bands), with surcharges of £3,500 and £5,000, though does not cite a source.
 
-The OBR expects the surcharge rates to increase with CPI inflation each year. Unlike standard council tax, the revenue flows to central government rather than local authorities.
+For this analysis, we assume the following band structure:
+
+| Property value | Annual surcharge | Source |
+|----------------|------------------|--------|
+| £2m - £2.5m | £2,500 | OBR |
+| £2.5m - £3m | £3,500 | Assumed |
+| £3m - £5m | £5,000 | Assumed |
+| £5m+ | £7,500 | OBR |
+
+The revenue flows to central government rather than local authorities.
 
 ## Constituency-level estimates
 
@@ -92,13 +96,9 @@ Properties valued over £5.23 million (in 2028 prices) represent 25% of projecte
 - **House price growth**: OBR November 2025 forecasts (2.9% in 2025, 2.5% in 2026-27, 2.4% in 2028)
 - **Constituency boundaries**: MySoc 2025 Westminster constituencies
 
-### Surcharge band rates
+### Surcharge band assumptions
 
-The OBR states there are "four price bands" but only explicitly confirms two surcharge rates:
-- £2,500 for properties valued £2 million to £2.5 million (lowest band)
-- £7,500 for properties valued £5 million or more (highest band)
-
-We use the middle band rates (£3,500 for £2.5m-£3m; £5,000 for £3m-£5m) as reported by Bloomberg, though the official source for these figures is unclear. Since we allocate the OBR's total revenue estimate proportionally by constituency, this assumption affects the distribution of revenue across bands but not the total or constituency-level allocations.
+As noted above, the OBR confirms only the lowest and highest band rates. Our assumed middle band structure (£3,500 for £2.5m-£3m; £5,000 for £3m-£5m) is broadly consistent with Bloomberg's reporting. Since we allocate the OBR's total revenue estimate proportionally by constituency, these assumptions affect the distribution of revenue across bands but not the total or constituency-level allocations.
 
 ### Uprating methodology
 
