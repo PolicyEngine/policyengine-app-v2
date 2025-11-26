@@ -211,8 +211,6 @@ export function PlotlyChartCode({
   backgroundColor?: string;
 }) {
   const plotlyData = safeJsonParse(data);
-  const displayCategory = useDisplayCategory();
-  const mobile = displayCategory === 'mobile';
 
   if (!plotlyData) {
     return null;
@@ -240,21 +238,23 @@ export function PlotlyChartCode({
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
-          width: mobile ? 400 : '100%',
           height: 600,
           plot_bgcolor: backgroundColor || 'transparent',
           paper_bgcolor: backgroundColor || 'transparent',
           margin: margins,
           autosize: true,
         }}
+        frames={plotlyData.frames}
         config={{
           displayModeBar: false,
           responsive: true,
         }}
         style={{
+          width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box',
         }}
+        useResizeHandler
       />
     </div>
   );
