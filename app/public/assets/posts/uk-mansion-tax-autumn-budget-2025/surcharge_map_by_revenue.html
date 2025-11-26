@@ -381,10 +381,13 @@
             .interpolator(t => d3.interpolate('#e0e7ed', '#1a4a6e')(Math.pow(t, 0.5)));
 
         // Draw geographic view
-        const geoPaths = g.selectAll('.constituency-path')
+        console.log('Drawing', geoData.features.length, 'constituencies');
+        console.log('Scale:', geoScale, 'Offset:', geoOffsetX, geoOffsetY);
+        console.log('Bounds:', xMin, xMax, yMin, yMax);
+
+        const geoPaths = g.selectAll('path')
             .data(geoData.features)
-            .enter()
-            .append('path')
+            .join('path')
             .attr('class', 'constituency-path')
             .attr('d', pathGenerator)
             .attr('fill', d => {
