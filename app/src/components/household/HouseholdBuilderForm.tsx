@@ -31,6 +31,7 @@ import {
   addVariable,
   addVariableToEntity,
   getInputVariables,
+  getVariableInfo,
   removeVariable,
   resolveEntity,
 } from '@/utils/VariableResolver';
@@ -371,29 +372,13 @@ export default function HouseholdBuilderForm({
                       <Stack gap="md">
                         {/* Basic person inputs (dynamically from metadata) */}
                         {basicPersonFields.map((fieldName) => {
-                          // Get variable directly from metadata (not from allInputVariables)
-                          // because basic inputs might not be marked as isInputVariable
-                          const rawVariable = metadata.variables?.[fieldName];
-                          if (!rawVariable) {
+                          const variable = getVariableInfo(fieldName, metadata);
+                          if (!variable) {
                             return null;
                           }
 
-                          const variable = {
-                            name: rawVariable.name,
-                            label: rawVariable.label,
-                            entity: rawVariable.entity,
-                            valueType: rawVariable.valueType,
-                            unit: rawVariable.unit,
-                            defaultValue: rawVariable.defaultValue,
-                            isInputVariable: rawVariable.isInputVariable,
-                            hiddenInput: rawVariable.hidden_input,
-                            moduleName: rawVariable.moduleName,
-                            possibleValues: rawVariable.possibleValues,
-                            documentation: rawVariable.documentation || rawVariable.description,
-                          };
-
                           return (
-                            <Group key={fieldName} gap="xs" align="flex-end" wrap="nowrap">
+                            <Group key={fieldName} gap="xs" align="center" wrap="nowrap">
                               <Box style={{ minWidth: 180, maxWidth: 180 }}>
                                 <Text size="sm">{capitalizeLabel(variable.label)}</Text>
                               </Box>
@@ -420,7 +405,7 @@ export default function HouseholdBuilderForm({
                           }
 
                           return (
-                            <Group key={varName} gap="xs" align="flex-end" wrap="nowrap">
+                            <Group key={varName} gap="xs" align="center" wrap="nowrap">
                               <Box style={{ minWidth: 180, maxWidth: 180 }}>
                                 <Text size="sm" lineClamp={2}>
                                   {capitalizeLabel(variable.label)}
@@ -548,29 +533,13 @@ export default function HouseholdBuilderForm({
             <Stack gap="md">
               {/* Basic household inputs (like state_name) */}
               {basicNonPersonFields.map((fieldName) => {
-                // Get variable directly from metadata (not from allInputVariables)
-                // because basic inputs might not be marked as isInputVariable
-                const rawVariable = metadata.variables?.[fieldName];
-                if (!rawVariable) {
+                const variable = getVariableInfo(fieldName, metadata);
+                if (!variable) {
                   return null;
                 }
 
-                const variable = {
-                  name: rawVariable.name,
-                  label: rawVariable.label,
-                  entity: rawVariable.entity,
-                  valueType: rawVariable.valueType,
-                  unit: rawVariable.unit,
-                  defaultValue: rawVariable.defaultValue,
-                  isInputVariable: rawVariable.isInputVariable,
-                  hiddenInput: rawVariable.hidden_input,
-                  moduleName: rawVariable.moduleName,
-                  possibleValues: rawVariable.possibleValues,
-                  documentation: rawVariable.documentation || rawVariable.description,
-                };
-
                 return (
-                  <Group key={fieldName} gap="xs" align="flex-end" wrap="nowrap">
+                  <Group key={fieldName} gap="xs" align="center" wrap="nowrap">
                     <Box style={{ minWidth: 180, maxWidth: 180 }}>
                       <Text size="sm" lineClamp={2}>
                         {capitalizeLabel(variable.label)}
@@ -598,7 +567,7 @@ export default function HouseholdBuilderForm({
                 }
 
                 return (
-                  <Group key={`${entity}-${varName}`} gap="xs" align="flex-end" wrap="nowrap">
+                  <Group key={`${entity}-${varName}`} gap="xs" align="center" wrap="nowrap">
                     <Box style={{ minWidth: 180, maxWidth: 180 }}>
                       <Text size="sm" lineClamp={2}>
                         {capitalizeLabel(variable.label)}
