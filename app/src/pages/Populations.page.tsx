@@ -209,7 +209,7 @@ export default function PopulationsPage() {
     const familiesCount = Object.keys(household?.household_json?.families || {}).length;
     return [
       { text: `${peopleCount} person${peopleCount !== 1 ? 's' : ''}`, badge: '' },
-      { text: `${familiesCount} family${familiesCount !== 1 ? 'ies' : ''}`, badge: '' },
+      { text: `${familiesCount} household${familiesCount !== 1 ? 's' : ''}`, badge: '' },
     ];
   };
 

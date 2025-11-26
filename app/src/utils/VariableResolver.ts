@@ -52,6 +52,24 @@ export function resolveEntity(variableName: string, metadata: any): EntityInfo |
 }
 
 /**
+ * Get simplified entity display info for a variable
+ * Returns isPerson flag and a display label for the entity type
+ */
+export function getVariableEntityDisplayInfo(
+  variableName: string,
+  metadata: any
+): { isPerson: boolean; label: string } {
+  const entityInfo = resolveEntity(variableName, metadata);
+  if (!entityInfo) {
+    return { isPerson: true, label: 'unknown' };
+  }
+  return {
+    isPerson: entityInfo.isPerson,
+    label: entityInfo.isPerson ? 'person' : entityInfo.label?.toLowerCase() || 'household',
+  };
+}
+
+/**
  * Get variable metadata
  */
 export function getVariableInfo(variableName: string, metadata: any): VariableInfo | null {

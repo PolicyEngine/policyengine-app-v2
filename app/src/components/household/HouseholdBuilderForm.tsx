@@ -9,33 +9,21 @@
  */
 
 import { useMemo, useState } from 'react';
-import { IconInfoCircle, IconPlus, IconSearch, IconX } from '@tabler/icons-react';
-import {
-  Accordion,
-  ActionIcon,
-  Alert,
-  Badge,
-  Box,
-  Button,
-  Divider,
-  Group,
-  Select,
-  Stack,
-  Text,
-  TextInput,
-  Tooltip,
-} from '@mantine/core';
+import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
+import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
 import { Household } from '@/types/ingredients/Household';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
   addVariable,
   addVariableToEntity,
   getInputVariables,
+  getVariableEntityDisplayInfo,
   getVariableInfo,
   removeVariable,
   resolveEntity,
 } from '@/utils/VariableResolver';
-import VariableInput from './VariableInput';
+import VariableRow from './VariableRow';
+import VariableSearchDropdown from './VariableSearchDropdown';
 
 export interface HouseholdBuilderFormProps {
   household: Household;
@@ -95,52 +83,17 @@ export default function HouseholdBuilderForm({
     return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
   };
 
-  // Helper to capitalize label
-  const capitalizeLabel = (label: string): string => {
-    return label
-      .split(' ')
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
-
-  // Filter ALL variables for person search (no entity filtering - shows all)
-  const filteredPersonVariables = useMemo(() => {
-    if (!personSearchValue.trim()) {
+  // Filter variables by search value (no entity filtering - shows all)
+  const getFilteredVariables = (searchValue: string) => {
+    if (!searchValue.trim()) {
       return allInputVariables.slice(0, 50);
     }
-
-    const search = personSearchValue.toLowerCase();
+    const search = searchValue.toLowerCase();
     return allInputVariables
       .filter(
         (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
       )
       .slice(0, 50);
-  }, [allInputVariables, personSearchValue]);
-
-  // Filter ALL variables for household search (no entity filtering - shows all)
-  const filteredHouseholdVariables = useMemo(() => {
-    if (!householdSearchValue.trim()) {
-      return allInputVariables.slice(0, 50);
-    }
-
-    const search = householdSearchValue.toLowerCase();
-    return allInputVariables
-      .filter(
-        (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
-      )
-      .slice(0, 50);
-  }, [allInputVariables, householdSearchValue]);
-
-  // Helper to get entity display info for a variable
-  const getVariableEntityInfo = (variableName: string): { isPerson: boolean; label: string } => {
-    const entityInfo = resolveEntity(variableName, metadata);
-    if (!entityInfo) {
-      return { isPerson: true, label: 'unknown' };
-    }
-    return {
-      isPerson: entityInfo.isPerson,
-      label: entityInfo.isPerson ? 'person' : entityInfo.label?.toLowerCase() || 'household',
-    };
   };
 
   // Get variables for a specific person (custom only, not basic inputs)
@@ -186,7 +139,7 @@ export default function HouseholdBuilderForm({
     variable: { name: string; label: string },
     person: string
   ) => {
-    const { isPerson, label: entityLabel } = getVariableEntityInfo(variable.name);
+    const { isPerson, label: entityLabel } = getVariableEntityDisplayInfo(variable.name, metadata);
 
     // If non-person variable selected from person context, show warning
     if (!isPerson) {
@@ -242,7 +195,7 @@ export default function HouseholdBuilderForm({
 
   // Handle household variable selection
   const handleHouseholdVariableSelect = (variable: { name: string; label: string }) => {
-    const { isPerson } = getVariableEntityInfo(variable.name);
+    const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
 
     // If person variable selected from household context, show warning
     if (isPerson) {
@@ -376,24 +329,17 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
-
                           return (
-                            <Group key={fieldName} gap="xs" align="center" wrap="nowrap">
-                              <Box style={{ minWidth: 180, maxWidth: 180 }}>
-                                <Text size="sm">{capitalizeLabel(variable.label)}</Text>
-                              </Box>
-                              <Box style={{ flex: 1, minWidth: 120 }}>
-                                <VariableInput
-                                  variable={{ ...variable, label: '' }}
-                                  household={household}
-                                  metadata={metadata}
-                                  year={year}
-                                  entityName={person}
-                                  onChange={onChange}
-                                  disabled={disabled}
-                                />
-                              </Box>
-                            </Group>
+                            <VariableRow
+                              key={fieldName}
+                              variable={variable}
+                              household={household}
+                              metadata={metadata}
+                              year={year}
+                              entityName={person}
+                              onChange={onChange}
+                              disabled={disabled}
+                            />
                           );
                         })}
 
@@ -403,107 +349,39 @@ export default function HouseholdBuilderForm({
                           if (!variable) {
                             return null;
                           }
-
                           return (
-                            <Group key={varName} gap="xs" align="center" wrap="nowrap">
-                              <Box style={{ minWidth: 180, maxWidth: 180 }}>
-                                <Text size="sm" lineClamp={2}>
-                                  {capitalizeLabel(variable.label)}
-                                </Text>
-                              </Box>
-                              <Box style={{ flex: 1, minWidth: 120 }}>
-                                <VariableInput
-                                  variable={{ ...variable, label: '' }}
-                                  household={household}
-                                  metadata={metadata}
-                                  year={year}
-                                  entityName={person}
-                                  onChange={onChange}
-                                  disabled={disabled}
-                                />
-                              </Box>
-                              <Tooltip label="Remove variable for this person">
-                                <ActionIcon
-                                  size="lg"
-                                  variant="default"
-                                  onClick={() => handleRemovePersonVariable(varName, person)}
-                                  disabled={disabled}
-                                >
-                                  <IconX size={16} />
-                                </ActionIcon>
-                              </Tooltip>
-                            </Group>
+                            <VariableRow
+                              key={varName}
+                              variable={variable}
+                              household={household}
+                              metadata={metadata}
+                              year={year}
+                              entityName={person}
+                              onChange={onChange}
+                              onRemove={() => handleRemovePersonVariable(varName, person)}
+                              disabled={disabled}
+                            />
                           );
                         })}
 
                         {/* Add variable search or link */}
                         {activePersonSearch === person ? (
-                          <Box>
-                            <TextInput
-                              placeholder="Search for a variable..."
-                              value={personSearchValue}
-                              onChange={(e) => setPersonSearchValue(e.currentTarget.value)}
-                              onFocus={() => setIsPersonSearchFocused(true)}
-                              onBlur={() => setTimeout(() => setIsPersonSearchFocused(false), 200)}
-                              leftSection={<IconSearch size={16} />}
-                              disabled={disabled}
-                              autoFocus
-                            />
-
-                            {/* Variable list - only show when focused */}
-                            {isPersonSearchFocused && (
-                              <Box
-                                mt="xs"
-                                style={{
-                                  maxHeight: 200,
-                                  overflow: 'auto',
-                                  border: '1px solid var(--mantine-color-default-border)',
-                                  borderRadius: 'var(--mantine-radius-sm)',
-                                }}
-                              >
-                                {filteredPersonVariables.length > 0 ? (
-                                  <Stack gap={0}>
-                                    {filteredPersonVariables.map((variable) => {
-                                      const { isPerson, label: entityLabel } =
-                                        getVariableEntityInfo(variable.name);
-                                      return (
-                                        <Box
-                                          key={variable.name}
-                                          p="sm"
-                                          onMouseDown={() =>
-                                            handlePersonVariableSelect(variable, person)
-                                          }
-                                          style={{
-                                            cursor: 'pointer',
-                                            borderBottom:
-                                              '1px solid var(--mantine-color-default-border)',
-                                          }}
-                                        >
-                                          <Group gap="xs" justify="space-between">
-                                            <Text size="sm">{variable.label}</Text>
-                                            {!isPerson && (
-                                              <Badge size="xs" variant="light" color="gray">
-                                                {entityLabel}
-                                              </Badge>
-                                            )}
-                                          </Group>
-                                          {variable.documentation && (
-                                            <Text size="xs" c="dimmed" lineClamp={1}>
-                                              {variable.documentation}
-                                            </Text>
-                                          )}
-                                        </Box>
-                                      );
-                                    })}
-                                  </Stack>
-                                ) : (
-                                  <Text size="sm" c="dimmed" p="md" ta="center">
-                                    No variables found
-                                  </Text>
-                                )}
-                              </Box>
-                            )}
-                          </Box>
+                          <VariableSearchDropdown
+                            searchValue={personSearchValue}
+                            onSearchChange={setPersonSearchValue}
+                            isFocused={isPersonSearchFocused}
+                            onFocusChange={setIsPersonSearchFocused}
+                            filteredVariables={getFilteredVariables(personSearchValue)}
+                            onSelect={(variable) => handlePersonVariableSelect(variable, person)}
+                            getBadgeInfo={(variable) => {
+                              const { isPerson, label: entityLabel } = getVariableEntityDisplayInfo(
+                                variable.name,
+                                metadata
+                              );
+                              return { show: !isPerson, label: entityLabel };
+                            }}
+                            disabled={disabled}
+                          />
                         ) : (
                           <Button
                             variant="subtle"
@@ -537,25 +415,16 @@ export default function HouseholdBuilderForm({
                 if (!variable) {
                   return null;
                 }
-
                 return (
-                  <Group key={fieldName} gap="xs" align="center" wrap="nowrap">
-                    <Box style={{ minWidth: 180, maxWidth: 180 }}>
-                      <Text size="sm" lineClamp={2}>
-                        {capitalizeLabel(variable.label)}
-                      </Text>
-                    </Box>
-                    <Box style={{ flex: 1, minWidth: 120 }}>
-                      <VariableInput
-                        variable={{ ...variable, label: '' }}
-                        household={household}
-                        metadata={metadata}
-                        year={year}
-                        onChange={onChange}
-                        disabled={disabled}
-                      />
-                    </Box>
-                  </Group>
+                  <VariableRow
+                    key={fieldName}
+                    variable={variable}
+                    household={household}
+                    metadata={metadata}
+                    year={year}
+                    onChange={onChange}
+                    disabled={disabled}
+                  />
                 );
               })}
 
@@ -565,102 +434,35 @@ export default function HouseholdBuilderForm({
                 if (!variable) {
                   return null;
                 }
-
                 return (
-                  <Group key={`${entity}-${varName}`} gap="xs" align="center" wrap="nowrap">
-                    <Box style={{ minWidth: 180, maxWidth: 180 }}>
-                      <Text size="sm" lineClamp={2}>
-                        {capitalizeLabel(variable.label)}
-                      </Text>
-                    </Box>
-                    <Box style={{ flex: 1, minWidth: 120 }}>
-                      <VariableInput
-                        variable={{ ...variable, label: '' }}
-                        household={household}
-                        metadata={metadata}
-                        year={year}
-                        onChange={onChange}
-                        disabled={disabled}
-                      />
-                    </Box>
-                    <Tooltip label="Remove variable">
-                      <ActionIcon
-                        size="lg"
-                        variant="default"
-                        onClick={() => handleRemoveHouseholdVariable(varName)}
-                        disabled={disabled}
-                      >
-                        <IconX size={16} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </Group>
+                  <VariableRow
+                    key={`${entity}-${varName}`}
+                    variable={variable}
+                    household={household}
+                    metadata={metadata}
+                    year={year}
+                    onChange={onChange}
+                    onRemove={() => handleRemoveHouseholdVariable(varName)}
+                    disabled={disabled}
+                  />
                 );
               })}
 
               {/* Add variable search or link */}
               {isHouseholdSearchActive ? (
-                <Box>
-                  <TextInput
-                    placeholder="Search for a variable..."
-                    value={householdSearchValue}
-                    onChange={(e) => setHouseholdSearchValue(e.currentTarget.value)}
-                    onFocus={() => setIsHouseholdSearchFocused(true)}
-                    onBlur={() => setTimeout(() => setIsHouseholdSearchFocused(false), 200)}
-                    leftSection={<IconSearch size={16} />}
-                    disabled={disabled}
-                    autoFocus
-                  />
-
-                  {/* Variable list - only show when focused */}
-                  {isHouseholdSearchFocused && (
-                    <Box
-                      mt="xs"
-                      style={{
-                        maxHeight: 200,
-                        overflow: 'auto',
-                        border: '1px solid var(--mantine-color-default-border)',
-                        borderRadius: 'var(--mantine-radius-sm)',
-                      }}
-                    >
-                      {filteredHouseholdVariables.length > 0 ? (
-                        <Stack gap={0}>
-                          {filteredHouseholdVariables.map((variable) => {
-                            const { isPerson } = getVariableEntityInfo(variable.name);
-                            return (
-                              <Box
-                                key={variable.name}
-                                p="sm"
-                                onMouseDown={() => handleHouseholdVariableSelect(variable)}
-                                style={{
-                                  cursor: 'pointer',
-                                  borderBottom: '1px solid var(--mantine-color-default-border)',
-                                }}
-                              >
-                                <Group gap="xs" justify="space-between">
-                                  <Text size="sm">{variable.label}</Text>
-                                  {isPerson && (
-                                    <Badge size="xs" variant="light" color="gray">
-                                      person
-                                    </Badge>
-                                  )}
-                                </Group>
-                                {variable.documentation && (
-                                  <Text size="xs" c="dimmed" lineClamp={1}>
-                                    {variable.documentation}
-                                  </Text>
-                                )}
-                              </Box>
-                            );
-                          })}
-                        </Stack>
-                      ) : (
-                        <Text size="sm" c="dimmed" p="md" ta="center">
-                          No variables found
-                        </Text>
-                      )}
-                    </Box>
-                  )}
-                </Box>
+                <VariableSearchDropdown
+                  searchValue={householdSearchValue}
+                  onSearchChange={setHouseholdSearchValue}
+                  isFocused={isHouseholdSearchFocused}
+                  onFocusChange={setIsHouseholdSearchFocused}
+                  filteredVariables={getFilteredVariables(householdSearchValue)}
+                  onSelect={handleHouseholdVariableSelect}
+                  getBadgeInfo={(variable) => {
+                    const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
+                    return { show: isPerson, label: 'person' };
+                  }}
+                  disabled={disabled}
+                />
               ) : (
                 <Button
                   variant="subtle"

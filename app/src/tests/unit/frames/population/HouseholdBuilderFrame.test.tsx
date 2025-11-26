@@ -174,6 +174,55 @@ vi.mock('@/utils/VariableResolver', () => ({
       { name: 'household_wealth', label: 'Household Wealth', entity: 'household' },
     ];
   },
+  getVariableInfo: (variableName: string, _metadata: any) => {
+    // Return variable info for a given variable name
+    const variableMap: Record<string, any> = {
+      age: { name: 'age', label: 'Age', entity: 'person', valueType: 'int', defaultValue: 0 },
+      employment_income: {
+        name: 'employment_income',
+        label: 'Employment Income',
+        entity: 'person',
+        valueType: 'float',
+        unit: 'currency-USD',
+        defaultValue: 0,
+      },
+      self_employment_income: {
+        name: 'self_employment_income',
+        label: 'Self Employment Income',
+        entity: 'person',
+        valueType: 'float',
+        defaultValue: 0,
+      },
+      rental_income: {
+        name: 'rental_income',
+        label: 'Rental Income',
+        entity: 'person',
+        valueType: 'float',
+        defaultValue: 0,
+      },
+      state_code: {
+        name: 'state_code',
+        label: 'State',
+        entity: 'household',
+        valueType: 'string',
+        defaultValue: 'CA',
+      },
+      household_wealth: {
+        name: 'household_wealth',
+        label: 'Household Wealth',
+        entity: 'household',
+        valueType: 'float',
+        defaultValue: 0,
+      },
+    };
+    return variableMap[variableName] || null;
+  },
+  getVariableEntityDisplayInfo: (variableName: string, _metadata: any) => {
+    // Return entity display info for a variable
+    const personVars = ['age', 'employment_income', 'self_employment_income', 'rental_income'];
+    const isPerson = personVars.includes(variableName);
+    return { isPerson, label: isPerson ? 'person' : 'household' };
+  },
   resolveEntity: (variableName: string, _metadata: any) => {
     // Map variable names to entities
     const entityMap: Record<string, { plural: string; isPerson: boolean }> = {

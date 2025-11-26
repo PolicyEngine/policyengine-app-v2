@@ -58,10 +58,6 @@ export default function HouseholdBuilderFrame({
     .filter(([key]) => key !== 'person')
     .flatMap(([, fields]) => fields);
 
-  // State for form controls
-  const [maritalStatus, setMaritalStatus] = useState<'single' | 'married'>('single');
-  const [numChildren, setNumChildren] = useState<number>(0);
-
   // Error boundary: Show error if no report year available
   if (!reportYear) {
     return (
@@ -86,16 +82,17 @@ export default function HouseholdBuilderFrame({
     );
   }
 
-  // Initialize with empty household if none exists
+  // Initialize household with "you" if none exists
   const [household, setLocalHousehold] = useState<Household>(() => {
     if (populationState?.household) {
       return populationState.household;
     }
     const builder = new HouseholdBuilder(countryId as any, reportYear);
+    builder.addAdult('you', 30, { employment_income: 0 });
     return builder.build();
   });
 
-  // Initialize household on mount if not exists
+  // Initialize household in Redux on mount if not exists
   useEffect(() => {
     if (!populationState?.household) {
       dispatch(
@@ -108,87 +105,55 @@ export default function HouseholdBuilderFrame({
     }
   }, [populationState?.household, countryId, dispatch, currentPosition, reportYear]);
 
-  // Rebuild household structure when marital status or children count changes
-  useEffect(() => {
+  // Derive marital status and number of children from household (single source of truth)
+  const people = Object.keys(household.householdData.people);
+  const maritalStatus = people.includes('your partner') ? 'married' : 'single';
+  const numChildren = people.filter((p) => p.includes('dependent')).length;
+
+  // Handler for marital status change - directly modifies household
+  const handleMaritalStatusChange = (newStatus: 'single' | 'married') => {
     const builder = new HouseholdBuilder(countryId as any, reportYear);
+    builder.loadHousehold(household);
 
-    // Get current people to preserve their data
-    const currentPeople = Object.keys(household.householdData.people);
-    const hasYou = currentPeople.includes('you');
-    const hasPartner = currentPeople.includes('your partner');
+    const hasPartner = people.includes('your partner');
 
-    // Add or update primary adult
-    if (hasYou) {
-      // Preserve existing data
-      builder.loadHousehold(household);
-    } else {
-      // Add new "you" person
-      builder.addAdult('you', 30, { employment_income: 0 });
-    }
-
-    // Handle spouse based on marital status
-    if (maritalStatus === 'married') {
-      if (!hasPartner) {
-        builder.addAdult('your partner', 30, { employment_income: 0 });
-      }
+    if (newStatus === 'married' && !hasPartner) {
+      builder.addAdult('your partner', 30, { employment_income: 0 });
       builder.setMaritalStatus('you', 'your partner');
-    } else if (hasPartner) {
+    } else if (newStatus === 'single' && hasPartner) {
       builder.removePerson('your partner');
     }
 
-    // Handle children
-    const children = currentPeople.filter((p) => p.includes('dependent'));
-    const currentChildCount = children.length;
+    setLocalHousehold(builder.build());
+  };
 
-    if (numChildren !== currentChildCount) {
+  // Handler for number of children change - directly modifies household
+  const handleNumChildrenChange = (newCount: number) => {
+    const builder = new HouseholdBuilder(countryId as any, reportYear);
+    builder.loadHousehold(household);
+
+    const currentChildren = people.filter((p) => p.includes('dependent'));
+    const currentChildCount = currentChildren.length;
+
+    if (newCount !== currentChildCount) {
       // Remove all existing children
-      children.forEach((child) => builder.removePerson(child));
+      currentChildren.forEach((child) => builder.removePerson(child));
 
       // Add new children
-      if (numChildren > 0) {
-        const parentIds = maritalStatus === 'married' ? ['you', 'your partner'] : ['you'];
+      if (newCount > 0) {
+        const hasPartner = people.includes('your partner');
+        const parentIds = hasPartner ? ['you', 'your partner'] : ['you'];
         const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
 
-        for (let i = 0; i < numChildren; i++) {
+        for (let i = 0; i < newCount; i++) {
           const childName = `your ${ordinals[i] || `${i + 1}th`} dependent`;
           builder.addChild(childName, 10, parentIds, { employment_income: 0 });
         }
       }
     }
 
-    // Build list of all people in household (common to all countries)
-    const allPeople = ['you'];
-    if (maritalStatus === 'married') {
-      allPeople.push('your partner');
-    }
-    const ordinals = ['first', 'second', 'third', 'fourth', 'fifth'];
-    for (let i = 0; i < numChildren; i++) {
-      allPeople.push(`your ${ordinals[i] || `${i + 1}th`} dependent`);
-    }
-
-    // Assign people to group entities based on country
-    // Each country has different entity structures
-    if (countryId === 'us') {
-      allPeople.forEach((person) => {
-        builder.assignToGroupEntity(person, 'households', 'your household');
-        builder.assignToGroupEntity(person, 'families', 'your family');
-        builder.assignToGroupEntity(person, 'taxUnits', 'your tax unit');
-        builder.assignToGroupEntity(person, 'spmUnits', 'your household');
-      });
-    } else if (countryId === 'uk') {
-      allPeople.forEach((person) => {
-        builder.assignToGroupEntity(person, 'households', 'your household');
-        builder.assignToGroupEntity(person, 'benunits', 'your benefit unit');
-      });
-    } else {
-      // Default for other countries (CA, NG, IL, etc.) - just households
-      allPeople.forEach((person) => {
-        builder.assignToGroupEntity(person, 'households', 'your household');
-      });
-    }
-
     setLocalHousehold(builder.build());
-  }, [maritalStatus, numChildren, reportYear, countryId]);
+  };
 
   // Handle submit
   const handleSubmit = async () => {
@@ -210,14 +175,10 @@ export default function HouseholdBuilderFrame({
     console.log('[HOUSEHOLD_API] ✅ Validation passed');
 
     // Log the raw household data before conversion
-    console.log('[HOUSEHOLD_API] 📦 Raw household data (before conversion):', {
-      people: household.householdData.people,
-      households: household.householdData.households,
-      taxUnits: household.householdData.tax_units,
-      spmUnits: household.householdData.spm_units,
-      families: household.householdData.families,
-      maritalUnits: household.householdData.marital_units,
-    });
+    console.log(
+      '[HOUSEHOLD_API] 📦 Raw household data (before conversion):',
+      household.householdData
+    );
 
     // Convert to API format
     const payload = HouseholdAdapter.toCreationPayload(household.householdData, countryId);
@@ -311,8 +272,8 @@ export default function HouseholdBuilderFrame({
         basicPersonFields={basicInputFields.person || []}
         basicNonPersonFields={basicNonPersonFields}
         onChange={setLocalHousehold}
-        onMaritalStatusChange={setMaritalStatus}
-        onNumChildrenChange={setNumChildren}
+        onMaritalStatusChange={handleMaritalStatusChange}
+        onNumChildrenChange={handleNumChildrenChange}
         disabled={loading || isPending}
       />
     </Stack>
