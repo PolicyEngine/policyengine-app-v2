@@ -19,11 +19,11 @@ From April 2028, owners of properties valued over £2 million (in 2026 prices) w
 | Property value | Annual surcharge |
 |----------------|------------------|
 | £2m - £2.5m | £2,500 |
-| £2.5m - £3m | £3,500* |
-| £3m - £5m | £5,000* |
+| £2.5m - £3m | £3,500 |
+| £3m - £5m | £5,000 |
 | £5m+ | £7,500 |
 
-*The OBR explicitly states only the lowest band rate (£2,500) and highest band rate (£7,500). The middle band rates shown above are our interpolated estimates based on a linear progression between the confirmed rates. Official rates for the middle bands have not been published.
+The OBR [explicitly states](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) only the lowest band rate (£2,500) and highest band rate (£7,500). [Bloomberg reports](https://www.bloomberg.com/news/articles/2025-11-26/reeves-hits-uk-property-with-mansion-tax-on-2-million-homes) the middle band rates as £3,500 and £5,000, though does not cite a source.
 
 The OBR expects the surcharge rates to increase with CPI inflation each year. Unlike standard council tax, the revenue flows to central government rather than local authorities.
 
@@ -92,13 +92,13 @@ Properties valued over £5.23 million (in 2028 prices) represent 25% of projecte
 - **House price growth**: OBR November 2025 forecasts (2.9% in 2025, 2.5% in 2026-27, 2.4% in 2028)
 - **Constituency boundaries**: MySoc 2025 Westminster constituencies
 
-### Surcharge band assumptions
+### Surcharge band rates
 
 The OBR states there are "four price bands" but only explicitly confirms two surcharge rates:
 - £2,500 for properties valued £2 million to £2.5 million (lowest band)
 - £7,500 for properties valued £5 million or more (highest band)
 
-We interpolate the middle band rates (£3,500 for £2.5m-£3m; £5,000 for £3m-£5m) assuming a linear progression. Since we allocate the OBR's total revenue estimate proportionally by constituency, this assumption affects the distribution of revenue across bands but not the total or constituency-level allocations.
+We use the middle band rates (£3,500 for £2.5m-£3m; £5,000 for £3m-£5m) as reported by Bloomberg, though the official source for these figures is unclear. Since we allocate the OBR's total revenue estimate proportionally by constituency, this assumption affects the distribution of revenue across bands but not the total or constituency-level allocations.
 
 ### Uprating methodology
 
