@@ -11,7 +11,7 @@ export const BANNER_LINKS = {
   TWO_CHILD_LIMIT: '/uk/research/uk-two-child-limit',
   VAT_THRESHOLDS: '/uk/research/uk-vat-thresholds',
   INCOME_TAX_NI: '/uk/research/uk-income-tax-ni-reforms-2025',
-  AUTUMN_BUDGET_DASHBOARD: '/uk/autumn-budget-dashboard',
+  AUTUMN_BUDGET_DASHBOARD: '/uk/uk-autumn-budget-2025',
 } as const;
 
 export const BANNER_CARD_TITLES = {
