@@ -44,6 +44,7 @@ app/src/
 All view components are already fully reusable across pathways:
 
 ### Simulation Views
+
 - `SimulationLabelView` - Label entry
 - `SimulationSetupView` - Policy/population setup coordination
 - `SimulationSubmitView` - API submission
@@ -51,12 +52,14 @@ All view components are already fully reusable across pathways:
 - `SimulationPopulationSetupView` - Population selection coordinator
 
 ### Policy Views
+
 - `PolicyLabelView` - Label entry
 - `PolicyParameterSelectorView` - Parameter modification
 - `PolicySubmitView` - API submission
 - `PolicyExistingView` - Load existing policy
 
 ### Population Views
+
 - `PopulationScopeView` - Household vs geography selection
 - `PopulationLabelView` - Label entry
 - `HouseholdBuilderView` - Custom household creation
@@ -76,6 +79,7 @@ All view components are already fully reusable across pathways:
 #### `isPolicyConfigured(policy: PolicyStateProps | null | undefined): boolean`
 
 Checks if a policy is configured by verifying it has an ID. A policy gets an ID when:
+
 - User creates custom policy and submits to API
 - User selects current law (ID = currentLawId)
 - User loads existing policy from database
@@ -103,6 +107,7 @@ if (isPopulationConfigured(population)) {
 #### `isSimulationConfigured(simulation: SimulationStateProps | null | undefined): boolean`
 
 Checks if a simulation is configured by checking:
+
 1. If simulation has an ID (fully persisted), OR
 2. If both policy and population are configured (ready to submit)
 
@@ -137,6 +142,7 @@ Factory functions that generate reusable callbacks for state management.
 ### `createPolicyCallbacks<TState, TMode>`
 
 **Parameters**:
+
 - `setState`: State setter function
 - `policySelector`: Extract policy from state
 - `policyUpdater`: Update policy in state
@@ -144,6 +150,7 @@ Factory functions that generate reusable callbacks for state management.
 - `returnMode`: Mode to return to after completion
 
 **Returns**:
+
 ```typescript
 {
   updateLabel: (label: string) => void
@@ -155,6 +162,7 @@ Factory functions that generate reusable callbacks for state management.
 ```
 
 **Example**:
+
 ```typescript
 const policyCallbacks = createPolicyCallbacks(
   setState,
@@ -168,6 +176,7 @@ const policyCallbacks = createPolicyCallbacks(
 ### `createPopulationCallbacks<TState, TMode>`
 
 **Parameters**:
+
 - `setState`: State setter function
 - `populationSelector`: Extract population from state
 - `populationUpdater`: Update population in state
@@ -176,6 +185,7 @@ const policyCallbacks = createPolicyCallbacks(
 - `labelMode`: Mode to navigate to for labeling
 
 **Returns**:
+
 ```typescript
 {
   updateLabel: (label: string) => void
@@ -190,6 +200,7 @@ const policyCallbacks = createPolicyCallbacks(
 ### `createSimulationCallbacks<TState, TMode>`
 
 **Parameters**:
+
 - `setState`: State setter function
 - `simulationSelector`: Extract simulation from state
 - `simulationUpdater`: Update simulation in state
@@ -197,6 +208,7 @@ const policyCallbacks = createPolicyCallbacks(
 - `returnMode`: Mode to return to after completion
 
 **Returns**:
+
 ```typescript
 {
   updateLabel: (label: string) => void
@@ -208,6 +220,7 @@ const policyCallbacks = createPolicyCallbacks(
 ### `createReportCallbacks<TMode>`
 
 **Parameters**:
+
 - `setState`: State setter function for report state
 - `navigateToMode`: Navigation function
 - `activeSimulationIndex`: Currently active simulation (0 or 1)
@@ -215,6 +228,7 @@ const policyCallbacks = createPolicyCallbacks(
 - `setupMode`: Mode to return to after operations (typically REPORT_SETUP)
 
 **Returns**:
+
 ```typescript
 {
   updateLabel: (label: string) => void
@@ -226,6 +240,7 @@ const policyCallbacks = createPolicyCallbacks(
 ```
 
 **Example**:
+
 ```typescript
 const reportCallbacks = createReportCallbacks(
   setReportState,
@@ -245,6 +260,7 @@ const reportCallbacks = createReportCallbacks(
 **Type Parameters**: `<TMode>` - The enum type for view modes
 
 **Returns**:
+
 ```typescript
 {
   currentMode: TMode
@@ -258,6 +274,7 @@ const reportCallbacks = createReportCallbacks(
 ```
 
 **Example**:
+
 ```typescript
 const { currentMode, navigateToMode, goBack } = usePathwayNavigation(
   SimulationViewMode.SIMULATION_LABEL
@@ -275,6 +292,7 @@ Utilities to convert API/enhanced data into StateProps format.
 Converts `EnhancedUserSimulation` → `SimulationStateProps`
 
 **Features**:
+
 - Reconstructs nested policy from `enhancedSimulation.policy`
 - Reconstructs nested population from household or geography
 - Handles populationType detection
@@ -285,6 +303,7 @@ Converts `EnhancedUserSimulation` → `SimulationStateProps`
 Converts `policy_json` format → `PolicyStateProps`
 
 **Features**:
+
 - Converts object notation to `Parameter[]` array
 - Handles value interval formatting
 - Normalizes date fields (start/startDate, end/endDate)
@@ -369,30 +388,32 @@ To create a new pathway (e.g., `SimulationPathwayWrapper`):
 
 ```typescript
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
-import {
-  createPolicyCallbacks,
-  createPopulationCallbacks,
-  createSimulationCallbacks,
-  createReportCallbacks // Only for report pathways
-} from '@/utils/pathwayCallbacks';
-import { PolicyViewMode, PopulationViewMode, SimulationViewMode } from '@/types/pathwayModes/SharedViewModes';
-
 // Import reusable views
 import SimulationLabelView from '@/pathways/report/views/simulation/SimulationLabelView';
 import SimulationSetupView from '@/pathways/report/views/simulation/SimulationSetupView';
+import {
+  PolicyViewMode,
+  PopulationViewMode,
+  SimulationViewMode,
+} from '@/types/pathwayModes/SharedViewModes';
+import {
+  createPolicyCallbacks,
+  createPopulationCallbacks,
+  createReportCallbacks, // Only for report pathways
+  createSimulationCallbacks,
+} from '@/utils/pathwayCallbacks';
+
 // ... etc
 ```
 
 ### 2. Define State Management
 
 ```typescript
-const [simulationState, setSimulationState] = useState<SimulationStateProps>(
-  () => initializeSimulationState(countryId)
+const [simulationState, setSimulationState] = useState<SimulationStateProps>(() =>
+  initializeSimulationState(countryId)
 );
 
-const { currentMode, navigateToMode } = usePathwayNavigation(
-  SimulationViewMode.SIMULATION_LABEL
-);
+const { currentMode, navigateToMode } = usePathwayNavigation(SimulationViewMode.SIMULATION_LABEL);
 ```
 
 ### 3. Create Callbacks Using Factories

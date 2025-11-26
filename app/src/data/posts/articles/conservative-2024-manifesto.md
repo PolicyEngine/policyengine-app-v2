@@ -91,15 +91,15 @@ PolicyEngine estimates that the complete Conservative manifesto would, in 2029:
 
 We estimate the Conservatives’ manifesto to be [mostly regressive along income lines](https://legacy.policyengine.org/uk/policy?focus=policyOutput.winnersAndLosers.incomeDecile&reform=58041&region=uk&timePeriod=2029&baseline=1), with the lowest decile experiencing a 6.4% decrease in disposable income, while those in the highest income bracket would see a 0.3% increase, and those in bracket 9 would experience the greatest relative increase of 1.6%.
 
-![Impact by income decile](/images/posts/conservative-2024-manifesto/decile_impact.png "image_tooltip")
+![Impact by income decile](/images/posts/conservative-2024-manifesto/decile_impact.png 'image_tooltip')
 
 We also conclude that people in the lowest income deciles are more likely to experience the negative impacts of the proposal, with over 95% of people in the first income decile experiencing a decrease in net income. The majority of people in income deciles above the fifth start to experience net income increases with [overall 46% of the population benefiting](https://legacy.policyengine.org/uk/policy?focus=policyOutput.winnersAndLosers.incomeDecile&reform=58041&region=uk&timePeriod=2029&baseline=1), in net income terms, and 52% of people experience net income decreases.
 
-![Impacts within income deciles](/images/posts/conservative-2024-manifesto/intra_decile_impact.png "image_tooltip")
+![Impacts within income deciles](/images/posts/conservative-2024-manifesto/intra_decile_impact.png 'image_tooltip')
 
 Regarding poverty rates, PolicyEngine estimates that the proposed policy changes would [increase the overall poverty rate 5.8%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact.regular.byAge&reform=58041&region=uk&timePeriod=2029&baseline=1). The percentage of seniors in poverty would increase by 19% to a total of 13.4%, while child and working-age adult poverty rates would increase by 3.5% and 4.6% respectively.
 
-![Poverty rate impacts](/images/posts/conservative-2024-manifesto/poverty_impact.png "image_tooltip")
+![Poverty rate impacts](/images/posts/conservative-2024-manifesto/poverty_impact.png 'image_tooltip')
 
 ## Conclusion
 
