@@ -9,11 +9,13 @@ With `@normy/react-query` installed and configured, your existing hooks (`useUse
 ### 1. Data is Automatically Normalized
 
 When your existing hooks fetch data with `id` fields, `@normy/react-query` automatically:
+
 - Stores each object by its ID in a normalized cache
 - Merges updates across all queries
 - Ensures data consistency
 
 Example with `useUserSimulations`:
+
 ```tsx
 // When this hook fetches simulations...
 const { data } = useUserSimulations(userId);
@@ -34,7 +36,7 @@ const { data: userSims } = useUserSimulations('user-1');
 // Component B
 const { data: simDetail } = useQuery({
   queryKey: ['simulation', '123'],
-  queryFn: () => fetchSimulation('123')
+  queryFn: () => fetchSimulation('123'),
 });
 // If this also returns simulation id:123, it uses/updates the same normalized object
 ```
@@ -59,16 +61,19 @@ const updateSim = useMutation({
 Your existing hooks now have these benefits automatically:
 
 ### useUserHousehold
+
 - Household objects are normalized by ID
 - Updates to a household in one place update it everywhere
 - Duplicate fetches are eliminated
 
-### useUserSimulation  
+### useUserSimulation
+
 - Simulations are normalized by ID
 - Related policies and populations are also normalized
 - Updates cascade through relationships
 
 ### useUserPolicy
+
 - Policies are normalized by ID
 - Shared between simulations that reference the same policy
 - Consistent policy data across the app
@@ -79,15 +84,15 @@ You can now access the normalized data directly:
 
 ```tsx
 import { useQueryNormalizer } from '@normy/react-query';
-import { useNormalizedData, useAllEntities } from '@/hooks/utils/normalizedUtils';
+import { useAllEntities, useNormalizedData } from '@/hooks/utils/normalizedUtils';
 
 function MyComponent() {
   // Get a specific simulation from normalized store
   const simulation = useNormalizedData('simulations', '123');
-  
+
   // Get all policies from normalized store
   const allPolicies = useAllEntities('policies');
-  
+
   // Direct access via queryNormalizer
   const queryNormalizer = useQueryNormalizer();
   const household = queryNormalizer.getObjectById('household-456');
@@ -115,7 +120,7 @@ const SimulationList = () => {
 const SimulationDetail = ({ simId }) => {
   // This will use the normalized simulation if already fetched!
   const simulation = useNormalizedData('simulations', simId);
-  
+
   // Or fetch if needed (will be normalized)
   const { data } = useQuery({
     queryKey: ['simulation', simId],
@@ -134,7 +139,7 @@ import { useManualNormalization } from '@/hooks/utils/normalizedUtils';
 
 function MyComponent() {
   const { updateEntity } = useManualNormalization();
-  
+
   // Manually update a simulation
   const handleWebSocketUpdate = (updatedSim) => {
     updateEntity('simulations', updatedSim);
@@ -158,7 +163,7 @@ To see normalization in action:
 
 ```tsx
 // In App.tsx, enable dev logging
-<QueryNormalizerProvider 
+<QueryNormalizerProvider
   queryClient={queryClient}
   normalizerConfig={{
     devLogging: true, // See normalization logs in console

@@ -28,14 +28,12 @@ HMRC administers this tax using a band system with different rates for certain i
 
 - **Standard income tax components**
   These are the main rate bands that determine tax payments on different portions of income. The UK uses a system where portions of income are taxed at different rates.
-
   - **Basic rate**: Applied to taxable income between the personal allowance and higher rate threshold at a rate of 20% for 2025, calculated in PolicyEngine as [`basic_rate_earned_income`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/bracketized_liability/basic_rate_earned_income_tax.py).
   - **Higher rate**: Applied to taxable income between the higher rate threshold (£37,700 above personal allowance in 2025) and additional rate threshold at a rate of 40% for 2025, calculated in PolicyEngine as [`higher_rate_earned_income`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/bracketized_liability/higher_rate_earned_income_tax.py).
   - **Additional rate**: Applied to taxable income over the additional rate threshold (£125,140 in 2025) at a rate of 45% for 2025, calculated in PolicyEngine as [`add_rate_earned_income`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/bracketized_liability/add_rate_earned_income_tax.py).
 
 - **Income tax bases**
   These represent the different sources of income subject to income tax in the UK. Each type has specific rules about deductions, allowances and sometimes different tax rates.
-
   - **Employment income**: Income from employment, including salaries, wages, bonuses and employment benefits. This income type is taxed through the PAYE system and represented by the [`taxable_employment_income`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/bases/taxable_employment_income.py) variable.
   - **Self-employment income**: Income from self-employment, freelance work or running a business as a sole trader. Self-employed individuals pay income tax on profits after business expenses, calculated as [`taxable_self_employment_income`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/bases/taxable_self_employment_income.py).
   - **Pension income**: Income from state pensions, workplace pensions and private pensions, calculated as [`taxable_pension_income`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/bases/taxable_pension_income.py) in PolicyEngine.
@@ -47,7 +45,6 @@ HMRC administers this tax using a band system with different rates for certain i
 
 - **Allowances and reliefs**
   These are amounts that can be earned tax-free or deductions that reduce taxable income, defined by various parameters and calculated as part of [`allowances`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/variables/gov/hmrc/income_tax/allowances).
-
   - **Personal allowance**: The amount of income that can be earned before paying income tax, set at £12,570 in 2025-26. The UK reduces the personal allowance at a 50% rate when income exceeds £100,000. PolicyEngine represents this in the [`personal_allowance`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/variables/gov/hmrc/income_tax/allowances) variable.
   - **Marriage allowance**: Allows a spouse or civil partner to transfer 10% of their personal allowance. Only available when the higher earner is a basic rate taxpayer and the lower earner has unused allowance, calculated as [`marriage_allowance`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/allowances/marriage_allowance.py).
   - **Dividend allowance**: Tax-free allowance for dividend income set at £500 in 2025, defined by the `dividend_allowance` parameter in [`dividend_allowance.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/hmrc/income_tax/allowances/dividend_allowance.yaml).
@@ -59,7 +56,6 @@ HMRC administers this tax using a band system with different rates for certain i
 
 - **Income tax charges**
   These are tax charges that withdraw benefits or allowances in specific circumstances, implemented in [`variables/gov/hmrc/income_tax/charges`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/variables/gov/hmrc/income_tax/charges/).
-
   - **Child benefit high income tax charge (HITC)**: A tax charge on high earners who or whose partner receives child benefit. Child benefit rates in 2025 are £26.04 per week for the eldest child and £17.24 per week for each additional child. The HITC withdraws this benefit when income exceeds a threshold, with full withdrawal at a higher threshold, calculated as [`child_benefit_hitc`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/income_tax/charges/child_benefit_hitc.py).
 
 PolicyEngine projects that the UK will collect [£322.2 billion](https://gist.github.com/vahid-ahmadi/505f1a571d3e71e594a4565b75380c56) in income tax revenue in 2025, 2.0% less than the OBR's forecast of [£328.7 billion](https://obr.uk/forecasts-in-depth/tax-by-tax-spend-by-spend/income-tax/). Figure 1 shows the distributional impact of this programme.
@@ -169,7 +165,6 @@ National Insurance consists of contributions paid by employees, employers and th
 
 - **Class 1** (Employees and employers)
   These are contributions paid on employee earnings above the primary threshold.
-
   - **Primary contributions (employees)**: Paid by employees at 8% on earnings between the primary threshold (£241.73 per week in 2025) and upper earnings limit, with a lower rate above the upper limit. This is deducted via the PAYE system alongside income tax, calculated as [`ni_class_1_employee_primary`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/national_insurance/class_1/ni_class_1_employee_primary.py).
   - **Secondary contributions (employers)**: Paid by employers at a flat rate on employee earnings above the secondary threshold. This represents a cost for employers and affects employment costs, calculated as [`ni_class_1_employer`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/national_insurance/class_1/ni_class_1_employer.py).
   - **Additional rate contributions**: The UK levies a rate of National Insurance on employment income in excess of the upper earnings limit, calculated as [`ni_class_1_employee_additional`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/national_insurance/class_1/ni_class_1_employee_additional.py).
@@ -180,7 +175,6 @@ National Insurance consists of contributions paid by employees, employers and th
   Optional contributions people can make to fill gaps in their National Insurance record, calculated as [`ni_class_3`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/national_insurance/class_3/ni_class_3.py).
 - **Class 4** (Self-employed - percentage-based)
   Percentage-based contributions paid by self-employed people on their profits. They function similar to income tax with different rates applied to different profit levels, calculated as [`ni_class_4`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/national_insurance/class_4/ni_class_4.py).
-
   - **Main rate**: Paid on self-employed profits between the lower profits limit and upper profits limit, calculated as [`ni_class_4_main`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/national_insurance/class_4/ni_class_4_main.py).
   - **Additional rate**: Paid on self-employed profits above the upper profits limit, calculated as [`ni_class_4_maximum`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/variables/gov/hmrc/national_insurance/class_4/ni_class_4_maximum.py).
 
@@ -642,14 +636,12 @@ SDLT is a tax paid when purchasing property over certain price thresholds in Eng
 
 - **Residential property**
   These rates apply to homes and residential properties with different structures for different buyer types, defined in [`residential`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/parameters/gov/hmrc/stamp_duty/residential/).
-
   - **Main residence rates (including first-time buyer relief)**: Standard rates apply in bands from the nil-rate band (£0) to portions over the highest threshold. For 2025, thresholds are £0, £125,000, £250,000, £925,000, and £1,500,000, with corresponding rates of 0%, 2%, 5%, 10%, and 12%. First-time buyers receive relief with higher nil-rate thresholds and reduced rates up to a maximum property value, defined in property-specific rate files within [`residential`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/parameters/gov/hmrc/stamp_duty/residential/).
   - **Additional property surcharge**: An extra percentage of SDLT is charged on additional residential properties over a threshold, defined in the surcharge parameters within [`residential`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/parameters/gov/hmrc/stamp_duty/residential/).
   - **Rental agreements**: SDLT applies to the net present value of rent over the lease term when exceeding a threshold, defined by residential rent parameters in [`rent.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/hmrc/stamp_duty/residential/rent.yaml).
 
 - **Non-residential property**
   These apply to commercial property purchases like shops, offices and agricultural land, defined in [`non_residential`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/parameters/gov/hmrc/stamp_duty/non_residential/).
-
   - **Purchase rates**: Rates apply in bands from the nil-rate band to portions over higher thresholds, defined by non-residential purchase parameters in [`purchase.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/hmrc/stamp_duty/non_residential/purchase.yaml).
   - **Rental agreements**: SDLT applies to the net present value of commercial lease rent above a threshold, defined by non-residential rent parameters in [`rent.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/hmrc/stamp_duty/non_residential/rent.yaml).
 
@@ -759,7 +751,6 @@ Scotland uses a different property transaction tax than England and Northern Ire
 
 - **Residential property**
   Scotland's residential property transaction tax applies to home purchases with specific rates, defined in [`residential`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/parameters/gov/revenue_scotland/lbtt/residential/).
-
   - **Standard rates**: Rates apply in bands with thresholds at £0, £145,000, £250,000, £325,000, and £750,000 for 2025, with corresponding rates of 0%, 2%, 5%, 10%, and 12%, defined by the [`rate`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/revenue_scotland/lbtt/residential/rate.yaml) parameter.
   - **First-time buyer relief**: First-time buyers pay no LBTT up to a higher threshold than standard purchases, defined by the [`first_time_buyer_rate`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/revenue_scotland/lbtt/residential/first_time_buyer_rate.yaml) parameter.
   - **Additional dwelling supplement**: A surcharge applies to additional residential properties over a threshold, defined by the [`additional_residence_surcharge`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/revenue_scotland/lbtt/residential/additional_residence_surcharge.yaml) parameter.
@@ -767,7 +758,6 @@ Scotland uses a different property transaction tax than England and Northern Ire
 
 - **Non-residential property**
   These apply to commercial property transactions in Scotland with distinct rates, defined in [`non_residential.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/revenue_scotland/lbtt/non_residential.yaml).
-
   - **Purchase rates**: Rates apply in bands from the nil-rate band to portions over higher thresholds, defined by specific band parameters in [`non_residential.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/revenue_scotland/lbtt/non_residential.yaml).
   - **Rental agreements**: LBTT applies to the net present value of commercial lease rent above a threshold, defined by specific rent parameters in [`rent.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/revenue_scotland/lbtt/rent.yaml).
 
@@ -877,14 +867,12 @@ Wales has its own property transaction tax system. Land Transaction Tax (LTT) is
 
 - **Residential property**
   Wales' residential property transaction tax applies to home purchases with its own rate structure, defined in [`residential`](https://github.com/PolicyEngine/policyengine-uk/tree/master/policyengine_uk/parameters/gov/wra/land_transaction_tax/residential/).
-
   - **Primary residence rates**: Rates apply in bands with thresholds at £0, £180,000, £250,000, £400,000, £750,000, and £1,500,000 for 2025, with corresponding rates of 0%, 3.5%, 5%, 7.5%, 10%, and 12%, defined by the [`primary`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/wra/land_transaction_tax/residential/primary.yaml) parameter.
   - **Higher rates for additional properties**: A surcharge applies to purchases of additional residential properties, defined by the [`higher_rate`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/wra/land_transaction_tax/residential/higher_rate.yaml) parameter.
   - **Rental agreements**: LTT applies to the net present value of residential lease rent above thresholds, defined by specific rent parameters in [`rent.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/wra/land_transaction_tax/rent.yaml).
 
 - **Non-residential property**
   These apply to commercial property purchases and leases in Wales with specific rates, defined in [`non_residential.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/wra/land_transaction_tax/non_residential.yaml).
-
   - **Purchase rates**: Rates apply in bands from the nil-rate band to portions over higher thresholds, defined by specific band parameters in [`non_residential.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/wra/land_transaction_tax/non_residential.yaml).
   - **Rental agreements**: LTT applies to the net present value of commercial lease rent with threshold and rate structures, defined by specific rental parameters in [`rent.yaml`](https://github.com/PolicyEngine/policyengine-uk/blob/master/policyengine_uk/parameters/gov/wra/land_transaction_tax/rent.yaml).
 

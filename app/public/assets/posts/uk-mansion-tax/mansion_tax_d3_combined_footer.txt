@@ -1,0 +1,394 @@
+
+        const width = 800;
+        const height = 900;
+        const svg = d3.select('#map');
+        const g = svg.append('g');
+        const tooltip = document.getElementById('tooltip');
+
+        let currentView = 'geo';
+
+        // Calculate bounds of British National Grid coordinates
+        let xMin = Infinity, xMax = -Infinity, yMin = Infinity, yMax = -Infinity;
+        geoData.features.forEach(feature => {
+            const traverse = (coords) => {
+                if (typeof coords[0] === 'number') {
+                    xMin = Math.min(xMin, coords[0]);
+                    xMax = Math.max(xMax, coords[0]);
+                    yMin = Math.min(yMin, coords[1]);
+                    yMax = Math.max(yMax, coords[1]);
+                } else {
+                    coords.forEach(traverse);
+                }
+            };
+            traverse(feature.geometry.coordinates);
+        });
+
+        // Create scale to fit British National Grid into SVG
+        const padding = 80;
+        const dataWidth = xMax - xMin;
+        const dataHeight = yMax - yMin;
+        const geoScale = Math.min((width - 2 * padding) / dataWidth, (height - 2 * padding) / dataHeight);
+        const geoOffsetX = (width - dataWidth * geoScale) / 2;
+        const geoOffsetY = (height - dataHeight * geoScale) / 2;
+
+        const projection = d3.geoTransform({
+            point: function(x, y) {
+                this.stream.point(
+                    (x - xMin) * geoScale + geoOffsetX,
+                    height - ((y - yMin) * geoScale + geoOffsetY)
+                );
+            }
+        });
+
+        const path = d3.geoPath().projection(projection);
+
+        // Calculate hex bounds
+        let hexQMin = Infinity, hexQMax = -Infinity, hexRMin = Infinity, hexRMax = -Infinity;
+        Object.values(hexData).forEach(h => {
+            hexQMin = Math.min(hexQMin, h.q);
+            hexQMax = Math.max(hexQMax, h.q);
+            hexRMin = Math.min(hexRMin, h.r);
+            hexRMax = Math.max(hexRMax, h.r);
+        });
+
+        // Hex positioning
+        const hexSize = 9;
+        const hexWidth = hexSize * 2;
+        const hexHeight = Math.sqrt(3) * hexSize;
+        const hexRangeQ = hexQMax - hexQMin;
+        const hexRangeR = hexRMax - hexRMin;
+        const hexTotalWidth = hexRangeQ * hexWidth * 0.75 + hexWidth;
+        const hexTotalHeight = hexRangeR * hexHeight + hexHeight;
+        const hexOffsetX = (width - hexTotalWidth) / 2;
+        const hexOffsetY = (height - hexTotalHeight) / 2;
+
+        function getHexPosition(q, r) {
+            const x = hexOffsetX + (q - hexQMin) * hexWidth * 0.75 + hexWidth / 2;
+            // Flip y-axis so south (London) is at the bottom
+            const y = hexOffsetY + (hexRMax - r) * hexHeight + (q % 2 !== 0 ? hexHeight / 2 : 0) + hexHeight / 2;
+            return { x, y };
+        }
+
+        // Hex path generator
+        function hexPath(cx, cy, size) {
+            const angles = [0, 60, 120, 180, 240, 300].map(a => a * Math.PI / 180);
+            const points = angles.map(a => [
+                cx + size * Math.cos(a),
+                cy + size * Math.sin(a)
+            ]);
+            return 'M' + points.map(p => p.join(',')).join('L') + 'Z';
+        }
+
+        // Color scale - sequential teal based on % of constituency
+        const maxPct = Math.max(...Object.values(impactData).map(d => d.pct));
+        const colorScale = d3.scaleSequential()
+            .domain([0, maxPct])
+            .interpolator(t => d3.interpolate('#e0e7ed', '#1a4a6e')(Math.pow(t, 0.5)));
+
+        // Calculate centroids for geo view
+        const centroids = {};
+        geoData.features.forEach(feature => {
+            const bounds = path.bounds(feature);
+            centroids[feature.properties.Name] = {
+                x: (bounds[0][0] + bounds[1][0]) / 2,
+                y: (bounds[0][1] + bounds[1][1]) / 2
+            };
+        });
+
+        // Draw geographic view (initial)
+        const paths = g.selectAll('path')
+            .data(geoData.features)
+            .join('path')
+            .attr('d', path)
+            .attr('class', 'constituency-path')
+            .attr('fill', d => {
+                const data = impactData[d.properties.Name];
+                return data ? colorScale(data.pct) : '#e0e7ed';
+            })
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 0.3)
+            .on('click', handleClick);
+
+        function handleClick(event, d) {
+            event.stopPropagation();
+            const name = d.properties ? d.properties.Name : d.name;
+            const data = impactData[name] || { pct: 0, num: 0, rev: 0 };
+            showTooltip(name, data, event);
+            // Highlight
+            g.selectAll('.constituency-path, .hex')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', currentView === 'geo' ? 0.3 : 1);
+            d3.select(this)
+                .attr('stroke', '#277674')
+                .attr('stroke-width', currentView === 'geo' ? 1.5 : 2);
+        }
+
+        function showTooltip(name, data, event) {
+            tooltip.innerHTML = `
+                <h4>${name}</h4>
+                <div class="tooltip-row">
+                    <span>Number</span>
+                    <span>${data.num.toLocaleString()}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span>Percent</span>
+                    <span>${data.pct.toFixed(2)}%</span>
+                </div>
+                <div class="tooltip-row">
+                    <span>Est. revenue</span>
+                    <span>£${data.rev.toLocaleString()}</span>
+                </div>
+            `;
+            const rect = document.querySelector('.map-canvas').getBoundingClientRect();
+            tooltip.style.left = (event.clientX - rect.left) + 'px';
+            tooltip.style.top = (event.clientY - rect.top - 10) + 'px';
+            tooltip.style.display = 'block';
+        }
+
+        // Click outside to hide tooltip
+        svg.on('click', () => {
+            tooltip.style.display = 'none';
+            g.selectAll('.constituency-path, .hex')
+                .attr('stroke', '#fff')
+                .attr('stroke-width', currentView === 'geo' ? 0.3 : 1);
+        });
+
+        // Zoom behavior
+        const zoom = d3.zoom()
+            .scaleExtent([1, 8])
+            .on('zoom', (event) => {
+                g.attr('transform', event.transform);
+            });
+        svg.call(zoom);
+
+        // Set initial view to center UK with slight zoom
+        const initialScale = 1.1;
+        const initialX = (width - width * initialScale) / 2;
+        const initialY = (height - height * initialScale) / 2 - 200;
+        svg.call(zoom.transform, d3.zoomIdentity.translate(initialX, initialY).scale(initialScale));
+
+        document.getElementById('zoom-in').onclick = () => svg.transition().call(zoom.scaleBy, 1.5);
+        document.getElementById('zoom-out').onclick = () => svg.transition().call(zoom.scaleBy, 0.67);
+        document.getElementById('zoom-reset').onclick = () => {
+            svg.transition().call(zoom.transform, d3.zoomIdentity);
+            tooltip.style.display = 'none';
+        };
+
+        // View toggle
+        const btnGeo = document.getElementById('btn-geo');
+        const btnHex = document.getElementById('btn-hex');
+
+        btnGeo.onclick = () => {
+            if (currentView === 'geo') return;
+            currentView = 'geo';
+            btnGeo.classList.add('active');
+            btnHex.classList.remove('active');
+            switchToGeo();
+        };
+
+        btnHex.onclick = () => {
+            if (currentView === 'hex') return;
+            currentView = 'hex';
+            btnHex.classList.add('active');
+            btnGeo.classList.remove('active');
+            switchToHex();
+        };
+
+        function switchToHex() {
+            // Set zoom for hex view (zoomed out and shifted up to fit)
+            const hexScale = 0.8;
+            const hexX = (width - width * hexScale) / 2;
+            const hexY = (height - height * hexScale) / 2 - 60;
+            svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(hexX, hexY).scale(hexScale));
+            tooltip.style.display = 'none';
+
+            // Remove existing paths
+            g.selectAll('path').remove();
+
+            // Create hex data array
+            const hexArray = geoData.features.map(feature => {
+                const name = feature.properties.Name;
+                const hex = hexData[name];
+                return {
+                    name: name,
+                    hex: hex,
+                    feature: feature
+                };
+            }).filter(d => d.hex);
+
+            // Draw hexes
+            g.selectAll('.hex')
+                .data(hexArray)
+                .join('path')
+                .attr('class', 'hex')
+                .attr('d', d => {
+                    const pos = getHexPosition(d.hex.q, d.hex.r);
+                    return hexPath(pos.x, pos.y, hexSize);
+                })
+                .attr('fill', d => {
+                    const data = impactData[d.name];
+                    return data ? colorScale(data.pct) : '#e0e7ed';
+                })
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 1)
+                .style('opacity', 0)
+                .on('click', function(event, d) {
+                    event.stopPropagation();
+                    const data = impactData[d.name] || { pct: 0, num: 0, rev: 0 };
+                    showTooltip(d.name, data, event);
+                    g.selectAll('.hex')
+                        .attr('stroke', '#fff')
+                        .attr('stroke-width', 1);
+                    d3.select(this)
+                        .attr('stroke', '#277674')
+                        .attr('stroke-width', 2);
+                })
+                .transition()
+                .duration(500)
+                .style('opacity', 1);
+        }
+
+        function switchToGeo() {
+            // Reset zoom
+            svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+            tooltip.style.display = 'none';
+
+            // Remove hexes
+            g.selectAll('.hex').remove();
+
+            // Redraw paths
+            g.selectAll('path')
+                .data(geoData.features)
+                .join('path')
+                .attr('d', path)
+                .attr('class', 'constituency-path')
+                .attr('fill', d => {
+                    const data = impactData[d.properties.Name];
+                    return data ? colorScale(data.pct) : '#e0e7ed';
+                })
+                .attr('stroke', '#fff')
+                .attr('stroke-width', 0.3)
+                .style('opacity', 0)
+                .on('click', handleClick)
+                .transition()
+                .duration(500)
+                .style('opacity', 1);
+        }
+
+        // Search functionality
+        const searchInput = document.getElementById('search-input');
+        const searchResults = document.getElementById('search-results');
+        const allNames = geoData.features.map(f => f.properties.Name).sort();
+
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            if (query.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            const matches = allNames
+                .filter(name => name.toLowerCase().includes(query))
+                .slice(0, 5);
+
+            if (matches.length === 0) {
+                searchResults.style.display = 'none';
+                return;
+            }
+
+            searchResults.innerHTML = matches.map(name => {
+                const data = impactData[name] || { pct: 0, num: 0, rev: 0 };
+                return `
+                    <button class="search-result-item" data-name="${name}">
+                        <div class="result-name">${name}</div>
+                        <div class="result-value">${data.num.toLocaleString()} · ${data.pct.toFixed(2)}%</div>
+                    </button>
+                `;
+            }).join('');
+            searchResults.style.display = 'block';
+
+            searchResults.querySelectorAll('.search-result-item').forEach(btn => {
+                btn.onclick = () => {
+                    const name = btn.dataset.name;
+                    searchInput.value = name;
+                    searchResults.style.display = 'none';
+
+                    // Reset zoom first
+                    svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+
+                    // Show tooltip
+                    const data = impactData[name] || { pct: 0, num: 0, rev: 0 };
+                    tooltip.innerHTML = `
+                        <h4>${name}</h4>
+                        <div class="tooltip-row"><span>Number</span><span>${data.num.toLocaleString()}</span></div>
+                        <div class="tooltip-row"><span>Percent</span><span>${data.pct.toFixed(2)}%</span></div>
+                        <div class="tooltip-row"><span>Est. revenue</span><span>£${data.rev.toLocaleString()}</span></div>
+                    `;
+
+                    if (currentView === 'geo') {
+                        // Highlight and zoom to constituency
+                        g.selectAll('.constituency-path')
+                            .attr('stroke', '#fff')
+                            .attr('stroke-width', 0.3);
+                        g.selectAll('.constituency-path')
+                            .filter(d => d.properties.Name === name)
+                            .attr('stroke', '#277674')
+                            .attr('stroke-width', 1.5);
+
+                        const feature = geoData.features.find(f => f.properties.Name === name);
+                        if (feature) {
+                            const bounds = path.bounds(feature);
+                            const dx = bounds[1][0] - bounds[0][0];
+                            const dy = bounds[1][1] - bounds[0][1];
+                            const x = (bounds[0][0] + bounds[1][0]) / 2;
+                            const y = (bounds[0][1] + bounds[1][1]) / 2;
+                            const zoomScale = Math.min(4, 0.9 / Math.max(dx / width, dy / height));
+                            const translate = [width / 2 - zoomScale * x, height / 2 - zoomScale * y];
+
+                            svg.transition().duration(750).call(
+                                zoom.transform,
+                                d3.zoomIdentity.translate(translate[0], translate[1]).scale(zoomScale)
+                            );
+
+                            tooltip.style.left = '50%';
+                            tooltip.style.top = '40%';
+                            tooltip.style.display = 'block';
+                        }
+                    } else {
+                        // Highlight hex
+                        g.selectAll('.hex')
+                            .attr('stroke', '#fff')
+                            .attr('stroke-width', 1);
+                        g.selectAll('.hex')
+                            .filter(d => d.name === name)
+                            .attr('stroke', '#277674')
+                            .attr('stroke-width', 2);
+
+                        const hex = hexData[name];
+                        if (hex) {
+                            const pos = getHexPosition(hex.q, hex.r);
+                            const zoomScale = 3;
+                            const translate = [width / 2 - zoomScale * pos.x, height / 2 - zoomScale * pos.y];
+
+                            svg.transition().duration(750).call(
+                                zoom.transform,
+                                d3.zoomIdentity.translate(translate[0], translate[1]).scale(zoomScale)
+                            );
+
+                            tooltip.style.left = '50%';
+                            tooltip.style.top = '40%';
+                            tooltip.style.display = 'block';
+                        }
+                    }
+                };
+            });
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.search-container')) {
+                searchResults.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

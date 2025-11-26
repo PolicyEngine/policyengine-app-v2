@@ -5,6 +5,7 @@ This project uses `@normy/react-query` to automatically normalize data fetched v
 ## How It Works
 
 `@normy/react-query` automatically normalizes any objects with an `id` field. When data is fetched:
+
 1. Objects with `id` fields are stored in a normalized cache by their ID
 2. If the same object (same ID) is fetched by another query, it's automatically merged
 3. Updates to an object in one query automatically update all references to that object
@@ -19,10 +20,8 @@ import { QueryNormalizerProvider } from '@normy/react-query';
 const queryClient = new QueryClient();
 
 <QueryNormalizerProvider queryClient={queryClient}>
-  <QueryClientProvider client={queryClient}>
-    {/* Your app */}
-  </QueryClientProvider>
-</QueryNormalizerProvider>
+  <QueryClientProvider client={queryClient}>{/* Your app */}</QueryClientProvider>
+</QueryNormalizerProvider>;
 ```
 
 ## Usage Examples
@@ -44,10 +43,10 @@ import { useQueryNormalizer } from '@normy/react-query';
 
 const MyComponent = () => {
   const queryNormalizer = useQueryNormalizer();
-  
+
   // Get a specific object by ID
   const user = queryNormalizer.getObjectById('user-123');
-  
+
   // Get all objects of a type
   const allUsers = queryNormalizer.getNormalizedData('users');
 };
@@ -93,7 +92,7 @@ const mutation = useMutation({
 You can configure the normalization behavior:
 
 ```tsx
-<QueryNormalizerProvider 
+<QueryNormalizerProvider
   queryClient={queryClient}
   normalizerConfig={{
     // Custom ID extraction (default uses 'id' field)
@@ -121,6 +120,7 @@ useQuery({
 ## Example: User Ingredients
 
 See `app/src/hooks/useUserIngredient.ts` for a complete example of using @normy/react-query with user ingredients, including:
+
 - Fetching and automatic normalization
 - Accessing normalized data
 - Searching normalized entities

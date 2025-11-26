@@ -114,7 +114,7 @@ export default function BlogPage() {
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
       <Box style={{ backgroundColor: colors.gray[50] }}>
-        <Container size="xl" py={80}>
+        <Container size="xl" py={post.hideHeaderImage ? 40 : 80}>
           <PostHeadingSection
             post={post}
             markdown={content}
@@ -202,7 +202,7 @@ function PostHeadingSection({
           <Text size="lg" c="dimmed" style={{ marginTop: 30, fontSize: '1.25rem' }}>
             {post.description}
           </Text>
-          {imageUrl && (
+          {imageUrl && !post.hideHeaderImage && (
             <img
               alt={post.title}
               src={imageUrl}
@@ -253,7 +253,7 @@ function PostHeadingSection({
           {readingTime}
         </Text>
       </div>
-      {imageUrl && (
+      {imageUrl && !post.hideHeaderImage && (
         <img
           alt={post.title}
           src={imageUrl}

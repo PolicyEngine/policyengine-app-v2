@@ -45,6 +45,7 @@ The calculation system orchestrates policy impact calculations for both househol
 ### 1. Initiation
 
 **Manual Creation (via useCreateReport):**
+
 ```typescript
 // User creates report → useCreateReport → CalcOrchestrator.startCalculation()
 const { createReport } = useCreateReport();
@@ -52,6 +53,7 @@ await createReport({ countryId, payload, simulations, populations });
 ```
 
 **Direct URL Load (via useStartCalculationOnLoad):**
+
 ```typescript
 // User loads /report-output/:id → auto-start if needed
 useStartCalculationOnLoad({
@@ -75,9 +77,7 @@ class CalcOrchestrator {
     const params = this.buildParams(config);
 
     // 3. Start query (triggers strategy execution)
-    queryClient.prefetchQuery(
-      calculationQueries.forReport(calcId, metadata, params)
-    );
+    queryClient.prefetchQuery(calculationQueries.forReport(calcId, metadata, params));
 
     // 4. Subscribe to completion
     this.subscribeToCompletion(calcId, metadata, countryId);
@@ -88,6 +88,7 @@ class CalcOrchestrator {
 ### 3. Strategy Execution
 
 **Economy Calculations (Polling):**
+
 ```typescript
 // EconomyCalcStrategy polls API until complete
 class EconomyCalcStrategy {
@@ -119,6 +120,7 @@ refetchInterval: (query) => {
 ```
 
 **Household Calculations (Await + Synthetic Progress):**
+
 ```typescript
 // HouseholdCalcStrategy awaits result (NO polling)
 class HouseholdCalcStrategy {
@@ -142,6 +144,7 @@ class HouseholdCalcStrategy {
 ### 4. Cache Management
 
 **TanStack Query Cache:**
+
 ```typescript
 // Query key structure
 calculationKeys = {
@@ -160,6 +163,7 @@ interface CalcStatus {
 ```
 
 **Cache Hydration (Phase 4):**
+
 ```typescript
 // On page load, hydrate cache from persisted report.output
 useHydrateCalculationCache({ report, outputType });
@@ -200,6 +204,7 @@ subscribeToCompletion(calcId, metadata, countryId) {
 **Solution:** Strategy awaits API response, UI shows synthetic progress.
 
 **Benefits:**
+
 - Eliminates API hammering
 - Reduces server load by 99%+
 - Better UX with smooth progress animation
@@ -211,6 +216,7 @@ subscribeToCompletion(calcId, metadata, countryId) {
 **Solution:** Strategies are stateless, reused via singleton pattern.
 
 **Benefits:**
+
 - Performance optimization (no repeated instantiation)
 - Simpler code (no state management in strategies)
 - Thread-safe (no shared mutable state)
@@ -220,10 +226,12 @@ subscribeToCompletion(calcId, metadata, countryId) {
 **Problem:** Direct URL loads showed "idle" forever.
 
 **Solution:** Two hooks working together:
+
 - `useHydrateCalculationCache`: Populates cache from persisted data
 - `useStartCalculationOnLoad`: Auto-starts calculation if needed
 
 **Benefits:**
+
 - Instant results for completed reports
 - Automatic calculation restart when needed
 - No duplicate calculation starts
@@ -233,11 +241,13 @@ subscribeToCompletion(calcId, metadata, countryId) {
 **Problem:** QueryObserver subscriptions never cleaned up.
 
 **Solution:**
+
 - Track unsubscribe function in CalcOrchestrator
 - Auto-cleanup on complete/error
 - Manual cleanup on component unmount
 
 **Benefits:**
+
 - No memory leaks
 - Proper resource cleanup
 - Better long-term stability
@@ -245,17 +255,21 @@ subscribeToCompletion(calcId, metadata, countryId) {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Each strategy has dedicated tests
 - Orchestrator tests verify lifecycle
 - Hook tests verify state management
 
 ### Integration Tests
+
 - Pathway validation tests (10 critical flows)
 - End-to-end calculation flows
 - Error handling and edge cases
 
 ### Test Fixtures
+
 All mocks and test data in `src/tests/fixtures/`:
+
 - `libs/calculations/` - Strategy and orchestrator fixtures
 - `hooks/` - Hook test fixtures
 - `integration/` - End-to-end flow fixtures
@@ -267,6 +281,7 @@ All mocks and test data in `src/tests/fixtures/`:
 **Endpoint:** `GET /{country}/economy/{reform}/over/{baseline}`
 
 **Response (Computing):**
+
 ```json
 {
   "status": "computing",
@@ -277,12 +292,13 @@ All mocks and test data in `src/tests/fixtures/`:
 ```
 
 **Response (Complete):**
+
 ```json
 {
   "status": "ok",
   "result": {
     "budget": { "budgetary_impact": 1000000 },
-    "earnings": { "total_earnings": 50000000 },
+    "earnings": { "total_earnings": 50000000 }
     // ... more metrics
   }
 }
@@ -293,6 +309,7 @@ All mocks and test data in `src/tests/fixtures/`:
 **Endpoint:** `POST /{country}/household`
 
 **Request:**
+
 ```json
 {
   "policy_id": "1",
@@ -304,6 +321,7 @@ All mocks and test data in `src/tests/fixtures/`:
 ```
 
 **Response (Always Synchronous):**
+
 ```json
 {
   "people": {
@@ -332,7 +350,7 @@ await orchestrator.startCalculation({
   targetType: 'report',
   countryId: 'us',
   simulations: { simulation1, simulation2 },
-  populations: { household1, geography1 }
+  populations: { household1, geography1 },
 });
 ```
 
@@ -359,8 +377,8 @@ if (status.isComplete) {
 ```typescript
 // In ReportOutput.page.tsx
 useHydrateCalculationCache({
-  report,          // Report with output field
-  outputType,      // 'economy' | 'household'
+  report, // Report with output field
+  outputType, // 'economy' | 'household'
 });
 
 useStartCalculationOnLoad({
@@ -374,12 +392,14 @@ useStartCalculationOnLoad({
 ## Performance Characteristics
 
 ### Economy Calculations
+
 - **API Calls:** Polling (1 per second while computing)
 - **Duration:** 5-30 seconds (server-side processing)
 - **Progress:** Real-time from API
 - **Caching:** Results cached indefinitely (staleTime: Infinity)
 
 ### Household Calculations
+
 - **API Calls:** Single call (awaits result)
 - **Duration:** 100-500ms (fast synchronous calculation)
 - **Progress:** Synthetic (client-side animation)
@@ -392,6 +412,7 @@ useStartCalculationOnLoad({
 **Cause:** `useCalculationStatus` called before CalcOrchestrator registers the query.
 
 **Symptoms:**
+
 ```
 No queryFn was passed as an option, and no default queryFn was found.
 Query key: ["calculations","report",48]
@@ -400,6 +421,7 @@ Query key: ["calculations","report",48]
 **Fix (Phase 9):** Added no-op queryFn that returns a never-resolving Promise. This satisfies TanStack Query requirements while maintaining cache-first behavior. The hook returns idle state until CalcOrchestrator populates the cache with real data.
 
 **Technical Details:**
+
 - `queryFn: () => new Promise(() => {})` - Prevents TanStack Query error
 - `isComputing` only true when `status === 'computing'` (not on `isLoading`)
 - Synthetic progress disabled for no-op loading state
