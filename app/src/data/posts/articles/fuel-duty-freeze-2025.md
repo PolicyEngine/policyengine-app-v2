@@ -1,4 +1,4 @@
-**Image credit: which.co.uk**
+Image credit: which.co.uk
 ## Introduction
 
 In the Autumn Budget 2025, the Government [announced](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) a five-month freeze to fuel duty rates until September 2026, at which point the five pence cut first introduced in 2022 will be reversed through a staggered approach. From April 2027, the Government has stated that fuel duty rates will then be uprated annually by RPI. Previously announced increases to fuel duty rates have now been postponed for 16 consecutive years. The total cost of fuel duty freezes from 2010-11 to 2026-27 has risen to £120 billion.
@@ -33,10 +33,10 @@ We [estimate](https://legacy.policyengine.org/uk/policy?focus=policyOutput.polic
 
 | Source       | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
 | ------------ | ------- | ------- | ------- | ------- | ------- |
-| [PolicyEngine](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=95140&region=uk&timePeriod=2026&baseline=95147&uk_local_areas_beta=true) | 0.0     | 2.8     | 0.7     | 0.7     | 0.7     |
-| [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)          | 0.0     | 2.4     | 0.9     | 0.9     | 0.9     |
+| [PolicyEngine](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=95140&region=uk&timePeriod=2026&baseline=95147&uk_local_areas_beta=true) | 0.0     | -2.8     | -0.7     | -0.7     | -0.7     |
+| [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)          | 0.0     | -2.4     | -0.9     | -0.9     | -0.9     |
 
-PolicyEngine estimates the freeze costs £2.8 billion in 2026-27, followed by £0.7 billion annually from 2027-28 onwards. The OBR projects costs of £2.4 billion in 2026-27 and £0.9 billion annually thereafter.
+PolicyEngine estimates the freeze reduces revenue by £2.8 billion in 2026-27, followed by £0.7 billion annually from 2027-28 onwards. The OBR projects revenue reductions of £2.4 billion in 2026-27 and £0.9 billion annually thereafter.
 
 ### Distributional impact
 
