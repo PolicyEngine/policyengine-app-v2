@@ -60,13 +60,30 @@ Explore how the OBR's projections changed between March and November 2025:
 
 We've updated the following OBR-derived parameters in [policyengine-uk](https://github.com/PolicyEngine/policyengine-uk):
 
+**Inflation indices** (from Economy Table 1.7):
 - **CPI growth**: Used for benefit uprating, poverty thresholds, and real-terms analysis
 - **RPI growth**: Used for student loan interest rates and some pension calculations
 - **CPIH growth**: Consumer prices including owner occupiers' housing costs
+
+**Labour market** (from Economy Table 1.6):
 - **Average earnings growth**: Used for projecting employment income and State Pension triple lock calculations
+
+**Housing** (from Economy Tables 1.7 and 1.16):
 - **House price growth**: Used for property-related calculations including stamp duty projections
 - **Rent growth**: Used for housing benefit and Universal Credit housing element calculations
 - **Mortgage interest growth**: Used for housing cost projections
+- **Social rent growth**: Derived from CPI+1% with one-year lag
+
+**Income components** (from Economy Table 1.12):
+- **Non-labour income growth**: Used for projecting investment and property income
+- **Per capita GDP growth**: Used for scaling aggregate statistics
+- **Per capita mixed income growth**: Used for self-employment income projections
+- **Per capita non-labour income growth**: Used for household income projections
+
+**Local taxes** (from Expenditure Table 4.1):
+- **Council tax receipt growth**: Separate forecasts for England, Scotland, and Wales
+
+All projections now extend to 2030, with clear annotations distinguishing outturn data (2009-2024) from OBR forecasts (2025-2030) and long-run equilibrium assumptions (2031+).
 
 These parameters affect both household-level calculations and economy-wide budget impact estimates.
 
