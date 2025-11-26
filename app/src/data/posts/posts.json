@@ -1,7 +1,7 @@
 [
   {
-    "title": "UK mansion tax impact by constituency",
-    "description": "Mapping which constituencies would be most affected by a mansion tax on properties above £1.5m or £2m thresholds.",
+    "title": "Mansion tax impact by constituency",
+    "description": "Three central London constituencies would account for a fifth of properties affected by a mansion tax. We map the geographic distribution.",
     "date": "2025-11-25 12:00:00",
     "tags": [
       "uk",
@@ -12,8 +12,8 @@
       "daphne-hansell"
     ],
     "filename": "uk-mansion-tax-autumn-budget.md",
-    "image": "uk-mansion-tax/mansion_tax_map_1m.png",
-    "hideHeaderImage": true
+    "image": "uk-mansion-tax/cover.png",
+    "hideHeaderImage": false
   },
   {
     "title": "Analysing alternative income tax and National Insurance reform options for the UK",

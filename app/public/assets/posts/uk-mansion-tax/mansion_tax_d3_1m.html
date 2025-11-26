@@ -6,6 +6,7 @@
     <title>Mansion Tax Impact by Constituency (£1.5m threshold)</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="map-styles.css">
     <style>
         * {
             box-sizing: border-box;
@@ -285,7 +286,7 @@
         </div>
 
         <div class="map-canvas">
-            <svg id="map" viewBox="-100 -50 1000 1000" preserveAspectRatio="xMidYMid meet"></svg>
+            <svg id="map" viewBox="0 0 800 900" preserveAspectRatio="xMidYMid meet"></svg>
             <div class="map-controls">
                 <button class="zoom-btn" id="zoom-in" title="Zoom in">+</button>
                 <button class="zoom-btn" id="zoom-out" title="Zoom out">−</button>
@@ -329,7 +330,7 @@
         });
 
         // Create scale to fit British National Grid into SVG
-        const padding = 40;
+        const padding = 80;
         const dataWidth = xMax - xMin;
         const dataHeight = yMax - yMin;
         const geoScale = Math.min((width - 2 * padding) / dataWidth, (height - 2 * padding) / dataHeight);
@@ -357,7 +358,7 @@
         });
 
         // Hex positioning
-        const hexSize = 12;
+        const hexSize = 9;
         const hexWidth = hexSize * 2;
         const hexHeight = Math.sqrt(3) * hexSize;
         const hexRangeQ = hexQMax - hexQMin;
@@ -466,6 +467,12 @@
             });
         svg.call(zoom);
 
+        // Set initial view to center UK with slight zoom
+        const initialScale = 1.1;
+        const initialX = (width - width * initialScale) / 2;
+        const initialY = (height - height * initialScale) / 2 - 200;
+        svg.call(zoom.transform, d3.zoomIdentity.translate(initialX, initialY).scale(initialScale));
+
         document.getElementById('zoom-in').onclick = () => svg.transition().call(zoom.scaleBy, 1.5);
         document.getElementById('zoom-out').onclick = () => svg.transition().call(zoom.scaleBy, 0.67);
         document.getElementById('zoom-reset').onclick = () => {
@@ -494,8 +501,11 @@
         };
 
         function switchToHex() {
-            // Reset zoom
-            svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity);
+            // Set zoom for hex view (zoomed out and shifted up to fit)
+            const hexScale = 0.8;
+            const hexX = (width - width * hexScale) / 2;
+            const hexY = (height - height * hexScale) / 2 - 60;
+            svg.transition().duration(300).call(zoom.transform, d3.zoomIdentity.translate(hexX, hexY).scale(hexScale));
             tooltip.style.display = 'none';
 
             // Remove existing paths

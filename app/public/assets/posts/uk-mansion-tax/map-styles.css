@@ -1,0 +1,9 @@
+/* Map container styling - edit this file to adjust map sizing */
+.map-canvas {
+  overflow: hidden;
+}
+
+#map {
+  transform: scale(0.8) translateY(-40px);
+  transform-origin: top center;
+}

@@ -1,35 +1,28 @@
-## Introduction
+The Times [reports](https://www.thetimes.com/article/b43b7639-6a3b-4180-baa2-b1c249d8a30a?shareToken=2b69490f2c227849a9d6446b1f6c477e) that Chancellor Rachel Reeves plans to raise up to £450 million from a levy on homes worth over £2 million, affecting over 100,000 properties. Earlier speculation suggested a £1.5 million threshold, which would have affected 300,000 homes.
 
-The Financial Times [reports](https://www.ft.com/content/8e375410-dde2-43bc-8cc3-c6ae37c1aef3) that the Treasury is considering a mansion tax for the Autumn Budget 2025. The proposed tax would charge around 1% annually on property values above £2 million.
+To illustrate where a mansion tax would have the greatest impact, we mapped 2024 Land Registry sales above these thresholds by parliamentary constituency. Sales data serves as a proxy for the stock of high-value homes; turnover rates vary by area, so these figures show the relative geographic concentration rather than the total number of homes that would be affected.
 
-This analysis estimates which UK parliamentary constituencies would be most affected by a mansion tax.
+## Key findings
 
-## Methodology
+Raising the threshold from £1.5 million to £2 million nearly halves the number of affected properties:
 
-We use Land Registry price paid data to identify property sales above £1.5 million and £2 million thresholds. We uprate 2024 transaction prices to 2026-27 values using the OBR house price index forecast from the [October 2024 Economic and Fiscal Outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2024/).
+| Threshold | Properties sold | Constituencies affected |
+|:----------|:---------------:|:-----------------------:|
+| £1.5 million | 14,820 | 568 (87%) |
+| £2 million | 8,213 | 553 (85%) |
 
-| Parameter | Value |
-|:----------|:------|
-| 2024 HPI | 148.74 |
-| 2026-27 HPI forecast | 154.03 |
-| Uprating factor | 1.0356 (+3.56%) |
+Three central London constituencies—Cities of London and Westminster, Kensington and Bayswater, and Chelsea and Fulham—account for 16% of affected properties at the £1.5m threshold and 21% at the £2m threshold. The median constituency saw 10 sales above £1.5m or 6 above £2m.
 
-For each constituency, we calculate the number of properties exceeding each threshold after uprating and estimated annual revenue assuming a £2,000 annual charge per property.
-
-[Download the full constituency dataset (CSV)](/assets/posts/uk-mansion-tax/mansion_tax_constituency_data.csv) | [View analysis code on GitHub](https://github.com/PolicyEngine/uk-mansion-tax)
+London constituencies account for 45-46% of all affected properties. Outside London, the constituencies with the most high-value sales are Runnymede and Weybridge (183), Queen's Park and Maida Vale (166), Esher and Walton (163), Windsor (134), and Chesham and Amersham (127).
 
 ## £1.5 million threshold
 
-Under a £1.5 million threshold, 14,820 properties would be affected in 2026-27, generating £29.6 million in annual revenue.
-
-**Figure 1: Mansion tax impact by constituency (£1.5m threshold)**
-
 <center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_1m.html" width="100%" height="750" style="border:none;"></iframe></center>
 
-**Table 1: Top 10 constituencies by properties affected (£1.5m threshold)**
+**Top 10 constituencies by properties affected**
 
-| Constituency | Number of properties | Share of total |
-|:-------------|:--------------------:|:---------------------:|
+| Constituency | Properties | Share |
+|:-------------|:----------:|:-----:|
 | Cities of London and Westminster | 951 | 6.4% |
 | Kensington and Bayswater | 778 | 5.2% |
 | Chelsea and Fulham | 603 | 4.1% |
@@ -43,16 +36,12 @@ Under a £1.5 million threshold, 14,820 properties would be affected in 2026-27,
 
 ## £2 million threshold
 
-Under a £2 million threshold, 8,213 properties would be affected in 2026-27, generating £16.4 million in annual revenue.
-
-**Figure 2: Mansion tax impact by constituency (£2m threshold)**
-
 <center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_2m.html" width="100%" height="750" style="border:none;"></iframe></center>
 
-**Table 2: Top 10 constituencies by properties affected (£2m threshold)**
+**Top 10 constituencies by properties affected**
 
-| Constituency | Number of properties | Share of total |
-|:-------------|:--------------------:|:---------------------:|
+| Constituency | Properties | Share |
+|:-------------|:----------:|:-----:|
 | Cities of London and Westminster | 755 | 9.2% |
 | Kensington and Bayswater | 577 | 7.0% |
 | Chelsea and Fulham | 376 | 4.6% |
@@ -64,64 +53,10 @@ Under a £2 million threshold, 8,213 properties would be affected in 2026-27, ge
 | Hammersmith and Chiswick | 125 | 1.5% |
 | Finchley and Golders Green | 112 | 1.4% |
 
-## Revenue concentration
+## Methodology
 
-The tax revenue is highly concentrated in a small number of constituencies.
+We identified 2024 property sales exceeding £1.5 million and £2 million from [Land Registry Price Paid Data](https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads), then uprated prices to 2026-27 values using the OBR house price index forecast (+3.56%) from the [October 2024 Economic and Fiscal Outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2024/).
 
-**Table 3: Revenue concentration by threshold**
+**Limitations**: We use sales as a proxy for housing stock, apply the national house price index uniformly (regional growth may vary), and properties near thresholds may be revalued.
 
-| Metric | £1.5m threshold | £2m threshold |
-|:-------|:---------------:|:-------------:|
-| Constituencies with 0 affected properties | 82 (13%) | 97 (15%) |
-| Constituencies with 1+ affected properties | 568 (87%) | 553 (85%) |
-| Top constituencies for 50% of revenue | 36 | 33 |
-| Top constituencies for 75% of revenue | 127 | 135 |
-| Top constituencies for 90% of revenue | 278 | 285 |
-
-**Table 4: Top 5 constituencies by estimated revenue (£1.5m threshold)**
-
-| Constituency | Est. revenue | % of total |
-|:-------------|:------------:|:----------:|
-| Cities of London and Westminster | £1,902,000 | 6.4% |
-| Kensington and Bayswater | £1,556,000 | 5.3% |
-| Chelsea and Fulham | £1,206,000 | 4.1% |
-| Hampstead and Highgate | £816,000 | 2.8% |
-| Battersea | £678,000 | 2.3% |
-
-The top 5 constituencies alone account for 20.8% of total revenue.
-
-## London dominance
-
-London constituencies account for nearly half of all affected properties and revenue.
-
-**Table 5: London share by threshold**
-
-| Metric | £1.5m threshold | £2m threshold |
-|:-------|:---------------:|:-------------:|
-| Properties in London | 7,187 (48%) | 4,089 (50%) |
-| Revenue from London | £14.4m (48%) | £8.2m (50%) |
-
-## Distribution of impact
-
-Most affected constituencies have only a small number of properties above the threshold.
-
-**Table 6: Constituencies by number of affected properties (£1.5m threshold)**
-
-| Properties | Constituencies |
-|:-----------|:--------------:|
-| 0 | 82 |
-| 1-10 | 307 |
-| 11-50 | 203 |
-| 51-100 | 33 |
-| 101-500 | 22 |
-| 500+ | 3 |
-
-## Limitations
-
-1. We use property sales as a proxy for the stock of high-value properties.
-2. We apply the national OBR house price index uniformly; regional price growth may vary.
-3. Properties near thresholds may be revalued or contested.
-
-## Conclusion
-
-A mansion tax would primarily affect constituencies in London and the South East. Under a £1.5 million threshold, 14,820 properties would be affected in 2026-27, falling to 8,213 under a £2 million threshold. Half of all revenue would come from just 33-36 constituencies, and London alone would account for nearly half of all revenue. 82-97 constituencies (13-15%) would see zero impact.
+[Download the constituency dataset (CSV)](/assets/posts/uk-mansion-tax/mansion_tax_constituency_data.csv) | [View code on GitHub](https://github.com/PolicyEngine/uk-mansion-tax)
