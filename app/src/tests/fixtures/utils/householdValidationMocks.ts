@@ -189,7 +189,7 @@ export const mockUSHouseholdNoTaxUnits: Household = {
   },
 };
 
-// US household with invalid marital unit (1 person)
+// US household with invalid marital unit (0 members - empty is invalid)
 export const mockUSHouseholdInvalidMaritalUnit: Household = {
   countryId: VALIDATION_COUNTRIES.US,
   householdData: {
@@ -203,7 +203,7 @@ export const mockUSHouseholdInvalidMaritalUnit: Household = {
     },
     maritalUnits: {
       [VALIDATION_GROUP_KEYS.INVALID_MARITAL_UNIT]: {
-        members: [VALIDATION_PERSON_NAMES.ADULT_1],
+        members: [], // Empty marital unit is invalid (must have 1 or 2 members)
       },
     },
   },

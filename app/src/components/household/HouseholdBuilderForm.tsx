@@ -84,16 +84,15 @@ export default function HouseholdBuilderForm({
   };
 
   // Filter variables by search value (no entity filtering - shows all)
+  // No artificial limit - dropdown is scrollable with maxHeight
   const getFilteredVariables = (searchValue: string) => {
     if (!searchValue.trim()) {
-      return allInputVariables.slice(0, 50);
+      return allInputVariables;
     }
     const search = searchValue.toLowerCase();
-    return allInputVariables
-      .filter(
-        (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
-      )
-      .slice(0, 50);
+    return allInputVariables.filter(
+      (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
+    );
   };
 
   // Get variables for a specific person (custom only, not basic inputs)
