@@ -140,6 +140,57 @@ export default function AutumnBudgetBanner() {
           {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025'}
         </Title>
 
+        {/* Autumn Budget Dashboard Box - Only show after budget */}
+        {!isBeforeBudget && (
+          <Box
+            mb={spacing.xl}
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+            }}
+          >
+            <Box
+              component="a"
+              href="/uk/autumn-budget-dashboard"
+              style={{
+                display: 'inline-block',
+                backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                borderRadius: '16px',
+                padding: `${spacing.xl} ${spacing['3xl']}`,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textDecoration: 'none',
+                border: `3px solid rgba(255, 255, 255, 0.4)`,
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
+                backdropFilter: 'blur(10px)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.35)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
+              }}
+            >
+              <Text
+                size={typography.fontSize['2xl']}
+                fw={typography.fontWeight.semibold}
+                c={colors.white}
+                style={{
+                  textAlign: 'center',
+                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                  letterSpacing: '0.3px',
+                }}
+              >
+                View the PolicyEngine analysis dashboard
+              </Text>
+            </Box>
+          </Box>
+        )}
+
         {/* Countdown Timer - Only show before budget */}
         {isBeforeBudget && timeRemaining && (
           <Box
