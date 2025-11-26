@@ -6,12 +6,12 @@ PolicyEngine uses these OBR projections to uprate monetary values across our UK 
 
 The November 2025 forecast shows higher inflation and earnings growth in the near term compared to March:
 
-- **Higher CPI inflation in 2025-26**: CPI revised up from 3.2% to 3.5% in 2025, and from 1.9% to 2.5% in 2026. The OBR attributes this to higher energy prices and the inflationary impact of the employer National Insurance increases announced in the Budget.
-- **Higher earnings growth through 2026**: Average earnings growth revised up from 3.7% to 5.2% in 2025—a 1.5 percentage point increase. This reflects stronger-than-expected wage growth and the impact of the National Living Wage increase.
+- **Higher CPI inflation in 2025-26**: CPI revised up from 3.2% to 3.5% in 2025, and from 2.1% to 2.5% in 2026. The OBR attributes this to higher energy prices and the inflationary impact of the employer National Insurance increases announced in the Budget.
+- **Higher earnings growth through 2026**: Average earnings growth revised up from 4.3% to 5.2% in 2025—a 0.9 percentage point increase. This reflects stronger-than-expected wage growth and the impact of the National Living Wage increase.
 - **Higher RPI through 2027**: RPI projections revised upward, reflecting the CPI revisions plus continued housing cost pressures. RPI matters particularly for student loan repayments and some pension uprating.
 - **Convergence to long-run assumptions by 2030**: Despite near-term revisions, both forecasts converge toward the same long-run equilibrium: 2% CPI (the Bank of England's target) and around 2.3% RPI.
 
-_Note: The OBR also revised 2024 outturn data upward (e.g., CPI from 2.3% to 2.5%, earnings from 4.7% to 4.9%). We updated these values in [policyengine-uk PR #1377](https://github.com/PolicyEngine/policyengine-uk/pull/1377)._
+_Note: The OBR also revised historical outturn data back to 2022 as final ONS estimates became available (e.g., 2023 CPI from 5.7% to 7.3%). The March 2025 forecast only projected housing, income, and council tax variables through 2029, while November 2025 extends these to 2030. We updated all values in [policyengine-uk PR #1377](https://github.com/PolicyEngine/policyengine-uk/pull/1377)._
 
 ## Interactive comparison
 
@@ -58,7 +58,7 @@ These updated projections affect several PolicyEngine calculations:
 
 2. **Tax threshold freezes**: The higher inflation forecasts increase the real cost of frozen income tax thresholds. With the personal allowance frozen at £12,570 and higher rate threshold frozen, more income gets pushed into higher tax bands—a phenomenon known as "fiscal drag."
 
-3. **State Pension**: The triple lock guarantees pensions rise by the highest of CPI inflation, average earnings growth, or 2.5%. The higher earnings growth forecast (5.2% in 2025) suggests larger State Pension increases.
+3. **State Pension**: The triple lock guarantees pensions rise by the highest of CPI inflation, average earnings growth, or 2.5%. The higher earnings growth forecast (5.2% vs 4.3% in 2025) suggests larger State Pension increases.
 
 4. **Earnings projections**: Our household simulations use earnings growth to project future incomes, affecting multi-year policy impact estimates. Higher near-term earnings growth means higher projected incomes.
 
