@@ -1,5 +1,21 @@
 [
   {
+    "title": "OBR November 2025 economic projections: what changed",
+    "description": "The OBR revised up inflation and earnings forecasts in the November 2025 Autumn Budget. We compare the new projections to March 2025.",
+    "date": "2025-11-26 18:00:00",
+    "tags": [
+      "uk",
+      "policy",
+      "technical"
+    ],
+    "authors": [
+      "max-ghenis"
+    ],
+    "filename": "obr-november-2025-projections.md",
+    "image": "obr-forecast-2025.jpg",
+    "hideHeaderImage": false
+  },
+  {
     "title": "Estimating the constituency distribution of a mansion tax",
     "description": "Three central London constituencies account for a fifth of property sales above £2 million.",
     "date": "2025-11-25 12:00:00",
