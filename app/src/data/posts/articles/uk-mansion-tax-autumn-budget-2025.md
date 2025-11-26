@@ -4,7 +4,7 @@ Using 2024 Land Registry sales data, we estimate how this revenue distributes ac
 
 ## Key findings
 
-- 553 of 650 constituencies had 2024 sales that would be subject to the surcharge in 2028
+- We project 553 of 650 constituencies will have sales subject to the surcharge in 2028
 - The top 10 constituencies account for 35% of the estimated revenue
 - Cities of London and Westminster alone accounts for 10% (£42 million)
 - London constituencies account for 47% of total revenue
@@ -30,11 +30,11 @@ The map shows estimated revenue allocation by constituency. Hover over a constit
 
 ## Constituency-level estimates
 
-We estimate each constituency's share of the £400 million total by analysing 2024 property sales. We uprate sale prices to April 2028 levels using OBR house price forecasts (10.7% cumulative growth from 2024), apply the surcharge band structure (with thresholds uprated by CPI from 2026 to 2028), and allocate the OBR's total estimate proportionally.
+We estimate each constituency's share of the £400 million total by analysing 2024 property sales and projecting them to 2028. We uprate sale prices to April 2028 levels using OBR house price forecasts (10.7% cumulative growth from 2024), apply the surcharge band structure (with thresholds uprated by CPI from 2026 to 2028), and allocate the OBR's total estimate proportionally.
 
 **Top 20 constituencies by estimated revenue**
 
-| Rank | Constituency                     | Sales | Revenue | Share |
+| Rank | Constituency                     | Projected sales | Revenue | Share |
 | :--: | :------------------------------- | :---: | :-----: | :---: |
 |  1   | Cities of London and Westminster |   767 | £41.9m  | 10.5% |
 |  2   | Kensington and Bayswater         |   589 | £29.4m  | 7.4%  |
@@ -61,16 +61,16 @@ The top 20 constituencies account for 43% of the estimated revenue while compris
 
 ## Geographic concentration
 
-Of the 553 constituencies with 2024 sales that would be subject to the surcharge in 2028:
+Of the 553 constituencies we project will have sales subject to the surcharge in 2028:
 
 - 56 are in Greater London (accounting for 47% of estimated revenue)
 - The remaining 497 constituencies share 53% of estimated revenue
 
-London constituencies account for 47% of affected property sales while comprising 9% of all constituencies.
+London constituencies account for 47% of projected affected sales while comprising 9% of all constituencies.
 
 ## Distribution by surcharge band
 
-Of the 9,139 sales in 2024 that would be subject to the surcharge in 2028:
+We project 9,139 sales will be subject to the surcharge in 2028, distributed across bands:
 
 | Band (2028 prices) | Sales | Share | Revenue contribution |
 | :----------------- | :---: | :---: | :------------------: |
@@ -79,7 +79,7 @@ Of the 9,139 sales in 2024 that would be subject to the surcharge in 2028:
 | £3.14m - £5.23m    | 2,423 |  27%  |         29%          |
 | £5.23m+            | 2,303 |  25%  |         41%          |
 
-Properties valued over £5.23 million (in 2028 prices) represent 25% of affected sales but contribute 41% of the estimated revenue due to the £7,500 annual surcharge rate.
+Properties valued over £5.23 million (in 2028 prices) represent 25% of projected affected sales but contribute 41% of the estimated revenue due to the £7,500 annual surcharge rate.
 
 ## Methodology
 
