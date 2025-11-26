@@ -26,7 +26,7 @@ The OBR expects the surcharge rates to increase with CPI inflation each year. Un
 
 The map shows estimated revenue allocation by constituency. Hover over a constituency to see details.
 
-<center><iframe src="/assets/posts/uk-mansion-tax/surcharge_map_by_revenue.html" width="100%" height="750" style="border:none;"></iframe></center>
+<center><iframe src="/assets/posts/uk-mansion-tax-autumn-budget-2025/surcharge_map_by_revenue.html" width="100%" height="750" style="border:none;"></iframe></center>
 
 ## Constituency-level estimates
 
@@ -98,4 +98,4 @@ Properties valued over £5 million represent 24% of affected sales but contribut
 
 This ratio is consistent with annual property turnover rates of 5-10% of housing stock. Our constituency-level allocations assume the geographic distribution of high-value sales reflects the distribution of high-value housing stock.
 
-[Download the constituency dataset (CSV)](/assets/posts/uk-mansion-tax/constituency_surcharge_summary.csv) | [View code on GitHub](https://github.com/PolicyEngine/uk-mansion-tax)
+[Download the constituency dataset (CSV)](/assets/posts/uk-mansion-tax-autumn-budget-2025/constituency_surcharge_summary.csv) | [View code on GitHub](https://github.com/PolicyEngine/uk-mansion-tax)
