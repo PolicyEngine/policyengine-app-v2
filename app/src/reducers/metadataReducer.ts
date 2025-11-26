@@ -91,8 +91,8 @@ const metadataSlice = createSlice({
         // Build parameter tree from parameters (following V1 approach)
         try {
           state.parameterTree = buildParameterTree(body.parameters) || null;
-          console.log('Parameter tree built successfully:', state.parameterTree);
         } catch (error) {
+          // eslint-disable-next-line no-console -- Legitimate error for debugging parameter tree build failures
           console.error('Failed to build parameter tree:', error);
           state.parameterTree = null;
         }
