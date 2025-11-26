@@ -103,96 +103,96 @@
     <script>
         const years = [2025, 2026, 2027, 2028, 2029, 2030];
 
-        // March 2025 forecast values from git history (commit c19189ff)
-        // November 2025 forecast values from current repo
-        // Note: 2024 outturn values also updated but not shown (this chart shows forecasts only)
+        // March 2025 forecast values from OBR EFO March 2025 detailed forecast tables
+        // (corrected in policyengine-uk PR #1393)
+        // November 2025 forecast values from OBR EFO November 2025 detailed forecast tables
         const data = {
             cpi: {
-                march: [3.18, 1.93, 2.00, 2.00, 2.00, 2.00],
+                march: [3.21, 2.08, 1.99, 2.00, 2.00, 2.00],
                 november: [3.45, 2.48, 2.02, 2.04, 2.04, 2.00],
                 title: 'CPI inflation (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Universal Credit, PIP, Child Benefit, State Pension</span> <span class="count">and 44 other benefits and consumption variables</span>. Also used for absolute poverty thresholds, triple lock calculations, and real-terms analysis.'
             },
             rpi: {
-                march: [4.16, 3.08, 3.00, 2.83, 2.83, 2.38],
+                march: [4.09, 3.23, 3.04, 2.85, 2.84, 2.38],
                 november: [4.33, 3.71, 3.13, 2.87, 2.91, 2.31],
                 title: 'RPI inflation (%)',
                 usage: '<strong>Used in PolicyEngine for:</strong> <span class="example">Private pension uprating</span> and fuel duty projections. RPI remains important for student loan interest rates and some legacy pension schemes.'
             },
             cpih: {
-                march: [3.74, 2.27, 2.10, 2.05, 2.09, 2.24],
-                november: [3.93, 2.67, 2.15, 2.08, 2.11, 2.13],
+                march: [3.88, 2.50, 2.13, 2.05, 2.08, 2.24],
+                november: [4.14, 3.00, 2.24, 2.10, 2.15, 2.19],
                 title: 'CPIH inflation (%)',
                 usage: '<strong>Used in PolicyEngine for:</strong> <span class="example">After-housing-costs (AHC) deflator</span> calculations. CPIH includes owner occupiers\' housing costs, making it useful for real-terms comparisons that account for housing.'
             },
             earnings: {
-                march: [3.71, 2.16, 2.07, 2.25, 2.53, 2.92],
+                march: [4.32, 2.30, 2.06, 2.18, 2.48, 2.92],
                 november: [5.17, 3.33, 2.25, 2.10, 2.21, 2.32],
                 title: 'Average earnings growth (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Employment income, pension contributions, student loan repayments</span> <span class="count">(6 variables)</span>. Also used in triple lock calculations for State Pension.'
             },
             house_prices: {
-                march: [2.4, 2.5, 2.6, 2.3, 2.4, null],
-                november: [2.94, 2.22, 2.79, 2.72, 2.57, 2.42],
+                march: [2.81, 2.47, 2.56, 2.48, 2.43, null],
+                november: [3.84, 1.20, 1.72, 2.09, 2.54, 2.96],
                 title: 'House price growth (%)',
                 usage: '<strong>Used in PolicyEngine for:</strong> Stamp duty projections and property value calculations. Not currently used for direct variable uprating.'
             },
             rent: {
-                march: [5.7, 3.6, 2.7, 2.3, 2.4, null],
-                november: [5.46, 3.34, 3.11, 2.43, 2.34, 2.54],
+                march: [6.49, 3.89, 2.98, 2.27, 2.38, null],
+                november: [6.34, 4.78, 3.46, 2.70, 2.51, 2.48],
                 title: 'Rent growth (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Private rent</span> for households in the private rented sector. Combined with social rent to derive private-sector-specific growth rates.'
             },
             social_rent: {
-                march: [3.3, 4.2, 2.9, 3.0, 3.0, null],
+                march: [3.5, 4.3, 3.1, 3.0, 3.0, null],
                 november: [3.5, 4.5, 3.5, 3.0, 3.0, 3.0],
                 title: 'Social rent growth (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Social housing rent</span> for households in council or housing association properties. Derived from CPI+1% with one-year lag.'
             },
             mortgage_interest: {
-                march: [13.6, 12.6, 8.2, 4.2, 4.7, null],
-                november: [10.98, 14.35, 10.32, 4.70, 4.66, 5.53],
+                march: [6.91, 4.17, 2.44, 1.95, 2.08, null],
+                november: [6.19, 2.63, 1.92, 1.85, 2.02, 2.35],
                 title: 'Mortgage interest growth (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Mortgage interest repayments</span>. Affects housing cost projections for owner-occupiers with mortgages.'
             },
             non_labour_income: {
-                march: [6.8, 5.6, 4.5, 3.4, 3.5, null],
+                march: [6.45, 6.34, 4.76, 3.54, 3.56, null],
                 november: [5.19, 5.65, 4.74, 3.64, 3.02, 2.92],
                 title: 'Non-labour income growth (%)',
                 usage: '<strong>Source parameter:</strong> Used to derive per capita non-labour income growth by subtracting population growth. Not directly used for uprating.'
             },
             per_capita_gdp: {
-                march: [2.8, 2.8, 3.1, 3.3, 3.3, null],
+                march: [3.5, 3.5, 3.7, 3.7, 3.7, null],
                 november: [4.18, 3.27, 3.26, 3.02, 2.94, 3.06],
                 title: 'Per capita GDP growth (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Dividend income, savings interest, property income, capital gains, wealth</span> <span class="count">and 16 other income and wealth variables</span>.'
             },
             per_capita_mixed: {
-                march: [4.7, 3.1, 3.1, 3.6, 3.8, null],
+                march: [5.9, 3.6, 3.5, 3.5, 3.8, null],
                 november: [0.24, 3.62, 3.74, 3.51, 3.58, 3.64],
                 title: 'Per capita mixed income growth (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Self-employment income</span>. Mixed income combines wages and profits for the self-employed.'
             },
             per_capita_nli: {
-                march: [5.7, 4.9, 3.8, 2.9, 3.0, null],
+                march: [5.7, 6.0, 4.4, 3.1, 3.1, null],
                 november: [4.47, 5.27, 4.37, 3.24, 2.58, 2.47],
                 title: 'Per capita non-labour income growth (%)',
                 usage: '<strong>Source parameter:</strong> Tracked for reference but not currently used directly for uprating. Per capita GDP growth is used instead for most non-labour income sources.'
             },
             council_tax_england: {
-                march: [5.0, 4.3, 4.3, 4.3, 4.3, null],
+                march: [5.57, 5.35, 5.49, 5.43, 5.39, null],
                 november: [7.81, 5.30, 5.79, 5.65, 5.47, 5.42],
                 title: 'Council tax growth - England (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Council tax</span> for households in England. Based on OBR\'s forecast of local authority council tax receipts.'
             },
             council_tax_scotland: {
-                march: [8.8, 2.7, 2.7, 2.7, 2.7, null],
+                march: [3.51, 3.51, 3.51, 3.51, 3.51, null],
                 november: [3.84, 3.84, 3.84, 3.84, 3.84, 3.84],
                 title: 'Council tax growth - Scotland (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Council tax</span> for households in Scotland. Based on OBR\'s forecast of Scottish local authority council tax receipts.'
             },
             council_tax_wales: {
-                march: [7.2, 4.1, 4.1, 4.1, 4.1, null],
+                march: [4.63, 4.63, 4.63, 4.63, 4.63, null],
                 november: [5.81, 5.81, 5.81, 5.81, 5.81, 5.81],
                 title: 'Council tax growth - Wales (%)',
                 usage: '<strong>Used in PolicyEngine to uprate:</strong> <span class="example">Council tax</span> for households in Wales. Based on OBR\'s forecast of Welsh local authority council tax receipts.'
