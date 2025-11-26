@@ -195,7 +195,7 @@ export default function PolicyExistingView({
   });
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };

@@ -89,7 +89,7 @@ export default function PopulationScopeView({
   );
 
   const primaryAction = {
-    label: 'Select scope ',
+    label: 'Select scope',
     onClick: submissionHandler,
   };
 

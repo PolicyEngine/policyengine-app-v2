@@ -178,7 +178,7 @@ export default function ReportSimulationExistingView({
   });
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };

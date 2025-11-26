@@ -87,7 +87,7 @@ export default function SimulationPolicySetupView({
   ];
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleClickSubmit,
     isDisabled: !selectedAction,
   };

@@ -547,7 +547,7 @@ export default function HouseholdBuilderView({
   const canProceed = validation.isValid;
 
   const primaryAction = {
-    label: 'Create household ',
+    label: 'Create household',
     onClick: handleSubmit,
     isLoading: isPending,
     isDisabled: !canProceed,
