@@ -247,6 +247,7 @@ export function PlotlyChartCode({
           margin: margins,
           autosize: true,
         }}
+        frames={plotlyData.frames}
         config={{
           displayModeBar: false,
           responsive: true,
