@@ -1,5 +1,21 @@
 [
   {
+    "title": "OBR November 2025 economic projections: what changed",
+    "description": "The OBR revised up inflation and earnings forecasts in the November 2025 Autumn Budget. We compare the new projections to March 2025.",
+    "date": "2025-11-26 18:00:00",
+    "tags": [
+      "uk",
+      "policy",
+      "technical"
+    ],
+    "authors": [
+      "max-ghenis"
+    ],
+    "filename": "obr-november-2025-projections.md",
+    "image": "obr-november-2025-projections/cover.png",
+    "hideHeaderImage": false
+  },
+  {
     "title": "Impact of the Autumn Budget fuel duty freeze",
     "description": "PolicyEngine estimates that the fuel duty freeze costs £2.8 billion in 2026-27 and raises net income for 46.7% of people.",
     "date": "2025-11-26 10:00:00",
