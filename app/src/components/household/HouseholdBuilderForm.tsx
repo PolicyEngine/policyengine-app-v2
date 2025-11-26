@@ -11,6 +11,8 @@
 import { useMemo, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
+import { spacing } from '@/designTokens';
+import { themeSpacing } from '@/styles/spacing';
 import { Household } from '@/types/ingredients/Household';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
@@ -256,11 +258,11 @@ export default function HouseholdBuilderForm({
           onClose={() => setWarningMessage(null)}
           style={{
             position: 'fixed',
-            top: 20,
-            right: 20,
+            top: `calc(${spacing.appShell.header.height} + ${spacing.xl})`,
+            right: spacing.xl,
             maxWidth: 400,
             zIndex: 1000,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            boxShadow: themeSpacing.shadows.lg,
           }}
         >
           {warningMessage}
