@@ -6,56 +6,41 @@ To illustrate where a mansion tax would have the greatest impact, we mapped 2024
 
 Raising the threshold from £1.5 million to £2 million nearly halves the number of affected properties:
 
-| Threshold | Properties sold | Constituencies affected |
-|:----------|:---------------:|:-----------------------:|
-| £1.5 million | 14,820 | 568 (87%) |
-| £2 million | 8,213 | 553 (85%) |
+| Threshold | Sales | Share of all sales |
+|:----------|:-----:|:------------------:|
+| £1.5 million | 14,820 | 1.7% |
+| £2 million | 8,213 | 0.9% |
 
 Three central London constituencies—Cities of London and Westminster, Kensington and Bayswater, and Chelsea and Fulham—account for 16% of affected properties at the £1.5m threshold and 21% at the £2m threshold. The median constituency saw 10 sales above £1.5m or 6 above £2m.
 
 London constituencies account for 45-46% of all affected properties. Outside London, the constituencies with the most high-value sales are Runnymede and Weybridge (183), Queen's Park and Maida Vale (166), Esher and Walton (163), Windsor (134), and Chesham and Amersham (127).
 
-## £1.5 million threshold
+## Interactive map
 
-<center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_1m.html" width="100%" height="750" style="border:none;"></iframe></center>
+Use the toggle to switch between £1.5m and £2m thresholds.
 
-**Top 10 constituencies by properties affected**
+<center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3.html" width="100%" height="750" style="border:none;"></iframe></center>
 
-| Constituency | Properties | Share |
-|:-------------|:----------:|:-----:|
-| Cities of London and Westminster | 951 | 6.4% |
-| Kensington and Bayswater | 778 | 5.2% |
-| Chelsea and Fulham | 603 | 4.1% |
-| Hampstead and Highgate | 408 | 2.8% |
-| Battersea | 339 | 2.3% |
-| Richmond Park | 301 | 2.0% |
-| Islington South and Finsbury | 260 | 1.8% |
-| Hammersmith and Chiswick | 255 | 1.7% |
-| Holborn and St Pancras | 211 | 1.4% |
-| Finchley and Golders Green | 197 | 1.3% |
+The top 10 constituencies account for 30% of sales above £1.5m and 36% above £2m. All are in London or the commuter belt.
 
-## £2 million threshold
+**Top 10 constituencies by share of nationwide high-value sales**
 
-<center><iframe src="/assets/posts/uk-mansion-tax/mansion_tax_d3_2m.html" width="100%" height="750" style="border:none;"></iframe></center>
-
-**Top 10 constituencies by properties affected**
-
-| Constituency | Properties | Share |
-|:-------------|:----------:|:-----:|
-| Cities of London and Westminster | 755 | 9.2% |
-| Kensington and Bayswater | 577 | 7.0% |
-| Chelsea and Fulham | 376 | 4.6% |
-| Hampstead and Highgate | 244 | 3.0% |
-| Richmond Park | 153 | 1.9% |
-| Islington South and Finsbury | 143 | 1.7% |
-| Holborn and St Pancras | 142 | 1.7% |
-| Battersea | 138 | 1.7% |
-| Hammersmith and Chiswick | 125 | 1.5% |
-| Finchley and Golders Green | 112 | 1.4% |
+| Constituency | £1.5m | £2m |
+|:-------------|:-----:|:---:|
+| Cities of London and Westminster | 6.7% | 9.5% |
+| Kensington and Bayswater | 5.5% | 7.0% |
+| Chelsea and Fulham | 4.2% | 4.6% |
+| Hampstead and Highgate | 2.7% | 3.0% |
+| Battersea | 2.2% | 1.7% |
+| Richmond Park | 2.0% | 1.9% |
+| Islington South and Finsbury | 1.7% | 1.7% |
+| Hammersmith and Chiswick | 1.7% | 1.6% |
+| Holborn and St Pancras | 1.5% | 1.7% |
+| Finchley and Golders Green | 1.3% | 1.4% |
 
 ## Methodology
 
-We identified 2024 property sales exceeding £1.5 million and £2 million from [Land Registry Price Paid Data](https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads), then uprated prices to 2026-27 values using the OBR house price index forecast (+3.56%) from the [October 2024 Economic and Fiscal Outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2024/).
+We identified 2024 property sales exceeding £1.5 million and £2 million from [Land Registry Price Paid Data](https://www.gov.uk/government/statistical-data-sets/price-paid-data-downloads), which includes postcodes for each transaction. We mapped postcodes to parliamentary constituencies using [MySociety's 2025 constituency lookup](https://github.com/mysociety/2025-constituencies), then uprated prices to 2026-27 values using the OBR house price index forecast (+3.56%) from the [October 2024 Economic and Fiscal Outlook](https://obr.uk/efo/economic-and-fiscal-outlook-october-2024/).
 
 **Limitations**: We use sales as a proxy for housing stock, apply the national house price index uniformly (regional growth may vary), and properties near thresholds may be revalued.
 
