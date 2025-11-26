@@ -254,7 +254,7 @@ export function PlotlyChartCode({
           maxWidth: '100%',
           boxSizing: 'border-box',
         }}
-        useResizeHandler={true}
+        useResizeHandler
       />
     </div>
   );
