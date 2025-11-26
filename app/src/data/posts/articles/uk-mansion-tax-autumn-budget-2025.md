@@ -1,4 +1,4 @@
-In the November 2025 Autumn Budget, the UK government announced a new high value council tax surcharge on properties valued over £2 million. The Office for Budget Responsibility (OBR) [estimates](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) this measure will raise £400 million in 2029-30.
+In the [November 2025 Autumn Budget](https://www.gov.uk/government/publications/autumn-budget-2025), the UK government announced a new high value council tax surcharge on properties valued over £2 million. The Office for Budget Responsibility (OBR) [estimates](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) this measure will raise £400 million in 2029-30.
 
 Using 2024 Land Registry sales data, we estimate how this revenue will be distributed across Westminster constituencies.
 
