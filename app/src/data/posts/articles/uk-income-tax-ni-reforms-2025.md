@@ -79,8 +79,8 @@ The combined reform creates different outcomes for households depending on their
       "t": 80,
       "pad": 4
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "font": {
       "family": "Roboto Serif"
     },
@@ -88,13 +88,13 @@ The combined reform creates different outcomes for households depending on their
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   }
@@ -204,35 +204,38 @@ Figure 2 shows the change in government revenue from each reform across fiscal y
     "margin": {
       "l": 80,
       "r": 50,
-      "b": 150,
+      "b": 120,
       "t": 100,
       "pad": 4
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "legend": {
-      "x": 0.5,
-      "y": -0.25,
+      "x": 0.42,
+      "y": -0.12,
       "xanchor": "center",
       "yanchor": "top",
       "orientation": "h",
       "font": {
         "family": "Roboto Serif",
-        "size": 12
+        "size": 11
       },
-      "bgcolor": "rgba(255,255,255,0.8)"
+      "bgcolor": "rgba(0,0,0,0)",
+      "bordercolor": "rgba(0,0,0,0)",
+      "borderwidth": 0,
+      "itemwidth": 40
     },
     "images": [
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   }
@@ -309,19 +312,19 @@ Figure 3 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
       "t": 100,
       "pad": 4
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "images": [
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   }
@@ -392,19 +395,19 @@ Figure 4 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
       "t": 100,
       "pad": 4
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "images": [
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   }
@@ -475,19 +478,19 @@ Figure 5 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
       "t": 100,
       "pad": 4
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "images": [
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   }
@@ -596,23 +599,26 @@ Figure 6 shows the relative change in household income by income decile from eac
     "margin": {
       "l": 80,
       "r": 50,
-      "b": 150,
+      "b": 120,
       "t": 100,
       "pad": 4
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "legend": {
-      "x": 0.5,
-      "y": -0.25,
+      "x": 0.42,
+      "y": -0.12,
       "xanchor": "center",
       "yanchor": "top",
       "orientation": "h",
       "font": {
         "family": "Roboto Serif",
-        "size": 12
+        "size": 11
       },
-      "bgcolor": "rgba(255,255,255,0.8)"
+      "bgcolor": "rgba(0,0,0,0)",
+      "bordercolor": "rgba(0,0,0,0)",
+      "borderwidth": 0,
+      "itemwidth": 40
     },
     "updatemenus": [
       {
@@ -697,13 +703,13 @@ Figure 6 shows the relative change in household income by income decile from eac
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   },
@@ -928,8 +934,8 @@ Figure 7 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
         }
       }
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "updatemenus": [
       {
         "buttons": [
@@ -1016,13 +1022,13 @@ Figure 7 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   },
@@ -1199,8 +1205,8 @@ Figure 8 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
         }
       }
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "updatemenus": [
       {
         "buttons": [
@@ -1287,13 +1293,13 @@ Figure 8 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   },
@@ -1470,8 +1476,8 @@ Figure 9 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
         }
       }
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "updatemenus": [
       {
         "buttons": [
@@ -1558,13 +1564,13 @@ Figure 9 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.po
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   },
@@ -1741,8 +1747,8 @@ Figure 10 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.w
         }
       }
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "transparent",
+    "paper_bgcolor": "transparent",
     "updatemenus": [
       {
         "buttons": [
@@ -1829,13 +1835,13 @@ Figure 10 [shows](https://legacy.policyengine.org/uk/policy?focus=policyOutput.w
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.18,
+        "y": -0.12,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.08,
+        "sizey": 0.08,
         "xanchor": "right",
-        "yanchor": "bottom"
+        "yanchor": "top"
       }
     ]
   },
