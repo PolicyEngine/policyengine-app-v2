@@ -131,19 +131,19 @@ export default function AutumnBudgetBanner() {
           size={typography.fontSize['3xl']}
           fw={typography.fontWeight.bold}
           c={colors.white}
-          mb={spacing.lg}
+          mb={spacing.xl}
           style={{
             textAlign: 'center',
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025'}
+          {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025 has been released'}
         </Title>
 
         {/* Autumn Budget Dashboard Box - Only show after budget */}
         {!isBeforeBudget && (
           <Box
-            mb={spacing.xl}
+            mb={spacing['2xl']}
             style={{
               display: 'flex',
               justifyContent: 'center',
@@ -155,8 +155,8 @@ export default function AutumnBudgetBanner() {
               style={{
                 display: 'inline-block',
                 backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                borderRadius: '16px',
-                padding: `${spacing.xl} ${spacing['3xl']}`,
+                borderRadius: '14px',
+                padding: `${spacing.lg} ${spacing['2xl']}`,
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 textDecoration: 'none',
@@ -176,7 +176,7 @@ export default function AutumnBudgetBanner() {
               }}
             >
               <Text
-                size={typography.fontSize['2xl']}
+                size={typography.fontSize.xl}
                 fw={typography.fontWeight.semibold}
                 c={colors.white}
                 style={{
@@ -194,7 +194,7 @@ export default function AutumnBudgetBanner() {
         {/* Countdown Timer - Only show before budget */}
         {isBeforeBudget && timeRemaining && (
           <Box
-            mb={spacing.xl}
+            mb={spacing['2xl']}
             style={{
               display: 'flex',
               justifyContent: 'center',
@@ -261,7 +261,7 @@ export default function AutumnBudgetBanner() {
             size={typography.fontSize.lg}
             c={colors.white}
             fw={typography.fontWeight.semibold}
-            mb={spacing.md}
+            mb={spacing.lg}
             style={{
               textAlign: 'center',
               textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
@@ -310,6 +310,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -363,6 +365,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -416,6 +420,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -469,6 +475,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -493,12 +501,12 @@ export default function AutumnBudgetBanner() {
 
         {/* Contact CTA */}
         <Box
-          mt={spacing.lg}
+          mt={spacing.xl}
           style={{
             textAlign: 'center',
           }}
         >
-          <Text size={typography.fontSize.base} c={colors.white} fw={typography.fontWeight.medium}>
+          <Text size={typography.fontSize.lg} c={colors.white} fw={typography.fontWeight.semibold}>
             Want custom analysis?{' '}
             <Text
               component="a"
