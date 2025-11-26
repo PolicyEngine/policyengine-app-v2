@@ -12,7 +12,7 @@ Key findings:
 
 ## The policy
 
-From April 2028, owners of properties in England valued over £2 million (in 2026 prices) will pay an annual surcharge in addition to their existing council tax. The policy applies to properties valued by the Valuation Office Agency, which covers England and Wales. According to the [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/):
+From April 2028, owners of properties in England and Wales valued over £2 million (in 2026 prices) will pay an annual surcharge in addition to their existing council tax. The policy applies to properties valued by the Valuation Office Agency; it does not apply to Scotland or Northern Ireland, which have separate property tax systems. According to the [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/):
 
 > There will be four price bands with the surcharge rising from £2,500 for a property valued in the lowest £2 million to £2.5 million band, to £7,500 for a property valued in the highest band of £5 million or more, all uprated by CPI inflation each year.
 
