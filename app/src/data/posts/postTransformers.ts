@@ -50,6 +50,7 @@ const topicLabels: TagLabels = {
   ai: 'AI',
   'april-fools': 'April Fools',
   'autumn-budget': 'Autumn Budget',
+  'autumn budget': 'Autumn Budget',
   'behavioral-responses': 'Behavioral responses', // UK variant: Behavioural responses
   benefit: 'Benefits',
   'child-tax-credit': 'Child Tax Credit',

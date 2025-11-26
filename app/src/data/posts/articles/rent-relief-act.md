@@ -102,7 +102,7 @@ To illustrate how the Rent Relief Act affects different household types across v
 
 **Figure 7: Rent Relief Act Credit for Selected Homes**
 
-![](/images/posts/rent_relief/rent_relief_comparison.png "image_tooltip")
+![](/images/posts/rent_relief/rent_relief_comparison.png 'image_tooltip')
 
 This chart demonstrates several key features of the Rent Relief Act:
 
