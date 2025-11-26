@@ -256,7 +256,7 @@ export default function HouseholdBuilderForm({
           onClose={() => setWarningMessage(null)}
           style={{
             position: 'fixed',
-            bottom: 20,
+            top: 20,
             right: 20,
             maxWidth: 400,
             zIndex: 1000,
