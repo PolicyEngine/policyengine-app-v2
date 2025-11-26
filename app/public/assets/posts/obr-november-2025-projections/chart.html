@@ -80,84 +80,85 @@
     <div id="chart"></div>
 
     <script>
-        const years = [2024, 2025, 2026, 2027, 2028, 2029, 2030];
+        const years = [2025, 2026, 2027, 2028, 2029, 2030];
 
-        // March 2025 values from git history (commit c19189ff)
-        // November 2025 values from current repo
+        // March 2025 forecast values from git history (commit c19189ff)
+        // November 2025 forecast values from current repo
+        // Note: 2024 outturn values also updated but not shown (this chart shows forecasts only)
         const data = {
             cpi: {
-                march: [2.33, 3.18, 1.93, 2.00, 2.00, 2.00, 2.00],
-                november: [2.53, 3.45, 2.48, 2.02, 2.04, 2.04, 2.00],
+                march: [3.18, 1.93, 2.00, 2.00, 2.00, 2.00],
+                november: [3.45, 2.48, 2.02, 2.04, 2.04, 2.00],
                 title: 'CPI inflation (%)'
             },
             rpi: {
-                march: [3.31, 4.16, 3.08, 3.00, 2.83, 2.83, 2.38],
-                november: [3.59, 4.33, 3.71, 3.13, 2.87, 2.91, 2.31],
+                march: [4.16, 3.08, 3.00, 2.83, 2.83, 2.38],
+                november: [4.33, 3.71, 3.13, 2.87, 2.91, 2.31],
                 title: 'RPI inflation (%)'
             },
             cpih: {
-                march: [3.20, 3.74, 2.27, 2.10, 2.05, 2.09, 2.24],
-                november: [3.27, 3.93, 2.67, 2.15, 2.08, 2.11, 2.13],
+                march: [3.74, 2.27, 2.10, 2.05, 2.09, 2.24],
+                november: [3.93, 2.67, 2.15, 2.08, 2.11, 2.13],
                 title: 'CPIH inflation (%)'
             },
             earnings: {
-                march: [4.67, 3.71, 2.16, 2.07, 2.25, 2.53, 2.92],
-                november: [4.93, 5.17, 3.33, 2.25, 2.10, 2.21, 2.32],
+                march: [3.71, 2.16, 2.07, 2.25, 2.53, 2.92],
+                november: [5.17, 3.33, 2.25, 2.10, 2.21, 2.32],
                 title: 'Average earnings growth (%)'
             },
             house_prices: {
-                march: [2.7, 2.4, 2.5, 2.6, 2.3, 2.4, null],
-                november: [0.83, 2.94, 2.22, 2.79, 2.72, 2.57, 2.42],
+                march: [2.4, 2.5, 2.6, 2.3, 2.4, null],
+                november: [2.94, 2.22, 2.79, 2.72, 2.57, 2.42],
                 title: 'House price growth (%)'
             },
             rent: {
-                march: [7.4, 5.7, 3.6, 2.7, 2.3, 2.4, null],
-                november: [7.16, 5.46, 3.34, 3.11, 2.43, 2.34, 2.54],
+                march: [5.7, 3.6, 2.7, 2.3, 2.4, null],
+                november: [5.46, 3.34, 3.11, 2.43, 2.34, 2.54],
                 title: 'Rent growth (%)'
             },
             social_rent: {
-                march: [6.7, 3.3, 4.2, 2.9, 3.0, 3.0, null],
-                november: [8.3, 3.5, 4.5, 3.5, 3.0, 3.0, 3.0],
+                march: [3.3, 4.2, 2.9, 3.0, 3.0, null],
+                november: [3.5, 4.5, 3.5, 3.0, 3.0, 3.0],
                 title: 'Social rent growth (%)'
             },
             mortgage_interest: {
-                march: [22.1, 13.6, 12.6, 8.2, 4.2, 4.7, null],
-                november: [27.3, 10.98, 14.35, 10.32, 4.70, 4.66, 5.53],
+                march: [13.6, 12.6, 8.2, 4.2, 4.7, null],
+                november: [10.98, 14.35, 10.32, 4.70, 4.66, 5.53],
                 title: 'Mortgage interest growth (%)'
             },
             non_labour_income: {
-                march: [8.0, 6.8, 5.6, 4.5, 3.4, 3.5, null],
-                november: [4.92, 5.19, 5.65, 4.74, 3.64, 3.02, 2.92],
+                march: [6.8, 5.6, 4.5, 3.4, 3.5, null],
+                november: [5.19, 5.65, 4.74, 3.64, 3.02, 2.92],
                 title: 'Non-labour income growth (%)'
             },
             per_capita_gdp: {
-                march: [3.8, 2.8, 2.8, 3.1, 3.3, 3.3, null],
-                november: [3.72, 4.18, 3.27, 3.26, 3.02, 2.94, 3.06],
+                march: [2.8, 2.8, 3.1, 3.3, 3.3, null],
+                november: [4.18, 3.27, 3.26, 3.02, 2.94, 3.06],
                 title: 'Per capita GDP growth (%)'
             },
             per_capita_mixed: {
-                march: [4.8, 4.7, 3.1, 3.1, 3.6, 3.8, null],
-                november: [2.73, 0.24, 3.62, 3.74, 3.51, 3.58, 3.64],
+                march: [4.7, 3.1, 3.1, 3.6, 3.8, null],
+                november: [0.24, 3.62, 3.74, 3.51, 3.58, 3.64],
                 title: 'Per capita mixed income growth (%)'
             },
             per_capita_nli: {
-                march: [6.9, 5.7, 4.9, 3.8, 2.9, 3.0, null],
-                november: [3.85, 4.47, 5.27, 4.37, 3.24, 2.58, 2.47],
+                march: [5.7, 4.9, 3.8, 2.9, 3.0, null],
+                november: [4.47, 5.27, 4.37, 3.24, 2.58, 2.47],
                 title: 'Per capita non-labour income growth (%)'
             },
             council_tax_england: {
-                march: [5.1, 5.0, 4.3, 4.3, 4.3, 4.3, null],
-                november: [5.1, 7.81, 5.30, 5.79, 5.65, 5.47, 5.42],
+                march: [5.0, 4.3, 4.3, 4.3, 4.3, null],
+                november: [7.81, 5.30, 5.79, 5.65, 5.47, 5.42],
                 title: 'Council tax growth - England (%)'
             },
             council_tax_scotland: {
-                march: [0.1, 8.8, 2.7, 2.7, 2.7, 2.7, null],
-                november: [0.1, 3.84, 3.84, 3.84, 3.84, 3.84, 3.84],
+                march: [8.8, 2.7, 2.7, 2.7, 2.7, null],
+                november: [3.84, 3.84, 3.84, 3.84, 3.84, 3.84],
                 title: 'Council tax growth - Scotland (%)'
             },
             council_tax_wales: {
-                march: [7.7, 7.2, 4.1, 4.1, 4.1, 4.1, null],
-                november: [7.7, 5.81, 5.81, 5.81, 5.81, 5.81, 5.81],
+                march: [7.2, 4.1, 4.1, 4.1, 4.1, null],
+                november: [5.81, 5.81, 5.81, 5.81, 5.81, 5.81],
                 title: 'Council tax growth - Wales (%)'
             }
         };

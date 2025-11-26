@@ -1,60 +1,23 @@
-The Office for Budget Responsibility (OBR) released its [November 2025 Economic and Fiscal Outlook](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) alongside the Autumn Budget. This forecast updates the March 2025 projections with significant revisions to inflation and earnings growth.
+The Office for Budget Responsibility (OBR) released its [November 2025 Economic and Fiscal Outlook](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) alongside the Autumn Budget. This forecast updates the March 2025 projections with revisions to inflation and earnings growth.
 
 PolicyEngine uses these OBR projections to uprate monetary values across our UK tax-benefit model, affecting calculations for benefits, tax thresholds, and policy impacts.
 
 ## Key changes
 
-The November 2025 forecast shows notably higher inflation and earnings growth in the near term compared to March:
+The November 2025 forecast shows higher inflation and earnings growth in the near term compared to March:
 
-- **2024 data revised upward**: The 2024 figures were already outturn (actual data) in March, but have been revised upward by the ONS since then. CPI is now recorded at 2.5% versus 2.3% in March, and earnings growth at 4.9% versus 4.7%.
 - **Higher CPI inflation in 2025-26**: CPI revised up from 3.2% to 3.5% in 2025, and from 1.9% to 2.5% in 2026. The OBR attributes this to higher energy prices and the inflationary impact of the employer National Insurance increases announced in the Budget.
-- **Higher earnings growth through 2026**: Average earnings growth revised up significantly, with 2025 now at 5.2% versus 3.7% previously—a 1.5 percentage point increase. This reflects stronger-than-expected wage growth and the impact of the National Living Wage increase.
+- **Higher earnings growth through 2026**: Average earnings growth revised up from 3.7% to 5.2% in 2025—a 1.5 percentage point increase. This reflects stronger-than-expected wage growth and the impact of the National Living Wage increase.
 - **Higher RPI through 2027**: RPI projections revised upward, reflecting the CPI revisions plus continued housing cost pressures. RPI matters particularly for student loan repayments and some pension uprating.
 - **Convergence to long-run assumptions by 2030**: Despite near-term revisions, both forecasts converge toward the same long-run equilibrium: 2% CPI (the Bank of England's target) and around 2.3% RPI.
+
+_Note: The OBR also revised 2024 outturn data upward (e.g., CPI from 2.3% to 2.5%, earnings from 4.7% to 4.9%). We updated these values in [policyengine-uk PR #1377](https://github.com/PolicyEngine/policyengine-uk/pull/1377)._
 
 ## Interactive comparison
 
 Explore how the OBR's projections changed between March and November 2025:
 
 <center><iframe src="/assets/posts/obr-november-2025-projections/chart.html" width="100%" height="500" style="border:none;"></iframe></center>
-
-## Detailed comparison
-
-### Consumer Price Index (CPI)
-
-| Year | March 2025 | November 2025 | Change |
-| :--: | :--------: | :-----------: | :----: |
-| 2024 |    2.3%    |     2.5%      | +0.2pp |
-| 2025 |    3.2%    |     3.5%      | +0.3pp |
-| 2026 |    1.9%    |     2.5%      | +0.6pp |
-| 2027 |    2.0%    |     2.0%      |   —    |
-| 2028 |    2.0%    |     2.0%      |   —    |
-| 2029 |    2.0%    |     2.0%      |   —    |
-| 2030 |    2.0%    |     2.0%      |   —    |
-
-### Retail Price Index (RPI)
-
-| Year | March 2025 | November 2025 | Change |
-| :--: | :--------: | :-----------: | :----: |
-| 2024 |    3.3%    |     3.6%      | +0.3pp |
-| 2025 |    4.2%    |     4.3%      | +0.1pp |
-| 2026 |    3.1%    |     3.7%      | +0.6pp |
-| 2027 |    3.0%    |     3.1%      | +0.1pp |
-| 2028 |    2.8%    |     2.9%      | +0.1pp |
-| 2029 |    2.8%    |     2.9%      | +0.1pp |
-| 2030 |    2.4%    |     2.3%      | −0.1pp |
-
-### Average earnings growth
-
-| Year | March 2025 | November 2025 | Change |
-| :--: | :--------: | :-----------: | :----: |
-| 2024 |    4.7%    |     4.9%      | +0.2pp |
-| 2025 |    3.7%    |     5.2%      | +1.5pp |
-| 2026 |    2.2%    |     3.3%      | +1.1pp |
-| 2027 |    2.1%    |     2.3%      | +0.2pp |
-| 2028 |    2.3%    |     2.1%      | −0.2pp |
-| 2029 |    2.5%    |     2.2%      | −0.3pp |
-| 2030 |    2.9%    |     2.3%      | −0.6pp |
 
 ## What we updated in PolicyEngine
 
