@@ -1,5 +1,3 @@
-# UK high value council tax surcharge: constituency-level impact
-
 In the November 2025 Autumn Budget, the UK government announced a new high value council tax surcharge on properties valued over £2 million. The Office for Budget Responsibility (OBR) [estimates](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) this measure will raise £400 million in 2029-30.
 
 Using 2024 Land Registry sales data, we estimate how this revenue will be distributed across Westminster constituencies.
@@ -66,7 +64,7 @@ The top 20 constituencies account for 43% of the estimated revenue while compris
 
 The map below shows the estimated revenue allocation by constituency. Darker shading indicates higher estimated revenue from the surcharge.
 
-<iframe src="surcharge_map_by_revenue.html" width="100%" height="850" frameborder="0"></iframe>
+<center><iframe src="/assets/posts/uk-mansion-tax/surcharge_map_by_revenue.html" width="100%" height="850" style="border:none;"></iframe></center>
 
 The concentration in London and the Home Counties reflects the geography of UK property wealth. Of the 553 constituencies we project will have sales subject to the surcharge in 2028:
 - 56 are in Greater London (accounting for 47% of estimated revenue)
