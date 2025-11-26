@@ -211,7 +211,7 @@ Figure 2 shows the change in government revenue from each reform across fiscal y
     "plot_bgcolor": "transparent",
     "paper_bgcolor": "transparent",
     "legend": {
-      "x": 0.42,
+      "x": 0.45,
       "y": -0.12,
       "xanchor": "center",
       "yanchor": "top",
@@ -223,7 +223,8 @@ Figure 2 shows the change in government revenue from each reform across fiscal y
       "bgcolor": "rgba(0,0,0,0)",
       "bordercolor": "rgba(0,0,0,0)",
       "borderwidth": 0,
-      "itemwidth": 40
+      "entrywidth": 0.42,
+      "entrywidthmode": "fraction"
     },
     "images": [
       {
@@ -606,7 +607,7 @@ Figure 6 shows the relative change in household income by income decile from eac
     "plot_bgcolor": "transparent",
     "paper_bgcolor": "transparent",
     "legend": {
-      "x": 0.42,
+      "x": 0.45,
       "y": -0.12,
       "xanchor": "center",
       "yanchor": "top",
@@ -618,7 +619,8 @@ Figure 6 shows the relative change in household income by income decile from eac
       "bgcolor": "rgba(0,0,0,0)",
       "bordercolor": "rgba(0,0,0,0)",
       "borderwidth": 0,
-      "itemwidth": 40
+      "entrywidth": 0.42,
+      "entrywidthmode": "fraction"
     },
     "updatemenus": [
       {
