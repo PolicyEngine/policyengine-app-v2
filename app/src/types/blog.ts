@@ -35,6 +35,9 @@ export interface BlogPost {
 
   /** Whether to hide the header image on the article page (image still shows in cards) */
   hideHeaderImage?: boolean;
+
+  /** Credit/attribution for the cover image (shown as tooltip) */
+  imageCredit?: string;
 }
 
 /**

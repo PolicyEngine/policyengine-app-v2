@@ -1,23 +1,20 @@
-Image credit: which.co.uk
-## Introduction
-
 In the Autumn Budget 2025, the Government [announced](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) a five-month freeze to fuel duty rates until September 2026, at which point the five pence cut first introduced in 2022 will be reversed through a staggered approach. From April 2027, the Government has stated that fuel duty rates will then be uprated annually by RPI. Previously announced increases to fuel duty rates have now been postponed for 16 consecutive years. The total cost of fuel duty freezes from 2010-11 to 2026-27 has risen to £120 billion.
 
 To understand the impact of this policy, we follow OBR methodology to compare it against a baseline that assumes the five pence cut would have ended in March 2026 as previously planned. Table 1 shows how fuel duty rates differ between these two scenarios across different time periods.
 
 **Table 1: Fuel duty rates under baseline and announced policy (pence per litre)**
 
-| Period | Baseline | Announced policy |
-| ------ | ------------------------- | ---------------- |
-| Jan 1 - Mar 22, 2026 | 52.95 | 52.95 |
-| Mar 23 - Mar 31, 2026 | 57.95 | 52.95 |
-| Apr 1 - Aug 31, 2026 | 60.33 | 52.95 |
-| Sep 1 - Nov 30, 2026 | 60.33 | 53.95 |
-| Dec 1, 2026 - Feb 28, 2027 | 60.33 | 55.95 |
-| Mar 1 - Mar 31, 2027 | 60.33 | 57.95 |
-| Apr 1, 2027 - Mar 31, 2028 | 62.26 | 59.80 |
-| Apr 1, 2028 - Mar 31, 2029 | 64.06 | 61.54 |
-| Apr 1, 2029 onwards | 65.92 | 63.34 |
+| Period                     | Baseline | Announced policy |
+| -------------------------- | -------- | ---------------- |
+| Jan 1 - Mar 22, 2026       | 52.95    | 52.95            |
+| Mar 23 - Mar 31, 2026      | 57.95    | 52.95            |
+| Apr 1 - Aug 31, 2026       | 60.33    | 52.95            |
+| Sep 1 - Nov 30, 2026       | 60.33    | 53.95            |
+| Dec 1, 2026 - Feb 28, 2027 | 60.33    | 55.95            |
+| Mar 1 - Mar 31, 2027       | 60.33    | 57.95            |
+| Apr 1, 2027 - Mar 31, 2028 | 62.26    | 59.80            |
+| Apr 1, 2028 - Mar 31, 2029 | 64.06    | 61.54            |
+| Apr 1, 2029 onwards        | 65.92    | 63.34            |
 
 The baseline assumes the 5p cut ends on March 22, 2026, returning the rate to 57.95p, followed by RPI uprating from April 2026 onwards (4.1% in 2026-27, 3.2% in 2027-28, 2.9% in 2028-29, and 2.9% in 2029-30). The announced policy maintains the freeze at 52.95p until September 2026, then implements a staggered reversal with increases of 1p, 2p, and 2p over three-month periods, reaching 57.95p by March 2027. Both policies then apply the same annual RPI uprating from April 2027 onwards.
 
@@ -31,10 +28,10 @@ We [estimate](https://legacy.policyengine.org/uk/policy?focus=policyOutput.polic
 
 **Table 2: Revenue impact of fuel duty freeze (£ billion)**
 
-| Source       | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
-| ------------ | ------- | ------- | ------- | ------- | ------- |
-| [PolicyEngine](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=95140&region=uk&timePeriod=2026&baseline=95147&uk_local_areas_beta=true) | 0.0     | -2.8     | -0.7     | -0.7     | -0.7     |
-| [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)          | 0.0     | -2.4     | -0.9     | -0.9     | -0.9     |
+| Source                                                                                                                                                                      | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | ------- | ------- | ------- |
+| [PolicyEngine](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=95140&region=uk&timePeriod=2026&baseline=95147&uk_local_areas_beta=true) | 0.0     | -2.8    | -0.7    | -0.7    | -0.7    |
+| [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)                                                                                                        | 0.0     | -2.4    | -0.9    | -0.9    | -0.9    |
 
 PolicyEngine estimates the freeze reduces revenue by £2.8 billion in 2026-27, followed by £0.7 billion annually from 2027-28 onwards. The OBR projects revenue reductions of £2.4 billion in 2026-27 and £0.9 billion annually thereafter.
 
