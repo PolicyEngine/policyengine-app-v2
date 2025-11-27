@@ -64,7 +64,7 @@ The top 20 constituencies account for 43% of the estimated revenue while compris
 
 The map below shows the estimated revenue allocation by constituency. Darker shading indicates higher estimated revenue from the surcharge.
 
-<center><iframe src="/assets/posts/uk-mansion-tax/surcharge_map_by_revenue.html" width="100%" height="850" style="border:none;"></iframe></center>
+<center><iframe src="https://policyengine.github.io/uk-mansion-tax/surcharge_map_by_revenue.html" width="100%" height="850" style="border:none;"></iframe></center>
 
 The concentration in London and the Home Counties reflects the geography of UK property wealth. Of the 553 constituencies we project will have sales subject to the surcharge in 2028:
 - 56 are in Greater London (accounting for 47% of estimated revenue)
