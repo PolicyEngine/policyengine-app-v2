@@ -3,7 +3,7 @@ In the [November 2025 Autumn Budget](https://www.gov.uk/government/collections/b
 Using 2024 Land Registry sales data, we estimate how this revenue will be distributed across Westminster constituencies.
 
 Key findings:
-- We project 553 of 650 constituencies will have sales subject to the surcharge in 2028
+- We estimate 553 of 650 constituencies have properties that would be subject to the surcharge
 - The top 10 constituencies account for 35% of the estimated revenue
 - Cities of London and Westminster alone accounts for 10% (£42 million)
 - London constituencies account for 47% of total revenue
@@ -31,32 +31,32 @@ The revenue flows to central government rather than local authorities.
 
 ## Constituency-level estimates
 
-We estimate each constituency's share of the £400 million total by analysing 2024 property sales and projecting them to 2028. We uprate sale prices to April 2028 levels using OBR house price forecasts (10.7% cumulative growth from 2024), apply the surcharge band structure (with thresholds uprated by CPI from 2026 to 2028), and allocate the OBR's total estimate proportionally based on each constituency's share of projected revenue.
+We estimate each constituency's share of the £400 million total by modelling the distribution of high-value properties using 2024 Land Registry sales data. We uprate sale prices to April 2028 levels using OBR house price forecasts (10.7% cumulative growth from 2024), apply the surcharge band structure (with thresholds uprated by CPI from 2026 to 2028), and allocate the OBR's total estimate proportionally based on each constituency's share of modelled revenue.
 
 ### Top 20 constituencies by estimated revenue
 
-| Rank | Constituency | Projected sales | Estimated annual revenue | Share of total |
-|------|--------------|----------------|--------------------------|----------------|
-| 1 | Cities of London and Westminster | 767 | £41.9m | 10.5% |
-| 2 | Kensington and Bayswater | 589 | £29.4m | 7.4% |
-| 3 | Chelsea and Fulham | 393 | £17.9m | 4.5% |
-| 4 | Hampstead and Highgate | 262 | £12.0m | 3.0% |
-| 5 | Richmond Park | 167 | £7.0m | 1.8% |
-| 6 | Battersea | 154 | £6.4m | 1.6% |
-| 7 | Islington South and Finsbury | 149 | £6.1m | 1.5% |
-| 8 | Holborn and St Pancras | 149 | £7.4m | 1.8% |
-| 9 | Hammersmith and Chiswick | 131 | £5.5m | 1.4% |
-| 10 | Finchley and Golders Green | 118 | £5.6m | 1.4% |
-| 11 | Runnymede and Weybridge | 104 | £5.0m | 1.3% |
-| 12 | Wimbledon | 99 | £4.3m | 1.1% |
-| 13 | Ealing Central and Acton | 92 | £3.6m | 0.9% |
-| 14 | Queen's Park and Maida Vale | 92 | £3.7m | 0.9% |
-| 15 | Windsor | 84 | £4.0m | 1.0% |
-| 16 | Esher and Walton | 81 | £3.1m | 0.8% |
-| 17 | Dulwich and West Norwood | 61 | £2.3m | 0.6% |
-| 18 | Harpenden and Berkhamsted | 60 | £2.0m | 0.5% |
-| 19 | Hornsey and Friern Barnet | 60 | £1.8m | 0.5% |
-| 20 | Chesham and Amersham | 60 | £2.1m | 0.5% |
+| Rank | Constituency | Estimated annual revenue | Share of total |
+|------|--------------|--------------------------|----------------|
+| 1 | Cities of London and Westminster | £41.9m | 10.5% |
+| 2 | Kensington and Bayswater | £29.4m | 7.4% |
+| 3 | Chelsea and Fulham | £17.9m | 4.5% |
+| 4 | Hampstead and Highgate | £12.0m | 3.0% |
+| 5 | Richmond Park | £7.0m | 1.8% |
+| 6 | Battersea | £6.4m | 1.6% |
+| 7 | Islington South and Finsbury | £6.1m | 1.5% |
+| 8 | Holborn and St Pancras | £7.4m | 1.8% |
+| 9 | Hammersmith and Chiswick | £5.5m | 1.4% |
+| 10 | Finchley and Golders Green | £5.6m | 1.4% |
+| 11 | Runnymede and Weybridge | £5.0m | 1.3% |
+| 12 | Wimbledon | £4.3m | 1.1% |
+| 13 | Ealing Central and Acton | £3.6m | 0.9% |
+| 14 | Queen's Park and Maida Vale | £3.7m | 0.9% |
+| 15 | Windsor | £4.0m | 1.0% |
+| 16 | Esher and Walton | £3.1m | 0.8% |
+| 17 | Dulwich and West Norwood | £2.3m | 0.6% |
+| 18 | Harpenden and Berkhamsted | £2.0m | 0.5% |
+| 19 | Hornsey and Friern Barnet | £1.8m | 0.5% |
+| 20 | Chesham and Amersham | £2.1m | 0.5% |
 
 The top 20 constituencies account for 43% of the estimated revenue while comprising 3% of all constituencies.
 
@@ -66,24 +66,24 @@ The map below shows the estimated revenue allocation by constituency. Darker sha
 
 <center><iframe src="https://policyengine.github.io/uk-mansion-tax/surcharge_map_by_revenue.html" width="100%" height="850" style="border:none;"></iframe></center>
 
-The concentration in London and the Home Counties reflects the geography of UK property wealth. Of the 553 constituencies we project will have sales subject to the surcharge in 2028:
+The concentration in London and the Home Counties reflects the geography of UK property wealth. Of the 553 constituencies we estimate have properties subject to the surcharge:
 - 56 are in Greater London (accounting for 47% of estimated revenue)
 - The remaining 497 constituencies share 53% of estimated revenue
 
-London constituencies account for 47% of projected affected sales while comprising 9% of all constituencies.
+London constituencies account for 47% of the estimated revenue while comprising 9% of all constituencies.
 
 ### Distribution by surcharge band
 
-We project 9,139 sales will be subject to the surcharge in 2028, distributed across bands:
+Revenue is concentrated in the highest-value properties:
 
-| Band (2028 prices) | Sales | Share of sales | Revenue contribution |
-|--------------------|-------|----------------|---------------------|
-| £2.09m - £2.61m | 2,806 | 31% | 17% |
-| £2.61m - £3.14m | 1,607 | 18% | 13% |
-| £3.14m - £5.23m | 2,423 | 27% | 29% |
-| £5.23m+ | 2,303 | 25% | 41% |
+| Band (2028 prices) | Share of affected properties | Revenue contribution |
+|--------------------|------------------------------|---------------------|
+| £2.09m - £2.61m | 31% | 17% |
+| £2.61m - £3.14m | 18% | 13% |
+| £3.14m - £5.23m | 27% | 29% |
+| £5.23m+ | 25% | 41% |
 
-Properties valued over £5.23 million (in 2028 prices) represent 25% of projected affected sales but contribute 41% of the estimated revenue due to the £7,500 annual surcharge rate.
+Properties valued over £5.23 million (in 2028 prices) represent an estimated 25% of affected properties but contribute 41% of the estimated revenue due to the £7,500 annual surcharge rate.
 
 ## Methodology and limitations
 
@@ -104,18 +104,13 @@ The policy takes effect in April 2028. We uprate 2024 sale prices to 2028 using 
 
 This approach captures the properties that would actually be subject to the surcharge when it comes into effect, accounting for both house price appreciation and the inflation-linked adjustment to the thresholds.
 
-### Key limitation: sales vs stock
+### Key assumption: sales as proxy for stock
 
-This analysis uses property sales data, not the full housing stock. The OBR's £400 million estimate is based on Valuation Office data covering all properties, not just those sold in a given year.
+This analysis uses property sales data to model the distribution of high-value properties across constituencies. We assume that the geographic distribution of high-value sales is representative of the geographic distribution of the high-value housing stock.
 
-We found:
-- Implied surcharge from 2024 sales: £42 million
-- OBR estimate (full housing stock): £400 million
-- Ratio: approximately 10x
+The OBR's £400 million estimate is based on Valuation Office data covering all properties, not just those sold in a given year. We allocate this total proportionally based on each constituency's share of modelled revenue from the sales data.
 
-This ratio is consistent with annual property turnover rates of 5-10% of housing stock. Our constituency-level allocations assume the geographic distribution of high-value sales reflects the distribution of high-value housing stock.
-
-We do not scale up transaction volumes to 2028 levels (the OBR [forecasts](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) transactions rising from 1.1 million in 2024 to 1.3 million in 2029). Since we allocate the OBR's total revenue estimate proportionally by constituency, the absolute number of sales matters less than their geographic distribution. The OBR's £400 million estimate already accounts for the full housing stock and projected behavioral responses.
+This approach is valid if high-value properties turn over at similar rates across constituencies. Annual property turnover rates of 5-10% of housing stock are typical, and there is no strong evidence that turnover rates vary systematically by constituency for high-value properties.
 
 ### Behavioural effects
 
