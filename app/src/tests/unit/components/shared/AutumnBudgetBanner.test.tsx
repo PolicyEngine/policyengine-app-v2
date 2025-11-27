@@ -107,7 +107,7 @@ describe('AutumnBudgetBanner', () => {
     expect(obrLink).toHaveAttribute('href', BANNER_LINKS.OBR_FORECAST);
   });
 
-  test('given analysis card links then open in new tab', () => {
+  test('given analysis card links then open in same tab', () => {
     // Given
     vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
@@ -116,8 +116,7 @@ describe('AutumnBudgetBanner', () => {
 
     // Then
     const twoChildLink = screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT).closest('a');
-    expect(twoChildLink).toHaveAttribute('target', '_blank');
-    expect(twoChildLink).toHaveAttribute('rel', 'noopener noreferrer');
+    expect(twoChildLink).not.toHaveAttribute('target', '_blank');
   });
 
   test('given contact CTA then displays with correct email link', () => {

@@ -234,8 +234,6 @@ export default function AutumnBudgetBanner() {
             <Card
               component="a"
               href="/uk/research/uk-two-child-limit"
-              target="_blank"
-              rel="noopener noreferrer"
               style={{
                 flex: '1 1 220px',
                 maxWidth: '260px',
@@ -289,8 +287,6 @@ export default function AutumnBudgetBanner() {
             <Card
               component="a"
               href="/uk/research/high-value-council-tax-surcharge"
-              target="_blank"
-              rel="noopener noreferrer"
               style={{
                 flex: '1 1 220px',
                 maxWidth: '260px',
@@ -344,8 +340,6 @@ export default function AutumnBudgetBanner() {
             <Card
               component="a"
               href="/uk/research/fuel-duty-freeze-2025"
-              target="_blank"
-              rel="noopener noreferrer"
               style={{
                 flex: '1 1 220px',
                 maxWidth: '260px',
@@ -399,8 +393,6 @@ export default function AutumnBudgetBanner() {
             <Card
               component="a"
               href="/uk/research/obr-november-2025-projections"
-              target="_blank"
-              rel="noopener noreferrer"
               style={{
                 flex: '1 1 220px',
                 maxWidth: '260px',
