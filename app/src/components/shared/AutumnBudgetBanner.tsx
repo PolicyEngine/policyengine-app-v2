@@ -142,56 +142,7 @@ export default function AutumnBudgetBanner() {
             : 'The Autumn Budget 2025 has been released'}
         </Title>
 
-        {/* Autumn Budget Dashboard Box - Only show after budget */}
-        {!isBeforeBudget && (
-          <Box
-            mb={spacing['2xl']}
-            style={{
-              display: 'flex',
-              justifyContent: 'center',
-            }}
-          >
-            <Box
-              component="a"
-              href="/uk/uk-autumn-budget-2025"
-              style={{
-                display: 'inline-block',
-                backgroundColor: 'rgba(255, 255, 255, 0.25)',
-                borderRadius: '14px',
-                padding: `${spacing.lg} ${spacing['2xl']}`,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                textDecoration: 'none',
-                border: `3px solid rgba(255, 255, 255, 0.4)`,
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.15)',
-                backdropFilter: 'blur(10px)',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.35)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
-              }}
-            >
-              <Text
-                size={typography.fontSize.xl}
-                fw={typography.fontWeight.semibold}
-                c={colors.white}
-                style={{
-                  textAlign: 'center',
-                  textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-                  letterSpacing: '0.3px',
-                }}
-              >
-                View the PolicyEngine analysis dashboard
-              </Text>
-            </Box>
-          </Box>
-        )}
+        {/* Dashboard link hidden for now */}
 
         {/* Countdown Timer - Only show before budget */}
         {isBeforeBudget && timeRemaining && (
@@ -257,7 +208,7 @@ export default function AutumnBudgetBanner() {
           </Box>
         )}
 
-        {/* Pre-Autumn Budget Analysis Cards */}
+        {/* Autumn Budget Analysis Cards */}
         <Box>
           <Text
             size={typography.fontSize.lg}
@@ -269,7 +220,7 @@ export default function AutumnBudgetBanner() {
               textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             }}
           >
-            Pre-autumn budget analysis
+            Autumn Budget analysis
           </Text>
 
           <Group
@@ -329,15 +280,15 @@ export default function AutumnBudgetBanner() {
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Analysis of removing the two-child limit reform
+                  Removal announced for 2026
                 </Text>
               </Box>
             </Card>
 
-            {/* Card 2: VAT Thresholds */}
+            {/* Card 2: High Value Council Tax Surcharge */}
             <Card
               component="a"
-              href="/uk/research/uk-vat-thresholds"
+              href="/uk/research/high-value-council-tax-surcharge"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -377,22 +328,22 @@ export default function AutumnBudgetBanner() {
                   c={colors.primary[700]}
                   mb={spacing.xs}
                 >
-                  VAT thresholds
+                  High value council tax surcharge
                 </Text>
                 <Text
                   size={typography.fontSize.xs}
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Impact analysis of changing VAT thresholds
+                  Constituency-level impact of £400m surcharge
                 </Text>
               </Box>
             </Card>
 
-            {/* Card 3: Income Tax & NI */}
+            {/* Card 3: Fuel Duty Freeze */}
             <Card
               component="a"
-              href="/uk/research/uk-income-tax-ni-reforms-2025"
+              href="/uk/research/fuel-duty-freeze-2025"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -432,22 +383,22 @@ export default function AutumnBudgetBanner() {
                   c={colors.primary[700]}
                   mb={spacing.xs}
                 >
-                  Income tax & NI reforms
+                  Fuel duty freeze
                 </Text>
                 <Text
                   size={typography.fontSize.xs}
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Analysis of alternative tax reform options
+                  £2.8bn cost, raises income for 47% of people
                 </Text>
               </Box>
             </Card>
 
-            {/* Card 4: Mansion Tax */}
+            {/* Card 4: OBR Forecast Update */}
             <Card
               component="a"
-              href="/uk/research/uk-mansion-tax-autumn-budget"
+              href="/uk/research/obr-november-2025-projections"
               target="_blank"
               rel="noopener noreferrer"
               style={{
@@ -487,14 +438,14 @@ export default function AutumnBudgetBanner() {
                   c={colors.primary[700]}
                   mb={spacing.xs}
                 >
-                  Mansion tax
+                  OBR forecast update
                 </Text>
                 <Text
                   size={typography.fontSize.xs}
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Constituency distribution of high-value property sales
+                  What changed in November 2025 projections
                 </Text>
               </Box>
             </Card>
