@@ -142,7 +142,7 @@ export default function AutumnBudgetBanner() {
             : 'The Autumn Budget 2025 has been released'}
         </Title>
 
-{/* Dashboard link hidden for now */}
+        {/* Dashboard link hidden for now */}
 
         {/* Countdown Timer - Only show before budget */}
         {isBeforeBudget && timeRemaining && (
