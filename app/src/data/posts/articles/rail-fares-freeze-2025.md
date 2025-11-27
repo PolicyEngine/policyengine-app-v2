@@ -6,28 +6,30 @@ In the Autumn Budget 2025, the Government announced a freeze on all regulated ra
 
 ### Methodology
 
-To estimate the reform impact, we follow OBR methodology and compare the freeze against a baseline where regulated fares increase by [5.8%](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate) in March 2026, as would occur under the existing [fare formula](https://www.gov.uk/government/publications/railways-bill/railways-bill-fares) (July 2025 [RPI of 4.8%](https://obr.uk/efo/economic-and-fiscal-outlook-march-2025/) plus 1%). For subsequent years, we use RPI forecasts from the OBR's March 2025 Economic Outlook to project baseline fare increases under the standard formula. The freeze prevents this increase, requiring additional government subsidy to compensate for foregone fare revenue. We model this by transferring household expenditure that would have been spent on higher fares to government rail subsidy, distributed proportionally based on households' rail usage.
+To estimate the reform impact, we compare the freeze against a baseline where regulated fares increase by [5.8%](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate) in March 2026, as would occur under the existing [fare formula](https://www.gov.uk/government/publications/railways-bill/railways-bill-fares) (July 2025 [RPI of 4.8%](https://obr.uk/efo/economic-and-fiscal-outlook-march-2025/) plus 1%). The freeze prevents this increase, requiring additional government subsidy to compensate for foregone fare revenue.
 
-In the following sections, we estimate the cost of the rail fares freeze, compare the revenue impact with official statistics, and examine the distributional effects across income deciles.
+We calibrate our model to [HM Treasury cost estimates](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) and distribute the benefit to households proportionally based on their rail usage from the Family Resources Survey.
+
+In the following sections, we present the cost of the rail fares freeze and examine the distributional effects across income deciles.
 
 ## Economic impacts
 
 ### Revenue impact
 
-We [estimate](https://gist.github.com/vahid-ahmadi/c0da31f3d92f117b4de92f31b4ca207b) the revenue impact of the rail fares freeze policy across fiscal years and compare our estimates with official HM Treasury projections. Table 1 shows the cost of freezing fares rather than implementing the planned 5.8% increase.
+Table 1 shows the cost of freezing fares rather than implementing the planned 5.8% increase. PolicyEngine estimates align closely with official HM Treasury projections.
 
 **Table 1: Revenue impact of rail fares freeze (£ million)**
 
 | Source       | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
 | ------------ | ------- | ------- | ------- | ------- | ------- |
-| [PolicyEngine](https://gist.github.com/vahid-ahmadi/c0da31f3d92f117b4de92f31b4ca207b) | 0       | -163    | -170    | -178    | -185    |
+| PolicyEngine | 0       | -145    | -155    | -160    | -165    |
 | [HM Treasury](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html)  | 0       | -145    | -150    | -155    | -160    |
 
-PolicyEngine estimates the freeze reduces revenue by £163 million in 2026-27, rising to £185 million by 2029-30 as baseline fare increases compound. HM Treasury projects revenue reductions of £145 million in 2026-27, rising to £160 million by 2029-30.
+PolicyEngine estimates the freeze reduces revenue by £145 million in 2026-27, rising to £165 million by 2029-30 as baseline fare increases compound. This closely matches HM Treasury projections of £145 million in 2026-27, rising to £160 million by 2029-30.
 
 ### Distributional impact
 
-Figure 1 [shows](https://gist.github.com/vahid-ahmadi/c0da31f3d92f117b4de92f31b4ca207b) the average change in household net income by income decile from the rail fares freeze in 2026-27. The distributional pattern reflects how rail usage varies across the income distribution.
+Figure 1 shows the average change in household net income by income decile from the rail fares freeze in 2026-27. The distributional pattern reflects how rail usage varies across the income distribution.
 
 **Figure 1: Average change in household income by income decile, 2026-27**
 
@@ -36,7 +38,7 @@ Figure 1 [shows](https://gist.github.com/vahid-ahmadi/c0da31f3d92f117b4de92f31b4
   "data": [
     {
       "x": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      "y": [2.58, 1.28, 1.00, 1.97, 3.07, 2.76, 5.58, 6.54, 5.02, 18.89],
+      "y": [13.49, 2.42, 1.77, 0.92, 3.52, 3.01, 4.55, 2.95, 7.93, 21.77],
       "type": "bar",
       "marker": {
         "color": "#2C6496",
@@ -45,7 +47,7 @@ Figure 1 [shows](https://gist.github.com/vahid-ahmadi/c0da31f3d92f117b4de92f31b4
         }
       },
       "hovertemplate": "Decile %{x}<br>Change: £%{y:.2f}<extra></extra>",
-      "text": ["£2.58", "£1.28", "£1.00", "£1.97", "£3.07", "£2.76", "£5.58", "£6.54", "£5.02", "£18.89"],
+      "text": ["£13.49", "£2.42", "£1.77", "£0.92", "£3.52", "£3.01", "£4.55", "£2.95", "£7.93", "£21.77"],
       "textposition": "outside",
       "textfont": {
         "family": "Roboto Serif",
@@ -91,7 +93,7 @@ Figure 1 [shows](https://gist.github.com/vahid-ahmadi/c0da31f3d92f117b4de92f31b4
       "zeroline": true,
       "zerolinecolor": "#333",
       "zerolinewidth": 2,
-      "range": [0, 20]
+      "range": [0, 25]
     },
     "height": 500,
     "margin": {
@@ -110,4 +112,4 @@ Figure 1 [shows](https://gist.github.com/vahid-ahmadi/c0da31f3d92f117b4de92f31b4
 }
 ```
 
-In 2026-27, the average household benefit ranges from £1.00 per year for the third decile to £18.89 for the highest decile. The absolute benefit rises with income, reflecting higher rail usage among higher-income households.
+In 2026-27, the average household benefit ranges from £0.92 per year for the fourth decile to £21.77 for the highest decile. The first decile sees a relatively high benefit of £13.49, which may reflect pensioner households with rail travel. The top decile benefits most, reflecting higher rail usage among higher-income households, particularly for commuting.
