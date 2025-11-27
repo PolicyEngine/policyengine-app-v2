@@ -77,7 +77,7 @@ Under baseline policy, total salary sacrifice contributions amount to £6.93 bil
 | 2028-29     | 1.16                   |
 | 2029-30     | 1.20                   |
 
-### Alternative behavioral responses
+### Alternative behavioural responses
 
 The revenue estimates above assume employees redirect their excess contributions to regular pension contributions, preserving their pension savings while losing only the NI relief. However, some employees may instead take the excess as taxable cash.
 
@@ -95,11 +95,11 @@ This estimate is lower than the government's £2 billion figure, which may refle
 
 ## Distributional analysis
 
-The impact of the cap varies significantly by income and behavioral response. Under the baseline scenario (Spread Cost + Maintain Pension), lower-income deciles see small positive impacts from the employer cost-spreading, while upper deciles face losses. The top decile sees a 0.16% reduction in employment income, while decile 9 sees a 0.03% reduction.
+The impact of the cap varies significantly by income and behavioural response. Under the baseline scenario (Spread Cost + Maintain Pension), lower-income deciles see small positive impacts from the employer cost-spreading, while upper deciles face losses. The top decile sees a 0.16% reduction in employment income, while decile 9 sees a 0.03% reduction.
 
 If employees take cash instead of maintaining pension contributions, the impacts are larger and more concentrated at the top. The top decile would lose 0.33% of employment income—roughly double the loss under the "maintain pension" scenario—because they pay full income tax rather than just National Insurance on the excess.
 
-The interactive chart below shows the distributional impact across all four behavioral scenarios:
+The interactive chart below shows the distributional impact across all four behavioural scenarios:
 
 <iframe src="https://policyengine.github.io/uk-salary-sacrifice-analysis/distributional-impact.html" width="100%" height="550" frameborder="0"></iframe>
 
@@ -107,9 +107,9 @@ Under all scenarios, the cap is progressive: lower-income households are largely
 
 ## Conclusion
 
-The cap would raise between £1.1 billion and £2.3 billion annually depending on behavioral responses, affecting 740,000 workers who currently contribute above £2,000. If employees redirect excess contributions to regular pension schemes (preserving pension savings), revenue would be £1.1–1.4 billion. If employees take the excess as taxable cash, revenue would nearly double to £2.0–2.3 billion because they would pay full income tax rather than just National Insurance on the excess.
+The cap would raise between £1.1 billion and £2.3 billion annually depending on behavioural responses, affecting 740,000 workers who currently contribute above £2,000. If employees redirect excess contributions to regular pension schemes (preserving pension savings), revenue would be £1.1–1.4 billion. If employees take the excess as taxable cash, revenue would nearly double to £2.0–2.3 billion because they would pay full income tax rather than just National Insurance on the excess.
 
-These estimates are lower than the government's £2 billion figure, likely due to differences in underlying salary sacrifice data. The impact is progressive under all scenarios: higher earners experience larger reductions while lower-income households are largely unaffected. The interactive charts above allow you to explore how different behavioral assumptions affect both revenue and distributional outcomes.
+These estimates are lower than the government's £2 billion figure, likely due to differences in underlying salary sacrifice data. The impact is progressive under all scenarios: higher earners experience larger reductions while lower-income households are largely unaffected. The interactive charts above allow you to explore how different behavioural assumptions affect both revenue and distributional outcomes.
 
 ## Appendix: Data construction methodology
 
