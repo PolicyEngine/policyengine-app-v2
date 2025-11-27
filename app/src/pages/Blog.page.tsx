@@ -205,6 +205,7 @@ function PostHeadingSection({
           {imageUrl && !post.hideHeaderImage && (
             <img
               alt={post.title}
+              title={post.imageCredit}
               src={imageUrl}
               style={{ width: '100%', marginTop: 30 }}
               onError={(e) => {
@@ -256,6 +257,7 @@ function PostHeadingSection({
       {imageUrl && !post.hideHeaderImage && (
         <img
           alt={post.title}
+          title={post.imageCredit}
           src={imageUrl}
           style={{ width: '100%' }}
           onError={(e) => {
