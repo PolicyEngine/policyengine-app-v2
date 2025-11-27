@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
-import HeaderContent from '@/components/home-header/HeaderContent';
-import { NavItemSetup } from '@/components/home-header/NavItem';
+import HeaderContent from '@/components/homeHeader/HeaderContent';
+import { NavItemSetup } from '@/components/homeHeader/NavItem';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 

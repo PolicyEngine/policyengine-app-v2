@@ -1,7 +1,7 @@
 import { renderWithCountry, screen } from '@test-utils';
 import { describe, expect, test } from 'vitest';
 import HeaderNavigation from '@/components/shared/HomeHeader';
-import { EXPECTED_HEADER_TEXT } from '@/tests/fixtures/components/home-header/HeaderMocks';
+import { EXPECTED_HEADER_TEXT } from '@/tests/fixtures/components/homeHeader/HeaderMocks';
 
 describe('HeaderNavigation', () => {
   test('given component renders then displays header with navigation', () => {
