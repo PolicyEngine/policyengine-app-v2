@@ -1,7 +1,3 @@
-_Photograph: House of Commons/Reuters_
-
-## Introduction
-
 The UK requires businesses to register for VAT and charge customers 20% on their sales once annual turnover reaches [£90,000](https://www.gov.uk/vat-registration-thresholds), up from [£85,000](https://www.gov.uk/government/publications/vat-increasing-the-registration-and-deregistration-thresholds/increasing-the-vat-registration-threshold) in 2024-25. The Telegraph [reported](https://www.telegraph.co.uk/business/2025/08/30/reeves-talks-to-raise-vat-threshold-battle-to-grow-economy/) that Chancellor Rachel Reeves is considering further increases to the VAT threshold.
 
 We analyse how VAT threshold changes between £70,000 and £120,000 would affect revenues and the number of VAT-paying firms for the 2026-27 fiscal year. We constructed synthetic firm microdata to generate these projections and compare them with HMRC's official estimates.

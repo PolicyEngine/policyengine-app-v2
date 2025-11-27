@@ -1,7 +1,3 @@
-_Image credit: birminghammail_
-
-## Introduction
-
 This analysis compares PolicyEngine's poverty estimates against official figures for 2023/24 using the Family Resources Survey (FRS). To understand the differences, we first describe how official statistics are produced.
 
 ### Official methodology

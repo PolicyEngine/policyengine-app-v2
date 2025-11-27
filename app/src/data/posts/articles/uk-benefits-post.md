@@ -1,5 +1,3 @@
-## Introduction
-
 This article outlines how PolicyEngine models the UK benefit system. It details benefits in the UK welfare system and the implementation within the PolicyEngine microsimulation. This article serves as a technical reference for understanding how the PolicyEngine UK microsimulation model performs benefit calculations.
 
 Table 1 summarises estimates for each benefit in the UK system, comparing PolicyEngine's 2025-26 fiscal year expenditure projections with those from the government (such as the Office for Budget Responsibility) and showing the percentage difference between them. While PolicyEngine accounts for interactions when tax and benefit programmes are introduced or removed, Table 1 shows only the direct expenditure for each benefit for consistency with government reports.

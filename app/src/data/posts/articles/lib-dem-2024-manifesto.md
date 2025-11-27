@@ -14,8 +14,6 @@ _Distributional impact of the Liberal Democrat 2024 Manifesto. See the full impa
 
 6. Child poverty would be reduced by a quarter, lifting 1.3m children out of poverty. Overall, 2.4m people would be lifted out of poverty, and income inequality would decrease by over 3% according to the Gini index.
 
-## Introduction
-
 Yesterday the Liberal Democrats [launched](https://www.bbc.co.uk/news/articles/crgg9l8z4lpo) their manifesto, detailing key reform pledges across taxes, welfare and public spending. The party committed to equal spending and revenue increases of £26.8bn (budget neutral overall), with prominence given to healthcare, international aid and welfare, as well as capital gains tax reform and anti-avoidance spending.
 
 For the first time, PolicyEngine will produce a comprehensive score of this and future manifestos, capturing an estimate of the economic impact of all spending and revenue changes.
@@ -76,15 +74,15 @@ PolicyEngine estimates that the combined Liberal Democrat manifesto would, in 20
 
 We also estimate that this level of redistribution would be progressive along income lines, with the lowest income decile seeing a 9% increase in disposable income, and a loss of 2% for the highest income decile.
 
-![Impact by income decile](/images/posts/lib-dem-2024-manifesto/decile_impact.jpeg "image_tooltip")
+![Impact by income decile](/images/posts/lib-dem-2024-manifesto/decile_impact.jpeg 'image_tooltip')
 
 We also estimate that people in lower income deciles are more likely to be better off under the plans than those in higher deciles, though the lowest decile still has 10% of people worse off under the manifesto policy.
 
-![Impacts within income deciles](/images/posts/lib-dem-2024-manifesto/intra_decile_impact.jpeg "image_tooltip")
+![Impacts within income deciles](/images/posts/lib-dem-2024-manifesto/intra_decile_impact.jpeg 'image_tooltip')
 
 On poverty rates, PolicyEngine estimates that the manifesto policy would reduce absolute child poverty by a quarter, lowering the number of children in poverty by 1.3m and the number of people in poverty by 2.4m. We also estimate that the Gini index of income inequality would fall by over 3%.
 
-![Poverty rate impacts](/images/posts/lib-dem-2024-manifesto/poverty_impact.jpeg "image_tooltip")
+![Poverty rate impacts](/images/posts/lib-dem-2024-manifesto/poverty_impact.jpeg 'image_tooltip')
 
 ## Conclusion
 

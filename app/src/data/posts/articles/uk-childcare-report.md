@@ -1,5 +1,3 @@
-## Introduction
-
 This report provides an analysis of childcare programmes in the UK, examining how they are modelled in PolicyEngine UK and their distributional impacts across different household types and income groups. We link each programme component to its implementation in the codebase to make this report a technical reference for understanding how childcare calculations are performed within the PolicyEngine UK microsimulation model. The report covers five major childcare programmes:
 
 - **[Tax-Free Childcare](https://www.gov.uk/tax-free-childcare?step-by-step-nav=d78aeaf6-1747-4d72-9619-f16efb4dd89d)**: The UK government adds £2 for every £8 parents pay into a childcare account, up to £2,000 per child per year (£4,000 if the child is disabled).

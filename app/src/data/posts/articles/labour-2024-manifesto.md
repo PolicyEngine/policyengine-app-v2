@@ -8,8 +8,6 @@ _Distributional impact of the Labour 2024 Manifesto. See the full impact score [
 - We project that the lowest income decile would see a 2.4% rise in net income, while the top decile would see a 1% fall in net income.
 - We also project modest reductions in absolute poverty and inequality.
 
-## Introduction
-
 On June 13, Labour [released](https://labour.org.uk/updates/stories/labour-manifesto-2024-sign-up/) their 2024 election manifesto, laying out their revenue and spending priorities for the coming parliament. In their manifesto, Labour does not provide a total figure for expected expenditures or tax revenue for the entirety of the five-year parliament. However, they do provide [cost estimates](https://labour.org.uk/change/labours-fiscal-plan/) for the 2028-29 fiscal year, which PolicyEngine uses as the basis of its modelling.
 
 In the manifesto, Labour set out a revenue-positive series of priorities. In fiscal year 2028-29, the party aims to raise £7.4bn through tax revisions and spend £4.8bn funding new expenditures, with the majority of this value allocated to increased NHS spending, NHS-adjacent healthcare programs, and education programs.
