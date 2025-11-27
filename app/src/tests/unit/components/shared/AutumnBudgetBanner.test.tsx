@@ -6,7 +6,6 @@ import {
   BANNER_DISMISSED_KEY,
   BANNER_LINKS,
   CONTACT_EMAIL,
-  DASHBOARD_BOX_TEXT,
   MOCK_DATE_AFTER_BUDGET,
   MOCK_DATE_AFTER_END,
   MOCK_DATE_BEFORE_BUDGET,
@@ -77,37 +76,40 @@ describe('AutumnBudgetBanner', () => {
 
   test('given all analysis cards then display with correct titles', () => {
     // Given
-    vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
+    vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
     render(<AutumnBudgetBanner />);
 
     // Then
     expect(screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT)).toBeInTheDocument();
-    expect(screen.getByText(BANNER_CARD_TITLES.VAT_THRESHOLDS)).toBeInTheDocument();
-    expect(screen.getByText(BANNER_CARD_TITLES.INCOME_TAX_NI)).toBeInTheDocument();
+    expect(screen.getByText(BANNER_CARD_TITLES.HIGH_VALUE_SURCHARGE)).toBeInTheDocument();
+    expect(screen.getByText(BANNER_CARD_TITLES.FUEL_DUTY_FREEZE)).toBeInTheDocument();
+    expect(screen.getByText(BANNER_CARD_TITLES.OBR_FORECAST)).toBeInTheDocument();
   });
 
   test('given analysis cards then link to correct URLs', () => {
     // Given
-    vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
+    vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
     render(<AutumnBudgetBanner />);
 
     // Then
     const twoChildLink = screen.getByText(BANNER_CARD_TITLES.TWO_CHILD_LIMIT).closest('a');
-    const vatLink = screen.getByText(BANNER_CARD_TITLES.VAT_THRESHOLDS).closest('a');
-    const incomeTaxLink = screen.getByText(BANNER_CARD_TITLES.INCOME_TAX_NI).closest('a');
+    const surchargeLink = screen.getByText(BANNER_CARD_TITLES.HIGH_VALUE_SURCHARGE).closest('a');
+    const fuelDutyLink = screen.getByText(BANNER_CARD_TITLES.FUEL_DUTY_FREEZE).closest('a');
+    const obrLink = screen.getByText(BANNER_CARD_TITLES.OBR_FORECAST).closest('a');
 
     expect(twoChildLink).toHaveAttribute('href', BANNER_LINKS.TWO_CHILD_LIMIT);
-    expect(vatLink).toHaveAttribute('href', BANNER_LINKS.VAT_THRESHOLDS);
-    expect(incomeTaxLink).toHaveAttribute('href', BANNER_LINKS.INCOME_TAX_NI);
+    expect(surchargeLink).toHaveAttribute('href', BANNER_LINKS.HIGH_VALUE_SURCHARGE);
+    expect(fuelDutyLink).toHaveAttribute('href', BANNER_LINKS.FUEL_DUTY_FREEZE);
+    expect(obrLink).toHaveAttribute('href', BANNER_LINKS.OBR_FORECAST);
   });
 
   test('given analysis card links then open in new tab', () => {
     // Given
-    vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
+    vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
 
     // When
     render(<AutumnBudgetBanner />);
@@ -174,39 +176,5 @@ describe('AutumnBudgetBanner', () => {
     // Then
     expect(screen.getByText('The Autumn Budget 2025 has been released')).toBeInTheDocument();
     expect(screen.queryByText('The Autumn Budget 2025 is coming soon')).not.toBeInTheDocument();
-  });
-
-  test('given after budget date then dashboard box displays', () => {
-    // Given
-    vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
-
-    // When
-    render(<AutumnBudgetBanner />);
-
-    // Then
-    expect(screen.getByText(DASHBOARD_BOX_TEXT.BUTTON_TEXT)).toBeInTheDocument();
-  });
-
-  test('given before budget date then dashboard box does not display', () => {
-    // Given
-    vi.setSystemTime(MOCK_DATE_BEFORE_BUDGET);
-
-    // When
-    render(<AutumnBudgetBanner />);
-
-    // Then
-    expect(screen.queryByText(DASHBOARD_BOX_TEXT.BUTTON_TEXT)).not.toBeInTheDocument();
-  });
-
-  test('given dashboard box then links to correct URL', () => {
-    // Given
-    vi.setSystemTime(MOCK_DATE_AFTER_BUDGET);
-
-    // When
-    render(<AutumnBudgetBanner />);
-
-    // Then
-    const dashboardLink = screen.getByText(DASHBOARD_BOX_TEXT.BUTTON_TEXT).closest('a');
-    expect(dashboardLink).toHaveAttribute('href', BANNER_LINKS.AUTUMN_BUDGET_DASHBOARD);
   });
 });
