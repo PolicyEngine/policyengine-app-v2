@@ -280,7 +280,7 @@ export default function AutumnBudgetBanner() {
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  No change announced
+                  Removal announced for 2026
                 </Text>
               </Box>
             </Card>
