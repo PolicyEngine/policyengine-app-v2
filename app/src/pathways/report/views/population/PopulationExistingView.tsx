@@ -326,7 +326,7 @@ export default function PopulationExistingView({
   const cardListItems = [...householdCardItems, ...geographicCardItems];
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };

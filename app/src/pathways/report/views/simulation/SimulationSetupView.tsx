@@ -153,26 +153,26 @@ export default function SimulationSetupView({
   const getPrimaryAction = () => {
     if (selectedCard === 'population' && !isPopulationConfigured(population)) {
       return {
-        label: 'Configure household(s) ',
+        label: 'Configure household(s)',
         onClick: handleNext,
         isDisabled: false,
       };
     } else if (selectedCard === 'policy' && !isPolicyConfigured(policy)) {
       return {
-        label: 'Configure policy ',
+        label: 'Configure policy',
         onClick: handleNext,
         isDisabled: false,
       };
     } else if (canProceed) {
       return {
-        label: 'Next ',
+        label: 'Next',
         onClick: handleNext,
         isDisabled: false,
       };
     }
     // Default disabled state - show uppermost option (household(s))
     return {
-      label: 'Configure household(s) ',
+      label: 'Configure household(s)',
       onClick: handleNext,
       isDisabled: true,
     };
