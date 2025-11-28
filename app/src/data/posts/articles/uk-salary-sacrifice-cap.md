@@ -86,15 +86,15 @@ The impact is progressive: higher earners experience larger reductions while low
 
 ## Appendix: Data construction methodology
 
-The Family Resources Survey (FRS) does not directly identify which pension contributions are made via salary sacrifice arrangements. To construct this variable, we use the following methodology:
+The Family Resources Survey (FRS) asks a subset of respondents whether their pension contributions are made through salary sacrifice (the SALSAC question). In FRS 2023-24, approximately 4,000 respondents were asked this question, while around 13,000 were not asked. To construct a complete picture of salary sacrifice usage, we use the following methodology:
 
 ### Imputation approach
 
-1. **Identify salary sacrifice respondents**: The FRS asks a subset of respondents whether their pension contributions are made through salary sacrifice. We use these responses as a training set.
+1. **Training data**: We use the ~4,000 FRS respondents who were asked about salary sacrifice as training data. This includes both participants (with reported contribution amounts) and non-participants (with zero contributions).
 
-2. **Predict salary sacrifice usage**: Using the subset of respondents who answered the salary sacrifice question, we train a model to predict salary sacrifice usage based on observable characteristics including employment income, pension contribution amounts, employer type, and other demographic factors.
+2. **Predict salary sacrifice amounts**: Using this training set, we fit a quantile random forest model to predict salary sacrifice pension contribution amounts based on age and employment income.
 
-3. **Impute for non-respondents**: We apply this model to impute salary sacrifice status for respondents who were not asked the question, generating a complete picture of salary sacrifice usage across the population.
+3. **Impute for non-respondents**: We apply this model to impute salary sacrifice amounts for respondents who were not asked the question, generating a complete picture of salary sacrifice usage across the population.
 
 ### Calibration
 
