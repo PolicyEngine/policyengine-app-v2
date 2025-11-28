@@ -1,16 +1,6 @@
 In the Autumn Budget 2025, the Government announced a freeze on all regulated rail fares in England for one year starting from March 2026. This is the first freeze on regulated rail fares in 30 years. The freeze applies to season tickets, peak return fares for commuters, and off-peak returns between major cities, holding these fares at their current levels until March 2027.
 
-### Methodology
-
-To estimate the reform impact, we compare the freeze against a baseline where regulated fares increase by [5.8%](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate) in March 2026, as would occur under the existing [fare formula](https://www.gov.uk/government/publications/railways-bill/railways-bill-fares) (July 2025 [RPI of 4.8%](https://obr.uk/efo/economic-and-fiscal-outlook-march-2025/) plus 1%). The freeze prevents this increase, requiring additional government subsidy to compensate for foregone fare revenue.
-
-We calibrate our model to [HM Treasury cost estimates](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) and distribute the benefit to households proportionally based on their rail usage from the Family Resources Survey.
-
-In the following sections, we present the cost of the rail fares freeze and examine the distributional effects across income deciles.
-
-## Economic impacts
-
-### Revenue impact
+## Revenue impact
 
 Table 1 shows the cost of freezing fares rather than implementing the planned 5.8% increase. PolicyEngine estimates align closely with official HM Treasury projections.
 
@@ -19,11 +9,11 @@ Table 1 shows the cost of freezing fares rather than implementing the planned 5.
 | Source       | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
 | ------------ | ------- | ------- | ------- | ------- | ------- |
 | PolicyEngine | 0       | -145    | -155    | -160    | -165    |
-| [HM Treasury](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html)  | 0       | -145    | -150    | -155    | -160    |
+| [HM Treasury](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate)  | 0       | -145    | -150    | -155    | -160    |
 
 PolicyEngine estimates the freeze reduces revenue by £145 million in 2026-27, rising to £165 million by 2029-30 as baseline fare increases compound. This closely matches HM Treasury projections of £145 million in 2026-27, rising to £160 million by 2029-30.
 
-### Distributional impact
+## Distributional impact
 
 Figure 1 shows the average change in household net income by income decile from the rail fares freeze in 2026-27. The distributional pattern reflects how rail usage varies across the income distribution.
 
@@ -109,3 +99,35 @@ Figure 1 shows the average change in household net income by income decile from 
 ```
 
 In 2026-27, the average household benefit ranges from £1.76 per year for the highest decile to £17.58 for the eighth decile. The eighth decile sees the largest benefit, likely reflecting middle-to-upper-middle income commuters who rely heavily on rail travel. Lower and middle deciles see more modest benefits of £2-5 per household, while the top decile benefits least in absolute terms despite higher incomes.
+
+## Appendix: Methodology
+
+### Baseline scenario
+
+Without the freeze, regulated rail fares would have increased by [5.8%](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate) in March 2026 under the existing [fare formula](https://www.gov.uk/government/publications/railways-bill/railways-bill-fares), which sets annual fare increases at July RPI plus 1 percentage point. HM Treasury's passenger savings methodology document uses July 2025 RPI of 4.8%, yielding the 5.8% baseline increase. Subsequent years would follow the same formula, with fare increases compounding annually.
+
+### Fiscal cost estimation
+
+We calibrate our aggregate fiscal cost to [HM Treasury estimates](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate). The freeze requires additional government subsidy to compensate train operating companies for foregone fare revenue, estimated at £145 million in 2026-27 rising to £775 million cumulative by 2030-31. Costs rise in subsequent years as the gap between frozen fares and the counterfactual baseline widens with each year of foregone increases.
+
+### Household-level distribution
+
+To estimate distributional impacts, we use household rail expenditure data from the [Family Resources Survey](https://www.gov.uk/government/collections/family-resources-survey--2) (FRS). The FRS records annual spending on rail travel for each sampled household, which we use as a proxy for rail usage intensity.
+
+We distribute the aggregate Treasury cost estimate to households in proportion to their share of total weighted rail expenditure:
+
+$$\text{Household benefit}_i = \text{Total cost} \times \frac{\text{Rail spending}_i \times \text{Weight}_i}{\sum_j \text{Rail spending}_j \times \text{Weight}_j}$$
+
+This approach assumes the benefit of frozen fares accrues proportionally to existing rail usage patterns. Households that spend more on rail travel receive a larger absolute benefit from the freeze.
+
+### Limitations
+
+Our distributional estimates have several limitations:
+
+1. **Static behaviour**: We assume rail usage patterns remain unchanged. In practice, the freeze may induce additional rail travel, particularly among price-sensitive households.
+
+2. **Regulated fares only**: The freeze applies only to regulated fares (season tickets, some returns). Unregulated fares set by train operators may still increase.
+
+3. **Survey coverage**: The FRS may undercount very high rail spending (e.g., long-distance commuters with expensive season tickets) due to survey design and response patterns.
+
+4. **Geographic variation**: Benefits concentrate among households with access to rail services, primarily in urban areas and along commuter corridors.
