@@ -2,8 +2,10 @@
  * VariableSearchDropdown - Search input with dropdown results for adding variables
  */
 
+import { useMemo } from 'react';
 import { IconSearch } from '@tabler/icons-react';
-import { Badge, Box, Group, Stack, Text, TextInput } from '@mantine/core';
+import { Box, Group, Stack, Text, TextInput } from '@mantine/core';
+import { colors } from '@/designTokens';
 import { VariableInfo } from '@/utils/VariableResolver';
 
 export interface VariableSearchDropdownProps {
@@ -13,8 +15,8 @@ export interface VariableSearchDropdownProps {
   onFocusChange: (focused: boolean) => void;
   filteredVariables: VariableInfo[];
   onSelect: (variable: VariableInfo) => void;
-  /** Function to get badge info for a variable (label and whether to show it) */
-  getBadgeInfo?: (variable: VariableInfo) => { show: boolean; label: string } | null;
+  /** Function to get entity hint for a variable (e.g., "Person" or "Household") */
+  getEntityHint?: (variable: VariableInfo) => { show: boolean; label: string } | null;
   disabled?: boolean;
   placeholder?: string;
 }
@@ -26,10 +28,27 @@ export default function VariableSearchDropdown({
   onFocusChange,
   filteredVariables,
   onSelect,
-  getBadgeInfo,
+  getEntityHint,
   disabled = false,
   placeholder = 'Search for a variable...',
 }: VariableSearchDropdownProps) {
+  // Sort so matching-context variables appear first (could extract to arrayUtils if reused)
+  const sortedVariables = useMemo(() => {
+    if (!getEntityHint) {
+      return filteredVariables;
+    }
+    const matching: VariableInfo[] = [];
+    const different: VariableInfo[] = [];
+    for (const v of filteredVariables) {
+      if (getEntityHint(v)?.show) {
+        different.push(v);
+      } else {
+        matching.push(v);
+      }
+    }
+    return [...matching, ...different];
+  }, [filteredVariables, getEntityHint]);
+
   return (
     <Box>
       <TextInput
@@ -53,10 +72,10 @@ export default function VariableSearchDropdown({
             borderRadius: 'var(--mantine-radius-sm)',
           }}
         >
-          {filteredVariables.length > 0 ? (
+          {sortedVariables.length > 0 ? (
             <Stack gap={0}>
-              {filteredVariables.map((variable) => {
-                const badgeInfo = getBadgeInfo?.(variable);
+              {sortedVariables.map((variable) => {
+                const entityHint = getEntityHint?.(variable);
                 return (
                   <Box
                     key={variable.name}
@@ -64,15 +83,15 @@ export default function VariableSearchDropdown({
                     onMouseDown={() => onSelect(variable)}
                     style={{
                       cursor: 'pointer',
-                      borderBottom: '1px solid var(--mantine-color-default-border)',
+                      borderBottom: `1px solid ${colors.gray[300]}`,
                     }}
                   >
                     <Group gap="xs" justify="space-between">
                       <Text size="sm">{variable.label}</Text>
-                      {badgeInfo?.show && (
-                        <Badge size="xs" variant="light" color="gray">
-                          {badgeInfo.label}
-                        </Badge>
+                      {entityHint?.show && (
+                        <Text size="xs" c="dimmed" fs="italic">
+                          {entityHint.label}
+                        </Text>
                       )}
                     </Group>
                     {variable.documentation && (

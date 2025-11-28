@@ -50,7 +50,7 @@ export default function HouseholdBuilderView({
   if (!reportYear) {
     return (
       <PathwayView
-        title="Create Household"
+        title="Create household"
         content={
           <Stack align="center" gap="md" p="xl">
             <Text c="red" fw={600}>
@@ -214,7 +214,7 @@ export default function HouseholdBuilderView({
 
   return (
     <PathwayView
-      title="Build Your Household"
+      title="Build your household"
       content={content}
       primaryAction={primaryAction}
       backAction={onBack ? { onClick: onBack } : undefined}

@@ -5,7 +5,7 @@
  * Uses VariableResolver for entity-aware value getting/setting.
  */
 
-import { NumberInput, Select, Switch, TextInput } from '@mantine/core';
+import { Group, NumberInput, Select, Switch, Text, TextInput } from '@mantine/core';
 import { Household } from '@/types/ingredients/Household';
 import { getInputFormattingProps } from '@/utils/householdValues';
 import { getValue, setValue, VariableInfo } from '@/utils/VariableResolver';
@@ -44,15 +44,25 @@ export default function VariableInput({
 
   // Render based on valueType
   switch (variable.valueType) {
-    case 'bool':
+    // Note: Same pattern in ValueInputBox.tsx - extract to shared component if reused again
+    case 'bool': {
+      const isChecked = Boolean(currentValue);
       return (
-        <Switch
-          label={variable.label}
-          checked={Boolean(currentValue)}
-          onChange={(event) => handleChange(event.currentTarget.checked)}
-          disabled={disabled}
-        />
+        <Group gap="xs" justify="flex-start">
+          <Text size="sm" c={isChecked ? 'dimmed' : 'dark'} fw={isChecked ? 400 : 600}>
+            False
+          </Text>
+          <Switch
+            checked={isChecked}
+            onChange={(event) => handleChange(event.currentTarget.checked)}
+            disabled={disabled}
+          />
+          <Text size="sm" c={isChecked ? 'dark' : 'dimmed'} fw={isChecked ? 600 : 400}>
+            True
+          </Text>
+        </Group>
       );
+    }
 
     case 'Enum':
       if (variable.possibleValues && variable.possibleValues.length > 0) {

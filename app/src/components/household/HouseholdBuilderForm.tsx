@@ -12,7 +12,6 @@ import { useMemo, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
 import { spacing } from '@/designTokens';
-import { themeSpacing } from '@/styles/spacing';
 import { Household } from '@/types/ingredients/Household';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
@@ -262,7 +261,6 @@ export default function HouseholdBuilderForm({
             right: spacing.xl,
             maxWidth: 400,
             zIndex: 1000,
-            boxShadow: themeSpacing.shadows.lg,
           }}
         >
           {warningMessage}
@@ -274,7 +272,7 @@ export default function HouseholdBuilderForm({
         {/* Marital Status and Children - side by side */}
         <Group grow>
           <Select
-            label="Marital Status"
+            label="Marital status"
             value={maritalStatus}
             onChange={(val) => onMaritalStatusChange((val || 'single') as 'single' | 'married')}
             data={[
@@ -285,7 +283,7 @@ export default function HouseholdBuilderForm({
           />
 
           <Select
-            label="Number of Children"
+            label="Number of children"
             value={numChildren.toString()}
             onChange={(val) => onNumChildrenChange(parseInt(val || '0', 10))}
             data={[
@@ -340,6 +338,7 @@ export default function HouseholdBuilderForm({
                               entityName={person}
                               onChange={onChange}
                               disabled={disabled}
+                              showRemoveColumn
                             />
                           );
                         })}
@@ -374,22 +373,22 @@ export default function HouseholdBuilderForm({
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={getFilteredVariables(personSearchValue)}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
-                            getBadgeInfo={(variable) => {
-                              const { isPerson, label: entityLabel } = getVariableEntityDisplayInfo(
+                            getEntityHint={(variable) => {
+                              const { isPerson } = getVariableEntityDisplayInfo(
                                 variable.name,
                                 metadata
                               );
-                              return { show: !isPerson, label: entityLabel };
+                              return { show: !isPerson, label: 'Household' };
                             }}
                             disabled={disabled}
                           />
                         ) : (
                           <Button
-                            variant="subtle"
+                            variant="default"
                             size="compact-sm"
                             leftSection={<IconPlus size={14} />}
                             onClick={() => handleOpenPersonSearch(person)}
-                            styles={{ label: { fontStyle: 'italic' } }}
+                            style={{ alignSelf: 'flex-start' }}
                           >
                             Add variable to {getPersonDisplayName(person)}
                           </Button>
@@ -425,6 +424,7 @@ export default function HouseholdBuilderForm({
                     year={year}
                     onChange={onChange}
                     disabled={disabled}
+                    showRemoveColumn
                   />
                 );
               })}
@@ -458,19 +458,19 @@ export default function HouseholdBuilderForm({
                   onFocusChange={setIsHouseholdSearchFocused}
                   filteredVariables={getFilteredVariables(householdSearchValue)}
                   onSelect={handleHouseholdVariableSelect}
-                  getBadgeInfo={(variable) => {
+                  getEntityHint={(variable) => {
                     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
-                    return { show: isPerson, label: 'person' };
+                    return { show: isPerson, label: 'Person' };
                   }}
                   disabled={disabled}
                 />
               ) : (
                 <Button
-                  variant="subtle"
+                  variant="default"
                   size="compact-sm"
                   leftSection={<IconPlus size={14} />}
                   onClick={handleOpenHouseholdSearch}
-                  styles={{ label: { fontStyle: 'italic' } }}
+                  style={{ alignSelf: 'flex-start' }}
                 >
                   Add variable
                 </Button>

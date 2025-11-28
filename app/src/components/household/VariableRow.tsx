@@ -17,17 +17,26 @@ export interface VariableRowProps {
   onChange: (household: Household) => void;
   onRemove?: () => void;
   disabled?: boolean;
+  /** Reserve space for remove button column (for alignment with removable rows) */
+  showRemoveColumn?: boolean;
 }
 
 /**
- * Capitalize label for display
+ * Sentence case label for display (capitalize first letter only)
  */
-function capitalizeLabel(label: string): string {
-  return label
-    .split(' ')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
+function sentenceCaseLabel(label: string): string {
+  if (!label) {
+    return '';
+  }
+
+  const firstLetter = label.charAt(0).toUpperCase();
+  const remainingText = label.slice(1).toLowerCase();
+
+  return firstLetter + remainingText;
 }
+
+// Fixed width for remove button column (matches ActionIcon size="sm")
+const REMOVE_COLUMN_WIDTH = 22;
 
 export default function VariableRow({
   variable,
@@ -38,15 +47,16 @@ export default function VariableRow({
   onChange,
   onRemove,
   disabled = false,
+  showRemoveColumn = false,
 }: VariableRowProps) {
+  const shouldShowColumn = onRemove || showRemoveColumn;
+
   return (
     <Group gap="xs" align="center" wrap="nowrap">
-      <Box style={{ minWidth: 180, maxWidth: 180 }}>
-        <Text size="sm" lineClamp={2}>
-          {capitalizeLabel(variable.label)}
-        </Text>
+      <Box style={{ flex: 1 }}>
+        <Text size="sm">{sentenceCaseLabel(variable.label)}</Text>
       </Box>
-      <Box style={{ flex: 1, minWidth: 120 }}>
+      <Box style={{ flex: 1 }}>
         <VariableInput
           variable={{ ...variable, label: '' }}
           household={household}
@@ -57,12 +67,22 @@ export default function VariableRow({
           disabled={disabled}
         />
       </Box>
-      {onRemove && (
-        <Tooltip label="Remove variable">
-          <ActionIcon size="lg" variant="default" onClick={onRemove} disabled={disabled}>
-            <IconX size={16} />
-          </ActionIcon>
-        </Tooltip>
+      {shouldShowColumn && (
+        <Box style={{ width: REMOVE_COLUMN_WIDTH }}>
+          {onRemove && (
+            <Tooltip label="Remove variable">
+              <ActionIcon
+                size="sm"
+                variant="subtle"
+                color="gray"
+                onClick={onRemove}
+                disabled={disabled}
+              >
+                <IconX size={16} />
+              </ActionIcon>
+            </Tooltip>
+          )}
+        </Box>
       )}
     </Group>
   );
