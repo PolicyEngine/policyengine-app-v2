@@ -20,6 +20,7 @@ This document describes the architecture for country ID management throughout th
 ```
 
 All country-specific routes are nested under the country ID parameter:
+
 - `/us/reports` - US reports page
 - `/uk/policies` - UK policies page
 - `/ca/simulations` - Canada simulations page
@@ -31,6 +32,7 @@ All country-specific routes are nested under the country ID parameter:
 The entry point for all country routes. Validates the country parameter and manages session-scoped state.
 
 **Responsibilities**:
+
 1. Validates `countryId` parameter against allowed countries
 2. Redirects to `/` if country is invalid
 3. Syncs valid country to `metadata.currentCountry` in Redux
@@ -38,6 +40,7 @@ The entry point for all country routes. Validates the country parameter and mana
 5. Renders child routes via `<Outlet />` if valid
 
 **Flow**:
+
 ```
 User navigates to /uk/reports
   ↓
@@ -61,6 +64,7 @@ Renders child routes
 A simple hook that reads the country ID directly from URL parameters.
 
 **Usage**:
+
 ```tsx
 function MyComponent() {
   const country = useCurrentCountry(); // Returns 'us', 'uk', etc.
@@ -70,6 +74,7 @@ function MyComponent() {
 ```
 
 **Implementation**:
+
 ```tsx
 export function useCurrentCountry() {
   const { countryId } = useParams<{ countryId: string }>();
@@ -79,6 +84,7 @@ export function useCurrentCountry() {
 ```
 
 **Key Points**:
+
 - Must be used within routes protected by CountryGuard
 - Reads directly from URL via `useParams()` - no Redux dependency
 - Throws error if used outside country routes
@@ -88,17 +94,20 @@ export function useCurrentCountry() {
 While the URL is the source of truth for components, Redux stores a copy for specific internal uses:
 
 **metadata.currentCountry**:
+
 - Set by CountryGuard via `setCurrentCountry()`
 - Used by:
   - `useFetchMetadata` to determine which country's metadata to load
   - `clearReport` thunk to set report.countryId
 
 **report.countryId**:
+
 - Set by `clearReport` thunk (reads from `metadata.currentCountry`)
 - Used for validation when submitting reports
 - Ensures reports are always tied to the correct country
 
 **Why not read from Redux?**
+
 - Components should read from URL for simplicity and reliability
 - Redux copy is for internal coordination only
 - Avoids sync issues and makes data flow clearer
@@ -110,12 +119,14 @@ While the URL is the source of truth for components, Redux stores a copy for spe
 All ingredient state is **session-scoped** to the current country. When the user navigates between countries, all state is cleared:
 
 **Cleared on Country Change**:
+
 - Reports (`report` reducer)
 - Policies (`policy` reducer)
 - Simulations (`simulations` reducer)
 - Populations (`population` reducer)
 
 **Example**:
+
 ```
 User at /us/reports with US policy + simulation
   ↓
@@ -152,16 +163,16 @@ Each reducer provides a clear action:
 
 ```typescript
 // Report
-clearReport() // Async thunk - also sets countryId
+clearReport(); // Async thunk - also sets countryId
 
 // Policy
-clearAllPolicies()
+clearAllPolicies();
 
 // Simulations
-clearAllSimulations()
+clearAllSimulations();
 
 // Populations
-clearAllPopulations()
+clearAllPopulations();
 ```
 
 ## Metadata Loading
@@ -171,20 +182,24 @@ clearAllPopulations()
 Two guards handle metadata loading:
 
 **MetadataGuard** (Blocking):
+
 - Blocks rendering until metadata loads
 - Shows loading/error pages
 - Used for routes that require metadata immediately (e.g., report-output)
 
 **MetadataLazyLoader** (Non-blocking):
+
 - Triggers metadata fetch but doesn't block rendering
 - Used for routes that benefit from metadata but can render without it (e.g., reports, policies)
 
 **Both guards**:
+
 - Use `useCurrentCountry()` to read country from URL
 - Call `useFetchMetadata(countryId)` to trigger fetch
 - Smart caching prevents duplicate fetches
 
 **Flow**:
+
 ```
 User navigates to /uk/reports
   ↓
@@ -251,9 +266,7 @@ When adding new country-dependent features:
 ```tsx
 function MyComponent() {
   const country = useCurrentCountry();
-  const { data } = useQuery(['reports', country], () =>
-    fetchReports(country)
-  );
+  const { data } = useQuery(['reports', country], () => fetchReports(country));
 }
 ```
 
@@ -262,10 +275,8 @@ function MyComponent() {
 ```tsx
 function MyComponent() {
   // DON'T DO THIS - URL is source of truth
-  const country = useSelector(state => state.metadata.currentCountry);
-  const { data } = useQuery(['reports', country], () =>
-    fetchReports(country)
-  );
+  const country = useSelector((state) => state.metadata.currentCountry);
+  const { data } = useQuery(['reports', country], () => fetchReports(country));
 }
 ```
 
@@ -350,6 +361,7 @@ test('given country change then clears all state', async () => {
 ## Migration Notes
 
 Previous implementations may have:
+
 - Hardcoded `'us'` as default country
 - Used `country || 'us'` fallbacks throughout
 - Stored country in multiple Redux slices inconsistently
@@ -360,6 +372,7 @@ All of these patterns have been replaced with the URL-as-source-of-truth archite
 ## Related Files
 
 ### Core Implementation
+
 - `src/routing/guards/CountryGuard.tsx` - Entry point and state management
 - `src/hooks/useCurrentCountry.ts` - Hook to read country from URL
 - `src/reducers/reportReducer.ts` - Report state with clearReport thunk
@@ -368,10 +381,12 @@ All of these patterns have been replaced with the URL-as-source-of-truth archite
 - `src/routing/guards/MetadataLazyLoader.tsx` - Non-blocking metadata loader
 
 ### Tests
+
 - `src/tests/unit/routing/guards/CountryGuard.test.tsx` - CountryGuard validation tests
 - `src/tests/integration/countryNavigation.test.tsx` - Cross-country navigation tests
 - `src/tests/unit/hooks/useCurrentCountry.test.tsx` - Hook tests (if exists)
 
 ### API Layer
+
 - All hooks in `src/hooks/` that make API calls should accept country parameter
 - No hardcoded country IDs in API calls

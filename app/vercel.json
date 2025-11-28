@@ -1,3 +1,16 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/" }]
+  "rewrites": [
+    {
+      "source": "/:country(uk|us)/research/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Twitterbot|facebookexternalhit|LinkedInBot|Slackbot|Discordbot|TelegramBot|WhatsApp).*"
+        }
+      ],
+      "destination": "/api/og?path=/:country/research/:slug"
+    },
+    { "source": "/(.*)", "destination": "/" }
+  ]
 }

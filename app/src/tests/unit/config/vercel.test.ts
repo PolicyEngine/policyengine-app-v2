@@ -81,4 +81,60 @@ describe('vercel.json configuration', () => {
     // Then
     expect(exists).toBe(false);
   });
+
+  test('given vercel.json rewrites then has crawler routing rule for blog posts before SPA fallback', () => {
+    // Given - Social media crawlers (Twitter, Facebook, etc.) don't execute JavaScript,
+    // so they need to be served the OG API response with proper meta tags
+    const content = fs.readFileSync(vercelJsonPath, 'utf-8');
+    const config = JSON.parse(content);
+
+    // When - Find the crawler routing rule
+    const crawlerRewrite = config.rewrites.find(
+      (rule: {
+        source: string;
+        destination: string;
+        has?: Array<{ type: string; key: string; value: string }>;
+      }) =>
+        rule.has?.some(
+          (condition) =>
+            condition.type === 'header' &&
+            condition.key === 'user-agent' &&
+            condition.value.includes('Twitterbot')
+        )
+    );
+
+    // Then - Must have crawler routing rule
+    expect(crawlerRewrite).toBeDefined();
+    expect(crawlerRewrite.source).toContain('research');
+    expect(crawlerRewrite.destination).toContain('/api/og');
+
+    // And - Crawler rule must come BEFORE the SPA fallback (order matters in Vercel rewrites)
+    const crawlerIndex = config.rewrites.indexOf(crawlerRewrite);
+    const spaIndex = config.rewrites.findIndex(
+      (rule: { source: string; destination: string }) =>
+        rule.source === '/(.*)' && rule.destination === '/'
+    );
+    expect(crawlerIndex).toBeLessThan(spaIndex);
+  });
+
+  test('given crawler routing rule then includes all major social platforms', () => {
+    // Given
+    const content = fs.readFileSync(vercelJsonPath, 'utf-8');
+    const config = JSON.parse(content);
+    const crawlerRewrite = config.rewrites.find(
+      (rule: { has?: Array<{ type: string; key: string; value: string }> }) =>
+        rule.has?.some((condition) => condition.key === 'user-agent')
+    );
+
+    // When
+    const userAgentPattern = crawlerRewrite?.has?.find(
+      (condition: { key: string }) => condition.key === 'user-agent'
+    )?.value;
+
+    // Then - Must include major social media crawlers
+    expect(userAgentPattern).toContain('Twitterbot');
+    expect(userAgentPattern).toContain('facebookexternalhit');
+    expect(userAgentPattern).toContain('LinkedInBot');
+    expect(userAgentPattern).toContain('Slackbot');
+  });
 });
