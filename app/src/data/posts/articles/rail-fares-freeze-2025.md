@@ -6,10 +6,10 @@ Table 1 shows the cost of freezing fares rather than implementing the planned 5.
 
 **Table 1: Revenue impact of rail fares freeze (£ million)**
 
-| Source       | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
-| ------------ | ------- | ------- | ------- | ------- | ------- |
-| PolicyEngine | 0       | -145    | -155    | -160    | -165    |
-| [HM Treasury](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate)  | 0       | -145    | -150    | -155    | -160    |
+| Source       | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
+| ------------ | ------- | ------- | ------- | ------- |
+| PolicyEngine | -145    | -155    | -160    | -165    |
+| [HM Treasury](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate)  | -145    | -150    | -155    | -160    |
 
 PolicyEngine estimates the freeze reduces revenue by £145 million in 2026-27, rising to £165 million by 2029-30 as baseline fare increases compound. This closely matches HM Treasury projections of £145 million in 2026-27, rising to £160 million by 2029-30.
 
@@ -27,18 +27,18 @@ Figure 1 shows the average change in household net income by income decile from 
       "y": [3.19, 5.03, 2.80, 2.62, 3.10, 4.50, 2.41, 17.58, 2.55, 1.76],
       "type": "bar",
       "marker": {
-        "color": "#2C6496",
+        "color": "#319795",
         "line": {
           "width": 0
         }
       },
       "hovertemplate": "Decile %{x}<br>Change: £%{y:.2f}<extra></extra>",
-      "text": ["£3.19", "£5.03", "£2.80", "£2.62", "£3.10", "£4.50", "£2.41", "£17.58", "£2.55", "£1.76"],
+      "text": ["£3", "£5", "£3", "£3", "£3", "£5", "£2", "£18", "£3", "£2"],
       "textposition": "outside",
       "textfont": {
-        "family": "Roboto Serif",
+        "family": "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
         "size": 14,
-        "color": "#333"
+        "color": "#000000"
       }
     }
   ],
@@ -47,15 +47,15 @@ Figure 1 shows the average change in household net income by income decile from 
       "title": {
         "text": "Income decile",
         "font": {
-          "family": "Roboto Serif",
+          "family": "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
           "size": 14
         }
       },
       "tickfont": {
-        "family": "Roboto Serif"
+        "family": "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
       },
       "showgrid": true,
-      "gridcolor": "#e0e0e0",
+      "gridcolor": "#E2E8F0",
       "gridwidth": 1,
       "tickmode": "linear",
       "tick0": 1,
@@ -63,36 +63,36 @@ Figure 1 shows the average change in household net income by income decile from 
     },
     "yaxis": {
       "title": {
-        "text": "Average change in net income (£)",
+        "text": "Average change in net income",
         "font": {
-          "family": "Roboto Serif",
+          "family": "Roboto, -apple-system, BlinkMacSystemFont, sans-serif",
           "size": 14
         }
       },
       "tickfont": {
-        "family": "Roboto Serif"
+        "family": "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
       },
-      "tickformat": "£.2f",
+      "tickprefix": "£",
       "showgrid": true,
-      "gridcolor": "#e0e0e0",
+      "gridcolor": "#E2E8F0",
       "gridwidth": 1,
       "zeroline": true,
-      "zerolinecolor": "#333",
+      "zerolinecolor": "#000000",
       "zerolinewidth": 2,
       "range": [0, 20]
     },
     "height": 500,
     "margin": {
-      "l": 100,
+      "l": 80,
       "r": 40,
       "b": 80,
       "t": 40,
       "pad": 4
     },
-    "plot_bgcolor": "white",
-    "paper_bgcolor": "white",
+    "plot_bgcolor": "#FFFFFF",
+    "paper_bgcolor": "#FFFFFF",
     "font": {
-      "family": "Roboto Serif"
+      "family": "Roboto, -apple-system, BlinkMacSystemFont, sans-serif"
     }
   }
 }
@@ -114,9 +114,7 @@ We calibrate our aggregate fiscal cost to [HM Treasury estimates](https://www.go
 
 To estimate distributional impacts, we use household rail expenditure data from the [Family Resources Survey](https://www.gov.uk/government/collections/family-resources-survey--2) (FRS). The FRS records annual spending on rail travel for each sampled household, which we use as a proxy for rail usage intensity.
 
-We distribute the aggregate Treasury cost estimate to households in proportion to their share of total weighted rail expenditure:
-
-$$\text{Household benefit}_i = \text{Total cost} \times \frac{\text{Rail spending}_i \times \text{Weight}_i}{\sum_j \text{Rail spending}_j \times \text{Weight}_j}$$
+We distribute the aggregate Treasury cost estimate to households in proportion to their share of total weighted rail expenditure. Each household's benefit equals the total cost multiplied by their share of weighted rail spending across all households.
 
 This approach assumes the benefit of frozen fares accrues proportionally to existing rail usage patterns. Households that spend more on rail travel receive a larger absolute benefit from the freeze.
 
