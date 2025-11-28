@@ -1,11 +1,5 @@
-import {
-  IconCalendar,
-  IconChevronLeft,
-  IconClock,
-  IconPencil,
-  IconStack2,
-} from '@tabler/icons-react';
-import { ActionIcon, Anchor, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { IconCalendar, IconClock, IconPencil, IconStack2 } from '@tabler/icons-react';
+import { ActionIcon, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
