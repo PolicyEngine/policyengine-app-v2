@@ -19,8 +19,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import Plot from 'react-plotly.js';
+import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import type { MarkdownFormatterProps } from '@/types/blog';
 import {
   blogColors,
@@ -31,6 +33,9 @@ import {
   blogTypography,
 } from './blogStyles';
 import { useDisplayCategory } from './useDisplayCategory';
+
+// Import KaTeX CSS for math rendering
+import 'katex/dist/katex.min.css';
 
 // Import Google Fonts for Roboto Serif
 const fontLinkElement = document.createElement('link');
@@ -858,7 +863,11 @@ export function MarkdownFormatter({
   };
 
   return (
-    <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]} components={components}>
+    <ReactMarkdown
+      rehypePlugins={[rehypeRaw, rehypeKatex]}
+      remarkPlugins={[remarkGfm, remarkMath]}
+      components={components}
+    >
       {markdown}
     </ReactMarkdown>
   );
