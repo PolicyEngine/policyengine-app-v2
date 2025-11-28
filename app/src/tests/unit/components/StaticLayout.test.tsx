@@ -14,6 +14,10 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: vi.fn(() => 'us'),
+}));
+
 describe('StaticLayout', () => {
   test('given component renders then displays header navigation', () => {
     // When
@@ -21,7 +25,7 @@ describe('StaticLayout', () => {
 
     // Then
     expect(screen.getByText(EXPECTED_LAYOUT_TEXT.ABOUT)).toBeInTheDocument();
-    expect(screen.getByText(EXPECTED_LAYOUT_TEXT.DONATE)).toBeInTheDocument();
+    expect(screen.getAllByText(EXPECTED_LAYOUT_TEXT.DONATE).length).toBeGreaterThan(0);
   });
 
   test('given component renders then displays outlet content', () => {
@@ -32,26 +36,30 @@ describe('StaticLayout', () => {
     expect(screen.getByText(EXPECTED_LAYOUT_TEXT.PAGE_CONTENT)).toBeInTheDocument();
   });
 
-  test('given component renders then header appears before content', () => {
+  test('given component renders then displays footer', () => {
+    // When
+    renderWithCountry(<StaticLayout />, 'us');
+
+    // Then
+    expect(screen.getByText('Subscribe to PolicyEngine')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('Enter your email address')).toBeInTheDocument();
+  });
+
+  test('given component renders then footer appears after content', () => {
     // When
     const { container } = renderWithCountry(<StaticLayout />, 'us');
 
     // Then
-    const elements = container.querySelectorAll('*');
-    let headerIndex = -1;
-    let contentIndex = -1;
+    const elements = Array.from(container.querySelectorAll('*'));
+    const contentIndex = elements.findIndex(
+      (el) => el.textContent === EXPECTED_LAYOUT_TEXT.PAGE_CONTENT
+    );
+    const footerIndex = elements.findIndex((el) =>
+      el.textContent?.includes('Subscribe to PolicyEngine')
+    );
 
-    elements.forEach((el, index) => {
-      if (el.textContent?.includes(EXPECTED_LAYOUT_TEXT.ABOUT)) {
-        headerIndex = index;
-      }
-      if (el.textContent === EXPECTED_LAYOUT_TEXT.PAGE_CONTENT) {
-        contentIndex = index;
-      }
-    });
-
-    expect(headerIndex).toBeGreaterThan(-1);
     expect(contentIndex).toBeGreaterThan(-1);
-    expect(headerIndex).toBeLessThan(contentIndex);
+    expect(footerIndex).toBeGreaterThan(-1);
+    expect(footerIndex).toBeGreaterThan(contentIndex);
   });
 });

@@ -4,7 +4,9 @@ import type { UserHouseholdMetadataWithAssociation } from '@/hooks/useUserHouseh
 import {
   createMockSimulation,
   mockGeographicData,
+  mockGeographicDataWithNumericMismatch,
   mockHouseholdData,
+  mockHouseholdDataWithNumericMismatch,
   TEST_GEOGRAPHY_IDS,
   TEST_HOUSEHOLD_IDS,
 } from '@/tests/fixtures/utils/populationMatchingMocks';
@@ -144,6 +146,57 @@ describe('populationMatching', () => {
 
       // Then
       expect(result).toBeNull();
+    });
+
+    it('given household simulation with numeric populationId matching string household id then returns matched household', () => {
+      // Given - Simulate the type mismatch that occurred in production
+      // API sometimes returns populationId as number, but household.id is always string
+      const simulation = createMockSimulation({
+        populationType: 'household',
+        populationId: TEST_HOUSEHOLD_IDS.NUMERIC_VALUE as any, // Force number type to simulate the bug
+      });
+
+      // When
+      const result = findMatchingPopulation(
+        simulation,
+        mockHouseholdDataWithNumericMismatch,
+        mockGeographicData
+      );
+
+      // Then - Should match despite type mismatch (number vs string)
+      expect(result).toBeDefined();
+      expect(result).not.toBeNull();
+      if (result) {
+        expect('household' in result).toBe(true);
+        expect((result as UserHouseholdMetadataWithAssociation).household?.id).toBe(
+          TEST_HOUSEHOLD_IDS.NUMERIC_STRING_MATCH
+        );
+      }
+    });
+
+    it('given geography simulation with numeric populationId matching string geography id then returns matched geography', () => {
+      // Given - Simulate the type mismatch for geography
+      const simulation = createMockSimulation({
+        populationType: 'geography',
+        populationId: TEST_GEOGRAPHY_IDS.NUMERIC_VALUE as any, // Force number type
+      });
+
+      // When
+      const result = findMatchingPopulation(
+        simulation,
+        mockHouseholdData,
+        mockGeographicDataWithNumericMismatch
+      );
+
+      // Then - Should match despite type mismatch (number vs string)
+      expect(result).toBeDefined();
+      expect(result).not.toBeNull();
+      if (result) {
+        expect('geography' in result).toBe(true);
+        expect((result as UserGeographicMetadataWithAssociation).geography?.id).toBe(
+          TEST_GEOGRAPHY_IDS.NUMERIC_STRING_MATCH
+        );
+      }
     });
   });
 });

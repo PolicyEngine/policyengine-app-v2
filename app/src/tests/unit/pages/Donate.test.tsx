@@ -17,7 +17,7 @@ describe('DonatePage', () => {
 
     // Then
     expect(
-      screen.getByText(/your donation to policyengine isn't just a gift/i)
+      screen.getByText(/policyengine is a nonprofit building free, open-source tools/i)
     ).toBeInTheDocument();
   });
 
@@ -36,10 +36,10 @@ describe('DonatePage', () => {
     render(<DonatePage />);
 
     // Then
-    expect(screen.getByText(/comprehensive policy analysis/i)).toBeInTheDocument();
-    expect(screen.getByText(/streamlined benefit access/i)).toBeInTheDocument();
+    expect(screen.getByText(/policy analysis/i)).toBeInTheDocument();
+    expect(screen.getByText(/benefit access/i)).toBeInTheDocument();
     expect(screen.getByText(/open-source development/i)).toBeInTheDocument();
-    expect(screen.getByText(/global impact/i)).toBeInTheDocument();
+    expect(screen.getByText(/global reach/i)).toBeInTheDocument();
   });
 
   test('given page loads then how to donate section is rendered', () => {
@@ -55,29 +55,17 @@ describe('DonatePage', () => {
     render(<DonatePage />);
 
     // Then
-    const donateButton = screen.getByRole('link', { name: /support transparent/i });
+    const donateButton = screen.getByRole('link', { name: /donate now/i });
     expect(donateButton).toBeInTheDocument();
     expect(donateButton).toHaveAttribute('href', 'https://opencollective.com/policyengine');
   });
 
-  test('given page loads then contact email link is present', () => {
+  test('given page loads then PSL Foundation is mentioned', () => {
     // Given / When
     render(<DonatePage />);
 
     // Then
-    const emailLink = screen.getByRole('link', { name: /hello@policyengine.org/i });
-    expect(emailLink).toBeInTheDocument();
-    expect(emailLink).toHaveAttribute('href', 'mailto:hello@policyengine.org');
-  });
-
-  test('given page loads then PSL Foundation caption is displayed', () => {
-    // Given / When
-    render(<DonatePage />);
-
-    // Then
-    expect(
-      screen.getByText(/donate on open collective through our fiscal sponsor/i)
-    ).toBeInTheDocument();
+    expect(screen.getByText(/fiscal sponsor, the psl foundation/i)).toBeInTheDocument();
   });
 
   test('given page loads then tax deductibility information is shown', () => {

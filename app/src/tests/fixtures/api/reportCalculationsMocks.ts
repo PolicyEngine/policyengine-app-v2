@@ -31,6 +31,7 @@ export const mockHouseholdMeta = (overrides?: Partial<CalculationMeta>): Calcula
     reform: TEST_POLICY_IDS.POLICY_2,
   },
   populationId: TEST_POPULATION_IDS.HOUSEHOLD_123,
+  year: '2024',
   ...overrides,
 });
 
@@ -43,6 +44,7 @@ export const mockEconomyMeta = (overrides?: Partial<CalculationMeta>): Calculati
   },
   populationId: TEST_POPULATION_IDS.US,
   region: TEST_REGIONS.ENHANCED_CPS,
+  year: '2024',
   ...overrides,
 });
 

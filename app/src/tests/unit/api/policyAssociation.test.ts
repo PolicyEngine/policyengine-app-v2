@@ -171,6 +171,34 @@ describe('ApiPolicyStore', () => {
       );
     });
   });
+
+  describe('update', () => {
+    it('given update called then throws not supported error', async () => {
+      // Given & When & Then
+      await expect(store.update('sup-abc123', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
+    });
+
+    it('given update called then logs warning', async () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      try {
+        await store.update('sup-abc123', { label: 'Updated Label' });
+      } catch {
+        // Expected to throw
+      }
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('API endpoint not yet implemented')
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
 });
 
 describe('LocalStoragePolicyStore', () => {
@@ -297,6 +325,83 @@ describe('LocalStoragePolicyStore', () => {
 
       // Then
       expect(result).toBeNull();
+    });
+  });
+
+  describe('update', () => {
+    it('given existing policy then update succeeds and returns updated policy', async () => {
+      // Given
+      const created = await store.create(mockPolicyInput1);
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.id).toBe(created.id);
+      expect(result.policyId).toBe(mockPolicyInput1.policyId);
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    it('given nonexistent policy then update throws error', async () => {
+      // Given - no policy created
+
+      // When & Then
+      await expect(store.update('sup-nonexistent', { label: 'Updated Label' })).rejects.toThrow(
+        'UserPolicy with id sup-nonexistent not found'
+      );
+    });
+
+    it('given existing policy then updatedAt timestamp is set', async () => {
+      // Given
+      const created = await store.create(mockPolicyInput1);
+      const beforeUpdate = new Date().toISOString();
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.updatedAt).toBeDefined();
+      expect(result.updatedAt! >= beforeUpdate).toBe(true);
+    });
+
+    it('given existing policy then update persists to localStorage', async () => {
+      // Given
+      const created = await store.create(mockPolicyInput1);
+
+      // When
+      await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      const persisted = await store.findById(mockPolicyInput1.userId, mockPolicyInput1.policyId);
+      expect(persisted?.label).toBe('Updated Label');
+    });
+
+    it('given multiple policies then updates correct one by ID', async () => {
+      // Given
+      const created1 = await store.create(mockPolicyInput1);
+      await store.create(mockPolicyInput2);
+
+      // When
+      await store.update(created1.id!, { label: 'Updated Label' });
+
+      // Then
+      const updated = await store.findById(mockPolicyInput1.userId, mockPolicyInput1.policyId);
+      const unchanged = await store.findById(mockPolicyInput2.userId, mockPolicyInput2.policyId);
+      expect(updated?.label).toBe('Updated Label');
+      expect(unchanged?.label).toBe(mockPolicyInput2.label);
+    });
+
+    it('given update with partial data then only specified fields are updated', async () => {
+      // Given
+      const created = await store.create(mockPolicyInput1);
+
+      // When
+      const result = await store.update(created.id!, { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.countryId).toBe(mockPolicyInput1.countryId); // unchanged
     });
   });
 

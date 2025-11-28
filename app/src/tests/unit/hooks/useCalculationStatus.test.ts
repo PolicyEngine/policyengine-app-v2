@@ -50,7 +50,6 @@ describe('useCalculationStatus', () => {
         progress: 45,
         message: 'Processing...',
         queuePosition: 3,
-        estimatedTimeRemaining: 30000,
       });
 
       queryClient.setQueryData(
@@ -71,7 +70,6 @@ describe('useCalculationStatus', () => {
         expect(result.current.isPending).toBe(true);
         // Server data is available even if not displayed
         expect(result.current.queuePosition).toBe(3);
-        expect(result.current.estimatedTimeRemaining).toBe(30000);
         // Progress is present (may be synthetic or server)
         expect(result.current.progress).toBeGreaterThan(0);
       });

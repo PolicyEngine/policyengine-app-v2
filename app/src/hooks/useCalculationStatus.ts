@@ -111,7 +111,6 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
   // Generate synthetic progress
   const synthetic = useSyntheticProgress(needsSyntheticProgress, calcType, {
     queuePosition: status?.queuePosition,
-    estimatedTimeRemaining: status?.estimatedTimeRemaining,
   });
 
   const currentStatus = status?.status || 'initializing';
@@ -132,7 +131,6 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
 
     // Keep server data available
     queuePosition: status?.queuePosition,
-    estimatedTimeRemaining: status?.estimatedTimeRemaining,
     result: status?.result,
     error: status?.error,
     metadata: status?.metadata,

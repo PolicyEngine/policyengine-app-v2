@@ -192,21 +192,6 @@ export default function IngredientReadView({
           </>
         )}
       </Paper>
-
-      {/* Pagination */}
-      {!isLoading && !isError && data.length > 0 && (
-        <Flex justify="space-between" align="center" mt={spacing.lg}>
-          <Button variant="subtle" size="sm" disabled>
-            Previous
-          </Button>
-          <Text size="sm" c={colors.text.secondary}>
-            Page 1 of 1
-          </Text>
-          <Button variant="subtle" size="sm" disabled>
-            Next
-          </Button>
-        </Flex>
-      )}
     </Box>
   );
 }

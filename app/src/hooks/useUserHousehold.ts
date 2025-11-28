@@ -86,30 +86,43 @@ export const useCreateHouseholdAssociation = () => {
   });
 };
 
-// Not yet implemented, but keeping for future use
-/*
-export const useUpdateAssociation = () => {
+export const useUpdateHouseholdAssociation = () => {
   const store = useUserHouseholdStore();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ userId, householdId, updates }: {
-      userId: string;
-      householdId: string;
-      updates: Partial<UserHousehold>;
-    }) => store.update(userId, householdId, updates),
+    mutationFn: ({
+      userHouseholdId,
+      updates,
+    }: {
+      userHouseholdId: string;
+      updates: Partial<UserHouseholdPopulation>;
+    }) => store.update(userHouseholdId, updates),
+
     onSuccess: (updatedAssociation) => {
-      queryClient.invalidateQueries({ queryKey: associationKeys.byUser(updatedAssociation.userId) });
-      queryClient.invalidateQueries({ queryKey: associationKeys.byHousehold(updatedAssociation.householdId) });
-      
+      // Invalidate all related queries to trigger refetch
+      queryClient.invalidateQueries({
+        queryKey: householdAssociationKeys.byUser(
+          updatedAssociation.userId,
+          updatedAssociation.countryId
+        ),
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: householdAssociationKeys.byHousehold(updatedAssociation.householdId),
+      });
+
+      // Optimistically update caches
       queryClient.setQueryData(
-        associationKeys.specific(updatedAssociation.userId, updatedAssociation.householdId),
+        householdAssociationKeys.specific(
+          updatedAssociation.userId,
+          updatedAssociation.householdId
+        ),
         updatedAssociation
       );
     },
   });
 };
-*/
 
 // Not yet implemented, but keeping for future use
 /*
@@ -193,13 +206,17 @@ export const useUserHouseholds = (userId: string) => {
   const householdsWithAssociations: UserHouseholdMetadataWithAssociation[] | undefined =
     associations
       ?.filter((association) => association.householdId)
-      .map((association, index) => ({
-        association,
-        household: householdQueries[index]?.data,
-        isLoading: householdQueries[index]?.isLoading ?? false,
-        error: householdQueries[index]?.error ?? null,
-        isError: !!householdQueries[index]?.error,
-      }));
+      .map((association, index) => {
+        const queryResult = householdQueries[index];
+
+        return {
+          association,
+          household: queryResult?.data,
+          isLoading: queryResult?.isLoading ?? false,
+          error: queryResult?.error ?? null,
+          isError: !!queryResult?.error,
+        };
+      });
 
   return {
     data: householdsWithAssociations,

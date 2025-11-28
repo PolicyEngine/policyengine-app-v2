@@ -1,11 +1,9 @@
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
-import FlowRouter from './components/FlowRouter';
-import Layout from './components/Layout';
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import PathwayLayout from './components/PathwayLayout';
+import StandardLayout from './components/StandardLayout';
 import StaticLayout from './components/StaticLayout';
-import { PolicyCreationFlow } from './flows/policyCreationFlow';
-import { PopulationCreationFlow } from './flows/populationCreationFlow';
-import { ReportCreationFlow } from './flows/reportCreationFlow';
-import { SimulationCreationFlow } from './flows/simulationCreationFlow';
+import AppPage from './pages/AppPage';
+import BlogPage from './pages/Blog.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
 import HomePage from './pages/Home.page';
@@ -14,10 +12,16 @@ import PopulationsPage from './pages/Populations.page';
 import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
+import ResearchPage from './pages/Research.page';
 import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
+import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
+import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
+import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
+import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -39,7 +43,11 @@ const router = createBrowserRouter(
           element: <MetadataGuard />,
           children: [
             {
-              element: <Layout />,
+              element: (
+                <StandardLayout>
+                  <Outlet />
+                </StandardLayout>
+              ),
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
@@ -53,8 +61,13 @@ const router = createBrowserRouter(
         {
           element: <MetadataLazyLoader />,
           children: [
+            // Regular routes with standard layout
             {
-              element: <Layout />,
+              element: (
+                <StandardLayout>
+                  <Outlet />
+                </StandardLayout>
+              ),
               children: [
                 {
                   path: 'dashboard',
@@ -66,32 +79,16 @@ const router = createBrowserRouter(
                   element: <ReportsPage />,
                 },
                 {
-                  path: 'reports/create',
-                  element: <FlowRouter flow={ReportCreationFlow} returnPath="reports" />,
-                },
-                {
                   path: 'simulations',
                   element: <SimulationsPage />,
-                },
-                {
-                  path: 'simulations/create',
-                  element: <FlowRouter flow={SimulationCreationFlow} returnPath="simulations" />,
                 },
                 {
                   path: 'households',
                   element: <PopulationsPage />,
                 },
                 {
-                  path: 'households/create',
-                  element: <FlowRouter flow={PopulationCreationFlow} returnPath="households" />,
-                },
-                {
                   path: 'policies',
                   element: <PoliciesPage />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <FlowRouter flow={PolicyCreationFlow} returnPath="policies" />,
                 },
                 {
                   path: 'account',
@@ -99,15 +96,27 @@ const router = createBrowserRouter(
                 },
               ],
             },
-          ],
-        },
-        // Routes that don't need metadata at all (no guard)
-        {
-          element: <Layout />,
-          children: [
+            // Pathway routes that manage their own layouts
             {
-              path: 'configurations',
-              element: <div>Configurations page</div>,
+              element: <PathwayLayout />,
+              children: [
+                {
+                  path: 'reports/create',
+                  element: <ReportPathwayWrapper />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create',
+                  element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <PolicyPathwayWrapper />,
+                },
+              ],
             },
           ],
         },
@@ -146,6 +155,38 @@ const router = createBrowserRouter(
             {
               path: 'support',
               element: <div>Support page</div>,
+            },
+            {
+              path: 'research',
+              element: <ResearchPage />,
+            },
+            {
+              path: 'research/:slug',
+              element: <BlogPage />,
+            },
+          ],
+        },
+        // Interactive app routes - use StaticLayout with CountryAppGuard
+        {
+          element: <CountryAppGuard />,
+          children: [
+            {
+              element: <StaticLayout />,
+              children: [
+                {
+                  path: ':slug',
+                  element: <AppPage />,
+                },
+              ],
+            },
+          ],
+        },
+        // Legacy routes - redirect old blog URLs to new research URLs
+        {
+          children: [
+            {
+              path: 'blog/:postName',
+              element: <Navigate to="research/:postName" replace />,
             },
           ],
         },

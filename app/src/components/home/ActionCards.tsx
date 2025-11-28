@@ -25,7 +25,7 @@ export default function ActionCards() {
           }}
         >
           <Text fw={typography.fontWeight.semibold} c={colors.primary[500]} size="xl">
-            Start building
+            Enter PolicyEngine
           </Text>
         </Card>
       </Center>

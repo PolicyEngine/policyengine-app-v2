@@ -176,6 +176,34 @@ describe('ApiGeographicStore', () => {
       );
     });
   });
+
+  describe('update', () => {
+    it('given update called then throws not supported error', async () => {
+      // Given & When & Then
+      await expect(store.update('user-123', 'geo-456', { label: 'Updated Label' })).rejects.toThrow(
+        'Please ensure you are using localStorage mode'
+      );
+    });
+
+    it('given update called then logs warning', async () => {
+      // Given
+      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // When
+      try {
+        await store.update('user-123', 'geo-456', { label: 'Updated Label' });
+      } catch {
+        // Expected to throw
+      }
+
+      // Then
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('API endpoint not yet implemented')
+      );
+
+      consoleWarnSpy.mockRestore();
+    });
+  });
 });
 
 describe('LocalStorageGeographicStore', () => {
@@ -255,14 +283,17 @@ describe('LocalStorageGeographicStore', () => {
       expect(result.createdAt).toBeDefined();
     });
 
-    it('given duplicate population then throws error', async () => {
+    it('given duplicate population then allows creation', async () => {
       // Given
       await store.create(mockPopulation1);
 
-      // When/Then
-      await expect(store.create(mockPopulation1)).rejects.toThrow(
-        'Geographic population already exists'
-      );
+      // When
+      const result = await store.create(mockPopulation1);
+
+      // Then - Implementation allows duplicates for multiple entries of same geography
+      expect(result).toEqual(mockPopulation1);
+      const allPopulations = await store.findByUser('user-123');
+      expect(allPopulations).toHaveLength(2);
     });
   });
 
@@ -312,6 +343,83 @@ describe('LocalStorageGeographicStore', () => {
 
       // Then
       expect(result).toBeNull();
+    });
+  });
+
+  describe('update', () => {
+    it('given existing geography then update succeeds and returns updated geography', async () => {
+      // Given
+      await store.create(mockPopulation1);
+
+      // When
+      const result = await store.update('user-123', 'geo-456', { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.userId).toBe('user-123');
+      expect(result.geographyId).toBe('geo-456');
+      expect(result.updatedAt).toBeDefined();
+    });
+
+    it('given nonexistent geography then update throws error', async () => {
+      // Given - no geography created
+
+      // When & Then
+      await expect(
+        store.update('user-123', 'nonexistent', { label: 'Updated Label' })
+      ).rejects.toThrow('UserGeography with userId user-123 and geographyId nonexistent not found');
+    });
+
+    it('given existing geography then updatedAt timestamp is set', async () => {
+      // Given
+      await store.create(mockPopulation1);
+      const beforeUpdate = new Date().toISOString();
+
+      // When
+      const result = await store.update('user-123', 'geo-456', { label: 'Updated Label' });
+
+      // Then
+      expect(result.updatedAt).toBeDefined();
+      expect(result.updatedAt! >= beforeUpdate).toBe(true);
+    });
+
+    it('given existing geography then update persists to localStorage', async () => {
+      // Given
+      await store.create(mockPopulation1);
+
+      // When
+      await store.update('user-123', 'geo-456', { label: 'Updated Label' });
+
+      // Then
+      const persisted = await store.findById('user-123', 'geo-456');
+      expect(persisted?.label).toBe('Updated Label');
+    });
+
+    it('given multiple geographies then updates correct one by composite key', async () => {
+      // Given
+      await store.create(mockPopulation1);
+      await store.create(mockPopulation2);
+
+      // When
+      await store.update('user-123', 'geo-456', { label: 'Updated Label' });
+
+      // Then
+      const updated = await store.findById('user-123', 'geo-456');
+      const unchanged = await store.findById('user-123', 'geo-789');
+      expect(updated?.label).toBe('Updated Label');
+      expect(unchanged?.label).toBe('Test Geography 2');
+    });
+
+    it('given update with partial data then only specified fields are updated', async () => {
+      // Given
+      await store.create(mockPopulation1);
+
+      // When
+      const result = await store.update('user-123', 'geo-456', { label: 'Updated Label' });
+
+      // Then
+      expect(result.label).toBe('Updated Label');
+      expect(result.scope).toBe('subnational'); // unchanged
     });
   });
 

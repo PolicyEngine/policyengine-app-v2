@@ -1,5 +1,11 @@
-import { IconClock, IconStack2 } from '@tabler/icons-react';
-import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import {
+  IconCalendar,
+  IconChevronLeft,
+  IconClock,
+  IconPencil,
+  IconStack2,
+} from '@tabler/icons-react';
+import { ActionIcon, Anchor, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
@@ -9,14 +15,12 @@ import { ReportSidebar } from './ReportSidebar';
 interface ReportOutputLayoutProps {
   reportId: string;
   reportLabel?: string;
+  reportYear?: string;
   timestamp?: string;
   tabs: Array<{ value: string; label: string }>;
   activeTab: string;
   onTabChange: (tabValue: string) => void;
-  // TODO: Re-enable when functionality is implemented
-  // onRunAgain?: () => void;
-  // onShare?: () => void;
-  // onEditName?: () => void;
+  onEditName?: () => void;
   showSidebar?: boolean;
   outputType?: 'household' | 'societyWide';
   activeView?: string;
@@ -38,14 +42,12 @@ interface ReportOutputLayoutProps {
 export default function ReportOutputLayout({
   reportId,
   reportLabel,
+  reportYear,
   timestamp = 'Ran today at 05:23:41',
   tabs,
   activeTab,
   onTabChange,
-  // TODO: Re-enable when functionality is implemented
-  // onRunAgain,
-  // onShare,
-  // onEditName,
+  onEditName,
   showSidebar = false,
   outputType = 'societyWide',
   activeView = '',
@@ -70,56 +72,40 @@ export default function ReportOutputLayout({
 
         {/* Header Section */}
         <Box>
-          {/* Title row with actions */}
-          <Group justify="space-between" align="flex-start" mb={spacing.xs}>
-            <Group gap={spacing.xs} align="center">
-              <Title
-                order={1}
-                variant="colored"
-                fw={typography.fontWeight.semibold}
-                fz={typography.fontSize['3xl']}
-              >
-                {reportLabel || reportId}
-              </Title>
-              {/* TODO: Re-enable edit name button once functionality is implemented */}
-              {/* <ActionIcon
-                variant="subtle"
-                color="gray"
-                size="lg"
-                aria-label="Edit report name"
-                onClick={onEditName}
-              >
-                <IconPencil size={18} />
-              </ActionIcon> */}
-            </Group>
-
-            {/* TODO: Re-enable "Run Again" and "Share" buttons once functionality is implemented */}
-            {/* <Group gap={spacing.sm}>
-              <Button
-                variant="filled"
-                leftSection={<IconRefresh size={18} />}
-                bg={colors.warning}
-                c={colors.black}
-                styles={{
-                  root: {
-                    '&:hover': {
-                      backgroundColor: colors.warning,
-                      filter: 'brightness(0.95)',
-                    },
-                  },
-                }}
-                onClick={onRunAgain}
-              >
-                Run Again
-              </Button>
-              <Button variant="default" leftSection={<IconShare size={18} />} onClick={onShare}>
-                Share
-              </Button>
-            </Group> */}
+          {/* Title row with edit action */}
+          <Group gap={spacing.xs} align="center" mb={spacing.xs}>
+            <Title
+              order={1}
+              variant="colored"
+              fw={typography.fontWeight.semibold}
+              fz={typography.fontSize['3xl']}
+            >
+              {reportLabel || reportId}
+            </Title>
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="lg"
+              aria-label="Edit report name"
+              onClick={onEditName}
+            >
+              <IconPencil size={18} />
+            </ActionIcon>
           </Group>
 
           {/* Timestamp and View All */}
           <Group gap={spacing.xs} align="center">
+            {reportYear && (
+              <>
+                <IconCalendar size={16} color={colors.text.secondary} />
+                <Text size="sm" c="dimmed">
+                  Year: {reportYear}
+                </Text>
+                <Text size="sm" c="dimmed">
+                  •
+                </Text>
+              </>
+            )}
             <IconClock size={16} color={colors.text.secondary} />
             <Text size="sm" c="dimmed">
               {timestamp}

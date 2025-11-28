@@ -138,8 +138,8 @@ describe('useSyntheticProgress', () => {
       );
     });
 
-    it('given queue position then shows queue message and minimal progress', () => {
-      // Given
+    it('given queue position then shows queue message with linear progress', () => {
+      // Given - queue position is now only used for messaging, not progress calculation
       const { result } = renderHook(() =>
         useSyntheticProgress(
           true,
@@ -155,20 +155,17 @@ describe('useSyntheticProgress', () => {
         vi.advanceTimersByTime(SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.TIME_1_SECOND);
       });
 
-      // Then
+      // Then - should show queue message but use linear time-based progress
       expect(result.current.message).toBe(
         SYNTHETIC_PROGRESS_TEST_CONSTANTS.QUEUE.EXPECTED_MESSAGE_POSITION_3
       );
-      expect(result.current.progress).toBeGreaterThan(
-        SYNTHETIC_PROGRESS_TEST_CONSTANTS.QUEUE.MIN_PROGRESS_IN_QUEUE
-      );
-      expect(result.current.progress).toBeLessThan(
-        SYNTHETIC_PROGRESS_TEST_CONSTANTS.QUEUE.MAX_PROGRESS_IN_QUEUE
-      );
+      // Progress should be very low (1 second / 6 minutes = 0.28%)
+      expect(result.current.progress).toBeGreaterThan(0);
+      expect(result.current.progress).toBeLessThan(1);
     });
 
-    it('given estimated time remaining then blends server and synthetic progress', () => {
-      // Given - server says 6 minutes remaining (50% complete)
+    it('given estimated time remaining then uses pure synthetic progress', () => {
+      // Given - server provides estimatedTimeRemaining but we ignore it for linear progress
       const { result } = renderHook(() =>
         useSyntheticProgress(
           true,
@@ -185,15 +182,9 @@ describe('useSyntheticProgress', () => {
         vi.advanceTimersByTime(SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.TIME_1_MINUTE);
       });
 
-      // Then - should blend server with synthetic (70/30 weight)
-      // Server: 50% (6 min remaining), Synthetic: ~8.33% (1 min elapsed)
-      // Blend: (50 * 0.7) + (8.33 * 0.3) = 37.5%
-      expect(result.current.progress).toBeGreaterThan(
-        SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.BLENDED_PROGRESS_MIN
-      );
-      expect(result.current.progress).toBeLessThan(
-        SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.BLENDED_PROGRESS_MAX
-      );
+      // Then - should use pure synthetic (not blended): 1 min / 6 min = ~16.67%
+      expect(result.current.progress).toBeGreaterThan(15);
+      expect(result.current.progress).toBeLessThan(18);
     });
 
     it('given progress under 10% then shows initializing message', () => {
@@ -212,21 +203,12 @@ describe('useSyntheticProgress', () => {
     });
 
     it('given progress 50-75% then shows reform scenario message', () => {
-      // Given - server says 3 minutes remaining (75% complete)
-      const { result } = renderHook(() =>
-        useSyntheticProgress(
-          true,
-          'societyWide',
-          createServerProgress({
-            estimatedTimeRemaining:
-              SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.SERVER_ESTIMATE_3_MIN_REMAINING,
-          })
-        )
-      );
+      // Given - advance to 50-75% range (3.5 minutes = 58.33%)
+      const { result } = renderHook(() => useSyntheticProgress(true, 'societyWide'));
 
-      // When
+      // When - advance 3.5 minutes (58.33% of 6 minutes)
       act(() => {
-        vi.advanceTimersByTime(SYNTHETIC_PROGRESS_TEST_CONSTANTS.ECONOMY.TIME_1_SECOND);
+        vi.advanceTimersByTime(3.5 * 60 * 1000);
       });
 
       // Then
