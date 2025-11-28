@@ -1,6 +1,15 @@
 [
   {
     "type": "iframe",
+    "slug": "spm-calculator",
+    "title": "SPM Threshold Calculator",
+    "description": "Calculate Supplemental Poverty Measure thresholds for any US geography, family composition, and year",
+    "source": "https://policyengine.github.io/spm-calculator/",
+    "tags": ["us", "featured", "policy", "poverty"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
     "slug": "uk-autumn-budget-2025",
     "title": "UK Autumn Budget 2025 analysis dashboard",
     "description": "Interactive tool to explore revenue and distributional impacts of UK Autumn Budget 2025 policies across income deciles, constituencies, and household types",
