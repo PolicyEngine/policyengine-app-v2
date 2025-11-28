@@ -441,6 +441,59 @@ export default function AutumnBudgetBanner() {
                 </Text>
               </Box>
             </Card>
+
+            {/* Card 5: Salary Sacrifice Cap */}
+            <Card
+              component="a"
+              href="/uk/research/uk-salary-sacrifice-cap"
+              style={{
+                flex: '1 1 220px',
+                maxWidth: '260px',
+                minHeight: '80px',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '12px',
+                padding: spacing.md,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textDecoration: 'none',
+                border: `2px solid ${colors.white}`,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              }}
+              styles={{
+                root: {
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                  },
+                },
+              }}
+            >
+              <Box
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                }}
+              >
+                <Text
+                  size={typography.fontSize.base}
+                  fw={typography.fontWeight.bold}
+                  c={colors.primary[700]}
+                  mb={spacing.xs}
+                >
+                  Salary sacrifice cap
+                </Text>
+                <Text
+                  size={typography.fontSize.xs}
+                  c={colors.gray[700]}
+                  style={{ lineHeight: 1.4 }}
+                >
+                  £2,000 cap would raise £1.1-2.3bn
+                </Text>
+              </Box>
+            </Card>
           </Group>
         </Box>
 
