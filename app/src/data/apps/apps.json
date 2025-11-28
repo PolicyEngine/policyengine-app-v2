@@ -1,7 +1,7 @@
 [
   {
     "type": "iframe",
-    "slug": "uk-autumn-budget-2025",
+    "slug": "autumn-budget-2025",
     "title": "UK Autumn Budget 2025 analysis dashboard",
     "description": "Interactive tool to explore revenue and distributional impacts of UK Autumn Budget 2025 policies across income deciles, constituencies, and household types",
     "source": "https://uk-autumn-budget-dashboard.vercel.app/",
