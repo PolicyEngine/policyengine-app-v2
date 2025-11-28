@@ -1,7 +1,3 @@
-Image credit: railsmartr
-
-## Introduction
-
 In the Autumn Budget 2025, the Government announced a freeze on all regulated rail fares in England for one year starting from March 2026. This is the first freeze on regulated rail fares in 30 years. The freeze applies to season tickets, peak return fares for commuters, and off-peak returns between major cities, holding these fares at their current levels until March 2027.
 
 ### Methodology
