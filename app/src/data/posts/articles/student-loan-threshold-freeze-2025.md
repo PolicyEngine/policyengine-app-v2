@@ -1,4 +1,4 @@
-In the Autumn Budget 2025, the Government [announced](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) a freeze to the Plan 2 student loan repayment threshold for three years starting from April 2027. This means borrowers who started university between 2012 and 2023 will begin repaying their loans at a lower real income level than if thresholds had continued to rise with inflation.
+In the Autumn Budget 2025, the Government [announced](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) a freeze to the Plan 2 student loan repayment threshold for three years starting from April 2026. This means borrowers who started university between 2012 and 2023 will begin repaying their loans at a lower real income level than if thresholds had continued to rise with inflation.
 
 To understand the impact of this policy, we compare it against a baseline where the repayment threshold would have continued to rise with RPI inflation. Table 1 shows how the Plan 2 threshold differs between these two scenarios.
 
@@ -10,9 +10,9 @@ To understand the impact of this policy, we compare it against a baseline where 
 | 2026-27 | £29,385              | £28,470          |
 | 2027-28 | £30,330              | £28,470          |
 | 2028-29 | £31,290              | £28,470          |
-| 2029-30 | £32,280              | £28,470          |
+| 2029-30 | £32,280              | £32,280          |
 
-Under current law, the Plan 2 threshold would normally increase with RPI each April. The freeze holds the threshold at £28,470 through 2029-30, meaning borrowers earning above this amount will repay 9% of their income above the threshold, rather than 9% above the higher RPI-indexed amount.
+Under current law, the Plan 2 threshold would normally increase with RPI each April. The freeze holds the threshold at £28,470 for three years (2026-27 through 2028-29), meaning borrowers earning above this amount will repay 9% of their income above the threshold, rather than 9% above the higher RPI-indexed amount. From 2029-30, normal RPI uprating resumes.
 
 In the following sections, we estimate the revenue impact and distributional effects of the student loan threshold freeze across income deciles and examine how the policy affects different groups of borrowers.
 
@@ -26,10 +26,10 @@ We estimate the revenue impact of the student loan threshold freeze across fisca
 
 | Source       | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
 | ------------ | ------- | ------- | ------- | ------- | ------- |
-| PolicyEngine | 0.0     | 0.1     | 0.3     | 0.5     | 0.7     |
-| OBR          | 0.0     | 0.3     | 0.3     | 0.3     | 0.4     |
+| PolicyEngine | 0.0     | 0.1     | 0.3     | 0.5     | 0.0     |
+| OBR          | 0.0     | 0.3     | 0.3     | 0.4     | 0.0     |
 
-PolicyEngine estimates the freeze raises £0.1 billion in 2026-27, growing to £0.7 billion by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. The OBR projects more modest increases of around £0.3-0.4 billion annually from 2026-27 onwards.
+PolicyEngine estimates the freeze raises £0.1 billion in 2026-27, growing to £0.5 billion by 2028-29 as the gap between frozen and RPI-indexed thresholds widens. The freeze ends after 2028-29, with normal RPI uprating resuming from April 2029, so there is no additional revenue impact in 2029-30.
 
 The difference between PolicyEngine and OBR estimates reflects methodological differences: PolicyEngine models the full household sector response including income effects, while OBR figures focus on direct cash receipt changes. Both estimates confirm the policy direction - the threshold freeze raises revenue by requiring borrowers to repay a larger portion of their income.
 
@@ -241,8 +241,8 @@ The threshold freeze primarily affects:
 2. **Earners above £28,470**: Only those earning above the threshold make repayments
 3. **Early-to-mid career graduates**: Those still repaying their loans, typically aged 22-50
 
-The average affected borrower will pay approximately £270 more per year by 2029-30 compared to a scenario where thresholds continued to rise with RPI. Over the three-year freeze period, the cumulative additional repayment could reach £600-800 per borrower.
+The average affected borrower will pay approximately £250 more per year by 2028-29 compared to a scenario where thresholds continued to rise with RPI. Over the three-year freeze period (2026-27 through 2028-29), the cumulative additional repayment could reach £400-600 per borrower.
 
 ## Conclusion
 
-PolicyEngine estimates the student loan threshold freeze raises £0.3-0.7 billion annually from 2027-28 onwards. The policy affects approximately 15% of the population, with impacts concentrated on middle-income deciles where Plan 2 borrowers are most prevalent. The freeze slightly increases income inequality (Gini +0.02%) as it effectively raises the tax burden on graduates relative to non-graduates at similar income levels.
+PolicyEngine estimates the student loan threshold freeze raises £0.1-0.5 billion annually during the three-year freeze period (2026-27 through 2028-29). The policy affects approximately 15% of the population, with impacts concentrated on middle-income deciles where Plan 2 borrowers are most prevalent. The freeze slightly increases income inequality (Gini +0.02%) as it effectively raises the tax burden on graduates relative to non-graduates at similar income levels.
