@@ -38,7 +38,7 @@ Figure 1 shows the average change in household net income by income decile from 
   "data": [
     {
       "x": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      "y": [13.49, 2.42, 1.77, 0.92, 3.52, 3.01, 4.55, 2.95, 7.93, 21.77],
+      "y": [3.19, 5.03, 2.80, 2.62, 3.10, 4.50, 2.41, 17.58, 2.55, 1.76],
       "type": "bar",
       "marker": {
         "color": "#2C6496",
@@ -47,7 +47,7 @@ Figure 1 shows the average change in household net income by income decile from 
         }
       },
       "hovertemplate": "Decile %{x}<br>Change: £%{y:.2f}<extra></extra>",
-      "text": ["£13.49", "£2.42", "£1.77", "£0.92", "£3.52", "£3.01", "£4.55", "£2.95", "£7.93", "£21.77"],
+      "text": ["£3.19", "£5.03", "£2.80", "£2.62", "£3.10", "£4.50", "£2.41", "£17.58", "£2.55", "£1.76"],
       "textposition": "outside",
       "textfont": {
         "family": "Roboto Serif",
@@ -93,7 +93,7 @@ Figure 1 shows the average change in household net income by income decile from 
       "zeroline": true,
       "zerolinecolor": "#333",
       "zerolinewidth": 2,
-      "range": [0, 25]
+      "range": [0, 20]
     },
     "height": 500,
     "margin": {
@@ -112,4 +112,4 @@ Figure 1 shows the average change in household net income by income decile from 
 }
 ```
 
-In 2026-27, the average household benefit ranges from £0.92 per year for the fourth decile to £21.77 for the highest decile. The first decile sees a relatively high benefit of £13.49, which may reflect pensioner households with rail travel. The top decile benefits most, reflecting higher rail usage among higher-income households, particularly for commuting.
+In 2026-27, the average household benefit ranges from £1.76 per year for the highest decile to £17.58 for the eighth decile. The eighth decile sees the largest benefit, likely reflecting middle-to-upper-middle income commuters who rely heavily on rail travel. Lower and middle deciles see more modest benefits of £2-5 per household, while the top decile benefits least in absolute terms despite higher incomes.
