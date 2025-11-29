@@ -78,10 +78,15 @@ export default function HouseholdBuilderForm({
     [household]
   );
 
-  // Helper to get person display name
+  // Helper to get person display name (entirely lowercase)
   const getPersonDisplayName = (personKey: string): string => {
-    const parts = personKey.split(' ');
-    return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+    return personKey.toLowerCase();
+  };
+
+  // Helper to get person display name with first letter capitalized
+  const getPersonDisplayNameCapitalized = (personKey: string): string => {
+    const lowercase = personKey.toLowerCase();
+    return lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
   };
 
   // Filter variables by search value (no entity filtering - shows all)
@@ -261,7 +266,10 @@ export default function HouseholdBuilderForm({
             right: spacing.xl,
             maxWidth: 400,
             zIndex: 1000,
-          }}
+            opacity: 1,
+            '--alert-bg': 'var(--mantine-color-blue-filled)',
+            '--alert-color': 'var(--mantine-color-white)',
+          } as React.CSSProperties}
         >
           {warningMessage}
         </Alert>
@@ -317,7 +325,7 @@ export default function HouseholdBuilderForm({
                   <Accordion.Item key={person} value={person}>
                     <Accordion.Control>
                       <Text fw={600} size="sm">
-                        {getPersonDisplayName(person)}
+                        {getPersonDisplayNameCapitalized(person)}
                       </Text>
                     </Accordion.Control>
                     <Accordion.Panel>

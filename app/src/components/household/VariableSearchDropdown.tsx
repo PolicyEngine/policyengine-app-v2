@@ -84,6 +84,7 @@ export default function VariableSearchDropdown({
                     style={{
                       cursor: 'pointer',
                       borderBottom: `1px solid ${colors.gray[300]}`,
+                      backgroundColor: 'var(--mantine-color-body)',
                     }}
                   >
                     <Group gap="xs" justify="space-between">
