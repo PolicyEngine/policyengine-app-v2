@@ -33,6 +33,8 @@ export interface VariableSearchDropdownProps {
   loading?: boolean;
   /** Called when user clicks the X button to close the dropdown entirely */
   onClose?: () => void;
+  /** Whether results were truncated (more available than displayed) */
+  truncated?: boolean;
 }
 
 // Fixed width for close button column (matches VariableRow's REMOVE_COLUMN_WIDTH)
@@ -57,6 +59,7 @@ export default function VariableSearchDropdown({
   onSelect,
   getEntityHint,
   disabled = false,
+  truncated = false,
   placeholder = 'Search for a variable...',
   loading = false,
   onClose,
@@ -176,7 +179,14 @@ export default function VariableSearchDropdown({
                   <Loader size="sm" />
                 </Center>
               ) : options.length > 0 ? (
-                options
+                <>
+                  {options}
+                  {truncated && (
+                    <Text size="xs" c="dimmed" p="xs" ta="center">
+                      Type to search more variables...
+                    </Text>
+                  )}
+                </>
               ) : (
                 <Combobox.Empty>No variables found</Combobox.Empty>
               )}

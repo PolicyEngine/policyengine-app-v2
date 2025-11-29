@@ -89,17 +89,38 @@ export default function HouseholdBuilderForm({
     return lowercase.charAt(0).toUpperCase() + lowercase.slice(1);
   };
 
-  // Filter variables by search value (no entity filtering - shows all)
-  // No artificial limit - dropdown is scrollable with maxHeight
-  const getFilteredVariables = (searchValue: string) => {
+  // Maximum number of results to display in dropdown for performance
+  const MAX_DROPDOWN_RESULTS = 100;
+
+  // Filter variables by search value with result limit for performance
+  const filterVariables = (searchValue: string) => {
     if (!searchValue.trim()) {
-      return allInputVariables;
+      return {
+        variables: allInputVariables.slice(0, MAX_DROPDOWN_RESULTS),
+        truncated: allInputVariables.length > MAX_DROPDOWN_RESULTS,
+      };
     }
     const search = searchValue.toLowerCase();
-    return allInputVariables.filter(
+    const filtered = allInputVariables.filter(
       (v) => v.label.toLowerCase().includes(search) || v.name.toLowerCase().includes(search)
     );
+    return {
+      variables: filtered.slice(0, MAX_DROPDOWN_RESULTS),
+      truncated: filtered.length > MAX_DROPDOWN_RESULTS,
+    };
   };
+
+  // Memoized filtered variables for person search
+  const filteredPersonVariables = useMemo(
+    () => filterVariables(personSearchValue),
+    [personSearchValue, allInputVariables]
+  );
+
+  // Memoized filtered variables for household search
+  const filteredHouseholdVariables = useMemo(
+    () => filterVariables(householdSearchValue),
+    [householdSearchValue, allInputVariables]
+  );
 
   // Get variables for a specific person (custom only, not basic inputs)
   const getPersonVariables = (personName: string): string[] => {
@@ -378,7 +399,8 @@ export default function HouseholdBuilderForm({
                             searchValue={personSearchValue}
                             onSearchChange={setPersonSearchValue}
                             onFocusChange={setIsPersonSearchFocused}
-                            filteredVariables={getFilteredVariables(personSearchValue)}
+                            filteredVariables={filteredPersonVariables.variables}
+                            truncated={filteredPersonVariables.truncated}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
                             getEntityHint={(variable) => {
                               const { isPerson } = getVariableEntityDisplayInfo(
@@ -468,7 +490,8 @@ export default function HouseholdBuilderForm({
                   searchValue={householdSearchValue}
                   onSearchChange={setHouseholdSearchValue}
                   onFocusChange={setIsHouseholdSearchFocused}
-                  filteredVariables={getFilteredVariables(householdSearchValue)}
+                  filteredVariables={filteredHouseholdVariables.variables}
+                  truncated={filteredHouseholdVariables.truncated}
                   onSelect={handleHouseholdVariableSelect}
                   getEntityHint={(variable) => {
                     const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
