@@ -28,12 +28,12 @@
   },
   {
     "title": "Impact of the Autumn Budget fuel duty freeze",
-    "description": "PolicyEngine estimates that the fuel duty freeze costs £2.8 billion in 2026-27 and raises net income for 46.7% of people.",
-    "date": "2025-11-26 10:00:00",
+    "description": "PolicyEngine estimates that the fuel duty freeze costs £3.5 billion in 2026-27 and reduces income inequality by 0.21% as measured by the Gini index.",
+    "date": "2025-11-29 10:00:00",
     "tags": ["uk", "autumn-budget", "featured"],
     "authors": ["vahid-ahmadi"],
-    "filename": "fuel-duty-freeze-2025.md",
-    "image": "uk-fuel-duty-freeze-2025/uk-fuel-duty-freeze-2025.jpeg",
+    "filename": "fuel-duty-freeze.md",
+    "image": "uk-fuel-duty-freeze/uk-fuel-duty-freeze.jpeg",
     "imageCredit": "which.co.uk",
     "hideHeaderImage": false
   },
