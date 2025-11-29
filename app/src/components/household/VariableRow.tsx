@@ -77,6 +77,7 @@ export default function VariableRow({
                 color="gray"
                 onClick={onRemove}
                 disabled={disabled}
+                style={{ height: 22 }}
               >
                 <IconX size={16} />
               </ActionIcon>

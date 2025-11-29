@@ -481,7 +481,7 @@ export default function HouseholdBuilderForm({
                   onClick={handleOpenHouseholdSearch}
                   style={{ alignSelf: 'flex-start' }}
                 >
-                  Add variable
+                  Add variable to your household
                 </Button>
               )}
             </Stack>
