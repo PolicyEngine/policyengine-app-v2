@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 /**
  * Generate llms.txt files for AI-friendly article extraction.
  *
