@@ -604,7 +604,7 @@ Figure 3 [shows](https://gist.github.com/vahid-ahmadi/b73dea80207de167490b0f1b80
 
 <iframe src="/assets/posts/uk-fuel-duty-freeze/constituency_map_fuel-duty.html" width="100%" height="600" frameborder="0"></iframe>
 
-Average net income changes vary across constituencies, with all experiencing positive impacts. The distribution ranges from increases of 0.11% to 0.28%. The five constituencies with the largest gains are St Ives (£99.77), North Devon (£102.25), Ynys Môn (£118.59), Isle of Wight East (£98.79), and South Dorset (£98.87).
+Average net income changes vary across constituencies, with all experiencing positive impacts. The distribution ranges from increases of 0.11% to 0.28%. The five constituencies with the largest relative gains are St Ives (£99.77), North Devon (£102.25), Ynys Môn (£118.59), Isle of Wight East (£98.79), and South Dorset (£98.87).
 
 ### Inequality impact
 
