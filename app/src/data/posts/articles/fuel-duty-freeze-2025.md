@@ -18,26 +18,26 @@ To understand the impact of this policy, we follow OBR methodology to compare it
 
 The baseline assumes the 5p cut ends on March 22, 2026, returning the rate to 57.95p, followed by RPI uprating from April 2026 onwards (4.1% in 2026-27, 3.2% in 2027-28, 2.9% in 2028-29, and 2.9% in 2029-30). The announced policy maintains the freeze at 52.95p until September 2026, then implements a staggered reversal with increases of 1p, 2p, and 2p over three-month periods, reaching 57.95p by March 2027. Both policies then apply the same annual RPI uprating from April 2027 onwards.
 
-In the following sections, we [estimate](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150ce8ed9) the revenue impact and distributional effects of the fuel duty freeze across income deciles, examine how the policy affects income inequality, and analyse impacts across UK constituencies.
+In the following sections, we [estimate](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) the revenue impact and distributional effects of the fuel duty freeze across income deciles, examine how the policy affects income inequality, and analyse impacts across UK constituencies.
 
 ## Economic impacts
 
 ### Revenue impact
 
-We [estimate](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150ce8ed9) the revenue impact of the fuel duty freeze policy across fiscal years and compare our estimates with official OBR projections. Table 2 shows the cost of maintaining frozen rates rather than implementing the planned policy trajectory.
+We [estimate](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) the revenue impact of the fuel duty freeze policy across fiscal years and compare our estimates with official OBR projections. Table 2 shows the cost of maintaining frozen rates rather than implementing the planned policy trajectory.
 
 **Table 2: Revenue impact of fuel duty freeze (£ billion)**
 
 | Source                                                                                                                                                                      | 2025-26 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | ------- | ------- | ------- |
-| [PolicyEngine](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150ce8ed9) | 0.0     | -3.5    | -1.6    | -1.5    | -0.9    |
+| [PolicyEngine](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) | 0.0     | -3.5    | -1.6    | -1.5    | -0.9    |
 | [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)                                                                                                        | 0.0     | -2.4    | -0.9    | -0.9    | -0.9    |
 
 PolicyEngine estimates the freeze reduces revenue by £3.5 billion in 2026-27, followed by £1.6 billion in 2027-28, £1.5 billion in 2028-29, and £0.9 billion in 2029-30. The OBR projects revenue reductions of £2.4 billion in 2026-27 and £0.9 billion annually thereafter.
 
 ### Distributional impact
 
-Figure 1 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150ce8ed9) the absolute change in household income by income decile from the fuel duty freeze across fiscal years 2026-27 through 2029-30.
+Figure 1 [shows](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) the absolute change in household income by income decile from the fuel duty freeze across fiscal years 2026-27 through 2029-30.
 
 **Figure 1: Absolute change in household income by income decile, 2026-27 to 2029-30**
 
@@ -258,9 +258,9 @@ In 2026-27, the average household gains £109 from the fuel duty freeze. Higher 
 
 ### Winners and losers
 
-Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150ce8ed9) the distribution of impacts across the population across fiscal years 2026-27 through 2029-30, categorising households by the magnitude of income changes they experience.
+Figure 2 [shows](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) the distribution of impacts across households across fiscal years 2026-27 through 2029-30, categorising households by the magnitude of income changes they experience.
 
-**Figure 2: Population share by income change from fuel duty freeze, 2026-27 to 2029-30**
+**Figure 2: Household share by income change from fuel duty freeze, 2026-27 to 2029-30**
 
 ```plotly
 {
@@ -269,10 +269,10 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150
       "name": "Gain more than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [4.8, null, 4.2, 5.8, 4.9, 3.9, 5.3, 4.0, 6.1, 3.6, 6.1, 4.6],
-      "y": ["All", " ", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
+      "x": [4.3, 6.9, 5.1, 3.8, 5.6, 4.4, 6.7, 3.2, 7.6, 5.4],
+      "y": ["10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
       "marker": {"color": "#2C6496"},
-      "text": ["5%", "", "4%", "6%", "5%", "4%", "5%", "4%", "6%", "4%", "6%", "5%"],
+      "text": ["4%", "7%", "5%", "4%", "6%", "4%", "7%", "3%", "8%", "5%"],
       "textposition": "inside",
       "textfont": {"color": "white", "size": 11},
       "hovertemplate": "%{y}<br>Gain more than 5%: %{x:.1f}%<extra></extra>",
@@ -282,10 +282,10 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150
       "name": "Gain less than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [44.7, null, 42.6, 47.6, 52.4, 50.9, 47.6, 51.1, 39.7, 38.2, 39.5, 37.3],
-      "y": ["All", " ", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
+      "x": [42.3, 44.4, 52.3, 49.5, 44.7, 53.2, 36.4, 37.8, 38.8, 32.8],
+      "y": ["10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
       "marker": {"color": "#C5D3E8"},
-      "text": ["45%", "", "43%", "48%", "52%", "51%", "48%", "51%", "40%", "38%", "40%", "37%"],
+      "text": ["42%", "44%", "52%", "50%", "45%", "53%", "36%", "38%", "39%", "33%"],
       "textposition": "inside",
       "textfont": {"color": "#333", "size": 11},
       "hovertemplate": "%{y}<br>Gain less than 5%: %{x:.1f}%<extra></extra>",
@@ -295,10 +295,10 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150
       "name": "No change",
       "type": "bar",
       "orientation": "h",
-      "x": [50.4, null, 53.3, 46.7, 42.8, 45.3, 47.1, 45.0, 54.2, 58.2, 54.4, 58.0],
-      "y": ["All", " ", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
+      "x": [53.4, 48.7, 42.6, 46.6, 49.7, 42.3, 56.9, 59.0, 53.7, 61.8],
+      "y": ["10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
       "marker": {"color": "#F0F0F0"},
-      "text": ["50%", "", "53%", "47%", "43%", "45%", "47%", "45%", "54%", "58%", "54%", "58%"],
+      "text": ["53%", "49%", "43%", "47%", "50%", "42%", "57%", "59%", "54%", "62%"],
       "textposition": "inside",
       "textfont": {"color": "#333", "size": 11},
       "hovertemplate": "%{y}<br>No change: %{x:.1f}%<extra></extra>",
@@ -308,10 +308,10 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150
       "name": "Lose less than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      "y": ["All", " ", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
+      "x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "y": ["10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
       "marker": {"color": "#FACBCB"},
-      "text": ["", "", "", "", "", "", "", "", "", "", "", ""],
+      "text": ["", "", "", "", "", "", "", "", "", ""],
       "textposition": "inside",
       "textfont": {"color": "#333", "size": 11},
       "hovertemplate": "%{y}<br>Lose less than 5%: %{x:.1f}%<extra></extra>",
@@ -321,10 +321,10 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150
       "name": "Lose more than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [0, null, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-      "y": ["All", " ", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
+      "x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+      "y": ["10", "9", "8", "7", "6", "5", "4", "3", "2", "1"],
       "marker": {"color": "#B71C1C"},
-      "text": ["", "", "", "", "", "", "", "", "", "", "", ""],
+      "text": ["", "", "", "", "", "", "", "", "", ""],
       "textposition": "inside",
       "textfont": {"color": "white", "size": 11},
       "hovertemplate": "%{y}<br>Lose more than 5%: %{x:.1f}%<extra></extra>",
@@ -335,7 +335,7 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150
     "barmode": "stack",
     "xaxis": {
       "title": {
-        "text": "Population share",
+        "text": "Household share",
         "font": {
           "family": "Roboto Serif",
           "size": 16
@@ -365,7 +365,7 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150
         "size": 12
       },
       "categoryorder": "array",
-      "categoryarray": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", " ", "All"],
+      "categoryarray": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
       "type": "category",
       "automargin": true
     },
@@ -608,7 +608,7 @@ Average net income changes vary across constituencies, with all experiencing pos
 
 ### Inequality impact
 
-Table 3 shows the fuel duty freeze [reduces](https://gist.github.com/vahid-ahmadi/77ce9195af266e6a6660f2e150ce8ed9) income inequality across all years. The Gini index falls by 0.21% in 2026-27, declining to 0.05% by 2029-30 as the policy's impact diminishes.
+Table 3 shows the fuel duty freeze [reduces](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) income inequality across all years. The Gini index falls by 0.21% in 2026-27, declining to 0.05% by 2029-30 as the policy's impact diminishes.
 
 **Table 3: Inequality impact of fuel duty freeze**
 
@@ -621,4 +621,4 @@ Table 3 shows the fuel duty freeze [reduces](https://gist.github.com/vahid-ahmad
 
 ## Conclusion
 
-PolicyEngine estimates the fuel duty freeze costs £3.5 billion in 2026-27. The policy benefits 49.5% of the population, with higher income deciles gaining more in absolute terms. The freeze reduces income inequality by 0.21% as measured by the Gini index in 2026-27.
+PolicyEngine estimates the fuel duty freeze costs £3.5 billion in 2026-27. Higher income deciles gain more in absolute terms. The freeze reduces income inequality by 0.21% as measured by the Gini index in 2026-27.
