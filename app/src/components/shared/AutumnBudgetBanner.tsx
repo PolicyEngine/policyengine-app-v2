@@ -384,7 +384,7 @@ export default function AutumnBudgetBanner() {
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  £2.8bn cost, raises income for 47% of people
+                  £3.5bn cost, raises income for 50% of people
                 </Text>
               </Box>
             </Card>
