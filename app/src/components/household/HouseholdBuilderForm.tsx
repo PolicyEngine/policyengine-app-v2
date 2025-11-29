@@ -384,7 +384,8 @@ export default function HouseholdBuilderForm({
                           />
                         ) : (
                           <Button
-                            variant="default"
+                            // variant="default"
+                            variant="subtle"
                             size="compact-sm"
                             leftSection={<IconPlus size={14} />}
                             onClick={() => handleOpenPersonSearch(person)}
@@ -466,7 +467,7 @@ export default function HouseholdBuilderForm({
                 />
               ) : (
                 <Button
-                  variant="default"
+                  variant="subtle"
                   size="compact-sm"
                   leftSection={<IconPlus size={14} />}
                   onClick={handleOpenHouseholdSearch}
