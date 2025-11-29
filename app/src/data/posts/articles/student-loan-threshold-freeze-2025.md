@@ -241,6 +241,33 @@ The threshold freeze primarily affects:
 
 The average affected borrower will pay approximately £250 more per year by 2029-30 compared to a scenario where thresholds continued to rise with RPI. Over the three-year freeze period (2027-28 through 2029-30), the cumulative additional repayment could reach £400-600 per borrower.
 
+## Lifetime perspective: when faster repayment helps
+
+While the threshold freeze increases annual repayments, some borrowers may actually benefit over their lifetime. This counterintuitive outcome occurs when higher repayments lead to faster loan payoff, reducing total interest paid.
+
+Consider a 2026 graduate earning £31,000 initially with £15,000 in student debt. Table 3 compares their lifetime repayment under both scenarios.
+
+**Table 3: Lifetime student loan repayment comparison**
+
+| Metric | RPI-uprated threshold | Frozen threshold |
+| ------ | -------------------- | ---------------- |
+| Year loan paid off | 2043 (age 39) | 2041 (age 37) |
+| Total payments | £25,659 | £24,305 |
+| Total interest paid | £10,659 | £9,305 |
+| **Lifetime savings** | - | **£1,354** |
+
+Under the freeze, this borrower pays off their loan two years earlier. Despite higher annual payments during the repayment period, the faster payoff means less time for interest to compound at rates up to 7.1% (RPI + 3%). The result: £1,354 less paid over their lifetime.
+
+This outcome depends on three key factors:
+
+1. **Income high enough to pay off the loan fully** under both scenarios
+2. **Sufficient years before the 30-year forgiveness** threshold
+3. **Moderate debt relative to income trajectory** (in this case, £15,000 debt with income growing from £31,000 to £66,000+)
+
+For borrowers who would have their loans forgiven after 30 years regardless, the freeze simply means higher payments with no offsetting benefit. But for those on track to repay in full, accelerated repayment can reduce lifetime costs.
+
+To explore how the threshold freeze affects your specific circumstances, try our [UK Autumn Budget Lifetime Calculator](https://policyengine.github.io/uk-autumn-budget-lifecycle/).
+
 ## Conclusion
 
 PolicyEngine estimates the student loan threshold freeze raises £0.2-0.5 billion annually during the three-year freeze period (2027-28 through 2029-30). The policy affects approximately 15% of the population, with impacts concentrated on middle-income deciles where Plan 2 borrowers are most prevalent. The freeze slightly increases income inequality (Gini +0.02%) as it effectively raises the tax burden on graduates relative to non-graduates at similar income levels.
