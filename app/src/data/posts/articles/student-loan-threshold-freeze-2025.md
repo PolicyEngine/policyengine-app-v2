@@ -15,30 +15,30 @@ To understand the impact of this policy, we compare it against a baseline where 
 
 Under current law, the Plan 2 threshold would normally increase with RPI each April. The freeze holds the threshold at £29,385 for three years (2027-28 through 2029-30), meaning borrowers earning above this amount will repay 9% of their income above the threshold, rather than 9% above the higher RPI-indexed amount.
 
-Note: HMT also estimates £5.9bn revenue in 2026-27 from student loan revaluation (a separate policy affecting existing loan balances), but our microsimulation focuses only on the threshold freeze starting in 2027.
-
 In the following sections, we estimate the revenue impact and distributional effects of the student loan threshold freeze across income deciles and examine how the policy affects different groups of borrowers.
 
 ## Economic impacts
 
 ### Revenue impact
 
-We estimate the revenue impact of the student loan threshold freeze across fiscal years and compare our estimates with official HM Treasury (HMT) projections. Table 2 shows the additional revenue from freezing thresholds rather than allowing RPI uprating.
+We [estimate](https://www.policyengine.org/uk/autumn-budget-2025) the revenue impact of the student loan threshold freeze across fiscal years and compare our estimates with official HM Treasury (HMT) projections. Table 2 shows the additional revenue from freezing thresholds rather than allowing RPI uprating.
 
 **Table 2: Revenue impact of student loan threshold freeze (£ million)**
 
 | Source       | 2027-28 | 2028-29 | 2029-30 |
 | ------------ | ------- | ------- | ------- |
-| [PolicyEngine](https://www.policyengine.org/uk/autumn-budget-2025) | 133     | 262     | 400     |
+| [PolicyEngine](https://www.policyengine.org/uk/autumn-budget-2025) | 135     | 260     | 400     |
 | [HMT](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) | 255     | 290     | 355     |
 
-[PolicyEngine](https://www.policyengine.org/uk/autumn-budget-2025) estimates the freeze raises £133 million in 2027-28, growing to £400 million by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. [HMT](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) estimates the policy raises £255-355 million annually from 2027-30.
+[PolicyEngine](https://www.policyengine.org/uk/autumn-budget-2025) estimates the freeze raises £135 million in 2027-28, growing to £400 million by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. [HMT](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) estimates the policy raises £255-355 million annually from 2027-30.[^1]
+
+[^1]: HMT also estimates £5.9bn revenue in 2026-27 from student loan revaluation (a separate policy affecting existing loan balances), but our microsimulation focuses only on the threshold freeze starting in 2027.
 
 The difference between PolicyEngine and HMT estimates reflects methodological differences: PolicyEngine models the full household sector response including income effects, while HMT figures focus on direct cash receipt changes. Both estimates confirm the policy direction - the threshold freeze raises revenue by requiring borrowers to repay a larger portion of their income.
 
 ### Distributional impact
 
-Figure 1 shows the absolute change in household income by income decile from the student loan threshold freeze across fiscal years 2027-28 to 2029-30. Use the slider to see how the impact grows over time as the gap between frozen and RPI-indexed thresholds widens.
+Figure 1 [shows](https://www.policyengine.org/uk/autumn-budget-2025) the absolute change in household income by income decile from the student loan threshold freeze across fiscal years 2027-28 to 2029-30. Use the slider to see how the impact grows over time as the gap between frozen and RPI-indexed thresholds widens.
 
 **Figure 1: Absolute change in household income by income decile**
 
@@ -143,10 +143,10 @@ Figure 1 shows the absolute change in household income by income decile from the
       {
         "active": 0,
         "pad": {"t": 50, "b": 10},
-        "len": 0.5,
-        "x": 0.18,
+        "len": 0.4,
+        "x": 0.25,
         "xanchor": "left",
-        "y": 1.18,
+        "y": 1.28,
         "yanchor": "top",
         "currentvalue": {
           "visible": false
@@ -233,6 +233,31 @@ Figure 1 shows the absolute change in household income by income decile from the
 
 The policy primarily affects higher-income deciles (6-10), who see the largest absolute income reductions. In 2027-28, decile 9 sees the largest impact at -£9.52 per year, growing to -£28.11 by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. This reflects the demographics of Plan 2 borrowers: graduates in early-to-mid career earning above the threshold. The lowest deciles are largely unaffected as their income falls below the repayment threshold.
 
+### Constituency impact
+
+Figure 2 [shows](https://www.policyengine.org/uk/autumn-budget-2025) the average change in household income across UK parliamentary constituencies from the student loan threshold freeze. The map includes a year selector to view impacts from 2027 to 2029. Constituencies with higher concentrations of young graduates see the largest impacts.
+
+**Figure 2: Average income change by constituency from the student loan threshold freeze**
+
+<iframe src="/assets/posts/student-loan-threshold-freeze-2025/constituency_map_student-loan.html" width="100%" height="600" frameborder="0"></iframe>
+
+Table 3 [shows](https://www.policyengine.org/uk/autumn-budget-2025) the ten constituencies with the largest average income reductions in 2027-28. University cities and inner London constituencies experience the greatest impacts, reflecting higher concentrations of Plan 2 borrowers in these areas.
+
+**Table 3: Top 10 constituencies by average income impact (2027-28)**
+
+| Rank | Constituency | Average impact (£/year) |
+|:----:|:-------------|:------------------------|
+|  1   | Bristol Central | -£13.88 |
+|  2   | Oxford East | -£12.78 |
+|  3   | Cambridge | -£11.11 |
+|  4   | Vauxhall and Camberwell Green | -£10.99 |
+|  5   | Bath | -£9.95 |
+|  6   | Brighton Pavilion | -£9.92 |
+|  7   | Islington South and Finsbury | -£9.42 |
+|  8   | Clapham and Brixton Hill | -£8.96 |
+|  9   | Islington North | -£8.88 |
+|  10  | Bermondsey and Old Southwark | -£8.80 |
+
 ## Who is affected?
 
 The threshold freeze primarily affects:
@@ -247,9 +272,9 @@ The average affected borrower will pay approximately £250 more per year by 2029
 
 While the threshold freeze increases annual repayments, some borrowers may actually benefit over their lifetime. This counterintuitive outcome occurs when higher repayments lead to faster loan payoff, reducing total interest paid.
 
-Consider a 2026 graduate earning £31,000 initially with £15,000 in student debt. Table 3 compares their lifetime repayment under both scenarios.
+Consider a 2026 graduate earning £31,000 initially with £15,000 in student debt. Table 4 compares their lifetime repayment under both scenarios.
 
-**Table 3: Lifetime student loan repayment comparison**
+**Table 4: Lifetime student loan repayment comparison**
 
 | Metric | RPI-uprated threshold | Frozen threshold |
 | ------ | -------------------- | ---------------- |
@@ -272,4 +297,4 @@ To explore how the threshold freeze affects your specific circumstances, try our
 
 ## Conclusion
 
-PolicyEngine estimates the student loan threshold freeze raises £133-400 million annually during the three-year freeze period (2027-28 through 2029-30). The policy impacts are concentrated on middle-income deciles where Plan 2 borrowers are most prevalent.
+PolicyEngine estimates the student loan threshold freeze raises £135-400 million annually during the three-year freeze period (2027-28 through 2029-30). The policy impacts are concentrated on higher-income deciles, university cities, and inner London constituencies.
