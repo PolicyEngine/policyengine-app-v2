@@ -23,31 +23,31 @@ In the following sections, we estimate the revenue impact and distributional eff
 
 ### Revenue impact
 
-We estimate the revenue impact of the student loan threshold freeze across fiscal years and compare our estimates with official HMT projections. Table 2 shows the additional revenue from freezing thresholds rather than allowing RPI uprating.
+We estimate the revenue impact of the student loan threshold freeze across fiscal years and compare our estimates with official HM Treasury (HMT) projections. Table 2 shows the additional revenue from freezing thresholds rather than allowing RPI uprating.
 
-**Table 2: Revenue impact of student loan threshold freeze (£ billion)**
+**Table 2: Revenue impact of student loan threshold freeze (£ million)**
 
 | Source       | 2027-28 | 2028-29 | 2029-30 |
 | ------------ | ------- | ------- | ------- |
-| PolicyEngine | 0.2     | 0.3     | 0.5     |
-| HMT          | 0.3     | 0.3     | 0.4     |
+| [PolicyEngine](https://www.policyengine.org/uk/autumn-budget-2025) | 133     | 262     | 400     |
+| [HMT](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) | 255     | 290     | 355     |
 
-PolicyEngine estimates the freeze raises £0.2 billion in 2027-28, growing to £0.5 billion by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. HMT estimates the policy raises £255-355 million annually from 2027-30.
+[PolicyEngine](https://www.policyengine.org/uk/autumn-budget-2025) estimates the freeze raises £133 million in 2027-28, growing to £400 million by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. [HMT](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) estimates the policy raises £255-355 million annually from 2027-30.
 
 The difference between PolicyEngine and HMT estimates reflects methodological differences: PolicyEngine models the full household sector response including income effects, while HMT figures focus on direct cash receipt changes. Both estimates confirm the policy direction - the threshold freeze raises revenue by requiring borrowers to repay a larger portion of their income.
 
 ### Distributional impact
 
-Figure 1 shows the relative change in household income by income decile from the student loan threshold freeze across fiscal years 2027-28 to 2029-30. Use the slider to see how the impact grows over time as the gap between frozen and RPI-indexed thresholds widens.
+Figure 1 shows the absolute change in household income by income decile from the student loan threshold freeze across fiscal years 2027-28 to 2029-30. Use the slider to see how the impact grows over time as the gap between frozen and RPI-indexed thresholds widens.
 
-**Figure 1: Relative change in household income by income decile**
+**Figure 1: Absolute change in household income by income decile**
 
 ```plotly
 {
   "data": [
     {
       "x": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-      "y": [-0.000000154, -0.0016634429, -0.0014984726, -0.0024604998, -0.0075688935, -0.011848607, -0.019367954, -0.022720737, -0.018594053, -0.006256272],
+      "y": [-0.08, -0.24, -0.18, -0.72, -1.16, -6.24, -7.06, -9.36, -9.52, -7.30],
       "type": "bar",
       "marker": {
         "color": "#2C6496",
@@ -55,8 +55,8 @@ Figure 1 shows the relative change in household income by income decile from the
           "width": 0
         }
       },
-      "hovertemplate": "Decile %{x}<br>Change: %{y:.2%}<extra></extra>",
-      "text": ["0.0%", "-0.2%", "-0.1%", "-0.2%", "-0.8%", "-1.2%", "-1.9%", "-2.3%", "-1.9%", "-0.6%"],
+      "hovertemplate": "Decile %{x}<br>Change: £%{y:.2f}<extra></extra>",
+      "text": ["-£0.08", "-£0.24", "-£0.18", "-£0.72", "-£1.16", "-£6.24", "-£7.06", "-£9.36", "-£9.52", "-£7.30"],
       "textposition": "inside",
       "insidetextanchor": "middle",
       "textfont": {
@@ -85,7 +85,7 @@ Figure 1 shows the relative change in household income by income decile from the
     },
     "yaxis": {
       "title": {
-        "text": "Relative change in net income",
+        "text": "Absolute change in net income (£/year)",
         "font": {
           "family": "Roboto Serif",
           "size": 14
@@ -94,20 +94,20 @@ Figure 1 shows the relative change in household income by income decile from the
       "tickfont": {
         "family": "Roboto Serif"
       },
-      "tickformat": ".1%",
+      "tickprefix": "£",
       "showgrid": true,
       "gridcolor": "#e0e0e0",
       "gridwidth": 1,
       "zeroline": true,
       "zerolinecolor": "#333",
       "zerolinewidth": 2,
-      "range": [-0.075, 0.005]
+      "range": [-35, 5]
     },
     "height": 600,
     "margin": {
       "l": 100,
       "r": 40,
-      "b": 180,
+      "b": 60,
       "t": 80,
       "pad": 4
     },
@@ -133,19 +133,21 @@ Figure 1 shows the relative change in household income by income decile from the
         "pad": {"r": 10, "t": 10},
         "showactive": false,
         "type": "buttons",
-        "x": 0.1,
+        "x": 0.08,
         "xanchor": "left",
-        "y": -0.28,
+        "y": 1.18,
         "yanchor": "top"
       }
     ],
     "sliders": [
       {
         "active": 0,
-        "pad": {"t": 80, "b": 20},
-        "len": 0.6,
-        "x": 0.5,
-        "xanchor": "center",
+        "pad": {"t": 50, "b": 10},
+        "len": 0.5,
+        "x": 0.18,
+        "xanchor": "left",
+        "y": 1.18,
+        "yanchor": "top",
         "currentvalue": {
           "visible": false
         },
@@ -184,7 +186,7 @@ Figure 1 shows the relative change in household income by income decile from the
       {
         "source": "/assets/logos/policyengine/teal-square.svg",
         "x": 1,
-        "y": -0.25,
+        "y": -0.05,
         "xref": "paper",
         "yref": "paper",
         "sizex": 0.08,
@@ -200,8 +202,8 @@ Figure 1 shows the relative change in household income by income decile from the
       "data": [
         {
           "x": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-          "y": [-0.000000154, -0.0016634429, -0.0014984726, -0.0024604998, -0.0075688935, -0.011848607, -0.019367954, -0.022720737, -0.018594053, -0.006256272],
-          "text": ["0.0%", "-0.2%", "-0.1%", "-0.2%", "-0.8%", "-1.2%", "-1.9%", "-2.3%", "-1.9%", "-0.6%"]
+          "y": [-0.08, -0.24, -0.18, -0.72, -1.16, -6.24, -7.06, -9.36, -9.52, -7.30],
+          "text": ["-£0.08", "-£0.24", "-£0.18", "-£0.72", "-£1.16", "-£6.24", "-£7.06", "-£9.36", "-£9.52", "-£7.30"]
         }
       ]
     },
@@ -210,8 +212,8 @@ Figure 1 shows the relative change in household income by income decile from the
       "data": [
         {
           "x": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-          "y": [-0.0000000629, -0.0032499, -0.0029619, -0.0049280, -0.0151188, -0.0235009, -0.0387240, -0.0454028, -0.0371881, -0.0125126],
-          "text": ["0.0%", "-0.3%", "-0.3%", "-0.5%", "-1.5%", "-2.4%", "-3.9%", "-4.5%", "-3.7%", "-1.3%"]
+          "y": [-0.0001, -0.48, -0.36, -1.95, -2.48, -11.86, -13.74, -17.82, -18.85, -14.20],
+          "text": ["-£0.00", "-£0.48", "-£0.36", "-£1.95", "-£2.48", "-£11.86", "-£13.74", "-£17.82", "-£18.85", "-£14.20"]
         }
       ]
     },
@@ -220,8 +222,8 @@ Figure 1 shows the relative change in household income by income decile from the
       "data": [
         {
           "x": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"],
-          "y": [-0.0000000906, -0.0049899, -0.0044954, -0.0073815, -0.0227067, -0.0355458, -0.0581039, -0.0681622, -0.0557871, -0.0187688],
-          "text": ["0.0%", "-0.5%", "-0.4%", "-0.7%", "-2.3%", "-3.6%", "-5.8%", "-6.8%", "-5.6%", "-1.9%"]
+          "y": [-0.0002, -0.78, -0.56, -3.44, -3.74, -17.94, -26.00, -21.98, -28.11, -21.41],
+          "text": ["-£0.00", "-£0.78", "-£0.56", "-£3.44", "-£3.74", "-£17.94", "-£26.00", "-£21.98", "-£28.11", "-£21.41"]
         }
       ]
     }
@@ -229,7 +231,7 @@ Figure 1 shows the relative change in household income by income decile from the
 }
 ```
 
-The policy primarily affects higher-income deciles (7-9), who see the largest relative income reductions. In 2027-28, decile 8 sees the largest impact at -2.3%, growing to -6.8% by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. This reflects the demographics of Plan 2 borrowers: graduates in early-to-mid career earning above the threshold. The lowest deciles are largely unaffected as their income falls below the repayment threshold.
+The policy primarily affects higher-income deciles (6-10), who see the largest absolute income reductions. In 2027-28, decile 9 sees the largest impact at -£9.52 per year, growing to -£28.11 by 2029-30 as the gap between frozen and RPI-indexed thresholds widens. This reflects the demographics of Plan 2 borrowers: graduates in early-to-mid career earning above the threshold. The lowest deciles are largely unaffected as their income falls below the repayment threshold.
 
 ## Who is affected?
 
@@ -270,4 +272,4 @@ To explore how the threshold freeze affects your specific circumstances, try our
 
 ## Conclusion
 
-PolicyEngine estimates the student loan threshold freeze raises £0.2-0.5 billion annually during the three-year freeze period (2027-28 through 2029-30). The policy affects approximately 15% of the population, with impacts concentrated on middle-income deciles where Plan 2 borrowers are most prevalent. The freeze slightly increases income inequality (Gini +0.02%) as it effectively raises the tax burden on graduates relative to non-graduates at similar income levels.
+PolicyEngine estimates the student loan threshold freeze raises £133-400 million annually during the three-year freeze period (2027-28 through 2029-30). The policy impacts are concentrated on middle-income deciles where Plan 2 borrowers are most prevalent.
