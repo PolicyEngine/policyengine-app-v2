@@ -35,8 +35,8 @@ function sentenceCaseLabel(label: string): string {
   return firstLetter + remainingText;
 }
 
-// Fixed width for remove button column (matches ActionIcon size="sm")
-const REMOVE_COLUMN_WIDTH = 22;
+// Fixed width and height for remove button column (matches ActionIcon size="sm")
+const REMOVE_COLUMN_SIDE = 22;
 
 export default function VariableRow({
   variable,
@@ -68,7 +68,7 @@ export default function VariableRow({
         />
       </Box>
       {shouldShowColumn && (
-        <Box style={{ width: REMOVE_COLUMN_WIDTH }}>
+        <Box style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}>
           {onRemove && (
             <Tooltip label="Remove variable">
               <ActionIcon
@@ -77,7 +77,7 @@ export default function VariableRow({
                 color="gray"
                 onClick={onRemove}
                 disabled={disabled}
-                style={{ height: 22 }}
+                style={{ width: REMOVE_COLUMN_SIDE, height: REMOVE_COLUMN_SIDE }}
               >
                 <IconX size={16} />
               </ActionIcon>

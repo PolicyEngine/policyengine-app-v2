@@ -38,6 +38,17 @@ export interface VariableSearchDropdownProps {
 // Fixed width for close button column (matches VariableRow's REMOVE_COLUMN_WIDTH)
 const CLOSE_COLUMN_WIDTH = 22;
 
+/**
+ * Capitalize first letter only, preserving the rest of the string as-is.
+ * This enforces sentence casing without lowercasing capitals in the middle.
+ */
+function sentenceCaseLabel(label: string): string {
+  if (!label) {
+    return '';
+  }
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
 export default function VariableSearchDropdown({
   searchValue,
   onSearchChange,
@@ -104,7 +115,7 @@ export default function VariableSearchDropdown({
         <Group gap="xs" justify="space-between" wrap="nowrap">
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" truncate>
-              {variable.label}
+              {sentenceCaseLabel(variable.label)}
             </Text>
             {variable.documentation && (
               <Text size="xs" c="dimmed" lineClamp={1}>
@@ -174,7 +185,7 @@ export default function VariableSearchDropdown({
         </Combobox>
       </Box>
       {onClose && (
-        <Box style={{ width: CLOSE_COLUMN_WIDTH }}>
+        <Box style={{ width: CLOSE_COLUMN_WIDTH, height: CLOSE_COLUMN_WIDTH }}>
           <Tooltip label="Cancel">
             <ActionIcon
               size="sm"
@@ -182,7 +193,7 @@ export default function VariableSearchDropdown({
               color="gray"
               onClick={handleClose}
               disabled={disabled}
-              style={{ height: 22 }}
+              style={{ width: CLOSE_COLUMN_WIDTH, height: CLOSE_COLUMN_WIDTH }}
             >
               <IconX size={16} />
             </ActionIcon>

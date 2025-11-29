@@ -144,12 +144,12 @@ export default function HouseholdBuilderForm({
     variable: { name: string; label: string },
     person: string
   ) => {
-    const { isPerson, label: entityLabel } = getVariableEntityDisplayInfo(variable.name, metadata);
+    const { isPerson } = getVariableEntityDisplayInfo(variable.name, metadata);
 
     // If non-person variable selected from person context, show warning
     if (!isPerson) {
       setWarningMessage(
-        `"${variable.label}" is a ${entityLabel}-level variable and was added to household variables.`
+        `"${variable.label}" is a variable applied household-wide. It was added to your household variables.`
       );
       // Auto-dismiss warning after 5 seconds
       setTimeout(() => setWarningMessage(null), 5000);
@@ -205,7 +205,7 @@ export default function HouseholdBuilderForm({
     // If person variable selected from household context, show warning
     if (isPerson) {
       setWarningMessage(
-        `"${variable.label}" is a person-level variable and was added to all household members.`
+        `"${variable.label}" is a variable applied to an individual. It was added to all household members.`
       );
       // Auto-dismiss warning after 5 seconds
       setTimeout(() => setWarningMessage(null), 5000);
