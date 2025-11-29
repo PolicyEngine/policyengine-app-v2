@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react';
 import { IconInfoCircle, IconPlus } from '@tabler/icons-react';
 import { Accordion, Alert, Button, Divider, Group, Select, Stack, Text } from '@mantine/core';
-import { spacing } from '@/designTokens';
+import { colors, spacing } from '@/designTokens';
 import { Household } from '@/types/ingredients/Household';
 import { sortPeopleKeys } from '@/utils/householdIndividuals';
 import {
@@ -59,12 +59,12 @@ export default function HouseholdBuilderForm({
   // Search state for person variables (per person)
   const [activePersonSearch, setActivePersonSearch] = useState<string | null>(null);
   const [personSearchValue, setPersonSearchValue] = useState('');
-  const [isPersonSearchFocused, setIsPersonSearchFocused] = useState(false);
+  const [, setIsPersonSearchFocused] = useState(false);
 
   // Search state for household variables
   const [isHouseholdSearchActive, setIsHouseholdSearchActive] = useState(false);
   const [householdSearchValue, setHouseholdSearchValue] = useState('');
-  const [isHouseholdSearchFocused, setIsHouseholdSearchFocused] = useState(false);
+  const [, setIsHouseholdSearchFocused] = useState(false);
 
   // Warning message state (shown when variable added to different entity than expected)
   const [warningMessage, setWarningMessage] = useState<string | null>(null);
@@ -257,7 +257,8 @@ export default function HouseholdBuilderForm({
       {warningMessage && (
         <Alert
           icon={<IconInfoCircle size={16} />}
-          color="blue"
+          color="teal"
+          variant="filled"
           withCloseButton
           onClose={() => setWarningMessage(null)}
           style={{
@@ -266,10 +267,8 @@ export default function HouseholdBuilderForm({
             right: spacing.xl,
             maxWidth: 400,
             zIndex: 1000,
-            opacity: 1,
-            '--alert-bg': 'var(--mantine-color-blue-filled)',
-            '--alert-color': 'var(--mantine-color-white)',
-          } as React.CSSProperties}
+            backgroundColor: colors.primary[500],
+          }}
         >
           {warningMessage}
         </Alert>
@@ -377,7 +376,6 @@ export default function HouseholdBuilderForm({
                           <VariableSearchDropdown
                             searchValue={personSearchValue}
                             onSearchChange={setPersonSearchValue}
-                            isFocused={isPersonSearchFocused}
                             onFocusChange={setIsPersonSearchFocused}
                             filteredVariables={getFilteredVariables(personSearchValue)}
                             onSelect={(variable) => handlePersonVariableSelect(variable, person)}
@@ -389,6 +387,11 @@ export default function HouseholdBuilderForm({
                               return { show: !isPerson, label: 'Household' };
                             }}
                             disabled={disabled}
+                            onClose={() => {
+                              setActivePersonSearch(null);
+                              setPersonSearchValue('');
+                              setIsPersonSearchFocused(false);
+                            }}
                           />
                         ) : (
                           <Button
@@ -463,7 +466,6 @@ export default function HouseholdBuilderForm({
                 <VariableSearchDropdown
                   searchValue={householdSearchValue}
                   onSearchChange={setHouseholdSearchValue}
-                  isFocused={isHouseholdSearchFocused}
                   onFocusChange={setIsHouseholdSearchFocused}
                   filteredVariables={getFilteredVariables(householdSearchValue)}
                   onSelect={handleHouseholdVariableSelect}
@@ -472,6 +474,11 @@ export default function HouseholdBuilderForm({
                     return { show: isPerson, label: 'Person' };
                   }}
                   disabled={disabled}
+                  onClose={() => {
+                    setIsHouseholdSearchActive(false);
+                    setHouseholdSearchValue('');
+                    setIsHouseholdSearchFocused(false);
+                  }}
                 />
               ) : (
                 <Button
