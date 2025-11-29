@@ -50,7 +50,7 @@ Figure 1 [shows](https://www.policyengine.org/uk/autumn-budget-2025) the absolut
       "y": [-0.08, -0.24, -0.18, -0.72, -1.16, -6.24, -7.06, -9.36, -9.52, -7.30],
       "type": "bar",
       "marker": {
-        "color": "#2C6496",
+        "color": "#808080",
         "line": {
           "width": 0
         }
