@@ -96,13 +96,18 @@ export function getVariableInfo(variableName: string, metadata: any): VariableIn
 /**
  * Get the group instance name for an entity type
  * Maps entity plural to the default instance name used in household data
+ *
+ * NOTE: These names must match the conventions from policyengine-app (the legacy app).
+ * In particular, spm_units uses "your household" as the instance name (not "your spm unit"),
+ * which is the same key used by the households entity. This is intentional and matches
+ * the legacy app's defaultHouseholds.js structure.
  */
 export function getGroupName(entityPlural: string, _personName?: string): string {
   const groupNameMap: Record<string, string> = {
     people: 'you', // Will be overridden by personName if provided
     households: 'your household',
     tax_units: 'your tax unit',
-    spm_units: 'your spm unit',
+    spm_units: 'your household', // Same as households - matches legacy policyengine-app
     families: 'your family',
     marital_units: 'your marital unit',
     benunits: 'your benefit unit',
