@@ -608,7 +608,7 @@ Average net income changes vary across constituencies, with all experiencing pos
 
 ### Inequality impact
 
-Table 3 shows the fuel duty freeze [reduces](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) income inequality across all years. The Gini index falls by 0.21% in 2026-27, declining to 0.05% by 2029-30 as the policy's impact diminishes.
+Table 3 shows the fuel duty freeze [reduces](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) income inequality across all years. The Gini index falls by 0.21% in 2026-27, declining to 0.05% by 2029-30.
 
 **Table 3: Inequality impact of fuel duty freeze**
 
