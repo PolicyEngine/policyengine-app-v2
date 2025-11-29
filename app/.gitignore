@@ -1,1 +1,7 @@
 .vercel
+
+# Generated llms.txt files (built on deploy)
+public/llms.txt
+public/llms-full.txt
+public/llms-research-us.txt
+public/llms-research-uk.txt
