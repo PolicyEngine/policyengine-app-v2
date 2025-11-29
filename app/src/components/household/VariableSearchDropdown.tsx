@@ -64,8 +64,7 @@ export default function VariableSearchDropdown({
   loading = false,
   onClose,
 }: VariableSearchDropdownProps) {
-  const combobox = useCombobox(
-    {
+  const combobox = useCombobox({
     onDropdownClose: () => {
       combobox.resetSelectedOption();
       onFocusChange(false);
@@ -73,8 +72,7 @@ export default function VariableSearchDropdown({
     onDropdownOpen: () => {
       onFocusChange(true);
     },
-  }
-    );
+  });
 
   // Sort so matching-context variables appear first
   const sortedVariables = useMemo(() => {
@@ -139,11 +137,7 @@ export default function VariableSearchDropdown({
   return (
     <Group gap="xs" align="center" wrap="nowrap">
       <Box style={{ flex: 1 }}>
-        <Combobox
-          store={combobox}
-          onOptionSubmit={handleOptionSubmit}
-          withinPortal={false}
-        >
+        <Combobox store={combobox} onOptionSubmit={handleOptionSubmit} withinPortal={false}>
           <Combobox.Target>
             <InputBase
               placeholder={placeholder}
@@ -153,11 +147,11 @@ export default function VariableSearchDropdown({
                 combobox.updateSelectedOptionIndex();
               }}
               onClick={() => {
-                combobox.openDropdown()
+                combobox.openDropdown();
               }}
               onFocus={() => combobox.openDropdown()}
               onBlur={() => {
-                combobox.closeDropdown()
+                combobox.closeDropdown();
               }}
               leftSection={<IconSearch size={16} />}
               rightSection={<Combobox.Chevron />}
