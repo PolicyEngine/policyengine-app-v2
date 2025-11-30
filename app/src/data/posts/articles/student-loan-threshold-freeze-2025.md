@@ -1,5 +1,3 @@
-Image credit: IFS
-
 In the Autumn Budget 2025, the Government [announced](https://www.gov.uk/government/publications/budget-2025-document/budget-2025-html) a freeze to the Plan 2 student loan repayment threshold for three years starting from April 2027. This means borrowers who started university between 2012 and 2023 will begin repaying their loans at a lower real income level than if thresholds had continued to rise with inflation.
 
 To understand the impact of this policy, we compare it against a baseline where the repayment threshold would have continued to rise with RPI inflation. Table 1 shows how the Plan 2 threshold differs between these two scenarios.
@@ -34,7 +32,7 @@ We [estimate](https://www.policyengine.org/uk/autumn-budget-2025) the revenue im
 
 [^1]: HMT also estimates £5.9bn revenue in 2026-27 from student loan revaluation (a separate policy affecting existing loan balances), but our microsimulation focuses only on the threshold freeze starting in 2027.
 
-The difference between PolicyEngine and HMT estimates reflects methodological differences: PolicyEngine models the full household sector response including income effects, while HMT figures focus on direct cash receipt changes. Both estimates confirm the policy direction - the threshold freeze raises revenue by requiring borrowers to repay a larger portion of their income.
+The difference between PolicyEngine and HMT estimates likely reflects different income distributions for Plan 2 borrowers and different assumptions about earnings growth. Both estimates confirm that the threshold freeze raises revenue by requiring borrowers to repay a larger portion of their income.
 
 ### Distributional impact
 
@@ -292,8 +290,6 @@ This outcome depends on three key factors:
 3. **Moderate debt relative to income trajectory** (in this case, £15,000 debt with income growing from £31,000 to £66,000+)
 
 For borrowers who would have their loans forgiven after 30 years regardless, the freeze simply means higher payments with no offsetting benefit. But for those on track to repay in full, accelerated repayment can reduce lifetime costs.
-
-To explore how the threshold freeze affects your specific circumstances, try our [UK Autumn Budget Lifetime Calculator](https://policyengine.github.io/uk-autumn-budget-lifecycle/).
 
 ## Conclusion
 
