@@ -6,10 +6,10 @@ To illustrate where a mansion tax would have the greatest impact, we mapped 2024
 
 Raising the threshold from £1.5 million to £2 million nearly halves the number of affected properties:
 
-| Threshold | Sales | Share of all sales |
-|:----------|:-----:|:------------------:|
-| £1.5 million | 14,820 | 1.7% |
-| £2 million | 8,213 | 0.9% |
+| Threshold    | Sales  | Share of all sales |
+| :----------- | :----: | :----------------: |
+| £1.5 million | 14,820 |        1.7%        |
+| £2 million   | 8,213  |        0.9%        |
 
 Three central London constituencies—Cities of London and Westminster, Kensington and Bayswater, and Chelsea and Fulham—account for 16% of affected properties at the £1.5m threshold and 21% at the £2m threshold. The median constituency saw 10 sales above £1.5m or 6 above £2m.
 
@@ -25,18 +25,18 @@ The top 10 constituencies account for 30% of sales above £1.5m and 36% above £
 
 **Top 10 constituencies by share of nationwide high-value sales**
 
-| Constituency | £1.5m | £2m |
-|:-------------|:-----:|:---:|
-| Cities of London and Westminster | 6.7% | 9.5% |
-| Kensington and Bayswater | 5.5% | 7.0% |
-| Chelsea and Fulham | 4.2% | 4.6% |
-| Hampstead and Highgate | 2.7% | 3.0% |
-| Battersea | 2.2% | 1.7% |
-| Richmond Park | 2.0% | 1.9% |
-| Islington South and Finsbury | 1.7% | 1.7% |
-| Hammersmith and Chiswick | 1.7% | 1.6% |
-| Holborn and St Pancras | 1.5% | 1.7% |
-| Finchley and Golders Green | 1.3% | 1.4% |
+| Constituency                     | £1.5m | £2m  |
+| :------------------------------- | :---: | :--: |
+| Cities of London and Westminster | 6.7%  | 9.5% |
+| Kensington and Bayswater         | 5.5%  | 7.0% |
+| Chelsea and Fulham               | 4.2%  | 4.6% |
+| Hampstead and Highgate           | 2.7%  | 3.0% |
+| Battersea                        | 2.2%  | 1.7% |
+| Richmond Park                    | 2.0%  | 1.9% |
+| Islington South and Finsbury     | 1.7%  | 1.7% |
+| Hammersmith and Chiswick         | 1.7%  | 1.6% |
+| Holborn and St Pancras           | 1.5%  | 1.7% |
+| Finchley and Golders Green       | 1.3%  | 1.4% |
 
 ## Methodology
 
