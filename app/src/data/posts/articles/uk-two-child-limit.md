@@ -1,10 +1,10 @@
-Chancellor Rachel Reeves is [expected](https://www.theguardian.com/society/2025/sep/30/rachel-reeves-lift-two-child-benefit-cap-november-budget) to lift the two-child benefit cap in the November 2025 Budget. The cap, introduced in 2017, prevents parents from claiming Universal Credit or Child Tax Credit for more than two children born after April 2017. The policy affected [1.5 million](https://www.gov.uk/government/statistics/universal-credit-and-child-tax-credit-claimants-statistics-related-to-the-policy-to-provide-support-for-a-maximum-of-2-children-april-2023) children in the UK in April 2023. Treasury officials are exploring alternatives to a complete removal of the cap.
+Chancellor Rachel Reeves [announced](https://www.gov.uk/government/news/chancellor-announces-autumn-budget-2025) in the November 2025 Budget that the government will remove the two-child benefit cap from April 2026. The cap, introduced in 2017, prevents parents from claiming Universal Credit or Child Tax Credit for more than two children born after April 2017. The OBR estimates that [560,000 families](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) will benefit from this change by 2029-30.
 
 In this analysis, we examine the impact of removing the two-child limit on household incomes, government spending, income distribution, poverty rates, income inequality, and geographic variation across parliamentary constituencies.
 
 ## Household impact
 
-The reform would increase Universal Credit or Child Tax Credit payments for affected families by removing the restriction on child elements. For a sample household of two parents with three children aged 3, 5, and 7 in 2026-27, Figure 1 [shows](https://legacy.policyengine.org/uk/household?focus=householdOutput.earnings&reform=93219&region=uk&timePeriod=2026&baseline=1&uk_local_areas_beta=true&household=56008) how household net income changes across different employment income levels.
+The reform will increase Universal Credit or Child Tax Credit payments for affected families by removing the restriction on child elements. For a sample household of two parents with three children aged 3, 5, and 7 in 2026-27, Figure 1 [shows](https://legacy.policyengine.org/uk/household?focus=householdOutput.earnings&reform=93219&region=uk&timePeriod=2026&baseline=1&uk_local_areas_beta=true&household=56008) how household net income changes across different employment income levels.
 
 **Figure 1: Household net income by employment income**
 
@@ -83,71 +83,78 @@ At lower income ranges, the reform delivers larger increases in household net in
 
 ## Budgetary impact
 
-PolicyEngine estimates that removing the two-child limit would cost £2.7 billion in 2025-26, rising to £3.1 billion by 2029-30. The cost increases over time as more children are born after April 2017, when the cap was introduced, making fewer families eligible for transitional protection. See the Appendix for a comparison of cost estimates from different organisations across years.
+PolicyEngine estimates that removing the two-child limit will cost £2.9 billion in 2026-27, rising to £3.6 billion by 2029-30. The Office for Budget Responsibility (OBR) estimates lower costs of £2.3 billion in 2026-27, rising to £3.0 billion by 2029-30. The cost increases over time as more children are born after April 2017, when the cap was introduced, making fewer families eligible for transitional protection.
+
+The OBR estimates that 560,000 families will gain from this policy by 2029-30, with an average increase in their Universal Credit award of £5,310 per year. The government estimates this measure will reduce child poverty by 450,000 by 2029-30. See the Appendix for a comparison of cost estimates from different organisations across years.
 
 ## Distributional impact
 
-By income decile, removing the two-child limit would provide the largest relative benefits to lower-income households, as shown in Figure 2. The lowest income decile would see household income rise by 1.4%, while the second decile would see a 1.3% increase.
+By income decile, removing the two-child limit will provide the largest relative benefits to lower-income households. The second income decile would see the largest increase in household income, reaching 2.59% by 2029-30. Figure 2 shows the relative change in household income by decile, with a year slider to see how the impact evolves from 2026-27 to 2029-30.
 
-**Figure 2: Change in household income by income decile, 2026-27**
+**Figure 2: Relative change in household income by income decile**
 
 ```plotly
 {
   "data": [
     {
       "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "y": [0.014328061696749907, 0.012677732494263927, 0.00604738540565023, 0.0031272796123411033, 0.0003271022742684365, 0.000312217381484109, 0.00021320237605410955, 9.079103413170756e-8, 0, 0],
+      "y": [1.1959776, 1.8391298, 0.4812252, 0.35359052, 0.11665296, 0.045929383, 0.0073350216, 0.0000073353062, 0, 0],
       "type": "bar",
-      "marker": {
-        "color": "#2C6496",
-        "line": {
-          "width": 0
-        }
-      },
-      "hovertemplate": "Decile %{x}<br>Change: +%{y:.1%}<extra></extra>",
-      "text": ["+1.4%", "+1.3%", "+0.6%", "+0.3%", "+0.0%", "+0.0%", "+0.0%", "+0.0%", "+0.0%", "+0.0%"],
-      "textposition": "inside",
-      "textfont": {
-        "family": "Roboto Serif",
-        "size": 14,
-        "color": "white"
-      }
+      "marker": {"color": "#2C6496"},
+      "hovertemplate": "Decile %{x}<br>Change: +%{y:.2f}%<extra></extra>",
+      "text": ["+1.20%", "+1.84%", "+0.48%", "+0.35%", "+0.12%", "+0.05%", "+0.01%", "+0.00%", "+0.00%", "+0.00%"],
+      "textposition": "outside",
+      "textfont": {"family": "Roboto Serif", "size": 11}
     }
   ],
   "layout": {
     "xaxis": {
       "title": "Income decile",
-      "titlefont": {
-        "family": "Roboto Serif"
-      },
-      "tickfont": {
-        "family": "Roboto Serif"
-      },
+      "titlefont": {"family": "Roboto Serif"},
+      "tickfont": {"family": "Roboto Serif"},
+      "tickmode": "array",
+      "tickvals": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       "showgrid": true,
-      "gridcolor": "#e0e0e0",
-      "gridwidth": 1
+      "gridcolor": "#e0e0e0"
     },
     "yaxis": {
-      "title": "Relative change in household income",
-      "titlefont": {
-        "family": "Roboto Serif"
-      },
-      "tickfont": {
-        "family": "Roboto Serif"
-      },
-      "tickformat": "+.1%",
+      "title": "Relative change in household income (%)",
+      "titlefont": {"family": "Roboto Serif"},
+      "tickfont": {"family": "Roboto Serif"},
+      "ticksuffix": "%",
       "showgrid": true,
       "gridcolor": "#e0e0e0",
-      "gridwidth": 1
+      "range": [0, 3]
     },
     "height": 500,
-    "margin": {
-      "l": 80,
-      "r": 50,
-      "b": 100,
-      "t": 100,
-      "pad": 4
-    },
+    "margin": {"l": 80, "r": 50, "b": 100, "t": 100, "pad": 4},
+    "updatemenus": [{
+      "type": "buttons",
+      "showactive": false,
+      "x": 0.1,
+      "y": 1.25,
+      "xanchor": "right",
+      "buttons": [{
+        "label": "Play",
+        "method": "animate",
+        "args": [null, {"frame": {"duration": 1000, "redraw": true}, "fromcurrent": true, "mode": "afterall"}]
+      }]
+    }],
+    "sliders": [{
+      "active": 0,
+      "steps": [
+        {"label": "2026-27", "method": "animate", "args": [["2026-27"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2027-28", "method": "animate", "args": [["2027-28"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2028-29", "method": "animate", "args": [["2028-29"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2029-30", "method": "animate", "args": [["2029-30"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]}
+      ],
+      "x": 0.25,
+      "len": 0.5,
+      "y": 1.15,
+      "yanchor": "bottom",
+      "currentvalue": {"visible": false},
+      "font": {"family": "Roboto Serif"}
+    }],
     "images": [
       {
         "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
@@ -161,15 +168,162 @@ By income decile, removing the two-child limit would provide the largest relativ
         "yanchor": "bottom"
       }
     ]
-  }
+  },
+  "frames": [
+    {
+      "name": "2026-27",
+      "data": [{
+        "y": [1.1959776, 1.8391298, 0.4812252, 0.35359052, 0.11665296, 0.045929383, 0.0073350216, 0.0000073353062, 0, 0],
+        "text": ["+1.20%", "+1.84%", "+0.48%", "+0.35%", "+0.12%", "+0.05%", "+0.01%", "+0.00%", "+0.00%", "+0.00%"]
+      }]
+    },
+    {
+      "name": "2027-28",
+      "data": [{
+        "y": [1.2528068, 1.968357, 0.51096624, 0.3697631, 0.11421897, 0.05568646, 0.0075182994, 0.000007653903, 0, 0],
+        "text": ["+1.25%", "+1.97%", "+0.51%", "+0.37%", "+0.11%", "+0.06%", "+0.01%", "+0.00%", "+0.00%", "+0.00%"]
+      }]
+    },
+    {
+      "name": "2028-29",
+      "data": [{
+        "y": [0.9840634, 2.4671202, 0.49848422, 0.43908167, 0.11204429, 0.06115094, 0.007567913, 0.00000831717, 0, 0],
+        "text": ["+0.98%", "+2.47%", "+0.50%", "+0.44%", "+0.11%", "+0.06%", "+0.01%", "+0.00%", "+0.00%", "+0.00%"]
+      }]
+    },
+    {
+      "name": "2029-30",
+      "data": [{
+        "y": [0.99413264, 2.588859, 0.50424, 0.52330637, 0.050979566, 0.06634871, 0.007651947, 0.000009246044, 0, 0],
+        "text": ["+0.99%", "+2.59%", "+0.50%", "+0.52%", "+0.05%", "+0.07%", "+0.01%", "+0.00%", "+0.00%", "+0.00%"]
+      }]
+    }
+  ]
 }
 ```
 
+In 2026-27, the second decile sees the largest relative gain at 1.84%, followed by the first decile at 1.20%. The benefits decline sharply for higher deciles, with deciles 5-10 seeing gains of 0.12% or less. By 2029-30, the second decile's gain increases to 2.59% as more children become eligible for the reformed policy.
+
+Figure 3 shows the absolute change in household income (in £ per year) by income decile. The second decile sees the largest absolute gains, reaching £632.36 per year by 2029-30.
+
+**Figure 3: Absolute change in household income by income decile (£/year)**
+
+```plotly
+{
+  "data": [
+    {
+      "x": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "y": [194.74147, 444.26904, 140.0342, 110.11041, 40.757065, 18.248802, 3.438594, 0.0038774062, 0, 0],
+      "type": "bar",
+      "marker": {"color": "#319795"},
+      "hovertemplate": "Decile %{x}<br>Change: £%{y:.2f}<extra></extra>",
+      "text": ["£194.74", "£444.27", "£140.03", "£110.11", "£40.76", "£18.25", "£3.44", "£0.00", "£0.00", "£0.00"],
+      "textposition": "outside",
+      "textfont": {"family": "Roboto Serif", "size": 11}
+    }
+  ],
+  "layout": {
+    "xaxis": {
+      "title": "Income decile",
+      "titlefont": {"family": "Roboto Serif"},
+      "tickfont": {"family": "Roboto Serif"},
+      "tickmode": "array",
+      "tickvals": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "showgrid": true,
+      "gridcolor": "#e0e0e0"
+    },
+    "yaxis": {
+      "title": "Absolute change in household income (£/year)",
+      "titlefont": {"family": "Roboto Serif"},
+      "tickfont": {"family": "Roboto Serif"},
+      "tickprefix": "£",
+      "showgrid": true,
+      "gridcolor": "#e0e0e0",
+      "range": [0, 700]
+    },
+    "height": 500,
+    "margin": {"l": 80, "r": 50, "b": 100, "t": 100, "pad": 4},
+    "updatemenus": [{
+      "type": "buttons",
+      "showactive": false,
+      "x": 0.1,
+      "y": 1.25,
+      "xanchor": "right",
+      "buttons": [{
+        "label": "Play",
+        "method": "animate",
+        "args": [null, {"frame": {"duration": 1000, "redraw": true}, "fromcurrent": true, "mode": "afterall"}]
+      }]
+    }],
+    "sliders": [{
+      "active": 0,
+      "steps": [
+        {"label": "2026-27", "method": "animate", "args": [["2026-27"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2027-28", "method": "animate", "args": [["2027-28"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2028-29", "method": "animate", "args": [["2028-29"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2029-30", "method": "animate", "args": [["2029-30"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]}
+      ],
+      "x": 0.25,
+      "len": 0.5,
+      "y": 1.15,
+      "yanchor": "bottom",
+      "currentvalue": {"visible": false},
+      "font": {"family": "Roboto Serif"}
+    }],
+    "images": [
+      {
+        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
+        "x": 1,
+        "y": -0.15,
+        "xref": "paper",
+        "yref": "paper",
+        "sizex": 0.15,
+        "sizey": 0.15,
+        "xanchor": "right",
+        "yanchor": "bottom"
+      }
+    ]
+  },
+  "frames": [
+    {
+      "name": "2026-27",
+      "data": [{
+        "y": [194.74147, 444.26904, 140.0342, 110.11041, 40.757065, 18.248802, 3.438594, 0.0038774062, 0, 0],
+        "text": ["£194.74", "£444.27", "£140.03", "£110.11", "£40.76", "£18.25", "£3.44", "£0.00", "£0.00", "£0.00"]
+      }]
+    },
+    {
+      "name": "2027-28",
+      "data": [{
+        "y": [204.51341, 475.8099, 147.7673, 119.19162, 40.017685, 22.271862, 3.5440817, 0.004082778, 0, 0],
+        "text": ["£204.51", "£475.81", "£147.77", "£119.19", "£40.02", "£22.27", "£3.54", "£0.00", "£0.00", "£0.00"]
+      }]
+    },
+    {
+      "name": "2028-29",
+      "data": [{
+        "y": [160.61665, 596.02576, 145.55849, 143.56012, 39.68743, 24.168938, 3.6592896, 0.004459857, 0, 0],
+        "text": ["£160.62", "£596.03", "£145.56", "£143.56", "£39.69", "£24.17", "£3.66", "£0.00", "£0.00", "£0.00"]
+      }]
+    },
+    {
+      "name": "2029-30",
+      "data": [{
+        "y": [162.87468, 632.3566, 147.75372, 174.25859, 18.166265, 26.402033, 3.7323763, 0.004979466, 0, 0],
+        "text": ["£162.87", "£632.36", "£147.75", "£174.26", "£18.17", "£26.40", "£3.73", "£0.00", "£0.00", "£0.00"]
+      }]
+    }
+  ]
+}
+```
+
+In 2026-27, the second decile receives an average gain of £444.27 per year, while the first decile gains £194.74. These amounts grow over time: by 2029-30, the second decile's gain reaches £632.36 and the fourth decile's gain increases from £110.11 to £174.26 per year. Upper deciles see negligible absolute gains.
+
 ### Winners and losers
 
-Figure 3 shows that 4.6% of the population would see income gains from removing the two-child limit, with the largest share of winners concentrated in the lowest income deciles. The lowest income decile sees 11% of households gain income, with 10.5% gaining more than 5% and 0.6% gaining less than 5%. The second decile sees 14.8% gain, with 14.2% gaining more than 5%.
+Figure 4 [shows](https://gist.github.com/vahid-ahmadi/0a9613b9857d03a50c71bbb8c1630555) that 4.4% of the population will see income gains from removing the two-child limit, with the largest share of winners concentrated in the lowest income deciles. The lowest income decile sees 9.5% of people gain income, with 8.7% gaining more than 5% and 0.8% gaining less than 5%. The second decile sees 18.4% gain, with 16.9% gaining more than 5%. Use the year slider to see how these shares evolve over time.
 
-**Figure 3: Population share by income change, 2026-27**
+**Figure 4: Population share by income change**
 
 ```plotly
 {
@@ -178,185 +332,227 @@ Figure 3 shows that 4.6% of the population would see income gains from removing 
       "name": "Gain more than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [4.2, 10.5, 14.2, 9.9, 5.6, 0.9, 0.4, 0.7, 0.0, 0.0, 0.0],
-      "y": ["All", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "x": [8.7, 16.9, 6.9, 5.0, 1.9, 0.1, 0.0, 0.0, 0.0, 0.0, null, 3.9],
+      "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "", "All"],
       "marker": {"color": "#2C6496"},
-      "text": ["4%", "11%", "14%", "10%", "6%", "", "", "", "", "", ""],
+      "text": ["9%", "17%", "7%", "5%", "2%", "", "", "", "", "", "", "4%"],
       "textposition": "inside",
-      "textfont": {"color": "white", "size": 11},
+      "textfont": {"color": "white", "size": 12, "family": "Roboto Serif"},
       "hovertemplate": "%{y}<br>Gain more than 5%: %{x:.1f}%<extra></extra>"
     },
     {
       "name": "Gain less than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [0.2, 0.6, 0.5, 0.1, 0.0, 0.0, 1.2, 0.0, 0.0, 0.0, 0.0],
-      "y": ["All", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "marker": {"color": "#C5D3E8"},
-      "text": ["", "", "", "", "", "", "", "", "", "", ""],
+      "x": [0.8, 1.5, 0.2, 0.9, 0.1, 1.6, 0.2, 0.0, 0.0, 0.0, null, 0.5],
+      "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "", "All"],
+      "marker": {"color": "#809ac2"},
+      "text": ["", "", "", "", "", "", "", "", "", "", "", ""],
       "textposition": "inside",
-      "textfont": {"color": "#333", "size": 11},
+      "textfont": {"color": "white", "size": 12, "family": "Roboto Serif"},
       "hovertemplate": "%{y}<br>Gain less than 5%: %{x:.1f}%<extra></extra>"
     },
     {
       "name": "No change",
       "type": "bar",
       "orientation": "h",
-      "x": [95.5, 88.9, 85.2, 90.0, 94.4, 99.1, 98.4, 99.3, 100.0, 100.0, 100.0],
-      "y": ["All", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "marker": {"color": "#F0F0F0"},
-      "text": ["96%", "89%", "85%", "90%", "94%", "99%", "98%", "99%", "100%", "100%", "100%"],
-      "textposition": "inside",
-      "textfont": {"color": "#333", "size": 11},
+      "x": [90.5, 81.6, 92.8, 94.1, 98.0, 98.3, 99.8, 100.0, 100.0, 100.0, null, 95.5],
+      "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "", "All"],
+      "marker": {"color": "#DCDCDC"},
+      "text": ["90%", "82%", "92%", "94%", "98%", "98%", "100%", "100%", "100%", "100%", "", "95%"],
+      "textposition": "outside",
+      "textfont": {"color": "#333", "size": 12, "family": "Roboto Serif"},
       "hovertemplate": "%{y}<br>No change: %{x:.1f}%<extra></extra>"
     },
     {
       "name": "Loss less than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-      "y": ["All", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-      "marker": {"color": "#A0A0A0"},
-      "text": ["", "", "", "", "", "", "", "", "", "", ""],
-      "textposition": "inside",
-      "textfont": {"color": "white", "size": 11},
+      "x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0],
+      "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "", "All"],
+      "marker": {"color": "#AAAAAA"},
       "hovertemplate": "%{y}<br>Loss less than 5%: %{x:.1f}%<extra></extra>"
     },
     {
       "name": "Loss more than 5%",
       "type": "bar",
       "orientation": "h",
-      "x": [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-      "y": ["All", 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      "x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0],
+      "y": ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "", "All"],
       "marker": {"color": "#616161"},
-      "text": ["", "", "", "", "", "", "", "", "", "", ""],
-      "textposition": "inside",
-      "textfont": {"color": "white", "size": 11},
       "hovertemplate": "%{y}<br>Loss more than 5%: %{x:.1f}%<extra></extra>"
     }
   ],
   "layout": {
     "barmode": "stack",
     "xaxis": {
-      "title": "Population share",
-      "titlefont": {
-        "family": "Roboto Serif"
-      },
-      "tickfont": {
-        "family": "Roboto Serif"
-      },
-      "tickformat": ".0%",
+      "title": {"text": "Population share", "font": {"family": "Roboto Serif", "size": 14}},
+      "tickfont": {"family": "Roboto Serif", "size": 12},
+      "ticksuffix": "%",
       "tickvals": [0, 20, 40, 60, 80, 100],
-      "range": [0, 105],
-      "showgrid": false
+      "range": [0, 108],
+      "showgrid": false,
+      "zeroline": false
     },
     "yaxis": {
-      "title": "Income decile",
-      "titlefont": {
-        "family": "Roboto Serif"
-      },
-      "tickfont": {
-        "family": "Roboto Serif"
-      },
-      "autorange": "reversed",
-      "showgrid": false
+      "title": {"text": "Income decile", "font": {"family": "Roboto Serif", "size": 14}},
+      "tickfont": {"family": "Roboto Serif", "size": 12},
+      "showgrid": false,
+      "zeroline": false,
+      "type": "category"
     },
-    "height": 500,
-    "margin": {
-      "l": 80,
-      "r": 200,
-      "b": 80,
-      "t": 100,
-      "pad": 4
-    },
+    "height": 650,
+    "margin": {"l": 80, "r": 180, "b": 100, "t": 120, "pad": 4},
     "legend": {
+      "orientation": "v",
       "x": 1.02,
       "y": 0.5,
       "xanchor": "left",
       "yanchor": "middle",
-      "font": {
-        "family": "Roboto Serif",
-        "size": 12
-      },
-      "title": {
-        "text": "Change in income",
-        "font": {
-          "family": "Roboto Serif",
-          "size": 13
-        }
-      }
+      "title": {"text": "Change in income", "font": {"family": "Roboto Serif", "size": 13}},
+      "font": {"family": "Roboto Serif", "size": 12}
     },
-    "plot_bgcolor": "#ebf2fa",
-    "paper_bgcolor": "#ebf2fa",
+    "plot_bgcolor": "white",
+    "paper_bgcolor": "white",
+    "updatemenus": [{
+      "type": "buttons",
+      "showactive": false,
+      "x": 0.0,
+      "y": 1.12,
+      "xanchor": "left",
+      "buttons": [{
+        "label": "Play",
+        "method": "animate",
+        "args": [null, {"frame": {"duration": 1000, "redraw": true}, "fromcurrent": true, "mode": "afterall"}]
+      }]
+    }],
+    "sliders": [{
+      "active": 0,
+      "steps": [
+        {"label": "2026-27", "method": "animate", "args": [["2026-27"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2027-28", "method": "animate", "args": [["2027-28"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2028-29", "method": "animate", "args": [["2028-29"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]},
+        {"label": "2029-30", "method": "animate", "args": [["2029-30"], {"frame": {"duration": 0, "redraw": true}, "mode": "immediate"}]}
+      ],
+      "x": 0.15,
+      "len": 0.7,
+      "y": 1.08,
+      "yanchor": "bottom",
+      "currentvalue": {"visible": false},
+      "font": {"family": "Roboto Serif"}
+    }],
     "images": [
       {
-        "source": "/assets/logos/policyengine/teal-square.png",
+        "source": "https://raw.githubusercontent.com/PolicyEngine/policyengine-app-v2/main/app/public/assets/logos/policyengine/teal.png",
         "x": 1,
-        "y": -0.18,
+        "y": -0.22,
         "xref": "paper",
         "yref": "paper",
-        "sizex": 0.1,
-        "sizey": 0.1,
+        "sizex": 0.15,
+        "sizey": 0.15,
         "xanchor": "right",
         "yanchor": "bottom"
       }
     ]
-  }
+  },
+  "frames": [
+    {
+      "name": "2026-27",
+      "data": [
+        {"x": [8.7, 16.9, 6.9, 5.0, 1.9, 0.1, 0.0, 0.0, 0.0, 0.0, null, 3.9], "text": ["9%", "17%", "7%", "5%", "2%", "", "", "", "", "", "", "4%"]},
+        {"x": [0.8, 1.5, 0.2, 0.9, 0.1, 1.6, 0.2, 0.0, 0.0, 0.0, null, 0.5]},
+        {"x": [90.5, 81.6, 92.8, 94.1, 98.0, 98.3, 99.8, 100.0, 100.0, 100.0, null, 95.5], "text": ["90%", "82%", "92%", "94%", "98%", "98%", "100%", "100%", "100%", "100%", "", "95%"]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]}
+      ]
+    },
+    {
+      "name": "2027-28",
+      "data": [
+        {"x": [8.3, 17.0, 7.1, 5.1, 1.8, 0.1, 0.0, 0.0, 0.0, 0.0, null, 3.9], "text": ["8%", "17%", "7%", "5%", "2%", "", "", "", "", "", "", "4%"]},
+        {"x": [1.2, 1.3, 0.3, 0.9, 0.1, 1.6, 0.2, 0.0, 0.0, 0.0, null, 0.6]},
+        {"x": [90.5, 81.7, 92.6, 93.9, 98.1, 98.2, 99.8, 100.0, 100.0, 100.0, null, 95.5], "text": ["91%", "82%", "93%", "94%", "98%", "98%", "100%", "100%", "100%", "100%", "", "95%"]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]}
+      ]
+    },
+    {
+      "name": "2028-29",
+      "data": [
+        {"x": [7.3, 19.7, 6.6, 6.5, 1.6, 0.1, 0.0, 0.0, 0.0, 0.0, null, 4.1], "text": ["7%", "20%", "7%", "7%", "2%", "", "", "", "", "", "", "4%"]},
+        {"x": [0.8, 1.4, 0.3, 0.4, 0.1, 1.6, 0.2, 0.0, 0.0, 0.0, null, 0.5]},
+        {"x": [91.9, 78.9, 93.1, 93.0, 98.2, 98.3, 99.8, 100.0, 100.0, 100.0, null, 95.4], "text": ["92%", "79%", "93%", "93%", "98%", "98%", "100%", "100%", "100%", "100%", "", "95%"]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]}
+      ]
+    },
+    {
+      "name": "2029-30",
+      "data": [
+        {"x": [6.8, 20.3, 6.6, 7.3, 0.9, 0.1, 0.0, 0.0, 0.0, 0.0, null, 4.2], "text": ["7%", "20%", "7%", "7%", "", "", "", "", "", "", "", "4%"]},
+        {"x": [0.5, 1.6, 0.4, 0.4, 0.1, 1.6, 0.2, 0.0, 0.0, 0.0, null, 0.5]},
+        {"x": [92.6, 78.1, 93.0, 92.2, 99.0, 98.3, 99.8, 100.0, 100.0, 100.0, null, 95.3], "text": ["93%", "78%", "93%", "92%", "99%", "98%", "100%", "100%", "100%", "100%", "", "95%"]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]},
+        {"x": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, null, 0]}
+      ]
+    }
+  ]
 }
 ```
 
 ## Poverty impact
 
-By age group, removing the two-child limit would reduce poverty rates most for children across all years. Using the absolute poverty measure before housing costs, the child poverty rate would fall by 13.6% in 2025-26 and by 15.5% in 2029-30, while the overall poverty rate would decline by 6.5% in 2025-26 and by 7.3% in 2029-30.
+By age group, removing the two-child limit will [reduce](https://gist.github.com/vahid-ahmadi/0a9613b9857d03a50c71bbb8c1630555) poverty rates most for children across all years. Using the absolute poverty measure before housing costs, the child poverty rate would fall by 13.5% in 2026-27, rising to 14.4% in 2028-29, while the overall poverty rate would decline by 6.6% in 2026-27 and by 7.1% in 2028-29.
 
-| Year | Children                                                                                                                               | All                                                                                                                                   |
-| ---- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| 2025 | [-13.6%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2025&baseline=1) | [-6.5%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2025&baseline=1) |
-| 2026 | [-15.7%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2026&baseline=1) | [-7.4%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2026&baseline=1) |
-| 2027 | [-15.8%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2027&baseline=1) | [-7.4%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2027&baseline=1) |
-| 2028 | [-16.3%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2028&baseline=1) | [-7.8%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2028&baseline=1) |
-| 2029 | [-15.5%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2029&baseline=1) | [-7.3%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact&reform=93219&region=uk&timePeriod=2029&baseline=1) |
+| Year    | Children | All    |
+| ------- | -------- | ------ |
+| 2026-27 | -13.5%   | -6.6%  |
+| 2027-28 | -13.6%   | -6.6%  |
+| 2028-29 | -14.4%   | -7.1%  |
+| 2029-30 | -13.8%   | -6.7%  |
 
 ## Inequality impact
 
-Removing the two-child limit in 2026-27 would reduce income inequality. The Gini index would fall by 0.6%, while the top 10% income share would decrease by 0.1% and the top 1% income share would decline by 0.1%.
+Removing the two-child limit will [reduce](https://gist.github.com/vahid-ahmadi/0a9613b9857d03a50c71bbb8c1630555) income inequality across all years. The Gini index would fall by 0.55% in 2026-27, increasing to 0.61% by 2029-30 as more children become eligible for the reformed policy.
 
-| Metric        | Change                                                                                                                                   |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Gini index    | [-0.6%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.inequalityImpact&reform=93219&region=uk&timePeriod=2026&baseline=1) |
-| Top 10% share | [-0.1%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.inequalityImpact&reform=93219&region=uk&timePeriod=2026&baseline=1) |
-| Top 1% share  | [-0.1%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.inequalityImpact&reform=93219&region=uk&timePeriod=2026&baseline=1) |
+| Year    | Gini index change |
+| ------- | ----------------- |
+| 2026-27 | -0.55%            |
+| 2027-28 | -0.57%            |
+| 2028-29 | -0.60%            |
+| 2029-30 | -0.61%            |
 
-## Geographic impact
+## Constituency impact
 
-The impact of removing the two-child limit [varies](https://legacy.policyengine.org/uk/policy?focus=policyOutput.constituencies.relative&reform=93219&region=uk&timePeriod=2026&baseline=1&uk_local_areas_beta=true&household=56008) across parliamentary constituencies, as shown in Figure 4.
+The impact of removing the two-child limit [varies](https://legacy.policyengine.org/uk/policy?focus=policyOutput.constituencies.relative&reform=93219&region=uk&timePeriod=2026&baseline=1&uk_local_areas_beta=true&household=56008) across parliamentary constituencies, as shown in Figure 5.
 
-**Figure 4: Geographic distribution of relative income change by parliamentary constituency**
+**Figure 5: Relative income change by parliamentary constituency**
 
-![](/images/posts/two-child-limit/map-impact.png)
+<iframe src="/assets/posts/uk-two-child-limit/constituency_map_two-child-limit.html" width="100%" height="600" frameborder="0"></iframe>
 
-The constituencies experiencing the largest relative income gains include Bradford East, Birmingham Hodge Hill and Solihull North, Bradford South, Luton North, and Birmingham Hall Green and Moseley. The constituencies with the smallest gains include South Down, Lagan Valley, Upper Bann, Glasgow East, and Cities of London and Westminster.
+The constituencies experiencing the largest average income gains include Belfast North (£243.47), Bradford East (£218.77), Birmingham Yardley (£209.33), Bradford West (£207.96), and West Tyrone (£205.92). The constituencies with the smallest gains include Dumfries and Galloway (£21.49), Orkney and Shetland (£22.25), and Glasgow East (£26.36).
 
 ## Conclusion
 
-Removing the two-child benefit limit would cost £2.7 billion in 2025-26, rising to £3.1 billion by 2029-30. The reform would reduce absolute child poverty (before housing costs) by 13.6% and overall absolute poverty by 6.5% in 2025-26.
+PolicyEngine estimates that removing the two-child benefit limit will cost £2.9 billion in 2026-27, rising to £3.6 billion by 2029-30. The reform would reduce absolute child poverty (before housing costs) by 13.5% and overall poverty by 6.6% in 2026-27. The OBR estimates a lower cost of £2.3 billion in 2026-27, rising to £3.0 billion by 2029-30, benefiting 560,000 families and reducing child poverty by 450,000.
 
-We invite you to explore the [PolicyEngine webapp](https://legacy.policyengine.org/) to model your own customised reforms.
+We invite you to explore the [UK Autumn Budget 2025 analysis dashboard](https://www.policyengine.org/uk/autumn-budget-2025) to explore revenue and distributional impacts across income deciles, constituencies, and household types.
 
 ## Appendix: Cost estimates by organisation and year
 
 The following table compares cost estimates for abolishing the two-child limit from different organisations.
 
-| Year              | PolicyEngine                                                                                                                             | IFS        | JRF        | Resolution Foundation |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------- | --------------------- |
-| 2024-25           | —                                                                                                                                        | —          | —          | £2.5bn                |
-| 2025-26           | [£2.7bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2025&baseline=1) | —          | £2.7bn[^1] | —                     |
-| 2026-27           | [£2.8bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2026&baseline=1) | —          | —          | —                     |
-| 2027-28           | [£2.9bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2027&baseline=1) | —          | —          | —                     |
-| 2028-29           | [£3.0bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2028&baseline=1) | —          | —          | —                     |
-| 2029-30           | [£3.1bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2029&baseline=1) | —          | £2.8bn[^2] | —                     |
-| Long run          | —                                                                                                                                        | £2.5bn[^3] | —          | —                     |
-| Full coverage[^4] | —                                                                                                                                        | —          | —          | £3.6bn                |
+| Year              | PolicyEngine                                                                                                                             | OBR (static) | OBR (post-behavioural) | IFS        | JRF        | Resolution Foundation |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------------ | ---------------------- | ---------- | ---------- | --------------------- |
+| 2024-25           | —                                                                                                                                        | —            | —                      | —          | —          | £2.5bn                |
+| 2025-26           | —                                                                                                                                        | —            | —                      | —          | £2.7bn[^1] | —                     |
+| 2026-27           | [£2.9bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2026&baseline=1) | £2.1bn       | £2.3bn                 | —          | —          | —                     |
+| 2027-28           | [£3.1bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2027&baseline=1) | £2.2bn       | £2.5bn                 | —          | —          | —                     |
+| 2028-29           | [£3.4bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2028&baseline=1) | £2.4bn       | £2.7bn                 | —          | —          | —                     |
+| 2029-30           | [£3.6bn](https://legacy.policyengine.org/uk/policy?focus=policyOutput.policyBreakdown&reform=93219&region=uk&timePeriod=2029&baseline=1) | £2.7bn       | £3.0bn                 | —          | £2.8bn[^2] | —                     |
+| 2030-31           | —                                                                                                                                        | £2.8bn       | £3.1bn                 | —          | —          | —                     |
+| Long run          | —                                                                                                                                        | —            | —                      | £2.5bn[^3] | —          | —                     |
+| Full coverage[^4] | —                                                                                                                                        | —            | —                      | —          | —          | £3.6bn                |
 
 [^1]: JRF estimate includes both two-child limit and benefit cap removal. Source: JRF analysis using IPPR tax-benefit model (Parkes et al 2025). JRF's earlier estimate from May 2025 showed £2.0bn for two-child limit only in 2025/26
 
@@ -369,6 +565,7 @@ The following table compares cost estimates for abolishing the two-child limit f
 Sources:
 
 - PolicyEngine: This analysis
+- OBR: [Economic and Fiscal Outlook November 2025](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)
 - IFS: [The two-child limit: poverty, incentives and cost](https://ifs.org.uk/articles/two-child-limit-poverty-incentives-and-cost)
 - JRF: [Getting the child poverty strategy we need](https://www.ippr.org/articles/getting-the-child-poverty-strategy-we-need) (IPPR/JRF collaboration), [Two policies to boost family living standards and reduce child poverty](https://www.jrf.org.uk/child-poverty/two-policies-to-boost-family-living-standards-and-reduce-child-poverty), and [Three policies to reduce child poverty this parliament](https://www.jrf.org.uk/child-poverty/three-policies-to-reduce-child-poverty-this-parliament)
 - Resolution Foundation: [Catastrophic caps](https://www.resolutionfoundation.org/publications/catastophic-caps/)
