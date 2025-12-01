@@ -35,26 +35,6 @@ export const populationSlice = createSlice({
     ) => {
       const { position, population } = action.payload;
 
-      console.log('[POPULATION REDUCER] createPopulationAtPosition called:', {
-        position,
-        population,
-      });
-      console.log('[POPULATION REDUCER] state.populations[0]:', state.populations[0]);
-      console.log('[POPULATION REDUCER] state.populations[1]:', state.populations[1]);
-      console.log('[POPULATION REDUCER] state.populations[position]:', state.populations[position]);
-      console.log(
-        '[POPULATION REDUCER] Boolean check !state.populations[position]:',
-        !state.populations[position]
-      );
-      console.log(
-        '[POPULATION REDUCER] typeof state.populations[position]:',
-        typeof state.populations[position]
-      );
-      console.log(
-        '[POPULATION REDUCER] Current population at position:',
-        state.populations[position]
-      );
-
       // Only create if no population exists at this position
       if (!state.populations[position]) {
         const newPopulation: Population = {
@@ -64,10 +44,7 @@ export const populationSlice = createSlice({
           geography: null,
           ...population,
         };
-        console.log('[POPULATION REDUCER] Creating new population:', newPopulation);
         state.populations[position] = newPopulation;
-      } else {
-        console.log('[POPULATION REDUCER] Population already exists, preserving existing data');
       }
     },
 
@@ -121,9 +98,7 @@ export const populationSlice = createSlice({
         household: Household;
       }>
     ) => {
-      console.log('[POPULATION REDUCER] setHouseholdAtPosition called:', action.payload);
       const population = state.populations[action.payload.position];
-      console.log('[POPULATION REDUCER] Current population:', population);
       if (!population) {
         throw new Error(
           `Cannot set household at position ${action.payload.position}: no population exists at that position`
@@ -131,7 +106,6 @@ export const populationSlice = createSlice({
       }
       population.household = action.payload.household;
       population.geography = null; // Clear geography when setting household
-      console.log('[POPULATION REDUCER] Updated population:', population);
     },
 
     // Initialize household at position
@@ -156,6 +130,7 @@ export const populationSlice = createSlice({
       const { countryId, year } = action.payload;
       const householdYear = year || CURRENT_YEAR;
       if (!year) {
+        // eslint-disable-next-line no-console -- Legitimate error for debugging missing year parameter
         console.error(
           '[populationReducer.initializeHouseholdAtPosition] No year provided - this is likely a bug. ' +
             `Falling back to CURRENT_YEAR (${CURRENT_YEAR}). ` +
