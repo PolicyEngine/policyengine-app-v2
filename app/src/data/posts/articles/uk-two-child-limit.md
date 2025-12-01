@@ -502,14 +502,27 @@ Figure 4 [shows](https://gist.github.com/vahid-ahmadi/0a9613b9857d03a50c71bbb8c1
 
 ## Poverty impact
 
-By age group, removing the two-child limit will [reduce](https://gist.github.com/vahid-ahmadi/0a9613b9857d03a50c71bbb8c1630555) poverty rates most for children across all years. Using the absolute poverty measure before housing costs, the child poverty rate would fall by 13.5% in 2026-27, rising to 14.4% in 2028-29, while the overall poverty rate would decline by 6.6% in 2026-27 and by 7.1% in 2028-29.
+By age group, removing the two-child limit will [reduce](https://gist.github.com/vahid-ahmadi/b3802dd91df3b5363b4b7b6037c0a8d5) poverty rates most for children across all years. Tables 1 and 2 show the percentage change in poverty rates for absolute and relative poverty measures, both before housing costs (BHC) and after housing costs (AHC).
 
-| Year    | Children | All    |
-| ------- | -------- | ------ |
-| 2026-27 | -13.5%   | -6.6%  |
-| 2027-28 | -13.6%   | -6.6%  |
-| 2028-29 | -14.4%   | -7.1%  |
-| 2029-30 | -13.8%   | -6.7%  |
+**Table 1: Change in absolute poverty rates**
+
+| Year    | Children (BHC) | Children (AHC) | All (BHC) | All (AHC) |
+| ------- | -------------- | -------------- | --------- | --------- |
+| 2026-27 | -13.5%         | -13.1%         | -6.6%     | -6.5%     |
+| 2027-28 | -13.6%         | -13.3%         | -6.6%     | -6.6%     |
+| 2028-29 | -14.4%         | -13.0%         | -7.1%     | -6.5%     |
+| 2029-30 | -13.8%         | -13.0%         | -6.7%     | -6.5%     |
+
+**Table 2: Change in relative poverty rates**
+
+| Year    | Children (BHC) | Children (AHC) | All (BHC) | All (AHC) |
+| ------- | -------------- | -------------- | --------- | --------- |
+| 2026-27 | -14.5%         | -6.0%          | -6.9%     | -2.7%     |
+| 2027-28 | -14.1%         | -5.7%          | -6.3%     | -2.6%     |
+| 2028-29 | -17.3%         | -6.1%          | -8.4%     | -2.7%     |
+| 2029-30 | -17.6%         | -6.9%          | -8.5%     | -3.5%     |
+
+Absolute poverty decreases by 13-14% for children and 6-7% overall. Relative poverty (BHC) decreases by 14-18% for children and 6-9% overall.
 
 ## Inequality impact
 
