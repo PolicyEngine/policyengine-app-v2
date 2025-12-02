@@ -18,7 +18,7 @@ GiveCalc uses PolicyEngine's microsimulation model to compute your taxes with an
 2. **Marginal giving discount**: The tax savings per additional dollar donated
 3. **Target donation finder**: The donation required to achieve a specific net income reduction
 
-For example, a California family earning $200,000 with $20,000 in itemized deductions saves $6,240 in taxes on a $20,000 donation, making their net cost $13,760.
+For example, a single California filer earning $200,000 with $20,000 in mortgage interest saves $5,818 in taxes on a $19,900 donation — a 33% marginal savings rate that makes their net cost $14,082.
 
 ## Supporting PolicyEngine
 
@@ -28,7 +28,7 @@ GiveCalc demonstrates what PolicyEngine does: we build open-source tools that he
 - **[PolicyEngine UK](https://policyengine.org/uk)**: Comprehensive UK tax-benefit model used by HM Treasury
 - **[Policy analysis](https://policyengine.org/us/research)**: Research on proposals from federal reconciliation bills to state tax reforms
 
-PolicyEngine is a 501(c)(3) nonprofit. Donations support:
+Donations to PolicyEngine are tax-deductible in the US and support:
 
 - Expanding coverage of tax credits and benefit programs
 - Improving data quality through enhanced microdata
