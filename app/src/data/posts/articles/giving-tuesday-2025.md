@@ -40,7 +40,9 @@ When major legislation moves through Congress, we build custom tools to help the
 
 ### Benefit access
 
-Tools like [MyFriendBen](https://myfriendben.org) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for, helping close the gap between eligibility and enrollment.
+Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for, helping close the gap between eligibility and enrollment.
+
+![Benefit screening tools powered by PolicyEngine](../images/giving-tuesday-2025/benefit-tools-collage.png)
 
 ### What donations support
 
