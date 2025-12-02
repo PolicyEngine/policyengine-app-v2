@@ -9,8 +9,8 @@
     "image": "us-giving-tuesday-2025/cover.png"
   },
   {
-    "title": "GiveCalc US: Calculate your charitable giving tax savings",
-    "description": "Calculate how charitable donations affect your federal and state taxes with our rebuilt, standalone web application.",
+    "title": "GiveCalc: Open-source tool to calculate the true cost of charitable giving",
+    "description": "Free, open-source calculator computes how charitable donations affect your federal and state taxes. Built on epistemic infrastructure that powers $1B+ in identified benefits.",
     "date": "2025-12-02",
     "tags": ["us", "featured", "giving"],
     "authors": ["max-ghenis"],
