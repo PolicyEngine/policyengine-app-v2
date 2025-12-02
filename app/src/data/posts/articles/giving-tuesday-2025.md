@@ -38,6 +38,12 @@ Tools like [MyFriendBen](https://myfriendben.org) use PolicyEngine's API to scre
 
 ![PolicyEngine household calculator](../images/giving-tuesday-2025/policyengine-calculator.png)
 
+### High-profile policy analysis
+
+When major legislation moves through Congress, we build custom tools to help the public understand impacts. Our [OBBBA household calculator](https://policyengine.github.io/obbba-household-by-household/) lets anyone see how reconciliation bill provisions affect their family.
+
+![OBBBA household-by-household calculator](../images/giving-tuesday-2025/obbba.png)
+
 ### What donations support
 
 Donations to PolicyEngine are tax-deductible in the US and support:
