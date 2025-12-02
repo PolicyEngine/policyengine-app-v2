@@ -9,6 +9,7 @@ Since [launching GiveCalc last year](/us/research/givecalc), we've rebuilt it fr
 - **2025 tax year support**: Calculate impacts for 2024, 2025, or 2026
 - **Expanded income types**: Add self-employment, capital gains, dividends, and interest income
 - **Mobile-friendly design**: Use GiveCalc on any device
+- **Validated accuracy**: Tax calculations powered by our [partnership with the National Bureau of Economic Research](/us/research/policyengine-nber-mou-taxsim)
 
 ## How it works
 
