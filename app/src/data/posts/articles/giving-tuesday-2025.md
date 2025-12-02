@@ -1,4 +1,4 @@
-This Giving Tuesday, we're launching [**GiveCalc**](https://givecalc.org) as a standalone web application at [givecalc.org](https://givecalc.org). The free calculator computes how charitable donations affect your federal and state taxes, helping you understand the true cost of giving.
+This Giving Tuesday, we're launching [**GiveCalc**](https://givecalc.org) as a standalone web application at [givecalc.org](https://givecalc.org). The free calculator computes how charitable donations affect your federal and state taxes, helping you understand the true cost of giving—to any charity, including [PolicyEngine](https://policyengine.org/us/donate).
 
 ## What's new
 
