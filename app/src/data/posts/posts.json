@@ -5,17 +5,17 @@
     "date": "2025-12-02 12:00:00",
     "tags": ["uk", "giving"],
     "authors": ["max-ghenis"],
-    "filename": "givecalc-uk.md",
+    "filename": "uk-giving-tuesday-2025.md",
     "image": "givecalc.png"
   },
   {
-    "title": "Giving Tuesday 2025: GiveCalc launches at givecalc.org",
+    "title": "GiveCalc US: Calculate your charitable giving tax savings",
     "description": "Calculate how charitable donations affect your federal and state taxes with our rebuilt, standalone web application.",
     "date": "2025-12-02",
     "tags": ["us", "featured", "giving"],
     "authors": ["max-ghenis"],
-    "filename": "giving-tuesday-2025.md",
-    "image": "giving-tuesday-2025/cover.png"
+    "filename": "us-giving-tuesday-2025.md",
+    "image": "givecalc.png"
   },
   {
     "title": "How a £2,000 salary sacrifice cap would affect workers",
