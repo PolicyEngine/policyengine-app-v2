@@ -30,7 +30,7 @@ PolicyEngine builds open-source infrastructure for evidence-based policy analysi
 
 ### Policy understanding
 
-[PolicyEngine's calculator](https://policyengine.org/us/household) lets anyone see how taxes and benefits affect their specific situation—and how proposed reforms would change it.
+[PolicyEngine's calculator](https://policyengine.org/us/reports) lets anyone see how taxes and benefits affect their specific situation—and how proposed reforms would change it.
 
 ![PolicyEngine calculator showing Nebraska EITC analysis](../images/giving-tuesday-2025/policyengine-calculator.png)
 
