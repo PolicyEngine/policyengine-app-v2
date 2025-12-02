@@ -5,6 +5,7 @@ This Giving Tuesday, we're launching [**GiveCalc**](https://givecalc.org) as a s
 Since [launching GiveCalc last year](/us/research/givecalc), we've rebuilt it from the ground up:
 
 - **New domain**: Access GiveCalc directly at [givecalc.org](https://givecalc.org)
+- **UK Gift Aid support**: Calculate tax relief on charitable donations in the UK, including [Scottish income tax rates](/uk/research/givecalc-uk)
 - **React frontend**: Faster, more responsive interface
 - **2025 tax year support**: Calculate impacts for 2024, 2025, or 2026, including HR1's charitable contribution changes and downstream state tax effects
 - **Expanded income types**: Add self-employment, capital gains, dividends, and interest income

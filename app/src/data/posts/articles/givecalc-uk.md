@@ -1,4 +1,4 @@
-[GiveCalc](https://givecalc.org) now supports UK Gift Aid calculations, helping UK taxpayers understand the true cost of their charitable donations.
+We're launching [GiveCalc](https://givecalc.org) for UK taxpayers, a free calculator that shows how Gift Aid affects your taxes. Enter your income and donation amount, and GiveCalc computes your tax relief — helping you understand the true cost of giving.
 
 ## How Gift Aid works
 
