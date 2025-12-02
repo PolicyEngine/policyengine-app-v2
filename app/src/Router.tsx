@@ -6,6 +6,7 @@ import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
+import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -163,6 +164,15 @@ const router = createBrowserRouter(
             {
               path: 'research/:slug',
               element: <BlogPage />,
+            },
+          ],
+        },
+        // Embed routes - minimal layout for iframe embedding
+        {
+          children: [
+            {
+              path: 'embed/org-logos',
+              element: <OrgLogosEmbedPage />,
             },
           ],
         },

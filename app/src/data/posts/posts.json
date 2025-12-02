@@ -1,5 +1,14 @@
 [
   {
+    "title": "Giving Tuesday 2025: GiveCalc launches at givecalc.org",
+    "description": "Calculate how charitable donations affect your federal and state taxes with our rebuilt, standalone web application.",
+    "date": "2025-12-02",
+    "tags": ["us", "featured", "giving"],
+    "authors": ["max-ghenis"],
+    "filename": "giving-tuesday-2025.md",
+    "image": "giving-tuesday-2025/cover.png"
+  },
+  {
     "title": "How a £2,000 salary sacrifice cap would affect workers",
     "description": "Capping salary sacrifice pension contributions at £2,000 would raise £3.3-7.6 billion in 2029-30 depending on behavioural responses, with impacts concentrated on higher earners.",
     "date": "2025-11-27",
