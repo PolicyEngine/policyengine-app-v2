@@ -25,7 +25,7 @@ For example, a single California filer earning $200,000 with $20,000 in mortgage
 
 ## Supporting PolicyEngine
 
-PolicyEngine builds open-source infrastructure for evidence-based policy analysis. Everything we do is micro-founded: societal impacts are built up person by person, household by household—making policy personal. Our platform serves 40 million calculations annually.
+PolicyEngine builds open-source infrastructure for evidence-based policy analysis. Everything we do is micro-founded: societal impacts are built up person by person, household by household—making policy personal.
 
 ![Organizations citing PolicyEngine](/assets/posts/giving-tuesday-2025/logo-cycle.gif)
 
@@ -43,7 +43,7 @@ When major legislation moves through Congress, we build custom tools to help the
 
 ### Benefit access
 
-Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for, helping close the gap between eligibility and enrollment.
+Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for. These tools have identified over $1 billion in unclaimed benefits, helping close the gap between eligibility and enrollment.
 
 ![Benefit screening tools powered by PolicyEngine](/assets/posts/giving-tuesday-2025/benefit-tools-collage.png)
 
