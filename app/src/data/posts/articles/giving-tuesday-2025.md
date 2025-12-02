@@ -20,7 +20,7 @@ GiveCalc uses PolicyEngine's microsimulation model to compute your taxes with an
 2. **Marginal giving discount**: The tax savings per additional dollar donated
 3. **Target donation finder**: The donation required to achieve a specific net income reduction
 
-For example, a single California filer earning $200,000 with $20,000 in mortgage interest saves $5,818 in taxes on a $19,900 donation — a 33% marginal savings rate that makes their net cost $14,082.
+For example, a single California filer earning $200,000 with $20,000 in mortgage interest saves $5,857 in taxes on a $20,000 donation — a 33% marginal savings rate that makes their net cost $14,143.
 
 ![GiveCalc screenshot showing tax savings calculation](/assets/posts/giving-tuesday-2025/screenshot.png)
 
