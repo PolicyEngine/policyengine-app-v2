@@ -27,6 +27,7 @@ GiveCalc demonstrates what PolicyEngine does: we build open-source tools that he
 - **[PolicyEngine US](https://policyengine.org/us)**: Free tax-benefit calculator covering federal taxes, all 50 states, and dozens of benefit programs
 - **[PolicyEngine UK](https://policyengine.org/uk)**: Working with top levels of central government to improve evidence-based policy
 - **[Policy analysis](https://policyengine.org/us/research)**: Research on proposals from federal reconciliation bills to state tax reforms
+- **Benefit access**: Powering tools like [MyFriendBen](https://myfriendben.org) that help families discover benefits they qualify for
 
 Donations to PolicyEngine are tax-deductible in the US and support:
 
