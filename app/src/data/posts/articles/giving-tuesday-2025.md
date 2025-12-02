@@ -6,7 +6,7 @@ Since [launching GiveCalc last year](/us/research/givecalc), we've rebuilt it fr
 
 - **New domain**: Access GiveCalc directly at [givecalc.org](https://givecalc.org)
 - **React frontend**: Faster, more responsive interface
-- **2025 tax year support**: Calculate impacts for 2024, 2025, or 2026
+- **2025 tax year support**: Calculate impacts for 2024, 2025, or 2026, including HR1's charitable contribution changes and downstream state tax effects
 - **Expanded income types**: Add self-employment, capital gains, dividends, and interest income
 - **Mobile-friendly design**: Use GiveCalc on any device
 - **Validated accuracy**: Tax calculations powered by our [partnership with the National Bureau of Economic Research](/us/research/policyengine-nber-mou-taxsim)
