@@ -20,6 +20,8 @@ GiveCalc uses PolicyEngine's microsimulation model to compute your taxes with an
 
 For example, a single California filer earning $200,000 with $20,000 in mortgage interest saves $5,818 in taxes on a $19,900 donation — a 33% marginal savings rate that makes their net cost $14,082.
 
+![GiveCalc screenshot showing tax savings calculation](../images/giving-tuesday-2025/screenshot.png)
+
 ## Supporting PolicyEngine
 
 GiveCalc demonstrates what PolicyEngine does: we build open-source tools that help people understand tax and benefit policy. Our work includes:
