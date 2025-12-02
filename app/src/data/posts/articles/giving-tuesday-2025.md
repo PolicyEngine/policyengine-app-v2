@@ -24,19 +24,27 @@ For example, a single California filer earning $200,000 with $20,000 in mortgage
 
 ## Supporting PolicyEngine
 
-GiveCalc demonstrates what PolicyEngine does: we build open-source tools that help people understand tax and benefit policy. Our work includes:
+PolicyEngine builds open-source infrastructure for evidence-based policy. The same platform powers tools that democratize policy understanding and expand access to public benefits—serving 40 million calculations annually.
 
-- **[PolicyEngine US](https://policyengine.org/us)**: Free tax-benefit calculator covering federal taxes, all 50 states, and dozens of benefit programs
-- **[PolicyEngine UK](https://policyengine.org/uk)**: Working with top levels of central government to improve evidence-based policy
-- **[Policy analysis](https://policyengine.org/us/research)**: Research on proposals from federal reconciliation bills to state tax reforms
-- **Benefit access**: Powering tools like [MyFriendBen](https://myfriendben.org) that help families discover benefits they qualify for
+### Benefit access
+
+Tools like [MyFriendBen](https://myfriendben.org) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for, helping close the gap between eligibility and enrollment.
+
+![MyFriendBen benefit screening tool](../images/giving-tuesday-2025/myfriendben.png)
+
+### Policy understanding
+
+[PolicyEngine's household calculator](https://policyengine.org/us/household) lets anyone see how taxes and benefits affect their specific situation—and how proposed reforms would change it.
+
+![PolicyEngine household calculator](../images/giving-tuesday-2025/policyengine-calculator.png)
+
+### What donations support
 
 Donations to PolicyEngine are tax-deductible in the US and support:
 
-- Expanding coverage of tax credits and benefit programs
-- Improving data quality through enhanced microdata
-- Building new tools like GiveCalc
-- Maintaining free, open-source access for everyone
+- **More programs**: Expanding benefit coverage so screening tools can help more families
+- **Better data**: Improving accuracy for poverty and distributional analysis
+- **Open infrastructure**: Sustaining free access for researchers, governments, and the public
 
 [Donate to PolicyEngine](https://policyengine.org/us/donate) and use [GiveCalc](https://givecalc.org) to calculate your tax savings.
 
