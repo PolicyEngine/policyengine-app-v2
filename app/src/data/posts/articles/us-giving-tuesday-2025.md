@@ -26,13 +26,13 @@ For example, a single California filer earning $200,000 with $20,000 in mortgage
 
 ## Supporting PolicyEngine
 
-PolicyEngine builds open-source infrastructure for evidence-based policy analysis. Everything we do is micro-founded: societal impacts are built up person by person, household by household—making policy personal.
+PolicyEngine advances evidence-based policy through open-source economic simulation models. We build epistemic infrastructure that improves institutional decisionmaking by making tax and benefit policy transparent, accessible, and rigorously quantifiable.
 
 ![Organizations citing PolicyEngine](/assets/posts/us-giving-tuesday-2025/logo-cycle.gif)
 
 ### Policy understanding
 
-[PolicyEngine's calculator](https://policyengine.org/us/reports) lets anyone see how taxes and benefits affect their specific situation—and how proposed reforms would change it.
+[PolicyEngine's calculator](https://policyengine.org/us/reports) lets anyone model how taxes and benefits affect their specific situation—and how proposed reforms would change it. This reduces information asymmetries between policymakers and the public.
 
 ![PolicyEngine calculator showing Nebraska EITC analysis](/assets/posts/us-giving-tuesday-2025/policyengine-calculator.png)
 
@@ -44,13 +44,19 @@ When major legislation moves through Congress, we build custom tools to help the
 
 ### Benefit access
 
-Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for. MyFriendBen alone has identified over $800 million in unclaimed benefits for Colorado residents; Amplifi has helped 17,000 California households access $185 million in benefits. Collectively, these tools have identified over $1 billion in unclaimed benefits.
+Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for. Collectively, these tools have identified over $1 billion in unclaimed benefits—direct welfare gains from reducing administrative barriers.
 
 ![Benefit screening tools powered by PolicyEngine](/assets/posts/us-giving-tuesday-2025/benefit-tools-collage.png)
 
+### AI and inequality research
+
+We're investigating how public policy mediates the relationship between AI-driven economic transformation and distributional outcomes. Our [research framework](https://policyengine.github.io/ai-growth-research/) examines the causal chain from AI economic shocks (rising productivity, capital share growth, labor disruption) through policy interventions to effects on income, consumption, and wealth inequality.
+
+This addresses an underexplored question: as AI potentially drives major economic shifts—unevenly distributed productivity gains, changing capital-labor shares, technological unemployment—how would different policy responses shape who benefits and who loses? We model how current policies versus alternatives (UBI, expanded safety nets, capital taxation) would differentially mediate these AI-driven changes.
+
 ### What donations support
 
-Donations to PolicyEngine are tax-deductible in the US and support:
+Donations to PolicyEngine are tax-deductible in the US and eligible for Gift Aid in the UK (charity no. 1210532). Donations support:
 
 - **More programs**: Expanding benefit coverage so screening tools can help more families
 - **Better data**: Improving accuracy for poverty and distributional analysis
