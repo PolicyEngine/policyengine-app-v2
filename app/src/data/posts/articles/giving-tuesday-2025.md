@@ -24,25 +24,23 @@ For example, a single California filer earning $200,000 with $20,000 in mortgage
 
 ## Supporting PolicyEngine
 
-PolicyEngine builds open-source infrastructure for evidence-based policy. The same platform powers tools that democratize policy understanding and expand access to public benefits—serving 40 million calculations annually.
-
-### Benefit access
-
-Tools like [MyFriendBen](https://myfriendben.org) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for, helping close the gap between eligibility and enrollment.
-
-![MyFriendBen benefit screening tool](../images/giving-tuesday-2025/myfriendben.png)
+PolicyEngine builds open-source infrastructure for evidence-based policy analysis. Everything we do is micro-founded: societal impacts are built up person by person, household by household—making policy personal. Our platform serves 40 million calculations annually.
 
 ### Policy understanding
 
-[PolicyEngine's household calculator](https://policyengine.org/us/household) lets anyone see how taxes and benefits affect their specific situation—and how proposed reforms would change it.
+[PolicyEngine's calculator](https://policyengine.org/us/household) lets anyone see how taxes and benefits affect their specific situation—and how proposed reforms would change it.
 
-![PolicyEngine household calculator](../images/giving-tuesday-2025/policyengine-calculator.png)
+![PolicyEngine calculator showing Nebraska EITC analysis](../images/giving-tuesday-2025/policyengine-calculator.png)
 
 ### High-profile policy analysis
 
 When major legislation moves through Congress, we build custom tools to help the public understand impacts. Our [OBBBA household calculator](https://policyengine.github.io/obbba-household-by-household/) lets anyone see how reconciliation bill provisions affect their family.
 
 ![OBBBA household-by-household calculator](../images/giving-tuesday-2025/obbba.png)
+
+### Benefit access
+
+Tools like [MyFriendBen](https://myfriendben.org) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for, helping close the gap between eligibility and enrollment.
 
 ### What donations support
 
