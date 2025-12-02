@@ -35,6 +35,8 @@ The calculator shows:
 2. **Marginal savings rate**: Tax saved per additional pound donated
 3. **Net cost**: Your actual out-of-pocket cost after tax relief
 
+![GiveCalc UK showing a higher rate taxpayer donating £1,000](/assets/posts/givecalc-uk/screenshot.png)
+
 ## Scottish taxpayers
 
 Scotland sets its own income tax rates, which differ from the rest of the UK:
