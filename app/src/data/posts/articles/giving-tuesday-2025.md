@@ -43,7 +43,7 @@ When major legislation moves through Congress, we build custom tools to help the
 
 ### Benefit access
 
-Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for. These tools have identified over $1 billion in unclaimed benefits, helping close the gap between eligibility and enrollment.
+Tools like [MyFriendBen](https://myfriendben.org), [Amplifi Benefit Navigator](https://www.benefitnavigator.us), [Starlight](https://www.meetstarlight.com), and [Mirza](https://mirza.co) use PolicyEngine's API to screen families for 40+ federal and state programs they may qualify for. MyFriendBen alone has identified over $800 million in unclaimed benefits for Colorado residents; Amplifi has helped 17,000 California households access $185 million in benefits. Collectively, these tools have identified over $1 billion in unclaimed benefits.
 
 ![Benefit screening tools powered by PolicyEngine](/assets/posts/giving-tuesday-2025/benefit-tools-collage.png)
 
