@@ -46,6 +46,8 @@ Donations to PolicyEngine are tax-deductible in the US and support:
 - **Better data**: Improving accuracy for poverty and distributional analysis
 - **Open infrastructure**: Sustaining free access for researchers, governments, and the public
 
+See how we spend donations on [Open Collective](https://opencollective.com/policyengine).
+
 [Donate to PolicyEngine](https://policyengine.org/us/donate) and use [GiveCalc](https://givecalc.org) to calculate your tax savings.
 
 ## Try GiveCalc
