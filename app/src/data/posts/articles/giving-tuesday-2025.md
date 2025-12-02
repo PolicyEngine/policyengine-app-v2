@@ -27,7 +27,7 @@ For example, a single California filer earning $200,000 with $20,000 in mortgage
 
 PolicyEngine builds open-source infrastructure for evidence-based policy analysis. Everything we do is micro-founded: societal impacts are built up person by person, household by household—making policy personal.
 
-![Organizations citing PolicyEngine](/assets/posts/giving-tuesday-2025/logo-cycle.gif)
+<iframe src="https://policyengine.org/us/embed/org-logos" width="100%" height="180" style="border: none; overflow: hidden;"></iframe>
 
 ### Policy understanding
 

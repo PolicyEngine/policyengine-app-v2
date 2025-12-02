@@ -17,6 +17,7 @@ import SimulationsPage from './pages/Simulations.page';
 import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
+import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
 import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
 import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
@@ -163,6 +164,15 @@ const router = createBrowserRouter(
             {
               path: 'research/:slug',
               element: <BlogPage />,
+            },
+          ],
+        },
+        // Embed routes - minimal layout for iframe embedding
+        {
+          children: [
+            {
+              path: 'embed/org-logos',
+              element: <OrgLogosEmbedPage />,
             },
           ],
         },
