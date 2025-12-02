@@ -1,5 +1,14 @@
 [
   {
+    "title": "GiveCalc UK: Calculate your Gift Aid tax relief",
+    "description": "GiveCalc now supports UK Gift Aid calculations, helping UK taxpayers understand the true cost of charitable donations including higher rate relief and Scottish income tax.",
+    "date": "2025-12-02 12:00:00",
+    "tags": ["uk", "giving"],
+    "authors": ["max-ghenis"],
+    "filename": "givecalc-uk.md",
+    "image": "givecalc.png"
+  },
+  {
     "title": "Giving Tuesday 2025: GiveCalc launches at givecalc.org",
     "description": "Calculate how charitable donations affect your federal and state taxes with our rebuilt, standalone web application.",
     "date": "2025-12-02",
