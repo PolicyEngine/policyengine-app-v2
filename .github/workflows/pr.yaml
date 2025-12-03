@@ -18,7 +18,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
@@ -47,7 +47,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
@@ -72,7 +72,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
@@ -85,12 +85,9 @@ jobs:
       - name: Run design system tests
         run: npm test --workspace=@policyengine/design-system
 
-      # TODO: Fix jsdom resolution issue in monorepo setup
-      # The app tests fail with "Cannot find package 'jsdom'" due to
-      # npm workspaces hoisting. This is a pre-existing issue.
-      # - name: Run app tests
-      #   working-directory: ./app
-      #   run: npm test
+      - name: Run app tests
+        working-directory: ./app
+        run: npm test
 
   build:
     name: Build
@@ -103,7 +100,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
