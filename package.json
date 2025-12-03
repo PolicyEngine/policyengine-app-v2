@@ -18,6 +18,7 @@
     "website:dev": "npm run dev --workspace=@policyengine/website"
   },
   "devDependencies": {
+    "jsdom": "^26.1.0",
     "turbo": "^2.5.3"
   },
   "packageManager": "npm@10.8.0",
