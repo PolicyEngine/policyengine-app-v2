@@ -44,9 +44,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
-    "generate-json": "node --experimental-strip-types scripts/generate-json.ts",
-    "generate-yaml": "node --experimental-strip-types scripts/generate-yaml.ts",
-    "export-python": "node --experimental-strip-types scripts/export-python.ts",
+    "generate-json": "tsx scripts/generate-json.ts",
+    "generate-yaml": "tsx scripts/generate-yaml.ts",
+    "export-python": "tsx scripts/export-python.ts",
     "test": "vitest run"
   },
   "peerDependencies": {
@@ -67,7 +67,8 @@
     "prettier": "^3.5.3",
     "js-yaml": "^4.1.0",
     "@types/js-yaml": "^4.0.9",
-    "vitest": "^3.2.3"
+    "vitest": "^3.2.3",
+    "tsx": "^4.19.0"
   },
   "repository": {
     "type": "git",
