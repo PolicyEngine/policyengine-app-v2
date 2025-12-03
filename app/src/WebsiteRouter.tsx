@@ -15,7 +15,7 @@ import SupportersPage from './pages/Supporters.page';
 import TeamPage from './pages/Team.page';
 import TermsPage from './pages/Terms.page';
 import { CountryAppGuard } from './routing/guards/CountryAppGuard';
-import { CountryGuard } from './routing/guards/CountryGuard';
+import { CountryGuardSimple } from './routing/guards/CountryGuardSimple';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 
 const router = createBrowserRouter(
@@ -26,7 +26,7 @@ const router = createBrowserRouter(
     },
     {
       path: '/:countryId',
-      element: <CountryGuard />,
+      element: <CountryGuardSimple />,
       children: [
         // Static pages - use StaticLayout
         {
