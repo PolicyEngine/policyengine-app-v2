@@ -1,0 +1,87 @@
+{
+  "name": "@policyengine/design-system",
+  "version": "0.1.0",
+  "description": "PolicyEngine design system - shared tokens, components, and utilities",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./tokens": {
+      "import": "./dist/tokens/index.js",
+      "types": "./dist/tokens/index.d.ts"
+    },
+    "./tokens/colors": {
+      "import": "./dist/tokens/colors.js",
+      "types": "./dist/tokens/colors.d.ts"
+    },
+    "./tokens/typography": {
+      "import": "./dist/tokens/typography.js",
+      "types": "./dist/tokens/typography.d.ts"
+    },
+    "./tokens/spacing": {
+      "import": "./dist/tokens/spacing.js",
+      "types": "./dist/tokens/spacing.d.ts"
+    },
+    "./charts": {
+      "import": "./dist/charts/index.js",
+      "types": "./dist/charts/index.d.ts"
+    },
+    "./tokens.json": "./dist/tokens.json",
+    "./tokens.yaml": "./dist/tokens.yaml"
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsc && npm run generate-json && npm run generate-yaml",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\"",
+    "generate-json": "node --experimental-strip-types scripts/generate-json.ts",
+    "generate-yaml": "node --experimental-strip-types scripts/generate-yaml.ts",
+    "export-python": "node --experimental-strip-types scripts/export-python.ts",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.11",
+    "typescript": "^5.8.3",
+    "prettier": "^3.5.3",
+    "js-yaml": "^4.1.0",
+    "@types/js-yaml": "^4.0.9",
+    "vitest": "^3.2.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/PolicyEngine/policyengine-app-v2.git",
+    "directory": "packages/design-system"
+  },
+  "license": "AGPL-3.0",
+  "keywords": [
+    "policyengine",
+    "design-system",
+    "design-tokens",
+    "react"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}
