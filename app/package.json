@@ -5,7 +5,11 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
+    "dev:calculator": "VITE_APP_MODE=calculator vite",
+    "dev:website": "VITE_APP_MODE=website vite",
     "build": "vite build",
+    "build:calculator": "VITE_APP_MODE=calculator vite build",
+    "build:website": "VITE_APP_MODE=website vite build",
     "build-with-types": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
