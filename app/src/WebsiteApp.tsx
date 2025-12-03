@@ -5,8 +5,8 @@
 import '@mantine/core/styles.css';
 
 import { MantineProvider } from '@mantine/core';
-import { WebsiteRouter } from './WebsiteRouter';
 import { policyEngineTheme } from './theme';
+import { WebsiteRouter } from './WebsiteRouter';
 
 export default function WebsiteApp() {
   return (
