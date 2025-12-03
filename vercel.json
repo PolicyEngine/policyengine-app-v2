@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "VITE_APP_MODE=calculator npm run build",
-  "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/calculator.html" }],
+  "installCommand": "npm ci",
+  "buildCommand": "npm run design-system:build && VITE_APP_MODE=website npm run build --workspace=policyengine-app-v2",
+  "outputDirectory": "app/dist",
+  "rewrites": [{ "source": "/(.*)", "destination": "/website.html" }],
   "headers": [
     {
       "source": "/assets/(.*)",
