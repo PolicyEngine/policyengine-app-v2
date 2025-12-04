@@ -75,7 +75,9 @@ export function getStateDatasetUrl(stateCode: string): string {
  * @returns true if the region is a US state/territory code
  */
 export function isUSState(region: string | undefined): boolean {
-  if (!region) return false;
+  if (!region) {
+    return false;
+  }
   return US_STATE_CODES.has(region.toLowerCase());
 }
 
