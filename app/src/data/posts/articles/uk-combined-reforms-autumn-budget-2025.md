@@ -1,4 +1,4 @@
-In the [November 2025 Autumn Budget](https://www.gov.uk/government/collections/budget-2025), Chancellor Rachel Reeves announced a comprehensive package of tax and benefit reforms. This analysis examines the combined economic impacts of these measures using PolicyEngine's microsimulation model.
+In the [November 2025 Autumn Budget](https://www.gov.uk/government/collections/budget-2025), Chancellor Rachel Reeves announced a comprehensive package of tax and benefit reforms. This analysis examines the combined economic impacts of these measures using PolicyEngine's microsimulation model. For our analysis of the [OBR's November 2025 economic projections](/uk/research/obr-november-2025-projections), see our separate report.
 
 ## Introduction
 
@@ -12,17 +12,17 @@ The Autumn Budget 2025 includes nine key reforms that we model in this analysis.
 
 **Rail fares freeze**: Freezes regulated rail fares in England for one year from March 2026 - the first freeze in 30 years. Without the freeze, fares would have increased by 5.8% under the RPI formula. The Government estimates this will save passengers £600 million in 2026-27, with commuters on expensive routes saving over £300 per year. See our [research report](/uk/research/rail-fares-freeze-2025) for details.
 
-**Threshold freeze extension**: This policy extends the freeze on income tax thresholds from 2027-28 to 2030-31. The personal allowance remains frozen at £12,570, the higher-rate threshold at £50,270, and the additional-rate threshold at £125,140. The NICs secondary threshold is also frozen. By 2030-31, the OBR estimates this will bring 5.2 million additional individuals into paying income tax.
+**Threshold freeze extension**: This policy extends the freeze on income tax thresholds from 2027-28 to 2030-31. The personal allowance remains frozen at £12,570, the higher-rate threshold at £50,270, and the additional-rate threshold at £125,140. The NICs secondary threshold is also frozen. By 2030-31, the [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) estimates this will bring 5.2 million additional individuals into paying income tax.
 
-**Dividend tax increase (+2pp)**: Increases dividend tax rates by 2 percentage points from April 2026. Basic rate: 8.75% to 10.75%, Higher rate: 33.75% to 35.75%. The additional rate remains at 39.35%. OBR estimates this will raise £1.0-1.1bn annually from 2027-28.
+**Dividend tax increase (+2pp)**: Increases dividend tax rates by 2 percentage points from April 2026. Basic rate: 8.75% to 10.75%, Higher rate: 33.75% to 35.75%. The additional rate remains at 39.35%. The [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) estimates this will raise £1.0-1.1bn annually from 2027-28.
 
-**Savings income tax increase (+2pp)**: Increases savings income tax rates by 2 percentage points from April 2027. Basic: 20% to 22%, Higher: 40% to 42%, Additional: 45% to 47%. OBR estimates this will raise £0.5bn annually from 2028-29.
+**Savings income tax increase (+2pp)**: Increases savings income tax rates by 2 percentage points from April 2027. Basic: 20% to 22%, Higher: 40% to 42%, Additional: 45% to 47%. The [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) estimates this will raise £0.5bn annually from 2028-29.
 
-**Property income tax increase (+2pp)**: Increases property income tax rates by 2 percentage points from April 2027. Basic: 20% to 22%, Higher: 40% to 42%, Additional: 45% to 47%. OBR estimates this will raise £0.4-0.6bn annually from 2028-29.
+**Property income tax increase (+2pp)**: Increases property income tax rates by 2 percentage points from April 2027. Basic: 20% to 22%, Higher: 40% to 42%, Additional: 45% to 47%. The [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) estimates this will raise £0.4-0.6bn annually from 2028-29.
 
-**Freeze student loan repayment thresholds**: Freezes the Plan 2 student loan repayment threshold at £29,385 for three years from April 2027, instead of allowing RPI uprating. This means graduates start repaying at a lower real income level, increasing repayments. OBR estimates this raises £255-355m annually from 2027-30.
+**Freeze student loan repayment thresholds**: Freezes the Plan 2 student loan repayment threshold at £29,385 for three years from April 2027, instead of allowing RPI uprating. This means graduates start repaying at a lower real income level, increasing repayments. The [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) estimates this raises £255-355m annually from 2027-30.
 
-**Salary sacrifice cap**: Caps National Insurance-free salary sacrifice pension contributions at £2,000 per year from April 2029. Contributions above this threshold become subject to employee and employer NICs. PolicyEngine estimates this will raise £3.3bn in 2029-30, assuming employers spread costs and employees maintain pension contributions. The OBR estimates £4.9bn (static) or £4.7bn (post-behavioural). See our [research report](/uk/research/uk-salary-sacrifice-cap) for details.
+**Salary sacrifice cap**: Caps National Insurance-free salary sacrifice pension contributions at £2,000 per year from April 2029. Contributions above this threshold become subject to employee and employer NICs. PolicyEngine estimates this will raise £3.3bn in 2029-30, assuming employers spread costs and employees maintain pension contributions. The [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) estimates £4.9bn (static) or £4.7bn (post-behavioural). See our [research report](/uk/research/uk-salary-sacrifice-cap) for details.
 
 ### Assumptions
 
@@ -47,7 +47,7 @@ This analysis uses PolicyEngine's UK microsimulation model, which draws on:
 
 ### Revenue impact
 
-We [estimate](LINK_TO_GIST) the combined revenue impact of all nine reforms across fiscal years. Table 1 compares our estimates with official OBR projections where available.
+We [estimate](LINK_TO_GIST) the combined revenue impact of all nine reforms across fiscal years. Table 1 compares our estimates with official [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/) projections where available.
 
 **Table 1: Combined revenue impact (£ billion)**
 
@@ -76,11 +76,21 @@ Figure 1 shows the relative change in household income by income decile from the
 
 [INTERPRETATION OF DISTRIBUTIONAL FINDINGS - WHICH DECILES GAIN/LOSE MOST AND WHY, HOW DIFFERENT POLICIES OFFSET EACH OTHER]
 
+### Household income impacts
+
+Figure 2 plots the net income change against baseline income for 500 sampled households. Green dots indicate gains, red shows losses, and grey shows minimal change. Dot opacity represents household weight in the population.
+
+**Figure 2: Household income impacts, 2029-30**
+
+[PLOTLY CHART PLACEHOLDER - SCATTER PLOT]
+
+[INTERPRETATION - PATTERN OF GAINS AND LOSSES BY INCOME LEVEL, WHICH HOUSEHOLDS GAIN/LOSE MOST]
+
 ### Winners and losers
 
-Figure 2 shows the distribution of impacts across the population, categorising people by the magnitude of income changes they experience.
+Figure 3 shows the distribution of impacts across the population, categorising people by the magnitude of income changes they experience.
 
-**Figure 2: Population share by income change from combined reforms**
+**Figure 3: Population share by income change from combined reforms**
 
 [PLOTLY CHART PLACEHOLDER - WINNERS/LOSERS STACKED BAR CHART]
 
@@ -88,9 +98,9 @@ Figure 2 shows the distribution of impacts across the population, categorising p
 
 ### Constituency impact
 
-Figure 3 shows the average net income change across UK parliamentary constituencies from the combined reforms.
+Figure 4 shows the average net income change across UK parliamentary constituencies from the combined reforms.
 
-**Figure 3: Average net income change by constituency**
+**Figure 4: Average net income change by constituency**
 
 <iframe src="/assets/posts/uk-combined-reforms-autumn-budget-2025/constituency_map.html" width="100%" height="600" frameborder="0"></iframe>
 
@@ -134,7 +144,7 @@ PolicyEngine estimates that the combined Autumn Budget 2025 reforms [RAISE/COST]
 
 The two-child limit repeal and fuel duty freeze benefit lower-income households, while the tax increases on dividends, savings, and property income, along with the threshold freeze extension and salary sacrifice cap, primarily affect higher-income households. [SUMMARY OF NET EFFECT AND KEY TAKEAWAYS]
 
-We invite you to explore the [UK Autumn Budget 2025 analysis dashboard](https://www.policyengine.org/uk/autumn-budget-2025) to explore revenue and distributional impacts across income deciles, constituencies, and household types.
+We invite you to explore the [UK Autumn Budget 2025 analysis dashboard](/uk/autumn-budget-2025) to explore revenue and distributional impacts across income deciles, constituencies, and household types.
 
 ---
 
