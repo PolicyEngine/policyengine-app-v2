@@ -25,6 +25,10 @@ function getInputConfig() {
 export default defineConfig({
   plugins: [react(), tsconfigPaths()],
   base: process.env.BASE_URL || '/',
+  define: {
+    // Expose VITE_APP_MODE to client-side code
+    'import.meta.env.VITE_APP_MODE': JSON.stringify(appMode),
+  },
   build: {
     rollupOptions: {
       input: getInputConfig(),
