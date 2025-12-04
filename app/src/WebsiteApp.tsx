@@ -13,8 +13,8 @@ import { MantineProvider } from '@mantine/core';
 import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
-import { WebsiteRouter } from './WebsiteRouter';
 import { cacheMonitor } from './utils/cacheMonitor';
+import { WebsiteRouter } from './WebsiteRouter';
 
 const queryClient = new QueryClient({
   defaultOptions: {
