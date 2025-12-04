@@ -414,10 +414,18 @@ describe('societyWide API', () => {
 
     test('given US country and various state regions then returns correct uppercase state URLs', () => {
       // When/Then - test multiple states
-      expect(getDatasetForRegion('us', 'ca')).toBe('hf://policyengine/policyengine-us-data/states/CA.h5');
-      expect(getDatasetForRegion('us', 'ny')).toBe('hf://policyengine/policyengine-us-data/states/NY.h5');
-      expect(getDatasetForRegion('us', 'tx')).toBe('hf://policyengine/policyengine-us-data/states/TX.h5');
-      expect(getDatasetForRegion('us', 'ut')).toBe('hf://policyengine/policyengine-us-data/states/UT.h5');
+      expect(getDatasetForRegion('us', 'ca')).toBe(
+        'hf://policyengine/policyengine-us-data/states/CA.h5'
+      );
+      expect(getDatasetForRegion('us', 'ny')).toBe(
+        'hf://policyengine/policyengine-us-data/states/NY.h5'
+      );
+      expect(getDatasetForRegion('us', 'tx')).toBe(
+        'hf://policyengine/policyengine-us-data/states/TX.h5'
+      );
+      expect(getDatasetForRegion('us', 'ut')).toBe(
+        'hf://policyengine/policyengine-us-data/states/UT.h5'
+      );
     });
 
     test('given US country and enhanced_us region then returns enhanced_cps', () => {
