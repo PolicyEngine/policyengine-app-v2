@@ -4,21 +4,62 @@ import { ReportOutputSocietyWideUS } from '@/types/metadata/ReportOutputSocietyW
 
 export type SocietyWideReportOutput = ReportOutputSocietyWideUS | ReportOutputSocietyWideUK;
 
+// US state and territory codes (lowercase) - excludes 'us' (nationwide) and 'enhanced_us'
+const US_STATE_CODES = new Set([
+  'al', 'ak', 'az', 'ar', 'ca', 'co', 'ct', 'de', 'dc', 'fl',
+  'ga', 'hi', 'id', 'il', 'in', 'ia', 'ks', 'ky', 'la', 'me',
+  'md', 'ma', 'mi', 'mn', 'ms', 'mo', 'mt', 'ne', 'nv', 'nh',
+  'nj', 'nm', 'ny', 'nyc', 'nc', 'nd', 'oh', 'ok', 'or', 'pa',
+  'ri', 'sc', 'sd', 'tn', 'tx', 'ut', 'vt', 'va', 'wa', 'wv',
+  'wi', 'wy',
+]);
+
+/**
+ * Generates the HuggingFace URL for a state-specific dataset.
+ * @param stateCode - The lowercase state code (e.g., 'ca', 'ny')
+ * @returns The full HuggingFace URL for the state dataset
+ */
+export function getStateDatasetUrl(stateCode: string): string {
+  return `hf://policyengine/policyengine-us-data/states/${stateCode.toUpperCase()}.h5`;
+}
+
+/**
+ * Checks if a region code represents a US state or territory.
+ * @param region - The region code to check
+ * @returns true if the region is a US state/territory code
+ */
+export function isUSState(region: string | undefined): boolean {
+  if (!region) return false;
+  return US_STATE_CODES.has(region.toLowerCase());
+}
+
 /**
  * Determines the dataset to use for a society-wide calculation.
- * Returns 'enhanced_cps' for US nationwide calculations, undefined otherwise.
- * This ensures Enhanced CPS is only used for US nationwide impacts, not for UK or US state-level calculations.
+ * - Returns 'enhanced_cps' for US nationwide calculations ('us' or 'enhanced_us')
+ * - Returns state-specific HuggingFace URL for US state calculations
+ * - Returns undefined for UK and other countries (uses API default)
  *
  * @param countryId - The country ID (e.g., 'us', 'uk')
  * @param region - The region (e.g., 'us', 'ca', 'uk')
- * @returns The dataset name or undefined to use API default
+ * @returns The dataset name/URL or undefined to use API default
  */
 export function getDatasetForRegion(countryId: string, region: string): string | undefined {
-  // Only use enhanced_cps for US nationwide
-  if (countryId === 'us' && region === 'us') {
+  if (countryId !== 'us') {
+    // Non-US countries use API defaults
+    return undefined;
+  }
+
+  // US nationwide - use enhanced_cps
+  if (region === 'us' || region === 'enhanced_us') {
     return 'enhanced_cps';
   }
-  // Return undefined for all other cases (UK, US states, etc.)
+
+  // US state - use state-specific dataset
+  if (isUSState(region)) {
+    return getStateDatasetUrl(region);
+  }
+
+  // Unknown US region - use API default
   return undefined;
 }
 

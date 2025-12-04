@@ -3,6 +3,7 @@ import { fetchSocietyWideCalculation, getDatasetForRegion } from '@/api/societyW
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   ERROR_MESSAGES,
+  getStateDatasetUrl,
   HTTP_STATUS,
   mockCompletedResponse,
   mockErrorCalculationResponse,
@@ -13,6 +14,7 @@ import {
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
   TEST_REGIONS,
+  TEST_US_STATES,
 } from '@/tests/fixtures/api/societyWideMocks';
 
 global.fetch = vi.fn();
@@ -44,9 +46,9 @@ describe('societyWide API', () => {
         params
       );
 
-      // Then
+      // Then - enhanced_us should add enhanced_cps dataset
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=${CURRENT_YEAR}`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${TEST_REGIONS.ENHANCED_US}&time_period=${CURRENT_YEAR}&dataset=enhanced_cps`,
         {
           headers: {
             'Content-Type': 'application/json',
@@ -289,12 +291,13 @@ describe('societyWide API', () => {
       );
     });
 
-    test('given US state then does not add dataset parameter', async () => {
+    test('given US state then adds state-specific dataset URL', async () => {
       // Given
       const countryId = TEST_COUNTRIES.US;
       const reformPolicyId = TEST_POLICY_IDS.REFORM;
       const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
-      const params = { region: 'ca', time_period: CURRENT_YEAR };
+      const stateCode = TEST_US_STATES.CA;
+      const params = { region: stateCode, time_period: CURRENT_YEAR };
       const mockResponse = mockSuccessResponse(mockCompletedResponse);
       (global.fetch as any).mockResolvedValue(mockResponse);
 
@@ -302,14 +305,47 @@ describe('societyWide API', () => {
       await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, params);
 
       // Then
+      const expectedDataset = encodeURIComponent(getStateDatasetUrl(stateCode));
       expect(global.fetch).toHaveBeenCalledWith(
-        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=ca&time_period=${CURRENT_YEAR}`,
+        `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${stateCode}&time_period=${CURRENT_YEAR}&dataset=${expectedDataset}`,
         expect.objectContaining({
           headers: {
             'Content-Type': 'application/json',
           },
         })
       );
+    });
+
+    test('given different US states then uses correct state-specific dataset URLs', async () => {
+      // Given
+      const countryId = TEST_COUNTRIES.US;
+      const reformPolicyId = TEST_POLICY_IDS.REFORM;
+      const baselinePolicyId = TEST_POLICY_IDS.BASELINE;
+      const mockResponse = mockSuccessResponse(mockCompletedResponse);
+      (global.fetch as any).mockResolvedValue(mockResponse);
+
+      // When - test multiple states
+      const states = [TEST_US_STATES.CA, TEST_US_STATES.NY, TEST_US_STATES.TX, TEST_US_STATES.UT];
+      for (const stateCode of states) {
+        await fetchSocietyWideCalculation(countryId, reformPolicyId, baselinePolicyId, {
+          region: stateCode,
+          time_period: CURRENT_YEAR,
+        });
+      }
+
+      // Then - verify each state gets its own dataset URL
+      states.forEach((stateCode, index) => {
+        const expectedDataset = encodeURIComponent(getStateDatasetUrl(stateCode));
+        expect(global.fetch).toHaveBeenNthCalledWith(
+          index + 1,
+          `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}?region=${stateCode}&time_period=${CURRENT_YEAR}&dataset=${expectedDataset}`,
+          expect.objectContaining({
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          })
+        );
+      });
     });
 
     test('given UK then does not add dataset parameter', async () => {
@@ -368,12 +404,36 @@ describe('societyWide API', () => {
       expect(result).toBe('enhanced_cps');
     });
 
-    test('given US country and state region then returns undefined', () => {
+    test('given US country and state region then returns state-specific dataset URL', () => {
       // When
       const result = getDatasetForRegion('us', 'ca');
 
       // Then
-      expect(result).toBeUndefined();
+      expect(result).toBe('hf://policyengine/policyengine-us-data/states/CA.h5');
+    });
+
+    test('given US country and various state regions then returns correct uppercase state URLs', () => {
+      // When/Then - test multiple states
+      expect(getDatasetForRegion('us', 'ca')).toBe('hf://policyengine/policyengine-us-data/states/CA.h5');
+      expect(getDatasetForRegion('us', 'ny')).toBe('hf://policyengine/policyengine-us-data/states/NY.h5');
+      expect(getDatasetForRegion('us', 'tx')).toBe('hf://policyengine/policyengine-us-data/states/TX.h5');
+      expect(getDatasetForRegion('us', 'ut')).toBe('hf://policyengine/policyengine-us-data/states/UT.h5');
+    });
+
+    test('given US country and enhanced_us region then returns enhanced_cps', () => {
+      // When
+      const result = getDatasetForRegion('us', 'enhanced_us');
+
+      // Then
+      expect(result).toBe('enhanced_cps');
+    });
+
+    test('given US country and nyc region then returns state-specific dataset URL for NYC', () => {
+      // When
+      const result = getDatasetForRegion('us', 'nyc');
+
+      // Then
+      expect(result).toBe('hf://policyengine/policyengine-us-data/states/NYC.h5');
     });
 
     test('given UK country then returns undefined', () => {

@@ -21,6 +21,17 @@ export const TEST_REGIONS = {
   STANDARD: 'standard',
 } as const;
 
+export const TEST_US_STATES = {
+  CA: 'ca',
+  NY: 'ny',
+  TX: 'tx',
+  UT: 'ut',
+} as const;
+
+// State dataset URL helper - generates HuggingFace URL for state-specific datasets
+export const getStateDatasetUrl = (stateCode: string): string =>
+  `hf://policyengine/policyengine-us-data/states/${stateCode.toUpperCase()}.h5`;
+
 export const HTTP_STATUS = {
   OK: 200,
   BAD_REQUEST: 400,
