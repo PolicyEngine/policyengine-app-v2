@@ -71,14 +71,15 @@ describe('vercel.json configuration', () => {
     expect(config.routes).toBeUndefined();
   });
 
-  test('given root vercel.json then does NOT exist (app/vercel.json is canonical)', () => {
-    // Given - Root vercel.json caused 404 errors by overriding app/vercel.json
+  test('given monorepo setup then root vercel.json exists for website project', () => {
+    // Given - Monorepo uses root vercel.json for policyengine-website project
+    // The policyengine-calculator project uses vercel.calculator.json
     const rootVercelJsonPath = path.resolve(__dirname, '../../../../../vercel.json');
 
     // When
     const exists = fs.existsSync(rootVercelJsonPath);
 
-    // Then
-    expect(exists).toBe(false);
+    // Then - Root config is required for monorepo website builds
+    expect(exists).toBe(true);
   });
 });
