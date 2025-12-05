@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   EXPECTED_FORMATS,
   TEST_COUNTRIES,
   TEST_DATES,
 } from '@/tests/fixtures/utils/dateUtilsMocks';
-import { formatDate } from '@/utils/dateUtils';
+import { formatDate, formatReportTimestamp } from '@/utils/dateUtils';
 
 describe('dateUtils', () => {
   describe('formatDate', () => {
@@ -164,6 +164,93 @@ describe('dateUtils', () => {
 
         // Then
         expect(result).toBe(EXPECTED_FORMATS.SHORT_MONTH_US);
+      });
+    });
+  });
+
+  describe('formatReportTimestamp', () => {
+    beforeEach(() => {
+      // Reset Date mocks before each test
+      vi.useRealTimers();
+    });
+
+    describe('given undefined or null timestamp', () => {
+      it('then returns fallback message', () => {
+        // When
+        const result = formatReportTimestamp(undefined);
+
+        // Then
+        expect(result).toBe('Ran recently');
+      });
+    });
+
+    describe('given timestamp from today', () => {
+      it('then returns "Ran today at HH:MM:SS"', () => {
+        // Given - Mock current time
+        const now = new Date('2024-01-15T14:30:45');
+        vi.setSystemTime(now);
+
+        // Create timestamp from earlier today
+        const todayTimestamp = new Date('2024-01-15T10:23:41').toISOString();
+
+        // When
+        const result = formatReportTimestamp(todayTimestamp);
+
+        // Then
+        expect(result).toMatch(/^Ran today at \d{2}:\d{2}:\d{2}$/);
+        expect(result).toContain('10:23:41');
+      });
+    });
+
+    describe('given timestamp from this year but not today', () => {
+      it('then returns "Ran on Month Day at HH:MM:SS" without year', () => {
+        // Given - Mock current time in December
+        const now = new Date('2024-12-31T23:59:59');
+        vi.setSystemTime(now);
+
+        // Create timestamp from earlier this year
+        const thisYearTimestamp = new Date('2024-06-15T14:23:41').toISOString();
+
+        // When
+        const result = formatReportTimestamp(thisYearTimestamp);
+
+        // Then
+        expect(result).toMatch(/^Ran on [A-Z][a-z]+ \d{1,2} at \d{2}:\d{2}:\d{2}$/);
+        expect(result).toContain('Jun 15');
+        expect(result).toContain('14:23:41');
+        expect(result).not.toContain('2024'); // Year should not be shown
+      });
+    });
+
+    describe('given timestamp from previous year', () => {
+      it('then returns "Ran on Month Day, Year at HH:MM:SS"', () => {
+        // Given - Mock current time in 2025
+        const now = new Date('2025-01-15T12:00:00');
+        vi.setSystemTime(now);
+
+        // Create timestamp from 2024
+        const lastYearTimestamp = new Date('2024-06-15T14:23:41').toISOString();
+
+        // When
+        const result = formatReportTimestamp(lastYearTimestamp);
+
+        // Then
+        expect(result).toMatch(/^Ran on [A-Z][a-z]+ \d{1,2}, \d{4} at \d{2}:\d{2}:\d{2}$/);
+        expect(result).toContain('Jun 15, 2024');
+        expect(result).toContain('14:23:41');
+      });
+    });
+
+    describe('given timestamp with different time zones', () => {
+      it('then formats in user local time', () => {
+        // Given - Timestamp in UTC
+        const utcTimestamp = '2024-01-15T10:00:00.000Z';
+
+        // When
+        const result = formatReportTimestamp(utcTimestamp);
+
+        // Then - Should contain a time (exact time depends on system timezone)
+        expect(result).toMatch(/at \d{2}:\d{2}:\d{2}$/);
       });
     });
   });

@@ -238,7 +238,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
     },
     margin: {
       t: 0,
-      b: 80,
+      b: 100,
       l: 40,
       r: 0,
     },
@@ -262,7 +262,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
             ...DEFAULT_CHART_CONFIG,
             locale: localeCode(countryId),
           }}
-          style={{ width: '100%', height: chartHeight, marginBottom: mobile ? 0 : 50 }}
+          style={{ width: '100%', height: chartHeight }}
         />
 
         {description}
