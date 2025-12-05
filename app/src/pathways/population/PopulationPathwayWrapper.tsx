@@ -9,6 +9,8 @@ import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import StandardLayout from '@/components/StandardLayout';
+import { CURRENT_YEAR } from '@/constants';
+import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { RootState } from '@/store';
@@ -134,5 +136,9 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       currentView = <div>Unknown view mode: {currentMode}</div>;
   }
 
-  return <StandardLayout>{currentView}</StandardLayout>;
+  return (
+    <ReportYearProvider year={CURRENT_YEAR}>
+      <StandardLayout>{currentView}</StandardLayout>
+    </ReportYearProvider>
+  );
 }
