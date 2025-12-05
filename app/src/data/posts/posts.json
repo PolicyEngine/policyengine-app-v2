@@ -1,5 +1,16 @@
 [
   {
+    "title": "How Autumn Budget 2025 reforms affect the UK",
+    "description": "PolicyEngine estimates the combined economic impacts of nine Autumn Budget 2025 reforms on revenue, distribution, inequality, and poverty.",
+    "date": "2025-12-05 12:00:00",
+    "tags": ["uk", "autumn-budget", "policy", "featured"],
+    "authors": ["vahid-ahmadi"],
+    "filename": "uk-combined-reforms-autumn-budget-2025.md",
+    "image": "Autumn-2025-Budget-combined.jpg",
+    "imageCredit": "gov.uk",
+    "hideHeaderImage": false
+  },
+  {
     "title": "GiveCalc UK: Calculate your Gift Aid tax relief",
     "description": "A free calculator that shows how Gift Aid affects your taxes, including higher rate relief and Scottish income tax rates.",
     "date": "2025-12-02 12:00:00",
@@ -89,7 +100,8 @@
     "tags": ["uk", "policy", "tax", "autumn-budget", "featured"],
     "authors": ["daphne-hansell"],
     "filename": "uk-mansion-tax-autumn-budget.md",
-    "image": "uk-mansion-tax/cover.png",
+    "image": "uk-mansion-tax.webp",
+    "imageCredit": "City AM",
     "hideHeaderImage": false
   },
   {
