@@ -54,7 +54,8 @@ export function buildParameterTree(parameters: Record<string, any>): ParameterTr
     (param: any) =>
       (param.economy || param.household) &&
       !param.parameter.includes('taxsim') &&
-      !param.parameter.includes('gov.abolitions')
+      !param.parameter.includes('gov.abolitions') &&
+      !param.parameter.includes('pycache')
   )) {
     const nodeToInsert: ParameterTreeNode = {
       name: parameter.parameter,

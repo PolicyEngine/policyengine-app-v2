@@ -147,7 +147,7 @@ describe('buildParameterTree', () => {
     expect(rate1Node?.label).toBe(EXPECTED_BRACKET_2_LABEL);
   });
 
-  test('given parameters with taxsim or abolitions then filters them out', () => {
+  test('given parameters with taxsim, abolitions, or pycache then filters them out', () => {
     // Given
     const parameters = mockFilteredParameters;
 
@@ -162,12 +162,15 @@ describe('buildParameterTree', () => {
     expect(taxNode).toBeDefined();
     expectNodeToHaveChildren(taxNode, EXPECTED_ONE_CHILD);
 
-    // Should not have taxsim or abolitions nodes
+    // Should not have taxsim, abolitions, or pycache nodes
     const taxsimNode = findNodeByName(tree, GOV_TAXSIM_NODE_NAME);
     expect(taxsimNode).toBeUndefined();
 
     const abolitionsNode = findNodeByName(tree, GOV_ABOLITIONS_NODE_NAME);
     expect(abolitionsNode).toBeUndefined();
+
+    const pycacheNode = findNodeByName(tree, 'gov.contrib.pycache');
+    expect(pycacheNode).toBeUndefined();
   });
 
   test('given parameters without economy or household flags then excludes them', () => {
