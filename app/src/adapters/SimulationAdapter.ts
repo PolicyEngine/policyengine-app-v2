@@ -37,7 +37,8 @@ export class SimulationAdapter {
     if (metadata.output && typeof metadata.output === 'string') {
       try {
         parsedOutput = JSON.parse(metadata.output);
-      } catch {
+      } catch (error) {
+        console.error('[SimulationAdapter.fromMetadata] Failed to parse output:', error);
         // Keep original value if parsing fails
         parsedOutput = metadata.output;
       }
