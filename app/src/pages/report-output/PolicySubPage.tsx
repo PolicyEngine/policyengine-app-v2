@@ -30,7 +30,6 @@ interface PolicySubPageProps {
  * all policies in a unified view.
  */
 export default function PolicySubPage({ policies, userPolicies }: PolicySubPageProps) {
-  console.log('[PolicySubPage] Rendering with policies:', policies);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
   const reportYear = useReportYear();
