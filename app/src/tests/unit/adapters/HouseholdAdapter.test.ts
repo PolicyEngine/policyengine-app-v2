@@ -66,9 +66,12 @@ describe('HouseholdAdapter', () => {
       expect(result.householdData.maritalUnits).toEqual(metadata.household_json.marital_units);
     });
 
-    test('given entity not in metadata then includes it anyway', () => {
+    test('given entity not in metadata then logs warning but includes it anyway', () => {
       const result = HouseholdAdapter.fromMetadata(mockHouseholdMetadataWithUnknownEntity);
 
+      expect(console.warn).toHaveBeenCalledWith(
+        'Entity "unknown_entity" not found in metadata, including anyway'
+      );
       expect(result.householdData).toHaveProperty('unknownEntity');
       expect(result.householdData.unknownEntity).toEqual(
         // @ts-expect-error
@@ -176,9 +179,12 @@ describe('HouseholdAdapter', () => {
       });
     });
 
-    test('given entity not in metadata then toCreationPayload uses snake_case', () => {
+    test('given entity not in metadata then toCreationPayload logs warning and uses snake_case', () => {
       const result = HouseholdAdapter.toCreationPayload(mockHouseholdDataWithUnknownEntity, 'uk');
 
+      expect(console.warn).toHaveBeenCalledWith(
+        'Entity "customEntity" not found in metadata, using snake_case "custom_entity"'
+      );
       expect(result.data).toHaveProperty('custom_entity');
       // @ts-expect-error
       expect(result.data.custom_entity).toEqual(mockHouseholdDataWithUnknownEntity.customEntity);
@@ -248,6 +254,7 @@ describe('HouseholdAdapter', () => {
 
       expect(result.householdData.people).toBeDefined();
       expect(result.householdData.taxUnits).toBeDefined();
+      expect(console.warn).toHaveBeenCalled();
     });
 
     test('given complex nested snake_case then converts correctly to camelCase', () => {
