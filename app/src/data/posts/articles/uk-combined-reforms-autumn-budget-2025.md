@@ -408,7 +408,7 @@ The combined reforms reduce income inequality in all years analysed. The Gini co
 
 Figure 4 [shows](https://gist.github.com/vahid-ahmadi/fc0c26d94572224cd97d1538d999b5ee) the impact of the combined reforms on poverty rates.
 
-**Figure 4: Change in poverty rates (pp)**
+**Figure 4: Change in poverty headcount rates (pp)**
 
 ```plotly
 {
@@ -432,7 +432,7 @@ Figure 4 [shows](https://gist.github.com/vahid-ahmadi/fc0c26d94572224cd97d1538d9
       "showgrid": false
     },
     "yaxis": {
-      "title": "Change in poverty rate (pp)",
+      "title": "Change in poverty headcount rate (pp)",
       "titlefont": {"family": "Roboto Serif"},
       "tickfont": {"family": "Roboto Serif"},
       "ticksuffix": "pp",
