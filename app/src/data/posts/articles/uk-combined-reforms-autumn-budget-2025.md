@@ -51,17 +51,8 @@ We [estimate](LINK_TO_GIST) the combined revenue impact of all nine reforms acro
 
 **Table 1: Combined revenue impact (£ billion)**
 
-| Reform                          | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
-| ------------------------------- | ------- | ------- | ------- | ------- |
-| Two-child limit repeal          | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Fuel duty freeze                | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Rail fares freeze               | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Threshold freeze extension      | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Dividend tax increase           | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Savings income tax increase     | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Property income tax increase    | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Student loan threshold freeze   | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
-| Salary sacrifice cap            | [X.X]   | [X.X]   | [X.X]   | [X.X]   |
+| Measure                           | 2026-27   | 2027-28   | 2028-29   | 2029-30   |
+| --------------------------------- | --------- | --------- | --------- | --------- |
 | **Combined total (PolicyEngine)** | **[X.X]** | **[X.X]** | **[X.X]** | **[X.X]** |
 
 [INTERPRETATION OF REVENUE FINDINGS - NET REVENUE RAISING OR COST, AND HOW IT COMPARES TO SUM OF INDIVIDUAL POLICIES]
