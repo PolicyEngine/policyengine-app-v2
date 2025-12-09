@@ -17,11 +17,25 @@ export interface RegionOption {
 }
 
 /**
- * Get US states from metadata (excludes national "us" entry)
+ * Get US states from metadata (filters "state/" prefix entries)
+ * After API update, states are prefixed with "state/" (e.g., "state/ca")
  */
 export function getUSStates(regions: MetadataRegion[]): RegionOption[] {
   return regions
-    .filter((r) => r.name !== 'us')
+    .filter((r) => r.name.startsWith('state/'))
+    .map((r) => ({
+      value: r.name,
+      label: r.label,
+    }));
+}
+
+/**
+ * Get US congressional districts from metadata (filters "congressional_district/" prefix entries)
+ * Districts follow pattern: "congressional_district/CA-01"
+ */
+export function getUSCongressionalDistricts(regions: MetadataRegion[]): RegionOption[] {
+  return regions
+    .filter((r) => r.name.startsWith('congressional_district/'))
     .map((r) => ({
       value: r.name,
       label: r.label,
@@ -75,7 +89,7 @@ export function extractRegionDisplayValue(fullValue: string): string {
  * @returns Geography object or null if household scope
  */
 export function createGeographyFromScope(
-  scope: 'national' | 'country' | 'constituency' | 'state' | 'household',
+  scope: 'national' | 'country' | 'constituency' | 'state' | 'congressional_district' | 'household',
   countryId: (typeof countryIds)[number],
   selectedRegion?: string
 ): {
@@ -104,10 +118,10 @@ export function createGeographyFromScope(
     return null;
   }
 
-  // CHANGED: Store the full prefixed value for UK regions
+  // Store the full prefixed value for all regions
   // For UK: selectedRegion is "constituency/Sheffield Central" or "country/england"
-  // For US: selectedRegion is just "ca", "ny", etc.
-  // We now store the FULL value with prefix
+  // For US: selectedRegion is "state/ca" or "congressional_district/CA-01"
+  // We store the FULL value with prefix
 
   const displayValue = extractRegionDisplayValue(selectedRegion);
 

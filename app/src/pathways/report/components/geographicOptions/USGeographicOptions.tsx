@@ -2,10 +2,11 @@ import { Box, Radio, Select } from '@mantine/core';
 import { RegionOption } from '@/utils/regionStrategies';
 
 interface USGeographicOptionsProps {
-  scope: 'national' | 'state' | 'household';
+  scope: 'national' | 'state' | 'congressional_district' | 'household';
   selectedRegion: string;
   stateOptions: RegionOption[];
-  onScopeChange: (scope: 'national' | 'state' | 'household') => void;
+  districtOptions: RegionOption[];
+  onScopeChange: (scope: 'national' | 'state' | 'congressional_district' | 'household') => void;
   onRegionChange: (region: string) => void;
 }
 
@@ -13,6 +14,7 @@ export default function USGeographicOptions({
   scope,
   selectedRegion,
   stateOptions,
+  districtOptions,
   onScopeChange,
   onRegionChange,
 }: USGeographicOptionsProps) {
@@ -40,6 +42,28 @@ export default function USGeographicOptions({
               label="Select State"
               placeholder="Pick a state"
               data={stateOptions}
+              value={selectedRegion}
+              onChange={(val) => onRegionChange(val || '')}
+              searchable
+            />
+          </Box>
+        )}
+      </Box>
+
+      {/* Congressional District option */}
+      <Box>
+        <Radio
+          value="congressional_district"
+          label="All households in a congressional district"
+          checked={scope === 'congressional_district'}
+          onChange={() => onScopeChange('congressional_district')}
+        />
+        {scope === 'congressional_district' && districtOptions.length > 0 && (
+          <Box ml={24} mt="xs">
+            <Select
+              label="Select Congressional District"
+              placeholder="Pick a congressional district"
+              data={districtOptions}
               value={selectedRegion}
               onChange={(val) => onRegionChange(val || '')}
               searchable

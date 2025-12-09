@@ -24,7 +24,8 @@ export interface UserGeographyPopulation extends BaseUserPopulation {
   type: 'geography';
   geographyId: string; // References Geography.geographyId
   // For UK: ALWAYS includes prefix ("constituency/Sheffield Central", "country/england")
-  // For US: NO prefix (just state code like "ca", "ny")
+  // For US: New format ALWAYS includes prefix ("state/ca", "congressional_district/CA-01");
+  // previously could be just state code ("ca"); this supports both
   // National: Just country code ("uk", "us")
   countryId: (typeof countryIds)[number];
   scope: 'national' | 'subnational';
