@@ -67,17 +67,15 @@ export default function SimulationPolicySetupView({
       onClick: handleClickCurrentLaw,
       isSelected: selectedAction === 'selectCurrentLaw',
     },
-    // Only show "Load existing" if user has existing policies
-    ...(hasExistingPolicies
-      ? [
-          {
-            title: 'Load existing policy',
-            description: 'Use a policy you have already created',
-            onClick: handleClickExisting,
-            isSelected: selectedAction === 'loadExisting',
-          },
-        ]
-      : []),
+    {
+      title: 'Load existing policy',
+      description: hasExistingPolicies
+        ? 'Use a policy you have already created'
+        : 'No existing policies available',
+      onClick: handleClickExisting,
+      isSelected: selectedAction === 'loadExisting',
+      isDisabled: !hasExistingPolicies,
+    },
     {
       title: 'Create new policy',
       description: 'Build a new policy',
