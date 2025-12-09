@@ -27,8 +27,13 @@ export interface CalculationMeta {
 export async function fetchCalculationWithMeta(meta: CalculationMeta) {
   if (meta.type === 'household') {
     const policyId = meta.policyIds.reform || meta.policyIds.baseline;
-    const result = await fetchHouseholdCalculation(meta.countryId, meta.populationId, policyId);
-    return result;
+    try {
+      const result = await fetchHouseholdCalculation(meta.countryId, meta.populationId, policyId);
+      return result;
+    } catch (error) {
+      console.error('[fetchCalculationWithMeta] Household calculation failed:', error);
+      throw error;
+    }
   }
 
   const params: SocietyWideCalculationParams = {
@@ -36,11 +41,16 @@ export async function fetchCalculationWithMeta(meta: CalculationMeta) {
     time_period: meta.year,
   };
 
-  const result = await fetchSocietyWideCalculation(
-    meta.countryId,
-    meta.policyIds.reform || meta.policyIds.baseline,
-    meta.policyIds.baseline,
-    params
-  );
-  return result;
+  try {
+    const result = await fetchSocietyWideCalculation(
+      meta.countryId,
+      meta.policyIds.reform || meta.policyIds.baseline,
+      meta.policyIds.baseline,
+      params
+    );
+    return result;
+  } catch (error) {
+    console.error('[fetchCalculationWithMeta] Society-wide calculation failed:', error);
+    throw error;
+  }
 }
