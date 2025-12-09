@@ -87,4 +87,4 @@ Figure 6 shows the marginal tax rate including health benefits for the Californi
 
 The Bipartisan Health Insurance Affordability Act would extend premium tax credit eligibility from 400% FPL to 700% FPL while implementing a modified contribution schedule. Compared to current law after IRA expiration, households between 400% and 700% FPL would receive premium tax credits they would not otherwise receive. Compared to a full IRA extension, the bill provides similar benefits up to 400% FPL, with differences emerging at higher income levels due to the 9.25% contribution cap at 700% FPL versus the IRA's 8.5% cap with no upper limit.
 
-You can model these reforms and explore how they would affect your household using [PolicyEngine's household calculator](https://policyengine.org/us/household).
+You can model these reforms and explore how they would affect your household using [PolicyEngine's ACA Calculator](https://www.policyengine.org/us/aca-calc).
