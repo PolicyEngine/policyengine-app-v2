@@ -16,7 +16,6 @@ export function useHouseholdCalculations(viewModel: HouseholdReportViewModel) {
       const config = viewModel.buildCalculationConfig();
 
       if (config) {
-        console.log('[useHouseholdCalculations] Starting calculations for report', config.reportId);
         orchestrator.startReport(config);
       }
     }
