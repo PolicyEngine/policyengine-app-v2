@@ -1,23 +1,22 @@
 /**
- * Research Page
+ * Research Page - Editorial Research Listing
  *
- * Main research/blog listing page with filtering and search.
- * Displays both blog posts and apps with displayWithResearch: true.
+ * A sophisticated research/blog listing with editorial styling,
+ * refined filters, and elegant card presentation.
  */
 
 import { useEffect, useMemo, useState } from 'react';
 import Fuse from 'fuse.js';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Box, Container, Text } from '@mantine/core';
+import { IconSearch } from '@tabler/icons-react';
+import { Box, Container, Text, TextInput } from '@mantine/core';
 import { BlogPostGrid } from '@/components/blog/BlogPostGrid';
 import { ResearchFilters } from '@/components/blog/ResearchFilters';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
-import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import { getResearchItems } from '@/data/posts/postTransformers';
-import { colors, spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
-// Mock authors for now - in production, import from authors.json
 const mockAuthors = [
   { key: 'max-ghenis', name: 'Max Ghenis' },
   { key: 'nikhil-woodruff', name: 'Nikhil Woodruff' },
@@ -26,12 +25,10 @@ const mockAuthors = [
   { key: 'ben-ogorek', name: 'Ben Ogorek' },
 ];
 
-// Helper to parse comma-separated URL param into array
 function parseArrayParam(value: string | null, defaultValue: string[] = []): string[] {
   return value ? value.split(',') : defaultValue;
 }
 
-// Helper to build URL params from filter state
 function buildFilterParams(
   filters: {
     search: string;
@@ -53,7 +50,6 @@ function buildFilterParams(
   if (filters.topics.length) {
     params.set('topics', filters.topics.join(','));
   }
-  // Only set locations if different from default
   const sortedDefault = [...defaultLocations].sort().join(',');
   const sortedCurrent = [...filters.locations].sort().join(',');
   if (sortedCurrent !== sortedDefault) {
@@ -71,13 +67,9 @@ export default function ResearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const displayCategory = useDisplayCategory();
 
-  // Get all research items
   const allItems = useMemo(() => getResearchItems(), []);
-
-  // Default locations based on country
   const defaultLocations = useMemo(() => [countryId, 'global'], [countryId]);
 
-  // Filter state - initialize from URL params
   const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   const [selectedTypes, setSelectedTypes] = useState<string[]>(() =>
     parseArrayParam(searchParams.get('types'))
@@ -92,7 +84,6 @@ export default function ResearchPage() {
     parseArrayParam(searchParams.get('authors'))
   );
 
-  // Sync URL params when filters change
   useEffect(() => {
     const params = buildFilterParams(
       {
@@ -115,11 +106,9 @@ export default function ResearchPage() {
     setSearchParams,
   ]);
 
-  // Filter items
   const filteredItems = useMemo(() => {
     let items = allItems;
 
-    // Filter by type
     if (selectedTypes.length > 0) {
       items = items.filter((item) => {
         const itemType = item.isApp ? 'interactive' : 'article';
@@ -127,26 +116,22 @@ export default function ResearchPage() {
       });
     }
 
-    // Filter by topics
     if (selectedTopics.length > 0) {
       items = items.filter((item) => selectedTopics.some((topic) => item.tags.includes(topic)));
     }
 
-    // Filter by locations
     if (selectedLocations.length > 0) {
       items = items.filter((item) =>
         selectedLocations.some((location) => item.tags.includes(location))
       );
     }
 
-    // Filter by authors
     if (selectedAuthors.length > 0) {
       items = items.filter((item) =>
         selectedAuthors.some((author) => item.authors.includes(author))
       );
     }
 
-    // Apply search
     if (searchQuery.trim()) {
       const fuse = new Fuse(items, {
         keys: ['title', 'description'],
@@ -158,36 +143,121 @@ export default function ResearchPage() {
     return items;
   }, [allItems, selectedTypes, selectedTopics, selectedLocations, selectedAuthors, searchQuery]);
 
-  // Handle search submit (just triggers the useEffect via state change)
   const handleSearchSubmit = () => {
     // URL params are already synced via useEffect
-    // This function exists for the search button/enter key
   };
 
   return (
     <StaticPageLayout title="Research">
-      <HeroSection
-        title="Research and analysis"
-        description="Explore our research on tax and benefit policy, including technical reports, policy analyses, and interactive tools."
-      />
+      {/* Hero Section */}
+      <Box
+        style={{
+          backgroundColor: colors.background.editorial,
+          borderBottom: `1px solid ${colors.border.light}`,
+          paddingTop: spacing['5xl'],
+          paddingBottom: spacing['4xl'],
+        }}
+      >
+        <Container size="xl">
+          <Box style={{ maxWidth: '700px' }}>
+            {/* Label */}
+            <Text
+              style={{
+                fontFamily: typography.fontFamily.primary,
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.semibold,
+                letterSpacing: typography.letterSpacing.widest,
+                textTransform: 'uppercase',
+                color: colors.primary[600],
+                marginBottom: spacing.lg,
+              }}
+            >
+              Research & Analysis
+            </Text>
+
+            {/* Title */}
+            <h1
+              style={{
+                fontFamily: typography.fontFamily.display,
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 500,
+                lineHeight: 1.2,
+                color: colors.text.primary,
+                margin: 0,
+                marginBottom: spacing.lg,
+              }}
+            >
+              Policy insights that drive change
+            </h1>
+
+            {/* Description */}
+            <Text
+              style={{
+                fontFamily: typography.fontFamily.primary,
+                fontSize: typography.fontSize.lg,
+                lineHeight: 1.6,
+                color: colors.text.secondary,
+                marginBottom: spacing['2xl'],
+              }}
+            >
+              Explore our research on tax and benefit policy, including technical
+              reports, policy analyses, and interactive tools.
+            </Text>
+
+            {/* Search Input */}
+            <TextInput
+              placeholder="Search research..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.currentTarget.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearchSubmit();
+                }
+              }}
+              leftSection={<IconSearch size={18} color={colors.text.tertiary} />}
+              styles={{
+                root: {
+                  maxWidth: '400px',
+                },
+                input: {
+                  fontFamily: typography.fontFamily.primary,
+                  fontSize: typography.fontSize.base,
+                  backgroundColor: colors.white,
+                  border: `1px solid ${colors.border.medium}`,
+                  borderRadius: spacing.radius.lg,
+                  padding: `${spacing.md} ${spacing.lg}`,
+                  paddingLeft: spacing['3xl'],
+                  height: 'auto',
+                  transition: 'all 200ms ease',
+                  '&:focus': {
+                    borderColor: colors.primary[400],
+                    boxShadow: `0 0 0 3px ${colors.primary[100]}`,
+                  },
+                },
+              }}
+            />
+          </Box>
+        </Container>
+      </Box>
 
       {/* Content */}
-      <Container size="xl" py="xl">
+      <Container size="xl" style={{ paddingTop: spacing['3xl'], paddingBottom: spacing['5xl'] }}>
         <Box
           style={{
             display: 'flex',
             flexDirection: displayCategory === 'desktop' ? 'row' : 'column',
-            gap: spacing.xl,
+            gap: spacing['3xl'],
           }}
         >
           {/* Sidebar Filters */}
           <Box
             style={{
-              flex: displayCategory === 'desktop' ? '0 0 250px' : '1',
+              flex: displayCategory === 'desktop' ? '0 0 260px' : '1',
               position: displayCategory === 'desktop' ? 'sticky' : 'static',
               top: displayCategory === 'desktop' ? '100px' : 'auto',
               alignSelf: 'flex-start',
-              height: displayCategory === 'desktop' ? 'calc(100vh - 120px)' : 'auto',
+              height: displayCategory === 'desktop' ? 'calc(100vh - 140px)' : 'auto',
+              overflowY: displayCategory === 'desktop' ? 'auto' : 'visible',
             }}
           >
             <ResearchFilters
@@ -204,14 +274,33 @@ export default function ResearchPage() {
               onAuthorsChange={setSelectedAuthors}
               availableAuthors={mockAuthors}
               countryId={countryId}
+              hideSearch
             />
           </Box>
 
           {/* Results */}
-          <Box style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-            <Text size="sm" c="dimmed" mb="md">
-              {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'}
-            </Text>
+          <Box style={{ flex: 1, minWidth: 0 }}>
+            {/* Results Count */}
+            <Box
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: spacing['2xl'],
+                paddingBottom: spacing.lg,
+                borderBottom: `1px solid ${colors.border.light}`,
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: typography.fontFamily.primary,
+                  fontSize: typography.fontSize.sm,
+                  color: colors.text.tertiary,
+                }}
+              >
+                {filteredItems.length} {filteredItems.length === 1 ? 'result' : 'results'}
+              </Text>
+            </Box>
 
             {filteredItems.length > 0 ? (
               <BlogPostGrid items={filteredItems} countryId={countryId} />
@@ -219,12 +308,30 @@ export default function ResearchPage() {
               <Box
                 style={{
                   textAlign: 'center',
-                  padding: spacing['3xl'],
+                  padding: spacing['5xl'],
                   backgroundColor: colors.gray[50],
-                  borderRadius: spacing.radius.md,
+                  borderRadius: spacing.radius.xl,
                 }}
               >
-                <Text c="dimmed">No results found. Try adjusting your filters.</Text>
+                <Text
+                  style={{
+                    fontFamily: typography.fontFamily.primary,
+                    fontSize: typography.fontSize.lg,
+                    color: colors.text.secondary,
+                    marginBottom: spacing.sm,
+                  }}
+                >
+                  No results found
+                </Text>
+                <Text
+                  style={{
+                    fontFamily: typography.fontFamily.primary,
+                    fontSize: typography.fontSize.sm,
+                    color: colors.text.tertiary,
+                  }}
+                >
+                  Try adjusting your filters or search terms.
+                </Text>
               </Box>
             )}
           </Box>

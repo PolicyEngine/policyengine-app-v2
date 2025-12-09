@@ -1,4 +1,9 @@
-// Colors submodule for Mantine theme
+/**
+ * Colors submodule for Mantine theme
+ *
+ * "Quantitative Editorial" Design System
+ * Maps design token colors to Mantine color tuples.
+ */
 import type { MantineColorsTuple } from '@mantine/core';
 import { colors } from '../designTokens';
 
@@ -29,6 +34,20 @@ export const themeColors: Record<string, MantineColorsTuple> = {
     colors.secondary[900],
   ] as MantineColorsTuple,
 
+  // Accent (gold) for CTAs
+  accent: [
+    colors.accent[50],
+    colors.accent[100],
+    colors.accent[200],
+    colors.accent[300],
+    colors.accent[400],
+    colors.accent[500],
+    colors.accent[600],
+    colors.accent[700],
+    colors.accent[800],
+    colors.accent[900],
+  ] as MantineColorsTuple,
+
   blue: [
     colors.blue[50],
     colors.blue[100],
@@ -55,6 +74,7 @@ export const themeColors: Record<string, MantineColorsTuple> = {
     colors.gray[900],
   ] as MantineColorsTuple,
 
+  // Alias: teal maps to primary
   teal: [
     colors.primary[50],
     colors.primary[100],

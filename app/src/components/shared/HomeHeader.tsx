@@ -1,3 +1,11 @@
+/**
+ * HomeHeader - Editorial Navigation
+ *
+ * A sophisticated header with editorial presence.
+ * Features a subtle gradient background, refined typography,
+ * and smooth hover interactions.
+ */
+
 import { useNavigate } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
 import HeaderContent from '@/components/homeHeader/HeaderContent';
@@ -25,7 +33,7 @@ export default function HeaderNavigation() {
     },
     {
       label: 'About',
-      onClick: () => {}, // No-op for dropdown parent
+      onClick: () => {},
       hasDropdown: true,
       dropdownItems: [
         { label: 'Team', onClick: () => handleNavClick(`/${countryId}/team`) },
@@ -40,33 +48,36 @@ export default function HeaderNavigation() {
   ];
 
   return (
-    <div
+    <header
       style={{
-        position: 'sticky' as const,
+        position: 'sticky',
         top: 0,
-        paddingTop: spacing.sm,
-        paddingBottom: spacing.sm,
-        paddingLeft: '24px',
-        paddingRight: '24px',
         height: spacing.layout.header,
-        backgroundColor: colors.primary[600],
-        borderBottom: `0.5px solid ${colors.border.dark}`,
+        background: `linear-gradient(135deg, ${colors.primary[700]} 0%, ${colors.primary[600]} 100%)`,
+        borderBottom: `1px solid ${colors.primary[500]}20`,
         boxShadow: `
-      0px 2px 4px -1px rgba(0, 0, 0, 0.06),
-      0px 4px 6px -1px rgba(0, 0, 0, 0.10)
-    `,
-        zIndex: 1000,
+          0 1px 3px rgba(0, 0, 0, 0.08),
+          0 4px 12px rgba(0, 0, 0, 0.04),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06)
+        `,
+        zIndex: spacing.zIndex.sticky,
         fontFamily: typography.fontFamily.primary,
         opacity: opened ? 0 : 1,
-        transition: 'opacity 0.1s ease',
-        marginTop: '0px',
-        marginLeft: '0px',
-        marginRight: '0px',
-        width: '100%',
-        borderRadius: '0px',
+        transition: 'opacity 150ms ease-out',
+        backdropFilter: 'blur(8px)',
       }}
     >
-      <HeaderContent opened={opened} onOpen={open} onClose={close} navItems={navItems} />
-    </div>
+      <div
+        style={{
+          height: '100%',
+          paddingLeft: spacing['2xl'],
+          paddingRight: spacing['2xl'],
+          maxWidth: spacing.layout.content,
+          margin: '0 auto',
+        }}
+      >
+        <HeaderContent opened={opened} onOpen={open} onClose={close} navItems={navItems} />
+      </div>
+    </header>
   );
 }

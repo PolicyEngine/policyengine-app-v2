@@ -1,19 +1,20 @@
 /**
- * ResearchFilters Component
+ * ResearchFilters - Editorial Filter Sidebar
  *
- * Sidebar filters for the Research page.
- * Includes search, topics, locations, and authors.
- * Filter menu extends to bottom of viewport with scroll in expanded section.
+ * Refined filter controls with elegant accordion sections
+ * and sophisticated styling.
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Box, Button, Checkbox, Group, Stack, Text, TextInput } from '@mantine/core';
+import { IconChevronDown } from '@tabler/icons-react';
+import { Box, Checkbox, Stack, Text, UnstyledButton } from '@mantine/core';
 import {
   getTopicLabel,
   locationLabels,
   locationTags,
   topicTags,
 } from '@/data/posts/postTransformers';
+import { colors, spacing, typography } from '@/designTokens';
 
 interface ResearchFiltersProps {
   searchQuery: string;
@@ -29,6 +30,7 @@ interface ResearchFiltersProps {
   onTypesChange: (types: string[]) => void;
   availableAuthors: { key: string; name: string }[];
   countryId?: string;
+  hideSearch?: boolean;
 }
 
 type ExpandedSection = 'type' | 'topics' | 'locations' | 'authors' | null;
@@ -39,9 +41,6 @@ const typeOptions = [
 ];
 
 export function ResearchFilters({
-  searchQuery,
-  onSearchChange,
-  onSearchSubmit,
   selectedTopics,
   onTopicsChange,
   selectedLocations,
@@ -53,21 +52,20 @@ export function ResearchFilters({
   availableAuthors,
   countryId = 'us',
 }: ResearchFiltersProps) {
-  const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
+  const [expandedSection, setExpandedSection] = useState<ExpandedSection>('type');
   const [usStatesExpanded, setUsStatesExpanded] = useState(false);
   const [availableHeight, setAvailableHeight] = useState<number>(400);
   const filterContainerRef = useRef<HTMLDivElement>(null);
 
-  // Calculate available height for the tag container
   useEffect(() => {
     const calculateHeight = () => {
       if (filterContainerRef.current) {
         const rect = filterContainerRef.current.getBoundingClientRect();
         const viewportHeight = window.innerHeight;
         const topOffset = rect.top;
-        const padding = 20; // Bottom padding
+        const padding = 40;
         const newHeight = viewportHeight - topOffset - padding;
-        setAvailableHeight(Math.max(newHeight, 100)); // Minimum 100px
+        setAvailableHeight(Math.max(newHeight, 100));
       }
     };
 
@@ -117,259 +115,272 @@ export function ResearchFilters({
     }
   };
 
-  // Render type options
-  const renderTypeOptions = () => (
-    <Stack gap={4}>
-      {typeOptions.map((option) => (
-        <Checkbox
-          key={option.value}
-          label={option.label}
-          checked={selectedTypes.includes(option.value)}
-          onChange={() => handleTypeToggle(option.value)}
-          size="sm"
-        />
-      ))}
-    </Stack>
-  );
-
-  // Render the tags for a section
-  const renderTopicTags = () => (
-    <Stack gap={4}>
-      {topicTags.map((tag) => (
-        <Checkbox
-          key={tag}
-          label={getTopicLabel(tag, countryId)}
-          checked={selectedTopics.includes(tag)}
-          onChange={() => handleTopicToggle(tag)}
-          size="sm"
-        />
-      ))}
-    </Stack>
-  );
-
-  const renderLocationTags = () => {
-    // Separate countries from US states
-    const countries = locationTags.filter((tag) => !tag.startsWith('us-'));
-    const usStates = locationTags.filter((tag) => tag.startsWith('us-'));
-
-    return (
-      <Stack gap={4}>
-        {/* Show countries */}
-        {countries.map((tag) => (
-          <Box key={tag}>
-            {tag === 'us' ? (
-              // US with expandable +/-
-              <Checkbox
-                label={
-                  <span>
-                    {locationLabels[tag] || tag}
-                    <Text
-                      component="span"
-                      size="sm"
-                      c="dimmed"
-                      style={{ cursor: 'pointer', userSelect: 'none', marginLeft: 12 }}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setUsStatesExpanded(!usStatesExpanded);
-                      }}
-                    >
-                      {usStatesExpanded ? '−' : '+'}
-                    </Text>
-                  </span>
-                }
-                checked={selectedLocations.includes(tag)}
-                onChange={() => handleLocationToggle(tag)}
-                size="sm"
-              />
-            ) : (
-              <Checkbox
-                label={locationLabels[tag] || tag}
-                checked={selectedLocations.includes(tag)}
-                onChange={() => handleLocationToggle(tag)}
-                size="sm"
-              />
-            )}
-          </Box>
-        ))}
-        {/* US States - only show when expanded */}
-        {usStatesExpanded &&
-          usStates.map((tag) => (
-            <Checkbox
-              key={tag}
-              label={locationLabels[tag] || tag}
-              checked={selectedLocations.includes(tag)}
-              onChange={() => handleLocationToggle(tag)}
-              size="sm"
-              ml="md"
-            />
-          ))}
-      </Stack>
-    );
-  };
-
-  const renderAuthorTags = () => (
-    <Stack gap={4}>
-      {availableAuthors.map((author) => (
-        <Checkbox
-          key={author.key}
-          label={author.name}
-          checked={selectedAuthors.includes(author.key)}
-          onChange={() => handleAuthorToggle(author.key)}
-          size="sm"
-        />
-      ))}
-    </Stack>
-  );
+  // Separate countries from US states
+  const countries = locationTags.filter((tag) => !tag.startsWith('us-'));
+  const usStates = locationTags.filter((tag) => tag.startsWith('us-'));
 
   return (
-    <Box style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Search - fixed at top */}
-      <Box mb="lg" style={{ flexShrink: 0 }}>
-        <TextInput
-          placeholder="Search posts..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.currentTarget.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              onSearchSubmit();
-            }
-          }}
-          mb="xs"
-        />
-        <Button fullWidth variant="outline" onClick={onSearchSubmit}>
-          Search
-        </Button>
-      </Box>
-
-      {/* Filter sections container - extends to bottom of viewport */}
-      <Box
-        ref={filterContainerRef}
+    <Box
+      ref={filterContainerRef}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        maxHeight: availableHeight,
+      }}
+    >
+      {/* Section Label */}
+      <Text
         style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: 0, // Important for flex child scrolling
-          maxHeight: availableHeight,
-          overflow: 'hidden',
+          fontFamily: typography.fontFamily.primary,
+          fontSize: typography.fontSize.xs,
+          fontWeight: typography.fontWeight.semibold,
+          letterSpacing: typography.letterSpacing.widest,
+          textTransform: 'uppercase',
+          color: colors.text.tertiary,
+          marginBottom: spacing.lg,
         }}
       >
-        {/* Type Header */}
-        <Group
-          justify="space-between"
-          onClick={() => toggleSection('type')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
-        >
-          <Text fw={600} size="sm">
-            Type
-          </Text>
-          <Text size="sm" c="dimmed">
-            {expandedSection === 'type' ? '−' : '+'}
-          </Text>
-        </Group>
+        Filter By
+      </Text>
 
-        {/* Type Content */}
-        {expandedSection === 'type' && (
-          <Box
-            style={{
-              overflowY: 'auto',
-              minHeight: 0,
-              maxHeight: availableHeight - 16,
-              paddingBottom: 8,
-            }}
-          >
-            {renderTypeOptions()}
-          </Box>
-        )}
+      {/* Type Section */}
+      <FilterSection
+        title="Type"
+        isExpanded={expandedSection === 'type'}
+        onToggle={() => toggleSection('type')}
+        count={selectedTypes.length}
+      >
+        <Stack gap={spacing.sm}>
+          {typeOptions.map((option) => (
+            <FilterCheckbox
+              key={option.value}
+              label={option.label}
+              checked={selectedTypes.includes(option.value)}
+              onChange={() => handleTypeToggle(option.value)}
+            />
+          ))}
+        </Stack>
+      </FilterSection>
 
-        {/* Topics Header */}
-        <Group
-          justify="space-between"
-          onClick={() => toggleSection('topics')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
-        >
-          <Text fw={600} size="sm">
-            Topic
-          </Text>
-          <Text size="sm" c="dimmed">
-            {expandedSection === 'topics' ? '−' : '+'}
-          </Text>
-        </Group>
+      {/* Topics Section */}
+      <FilterSection
+        title="Topic"
+        isExpanded={expandedSection === 'topics'}
+        onToggle={() => toggleSection('topics')}
+        count={selectedTopics.length}
+      >
+        <Stack gap={spacing.sm}>
+          {topicTags.map((tag) => (
+            <FilterCheckbox
+              key={tag}
+              label={getTopicLabel(tag, countryId)}
+              checked={selectedTopics.includes(tag)}
+              onChange={() => handleTopicToggle(tag)}
+            />
+          ))}
+        </Stack>
+      </FilterSection>
 
-        {/* Topics Content */}
-        {expandedSection === 'topics' && (
-          <Box
-            style={{
-              overflowY: 'auto',
-              minHeight: 0,
-              maxHeight: availableHeight - 16,
-              paddingBottom: 8,
-            }}
-          >
-            {renderTopicTags()}
-          </Box>
-        )}
+      {/* Locations Section */}
+      <FilterSection
+        title="Location"
+        isExpanded={expandedSection === 'locations'}
+        onToggle={() => toggleSection('locations')}
+        count={selectedLocations.length}
+      >
+        <Stack gap={spacing.sm}>
+          {countries.map((tag) => (
+            <Box key={tag}>
+              {tag === 'us' ? (
+                <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                  <FilterCheckbox
+                    label={locationLabels[tag] || tag}
+                    checked={selectedLocations.includes(tag)}
+                    onChange={() => handleLocationToggle(tag)}
+                  />
+                  <UnstyledButton
+                    onClick={() => setUsStatesExpanded(!usStatesExpanded)}
+                    style={{
+                      fontFamily: typography.fontFamily.primary,
+                      fontSize: typography.fontSize.xs,
+                      color: colors.primary[600],
+                      padding: `2px ${spacing.sm}`,
+                      borderRadius: spacing.radius.sm,
+                      backgroundColor: colors.primary[50],
+                    }}
+                  >
+                    {usStatesExpanded ? 'Hide states' : 'Show states'}
+                  </UnstyledButton>
+                </Box>
+              ) : (
+                <FilterCheckbox
+                  label={locationLabels[tag] || tag}
+                  checked={selectedLocations.includes(tag)}
+                  onChange={() => handleLocationToggle(tag)}
+                />
+              )}
+            </Box>
+          ))}
+          {usStatesExpanded && (
+            <Box style={{ paddingLeft: spacing.lg, borderLeft: `2px solid ${colors.border.light}` }}>
+              <Stack gap={spacing.sm}>
+                {usStates.map((tag) => (
+                  <FilterCheckbox
+                    key={tag}
+                    label={locationLabels[tag] || tag}
+                    checked={selectedLocations.includes(tag)}
+                    onChange={() => handleLocationToggle(tag)}
+                  />
+                ))}
+              </Stack>
+            </Box>
+          )}
+        </Stack>
+      </FilterSection>
 
-        {/* Locations Header */}
-        <Group
-          justify="space-between"
-          onClick={() => toggleSection('locations')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
-        >
-          <Text fw={600} size="sm">
-            Location
-          </Text>
-          <Text size="sm" c="dimmed">
-            {expandedSection === 'locations' ? '−' : '+'}
-          </Text>
-        </Group>
-
-        {/* Locations Content */}
-        {expandedSection === 'locations' && (
-          <Box
-            style={{
-              overflowY: 'auto',
-              minHeight: 0,
-              maxHeight: availableHeight - 16,
-              paddingBottom: 8,
-            }}
-          >
-            {renderLocationTags()}
-          </Box>
-        )}
-
-        {/* Authors Header */}
-        <Group
-          justify="space-between"
-          onClick={() => toggleSection('authors')}
-          style={{ cursor: 'pointer', flexShrink: 0 }}
-          py="xs"
-        >
-          <Text fw={600} size="sm">
-            Author
-          </Text>
-          <Text size="sm" c="dimmed">
-            {expandedSection === 'authors' ? '−' : '+'}
-          </Text>
-        </Group>
-
-        {/* Authors Content */}
-        {expandedSection === 'authors' && (
-          <Box
-            style={{
-              overflowY: 'auto',
-              minHeight: 0,
-              maxHeight: availableHeight - 16,
-              paddingBottom: 8,
-            }}
-          >
-            {renderAuthorTags()}
-          </Box>
-        )}
-      </Box>
+      {/* Authors Section */}
+      <FilterSection
+        title="Author"
+        isExpanded={expandedSection === 'authors'}
+        onToggle={() => toggleSection('authors')}
+        count={selectedAuthors.length}
+      >
+        <Stack gap={spacing.sm}>
+          {availableAuthors.map((author) => (
+            <FilterCheckbox
+              key={author.key}
+              label={author.name}
+              checked={selectedAuthors.includes(author.key)}
+              onChange={() => handleAuthorToggle(author.key)}
+            />
+          ))}
+        </Stack>
+      </FilterSection>
     </Box>
+  );
+}
+
+// Filter Section Component
+function FilterSection({
+  title,
+  isExpanded,
+  onToggle,
+  count,
+  children,
+}: {
+  title: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  count: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <Box
+      style={{
+        borderBottom: `1px solid ${colors.border.light}`,
+        paddingBottom: spacing.md,
+        marginBottom: spacing.md,
+      }}
+    >
+      <UnstyledButton
+        onClick={onToggle}
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+          padding: `${spacing.sm} 0`,
+        }}
+      >
+        <Box style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+          <Text
+            style={{
+              fontFamily: typography.fontFamily.primary,
+              fontSize: typography.fontSize.sm,
+              fontWeight: typography.fontWeight.semibold,
+              color: colors.text.primary,
+            }}
+          >
+            {title}
+          </Text>
+          {count > 0 && (
+            <Text
+              style={{
+                fontFamily: typography.fontFamily.primary,
+                fontSize: typography.fontSize.xs,
+                fontWeight: typography.fontWeight.semibold,
+                color: colors.white,
+                backgroundColor: colors.primary[600],
+                padding: `1px ${spacing.sm}`,
+                borderRadius: spacing.radius.full,
+                minWidth: '20px',
+                textAlign: 'center',
+              }}
+            >
+              {count}
+            </Text>
+          )}
+        </Box>
+        <IconChevronDown
+          size={16}
+          color={colors.text.tertiary}
+          style={{
+            transition: 'transform 200ms ease',
+            transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+          }}
+        />
+      </UnstyledButton>
+
+      {isExpanded && (
+        <Box
+          style={{
+            paddingTop: spacing.sm,
+            maxHeight: '250px',
+            overflowY: 'auto',
+          }}
+        >
+          {children}
+        </Box>
+      )}
+    </Box>
+  );
+}
+
+// Filter Checkbox Component
+function FilterCheckbox({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <Checkbox
+      label={label}
+      checked={checked}
+      onChange={onChange}
+      size="sm"
+      styles={{
+        root: {
+          cursor: 'pointer',
+        },
+        input: {
+          cursor: 'pointer',
+          borderColor: colors.border.medium,
+          '&:checked': {
+            backgroundColor: colors.primary[600],
+            borderColor: colors.primary[600],
+          },
+        },
+        label: {
+          fontFamily: typography.fontFamily.primary,
+          fontSize: typography.fontSize.sm,
+          color: colors.text.secondary,
+          cursor: 'pointer',
+        },
+      }}
+    />
   );
 }

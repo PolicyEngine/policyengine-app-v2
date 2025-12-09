@@ -1,110 +1,153 @@
-// Comments indicate color names from Figma; these can be removed in the future
+/**
+ * PolicyEngine Design Tokens - Colors
+ *
+ * "Quantitative Editorial" Design System
+ * Inspired by The Economist, Bloomberg, and modern think-tank aesthetics
+ *
+ * A sophisticated palette that balances analytical authority with warmth.
+ * Deep teals anchor the brand, gold accents create visual interest,
+ * and a refined gray scale provides professional foundation.
+ */
 
 export const colors = {
-  // Primary brand colors - teal from Figma
+  // Primary brand colors - Deep Teal (evolved from original)
+  // More saturated and dramatic for editorial impact
   primary: {
-    50: '#E6FFFA',
-    100: '#B2F5EA',
-    200: '#81E6D9',
-    300: '#4FD1C5',
-    400: '#38B2AC',
-    500: '#319795', // teal/500 from Figma
-    600: '#2C7A7B',
-    700: '#285E61',
-    800: '#234E52',
-    900: '#1D4044', // Vector color from Figma
+    50: '#E8FAF8',
+    100: '#C3F2ED',
+    200: '#8FE5DD',
+    300: '#52D4C7',
+    400: '#2BB8AA',
+    500: '#1A9E91', // Core brand - richer than before
+    600: '#147A73', // Header/footer background
+    700: '#10605A',
+    800: '#0C4A45',
+    900: '#082F2C', // Darkest - for dramatic sections
     alpha: {
-      40: '#31979566', // 40% opacity of primary[500]
-      50: '#31979580', // 50% opacity of primary[500]
-      60: '#31979599', // 60% opacity of primary[500]
+      10: '#1A9E911A',
+      20: '#1A9E9133',
+      40: '#1A9E9166',
+      60: '#1A9E9199',
     },
   },
 
-  // Secondary colors - extracted from Figma design
+  // Accent - Warm Gold/Amber
+  // For CTAs, highlights, and data emphasis
+  accent: {
+    50: '#FFF9E6',
+    100: '#FFEFC0',
+    200: '#FFE08A',
+    300: '#FFD054',
+    400: '#FFC629', // Primary CTA
+    500: '#E6A800', // Hover state
+    600: '#B38200',
+    700: '#805C00',
+    800: '#4D3700',
+    900: '#1A1200',
+  },
+
+  // Secondary - Slate Blue Gray
+  // For sophisticated neutrals with depth
   secondary: {
-    50: '#F0F9FF', // Blue light/50 from Figma
-    100: '#F2F4F7', // Gray/100 from Figma
-    200: '#E2E8F0', // gray/200 from Figma
+    50: '#F7F9FC',
+    100: '#EEF2F7',
+    200: '#E2E8F0',
     300: '#CBD5E1',
     400: '#94A3B8',
     500: '#64748B',
     600: '#475569',
-    700: '#344054', // Gray/700 from Figma
-    800: '#1E293B',
-    900: '#101828', // Gray/900 from Figma
+    700: '#334155',
+    800: '#1E293B', // Deep text
+    900: '#0F172A', // Darkest
   },
 
-  // Blue colors from Figma
+  // Blue - Data visualization primary
   blue: {
-    50: '#F0F9FF', // Blue light/50
-    100: '#E0F2FE',
-    200: '#BAE6FD',
-    300: '#7DD3FC',
-    400: '#38BDF8',
-    500: '#0EA5E9',
-    600: '#0284C7',
-    700: '#026AA2', // Blue light/700 from Figma
-    800: '#075985',
-    900: '#0C4A6E',
+    50: '#EFF6FF',
+    100: '#DBEAFE',
+    200: '#BFDBFE',
+    300: '#93C5FD',
+    400: '#60A5FA',
+    500: '#3B82F6',
+    600: '#2563EB',
+    700: '#1D4ED8',
+    800: '#1E40AF',
+    900: '#1E3A8A',
   },
 
-  // Semantic colors - extracted from design elements
-  success: '#22C55E',
-  warning: '#FEC601', // Yellow button color from design
-  error: '#EF4444',
-  info: '#1890FF', // Primary/6 from Figma
+  // Semantic colors
+  success: '#059669', // Emerald 600
+  warning: '#D97706', // Amber 600
+  error: '#DC2626', // Red 600
+  info: '#0284C7', // Sky 600
 
-  // Neutral colors
-  white: '#FFFFFF', // White from Figma
-  black: '#000000', // Character/Title .85 from Figma
+  // Core
+  white: '#FFFFFF',
+  black: '#0A0A0A', // Soft black
 
-  // Gray scale - updated to match Figma
+  // Gray scale - refined warm-cool balance
   gray: {
-    50: '#F9FAFB',
-    100: '#F2F4F7', // Gray/100 from Figma
-    200: '#E2E8F0', // gray/200 from Figma
-    300: '#D1D5DB',
-    400: '#9CA3AF',
-    500: '#6B7280',
-    600: '#4B5563',
-    700: '#344054', // Gray/700 from Figma
-    800: '#1F2937',
-    900: '#101828', // Gray/900 from Figma
+    50: '#FAFAFA',
+    100: '#F5F5F5',
+    200: '#E5E5E5',
+    300: '#D4D4D4',
+    400: '#A3A3A3',
+    500: '#737373',
+    600: '#525252',
+    700: '#404040',
+    800: '#262626',
+    900: '#171717',
   },
 
-  // Background colors - from Figma design
+  // Background colors
   background: {
-    primary: '#FFFFFF', // White from Figma
-    secondary: '#F5F9FF', // Sidebar background from design
-    tertiary: '#F1F5F9',
-    sider: '#FFFFFF', // Conditional / sider-background from Figma
+    primary: '#FFFFFF',
+    secondary: '#FAFBFC', // Subtle cool gray
+    tertiary: '#F1F5F9', // Slate 100
+    elevated: '#FFFFFF',
+    editorial: '#F8F6F3', // Warm paper-like
+    dark: '#0F172A', // For inverted sections
   },
 
-  // Text colors - from Figma design
+  // Text colors
   text: {
-    primary: '#000000', // Character/Primary .85 from Figma
-    secondary: '#5A5A5A', // Secondary text from design
-    tertiary: '#9CA3AF',
+    primary: '#1E293B', // Slate 800 - softer than pure black
+    secondary: '#475569', // Slate 600
+    tertiary: '#64748B', // Slate 500
+    muted: '#94A3B8', // Slate 400
     inverse: '#FFFFFF',
-    title: '#000000', // Character/Title .85 from Figma
+    editorial: '#1A1A1A', // For long-form reading
   },
 
-  // Additional colors from the design
-  teal: {
-    500: '#319795', // teal/500 from Figma
-  },
-
-  // Border colors from design
+  // Border colors
   border: {
-    light: '#E2E8F0', // gray/200 from Figma
+    light: '#E2E8F0',
     medium: '#CBD5E1',
     dark: '#94A3B8',
+    editorial: '#D1D5DB', // Slightly warmer
   },
 
-  // Shadow colors (if needed)
+  // Shadow colors
   shadow: {
-    light: 'rgba(16, 24, 40, 0.05)',
-    medium: 'rgba(16, 24, 40, 0.1)',
-    dark: 'rgba(16, 24, 40, 0.2)',
+    light: 'rgba(15, 23, 42, 0.04)',
+    medium: 'rgba(15, 23, 42, 0.08)',
+    dark: 'rgba(15, 23, 42, 0.16)',
+    colored: 'rgba(26, 158, 145, 0.15)', // Teal-tinted shadow
+  },
+
+  // Chart/Data visualization palette
+  chart: {
+    primary: '#1A9E91',
+    secondary: '#3B82F6',
+    tertiary: '#8B5CF6',
+    quaternary: '#EC4899',
+    positive: '#059669',
+    negative: '#DC2626',
+    neutral: '#64748B',
+  },
+
+  // Legacy support - mapped to new values
+  teal: {
+    500: '#1A9E91',
   },
 };
