@@ -50,8 +50,6 @@ interface SimulationPathwayWrapperProps {
 }
 
 export default function SimulationPathwayWrapper({ onComplete }: SimulationPathwayWrapperProps) {
-  console.log('[SimulationPathwayWrapper] ========== RENDER ==========');
-
   const countryId = useCurrentCountry();
   const navigate = useNavigate();
 
@@ -106,9 +104,8 @@ export default function SimulationPathwayWrapper({ onComplete }: SimulationPathw
     (_state, simulation) => simulation,
     navigateToMode,
     SimulationViewMode.SETUP,
-    (simulationId: string) => {
+    (_simulationId: string) => {
       // onSimulationComplete: custom navigation for standalone pathway
-      console.log('[SimulationPathwayWrapper] Simulation created with ID:', simulationId);
       navigate(`/${countryId}/simulations`);
       onComplete?.();
     }

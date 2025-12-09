@@ -48,10 +48,8 @@ export default function PolicySubmitView({
     const serializedPolicyCreationPayload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(
       policyData as Policy
     );
-    console.log('serializedPolicyCreationPayload', serializedPolicyCreationPayload);
     createPolicy(serializedPolicyCreationPayload, {
       onSuccess: (data) => {
-        console.log('Policy created successfully:', data);
         onSubmitSuccess(data.result.policy_id);
       },
     });

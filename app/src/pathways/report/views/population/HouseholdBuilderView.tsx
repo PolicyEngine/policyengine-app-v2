@@ -154,36 +154,24 @@ export default function HouseholdBuilderView({
     // Validate household
     const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
     if (!validation.isValid) {
-      console.error('Household validation failed:', validation.errors);
       return;
     }
 
     // Convert to API format
     const payload = HouseholdAdapter.toCreationPayload(household.householdData, countryId);
 
-    console.log('Creating household with payload:', payload);
-
     try {
       const result = await createHousehold(payload);
-      console.log('Household created successfully:', result);
 
       const householdId = result.result.household_id;
       onSubmitSuccess(householdId, household);
     } catch (err) {
-      console.error('Failed to create household:', err);
+      // Error is handled by the mutation
     }
   };
 
   const validation = HouseholdValidation.isReadyForSimulation(household, reportYear);
   const canProceed = validation.isValid;
-
-  // Debug: log validation result
-  console.log('[HouseholdBuilderView] Validation:', {
-    isValid: validation.isValid,
-    errors: validation.errors,
-    warnings: validation.warnings,
-    household,
-  });
 
   const primaryAction = {
     label: 'Create household',
