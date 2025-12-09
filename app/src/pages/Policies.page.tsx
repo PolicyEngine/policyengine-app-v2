@@ -101,8 +101,6 @@ export default function PoliciesPage() {
   ];
 
   // Transform the data to match the new structure
-  console.log('Raw user policies data:', data);
-
   const transformedData: IngredientRecord[] =
     data?.map((item) => ({
       id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID

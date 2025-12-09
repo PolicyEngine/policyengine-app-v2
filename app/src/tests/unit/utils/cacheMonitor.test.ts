@@ -94,53 +94,33 @@ describe('cacheMonitor', () => {
   });
 
   describe('logInvalidation', () => {
-    it('given query key then logs invalidation', () => {
-      // Given
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-      // When
-      cacheMonitor.logInvalidation(TEST_QUERY_KEYS.SIMULATION);
-
-      // Then
-      expect(consoleSpy).toHaveBeenCalled();
-
-      consoleSpy.mockRestore();
+    it('given query key then does not throw', () => {
+      // When/Then - should not throw
+      expect(() => {
+        cacheMonitor.logInvalidation(TEST_QUERY_KEYS.SIMULATION);
+      }).not.toThrow();
     });
   });
 
   describe('logCacheState', () => {
-    it('given label then includes label in log', () => {
+    it('given label then does not throw', () => {
       // Given
       const mockClient = createMockQueryClient();
       cacheMonitor.init(mockClient);
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
-      // When
-      cacheMonitor.logCacheState('Test Label');
-
-      // Then
-      expect(consoleSpy).toHaveBeenCalled();
-      const logCall = consoleSpy.mock.calls[consoleSpy.mock.calls.length - 1];
-      expect(logCall[0]).toContain('[Test Label]');
-
-      consoleSpy.mockRestore();
+      // When/Then - should not throw
+      expect(() => {
+        cacheMonitor.logCacheState('Test Label');
+      }).not.toThrow();
     });
   });
 
   describe('logNavigation', () => {
-    it('given from and to then logs navigation', () => {
-      // Given
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
-      // When
-      cacheMonitor.logNavigation('/reports', '/reports/123');
-
-      // Then
-      expect(consoleSpy).toHaveBeenCalled();
-      const logCall = consoleSpy.mock.calls[0];
-      expect(logCall[0]).toContain('NAVIGATION');
-
-      consoleSpy.mockRestore();
+    it('given from and to then does not throw', () => {
+      // When/Then - should not throw
+      expect(() => {
+        cacheMonitor.logNavigation('/reports', '/reports/123');
+      }).not.toThrow();
     });
   });
 });

@@ -189,9 +189,8 @@ describe('useStartCalculationOnLoad', () => {
     expect(mockStartCalculation).toHaveBeenCalledTimes(1);
   });
 
-  it('should log when starting calculation', async () => {
+  it('should start calculation without logging', async () => {
     const config = createMockConfig();
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     renderHook(
       () =>
@@ -204,10 +203,8 @@ describe('useStartCalculationOnLoad', () => {
     );
 
     await waitFor(() => {
-      // Check that logs include the calcId (log format changed to use timestamps)
-      const logCalls = consoleLogSpy.mock.calls.map((call) => call.join(' '));
-      const hasCalcId = logCalls.some((log) => log.includes(config.calcId));
-      expect(hasCalcId).toBe(true);
+      // Verify calculation was started (no logging expected)
+      expect(mockStartCalculation).toHaveBeenCalledWith(config);
     });
   });
 

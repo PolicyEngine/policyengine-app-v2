@@ -53,10 +53,6 @@ export function formatDate(
   countryId: (typeof countryIds)[number],
   stripTime: boolean = false
 ): string {
-  console.log('Formatting date:', dateStr, 'with format type:', formatType);
-  // Ensure UTC interpretation by appending timezone
-  // const date = new Date(`${dateStr}T00:00:00.000Z`);
-
   const date = new Date(dateStr);
 
   if (stripTime) {

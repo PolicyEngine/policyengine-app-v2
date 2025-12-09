@@ -34,10 +34,6 @@ export default function HouseholdSubPage({
   // Check if households are the same
   const householdsSame = householdsAreEqual(baselineHousehold, reformHousehold);
 
-  console.log(`[HouseholdSubPage] baselineHousehold:`, baselineHousehold);
-  console.log(`[HouseholdSubPage] reformHousehold:`, reformHousehold);
-  console.log(`[HouseholdSubPage] userHouseholds:`, userHouseholds);
-
   // Get custom labels from userHouseholds, fallback to generic labels
   const baselineUserHousehold = userHouseholds?.find(
     (uh) => uh.householdId === baselineHousehold?.id

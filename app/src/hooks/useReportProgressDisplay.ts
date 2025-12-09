@@ -38,16 +38,8 @@ export function useReportProgressDisplay(reportId: string | undefined) {
     const progress = calcStatus.progress || 0;
     const statusMessage = calcStatus.message;
 
-    console.log('[useReportProgressDisplay]', {
-      reportId,
-      status: calcStatus.status,
-      progress,
-      hasCalcStatus: true,
-      message: statusMessage,
-    });
-
     return { displayProgress: progress, hasCalcStatus: true, message: statusMessage };
-  }, [calcStatus, reportId]);
+  }, [calcStatus]);
 
   return { displayProgress, hasCalcStatus, message };
 }

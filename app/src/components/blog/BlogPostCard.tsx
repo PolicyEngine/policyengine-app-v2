@@ -17,15 +17,6 @@ interface BlogPostCardProps {
 }
 
 export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
-  // Debug logging
-  console.log('[THIS] BlogPostCard rendering:', {
-    title: item.title,
-    image: item.image,
-    imagePath: item.image ? `/assets/posts/${item.image}` : 'NO IMAGE',
-    isApp: item.isApp,
-    slug: item.slug,
-  });
-
   // Generate link based on whether it's an app or post
   // Apps go to AppPage, posts go to BlogPage
   const link = item.isApp

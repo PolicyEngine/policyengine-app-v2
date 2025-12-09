@@ -28,13 +28,6 @@ export default function ReportSimulationExistingView({
   const { data, isLoading, isError, error } = useUserSimulations(userId);
   const [localSimulation, setLocalSimulation] = useState<EnhancedUserSimulation | null>(null);
 
-  console.log('[ReportSimulationExistingView] ========== DATA FETCH ==========');
-  console.log('[ReportSimulationExistingView] Raw data:', data);
-  console.log('[ReportSimulationExistingView] Raw data length:', data?.length);
-  console.log('[ReportSimulationExistingView] isLoading:', isLoading);
-  console.log('[ReportSimulationExistingView] isError:', isError);
-  console.log('[ReportSimulationExistingView] Error:', error);
-
   function canProceed() {
     if (!localSimulation) {
       return false;
@@ -55,17 +48,11 @@ export default function ReportSimulationExistingView({
       return;
     }
 
-    console.log('Submitting Simulation in handleSubmit:', localSimulation);
-
     onSelectSimulation(localSimulation);
     onNext();
   }
 
   const userSimulations = data || [];
-
-  console.log('[ReportSimulationExistingView] ========== BEFORE FILTERING ==========');
-  console.log('[ReportSimulationExistingView] User simulations count:', userSimulations.length);
-  console.log('[ReportSimulationExistingView] User simulations:', userSimulations);
 
   if (isLoading) {
     return (
@@ -106,12 +93,6 @@ export default function ReportSimulationExistingView({
   // Filter simulations with loaded data
   const filteredSimulations = userSimulations.filter((enhancedSim) => enhancedSim.simulation?.id);
 
-  console.log('[ReportSimulationExistingView] ========== AFTER FILTERING ==========');
-  console.log(
-    '[ReportSimulationExistingView] Filtered simulations count:',
-    filteredSimulations.length
-  );
-
   // Get other simulation's population ID (base ingredient ID) for compatibility check
   // For household populations, use household.id
   // For geography populations, use geography.geographyId (the base geography identifier)
@@ -127,9 +108,6 @@ export default function ReportSimulationExistingView({
 
     return bCompatible === aCompatible ? 0 : aCompatible ? -1 : 1;
   });
-
-  console.log('[ReportSimulationExistingView] ========== AFTER SORTING ==========');
-  console.log('[ReportSimulationExistingView] Sorted simulations count:', sortedSimulations.length);
 
   // Build card list items from sorted simulations
   const simulationCardItems = sortedSimulations.map((enhancedSim) => {

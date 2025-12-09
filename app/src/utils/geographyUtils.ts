@@ -16,9 +16,6 @@ export function getCountryLabel(countryCode: string): string {
 }
 
 export function getRegionLabel(regionCode: string, metadata: MetadataState): string {
-  console.log('regionCode:', regionCode);
-  console.log('region options:', metadata.economyOptions.region);
-
   // regionCode now contains the FULL prefixed value for UK regions
   // e.g., "constituency/Sheffield Central" or "country/england"
   // For US: just the state code like "ca"

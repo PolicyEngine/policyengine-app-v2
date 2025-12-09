@@ -24,12 +24,6 @@ export const MultiSimOutputTypeCell = React.memo(
     // Subscribe to CalcStatus for this report's simulations
     const { isCalculating, progress } = useMultiSimulationCalcStatus(simulationIds);
 
-    console.log('[MultiSimOutputTypeCell] Render:', {
-      simulationIds,
-      isCalculating,
-      progress,
-    });
-
     // Show calculating state with spinner and progress
     if (isCalculating) {
       return (

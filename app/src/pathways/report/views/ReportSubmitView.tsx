@@ -16,8 +16,6 @@ export default function ReportSubmitView({
   onBack,
   onCancel,
 }: ReportSubmitViewProps) {
-  console.log('[ReportSubmitView] ========== COMPONENT RENDER ==========');
-
   const simulation1 = reportState.simulations[0];
   const simulation2 = reportState.simulations[1];
 

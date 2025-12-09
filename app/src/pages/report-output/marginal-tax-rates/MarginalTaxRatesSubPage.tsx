@@ -147,12 +147,6 @@ export default function MarginalTaxRatesSubPage({
   // Use first person's MTR (matches V1 behavior) - MTR should not be aggregated across people
   const firstPersonName = Object.keys(baselineVariation.householdData?.people || {})[0];
 
-  console.log('[MTR DEBUG] First person name:', firstPersonName);
-  console.log(
-    '[MTR DEBUG] People in household:',
-    Object.keys(baselineVariation.householdData?.people || {})
-  );
-
   const baselineMTR = getValueFromHousehold(
     'marginal_tax_rate',
     reportYear,
@@ -161,16 +155,6 @@ export default function MarginalTaxRatesSubPage({
     metadata
   );
 
-  console.log(
-    '[MTR DEBUG] Baseline MTR type:',
-    typeof baselineMTR,
-    'isArray:',
-    Array.isArray(baselineMTR)
-  );
-  console.log(
-    '[MTR DEBUG] Baseline MTR sample values:',
-    Array.isArray(baselineMTR) ? baselineMTR.slice(0, 5) : baselineMTR
-  );
   const reformMTR =
     reform && reformVariation
       ? getValueFromHousehold(

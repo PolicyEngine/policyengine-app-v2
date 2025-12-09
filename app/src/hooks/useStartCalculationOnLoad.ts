@@ -85,15 +85,6 @@ export function useStartCalculationOnLoad({
       return;
     }
 
-    const timestamp = Date.now();
-    console.log(
-      `[useStartCalculationOnLoad][${timestamp}] ========================================`
-    );
-    console.log(
-      `[useStartCalculationOnLoad][${timestamp}] Ensuring ${currentConfigs.length} calculation(s) started`
-    );
-    console.log(`[useStartCalculationOnLoad][${timestamp}] Config key: ${configKey}`);
-
     // Start all calculations (household reports have multiple, economy has one)
     // CRITICAL: Do NOT await - let TanStack Query handle waiting in background
     for (const config of currentConfigs) {
@@ -106,51 +97,20 @@ export function useStartCalculationOnLoad({
       const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
 
       if (cachedStatus?.status === 'complete') {
-        console.log(
-          `[useStartCalculationOnLoad][${timestamp}] ⏭️  SKIP: ${config.calcId} already complete in cache`
-        );
         continue;
       }
 
       // Check if orchestrator is already running for this calcId
       if (manager.isRunning(config.calcId)) {
-        console.log(
-          `[useStartCalculationOnLoad][${timestamp}] ⏭️  SKIP: ${config.calcId} orchestrator already running`
-        );
         continue;
       }
 
-      console.log(`[useStartCalculationOnLoad][${timestamp}]   calcId: "${config.calcId}"`);
-      console.log(`[useStartCalculationOnLoad][${timestamp}]   targetType: "${config.targetType}"`);
-      console.log(
-        `[useStartCalculationOnLoad][${timestamp}]   cachedStatus: ${cachedStatus?.status || 'none'}`
-      );
-
       // Manager handles idempotency - won't start if already running
-      console.log(
-        `[useStartCalculationOnLoad][${timestamp}] → Calling manager.startCalculation() (fire and forget)`
-      );
-
       // Fire and forget - don't await, especially critical for household (30-60s API calls)
-      manager
-        .startCalculation(config)
-        .then(() => {
-          console.log(
-            `[useStartCalculationOnLoad][${timestamp}] ✓ manager.startCalculation() completed for ${config.calcId}`
-          );
-        })
-        .catch((error) => {
-          console.error(
-            `[useStartCalculationOnLoad][${timestamp}] ❌ Failed to start ${config.calcId}:`,
-            error
-          );
-        });
+      manager.startCalculation(config).catch((error) => {
+        console.error(`[useStartCalculationOnLoad] Failed to start ${config.calcId}:`, error);
+      });
     }
-
-    console.log(`[useStartCalculationOnLoad][${timestamp}] ✓ All calculation requests processed`);
-    console.log(
-      `[useStartCalculationOnLoad][${timestamp}] ========================================`
-    );
   }, [enabled, configKey, isComplete, manager, queryClient]);
   // NOTE: Using configKey instead of configs to prevent infinite loop
   // configKey is a stable string that only changes when calcIds change

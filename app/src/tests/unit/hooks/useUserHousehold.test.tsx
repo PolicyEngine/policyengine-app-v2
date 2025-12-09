@@ -15,7 +15,6 @@ import {
   useUserHouseholdStore,
 } from '@/hooks/useUserHousehold';
 import {
-  CONSOLE_MESSAGES,
   createMockQueryClient,
   GEO_CONSTANTS,
   mockHouseholdMetadata,
@@ -146,16 +145,6 @@ describe('useUserHousehold hooks', () => {
       expect(result.current.data).toEqual(mockUserHouseholdPopulationList);
       const mockStore = (LocalStorageHouseholdStore as any)();
       expect(mockStore.findByUser).toHaveBeenCalledWith(userId, 'us');
-
-      // Verify console logs
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
-        CONSOLE_MESSAGES.USER_ID_LOG,
-        userId
-      );
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
-        CONSOLE_MESSAGES.STORE_LOG,
-        expect.any(Object)
-      );
     });
 
     test('given empty user ID when fetching then still attempts fetch', async () => {
@@ -260,13 +249,6 @@ describe('useUserHousehold hooks', () => {
         type: 'household',
       });
 
-      // Verify console logs
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(CONSOLE_MESSAGES.HOUSEHOLD_LOG);
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(newHousehold);
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
-        CONSOLE_MESSAGES.NEW_ASSOCIATION_LOG
-      );
-
       // Verify cache invalidation
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: QUERY_KEY_PATTERNS.ASSOCIATION_BY_USER(TEST_IDS.USER_ID),
@@ -317,16 +299,6 @@ describe('useUserHousehold hooks', () => {
 
       expect(result.current.data).toBeDefined();
       expect(result.current.data).toHaveLength(2); // Two households in mock list
-
-      // Verify console logs
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(
-        CONSOLE_MESSAGES.ASSOCIATIONS_LOG,
-        mockUserHouseholdPopulationList
-      );
-      expect(consoleMocks.consoleSpy.log).toHaveBeenCalledWith(CONSOLE_MESSAGES.HOUSEHOLD_IDS_LOG, [
-        TEST_IDS.HOUSEHOLD_ID,
-        TEST_IDS.HOUSEHOLD_ID_2,
-      ]);
 
       // Verify each household has association and metadata
       const firstHousehold = result.current.data![0];

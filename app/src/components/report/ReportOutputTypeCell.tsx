@@ -23,18 +23,8 @@ export const ReportOutputTypeCell = React.memo(
 
     const displayText = progress ? `${Math.round(progress)}%` : '';
 
-    console.log('[ReportOutputTypeCell] Render:', {
-      reportId,
-      isCalculating,
-      progress,
-      roundedProgress: progress ? Math.round(progress) : undefined,
-      displayText,
-      reportHasOutput: !!report?.output,
-    });
-
     // Show calculating state with spinner and progress
     if (isCalculating) {
-      console.log('[ReportOutputTypeCell] Displaying calculating state:', displayText);
       return (
         <Group gap="xs">
           <Loader size="sm" color="teal" />
@@ -46,7 +36,6 @@ export const ReportOutputTypeCell = React.memo(
     // Show status text
     const status = report?.status || 'initializing';
     const formattedStatus = status.charAt(0).toUpperCase() + status.slice(1);
-    console.log('[ReportOutputTypeCell] Displaying complete state:', formattedStatus);
     return <Text size="sm">{formattedStatus}</Text>;
   }
 );
