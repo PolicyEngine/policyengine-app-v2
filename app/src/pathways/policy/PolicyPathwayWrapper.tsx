@@ -27,8 +27,6 @@ interface PolicyPathwayWrapperProps {
 }
 
 export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrapperProps) {
-  console.log('[PolicyPathwayWrapper] ========== RENDER ==========');
-
   const countryId = useCurrentCountry();
   const navigate = useNavigate();
 
@@ -52,7 +50,6 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
     StandalonePolicyViewMode.SUBMIT, // returnMode (not used in standalone mode)
     (policyId: string) => {
       // onPolicyComplete: custom navigation for standalone pathway
-      console.log('[PolicyPathwayWrapper] Policy created with ID:', policyId);
       navigate(`/${countryId}/policies`);
       onComplete?.();
     }

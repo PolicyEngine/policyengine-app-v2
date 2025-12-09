@@ -166,12 +166,6 @@ function PostHeadingSection({
   const imageUrl = post.image ? `/assets/posts/${post.image}` : '';
   const readingTime = calculateReadingTime(markdown);
 
-  console.log('[THIS] Cover image debug:', {
-    postImage: post.image,
-    imageUrl,
-    hasImage: !!post.image,
-  });
-
   if (displayCategory === 'desktop') {
     return (
       <div style={{ display: 'flex' }}>
