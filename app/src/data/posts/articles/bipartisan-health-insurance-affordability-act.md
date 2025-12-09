@@ -1,4 +1,4 @@
-A bipartisan group of members of Congress have introduced the [Bipartisan Health Insurance Affordability Act](https://www.congress.gov/bill/119th-congress/senate-bill/976) (S. 976), which would extend and modify Affordable Care Act premium tax credits. In this report, we use the PolicyEngine ACA microsimulation model to analyze how this bill would affect representative households compared to current law and a full IRA extension.
+A bipartisan group of members of Congress have introduced the [Bipartisan Health Insurance Affordability Act](https://punchbowl.news/wp-content/uploads/Bipartisan-Health-Insurance-Affordability-Act-Section-by-Section-copy.pdf) which would extend and modify Affordable Care Act premium tax credits. In this report, we use the PolicyEngine ACA microsimulation model to analyze how this bill would affect representative households compared to current law and a full IRA extension.
 
 _Code for the figures can be found [here](https://github.com/PolicyEngine/analysis-notebooks/tree/main/us/blog_posts)._
 
