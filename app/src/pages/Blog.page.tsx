@@ -10,6 +10,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { Box, Center, Container, Loader, Text } from '@mantine/core';
 import { blogSpacing } from '@/components/blog/blogStyles';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
+import { NotebookRenderer } from '@/components/blog/NotebookRenderer';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import authorsData from '@/data/posts/authors.json';
@@ -153,6 +154,7 @@ export default function BlogPage() {
         <PostBodySection
           post={post}
           markdown={content}
+          notebook={notebook}
           countryId={countryId}
           displayCategory={displayCategory}
         />
@@ -293,14 +295,23 @@ function PostHeadingSection({
 function PostBodySection({
   post,
   markdown,
+  notebook,
   countryId,
   displayCategory,
 }: {
   post: BlogPost;
   markdown: string;
+  notebook: Notebook | null;
   countryId: string;
   displayCategory: string;
 }) {
+  // Render either notebook or markdown content
+  const bodyContent = notebook ? (
+    <NotebookRenderer notebook={notebook} displayCategory={displayCategory} />
+  ) : (
+    <MarkdownFormatter markdown={markdown} />
+  );
+
   if (displayCategory === 'desktop') {
     return (
       <div style={{ display: 'flex' }}>
@@ -322,7 +333,7 @@ function PostBodySection({
 
         {/* Main content */}
         <div style={{ flex: 4, minWidth: 0 }}>
-          <MarkdownFormatter markdown={markdown} />
+          {bodyContent}
           <AuthorSection post={post} countryId={countryId} />
         </div>
 
@@ -357,7 +368,7 @@ function PostBodySection({
           </div>
         </div>
         <div style={{ flex: 3 }}>
-          <MarkdownFormatter markdown={markdown} />
+          {bodyContent}
           <AuthorSection post={post} countryId={countryId} />
         </div>
       </div>
@@ -379,7 +390,7 @@ function PostBodySection({
         </Text>
         <LeftContents markdown={markdown} />
       </div>
-      <MarkdownFormatter markdown={markdown} />
+      {bodyContent}
       <AuthorSection post={post} countryId={countryId} />
       <div style={{ marginTop: 15 }}>
         <MoreOn post={post} countryId={countryId} />
