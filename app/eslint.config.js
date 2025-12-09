@@ -7,5 +7,37 @@ export default tseslint.config(
   {
     files: ['**/*.story.tsx'],
     rules: { 'no-console': 'off' },
+  },
+  {
+    rules: {
+      'no-console': [
+        'warn',
+        {
+          allow: [
+            'warn',
+            'error',
+            'info',
+            'debug',
+            'table',
+            'time',
+            'timeEnd',
+            'timeLog',
+            'trace',
+            'dir',
+            'dirxml',
+            'group',
+            'groupCollapsed',
+            'groupEnd',
+            'clear',
+            'count',
+            'countReset',
+            'assert',
+            'profile',
+            'profileEnd',
+            'timeStamp',
+          ],
+        },
+      ],
+    },
   }
 );
