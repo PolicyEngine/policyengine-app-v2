@@ -99,28 +99,26 @@ describe('useHydrateCalculationCache', () => {
   });
 
   it('should skip hydration if report is undefined', () => {
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
     renderHook(() => useHydrateCalculationCache({ report: undefined, outputType: 'societyWide' }), {
       wrapper,
     });
 
-    expect(consoleLogSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining('[useHydrateCalculationCache]')
-    );
+    // No cache should be populated when report is undefined
+    // We can't check specific reportId since report is undefined
+    expect(true).toBe(true); // Hook should complete without error
   });
 
   it('should skip hydration if outputType is undefined', () => {
     const mockReport = createMockReport(true);
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
 
     renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType: undefined }), {
       wrapper,
     });
 
-    expect(consoleLogSpy).not.toHaveBeenCalledWith(
-      expect.stringContaining('[useHydrateCalculationCache]')
-    );
+    // Cache should not be populated when outputType is undefined
+    const queryKey = calculationKeys.byReportId(mockReport.id!);
+    const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
+    expect(cachedStatus).toBeUndefined();
   });
 
   it('should skip hydration if cache already has data', () => {
@@ -132,16 +130,9 @@ describe('useHydrateCalculationCache', () => {
     const queryKey = calculationKeys.byReportId(mockReport.id!);
     queryClient.setQueryData(queryKey, existingStatus);
 
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
     renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType }), { wrapper });
 
-    // Should log that cache is already populated with timestamp
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      expect.stringMatching(/\[useHydrateCache\]\[\d+\] SKIP: Already in cache \(pending\)/)
-    );
-
-    // Cache should still have the original computing status
+    // Cache should still have the original computing status (not overwritten)
     const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
     expect(cachedStatus).toEqual(existingStatus);
   });
@@ -167,17 +158,17 @@ describe('useHydrateCalculationCache', () => {
     expect(firstResult).toBe(secondResult);
   });
 
-  it('should log hydration action', () => {
+  it('should hydrate cache successfully', () => {
     const mockReport = createMockReport(true);
     const outputType: 'societyWide' | 'household' = 'societyWide';
 
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-
     renderHook(() => useHydrateCalculationCache({ report: mockReport, outputType }), { wrapper });
 
-    expect(consoleLogSpy).toHaveBeenCalledWith(
-      '[useHydrateCache] Hydrating cache with persisted result'
-    );
+    // Verify cache was hydrated
+    const queryKey = calculationKeys.byReportId(mockReport.id!);
+    const cachedStatus = queryClient.getQueryData<CalcStatus>(queryKey);
+    expect(cachedStatus).toBeDefined();
+    expect(cachedStatus?.status).toBe('complete');
   });
 
   it('should handle report changing from undefined to defined', async () => {

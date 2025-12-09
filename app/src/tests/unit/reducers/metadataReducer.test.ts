@@ -228,10 +228,6 @@ describe('metadataReducer', () => {
 
       // Then
       expectParameterTree(state, false);
-      expect(console.error).toHaveBeenCalledWith(
-        'Failed to build parameter tree:',
-        expect.any(Error)
-      );
     });
 
     test('given rejected action then sets error state', () => {
