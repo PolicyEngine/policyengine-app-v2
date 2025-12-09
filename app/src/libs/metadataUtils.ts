@@ -50,20 +50,53 @@ export const getRegions = createSelector(
 );
 
 export const getBasicInputFields = createSelector(
-  (state: RootState) => state.metadata.basicInputs,
-  (basicInputs) => {
+  [
+    (state: RootState) => state.metadata.basicInputs,
+    (state: RootState) => state.metadata.variables,
+    (state: RootState) => state.metadata.entities,
+  ],
+  (basicInputs, variables, entities) => {
     const inputs = basicInputs || [];
 
-    // Person-level fields that apply to each individual
-    const personFields = inputs.filter((field) => ['age', 'employment_income'].includes(field));
+    // Dynamically build categories from metadata entities (country-agnostic)
+    // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically
+    const categorized: Record<string, string[]> = {};
 
-    // Household-level fields that apply once per household
-    const householdFields = inputs.filter((field) => !['age', 'employment_income'].includes(field));
+    // Initialize categories from available entities in metadata
+    if (entities) {
+      for (const [entityType, entityInfo] of Object.entries(entities)) {
+        // Use 'person' as the key for person entities, otherwise use the entity type
+        const key = (entityInfo as any).is_person ? 'person' : entityType;
+        categorized[key] = [];
+      }
+    }
 
-    return {
-      person: personFields,
-      household: householdFields,
-    };
+    // Categorize each field by looking up its entity in metadata
+    for (const field of inputs) {
+      const variable = variables?.[field];
+      if (!variable) {
+        continue;
+      }
+
+      const entityType = variable.entity;
+      const entityInfo = entities?.[entityType];
+
+      if (!entityInfo) {
+        // Unknown entity - skip field with warning
+        console.warn(`[metadataUtils] Unknown entity type "${entityType}" for field "${field}"`);
+        continue;
+      }
+
+      // Use 'person' as the key for person entities, otherwise use the entity type
+      const key = entityInfo.is_person ? 'person' : entityType;
+
+      if (!categorized[key]) {
+        categorized[key] = [];
+      }
+      categorized[key].push(field);
+    }
+
+    return categorized;
   }
 );
 

@@ -53,13 +53,6 @@ export default function PopulationExistingView({
     error: householdError,
   } = useUserHouseholds(userId);
 
-  console.log('[PopulationExistingView] ========== HOUSEHOLD DATA FETCH ==========');
-  console.log('[PopulationExistingView] Household raw data:', householdData);
-  console.log('[PopulationExistingView] Household raw data length:', householdData?.length);
-  console.log('[PopulationExistingView] Household isLoading:', isHouseholdLoading);
-  console.log('[PopulationExistingView] Household isError:', isHouseholdError);
-  console.log('[PopulationExistingView] Household error:', householdError);
-
   // Fetch geographic populations
   const {
     data: geographicData,
@@ -67,13 +60,6 @@ export default function PopulationExistingView({
     isError: isGeographicError,
     error: geographicError,
   } = useUserGeographics(userId);
-
-  console.log('[PopulationExistingView] ========== GEOGRAPHIC DATA FETCH ==========');
-  console.log('[PopulationExistingView] Geographic raw data:', geographicData);
-  console.log('[PopulationExistingView] Geographic raw data length:', geographicData?.length);
-  console.log('[PopulationExistingView] Geographic isLoading:', isGeographicLoading);
-  console.log('[PopulationExistingView] Geographic isError:', isGeographicError);
-  console.log('[PopulationExistingView] Geographic error:', geographicError);
 
   const [localPopulation, setLocalPopulation] = useState<
     UserHouseholdMetadataWithAssociation | UserGeographicMetadataWithAssociation | null
@@ -162,12 +148,6 @@ export default function PopulationExistingView({
       return;
     }
 
-    console.log('[PopulationExistingView] Local Geographic Population on Submit:', localPopulation);
-    console.log(
-      '[PopulationExistingView] Setting geography in population:',
-      localPopulation.geography
-    );
-
     const label = localPopulation.association?.label || '';
     const geography = localPopulation.geography!;
     const geographyId = geography.id!;
@@ -178,15 +158,6 @@ export default function PopulationExistingView({
 
   const householdPopulations = householdData || [];
   const geographicPopulations = geographicData || [];
-
-  console.log('[PopulationExistingView] ========== BEFORE FILTERING ==========');
-  console.log('[PopulationExistingView] Household populations count:', householdPopulations.length);
-  console.log('[PopulationExistingView] Household populations:', householdPopulations);
-  console.log(
-    '[PopulationExistingView] Geographic populations count:',
-    geographicPopulations.length
-  );
-  console.log('[PopulationExistingView] Geographic populations:', geographicPopulations);
 
   if (isLoading) {
     return (
@@ -228,13 +199,6 @@ export default function PopulationExistingView({
   const filteredHouseholds = householdPopulations.filter((association) =>
     isHouseholdMetadataWithAssociation(association)
   );
-
-  console.log('[PopulationExistingView] ========== AFTER FILTERING ==========');
-  console.log('[PopulationExistingView] Filtered households count:', filteredHouseholds.length);
-  console.log(
-    '[PopulationExistingView] Filter criteria: isHouseholdMetadataWithAssociation(association)'
-  );
-  console.log('[PopulationExistingView] Filtered households:', filteredHouseholds);
 
   // Combine all populations (pagination handled by PathwayView)
   const allPopulations = [...filteredHouseholds, ...geographicPopulations];
@@ -326,7 +290,7 @@ export default function PopulationExistingView({
   const cardListItems = [...householdCardItems, ...geographicCardItems];
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };

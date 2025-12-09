@@ -63,7 +63,7 @@ class CacheMonitor {
       }
     });
 
-    console.log('🔍 [CacheMonitor] Initialized - Tracking cache operations');
+    // CacheMonitor initialized - tracking cache operations
   }
 
   /**
@@ -75,22 +75,11 @@ class CacheMonitor {
     }
 
     const key = this.getQueryKeyString(query.queryKey);
-    const wasInvalidated = query.state.isInvalidated;
 
     this.activeQueries.set(key, {
       startTime: Date.now(),
       key: query.queryKey,
     });
-
-    console.log(
-      `🔄 [CacheMonitor] FETCH START: ${key}`,
-      wasInvalidated ? '(INVALIDATED)' : '(STALE)',
-      {
-        queryKey: query.queryKey,
-        dataUpdatedAt: new Date(query.state.dataUpdatedAt).toLocaleTimeString(),
-        isInvalidated: query.state.isInvalidated,
-      }
-    );
   }
 
   /**
@@ -105,12 +94,7 @@ class CacheMonitor {
     const active = this.activeQueries.get(key);
 
     if (active) {
-      const duration = Date.now() - active.startTime;
-      console.log(`✅ [CacheMonitor] FETCH END: ${key}`, `(${duration}ms)`, {
-        queryKey: query.queryKey,
-        hasData: !!query.state.data,
-        hasError: !!query.state.error,
-      });
+      // FETCH END tracked internally
       this.activeQueries.delete(key);
     }
   }
@@ -118,37 +102,15 @@ class CacheMonitor {
   /**
    * Called when a query is removed from cache (garbage collected)
    */
-  private onQueryRemoved(query: any) {
-    if (!this.config.logGarbageCollection) {
-      return;
-    }
-
-    const key = this.getQueryKeyString(query.queryKey);
-    const dataAge = query.state.dataUpdatedAt
-      ? ((Date.now() - query.state.dataUpdatedAt) / 1000).toFixed(1)
-      : 'N/A';
-
-    console.log(`🗑️ [CacheMonitor] GARBAGE COLLECTED: ${key}`, {
-      queryKey: query.queryKey,
-      dataAge: `${dataAge}s old`,
-      hadData: !!query.state.data,
-    });
+  private onQueryRemoved(_query: any) {
+    // GARBAGE COLLECTED tracked internally - no-op when logging disabled
   }
 
   /**
    * Log when a query is manually invalidated
    */
-  logInvalidation(queryKey: any, options?: any) {
-    if (!this.config.logInvalidations) {
-      return;
-    }
-
-    const key = this.getQueryKeyString(queryKey);
-    console.log(`❌ [CacheMonitor] INVALIDATED: ${key}`, {
-      queryKey,
-      options,
-      timestamp: new Date().toLocaleTimeString(),
-    });
+  logInvalidation(_queryKey: any, _options?: any) {
+    // INVALIDATED tracked internally - no-op when logging disabled
   }
 
   /**
@@ -183,23 +145,15 @@ class CacheMonitor {
   /**
    * Log current cache state
    */
-  logCacheState(label?: string) {
-    const state = this.getCacheState();
-    const prefix = label ? `[${label}]` : '';
-    console.log(`📊 [CacheMonitor] ${prefix} Cache State:`, state);
+  logCacheState(_label?: string) {
+    // Cache state available via getCacheState()
   }
 
   /**
    * Log navigation event
    */
-  logNavigation(from: string, to: string) {
-    console.log(`🧭 [CacheMonitor] NAVIGATION: ${from} → ${to}`);
-
-    if (this.config.logCacheState) {
-      setTimeout(() => {
-        this.logCacheState('After Navigation');
-      }, 100);
-    }
+  logNavigation(_from: string, _to: string) {
+    // Navigation tracked internally
   }
 
   /**
@@ -227,32 +181,8 @@ class CacheMonitor {
   /**
    * Monitor specific simulation IDs
    */
-  monitorSimulations(simulationIds: string[]) {
-    if (!this.queryClient) {
-      return;
-    }
-
-    console.log(`👁️ [CacheMonitor] Monitoring simulations:`, simulationIds);
-
-    const cache = this.queryClient.getQueryCache();
-    const queries = cache.getAll();
-
-    const relevantQueries = queries.filter(
-      (q) => q.queryKey[0] === 'simulations' && simulationIds.includes(q.queryKey[2] as string)
-    );
-
-    relevantQueries.forEach((query) => {
-      const key = this.getQueryKeyString(query.queryKey);
-      console.log(`  📌 ${key}:`, {
-        hasData: !!query.state.data,
-        isStale: query.isStale(),
-        isFetching: query.state.fetchStatus === 'fetching',
-        observers: query.getObserversCount(),
-        dataAge: query.state.dataUpdatedAt
-          ? `${((Date.now() - query.state.dataUpdatedAt) / 1000).toFixed(1)}s`
-          : 'N/A',
-      });
-    });
+  monitorSimulations(_simulationIds: string[]) {
+    // Monitoring tracked internally via getCacheState()
   }
 
   /**
@@ -276,7 +206,6 @@ class CacheMonitor {
       orphaned: queries.filter((q) => q.getObserversCount() === 0).length,
     };
 
-    console.log('📈 [CacheMonitor] Stats:', stats);
     return stats;
   }
 }

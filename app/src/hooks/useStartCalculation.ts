@@ -19,14 +19,10 @@ export function useStartCalculation() {
 
   return useMutation({
     mutationFn: async (config: CalcStartConfig) => {
-      console.log('[useStartCalculation] Starting calculation:', config.calcId);
       await orchestrator.startCalculation(config);
     },
     onError: (error) => {
       console.error('[useStartCalculation] Failed to start calculation:', error);
-    },
-    onSuccess: (_, config) => {
-      console.log('[useStartCalculation] Calculation started successfully:', config.calcId);
     },
   });
 }

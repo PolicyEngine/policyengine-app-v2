@@ -31,13 +31,6 @@ export default function PolicyExistingView({
   const { data, isLoading, isError, error } = useUserPolicies(userId);
   const [localPolicy, setLocalPolicy] = useState<UserPolicyMetadataWithAssociation | null>(null);
 
-  console.log('[PolicyExistingView] ========== DATA FETCH ==========');
-  console.log('[PolicyExistingView] Raw data:', data);
-  console.log('[PolicyExistingView] Raw data length:', data?.length);
-  console.log('[PolicyExistingView] isLoading:', isLoading);
-  console.log('[PolicyExistingView] isError:', isError);
-  console.log('[PolicyExistingView] Error:', error);
-
   function canProceed() {
     if (!localPolicy) {
       return false;
@@ -61,10 +54,7 @@ export default function PolicyExistingView({
       return;
     }
 
-    console.log('[PolicyExistingView] Submitting Policy in handleSubmit:', localPolicy);
-
     if (isPolicyMetadataWithAssociation(localPolicy)) {
-      console.log('[PolicyExistingView] Use policy handler');
       handleSubmitPolicy();
     }
   }
@@ -74,13 +64,6 @@ export default function PolicyExistingView({
       return;
     }
 
-    console.log('[PolicyExistingView] === SUBMIT START ===');
-    console.log('[PolicyExistingView] Local Policy on Submit:', localPolicy);
-    console.log('[PolicyExistingView] Association:', localPolicy.association);
-    console.log('[PolicyExistingView] Association countryId:', localPolicy.association?.countryId);
-    console.log('[PolicyExistingView] Policy metadata:', localPolicy.policy);
-    console.log('[PolicyExistingView] Policy ID:', localPolicy.policy?.id);
-
     const policyId = localPolicy.policy?.id?.toString();
     const label = localPolicy.association?.label || '';
 
@@ -89,10 +72,6 @@ export default function PolicyExistingView({
 
     if (localPolicy.policy?.policy_json) {
       const policyJson = localPolicy.policy.policy_json;
-      console.log(
-        '[PolicyExistingView] Converting parameters from policy_json:',
-        Object.keys(policyJson)
-      );
 
       Object.entries(policyJson).forEach(([paramName, valueIntervals]) => {
         if (Array.isArray(valueIntervals) && valueIntervals.length > 0) {
@@ -111,9 +90,6 @@ export default function PolicyExistingView({
       });
     }
 
-    console.log('[PolicyExistingView] Converted parameters:', parameters);
-    console.log('[PolicyExistingView] === SUBMIT END ===');
-
     // Call parent callback instead of dispatching to Redux
     if (policyId) {
       onSelectPolicy(policyId, label, parameters);
@@ -121,10 +97,6 @@ export default function PolicyExistingView({
   }
 
   const userPolicies = data || [];
-
-  console.log('[PolicyExistingView] ========== BEFORE FILTERING ==========');
-  console.log('[PolicyExistingView] User policies count:', userPolicies.length);
-  console.log('[PolicyExistingView] User policies:', userPolicies);
 
   if (isLoading) {
     return (
@@ -167,11 +139,6 @@ export default function PolicyExistingView({
     isPolicyMetadataWithAssociation(association)
   );
 
-  console.log('[PolicyExistingView] ========== AFTER FILTERING ==========');
-  console.log('[PolicyExistingView] Filtered policies count:', filteredPolicies.length);
-  console.log('[PolicyExistingView] Filter criteria: isPolicyMetadataWithAssociation(association)');
-  console.log('[PolicyExistingView] Filtered policies:', filteredPolicies);
-
   // Build card list items from ALL filtered policies (pagination handled by PathwayView)
   const policyCardItems = filteredPolicies.map((association) => {
     let title = '';
@@ -195,7 +162,7 @@ export default function PolicyExistingView({
   });
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleSubmit,
     isDisabled: !canProceed(),
   };

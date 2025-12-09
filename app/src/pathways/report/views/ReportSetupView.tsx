@@ -49,25 +49,20 @@ export default function ReportSetupView({
 
   const handleSimulation1Select = () => {
     setSelectedCard('simulation1');
-    console.log('Adding simulation 1');
   };
 
   const handleSimulation2Select = () => {
     setSelectedCard('simulation2');
-    console.log('Adding simulation 2');
   };
 
   const handleNext = () => {
     if (selectedCard === 'simulation1') {
-      console.log('Setting up simulation 1');
       onNavigateToSimulationSelection(0);
     } else if (selectedCard === 'simulation2') {
-      console.log('Setting up simulation 2');
       // PRE-FILL POPULATION FROM SIMULATION 1
       onPrefillPopulation2();
       onNavigateToSimulationSelection(1);
     } else if (canProceed) {
-      console.log('Both simulations configured, proceeding to next step');
       onNext();
     }
   };
@@ -111,7 +106,7 @@ export default function ReportSetupView({
     // Allow setting up simulation1 if selected and not configured
     if (selectedCard === 'simulation1' && !simulation1Configured) {
       return {
-        label: 'Configure baseline simulation ',
+        label: 'Configure baseline simulation',
         onClick: handleNext,
         isDisabled: false,
       };
@@ -119,7 +114,7 @@ export default function ReportSetupView({
     // Allow setting up simulation2 if selected and not configured
     else if (selectedCard === 'simulation2' && !simulation2Configured) {
       return {
-        label: 'Configure comparison simulation ',
+        label: 'Configure comparison simulation',
         onClick: handleNext,
         isDisabled: !isPopulationDataLoaded, // Disable if data not loaded
       };
@@ -127,14 +122,14 @@ export default function ReportSetupView({
     // Allow proceeding if requirements met
     else if (canProceed) {
       return {
-        label: 'Review report ',
+        label: 'Review report',
         onClick: handleNext,
         isDisabled: false,
       };
     }
     // Disable if requirements not met - show uppermost option (baseline)
     return {
-      label: 'Configure baseline simulation ',
+      label: 'Configure baseline simulation',
       onClick: handleNext,
       isDisabled: true,
     };

@@ -25,17 +25,6 @@ export const useHouseholdAssociationsByUser = (userId: string) => {
   // TODO: Should we determine user ID from auth context here? Or pass as arg?
   const config = isLoggedIn ? queryConfig.api : queryConfig.localStorage;
 
-  console.log('userId', userId);
-  console.log('store', store);
-  console.log('isLoggedIn', isLoggedIn);
-  console.log('config', config);
-
-  console.log(
-    'householdAssociationKeys.byUser(userId, countryId)',
-    householdAssociationKeys.byUser(userId, countryId)
-  );
-  console.log('store.findByUser(userId, countryId)', store.findByUser(userId, countryId));
-
   return useQuery({
     queryKey: householdAssociationKeys.byUser(userId, countryId),
     queryFn: () => store.findByUser(userId, countryId),
@@ -61,14 +50,9 @@ export const useCreateHouseholdAssociation = () => {
 
   return useMutation({
     mutationFn: (household: Omit<UserHouseholdPopulation, 'createdAt' | 'type'>) => {
-      console.log('household in useCreateHouseholdAssociation');
-      console.log(household);
       return store.create({ ...household, type: 'household' as const });
     },
     onSuccess: (newAssociation) => {
-      console.log('new association');
-      console.log(newAssociation);
-
       // Invalidate and refetch related queries
       queryClient.invalidateQueries({
         queryKey: householdAssociationKeys.byUser(newAssociation.userId, newAssociation.countryId),
@@ -179,12 +163,8 @@ export const useUserHouseholds = (userId: string) => {
     error: associationsError,
   } = useHouseholdAssociationsByUser(userId);
 
-  console.log('associations', associations);
-
   // Extract household IDs
   const householdIds = associations?.map((a) => a.householdId) ?? [];
-
-  console.log('householdIds', householdIds);
 
   // Fetch all households in parallel
   const householdQueries = useQueries({

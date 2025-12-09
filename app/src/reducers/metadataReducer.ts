@@ -91,9 +91,7 @@ const metadataSlice = createSlice({
         // Build parameter tree from parameters (following V1 approach)
         try {
           state.parameterTree = buildParameterTree(body.parameters) || null;
-          console.log('Parameter tree built successfully:', state.parameterTree);
         } catch (error) {
-          console.error('Failed to build parameter tree:', error);
           state.parameterTree = null;
         }
       })

@@ -85,7 +85,7 @@ export class HouseholdAdapter {
         // Convert snake_case to camelCase for internal representation
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
         householdData[camelKey] = value as any;
-      } catch (error) {
+      } catch {
         // If entity not found in metadata, still include it but log warning
         console.warn(`Entity "${key}" not found in metadata, including anyway`);
         const camelKey = key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());

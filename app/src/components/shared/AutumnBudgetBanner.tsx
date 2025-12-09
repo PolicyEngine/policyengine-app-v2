@@ -131,19 +131,23 @@ export default function AutumnBudgetBanner() {
           size={typography.fontSize['3xl']}
           fw={typography.fontWeight.bold}
           c={colors.white}
-          mb={spacing.lg}
+          mb={spacing.xl}
           style={{
             textAlign: 'center',
             textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {isBeforeBudget ? 'The Autumn Budget 2025 is coming soon' : 'The Autumn Budget 2025'}
+          {isBeforeBudget
+            ? 'The Autumn Budget 2025 is coming soon'
+            : 'The Autumn Budget 2025 has been released'}
         </Title>
+
+        {/* Dashboard link hidden for now */}
 
         {/* Countdown Timer - Only show before budget */}
         {isBeforeBudget && timeRemaining && (
           <Box
-            mb={spacing.xl}
+            mb={spacing['2xl']}
             style={{
               display: 'flex',
               justifyContent: 'center',
@@ -204,19 +208,19 @@ export default function AutumnBudgetBanner() {
           </Box>
         )}
 
-        {/* Pre-Autumn Budget Analysis Cards */}
+        {/* Autumn Budget Analysis Cards */}
         <Box>
           <Text
             size={typography.fontSize.lg}
             c={colors.white}
             fw={typography.fontWeight.semibold}
-            mb={spacing.md}
+            mb={spacing.lg}
             style={{
               textAlign: 'center',
               textShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
             }}
           >
-            Pre-autumn budget analysis
+            Autumn Budget analysis
           </Text>
 
           <Group
@@ -230,11 +234,9 @@ export default function AutumnBudgetBanner() {
             <Card
               component="a"
               href="/uk/research/uk-two-child-limit"
-              target="_blank"
-              rel="noopener noreferrer"
               style={{
-                flex: '1 1 280px',
-                maxWidth: '320px',
+                flex: '1 1 220px',
+                maxWidth: '260px',
                 minHeight: '80px',
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 borderRadius: '12px',
@@ -259,6 +261,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -274,20 +278,18 @@ export default function AutumnBudgetBanner() {
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Analysis of removing the two-child limit reform
+                  Removal announced for 2026
                 </Text>
               </Box>
             </Card>
 
-            {/* Card 2: VAT Thresholds */}
+            {/* Card 2: High Value Council Tax Surcharge */}
             <Card
               component="a"
-              href="/uk/research/uk-vat-thresholds"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/uk/research/high-value-council-tax-surcharge"
               style={{
-                flex: '1 1 280px',
-                maxWidth: '320px',
+                flex: '1 1 220px',
+                maxWidth: '260px',
                 minHeight: '80px',
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 borderRadius: '12px',
@@ -312,6 +314,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -320,27 +324,25 @@ export default function AutumnBudgetBanner() {
                   c={colors.primary[700]}
                   mb={spacing.xs}
                 >
-                  VAT thresholds
+                  High value council tax surcharge
                 </Text>
                 <Text
                   size={typography.fontSize.xs}
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Impact analysis of changing VAT thresholds
+                  Constituency-level impact of £400m surcharge
                 </Text>
               </Box>
             </Card>
 
-            {/* Card 3: Income Tax & NI */}
+            {/* Card 3: Fuel Duty Freeze */}
             <Card
               component="a"
-              href="/uk/research/uk-income-tax-ni-reforms-2025"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/uk/research/fuel-duty-freeze-2025"
               style={{
-                flex: '1 1 280px',
-                maxWidth: '320px',
+                flex: '1 1 220px',
+                maxWidth: '260px',
                 minHeight: '80px',
                 backgroundColor: 'rgba(255, 255, 255, 0.95)',
                 borderRadius: '12px',
@@ -365,6 +367,8 @@ export default function AutumnBudgetBanner() {
                   display: 'flex',
                   flexDirection: 'column',
                   height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
                 }}
               >
                 <Text
@@ -373,14 +377,120 @@ export default function AutumnBudgetBanner() {
                   c={colors.primary[700]}
                   mb={spacing.xs}
                 >
-                  Income tax & NI reforms
+                  Fuel duty freeze
                 </Text>
                 <Text
                   size={typography.fontSize.xs}
                   c={colors.gray[700]}
                   style={{ lineHeight: 1.4 }}
                 >
-                  Analysis of alternative tax reform options
+                  £3.5bn cost in 2026-27
+                </Text>
+              </Box>
+            </Card>
+
+            {/* Card 4: OBR Forecast Update */}
+            <Card
+              component="a"
+              href="/uk/research/obr-november-2025-projections"
+              style={{
+                flex: '1 1 220px',
+                maxWidth: '260px',
+                minHeight: '80px',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '12px',
+                padding: spacing.md,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textDecoration: 'none',
+                border: `2px solid ${colors.white}`,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              }}
+              styles={{
+                root: {
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                  },
+                },
+              }}
+            >
+              <Box
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                }}
+              >
+                <Text
+                  size={typography.fontSize.base}
+                  fw={typography.fontWeight.bold}
+                  c={colors.primary[700]}
+                  mb={spacing.xs}
+                >
+                  OBR forecast update
+                </Text>
+                <Text
+                  size={typography.fontSize.xs}
+                  c={colors.gray[700]}
+                  style={{ lineHeight: 1.4 }}
+                >
+                  What changed in November 2025 projections
+                </Text>
+              </Box>
+            </Card>
+
+            {/* Card 5: Salary Sacrifice Cap */}
+            <Card
+              component="a"
+              href="/uk/research/uk-salary-sacrifice-cap"
+              style={{
+                flex: '1 1 220px',
+                maxWidth: '260px',
+                minHeight: '80px',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '12px',
+                padding: spacing.md,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                textDecoration: 'none',
+                border: `2px solid ${colors.white}`,
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+              }}
+              styles={{
+                root: {
+                  '&:hover': {
+                    transform: 'translateY(-4px)',
+                    boxShadow: '0 12px 24px rgba(0, 0, 0, 0.2)',
+                  },
+                },
+              }}
+            >
+              <Box
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
+                  alignItems: 'center',
+                  textAlign: 'center',
+                }}
+              >
+                <Text
+                  size={typography.fontSize.base}
+                  fw={typography.fontWeight.bold}
+                  c={colors.primary[700]}
+                  mb={spacing.xs}
+                >
+                  Salary sacrifice cap
+                </Text>
+                <Text
+                  size={typography.fontSize.xs}
+                  c={colors.gray[700]}
+                  style={{ lineHeight: 1.4 }}
+                >
+                  £2,000 cap would raise £1.1-2.3bn
                 </Text>
               </Box>
             </Card>
@@ -389,12 +499,12 @@ export default function AutumnBudgetBanner() {
 
         {/* Contact CTA */}
         <Box
-          mt={spacing.lg}
+          mt={spacing.xl}
           style={{
             textAlign: 'center',
           }}
         >
-          <Text size={typography.fontSize.base} c={colors.white} fw={typography.fontWeight.medium}>
+          <Text size={typography.fontSize.lg} c={colors.white} fw={typography.fontWeight.semibold}>
             Want custom analysis?{' '}
             <Text
               component="a"

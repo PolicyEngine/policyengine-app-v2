@@ -157,8 +157,6 @@ export function useAggregatedCalculationStatus(
 ): AggregatedCalcStatus {
   const queryClient = useQueryClient();
 
-  console.log(`[useAggregatedCalculationStatus] Called with ${calcIds.length} calcIds:`, calcIds);
-
   // Initialize state with current cache values or initializing
   const [calculations, setCalculations] = useState<CalcStatus[]>(() => {
     return calcIds.map((calcId) => {
@@ -169,16 +167,9 @@ export function useAggregatedCalculationStatus(
 
       const cached = queryClient.getQueryData<CalcStatus>(queryKey);
       if (cached) {
-        console.log(
-          `[useAggregatedCalculationStatus] Initial cache hit for ${calcId}:`,
-          cached.status
-        );
         return cached;
       }
 
-      console.log(
-        `[useAggregatedCalculationStatus] No initial cache for ${calcId}, returning initializing`
-      );
       return {
         status: 'initializing' as const,
         metadata: {
@@ -199,8 +190,6 @@ export function useAggregatedCalculationStatus(
       return;
     }
 
-    console.log(`[useAggregatedCalculationStatus] Creating ${calcIds.length} QueryObservers`);
-
     // Create an observer for each calculation
     const observers = calcIds.map((calcId) => {
       const queryKey =
@@ -216,11 +205,6 @@ export function useAggregatedCalculationStatus(
     // Subscribe to all observers
     const unsubscribers = observers.map((observer, index) => {
       return observer.subscribe((result) => {
-        console.log(
-          `[useAggregatedCalculationStatus] Observer update for ${calcIds[index]}:`,
-          result.data?.status
-        );
-
         setCalculations((prev) => {
           const next = [...prev];
           if (result.data) {
@@ -249,7 +233,6 @@ export function useAggregatedCalculationStatus(
     });
 
     return () => {
-      console.log(`[useAggregatedCalculationStatus] Unsubscribing ${calcIds.length} observers`);
       unsubscribers.forEach((unsubscribe) => unsubscribe());
     };
   }, [queryClient, calcIds, targetType]);

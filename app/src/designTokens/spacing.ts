@@ -22,6 +22,7 @@ export const spacing = {
     input: {
       padding: '8px 12px',
       height: '40px',
+      compactWidth: '120px', // For narrow numeric inputs
     },
     badge: {
       padding: '4px 12px',

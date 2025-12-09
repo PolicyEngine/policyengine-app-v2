@@ -58,11 +58,14 @@ export const ENTITY_NAMES = {
 } as const;
 
 // Group keys
+// NOTE: These names must match the conventions from policyengine-app (the legacy app).
+// In particular, spm_units uses "your household" as the instance name (not "your spm unit"),
+// which is the same key used by the households entity.
 export const GROUP_KEYS = {
   DEFAULT_HOUSEHOLD: 'your household',
   DEFAULT_FAMILY: 'your family',
   DEFAULT_TAX_UNIT: 'your tax unit',
-  DEFAULT_SPM_UNIT: 'your spm unit',
+  DEFAULT_SPM_UNIT: 'your household', // Same as DEFAULT_HOUSEHOLD - matches legacy policyengine-app
   DEFAULT_MARITAL_UNIT: 'your marital unit',
   DEFAULT_BEN_UNIT: 'your benefit unit',
   CUSTOM_GROUP: 'custom group',

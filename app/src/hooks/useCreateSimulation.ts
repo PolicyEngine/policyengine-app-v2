@@ -18,8 +18,6 @@ export function useCreateSimulation(simulationLabel?: string) {
       try {
         queryClient.invalidateQueries({ queryKey: simulationKeys.all });
 
-        console.log('simulation label in useCreateSimulation:', simulationLabel);
-
         // Create association with current user (or anonymous for session storage)
         const userId = MOCK_USER_ID; // TODO: Replace with actual user ID retrieval logic and add conditional logic to access user ID
 

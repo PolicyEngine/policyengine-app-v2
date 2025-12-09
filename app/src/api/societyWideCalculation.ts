@@ -43,12 +43,6 @@ export async function fetchSocietyWideCalculation(
   baselinePolicyId: string,
   params: SocietyWideCalculationParams
 ): Promise<SocietyWideCalculationResponse> {
-  console.log('[fetchSocietyWideCalculation] Called with:');
-  console.log('  - countryId:', countryId);
-  console.log('  - reformPolicyId:', reformPolicyId);
-  console.log('  - baselinePolicyId:', baselinePolicyId);
-  console.log('  - params:', JSON.stringify(params, null, 2));
-
   // Automatically set dataset for US nationwide if not explicitly provided
   const dataset = params.dataset ?? getDatasetForRegion(countryId, params.region);
   const paramsWithDataset = dataset ? { ...params, dataset } : params;
@@ -63,18 +57,12 @@ export async function fetchSocietyWideCalculation(
 
   const queryString = queryParams.toString();
   const url = `${BASE_URL}/${countryId}/economy/${reformPolicyId}/over/${baselinePolicyId}${queryString ? `?${queryString}` : ''}`;
-  console.log('[fetchSocietyWideCalculation] Fetching URL:', url);
 
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
     },
   });
-  console.log(
-    '[fetchSocietyWideCalculation] Response status:',
-    response.status,
-    response.statusText
-  );
 
   if (!response.ok) {
     console.error(
@@ -86,13 +74,5 @@ export async function fetchSocietyWideCalculation(
   }
 
   const data = await response.json();
-  console.log('[fetchSocietyWideCalculation] Response data:');
-  console.log('  - status:', data.status);
-  console.log('  - has result?', !!data.result);
-  console.log('  - queue_position:', data.queue_position);
-  console.log('  - average_time:', data.average_time);
-  console.log('  - error:', data.error);
-  console.log('  - full response:', JSON.stringify(data, null, 2));
-
   return data;
 }

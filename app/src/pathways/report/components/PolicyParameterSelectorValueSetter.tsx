@@ -77,10 +77,6 @@ export default function PolicyParameterSelectorValueSetter({
     const newValues = paramCollection.getIntervals();
     existingParam.values = newValues;
 
-    console.log('[PolicyParameterSelectorValueSetter] Updated policy:', updatedPolicy);
-    console.log('[PolicyParameterSelectorValueSetter] Parameter:', param.parameter);
-    console.log('[PolicyParameterSelectorValueSetter] New intervals:', newValues);
-
     // Notify parent of policy update
     onPolicyUpdate(updatedPolicy);
 

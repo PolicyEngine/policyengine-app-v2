@@ -47,16 +47,10 @@ if (!document.head.querySelector(`link[href="${fontLinkElement.href}"]`)) {
 function safeJsonParse(data: string | string[]): any {
   try {
     const jsonString = Array.isArray(data) ? data[0] : data;
-    console.log('[PLOTLY] Attempting to parse data, length:', jsonString?.length);
     const parsed = JSON.parse(jsonString);
-    console.log('[PLOTLY] Successfully parsed, has data:', !!parsed?.data);
     return parsed;
   } catch (err) {
     console.error('[PLOTLY] Failed to parse JSON:', err);
-    console.error(
-      '[PLOTLY] Data was:',
-      Array.isArray(data) ? data[0]?.substring(0, 200) : data?.substring(0, 200)
-    );
     return null;
   }
 }
@@ -211,8 +205,6 @@ export function PlotlyChartCode({
   backgroundColor?: string;
 }) {
   const plotlyData = safeJsonParse(data);
-  const displayCategory = useDisplayCategory();
-  const mobile = displayCategory === 'mobile';
 
   if (!plotlyData) {
     return null;
@@ -240,21 +232,23 @@ export function PlotlyChartCode({
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
-          width: mobile ? 400 : '100%',
           height: 600,
           plot_bgcolor: backgroundColor || 'transparent',
           paper_bgcolor: backgroundColor || 'transparent',
           margin: margins,
           autosize: true,
         }}
+        frames={plotlyData.frames}
         config={{
           displayModeBar: false,
           responsive: true,
         }}
         style={{
+          width: '100%',
           maxWidth: '100%',
           boxSizing: 'border-box',
         }}
+        useResizeHandler
       />
     </div>
   );
@@ -550,7 +544,6 @@ export function MarkdownFormatter({
     h1: ({ children }) => {
       const headerText = String(children);
       const slug = headerText.replace(/[/,]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
-      console.log('H1 rendered with text:', headerText, 'slug:', slug);
 
       return (
         <div style={{ position: 'relative' }}>
@@ -593,7 +586,6 @@ export function MarkdownFormatter({
     h2: ({ children }) => {
       const headerText = String(children || '');
       const slug = headerText.replace(/[/,]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
-      console.log('H2 rendered with text:', headerText, 'slug:', slug);
 
       return (
         <div style={{ position: 'relative' }}>
@@ -636,7 +628,6 @@ export function MarkdownFormatter({
     h3: ({ children }) => {
       const headerText = String(children);
       const slug = headerText.replace(/[/,]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
-      console.log('H3 rendered with text:', headerText, 'slug:', slug);
 
       return (
         <div style={{ position: 'relative' }}>
@@ -677,7 +668,6 @@ export function MarkdownFormatter({
     h4: ({ children }) => {
       const headerText = String(children);
       const slug = headerText.replace(/[/,]/g, '').trim().replace(/\s+/g, '-').toLowerCase();
-      console.log('H4 rendered with text:', headerText, 'slug:', slug);
 
       return (
         <div style={{ position: 'relative' }}>

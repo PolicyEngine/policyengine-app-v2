@@ -14,8 +14,6 @@ _Distributional impact of the Conservative 2024 Manifesto. See the full impact s
 
 6. The majority of people in the five lowest income deciles would experience a negative impact on net income while the majority of people in the five highest income deciles would experience a positive net income change.
 
-## Introduction
-
 On June 11th, the Conservative and Unionist Party [released](https://manifesto.conservatives.com/) their manifesto, outlining pivotal reforms in taxation, welfare, and public expenditure for the next five years. The party committed to a net spending decrease of £2bn through 2030, with emphasis on healthcare, education, and defence, alongside tax policy changes such as lowering employee and self-employment NICs.
 
 For the first time, PolicyEngine will produce a comprehensive score of this and future manifestos, capturing an estimate of the economic impact of all spending and revenue changes.
@@ -91,15 +89,15 @@ PolicyEngine estimates that the complete Conservative manifesto would, in 2029:
 
 We estimate the Conservatives’ manifesto to be [mostly regressive along income lines](https://legacy.policyengine.org/uk/policy?focus=policyOutput.winnersAndLosers.incomeDecile&reform=58041&region=uk&timePeriod=2029&baseline=1), with the lowest decile experiencing a 6.4% decrease in disposable income, while those in the highest income bracket would see a 0.3% increase, and those in bracket 9 would experience the greatest relative increase of 1.6%.
 
-![Impact by income decile](/images/posts/conservative-2024-manifesto/decile_impact.png "image_tooltip")
+![Impact by income decile](/images/posts/conservative-2024-manifesto/decile_impact.png 'image_tooltip')
 
 We also conclude that people in the lowest income deciles are more likely to experience the negative impacts of the proposal, with over 95% of people in the first income decile experiencing a decrease in net income. The majority of people in income deciles above the fifth start to experience net income increases with [overall 46% of the population benefiting](https://legacy.policyengine.org/uk/policy?focus=policyOutput.winnersAndLosers.incomeDecile&reform=58041&region=uk&timePeriod=2029&baseline=1), in net income terms, and 52% of people experience net income decreases.
 
-![Impacts within income deciles](/images/posts/conservative-2024-manifesto/intra_decile_impact.png "image_tooltip")
+![Impacts within income deciles](/images/posts/conservative-2024-manifesto/intra_decile_impact.png 'image_tooltip')
 
 Regarding poverty rates, PolicyEngine estimates that the proposed policy changes would [increase the overall poverty rate 5.8%](https://legacy.policyengine.org/uk/policy?focus=policyOutput.povertyImpact.regular.byAge&reform=58041&region=uk&timePeriod=2029&baseline=1). The percentage of seniors in poverty would increase by 19% to a total of 13.4%, while child and working-age adult poverty rates would increase by 3.5% and 4.6% respectively.
 
-![Poverty rate impacts](/images/posts/conservative-2024-manifesto/poverty_impact.png "image_tooltip")
+![Poverty rate impacts](/images/posts/conservative-2024-manifesto/poverty_impact.png 'image_tooltip')
 
 ## Conclusion
 

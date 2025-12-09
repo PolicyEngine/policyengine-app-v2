@@ -49,10 +49,8 @@ export default function SimulationSubmitView({
     const serializedSimulationCreationPayload: SimulationCreationPayload =
       SimulationAdapter.toCreationPayload(simulationData);
 
-    console.log('Submitting simulation:', serializedSimulationCreationPayload);
     createSimulation(serializedSimulationCreationPayload, {
       onSuccess: (data) => {
-        console.log('Simulation created successfully:', data);
         onSubmitSuccess(data.result.simulation_id);
       },
     });

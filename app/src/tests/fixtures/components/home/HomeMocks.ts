@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { NavItemSetup } from '@/components/home-header/NavItem';
+import { NavItemSetup } from '@/components/homeHeader/NavItem';
 
 export const MOCK_NAV_ITEMS: NavItemSetup[] = [
   {

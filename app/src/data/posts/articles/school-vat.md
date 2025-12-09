@@ -5,8 +5,6 @@
 - We estimate that the Gini index of income inequality would decrease slightly by 0.01% in FY2025.
 - We also estimate that Labour's plan would lower net income for 3.3% of people.
 
-## Introduction
-
 Labour has proposed a policy change aimed at reducing educational inequality and raising additional revenue for the public sector. Their plan involves removing tax exemptions from private schools, including VAT exemptions and business rates relief. In this report, we provide a comprehensive analysis of Labour's proposal using household data, offering a score of the policy's potential outcomes. This approach (compared to using administrative data) allows us to examine a broader range of potential effects, including changes in the income distribution. In this report, we analyse Labour's key policy proposals by implementing them in our household model. We present our estimated impacts based on the policy reform details and ISC census data, providing a comprehensive view of the potential effects on households.
 
 ## Economic impact

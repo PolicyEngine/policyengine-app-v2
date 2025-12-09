@@ -20,7 +20,6 @@ import PopulationSubPage from './PopulationSubPage';
 import { useHouseholdCalculations } from './useHouseholdCalculations';
 
 interface HouseholdReportOutputProps {
-  reportId: string;
   report: Report | undefined;
   simulations: Simulation[] | undefined;
   userSimulations?: UserSimulation[];
@@ -43,7 +42,6 @@ interface HouseholdReportOutputProps {
  * - Component: Presentation only
  */
 export function HouseholdReportOutput({
-  reportId,
   report,
   simulations,
   userSimulations,
@@ -75,20 +73,6 @@ export function HouseholdReportOutput({
   // Extract states from view model
   const { isPending, isComplete, isError } = viewModel.simulationStates;
 
-  // Logging for debugging
-  console.log('[HouseholdReportOutput] Render:', {
-    reportId,
-    report,
-    simulations,
-    dataLoading,
-    dataError,
-    displayProgress,
-    hasCalcStatus,
-    isPending,
-    isComplete,
-    isError,
-  });
-
   // RENDER DECISIONS: Based on persistent Simulation.status
   // PROGRESS DISPLAY: Enhanced with ephemeral CalcStatus when available
 
@@ -118,18 +102,8 @@ export function HouseholdReportOutput({
 
   // Show results if all simulations complete (persistent status)
   if (isComplete) {
-    console.log('[HouseholdReportOutput] ========== PREPARING HOUSEHOLD OUTPUTS ==========');
-    console.log('[HouseholdReportOutput] Complete simulations:', simulations);
-    console.log(
-      '[HouseholdReportOutput] Simulation statuses:',
-      simulations?.map((s) => ({ id: s.id, status: s.status, hasOutput: !!s.output }))
-    );
-
     const output = viewModel.getFormattedOutput();
     const policyLabels = viewModel.getPolicyLabels();
-
-    console.log('[HouseholdReportOutput] Final output:', output);
-    console.log('[HouseholdReportOutput] Policy labels:', policyLabels);
 
     if (!output) {
       return <NotFoundSubPage />;

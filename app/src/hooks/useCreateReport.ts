@@ -47,8 +47,6 @@ export function useCreateReport(reportLabel?: string) {
 
   const userId = MOCK_USER_ID;
 
-  console.log('[useCreateReport] Hook initialized, manager available:', !!manager);
-
   const mutation = useMutation({
     mutationFn: async ({
       countryId,
@@ -73,39 +71,18 @@ export function useCreateReport(reportLabel?: string) {
     },
 
     onSuccess: async (result) => {
-      const timestamp = Date.now();
-      console.log(`[useCreateReport][${timestamp}] ========================================`);
-      console.log(`[useCreateReport][${timestamp}] onSuccess triggered`);
-
       try {
         const { report, simulations, populations } = result;
         const reportIdStr = String(report.id);
-
-        console.log(`[useCreateReport][${timestamp}] Report ID (raw):`, report.id);
-        console.log(`[useCreateReport][${timestamp}] Report ID (string):`, reportIdStr);
-        console.log(`[useCreateReport][${timestamp}] Report type:`, typeof report.id);
-        console.log(`[useCreateReport][${timestamp}] Report object:`, report);
-        console.log(`[useCreateReport][${timestamp}] Report.countryId:`, report.countryId);
-        console.log(`[useCreateReport][${timestamp}] Report.year:`, report.year);
-        console.log(
-          `[useCreateReport][${timestamp}] Report.country_id:`,
-          (report as any).country_id
-        );
 
         // Invalidate queries
         // WHY: We need to invalidate BOTH reports AND report associations
         // - reportKeys.all: Invalidates individual report queries
         // - reportAssociationKeys.all: Invalidates user→report mappings (critical for Reports page)
-        console.log(`[useCreateReport][${timestamp}] Invalidating report queries...`);
         queryClient.invalidateQueries({ queryKey: reportKeys.all });
-        console.log(`[useCreateReport][${timestamp}] Invalidating report association queries...`);
         queryClient.invalidateQueries({ queryKey: reportAssociationKeys.all });
 
         // Cache the report data using consistent key structure
-        console.log(
-          `[useCreateReport][${timestamp}] Caching report data with key:`,
-          reportKeys.byId(reportIdStr)
-        );
         queryClient.setQueryData(reportKeys.byId(reportIdStr), report);
 
         // Determine calculation type from simulation
@@ -130,9 +107,6 @@ export function useCreateReport(reportLabel?: string) {
           // CRITICAL: We do NOT await these calls. The household API takes 30-60s per
           // simulation, but we want the UI to navigate immediately and show progress.
           // TanStack Query will handle waiting for the response in the background.
-          console.log(
-            '[useCreateReport] Starting household calculations for each simulation (non-blocking)'
-          );
 
           const allSimulations = [simulation1, simulation2].filter(
             (sim): sim is Simulation => sim !== null && sim !== undefined
@@ -144,9 +118,6 @@ export function useCreateReport(reportLabel?: string) {
               continue;
             }
 
-            console.log(
-              `[useCreateReport] → Starting calculation for simulation ${sim.id} (fire and forget)`
-            );
             // Fire and forget - don't await, let TanStack Query handle the waiting
             manager
               .startCalculation({
@@ -172,16 +143,11 @@ export function useCreateReport(reportLabel?: string) {
                   error
                 );
               });
-            console.log(`[useCreateReport] ✓ Calculation request fired for simulation ${sim.id}`);
           }
         } else {
           // Economy reports: Single calculation at report level
           // WHY: Economy calculations operate on the entire geography and compare
           // all policies in a single API call. Results stored at report level.
-          console.log('[useCreateReport] Starting economy calculation at report level');
-          console.log(`[useCreateReport][${timestamp}] → Calling manager.startCalculation`);
-          console.log(`[useCreateReport][${timestamp}]   calcId: ${reportIdStr}`);
-          console.log(`[useCreateReport][${timestamp}]   targetType: report`);
 
           await manager.startCalculation({
             calcId: reportIdStr,
@@ -199,15 +165,9 @@ export function useCreateReport(reportLabel?: string) {
               geography2: null,
             },
           });
-
-          console.log(`[useCreateReport][${timestamp}] ✓ manager.startCalculation completed`);
         }
-
-        console.log(`[useCreateReport][${timestamp}] onSuccess COMPLETED successfully`);
-        console.log(`[useCreateReport][${timestamp}] ========================================`);
       } catch (error) {
-        console.error(`[useCreateReport][${timestamp}] Post-creation tasks failed:`, error);
-        console.log(`[useCreateReport][${timestamp}] ========================================`);
+        console.error('[useCreateReport] Post-creation tasks failed:', error);
       }
     },
   });

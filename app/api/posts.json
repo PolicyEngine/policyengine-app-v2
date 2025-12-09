@@ -1,5 +1,23 @@
 [
   {
+    "title": "Estimating the constituency distribution of a mansion tax",
+    "description": "Three central London constituencies account for a fifth of property sales above £2 million.",
+    "date": "2025-11-25 12:00:00",
+    "tags": [
+      "uk",
+      "policy",
+      "tax",
+      "autumn-budget",
+      "featured"
+    ],
+    "authors": [
+      "daphne-hansell"
+    ],
+    "filename": "uk-mansion-tax-autumn-budget.md",
+    "image": "uk-mansion-tax/cover.png",
+    "hideHeaderImage": false
+  },
+  {
     "title": "Analysing alternative income tax and National Insurance reform options for the UK",
     "description": "PolicyEngine analysis of alternative tax reform options: raising basic and higher income tax rates, cutting NI, and extending the threshold freeze.",
     "date": "2025-11-20 11:00:00",
@@ -59,7 +77,7 @@
   },
   {
     "title": "How removing the two-child benefit limit would affect the UK",
-    "description": "Removing the two-child limit would cost £2.8 billion in 2026-27 and reduce child poverty by 15.7%.",
+    "description": "PolicyEngine estimates removing the two-child limit would cost £2.9 billion in 2026-27 and reduce child poverty by 13.5%.",
     "date": "2025-10-06 11:00:00",
     "tags": [
       "uk",

@@ -1,7 +1,3 @@
-_Image credit: UK Trade and Business Commission_
-
-## Introduction
-
 This report examines how carbon tax and dividend policies would affect UK households under two scenarios: £100 and £200 per tonne of CO2. We analyse how carbon prices impact household incomes when all tax revenue is returned as equal dividends to every resident.
 
 In this policy experiment, the government applies carbon taxes at £100 and £200 per tonne of CO2 equivalent, generating revenue based on emissions and consumption patterns. We calculate average household net income under baseline conditions (no carbon tax) and reform conditions (with carbon tax). The government redistributes all tax revenue as equal per-person dividends to UK residents. We categorise household income changes by gain and loss thresholds and analyse distributional effects across income deciles.

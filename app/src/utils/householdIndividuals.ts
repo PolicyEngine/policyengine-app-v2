@@ -1,5 +1,41 @@
 import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
 
+/**
+ * Sort people keys in display order: you, your partner, then dependents by ordinal
+ * This ensures consistent ordering across the UI regardless of object key order
+ */
+export function sortPeopleKeys(peopleKeys: string[]): string[] {
+  const ordinalOrder = ['first', 'second', 'third', 'fourth', 'fifth'];
+
+  return [...peopleKeys].sort((a, b) => {
+    // "you" always first
+    if (a === 'you') {
+      return -1;
+    }
+    if (b === 'you') {
+      return 1;
+    }
+
+    // "your partner" always second
+    if (a === 'your partner') {
+      return -1;
+    }
+    if (b === 'your partner') {
+      return 1;
+    }
+
+    // Sort dependents by ordinal (first, second, third, etc.)
+    const aOrdinalIndex = ordinalOrder.findIndex((ord) => a.includes(ord));
+    const bOrdinalIndex = ordinalOrder.findIndex((ord) => b.includes(ord));
+    if (aOrdinalIndex !== -1 && bOrdinalIndex !== -1) {
+      return aOrdinalIndex - bOrdinalIndex;
+    }
+
+    // Fallback to alphabetical for any other keys
+    return a.localeCompare(b);
+  });
+}
+
 export interface EntityVariable {
   paramName: string;
   label: string;

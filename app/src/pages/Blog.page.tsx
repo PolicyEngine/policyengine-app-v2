@@ -114,7 +114,7 @@ export default function BlogPage() {
     <StaticPageLayout title={post.title}>
       {/* Header Section */}
       <Box style={{ backgroundColor: colors.gray[50] }}>
-        <Container size="xl" py={80}>
+        <Container size="xl" py={post.hideHeaderImage ? 40 : 80}>
           <PostHeadingSection
             post={post}
             markdown={content}
@@ -166,12 +166,6 @@ function PostHeadingSection({
   const imageUrl = post.image ? `/assets/posts/${post.image}` : '';
   const readingTime = calculateReadingTime(markdown);
 
-  console.log('[THIS] Cover image debug:', {
-    postImage: post.image,
-    imageUrl,
-    hasImage: !!post.image,
-  });
-
   if (displayCategory === 'desktop') {
     return (
       <div style={{ display: 'flex' }}>
@@ -202,9 +196,10 @@ function PostHeadingSection({
           <Text size="lg" c="dimmed" style={{ marginTop: 30, fontSize: '1.25rem' }}>
             {post.description}
           </Text>
-          {imageUrl && (
+          {imageUrl && !post.hideHeaderImage && (
             <img
               alt={post.title}
+              title={post.imageCredit}
               src={imageUrl}
               style={{ width: '100%', marginTop: 30 }}
               onError={(e) => {
@@ -253,9 +248,10 @@ function PostHeadingSection({
           {readingTime}
         </Text>
       </div>
-      {imageUrl && (
+      {imageUrl && !post.hideHeaderImage && (
         <img
           alt={post.title}
+          title={post.imageCredit}
           src={imageUrl}
           style={{ width: '100%' }}
           onError={(e) => {

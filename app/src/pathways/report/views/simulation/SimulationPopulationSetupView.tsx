@@ -133,7 +133,7 @@ export default function SimulationPopulationSetupView({
   const viewSubtitle = getPopulationSelectionSubtitle(shouldLockToOtherPopulation);
 
   const primaryAction = {
-    label: 'Next ',
+    label: 'Next',
     onClick: handleClickSubmit,
     isDisabled: shouldLockToOtherPopulation ? false : !selectedAction,
   };

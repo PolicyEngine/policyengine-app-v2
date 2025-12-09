@@ -13,7 +13,6 @@ export function usePathwayNavigation<TMode>(initialMode: TMode) {
 
   const navigateToMode = useCallback(
     (mode: TMode) => {
-      console.log('[usePathwayNavigation] Navigating to mode:', mode);
       setHistory((prev) => [...prev, currentMode]);
       setCurrentMode(mode);
     },
@@ -23,16 +22,12 @@ export function usePathwayNavigation<TMode>(initialMode: TMode) {
   const goBack = useCallback(() => {
     if (history.length > 0) {
       const previousMode = history[history.length - 1];
-      console.log('[usePathwayNavigation] Going back to mode:', previousMode);
       setHistory((prev) => prev.slice(0, -1));
       setCurrentMode(previousMode);
-    } else {
-      console.warn('[usePathwayNavigation] No history to go back to');
     }
   }, [history]);
 
   const resetNavigation = useCallback((mode: TMode) => {
-    console.log('[usePathwayNavigation] Resetting navigation to mode:', mode);
     setHistory([]);
     setCurrentMode(mode);
   }, []);

@@ -50,8 +50,6 @@ export class ProgressTracker {
    * @param estimatedDuration - Estimated time to completion in milliseconds (default: 60000)
    */
   register(calcId: string, promise: Promise<HouseholdData>, estimatedDuration = 60000): void {
-    console.log('[ProgressTracker] Registering calculation:', calcId);
-
     const tracking: ActiveCalc = {
       promise,
       startTime: Date.now(),
@@ -64,11 +62,9 @@ export class ProgressTracker {
     // Auto-update on completion
     promise
       .then((result) => {
-        console.log('[ProgressTracker] Calculation completed:', calcId);
         this.complete(calcId, result);
       })
       .catch((error) => {
-        console.log('[ProgressTracker] Calculation failed:', calcId, error);
         this.fail(calcId, error);
       });
   }
@@ -123,7 +119,6 @@ export class ProgressTracker {
       // Clean up after a delay
       setTimeout(() => {
         this.active.delete(calcId);
-        console.log('[ProgressTracker] Cleaned up calculation:', calcId);
       }, 5000);
     }
   }
@@ -142,7 +137,6 @@ export class ProgressTracker {
       // Clean up after a delay
       setTimeout(() => {
         this.active.delete(calcId);
-        console.log('[ProgressTracker] Cleaned up failed calculation:', calcId);
       }, 5000);
     }
   }

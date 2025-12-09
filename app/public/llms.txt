@@ -1,0 +1,44 @@
+# PolicyEngine Research
+
+> PolicyEngine is a free, open-source tool for analyzing tax and benefit policy impacts through microsimulation modeling. We provide household calculators and society-wide impact analysis for the US and UK.
+
+## About PolicyEngine
+
+PolicyEngine enables users to:
+- Calculate how policy changes affect individual households
+- Estimate society-wide impacts on revenue, poverty, and inequality
+- Compare reform proposals across different scenarios
+- Access programmatic policy analysis via API
+
+## Recent Research
+
+- [How a £2,000 salary sacrifice cap would affect workers](/research/uk-salary-sacrifice-cap): Capping salary sacrifice pension contributions at £2,000 would raise £3.3-7.6 billion in 2029-30 depending on behavioural responses, with impacts concentrated on higher earners.
+- [OBR November 2025 economic projections: what changed](/research/obr-november-2025-projections): The OBR revised up inflation and earnings forecasts in the November 2025 Autumn Budget. We compare the new projections to March 2025.
+- [Impact of the Autumn Budget fuel duty freeze](/research/fuel-duty-freeze-2025): PolicyEngine estimates that the fuel duty freeze costs £2.8 billion in 2026-27 and raises net income for 46.7% of people.
+- [Impact of the Autumn Budget rail fares freeze](/research/rail-fares-freeze-2025): PolicyEngine estimates that the rail fares freeze reduces revenue by £145 million in 2026-27.
+- [High value council tax surcharge: constituency-level impact](/research/high-value-council-tax-surcharge): The top 10 constituencies account for 35% of the £400 million annual revenue from the new surcharge on properties over £2 million.
+- [Estimating the constituency distribution of a mansion tax](/research/uk-mansion-tax-autumn-budget): Three central London constituencies account for a fifth of property sales above £2 million.
+- [Analysing alternative income tax and National Insurance reform options for the UK](/research/uk-income-tax-ni-reforms-2025): PolicyEngine analysis of alternative tax reform options: raising basic and higher income tax rates, cutting NI, and extending the threshold freeze.
+- [PolicyEngine London event 2025](/research/policyengine-2-event-report): PolicyEngine hosted an event in London that presented new updates and capabilities, real-world policy research applications, local area modelling, and how to use AI in policy research.
+- [Marginal tax rates in California's proposed billionaire tax](/research/california-billionaire-tax-marginal-rates): The 5% tax creates marginal tax rates between 50% and 60% on wealth between $1 billion and $1.1 billion.
+- [Comparing PolicyEngine and official UK poverty rates](/research/uk-poverty-analysis): We compare PolicyEngine poverty estimates with official DWP statistics and explain the methodological factors behind the differences.
+
+## Research by Region
+
+- [US Research](/llms-research-us.txt): 92 articles on US federal and state policy
+- [UK Research](/llms-research-uk.txt): 70 articles on UK tax and benefit policy
+
+## Full Archive
+
+- [All Research](/llms-full.txt): Complete archive of all PolicyEngine research articles
+
+## Documentation
+
+- [API Documentation](https://policyengine.org/us/api-explorer): Programmatic access to PolicyEngine
+- [Python Package](https://policyengine.github.io/policyengine-us/): policyengine-us documentation
+
+## Contact
+
+- Website: https://policyengine.org
+- GitHub: https://github.com/PolicyEngine
+- Email: hello@policyengine.org

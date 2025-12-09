@@ -25,7 +25,6 @@ export default function ReportLabelView({
   onBack,
   onCancel,
 }: ReportLabelViewProps) {
-  console.log('[ReportLabelView] ========== COMPONENT RENDER ==========');
   const countryId = useCurrentCountry();
   const [localLabel, setLocalLabel] = useState(label || '');
   const [localYear, setLocalYear] = useState<string>(year || CURRENT_YEAR);
@@ -42,15 +41,12 @@ export default function ReportLabelView({
 
   function handleYearChange(value: string | null) {
     const newYear = value || CURRENT_YEAR;
-    console.log('[ReportLabelView] Year changed to:', newYear);
     setLocalYear(newYear);
   }
 
   function submissionHandler() {
-    console.log('[ReportLabelView] Submit clicked - label:', localLabel, 'year:', localYear);
     onUpdateLabel(localLabel);
     onUpdateYear(localYear);
-    console.log('[ReportLabelView] Navigating to next');
     onNext();
   }
 

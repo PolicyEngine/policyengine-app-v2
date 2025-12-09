@@ -32,22 +32,13 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
       ? calculationKeys.byReportId(calcId)
       : calculationKeys.bySimulationId(calcId);
 
-  const timestamp = Date.now();
-  console.log(`[useCalculationStatus][${timestamp}] ========================================`);
-  console.log(
-    `[useCalculationStatus][${timestamp}] CALLED: calcId="${calcId}" targetType="${targetType}"`
-  );
-  console.log(`[useCalculationStatus][${timestamp}] Query key:`, JSON.stringify(queryKey));
-
   // Initialize state with current cache value or initializing
   const [status, setStatus] = useState<CalcStatus | undefined>(() => {
     const cached = queryClient.getQueryData<CalcStatus>(queryKey);
     if (cached) {
-      console.log(`[useCalculationStatus][${timestamp}] Initial cache hit:`, cached.status);
       return cached;
     }
 
-    console.log(`[useCalculationStatus][${timestamp}] No initial cache, returning initializing`);
     return {
       status: 'initializing' as const,
       metadata: {
@@ -67,8 +58,6 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
       return;
     }
 
-    console.log(`[useCalculationStatus] Creating QueryObserver for ${calcId}`);
-
     // Create observer that watches this query key
     const observer = new QueryObserver<CalcStatus>(queryClient, {
       queryKey,
@@ -76,8 +65,6 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
 
     // Subscribe to cache updates
     const unsubscribe = observer.subscribe((result) => {
-      console.log(`[useCalculationStatus] Observer update for ${calcId}:`, result.data?.status);
-
       if (result.data) {
         setStatus(result.data);
       }
@@ -87,18 +74,13 @@ function useSingleCalculationStatus(calcId: string, targetType: 'report' | 'simu
     // Get current value immediately in case it was set while component was rendering
     const current = queryClient.getQueryData<CalcStatus>(queryKey);
     if (current) {
-      console.log(`[useCalculationStatus] Immediate cache value for ${calcId}:`, current.status);
       setStatus(current);
     }
 
     return () => {
-      console.log(`[useCalculationStatus] Unsubscribing observer for ${calcId}`);
       unsubscribe();
     };
   }, [queryClient, queryKey, calcId]);
-
-  console.log(`[useCalculationStatus][${timestamp}] Current status:`, status?.status);
-  console.log(`[useCalculationStatus][${timestamp}] ========================================`);
 
   // Determine calculation type from metadata
   const calcType = status?.metadata?.calcType || 'household';

@@ -1,6 +1,19 @@
 [
   {
     "type": "iframe",
+    "slug": "autumn-budget-2025",
+    "title": "UK Autumn Budget 2025 analysis dashboard",
+    "description": "Interactive tool to explore revenue and distributional impacts of UK Autumn Budget 2025 policies across income deciles, constituencies, and household types",
+    "source": "https://uk-autumn-budget-dashboard.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "autumn-2025-budget-dashboard.jpg",
+    "date": "2025-12-09 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
     "slug": "public-services-spending",
     "title": "UK public services spending analysis dashboard",
     "description": "Explore how public services spending varies across demographic groups and regions in the UK, including NHS healthcare, education, and transport subsidies",
@@ -153,6 +166,15 @@
     "description": "Interactive scatter plot visualization of OBBBA household impacts",
     "source": "https://policyengine.github.io/obbba-scatter",
     "tags": ["us", "featured", "policy", "reconciliation"],
+    "countryId": "us"
+  },
+  {
+    "type": "iframe",
+    "slug": "snap-district-map",
+    "title": "SNAP district map",
+    "description": "Interactive map showing SNAP (food stamps) data by congressional district",
+    "source": "https://policyengine.github.io/snap-district-map/",
+    "tags": ["us", "policy"],
     "countryId": "us"
   }
 ]
