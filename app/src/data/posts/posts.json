@@ -1,5 +1,21 @@
 [
   {
+    "title": "Analyzing the Bipartisan Health Insurance Affordability Act",
+    "description": "The bipartisan bill would extend ACA premium tax credits to 700% FPL with a modified contribution schedule. We analyze impacts on representative households.",
+    "date": "2025-12-09",
+    "tags": [
+      "us",
+      "policy",
+      "healthcare",
+      "featured"
+    ],
+    "filename": "bipartisan-health-insurance-affordability-act.md",
+    "image": "enhanced-premium-tax-credits-extension.jpg",
+    "authors": [
+      "daphne-hansell"
+    ]
+  },
+  {
     "title": "Analysing alternative income tax and National Insurance reform options for the UK",
     "description": "PolicyEngine analysis of alternative tax reform options: raising basic and higher income tax rates, cutting NI, and extending the threshold freeze.",
     "date": "2025-11-20 11:00:00",
