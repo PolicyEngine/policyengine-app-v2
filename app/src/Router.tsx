@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import AppLayout from './components/AppLayout';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import StaticLayout from './components/StaticLayout';
@@ -176,12 +177,12 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // Interactive app routes - use StaticLayout with CountryAppGuard
+        // Interactive app routes - use AppLayout (no legacy banner) with CountryAppGuard
         {
           element: <CountryAppGuard />,
           children: [
             {
-              element: <StaticLayout />,
+              element: <AppLayout />,
               children: [
                 {
                   path: ':slug',
