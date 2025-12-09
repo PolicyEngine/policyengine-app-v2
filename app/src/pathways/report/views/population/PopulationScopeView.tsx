@@ -16,12 +16,13 @@ import {
   createGeographyFromScope,
   getUKConstituencies,
   getUKCountries,
+  getUSCongressionalDistricts,
   getUSStates,
 } from '@/utils/regionStrategies';
 import UKGeographicOptions from '../../components/geographicOptions/UKGeographicOptions';
 import USGeographicOptions from '../../components/geographicOptions/USGeographicOptions';
 
-type ScopeType = 'national' | 'country' | 'constituency' | 'state' | 'household';
+type ScopeType = 'national' | 'country' | 'constituency' | 'state' | 'district' | 'household';
 
 interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
@@ -43,6 +44,7 @@ export default function PopulationScopeView({
 
   // Get region options based on country
   const usStates = countryId === 'us' ? getUSStates(regionData) : [];
+  const usDistricts = countryId === 'us' ? getUSCongressionalDistricts(regionData) : [];
   const ukCountries = countryId === 'uk' ? getUKCountries(regionData) : [];
   const ukConstituencies = countryId === 'uk' ? getUKConstituencies(regionData) : [];
 
@@ -53,7 +55,7 @@ export default function PopulationScopeView({
 
   function submissionHandler() {
     // Validate that if a regional scope is selected, a region must be chosen
-    const needsRegion = ['state', 'country', 'constituency'].includes(scope);
+    const needsRegion = ['state', 'district', 'country', 'constituency'].includes(scope);
     if (needsRegion && !selectedRegion) {
       console.warn(`${scope} selected but no region chosen`);
       return;
@@ -78,9 +80,10 @@ export default function PopulationScopeView({
         />
       ) : (
         <USGeographicOptions
-          scope={scope as 'national' | 'state' | 'household'}
+          scope={scope as 'national' | 'state' | 'district' | 'household'}
           selectedRegion={selectedRegion}
           stateOptions={usStates}
+          districtOptions={usDistricts}
           onScopeChange={(newScope) => handleScopeChange(newScope)}
           onRegionChange={setSelectedRegion}
         />

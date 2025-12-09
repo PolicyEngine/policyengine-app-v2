@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { fetchSocietyWideCalculation, getDatasetForRegion } from '@/api/societyWideCalculation';
+import {
+  fetchSocietyWideCalculation,
+  getDatasetForRegion,
+  getDistrictDatasetUrl,
+  isUSCongressionalDistrict,
+  US_DISTRICT_PREFIX,
+} from '@/api/societyWideCalculation';
 import { BASE_URL, CURRENT_YEAR } from '@/constants';
 import {
   ERROR_MESSAGES,
@@ -13,6 +19,8 @@ import {
   TEST_COUNTRIES,
   TEST_POLICY_IDS,
   TEST_REGIONS,
+  TEST_US_DISTRICTS,
+  TEST_US_STATES,
 } from '@/tests/fixtures/api/societyWideMocks';
 
 global.fetch = vi.fn();
@@ -390,6 +398,85 @@ describe('societyWide API', () => {
 
       // Then
       expect(result).toBeUndefined();
+    });
+
+    test('given US country and congressional district then returns HuggingFace URL', () => {
+      // When
+      const result = getDatasetForRegion('us', TEST_US_DISTRICTS.CA_01);
+
+      // Then
+      expect(result).toBe('hf://policyengine/policyengine-us-data/districts/CA-01.h5');
+    });
+
+    test('given US country and NY district then returns correct HuggingFace URL', () => {
+      // When
+      const result = getDatasetForRegion('us', TEST_US_DISTRICTS.NY_12);
+
+      // Then
+      expect(result).toBe('hf://policyengine/policyengine-us-data/districts/NY-12.h5');
+    });
+  });
+
+  describe('isUSCongressionalDistrict', () => {
+    test('given district region then returns true', () => {
+      // When/Then
+      expect(isUSCongressionalDistrict(TEST_US_DISTRICTS.CA_01)).toBe(true);
+      expect(isUSCongressionalDistrict(TEST_US_DISTRICTS.NY_12)).toBe(true);
+      expect(isUSCongressionalDistrict(TEST_US_DISTRICTS.TX_35)).toBe(true);
+    });
+
+    test('given state region then returns false', () => {
+      // When/Then
+      expect(isUSCongressionalDistrict(TEST_US_STATES.CA)).toBe(false);
+      expect(isUSCongressionalDistrict(TEST_US_STATES.NY)).toBe(false);
+    });
+
+    test('given nationwide region then returns false', () => {
+      // When/Then
+      expect(isUSCongressionalDistrict('us')).toBe(false);
+    });
+
+    test('given undefined then returns false', () => {
+      // When/Then
+      expect(isUSCongressionalDistrict(undefined)).toBe(false);
+    });
+
+    test('given empty string then returns false', () => {
+      // When/Then
+      expect(isUSCongressionalDistrict('')).toBe(false);
+    });
+  });
+
+  describe('getDistrictDatasetUrl', () => {
+    test('given CA-01 district then returns correct HuggingFace URL', () => {
+      // When
+      const result = getDistrictDatasetUrl(TEST_US_DISTRICTS.CA_01);
+
+      // Then
+      expect(result).toBe('hf://policyengine/policyengine-us-data/districts/CA-01.h5');
+    });
+
+    test('given NY-12 district then returns correct HuggingFace URL', () => {
+      // When
+      const result = getDistrictDatasetUrl(TEST_US_DISTRICTS.NY_12);
+
+      // Then
+      expect(result).toBe('hf://policyengine/policyengine-us-data/districts/NY-12.h5');
+    });
+
+    test('given at-large district then returns correct HuggingFace URL', () => {
+      // When
+      const result = getDistrictDatasetUrl(TEST_US_DISTRICTS.AK_01);
+
+      // Then
+      expect(result).toBe('hf://policyengine/policyengine-us-data/districts/AK-01.h5');
+    });
+  });
+
+  describe('US_DISTRICT_PREFIX', () => {
+    test('has correct value', () => {
+      // Then
+      expect(US_DISTRICT_PREFIX).toBe('district/');
     });
   });
 });

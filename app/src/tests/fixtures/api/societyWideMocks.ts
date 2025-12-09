@@ -21,6 +21,27 @@ export const TEST_REGIONS = {
   STANDARD: 'standard',
 } as const;
 
+/**
+ * US Congressional district test constants.
+ * Format: "district/{STATE_CODE}-{DISTRICT_NUMBER}"
+ */
+export const TEST_US_DISTRICTS = {
+  CA_01: 'district/CA-01',
+  CA_12: 'district/CA-12',
+  NY_12: 'district/NY-12',
+  TX_35: 'district/TX-35',
+  AK_01: 'district/AK-01', // At-large district
+} as const;
+
+/**
+ * US State test constants (lowercase state codes).
+ */
+export const TEST_US_STATES = {
+  CA: 'ca',
+  NY: 'ny',
+  TX: 'tx',
+} as const;
+
 export const HTTP_STATUS = {
   OK: 200,
   BAD_REQUEST: 400,
