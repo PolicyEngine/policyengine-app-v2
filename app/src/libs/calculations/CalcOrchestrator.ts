@@ -55,19 +55,9 @@ export class CalcOrchestrator {
    *   7. Cleanup
    */
   async startCalculation(config: CalcStartConfig): Promise<void> {
-    const timestamp = Date.now();
-    console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
-    console.log(`[CalcOrchestrator][${timestamp}] startCalculation() called`);
-    console.log(`[CalcOrchestrator][${timestamp}]   calcId: "${config.calcId}"`);
-    console.log(`[CalcOrchestrator][${timestamp}]   targetType: "${config.targetType}"`);
-    console.log(`[CalcOrchestrator][${timestamp}]   countryId: "${config.countryId}"`);
-
     // Build metadata and params
     const metadata = this.buildMetadata(config);
     const params = this.buildParams(config);
-
-    console.log(`[CalcOrchestrator][${timestamp}]   calcType: "${metadata.calcType}"`);
-    console.log(`[CalcOrchestrator][${timestamp}]   populationId: "${params.populationId}"`);
 
     // Create query options (includes refetchInterval from strategy)
     const queryOptions =
@@ -75,22 +65,10 @@ export class CalcOrchestrator {
         ? calculationQueries.forReport(config.calcId, metadata, params)
         : calculationQueries.forSimulation(config.calcId, metadata, params);
 
-    console.log(
-      `[CalcOrchestrator][${timestamp}]   queryKey:`,
-      JSON.stringify(queryOptions.queryKey)
-    );
-    console.log(
-      `[CalcOrchestrator][${timestamp}]   refetchInterval:`,
-      queryOptions.refetchInterval
-    );
-
     // For household calculations: Set 'computing' status BEFORE API call
     // WHY: Household API calls take 30-45s. By setting 'computing' status in cache
     // immediately, the UI can show synthetic progress during the long-running call.
     if (metadata.calcType === 'household') {
-      console.log(
-        `[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Setting 'computing' status before API call...`
-      );
       const computingStatus: CalcStatus = {
         status: 'pending',
         progress: 0,
@@ -98,54 +76,29 @@ export class CalcOrchestrator {
         metadata,
       };
       this.queryClient.setQueryData(queryOptions.queryKey, computingStatus);
-      console.log(
-        `[CalcOrchestrator][${timestamp}] ✓ Computing status cached, UI will show synthetic progress`
-      );
     }
 
     // Execute initial queryFn
-    console.log(`[CalcOrchestrator][${timestamp}] → Executing queryFn()...`);
-    const startTime = Date.now();
     const initialStatus = await queryOptions.queryFn();
-    const duration = Date.now() - startTime;
-    console.log(`[CalcOrchestrator][${timestamp}] ✓ queryFn() completed in ${duration}ms`);
-    console.log(`[CalcOrchestrator][${timestamp}]   Initial status: "${initialStatus.status}"`);
 
     // Set result in cache
     this.queryClient.setQueryData(queryOptions.queryKey, initialStatus);
-    console.log(`[CalcOrchestrator][${timestamp}] ✓ Status cached`);
 
     // CRITICAL DECISION POINT: Household vs Economy
     if (initialStatus.status === 'complete') {
       // HOUSEHOLD CASE: Calculation completed synchronously
-      console.log(
-        `[CalcOrchestrator][${timestamp}] 🏠 HOUSEHOLD: Calculation completed immediately (no polling needed)`
-      );
-      console.log(`[CalcOrchestrator][${timestamp}]   Duration: ${duration}ms`);
-      console.log(`[CalcOrchestrator][${timestamp}] → Persisting result...`);
-
       await this.resultPersister.persist(initialStatus, config.countryId, config.year);
-      console.log(`[CalcOrchestrator][${timestamp}] ✓ Result persisted`);
 
       // Notify manager to cleanup this orchestrator
       if (this.manager) {
-        console.log(`[CalcOrchestrator][${timestamp}] → Notifying manager to cleanup`);
         this.manager.cleanup(config.calcId);
       }
 
-      console.log(`[CalcOrchestrator][${timestamp}] ✓ Household calculation complete`);
-      console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
       return;
     }
 
     // ECONOMY CASE: Start polling for progress
-    console.log(
-      `[CalcOrchestrator][${timestamp}] 🌍 ECONOMY: Starting polling (async calculation)`
-    );
     this.startPolling(queryOptions, metadata, config.countryId, config.calcId, config.year);
-
-    console.log(`[CalcOrchestrator][${timestamp}] ✓ Polling started`);
-    console.log(`[CalcOrchestrator][${timestamp}] ========================================`);
   }
 
   /**
@@ -170,28 +123,16 @@ export class CalcOrchestrator {
     year: string
   ): void {
     const { queryKey, queryFn, refetchInterval } = queryOptions;
-    const timestamp = Date.now();
-
-    console.log(`[CalcOrchestrator][${timestamp}] startPolling() called for ${calcId}`);
-    console.log(`[CalcOrchestrator][${timestamp}]   refetchInterval: ${refetchInterval}`);
 
     // SAFETY CHECK: Should never happen since household returns 'complete' immediately
     if (refetchInterval === false) {
-      console.error(
-        `[CalcOrchestrator][${timestamp}] ❌ UNEXPECTED: startPolling() called with refetchInterval=false`
-      );
-      console.error(
-        `[CalcOrchestrator][${timestamp}]    This should never happen! Household calculations should return 'complete' immediately.`
-      );
-      console.error(`[CalcOrchestrator][${timestamp}]    Cleaning up and returning.`);
+      console.error('[CalcOrchestrator] Unexpected: startPolling() called with refetchInterval=false');
 
       if (this.manager) {
         this.manager.cleanup(calcId);
       }
       return;
     }
-
-    console.log(`[CalcOrchestrator][${timestamp}] ✓ Creating QueryObserver with polling`);
 
     // Create observer with polling
     const observer = new QueryObserver(this.queryClient, {
@@ -202,8 +143,6 @@ export class CalcOrchestrator {
         : refetchInterval) as any, // Type assertion needed for QueryObserver
     });
 
-    console.log(`[CalcOrchestrator][${timestamp}] ✓ Observer created, subscribing...`);
-
     // Subscribe to updates
     const unsubscribe = observer.subscribe((result) => {
       const status = result.data as CalcStatus | undefined;
@@ -212,30 +151,14 @@ export class CalcOrchestrator {
         return;
       }
 
-      const progress = status.progress !== undefined ? `${status.progress}%` : 'N/A';
-      console.log(
-        `[CalcOrchestrator] 🔄 Poll update for ${calcId}: status="${status.status}" progress=${progress}`
-      );
-
       // Handle completion
       if (status.status === 'complete' && status.result) {
-        const completionTime = Date.now();
-        console.log(`[CalcOrchestrator][${completionTime}] ✅ COMPLETE: ${calcId}`);
-        console.log(`[CalcOrchestrator][${completionTime}] → Persisting result...`);
-
         this.resultPersister
           .persist(status, countryId, year)
-          .then(() => {
-            console.log(`[CalcOrchestrator][${completionTime}] ✓ Result persisted for ${calcId}`);
-          })
           .catch((error) => {
-            console.error(
-              `[CalcOrchestrator][${completionTime}] ❌ Failed to persist ${calcId}:`,
-              error
-            );
+            console.error('[CalcOrchestrator] Failed to persist:', error);
           })
           .finally(() => {
-            console.log(`[CalcOrchestrator][${completionTime}] → Stopping polling and cleaning up`);
             unsubscribe();
             this.currentUnsubscribe = null;
 
@@ -250,10 +173,7 @@ export class CalcOrchestrator {
 
       // Handle error
       if (status.status === 'error') {
-        const errorTime = Date.now();
-        console.error(`[CalcOrchestrator][${errorTime}] ❌ ERROR: ${calcId}`);
-        console.error(`[CalcOrchestrator][${errorTime}]    Error:`, status.error);
-        console.log(`[CalcOrchestrator][${errorTime}] → Stopping polling and cleaning up`);
+        console.error('[CalcOrchestrator] Calculation error:', status.error);
 
         unsubscribe();
         this.currentUnsubscribe = null;
@@ -267,7 +187,6 @@ export class CalcOrchestrator {
 
     // Store unsubscribe function for manual cleanup
     this.currentUnsubscribe = unsubscribe;
-    console.log(`[CalcOrchestrator][${timestamp}] ✓ Subscribed to polling updates`);
   }
 
   /**
@@ -276,11 +195,8 @@ export class CalcOrchestrator {
    */
   cleanup(): void {
     if (this.currentUnsubscribe) {
-      console.log('[CalcOrchestrator] cleanup() → Stopping polling');
       this.currentUnsubscribe();
       this.currentUnsubscribe = null;
-    } else {
-      console.log('[CalcOrchestrator] cleanup() → No active polling to stop');
     }
   }
 
