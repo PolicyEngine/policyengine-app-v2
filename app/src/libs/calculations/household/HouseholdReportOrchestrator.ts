@@ -166,7 +166,10 @@ export class HouseholdReportOrchestrator {
           queryKey: simulationKeys.byId(simulationId),
         });
       } catch (patchError) {
-        console.error('[HouseholdReportOrchestrator] Failed to mark simulation as error:', patchError);
+        console.error(
+          '[HouseholdReportOrchestrator] Failed to mark simulation as error:',
+          patchError
+        );
       }
 
       throw error; // Re-throw to trigger Promise.all catch

@@ -56,7 +56,6 @@ export class HouseholdSimCalculator {
     this.queryClient.setQueryData(calcKey, initialStatus);
 
     try {
-
       // Execute the LONG-RUNNING API call (30-50s)
       // This blocks but that's OK - runs in background Promise
       const result = await fetchHouseholdCalculation(

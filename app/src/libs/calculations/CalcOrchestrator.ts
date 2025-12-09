@@ -126,7 +126,9 @@ export class CalcOrchestrator {
 
     // SAFETY CHECK: Should never happen since household returns 'complete' immediately
     if (refetchInterval === false) {
-      console.error('[CalcOrchestrator] Unexpected: startPolling() called with refetchInterval=false');
+      console.error(
+        '[CalcOrchestrator] Unexpected: startPolling() called with refetchInterval=false'
+      );
 
       if (this.manager) {
         this.manager.cleanup(calcId);
