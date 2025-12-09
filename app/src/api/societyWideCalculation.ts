@@ -65,6 +65,11 @@ export async function fetchSocietyWideCalculation(
   });
 
   if (!response.ok) {
+    console.error(
+      '[fetchSocietyWideCalculation] Failed with status:',
+      response.status,
+      response.statusText
+    );
     throw new Error(`Society-wide calculation failed: ${response.statusText}`);
   }
 
