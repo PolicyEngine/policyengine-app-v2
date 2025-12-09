@@ -89,6 +89,7 @@ export function NotebookRenderer({ notebook, displayCategory: propDisplayCategor
 /**
  * NotebookCell component
  * Renders a single code cell with its outputs
+ * Prioritizes richer output types (plotly > markdown > html > plain)
  */
 function NotebookCell({ cell }: { cell: NotebookCellType }) {
   const outputCell = cell.outputs?.[0]?.data;
@@ -98,25 +99,26 @@ function NotebookCell({ cell }: { cell: NotebookCellType }) {
     return null;
   }
 
+  // Prioritize output types - prefer richer formats over plain text
+  // This is important because cells often have multiple output types
+  if (outputCell['application/vnd.plotly.v1+json']) {
+    return <NotebookOutputPlotly data={outputCell['application/vnd.plotly.v1+json']} />;
+  }
+
+  if (outputCell['text/markdown']) {
+    return <NotebookOutputMarkdown data={outputCell['text/markdown']} />;
+  }
+
+  if (outputCell['text/html']) {
+    return <NotebookOutputHTML data={outputCell['text/html']} />;
+  }
+
+  if (outputCell['text/plain']) {
+    return <NotebookOutputPlain data={outputCell['text/plain']} />;
+  }
+
+  // Unknown output type - show first available
   const outputType = Object.keys(outputCell)[0];
-
-  if (outputType === 'text/plain') {
-    return <NotebookOutputPlain data={outputCell[outputType]} />;
-  }
-
-  if (outputType === 'application/vnd.plotly.v1+json') {
-    return <NotebookOutputPlotly data={outputCell[outputType]} />;
-  }
-
-  if (outputType === 'text/html') {
-    return <NotebookOutputHTML data={outputCell[outputType]} />;
-  }
-
-  if (outputType === 'text/markdown') {
-    return <NotebookOutputMarkdown data={outputCell[outputType]} />;
-  }
-
-  // Unknown output type
   return (
     <p style={{ color: blogColors.textSecondary, fontStyle: 'italic' }}>
       Unknown output type: {outputType}
