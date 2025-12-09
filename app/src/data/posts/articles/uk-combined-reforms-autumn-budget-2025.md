@@ -42,7 +42,7 @@ Figure 1 [shows](https://gist.github.com/vahid-ahmadi/fc0c26d94572224cd97d1538d9
 
 **Figure 1: Average change in household income by income decile (£/year)**
 
-<iframe src="http://localhost:5179/combined_reforms/distributional.html" width="100%" height="550" frameborder="0"></iframe>
+<iframe src="https://policyengine.github.io/uk-autumn-budget-dashboard/combined_reforms/distributional.html" width="100%" height="550" frameborder="0"></iframe>
 
 The distributional pattern shifts over the forecast period. In 2026-27, all deciles gain on average, with the second decile recording the largest gain (£1,139.5/year). By 2030-31, the bottom four deciles continue to gain (ranging from £58.7 to £1,343.2), while the top six deciles experience losses, with the tenth decile losing £1,874.0 on average. The two-child limit repeal increases incomes for lower-income households, while the threshold freeze, investment income tax increases, and salary sacrifice cap reduce incomes for higher earners.
 
@@ -52,7 +52,7 @@ Figure 2 [shows](https://gist.github.com/vahid-ahmadi/fc0c26d94572224cd97d1538d9
 
 **Figure 2: Population share by income change from combined reforms**
 
-<iframe src="http://localhost:5179/combined_reforms/winners_losers.html" width="100%" height="700" frameborder="0"></iframe>
+<iframe src="https://policyengine.github.io/uk-autumn-budget-dashboard/combined_reforms/winners_losers.html" width="100%" height="700" frameborder="0"></iframe>
 
 In 2026-27, over half the population either gains or sees no change, with no losers. By 2030-31, 82.2% of the population experiences losses (76.7% lose less than 5%, 5.5% lose more than 5%), while 11.0% gain. The lowest deciles maintain the highest share of gainers throughout, with 20.9% of the second decile gaining more than 5% in 2030-31. The top decile sees 99.5% experiencing income losses by 2030-31.
 
@@ -62,7 +62,7 @@ Figure 3 [shows](https://gist.github.com/vahid-ahmadi/fc0c26d94572224cd97d1538d9
 
 **Figure 3: Average net income change by constituency**
 
-<iframe src="http://localhost:5179/combined_reforms/constituency_map.html" width="100%" height="600" frameborder="0"></iframe>
+<iframe src="https://policyengine.github.io/uk-autumn-budget-dashboard/combined_reforms/constituency_map.html" width="100%" height="600" frameborder="0"></iframe>
 
 In 2026-27, all constituencies gain on average, with the largest gains in Birmingham Yardley (+£267.4), Bradford East (+£260.5), and Barking (+£257.5). In 2027-28, gains reduce but remain positive across all constituencies. By 2028-29, the pattern becomes mixed: constituencies with higher concentrations of families with children continue to show gains, while others begin to show losses as tax increases take effect. In 2029-30, most constituencies show net losses as the salary sacrifice cap is introduced. By 2030-31, all constituencies show net losses on average, with the largest losses in constituencies in London and the South East.
 
@@ -88,7 +88,7 @@ Figure 4 [shows](https://gist.github.com/vahid-ahmadi/fc0c26d94572224cd97d1538d9
 
 **Figure 4: Change in poverty headcount rates (pp)**
 
-<iframe src="http://localhost:5179/combined_reforms/poverty_inequality.html" width="100%" height="550" frameborder="0"></iframe>
+<iframe src="https://policyengine.github.io/uk-autumn-budget-dashboard/combined_reforms/poverty_inequality.html" width="100%" height="550" frameborder="0"></iframe>
 
 The chart above shows absolute poverty before housing costs (BHC) by default; use the toggles to explore relative poverty and after housing costs (AHC) measures. The combined reforms reduce child poverty throughout the forecast period. Using absolute BHC poverty, the overall poverty rate falls by 0.7 to 0.8 percentage points, child poverty falls by 2.3 to 2.9 percentage points, and working-age adult poverty falls by 0.3 to 0.4 percentage points. Pensioner poverty increases slightly, by up to 0.1 percentage points by 2030-31. The child poverty reduction is larger when measured after housing costs, falling by 3.4 to 3.8 percentage points.
 
