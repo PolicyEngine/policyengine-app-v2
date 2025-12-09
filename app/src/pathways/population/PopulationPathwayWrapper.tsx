@@ -30,8 +30,6 @@ interface PopulationPathwayWrapperProps {
 }
 
 export default function PopulationPathwayWrapper({ onComplete }: PopulationPathwayWrapperProps) {
-  console.log('[PopulationPathwayWrapper] ========== RENDER ==========');
-
   const countryId = useCurrentCountry();
   const navigate = useNavigate();
 
@@ -59,16 +57,11 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
     StandalonePopulationViewMode.LABEL, // labelMode
     {
       // Custom navigation for standalone pathway: exit to households list
-      onHouseholdComplete: (householdId: string, _household: Household) => {
-        console.log('[PopulationPathwayWrapper] Household created with ID:', householdId);
+      onHouseholdComplete: (_householdId: string, _household: Household) => {
         navigate(`/${countryId}/households`);
         onComplete?.();
       },
-      onGeographyComplete: (geographyId: string, _label: string) => {
-        console.log(
-          '[PopulationPathwayWrapper] Geographic population created with ID:',
-          geographyId
-        );
+      onGeographyComplete: (_geographyId: string, _label: string) => {
         navigate(`/${countryId}/households`);
         onComplete?.();
       },
