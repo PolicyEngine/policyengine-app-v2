@@ -48,7 +48,7 @@ export default function PolicyPathwayWrapper({ onComplete }: PolicyPathwayWrappe
     (_state, policy) => policy, // policyUpdater: replace entire state with new policy
     navigateToMode,
     StandalonePolicyViewMode.SUBMIT, // returnMode (not used in standalone mode)
-    (policyId: string) => {
+    (_policyId: string) => {
       // onPolicyComplete: custom navigation for standalone pathway
       navigate(`/${countryId}/policies`);
       onComplete?.();

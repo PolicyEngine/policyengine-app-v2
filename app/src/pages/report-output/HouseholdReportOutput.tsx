@@ -43,7 +43,7 @@ interface HouseholdReportOutputProps {
  * - Component: Presentation only
  */
 export function HouseholdReportOutput({
-  reportId,
+  reportId: _reportId,
   report,
   simulations,
   userSimulations,
