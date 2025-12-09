@@ -20,7 +20,6 @@ import PopulationSubPage from './PopulationSubPage';
 import { useHouseholdCalculations } from './useHouseholdCalculations';
 
 interface HouseholdReportOutputProps {
-  reportId: string;
   report: Report | undefined;
   simulations: Simulation[] | undefined;
   userSimulations?: UserSimulation[];
@@ -43,7 +42,6 @@ interface HouseholdReportOutputProps {
  * - Component: Presentation only
  */
 export function HouseholdReportOutput({
-  reportId: _reportId,
   report,
   simulations,
   userSimulations,

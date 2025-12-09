@@ -155,7 +155,6 @@ export default function ReportOutputPage() {
     if (outputType === 'household') {
       return (
         <HouseholdReportOutput
-          reportId={userReportId}
           report={report}
           simulations={simulations}
           userSimulations={userSimulations}
