@@ -22,10 +22,6 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
    * We await the full calculation and return the final result immediately.
    */
   async execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
-    console.log('[HouseholdCalcStrategy.execute] Starting calculation');
-    console.log('[HouseholdCalcStrategy.execute] params:', params);
-    console.log('[HouseholdCalcStrategy.execute] metadata:', metadata);
-
     const policyId = params.policyIds.reform || params.policyIds.baseline;
 
     try {
@@ -34,12 +30,6 @@ export class HouseholdCalcStrategy implements CalcExecutionStrategy {
         params.countryId,
         params.populationId,
         policyId
-      );
-
-      console.log('[HouseholdCalcStrategy.execute] Calculation completed successfully');
-      console.log(
-        '[HouseholdCalcStrategy.execute] Using metadata with reportId:',
-        metadata.reportId
       );
 
       // Return complete status with result and PROVIDED metadata (includes reportId!)

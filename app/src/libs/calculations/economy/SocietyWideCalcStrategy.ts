@@ -18,24 +18,17 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
    * Makes direct API call - server manages state and queuing
    */
   async execute(params: CalcParams, metadata: CalcMetadata): Promise<CalcStatus> {
-    console.log('[SocietyWideCalcStrategy.execute] Starting with params:', params);
-    console.log('[SocietyWideCalcStrategy.execute] metadata:', metadata);
-
     // Pass the region value AS-IS to the API (NO prefix stripping)
     // For UK: includes prefix like "constituency/Sheffield Central" or "country/england"
     // For US: just state code like "ca" or "ny"
     // For National: just country code like "uk" or "us"
     const apiRegion = params.region || params.countryId;
 
-    console.log('[SocietyWideCalcStrategy.execute] API region parameter:', apiRegion);
-
     // Build API parameters - use year from params
     const apiParams: SocietyWideCalculationParams = {
       region: apiRegion,
       time_period: params.year,
     };
-
-    console.log('[SocietyWideCalcStrategy.execute] Using year:', params.year);
 
     // Call society-wide calculation API
     const response = await fetchSocietyWideCalculation(
@@ -44,8 +37,6 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       params.policyIds.baseline,
       apiParams
     );
-
-    console.log('[SocietyWideCalcStrategy.execute] API response:', response.status);
 
     // Transform to unified status with provided metadata
     return this.transformResponseWithMetadata(response, metadata, params.countryId);
@@ -83,15 +74,6 @@ export class SocietyWideCalcStrategy implements CalcExecutionStrategy {
       const elapsed = Date.now() - metadata.startedAt;
       const estimatedDuration = this.getEstimatedDuration(countryId);
       const progress = Math.min((elapsed / estimatedDuration) * 100, 95); // Cap at 95%
-
-      console.log('[SocietyWideCalcStrategy] Progress calculation:', {
-        countryId,
-        elapsed,
-        estimatedDuration,
-        rawProgress: (elapsed / estimatedDuration) * 100,
-        cappedProgress: progress,
-        queuePosition: response.queue_position,
-      });
 
       return {
         status: 'pending',

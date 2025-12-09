@@ -11,15 +11,12 @@ export default function Layout() {
   const location = useLocation();
   const previousLocation = useRef(location.pathname);
 
-  // Log navigation events for cache monitoring
+  // Track navigation for cache monitoring
   useEffect(() => {
     const from = previousLocation.current;
     const to = location.pathname;
 
     if (from !== to) {
-      console.log('[Layout] ========== NAVIGATION DETECTED ==========');
-      console.log('[Layout] From:', from);
-      console.log('[Layout] To:', to);
       cacheMonitor.logNavigation(from, to);
       previousLocation.current = to;
     }

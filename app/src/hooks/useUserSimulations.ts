@@ -84,14 +84,8 @@ export const useUserSimulations = (userId: string) => {
     error: housAssocError,
   } = useHouseholdAssociationsByUser(userId);
 
-  console.log('simulationAssociations', simulationAssociations);
-  console.log('policyAssociations', policyAssociations);
-  console.log('householdAssociations', householdAssociations);
-
   // Step 2: Extract IDs for fetching
   const simulationIds = simulationAssociations?.map((a) => a.simulationId).filter(Boolean) ?? [];
-
-  console.log('simulationIds', simulationIds);
 
   // Step 3: Fetch simulations using parallel queries utility
   const simulationResults = useParallelQueries<Simulation>(simulationIds, {
@@ -104,14 +98,10 @@ export const useUserSimulations = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  console.log('simulationResults', simulationResults);
-
   // Step 4: Extract policy and household IDs from fetched simulations
   const simulations = simulationResults.queries
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
-
-  console.log('simulations', simulations);
 
   const policyIds = extractUniqueIds(simulations, 'policyId');
 
@@ -127,9 +117,6 @@ export const useUserSimulations = (userId: string) => {
   //   .map(s => s.populationId)
   //   .filter((id, index, self) => id && self.indexOf(id) === index);
 
-  console.log('policyIds', policyIds);
-  console.log('householdIds', householdIds);
-
   // Step 5: Fetch policies (only those not already in cache)
   const policyResults = useParallelQueries<Policy>(policyIds, {
     queryKey: policyKeys.byId,
@@ -140,8 +127,6 @@ export const useUserSimulations = (userId: string) => {
     enabled: policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
-
-  console.log('policyResults', policyResults);
 
   // Step 6: Fetch households (populations)
   const householdResults = useParallelQueries<Household>(householdIds, {
@@ -154,8 +139,6 @@ export const useUserSimulations = (userId: string) => {
     staleTime: 5 * 60 * 1000,
   });
 
-  console.log('householdResults', householdResults);
-
   // Step 7: Combine loading states
   const { isLoading, error } = combineLoadingStates(
     { isLoading: simAssocLoading, error: simAssocError },
@@ -165,9 +148,6 @@ export const useUserSimulations = (userId: string) => {
     { isLoading: policyResults.isLoading, error: policyResults.error },
     { isLoading: householdResults.isLoading, error: householdResults.error }
   );
-
-  console.log('isLoading', isLoading);
-  console.log('error', error);
 
   // Step 8: Build enhanced results with all relationships
   const enhancedSimulations: EnhancedUserSimulation[] =
