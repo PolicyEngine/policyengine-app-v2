@@ -15,7 +15,6 @@ import {
   useUserHouseholdStore,
 } from '@/hooks/useUserHousehold';
 import {
-  CONSOLE_MESSAGES,
   createMockQueryClient,
   GEO_CONSTANTS,
   mockHouseholdMetadata,
