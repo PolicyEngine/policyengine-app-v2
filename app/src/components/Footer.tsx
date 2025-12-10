@@ -10,7 +10,7 @@ import {
 import { Anchor, Box, Container, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import type { CountryId } from '@/api/report';
 import FooterSubscribe from '@/components/FooterSubscribe';
-import { colors, spacing, typography } from '@/designTokens';
+import { spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
@@ -20,8 +20,6 @@ const getContactLinks = (countryId: CountryId) => ({
   donate: `/${countryId}/donate`,
   privacy: `/${countryId}/privacy`,
   terms: `/${countryId}/terms`,
-  // TODO: Add developer-tools page once it's built out
-  // developerTools: `/${countryId}/developer-tools`,
 });
 
 const SOCIAL_LINKS = [
@@ -37,13 +35,34 @@ const SOCIAL_LINKS = [
 export default function Footer() {
   const countryId = useCurrentCountry();
   const CONTACT_LINKS = getContactLinks(countryId);
+
   return (
     <Box
       component="footer"
       w="100%"
-      style={{ backgroundColor: colors.primary[900], padding: '3rem 4rem' }}
+      style={{
+        background: 'linear-gradient(180deg, #0d2b2a 0%, #0a1f1e 100%)',
+        padding: '3rem 4rem',
+        position: 'relative',
+        overflow: 'hidden',
+      }}
     >
-      <Container size="2xl">
+      {/* Decorative gradient orb */}
+      <Box
+        style={{
+          position: 'absolute',
+          top: '-50%',
+          right: '-10%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(79, 209, 197, 0.08) 0%, transparent 70%)',
+          borderRadius: '50%',
+          filter: 'blur(60px)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      <Container size="2xl" style={{ position: 'relative', zIndex: 1 }}>
         <img
           src={PolicyEngineLogo}
           alt="PolicyEngine"
@@ -58,62 +77,105 @@ export default function Footer() {
             <Stack gap="xs">
               <Anchor
                 href={CONTACT_LINKS.about}
-                c={colors.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
+                style={{
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#4FD1C5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+                }}
               >
                 About us
               </Anchor>
               <Anchor
                 href={CONTACT_LINKS.donate}
-                c={colors.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
+                style={{
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#4FD1C5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+                }}
               >
                 Donate
               </Anchor>
               <Anchor
                 href={CONTACT_LINKS.privacy}
-                c={colors.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
+                style={{
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#4FD1C5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+                }}
               >
                 Privacy policy
               </Anchor>
               <Anchor
                 href={CONTACT_LINKS.terms}
-                c={colors.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
+                style={{
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = '#4FD1C5';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = 'rgba(255, 255, 255, 0.8)';
+                }}
               >
                 Terms and conditions
               </Anchor>
-              {/* TODO: Uncomment when developer-tools page is built
-              <Anchor
-                href={CONTACT_LINKS.developerTools}
-                c={colors.white}
-                fz="md"
-                underline="never"
-                ff={typography.fontFamily.primary}
-              >
-                Developer tools
-              </Anchor>
-              */}
             </Stack>
 
             <Stack gap="md">
               <Group gap="md">
                 {SOCIAL_LINKS.map(({ icon: Icon, href }, index) => (
-                  <Anchor key={index} href={href} target="_blank">
-                    <Icon size={24} color={colors.white} />
+                  <Anchor
+                    key={index}
+                    href={href}
+                    target="_blank"
+                    style={{
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      transition: 'color 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.color = '#4FD1C5';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.color = 'rgba(255, 255, 255, 0.6)';
+                    }}
+                  >
+                    <Icon size={24} />
                   </Anchor>
                 ))}
               </Group>
-              <Text fz="xs" c={colors.white} ff={typography.fontFamily.primary}>
+              <Text
+                fz="xs"
+                ff={typography.fontFamily.primary}
+                style={{ color: 'rgba(255, 255, 255, 0.5)' }}
+              >
                 © {new Date().getFullYear()} PolicyEngine. All rights reserved.
               </Text>
             </Stack>

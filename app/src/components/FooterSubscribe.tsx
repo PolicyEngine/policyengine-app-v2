@@ -40,10 +40,19 @@ export default function FooterSubscribe() {
 
   return (
     <Stack gap="xs" pl="2xl">
-      <Text fw={600} fz="h2" c={colors.white} ff={typography.fontFamily.primary}>
+      <Text
+        fw={600}
+        fz="h2"
+        ff={typography.fontFamily.primary}
+        style={{ color: 'rgba(255, 255, 255, 0.95)' }}
+      >
         Subscribe to PolicyEngine
       </Text>
-      <Text fz="h5" c={colors.white} ff={typography.fontFamily.primary}>
+      <Text
+        fz="h5"
+        ff={typography.fontFamily.primary}
+        style={{ color: 'rgba(255, 255, 255, 0.7)' }}
+      >
         Get the latest posts delivered right to your inbox.
       </Text>
       <Stack gap="sm" w="80%" mt="20px">
@@ -54,17 +63,41 @@ export default function FooterSubscribe() {
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
           styles={{
-            input: { backgroundColor: colors.white, flex: 1 },
+            input: {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(79, 209, 197, 0.3)',
+              color: '#ffffff',
+              '&::placeholder': {
+                color: 'rgba(255, 255, 255, 0.5)',
+              },
+              '&:focus': {
+                borderColor: '#4FD1C5',
+              },
+            },
           }}
           disabled={status === 'loading'}
         />
         <Button
-          color={colors.primary[500]}
           size="md"
           ff={typography.fontFamily.primary}
           onClick={handleSubscribe}
           loading={status === 'loading'}
           disabled={status === 'loading'}
+          style={{
+            background: 'linear-gradient(135deg, #4FD1C5 0%, #38B2AC 100%)',
+            color: '#0d2b2a',
+            fontWeight: 600,
+            border: 'none',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'translateY(-1px)';
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(79, 209, 197, 0.3)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
         >
           SUBSCRIBE
         </Button>

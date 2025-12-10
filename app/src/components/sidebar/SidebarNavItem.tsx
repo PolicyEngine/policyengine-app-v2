@@ -1,7 +1,6 @@
 import { IconExternalLink } from '@tabler/icons-react';
 import { Link } from 'react-router-dom';
 import { Group, Text, Tooltip, UnstyledButton } from '@mantine/core';
-import { colors } from '../../designTokens';
 
 interface SidebarNavItemProps {
   label: string;
@@ -20,28 +19,24 @@ export default function SidebarNavItem({
   external,
   disabled,
 }: SidebarNavItemProps) {
+  const textColor = disabled
+    ? 'rgba(255, 255, 255, 0.3)'
+    : isActive
+      ? '#4FD1C5'
+      : 'rgba(255, 255, 255, 0.7)';
+  const iconColor = disabled
+    ? 'rgba(255, 255, 255, 0.3)'
+    : isActive
+      ? '#4FD1C5'
+      : 'rgba(255, 255, 255, 0.5)';
+
   const content = (
     <Group gap={20} wrap="nowrap">
-      <Icon
-        size={20}
-        stroke={1.5}
-        color={disabled ? colors.gray[400] : isActive ? colors.gray[700] : colors.text.secondary}
-      />
-      <Text
-        size="sm"
-        fw={isActive ? 500 : 400}
-        c={disabled ? colors.gray[400] : isActive ? colors.gray[900] : colors.gray[700]}
-        style={{ flex: 1 }}
-      >
+      <Icon size={20} stroke={1.5} color={iconColor} />
+      <Text size="sm" fw={isActive ? 500 : 400} c={textColor} style={{ flex: 1 }}>
         {label}
       </Text>
-      {external && (
-        <IconExternalLink
-          size={14}
-          stroke={1.5}
-          color={disabled ? colors.gray[400] : colors.text.secondary}
-        />
-      )}
+      {external && <IconExternalLink size={14} stroke={1.5} color={iconColor} />}
     </Group>
   );
 
@@ -50,12 +45,13 @@ export default function SidebarNavItem({
     width: '100%',
     borderRadius: 6,
     padding: '8px 12px',
-    backgroundColor: isActive ? colors.gray[50] : 'transparent',
+    backgroundColor: isActive ? 'rgba(79, 209, 197, 0.1)' : 'transparent',
     textDecoration: 'none',
     cursor: disabled ? 'not-allowed' : 'pointer',
     opacity: disabled ? 0.6 : 1,
+    transition: 'all 0.2s ease',
     '&:hover': {
-      backgroundColor: disabled ? 'transparent' : colors.gray[50],
+      backgroundColor: disabled ? 'transparent' : 'rgba(79, 209, 197, 0.1)',
     },
   };
 

@@ -51,20 +51,24 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
   const cardContent = (
     <Box
       style={{
-        border: `1px solid ${colors.gray[300]}`,
+        border: '1px solid rgba(79, 209, 197, 0.2)',
         borderRadius: spacing.radius.md,
         overflow: 'hidden',
         backgroundColor: colors.white,
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        transition: 'box-shadow 0.2s ease',
+        transition: 'all 0.3s ease',
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = `0 4px 12px ${colors.gray[300]}`;
+        e.currentTarget.style.boxShadow = '0 8px 30px rgba(79, 209, 197, 0.15)';
+        e.currentTarget.style.transform = 'translateY(-4px)';
+        e.currentTarget.style.borderColor = 'rgba(79, 209, 197, 0.4)';
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.boxShadow = 'none';
+        e.currentTarget.style.transform = 'translateY(0)';
+        e.currentTarget.style.borderColor = 'rgba(79, 209, 197, 0.2)';
       }}
     >
       {/* Image */}
@@ -83,6 +87,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
               width: '100%',
               height: '100%',
               objectFit: 'cover',
+              transition: 'transform 0.3s ease',
             }}
             onError={(e) => {
               // Hide broken images
@@ -105,7 +110,18 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
         <Group justify="space-between" mb="xs">
           <Group gap="xs">
             {displayTags.map((tag) => (
-              <Badge key={tag} size="xs" variant="light" color={item.isApp ? 'teal' : 'blue'}>
+              <Badge
+                key={tag}
+                size="xs"
+                variant="light"
+                style={{
+                  backgroundColor: item.isApp
+                    ? 'rgba(79, 209, 197, 0.1)'
+                    : 'rgba(79, 209, 197, 0.1)',
+                  color: '#0d9488',
+                  border: '1px solid rgba(79, 209, 197, 0.2)',
+                }}
+              >
                 {tag}
               </Badge>
             ))}
@@ -130,8 +146,9 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
           size="sm"
           mt="sm"
           style={{
-            color: colors.primary[600],
+            color: '#0d9488',
             textAlign: 'right',
+            fontWeight: 500,
           }}
         >
           {item.isApp ? 'Open →' : 'Read →'}
