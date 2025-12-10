@@ -1,12 +1,15 @@
-import { Box, Radio, Select } from '@mantine/core';
-import { RegionOption } from '@/utils/regionStrategies';
+import { Box, Radio } from '@mantine/core';
+import { RegionOption, US_REGION_TYPES } from '@/utils/regionStrategies';
+import { USScopeType } from '@/types/regionTypes';
+import USStateSelector from './USStateSelector';
+import USDistrictSelector from './USDistrictSelector';
 
 interface USGeographicOptionsProps {
-  scope: 'national' | 'state' | 'congressional_district' | 'household';
+  scope: USScopeType;
   selectedRegion: string;
   stateOptions: RegionOption[];
   districtOptions: RegionOption[];
-  onScopeChange: (scope: 'national' | 'state' | 'congressional_district' | 'household') => void;
+  onScopeChange: (scope: USScopeType) => void;
   onRegionChange: (region: string) => void;
 }
 
@@ -18,33 +21,36 @@ export default function USGeographicOptions({
   onScopeChange,
   onRegionChange,
 }: USGeographicOptionsProps) {
+  // Handle scope change - clear region when switching scopes
+  const handleScopeChange = (newScope: USScopeType) => {
+    onRegionChange('');
+    onScopeChange(newScope);
+  };
+
   return (
     <>
       {/* National option */}
       <Radio
-        value="national"
+        value={US_REGION_TYPES.NATIONAL}
         label="All households nationally"
-        checked={scope === 'national'}
-        onChange={() => onScopeChange('national')}
+        checked={scope === US_REGION_TYPES.NATIONAL}
+        onChange={() => handleScopeChange(US_REGION_TYPES.NATIONAL)}
       />
 
       {/* State option */}
       <Box>
         <Radio
-          value="state"
+          value={US_REGION_TYPES.STATE}
           label="All households in a state"
-          checked={scope === 'state'}
-          onChange={() => onScopeChange('state')}
+          checked={scope === US_REGION_TYPES.STATE}
+          onChange={() => handleScopeChange(US_REGION_TYPES.STATE)}
         />
-        {scope === 'state' && stateOptions.length > 0 && (
+        {scope === US_REGION_TYPES.STATE && stateOptions.length > 0 && (
           <Box ml={24} mt="xs">
-            <Select
-              label="Select State"
-              placeholder="Pick a state"
-              data={stateOptions}
-              value={selectedRegion}
-              onChange={(val) => onRegionChange(val || '')}
-              searchable
+            <USStateSelector
+              stateOptions={stateOptions}
+              selectedState={selectedRegion}
+              onStateChange={onRegionChange}
             />
           </Box>
         )}
@@ -53,20 +59,17 @@ export default function USGeographicOptions({
       {/* Congressional District option */}
       <Box>
         <Radio
-          value="congressional_district"
+          value={US_REGION_TYPES.CONGRESSIONAL_DISTRICT}
           label="All households in a congressional district"
-          checked={scope === 'congressional_district'}
-          onChange={() => onScopeChange('congressional_district')}
+          checked={scope === US_REGION_TYPES.CONGRESSIONAL_DISTRICT}
+          onChange={() => handleScopeChange(US_REGION_TYPES.CONGRESSIONAL_DISTRICT)}
         />
-        {scope === 'congressional_district' && districtOptions.length > 0 && (
+        {scope === US_REGION_TYPES.CONGRESSIONAL_DISTRICT && districtOptions.length > 0 && (
           <Box ml={24} mt="xs">
-            <Select
-              label="Select Congressional District"
-              placeholder="Pick a congressional district"
-              data={districtOptions}
-              value={selectedRegion}
-              onChange={(val) => onRegionChange(val || '')}
-              searchable
+            <USDistrictSelector
+              districtOptions={districtOptions}
+              selectedDistrict={selectedRegion}
+              onDistrictChange={onRegionChange}
             />
           </Box>
         )}
@@ -77,7 +80,7 @@ export default function USGeographicOptions({
         value="household"
         label="Custom household"
         checked={scope === 'household'}
-        onChange={() => onScopeChange('household')}
+        onChange={() => handleScopeChange('household')}
       />
     </>
   );

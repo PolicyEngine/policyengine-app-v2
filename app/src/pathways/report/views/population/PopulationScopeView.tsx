@@ -12,6 +12,7 @@ import { Stack } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { countryIds } from '@/libs/countries';
 import { Geography } from '@/types/ingredients/Geography';
+import { ScopeType, USScopeType, UKScopeType, US_REGION_TYPES, UK_REGION_TYPES } from '@/types/regionTypes';
 import {
   createGeographyFromScope,
   getUKConstituencies,
@@ -21,8 +22,6 @@ import {
 } from '@/utils/regionStrategies';
 import UKGeographicOptions from '../../components/geographicOptions/UKGeographicOptions';
 import USGeographicOptions from '../../components/geographicOptions/USGeographicOptions';
-
-type ScopeType = 'national' | 'country' | 'constituency' | 'state' | 'congressional_district' | 'household';
 
 interface PopulationScopeViewProps {
   countryId: (typeof countryIds)[number];
@@ -39,7 +38,7 @@ export default function PopulationScopeView({
   onBack,
   onCancel,
 }: PopulationScopeViewProps) {
-  const [scope, setScope] = useState<ScopeType>('national');
+  const [scope, setScope] = useState<ScopeType>(US_REGION_TYPES.NATIONAL);
   const [selectedRegion, setSelectedRegion] = useState('');
 
   // Get region options based on country
@@ -55,7 +54,12 @@ export default function PopulationScopeView({
 
   function submissionHandler() {
     // Validate that if a regional scope is selected, a region must be chosen
-    const needsRegion = ['state', 'congressional_district', 'country', 'constituency'].includes(scope);
+    const needsRegion = [
+      US_REGION_TYPES.STATE,
+      US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+      UK_REGION_TYPES.COUNTRY,
+      UK_REGION_TYPES.CONSTITUENCY,
+    ].includes(scope as any);
     if (needsRegion && !selectedRegion) {
       console.warn(`${scope} selected but no region chosen`);
       return;
@@ -71,7 +75,7 @@ export default function PopulationScopeView({
     <Stack>
       {countryId === 'uk' ? (
         <UKGeographicOptions
-          scope={scope as 'national' | 'country' | 'constituency' | 'household'}
+          scope={scope as UKScopeType}
           selectedRegion={selectedRegion}
           countryOptions={ukCountries}
           constituencyOptions={ukConstituencies}
@@ -80,7 +84,7 @@ export default function PopulationScopeView({
         />
       ) : (
         <USGeographicOptions
-          scope={scope as 'national' | 'state' | 'congressional_district' | 'household'}
+          scope={scope as USScopeType}
           selectedRegion={selectedRegion}
           stateOptions={usStates}
           districtOptions={usDistricts}

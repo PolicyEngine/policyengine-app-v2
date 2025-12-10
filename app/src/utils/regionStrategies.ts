@@ -1,12 +1,11 @@
 import { countryIds } from '@/libs/countries';
+import { MetadataRegionEntry } from '@/types/metadata';
+import { US_REGION_TYPES, UK_REGION_TYPES, ScopeType } from '@/types/regionTypes';
 
-/**
- * Region data from metadata
- */
-export interface MetadataRegion {
-  name: string;
-  label: string;
-}
+// Re-export types for convenience
+export type { MetadataRegionEntry };
+export { US_REGION_TYPES, UK_REGION_TYPES };
+export type { ScopeType };
 
 /**
  * Region option for display in dropdowns
@@ -14,55 +13,111 @@ export interface MetadataRegion {
 export interface RegionOption {
   value: string;
   label: string;
+  type: (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES] | (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES];
+  // Congressional district specific fields
+  stateAbbreviation?: string;
+  stateName?: string;
 }
 
 /**
- * Get US states from metadata (filters "state/" prefix entries)
- * After API update, states are prefixed with "state/" (e.g., "state/ca")
+ * Get US states from metadata (filters by type)
  */
-export function getUSStates(regions: MetadataRegion[]): RegionOption[] {
+export function getUSStates(regions: MetadataRegionEntry[]): RegionOption[] {
   return regions
-    .filter((r) => r.name.startsWith('state/'))
+    .filter((r) => r.type === US_REGION_TYPES.STATE)
     .map((r) => ({
       value: r.name,
       label: r.label,
+      type: r.type,
     }));
 }
 
 /**
- * Get US congressional districts from metadata (filters "congressional_district/" prefix entries)
- * Districts follow pattern: "congressional_district/CA-01"
+ * Get US congressional districts from metadata (filters by type)
+ * Districts include state_abbreviation and state_name from the API
  */
-export function getUSCongressionalDistricts(regions: MetadataRegion[]): RegionOption[] {
+export function getUSCongressionalDistricts(regions: MetadataRegionEntry[]): RegionOption[] {
   return regions
-    .filter((r) => r.name.startsWith('congressional_district/'))
+    .filter((r) => r.type === US_REGION_TYPES.CONGRESSIONAL_DISTRICT)
     .map((r) => ({
       value: r.name,
       label: r.label,
+      type: r.type,
+      stateAbbreviation: r.state_abbreviation,
+      stateName: r.state_name,
     }));
 }
 
 /**
- * Get UK countries from metadata (filters "country/" prefix entries)
+ * Filter congressional districts by state name
+ * @param districts - All district options (must include stateName from API)
+ * @param stateName - Full state name (e.g., "California")
+ * @returns Districts belonging to the specified state
  */
-export function getUKCountries(regions: MetadataRegion[]): RegionOption[] {
+export function filterDistrictsByState(
+  districts: RegionOption[],
+  stateName: string
+): RegionOption[] {
+  if (!stateName) {
+    return [];
+  }
+  return districts.filter((d) => d.stateName === stateName);
+}
+
+/**
+ * Get the state name from a district option
+ * @param districtValue - District value (e.g., "congressional_district/CA-01")
+ * @param districts - All district options with state info
+ * @returns State name or empty string if not found
+ */
+export function getStateNameFromDistrict(
+  districtValue: string,
+  districts: RegionOption[]
+): string {
+  const district = districts.find((d) => d.value === districtValue);
+  return district?.stateName || '';
+}
+
+/**
+ * Format district options for display in a dropdown
+ * - Single-district states show "At-large"
+ * - Multi-district states show just the district number (e.g., "1st", "2nd")
+ * @param districts - Districts filtered by state
+ * @returns Formatted district options
+ */
+export function formatDistrictOptionsForDisplay(districts: RegionOption[]): RegionOption[] {
+  if (districts.length === 1) {
+    return districts.map((d) => ({ ...d, label: 'At-large' }));
+  }
+  return districts.map((d) => {
+    const match = d.label.match(/(\d+(?:st|nd|rd|th)?)/i);
+    return { ...d, label: match ? match[1] : d.label };
+  });
+}
+
+/**
+ * Get UK countries from metadata (filters by type)
+ */
+export function getUKCountries(regions: MetadataRegionEntry[]): RegionOption[] {
   return regions
-    .filter((r) => r.name.startsWith('country/'))
+    .filter((r) => r.type === UK_REGION_TYPES.COUNTRY)
     .map((r) => ({
       value: r.name,
       label: r.label,
+      type: r.type,
     }));
 }
 
 /**
- * Get UK constituencies from metadata (filters "constituency/" prefix entries)
+ * Get UK constituencies from metadata (filters by type)
  */
-export function getUKConstituencies(regions: MetadataRegion[]): RegionOption[] {
+export function getUKConstituencies(regions: MetadataRegionEntry[]): RegionOption[] {
   return regions
-    .filter((r) => r.name.startsWith('constituency/'))
+    .filter((r) => r.type === UK_REGION_TYPES.CONSTITUENCY)
     .map((r) => ({
       value: r.name,
       label: r.label,
+      type: r.type,
     }));
 }
 
@@ -89,7 +144,7 @@ export function extractRegionDisplayValue(fullValue: string): string {
  * @returns Geography object or null if household scope
  */
 export function createGeographyFromScope(
-  scope: 'national' | 'country' | 'constituency' | 'state' | 'congressional_district' | 'household',
+  scope: ScopeType,
   countryId: (typeof countryIds)[number],
   selectedRegion?: string
 ): {
@@ -104,7 +159,7 @@ export function createGeographyFromScope(
   }
 
   // National scope uses country ID
-  if (scope === 'national') {
+  if (scope === US_REGION_TYPES.NATIONAL) {
     return {
       id: countryId,
       countryId,

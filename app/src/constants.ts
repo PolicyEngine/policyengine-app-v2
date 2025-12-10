@@ -1,5 +1,5 @@
 export const FOREVER = '2100-12-31';
-export const BASE_URL = 'https://api.policyengine.org';
+export const BASE_URL = 'http://127.0.0.1:5000';
 export const CURRENT_YEAR = '2025';
 
 /**

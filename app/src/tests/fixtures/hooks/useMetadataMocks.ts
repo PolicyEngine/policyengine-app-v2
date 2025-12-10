@@ -1,5 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { MetadataState } from '@/types/metadata';
+import { US_REGION_TYPES, UK_REGION_TYPES } from '@/types/regionTypes';
 
 // Test country IDs
 export const TEST_COUNTRY_US = 'us';
@@ -50,7 +51,7 @@ export const mockLoadedMetadataState: MetadataState = {
     person: { label: 'Person', description: 'Person variables' },
   },
   economyOptions: {
-    region: [{ name: 'us', label: 'United States' }],
+    region: [{ name: 'us', label: 'United States', type: US_REGION_TYPES.NATIONAL }],
     time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
     datasets: [
       {
@@ -83,7 +84,7 @@ export const mockUKMetadataState: MetadataState = {
     income: { label: 'Income', unit: 'currency-GBP' },
   },
   economyOptions: {
-    region: [{ name: 'uk', label: 'United Kingdom' }],
+    region: [{ name: 'uk', label: 'United Kingdom', type: UK_REGION_TYPES.NATIONAL }],
     time_period: [{ name: parseInt(CURRENT_YEAR, 10), label: CURRENT_YEAR }],
     datasets: [
       {
