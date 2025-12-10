@@ -9,8 +9,13 @@ export const TEST_REGIONS = {
   UK_COUNTRY_DISPLAY: 'england',
   US_STATE: 'state/ca',
   US_STATE_NY: 'state/ny',
+  US_CONGRESSIONAL_DISTRICT: 'congressional_district/CA-01',
   UK_NATIONAL: 'uk',
   US_NATIONAL: 'us',
+  // Legacy US region formats (without prefix)
+  US_LEGACY_STATE_CODE: 'tx',
+  US_LEGACY_CITY_CODE_NYC: 'nyc',
+  US_LEGACY_STATE_CODE_CA: 'ca',
 } as const;
 
 // Mock metadata regions for UK
@@ -74,4 +79,58 @@ export const expectedUKConstituencies = [
   { value: 'constituency/Sheffield Central', label: 'Sheffield Central', type: UK_REGION_TYPES.CONSTITUENCY },
   { value: 'constituency/Manchester Central', label: 'Manchester Central', type: UK_REGION_TYPES.CONSTITUENCY },
   { value: 'constituency/Brighton Pavilion', label: 'Brighton Pavilion', type: UK_REGION_TYPES.CONSTITUENCY },
+];
+
+// Expected congressional districts after filtering
+export const expectedUSCongressionalDistricts = [
+  {
+    value: 'congressional_district/CA-01',
+    label: "California's 1st congressional district",
+    type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    stateAbbreviation: 'CA',
+    stateName: 'California',
+  },
+  {
+    value: 'congressional_district/CA-02',
+    label: "California's 2nd congressional district",
+    type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    stateAbbreviation: 'CA',
+    stateName: 'California',
+  },
+  {
+    value: 'congressional_district/NY-01',
+    label: "New York's 1st congressional district",
+    type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    stateAbbreviation: 'NY',
+    stateName: 'New York',
+  },
+];
+
+// California districts only (for filtering tests)
+export const expectedCaliforniaDistricts = [
+  {
+    value: 'congressional_district/CA-01',
+    label: "California's 1st congressional district",
+    type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    stateAbbreviation: 'CA',
+    stateName: 'California',
+  },
+  {
+    value: 'congressional_district/CA-02',
+    label: "California's 2nd congressional district",
+    type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    stateAbbreviation: 'CA',
+    stateName: 'California',
+  },
+];
+
+// Mock single-district state (for at-large test)
+export const mockSingleDistrictState: MetadataRegionEntry[] = [
+  {
+    name: 'congressional_district/AK-00',
+    label: "Alaska's at-large congressional district",
+    type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+    state_abbreviation: 'AK',
+    state_name: 'Alaska',
+  },
 ];
