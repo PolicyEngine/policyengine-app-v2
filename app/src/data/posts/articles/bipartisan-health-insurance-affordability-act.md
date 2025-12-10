@@ -35,21 +35,41 @@ Consider a family of four in Hillsborough County, Florida with two parents aged 
 | 600% FPL | $192,900 | $0 | $1,100 | $2,383 |
 | 700% FPL | $225,050 | $0 | $0 | $1,200 |
 
-Figure 1 shows the premium tax credit across income levels for the Florida household under each scenario. Under baseline, the PTC phases out completely at 400% FPL. Both the 700% FPL extension and IRA extension provide credits above this threshold, with the IRA extension providing slightly higher credits at income levels above 600% FPL.
+Table 2a shows the full picture of health assistance programs available to this Florida family at different income levels. Florida did not expand Medicaid under the ACA, so parents only qualify for Medicaid up to approximately 32% FPL. Additionally, adults cannot receive ACA premium tax credits until their income reaches 100% FPL. This creates a coverage gap between 32% and 100% FPL where parents may have no affordable coverage option. At zero income, the parents qualify for Medicaid. At $12,000 (36% FPL), the parents are in this coverage gap—they've lost Medicaid eligibility but don't yet qualify for PTCs. Above 100% FPL, the family can access marketplace coverage with premium tax credits.
 
-**Figure 1: ACA Premium Tax Credit by Income - Florida Family of 4**
+**Table 2a: Health programs for Florida household at select income levels**
+
+| Income Level | Income | Medicaid | CHIP | PTC (Baseline) | PTC (700% FPL) | PTC (IRA) |
+|--------------|--------|----------|------|----------------|----------------|-----------|
+| 0% FPL | $0 | $12,091 | $0 | $0 | $0 | $0 |
+| 36% FPL | $12,000 | $5,527 | $0 | $0 | $0 | $0 |
+| 138% FPL | $45,446 | $0 | $0 | $10,589 | $12,240 | $12,240 |
+| 300% FPL | $98,797 | $0 | $0 | $9,727 | $13,466 | $13,466 |
+| 400% FPL | $131,729 | $0 | $0 | $0 | $8,370 | $8,370 |
+| 600% FPL | $197,593 | $0 | $0 | $0 | $2,564 | $2,772 |
+| 700% FPL | $230,525 | $0 | $0 | $0 | $0 | $0 |
+
+Figure 1 shows the health programs available to this Florida family across income levels. Medicaid covers parents at very low incomes, while ACA premium tax credits become available above 100% FPL. The chart illustrates how the PTC reforms extend coverage to higher income levels.
+
+**Figure 1: Health Programs by Income - Florida Family of 4**
+
+![](/images/posts/bipartisan-aca-florida-programs.png)
+
+Figure 2 shows the premium tax credit across income levels for the Florida household under each scenario. Under baseline, the PTC phases out completely at 400% FPL. Both the 700% FPL extension and IRA extension provide credits above this threshold, with the IRA extension providing slightly higher credits at income levels above 600% FPL.
+
+**Figure 2: ACA Premium Tax Credit by Income - Florida Family of 4**
 
 ![](/images/posts/bipartisan-aca-florida-ptc.png)
 
-Figure 2 shows the change in net income (including the value of health benefits) relative to baseline for each reform scenario. Both reforms increase net income for households above 300% FPL, with the largest gains occurring around 400% FPL where baseline eligibility ends.
+Figure 3 shows the change in net income (including the value of health benefits) relative to baseline for each reform scenario. Both reforms increase net income for households above 300% FPL, with the largest gains occurring around 400% FPL where baseline eligibility ends.
 
-**Figure 2: Impact on Net Income - Florida Family of 4**
+**Figure 3: Impact on Net Income - Florida Family of 4**
 
 ![](/images/posts/bipartisan-aca-florida-delta.png)
 
-Figure 3 shows the marginal tax rate (MTR) including health benefits across income levels. The baseline shows a spike at 400% FPL where PTC eligibility ends. Both reform scenarios smooth this cliff, though they create higher MTRs at higher income levels as credits phase out more gradually.
+Figure 4 shows the marginal tax rate (MTR) including health benefits across income levels. The baseline shows a spike at 400% FPL where PTC eligibility ends. Both reform scenarios smooth this cliff, though they create higher MTRs at higher income levels as credits phase out more gradually.
 
-**Figure 3: Marginal Tax Rate - Florida Family of 4**
+**Figure 4: Marginal Tax Rate - Florida Family of 4**
 
 ![](/images/posts/bipartisan-aca-florida-mtr.png)
 
@@ -65,21 +85,39 @@ Consider a couple in San Benito County, California—one person aged 64 and anot
 | 400% FPL | $86,658 | $0 | $33,737 | $35,349 |
 | 600% FPL | $129,987 | $0 | $26,000 | $30,500 |
 
-Figure 4 shows the premium tax credit across income levels for the California household. The higher benchmark premiums for this older couple result in larger absolute PTC amounts compared to the Florida household.
+Table 3a shows the health assistance programs available to this California couple. Since this is an adult-only household with no children, CHIP does not apply. California expanded Medicaid under the ACA, so adults may qualify for Medi-Cal at lower income levels. The higher benchmark premiums for this older couple (due to age-based rating in ACA marketplaces) result in substantially larger PTC amounts compared to the younger Florida family.
 
-**Figure 4: ACA Premium Tax Credit by Income - California Couple (ages 64 & 62)**
+**Table 3a: Health programs for California household at select income levels**
+
+| Income Level | Income | Medicaid | PTC (Baseline) | PTC (700% FPL) | PTC (IRA) |
+|--------------|--------|----------|----------------|----------------|-----------|
+| 138% FPL | $29,897 | $0 | $0 | $0 | $0 |
+| 300% FPL | $64,994 | $0 | $36,242 | $38,702 | $38,702 |
+| 400% FPL | $86,658 | $0 | $0 | $35,349 | $35,349 |
+| 600% FPL | $129,987 | $0 | $0 | $31,530 | $31,666 |
+| 700% FPL | $151,652 | $0 | $0 | $0 | $29,825 |
+
+Figure 5 shows the health programs available to this California couple across income levels. California expanded Medicaid (Medi-Cal) under the ACA, providing coverage at lower incomes. The chart shows how ACA premium tax credits phase in above the Medicaid threshold and how the reforms extend PTC eligibility.
+
+**Figure 5: Health Programs by Income - California Couple (ages 64 & 62)**
+
+![](/images/posts/bipartisan-aca-california-programs.png)
+
+Figure 6 shows the premium tax credit across income levels for the California household. The higher benchmark premiums for this older couple result in larger absolute PTC amounts compared to the Florida household.
+
+**Figure 6: ACA Premium Tax Credit by Income - California Couple (ages 64 & 62)**
 
 ![](/images/posts/bipartisan-aca-california-ptc.png)
 
-Figure 5 shows the change in net income relative to baseline for the California household. The older couple sees larger absolute gains from the reforms due to their higher benchmark premiums.
+Figure 7 shows the change in net income relative to baseline for the California household. The older couple sees larger absolute gains from the reforms due to their higher benchmark premiums.
 
-**Figure 5: Impact on Net Income - California Couple (ages 64 & 62)**
+**Figure 7: Impact on Net Income - California Couple (ages 64 & 62)**
 
 ![](/images/posts/bipartisan-aca-california-delta.png)
 
-Figure 6 shows the marginal tax rate including health benefits for the California household. Similar to the Florida example, baseline law creates a cliff at 400% FPL, while both reforms extend eligibility with more gradual phase-outs.
+Figure 8 shows the marginal tax rate including health benefits for the California household. Similar to the Florida example, baseline law creates a cliff at 400% FPL, while both reforms extend eligibility with more gradual phase-outs.
 
-**Figure 6: Marginal Tax Rate - California Couple (ages 64 & 62)**
+**Figure 8: Marginal Tax Rate - California Couple (ages 64 & 62)**
 
 ![](/images/posts/bipartisan-aca-california-mtr.png)
 
