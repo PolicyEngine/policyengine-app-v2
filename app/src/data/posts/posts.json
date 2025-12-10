@@ -1,37 +1,24 @@
 [
   {
-    "title": "Combined impacts of Autumn Budget 2025 reforms",
-    "description": "Nine tax and benefit measures shift from costing £6.6bn in 2026-27 to raising £12.4bn by 2030-31, reducing inequality and child poverty while increasing taxes on higher earners.",
-    "date": "2025-12-09 12:00:00",
-    "tags": ["uk", "autumn-budget", "policy", "featured"],
-    "authors": ["vahid-ahmadi"],
-    "filename": "uk-combined-reforms-autumn-budget-2025.md",
-    "image": "Autumn-2025-Budget-combined.jpg",
-    "imageCredit": "gov.uk",
-    "hideHeaderImage": false
+    "title": "Analyzing the Bipartisan Health Insurance Affordability Act",
+    "description": "The bipartisan bill would extend ACA premium tax credits to 700% FPL with a modified contribution schedule. We analyze impacts on representative households.",
+    "date": "2025-12-09",
+    "tags": [
+      "us",
+      "policy",
+      "healthcare",
+      "featured"
+    ],
+    "filename": "bipartisan-health-insurance-affordability-act.md",
+    "image": "enhanced-premium-tax-credits-extension.jpg",
+    "authors": [
+      "daphne-hansell"
+    ]
   },
   {
-    "title": "GiveCalc UK: Calculate your Gift Aid tax relief",
-    "description": "A free calculator that shows how Gift Aid affects your taxes, including higher rate relief and Scottish income tax rates.",
-    "date": "2025-12-02 12:00:00",
-    "tags": ["uk", "giving"],
-    "authors": ["max-ghenis"],
-    "filename": "uk-giving-tuesday-2025.md",
-    "image": "us-giving-tuesday-2025/cover.png"
-  },
-  {
-    "title": "GiveCalc US: Calculate your charitable giving tax savings",
-    "description": "Calculate how charitable donations affect your federal and state taxes with our rebuilt, standalone web application.",
-    "date": "2025-12-02",
-    "tags": ["us", "featured", "giving"],
-    "authors": ["max-ghenis"],
-    "filename": "us-giving-tuesday-2025.md",
-    "image": "us-giving-tuesday-2025/cover.png"
-  },
-  {
-    "title": "How a £2,000 salary sacrifice cap would affect workers",
-    "description": "Capping salary sacrifice pension contributions at £2,000 would raise £3.3-7.6 billion in 2029-30 depending on behavioural responses, with impacts concentrated on higher earners.",
-    "date": "2025-11-27",
+    "title": "Analysing alternative income tax and National Insurance reform options for the UK",
+    "description": "PolicyEngine analysis of alternative tax reform options: raising basic and higher income tax rates, cutting NI, and extending the threshold freeze.",
+    "date": "2025-11-20 11:00:00",
     "tags": [
       "uk",
       "policy"
