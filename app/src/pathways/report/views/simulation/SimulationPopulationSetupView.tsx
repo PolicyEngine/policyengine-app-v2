@@ -81,7 +81,23 @@ export default function SimulationPopulationSetupView({
 
   // Define card arrays separately for clarity
   const lockedCards = [
-    // Card 1: Load Existing Population (disabled)
+    // Card 1: Create New Population (disabled)
+    {
+      title: 'Create new household(s)',
+      description: 'Cannot create new household(s) when another simulation is already configured',
+      onClick: handleClickCreateNew,
+      isSelected: false,
+      isDisabled: true,
+    },
+    // Card 2: Use Population from Other Simulation (enabled)
+    {
+      title: `Use household(s) from ${getSimulationLabel(otherSimulation as any)}`,
+      description: `Household(s): ${getPopulationLabel(otherPopulation as any)}`,
+      onClick: handleClickCopyExisting,
+      isSelected: selectedAction === 'copyExisting',
+      isDisabled: false,
+    },
+    // Card 3: Load Existing Population (disabled)
     {
       title: 'Load existing household(s)',
       description:
@@ -90,25 +106,15 @@ export default function SimulationPopulationSetupView({
       isSelected: false,
       isDisabled: true,
     },
-    // Card 2: Create New Population (disabled)
-    {
-      title: 'Create new household(s)',
-      description: 'Cannot create new household(s) when another simulation is already configured',
-      onClick: handleClickCreateNew,
-      isSelected: false,
-      isDisabled: true,
-    },
-    // Card 3: Use Population from Other Simulation (enabled)
-    {
-      title: `Use household(s) from ${getSimulationLabel(otherSimulation as any)}`,
-      description: `Household(s): ${getPopulationLabel(otherPopulation as any)}`,
-      onClick: handleClickCopyExisting,
-      isSelected: selectedAction === 'copyExisting',
-      isDisabled: false,
-    },
   ];
 
   const normalCards = [
+    {
+      title: 'Create new household(s)',
+      description: 'Build new household(s)',
+      onClick: handleClickCreateNew,
+      isSelected: selectedAction === 'createNew',
+    },
     {
       title: 'Load existing household(s)',
       description: hasExistingPopulations
@@ -117,12 +123,6 @@ export default function SimulationPopulationSetupView({
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
       isDisabled: !hasExistingPopulations,
-    },
-    {
-      title: 'Create new household(s)',
-      description: 'Build new household(s)',
-      onClick: handleClickCreateNew,
-      isSelected: selectedAction === 'createNew',
     },
   ];
 

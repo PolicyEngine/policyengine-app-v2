@@ -68,6 +68,12 @@ export default function SimulationPolicySetupView({
       isSelected: selectedAction === 'selectCurrentLaw',
     },
     {
+      title: 'Create new policy',
+      description: 'Build a new policy',
+      onClick: handleClickCreateNew,
+      isSelected: selectedAction === 'createNew',
+    },
+    {
       title: 'Load existing policy',
       description: hasExistingPolicies
         ? 'Use a policy you have already created'
@@ -75,12 +81,6 @@ export default function SimulationPolicySetupView({
       onClick: handleClickExisting,
       isSelected: selectedAction === 'loadExisting',
       isDisabled: !hasExistingPolicies,
-    },
-    {
-      title: 'Create new policy',
-      description: 'Build a new policy',
-      onClick: handleClickCreateNew,
-      isSelected: selectedAction === 'createNew',
     },
   ];
 
