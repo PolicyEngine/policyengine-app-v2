@@ -10,7 +10,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
-import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
 import { cacheMonitor } from './utils/cacheMonitor';
@@ -38,10 +37,8 @@ export default function WebsiteApp() {
           }}
         >
           <QueryClientProvider client={queryClient}>
-            <CalcOrchestratorProvider>
-              <WebsiteRouter />
-              <ReactQueryDevtools initialIsOpen={false} />
-            </CalcOrchestratorProvider>
+            <WebsiteRouter />
+            <ReactQueryDevtools initialIsOpen={false} />
           </QueryClientProvider>
         </QueryNormalizerProvider>
       </MantineProvider>
