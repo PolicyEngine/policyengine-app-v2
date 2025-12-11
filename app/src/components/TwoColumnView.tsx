@@ -1,4 +1,4 @@
-import { Grid, Paper, Title } from '@mantine/core';
+import { Box, Grid, Paper, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 interface TwoColumnViewProps {
@@ -20,29 +20,32 @@ const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoC
   };
 
   return (
-    <Paper
-      bg={getBackgroundColor()}
-      p={spacing.container.lg}
-      radius={spacing.radius.lg}
-      style={{ minHeight: '400px' }}
+    <Box
+      style={{
+        maxWidth: 1300,
+        margin: '0 auto',
+        paddingTop: spacing['2xl'],
+        paddingBottom: spacing['2xl'],
+      }}
     >
-      <Title
-        order={2}
-        variant="colored"
-        ff={typography.fontFamily.primary}
-        size={typography.fontSize['3xl']}
-        fw={typography.fontWeight.bold}
-        c={colors.text.title}
-        mb={spacing['3xl']}
-        ta="left"
-      >
-        {title}
-      </Title>
-      <Grid gutter={spacing['3xl']} align="center">
-        <Grid.Col span={{ base: 12, sm: 6 }}>{leftColumn}</Grid.Col>
-        <Grid.Col span={{ base: 12, sm: 6 }}>{rightColumn}</Grid.Col>
-      </Grid>
-    </Paper>
+      <Paper bg={getBackgroundColor()} radius={spacing.radius.lg} style={{ minHeight: '400px' }}>
+        <Title
+          variant="colored"
+          ff={typography.fontFamily.primary}
+          size={typography.fontSize['4xl']}
+          fw={typography.fontWeight.medium}
+          c={colors.text.title}
+          mb={spacing['2xl']}
+          ta="left"
+        >
+          {title}
+        </Title>
+        <Grid gutter={spacing['3xl']} align="center">
+          <Grid.Col span={{ base: 12, sm: 6 }}>{leftColumn}</Grid.Col>
+          <Grid.Col span={{ base: 12, sm: 6 }}>{rightColumn}</Grid.Col>
+        </Grid>
+      </Paper>
+    </Box>
   );
 };
 
