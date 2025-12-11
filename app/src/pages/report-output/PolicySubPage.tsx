@@ -1,5 +1,7 @@
 import { useSelector } from 'react-redux';
 import ParameterTable from '@/components/report/ParameterTable';
+import { getParamDefinitionDate } from '@/constants';
+import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -30,6 +32,8 @@ interface PolicySubPageProps {
 export default function PolicySubPage({ policies, userPolicies }: PolicySubPageProps) {
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
   const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const reportYear = useReportYear();
+  const reportDate = getParamDefinitionDate(reportYear ?? undefined);
 
   if (!policies || policies.length === 0) {
     return <div>No policy data available</div>;
@@ -73,11 +77,13 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
         labelColumnWidth={labelColumnWidth}
         valueColumnWidth={valueColumnWidth}
         renderColumnHeader={(column) => buildColumnHeaderText(column, userPolicies)}
-        renderCurrentLawValue={(paramName) => getCurrentLawParameterValue(paramName, parameters)}
+        renderCurrentLawValue={(paramName) =>
+          getCurrentLawParameterValue(paramName, parameters, reportDate)
+        }
         renderColumnValue={(column, paramName) => {
           // For merged columns, just use the first policy since they're equal
           const policy = column.policies[0];
-          return getParameterValueFromPolicy(policy, paramName, parameters);
+          return getParameterValueFromPolicy(policy, paramName, parameters, reportDate);
         }}
       />
     </div>
