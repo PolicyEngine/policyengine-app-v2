@@ -733,7 +733,7 @@ describe('useUserReportById', () => {
     expect(result.current.geographies).toBeDefined();
     expect(result.current.geographies.length).toBeGreaterThan(0);
 
-    const geography = result.current.geographies.find((g) => g.geographyId === 'california');
+    const geography = result.current.geographies.find((g) => g.geographyId === 'state/ca');
     expect(geography).toBeDefined();
     expect(geography?.name).toBe('California');
     expect(geography?.countryId).toBe('us');

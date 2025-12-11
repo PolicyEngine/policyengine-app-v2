@@ -19,7 +19,7 @@ export const TEST_SIMULATION_ID_2 = 'sim-789';
 export const TEST_POLICY_ID_1 = 'policy-456'; // Changed to avoid ID collision with simulations
 export const TEST_POLICY_ID_2 = 'policy-789'; // Changed to avoid ID collision with simulations
 export const TEST_HOUSEHOLD_ID = 'household-123';
-export const TEST_GEOGRAPHY_ID = 'california';
+export const TEST_GEOGRAPHY_ID = 'state/ca';
 export const TEST_COUNTRIES = {
   US: 'us',
   UK: 'uk',
@@ -194,8 +194,8 @@ export const mockMetadataInitialState = {
     variableModules: {},
     economyOptions: {
       region: [
-        { name: 'state/california', label: 'California', type: US_REGION_TYPES.STATE },
-        { name: 'state/texas', label: 'Texas', type: US_REGION_TYPES.STATE },
+        { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
+        { name: 'state/tx', label: 'Texas', type: US_REGION_TYPES.STATE },
       ],
       time_period: [],
       datasets: [],

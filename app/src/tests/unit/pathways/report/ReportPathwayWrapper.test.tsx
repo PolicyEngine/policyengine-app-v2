@@ -127,9 +127,8 @@ describe('ReportPathwayWrapper', () => {
       // When
       render(<ReportPathwayWrapper />);
 
-      // Then - Hooks should have been called
+      // Then - Hooks should have been called (useUserPolicies is used in child components, not wrapper)
       expect(useUserSimulations).toHaveBeenCalled();
-      expect(useUserPolicies).toHaveBeenCalled();
       expect(useUserHouseholds).toHaveBeenCalled();
       expect(useUserGeographics).toHaveBeenCalled();
       expect(useCreateReport).toHaveBeenCalled();
