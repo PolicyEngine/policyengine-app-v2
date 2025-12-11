@@ -103,7 +103,6 @@ Figures 2 through 5 display the changes in net income and marginal tax rates for
 For tax year 2025, PolicyEngine projects that these reforms would:
 
 - [Cost $4.8 billion](https://legacy.policyengine.org/us/policy?focus=policyOutput.policyBreakdown&household=51448&region=ny&timePeriod=2025&baseline=2&reform=76580), with the following breakdown:
-
   - Inflation Rebates: [$3.7 billion](https://legacy.policyengine.org/us/policy?focus=policyOutput.policyBreakdown&reform=76266&region=ny&timePeriod=2025&baseline=2)[^2]
 
   - ESCC expansion: [$481 million](https://legacy.policyengine.org/us/policy?focus=policyOutput.policyBreakdown&reform=76581&region=ny&timePeriod=2025&baseline=2)
@@ -141,7 +140,6 @@ Finally, the tax reforms would [decrease income inequality](https://legacy.polic
 For tax year 2026, PolicyEngine projects that these reforms would:
 
 - Cost [$2.1 billion](https://legacy.policyengine.org/us/policy?focus=policyOutput.budgetaryImpact.overall&household=51448&region=ny&timePeriod=2026&baseline=2&reform=76580), with the following breakdown:
-
   - ESCC expansion: [$821 million](https://legacy.policyengine.org/us/policy?focus=policyOutput.policyBreakdown&reform=76581&region=ny&timePeriod=2026&baseline=2)
 
   - Income tax cuts: [$1.3 billion](https://legacy.policyengine.org/us/policy?focus=policyOutput.budgetaryImpact.overall&household=51448&region=ny&timePeriod=2026&baseline=2&reform=76590)[^4]

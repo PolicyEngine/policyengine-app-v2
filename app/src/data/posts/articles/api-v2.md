@@ -206,14 +206,12 @@ Assuming we have transitioned both APIs to just do API and delegating all simula
 Cost was estimated using these usage estimates:
 
 - Simulation API
-
   - Cloud Run function using 16GB and 2 CPUs — based on existing app engine configuration.
   - One minimum instance is hot at all times — reduce cold start time
   - 100 simulations a day every day all month averaging 15 minutes to run — WAG
   - Only one concurrent request per function at a time — currently safe limitation.
 
 - API compute
-
   - 2 always active servers running the front end API and servicing 1M requests a month (roughly 1,000 requests and hour all month which is a very conservative WAG)
   - 2 CPU/1G RAM
   - 80 requests concurrent

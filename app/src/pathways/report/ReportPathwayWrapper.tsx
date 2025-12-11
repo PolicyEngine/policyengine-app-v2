@@ -18,7 +18,6 @@ import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
@@ -101,12 +100,10 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
   const userId = MOCK_USER_ID.toString();
   const { data: userSimulations } = useUserSimulations(userId);
-  const { data: userPolicies } = useUserPolicies(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
   const { data: userGeographics } = useUserGeographics(userId);
 
   const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
-  const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
   const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
 
   // ========== HELPER: Get active simulation ==========
@@ -193,15 +190,10 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     [reportCallbacks, hasExistingSimulations, navigateToMode]
   );
 
-  // Conditional navigation to policy setup - skip if no existing policies
+  // Always navigate to policy setup view (shows Current Law, Load Existing, Create New)
   const handleNavigateToPolicy = useCallback(() => {
-    if (hasExistingPolicies) {
-      navigateToMode(ReportViewMode.SETUP_POLICY);
-    } else {
-      // Skip selection view, go directly to create new
-      navigateToMode(ReportViewMode.POLICY_LABEL);
-    }
-  }, [hasExistingPolicies, navigateToMode]);
+    navigateToMode(ReportViewMode.SETUP_POLICY);
+  }, [navigateToMode]);
 
   // Conditional navigation to population setup - skip if no existing populations
   const handleNavigateToPopulation = useCallback(() => {

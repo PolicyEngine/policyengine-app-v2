@@ -9,14 +9,14 @@ This document covers two hooks for working with user simulations:
 
 ## When to Use Each Hook
 
-| Use Case | Hook to Use |
-|----------|-------------|
-| Simulation detail pages | `useUserSimulations` |
-| Lists with policy/household info | `useUserSimulations` |
-| Complex simulation views | `useUserSimulations` |
-| Simple simulation count | `useSimulationAssociationsByUser` |
-| Navigation menus | `useSimulationAssociationsByUser` |
-| Sidebar lists | `useSimulationAssociationsByUser` |
+| Use Case                         | Hook to Use                       |
+| -------------------------------- | --------------------------------- |
+| Simulation detail pages          | `useUserSimulations`              |
+| Lists with policy/household info | `useUserSimulations`              |
+| Complex simulation views         | `useUserSimulations`              |
+| Simple simulation count          | `useSimulationAssociationsByUser` |
+| Navigation menus                 | `useSimulationAssociationsByUser` |
+| Sidebar lists                    | `useSimulationAssociationsByUser` |
 
 ## Primary Hook: useUserSimulations
 
@@ -25,16 +25,19 @@ Provides a complete solution for fetching user simulations with all related data
 ## Key Features
 
 ### 1. Automatic Normalization
+
 - All fetched objects with `id` fields are automatically normalized
 - Data is shared across all queries and components
 - Updates to any object automatically propagate everywhere
 
 ### 2. Intelligent Caching
+
 - Checks existing cache before fetching
 - Uses `useParallelQueries` utility for efficient batch fetching
 - Configurable stale time (default: 5 minutes)
 
 ### 3. Complete Relationship Mapping
+
 - Fetches UserSimulation associations
 - Fetches underlying Simulation data
 - Fetches related Policy and Household (Population) data
@@ -50,19 +53,19 @@ import { useUserSimulations } from '@/hooks/useUserSimulations';
 
 const MyComponent = () => {
   const userId = 'current-user-id';
-  
+
   const {
-    data,              // Enhanced simulation objects with all relationships
-    isLoading,         // Combined loading state
-    error,             // Combined error state
-    associations,      // Raw association data
-    getSimulationWithFullContext,  // Helper function
-    getSimulationsByPolicy,        // Helper function
-    getNormalizedPolicy,           // Direct cache access
+    data, // Enhanced simulation objects with all relationships
+    isLoading, // Combined loading state
+    error, // Combined error state
+    associations, // Raw association data
+    getSimulationWithFullContext, // Helper function
+    getSimulationsByPolicy, // Helper function
+    getNormalizedPolicy, // Direct cache access
   } = useUserSimulations(userId);
 
   if (isLoading) return <div>Loading...</div>;
-  
+
   return (
     <div>
       {data.map(({ userSimulation, simulation, policy, household, userPolicy }) => (
@@ -84,17 +87,10 @@ import { useUserSimulationById } from '@/hooks/useUserSimulations';
 
 const SimulationDetail = ({ simulationId }) => {
   const userId = 'current-user-id';
-  
-  const {
-    simulation,
-    policy,
-    household,
-    userPolicy,
-    userHousehold,
-    isLoading,
-    error,
-  } = useUserSimulationById(userId, simulationId);
-  
+
+  const { simulation, policy, household, userPolicy, userHousehold, isLoading, error } =
+    useUserSimulationById(userId, simulationId);
+
   // All related data is fetched and normalized
 };
 ```
@@ -107,36 +103,39 @@ graph TD
     B --> B1[UserSimulation]
     B --> B2[UserPolicy]
     B --> B3[UserHousehold]
-    
+
     B1 --> C[Extract Simulation IDs]
     C --> D[Fetch Simulations - Parallel]
     D --> E[Extract Policy & Household IDs]
-    
+
     E --> F[Fetch Policies - Parallel]
     E --> G[Fetch Households - Parallel]
-    
+
     F --> H[@normy/react-query Normalization]
     G --> H
     D --> H
-    
+
     H --> I[Enhanced Results with Full Context]
 ```
 
 ## Benefits
 
 ### 1. Performance
+
 - **Cache First**: Always checks cache before fetching
 - **Parallel Fetching**: Uses `useQueries` for parallel API calls
 - **Deduplication**: Same objects are never fetched twice
 - **Automatic Sharing**: Data is shared across all components
 
 ### 2. Developer Experience
+
 - **Type Safety**: Full TypeScript support
 - **Clean Code**: Follows DRY, CLEAN, SOLID principles
 - **Reusable Utilities**: Leverages existing adapters and utilities
 - **Helper Functions**: Provides convenient data access methods
 
 ### 3. Data Consistency
+
 - **Automatic Updates**: Mutations update all references
 - **Single Source of Truth**: Normalized cache ensures consistency
 - **Relationship Integrity**: Maintains proper entity relationships
@@ -145,18 +144,18 @@ graph TD
 
 The hook returns an object with:
 
-| Property | Type | Description |
-|----------|------|-------------|
-| `data` | `EnhancedUserSimulation[]` | Array of simulations with full context |
-| `isLoading` | `boolean` | Combined loading state |
-| `error` | `Error \| null` | Combined error state |
-| `associations` | `object` | Raw association data for simulations, policies, households |
-| `getSimulationWithFullContext` | `function` | Get a specific simulation by ID |
-| `getSimulationsByPolicy` | `function` | Filter simulations by policy ID |
-| `getSimulationsByHousehold` | `function` | Filter simulations by household ID |
-| `getNormalizedSimulation` | `function` | Direct access to normalized simulation |
-| `getNormalizedPolicy` | `function` | Direct access to normalized policy |
-| `getNormalizedHousehold` | `function` | Direct access to normalized household |
+| Property                       | Type                       | Description                                                |
+| ------------------------------ | -------------------------- | ---------------------------------------------------------- |
+| `data`                         | `EnhancedUserSimulation[]` | Array of simulations with full context                     |
+| `isLoading`                    | `boolean`                  | Combined loading state                                     |
+| `error`                        | `Error \| null`            | Combined error state                                       |
+| `associations`                 | `object`                   | Raw association data for simulations, policies, households |
+| `getSimulationWithFullContext` | `function`                 | Get a specific simulation by ID                            |
+| `getSimulationsByPolicy`       | `function`                 | Filter simulations by policy ID                            |
+| `getSimulationsByHousehold`    | `function`                 | Filter simulations by household ID                         |
+| `getNormalizedSimulation`      | `function`                 | Direct access to normalized simulation                     |
+| `getNormalizedPolicy`          | `function`                 | Direct access to normalized policy                         |
+| `getNormalizedHousehold`       | `function`                 | Direct access to normalized household                      |
 
 ## Enhanced User Simulation Type
 
@@ -165,15 +164,15 @@ interface EnhancedUserSimulation {
   // Core associations
   userSimulation: UserSimulation;
   simulation?: Simulation;
-  
+
   // Related entities
   policy?: Policy;
   household?: HouseholdMetadata;
-  
+
   // User associations for related entities
   userPolicy?: UserPolicy;
   userHousehold?: any;
-  
+
   // Status
   isLoading: boolean;
   error: Error | null;
@@ -183,17 +182,20 @@ interface EnhancedUserSimulation {
 ## Implementation Details
 
 ### Cache Strategy
+
 1. Check normalized cache via `queryNormalizer.getObjectById()`
 2. Check React Query cache via `queryClient.getQueryData()`
 3. Fetch from API if not cached
 4. Normalize and store in both caches
 
 ### Parallel Fetching
+
 - Uses `useParallelQueries` utility for batch operations
 - Fetches all simulations, policies, and households in parallel
 - Minimizes waterfall requests
 
 ### Error Handling
+
 - Combines errors from all queries
 - Provides granular error information per entity
 - Gracefully handles partial failures
@@ -217,7 +219,7 @@ import { useSimulationAssociationsByUser } from '@/hooks/useUserSimulationAssoci
 const SimulationCount = () => {
   const userId = 'current-user-id';
   const { data: associations, isLoading } = useSimulationAssociationsByUser(userId);
-  
+
   return <div>You have {associations?.length || 0} simulations</div>;
 };
 ```

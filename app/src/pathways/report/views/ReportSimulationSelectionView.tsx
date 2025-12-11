@@ -240,6 +240,12 @@ export default function ReportSimulationSelectionView({
   }
 
   const buttonPanelCards = [
+    {
+      title: 'Create new simulation',
+      description: 'Build a new simulation',
+      onClick: handleClickCreateNew,
+      isSelected: selectedAction === 'createNew',
+    },
     // Only show "Load existing" if user has existing simulations
     ...(hasExistingSimulations
       ? [
@@ -251,12 +257,6 @@ export default function ReportSimulationSelectionView({
           },
         ]
       : []),
-    {
-      title: 'Create new simulation',
-      description: 'Build a new simulation',
-      onClick: handleClickCreateNew,
-      isSelected: selectedAction === 'createNew',
-    },
   ];
 
   const hasExistingBaselineText = existingBaseline && existingSimulationId;

@@ -6,10 +6,10 @@ Table 1 shows the cost of freezing fares rather than implementing the planned 5.
 
 **Table 1: Revenue impact of rail fares freeze (£ million)**
 
-| Source       | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
-| ------------ | ------- | ------- | ------- | ------- |
-| PolicyEngine | -145    | -155    | -160    | -165    |
-| [HM Treasury](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate)  | -145    | -150    | -155    | -160    |
+| Source                                                                                                 | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
+| ------------------------------------------------------------------------------------------------------ | ------- | ------- | ------- | ------- |
+| PolicyEngine                                                                                           | -145    | -155    | -160    | -165    |
+| [HM Treasury](https://www.gov.uk/government/publications/rail-fares-freeze-passenger-savings-estimate) | -145    | -150    | -155    | -160    |
 
 PolicyEngine estimates the freeze reduces revenue by £145 million in 2026-27, rising to £165 million by 2029-30 as baseline fare increases compound. This closely matches HM Treasury projections of £145 million in 2026-27, rising to £160 million by 2029-30.
 

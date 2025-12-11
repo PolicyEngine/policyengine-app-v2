@@ -1,12 +1,13 @@
 import { Box, Radio, Select } from '@mantine/core';
-import { RegionOption } from '@/utils/regionStrategies';
+import { UKScopeType } from '@/types/regionTypes';
+import { RegionOption, UK_REGION_TYPES } from '@/utils/regionStrategies';
 
 interface UKGeographicOptionsProps {
-  scope: 'national' | 'country' | 'constituency' | 'household';
+  scope: UKScopeType;
   selectedRegion: string;
   countryOptions: RegionOption[];
   constituencyOptions: RegionOption[];
-  onScopeChange: (scope: 'national' | 'country' | 'constituency' | 'household') => void;
+  onScopeChange: (scope: UKScopeType) => void;
   onRegionChange: (region: string) => void;
 }
 
@@ -22,21 +23,21 @@ export default function UKGeographicOptions({
     <>
       {/* UK-wide option */}
       <Radio
-        value="national"
+        value={UK_REGION_TYPES.NATIONAL}
         label="All households UK-wide"
-        checked={scope === 'national'}
-        onChange={() => onScopeChange('national')}
+        checked={scope === UK_REGION_TYPES.NATIONAL}
+        onChange={() => onScopeChange(UK_REGION_TYPES.NATIONAL)}
       />
 
       {/* Country option */}
       <Box>
         <Radio
-          value="country"
+          value={UK_REGION_TYPES.COUNTRY}
           label="All households in a country"
-          checked={scope === 'country'}
-          onChange={() => onScopeChange('country')}
+          checked={scope === UK_REGION_TYPES.COUNTRY}
+          onChange={() => onScopeChange(UK_REGION_TYPES.COUNTRY)}
         />
-        {scope === 'country' && countryOptions.length > 0 && (
+        {scope === UK_REGION_TYPES.COUNTRY && countryOptions.length > 0 && (
           <Box ml={24} mt="xs">
             <Select
               label="Select Country"
@@ -53,12 +54,12 @@ export default function UKGeographicOptions({
       {/* Parliamentary Constituency option */}
       <Box>
         <Radio
-          value="constituency"
+          value={UK_REGION_TYPES.CONSTITUENCY}
           label="All households in a constituency"
-          checked={scope === 'constituency'}
-          onChange={() => onScopeChange('constituency')}
+          checked={scope === UK_REGION_TYPES.CONSTITUENCY}
+          onChange={() => onScopeChange(UK_REGION_TYPES.CONSTITUENCY)}
         />
-        {scope === 'constituency' && constituencyOptions.length > 0 && (
+        {scope === UK_REGION_TYPES.CONSTITUENCY && constituencyOptions.length > 0 && (
           <Box ml={24} mt="xs">
             <Select
               label="Select Parliamentary Constituency"

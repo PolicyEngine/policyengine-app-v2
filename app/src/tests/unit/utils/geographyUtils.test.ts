@@ -141,6 +141,30 @@ describe('geographyUtils', () => {
       // Should find it by adding the constituency/ prefix
       expect(result).toBe('Sheffield Central');
     });
+
+    it('given congressional district with prefix then returns label', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+      const regionCode = TEST_REGION_CODES.US_CONGRESSIONAL_DISTRICT_PREFIXED;
+
+      // When
+      const result = getRegionLabel(regionCode, metadata);
+
+      // Then
+      expect(result).toBe("California's 1st congressional district");
+    });
+
+    it('given legacy US state code (tx) without prefix then finds via fallback', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+      const legacyCode = TEST_REGION_CODES.US_LEGACY_STATE_TX;
+
+      // When
+      const result = getRegionLabel(legacyCode, metadata);
+
+      // Then
+      expect(result).toBe('Texas');
+    });
   });
 
   describe('getRegionType', () => {
@@ -240,6 +264,30 @@ describe('geographyUtils', () => {
       // Then
       expect(resultUS).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);
       expect(resultUK).toBe(EXPECTED_REGION_TYPE_LABELS.CONSTITUENCY);
+    });
+
+    it('given US congressional district with prefix then returns Congressional district', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+      const regionCode = TEST_REGION_CODES.US_CONGRESSIONAL_DISTRICT_PREFIXED;
+
+      // When
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.US, regionCode, metadata);
+
+      // Then
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.CONGRESSIONAL_DISTRICT);
+    });
+
+    it('given legacy US state code (tx) then returns State via fallback', () => {
+      // Given
+      const metadata = mockMetadataWithRegions();
+      const legacyCode = TEST_REGION_CODES.US_LEGACY_STATE_TX;
+
+      // When
+      const result = getRegionTypeLabel(TEST_COUNTRY_CODES.US, legacyCode, metadata);
+
+      // Then
+      expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);
     });
   });
 });

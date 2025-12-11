@@ -50,15 +50,32 @@ export function getRegionType(countryCode: string): 'state' | 'constituency' {
  * @param countryId - The country ID (e.g., 'us', 'uk')
  * @param regionCode - The region code (e.g., 'california', 'wales', 'brighton-pavilion')
  * @param metadata - The metadata containing region definitions
- * @returns The display label for the region type (e.g., 'State', 'Country', 'Constituency')
+ * @returns The display label for the region type (e.g., 'State', 'Country', 'Constituency', 'Congressional District')
  */
 export function getRegionTypeLabel(
   countryId: string,
   regionCode: string,
   metadata: MetadataState
 ): string {
-  // US strategy: always State
+  // US strategy: check metadata to determine if it's a state or congressional district
   if (countryId === 'us') {
+    const region = metadata.economyOptions.region.find(
+      (r) =>
+        r.name === regionCode ||
+        r.name === `state/${regionCode}` ||
+        r.name === `congressional_district/${regionCode}`
+    );
+
+    if (region) {
+      if (region.name.startsWith('congressional_district/')) {
+        return 'Congressional district';
+      }
+      if (region.name.startsWith('state/')) {
+        return 'State';
+      }
+    }
+
+    // Fallback to State for US if we can't determine
     return 'State';
   }
 

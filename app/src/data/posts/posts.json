@@ -32,14 +32,8 @@
     "title": "How a £2,000 salary sacrifice cap would affect workers",
     "description": "Capping salary sacrifice pension contributions at £2,000 would raise £3.3-7.6 billion in 2029-30 depending on behavioural responses, with impacts concentrated on higher earners.",
     "date": "2025-11-27",
-    "tags": [
-      "uk",
-      "policy"
-    ],
-    "authors": [
-      "max-ghenis",
-      "vahid-ahmadi"
-    ],
+    "tags": ["uk", "policy"],
+    "authors": ["max-ghenis", "vahid-ahmadi"],
     "filename": "uk-salary-sacrifice-cap.md",
     "image": "uk-salary-sacrifice-cap/cover.jpg",
     "imageCredit": "qualitycompanyformations",
@@ -70,14 +64,8 @@
     "title": "Impact of the Autumn Budget rail fares freeze",
     "description": "PolicyEngine estimates that the rail fares freeze reduces revenue by £145 million in 2026-27.",
     "date": "2025-11-27 10:00:00",
-    "tags": [
-      "uk",
-      "autumn-budget",
-      "policy"
-    ],
-    "authors": [
-      "vahid-ahmadi"
-    ],
+    "tags": ["uk", "autumn-budget", "policy"],
+    "authors": ["vahid-ahmadi"],
     "filename": "rail-fares-freeze-2025.md",
     "image": "rail-fares-freeze-2025/rail-fares-freeze-2025.jpg",
     "imageCredit": "railsmartr",

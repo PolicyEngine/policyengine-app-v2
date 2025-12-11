@@ -3,6 +3,7 @@ In the [November 2025 Autumn Budget](https://www.gov.uk/government/collections/b
 Using 2024 Land Registry sales data, we estimate how this revenue will be distributed across Westminster constituencies.
 
 Key findings:
+
 - We estimate 553 of 650 constituencies have properties that would be subject to the surcharge
 - The top 10 constituencies account for 35% of the estimated revenue
 - Cities of London and Westminster alone accounts for 10% (£42 million)
@@ -20,12 +21,12 @@ The OBR does not specify the thresholds or surcharge amounts for the two middle 
 
 For this analysis, we assume the following band structure:
 
-| Property value | Annual surcharge | Source |
-|----------------|------------------|--------|
-| £2m - £2.5m | £2,500 | OBR |
-| £2.5m - £3m | £3,500 | Assumed |
-| £3m - £5m | £5,000 | Assumed |
-| £5m+ | £7,500 | OBR |
+| Property value | Annual surcharge | Source  |
+| -------------- | ---------------- | ------- |
+| £2m - £2.5m    | £2,500           | OBR     |
+| £2.5m - £3m    | £3,500           | Assumed |
+| £3m - £5m      | £5,000           | Assumed |
+| £5m+           | £7,500           | OBR     |
 
 The revenue flows to central government rather than local authorities.
 
@@ -35,28 +36,28 @@ We estimate each constituency's share of the £400 million total by modelling th
 
 ### Top 20 constituencies by estimated revenue
 
-| Rank | Constituency | Estimated annual revenue | Share of total |
-|------|--------------|--------------------------|----------------|
-| 1 | Cities of London and Westminster | £41.9m | 10.5% |
-| 2 | Kensington and Bayswater | £29.4m | 7.4% |
-| 3 | Chelsea and Fulham | £17.9m | 4.5% |
-| 4 | Hampstead and Highgate | £12.0m | 3.0% |
-| 5 | Richmond Park | £7.0m | 1.8% |
-| 6 | Battersea | £6.4m | 1.6% |
-| 7 | Islington South and Finsbury | £6.1m | 1.5% |
-| 8 | Holborn and St Pancras | £7.4m | 1.8% |
-| 9 | Hammersmith and Chiswick | £5.5m | 1.4% |
-| 10 | Finchley and Golders Green | £5.6m | 1.4% |
-| 11 | Runnymede and Weybridge | £5.0m | 1.3% |
-| 12 | Wimbledon | £4.3m | 1.1% |
-| 13 | Ealing Central and Acton | £3.6m | 0.9% |
-| 14 | Queen's Park and Maida Vale | £3.7m | 0.9% |
-| 15 | Windsor | £4.0m | 1.0% |
-| 16 | Esher and Walton | £3.1m | 0.8% |
-| 17 | Dulwich and West Norwood | £2.3m | 0.6% |
-| 18 | Harpenden and Berkhamsted | £2.0m | 0.5% |
-| 19 | Hornsey and Friern Barnet | £1.8m | 0.5% |
-| 20 | Chesham and Amersham | £2.1m | 0.5% |
+| Rank | Constituency                     | Estimated annual revenue | Share of total |
+| ---- | -------------------------------- | ------------------------ | -------------- |
+| 1    | Cities of London and Westminster | £41.9m                   | 10.5%          |
+| 2    | Kensington and Bayswater         | £29.4m                   | 7.4%           |
+| 3    | Chelsea and Fulham               | £17.9m                   | 4.5%           |
+| 4    | Hampstead and Highgate           | £12.0m                   | 3.0%           |
+| 5    | Richmond Park                    | £7.0m                    | 1.8%           |
+| 6    | Battersea                        | £6.4m                    | 1.6%           |
+| 7    | Islington South and Finsbury     | £6.1m                    | 1.5%           |
+| 8    | Holborn and St Pancras           | £7.4m                    | 1.8%           |
+| 9    | Hammersmith and Chiswick         | £5.5m                    | 1.4%           |
+| 10   | Finchley and Golders Green       | £5.6m                    | 1.4%           |
+| 11   | Runnymede and Weybridge          | £5.0m                    | 1.3%           |
+| 12   | Wimbledon                        | £4.3m                    | 1.1%           |
+| 13   | Ealing Central and Acton         | £3.6m                    | 0.9%           |
+| 14   | Queen's Park and Maida Vale      | £3.7m                    | 0.9%           |
+| 15   | Windsor                          | £4.0m                    | 1.0%           |
+| 16   | Esher and Walton                 | £3.1m                    | 0.8%           |
+| 17   | Dulwich and West Norwood         | £2.3m                    | 0.6%           |
+| 18   | Harpenden and Berkhamsted        | £2.0m                    | 0.5%           |
+| 19   | Hornsey and Friern Barnet        | £1.8m                    | 0.5%           |
+| 20   | Chesham and Amersham             | £2.1m                    | 0.5%           |
 
 The top 20 constituencies account for 43% of the estimated revenue while comprising 3% of all constituencies.
 
@@ -67,6 +68,7 @@ The map below shows the estimated revenue allocation by constituency. Darker sha
 <center><iframe src="https://policyengine.github.io/uk-mansion-tax/surcharge_map_by_revenue.html" width="100%" height="850" style="border:none;"></iframe></center>
 
 The concentration in London and the Home Counties reflects the geography of UK property wealth. Of the 553 constituencies we estimate have properties subject to the surcharge:
+
 - 56 are in Greater London (accounting for 47% of estimated revenue)
 - The remaining 497 constituencies share 53% of estimated revenue
 
@@ -77,11 +79,11 @@ London constituencies account for 47% of the estimated revenue while comprising 
 Revenue is concentrated in the highest-value properties:
 
 | Band (2028 prices) | Share of affected properties | Revenue contribution |
-|--------------------|------------------------------|---------------------|
-| £2.09m - £2.61m | 31% | 17% |
-| £2.61m - £3.14m | 18% | 13% |
-| £3.14m - £5.23m | 27% | 29% |
-| £5.23m+ | 25% | 41% |
+| ------------------ | ---------------------------- | -------------------- |
+| £2.09m - £2.61m    | 31%                          | 17%                  |
+| £2.61m - £3.14m    | 18%                          | 13%                  |
+| £3.14m - £5.23m    | 27%                          | 29%                  |
+| £5.23m+            | 25%                          | 41%                  |
 
 Properties valued over £5.23 million (in 2028 prices) represent an estimated 25% of affected properties but contribute 41% of the estimated revenue due to the £7,500 annual surcharge rate.
 
@@ -115,6 +117,7 @@ This approach is valid if high-value properties turn over at similar rates acros
 ### Behavioural effects
 
 The OBR's £400 million estimate incorporates behavioural responses including:
+
 - Full pass-through of the surcharge into property prices
 - Price bunching just below band boundaries
 - Non-compliance and appeals
@@ -127,4 +130,4 @@ The high value council tax surcharge concentrates revenue collection in a small 
 
 ---
 
-*Analysis by PolicyEngine. Data and code available on [GitHub](https://github.com/PolicyEngine/uk-mansion-tax).*
+_Analysis by PolicyEngine. Data and code available on [GitHub](https://github.com/PolicyEngine/uk-mansion-tax)._
