@@ -31,22 +31,19 @@
       "import": "./dist/charts/index.js",
       "types": "./dist/charts/index.d.ts"
     },
-    "./tokens.json": "./dist/tokens.json",
-    "./tokens.yaml": "./dist/tokens.yaml"
+    "./tokens.json": "./dist/tokens.json"
   },
   "files": [
     "dist",
     "src"
   ],
   "scripts": {
-    "build": "tsc && npm run generate-json && npm run generate-yaml",
+    "build": "tsc && npm run generate-json",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --ext .ts,.tsx",
     "format": "prettier --write \"src/**/*.{ts,tsx}\"",
     "generate-json": "tsx scripts/generate-json.ts",
-    "generate-yaml": "tsx scripts/generate-yaml.ts",
-    "export-python": "tsx scripts/export-python.ts",
     "test": "vitest run"
   },
   "peerDependencies": {
@@ -65,8 +62,6 @@
     "@types/node": "^22.15.11",
     "typescript": "^5.8.3",
     "prettier": "^3.5.3",
-    "js-yaml": "^4.1.0",
-    "@types/js-yaml": "^4.0.9",
     "vitest": "^3.2.3",
     "tsx": "^4.19.0"
   },

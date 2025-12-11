@@ -24,10 +24,6 @@
     "typecheck": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"]
-    },
-    "export-python": {
-      "dependsOn": ["build"],
-      "outputs": ["dist/python/**"]
     }
   }
 }
