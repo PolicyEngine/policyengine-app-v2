@@ -1,4 +1,4 @@
-import { Box } from '@mantine/core';
+import { Box, Image, Title } from '@mantine/core';
 import aiAnalysisImg from '@/assets/ai-analysis.png';
 import usHouseholdAiImg from '@/assets/us-household-ai.png';
 import CalloutWithImage from '@/components/shared/static/CalloutWithImage';
@@ -6,7 +6,7 @@ import { CardsWithHeader } from '@/components/shared/static/CardsWithHeader';
 import PageHeader from '@/components/shared/static/PageHeader';
 import { TitleCardWithHeader } from '@/components/shared/static/TextCardWithHeader';
 import TwoColumnView from '@/components/TwoColumnView';
-import { spacing } from '@/designTokens';
+import { colors, spacing, typography } from '@/designTokens';
 
 export default function AIMLPage() {
   const leftColumnContent = (
@@ -27,9 +27,10 @@ export default function AIMLPage() {
   );
 
   const rightColumnContent = (
-    <img
+    <Image
       src={aiAnalysisImg}
       alt="Diagram illustrating AI analysis"
+      radius="lg"
       style={{ maxWidth: '100%', height: 'auto' }}
     />
   );
@@ -113,19 +114,34 @@ export default function AIMLPage() {
         />
 
         <TwoColumnView
-          title="How it works"
+          title="How It Works"
           leftColumn={leftColumnContent}
           rightColumn={rightColumnContent}
         />
 
-        <Box>
-          <h1>Watch our AI Demo</h1>
+        <Box
+          style={{
+            paddingTop: spacing['2xl'],
+            paddingBottom: spacing['2xl'],
+          }}
+        >
+          <Title
+            size={typography.fontSize['4xl']}
+            style={{
+              color: colors.text.primary,
+              fontWeight: typography.fontWeight.medium,
+              fontFamily: typography.fontFamily.primary,
+              marginBottom: spacing['2xl'],
+            }}
+          >
+            Watch Our AI Demo
+          </Title>
           <iframe
             width="900"
             height="550"
             src="https://www.youtube.com/embed/fnuDyLKpt90?si=kIOaT5HbJzRRV0Fj"
             title="YouTube video player"
-            style={{ border: 'none' }}
+            style={{ border: 'none', borderRadius: spacing.radius.lg }}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
             referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen

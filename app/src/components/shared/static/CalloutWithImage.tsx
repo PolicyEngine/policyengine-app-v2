@@ -1,5 +1,5 @@
-import { Button, Container, Grid, Image, Stack, Text, Title } from '@mantine/core';
-import { colors, typography } from '@/designTokens';
+import { Box, Button, Grid, Image, Stack, Text, Title } from '@mantine/core';
+import { colors, spacing, typography } from '@/designTokens';
 
 export interface CalloutWithImageProps {
   title: string;
@@ -23,7 +23,12 @@ export default function CalloutWithImage({
   imageAlt,
 }: CalloutWithImageProps) {
   return (
-    <Container size="xl" px="sm" py="3xl">
+    <Box
+      style={{
+        paddingTop: spacing['2xl'],
+        paddingBottom: spacing['2xl'],
+      }}
+    >
       <Grid align="center" gutter="xl">
         {/* Left Column */}
         <Grid.Col span={{ base: 12, md: 6 }}>
@@ -34,6 +39,7 @@ export default function CalloutWithImage({
                 color: colors.text.primary,
                 fontWeight: typography.fontWeight.medium,
                 fontFamily: typography.fontFamily.primary,
+                marginBottom: spacing['2xl'],
               }}
             >
               {title}
@@ -48,12 +54,12 @@ export default function CalloutWithImage({
               <Button
                 size="lg"
                 radius="md"
-                color={colors.primary[400]}
+                color={colors.primary[600]}
                 onClick={onButtonClick}
                 style={{
-                  borderRadius: 0,
                   alignSelf: 'flex-start',
                   marginTop: '14px',
+                  fontWeight: typography.fontWeight.medium,
                 }}
               >
                 {buttonLabel}
@@ -68,10 +74,10 @@ export default function CalloutWithImage({
             src={imageSrc}
             alt={imageAlt}
             radius="lg"
-            style={{ width: '90%', height: 'auto', objectFit: 'cover', justifySelf: 'center' }}
+            style={{ width: '100%', height: 'auto', objectFit: 'cover', justifySelf: 'center' }}
           />
         </Grid.Col>
       </Grid>
-    </Container>
+    </Box>
   );
 }

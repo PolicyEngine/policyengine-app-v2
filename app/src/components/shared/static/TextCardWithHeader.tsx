@@ -1,5 +1,5 @@
 import { Box, Button, Card, Group, Stack, Text, Title } from '@mantine/core';
-import { colors } from '../../../designTokens';
+import { colors, spacing, typography } from '../../../designTokens';
 
 interface Section {
   heading?: string;
@@ -40,14 +40,27 @@ export const TitleCardWithHeader: React.FC<TitleCardWithHeaderProps> = ({
   }
 
   return (
-    <Box>
+    <Box
+      style={{
+        paddingTop: spacing['2xl'],
+        paddingBottom: spacing['2xl'],
+      }}
+    >
       {/* Title */}
-      <Title order={2} variant="colored">
+      <Title
+        size={typography.fontSize['4xl']}
+        style={{
+          color: colors.text.primary,
+          fontWeight: typography.fontWeight.medium,
+          fontFamily: typography.fontFamily.primary,
+          marginBottom: spacing['2xl'],
+        }}
+      >
         {title}
       </Title>
 
       {/* Card with content */}
-      <Card radius="lg" p="xl" mt="md" bg={resolvedBackgroundColor}>
+      <Card radius="lg" p="xl" bg={resolvedBackgroundColor}>
         <Stack gap="md">
           {sections.map((section, idx) => (
             <>

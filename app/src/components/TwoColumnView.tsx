@@ -24,17 +24,18 @@ const TwoColumnView = ({ title, leftColumn, rightColumn, backgroundColor }: TwoC
       style={{
         maxWidth: 1300,
         margin: '0 auto',
+        paddingTop: spacing['2xl'],
+        paddingBottom: spacing['2xl'],
       }}
     >
       <Paper bg={getBackgroundColor()} radius={spacing.radius.lg} style={{ minHeight: '400px' }}>
         <Title
-          order={2}
           variant="colored"
           ff={typography.fontFamily.primary}
-          size={typography.fontSize['3xl']}
-          fw={typography.fontWeight.bold}
+          size={typography.fontSize['4xl']}
+          fw={typography.fontWeight.medium}
           c={colors.text.title}
-          mb={spacing['3xl']}
+          mb={spacing['2xl']}
           ta="left"
         >
           {title}
