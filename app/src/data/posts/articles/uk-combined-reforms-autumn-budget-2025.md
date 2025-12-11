@@ -30,9 +30,9 @@ We [estimate](https://gist.github.com/vahid-ahmadi/fc0c26d94572224cd97d1538d999b
 
 **Table 1: Combined revenue impact (£ billion)**
 
-| Measure                           | 2026-27  | 2027-28  | 2028-29  | 2029-30  | 2030-31  |
-| --------------------------------- | -------- | -------- | -------- | -------- | -------- |
-| Combined total | -6.6 | -4.5 | 0.5 | 8.1 | 12.4 |
+| Measure        | 2026-27 | 2027-28 | 2028-29 | 2029-30 | 2030-31 |
+| -------------- | ------- | ------- | ------- | ------- | ------- |
+| Combined total | -6.6    | -4.5    | 0.5     | 8.1     | 12.4    |
 
 The combined reforms transition from a net cost to the exchequer in 2026-27 to a net revenue raiser by 2028-29. In the initial years, the costs of repealing the two-child limit (approximately £2.50bn annually) and the fuel duty freeze exceed revenue from other measures. As the threshold freeze extension, tax increases on investment income, and the salary sacrifice cap (effective from 2029) take effect, the package becomes revenue-positive. By 2030-31, the combined reforms raise an estimated £12.4 billion.
 

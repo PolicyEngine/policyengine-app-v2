@@ -1,4 +1,4 @@
-import { RegionOption, US_REGION_TYPES, UK_REGION_TYPES } from '@/utils/regionStrategies';
+import { RegionOption, UK_REGION_TYPES, US_REGION_TYPES } from '@/utils/regionStrategies';
 
 // Mock US state options
 export const mockUSStateOptions: RegionOption[] = [
@@ -52,8 +52,16 @@ export const mockUKCountryOptions: RegionOption[] = [
 
 // Mock UK constituency options
 export const mockUKConstituencyOptions: RegionOption[] = [
-  { value: 'constituency/Sheffield Central', label: 'Sheffield Central', type: UK_REGION_TYPES.CONSTITUENCY },
-  { value: 'constituency/Manchester Central', label: 'Manchester Central', type: UK_REGION_TYPES.CONSTITUENCY },
+  {
+    value: 'constituency/Sheffield Central',
+    label: 'Sheffield Central',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  {
+    value: 'constituency/Manchester Central',
+    label: 'Manchester Central',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
 ];
 
 // Test constants

@@ -28,10 +28,10 @@ We [estimate](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1
 
 **Table 2: Revenue impact of fuel duty freeze (£ billion)**
 
-| Source                                                                                                                                                                      | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------- | ------- | ------- |
+| Source                                                                                | 2026-27 | 2027-28 | 2028-29 | 2029-30 |
+| ------------------------------------------------------------------------------------- | ------- | ------- | ------- | ------- |
 | [PolicyEngine](https://gist.github.com/vahid-ahmadi/66f5b237735df1e36e043db9573b1548) | -3.5    | -1.6    | -1.5    | -0.9    |
-| [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)                                                                                                        | -2.4    | -0.9    | -0.9    | -0.9    |
+| [OBR](https://obr.uk/efo/economic-and-fiscal-outlook-november-2025/)                  | -2.4    | -0.9    | -0.9    | -0.9    |
 
 PolicyEngine estimates the freeze reduces revenue by £3.5 billion in 2026-27, followed by £1.6 billion in 2027-28, £1.5 billion in 2028-29, and £0.9 billion in 2029-30. The OBR projects revenue reductions of £2.4 billion in 2026-27 and £0.9 billion annually thereafter.
 

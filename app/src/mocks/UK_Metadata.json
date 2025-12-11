@@ -101,13 +101,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "household_market_income",
-          "pre_budget_change_household_benefits"
-        ],
-        "subtracts": [
-          "pre_budget_change_household_tax"
-        ],
+        "adds": ["household_market_income", "pre_budget_change_household_benefits"],
+        "subtracts": ["pre_budget_change_household_tax"],
         "hidden_input": false
       },
       "pre_budget_change_ons_household_income_decile": {
@@ -460,10 +455,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "bi_individual_phaseout",
-          "bi_household_phaseout"
-        ],
+        "adds": ["bi_individual_phaseout", "bi_household_phaseout"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -514,12 +506,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "bi_maximum"
-        ],
-        "subtracts": [
-          "bi_phaseout"
-        ],
+        "adds": ["bi_maximum"],
+        "subtracts": ["bi_phaseout"],
         "hidden_input": false
       },
       "cliff_evaluated": {
@@ -4858,9 +4846,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "non_residential_property_value"
-        ],
+        "adds": ["non_residential_property_value"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -4877,10 +4863,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "mortgage_interest_repayment",
-          "mortgage_capital_repayment"
-        ],
+        "adds": ["mortgage_interest_repayment", "mortgage_capital_repayment"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -4897,9 +4880,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "personal_rent"
-        ],
+        "adds": ["personal_rent"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -5069,9 +5050,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "personal_rent"
-        ],
+        "adds": ["personal_rent"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -5139,11 +5118,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "rent",
-          "mortgage",
-          "water_and_sewerage_charges"
-        ],
+        "adds": ["rent", "mortgage", "water_and_sewerage_charges"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -5160,9 +5135,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "rent"
-        ],
+        "adds": ["rent"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -5196,10 +5169,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "statutory_sick_pay",
-          "statutory_maternity_pay"
-        ],
+        "adds": ["statutory_sick_pay", "statutory_maternity_pay"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -5420,13 +5390,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "household_market_income",
-          "household_benefits"
-        ],
-        "subtracts": [
-          "household_tax"
-        ],
+        "adds": ["household_market_income", "household_benefits"],
+        "subtracts": ["household_tax"],
         "hidden_input": false
       },
       "in_work": {
@@ -5510,10 +5475,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "savings_interest_income",
-          "dividend_income"
-        ],
+        "adds": ["savings_interest_income", "dividend_income"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -5666,10 +5628,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "capital_gains_before_response",
-          "capital_gains_behavioural_response"
-        ],
+        "adds": ["capital_gains_before_response", "capital_gains_behavioural_response"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -5761,9 +5720,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "hbai_household_net_income"
-        ],
+        "adds": ["hbai_household_net_income"],
         "subtracts": [
           "rent",
           "water_and_sewerage_charges",
@@ -5892,9 +5849,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "weekly_hours"
-        ],
+        "adds": ["weekly_hours"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -6329,14 +6284,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "household_market_income",
-          "household_benefits"
-        ],
-        "subtracts": [
-          "household_tax",
-          "housing_costs"
-        ],
+        "adds": ["household_market_income", "household_benefits"],
+        "subtracts": ["household_tax", "housing_costs"],
         "hidden_input": false
       },
       "hbai_excluded_income_change": {
@@ -6518,10 +6467,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "property_wealth",
-          "corporate_wealth"
-        ],
+        "adds": ["property_wealth", "corporate_wealth"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -6538,10 +6484,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "household_land_value",
-          "corporate_land_value"
-        ],
+        "adds": ["household_land_value", "corporate_land_value"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -6558,10 +6501,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "residential_property_value",
-          "non_residential_property_value"
-        ],
+        "adds": ["residential_property_value", "non_residential_property_value"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -6578,10 +6518,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "corporate_sdlt",
-          "business_rates"
-        ],
+        "adds": ["corporate_sdlt", "business_rates"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -6632,10 +6569,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "main_residence_value",
-          "other_residential_property_value"
-        ],
+        "adds": ["main_residence_value", "other_residential_property_value"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -7897,12 +7831,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "gov_tax"
-        ],
-        "subtracts": [
-          "gov_spending"
-        ],
+        "adds": ["gov_tax"],
+        "subtracts": ["gov_spending"],
         "hidden_input": false
       },
       "gov_spending": {
@@ -8098,10 +8028,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "lbtt_on_residential_property_rent",
-          "lbtt_on_non_residential_property_rent"
-        ],
+        "adds": ["lbtt_on_residential_property_rent", "lbtt_on_non_residential_property_rent"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -8611,10 +8538,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "rail_subsidy_spending",
-          "bus_subsidy_spending"
-        ],
+        "adds": ["rail_subsidy_spending", "bus_subsidy_spending"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -8648,10 +8572,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "sdlt_on_transactions",
-          "sdlt_on_rent"
-        ],
+        "adds": ["sdlt_on_transactions", "sdlt_on_rent"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -8773,9 +8694,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "child_benefit_respective_amount"
-        ],
+        "adds": ["child_benefit_respective_amount"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -8792,12 +8711,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "tax"
-        ],
-        "subtracts": [
-          "tax_reported"
-        ],
+        "adds": ["tax"],
+        "subtracts": ["tax_reported"],
         "hidden_input": false
       },
       "baseline_child_benefit_entitlement": {
@@ -8864,9 +8779,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "tax"
-        ],
+        "adds": ["tax"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -8900,12 +8813,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "vat"
-        ],
-        "subtracts": [
-          "baseline_vat"
-        ],
+        "adds": ["vat"],
+        "subtracts": ["baseline_vat"],
         "hidden_input": false
       },
       "expected_sdlt": {
@@ -9048,9 +8957,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "child_benefit_entitlement"
-        ],
+        "adds": ["child_benefit_entitlement"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9118,10 +9025,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "income_tax",
-          "national_insurance"
-        ],
+        "adds": ["income_tax", "national_insurance"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9138,12 +9042,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "child_benefit"
-        ],
-        "subtracts": [
-          "CB_HITC"
-        ],
+        "adds": ["child_benefit"],
+        "subtracts": ["CB_HITC"],
         "hidden_input": false
       },
       "student_loan_repayments": {
@@ -9176,10 +9076,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "sdlt_on_residential_property_rent",
-          "sdlt_on_non_residential_property_rent"
-        ],
+        "adds": ["sdlt_on_residential_property_rent", "sdlt_on_non_residential_property_rent"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9468,10 +9365,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "national_insurance",
-          "ni_class_1_employer"
-        ],
+        "adds": ["national_insurance", "ni_class_1_employer"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9488,10 +9382,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "ni_class_2",
-          "ni_class_4"
-        ],
+        "adds": ["ni_class_2", "ni_class_4"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9508,9 +9399,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "ni_class_1_employer"
-        ],
+        "adds": ["ni_class_1_employer"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9527,9 +9416,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "ni_class_1_employee"
-        ],
+        "adds": ["ni_class_1_employee"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9546,12 +9433,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "ni_class_1_employee",
-          "ni_class_2",
-          "ni_class_3",
-          "ni_class_4"
-        ],
+        "adds": ["ni_class_1_employee", "ni_class_2", "ni_class_3", "ni_class_4"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9709,10 +9591,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "ni_class_1_employee_primary",
-          "ni_class_1_employee_additional"
-        ],
+        "adds": ["ni_class_1_employee_primary", "ni_class_1_employee_additional"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9831,10 +9710,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "private_pension_income",
-          "state_pension"
-        ],
+        "adds": ["private_pension_income", "state_pension"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9911,11 +9787,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "earned_taxable_income",
-          "taxed_savings_income",
-          "taxed_dividend_income"
-        ],
+        "adds": ["earned_taxable_income", "taxed_savings_income", "taxed_dividend_income"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -9949,11 +9821,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "earned_income_tax",
-          "savings_income_tax",
-          "dividend_income_tax"
-        ],
+        "adds": ["earned_income_tax", "savings_income_tax", "dividend_income_tax"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -10749,9 +10617,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "miscellaneous_income"
-        ],
+        "adds": ["miscellaneous_income"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -10836,9 +10702,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "social_security_income"
-        ],
+        "adds": ["social_security_income"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -10889,9 +10753,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "private_pension_income"
-        ],
+        "adds": ["private_pension_income"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -10925,9 +10787,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "individual_savings_account_interest_income"
-        ],
+        "adds": ["individual_savings_account_interest_income"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -11046,9 +10906,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "employment_expenses"
-        ],
+        "adds": ["employment_expenses"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -11324,9 +11182,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "maternity_allowance_reported"
-        ],
+        "adds": ["maternity_allowance_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -11467,9 +11323,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "wtc_entitlement"
-        ],
+        "adds": ["wtc_entitlement"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -11520,9 +11374,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "income_support_entitlement"
-        ],
+        "adds": ["income_support_entitlement"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -11641,9 +11493,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "esa_income_reported"
-        ],
+        "adds": ["esa_income_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -11784,9 +11634,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "bsp_reported"
-        ],
+        "adds": ["bsp_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -11956,9 +11804,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "council_tax_benefit_reported"
-        ],
+        "adds": ["council_tax_benefit_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12119,10 +11965,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "esa_contrib",
-          "esa_income"
-        ],
+        "adds": ["esa_contrib", "esa_income"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12224,9 +12067,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "esa_contrib_reported"
-        ],
+        "adds": ["esa_contrib_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12243,9 +12084,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "incapacity_benefit_reported"
-        ],
+        "adds": ["incapacity_benefit_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12313,9 +12152,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "iidb_reported"
-        ],
+        "adds": ["iidb_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12485,9 +12322,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "afcs_reported"
-        ],
+        "adds": ["afcs_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12589,12 +12424,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "adult_ema",
-          "child_ema",
-          "access_fund",
-          "education_grants"
-        ],
+        "adds": ["adult_ema", "child_ema", "access_fund", "education_grants"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12611,10 +12441,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "jsa_income",
-          "jsa_contrib"
-        ],
+        "adds": ["jsa_income", "jsa_contrib"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12730,9 +12557,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "ctc_entitlement"
-        ],
+        "adds": ["ctc_entitlement"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -12919,9 +12744,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "jsa_contrib_reported"
-        ],
+        "adds": ["jsa_contrib_reported"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -13129,12 +12952,8 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "uc_maximum_amount"
-        ],
-        "subtracts": [
-          "uc_income_reduction"
-        ],
+        "adds": ["uc_maximum_amount"],
+        "subtracts": ["uc_income_reduction"],
         "hidden_input": false
       },
       "is_uc_eligible": {
@@ -13253,9 +13072,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "uc_individual_child_element"
-        ],
+        "adds": ["uc_individual_child_element"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -13735,10 +13552,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "dla_sc",
-          "dla_m"
-        ],
+        "adds": ["dla_sc", "dla_m"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -13857,10 +13671,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "guarantee_credit",
-          "savings_credit"
-        ],
+        "adds": ["guarantee_credit", "savings_credit"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -14064,10 +13875,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "standard_minimum_guarantee",
-          "additional_minimum_guarantee"
-        ],
+        "adds": ["standard_minimum_guarantee", "additional_minimum_guarantee"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -14254,10 +14062,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "pip_dl",
-          "pip_m"
-        ],
+        "adds": ["pip_dl", "pip_m"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -14597,10 +14402,7 @@
         "indexInModule": 0,
         "isInputVariable": false,
         "defaultValue": 0,
-        "adds": [
-          "ebr_council_tax_rebate",
-          "ebr_energy_bills_credit"
-        ],
+        "adds": ["ebr_council_tax_rebate", "ebr_energy_bills_credit"],
         "subtracts": null,
         "hidden_input": false
       },
@@ -18538,10 +18340,7 @@
         "unit": "program",
         "period": "year",
         "values": {
-          "2015-01-01": [
-            "employment_income",
-            "self_employment_income"
-          ]
+          "2015-01-01": ["employment_income", "self_employment_income"]
         },
         "economy": true,
         "household": true
@@ -18554,18 +18353,8 @@
         "unit": "program",
         "period": "year",
         "values": {
-          "2015-09-01": [
-            "carers_allowance",
-            "esa_contrib",
-            "incapacity_benefit",
-            "sda"
-          ],
-          "2015-01-01": [
-            "carers_allowance",
-            "esa_contrib",
-            "incapacity_benefit",
-            "sda"
-          ]
+          "2015-09-01": ["carers_allowance", "esa_contrib", "incapacity_benefit", "sda"],
+          "2015-01-01": ["carers_allowance", "esa_contrib", "incapacity_benefit", "sda"]
         },
         "economy": true,
         "household": true
@@ -18633,12 +18422,7 @@
         "unit": "program",
         "period": "year",
         "values": {
-          "2014-01-01": [
-            "income_support",
-            "jsa_income",
-            "esa_income",
-            "guarantee_credit"
-          ]
+          "2014-01-01": ["income_support", "jsa_income", "esa_income", "guarantee_credit"]
         },
         "economy": true,
         "household": true
@@ -18901,10 +18685,7 @@
         "unit": "program",
         "period": "year",
         "values": {
-          "2015-01-01": [
-            "employment_income",
-            "self_employment_income"
-          ]
+          "2015-01-01": ["employment_income", "self_employment_income"]
         },
         "economy": true,
         "household": true
@@ -18917,11 +18698,7 @@
         "unit": "program",
         "period": "year",
         "values": {
-          "2015-01-01": [
-            "working_tax_credit",
-            "child_tax_credit",
-            "universal_credit"
-          ]
+          "2015-01-01": ["working_tax_credit", "child_tax_credit", "universal_credit"]
         },
         "economy": true,
         "household": true
@@ -22671,10 +22448,7 @@
         "unit": "list",
         "period": "year",
         "values": {
-          "0000-01-01": [
-            "personal_pension_contributions",
-            "employee_pension_contributions"
-          ]
+          "0000-01-01": ["personal_pension_contributions", "employee_pension_contributions"]
         },
         "economy": true,
         "household": true
@@ -22754,10 +22528,7 @@
         "unit": "list",
         "period": null,
         "values": {
-          "0000-01-01": [
-            "capped_mcad",
-            "other_tax_credits"
-          ]
+          "0000-01-01": ["capped_mcad", "other_tax_credits"]
         },
         "economy": true,
         "household": true
@@ -23682,11 +23453,7 @@
         "unit": "list",
         "period": "year",
         "values": {
-          "0000-01-01": [
-            "loss_relief",
-            "capital_allowances",
-            "trading_allowance"
-          ]
+          "0000-01-01": ["loss_relief", "capital_allowances", "trading_allowance"]
         },
         "economy": true,
         "household": true
@@ -26273,10 +26040,7 @@
         "unit": "currency-GBP",
         "period": null,
         "values": {
-          "2002-01-01": [
-            "jsa_contrib",
-            "esa_contrib"
-          ]
+          "2002-01-01": ["jsa_contrib", "esa_contrib"]
         },
         "economy": false,
         "household": true
@@ -26310,10 +26074,7 @@
         "unit": "currency-GBP",
         "period": null,
         "values": {
-          "2002-01-01": [
-            "jsa_contrib",
-            "esa_contrib"
-          ]
+          "2002-01-01": ["jsa_contrib", "esa_contrib"]
         },
         "economy": true,
         "household": true
@@ -26514,10 +26275,7 @@
         "unit": "list",
         "period": null,
         "values": {
-          "2002-01-01": [
-            "employment_income",
-            "self_employment_income"
-          ]
+          "2002-01-01": ["employment_income", "self_employment_income"]
         },
         "economy": true,
         "household": true
@@ -26597,10 +26355,7 @@
         "unit": "currency-GBP",
         "period": null,
         "values": {
-          "2002-01-01": [
-            "pip",
-            "dla"
-          ]
+          "2002-01-01": ["pip", "dla"]
         },
         "economy": false,
         "household": true
@@ -26645,10 +26400,7 @@
         "unit": "currency-GBP",
         "period": null,
         "values": {
-          "2002-01-01": [
-            "receives_highest_dla_sc",
-            "receives_enhanced_pip_dl"
-          ]
+          "2002-01-01": ["receives_highest_dla_sc", "receives_enhanced_pip_dl"]
         },
         "economy": false,
         "household": true
@@ -28850,18 +28602,8 @@
         "unit": "variable",
         "period": null,
         "values": {
-          "2022-01-01": [
-            "pip",
-            "dla",
-            "attendance_allowance",
-            "armed_forces_independence_payment"
-          ],
-          "2015-01-01": [
-            "pip",
-            "dla",
-            "attendance_allowance",
-            "armed_forces_independence_payment"
-          ]
+          "2022-01-01": ["pip", "dla", "attendance_allowance", "armed_forces_independence_payment"],
+          "2015-01-01": ["pip", "dla", "attendance_allowance", "armed_forces_independence_payment"]
         },
         "economy": false,
         "household": true
@@ -28897,12 +28639,8 @@
         "unit": "variable",
         "period": null,
         "values": {
-          "2022-01-01": [
-            "winter_fuel_allowance"
-          ],
-          "2015-01-01": [
-            "winter_fuel_allowance"
-          ]
+          "2022-01-01": ["winter_fuel_allowance"],
+          "2015-01-01": ["winter_fuel_allowance"]
         },
         "economy": false,
         "household": true
@@ -28961,12 +28699,7 @@
         "unit": "list",
         "period": "year",
         "values": {
-          "0001-01-01": [
-            "A",
-            "B",
-            "C",
-            "D"
-          ]
+          "0001-01-01": ["A", "B", "C", "D"]
         },
         "economy": false,
         "household": true
@@ -42602,9 +42335,7 @@
         "doc": "An individual. The minimal legal entity on which a legislation might be applied.",
         "is_person": true,
         "key": "person",
-        "roles": {
-
-        }
+        "roles": {}
       }
     },
     "variableModules": {
@@ -48647,20 +48378,10 @@
           "label": "2030"
         }
       ],
-      "datasets": [
-        {
-
-        }
-      ]
+      "datasets": [{}]
     },
     "current_law_id": 1,
-    "basicInputs": [
-      "brma",
-      "local_authority",
-      "region",
-      "employment_income",
-      "age"
-    ],
+    "basicInputs": ["brma", "local_authority", "region", "employment_income", "age"],
     "modelled_policies": {
       "core": {
         "modelled": [
@@ -48675,25 +48396,16 @@
           "Fuel duty",
           "Council Tax"
         ],
-        "not_modelled": [
-          "Tax-free childcare",
-          "VAT"
-        ]
+        "not_modelled": ["Tax-free childcare", "VAT"]
       },
       "filtered": {
         "country": {
           "SCOTLAND": {
-            "modelled": [
-              "Scottish tax rates"
-            ],
-            "not_modelled": [
-              "Scottish Child Payment"
-            ]
+            "modelled": ["Scottish tax rates"],
+            "not_modelled": ["Scottish Child Payment"]
           },
           "NORTHERN_IRELAND": {
-            "modelled": [
-              "Domestic rates"
-            ]
+            "modelled": ["Domestic rates"]
           }
         }
       }

@@ -1,10 +1,10 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Group, Select, Text } from '@mantine/core';
 import {
-  RegionOption,
   filterDistrictsByState,
   formatDistrictOptionsForDisplay,
   getStateNameFromDistrict,
+  RegionOption,
 } from '@/utils/regionStrategies';
 
 interface USDistrictSelectorProps {

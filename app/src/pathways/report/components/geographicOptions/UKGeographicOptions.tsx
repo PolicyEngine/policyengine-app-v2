@@ -1,6 +1,6 @@
 import { Box, Radio, Select } from '@mantine/core';
-import { RegionOption, UK_REGION_TYPES } from '@/utils/regionStrategies';
 import { UKScopeType } from '@/types/regionTypes';
+import { RegionOption, UK_REGION_TYPES } from '@/utils/regionStrategies';
 
 interface UKGeographicOptionsProps {
   scope: UKScopeType;

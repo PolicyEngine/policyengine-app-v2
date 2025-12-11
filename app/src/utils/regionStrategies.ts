@@ -1,6 +1,6 @@
 import { countryIds } from '@/libs/countries';
 import { MetadataRegionEntry } from '@/types/metadata';
-import { US_REGION_TYPES, UK_REGION_TYPES, ScopeType } from '@/types/regionTypes';
+import { ScopeType, UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 
 // Re-export types for convenience
 export type { MetadataRegionEntry };
@@ -13,7 +13,9 @@ export type { ScopeType };
 export interface RegionOption {
   value: string;
   label: string;
-  type: (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES] | (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES];
+  type:
+    | (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES]
+    | (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES];
   // Congressional district specific fields
   stateAbbreviation?: string;
   stateName?: string;
@@ -70,10 +72,7 @@ export function filterDistrictsByState(
  * @param districts - All district options with state info
  * @returns State name or empty string if not found
  */
-export function getStateNameFromDistrict(
-  districtValue: string,
-  districts: RegionOption[]
-): string {
+export function getStateNameFromDistrict(districtValue: string, districts: RegionOption[]): string {
   const district = districts.find((d) => d.value === districtValue);
   return district?.stateName || '';
 }

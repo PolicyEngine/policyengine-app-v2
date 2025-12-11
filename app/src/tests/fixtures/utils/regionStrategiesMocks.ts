@@ -1,5 +1,5 @@
 import { MetadataRegionEntry } from '@/types/metadata';
-import { US_REGION_TYPES, UK_REGION_TYPES } from '@/types/regionTypes';
+import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 
 // Test region values
 export const TEST_REGIONS = {
@@ -25,9 +25,21 @@ export const mockUKRegions: MetadataRegionEntry[] = [
   { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
   { name: 'country/ni', label: 'Northern Ireland', type: UK_REGION_TYPES.COUNTRY },
-  { name: 'constituency/Sheffield Central', label: 'Sheffield Central', type: UK_REGION_TYPES.CONSTITUENCY },
-  { name: 'constituency/Manchester Central', label: 'Manchester Central', type: UK_REGION_TYPES.CONSTITUENCY },
-  { name: 'constituency/Brighton Pavilion', label: 'Brighton Pavilion', type: UK_REGION_TYPES.CONSTITUENCY },
+  {
+    name: 'constituency/Sheffield Central',
+    label: 'Sheffield Central',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  {
+    name: 'constituency/Manchester Central',
+    label: 'Manchester Central',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  {
+    name: 'constituency/Brighton Pavilion',
+    label: 'Brighton Pavilion',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
 ];
 
 // Mock metadata regions for US
@@ -76,9 +88,21 @@ export const expectedUKCountries = [
 ];
 
 export const expectedUKConstituencies = [
-  { value: 'constituency/Sheffield Central', label: 'Sheffield Central', type: UK_REGION_TYPES.CONSTITUENCY },
-  { value: 'constituency/Manchester Central', label: 'Manchester Central', type: UK_REGION_TYPES.CONSTITUENCY },
-  { value: 'constituency/Brighton Pavilion', label: 'Brighton Pavilion', type: UK_REGION_TYPES.CONSTITUENCY },
+  {
+    value: 'constituency/Sheffield Central',
+    label: 'Sheffield Central',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  {
+    value: 'constituency/Manchester Central',
+    label: 'Manchester Central',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  {
+    value: 'constituency/Brighton Pavilion',
+    label: 'Brighton Pavilion',
+    type: UK_REGION_TYPES.CONSTITUENCY,
+  },
 ];
 
 // Expected congressional districts after filtering

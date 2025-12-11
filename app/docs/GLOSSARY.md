@@ -24,6 +24,7 @@ Multiple user reports can reference the same base report (enables sharing).
 ## Simulation
 
 A single policy calculation run. Each simulation references:
+
 - A [Policy](#policy) (the rules being applied)
 - A [Population](#population) (who is being analyzed)
 - A year (when the calculation applies)
@@ -44,6 +45,7 @@ Defines who is being analyzed. Two types:
 ## Household
 
 A structured data object representing a family unit for microsimulation. Contains:
+
 - **People:** Individual members with variables (age, income, etc.)
 - **Group entities:** Tax units, marital units, SPM units, benefit units (country-specific)
 
@@ -63,6 +65,7 @@ A set of parameter values defining tax/benefit rules. Two roles in analysis:
 ## Parameter
 
 A single configurable value within a policy (e.g., tax rate, benefit threshold). Parameters are:
+
 - Defined in the country model (policyengine-us, policyengine-uk)
 - Time-indexed (values can change by year)
 - Organized hierarchically (e.g., `gov.irs.income.bracket.rates`)
@@ -84,20 +87,21 @@ Variables have metadata including: entity type, value type (int/float/bool/strin
 
 A unit that variables can belong to. Common entities:
 
-| Entity | Description | Example Variables |
-|--------|-------------|-------------------|
-| `person` | Individual | age, employment_income |
-| `household` | Physical dwelling | state_name, rent |
-| `tax_unit` | IRS filing unit (US) | filing_status |
-| `spm_unit` | Supplemental Poverty Measure unit (US) | spm_resources |
-| `benunit` | Benefit unit (UK) | benunit_rent |
-| `marital_unit` | Married couple or single adult | marital_status |
+| Entity         | Description                            | Example Variables      |
+| -------------- | -------------------------------------- | ---------------------- |
+| `person`       | Individual                             | age, employment_income |
+| `household`    | Physical dwelling                      | state_name, rent       |
+| `tax_unit`     | IRS filing unit (US)                   | filing_status          |
+| `spm_unit`     | Supplemental Poverty Measure unit (US) | spm_resources          |
+| `benunit`      | Benefit unit (UK)                      | benunit_rent           |
+| `marital_unit` | Married couple or single adult         | marital_status         |
 
 ---
 
 ## Year / Tax Year
 
 The fiscal year for calculations. Affects:
+
 - Which parameter values apply
 - Variable time periods
 - Available policy options
@@ -109,6 +113,7 @@ Set at the [Report](#report) level and propagated via `ReportYearContext`.
 ## Pathway
 
 A multi-step user flow for creating an ingredient. Examples:
+
 - **Report Pathway:** Create report → select year → choose population → configure policy → view results
 - **Population Pathway:** Choose type → build household or select geography
 
@@ -119,6 +124,7 @@ Implemented as state machines in `src/pathways/`.
 ## Metadata
 
 Country-specific configuration loaded from the API containing:
+
 - All available [variables](#variable) and their properties
 - All available [parameters](#parameter) and their structures
 - Entity definitions

@@ -26,17 +26,13 @@ export const UK_REGION_TYPES = {
  * US scope types for geographic selection
  * Includes 'household' for custom household scope (not a geographic region)
  */
-export type USScopeType =
-  | (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES]
-  | 'household';
+export type USScopeType = (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES] | 'household';
 
 /**
  * UK scope types for geographic selection
  * Includes 'household' for custom household scope (not a geographic region)
  */
-export type UKScopeType =
-  | (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES]
-  | 'household';
+export type UKScopeType = (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES] | 'household';
 
 /**
  * Combined scope type for all countries
@@ -49,7 +45,9 @@ export type ScopeType = USScopeType | UKScopeType;
 export function isUSScopeType(scope: string): scope is USScopeType {
   return (
     scope === 'household' ||
-    Object.values(US_REGION_TYPES).includes(scope as (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES])
+    Object.values(US_REGION_TYPES).includes(
+      scope as (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES]
+    )
   );
 }
 
@@ -59,6 +57,8 @@ export function isUSScopeType(scope: string): scope is USScopeType {
 export function isUKScopeType(scope: string): scope is UKScopeType {
   return (
     scope === 'household' ||
-    Object.values(UK_REGION_TYPES).includes(scope as (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES])
+    Object.values(UK_REGION_TYPES).includes(
+      scope as (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES]
+    )
   );
 }

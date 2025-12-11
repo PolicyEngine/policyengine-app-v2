@@ -1,8 +1,8 @@
 import { Box, Radio } from '@mantine/core';
-import { RegionOption, US_REGION_TYPES } from '@/utils/regionStrategies';
 import { USScopeType } from '@/types/regionTypes';
-import USStateSelector from './USStateSelector';
+import { RegionOption, US_REGION_TYPES } from '@/utils/regionStrategies';
 import USDistrictSelector from './USDistrictSelector';
+import USStateSelector from './USStateSelector';
 
 interface USGeographicOptionsProps {
   scope: USScopeType;

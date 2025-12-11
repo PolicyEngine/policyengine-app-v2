@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from 'vitest';
 import { render, screen, userEvent, waitFor } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import USDistrictSelector from '@/pathways/report/components/geographicOptions/USDistrictSelector';
 import {
   mockUSDistrictOptions,

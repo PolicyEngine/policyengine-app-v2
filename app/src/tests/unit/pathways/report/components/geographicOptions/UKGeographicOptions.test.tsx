@@ -1,12 +1,12 @@
-import { describe, expect, test, vi } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import UKGeographicOptions from '@/pathways/report/components/geographicOptions/UKGeographicOptions';
-import { UK_REGION_TYPES } from '@/utils/regionStrategies';
 import {
-  mockUKCountryOptions,
   mockUKConstituencyOptions,
+  mockUKCountryOptions,
   TEST_VALUES,
 } from '@/tests/fixtures/pathways/report/components/geographicOptionsMocks';
+import { UK_REGION_TYPES } from '@/utils/regionStrategies';
 
 describe('UKGeographicOptions', () => {
   test('given component then renders all scope options', () => {

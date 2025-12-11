@@ -8,8 +8,8 @@ import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { MetadataState } from '@/types/metadata';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { PolicyMetadata } from '@/types/metadata/policyMetadata';
-import { US_REGION_TYPES } from '@/types/regionTypes';
 import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
+import { US_REGION_TYPES } from '@/types/regionTypes';
 import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
 

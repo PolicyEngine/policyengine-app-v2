@@ -1,15 +1,16 @@
 import { describe, expect, test } from 'vitest';
 import {
+  expectedCaliforniaDistricts,
   expectedUKConstituencies,
   expectedUKCountries,
-  expectedUSStates,
   expectedUSCongressionalDistricts,
-  expectedCaliforniaDistricts,
+  expectedUSStates,
+  mockSingleDistrictState,
   mockUKRegions,
   mockUSRegions,
-  mockSingleDistrictState,
   TEST_REGIONS,
 } from '@/tests/fixtures/utils/regionStrategiesMocks';
+import { US_REGION_TYPES } from '@/types/regionTypes';
 import {
   createGeographyFromScope,
   extractRegionDisplayValue,
@@ -21,7 +22,6 @@ import {
   getUSCongressionalDistricts,
   getUSStates,
 } from '@/utils/regionStrategies';
-import { US_REGION_TYPES } from '@/types/regionTypes';
 
 describe('regionStrategies', () => {
   describe('getUSStates', () => {

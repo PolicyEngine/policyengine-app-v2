@@ -1,4 +1,4 @@
-import { US_REGION_TYPES, UK_REGION_TYPES } from './regionTypes';
+import { UK_REGION_TYPES, US_REGION_TYPES } from './regionTypes';
 
 /**
  * Region entry from API metadata
@@ -8,7 +8,9 @@ import { US_REGION_TYPES, UK_REGION_TYPES } from './regionTypes';
 export interface MetadataRegionEntry {
   name: string;
   label: string;
-  type: (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES] | (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES];
+  type:
+    | (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES]
+    | (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES];
   // Congressional district specific fields
   state_abbreviation?: string;
   state_name?: string;

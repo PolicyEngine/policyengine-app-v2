@@ -12,12 +12,12 @@ Gift Aid is the UK's primary tax relief for charitable giving. When you donate t
 
 A higher rate taxpayer donating £1,000:
 
-| Component | Amount |
-|-----------|--------|
-| Your donation | £1,000 |
-| Charity receives (grossed up) | £1,250 |
-| Your tax relief (40% - 20% on £1,250) | £250 |
-| **Net cost to you** | **£750** |
+| Component                             | Amount   |
+| ------------------------------------- | -------- |
+| Your donation                         | £1,000   |
+| Charity receives (grossed up)         | £1,250   |
+| Your tax relief (40% - 20% on £1,250) | £250     |
+| **Net cost to you**                   | **£750** |
 
 The charity gets 25% more than you gave, and you save 25% on your donation — everyone benefits except HMRC.
 
@@ -41,14 +41,14 @@ The calculator shows:
 
 Scotland sets its own income tax rates, which differ from the rest of the UK:
 
-| Band | Scotland | Rest of UK |
-|------|----------|------------|
-| Starter (19%) | £12,571–£14,876 | — |
-| Basic (20%) | £14,877–£26,561 | £12,571–£50,270 |
-| Intermediate (21%) | £26,562–£43,662 | — |
-| Higher (42%) | £43,663–£75,000 | — |
-| Advanced (45%) | £75,001–£125,140 | — |
-| Top (48%) | Over £125,140 | — |
+| Band               | Scotland         | Rest of UK      |
+| ------------------ | ---------------- | --------------- |
+| Starter (19%)      | £12,571–£14,876  | —               |
+| Basic (20%)        | £14,877–£26,561  | £12,571–£50,270 |
+| Intermediate (21%) | £26,562–£43,662  | —               |
+| Higher (42%)       | £43,663–£75,000  | —               |
+| Advanced (45%)     | £75,001–£125,140 | —               |
+| Top (48%)          | Over £125,140    | —               |
 
 GiveCalc automatically applies the correct rates based on your selected region.
 

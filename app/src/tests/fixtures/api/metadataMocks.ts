@@ -68,7 +68,11 @@ export const mockMetadataResponse: MetadataApiPayload = {
         { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
         { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
         { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
-        { name: 'country/northern_ireland', label: 'Northern Ireland', type: UK_REGION_TYPES.COUNTRY },
+        {
+          name: 'country/northern_ireland',
+          label: 'Northern Ireland',
+          type: UK_REGION_TYPES.COUNTRY,
+        },
       ],
       time_period: [
         { name: 2023, label: '2023' },

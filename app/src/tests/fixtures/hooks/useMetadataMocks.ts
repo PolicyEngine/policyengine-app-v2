@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { MetadataState } from '@/types/metadata';
-import { US_REGION_TYPES, UK_REGION_TYPES } from '@/types/regionTypes';
+import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 
 // Test country IDs
 export const TEST_COUNTRY_US = 'us';

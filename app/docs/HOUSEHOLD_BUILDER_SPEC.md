@@ -7,6 +7,7 @@
 The HouseholdBuilderFrame in V2 (`app/src/frames/population/HouseholdBuilderFrame.tsx`) displays a minimal set of fields for creating a household:
 
 **Structural Controls:**
+
 - Tax Year (dropdown: 2020-2035)
 - Marital Status (single/married)
 - Number of Children (0-5)
@@ -36,6 +37,7 @@ Similar to V2 - marital status, children count, age, employment income, and stat
 
 **2. Variable Editor Mode:**
 V1 included a VariableEditor component (`src/pages/household/input/VariableEditor.jsx`) that allowed users to:
+
 - Edit ANY variable from metadata, not just basicInputs
 - Navigate to specific variables via URL search params (e.g., `?focus=householdOutput.snap_gross_income`)
 - Automatically detect and render inputs for the correct entity type
@@ -62,6 +64,7 @@ const fieldValue = household.householdData.households?.['your household']?.[fiel
 This line assumes ALL fields in `basicInputFields.household` belong to the "households" entity. This assumption is incorrect.
 
 **How Variables and Entities Work:**
+
 - Each variable in metadata belongs to exactly ONE entity type (person, household, tax_unit, spm_unit, family, marital_unit, benunit)
 - Variables are defined with `"entity": "person"` or `"entity": "tax_unit"` etc. in metadata
 - The household data structure stores variables under their entity's plural form:
@@ -72,6 +75,7 @@ This line assumes ALL fields in `basicInputFields.household` belong to the "hous
 
 **The Bug:**
 In metadataUtils.ts (line 53), the code categorizes fields as:
+
 ```
 const householdFields = inputs.filter(field => !['age', 'employment_income'].includes(field))
 ```
@@ -80,6 +84,7 @@ This hardcodes that age and employment_income are person-level, and assumes EVER
 
 **Real-World Failure Scenario:**
 If basicInputs included `["age", "employment_income", "state_name", "eitc"]`:
+
 - eitc belongs to tax_unit entity (not household)
 - Current code would try to read: `householdData.households["your household"].eitc`
 - Correct location is: `householdData.taxUnits["your tax unit"].eitc`
@@ -95,6 +100,7 @@ If basicInputs included `["age", "employment_income", "state_name", "eitc"]`:
 PolicyEngine's accuracy improves significantly when users provide more detailed inputs beyond the basic three variables. Currently, V2 has no mechanism for users to specify these (Income Sources, Benefits & Assistance, etc)
 
 **Why This Matters:**
+
 - With basic inputs only: PolicyEngine **estimates** benefit eligibility and amounts based on income/age/state
 - With custom inputs: PolicyEngine **calculates exactly** based on actual income sources, benefit receipt, and eligibility factors
 - More accurate custom variables = more accurate policy impact analysis
@@ -107,32 +113,38 @@ The household builder redo will fix the entity resolution bug by removing hardco
 ## Implementation Plan
 
 **1. Create VariableResolver utility** (`app/src/utils/VariableResolver.ts`)
+
 - `resolveEntity(variableName, metadata)` - Get entity info for variable
 - `getValue(household, variableName, metadata, year, personName?)` - Read from correct entity location
 - `setValue(household, variableName, value, metadata, year, personName?)` - Write to correct entity location
 - `getGroupName(entityPlural, personName?)` - Map entity type to group instance name
 
 **2. Fix field categorization** (`app/src/libs/metadataUtils.ts`)
+
 - Remove hardcoded `['age', 'employment_income']` assumptions
 - Categorize fields by `metadata.variables[field].entity`
 - Return `{ person: [...], household: [...], taxUnit: [...], spmUnit: [...] }`
 
 **3. Update HouseholdBuilderFrame** (`app/src/frames/population/HouseholdBuilderFrame.tsx`)
+
 - Replace line 389 with `VariableResolver.getValue`
 - Replace `handleHouseholdFieldChange` to use `VariableResolver.setValue`
 - Render fields for all entity types, not just households
 
 **4. Create VariableInput component** (`app/src/components/household/VariableInput.tsx`)
+
 - Render NumberInput, Select, Checkbox, or TextInput based on `variable.valueType`
 - Apply formatting from `getInputFormattingProps`
 - Use VariableResolver for getting/setting values
 
 **5. Add custom variables UI**
+
 - Collapsible "Advanced Settings" section in HouseholdBuilderFrame
 - Search bar + categorized browser for variable selection
 - Render selected variables with entity-aware inputs
 
 **6. Testing**
+
 - Test entity resolution with variables from different entities
 - Verify payload generation for household creation
 - Test UI flow for basic and custom variable entry
@@ -144,6 +156,7 @@ The household builder redo will fix the entity resolution bug by removing hardco
 After evaluating multiple approaches, we chose a simple inline search with variables stacking above the search bar. This design mirrors V1's flat dropdown approach while providing better visual feedback.
 
 **Layout Structure:**
+
 ```
 ▼ Advanced Settings
   ─────────────────────────────────────
@@ -174,6 +187,7 @@ We explored several alternatives before settling on this approach:
 3. **Modal variable selector** - Added unnecessary friction (extra click to open, context switch away from form). Users can't see existing inputs while selecting new variables.
 
 **The chosen inline approach is simplest because:**
+
 - Single interaction pattern: click search → select variable → input appears above
 - Variables stack in order added, newest closest to search (natural reading flow)
 - Search bar always visible at bottom as the "add more" action
@@ -182,6 +196,7 @@ We explored several alternatives before settling on this approach:
 - Matches V1's familiar flat dropdown pattern
 
 **Design Elements:**
+
 - Mantine `TextInput` with search icon, dropdown appears on focus
 - Flat list of variables filtered as user types (like V1)
 - Info icon (ⓘ) on variable labels shows documentation tooltip
@@ -189,6 +204,7 @@ We explored several alternatives before settling on this approach:
 - Entity-aware inputs render per-instance fields (person-level variables show inputs for each person)
 
 **Search Behavior:**
+
 - Show first 50 variables when empty, filter as user types
 - Only show `isInputVariable: true` variables (not computed outputs)
 - Exclude `hidden_input: true` variables
@@ -204,6 +220,7 @@ Custom variables that are person-level (like `self_employment_income`, `is_disab
 The household builder now uses Mockup 3's per-person variable assignment pattern:
 
 **Structure:**
+
 - **Household Information Section**: Tax Year, Marital Status, Number of Children
 - **Individuals / Members Accordion**:
   - Each person (You, Your Partner, dependents) has their own panel
@@ -216,6 +233,7 @@ The household builder now uses Mockup 3's per-person variable assignment pattern
   - Inline search with "Add variable" link
 
 **Key Features:**
+
 1. **Per-Person Variable Assignment**: Custom variables added to specific individuals, not all members
 2. **Inline Search Pattern**: Search bar appears on clicking "Add variable" link, disappears after selection
 3. **Entity-Aware Resolution**: All variables correctly resolved to their entity (person, tax_unit, spm_unit, household)
@@ -223,6 +241,7 @@ The household builder now uses Mockup 3's per-person variable assignment pattern
 5. **Metadata-Driven**: Basic inputs read directly from `metadata.variables` (not filtered by `isInputVariable`)
 
 **Component Architecture:**
+
 - `HouseholdBuilderFrame.tsx`: Redux integration, API calls, flow navigation, household structure management
 - `HouseholdBuilderForm.tsx`: Pure presentation component with all UI logic
 - `AdvancedSettings.tsx`: Collapsible section for power users (currently unused in Mockup 3)

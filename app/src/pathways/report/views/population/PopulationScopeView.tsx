@@ -12,7 +12,13 @@ import { Stack } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { countryIds } from '@/libs/countries';
 import { Geography } from '@/types/ingredients/Geography';
-import { ScopeType, USScopeType, UKScopeType, US_REGION_TYPES, UK_REGION_TYPES } from '@/types/regionTypes';
+import {
+  ScopeType,
+  UK_REGION_TYPES,
+  UKScopeType,
+  US_REGION_TYPES,
+  USScopeType,
+} from '@/types/regionTypes';
 import {
   createGeographyFromScope,
   getUKConstituencies,

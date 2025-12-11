@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from 'vitest';
 import { render, screen, userEvent } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import USStateSelector from '@/pathways/report/components/geographicOptions/USStateSelector';
 import {
   mockUSStateOptions,
@@ -84,13 +84,7 @@ describe('USStateSelector', () => {
     const onStateChange = vi.fn();
 
     // When
-    render(
-      <USStateSelector
-        stateOptions={[]}
-        selectedState=""
-        onStateChange={onStateChange}
-      />
-    );
+    render(<USStateSelector stateOptions={[]} selectedState="" onStateChange={onStateChange} />);
 
     // Then
     expect(screen.getByText('Select State')).toBeInTheDocument();
