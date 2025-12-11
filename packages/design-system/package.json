@@ -35,7 +35,9 @@
   },
   "files": [
     "dist",
-    "src"
+    "!dist/__tests__",
+    "src",
+    "!src/__tests__"
   ],
   "scripts": {
     "build": "tsc && npm run generate-json",
