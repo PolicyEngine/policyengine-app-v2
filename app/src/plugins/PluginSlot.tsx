@@ -4,11 +4,14 @@
  * Renders plugin-provided components at designated locations in the app.
  * Each slot is wrapped in an error boundary to prevent plugin errors
  * from crashing the app.
+ *
+ * Gracefully handles missing PluginProvider context by rendering nothing,
+ * which allows components using slots to be tested without the provider.
  */
 
-import type { ReactNode } from 'react';
+import { useContext, type ReactNode } from 'react';
 import type { PluginSlotContext } from '@/types/plugin';
-import { usePluginContext } from './PluginContext';
+import PluginContext from './PluginContext';
 import { PluginErrorBoundary } from './PluginErrorBoundary';
 import { pluginRegistry } from './PluginRegistry';
 
@@ -50,8 +53,14 @@ export interface PluginSlotProps {
  * ```
  */
 export function PluginSlot({ name, fallback, context, className }: PluginSlotProps) {
-  const { getSlotComponents } = usePluginContext();
-  const components = getSlotComponents(name, context);
+  const pluginContext = useContext(PluginContext);
+
+  // Gracefully handle missing context (e.g., in tests without PluginProvider)
+  if (!pluginContext) {
+    return <>{fallback}</>;
+  }
+
+  const components = pluginContext.getSlotComponents(name, context);
 
   if (components.length === 0) {
     return <>{fallback}</>;

@@ -8,7 +8,7 @@ import { Provider } from 'react-redux';
 import { MantineProvider } from '@mantine/core';
 import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
 import { plugins } from './data/plugins/pluginTransformers';
-import { PluginProvider } from './plugins';
+import { PluginProvider, PluginSlot } from './plugins';
 import { Router } from './Router';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
@@ -43,6 +43,8 @@ export default function App() {
             <QueryClientProvider client={queryClient}>
               <CalcOrchestratorProvider>
                 <Router />
+                {/* Plugin slot for modal dialogs */}
+                <PluginSlot name="modals" />
                 <ReactQueryDevtools initialIsOpen={false} />
               </CalcOrchestratorProvider>
             </QueryClientProvider>

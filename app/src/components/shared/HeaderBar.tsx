@@ -1,5 +1,6 @@
 import { Box, Text } from '@mantine/core';
 import { colors, spacing } from '@/designTokens';
+import { PluginSlot } from '@/plugins';
 
 const PolicyEngineLogo = '/assets/logos/policyengine/white.svg';
 
@@ -40,7 +41,11 @@ export default function HeaderBar({ title, children, showLogo = false }: HeaderB
           </Text>
         )}
       </Box>
-      {children}
+      <Box style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        {/* Plugin slot for header action buttons */}
+        <PluginSlot name="header-actions" />
+        {children}
+      </Box>
     </Box>
   );
 }

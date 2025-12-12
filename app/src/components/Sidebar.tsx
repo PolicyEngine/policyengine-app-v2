@@ -14,6 +14,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Stack } from '@mantine/core';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { PluginSlot } from '@/plugins';
 import { colors, spacing, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
@@ -117,6 +118,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             New report
           </Button>
         </Box>
+
+        {/* Plugin slot for content at top of sidebar */}
+        <PluginSlot name="sidebar-top" />
       </Stack>
 
       <Stack gap={0} style={{ flex: 1 }}>
@@ -145,6 +149,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             <SidebarNavItem key={item.path} {...item} isActive={location.pathname === item.path} />
           ))}
         </SidebarSection>
+
+        {/* Plugin slot for content at bottom of sidebar */}
+        <PluginSlot name="sidebar-bottom" />
       </Stack>
     </Stack>
   );
