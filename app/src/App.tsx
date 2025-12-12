@@ -5,10 +5,9 @@ import { QueryNormalizerProvider } from '@normy/react-query';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { Provider } from 'react-redux';
-import { MantineProvider } from '@mantine/core';
 import { CalcOrchestratorProvider } from './contexts/CalcOrchestratorContext';
 import { plugins } from './data/plugins/pluginTransformers';
-import { PluginProvider, PluginSlot } from './plugins';
+import { PluginProvider, PluginSlot, ThemedMantineProvider } from './plugins';
 import { Router } from './Router';
 import { store } from './store';
 import { policyEngineTheme } from './theme';
@@ -33,7 +32,7 @@ export default function App() {
   return (
     <Provider store={store}>
       <PluginProvider plugins={plugins}>
-        <MantineProvider theme={policyEngineTheme}>
+        <ThemedMantineProvider theme={policyEngineTheme}>
           <QueryNormalizerProvider
             queryClient={queryClient}
             normalizerConfig={{
@@ -49,7 +48,7 @@ export default function App() {
               </CalcOrchestratorProvider>
             </QueryClientProvider>
           </QueryNormalizerProvider>
-        </MantineProvider>
+        </ThemedMantineProvider>
       </PluginProvider>
     </Provider>
   );

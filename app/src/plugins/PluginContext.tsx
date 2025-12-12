@@ -42,6 +42,8 @@ export interface PluginContextValue {
   availablePlugins: Plugin[];
   /** Whether the plugin system is initialized */
   isInitialized: boolean;
+  /** Version counter that increments when settings change (for dependent components) */
+  settingsVersion: number;
 
   // Actions
   /** Install and activate a plugin */
@@ -241,6 +243,7 @@ export function PluginProvider({ children, plugins = [] }: PluginProviderProps) 
       activePlugins,
       availablePlugins,
       isInitialized,
+      settingsVersion,
       installPlugin,
       uninstallPlugin,
       isPluginActive,
@@ -255,6 +258,7 @@ export function PluginProvider({ children, plugins = [] }: PluginProviderProps) 
       activePlugins,
       availablePlugins,
       isInitialized,
+      settingsVersion,
       installPlugin,
       uninstallPlugin,
       isPluginActive,

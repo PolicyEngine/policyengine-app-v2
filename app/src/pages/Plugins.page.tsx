@@ -2,21 +2,16 @@
  * Plugins Page
  *
  * Displays available plugins with install/remove functionality.
- * Plugin installation state is stored in sessionStorage.
+ * Uses the plugin context for proper activation/deactivation.
  */
 
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { Box, Button, Container, SimpleGrid, Text } from '@mantine/core';
 import HeroSection from '@/components/shared/static/HeroSection';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
-import { plugins } from '@/data/plugins/pluginTransformers';
 import { colors, spacing } from '@/designTokens';
+import { usePluginContext } from '@/plugins';
 import type { Plugin } from '@/types/plugin';
-import {
-  addInstalledPlugin,
-  getInstalledPlugins,
-  removeInstalledPlugin,
-} from '@/utils/pluginStorage';
 
 interface PluginCardProps {
   plugin: Plugin;
@@ -129,27 +124,22 @@ function PluginCard({ plugin, isInstalled, onToggle }: PluginCardProps) {
 }
 
 export default function PluginsPage() {
-  // Initialize installed plugins from sessionStorage
-  const [installedPlugins, setInstalledPlugins] = useState<string[]>(() => getInstalledPlugins());
+  // Use plugin context for proper activation/deactivation
+  const { availablePlugins, activePlugins, installPlugin, uninstallPlugin, isPluginActive } =
+    usePluginContext();
 
-  const handleTogglePlugin = useCallback((slug: string, shouldInstall: boolean) => {
-    if (shouldInstall) {
-      const updated = addInstalledPlugin(slug);
-      setInstalledPlugins(updated);
-    } else {
-      const updated = removeInstalledPlugin(slug);
-      setInstalledPlugins(updated);
-    }
-  }, []);
-
-  const checkIsInstalled = useCallback(
-    (slug: string) => {
-      return installedPlugins.includes(slug);
+  const handleTogglePlugin = useCallback(
+    async (slug: string, shouldInstall: boolean) => {
+      if (shouldInstall) {
+        await installPlugin(slug);
+      } else {
+        await uninstallPlugin(slug);
+      }
     },
-    [installedPlugins]
+    [installPlugin, uninstallPlugin]
   );
 
-  const installedCount = installedPlugins.length;
+  const installedCount = activePlugins.length;
 
   return (
     <StaticPageLayout title="Plugins">
@@ -161,18 +151,18 @@ export default function PluginsPage() {
       <Container size="xl" py="xl">
         {/* Stats */}
         <Text size="sm" c="dimmed" mb="md">
-          {plugins.length} {plugins.length === 1 ? 'plugin' : 'plugins'} available
+          {availablePlugins.length} {availablePlugins.length === 1 ? 'plugin' : 'plugins'} available
           {installedCount > 0 && ` (${installedCount} installed)`}
         </Text>
 
         {/* Plugin Grid */}
-        {plugins.length > 0 ? (
+        {availablePlugins.length > 0 ? (
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="lg">
-            {plugins.map((plugin) => (
+            {availablePlugins.map((plugin) => (
               <PluginCard
                 key={plugin.slug}
                 plugin={plugin}
-                isInstalled={checkIsInstalled(plugin.slug)}
+                isInstalled={isPluginActive(plugin.slug)}
                 onToggle={handleTogglePlugin}
               />
             ))}

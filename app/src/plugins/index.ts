@@ -19,6 +19,8 @@ export type { PluginSlotProps } from './PluginSlot';
 
 export { PluginErrorBoundary } from './PluginErrorBoundary';
 
+export { ThemedMantineProvider } from './ThemedMantineProvider';
+
 // Hooks
 export {
   usePlugin,
