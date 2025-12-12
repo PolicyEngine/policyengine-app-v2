@@ -6,11 +6,12 @@
  * Part of the calculator UX (shows sidebar).
  */
 
-import { useCallback } from 'react';
-import { Box, Button, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { useCallback, useState } from 'react';
+import { IconSettings } from '@tabler/icons-react';
+import { ActionIcon, Box, Button, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { usePluginContext } from '@/plugins';
-import type { Plugin } from '@/types/plugin';
+import { PluginSettingsModal, usePluginContext } from '@/plugins';
+import type { Plugin, PluginSettingsValues } from '@/types/plugin';
 
 /** Aspect ratio for plugin icon containers (matches SVG dimensions) */
 const ICON_ASPECT_RATIO = '16 / 9';
@@ -19,9 +20,10 @@ interface PluginCardProps {
   plugin: Plugin;
   isInstalled: boolean;
   onToggle: (slug: string, installed: boolean) => void;
+  onOpenSettings: (plugin: Plugin) => void;
 }
 
-function PluginCard({ plugin, isInstalled, onToggle }: PluginCardProps) {
+function PluginCard({ plugin, isInstalled, onToggle, onOpenSettings }: PluginCardProps) {
   const formattedDateUpdated = new Date(plugin.dateUpdated).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'short',
@@ -31,6 +33,8 @@ function PluginCard({ plugin, isInstalled, onToggle }: PluginCardProps) {
   const handleToggle = () => {
     onToggle(plugin.slug, !isInstalled);
   };
+
+  const hasSettings = plugin.settings && plugin.settings.length > 0;
 
   return (
     <Paper
@@ -77,15 +81,27 @@ function PluginCard({ plugin, isInstalled, onToggle }: PluginCardProps) {
           flexDirection: 'column',
         }}
       >
-        {/* Title */}
-        <Text
-          fw={typography.fontWeight.semibold}
-          size="md"
-          mb={4}
-          style={{ color: colors.gray[900] }}
-        >
-          {plugin.name}
-        </Text>
+        {/* Title with settings button */}
+        <Group justify="space-between" align="flex-start" mb={4}>
+          <Text
+            fw={typography.fontWeight.semibold}
+            size="md"
+            style={{ color: colors.gray[900] }}
+          >
+            {plugin.name}
+          </Text>
+          {hasSettings && isInstalled && (
+            <ActionIcon
+              variant="subtle"
+              color="gray"
+              size="sm"
+              onClick={() => onOpenSettings(plugin)}
+              aria-label={`${plugin.name} settings`}
+            >
+              <IconSettings size={16} />
+            </ActionIcon>
+          )}
+        </Group>
 
         {/* Description */}
         <Text size="sm" c="dimmed" lineClamp={2} style={{ flex: 1, marginBottom: spacing.sm }}>
@@ -114,8 +130,19 @@ function PluginCard({ plugin, isInstalled, onToggle }: PluginCardProps) {
 
 export default function PluginsPage() {
   // Use plugin context for proper activation/deactivation
-  const { availablePlugins, activePlugins, installPlugin, uninstallPlugin, isPluginActive } =
-    usePluginContext();
+  const {
+    availablePlugins,
+    activePlugins,
+    installPlugin,
+    uninstallPlugin,
+    isPluginActive,
+    getSettings,
+    updateSettings,
+  } = usePluginContext();
+
+  // Settings modal state
+  const [settingsPlugin, setSettingsPlugin] = useState<Plugin | null>(null);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const handleTogglePlugin = useCallback(
     async (slug: string, shouldInstall: boolean) => {
@@ -126,6 +153,25 @@ export default function PluginsPage() {
       }
     },
     [installPlugin, uninstallPlugin]
+  );
+
+  const handleOpenSettings = useCallback((plugin: Plugin) => {
+    setSettingsPlugin(plugin);
+    setSettingsModalOpen(true);
+  }, []);
+
+  const handleCloseSettings = useCallback(() => {
+    setSettingsModalOpen(false);
+    setSettingsPlugin(null);
+  }, []);
+
+  const handleSaveSettings = useCallback(
+    async (newSettings: PluginSettingsValues) => {
+      if (settingsPlugin) {
+        await updateSettings(settingsPlugin.slug, newSettings);
+      }
+    },
+    [settingsPlugin, updateSettings]
   );
 
   const installedCount = activePlugins.length;
@@ -152,6 +198,7 @@ export default function PluginsPage() {
               plugin={plugin}
               isInstalled={isPluginActive(plugin.slug)}
               onToggle={handleTogglePlugin}
+              onOpenSettings={handleOpenSettings}
             />
           ))}
         </SimpleGrid>
@@ -167,6 +214,17 @@ export default function PluginsPage() {
         >
           <Text c="dimmed">No plugins available yet.</Text>
         </Paper>
+      )}
+
+      {/* Settings Modal */}
+      {settingsPlugin && (
+        <PluginSettingsModal
+          opened={settingsModalOpen}
+          onClose={handleCloseSettings}
+          plugin={settingsPlugin}
+          currentSettings={getSettings(settingsPlugin.slug)}
+          onSave={handleSaveSettings}
+        />
       )}
     </Stack>
   );
