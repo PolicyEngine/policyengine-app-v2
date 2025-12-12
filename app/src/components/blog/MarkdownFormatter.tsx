@@ -270,10 +270,12 @@ export function MarkdownFormatter({
   markdown,
   backgroundColor,
   displayCategory: propDisplayCategory,
+  hideFootnotes = false,
 }: MarkdownFormatterProps & {
   backgroundColor?: string;
   dict?: Record<string, any>;
   pSize?: number;
+  hideFootnotes?: boolean;
 }) {
   const hookDisplayCategory = useDisplayCategory();
   const displayCategory = propDisplayCategory || hookDisplayCategory;
@@ -509,16 +511,16 @@ export function MarkdownFormatter({
 
     // Links with footnote support
     a: ({ href, children }) => {
-      let id: string;
+      let id: string | undefined;
       let footnoteNumber: number | null = null;
+      let isFootnoteRef = false;
 
       if (href?.startsWith('#user-content-fn-')) {
         id = href.replace('#user-content-fn-', 'user-content-fnref-');
         footnoteNumber = parseInt(id?.split('-').pop() || '0', 10);
+        isFootnoteRef = true;
       } else if (href?.startsWith('#user-content-fnref-')) {
         id = href.replace('#user-content-fnref-', 'user-content-fn-');
-      } else {
-        id = href || '';
       }
 
       return (
@@ -534,6 +536,8 @@ export function MarkdownFormatter({
             fontWeight: href?.startsWith('#') ? 'normal' : blogFontWeights.medium,
             transition: 'background-color 0.2s ease, color 0.2s ease',
             borderRadius: blogRadius.sm,
+            // Add scroll margin for footnote references so they don't hide behind navbar
+            scrollMarginTop: isFootnoteRef ? '80px' : undefined,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = blogColors.link;
@@ -720,6 +724,11 @@ export function MarkdownFormatter({
       );
 
       if (className === 'footnotes') {
+        // Hide footnotes section when requested (for notebooks where we consolidate at end)
+        if (hideFootnotes) {
+          return null;
+        }
+
         return (
           <div
             style={{
@@ -860,5 +869,73 @@ export function MarkdownFormatter({
     <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]} components={components}>
       {markdown}
     </ReactMarkdown>
+  );
+}
+
+/**
+ * FootnotesSection Component
+ * Renders a consolidated footnotes section for notebooks.
+ * Creates elements with the correct IDs that remark-gfm's footnote references link to.
+ */
+export function FootnotesSection({
+  footnotes,
+  displayCategory: propDisplayCategory,
+}: {
+  footnotes: Record<string, string>;
+  displayCategory?: string;
+}) {
+  const hookDisplayCategory = useDisplayCategory();
+  const displayCategory = propDisplayCategory || hookDisplayCategory;
+  const mobile = displayCategory === 'mobile';
+
+  const sortedKeys = Object.keys(footnotes).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+
+  if (sortedKeys.length === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        borderTop: `1px solid ${blogColors.borderDark}`,
+        paddingTop: blogSpacing.xl,
+        marginTop: blogSpacing.xxl,
+        marginBottom: blogSpacing.lg,
+        backgroundColor: blogColors.backgroundSecondary,
+        borderRadius: blogRadius.md,
+        padding: `${blogSpacing.lg}px ${blogSpacing.md}px`,
+        fontSize: mobile ? blogTypography.smallMobile : blogTypography.smallDesktop,
+        color: blogColors.textSecondary,
+      }}
+    >
+      <ol style={{ margin: 0, paddingLeft: blogSpacing.lg }}>
+        {sortedKeys.map((key) => (
+          <li
+            key={key}
+            id={`user-content-fn-${key}`}
+            style={{
+              marginBottom: blogSpacing.sm,
+              lineHeight: 1.5,
+              scrollMarginTop: '80px',
+            }}
+          >
+            <p style={{ margin: 0, display: 'inline' }}>
+              {footnotes[key]}{' '}
+              <a
+                href={`#user-content-fnref-${key}`}
+                style={{
+                  color: blogColors.link,
+                  textDecoration: 'none',
+                  fontSize: '0.85em',
+                }}
+                aria-label="Back to reference"
+              >
+                ↩
+              </a>
+            </p>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }

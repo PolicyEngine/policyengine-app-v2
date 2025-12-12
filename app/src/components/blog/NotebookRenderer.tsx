@@ -8,12 +8,28 @@
  * Ported from old app's BlogPage.jsx notebook handling.
  */
 
+import { useMemo } from 'react';
 import Plot from 'react-plotly.js';
 import type { Notebook, NotebookCell as NotebookCellType, PlotlyData } from '@/types/blog';
-import { parseJSONSafe } from '@/utils/notebookUtils';
+import {
+  extractNotebookFootnotes,
+  hasFootnoteReferences,
+  parseJSONSafe,
+} from '@/utils/notebookUtils';
 import { blogColors, blogSpacing, blogTypography } from './blogStyles';
-import { HighlightedBlock, MarkdownFormatter, PlotlyChartCode } from './MarkdownFormatter';
+import { FootnotesSection, HighlightedBlock, MarkdownFormatter, PlotlyChartCode } from './MarkdownFormatter';
 import { useDisplayCategory } from './useDisplayCategory';
+
+/**
+ * Build footnote definitions markdown to append to cells with references
+ */
+function buildFootnotesMarkdown(footnotes: Record<string, string>): string {
+  const sortedKeys = Object.keys(footnotes).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+  if (sortedKeys.length === 0) {
+    return '';
+  }
+  return sortedKeys.map((key) => `[^${key}]: ${footnotes[key]}`).join('\n\n');
+}
 
 interface NotebookRendererProps {
   notebook: Notebook;
@@ -23,11 +39,22 @@ interface NotebookRendererProps {
 /**
  * Main NotebookRenderer component
  * Iterates through notebook cells and renders them appropriately
- * Matches the old app's behavior - renders each cell's markdown directly
+ * Consolidates footnotes at the end of the article (above author profile)
  */
 export function NotebookRenderer({ notebook, displayCategory: propDisplayCategory }: NotebookRendererProps) {
   const hookDisplayCategory = useDisplayCategory();
   const displayCategory = propDisplayCategory || hookDisplayCategory;
+
+  // Memoize footnote extraction to avoid recomputing on every render
+  const { footnotes, hasFootnotes, footnotesMarkdown } = useMemo(() => {
+    if (!notebook?.cells) {
+      return { footnotes: {}, hasFootnotes: false, footnotesMarkdown: '' };
+    }
+    const extractedFootnotes = extractNotebookFootnotes(notebook);
+    const hasAnyFootnotes = Object.keys(extractedFootnotes).length > 0;
+    const markdown = buildFootnotesMarkdown(extractedFootnotes);
+    return { footnotes: extractedFootnotes, hasFootnotes: hasAnyFootnotes, footnotesMarkdown: markdown };
+  }, [notebook]);
 
   if (!notebook?.cells) {
     return null;
@@ -42,7 +69,12 @@ export function NotebookRenderer({ notebook, displayCategory: propDisplayCategor
         const dataString = Array.isArray(currentCellData) ? currentCellData[0] : currentCellData;
         try {
           const parsedData = parseJSONSafe(dataString as string);
-          const nextCellData = nextCell.source.join('');
+          let nextCellMarkdown = nextCell.source.join('');
+          // If cell has footnote references, append definitions so links work
+          const cellHasRefs = hasFootnoteReferences(nextCellMarkdown);
+          if (cellHasRefs && footnotesMarkdown) {
+            nextCellMarkdown = `${nextCellMarkdown}\n\n${footnotesMarkdown}`;
+          }
           return (
             <HighlightedBlock
               key={`cell-${index}`}
@@ -52,7 +84,12 @@ export function NotebookRenderer({ notebook, displayCategory: propDisplayCategor
                   backgroundColor={blogColors.backgroundSecondary}
                 />
               }
-              rightContent={<MarkdownFormatter markdown={nextCellData} />}
+              rightContent={
+                <MarkdownFormatter
+                  markdown={nextCellMarkdown}
+                  hideFootnotes={hasFootnotes && cellHasRefs}
+                />
+              }
             />
           );
         } catch (e) {
@@ -66,9 +103,21 @@ export function NotebookRenderer({ notebook, displayCategory: propDisplayCategor
       return null;
     }
 
-    // Render markdown cells - just pass the markdown directly like the old app
+    // Render markdown cells
     if (cell.cell_type === 'markdown') {
-      return <MarkdownFormatter key={`cell-${index}`} markdown={cell.source.join('')} />;
+      let cellMarkdown = cell.source.join('');
+      // If cell has footnote references, append definitions so remark-gfm creates clickable links
+      const cellHasRefs = hasFootnoteReferences(cellMarkdown);
+      if (cellHasRefs && footnotesMarkdown) {
+        cellMarkdown = `${cellMarkdown}\n\n${footnotesMarkdown}`;
+      }
+      return (
+        <MarkdownFormatter
+          key={`cell-${index}`}
+          markdown={cellMarkdown}
+          hideFootnotes={hasFootnotes && cellHasRefs}
+        />
+      );
     }
 
     // Render code cells
@@ -84,7 +133,13 @@ export function NotebookRenderer({ notebook, displayCategory: propDisplayCategor
     );
   };
 
-  return <>{notebook.cells.map(renderCell)}</>;
+  return (
+    <>
+      {notebook.cells.map(renderCell)}
+      {/* Render consolidated footnotes at the end */}
+      {hasFootnotes && <FootnotesSection footnotes={footnotes} displayCategory={displayCategory} />}
+    </>
+  );
 }
 
 /**

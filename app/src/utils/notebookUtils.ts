@@ -61,3 +61,52 @@ export function parseJSONSafe(str: string): unknown {
 export function isNotebookFile(filename: string): boolean {
   return filename.endsWith('.ipynb');
 }
+
+/**
+ * Regex to match footnote definitions like [^1]: Some text
+ * Matches multi-line footnotes (definition continues until next footnote or blank line)
+ */
+const FOOTNOTE_DEFINITION_REGEX = /^\[\^(\d+)\]:\s*(.+?)(?=\n\[\^|\n\n|$)/gms;
+
+/**
+ * Extract footnote definitions from markdown content
+ * Returns an object with footnote numbers as keys and definitions as values
+ */
+export function extractFootnoteDefinitions(markdown: string): Record<string, string> {
+  const footnotes: Record<string, string> = {};
+  const matches = markdown.matchAll(FOOTNOTE_DEFINITION_REGEX);
+
+  for (const match of matches) {
+    const footnoteNum = match[1];
+    const footnoteText = match[2].trim();
+    footnotes[footnoteNum] = footnoteText;
+  }
+
+  return footnotes;
+}
+
+/**
+ * Extract all footnote definitions from a notebook
+ */
+export function extractNotebookFootnotes(notebook: Notebook): Record<string, string> {
+  const allFootnotes: Record<string, string> = {};
+
+  for (const cell of notebook.cells) {
+    if (cell.cell_type === 'markdown') {
+      const cellMarkdown = cell.source.join('');
+      const cellFootnotes = extractFootnoteDefinitions(cellMarkdown);
+      Object.assign(allFootnotes, cellFootnotes);
+    }
+  }
+
+  return allFootnotes;
+}
+
+/**
+ * Check if markdown contains footnote references (e.g., [^1])
+ * Matches [^n] that are NOT at the start of a line (definitions start at line beginning)
+ */
+export function hasFootnoteReferences(markdown: string): boolean {
+  // Match [^n] where n is a number, but not followed by : (which would be a definition)
+  return /\[\^\d+\](?!:)/m.test(markdown);
+}
