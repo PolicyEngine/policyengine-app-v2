@@ -6,6 +6,7 @@ import {
   IconGitBranch,
   IconMail,
   IconPlus,
+  IconPuzzle,
   IconScale,
   IconSettings2,
   IconUsers,
@@ -71,6 +72,11 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
       icon: IconSettings2,
       path: `/${countryId}/account`,
       disabled: true,
+    },
+    {
+      label: 'Plugins',
+      icon: IconPuzzle,
+      path: `/${countryId}/plugins`,
     },
   ];
 

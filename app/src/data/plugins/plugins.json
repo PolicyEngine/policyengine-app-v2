@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Dark Mode",
+    "slug": "dark-mode",
+    "description": "Switch to a dark color scheme that's easier on the eyes in low-light environments. Reduces eye strain and saves battery on OLED displays.",
+    "dateCreated": "2025-01-15",
+    "dateUpdated": "2025-03-10",
+    "image": "/assets/plugins/dark-mode.svg"
+  },
+  {
+    "name": "Advanced Calculations",
+    "slug": "advanced-calculations",
+    "description": "Unlock advanced policy simulation features including multi-year projections, scenario comparisons, and detailed marginal tax rate analysis.",
+    "dateCreated": "2025-02-01",
+    "dateUpdated": "2025-04-05",
+    "image": "/assets/plugins/advanced-calculations.svg"
+  },
+  {
+    "name": "Export Suite",
+    "slug": "export-suite",
+    "description": "Export your analysis results to multiple formats including PDF reports, Excel spreadsheets, and shareable presentation slides.",
+    "dateCreated": "2025-02-20",
+    "dateUpdated": "2025-03-25",
+    "image": "/assets/plugins/export-suite.svg"
+  }
+]
