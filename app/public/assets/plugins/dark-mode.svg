@@ -1,5 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <rect width="200" height="200" fill="#1D4044"/>
-  <circle cx="100" cy="100" r="50" fill="#319795"/>
-  <circle cx="120" cy="80" r="40" fill="#1D4044"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+  <!-- Background fills entire container -->
+  <rect width="320" height="180" fill="#1D4044"/>
+  <!-- Moon icon centered -->
+  <circle cx="160" cy="90" r="45" fill="#319795"/>
+  <circle cx="180" cy="70" r="36" fill="#1D4044"/>
 </svg>

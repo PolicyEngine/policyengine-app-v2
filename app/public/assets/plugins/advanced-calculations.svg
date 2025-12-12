@@ -1,8 +1,11 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
-  <rect width="200" height="200" fill="#E6FFFA"/>
-  <rect x="30" y="140" width="30" height="40" fill="#319795"/>
-  <rect x="70" y="100" width="30" height="80" fill="#2C7A7B"/>
-  <rect x="110" y="60" width="30" height="120" fill="#319795"/>
-  <rect x="150" y="80" width="30" height="100" fill="#2C7A7B"/>
-  <line x1="30" y1="50" x2="170" y2="50" stroke="#285E61" stroke-width="2" stroke-dasharray="5,5"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="180" viewBox="0 0 320 180">
+  <!-- Background fills entire container -->
+  <rect width="320" height="180" fill="#E6FFFA"/>
+  <!-- Bar chart centered -->
+  <rect x="70" y="120" width="35" height="45" fill="#319795"/>
+  <rect x="115" y="80" width="35" height="85" fill="#2C7A7B"/>
+  <rect x="160" y="40" width="35" height="125" fill="#319795"/>
+  <rect x="205" y="60" width="35" height="105" fill="#2C7A7B"/>
+  <!-- Trend line -->
+  <line x1="70" y1="35" x2="240" y2="35" stroke="#285E61" stroke-width="2" stroke-dasharray="5,5"/>
 </svg>

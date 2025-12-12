@@ -94,6 +94,10 @@ const router = createBrowserRouter(
                   element: <PoliciesPage />,
                 },
                 {
+                  path: 'plugins',
+                  element: <PluginsPage />,
+                },
+                {
                   path: 'account',
                   element: <div>Account settings page</div>,
                 },
@@ -166,10 +170,6 @@ const router = createBrowserRouter(
             {
               path: 'research/:slug',
               element: <BlogPage />,
-            },
-            {
-              path: 'plugins',
-              element: <PluginsPage />,
             },
           ],
         },
