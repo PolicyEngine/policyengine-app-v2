@@ -3,22 +3,13 @@ export const BASE_URL = 'https://api.policyengine.org';
 export const CURRENT_YEAR = '2025';
 
 // App URLs for the split website/calculator architecture
-const PROD_WEBSITE_URL = 'https://policyengine.org';
-const PROD_CALCULATOR_URL = 'https://app.policyengine.org';
+// In dev mode, these are set via VITE_* env vars to localhost URLs
+// In production, they fall back to the prod URLs
+export const WEBSITE_URL =
+  import.meta.env.VITE_WEBSITE_URL || 'https://policyengine.org';
 
-// In combined dev mode, use relative URLs since all routes exist locally
-// In split dev mode or production, use external URLs
-const isDev = import.meta.env.DEV;
-const isCombinedMode = import.meta.env.VITE_APP_MODE === 'combined';
-const useRelativeUrls = isDev && isCombinedMode;
-
-export const WEBSITE_URL = useRelativeUrls
-  ? ''
-  : import.meta.env.VITE_WEBSITE_URL || PROD_WEBSITE_URL;
-
-export const CALCULATOR_URL = useRelativeUrls
-  ? ''
-  : import.meta.env.VITE_CALCULATOR_URL || PROD_CALCULATOR_URL;
+export const CALCULATOR_URL =
+  import.meta.env.VITE_CALCULATOR_URL || 'https://app.policyengine.org';
 
 /**
  * Temporary constant for report time calculations

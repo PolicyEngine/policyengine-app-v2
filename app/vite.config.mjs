@@ -4,21 +4,16 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { resolve } from 'path';
 
 // Determine which app to build based on VITE_APP_MODE env var
-const appMode = process.env.VITE_APP_MODE || 'combined';
+// Default to website for backwards compatibility with 'npm run dev'
+const appMode = process.env.VITE_APP_MODE || 'website';
 
 function getInputConfig() {
   switch (appMode) {
     case 'calculator':
       return { main: resolve(__dirname, 'calculator.html') };
     case 'website':
-      return { main: resolve(__dirname, 'website.html') };
     default:
-      // Combined mode - build all (for development/testing)
-      return {
-        main: resolve(__dirname, 'index.html'),
-        calculator: resolve(__dirname, 'calculator.html'),
-        website: resolve(__dirname, 'website.html'),
-      };
+      return { main: resolve(__dirname, 'website.html') };
   }
 }
 

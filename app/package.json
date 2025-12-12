@@ -4,10 +4,10 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "dev": "vite",
-    "dev:calculator": "VITE_APP_MODE=calculator vite",
-    "dev:website": "VITE_APP_MODE=website vite",
-    "build": "vite build",
+    "dev": "concurrently \"npm run dev:website\" \"npm run dev:calculator\"",
+    "dev:calculator": "VITE_APP_MODE=calculator VITE_WEBSITE_URL=http://localhost:3000 vite --port 3001",
+    "dev:website": "VITE_APP_MODE=website VITE_CALCULATOR_URL=http://localhost:3001 vite --port 3000",
+    "build": "npm run build:website && npm run build:calculator",
     "build:calculator": "VITE_APP_MODE=calculator vite build",
     "build:website": "VITE_APP_MODE=website vite build",
     "build-with-types": "tsc --noEmit && vite build",
@@ -54,6 +54,7 @@
     "wordwrapjs": "^5.1.1"
   },
   "devDependencies": {
+    "concurrently": "^9.1.2",
     "@eslint/js": "^9.29.0",
     "@ianvs/prettier-plugin-sort-imports": "^4.4.2",
     "@storybook/react": "^8.6.12",
