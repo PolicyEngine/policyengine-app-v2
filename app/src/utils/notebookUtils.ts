@@ -31,17 +31,19 @@ export function decode(str: string): string {
 export function recursivelyDecode<T>(obj: T): T {
   if (typeof obj === 'string') {
     return decode(obj) as T;
-  } else if (Array.isArray(obj)) {
+  }
+  if (Array.isArray(obj)) {
     return obj.map(recursivelyDecode) as T;
-  } else if (!obj) {
+  }
+  if (!obj) {
     return obj;
-  } else if (typeof obj === 'object') {
+  }
+  if (typeof obj === 'object') {
     return Object.fromEntries(
       Object.entries(obj as object).map(([key, value]) => [key, recursivelyDecode(value)])
     ) as T;
-  } else {
-    return obj;
   }
+  return obj;
 }
 
 /**

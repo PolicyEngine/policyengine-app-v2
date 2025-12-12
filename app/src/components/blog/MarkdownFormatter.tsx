@@ -218,6 +218,14 @@ export function PlotlyChartCode({
   };
   const margins = { ...defaultMargins, ...(plotlyData.layout?.margin || {}) };
 
+  // Update image sources to use SVG with transparent background instead of PNG
+  const images = plotlyData.layout?.images?.map((img: Record<string, unknown>) => ({
+    ...img,
+    source: typeof img.source === 'string'
+      ? img.source.replace('/teal-square.png', '/teal-square.svg')
+      : img.source,
+  }));
+
   return (
     <div
       style={{
@@ -232,6 +240,7 @@ export function PlotlyChartCode({
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
+          images,
           height: 600,
           plot_bgcolor: backgroundColor || 'transparent',
           paper_bgcolor: backgroundColor || 'transparent',
