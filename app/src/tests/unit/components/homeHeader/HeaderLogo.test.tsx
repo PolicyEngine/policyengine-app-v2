@@ -26,8 +26,8 @@ describe('HeaderLogo', () => {
     renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.US);
     const link = screen.getByRole('link');
 
-    // Then - In dev/test mode, WEBSITE_URL is relative so href is just /us
-    expect(link).toHaveAttribute('href', '/us');
+    // Then - WEBSITE_URL defaults to https://policyengine.org
+    expect(link).toHaveAttribute('href', 'https://policyengine.org/us');
   });
 
   test('given UK country then logo links to UK homepage', () => {
@@ -36,6 +36,6 @@ describe('HeaderLogo', () => {
     const link = screen.getByRole('link');
 
     // Then
-    expect(link).toHaveAttribute('href', '/uk');
+    expect(link).toHaveAttribute('href', 'https://policyengine.org/uk');
   });
 });
