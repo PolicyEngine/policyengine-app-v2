@@ -3,6 +3,7 @@
  * Contains homepage, blog, team, and embedded apps
  */
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom';
+import AppLayout from './components/AppLayout';
 import StaticLayout from './components/StaticLayout';
 import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
@@ -83,12 +84,12 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // Interactive app routes - use StaticLayout with CountryAppGuard
+        // Interactive app routes - use AppLayout (no legacy banner) with CountryAppGuard
         {
           element: <CountryAppGuard />,
           children: [
             {
-              element: <StaticLayout />,
+              element: <AppLayout />,
               children: [
                 {
                   path: ':slug',
