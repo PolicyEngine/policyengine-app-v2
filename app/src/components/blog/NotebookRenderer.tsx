@@ -23,6 +23,7 @@ interface NotebookRendererProps {
 /**
  * Main NotebookRenderer component
  * Iterates through notebook cells and renders them appropriately
+ * Matches the old app's behavior - renders each cell's markdown directly
  */
 export function NotebookRenderer({ notebook, displayCategory: propDisplayCategory }: NotebookRendererProps) {
   const hookDisplayCategory = useDisplayCategory();
@@ -65,7 +66,7 @@ export function NotebookRenderer({ notebook, displayCategory: propDisplayCategor
       return null;
     }
 
-    // Render markdown cells
+    // Render markdown cells - just pass the markdown directly like the old app
     if (cell.cell_type === 'markdown') {
       return <MarkdownFormatter key={`cell-${index}`} markdown={cell.source.join('')} />;
     }
@@ -194,6 +195,14 @@ function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
   const width = displayCategory === 'mobile' ? 600 : (typeof layoutWidth === 'number' ? layoutWidth : undefined);
   const height = typeof layoutHeight === 'number' ? layoutHeight : 600;
 
+  // Update image sources to use SVG with transparent background instead of PNG
+  const images = data.layout?.images?.map((img: Record<string, unknown>) => ({
+    ...img,
+    source: typeof img.source === 'string'
+      ? img.source.replace('/teal-square.png', '/teal-square.svg')
+      : img.source,
+  }));
+
   return (
     <div style={{ marginBottom: blogSpacing.lg }}>
       {title && (
@@ -212,6 +221,7 @@ function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
         data={data.data}
         layout={{
           ...data.layout,
+          images,
           width,
           height,
           title: { text: '' },
