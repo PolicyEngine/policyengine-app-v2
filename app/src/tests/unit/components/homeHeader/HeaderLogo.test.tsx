@@ -1,23 +1,9 @@
 import { renderWithCountry, screen } from '@test-utils';
-import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import HeaderLogo from '@/components/homeHeader/HeaderLogo';
 import { TEST_COUNTRY_IDS } from '@/tests/fixtures/components/homeHeader/CountrySelectorMocks';
 
-const mockNavigate = vi.fn();
-
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom');
-  return {
-    ...actual,
-    useNavigate: () => mockNavigate,
-  };
-});
-
 describe('HeaderLogo', () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   test('given component renders then displays PolicyEngine logo', () => {
     // When
     renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.US);
@@ -35,29 +21,21 @@ describe('HeaderLogo', () => {
     expect(logo).toHaveStyle({ height: '24px' });
   });
 
-  test('given user clicks logo from US then navigates to US home', async () => {
-    // Given
-    const { userEvent } = await import('@test-utils');
-    const user = userEvent.setup();
-
+  test('given US country then logo links to US homepage', () => {
     // When
     renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.US);
-    await user.click(screen.getByAltText('PolicyEngine'));
+    const link = screen.getByRole('link');
 
-    // Then
-    expect(mockNavigate).toHaveBeenCalledWith('/us');
+    // Then - WEBSITE_URL defaults to https://policyengine.org
+    expect(link).toHaveAttribute('href', 'https://policyengine.org/us');
   });
 
-  test('given user clicks logo from UK then navigates to UK home', async () => {
-    // Given
-    const { userEvent } = await import('@test-utils');
-    const user = userEvent.setup();
-
+  test('given UK country then logo links to UK homepage', () => {
     // When
     renderWithCountry(<HeaderLogo />, TEST_COUNTRY_IDS.UK);
-    await user.click(screen.getByAltText('PolicyEngine'));
+    const link = screen.getByRole('link');
 
     // Then
-    expect(mockNavigate).toHaveBeenCalledWith('/uk');
+    expect(link).toHaveAttribute('href', 'https://policyengine.org/uk');
   });
 });
