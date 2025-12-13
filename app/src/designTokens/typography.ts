@@ -2,7 +2,8 @@
 
 export const typography = {
   fontFamily: {
-    primary: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+    display: "'Instrument Serif', Georgia, serif",
+    primary: "'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif",
     secondary: 'Public Sans, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     body: 'Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     mono: 'JetBrains Mono, "Fira Code", Consolas, monospace',

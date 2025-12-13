@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Box, Flex, Text } from '@mantine/core';
 import { CountryId, getOrgsForCountry, Organization } from '@/data/organizations';
-import { colors, spacing, typography } from '@/designTokens';
+import { spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 const NUM_VISIBLE = 7;
@@ -104,14 +104,30 @@ export default function OrgLogos() {
   const visibleOrgs = slotIndices.map((idx) => shuffledOrgs[idx]).filter(Boolean) as Organization[];
 
   return (
-    <Box mt={spacing['4xl']} mb={spacing['4xl']}>
+    <Box
+      mt={spacing['4xl']}
+      style={{
+        position: 'relative',
+        zIndex: 1,
+        background: 'rgba(255, 255, 255, 0.95)',
+        borderTop: '1px solid rgba(79, 209, 197, 0.1)',
+        borderBottom: '1px solid rgba(79, 209, 197, 0.1)',
+        paddingTop: spacing['3xl'],
+        paddingBottom: spacing['3xl'],
+      }}
+    >
       <Text
         ta="center"
         size="lg"
-        c={colors.primary[600]}
         fw={typography.fontWeight.medium}
         mb={spacing.xl}
-        style={{ fontFamily: typography.fontFamily.primary }}
+        style={{
+          fontFamily: typography.fontFamily.primary,
+          color: 'rgba(13, 43, 42, 0.5)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.1em',
+          fontSize: '13px',
+        }}
       >
         {countryId === 'us'
           ? 'Trusted by researchers, policy organizations, and benefit platforms'
@@ -144,8 +160,18 @@ export default function OrgLogos() {
                 cursor: 'pointer',
                 width: '120px',
                 height: '100px',
-                opacity: transitioningSlot === i ? 0 : 1,
+                opacity: transitioningSlot === i ? 0 : 0.6,
                 transition: 'opacity 0.3s ease-in-out',
+              }}
+              onMouseEnter={(e) => {
+                if (transitioningSlot !== i) {
+                  e.currentTarget.style.opacity = '1';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (transitioningSlot !== i) {
+                  e.currentTarget.style.opacity = '0.6';
+                }
               }}
             >
               <button

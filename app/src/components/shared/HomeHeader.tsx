@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDisclosure } from '@mantine/hooks';
 import HeaderContent from '@/components/homeHeader/HeaderContent';
 import { NavItemSetup } from '@/components/homeHeader/NavItem';
-import { colors, spacing, typography } from '@/designTokens';
+import { spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 
 export default function HeaderNavigation() {
@@ -49,12 +49,11 @@ export default function HeaderNavigation() {
         paddingLeft: '24px',
         paddingRight: '24px',
         height: spacing.layout.header,
-        backgroundColor: colors.primary[600],
-        borderBottom: `0.5px solid ${colors.border.dark}`,
-        boxShadow: `
-      0px 2px 4px -1px rgba(0, 0, 0, 0.06),
-      0px 4px 6px -1px rgba(0, 0, 0, 0.10)
-    `,
+        background: 'linear-gradient(180deg, rgba(13, 43, 42, 0.95) 0%, rgba(13, 43, 42, 0.9) 100%)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(79, 209, 197, 0.1)',
+        boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
         zIndex: 1000,
         fontFamily: typography.fontFamily.primary,
         opacity: opened ? 0 : 1,

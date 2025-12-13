@@ -336,15 +336,17 @@ export const themeComponents = {
   AppShell: AppShell.extend({
     defaultProps: {
       padding: spacing.appShell.main.padding,
-      withBorder: true,
+      withBorder: false,
     },
     styles: {
       main: {
         minHeight: spacing.appShell.main.minHeight,
-        backgroundColor: colors.gray[50],
+        backgroundColor: '#f8fffe',
       },
       navbar: {
         padding: spacing.appShell.navbar.padding,
+        backgroundColor: 'transparent',
+        border: 'none',
       },
     },
   }),

@@ -1,0 +1,209 @@
+/* PolicyEngine Global Styles - Editorial Redesign */
+
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* CSS Variables */
+:root {
+  /* Teal brand colors */
+  --pe-teal-50: #f0fdfa;
+  --pe-teal-100: #ccfbf1;
+  --pe-teal-200: #99f6e4;
+  --pe-teal-300: #5eead4;
+  --pe-teal-400: #2dd4bf;
+  --pe-teal-500: #14b8a6;
+  --pe-teal-600: #0d9488;
+  --pe-teal-700: #0f766e;
+  --pe-teal-800: #115e59;
+  --pe-teal-900: #134e4a;
+
+  /* Dark teal for backgrounds */
+  --pe-dark-900: #0a1f1e;
+  --pe-dark-800: #0d2b2a;
+  --pe-dark-700: #164e4a;
+  --pe-dark-600: #1a5f5a;
+
+  /* Accent */
+  --pe-accent: #4FD1C5;
+
+  /* Fonts */
+  --font-display: 'Instrument Serif', Georgia, serif;
+  --font-primary: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Animation Utility Classes */
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.5s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulse 4s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.delay-100 {
+  animation-delay: 0.1s;
+}
+
+.delay-200 {
+  animation-delay: 0.2s;
+}
+
+.delay-300 {
+  animation-delay: 0.3s;
+}
+
+.delay-400 {
+  animation-delay: 0.4s;
+}
+
+.delay-500 {
+  animation-delay: 0.5s;
+}
+
+/* Gradient text effect */
+.gradient-text {
+  background: linear-gradient(135deg, var(--pe-accent) 0%, var(--pe-teal-300) 50%, var(--pe-accent) 100%);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* Glass morphism effect */
+.glass {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Noise texture overlay */
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better focus states */
+*:focus-visible {
+  outline: 2px solid var(--pe-accent);
+  outline-offset: 2px;
+}
+
+/* Selection color */
+::selection {
+  background: var(--pe-teal-200);
+  color: var(--pe-dark-900);
+}

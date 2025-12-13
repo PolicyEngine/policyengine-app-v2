@@ -13,7 +13,7 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Box, Button, Stack } from '@mantine/core';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { colors, spacing, typography } from '../designTokens';
+import { spacing, typography } from '../designTokens';
 import SidebarDivider from './sidebar/SidebarDivider';
 import SidebarNavItem from './sidebar/SidebarNavItem';
 import SidebarSection from './sidebar/SidebarSection';
@@ -81,9 +81,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   return (
     <Stack
       h="100vh"
-      bg="white"
       style={{
-        borderRight: `1px solid ${colors.border.light}`,
+        background: 'linear-gradient(180deg, #0d2b2a 0%, #0a1f1e 100%)',
+        borderRight: '1px solid rgba(79, 209, 197, 0.1)',
         width: parseInt(spacing.appShell.navbar.width, 10),
         left: 0,
         top: 0,
@@ -101,9 +101,16 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             h={36}
             styles={{
               root: {
-                backgroundColor: colors.primary[600],
+                background: 'linear-gradient(135deg, #4FD1C5 0%, #38B2AC 100%)',
+                color: '#0d2b2a',
                 fontSize: typography.fontSize.sm,
-                fontWeight: typography.fontWeight.medium,
+                fontWeight: typography.fontWeight.semibold,
+                border: 'none',
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  transform: 'translateY(-1px)',
+                  boxShadow: '0 4px 20px rgba(79, 209, 197, 0.3)',
+                },
               },
             }}
             onClick={() => navigate(`/${countryId}/reports/create`)}
