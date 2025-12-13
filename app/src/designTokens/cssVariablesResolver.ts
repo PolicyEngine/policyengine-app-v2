@@ -289,10 +289,10 @@ const darkColors = {
   'footer-text': '#F1F5F9',
   'footer-border': '#115E59',
 
-  // Button styles (dark mode) - vibrant teal
-  'button-primary-bg': '#0D9488', // primary[500]
+  // Button styles (dark mode) - vibrant teal (matches teal[4] in theme)
+  'button-primary-bg': '#0D9488',
   'button-primary-text': '#FFFFFF',
-  'button-primary-hover': '#0F766E', // primary[600]
+  'button-primary-hover': '#0F766E',
   'button-secondary-bg': 'transparent',
   'button-secondary-text': '#F1F5F9',
   'button-secondary-border': '#334155',
