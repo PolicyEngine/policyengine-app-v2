@@ -122,6 +122,69 @@ export const colors = {
     medium: 'var(--pe-shadow-medium)',
     dark: 'var(--pe-shadow-dark)',
   },
+
+  // Static colors - these DO NOT change with theme
+  // Use for brand elements on colored backgrounds (e.g., white text on teal header/footer)
+  static: {
+    white: 'var(--pe-static-white)',
+    black: 'var(--pe-static-black)',
+  },
+
+  // Header colors - adapts to light/dark mode
+  header: {
+    bg: 'var(--pe-header-bg)',
+    text: 'var(--pe-header-text)',
+    border: 'var(--pe-header-border)',
+  },
+
+  // Hero section colors
+  hero: {
+    bgStart: 'var(--pe-hero-bg-start)',
+    bgEnd: 'var(--pe-hero-bg-end)',
+    text: 'var(--pe-hero-text)',
+    accent: 'var(--pe-hero-accent)',
+    gradient: 'var(--pe-hero-gradient)',
+    mesh: 'var(--pe-hero-mesh)',
+  },
+
+  // Feature card colors
+  cardFeature: {
+    bg: 'var(--pe-card-feature-bg)',
+    border: 'var(--pe-card-feature-border)',
+    text: 'var(--pe-card-feature-text)',
+    description: 'var(--pe-card-feature-description)',
+    iconBg: 'var(--pe-card-feature-icon-bg)',
+  },
+
+  // CTA section colors
+  cta: {
+    bgStart: 'var(--pe-cta-bg-start)',
+    bgEnd: 'var(--pe-cta-bg-end)',
+    text: 'var(--pe-cta-text)',
+  },
+
+  // Partner/logo section colors
+  partner: {
+    bg: 'var(--pe-partner-bg)',
+    text: 'var(--pe-partner-text)',
+  },
+
+  // Footer colors
+  footer: {
+    bg: 'var(--pe-footer-bg)',
+    text: 'var(--pe-footer-text)',
+    border: 'var(--pe-footer-border)',
+  },
+
+  // Button colors
+  button: {
+    primaryBg: 'var(--pe-button-primary-bg)',
+    primaryText: 'var(--pe-button-primary-text)',
+    primaryHover: 'var(--pe-button-primary-hover)',
+    secondaryBg: 'var(--pe-button-secondary-bg)',
+    secondaryText: 'var(--pe-button-secondary-text)',
+    secondaryBorder: 'var(--pe-button-secondary-border)',
+  },
 };
 
 /**

@@ -35,7 +35,7 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9fafb',
+            backgroundColor: colors.gray[50],
             zIndex: 1,
           }}
         >
@@ -45,7 +45,7 @@ export default function IframeContent({
                 width: '48px',
                 height: '48px',
                 border: `4px solid ${colors.gray[200]}`,
-                borderTop: `4px solid ${colors.primary[600]}`,
+                borderTop: `4px solid ${colors.button.primaryBg}`,
                 borderRadius: '50%',
                 margin: '0 auto 1rem',
                 animation: 'spin 1s linear infinite',
@@ -66,7 +66,7 @@ export default function IframeContent({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9fafb',
+            backgroundColor: colors.gray[50],
             zIndex: 1,
           }}
         >
@@ -90,8 +90,8 @@ export default function IframeContent({
               style={{
                 display: 'inline-block',
                 padding: '0.5rem 1rem',
-                backgroundColor: colors.primary[600],
-                color: colors.white,
+                backgroundColor: colors.button.primaryBg,
+                color: colors.static.white,
                 textDecoration: 'none',
                 borderRadius: '4px',
               }}

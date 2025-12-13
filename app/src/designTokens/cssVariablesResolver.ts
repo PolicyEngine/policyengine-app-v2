@@ -5,6 +5,13 @@
  * light and dark theme variants. This enables dark mode to work across
  * all components that use design tokens, not just Mantine components.
  *
+ * Dark Mode Design Philosophy:
+ * - Uses teal-tinted dark grays to maintain brand identity
+ * - Follows elevation principle: surfaces get lighter as they elevate
+ * - Off-white text (#E7E9EA) to reduce eye strain vs pure white
+ * - Teal accent remains vibrant but slightly desaturated for harmony
+ * - 4.5:1+ contrast ratio for accessibility (WCAG AA)
+ *
  * The resolver is passed to MantineProvider's cssVariablesResolver prop.
  */
 
@@ -98,96 +105,197 @@ const lightColors = {
   'shadow-light': 'rgba(16, 24, 40, 0.05)',
   'shadow-medium': 'rgba(16, 24, 40, 0.1)',
   'shadow-dark': 'rgba(16, 24, 40, 0.2)',
+
+  // Static colors - these DO NOT change with theme
+  // Use for brand elements on colored backgrounds (e.g., white text on teal header)
+  'static-white': '#FFFFFF',
+  'static-black': '#000000',
+
+  // Header colors (light mode: teal header)
+  'header-bg': '#2C7A7B',
+  'header-text': '#FFFFFF',
+  'header-border': '#285E61',
+
+  // Hero section (light mode: warm teal to cream gradient from redesign)
+  'hero-bg-start': '#ECFDF5',
+  'hero-bg-end': '#FAFBFC',
+  'hero-text': '#234E52',
+  'hero-accent': '#319795',
+  // Exact gradient strings from redesign
+  'hero-gradient': `radial-gradient(ellipse 80% 50% at 50% -20%, rgba(13, 148, 136, 0.15), transparent), radial-gradient(ellipse 60% 40% at 80% 60%, rgba(13, 148, 136, 0.08), transparent), linear-gradient(180deg, #ECFDF5 0%, #FAFBFC 50%, #FAFBFC 100%)`,
+  'hero-mesh': `radial-gradient(at 40% 20%, rgba(13, 148, 136, 0.12) 0px, transparent 50%), radial-gradient(at 80% 0%, rgba(52, 211, 153, 0.1) 0px, transparent 40%), radial-gradient(at 0% 50%, rgba(13, 148, 136, 0.05) 0px, transparent 50%)`,
+
+  // Card backgrounds for feature sections (light mode: white cards)
+  'card-feature-bg': '#FFFFFF',
+  'card-feature-border': '#E2E8F0',
+  'card-feature-text': '#101828',
+  'card-feature-description': '#5A5A5A',
+  'card-feature-icon-bg': 'rgba(49, 151, 149, 0.1)',
+
+  // CTA section (light mode: teal gradient)
+  'cta-bg-start': '#2C7A7B',
+  'cta-bg-end': '#319795',
+  'cta-text': '#FFFFFF',
+
+  // Logo/partner section (light mode: light background)
+  'partner-bg': '#F5F9FF',
+  'partner-text': '#5A5A5A',
+
+  // Footer (light mode: teal)
+  'footer-bg': '#2C7A7B',
+  'footer-text': '#FFFFFF',
+  'footer-border': '#285E61',
+
+  // Button styles
+  'button-primary-bg': '#2C7A7B',
+  'button-primary-text': '#FFFFFF',
+  'button-primary-hover': '#285E61',
+  'button-secondary-bg': 'transparent',
+  'button-secondary-text': '#FFFFFF',
+  'button-secondary-border': '#FFFFFF',
 };
 
 /**
  * Dark theme color values
- * These colors are used when dark mode is active
+ *
+ * Design rationale (from redesign worktree):
+ * - Base background (#0A0F14): Rich navy-black
+ * - Header/navbar uses dark teal (#0A3D38) not pure black
+ * - Hero uses radial gradients with teal undertones
+ * - Buttons use primary[500] (#0D9488) - vibrant teal
+ * - Footer uses deepest teal (#042F2E)
  */
 const darkColors = {
-  // Primary brand colors - brighter teal for dark backgrounds
-  'primary-50': '#087F5B',
-  'primary-100': '#099268',
-  'primary-200': '#0CA678',
-  'primary-300': '#12B886',
-  'primary-400': '#20C997',
-  'primary-500': '#38D9A9',
-  'primary-600': '#63E6BE',
-  'primary-700': '#96F2D7',
-  'primary-800': '#C3FAE8',
-  'primary-900': '#E6FCF5',
-  'primary-alpha-40': 'rgba(56, 217, 169, 0.4)',
-  'primary-alpha-50': 'rgba(56, 217, 169, 0.5)',
-  'primary-alpha-60': 'rgba(56, 217, 169, 0.6)',
+  // Primary brand colors - teal adjusted for dark backgrounds
+  'primary-50': '#042F2E', // Deepest teal (footer bg)
+  'primary-100': '#0A3D38', // Dark teal (navbar bg)
+  'primary-200': '#115E59',
+  'primary-300': '#134E4A',
+  'primary-400': '#0F766E',
+  'primary-500': '#0D9488', // Main button color
+  'primary-600': '#14B8A6',
+  'primary-700': '#2DD4BF',
+  'primary-800': '#5EEAD4',
+  'primary-900': '#99F6E4',
+  'primary-alpha-40': 'rgba(13, 148, 136, 0.4)',
+  'primary-alpha-50': 'rgba(13, 148, 136, 0.5)',
+  'primary-alpha-60': 'rgba(13, 148, 136, 0.6)',
 
-  // Secondary colors - inverted for dark mode
-  'secondary-50': '#101828',
-  'secondary-100': '#1E293B',
-  'secondary-200': '#344054',
-  'secondary-300': '#475569',
-  'secondary-400': '#64748B',
-  'secondary-500': '#94A3B8',
-  'secondary-600': '#CBD5E1',
-  'secondary-700': '#E2E8F0',
-  'secondary-800': '#F2F4F7',
-  'secondary-900': '#F0F9FF',
+  // Secondary colors - navy palette for dark mode
+  'secondary-50': '#0A0F14', // Deepest background
+  'secondary-100': '#111827', // Elevated surface level 1
+  'secondary-200': '#1F2937', // Elevated surface level 2
+  'secondary-300': '#334155', // Elevated surface level 3 / borders
+  'secondary-400': '#475569', // Muted elements
+  'secondary-500': '#64748B', // Secondary text / icons
+  'secondary-600': '#94A3B8', // Tertiary text
+  'secondary-700': '#CBD5E1', // Subtle text
+  'secondary-800': '#E2E8F0', // Body text
+  'secondary-900': '#F1F5F9', // Primary text
 
   // Blue colors - adjusted for dark mode
-  'blue-50': '#0C4A6E',
-  'blue-100': '#075985',
-  'blue-200': '#026AA2',
-  'blue-300': '#0284C7',
-  'blue-400': '#0EA5E9',
-  'blue-500': '#38BDF8',
-  'blue-600': '#7DD3FC',
-  'blue-700': '#BAE6FD',
-  'blue-800': '#E0F2FE',
-  'blue-900': '#F0F9FF',
+  'blue-50': '#0C2D48',
+  'blue-100': '#0E3A5C',
+  'blue-200': '#0D4A70',
+  'blue-300': '#0C5A8A',
+  'blue-400': '#1D7ABF',
+  'blue-500': '#58A6FF',
+  'blue-600': '#79B8FF',
+  'blue-700': '#A5D6FF',
+  'blue-800': '#CAE8FF',
+  'blue-900': '#E6F4FF',
 
-  // Semantic colors - slightly adjusted for dark backgrounds
-  success: '#4ADE80',
-  warning: '#FBBF24',
-  error: '#F87171',
-  info: '#60A5FA',
+  // Semantic colors
+  success: '#34D399', // Green-teal accent
+  warning: '#D29922',
+  error: '#F85149',
+  info: '#58A6FF',
 
-  // Neutral colors - swapped
-  white: '#1A1B1E',
-  black: '#E4E4E7',
+  // Neutral colors - semantic swap for dark mode
+  white: '#0A0F14', // "White" becomes the darkest background
+  black: '#F1F5F9', // "Black" becomes the lightest text
 
-  // Gray scale - inverted for dark mode
-  'gray-50': '#101113',
-  'gray-100': '#141517',
-  'gray-200': '#1A1B1E',
-  'gray-300': '#25262B',
-  'gray-400': '#2C2E33',
-  'gray-500': '#373A40',
-  'gray-600': '#5C5F66',
-  'gray-700': '#909296',
-  'gray-800': '#A6A7AB',
-  'gray-900': '#C1C2C5',
+  // Gray scale - navy-tinted dark grays
+  'gray-50': '#0A0F14', // Base background
+  'gray-100': '#111827', // Card/surface level 1
+  'gray-200': '#1F2937', // Surface level 2
+  'gray-300': '#334155', // Surface level 3 / borders
+  'gray-400': '#475569', // Disabled state
+  'gray-500': '#64748B', // Muted text / icons
+  'gray-600': '#94A3B8', // Secondary icons
+  'gray-700': '#CBD5E1', // Tertiary text
+  'gray-800': '#E2E8F0', // Secondary text
+  'gray-900': '#F1F5F9', // Primary text
 
-  // Background colors - dark variants
-  'background-primary': '#1A1B1E',
-  'background-secondary': '#141517',
-  'background-tertiary': '#25262B',
-  'background-sider': '#1A1B1E',
+  // Background colors - elevation-based
+  'background-primary': '#0A0F14', // Main app background
+  'background-secondary': '#111827', // Cards, modals, elevated surfaces
+  'background-tertiary': '#1F2937', // Nested cards, hover states
+  'background-sider': '#111827', // Sidebar background
 
-  // Text colors - inverted for dark mode
-  'text-primary': '#E4E4E7',
-  'text-secondary': '#A1A1AA',
-  'text-tertiary': '#71717A',
-  'text-inverse': '#18181B',
-  'text-title': '#FAFAFA',
+  // Text colors - optimized for readability
+  'text-primary': '#F1F5F9', // Main text - off-white
+  'text-secondary': '#CBD5E1', // Secondary text
+  'text-tertiary': '#94A3B8', // Muted text
+  'text-inverse': '#0F172A', // Text on light/accent backgrounds
+  'text-title': '#F1F5F9', // Titles
 
-  // Border colors - dark variants
-  'border-light': '#2C2E33',
-  'border-medium': '#373A40',
-  'border-dark': '#5C5F66',
+  // Border colors
+  'border-light': '#1E293B', // Subtle borders
+  'border-medium': '#334155', // Standard borders
+  'border-dark': '#475569', // Emphasized borders
 
-  // Shadow colors - adjusted for dark mode
-  'shadow-light': 'rgba(0, 0, 0, 0.2)',
-  'shadow-medium': 'rgba(0, 0, 0, 0.3)',
-  'shadow-dark': 'rgba(0, 0, 0, 0.4)',
+  // Shadow colors
+  'shadow-light': 'rgba(0, 0, 0, 0.3)',
+  'shadow-medium': 'rgba(0, 0, 0, 0.4)',
+  'shadow-dark': 'rgba(0, 0, 0, 0.5)',
+
+  // Static colors - these DO NOT change with theme
+  'static-white': '#FFFFFF',
+  'static-black': '#000000',
+
+  // Header colors (dark mode: dark TEAL header, not black)
+  'header-bg': '#0A3D38', // primary[900] - dark teal
+  'header-text': '#FFFFFF',
+  'header-border': '#115E59', // primary[800]
+
+  // Hero section (dark mode: deep navy with teal accents from redesign)
+  'hero-bg-start': '#0A1A1F',
+  'hero-bg-end': '#0A0F14',
+  'hero-text': '#F1F5F9',
+  'hero-accent': '#34D399',
+  // Exact gradient strings from redesign
+  'hero-gradient': `radial-gradient(ellipse 80% 50% at 50% -20%, rgba(13, 148, 136, 0.25), transparent), radial-gradient(ellipse 60% 40% at 80% 60%, rgba(13, 148, 136, 0.12), transparent), linear-gradient(180deg, #0A1A1F 0%, #0A0F14 50%, #0A0F14 100%)`,
+  'hero-mesh': `radial-gradient(at 40% 20%, rgba(13, 148, 136, 0.2) 0px, transparent 50%), radial-gradient(at 80% 0%, rgba(52, 211, 153, 0.15) 0px, transparent 40%), radial-gradient(at 0% 50%, rgba(13, 148, 136, 0.08) 0px, transparent 50%)`,
+
+  // Card backgrounds for feature sections
+  'card-feature-bg': '#111827',
+  'card-feature-border': '#1E293B',
+  'card-feature-text': '#F1F5F9',
+  'card-feature-description': '#94A3B8',
+  'card-feature-icon-bg': 'rgba(13, 148, 136, 0.2)',
+
+  // CTA section (dark mode: teal gradient)
+  'cta-bg-start': '#134E4A',
+  'cta-bg-end': '#0F766E',
+  'cta-text': '#FFFFFF',
+
+  // Logo/partner section
+  'partner-bg': '#0A0F14',
+  'partner-text': '#94A3B8',
+
+  // Footer (dark mode: deepest teal)
+  'footer-bg': '#042F2E', // primary[950]
+  'footer-text': '#F1F5F9',
+  'footer-border': '#115E59',
+
+  // Button styles (dark mode) - vibrant teal
+  'button-primary-bg': '#0D9488', // primary[500]
+  'button-primary-text': '#FFFFFF',
+  'button-primary-hover': '#0F766E', // primary[600]
+  'button-secondary-bg': 'transparent',
+  'button-secondary-text': '#F1F5F9',
+  'button-secondary-border': '#334155',
 };
 
 /**

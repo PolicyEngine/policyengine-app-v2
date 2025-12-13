@@ -55,16 +55,18 @@ export const themeColors: Record<string, MantineColorsTuple> = {
     colors.gray[900],
   ] as MantineColorsTuple,
 
+  // Teal uses raw hex values (not CSS vars) for Mantine's internal color calculations
+  // These are the brand teal colors that match light mode
   teal: [
-    colors.primary[50],
-    colors.primary[100],
-    colors.primary[200],
-    colors.primary[300],
-    colors.primary[400],
-    colors.primary[500],
-    colors.primary[600],
-    colors.primary[700],
-    colors.primary[800],
-    colors.primary[900],
+    '#E6FFFA', // 50
+    '#B2F5EA', // 100
+    '#81E6D9', // 200
+    '#4FD1C5', // 300
+    '#38B2AC', // 400
+    '#319795', // 500
+    '#2C7A7B', // 600 - primary button color
+    '#285E61', // 700
+    '#234E52', // 800
+    '#1D4044', // 900
   ] as MantineColorsTuple,
 };

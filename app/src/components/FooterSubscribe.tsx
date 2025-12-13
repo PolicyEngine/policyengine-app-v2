@@ -40,10 +40,10 @@ export default function FooterSubscribe() {
 
   return (
     <Stack gap="xs" pl="2xl">
-      <Text fw={600} fz="h2" c={colors.white} ff={typography.fontFamily.primary}>
+      <Text fw={600} fz="h2" c={colors.static.white} ff={typography.fontFamily.primary}>
         Subscribe to PolicyEngine
       </Text>
-      <Text fz="h5" c={colors.white} ff={typography.fontFamily.primary}>
+      <Text fz="h5" c={colors.static.white} ff={typography.fontFamily.primary}>
         Get the latest posts delivered right to your inbox.
       </Text>
       <Stack gap="sm" w="80%" mt="20px">
@@ -54,7 +54,7 @@ export default function FooterSubscribe() {
           value={email}
           onChange={(event) => setEmail(event.currentTarget.value)}
           styles={{
-            input: { backgroundColor: colors.white, flex: 1 },
+            input: { backgroundColor: colors.static.white, flex: 1 },
           }}
           disabled={status === 'loading'}
         />

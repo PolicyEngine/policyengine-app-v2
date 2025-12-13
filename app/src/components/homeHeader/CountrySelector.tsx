@@ -30,7 +30,7 @@ export default function CountrySelector() {
       <Menu.Target>
         <UnstyledButton aria-label="Country selector" style={{ lineHeight: 1 }}>
           <Group gap={4} align="center">
-            <IconWorld size={18} color={colors.text.inverse} />
+            <IconWorld size={18} color={colors.header.text} />
           </Group>
         </UnstyledButton>
       </Menu.Target>

@@ -116,10 +116,23 @@ function PluginCard({ plugin, isInstalled, onToggle, onOpenSettings }: PluginCar
         {/* Install/Remove Button */}
         <Button
           variant={isInstalled ? 'outline' : 'filled'}
-          color={isInstalled ? 'red' : 'teal'}
+          color={isInstalled ? 'red' : undefined}
           size="sm"
           fullWidth
           onClick={handleToggle}
+          styles={
+            !isInstalled
+              ? {
+                  root: {
+                    backgroundColor: colors.button.primaryBg,
+                    color: colors.button.primaryText,
+                    '&:hover': {
+                      backgroundColor: colors.button.primaryHover,
+                    },
+                  },
+                }
+              : undefined
+          }
         >
           {isInstalled ? 'Remove' : 'Install'}
         </Button>

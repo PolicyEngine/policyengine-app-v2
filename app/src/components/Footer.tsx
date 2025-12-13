@@ -41,7 +41,7 @@ export default function Footer() {
     <Box
       component="footer"
       w="100%"
-      style={{ backgroundColor: colors.primary[900], padding: '3rem 4rem' }}
+      style={{ backgroundColor: colors.footer.bg, padding: '3rem 4rem' }}
     >
       <Container size="2xl">
         <img
@@ -58,7 +58,7 @@ export default function Footer() {
             <Stack gap="xs">
               <Anchor
                 href={CONTACT_LINKS.about}
-                c={colors.white}
+                c={colors.static.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
@@ -67,7 +67,7 @@ export default function Footer() {
               </Anchor>
               <Anchor
                 href={CONTACT_LINKS.donate}
-                c={colors.white}
+                c={colors.static.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
@@ -76,7 +76,7 @@ export default function Footer() {
               </Anchor>
               <Anchor
                 href={CONTACT_LINKS.privacy}
-                c={colors.white}
+                c={colors.static.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
@@ -85,7 +85,7 @@ export default function Footer() {
               </Anchor>
               <Anchor
                 href={CONTACT_LINKS.terms}
-                c={colors.white}
+                c={colors.static.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
@@ -95,7 +95,7 @@ export default function Footer() {
               {/* TODO: Uncomment when developer-tools page is built
               <Anchor
                 href={CONTACT_LINKS.developerTools}
-                c={colors.white}
+                c={colors.static.white}
                 fz="md"
                 underline="never"
                 ff={typography.fontFamily.primary}
@@ -109,11 +109,11 @@ export default function Footer() {
               <Group gap="md">
                 {SOCIAL_LINKS.map(({ icon: Icon, href }, index) => (
                   <Anchor key={index} href={href} target="_blank">
-                    <Icon size={24} color={colors.white} />
+                    <Icon size={24} color={colors.static.white} />
                   </Anchor>
                 ))}
               </Group>
-              <Text fz="xs" c={colors.white} ff={typography.fontFamily.primary}>
+              <Text fz="xs" c={colors.static.white} ff={typography.fontFamily.primary}>
                 © {new Date().getFullYear()} PolicyEngine. All rights reserved.
               </Text>
             </Stack>

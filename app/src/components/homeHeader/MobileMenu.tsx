@@ -16,7 +16,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
       {/* Mobile Burger Menu with Country Selector */}
       <Group hiddenFrom="lg" gap={spacing.md}>
         <CountrySelector />
-        <Burger opened={opened} onClick={onOpen} color={colors.text.inverse} size="sm" />
+        <Burger opened={opened} onClick={onOpen} color={colors.header.text} size="sm" />
       </Group>
 
       {/* Mobile Drawer */}
@@ -26,10 +26,10 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
         position="right"
         size="sm"
         styles={{
-          content: { backgroundColor: colors.primary[600] },
-          header: { backgroundColor: colors.primary[600], borderBottom: 'none' },
+          content: { backgroundColor: colors.header.bg },
+          header: { backgroundColor: colors.header.bg, borderBottom: 'none' },
         }}
-        closeButtonProps={{ style: { color: colors.text.inverse }, size: 'md' }}
+        closeButtonProps={{ style: { color: colors.header.text }, size: 'md' }}
       >
         <Stack gap={spacing.lg} p={spacing.lg}>
           {navItems.map((item) =>
@@ -37,7 +37,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
               // Render dropdown as a section
               <Box key={item.label}>
                 <Text
-                  c={colors.text.inverse}
+                  c={colors.header.text}
                   fw={typography.fontWeight.medium}
                   size="sm"
                   mb={spacing.xs}
@@ -49,7 +49,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
                   {item.dropdownItems.map((dropdownItem) => (
                     <Anchor
                       key={dropdownItem.label}
-                      c={colors.text.inverse}
+                      c={colors.header.text}
                       variant="subtle"
                       td="none"
                       fw={typography.fontWeight.normal}
@@ -66,7 +66,7 @@ export default function MobileMenu({ opened, onOpen, onClose, navItems }: Mobile
               // Render regular link
               <Anchor
                 key={item.label}
-                c={colors.text.inverse}
+                c={colors.header.text}
                 variant="subtle"
                 td="none"
                 fw={typography.fontWeight.medium}

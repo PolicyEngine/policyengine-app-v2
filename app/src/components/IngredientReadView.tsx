@@ -63,7 +63,20 @@ export default function IngredientReadView({
           </Box>
 
           {onBuild && (
-            <Button rightSection={<IconPlus size={16} />} onClick={onBuild} variant="filled">
+            <Button
+              rightSection={<IconPlus size={16} />}
+              onClick={onBuild}
+              variant="filled"
+              styles={{
+                root: {
+                  backgroundColor: colors.button.primaryBg,
+                  color: colors.button.primaryText,
+                  '&:hover': {
+                    backgroundColor: colors.button.primaryHover,
+                  },
+                },
+              }}
+            >
               {buttonLabel || `New ${ingredient.toLowerCase()}`}
             </Button>
           )}
@@ -93,7 +106,7 @@ export default function IngredientReadView({
       >
         {isLoading && (
           <Box p={spacing['3xl']} ta="center">
-            <Loader />
+            <Loader color={colors.button.primaryBg} />
           </Box>
         )}
 

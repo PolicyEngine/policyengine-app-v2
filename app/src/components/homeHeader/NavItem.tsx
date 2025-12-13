@@ -32,14 +32,14 @@ export default function NavItem({ setup }: NavItemProps) {
           <UnstyledButton onClick={onClick}>
             <Group gap={4} align="center">
               <Text
-                c={colors.text.inverse}
+                c={colors.header.text}
                 fw={typography.fontWeight.medium}
                 size="18px"
                 style={{ fontFamily: typography.fontFamily.primary }}
               >
                 {label}
               </Text>
-              <IconChevronDown size={18} color={colors.text.inverse} />
+              <IconChevronDown size={18} color={colors.header.text} />
             </Group>
           </UnstyledButton>
         </Menu.Target>
@@ -56,7 +56,7 @@ export default function NavItem({ setup }: NavItemProps) {
 
   return (
     <Anchor
-      c={colors.text.inverse}
+      c={colors.header.text}
       variant="subtle"
       td="none"
       fw={typography.fontWeight.medium}

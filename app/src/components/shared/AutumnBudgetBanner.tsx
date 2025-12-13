@@ -91,7 +91,7 @@ export default function AutumnBudgetBanner() {
           right: 0,
           bottom: 0,
           opacity: 0.05,
-          backgroundImage: `radial-gradient(circle at 20% 50%, ${colors.white} 1px, transparent 1px), radial-gradient(circle at 80% 80%, ${colors.white} 1px, transparent 1px)`,
+          backgroundImage: `radial-gradient(circle at 20% 50%, ${colors.static.white} 1px, transparent 1px), radial-gradient(circle at 80% 80%, ${colors.static.white} 1px, transparent 1px)`,
           backgroundSize: '50px 50px',
           pointerEvents: 'none',
         }}
@@ -105,7 +105,7 @@ export default function AutumnBudgetBanner() {
           position: 'absolute',
           top: spacing.lg,
           right: spacing.lg,
-          color: colors.white,
+          color: colors.static.white,
           zIndex: 10,
         }}
         styles={{
@@ -130,7 +130,7 @@ export default function AutumnBudgetBanner() {
           order={1}
           size={typography.fontSize['3xl']}
           fw={typography.fontWeight.bold}
-          c={colors.white}
+          c={colors.static.white}
           mb={spacing.xl}
           style={{
             textAlign: 'center',
@@ -180,7 +180,7 @@ export default function AutumnBudgetBanner() {
                 <Text
                   size={typography.fontSize['3xl']}
                   fw={typography.fontWeight.bold}
-                  c={colors.white}
+                  c={colors.static.white}
                   style={{
                     lineHeight: 1,
                     textShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
@@ -191,7 +191,7 @@ export default function AutumnBudgetBanner() {
                 </Text>
                 <Text
                   size={typography.fontSize.sm}
-                  c={colors.white}
+                  c={colors.static.white}
                   fw={typography.fontWeight.medium}
                   mt={spacing.xs}
                   style={{
@@ -212,7 +212,7 @@ export default function AutumnBudgetBanner() {
         <Box>
           <Text
             size={typography.fontSize.lg}
-            c={colors.white}
+            c={colors.static.white}
             fw={typography.fontWeight.semibold}
             mb={spacing.lg}
             style={{
@@ -244,7 +244,7 @@ export default function AutumnBudgetBanner() {
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 textDecoration: 'none',
-                border: `2px solid ${colors.white}`,
+                border: `2px solid ${colors.static.white}`,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               }}
               styles={{
@@ -297,7 +297,7 @@ export default function AutumnBudgetBanner() {
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 textDecoration: 'none',
-                border: `2px solid ${colors.white}`,
+                border: `2px solid ${colors.static.white}`,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               }}
               styles={{
@@ -350,7 +350,7 @@ export default function AutumnBudgetBanner() {
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 textDecoration: 'none',
-                border: `2px solid ${colors.white}`,
+                border: `2px solid ${colors.static.white}`,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               }}
               styles={{
@@ -403,7 +403,7 @@ export default function AutumnBudgetBanner() {
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 textDecoration: 'none',
-                border: `2px solid ${colors.white}`,
+                border: `2px solid ${colors.static.white}`,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               }}
               styles={{
@@ -456,7 +456,7 @@ export default function AutumnBudgetBanner() {
                 cursor: 'pointer',
                 transition: 'all 0.3s ease',
                 textDecoration: 'none',
-                border: `2px solid ${colors.white}`,
+                border: `2px solid ${colors.static.white}`,
                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
               }}
               styles={{
@@ -504,13 +504,13 @@ export default function AutumnBudgetBanner() {
             textAlign: 'center',
           }}
         >
-          <Text size={typography.fontSize.lg} c={colors.white} fw={typography.fontWeight.semibold}>
+          <Text size={typography.fontSize.lg} c={colors.static.white} fw={typography.fontWeight.semibold}>
             Want custom analysis?{' '}
             <Text
               component="a"
               href="mailto:hello@policyengine.org"
               style={{
-                color: colors.white,
+                color: colors.static.white,
                 textDecoration: 'underline',
                 fontWeight: typography.fontWeight.semibold,
                 cursor: 'pointer',
