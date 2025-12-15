@@ -4,9 +4,10 @@
   "type": "module",
   "version": "0.0.0",
   "scripts": {
-    "dev": "concurrently \"npm run dev:website\" \"npm run dev:calculator\"",
-    "dev:calculator": "VITE_APP_MODE=calculator VITE_WEBSITE_URL=http://localhost:3000 vite --port 3001",
-    "dev:website": "VITE_APP_MODE=website VITE_CALCULATOR_URL=http://localhost:3001 vite --port 3000",
+    "predev": "echo '\n  Dev servers: Website :3000, Calculator :3001\n  Port conflict? Run: pkill -f vite\n'",
+    "dev": "concurrently --names website,calc --prefix-colors blue,green \"npm run dev:website\" \"npm run dev:calculator\"",
+    "dev:calculator": "VITE_APP_MODE=calculator VITE_WEBSITE_URL=http://localhost:3000 vite --port 3001 --strictPort",
+    "dev:website": "VITE_APP_MODE=website VITE_CALCULATOR_URL=http://localhost:3001 vite --port 3000 --strictPort",
     "build": "npm run build:website && npm run build:calculator",
     "build:calculator": "VITE_APP_MODE=calculator vite build",
     "build:website": "VITE_APP_MODE=website vite build",
