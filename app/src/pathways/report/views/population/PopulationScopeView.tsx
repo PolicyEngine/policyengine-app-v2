@@ -23,6 +23,7 @@ import {
   createGeographyFromScope,
   getUKConstituencies,
   getUKCountries,
+  getUKLocalAuthorities,
   getUSCongressionalDistricts,
   getUSStates,
 } from '@/utils/regionStrategies';
@@ -52,6 +53,7 @@ export default function PopulationScopeView({
   const usDistricts = countryId === 'us' ? getUSCongressionalDistricts(regionData) : [];
   const ukCountries = countryId === 'uk' ? getUKCountries(regionData) : [];
   const ukConstituencies = countryId === 'uk' ? getUKConstituencies(regionData) : [];
+  const ukLocalAuthorities = countryId === 'uk' ? getUKLocalAuthorities(regionData) : [];
 
   const handleScopeChange = (value: ScopeType) => {
     setScope(value);
@@ -65,6 +67,7 @@ export default function PopulationScopeView({
       US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
       UK_REGION_TYPES.COUNTRY,
       UK_REGION_TYPES.CONSTITUENCY,
+      UK_REGION_TYPES.LOCAL_AUTHORITY,
     ].includes(scope as any);
     if (needsRegion && !selectedRegion) {
       console.warn(`${scope} selected but no region chosen`);
@@ -85,6 +88,7 @@ export default function PopulationScopeView({
           selectedRegion={selectedRegion}
           countryOptions={ukCountries}
           constituencyOptions={ukConstituencies}
+          localAuthorityOptions={ukLocalAuthorities}
           onScopeChange={(newScope) => handleScopeChange(newScope)}
           onRegionChange={setSelectedRegion}
         />

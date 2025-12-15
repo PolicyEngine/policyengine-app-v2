@@ -3,6 +3,7 @@ import {
   expectedCaliforniaDistricts,
   expectedUKConstituencies,
   expectedUKCountries,
+  expectedUKLocalAuthorities,
   expectedUSCongressionalDistricts,
   expectedUSStates,
   mockSingleDistrictState,
@@ -10,7 +11,7 @@ import {
   mockUSRegions,
   TEST_REGIONS,
 } from '@/tests/fixtures/utils/regionStrategiesMocks';
-import { US_REGION_TYPES } from '@/types/regionTypes';
+import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 import {
   createGeographyFromScope,
   extractRegionDisplayValue,
@@ -19,6 +20,7 @@ import {
   getStateNameFromDistrict,
   getUKConstituencies,
   getUKCountries,
+  getUKLocalAuthorities,
   getUSCongressionalDistricts,
   getUSStates,
 } from '@/utils/regionStrategies';
@@ -248,6 +250,42 @@ describe('regionStrategies', () => {
     });
   });
 
+  describe('getUKLocalAuthorities', () => {
+    test('given UK regions then returns only local authority entries with prefix', () => {
+      // Given
+      const regions = mockUKRegions;
+
+      // When
+      const result = getUKLocalAuthorities(regions);
+
+      // Then
+      expect(result).toEqual(expectedUKLocalAuthorities);
+      expect(result.every((r) => r.value.startsWith('local_authority/'))).toBe(true);
+    });
+
+    test('given UK regions then returns local authorities with type field', () => {
+      // Given
+      const regions = mockUKRegions;
+
+      // When
+      const result = getUKLocalAuthorities(regions);
+
+      // Then
+      expect(result.every((r) => r.type === UK_REGION_TYPES.LOCAL_AUTHORITY)).toBe(true);
+    });
+
+    test('given regions with no local authorities then returns empty array', () => {
+      // Given
+      const regions = mockUSRegions;
+
+      // When
+      const result = getUKLocalAuthorities(regions);
+
+      // Then
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('extractRegionDisplayValue', () => {
     test('given UK constituency with prefix then strips prefix', () => {
       // Given
@@ -269,6 +307,17 @@ describe('regionStrategies', () => {
 
       // Then
       expect(result).toBe(TEST_REGIONS.UK_COUNTRY_DISPLAY);
+    });
+
+    test('given UK local authority with prefix then strips prefix', () => {
+      // Given
+      const fullValue = TEST_REGIONS.UK_LOCAL_AUTHORITY_PREFIXED;
+
+      // When
+      const result = extractRegionDisplayValue(fullValue);
+
+      // Then
+      expect(result).toBe(TEST_REGIONS.UK_LOCAL_AUTHORITY_DISPLAY);
     });
 
     test('given US state with prefix then strips prefix', () => {
@@ -421,6 +470,24 @@ describe('regionStrategies', () => {
         countryId: 'uk',
         scope: 'subnational',
         geographyId: TEST_REGIONS.UK_COUNTRY_PREFIXED, // Stores FULL prefixed value
+      });
+    });
+
+    test('given UK local authority scope then stores full prefixed value', () => {
+      // Given
+      const scope = 'local_authority' as const;
+      const countryId = 'uk' as const;
+      const selectedRegion = TEST_REGIONS.UK_LOCAL_AUTHORITY_PREFIXED;
+
+      // When
+      const result = createGeographyFromScope(scope, countryId, selectedRegion);
+
+      // Then
+      expect(result).toEqual({
+        id: 'uk-Maidstone', // ID uses display value
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: TEST_REGIONS.UK_LOCAL_AUTHORITY_PREFIXED, // Stores FULL prefixed value
       });
     });
 

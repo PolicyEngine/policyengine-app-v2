@@ -20,6 +20,7 @@ export const UK_REGION_TYPES = {
   NATIONAL: 'national',
   COUNTRY: 'country',
   CONSTITUENCY: 'constituency',
+  LOCAL_AUTHORITY: 'local_authority',
 } as const;
 
 /**

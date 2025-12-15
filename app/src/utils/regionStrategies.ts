@@ -121,6 +121,19 @@ export function getUKConstituencies(regions: MetadataRegionEntry[]): RegionOptio
 }
 
 /**
+ * Get UK local authorities from metadata (filters by type)
+ */
+export function getUKLocalAuthorities(regions: MetadataRegionEntry[]): RegionOption[] {
+  return regions
+    .filter((r) => r.type === UK_REGION_TYPES.LOCAL_AUTHORITY)
+    .map((r) => ({
+      value: r.name,
+      label: r.label,
+      type: r.type,
+    }));
+}
+
+/**
  * Extract display value from a region identifier
  * Strips "constituency/" or "country/" prefix for UK regions for display purposes
  * Returns value as-is for US regions
