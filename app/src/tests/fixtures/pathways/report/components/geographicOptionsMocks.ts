@@ -64,6 +64,20 @@ export const mockUKConstituencyOptions: RegionOption[] = [
   },
 ];
 
+// Mock UK local authority options
+export const mockUKLocalAuthorityOptions: RegionOption[] = [
+  {
+    value: 'local_authority/Maidstone',
+    label: 'Maidstone',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
+  },
+  {
+    value: 'local_authority/Westminster',
+    label: 'Westminster',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
+  },
+];
+
 // Test constants
 export const TEST_VALUES = {
   CALIFORNIA_STATE: 'state/ca',

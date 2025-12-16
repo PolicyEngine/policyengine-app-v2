@@ -1,12 +1,16 @@
-import { Box, Radio, Select } from '@mantine/core';
+import { Box, Radio } from '@mantine/core';
 import { UKScopeType } from '@/types/regionTypes';
 import { RegionOption, UK_REGION_TYPES } from '@/utils/regionStrategies';
+import UKConstituencySelector from './UKConstituencySelector';
+import UKCountrySelector from './UKCountrySelector';
+import UKLocalAuthoritySelector from './UKLocalAuthoritySelector';
 
 interface UKGeographicOptionsProps {
   scope: UKScopeType;
   selectedRegion: string;
   countryOptions: RegionOption[];
   constituencyOptions: RegionOption[];
+  localAuthorityOptions: RegionOption[];
   onScopeChange: (scope: UKScopeType) => void;
   onRegionChange: (region: string) => void;
 }
@@ -16,6 +20,7 @@ export default function UKGeographicOptions({
   selectedRegion,
   countryOptions,
   constituencyOptions,
+  localAuthorityOptions,
   onScopeChange,
   onRegionChange,
 }: UKGeographicOptionsProps) {
@@ -39,13 +44,10 @@ export default function UKGeographicOptions({
         />
         {scope === UK_REGION_TYPES.COUNTRY && countryOptions.length > 0 && (
           <Box ml={24} mt="xs">
-            <Select
-              label="Select Country"
-              placeholder="Pick a country"
-              data={countryOptions}
-              value={selectedRegion}
-              onChange={(val) => onRegionChange(val || '')}
-              searchable
+            <UKCountrySelector
+              countryOptions={countryOptions}
+              selectedCountry={selectedRegion}
+              onCountryChange={onRegionChange}
             />
           </Box>
         )}
@@ -61,13 +63,29 @@ export default function UKGeographicOptions({
         />
         {scope === UK_REGION_TYPES.CONSTITUENCY && constituencyOptions.length > 0 && (
           <Box ml={24} mt="xs">
-            <Select
-              label="Select Parliamentary Constituency"
-              placeholder="Pick a constituency"
-              data={constituencyOptions}
-              value={selectedRegion}
-              onChange={(val) => onRegionChange(val || '')}
-              searchable
+            <UKConstituencySelector
+              constituencyOptions={constituencyOptions}
+              selectedConstituency={selectedRegion}
+              onConstituencyChange={onRegionChange}
+            />
+          </Box>
+        )}
+      </Box>
+
+      {/* Local Authority option */}
+      <Box>
+        <Radio
+          value={UK_REGION_TYPES.LOCAL_AUTHORITY}
+          label="All households in a local authority"
+          checked={scope === UK_REGION_TYPES.LOCAL_AUTHORITY}
+          onChange={() => onScopeChange(UK_REGION_TYPES.LOCAL_AUTHORITY)}
+        />
+        {scope === UK_REGION_TYPES.LOCAL_AUTHORITY && localAuthorityOptions.length > 0 && (
+          <Box ml={24} mt="xs">
+            <UKLocalAuthoritySelector
+              localAuthorityOptions={localAuthorityOptions}
+              selectedLocalAuthority={selectedRegion}
+              onLocalAuthorityChange={onRegionChange}
             />
           </Box>
         )}

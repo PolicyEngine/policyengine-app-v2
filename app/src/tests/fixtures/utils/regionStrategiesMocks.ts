@@ -7,6 +7,8 @@ export const TEST_REGIONS = {
   UK_CONSTITUENCY_DISPLAY: 'Sheffield Central',
   UK_COUNTRY_PREFIXED: 'country/england',
   UK_COUNTRY_DISPLAY: 'england',
+  UK_LOCAL_AUTHORITY_PREFIXED: 'local_authority/Maidstone',
+  UK_LOCAL_AUTHORITY_DISPLAY: 'Maidstone',
   US_STATE: 'state/ca',
   US_STATE_NY: 'state/ny',
   US_CONGRESSIONAL_DISTRICT: 'congressional_district/CA-01',
@@ -39,6 +41,21 @@ export const mockUKRegions: MetadataRegionEntry[] = [
     name: 'constituency/Brighton Pavilion',
     label: 'Brighton Pavilion',
     type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+  {
+    name: 'local_authority/Maidstone',
+    label: 'Maidstone',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
+  },
+  {
+    name: 'local_authority/Westminster',
+    label: 'Westminster',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
+  },
+  {
+    name: 'local_authority/Birmingham',
+    label: 'Birmingham',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
   },
 ];
 
@@ -102,6 +119,24 @@ export const expectedUKConstituencies = [
     value: 'constituency/Brighton Pavilion',
     label: 'Brighton Pavilion',
     type: UK_REGION_TYPES.CONSTITUENCY,
+  },
+];
+
+export const expectedUKLocalAuthorities = [
+  {
+    value: 'local_authority/Maidstone',
+    label: 'Maidstone',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
+  },
+  {
+    value: 'local_authority/Westminster',
+    label: 'Westminster',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
+  },
+  {
+    value: 'local_authority/Birmingham',
+    label: 'Birmingham',
+    type: UK_REGION_TYPES.LOCAL_AUTHORITY,
   },
 ];
 
