@@ -38,6 +38,16 @@ export interface HexMapConfig {
   /** Size of each hexagon marker */
   hexSize?: number;
 
+  /**
+   * Scale factor for coordinates to control spacing between hexagons.
+   * Values < 1 bring hexagons closer together, values > 1 spread them apart.
+   * Default is 1 (no scaling).
+   *
+   * @example
+   * coordinateScale: 0.5 // Hexagons will be twice as close together
+   */
+  coordinateScale?: number;
+
   /** Color scale configuration */
   colorScale?: ColorScaleConfig;
 

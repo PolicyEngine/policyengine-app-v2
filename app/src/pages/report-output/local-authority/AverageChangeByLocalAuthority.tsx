@@ -49,6 +49,7 @@ export function AverageChangeByLocalAuthority({ output }: AverageChangeByLocalAu
       <HexagonalMap
         data={hexMapData}
         config={{
+          hexSize: 18,
           colorScale: {
             colors: DIVERGING_GRAY_TEAL.colors,
             tickFormat: '£,.0f',
