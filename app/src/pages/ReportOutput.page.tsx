@@ -235,7 +235,7 @@ function getTabsForOutputType(
   if (outputType === 'societyWide') {
     const tabs = [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
@@ -245,7 +245,7 @@ function getTabsForOutputType(
     // US does not have this capability at this time
     if (countryId === 'uk') {
       tabs.push({ value: 'constituency', label: 'Constituencies' });
-      tabs.push({ value: 'local-authority', label: 'Local Authorities' });
+      tabs.push({ value: 'local-authority', label: 'Local authorities' });
     }
 
     return tabs;
@@ -254,7 +254,7 @@ function getTabsForOutputType(
   if (outputType === 'household') {
     return [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
