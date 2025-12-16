@@ -9,7 +9,12 @@ import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
+  downloadCsv,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -140,14 +145,13 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     downloadCsv([header, ...rows], 'winners-losers-wealth-decile.csv');
   };
 
-  // Create traces for both "All" and individual deciles
-  // Following v1's approach with separate axes for All and Deciles
-  const hoverTitle = (y: string | number) => (y === 'All' ? 'All households' : `Decile ${y}`);
+  // Generate trace for a specific type and category
+  const createTrace = (type: 'all' | 'decile', category: string) => {
+    const hoverTitle = (y: string | number) => (y === 'All' ? 'All households' : `Decile ${y}`);
 
-  const createTrace = (type: 'all' | 'decile', category: (typeof CATEGORIES)[number]) => {
     const xArray =
       type === 'all'
-        ? [all[category]]
+        ? [all[category as keyof typeof all]]
         : decileNumbers.map((d) => (deciles as any)[category][d - 1]);
     const yArray = type === 'all' ? ['All'] : decileNumbers;
 
@@ -157,13 +161,13 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
       xaxis: type === 'all' ? 'x' : 'x2',
       yaxis: type === 'all' ? 'y' : 'y2',
       type: 'bar' as const,
-      orientation: 'h' as const,
       name: LEGEND_TEXT_MAP[category],
       legendgroup: category,
       showlegend: type === 'decile',
       marker: {
         color: COLOR_MAP[category],
       },
+      orientation: 'h' as const,
       text: xArray.map((value: number) => `${(value * 100).toFixed(0)}%`) as any,
       textposition: 'inside' as const,
       textangle: 0,
@@ -184,6 +188,7 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
   }
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     barmode: 'stack' as const,
     grid: {
       rows: 2,

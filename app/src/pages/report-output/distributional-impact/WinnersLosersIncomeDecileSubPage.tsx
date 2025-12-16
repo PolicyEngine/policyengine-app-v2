@@ -9,7 +9,12 @@ import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
+  downloadCsv,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -194,6 +199,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   }
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     barmode: 'stack',
     grid: {
       rows: 2,
