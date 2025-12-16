@@ -15,6 +15,7 @@ import { getDisplayStatus } from '@/utils/statusMapping';
 import { ComparativeAnalysisPage } from './ComparativeAnalysisPage';
 import { ConstituencySubPage } from './ConstituencySubPage';
 import DynamicsSubPage from './DynamicsSubPage';
+import { LocalAuthoritySubPage } from './LocalAuthoritySubPage';
 import ErrorPage from './ErrorPage';
 import LoadingPage from './LoadingPage';
 import NotFoundSubPage from './NotFoundSubPage';
@@ -178,6 +179,9 @@ export function SocietyWideReportOutput({
 
       case 'constituency':
         return <ConstituencySubPage output={output} />;
+
+      case 'local-authority':
+        return <LocalAuthoritySubPage output={output} />;
 
       default:
         return <NotFoundSubPage />;

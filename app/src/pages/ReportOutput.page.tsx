@@ -241,10 +241,11 @@ function getTabsForOutputType(
       { value: 'dynamics', label: 'Dynamics' },
     ];
 
-    // IMPORTANT: Only show constituencies for UK reports
+    // IMPORTANT: Only show constituencies and local authorities for UK reports
     // US does not have this capability at this time
     if (countryId === 'uk') {
       tabs.push({ value: 'constituency', label: 'Constituencies' });
+      tabs.push({ value: 'local-authority', label: 'Local Authorities' });
     }
 
     return tabs;
