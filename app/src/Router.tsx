@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
+import AppLayout from './components/AppLayout';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
 import StaticLayout from './components/StaticLayout';
@@ -6,6 +7,7 @@ import AppPage from './pages/AppPage';
 import BlogPage from './pages/Blog.page';
 import DashboardPage from './pages/Dashboard.page';
 import DonatePage from './pages/Donate.page';
+import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
 import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
@@ -166,12 +168,21 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // Interactive app routes - use StaticLayout with CountryAppGuard
+        // Embed routes - minimal layout for iframe embedding
+        {
+          children: [
+            {
+              path: 'embed/org-logos',
+              element: <OrgLogosEmbedPage />,
+            },
+          ],
+        },
+        // Interactive app routes - use AppLayout (no legacy banner) with CountryAppGuard
         {
           element: <CountryAppGuard />,
           children: [
             {
-              element: <StaticLayout />,
+              element: <AppLayout />,
               children: [
                 {
                   path: ':slug',

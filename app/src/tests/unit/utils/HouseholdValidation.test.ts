@@ -286,7 +286,7 @@ describe('HouseholdValidation', () => {
       verifyValidationWarning(warnings, VALIDATION_WARNING_CODES.NO_TAX_UNITS, 'taxUnits');
     });
 
-    test('given US household with invalid marital unit when validating then adds error', () => {
+    test('given US household with empty marital unit (0 members) when validating then adds error', () => {
       // Given
       const errors: any[] = [];
       const warnings: any[] = [];

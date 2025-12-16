@@ -173,7 +173,7 @@ describe('ReportOutputLayout', () => {
     );
 
     // Then
-    const activeTabElement = screen.getByText('Comparative Analysis');
+    const activeTabElement = screen.getByText('Comparative analysis');
     expect(activeTabElement).toBeInTheDocument();
   });
 

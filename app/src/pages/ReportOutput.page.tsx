@@ -68,17 +68,6 @@ export default function ReportOutputPage() {
     error: dataError,
   } = useUserReportById(userReportId);
 
-  console.log('[ReportOutputPage] Fetched user report and simulations:', {
-    userReport,
-    report,
-    simulations,
-    userSimulations,
-    dataLoading,
-    dataError,
-    userHouseholds,
-    geographies,
-  });
-
   // Derive output type from simulation (needed for target type determination)
   const outputType: ReportOutputType | undefined =
     simulations?.[0]?.populationType === 'household'
@@ -87,15 +76,6 @@ export default function ReportOutputPage() {
         ? 'societyWide'
         : undefined;
 
-  // Debug logging for household reports
-  if (outputType === 'household') {
-    console.log('Household Report Data:', {
-      outputType,
-      report,
-      simulations,
-    });
-  }
-
   const DEFAULT_PAGE = 'overview';
   const activeTab = subpage || DEFAULT_PAGE;
   const activeView = view || '';
@@ -103,9 +83,7 @@ export default function ReportOutputPage() {
   // Redirect to overview if no subpage is specified and data is ready
   useEffect(() => {
     if (!subpage && report && simulations) {
-      const targetPath = `/${countryId}/report-output/${userReportId}/${DEFAULT_PAGE}`;
-      console.log('[ReportOutputPage] Redirecting to overview:', targetPath);
-      navigate(targetPath);
+      navigate(`/${countryId}/report-output/${userReportId}/${DEFAULT_PAGE}`);
     }
   }, [subpage, navigate, report, simulations, countryId, userReportId]);
 
@@ -114,12 +92,6 @@ export default function ReportOutputPage() {
 
   // Handle tab navigation (absolute path)
   const handleTabClick = (tabValue: string) => {
-    console.log(
-      '[ReportOutputPage] Tab clicked:',
-      tabValue,
-      'Current path:',
-      window.location.pathname
-    );
     navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
   };
 
@@ -184,7 +156,6 @@ export default function ReportOutputPage() {
     if (outputType === 'household') {
       return (
         <HouseholdReportOutput
-          reportId={userReportId}
           report={report}
           simulations={simulations}
           userSimulations={userSimulations}
@@ -265,16 +236,17 @@ function getTabsForOutputType(
   if (outputType === 'societyWide') {
     const tabs = [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
     ];
 
-    // IMPORTANT: Only show constituencies for UK reports
+    // IMPORTANT: Only show constituencies and local authorities for UK reports
     // US does not have this capability at this time
     if (countryId === 'uk') {
       tabs.push({ value: 'constituency', label: 'Constituencies' });
+      tabs.push({ value: 'local-authority', label: 'Local authorities' });
     }
 
     return tabs;
@@ -283,7 +255,7 @@ function getTabsForOutputType(
   if (outputType === 'household') {
     return [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },

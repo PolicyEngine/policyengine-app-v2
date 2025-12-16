@@ -44,8 +44,6 @@ export async function createSimulation(
 ): Promise<{ result: { simulation_id: string } }> {
   const url = `${BASE_URL}/${countryId}/simulation`;
 
-  console.log('Creating simulation with data:', data); // Debug log
-
   const response = await fetch(url, {
     method: 'POST',
     headers: {

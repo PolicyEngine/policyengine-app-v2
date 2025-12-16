@@ -161,16 +161,17 @@ export const HouseholdValidation = {
     }
 
     // Validate marital units if they exist
+    // Marital units can have 1 member (single) or 2 members (married couple)
     if (household.householdData.maritalUnits) {
       const maritalUnits = household.householdData.maritalUnits as Record<
         string,
         HouseholdGroupEntity
       >;
       Object.entries(maritalUnits).forEach(([unitId, unit]) => {
-        if (unit.members.length !== 2) {
+        if (unit.members.length === 0 || unit.members.length > 2) {
           errors.push({
             code: 'INVALID_MARITAL_UNIT',
-            message: `Marital unit ${unitId} must have exactly 2 members`,
+            message: `Marital unit ${unitId} must have 1 or 2 members`,
             field: `maritalUnits.${unitId}`,
           });
         }

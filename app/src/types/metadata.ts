@@ -1,3 +1,21 @@
+import { UK_REGION_TYPES, US_REGION_TYPES } from './regionTypes';
+
+/**
+ * Region entry from API metadata
+ * All regions have: name, label, type
+ * Congressional districts also have: state_abbreviation, state_name
+ */
+export interface MetadataRegionEntry {
+  name: string;
+  label: string;
+  type:
+    | (typeof US_REGION_TYPES)[keyof typeof US_REGION_TYPES]
+    | (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES];
+  // Congressional district specific fields
+  state_abbreviation?: string;
+  state_name?: string;
+}
+
 export interface MetadataApiPayload {
   status: string;
   message: string | null;
@@ -7,7 +25,7 @@ export interface MetadataApiPayload {
     entities: Record<string, any>;
     variableModules: Record<string, any>;
     economy_options: {
-      region: Array<{ name: string; label: string }>;
+      region: MetadataRegionEntry[];
       time_period: Array<{ name: number; label: string }>;
       datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
     };
@@ -47,7 +65,7 @@ export interface MetadataState {
   entities: Record<string, any>;
   variableModules: Record<string, any>;
   economyOptions: {
-    region: Array<{ name: string; label: string }>;
+    region: MetadataRegionEntry[];
     time_period: Array<{ name: number; label: string }>;
     datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
   };

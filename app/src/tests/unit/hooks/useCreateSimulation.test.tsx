@@ -126,10 +126,6 @@ describe('useCreateSimulation', () => {
       expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
         queryKey: QUERY_KEY_PATTERNS.SIMULATION_ALL,
       });
-      expect(consoleSpies.logSpy).toHaveBeenCalledWith(
-        CONSOLE_MESSAGES.LABEL_LOG,
-        TEST_LABELS.SIMULATION
-      );
     });
 
     test('given geography payload when createSimulation called then creates geography simulation', async () => {
@@ -162,7 +158,6 @@ describe('useCreateSimulation', () => {
         isCreated: true,
         countryId: 'us',
       });
-      expect(consoleSpies.logSpy).toHaveBeenCalledWith(CONSOLE_MESSAGES.LABEL_LOG, undefined);
     });
 
     test('given custom label when createSimulation called then uses provided label', async () => {

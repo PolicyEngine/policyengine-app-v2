@@ -49,25 +49,20 @@ export default function ReportSetupView({
 
   const handleSimulation1Select = () => {
     setSelectedCard('simulation1');
-    console.log('Adding simulation 1');
   };
 
   const handleSimulation2Select = () => {
     setSelectedCard('simulation2');
-    console.log('Adding simulation 2');
   };
 
   const handleNext = () => {
     if (selectedCard === 'simulation1') {
-      console.log('Setting up simulation 1');
       onNavigateToSimulationSelection(0);
     } else if (selectedCard === 'simulation2') {
-      console.log('Setting up simulation 2');
       // PRE-FILL POPULATION FROM SIMULATION 1
       onPrefillPopulation2();
       onNavigateToSimulationSelection(1);
     } else if (canProceed) {
-      console.log('Both simulations configured, proceeding to next step');
       onNext();
     }
   };

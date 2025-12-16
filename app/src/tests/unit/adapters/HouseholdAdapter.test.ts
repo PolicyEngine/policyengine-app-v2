@@ -253,6 +253,7 @@ describe('HouseholdAdapter', () => {
       const result = HouseholdAdapter.fromMetadata(metadata as any);
 
       expect(result.householdData.people).toBeDefined();
+      expect(result.householdData.taxUnits).toBeDefined();
       expect(console.warn).toHaveBeenCalled();
     });
 

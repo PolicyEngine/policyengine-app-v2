@@ -1,4 +1,5 @@
 import type { MetadataState } from '@/types/metadata';
+import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
 
 export const TEST_COUNTRY_CODES = {
   US: 'us',
@@ -21,6 +22,12 @@ export const TEST_REGION_CODES = {
   WALES: 'wales',
   UK_CONSTITUENCY_PREFIXED: 'constituency/Sheffield Central',
   UK_COUNTRY_PREFIXED: 'country/england',
+  // Congressional district codes
+  US_CONGRESSIONAL_DISTRICT_PREFIXED: 'congressional_district/CA-01',
+  US_CONGRESSIONAL_DISTRICT_CODE: 'CA-01',
+  // Legacy US state codes (without prefix)
+  US_LEGACY_STATE_TX: 'tx',
+  US_LEGACY_CITY_NYC: 'nyc',
 } as const;
 
 export const EXPECTED_REGION_TYPE_LABELS = {
@@ -28,6 +35,7 @@ export const EXPECTED_REGION_TYPE_LABELS = {
   COUNTRY: 'Country',
   CONSTITUENCY: 'Constituency',
   REGION: 'Region',
+  CONGRESSIONAL_DISTRICT: 'Congressional district',
 } as const;
 
 export const mockMetadataWithRegions = (): MetadataState => ({
@@ -38,13 +46,28 @@ export const mockMetadataWithRegions = (): MetadataState => ({
   variableModules: {},
   economyOptions: {
     region: [
-      { name: 'state/ca', label: 'California' },
-      { name: 'state/tx', label: 'Texas' },
-      { name: 'country/wales', label: 'Wales' },
-      { name: 'country/scotland', label: 'Scotland' },
-      { name: 'constituency/E14000698', label: 'Cities of London and Westminster' },
-      { name: 'constituency/Sheffield Central', label: 'Sheffield Central' },
-      { name: 'country/england', label: 'England' },
+      { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
+      { name: 'state/tx', label: 'Texas', type: US_REGION_TYPES.STATE },
+      {
+        name: 'congressional_district/CA-01',
+        label: "California's 1st congressional district",
+        type: US_REGION_TYPES.CONGRESSIONAL_DISTRICT,
+        state_abbreviation: 'CA',
+        state_name: 'California',
+      },
+      { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
+      { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
+      {
+        name: 'constituency/E14000698',
+        label: 'Cities of London and Westminster',
+        type: UK_REGION_TYPES.CONSTITUENCY,
+      },
+      {
+        name: 'constituency/Sheffield Central',
+        label: 'Sheffield Central',
+        type: UK_REGION_TYPES.CONSTITUENCY,
+      },
+      { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
     ],
     time_period: [],
     datasets: [],

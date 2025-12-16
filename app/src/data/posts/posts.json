@@ -1,16 +1,39 @@
 [
   {
+    "title": "Combined impacts of Autumn Budget 2025 reforms",
+    "description": "Nine tax and benefit measures shift from costing £6.6bn in 2026-27 to raising £12.4bn by 2030-31, reducing inequality and child poverty while increasing taxes on higher earners.",
+    "date": "2025-12-09 12:00:00",
+    "tags": ["uk", "autumn-budget", "policy", "featured"],
+    "authors": ["vahid-ahmadi"],
+    "filename": "uk-combined-reforms-autumn-budget-2025.md",
+    "image": "Autumn-2025-Budget-combined.jpg",
+    "imageCredit": "gov.uk",
+    "hideHeaderImage": false
+  },
+  {
+    "title": "GiveCalc UK: Calculate your Gift Aid tax relief",
+    "description": "A free calculator that shows how Gift Aid affects your taxes, including higher rate relief and Scottish income tax rates.",
+    "date": "2025-12-02 12:00:00",
+    "tags": ["uk", "giving"],
+    "authors": ["max-ghenis"],
+    "filename": "uk-giving-tuesday-2025.md",
+    "image": "us-giving-tuesday-2025/cover.png"
+  },
+  {
+    "title": "GiveCalc US: Calculate your charitable giving tax savings",
+    "description": "Calculate how charitable donations affect your federal and state taxes with our rebuilt, standalone web application.",
+    "date": "2025-12-02",
+    "tags": ["us", "featured", "giving"],
+    "authors": ["max-ghenis"],
+    "filename": "us-giving-tuesday-2025.md",
+    "image": "us-giving-tuesday-2025/cover.png"
+  },
+  {
     "title": "How a £2,000 salary sacrifice cap would affect workers",
     "description": "Capping salary sacrifice pension contributions at £2,000 would raise £3.3-7.6 billion in 2029-30 depending on behavioural responses, with impacts concentrated on higher earners.",
     "date": "2025-11-27",
-    "tags": [
-      "uk",
-      "policy"
-    ],
-    "authors": [
-      "max-ghenis",
-      "vahid-ahmadi"
-    ],
+    "tags": ["uk", "policy"],
+    "authors": ["max-ghenis", "vahid-ahmadi"],
     "filename": "uk-salary-sacrifice-cap.md",
     "image": "uk-salary-sacrifice-cap/cover.jpg",
     "imageCredit": "qualitycompanyformations",
@@ -28,12 +51,12 @@
   },
   {
     "title": "Impact of the Autumn Budget fuel duty freeze",
-    "description": "PolicyEngine estimates that the fuel duty freeze costs £2.8 billion in 2026-27 and raises net income for 46.7% of people.",
-    "date": "2025-11-26 10:00:00",
+    "description": "PolicyEngine estimates that the fuel duty freeze costs £3.5 billion in 2026-27 and reduces income inequality by 0.21% as measured by the Gini index.",
+    "date": "2025-11-29 10:00:00",
     "tags": ["uk", "autumn-budget", "featured"],
     "authors": ["vahid-ahmadi"],
-    "filename": "fuel-duty-freeze-2025.md",
-    "image": "uk-fuel-duty-freeze-2025/uk-fuel-duty-freeze-2025.jpeg",
+    "filename": "fuel-duty-freeze.md",
+    "image": "uk-fuel-duty-freeze/uk-fuel-duty-freeze.jpeg",
     "imageCredit": "which.co.uk",
     "hideHeaderImage": false
   },
@@ -41,14 +64,8 @@
     "title": "Impact of the Autumn Budget rail fares freeze",
     "description": "PolicyEngine estimates that the rail fares freeze reduces revenue by £145 million in 2026-27.",
     "date": "2025-11-27 10:00:00",
-    "tags": [
-      "uk",
-      "autumn-budget",
-      "policy"
-    ],
-    "authors": [
-      "vahid-ahmadi"
-    ],
+    "tags": ["uk", "autumn-budget", "policy"],
+    "authors": ["vahid-ahmadi"],
     "filename": "rail-fares-freeze-2025.md",
     "image": "rail-fares-freeze-2025/rail-fares-freeze-2025.jpg",
     "imageCredit": "railsmartr",
@@ -71,7 +88,8 @@
     "tags": ["uk", "policy", "tax", "autumn-budget", "featured"],
     "authors": ["daphne-hansell"],
     "filename": "uk-mansion-tax-autumn-budget.md",
-    "image": "uk-mansion-tax/cover.png",
+    "image": "uk-mansion-tax.webp",
+    "imageCredit": "City AM",
     "hideHeaderImage": false
   },
   {
@@ -113,13 +131,13 @@
   },
   {
     "title": "How removing the two-child benefit limit would affect the UK",
-    "description": "Removing the two-child limit would cost £2.8 billion in 2026-27 and reduce child poverty by 15.7%.",
-    "date": "2025-10-06 11:00:00",
+    "description": "PolicyEngine estimates removing the two-child limit would cost £2.9 billion in 2026-27 and reduce child poverty by 13.5%.",
+    "date": "2025-12-01 11:00:00",
     "tags": ["uk", "policy", "featured"],
     "authors": ["vahid-ahmadi"],
     "filename": "uk-two-child-limit.md",
-    "image": "uk-reeves.jpg",
-    "imageCredit": "House of Commons"
+    "image": "uk-reeves-two-child.jpeg",
+    "imageCredit": "which.co.uk"
   },
   {
     "title": "How we used Claude Code to choose our DC office",

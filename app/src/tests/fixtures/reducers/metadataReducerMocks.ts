@@ -1,6 +1,7 @@
 import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
 import { MetadataApiPayload, MetadataState } from '@/types/metadata';
+import { US_REGION_TYPES } from '@/types/regionTypes';
 
 // Test constants
 export const TEST_COUNTRY_US = 'us';
@@ -96,9 +97,9 @@ export const MOCK_VARIABLE_MODULES = {
 // Mock economy options
 export const MOCK_ECONOMY_OPTIONS = {
   region: [
-    { name: 'ca', label: 'California' },
-    { name: 'ny', label: 'New York' },
-    { name: 'tx', label: 'Texas' },
+    { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
+    { name: 'state/ny', label: 'New York', type: US_REGION_TYPES.STATE },
+    { name: 'state/tx', label: 'Texas', type: US_REGION_TYPES.STATE },
   ],
   time_period: [
     { name: 2022, label: '2022' },

@@ -166,14 +166,14 @@ export class HouseholdBuilder {
    */
   private applyCountrySpecificPersonDefaults(
     personKey: string,
-    _personType: 'adult' | 'child'
+    personType: 'adult' | 'child'
   ): void {
     const countryId = this.household.countryId;
 
     switch (countryId) {
       case 'us':
-        // Add person to default tax unit and household
-        this.ensureUSDefaults(personKey);
+        // Add person to all US entities
+        this.ensureUSDefaults(personKey, personType);
         break;
       case 'uk':
         // Add person to default benefit unit and household
@@ -187,10 +187,10 @@ export class HouseholdBuilder {
   }
 
   /**
-   * Ensure US-specific defaults
+   * Ensure US-specific defaults - adds person to all required US entities
    */
-  private ensureUSDefaults(personKey: string): void {
-    // Ensure default tax unit exists
+  private ensureUSDefaults(personKey: string, personType: 'adult' | 'child'): void {
+    // Ensure default tax unit exists and add person
     if (!this.household.householdData.taxUnits) {
       this.household.householdData.taxUnits = {};
     }
@@ -198,10 +198,64 @@ export class HouseholdBuilder {
     if (Object.keys(taxUnits).length === 0) {
       taxUnits['your tax unit'] = { members: [] };
     }
-    // Add person to first tax unit
     const firstTaxUnit = Object.values(taxUnits)[0];
     if (!firstTaxUnit.members.includes(personKey)) {
       firstTaxUnit.members.push(personKey);
+    }
+
+    // Ensure default family exists and add person
+    if (!this.household.householdData.families) {
+      this.household.householdData.families = {};
+    }
+    const families = this.household.householdData.families as Record<string, HouseholdGroupEntity>;
+    if (Object.keys(families).length === 0) {
+      families['your family'] = { members: [] };
+    }
+    const firstFamily = Object.values(families)[0];
+    if (!firstFamily.members.includes(personKey)) {
+      firstFamily.members.push(personKey);
+    }
+
+    // Ensure default SPM unit exists and add person
+    if (!this.household.householdData.spmUnits) {
+      this.household.householdData.spmUnits = {};
+    }
+    const spmUnits = this.household.householdData.spmUnits as Record<string, HouseholdGroupEntity>;
+    if (Object.keys(spmUnits).length === 0) {
+      spmUnits['your household'] = { members: [] };
+    }
+    const firstSpmUnit = Object.values(spmUnits)[0];
+    if (!firstSpmUnit.members.includes(personKey)) {
+      firstSpmUnit.members.push(personKey);
+    }
+
+    // Handle marital units - adults share one, children get their own
+    if (!this.household.householdData.maritalUnits) {
+      this.household.householdData.maritalUnits = {};
+    }
+    const maritalUnits = this.household.householdData.maritalUnits as Record<
+      string,
+      HouseholdGroupEntity
+    >;
+
+    if (personType === 'adult') {
+      // Adults share "your marital unit"
+      if (!maritalUnits['your marital unit']) {
+        maritalUnits['your marital unit'] = { members: [] };
+      }
+      if (!maritalUnits['your marital unit'].members.includes(personKey)) {
+        maritalUnits['your marital unit'].members.push(personKey);
+      }
+    } else {
+      // Children get their own marital unit
+      const childMaritalUnitKey = `${personKey}'s marital unit`;
+      const childCount = Object.keys(maritalUnits).filter((k) =>
+        k.includes("'s marital unit")
+      ).length;
+      maritalUnits[childMaritalUnitKey] = {
+        members: [personKey],
+        marital_unit_id: { [this.currentYear]: childCount + 1 },
+      };
     }
 
     // Ensure default household exists

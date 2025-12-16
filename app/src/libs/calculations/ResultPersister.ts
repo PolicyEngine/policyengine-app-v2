@@ -20,17 +20,7 @@ export class ResultPersister {
    * @throws Error if persistence fails after retry
    */
   async persist(status: CalcStatus, countryId: string, year: string): Promise<void> {
-    const timestamp = Date.now();
-    console.log(`[ResultPersister][${timestamp}] ========================================`);
-    console.log(`[ResultPersister][${timestamp}] ⚠️  PERSIST CALLED ⚠️`);
-    console.log(`[ResultPersister][${timestamp}] targetType: ${status.metadata.targetType}`);
-    console.log(`[ResultPersister][${timestamp}] calcId: ${status.metadata.calcId}`);
-    console.log(`[ResultPersister][${timestamp}] reportId: ${status.metadata.reportId || 'NONE'}`);
-    console.log(`[ResultPersister][${timestamp}] status: ${status.status}`);
-    console.log(`[ResultPersister][${timestamp}] has result? ${!!status.result}`);
-
     if (!status.result) {
-      console.error(`[ResultPersister][${timestamp}] ❌ ERROR: No result to persist!`);
       throw new Error('Cannot persist: result is missing from CalcStatus');
     }
 
@@ -45,9 +35,8 @@ export class ResultPersister {
           status.metadata.reportId // Pass parent reportId for household sim-level calcs
         );
       }
-      console.log(`[ResultPersister] Successfully persisted to ${status.metadata.targetType}`);
     } catch (error) {
-      console.error(`[ResultPersister] Persistence failed, retrying once...`, error);
+      console.error('[ResultPersister] Persistence failed, retrying once...', error);
       // Retry once after 1 second
       await this.sleep(1000);
       try {
@@ -61,9 +50,8 @@ export class ResultPersister {
             status.metadata.reportId // Pass parent reportId for household sim-level calcs
           );
         }
-        console.log(`[ResultPersister] Retry successful`);
       } catch (retryError) {
-        console.error(`[ResultPersister] Retry failed`, retryError);
+        console.error('[ResultPersister] Retry failed', retryError);
         throw new Error(
           `Failed to persist ${status.metadata.targetType} after retry: ${retryError}`
         );
@@ -98,13 +86,9 @@ export class ResultPersister {
     // WHY: Reports page reads from reportKeys.byId(), not calculation cache.
     // After persisting to database, we need to invalidate so next fetch gets fresh data.
     // This is safe because database persistence is complete at this point.
-    console.log(`[ResultPersister] → Invalidating report cache for ${reportId}`);
     this.queryClient.invalidateQueries({
       queryKey: reportKeys.byId(reportId),
     });
-    console.log(
-      `[ResultPersister] ✓ Report cache invalidated, Reports page will show updated status`
-    );
   }
 
   /**
@@ -119,41 +103,21 @@ export class ResultPersister {
     countryId: string,
     reportId?: string
   ): Promise<void> {
-    const timestamp = Date.now();
-    console.log(`[ResultPersister][${timestamp}] ========================================`);
-    console.log(`[ResultPersister][${timestamp}] persistToSimulation() called`);
-    console.log(`[ResultPersister][${timestamp}]   simulationId: ${simulationId}`);
-    console.log(`[ResultPersister][${timestamp}]   countryId: ${countryId}`);
-    console.log(`[ResultPersister][${timestamp}]   reportId: ${reportId || 'none'}`);
-
     // Use new updateSimulationOutput API
-    console.log(`[ResultPersister][${timestamp}] → Calling updateSimulationOutput API...`);
     await updateSimulationOutput(countryId as any, simulationId, result);
-    console.log(`[ResultPersister][${timestamp}] ✓ updateSimulationOutput API completed`);
 
     // Invalidate simulation metadata cache so Reports page shows updated status
     // WHY: Reports page may display simulation info, and we need fresh data after persistence.
     // This is safe because database persistence is complete at this point.
-    console.log(
-      `[ResultPersister][${timestamp}] → Invalidating simulation cache for ${simulationId}`
-    );
     this.queryClient.invalidateQueries({
       queryKey: simulationKeys.byId(simulationId),
     });
-    console.log(`[ResultPersister][${timestamp}] ✓ Simulation cache invalidated`);
 
     // For household reports: Check if all simulations are complete
     if (reportId) {
-      console.log(
-        `[ResultPersister][${timestamp}] Checking if all simulations complete for report ${reportId}...`
-      );
       const allSimsComplete = await this.checkAllSimulationsComplete(reportId);
 
       if (allSimsComplete) {
-        console.log(
-          `[ResultPersister][${timestamp}] ✓ All simulations complete! Marking report as complete...`
-        );
-
         // Fetch the report to get its year
         const report = this.queryClient.getQueryData<any>(reportKeys.byId(reportId));
         if (!report?.year) {
@@ -165,16 +129,8 @@ export class ResultPersister {
 
         // Mark report as complete with aggregated output
         await this.persistToReport(reportId, aggregatedOutput, countryId, report.year);
-
-        console.log(`[ResultPersister][${timestamp}] ✓ Report ${reportId} marked as complete`);
-      } else {
-        console.log(
-          `[ResultPersister][${timestamp}] ⏳ Not all simulations complete yet for report ${reportId}`
-        );
       }
     }
-
-    console.log(`[ResultPersister][${timestamp}] ========================================`);
   }
 
   /**
@@ -186,13 +142,8 @@ export class ResultPersister {
     // Get report to find simulation IDs
     const report = this.queryClient.getQueryData<Report>(reportKeys.byId(reportId));
     if (!report) {
-      console.log(`[ResultPersister] Report ${reportId} not found in cache`);
       return false;
     }
-
-    console.log(
-      `[ResultPersister] Checking ${report.simulationIds.length} simulations for report ${reportId}`
-    );
 
     // Check each simulation's calculation cache
     for (const simId of report.simulationIds) {
@@ -200,16 +151,11 @@ export class ResultPersister {
         calculationKeys.bySimulationId(simId)
       );
 
-      console.log(
-        `[ResultPersister]   Simulation ${simId}: status=${simStatus?.status || 'not in cache'}`
-      );
-
       if (simStatus?.status !== 'complete') {
         return false;
       }
     }
 
-    console.log(`[ResultPersister] ✓ All simulations complete for report ${reportId}`);
     return true;
   }
 
@@ -224,10 +170,6 @@ export class ResultPersister {
       throw new Error(`Report ${reportId} not found in cache during aggregation`);
     }
 
-    console.log(
-      `[ResultPersister] Aggregating outputs from ${report.simulationIds.length} simulations`
-    );
-
     // Get all simulation outputs from calculation cache
     const outputs = report.simulationIds
       .map((simId) => {
@@ -237,8 +179,6 @@ export class ResultPersister {
         return simStatus?.result;
       })
       .filter((output) => output !== undefined);
-
-    console.log(`[ResultPersister] Aggregated ${outputs.length} outputs`);
 
     // For household reports, return array of household outputs
     // This matches what HouseholdOverview expects

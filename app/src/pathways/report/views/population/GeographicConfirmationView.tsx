@@ -48,14 +48,12 @@ export default function GeographicConfirmationView({
 
   const handleSubmit = async () => {
     const populationData = buildGeographicPopulation();
-    console.log('Creating geographic population:', populationData);
 
     try {
       const result = await createGeographicAssociation(populationData);
-      console.log('Geographic population created successfully:', result);
       onSubmitSuccess(result.geographyId, result.label || '');
     } catch (err) {
-      console.error('Failed to create geographic association:', err);
+      // Error is handled by the mutation
     }
   };
 

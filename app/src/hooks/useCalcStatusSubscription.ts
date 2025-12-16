@@ -108,14 +108,6 @@ export function useReportCalculationStatus(reportId: string | undefined) {
 
   const calcStatus = queries[0]?.data as CalcStatus | undefined;
 
-  console.log('[useReportCalculationStatus]', {
-    reportId,
-    status: calcStatus?.status,
-    progress: calcStatus?.progress,
-    isCalculating: calcStatus?.status === 'pending',
-    message: calcStatus?.message,
-  });
-
   return {
     isCalculating: calcStatus?.status === 'pending',
     progress: calcStatus?.progress,

@@ -33,20 +33,14 @@ interface CalcOrchestratorProviderProps {
 export function CalcOrchestratorProvider({ children }: CalcOrchestratorProviderProps) {
   const queryClient = useQueryClient();
 
-  console.log('[CalcOrchestratorProvider] Rendering provider');
-
   // Create manager once per app lifetime
   const manager = useMemo(() => {
-    console.log('[CalcOrchestratorProvider] → Creating new CalcOrchestratorManager instance');
     return new CalcOrchestratorManager(queryClient);
   }, [queryClient]);
 
   // Cleanup on unmount (when app closes)
   useEffect(() => {
-    console.log('[CalcOrchestratorProvider] Provider mounted');
-
     return () => {
-      console.log('[CalcOrchestratorProvider] Provider unmounting → cleaning up all orchestrators');
       manager.cleanupAll();
     };
   }, [manager]);

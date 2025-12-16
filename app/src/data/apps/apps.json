@@ -1,15 +1,28 @@
 [
   {
     "type": "iframe",
-    "slug": "uk-autumn-budget-2025",
+    "slug": "local-areas-dashboard",
+    "title": "UK local areas dashboard",
+    "description": "Explore how national policies affect different local areas across the UK, including parliamentary constituencies and local authorities",
+    "source": "https://local-area.vercel.app/",
+    "tags": ["uk", "featured", "policy", "interactives"],
+    "countryId": "uk",
+    "displayWithResearch": true,
+    "image": "uk-local-areas-dashboard.png",
+    "date": "2025-12-16 12:00:00",
+    "authors": ["vahid-ahmadi"]
+  },
+  {
+    "type": "iframe",
+    "slug": "autumn-budget-2025",
     "title": "UK Autumn Budget 2025 analysis dashboard",
     "description": "Interactive tool to explore revenue and distributional impacts of UK Autumn Budget 2025 policies across income deciles, constituencies, and household types",
     "source": "https://uk-autumn-budget-dashboard.vercel.app/",
     "tags": ["uk", "featured", "policy", "interactives"],
     "countryId": "uk",
     "displayWithResearch": true,
-    "image": "uk-autumn-budget-2025.jpg",
-    "date": "2025-11-26 12:00:00",
+    "image": "autumn-2025-budget-dashboard.jpg",
+    "date": "2025-12-09 12:00:00",
     "authors": ["vahid-ahmadi"]
   },
   {

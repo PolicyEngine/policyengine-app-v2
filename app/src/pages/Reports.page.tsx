@@ -21,7 +21,6 @@ import { useCacheMonitor } from '@/utils/cacheMonitor';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function ReportsPage() {
-  console.log('[ReportsPage] ========== COMPONENT RENDER ==========');
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   const { data, isLoading, isError, error } = useUserReports(userId);
   const cacheMonitor = useCacheMonitor();
@@ -30,7 +29,6 @@ export default function ReportsPage() {
 
   // Log cache state when component mounts and when data changes
   useEffect(() => {
-    console.log('📊 [ReportsPage] Component mounted/updated');
     cacheMonitor.getStats();
   }, [data]);
 
@@ -45,9 +43,7 @@ export default function ReportsPage() {
   const updateAssociation = useUpdateReportAssociation();
 
   const handleBuildReport = () => {
-    console.log('[ReportsPage] ========== NEW REPORT CLICKED ==========');
     const targetPath = `/${countryId}/reports/create`;
-    console.log('[ReportsPage] Navigating to:', targetPath);
     navigate(targetPath);
   };
 
@@ -140,8 +136,6 @@ export default function ReportsPage() {
       },
     },
   ];
-
-  console.log('User Reports Data:', data);
 
   // Transform the data to match the new structure
   // Use useMemo to prevent unnecessary re-creation of data objects

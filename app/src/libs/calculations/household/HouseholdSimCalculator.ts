@@ -39,11 +39,6 @@ export class HouseholdSimCalculator {
     policyId: string;
   }): Promise<any> {
     const calcKey = calculationKeys.bySimulationId(this.simulationId);
-    const timestamp = Date.now();
-
-    console.log(
-      `[HouseholdSimCalculator][${timestamp}] Starting calculation for simulation ${this.simulationId}`
-    );
 
     // Set initial pending status (no progress field - coordinator handles it)
     const initialStatus: CalcStatus = {
@@ -59,11 +54,8 @@ export class HouseholdSimCalculator {
     };
 
     this.queryClient.setQueryData(calcKey, initialStatus);
-    console.log(`[HouseholdSimCalculator][${timestamp}] Set pending status in cache`);
 
     try {
-      console.log(`[HouseholdSimCalculator][${timestamp}] Calling fetchHouseholdCalculation API`);
-
       // Execute the LONG-RUNNING API call (30-50s)
       // This blocks but that's OK - runs in background Promise
       const result = await fetchHouseholdCalculation(
@@ -71,8 +63,6 @@ export class HouseholdSimCalculator {
         params.populationId,
         params.policyId
       );
-
-      console.log(`[HouseholdSimCalculator][${timestamp}] API call completed successfully`);
 
       // Set final complete status
       const completeStatus: CalcStatus = {
@@ -89,11 +79,10 @@ export class HouseholdSimCalculator {
       };
 
       this.queryClient.setQueryData(calcKey, completeStatus);
-      console.log(`[HouseholdSimCalculator][${timestamp}] Set complete status in cache`);
 
       return result;
     } catch (error) {
-      console.error(`[HouseholdSimCalculator][${timestamp}] API call failed:`, error);
+      console.error('[HouseholdSimCalculator] API call failed:', error);
 
       const errorStatus: CalcStatus = {
         status: 'error',
@@ -113,7 +102,6 @@ export class HouseholdSimCalculator {
       };
 
       this.queryClient.setQueryData(calcKey, errorStatus);
-      console.log(`[HouseholdSimCalculator][${timestamp}] Set error status in cache`);
 
       throw error;
     }

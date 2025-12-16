@@ -1,4 +1,5 @@
 import { ReportOutputSocietyWideByConstituency } from './ReportOutputSocietyWideByConstituency';
+import { ReportOutputSocietyWideByLocalAuthority } from './ReportOutputSocietyWideByLocalAuthority';
 
 export interface ReportOutputSocietyWideUK {
   budget: {
@@ -49,6 +50,9 @@ export interface ReportOutputSocietyWideUK {
         'No change': number;
       };
     };
+  };
+  local_authority_impact?: {
+    by_local_authority: ReportOutputSocietyWideByLocalAuthority;
   };
   data_version: string;
   decile: {

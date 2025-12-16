@@ -23,36 +23,10 @@ interface HouseholdOverviewProps {
  * - In comparison mode, arrows indicate increase (up, blue) or decrease (down, gray)
  */
 export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOverviewProps) {
-  console.log('[HouseholdOverview] ========== RECEIVED OUTPUTS ==========');
-  console.log('[HouseholdOverview] Total outputs:', outputs.length);
-  console.log('[HouseholdOverview] Baseline (outputs[0]):', outputs[0]);
-  console.log('[HouseholdOverview] Baseline household data:', outputs[0]?.householdData);
-  console.log(
-    '[HouseholdOverview] Baseline household data keys:',
-    outputs[0]?.householdData ? Object.keys(outputs[0].householdData) : []
-  );
-  if (outputs[1]) {
-    console.log('[HouseholdOverview] Reform (outputs[1]):', outputs[1]);
-    console.log('[HouseholdOverview] Reform household data:', outputs[1]?.householdData);
-    console.log(
-      '[HouseholdOverview] Reform household data keys:',
-      outputs[1]?.householdData ? Object.keys(outputs[1].householdData) : []
-    );
-  }
-
   // Determine mode and extract households
   const isComparisonMode = outputs.length === 2;
-  console.log('[HouseholdOverview] Is comparison mode:', isComparisonMode);
   const baseline = outputs[0];
-  console.log('[HouseholdOverview] Extracted baseline household with ID:', baseline?.id);
   const reform = isComparisonMode ? outputs[1] : null;
-  console.log('[HouseholdOverview] Extracted reform household with ID:', reform?.id);
-
-  console.log('[HouseholdOverview] Mode:', isComparisonMode ? 'COMPARISON' : 'SINGLE');
-  console.log('[HouseholdOverview] Baseline ID:', baseline?.id);
-  if (reform) {
-    console.log('[HouseholdOverview] Reform ID:', reform?.id);
-  }
 
   return (
     <Stack gap={spacing.xl}>

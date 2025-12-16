@@ -234,22 +234,6 @@ describe('useUserReports', () => {
       });
 
       const reports = result.current.data;
-      console.log('[HOUSEHOLD TEST] Total reports:', reports.length);
-      reports.forEach((r, i) => {
-        console.log(`[HOUSEHOLD TEST] Report ${i}:`, {
-          id: r.report?.id,
-          hasSimulations: !!r.simulations,
-          simulationCount: r.simulations?.length || 0,
-          simulationTypes: r.simulations?.map((s) => s.populationType) || [],
-          simulations:
-            r.simulations?.map((s) => ({
-              id: s.id,
-              populationType: s.populationType,
-              policyId: s.policyId,
-              populationId: s.populationId,
-            })) || [],
-        });
-      });
 
       const reportWithHousehold = reports.find((r) =>
         r.simulations?.some((s) => s.populationType === 'household')
@@ -404,8 +388,6 @@ describe('useUserReports', () => {
 
       // Use '456' instead of TEST_SIMULATION_ID_1 because simulations are adapted to have numeric string IDs
       const reports = result.current.getReportsBySimulation('456');
-
-      console.error('[useUserReports.test.tsx] reports:', reports);
 
       // Then
       expect(reports).toBeDefined();
@@ -751,7 +733,7 @@ describe('useUserReportById', () => {
     expect(result.current.geographies).toBeDefined();
     expect(result.current.geographies.length).toBeGreaterThan(0);
 
-    const geography = result.current.geographies.find((g) => g.geographyId === 'california');
+    const geography = result.current.geographies.find((g) => g.geographyId === 'state/ca');
     expect(geography).toBeDefined();
     expect(geography?.name).toBe('California');
     expect(geography?.countryId).toBe('us');

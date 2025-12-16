@@ -18,7 +18,6 @@ import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
 import { countryIds } from '@/libs/countries';
 import { RootState } from '@/store';
@@ -81,9 +80,6 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   const countryId = countryIdParam as (typeof countryIds)[number];
 
-  console.log('[ReportPathwayWrapper] ========== RENDER ==========');
-  console.log('[ReportPathwayWrapper] countryId:', countryId);
-
   // Initialize report state
   const [reportState, setReportState] = useState<ReportStateProps>(() =>
     initializeReportState(countryId)
@@ -104,12 +100,10 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   // ========== FETCH USER DATA FOR CONDITIONAL NAVIGATION ==========
   const userId = MOCK_USER_ID.toString();
   const { data: userSimulations } = useUserSimulations(userId);
-  const { data: userPolicies } = useUserPolicies(userId);
   const { data: userHouseholds } = useUserHouseholds(userId);
   const { data: userGeographics } = useUserGeographics(userId);
 
   const hasExistingSimulations = (userSimulations?.length ?? 0) > 0;
-  const hasExistingPolicies = (userPolicies?.length ?? 0) > 0;
   const hasExistingPopulations = (userHouseholds?.length ?? 0) + (userGeographics?.length ?? 0) > 0;
 
   // ========== HELPER: Get active simulation ==========
@@ -183,7 +177,6 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   // Skips selection view if user has no existing simulations (except for baseline, which has DefaultBaselineOption)
   const handleNavigateToSimulationSelection = useCallback(
     (simulationIndex: 0 | 1) => {
-      console.log('[ReportPathwayWrapper] Setting active simulation index:', simulationIndex);
       setActiveSimulationIndex(simulationIndex);
       // Always show selection view for baseline (index 0) because it has DefaultBaselineOption
       // For reform (index 1), skip if no existing simulations
@@ -197,15 +190,10 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     [reportCallbacks, hasExistingSimulations, navigateToMode]
   );
 
-  // Conditional navigation to policy setup - skip if no existing policies
+  // Always navigate to policy setup view (shows Current Law, Load Existing, Create New)
   const handleNavigateToPolicy = useCallback(() => {
-    if (hasExistingPolicies) {
-      navigateToMode(ReportViewMode.SETUP_POLICY);
-    } else {
-      // Skip selection view, go directly to create new
-      navigateToMode(ReportViewMode.POLICY_LABEL);
-    }
-  }, [hasExistingPolicies, navigateToMode]);
+    navigateToMode(ReportViewMode.SETUP_POLICY);
+  }, [navigateToMode]);
 
   // Conditional navigation to population setup - skip if no existing populations
   const handleNavigateToPopulation = useCallback(() => {
@@ -217,20 +205,15 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
     }
   }, [hasExistingPopulations, navigateToMode]);
 
-  // Wrapper for current law selection with custom logging
+  // Wrapper for current law selection
   const handleSelectCurrentLaw = useCallback(() => {
-    console.log('[ReportPathwayWrapper] Selecting current law');
     policyCallbacks.handleSelectCurrentLaw(currentLawId, 'Current law');
   }, [currentLawId, policyCallbacks]);
 
   // Handler for selecting default baseline simulation
   // This is called after the simulation has been created by DefaultBaselineOption
   const handleSelectDefaultBaseline = useCallback(
-    (simulationState: SimulationStateProps, simulationId: string) => {
-      console.log('[ReportPathwayWrapper] Default baseline simulation created');
-      console.log('[ReportPathwayWrapper] Simulation state:', simulationState);
-      console.log('[ReportPathwayWrapper] Simulation ID:', simulationId);
-
+    (simulationState: SimulationStateProps, _simulationId: string) => {
       // Update the active simulation with the created simulation
       setReportState((prev) => {
         const newSimulations = [...prev.simulations] as [
@@ -249,9 +232,6 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   // ========== REPORT SUBMISSION ==========
   const handleSubmitReport = useCallback(() => {
-    console.log('[ReportPathwayWrapper] ========== SUBMIT REPORT ==========');
-    console.log('[ReportPathwayWrapper] Report state:', reportState);
-
     const sim1Id = reportState.simulations[0]?.id;
     const sim2Id = reportState.simulations[1]?.id;
 
@@ -282,21 +262,6 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       return;
     }
 
-    console.log('[ReportPathwayWrapper] Converted simulations to API format:', {
-      simulation1: {
-        id: simulation1Api.id,
-        policyId: simulation1Api.policyId,
-        populationId: simulation1Api.populationId,
-      },
-      simulation2: simulation2Api
-        ? {
-            id: simulation2Api.id,
-            policyId: simulation2Api.policyId,
-            populationId: simulation2Api.populationId,
-          }
-        : null,
-    });
-
     // Submit report
     createReport(
       {
@@ -315,7 +280,6 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       },
       {
         onSuccess: (data) => {
-          console.log('[ReportPathwayWrapper] Report created:', data.userReport);
           const outputPath = getReportOutputPath(reportState.countryId, data.userReport.id);
           navigate(outputPath);
           onComplete?.();
@@ -328,8 +292,6 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
   }, [reportState, createReport, navigate, onComplete]);
 
   // ========== RENDER CURRENT VIEW ==========
-  console.log('[ReportPathwayWrapper] Current mode:', currentMode);
-
   // Determine which view to render based on current mode
   let currentView: React.ReactNode;
 

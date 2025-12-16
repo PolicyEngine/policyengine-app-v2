@@ -73,7 +73,6 @@ export class HouseholdProgressCoordinator {
     if (sim) {
       sim.status = 'pending'; // API call in progress (aligns with API status)
       sim.startTime = Date.now();
-      console.log(`[ProgressCoordinator] Simulation ${simulationId} started (pending)`);
       this.updateProgress();
     }
   }
@@ -87,7 +86,6 @@ export class HouseholdProgressCoordinator {
     if (sim) {
       sim.status = 'complete';
       sim.completionTime = Date.now();
-      console.log(`[ProgressCoordinator] Simulation ${simulationId} completed`);
       this.updateProgress();
     }
   }
@@ -100,7 +98,6 @@ export class HouseholdProgressCoordinator {
     const sim = this.simulations.get(simulationId);
     if (sim) {
       sim.status = 'error';
-      console.log(`[ProgressCoordinator] Simulation ${simulationId} failed`);
       this.updateProgress();
     }
   }
@@ -203,12 +200,6 @@ export class HouseholdProgressCoordinator {
   private updateProgress(): void {
     const overall = this.calculateOverallProgress();
 
-    console.log('[ProgressCoordinator] Progress update:', {
-      totalProgress: overall.totalProgress,
-      simulationProgresses: overall.simulationProgresses,
-      message: overall.message,
-    });
-
     // Update each simulation's CalcStatus with overall progress
     // All simulations show the same total progress (not individual progress)
     for (const simId of this.simulations.keys()) {
@@ -230,7 +221,6 @@ export class HouseholdProgressCoordinator {
    * Returns the timer so it can be cleaned up later
    */
   startProgressTimer(): NodeJS.Timeout {
-    console.log('[ProgressCoordinator] Starting progress timer');
     return setInterval(() => {
       this.updateProgress();
     }, 500); // Update every 500ms for smooth progress bar
@@ -240,7 +230,6 @@ export class HouseholdProgressCoordinator {
    * Stop the timer and cleanup
    */
   cleanup(timer: NodeJS.Timeout): void {
-    console.log('[ProgressCoordinator] Cleaning up progress timer');
     clearInterval(timer);
   }
 }

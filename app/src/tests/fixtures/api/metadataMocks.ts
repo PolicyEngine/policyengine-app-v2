@@ -1,5 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { MetadataApiPayload } from '@/types/metadata';
+import { UK_REGION_TYPES } from '@/types/regionTypes';
 
 export const mockMetadataResponse: MetadataApiPayload = {
   status: 'ok',
@@ -63,11 +64,15 @@ export const mockMetadataResponse: MetadataApiPayload = {
     },
     economy_options: {
       region: [
-        { name: 'uk', label: 'UK' },
-        { name: 'england', label: 'England' },
-        { name: 'scotland', label: 'Scotland' },
-        { name: 'wales', label: 'Wales' },
-        { name: 'northern_ireland', label: 'Northern Ireland' },
+        { name: 'uk', label: 'UK', type: UK_REGION_TYPES.NATIONAL },
+        { name: 'country/england', label: 'England', type: UK_REGION_TYPES.COUNTRY },
+        { name: 'country/scotland', label: 'Scotland', type: UK_REGION_TYPES.COUNTRY },
+        { name: 'country/wales', label: 'Wales', type: UK_REGION_TYPES.COUNTRY },
+        {
+          name: 'country/northern_ireland',
+          label: 'Northern Ireland',
+          type: UK_REGION_TYPES.COUNTRY,
+        },
       ],
       time_period: [
         { name: 2023, label: '2023' },
