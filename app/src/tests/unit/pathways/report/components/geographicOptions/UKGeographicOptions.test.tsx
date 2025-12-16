@@ -4,6 +4,7 @@ import UKGeographicOptions from '@/pathways/report/components/geographicOptions/
 import {
   mockUKConstituencyOptions,
   mockUKCountryOptions,
+  mockUKLocalAuthorityOptions,
   TEST_VALUES,
 } from '@/tests/fixtures/pathways/report/components/geographicOptionsMocks';
 import { UK_REGION_TYPES } from '@/utils/regionStrategies';
@@ -21,6 +22,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -30,6 +32,7 @@ describe('UKGeographicOptions', () => {
     expect(screen.getByLabelText('All households UK-wide')).toBeInTheDocument();
     expect(screen.getByLabelText('All households in a country')).toBeInTheDocument();
     expect(screen.getByLabelText('All households in a constituency')).toBeInTheDocument();
+    expect(screen.getByLabelText('All households in a local authority')).toBeInTheDocument();
     expect(screen.getByLabelText('Custom household')).toBeInTheDocument();
   });
 
@@ -45,6 +48,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -67,6 +71,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -88,6 +93,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -109,6 +115,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -129,6 +136,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -152,6 +160,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -175,6 +184,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -199,6 +209,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion={TEST_VALUES.ENGLAND_COUNTRY}
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -220,6 +231,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={mockUKCountryOptions}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
@@ -245,6 +257,7 @@ describe('UKGeographicOptions', () => {
         selectedRegion=""
         countryOptions={[]}
         constituencyOptions={mockUKConstituencyOptions}
+        localAuthorityOptions={mockUKLocalAuthorityOptions}
         onScopeChange={onScopeChange}
         onRegionChange={onRegionChange}
       />
