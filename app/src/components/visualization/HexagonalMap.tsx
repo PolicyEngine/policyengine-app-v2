@@ -50,6 +50,7 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
     () => ({
       height: 600,
       hexSize: 12,
+      coordinateScale: 1,
       showColorBar: true,
       colorScale: {
         colors: getColorScale('diverging-gray-teal'),
@@ -59,12 +60,27 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       },
       formatValue: config.formatValue || ((val) => val.toFixed(2)),
       layoutOverrides: config.layoutOverrides || {},
+      ...config,
     }),
     [config]
   );
 
-  // Transform data for hexagonal positioning
-  const positionedData = useMemo(() => applyHexagonalPositioning(data), [data]);
+  // Transform data for hexagonal positioning and apply coordinate scaling
+  const positionedData = useMemo(() => {
+    const hexPositioned = applyHexagonalPositioning(data);
+    const scale = fullConfig.coordinateScale ?? 1;
+
+    if (scale === 1) {
+      return hexPositioned;
+    }
+
+    // Apply coordinate scaling - smaller scale = hexagons closer together
+    return hexPositioned.map((point) => ({
+      ...point,
+      x: point.x * scale,
+      y: point.y * scale,
+    }));
+  }, [data, fullConfig.coordinateScale]);
 
   // Extract arrays for Plotly
   const xValues = positionedData.map((p) => p.x);

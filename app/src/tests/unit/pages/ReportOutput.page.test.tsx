@@ -103,7 +103,7 @@ describe('ReportOutputPage', () => {
 
     // Then
     expect(screen.getByText('Overview')).toBeInTheDocument();
-    expect(screen.getByText('Comparative Analysis')).toBeInTheDocument();
+    expect(screen.getByText('Comparative analysis')).toBeInTheDocument();
     expect(screen.getByText('Policy')).toBeInTheDocument();
     expect(screen.getByText('Population')).toBeInTheDocument();
     expect(screen.getByText('Dynamics')).toBeInTheDocument();

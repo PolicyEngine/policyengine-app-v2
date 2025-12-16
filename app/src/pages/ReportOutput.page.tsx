@@ -235,16 +235,17 @@ function getTabsForOutputType(
   if (outputType === 'societyWide') {
     const tabs = [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
     ];
 
-    // IMPORTANT: Only show constituencies for UK reports
+    // IMPORTANT: Only show constituencies and local authorities for UK reports
     // US does not have this capability at this time
     if (countryId === 'uk') {
       tabs.push({ value: 'constituency', label: 'Constituencies' });
+      tabs.push({ value: 'local-authority', label: 'Local authorities' });
     }
 
     return tabs;
@@ -253,7 +254,7 @@ function getTabsForOutputType(
   if (outputType === 'household') {
     return [
       { value: 'overview', label: 'Overview' },
-      { value: 'comparative-analysis', label: 'Comparative Analysis' },
+      { value: 'comparative-analysis', label: 'Comparative analysis' },
       { value: 'policy', label: 'Policy' },
       { value: 'population', label: 'Population' },
       { value: 'dynamics', label: 'Dynamics' },
