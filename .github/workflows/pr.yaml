@@ -8,7 +8,6 @@ on:
 
 env:
   VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   lint:
@@ -93,12 +92,14 @@ jobs:
         working-directory: ./app
         run: npm test
 
-  preview:
-    name: Preview Deploy
+  preview-website:
+    name: Preview Website
     runs-on: ubuntu-latest
     environment:
-      name: preview
+      name: preview-website
       url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}
 
     steps:
       - name: Check out repository
@@ -128,7 +129,7 @@ jobs:
         id: deployment
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          environment: preview
+          environment: preview-website
           ref: ${{ github.head_ref }}
 
       - name: Deploy Preview
@@ -146,23 +147,60 @@ jobs:
           state: ${{ job.status == 'success' && 'success' || 'failure' }}
           environment-url: ${{ steps.deploy.outputs.url }}
 
-      - name: Find existing comment
-        uses: peter-evans/find-comment@v3
-        id: find-comment
+  preview-calculator:
+    name: Preview Calculator
+    runs-on: ubuntu-latest
+    environment:
+      name: preview-calculator
+      url: ${{ steps.deploy.outputs.url }}
+    env:
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_CALCULATOR_PROJECT_ID }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Preview deployed
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: package-lock.json
 
-      - name: Create or update comment
-        uses: peter-evans/create-or-update-comment@v4
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: ./calculator
+
+      - name: Build
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        working-directory: ./calculator
+
+      - name: Create GitHub deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment
         with:
-          comment-id: ${{ steps.find-comment.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          edit-mode: replace
-          body: |
-            ✅ **Preview deployed!**
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: preview-calculator
+          ref: ${{ github.head_ref }}
 
-            🔗 ${{ steps.deploy.outputs.url }}
+      - name: Deploy Preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+        working-directory: ./calculator
 
-            _Commit: ${{ github.event.pull_request.head.sha }}_
+      - name: Update deployment status
+        if: always()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: ${{ job.status == 'success' && 'success' || 'failure' }}
+          environment-url: ${{ steps.deploy.outputs.url }}
