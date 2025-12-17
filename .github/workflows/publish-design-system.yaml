@@ -1,0 +1,69 @@
+# Publish @policyengine/design-system to npm via semantic-release
+#
+# Triggers:
+# - On push to main with changes in packages/design-system/
+# - Manual workflow dispatch
+#
+# Prerequisites:
+# - NPM_TOKEN secret configured in repo settings
+# - @policyengine org exists on npmjs.com
+#
+# Version bumps are determined automatically from commit messages:
+# - fix: ... → patch (0.1.0 → 0.1.1)
+# - feat: ... → minor (0.1.0 → 0.2.0)
+# - feat!: ... or BREAKING CHANGE: → major (0.1.0 → 1.0.0)
+#
+# See: packages/design-system/NPM_SETUP.md for setup instructions
+
+name: Publish Design System
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/design-system/**"
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build design system
+        run: npm run build --workspace=@policyengine/design-system
+
+      - name: Run tests
+        run: npm run test --workspace=@policyengine/design-system
+
+      - name: Release
+        run: npx semantic-release
+        working-directory: packages/design-system
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Summary
+        run: |
+          echo "## Design System Release" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "semantic-release has processed commits and published if warranted." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Check [Releases](https://github.com/${{ github.repository }}/releases) for details." >> $GITHUB_STEP_SUMMARY

@@ -1,29 +1,20 @@
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom';
-import AppLayout from './components/AppLayout';
+/**
+ * Router for the Calculator app (app.policyengine.org)
+ * Contains only the interactive calculator functionality
+ */
+import { createBrowserRouter, Outlet, RouterProvider } from 'react-router-dom';
 import PathwayLayout from './components/PathwayLayout';
 import StandardLayout from './components/StandardLayout';
-import StaticLayout from './components/StaticLayout';
-import AppPage from './pages/AppPage';
-import BlogPage from './pages/Blog.page';
 import DashboardPage from './pages/Dashboard.page';
-import DonatePage from './pages/Donate.page';
-import OrgLogosEmbedPage from './pages/embed/OrgLogosEmbed.page';
-import HomePage from './pages/Home.page';
 import PoliciesPage from './pages/Policies.page';
 import PopulationsPage from './pages/Populations.page';
-import PrivacyPage from './pages/Privacy.page';
 import ReportOutputPage from './pages/ReportOutput.page';
 import ReportsPage from './pages/Reports.page';
-import ResearchPage from './pages/Research.page';
 import SimulationsPage from './pages/Simulations.page';
-import SupportersPage from './pages/Supporters.page';
-import TeamPage from './pages/Team.page';
-import TermsPage from './pages/Terms.page';
 import PolicyPathwayWrapper from './pathways/policy/PolicyPathwayWrapper';
 import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWrapper';
 import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
-import { CountryAppGuard } from './routing/guards/CountryAppGuard';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
@@ -33,7 +24,6 @@ const router = createBrowserRouter(
   [
     {
       path: '/',
-      // Dynamically detect and redirect to user's country
       element: <RedirectToCountry />,
     },
     {
@@ -72,8 +62,11 @@ const router = createBrowserRouter(
               ),
               children: [
                 {
+                  index: true,
+                  element: <DashboardPage />,
+                },
+                {
                   path: 'dashboard',
-                  // TODO: Build dashboard page
                   element: <DashboardPage />,
                 },
                 {
@@ -122,85 +115,6 @@ const router = createBrowserRouter(
             },
           ],
         },
-        // Static pages - use StaticLayout, no metadata needed
-        {
-          element: <StaticLayout />,
-          children: [
-            {
-              index: true,
-              element: <HomePage />,
-            },
-            {
-              path: 'donate',
-              element: <DonatePage />,
-            },
-            {
-              path: 'supporters',
-              element: <SupportersPage />,
-            },
-            {
-              path: 'team',
-              element: <TeamPage />,
-            },
-            {
-              path: 'privacy',
-              element: <PrivacyPage />,
-            },
-            {
-              path: 'terms',
-              element: <TermsPage />,
-            },
-            {
-              path: 'methodology',
-              element: <div>Methodology page</div>,
-            },
-            {
-              path: 'support',
-              element: <div>Support page</div>,
-            },
-            {
-              path: 'research',
-              element: <ResearchPage />,
-            },
-            {
-              path: 'research/:slug',
-              element: <BlogPage />,
-            },
-          ],
-        },
-        // Embed routes - minimal layout for iframe embedding
-        {
-          children: [
-            {
-              path: 'embed/org-logos',
-              element: <OrgLogosEmbedPage />,
-            },
-          ],
-        },
-        // Interactive app routes - use AppLayout (no legacy banner) with CountryAppGuard
-        {
-          element: <CountryAppGuard />,
-          children: [
-            {
-              element: <AppLayout />,
-              children: [
-                {
-                  path: ':slug',
-                  element: <AppPage />,
-                },
-              ],
-            },
-          ],
-        },
-        // Legacy routes - redirect old blog URLs to new research URLs
-        {
-          children: [
-            {
-              path: 'blog/:postName',
-              element: <Navigate to="research/:postName" replace />,
-            },
-          ],
-        },
       ],
     },
   ],
@@ -209,6 +123,6 @@ const router = createBrowserRouter(
   }
 );
 
-export function Router() {
+export function CalculatorRouter() {
   return <RouterProvider router={router} />;
 }
