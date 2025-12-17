@@ -54,7 +54,7 @@ export default function GeographySubPage({
 
   return (
     <div>
-      <h2>Population Information</h2>
+      <h2>Population information</h2>
 
       <Box
         style={{

@@ -1,4 +1,4 @@
-import { IconCalendar, IconClock, IconPencil, IconStack2 } from '@tabler/icons-react';
+import { IconCalendar, IconClock, IconPencil } from '@tabler/icons-react';
 import { ActionIcon, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -26,7 +26,6 @@ interface ReportOutputLayoutProps {
  * ReportOutputLayout - Structural chrome for report output pages
  *
  * Provides consistent layout with:
- * - Back navigation
  * - Header with title and actions
  * - Tab navigation bar
  * - Content area (children)
@@ -56,14 +55,6 @@ export default function ReportOutputLayout({
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
-        {/* TODO: Re-enable back navigation once Reports list page is implemented */}
-        {/* <Group gap={spacing.xs} align="center">
-          <IconChevronLeft size={20} color={colors.text.secondary} />
-          <Text size="md" c={colors.text.secondary}>
-            Reports
-          </Text>
-        </Group> */}
-
         {/* Header Section */}
         <Box>
           {/* Title row with edit action */}
@@ -104,10 +95,6 @@ export default function ReportOutputLayout({
             <Text size="sm" c="dimmed">
               {timestamp}
             </Text>
-            {/* TODO: Re-enable "View All" link once functionality is implemented */}
-            {/* <Anchor size="sm" underline="always" c={colors.blue[700]}>
-              View All
-            </Anchor> */}
           </Group>
         </Box>
 
@@ -158,7 +145,6 @@ export default function ReportOutputLayout({
                 >
                   {tab.label}
                 </Text>
-                <IconStack2 size={14} color={colors.gray[500]} />
                 {activeTab === tab.value && (
                   <Box
                     style={{

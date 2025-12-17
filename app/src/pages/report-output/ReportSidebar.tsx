@@ -88,9 +88,14 @@ export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarPro
         width: 250,
         padding: spacing.md,
         borderRight: '1px solid var(--mantine-color-gray-3)',
+        position: 'sticky',
+        top: spacing.xl,
+        alignSelf: 'flex-start',
+        maxHeight: 'calc(100vh - 200px)',
+        overflow: 'hidden',
       }}
     >
-      <ScrollArea h="100%" type="scroll">
+      <ScrollArea h="100%" type="auto" offsetScrollbars>
         {tree.map((node) => renderNode(node))}
       </ScrollArea>
     </Box>

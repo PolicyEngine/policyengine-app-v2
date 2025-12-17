@@ -61,7 +61,7 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
 
   return (
     <div>
-      <h2>Policy Information</h2>
+      <h2>Policy information</h2>
 
       {hasNoPolicyChanges && (
         <p style={{ fontStyle: 'italic', color: 'var(--mantine-color-dimmed)' }}>

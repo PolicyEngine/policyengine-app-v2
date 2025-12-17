@@ -69,7 +69,7 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
   if (paramList.length === 0) {
     return (
       <div>
-        <h2>Dynamics Information</h2>
+        <h2>Dynamics information</h2>
         <Box
           style={{
             border: `1px solid ${colors.border.light}`,
@@ -100,7 +100,7 @@ export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubP
 
   return (
     <div>
-      <h2>Dynamics Information</h2>
+      <h2>Dynamics information</h2>
 
       <ParameterTable
         parameterNames={paramList}
