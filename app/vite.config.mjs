@@ -4,8 +4,16 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import { resolve } from 'path';
 
 // Determine which app to build based on VITE_APP_MODE env var
-// Default to website for backwards compatibility with 'npm run dev'
-const appMode = process.env.VITE_APP_MODE || 'website';
+// All dev/build scripts must explicitly set this variable
+const appMode = process.env.VITE_APP_MODE;
+
+// Validate for dev/build; skip for tests (vitest loads this config but doesn't use appMode)
+if (!process.env.VITEST && (!appMode || !['website', 'calculator'].includes(appMode))) {
+  throw new Error(
+    `VITE_APP_MODE must be "website" or "calculator". Got: "${appMode}"\n` +
+      'Use npm scripts: dev:website, dev:calculator, build:website, build:calculator'
+  );
+}
 
 function getHtmlFile() {
   return appMode === 'calculator' ? 'calculator.html' : 'website.html';
