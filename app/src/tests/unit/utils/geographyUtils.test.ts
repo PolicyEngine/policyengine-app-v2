@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import type { Geography } from '@/types/ingredients/Geography';
 import {
   EXPECTED_COUNTRY_LABELS,
   EXPECTED_REGION_TYPE_LABELS,
@@ -8,6 +7,7 @@ import {
   TEST_COUNTRY_CODES,
   TEST_REGION_CODES,
 } from '@/tests/fixtures/utils/geographyUtilsMocks';
+import type { Geography } from '@/types/ingredients/Geography';
 import {
   getCountryLabel,
   getRegionLabel,

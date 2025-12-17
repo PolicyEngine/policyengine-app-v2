@@ -1,7 +1,7 @@
+import { resolve } from 'path';
 import react from '@vitejs/plugin-react';
 import { defineConfig } from 'vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
-import { resolve } from 'path';
 
 // Determine which app to build based on VITE_APP_MODE env var
 // All dev/build scripts must explicitly set this variable
