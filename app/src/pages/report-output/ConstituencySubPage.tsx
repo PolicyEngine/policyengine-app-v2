@@ -10,8 +10,8 @@ interface ConstituencySubPageProps {
 }
 
 const CONSTITUENCY_TABS: SidebarTab[] = [
-  { value: 'average', label: 'Average Change' },
-  { value: 'relative', label: 'Relative Change' },
+  { value: 'average', label: 'Average change' },
+  { value: 'relative', label: 'Relative change' },
 ];
 
 /**

@@ -91,13 +91,11 @@ export function ReportSidebar({ tree, activeView, onNavigate }: ReportSidebarPro
         position: 'sticky',
         top: spacing.xl,
         alignSelf: 'flex-start',
-        maxHeight: 'calc(100vh - 200px)',
-        overflow: 'hidden',
       }}
     >
-      <ScrollArea h="100%" type="auto" offsetScrollbars>
+      <ScrollArea.Autosize mah="calc(100vh - 250px)" type="auto" offsetScrollbars>
         {tree.map((node) => renderNode(node))}
-      </ScrollArea>
+      </ScrollArea.Autosize>
     </Box>
   );
 }

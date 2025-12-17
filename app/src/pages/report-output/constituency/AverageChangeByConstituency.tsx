@@ -43,7 +43,7 @@ export function AverageChangeByConstituency({ output }: AverageChangeByConstitue
   return (
     <Stack gap="md">
       <div>
-        <Title order={3}>Average Household Income Change by Constituency</Title>
+        <Title order={3}>Average household income change by constituency</Title>
       </div>
 
       <HexagonalMap

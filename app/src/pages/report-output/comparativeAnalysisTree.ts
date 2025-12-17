@@ -13,7 +13,7 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
   return [
     {
       name: 'budgetaryImpact',
-      label: 'Budgetary Impact',
+      label: 'Budgetary impact',
       children: [
         {
           name: 'budgetary-impact-overall',
@@ -31,7 +31,7 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
     },
     {
       name: 'distributionalImpact',
-      label: 'Distributional Impact',
+      label: 'Distributional impact',
       children: [
         {
           name: 'distributionalImpact.incomeDecile',
@@ -69,7 +69,7 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
     },
     {
       name: 'winnersAndLosers',
-      label: 'Winners and Losers',
+      label: 'Winners and losers',
       children: [
         {
           name: 'winners-losers-income-decile',
@@ -87,7 +87,7 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
     },
     {
       name: 'povertyImpact',
-      label: 'Poverty Impact',
+      label: 'Poverty impact',
       children: [
         {
           name: 'povertyImpact.regular',
@@ -129,7 +129,7 @@ export function getComparativeAnalysisTree(countryId: string): TreeNode[] {
     },
     {
       name: 'inequality-impact',
-      label: 'Inequality Impact',
+      label: 'Inequality impact',
     },
   ];
 }

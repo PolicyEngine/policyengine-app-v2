@@ -43,7 +43,7 @@ export function RelativeChangeByConstituency({ output }: RelativeChangeByConstit
   return (
     <Stack gap="md">
       <div>
-        <Title order={3}>Relative Household Income Change by Constituency</Title>
+        <Title order={3}>Relative household income change by constituency</Title>
       </div>
 
       <HexagonalMap
