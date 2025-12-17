@@ -48,8 +48,8 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
   // Apply default configuration
   const fullConfig: HexMapConfig = useMemo(
     () => ({
-      height: 600,
-      hexSize: 12,
+      height: 380,
+      hexSize: 8,
       coordinateScale: 1,
       showColorBar: true,
       colorScale: {
@@ -154,6 +154,8 @@ export function HexagonalMap({ data, config = {} }: HexagonalMapProps) {
       showline: false,
     },
     height: fullConfig.height,
+    paper_bgcolor: colors.background.primary,
+    plot_bgcolor: colors.background.primary,
     showlegend: false,
     coloraxis: {
       showscale: fullConfig.showColorBar,

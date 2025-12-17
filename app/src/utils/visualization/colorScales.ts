@@ -43,7 +43,7 @@ export const DIVERGING_GRAY_TEAL: ColorScale = {
   colors: [
     colors.gray[700], // Dark gray (most negative)
     colors.gray[400], // Medium gray
-    colors.white, // White (neutral)
+    '#F9F2EA', // Warm neutral (halfway between cream and champagne) - visible against white
     colors.primary[200], // Light teal
     colors.primary[600], // Teal (most positive)
   ],

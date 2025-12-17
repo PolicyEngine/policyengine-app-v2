@@ -49,7 +49,7 @@ export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocal
       <HexagonalMap
         data={hexMapData}
         config={{
-          hexSize: 18,
+          hexSize: 11,
           colorScale: {
             colors: DIVERGING_GRAY_TEAL.colors,
             tickFormat: '.1%',
