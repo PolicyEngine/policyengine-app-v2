@@ -864,6 +864,48 @@ export function MarkdownFormatter({
 }
 
 /**
+ * Parse inline markdown links [text](url) to React elements
+ * Lightweight alternative to full MarkdownFormatter for simple inline content
+ */
+function parseInlineLinks(text: string): React.ReactNode[] {
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    // Add text before the link
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // Add the link
+    parts.push(
+      <a
+        key={match.index}
+        href={match[2]}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          color: blogColors.link,
+          textDecoration: 'none',
+          borderBottom: `1px solid ${blogColors.link}`,
+        }}
+      >
+        {match[1]}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text after last link
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [text];
+}
+
+/**
  * FootnotesSection Component
  * Renders a consolidated footnotes section for notebooks.
  * Creates elements with the correct IDs that remark-gfm's footnote references link to.
@@ -889,13 +931,13 @@ export function FootnotesSection({
     <div
       style={{
         borderTop: `1px solid ${blogColors.borderDark}`,
-        paddingTop: blogSpacing.xl,
+        paddingTop: blogSpacing.md,
         marginTop: blogSpacing.xxl,
         marginBottom: blogSpacing.lg,
         backgroundColor: blogColors.backgroundSecondary,
         borderRadius: blogRadius.md,
-        padding: `${blogSpacing.lg}px ${blogSpacing.md}px`,
-        fontSize: mobile ? blogTypography.smallMobile : blogTypography.smallDesktop,
+        padding: `${blogSpacing.md}px ${blogSpacing.md}px`,
+        fontSize: mobile ? '0.8rem' : '0.85rem',
         color: blogColors.textSecondary,
       }}
     >
@@ -905,25 +947,23 @@ export function FootnotesSection({
             key={key}
             id={`user-content-fn-${key}`}
             style={{
-              marginBottom: blogSpacing.sm,
-              lineHeight: 1.5,
+              marginBottom: blogSpacing.xs,
+              lineHeight: 1.4,
               scrollMarginTop: '80px',
             }}
           >
-            <p style={{ margin: 0, display: 'inline' }}>
-              {footnotes[key]}{' '}
-              <a
-                href={`#user-content-fnref-${key}`}
-                style={{
-                  color: blogColors.link,
-                  textDecoration: 'none',
-                  fontSize: '0.85em',
-                }}
-                aria-label="Back to reference"
-              >
-                ↩
-              </a>
-            </p>
+            {parseInlineLinks(footnotes[key])}{' '}
+            <a
+              href={`#user-content-fnref-${key}`}
+              style={{
+                color: blogColors.link,
+                textDecoration: 'none',
+                fontSize: '0.85em',
+              }}
+              aria-label="Back to reference"
+            >
+              ↩
+            </a>
           </li>
         ))}
       </ol>
