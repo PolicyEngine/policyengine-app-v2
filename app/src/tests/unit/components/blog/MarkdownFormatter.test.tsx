@@ -1,5 +1,5 @@
-import { describe, expect, test, vi } from 'vitest';
 import { render, screen } from '@test-utils';
+import { describe, expect, test, vi } from 'vitest';
 import { FootnotesSection, MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
 import {
   EXPECTED_LINK_ATTRS,

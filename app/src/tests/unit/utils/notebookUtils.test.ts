@@ -1,15 +1,5 @@
 import { describe, expect, test } from 'vitest';
 import {
-  decode,
-  extractFootnoteDefinitions,
-  extractMarkdownFromNotebook,
-  extractNotebookFootnotes,
-  hasFootnoteReferences,
-  isNotebookFile,
-  parseJSONSafe,
-  recursivelyDecode,
-} from '@/utils/notebookUtils';
-import {
   EXPECTED_FOOTNOTES,
   FOOTNOTE_REFERENCE_STRINGS,
   JSON_TEST_STRINGS,
@@ -21,6 +11,16 @@ import {
   TEST_FILENAMES,
   UNICODE_STRINGS,
 } from '@/tests/fixtures/utils/notebookUtilsMocks';
+import {
+  decode,
+  extractFootnoteDefinitions,
+  extractMarkdownFromNotebook,
+  extractNotebookFootnotes,
+  hasFootnoteReferences,
+  isNotebookFile,
+  parseJSONSafe,
+  recursivelyDecode,
+} from '@/utils/notebookUtils';
 
 describe('notebookUtils', () => {
   describe('isNotebookFile', () => {

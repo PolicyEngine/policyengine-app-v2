@@ -17,7 +17,12 @@ import {
   parseJSONSafe,
 } from '@/utils/notebookUtils';
 import { blogColors, blogSpacing, blogTypography } from './blogStyles';
-import { FootnotesSection, HighlightedBlock, MarkdownFormatter, PlotlyChartCode } from './MarkdownFormatter';
+import {
+  FootnotesSection,
+  HighlightedBlock,
+  MarkdownFormatter,
+  PlotlyChartCode,
+} from './MarkdownFormatter';
 import { useDisplayCategory } from './useDisplayCategory';
 
 /**
@@ -41,7 +46,10 @@ interface NotebookRendererProps {
  * Iterates through notebook cells and renders them appropriately
  * Consolidates footnotes at the end of the article (above author profile)
  */
-export function NotebookRenderer({ notebook, displayCategory: propDisplayCategory }: NotebookRendererProps) {
+export function NotebookRenderer({
+  notebook,
+  displayCategory: propDisplayCategory,
+}: NotebookRendererProps) {
   const hookDisplayCategory = useDisplayCategory();
   const displayCategory = propDisplayCategory || hookDisplayCategory;
 
@@ -53,7 +61,11 @@ export function NotebookRenderer({ notebook, displayCategory: propDisplayCategor
     const extractedFootnotes = extractNotebookFootnotes(notebook);
     const hasAnyFootnotes = Object.keys(extractedFootnotes).length > 0;
     const markdown = buildFootnotesMarkdown(extractedFootnotes);
-    return { footnotes: extractedFootnotes, hasFootnotes: hasAnyFootnotes, footnotesMarkdown: markdown };
+    return {
+      footnotes: extractedFootnotes,
+      hasFootnotes: hasAnyFootnotes,
+      footnotesMarkdown: markdown,
+    };
   }, [notebook]);
 
   if (!notebook?.cells) {
@@ -248,9 +260,10 @@ function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
   // Update image sources to use SVG with transparent background instead of PNG
   const images = data.layout?.images?.map((img: Record<string, unknown>) => ({
     ...img,
-    source: typeof img.source === 'string'
-      ? img.source.replace('/teal-square.png', '/teal-square.svg')
-      : img.source,
+    source:
+      typeof img.source === 'string'
+        ? img.source.replace('/teal-square.png', '/teal-square.svg')
+        : img.source,
   }));
 
   // Preserve original margins from notebook data, falling back to defaults
@@ -276,7 +289,12 @@ function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
         layout={{
           ...data.layout,
           images,
-          width: displayCategory === 'mobile' ? 600 : (typeof data.layout?.width === 'number' ? data.layout.width : undefined),
+          width:
+            displayCategory === 'mobile'
+              ? 600
+              : typeof data.layout?.width === 'number'
+                ? data.layout.width
+                : undefined,
           height: typeof data.layout?.height === 'number' ? data.layout.height : 600,
           title: { text: '' },
           paper_bgcolor: 'transparent',
