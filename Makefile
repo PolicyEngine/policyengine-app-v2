@@ -13,10 +13,10 @@ help:
 	@echo "  make deploy     - Build and deploy to GitHub Pages"
 
 install:
-	cd app && npm install
+	npm install
 
 dev:
-	cd app && npm run dev
+	npm run dev
 
 build:
 	cd app && npm run build-with-types
@@ -37,7 +37,7 @@ format:
 	cd app && npm run prettier:write
 
 clean:
-	rm -rf app/dist app/node_modules
+	rm -rf app/dist app/node_modules node_modules packages/*/node_modules
 
 deploy: build
 	@echo "Build complete. GitHub Actions will handle deployment"

@@ -64,6 +64,12 @@ export default defineConfig({
     // Expose VITE_APP_MODE to client-side code
     'import.meta.env.VITE_APP_MODE': JSON.stringify(appMode),
   },
+  // Use separate cache directories for website and calculator to avoid conflicts
+  cacheDir: `node_modules/.vite-${appMode || 'default'}`,
+  optimizeDeps: {
+    // Force pre-bundle ESM-only packages that cause issues
+    include: ['wordwrapjs'],
+  },
   build: {
     rollupOptions: {
       input: getInputConfig(),
