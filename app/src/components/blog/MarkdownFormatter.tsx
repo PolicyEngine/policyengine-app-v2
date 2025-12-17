@@ -196,6 +196,7 @@ export function HighlightedBlock({
 
 /**
  * Plotly Chart Code Block Component
+ * Copied as closely as possible from app v1's MarkdownFormatter.jsx
  */
 export function PlotlyChartCode({
   data,
@@ -204,27 +205,19 @@ export function PlotlyChartCode({
   data: string | string[];
   backgroundColor?: string;
 }) {
+  const displayCategory = useDisplayCategory();
+  const mobile = displayCategory === 'mobile';
+
   const plotlyData = safeJsonParse(data);
 
   if (!plotlyData) {
     return null;
   }
 
-  const defaultMargins = {
-    l: blogSpacing.lg,
-    r: blogSpacing.lg,
-    t: blogSpacing.lg,
-    b: blogSpacing.lg,
-  };
+  // Use the margins defined in the plotly data, falling back to reasonable defaults
+  // Don't override what's in the data, but ensure we have at least some margin
+  const defaultMargins = { l: 20, r: 20, t: 20, b: 20 };
   const margins = { ...defaultMargins, ...(plotlyData.layout?.margin || {}) };
-
-  // Update image sources to use SVG with transparent background instead of PNG
-  const images = plotlyData.layout?.images?.map((img: Record<string, unknown>) => ({
-    ...img,
-    source: typeof img.source === 'string'
-      ? img.source.replace('/teal-square.png', '/teal-square.svg')
-      : img.source,
-  }));
 
   return (
     <div
@@ -233,21 +226,20 @@ export function PlotlyChartCode({
         width: '100%',
         display: 'flex',
         justifyContent: 'center',
-        marginBottom: blogSpacing.lg,
+        marginBottom: 20,
       }}
     >
       <Plot
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
-          images,
+          width: mobile ? 400 : undefined,
           height: 600,
           plot_bgcolor: backgroundColor || 'transparent',
           paper_bgcolor: backgroundColor || 'transparent',
           margin: margins,
           autosize: true,
         }}
-        frames={plotlyData.frames}
         config={{
           displayModeBar: false,
           responsive: true,
@@ -255,7 +247,6 @@ export function PlotlyChartCode({
         style={{
           width: '100%',
           maxWidth: '100%',
-          boxSizing: 'border-box',
         }}
         useResizeHandler
       />

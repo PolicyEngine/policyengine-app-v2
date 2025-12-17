@@ -239,16 +239,11 @@ function NotebookOutputPlain({ data }: { data: string | string[] }) {
 
 /**
  * Renders Plotly chart output from notebook cells
+ * Preserves original layout margins to avoid legend clipping
  */
 function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
   const displayCategory = useDisplayCategory();
   const title = data.layout?.title?.text;
-
-  // Convert width/height to numbers (Plotly.js requires number | undefined)
-  const layoutWidth = data.layout?.width;
-  const layoutHeight = data.layout?.height;
-  const width = displayCategory === 'mobile' ? 600 : (typeof layoutWidth === 'number' ? layoutWidth : undefined);
-  const height = typeof layoutHeight === 'number' ? layoutHeight : 600;
 
   // Update image sources to use SVG with transparent background instead of PNG
   const images = data.layout?.images?.map((img: Record<string, unknown>) => ({
@@ -257,6 +252,10 @@ function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
       ? img.source.replace('/teal-square.png', '/teal-square.svg')
       : img.source,
   }));
+
+  // Preserve original margins from notebook data, falling back to defaults
+  const defaultMargins = { l: 20, r: 20, t: 20, b: 20 };
+  const margins = { ...defaultMargins, ...(data.layout?.margin || {}) };
 
   return (
     <div style={{ marginBottom: blogSpacing.lg }}>
@@ -277,17 +276,12 @@ function NotebookOutputPlotly({ data }: { data: PlotlyData }) {
         layout={{
           ...data.layout,
           images,
-          width,
-          height,
+          width: displayCategory === 'mobile' ? 600 : (typeof data.layout?.width === 'number' ? data.layout.width : undefined),
+          height: typeof data.layout?.height === 'number' ? data.layout.height : 600,
           title: { text: '' },
           paper_bgcolor: 'transparent',
           plot_bgcolor: 'transparent',
-          margin: {
-            l: 20,
-            r: 20,
-            t: 20,
-            b: 20,
-          },
+          margin: margins,
         }}
         config={{
           displayModeBar: false,
