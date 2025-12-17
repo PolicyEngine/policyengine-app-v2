@@ -6,6 +6,10 @@ on:
       - main
       - master
 
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
 jobs:
   lint:
     name: Lint and format
@@ -89,9 +93,12 @@ jobs:
         working-directory: ./app
         run: npm test
 
-  build:
-    name: Build
+  preview:
+    name: Preview Deploy
     runs-on: ubuntu-latest
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.url }}
 
     steps:
       - name: Check out repository
@@ -100,16 +107,62 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Build design system
-        run: npm run design-system:build
+      - name: Install Vercel CLI
+        run: npm install -g vercel
 
-      - name: Build application
-        working-directory: ./app
-        run: npm run build
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Create GitHub deployment
+        uses: chrnorm/deployment-action@v2
+        id: deployment
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          environment: preview
+          ref: ${{ github.head_ref }}
+
+      - name: Deploy Preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$url" >> $GITHUB_OUTPUT
+
+      - name: Update deployment status
+        if: always()
+        uses: chrnorm/deployment-status@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
+          state: ${{ job.status == 'success' && 'success' || 'failure' }}
+          environment-url: ${{ steps.deploy.outputs.url }}
+
+      - name: Find existing comment
+        uses: peter-evans/find-comment@v3
+        id: find-comment
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Preview deployed
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.find-comment.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          edit-mode: replace
+          body: |
+            ✅ **Preview deployed!**
+
+            🔗 ${{ steps.deploy.outputs.url }}
+
+            _Commit: ${{ github.event.pull_request.head.sha }}_
