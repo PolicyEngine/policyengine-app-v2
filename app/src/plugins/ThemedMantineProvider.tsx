@@ -7,7 +7,6 @@
 
 import { MantineProvider, type MantineColorScheme, type MantineThemeOverride } from '@mantine/core';
 import { useContext, useMemo, type ReactNode } from 'react';
-import { cssVariablesResolver } from '@/designTokens';
 import PluginContext from './PluginContext';
 import { pluginRegistry } from './PluginRegistry';
 
@@ -65,11 +64,7 @@ export function ThemedMantineProvider({ theme, children }: ThemedMantineProvider
   }, [pluginContext?.activePlugins, pluginContext?.settingsVersion]);
 
   return (
-    <MantineProvider
-      theme={modifiedTheme}
-      forceColorScheme={colorScheme}
-      cssVariablesResolver={cssVariablesResolver}
-    >
+    <MantineProvider theme={modifiedTheme} forceColorScheme={colorScheme}>
       {children}
     </MantineProvider>
   );

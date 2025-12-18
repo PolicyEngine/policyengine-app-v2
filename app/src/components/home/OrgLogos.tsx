@@ -108,10 +108,10 @@ export default function OrgLogos() {
       <Text
         ta="center"
         size="lg"
-        c={colors.hero.text}
+        c={colors.primary[600]}
         fw={typography.fontWeight.medium}
         mb={spacing.xl}
-        style={{ fontFamily: typography.fontFamily.primary, opacity: 0.9 }}
+        style={{ fontFamily: typography.fontFamily.primary }}
       >
         {countryId === 'us'
           ? 'Trusted by researchers, policy organizations, and benefit platforms'

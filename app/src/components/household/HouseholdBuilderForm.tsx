@@ -278,7 +278,7 @@ export default function HouseholdBuilderForm({
       {warningMessage && (
         <Alert
           icon={<IconInfoCircle size={16} />}
-          color={colors.button.primaryBg}
+          color="teal"
           variant="outline"
           withCloseButton
           onClose={() => setWarningMessage(null)}

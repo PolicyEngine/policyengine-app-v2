@@ -17,14 +17,14 @@ export default function ActionCards() {
           withBorder
           onClick={() => navigate(`/${countryId}/reports`)}
           style={{
-            backgroundColor: colors.button.primaryBg,
+            backgroundColor: 'transparent',
             cursor: 'pointer',
-            borderColor: colors.button.primaryBg,
+            borderColor: colors.primary[500],
             borderWidth: 1.5,
             fontFamily: typography.fontFamily.primary,
           }}
         >
-          <Text fw={typography.fontWeight.semibold} c={colors.button.primaryText} size="xl">
+          <Text fw={typography.fontWeight.semibold} c={colors.primary[500]} size="xl">
             Enter PolicyEngine
           </Text>
         </Card>

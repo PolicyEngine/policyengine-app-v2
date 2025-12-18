@@ -1,6 +1,5 @@
 import React from 'react';
 import { Group, Loader, Text } from '@mantine/core';
-import { colors } from '@/designTokens';
 import { useReportCalculationStatus } from '@/hooks/useCalcStatusSubscription';
 import type { Report } from '@/types/ingredients/Report';
 
@@ -28,7 +27,7 @@ export const ReportOutputTypeCell = React.memo(
     if (isCalculating) {
       return (
         <Group gap="xs">
-          <Loader size="sm" color={colors.button.primaryBg} />
+          <Loader size="sm" color="teal" />
           <Text size="sm">{displayText}</Text>
         </Group>
       );

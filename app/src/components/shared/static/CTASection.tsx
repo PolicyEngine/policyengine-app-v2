@@ -19,15 +19,15 @@ export default function CTASection({
   caption,
 }: CTASectionProps) {
   const backgrounds = {
-    primary: colors.background.primary,
-    secondary: colors.background.tertiary,
-    accent: colors.cta.bgStart,
+    primary: colors.white,
+    secondary: colors.gray[100],
+    accent: colors.primary[700],
   };
 
   const textColors = {
     primary: colors.text.primary,
     secondary: colors.text.primary,
-    accent: colors.cta.text,
+    accent: colors.text.inverse,
   };
 
   const isInverted = variant === 'accent';

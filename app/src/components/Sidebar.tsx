@@ -88,8 +88,8 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   return (
     <Stack
       h="100vh"
+      bg="white"
       style={{
-        backgroundColor: colors.background.sider,
         borderRight: `1px solid ${colors.border.light}`,
         width: parseInt(spacing.appShell.navbar.width, 10),
         left: 0,
@@ -108,13 +108,9 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
             h={36}
             styles={{
               root: {
-                backgroundColor: colors.button.primaryBg,
-                color: colors.button.primaryText,
+                backgroundColor: colors.primary[600],
                 fontSize: typography.fontSize.sm,
                 fontWeight: typography.fontWeight.medium,
-                '&:hover': {
-                  backgroundColor: colors.button.primaryHover,
-                },
               },
             }}
             onClick={() => navigate(`/${countryId}/reports/create`)}

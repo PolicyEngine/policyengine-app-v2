@@ -11,33 +11,15 @@ export default function HomePage() {
       <AutumnBudgetBanner />
       <Box
         style={{
+          backgroundImage: `linear-gradient(180deg, ${colors.primary[50]}, #f2fcfaff, ${colors.white})`,
           minHeight: '100vh',
           fontFamily: typography.fontFamily.primary,
           position: 'relative',
-          backgroundColor: colors.background.primary,
         }}
       >
-        {/* Hero Section with gradient backgrounds (exact copy from redesign) */}
-        <Box
-          style={{
-            background: colors.hero.gradient,
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Gradient mesh overlay for depth */}
-          <Box
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: colors.hero.mesh,
-              pointerEvents: 'none',
-            }}
-          />
-          <Box pt={spacing['4xl']} style={{ position: 'relative', zIndex: 1 }}>
-            <MainSection />
-            <ActionCards />
-          </Box>
+        <Box pt={spacing['4xl']}>
+          <MainSection />
+          <ActionCards />
         </Box>
         <OrgLogos />
       </Box>

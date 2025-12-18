@@ -19,7 +19,7 @@ export default function MainSection() {
           size={48}
           fw={typography.fontWeight.bold}
           ta="center"
-          c={colors.hero.text}
+          c={colors.primary[800]}
           style={{
             lineHeight: typography.lineHeight.tight,
             fontFamily: typography.fontFamily.primary,
@@ -30,7 +30,7 @@ export default function MainSection() {
 
         <Text
           size={typography.fontSize['2xl']}
-          c={colors.hero.text}
+          c="#132F46"
           ta="center"
           fw={typography.fontWeight.normal}
           style={{

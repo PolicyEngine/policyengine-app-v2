@@ -142,7 +142,7 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.sm,
-            backgroundColor: colors.background.primary,
+            backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
@@ -187,7 +187,7 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            backgroundColor: colors.background.primary,
+            backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
@@ -203,7 +203,7 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            backgroundColor: colors.background.primary,
+            backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
@@ -249,7 +249,7 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            backgroundColor: colors.background.primary,
+            backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
@@ -294,7 +294,7 @@ export const themeComponents = {
         return {
           root: {
             padding: spacing.md,
-            backgroundColor: colors.background.primary,
+            backgroundColor: colors.white,
             border: `1px solid ${colors.border.light}`,
             cursor: 'pointer',
             transition: 'all 0.2s ease',
@@ -341,15 +341,10 @@ export const themeComponents = {
     styles: {
       main: {
         minHeight: spacing.appShell.main.minHeight,
-        backgroundColor: colors.background.tertiary,
+        backgroundColor: colors.gray[50],
       },
       navbar: {
         padding: spacing.appShell.navbar.padding,
-        backgroundColor: colors.background.sider,
-      },
-      header: {
-        backgroundColor: colors.background.primary,
-        borderBottom: `1px solid ${colors.border.light}`,
       },
     },
   }),
@@ -362,7 +357,7 @@ export const themeComponents = {
             border: `1px solid ${colors.border.light}`,
             borderRadius: spacing.radius.lg,
             overflow: 'hidden',
-            backgroundColor: colors.background.primary,
+            backgroundColor: colors.white,
           },
           thead: {
             backgroundColor: colors.gray[50],

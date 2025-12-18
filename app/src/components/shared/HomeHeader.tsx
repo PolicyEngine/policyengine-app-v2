@@ -49,8 +49,8 @@ export default function HeaderNavigation() {
         paddingLeft: '24px',
         paddingRight: '24px',
         height: spacing.layout.header,
-        backgroundColor: colors.header.bg,
-        borderBottom: `0.5px solid ${colors.header.border}`,
+        backgroundColor: colors.primary[600],
+        borderBottom: `0.5px solid ${colors.border.dark}`,
         boxShadow: `
       0px 2px 4px -1px rgba(0, 0, 0, 0.06),
       0px 4px 6px -1px rgba(0, 0, 0, 0.10)

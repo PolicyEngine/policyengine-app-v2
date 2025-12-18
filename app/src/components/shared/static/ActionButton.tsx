@@ -27,25 +27,25 @@ export default function ActionButton({
   }, [text, multiline]);
   const styles = {
     primary: {
-      backgroundColor: colors.background.primary,
+      backgroundColor: colors.white,
       color: colors.text.primary,
       border: `2px solid ${colors.border.light}`,
       hoverBackground: colors.gray[50],
-      hoverBorder: colors.text.primary,
+      hoverBorder: colors.black,
     },
     secondary: {
-      backgroundColor: colors.button.primaryBg,
-      color: colors.button.primaryText,
-      border: `2px solid ${colors.button.primaryBg}`,
-      hoverBackground: colors.button.primaryHover,
-      hoverBorder: colors.button.primaryHover,
+      backgroundColor: colors.primary[500],
+      color: colors.white,
+      border: `2px solid ${colors.primary[500]}`,
+      hoverBackground: colors.primary[600],
+      hoverBorder: colors.primary[600],
     },
     inverted: {
-      backgroundColor: colors.static.white,
-      color: colors.static.black,
-      border: `2px solid ${colors.static.white}`,
-      hoverBackground: colors.gray[100],
-      hoverBorder: colors.static.black,
+      backgroundColor: colors.white,
+      color: colors.text.primary,
+      border: `2px solid ${colors.white}`,
+      hoverBackground: colors.gray[50],
+      hoverBorder: colors.black,
     },
   };
 
@@ -102,7 +102,7 @@ export default function ActionButton({
           <Text
             style={{
               fontSize: typography.fontSize.sm,
-              color: variant === 'primary' ? colors.text.secondary : colors.static.white,
+              color: variant === 'primary' ? colors.text.secondary : colors.text.inverse,
               fontFamily: typography.fontFamily.body,
               textAlign: 'center',
             }}

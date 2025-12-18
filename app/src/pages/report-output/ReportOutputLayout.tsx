@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   IconCalendar,
   IconChevronLeft,
@@ -8,6 +9,7 @@ import {
 import { ActionIcon, Anchor, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useChartPluginIntegration } from '@/plugins/chartPlugins/useChartPluginIntegration';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
 import { getHouseholdOutputTree } from './householdOutputTree';
 import { ReportSidebar } from './ReportSidebar';
@@ -55,10 +57,17 @@ export default function ReportOutputLayout({
   children,
 }: ReportOutputLayoutProps) {
   const countryId = useCurrentCountry();
+  const { injectIntoTree } = useChartPluginIntegration(countryId);
 
-  // Get the appropriate tree based on output type
-  const sidebarTree =
-    outputType === 'household' ? getHouseholdOutputTree() : getComparativeAnalysisTree(countryId);
+  // Get the appropriate tree based on output type, injecting plugin nodes for comparative analysis
+  const sidebarTree = useMemo(() => {
+    if (outputType === 'household') {
+      return getHouseholdOutputTree();
+    }
+    const baseTree = getComparativeAnalysisTree(countryId);
+    return injectIntoTree(baseTree);
+  }, [outputType, countryId, injectIntoTree]);
+
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>

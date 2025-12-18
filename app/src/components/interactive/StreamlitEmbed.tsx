@@ -9,7 +9,7 @@
  */
 
 import { useState } from 'react';
-import { colors, spacing } from '@/designTokens';
+import { spacing } from '@/designTokens';
 import type { StreamlitEmbedProps } from '@/types/apps';
 
 export default function StreamlitEmbed({
@@ -67,11 +67,11 @@ export default function StreamlitEmbed({
             left: 0,
             right: 0,
             zIndex: 1000,
-            backgroundColor: colors.gray[100],
-            borderBottom: `1px solid ${colors.border.light}`,
+            backgroundColor: '#f0f2f5',
+            borderBottom: '1px solid #d9d9d9',
             padding: '8px 16px',
             fontSize: '13px',
-            color: colors.text.secondary,
+            color: '#595959',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -92,23 +92,23 @@ export default function StreamlitEmbed({
               target="_blank"
               rel="noopener noreferrer"
               style={{
-                backgroundColor: colors.background.primary,
-                border: `1px solid ${colors.border.light}`,
+                backgroundColor: '#ffffff',
+                border: '1px solid #d9d9d9',
                 borderRadius: '4px',
                 padding: '2px 12px',
                 fontSize: '12px',
-                color: colors.text.secondary,
+                color: '#595959',
                 textDecoration: 'none',
                 display: 'inline-block',
                 transition: 'all 0.2s',
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.borderColor = colors.info;
-                e.currentTarget.style.color = colors.info;
+                e.currentTarget.style.borderColor = '#1890ff';
+                e.currentTarget.style.color = '#1890ff';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.borderColor = colors.border.light;
-                e.currentTarget.style.color = colors.text.secondary;
+                e.currentTarget.style.borderColor = '#d9d9d9';
+                e.currentTarget.style.color = '#595959';
               }}
             >
               Wake it up
@@ -120,7 +120,7 @@ export default function StreamlitEmbed({
             style={{
               background: 'none',
               border: 'none',
-              color: colors.text.tertiary,
+              color: '#8c8c8c',
               cursor: 'pointer',
               fontSize: '16px',
               padding: '0 4px',

@@ -36,7 +36,7 @@ export default function HeaderBar({ title, children, showLogo = false }: HeaderB
           />
         )}
         {title && (
-          <Text c={colors.static.white} fw={700} size="md">
+          <Text c="white" fw={700} size="md">
             {title}
           </Text>
         )}

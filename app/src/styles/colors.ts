@@ -55,18 +55,16 @@ export const themeColors: Record<string, MantineColorsTuple> = {
     colors.gray[900],
   ] as MantineColorsTuple,
 
-  // Teal uses raw hex values (not CSS vars) for Mantine's internal color calculations
-  // Structured so primaryShade can select correct color for light (6) and dark (4) modes
   teal: [
-    '#E6FFFA', // 0 - lightest
-    '#B2F5EA', // 1
-    '#81E6D9', // 2
-    '#4FD1C5', // 3
-    '#0D9488', // 4 - dark mode button color (from redesign)
-    '#319795', // 5
-    '#2C7A7B', // 6 - light mode button color
-    '#285E61', // 7
-    '#234E52', // 8
-    '#1D4044', // 9 - darkest
+    colors.primary[50],
+    colors.primary[100],
+    colors.primary[200],
+    colors.primary[300],
+    colors.primary[400],
+    colors.primary[500],
+    colors.primary[600],
+    colors.primary[700],
+    colors.primary[800],
+    colors.primary[900],
   ] as MantineColorsTuple,
 };

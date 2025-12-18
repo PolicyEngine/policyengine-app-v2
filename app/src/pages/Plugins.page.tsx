@@ -2,15 +2,36 @@
  * Plugins Page
  *
  * Displays available plugins with install/remove functionality.
+ * Includes both built-in plugins and chart plugins from GitHub.
  * Uses the plugin context for proper activation/deactivation.
  * Part of the calculator UX (shows sidebar).
  */
 
-import { useCallback, useState } from 'react';
-import { IconSettings } from '@tabler/icons-react';
-import { ActionIcon, Box, Button, Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { useCallback, useEffect, useState } from 'react';
+import { IconChartBar, IconDownload, IconSettings, IconTrash } from '@tabler/icons-react';
+import {
+  ActionIcon,
+  Alert,
+  Badge,
+  Box,
+  Button,
+  Divider,
+  Group,
+  Loader,
+  Paper,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  Title,
+} from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { PluginSettingsModal, usePluginContext } from '@/plugins';
+import {
+  chartPluginLoader,
+  chartPluginRegistry,
+  type InstalledChartPlugin,
+} from '@/plugins/chartPlugins';
 import type { Plugin, PluginSettingsValues } from '@/types/plugin';
 
 /** Aspect ratio for plugin icon containers (matches SVG dimensions) */
@@ -22,6 +43,166 @@ interface PluginCardProps {
   onToggle: (slug: string, installed: boolean) => void;
   onOpenSettings: (plugin: Plugin) => void;
 }
+
+// =============================================================================
+// Chart Plugin Components
+// =============================================================================
+
+interface ChartPluginCardProps {
+  plugin: InstalledChartPlugin;
+  onRemove: (pluginId: string) => void;
+}
+
+function ChartPluginCard({ plugin, onRemove }: ChartPluginCardProps) {
+  const { manifest } = plugin;
+
+  return (
+    <Paper
+      shadow="xs"
+      radius="md"
+      style={{
+        overflow: 'hidden',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        border: `1px solid ${colors.border.light}`,
+      }}
+    >
+      {/* Icon container */}
+      <Box
+        style={{
+          aspectRatio: ICON_ASPECT_RATIO,
+          backgroundColor: colors.primary[50],
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <IconChartBar size={48} color={colors.primary[500]} />
+      </Box>
+
+      {/* Content */}
+      <Box
+        style={{
+          padding: spacing.md,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        {/* Title */}
+        <Group justify="space-between" align="flex-start" mb={4}>
+          <Text
+            fw={typography.fontWeight.semibold}
+            size="md"
+            style={{ color: colors.gray[900] }}
+          >
+            {manifest.name}
+          </Text>
+          <Badge size="sm" variant="light" color="teal">
+            v{manifest.version}
+          </Badge>
+        </Group>
+
+        {/* Description */}
+        <Text size="sm" c="dimmed" lineClamp={2} style={{ flex: 1, marginBottom: spacing.sm }}>
+          {manifest.description}
+        </Text>
+
+        {/* Countries */}
+        <Group gap={4} mb="sm">
+          {manifest.countries.map((country) => (
+            <Badge key={country} size="xs" variant="outline">
+              {country.toUpperCase()}
+            </Badge>
+          ))}
+        </Group>
+
+        {/* Author */}
+        <Text size="xs" c="dimmed" mb="sm">
+          By {manifest.author}
+        </Text>
+
+        {/* Remove Button */}
+        <Button
+          variant="outline"
+          color="red"
+          size="sm"
+          fullWidth
+          leftSection={<IconTrash size={14} />}
+          onClick={() => onRemove(manifest.id)}
+        >
+          Remove
+        </Button>
+      </Box>
+    </Paper>
+  );
+}
+
+interface ChartPluginInstallFormProps {
+  onInstall: (repoUrl: string) => Promise<void>;
+  loading: boolean;
+  error: string | null;
+}
+
+function ChartPluginInstallForm({ onInstall, loading, error }: ChartPluginInstallFormProps) {
+  const [url, setUrl] = useState('');
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (url.trim()) {
+      await onInstall(url.trim());
+      setUrl('');
+    }
+  };
+
+  return (
+    <Paper
+      p="md"
+      radius="md"
+      style={{
+        border: `1px dashed ${colors.border.medium}`,
+        backgroundColor: colors.gray[50],
+      }}
+    >
+      <form onSubmit={handleSubmit}>
+        <Stack gap="sm">
+          <Text fw={500} size="sm">
+            Install from GitHub
+          </Text>
+          <Text size="xs" c="dimmed">
+            Enter a GitHub repository URL containing a chart plugin (must have a manifest.json).
+          </Text>
+          <Group gap="sm" align="flex-end">
+            <TextInput
+              placeholder="https://github.com/user/chart-plugin"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              style={{ flex: 1 }}
+              disabled={loading}
+            />
+            <Button
+              type="submit"
+              leftSection={loading ? <Loader size={14} /> : <IconDownload size={14} />}
+              disabled={!url.trim() || loading}
+            >
+              {loading ? 'Installing...' : 'Install'}
+            </Button>
+          </Group>
+          {error && (
+            <Alert color="red" variant="light">
+              {error}
+            </Alert>
+          )}
+        </Stack>
+      </form>
+    </Paper>
+  );
+}
+
+// =============================================================================
+// Built-in Plugin Components
+// =============================================================================
 
 function PluginCard({ plugin, isInstalled, onToggle, onOpenSettings }: PluginCardProps) {
   const formattedDateUpdated = new Date(plugin.dateUpdated).toLocaleDateString('en-US', {
@@ -116,23 +297,10 @@ function PluginCard({ plugin, isInstalled, onToggle, onOpenSettings }: PluginCar
         {/* Install/Remove Button */}
         <Button
           variant={isInstalled ? 'outline' : 'filled'}
-          color={isInstalled ? 'red' : undefined}
+          color={isInstalled ? 'red' : 'teal'}
           size="sm"
           fullWidth
           onClick={handleToggle}
-          styles={
-            !isInstalled
-              ? {
-                  root: {
-                    backgroundColor: colors.button.primaryBg,
-                    color: colors.button.primaryText,
-                    '&:hover': {
-                      backgroundColor: colors.button.primaryHover,
-                    },
-                  },
-                }
-              : undefined
-          }
         >
           {isInstalled ? 'Remove' : 'Install'}
         </Button>
@@ -156,6 +324,24 @@ export default function PluginsPage() {
   // Settings modal state
   const [settingsPlugin, setSettingsPlugin] = useState<Plugin | null>(null);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  // Chart plugins state
+  const [chartPlugins, setChartPlugins] = useState<InstalledChartPlugin[]>([]);
+  const [chartInstallLoading, setChartInstallLoading] = useState(false);
+  const [chartInstallError, setChartInstallError] = useState<string | null>(null);
+
+  // Subscribe to chart plugin registry changes
+  useEffect(() => {
+    const updateChartPlugins = () => {
+      setChartPlugins(chartPluginRegistry.getAllPlugins());
+    };
+
+    // Initial load
+    updateChartPlugins();
+
+    // Subscribe to changes
+    return chartPluginRegistry.subscribe(updateChartPlugins);
+  }, []);
 
   const handleTogglePlugin = useCallback(
     async (slug: string, shouldInstall: boolean) => {
@@ -186,6 +372,33 @@ export default function PluginsPage() {
     },
     [settingsPlugin, updateSettings]
   );
+
+  // Chart plugin handlers
+  const handleInstallChartPlugin = useCallback(async (repoUrl: string) => {
+    setChartInstallLoading(true);
+    setChartInstallError(null);
+
+    try {
+      const { manifest, code } = await chartPluginLoader.fetchFromUrl(repoUrl);
+
+      // Check if already installed
+      if (chartPluginRegistry.isInstalled(manifest.id)) {
+        throw new Error(`Plugin "${manifest.name}" is already installed`);
+      }
+
+      chartPluginRegistry.install(manifest, repoUrl, code);
+    } catch (error) {
+      setChartInstallError(
+        error instanceof Error ? error.message : 'Failed to install plugin'
+      );
+    } finally {
+      setChartInstallLoading(false);
+    }
+  }, []);
+
+  const handleRemoveChartPlugin = useCallback((pluginId: string) => {
+    chartPluginRegistry.uninstall(pluginId);
+  }, []);
 
   const installedCount = activePlugins.length;
 
@@ -227,6 +440,43 @@ export default function PluginsPage() {
         >
           <Text c="dimmed">No plugins available yet.</Text>
         </Paper>
+      )}
+
+      {/* Divider */}
+      <Divider my="lg" />
+
+      {/* Chart Plugins Section */}
+      <Box>
+        <Title order={3} mb={4} style={{ color: colors.gray[900] }}>
+          <Group gap="xs">
+            <IconChartBar size={20} />
+            Chart Plugins
+          </Group>
+        </Title>
+        <Text size="sm" c="dimmed" mb="md">
+          Install custom chart plugins from GitHub to add new visualizations to your reports.
+          {chartPlugins.length > 0 && ` ${chartPlugins.length} chart plugin(s) installed.`}
+        </Text>
+      </Box>
+
+      {/* Chart Plugin Install Form */}
+      <ChartPluginInstallForm
+        onInstall={handleInstallChartPlugin}
+        loading={chartInstallLoading}
+        error={chartInstallError}
+      />
+
+      {/* Installed Chart Plugins Grid */}
+      {chartPlugins.length > 0 && (
+        <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md">
+          {chartPlugins.map((plugin) => (
+            <ChartPluginCard
+              key={plugin.manifest.id}
+              plugin={plugin}
+              onRemove={handleRemoveChartPlugin}
+            />
+          ))}
+        </SimpleGrid>
       )}
 
       {/* Settings Modal */}

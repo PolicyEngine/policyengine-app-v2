@@ -52,7 +52,7 @@ export default function LoadingPage({
             </Text>
           </Group>
         </Group>
-        <Progress value={progressValue} size="lg" radius="md" animated color={colors.button.primaryBg} />
+        <Progress value={progressValue} size="lg" radius="md" animated color="teal" />
         {estimatedTime && (
           <Text size="sm" c="dimmed" mt={spacing.xs}>
             Estimated time remaining: {estimatedTime}

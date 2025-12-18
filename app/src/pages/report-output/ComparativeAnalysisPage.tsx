@@ -1,5 +1,7 @@
-import type { ComponentType } from 'react';
+import { useMemo, type ComponentType } from 'react';
 import type { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useChartPluginIntegration } from '@/plugins/chartPlugins/useChartPluginIntegration';
 import BudgetaryImpactByProgramSubPage from './budgetary-impact/BudgetaryImpactByProgramSubPage';
 import BudgetaryImpactSubPage from './budgetary-impact/BudgetaryImpactSubPage';
 import DistributionalImpactIncomeAverageSubPage from './distributional-impact/DistributionalImpactIncomeAverageSubPage';
@@ -49,13 +51,26 @@ const VIEW_MAP: Record<string, ComponentType<ViewComponentProps>> = {
 /**
  * Sub-router for Comparative Analysis tab - maps :view URL parameter to specific chart components.
  * Acts as a mini-router to keep SocietyWideReportOutput clean as we add 20+ analysis charts.
+ * Also supports chart plugins that are installed and active.
  */
 export function ComparativeAnalysisPage({ output, view }: Props) {
+  const countryId = useCurrentCountry();
+  const { viewMap: pluginViewMap } = useChartPluginIntegration(countryId);
+
+  // Combine built-in VIEW_MAP with plugin views
+  const combinedViewMap = useMemo(
+    () => ({
+      ...VIEW_MAP,
+      ...pluginViewMap,
+    }),
+    [pluginViewMap]
+  );
+
   // If no view specified, use default view
   const effectiveView = view || 'budgetary-impact-overall';
 
-  // Look up component in map
-  const ViewComponent = VIEW_MAP[effectiveView];
+  // Look up component in combined map
+  const ViewComponent = combinedViewMap[effectiveView];
 
   // If found, render it; otherwise show NotFound
   return ViewComponent ? <ViewComponent output={output} /> : <NotFoundSubPage />;

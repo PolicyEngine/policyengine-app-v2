@@ -1,6 +1,5 @@
 import React from 'react';
 import { Group, Loader, Text } from '@mantine/core';
-import { colors } from '@/designTokens';
 import { useMultiSimulationCalcStatus } from '@/hooks/useCalcStatusSubscription';
 import type { Report } from '@/types/ingredients/Report';
 import type { Simulation } from '@/types/ingredients/Simulation';
@@ -29,7 +28,7 @@ export const MultiSimOutputTypeCell = React.memo(
     if (isCalculating) {
       return (
         <Group gap="xs">
-          <Loader size="sm" color={colors.button.primaryBg} />
+          <Loader size="sm" color="teal" />
           <Text size="sm">{progress ? `${Math.round(progress)}%` : ''}</Text>
         </Group>
       );
