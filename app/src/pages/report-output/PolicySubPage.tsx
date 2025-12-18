@@ -76,13 +76,17 @@ export default function PolicySubPage({ policies, userPolicies }: PolicySubPageP
         needsCurrentLawColumn={needsCurrentLawColumn}
         labelColumnWidth={labelColumnWidth}
         valueColumnWidth={valueColumnWidth}
-        renderColumnHeader={(column) => buildColumnHeaderText(column, userPolicies)}
+        renderColumnHeader={(column) => buildColumnHeaderText(column, userPolicies, currentLawId)}
         renderCurrentLawValue={(paramName) =>
           getCurrentLawParameterValue(paramName, parameters, reportDate)
         }
         renderColumnValue={(column, paramName) => {
           // For merged columns, just use the first policy since they're equal
           const policy = column.policies[0];
+          // If policy is current law, get value from metadata (policy.parameters will be empty)
+          if (policy && policy.id === String(currentLawId)) {
+            return getCurrentLawParameterValue(paramName, parameters, reportDate);
+          }
           return getParameterValueFromPolicy(policy, paramName, parameters, reportDate);
         }}
       />
