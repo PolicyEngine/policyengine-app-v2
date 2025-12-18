@@ -21,18 +21,19 @@ function buildCumulativePaths(parts: string[]): string[] {
 }
 
 /**
- * Formats a string to sentence case (only first letter capitalized).
+ * Capitalizes only the first character of a string, leaving the rest unchanged.
  */
-function toSentenceCase(text: string): string {
+function capitalizeFirst(text: string): string {
   if (!text) {
     return text;
   }
-  return text.charAt(0).toUpperCase() + text.slice(1).toLowerCase();
+  return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
 /**
  * Gets hierarchical labels for a parameter path.
  * Starts from the second level (skipping "gov") and collects all available labels.
+ * Only the first label has its first character capitalized; all others are unchanged.
  */
 export function getHierarchicalLabels(
   paramName: string,
@@ -45,35 +46,22 @@ export function getHierarchicalLabels(
   const labels = paths
     .slice(1)
     .map((path) => parameters[path]?.label)
-    .filter((label): label is string => Boolean(label))
-    .map(toSentenceCase);
+    .filter((label): label is string => Boolean(label));
 
-  return labels;
+  // Capitalize the first character of each label, leaving the rest unchanged
+  return labels.map(capitalizeFirst);
 }
 
 /**
- * Builds a display label using the "first + last" strategy.
- * - If 3 or fewer labels: show all
- * - If more than 3: show first 1 and last 2
+ * Returns all labels for display (no truncation).
  */
 export function buildCompactLabel(labels: string[]): {
   displayParts: string[];
   hasMore: boolean;
 } {
-  if (labels.length <= 3) {
-    return {
-      displayParts: labels,
-      hasMore: false,
-    };
-  }
-
-  // Show first 1 and last 2
-  const first = labels.slice(0, 1);
-  const last = labels.slice(-2);
-
   return {
-    displayParts: [...first, '...', ...last],
-    hasMore: true,
+    displayParts: labels,
+    hasMore: false,
   };
 }
 
