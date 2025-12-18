@@ -241,7 +241,7 @@ export default function MarginalTaxRatesSubPage({
           y: [Math.max(-2, Math.min(2, currentMTR))],
           type: 'scatter' as const,
           mode: 'markers' as const,
-          marker: { color: colors.primary[700], size: 10 },
+          marker: { color: colors.primary[500], size: 10 },
           name: 'Current',
           hovertemplate: `<b>Your current position</b><br>Earnings: %{x:${symbol},.0f}<br>MTR: %{y:.1%}<extra></extra>`,
         });
