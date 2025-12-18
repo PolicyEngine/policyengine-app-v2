@@ -188,6 +188,7 @@ export const mockMetadataInitialState = {
     currentCountry: TEST_COUNTRIES.US,
     loading: false,
     error: null,
+    progress: 100,
     variables: {},
     parameters: {},
     entities: {},

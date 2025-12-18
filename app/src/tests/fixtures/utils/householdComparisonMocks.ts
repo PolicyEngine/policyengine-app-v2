@@ -32,6 +32,7 @@ export const mockMetadata = (): MetadataState => ({
   parameterTree: null,
   loading: false,
   error: null,
+  progress: 100,
 });
 
 export const TEST_VARIABLE_NAMES = {

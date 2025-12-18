@@ -99,7 +99,7 @@ export const mockStateWithMetadata = (
       ...metadata,
       loading: false,
       error: null,
-      lastFetched: null,
+      progress: 100,
     },
   } as Partial<RootState>;
 };
