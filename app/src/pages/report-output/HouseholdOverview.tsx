@@ -15,6 +15,9 @@ interface HouseholdOverviewProps {
   policyLabels?: string[];
 }
 
+// Fixed size for icon container to ensure square aspect ratio
+const HERO_ICON_SIZE = 48;
+
 /**
  * Overview page for household reports
  *
@@ -93,29 +96,25 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
       <Box
         p={spacing.xl}
         style={{
-          background:
-            trend === 'positive'
-              ? `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`
-              : trend === 'negative'
-                ? `linear-gradient(135deg, ${colors.gray[100]} 0%, ${colors.background.primary} 100%)`
-                : `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`,
+          background: `linear-gradient(135deg, ${colors.primary[50]} 0%, ${colors.background.primary} 100%)`,
           borderRadius: spacing.md,
-          border: `1px solid ${trend === 'positive' ? colors.primary[100] : colors.gray[200]}`,
+          border: `1px solid ${colors.primary[100]}`,
         }}
       >
         <Group gap={spacing.md} align="flex-start">
           <Box
-            p={spacing.sm}
             style={{
-              backgroundColor: trend === 'positive' ? colors.primary[100] : colors.gray[200],
+              width: HERO_ICON_SIZE,
+              height: HERO_ICON_SIZE,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.primary[100],
               borderRadius: spacing.sm,
+              flexShrink: 0,
             }}
           >
-            <IconWallet
-              size={28}
-              color={trend === 'positive' ? colors.primary[700] : colors.gray[600]}
-              stroke={1.5}
-            />
+            <IconWallet size={28} color={colors.primary[700]} stroke={1.5} />
           </Box>
           <Box style={{ flex: 1 }}>
             <MetricCard
@@ -162,7 +161,7 @@ export default function HouseholdOverview({ outputs, policyLabels }: HouseholdOv
                 <IconChevronRight size={20} color={colors.text.secondary} />
               )}
               <Text fw={typography.fontWeight.medium} c={colors.text.primary}>
-                {isComparisonMode ? 'How this change breaks down' : 'How we calculated this'}
+                Detailed breakdown
               </Text>
             </Group>
             <Text size="sm" c={colors.text.tertiary}>

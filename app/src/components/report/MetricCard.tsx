@@ -17,6 +17,8 @@ interface MetricCardProps {
   hero?: boolean;
   /** Optional description text */
   description?: string;
+  /** Invert the arrow direction (useful when decrease is good, like poverty) */
+  invertArrow?: boolean;
 }
 
 /**
@@ -32,6 +34,7 @@ export default function MetricCard({
   trend = 'neutral',
   hero = false,
   description,
+  invertArrow = false,
 }: MetricCardProps) {
   const getTrendColor = () => {
     switch (trend) {
@@ -45,14 +48,18 @@ export default function MetricCard({
   };
 
   const getTrendIcon = () => {
-    switch (trend) {
-      case 'positive':
-        return <IconArrowUp size={hero ? 20 : 16} stroke={2.5} />;
-      case 'negative':
-        return <IconArrowDown size={hero ? 20 : 16} stroke={2.5} />;
-      default:
-        return <IconMinus size={hero ? 20 : 16} stroke={2.5} />;
+    // When invertArrow is true, flip the arrow direction
+    // (useful for metrics like poverty where decrease is good)
+    const showUpArrow = invertArrow ? trend === 'negative' : trend === 'positive';
+    const showDownArrow = invertArrow ? trend === 'positive' : trend === 'negative';
+
+    if (showUpArrow) {
+      return <IconArrowUp size={hero ? 20 : 16} stroke={2.5} />;
     }
+    if (showDownArrow) {
+      return <IconArrowDown size={hero ? 20 : 16} stroke={2.5} />;
+    }
+    return <IconMinus size={hero ? 20 : 16} stroke={2.5} />;
   };
 
   const trendColor = getTrendColor();
