@@ -1,11 +1,5 @@
-import {
-  IconCalendar,
-  IconChevronLeft,
-  IconClock,
-  IconPencil,
-  IconStack2,
-} from '@tabler/icons-react';
-import { ActionIcon, Anchor, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { IconCalendar, IconClock, IconPencil, IconStack2 } from '@tabler/icons-react';
+import { ActionIcon, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { getComparativeAnalysisTree } from './comparativeAnalysisTree';
@@ -62,13 +56,13 @@ export default function ReportOutputLayout({
   return (
     <Container size="xl" px={spacing.xl}>
       <Stack gap={spacing.xl}>
-        {/* Back navigation */}
-        <Group gap={spacing.xs} align="center">
+        {/* TODO: Re-enable back navigation once Reports list page is implemented */}
+        {/* <Group gap={spacing.xs} align="center">
           <IconChevronLeft size={20} color={colors.text.secondary} />
           <Text size="md" c={colors.text.secondary}>
             Reports
           </Text>
-        </Group>
+        </Group> */}
 
         {/* Header Section */}
         <Box>
@@ -110,9 +104,10 @@ export default function ReportOutputLayout({
             <Text size="sm" c="dimmed">
               {timestamp}
             </Text>
-            <Anchor size="sm" underline="always" c={colors.blue[700]}>
+            {/* TODO: Re-enable "View All" link once functionality is implemented */}
+            {/* <Anchor size="sm" underline="always" c={colors.blue[700]}>
               View All
-            </Anchor>
+            </Anchor> */}
           </Group>
         </Box>
 

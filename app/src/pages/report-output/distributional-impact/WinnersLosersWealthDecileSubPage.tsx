@@ -9,7 +9,12 @@ import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import type { RootState } from '@/store';
-import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
+import {
+  DEFAULT_CHART_CONFIG,
+  DEFAULT_CHART_LAYOUT,
+  downloadCsv,
+  getClampedChartHeight,
+} from '@/utils/chartUtils';
 import { formatPercent, localeCode, ordinal } from '@/utils/formatters';
 import { regionName } from '@/utils/impactChartUtils';
 
@@ -140,46 +145,101 @@ export default function WinnersLosersWealthDecileSubPage({ output }: Props) {
     downloadCsv([header, ...rows], 'winners-losers-wealth-decile.csv');
   };
 
-  // Prepare data for stacked bar chart
-  const chartData = CATEGORIES.map((category) => ({
-    x: [...decileNumbers.map((d) => d.toString()), 'All'],
-    y: [...decileNumbers.map((d) => (deciles as any)[category]?.[d - 1] || 0), all[category]],
-    type: 'bar' as const,
-    name: LEGEND_TEXT_MAP[category],
-    marker: {
-      color: COLOR_MAP[category],
-    },
-    customdata: [
-      ...decileNumbers.map((d) =>
-        hoverMessage((deciles as any)[category]?.[d - 1] || 0, d.toString(), category)
-      ),
-      hoverMessage(all[category], 'All', category),
-    ] as any,
-    hovertemplate: '%{customdata}<extra></extra>',
-  }));
+  // Generate trace for a specific type and category
+  const createTrace = (type: 'all' | 'decile', category: string) => {
+    const hoverTitle = (y: string | number) => (y === 'All' ? 'All households' : `Decile ${y}`);
+
+    const xArray =
+      type === 'all'
+        ? [all[category as keyof typeof all]]
+        : decileNumbers.map((d) => (deciles as any)[category][d - 1]);
+    const yArray = type === 'all' ? ['All'] : decileNumbers;
+
+    return {
+      x: xArray,
+      y: yArray,
+      xaxis: type === 'all' ? 'x' : 'x2',
+      yaxis: type === 'all' ? 'y' : 'y2',
+      type: 'bar' as const,
+      name: LEGEND_TEXT_MAP[category],
+      legendgroup: category,
+      showlegend: type === 'decile',
+      marker: {
+        color: COLOR_MAP[category],
+      },
+      orientation: 'h' as const,
+      text: xArray.map((value: number) => `${(value * 100).toFixed(0)}%`) as any,
+      textposition: 'inside' as const,
+      textangle: 0,
+      customdata: xArray.map((x: number, i: number) => ({
+        title: hoverTitle(yArray[i]),
+        msg: hoverMessage(x, yArray[i].toString(), category),
+      })) as any,
+      hovertemplate: '<b>%{customdata.title}</b><br><br>%{customdata.msg}<extra></extra>',
+    };
+  };
+
+  // Generate all traces (cartesian product of types and categories)
+  const chartData = [];
+  for (const type of ['all', 'decile'] as const) {
+    for (const category of CATEGORIES) {
+      chartData.push(createTrace(type, category));
+    }
+  }
 
   const layout = {
+    ...DEFAULT_CHART_LAYOUT,
     barmode: 'stack' as const,
-    xaxis: {
-      title: { text: 'Wealth decile' },
-      fixedrange: true,
+    grid: {
+      rows: 2,
+      columns: 1,
     },
+    // Y-axis for "All" row (top)
     yaxis: {
-      title: { text: 'Population share' },
-      tickformat: ',.0%',
+      title: { text: '' },
+      tickvals: ['All'],
+      domain: [0.91, 1] as [number, number],
+    },
+    // X-axis for "All" row
+    xaxis: {
+      title: { text: '' },
+      tickformat: '.0%',
+      anchor: 'y',
+      matches: 'x2',
+      showgrid: false,
+      showticklabels: false,
       fixedrange: true,
     },
+    // X-axis for deciles (bottom)
+    xaxis2: {
+      title: { text: 'Population share' },
+      tickformat: '.0%',
+      anchor: 'y2',
+      fixedrange: true,
+    },
+    // Y-axis for deciles (bottom)
+    yaxis2: {
+      title: { text: 'Wealth decile' },
+      tickvals: decileNumbers,
+      anchor: 'x2',
+      domain: [0, 0.85] as [number, number],
+    },
+    showlegend: true,
     legend: {
-      orientation: mobile ? ('h' as const) : ('v' as const),
-      yanchor: 'top',
-      y: mobile ? -0.2 : 1,
-      xanchor: mobile ? 'center' : 'left',
-      x: mobile ? 0.5 : 1.02,
+      title: {
+        text: 'Change in income<br />',
+      },
+      tracegroupgap: 10,
+    },
+    uniformtext: {
+      mode: 'hide',
+      minsize: mobile ? 7 : 10,
     },
     margin: {
       t: 0,
-      b: mobile ? 120 : 80,
-      r: mobile ? 0 : 200,
+      b: 100,
+      l: 40,
+      r: 0,
     },
   } as Partial<Layout>;
 
