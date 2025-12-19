@@ -1,4 +1,5 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { getStaticData } from '@/data/static';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { loadCoreMetadata, loadParameters } from '@/storage';
 import { MetadataState } from '@/types/metadata';
@@ -131,6 +132,15 @@ const metadataSlice = createSlice({
           title: d.description || d.name,
           default: i === 0,
         }));
+
+        // Load static data for the country
+        const staticData = getStaticData(countryId);
+        state.entities = staticData.entities;
+        state.basicInputs = staticData.basicInputs;
+        state.economyOptions.region = staticData.regions;
+        state.economyOptions.time_period = staticData.timePeriods;
+        state.modelledPolicies = staticData.modelledPolicies;
+        state.currentLawId = staticData.currentLawId;
       })
       .addCase(fetchCoreMetadataThunk.rejected, (state, action) => {
         state.coreLoading = false;
