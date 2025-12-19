@@ -16,8 +16,8 @@ import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWra
 import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
-import { MetadataGuard } from './routing/guards/MetadataGuard';
-import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
+import { CoreMetadataGuard } from './routing/guards/CoreMetadataGuard';
+import { ParametersGuard } from './routing/guards/ParametersGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 
 const router = createBrowserRouter(
@@ -30,30 +30,39 @@ const router = createBrowserRouter(
       path: '/:countryId',
       element: <CountryGuard />,
       children: [
-        // Routes that need metadata immediately (blocking guard)
+        // All routes need core metadata (variables + datasets)
         {
-          element: <MetadataGuard />,
+          element: <CoreMetadataGuard />,
           children: [
+            // Routes that also need parameters (policy editing, reports)
             {
-              element: (
-                <StandardLayout>
-                  <Outlet />
-                </StandardLayout>
-              ),
+              element: <ParametersGuard />,
               children: [
                 {
-                  path: 'report-output/:reportId/:subpage?/:view?',
-                  element: <ReportOutputPage />,
+                  element: (
+                    <StandardLayout>
+                      <Outlet />
+                    </StandardLayout>
+                  ),
+                  children: [
+                    {
+                      path: 'report-output/:reportId/:subpage?/:view?',
+                      element: <ReportOutputPage />,
+                    },
+                  ],
+                },
+                {
+                  element: <PathwayLayout />,
+                  children: [
+                    {
+                      path: 'policies/create',
+                      element: <PolicyPathwayWrapper />,
+                    },
+                  ],
                 },
               ],
             },
-          ],
-        },
-        // Routes that benefit from metadata but don't require it (lazy loader)
-        {
-          element: <MetadataLazyLoader />,
-          children: [
-            // Regular routes with standard layout
+            // Routes that only need core metadata
             {
               element: (
                 <StandardLayout>
@@ -91,7 +100,7 @@ const router = createBrowserRouter(
                 },
               ],
             },
-            // Pathway routes that manage their own layouts
+            // Pathway routes (core metadata only)
             {
               element: <PathwayLayout />,
               children: [
@@ -106,10 +115,6 @@ const router = createBrowserRouter(
                 {
                   path: 'households/create',
                   element: <PopulationPathwayWrapper />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <PolicyPathwayWrapper />,
                 },
               ],
             },

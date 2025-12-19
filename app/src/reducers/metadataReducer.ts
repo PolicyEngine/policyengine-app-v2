@@ -1,6 +1,4 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-// Import the API function
-import { fetchMetadata as fetchMetadataApi } from '@/api/metadata';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { loadCoreMetadata, loadParameters } from '@/storage';
 import { MetadataState } from '@/types/metadata';
@@ -10,7 +8,7 @@ const initialState: MetadataState = {
   error: null,
   currentCountry: null,
 
-  // V2 tiered loading states
+  // Tiered loading states
   coreLoading: false,
   coreLoaded: false,
   coreError: null,
@@ -30,23 +28,7 @@ const initialState: MetadataState = {
   parameterTree: null,
 };
 
-// Async thunk for fetching metadata (V1 - legacy)
-export const fetchMetadataThunk = createAsyncThunk(
-  'metadata/fetch',
-  async (country: string, { rejectWithValue }) => {
-    try {
-      // Use the API layer function
-      const data = await fetchMetadataApi(country);
-
-      // Return both API data and the country that was fetched
-      return { data, country };
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
-    }
-  }
-);
-
-// V2 thunk: Fetch core metadata (variables + datasets)
+// Fetch core metadata (variables + datasets)
 export const fetchCoreMetadataThunk = createAsyncThunk(
   'metadata/fetchCore',
   async (countryId: string, { rejectWithValue }) => {
@@ -59,7 +41,7 @@ export const fetchCoreMetadataThunk = createAsyncThunk(
   }
 );
 
-// V2 thunk: Fetch parameters (lazy load)
+// Fetch parameters (lazy load)
 export const fetchParametersThunk = createAsyncThunk(
   'metadata/fetchParameters',
   async (countryId: string, { rejectWithValue }) => {
@@ -107,41 +89,7 @@ const metadataSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchMetadataThunk.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchMetadataThunk.fulfilled, (state, action) => {
-        const { data, country } = action.payload;
-        const body = data.result;
-
-        state.loading = false;
-        state.error = null;
-        state.currentCountry = country;
-
-        // Transform API response to state
-        state.variables = body.variables;
-        state.parameters = body.parameters;
-        state.entities = body.entities;
-        state.variableModules = body.variableModules;
-        state.economyOptions = body.economy_options;
-        state.currentLawId = body.current_law_id;
-        state.basicInputs = body.basicInputs;
-        state.modelledPolicies = body.modelled_policies;
-        state.version = body.version;
-
-        // Build parameter tree from parameters (following V1 approach)
-        try {
-          state.parameterTree = buildParameterTree(body.parameters) || null;
-        } catch (error) {
-          state.parameterTree = null;
-        }
-      })
-      .addCase(fetchMetadataThunk.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload as string;
-      })
-      // V2: Core metadata thunk
+      // Core metadata thunk
       .addCase(fetchCoreMetadataThunk.pending, (state) => {
         state.coreLoading = true;
         state.coreError = null;
@@ -174,7 +122,7 @@ const metadataSlice = createSlice({
         state.coreLoading = false;
         state.coreError = action.payload as string;
       })
-      // V2: Parameters thunk
+      // Parameters thunk
       .addCase(fetchParametersThunk.pending, (state) => {
         state.parametersLoading = true;
         state.parametersError = null;
@@ -223,8 +171,5 @@ const metadataSlice = createSlice({
 });
 
 export const { setCurrentCountry, clearMetadata } = metadataSlice.actions;
-
-// The metadata.currentCountry state is only used internally by useFetchMetadata
-// to track which country's metadata is currently cached.
 
 export default metadataSlice.reducer;

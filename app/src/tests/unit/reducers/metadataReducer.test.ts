@@ -1,14 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import * as metadataApi from '@/api/metadata';
 import * as buildParameterTreeModule from '@/libs/buildParameterTree';
 import metadataReducer, {
   clearMetadata,
-  fetchMetadataThunk,
+  fetchCoreMetadataThunk,
+  fetchParametersThunk,
   setCurrentCountry,
 } from '@/reducers/metadataReducer';
 import {
-  createMockApiPayload,
   createMockClearedState,
   createMockStateWithData,
   expectCurrentCountry,
@@ -18,102 +17,70 @@ import {
   expectLoadingState,
   expectParameterTree,
   expectStateToEqual,
-  expectVersion,
-  MOCK_BASIC_INPUTS,
-  MOCK_ECONOMY_OPTIONS,
-  MOCK_ENTITIES,
-  MOCK_LOADING_STATE,
-  MOCK_MODELLED_POLICIES,
   MOCK_PARAMETER_TREE,
-  MOCK_PARAMETERS,
-  MOCK_VARIABLE_MODULES,
-  MOCK_VARIABLES,
   TEST_COUNTRY_CA,
   TEST_COUNTRY_UK,
   TEST_COUNTRY_US,
-  TEST_CURRENT_LAW_ID,
   TEST_ERROR_MESSAGE,
   TEST_VERSION,
 } from '@/tests/fixtures/reducers/metadataReducerMocks';
 
-// Mock the API and buildParameterTree modules
-vi.mock('@/api/metadata');
+// Mock the storage loaders
+vi.mock('@/storage', () => ({
+  loadCoreMetadata: vi.fn(),
+  loadParameters: vi.fn(),
+}));
+
 vi.mock('@/libs/buildParameterTree');
 
 describe('metadataReducer', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock console methods to avoid test output noise
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   describe('initial state', () => {
     test('given no action then returns initial state', () => {
-      // Given
       const action = { type: 'unknown/action' };
-
-      // When
       const state = metadataReducer(undefined, action);
-
-      // Then
       expectStateToEqual(state, EXPECTED_INITIAL_STATE);
     });
   });
 
   describe('setCurrentCountry action', () => {
     test('given setCurrentCountry with new country then updates country', () => {
-      // Given
       const initialState = EXPECTED_INITIAL_STATE;
       const action = setCurrentCountry(TEST_COUNTRY_US);
-
-      // When
       const state = metadataReducer(initialState, action);
-
-      // Then
       expectCurrentCountry(state, TEST_COUNTRY_US);
     });
 
     test('given setCurrentCountry when version is null then does not clear metadata', () => {
-      // Given
       const initialState = EXPECTED_INITIAL_STATE;
       const action = setCurrentCountry(TEST_COUNTRY_US);
-
-      // When
       const state = metadataReducer(initialState, action);
-
-      // Then
       expectCurrentCountry(state, TEST_COUNTRY_US);
       expect(state.variables).toEqual({});
       expect(state.parameters).toEqual({});
     });
 
-    test('given setCurrentCountry when version exists then clears metadata', () => {
-      // Given
-      const initialState = createMockStateWithData({ version: TEST_VERSION });
+    test('given setCurrentCountry when coreLoaded is true then clears metadata', () => {
+      const initialState = createMockStateWithData({ coreLoaded: true });
       const action = setCurrentCountry(TEST_COUNTRY_UK);
-
-      // When
       const state = metadataReducer(initialState, action);
-
-      // Then
       expectCurrentCountry(state, TEST_COUNTRY_UK);
       expectEmptyMetadata(state);
     });
 
     test('given setCurrentCountry then preserves loading and error states', () => {
-      // Given
       const initialState = createMockStateWithData({
         loading: true,
         error: TEST_ERROR_MESSAGE,
-        version: TEST_VERSION,
+        coreLoaded: true,
       });
       const action = setCurrentCountry(TEST_COUNTRY_CA);
-
-      // When
       const state = metadataReducer(initialState, action);
-
-      // Then
       expectLoadingState(state, true);
       expectErrorState(state, TEST_ERROR_MESSAGE);
     });
@@ -121,216 +88,162 @@ describe('metadataReducer', () => {
 
   describe('clearMetadata action', () => {
     test('given clearMetadata then resets to initial state but keeps country', () => {
-      // Given
       const initialState = createMockStateWithData({ currentCountry: TEST_COUNTRY_US });
       const action = clearMetadata();
-
-      // When
       const state = metadataReducer(initialState, action);
-
-      // Then
       expectStateToEqual(state, createMockClearedState(TEST_COUNTRY_US));
     });
 
     test('given clearMetadata with no country then keeps null country', () => {
-      // Given
       const initialState = createMockStateWithData({ currentCountry: null });
       const action = clearMetadata();
-
-      // When
       const state = metadataReducer(initialState, action);
-
-      // Then
       expectStateToEqual(state, createMockClearedState(null));
     });
   });
 
-  describe('fetchMetadataThunk', () => {
-    test('given pending action then sets loading state', () => {
-      // Given
+  describe('fetchCoreMetadataThunk', () => {
+    test('given pending action then sets coreLoading state', () => {
       const initialState = EXPECTED_INITIAL_STATE;
-      const action = { type: fetchMetadataThunk.pending.type };
-
-      // When
+      const action = { type: fetchCoreMetadataThunk.pending.type };
       const state = metadataReducer(initialState, action);
-
-      // Then
-      expectLoadingState(state, true);
-      expectErrorState(state, null);
+      expect(state.coreLoading).toBe(true);
+      expect(state.coreError).toBeNull();
     });
 
-    test('given fulfilled action then updates all metadata fields', () => {
-      // Given
-      const initialState = MOCK_LOADING_STATE;
-      const apiPayload = createMockApiPayload();
+    test('given fulfilled action then updates core metadata fields', () => {
+      const initialState = { ...EXPECTED_INITIAL_STATE, coreLoading: true };
+      const mockVariables = [
+        { id: '1', name: 'income', entity: 'person', description: 'Income' },
+      ];
+      const mockDatasets = [
+        { id: '1', name: 'cps_2024', description: 'CPS 2024' },
+      ];
       const action = {
-        type: fetchMetadataThunk.fulfilled.type,
-        payload: { data: apiPayload, country: TEST_COUNTRY_US },
+        type: fetchCoreMetadataThunk.fulfilled.type,
+        payload: {
+          data: {
+            variables: mockVariables,
+            datasets: mockDatasets,
+            version: TEST_VERSION,
+            versionId: 'version-123',
+          },
+          countryId: TEST_COUNTRY_US,
+        },
       };
 
-      // Mock buildParameterTree to return our mock tree
-      vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(MOCK_PARAMETER_TREE);
-
-      // When
       const state = metadataReducer(initialState, action);
 
-      // Then
-      expectLoadingState(state, false);
-      expectErrorState(state, null);
-      expectCurrentCountry(state, TEST_COUNTRY_US);
-      expect(state.variables).toEqual(MOCK_VARIABLES);
-      expect(state.parameters).toEqual(MOCK_PARAMETERS);
-      expect(state.entities).toEqual(MOCK_ENTITIES);
-      expect(state.variableModules).toEqual(MOCK_VARIABLE_MODULES);
-      expect(state.economyOptions).toEqual(MOCK_ECONOMY_OPTIONS);
-      expect(state.currentLawId).toBe(TEST_CURRENT_LAW_ID);
-      expect(state.basicInputs).toEqual(MOCK_BASIC_INPUTS);
-      expect(state.modelledPolicies).toEqual(MOCK_MODELLED_POLICIES);
-      expectVersion(state, TEST_VERSION);
-      expectParameterTree(state, true);
+      expect(state.coreLoading).toBe(false);
+      expect(state.coreLoaded).toBe(true);
+      expect(state.coreError).toBeNull();
+      expect(state.currentCountry).toBe(TEST_COUNTRY_US);
+      expect(state.version).toBe(TEST_VERSION);
+      expect(state.variables).toEqual({ income: mockVariables[0] });
+      expect(state.economyOptions.datasets).toHaveLength(1);
+      expect(state.economyOptions.datasets[0].name).toBe('cps_2024');
     });
 
-    test('given fulfilled action when buildParameterTree returns undefined then sets null tree', () => {
-      // Given
-      const initialState = MOCK_LOADING_STATE;
-      const apiPayload = createMockApiPayload();
+    test('given rejected action then sets coreError state', () => {
+      const initialState = { ...EXPECTED_INITIAL_STATE, coreLoading: true };
       const action = {
-        type: fetchMetadataThunk.fulfilled.type,
-        payload: { data: apiPayload, country: TEST_COUNTRY_US },
-      };
-
-      // Mock buildParameterTree to return undefined
-      vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(undefined);
-
-      // When
-      const state = metadataReducer(initialState, action);
-
-      // Then
-      expectParameterTree(state, false);
-    });
-
-    test('given fulfilled action when buildParameterTree throws error then sets null tree', () => {
-      // Given
-      const initialState = MOCK_LOADING_STATE;
-      const apiPayload = createMockApiPayload();
-      const action = {
-        type: fetchMetadataThunk.fulfilled.type,
-        payload: { data: apiPayload, country: TEST_COUNTRY_US },
-      };
-
-      // Mock buildParameterTree to throw error
-      vi.mocked(buildParameterTreeModule.buildParameterTree).mockImplementation(() => {
-        throw new Error('Failed to build tree');
-      });
-
-      // When
-      const state = metadataReducer(initialState, action);
-
-      // Then
-      expectParameterTree(state, false);
-    });
-
-    test('given rejected action then sets error state', () => {
-      // Given
-      const initialState = MOCK_LOADING_STATE;
-      const action = {
-        type: fetchMetadataThunk.rejected.type,
+        type: fetchCoreMetadataThunk.rejected.type,
         payload: TEST_ERROR_MESSAGE,
       };
-
-      // When
       const state = metadataReducer(initialState, action);
-
-      // Then
-      expectLoadingState(state, false);
-      expectErrorState(state, TEST_ERROR_MESSAGE);
+      expect(state.coreLoading).toBe(false);
+      expect(state.coreError).toBe(TEST_ERROR_MESSAGE);
     });
   });
 
-  describe('fetchMetadataThunk async behavior', () => {
-    test('given successful API call then returns data and country', async () => {
-      // Given
-      const apiPayload = createMockApiPayload();
-      vi.mocked(metadataApi.fetchMetadata).mockResolvedValue(apiPayload);
-
-      const store = configureStore({
-        reducer: { metadata: metadataReducer },
-      });
-
-      // When
-      const result = await store.dispatch(fetchMetadataThunk(TEST_COUNTRY_US));
-
-      // Then
-      expect(result.type).toBe(fetchMetadataThunk.fulfilled.type);
-      expect(result.payload).toEqual({ data: apiPayload, country: TEST_COUNTRY_US });
+  describe('fetchParametersThunk', () => {
+    test('given pending action then sets parametersLoading state', () => {
+      const initialState = { ...EXPECTED_INITIAL_STATE, coreLoaded: true };
+      const action = { type: fetchParametersThunk.pending.type };
+      const state = metadataReducer(initialState, action);
+      expect(state.parametersLoading).toBe(true);
+      expect(state.parametersError).toBeNull();
     });
 
-    test('given API error then rejects with error message', async () => {
-      // Given
-      const error = new Error(TEST_ERROR_MESSAGE);
-      vi.mocked(metadataApi.fetchMetadata).mockRejectedValue(error);
+    test('given fulfilled action then updates parameters fields', () => {
+      const initialState = { ...EXPECTED_INITIAL_STATE, coreLoaded: true, parametersLoading: true };
+      const mockParameters = [
+        { id: 'p1', name: 'tax.rate', label: 'Tax Rate' },
+      ];
+      const mockParameterValues = [
+        { id: 'pv1', parameter_id: 'p1', start_date: '2024-01-01', value_json: 0.25 },
+      ];
+      const action = {
+        type: fetchParametersThunk.fulfilled.type,
+        payload: {
+          data: {
+            parameters: mockParameters,
+            parameterValues: mockParameterValues,
+          },
+        },
+      };
 
-      const store = configureStore({
-        reducer: { metadata: metadataReducer },
-      });
+      vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(MOCK_PARAMETER_TREE);
 
-      // When
-      const result = await store.dispatch(fetchMetadataThunk(TEST_COUNTRY_US));
+      const state = metadataReducer(initialState, action);
 
-      // Then
-      expect(result.type).toBe(fetchMetadataThunk.rejected.type);
-      expect(result.payload).toBe(TEST_ERROR_MESSAGE);
+      expect(state.parametersLoading).toBe(false);
+      expect(state.parametersLoaded).toBe(true);
+      expect(state.parametersError).toBeNull();
+      expect(state.parameters['tax.rate']).toBeDefined();
+      expect(state.parameters['tax.rate'].values['2024-01-01']).toBe(0.25);
+      expectParameterTree(state, true);
     });
 
-    test('given non-Error rejection then rejects with unknown error', async () => {
-      // Given
-      vi.mocked(metadataApi.fetchMetadata).mockRejectedValue('String error');
-
-      const store = configureStore({
-        reducer: { metadata: metadataReducer },
-      });
-
-      // When
-      const result = await store.dispatch(fetchMetadataThunk(TEST_COUNTRY_US));
-
-      // Then
-      expect(result.type).toBe(fetchMetadataThunk.rejected.type);
-      expect(result.payload).toBe('Unknown error');
+    test('given rejected action then sets parametersError state', () => {
+      const initialState = { ...EXPECTED_INITIAL_STATE, coreLoaded: true, parametersLoading: true };
+      const action = {
+        type: fetchParametersThunk.rejected.type,
+        payload: TEST_ERROR_MESSAGE,
+      };
+      const state = metadataReducer(initialState, action);
+      expect(state.parametersLoading).toBe(false);
+      expect(state.parametersError).toBe(TEST_ERROR_MESSAGE);
     });
   });
 
   describe('state transitions', () => {
     test('given sequence of actions then maintains correct state', () => {
-      // Given
       let state = EXPECTED_INITIAL_STATE;
 
-      // When & Then - Set country
+      // Set country
       state = metadataReducer(state, setCurrentCountry(TEST_COUNTRY_US));
       expectCurrentCountry(state, TEST_COUNTRY_US);
 
-      // When & Then - Start loading
-      state = metadataReducer(state, { type: fetchMetadataThunk.pending.type });
-      expectLoadingState(state, true);
+      // Start core loading
+      state = metadataReducer(state, { type: fetchCoreMetadataThunk.pending.type });
+      expect(state.coreLoading).toBe(true);
 
-      // When & Then - Receive data
-      const apiPayload = createMockApiPayload();
-      vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(MOCK_PARAMETER_TREE);
+      // Receive core data
       state = metadataReducer(state, {
-        type: fetchMetadataThunk.fulfilled.type,
-        payload: { data: apiPayload, country: TEST_COUNTRY_US },
+        type: fetchCoreMetadataThunk.fulfilled.type,
+        payload: {
+          data: {
+            variables: [{ id: '1', name: 'test', entity: 'person' }],
+            datasets: [],
+            version: TEST_VERSION,
+            versionId: 'v1',
+          },
+          countryId: TEST_COUNTRY_US,
+        },
       });
-      expectLoadingState(state, false);
-      expectVersion(state, TEST_VERSION);
+      expect(state.coreLoading).toBe(false);
+      expect(state.coreLoaded).toBe(true);
 
-      // When & Then - Change country (should clear data)
+      // Start parameters loading
+      state = metadataReducer(state, { type: fetchParametersThunk.pending.type });
+      expect(state.parametersLoading).toBe(true);
+
+      // Change country (should clear data and reset loading states)
       state = metadataReducer(state, setCurrentCountry(TEST_COUNTRY_UK));
       expectCurrentCountry(state, TEST_COUNTRY_UK);
-      expectEmptyMetadata(state);
-
-      // When & Then - Clear metadata
-      state = metadataReducer(state, clearMetadata());
-      expectCurrentCountry(state, TEST_COUNTRY_UK);
-      expectEmptyMetadata(state);
+      expect(state.coreLoaded).toBe(false);
+      expect(state.parametersLoaded).toBe(false);
     });
   });
 });
