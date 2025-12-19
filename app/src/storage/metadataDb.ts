@@ -43,6 +43,21 @@ export interface ParameterValue {
 }
 
 /**
+ * Dataset record from V2 API
+ */
+export interface Dataset {
+  id: string;
+  name: string;
+  description: string;
+  filepath: string;
+  year: number;
+  is_output_dataset: boolean;
+  tax_benefit_model_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
  * Metadata description for tracking loaded state per country
  */
 export interface MetadataDescription {
@@ -61,6 +76,7 @@ class PolicyEngineDatabase extends Dexie {
   variables!: EntityTable<Variable, "id">;
   parameters!: EntityTable<Parameter, "id">;
   parameterValues!: EntityTable<ParameterValue, "id">;
+  datasets!: EntityTable<Dataset, "id">;
   metadataDescriptions!: EntityTable<MetadataDescription, "countryId">;
 
   constructor() {
@@ -70,6 +86,14 @@ class PolicyEngineDatabase extends Dexie {
       variables: "id, name, tax_benefit_model_version_id",
       parameters: "id, name, tax_benefit_model_version_id",
       parameterValues: "id, parameter_id",
+      metadataDescriptions: "countryId",
+    });
+
+    this.version(2).stores({
+      variables: "id, name, tax_benefit_model_version_id",
+      parameters: "id, name, tax_benefit_model_version_id",
+      parameterValues: "id, parameter_id",
+      datasets: "id, name, tax_benefit_model_id",
       metadataDescriptions: "countryId",
     });
   }
