@@ -5,6 +5,7 @@ import {
   IconCpu,
   IconFileDescription,
   IconGitBranch,
+  IconLayoutGrid,
   IconMail,
   IconPlus,
   IconScale,
@@ -32,6 +33,7 @@ export default function Sidebar({ isOpen = true }: SidebarProps) {
   // All internal navigation paths include the country prefix for consistency with v1 app
   const navItems = [
     { label: 'Reports', icon: IconFileDescription, path: `/${countryId}/reports` },
+    { label: 'Report Builder', icon: IconLayoutGrid, path: `/${countryId}/report-builder` },
     { label: 'Simulations', icon: IconGitBranch, path: `/${countryId}/simulations` },
     { label: 'Policies', icon: IconScale, path: `/${countryId}/policies` },
     { label: 'Households', icon: IconUsers, path: `/${countryId}/households` },
