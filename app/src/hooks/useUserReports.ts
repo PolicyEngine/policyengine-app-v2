@@ -342,16 +342,17 @@ export const useUserReports = (userId: string) => {
  * @param userReportId - The user report ID (e.g., 'sur-abc123')
  * @returns Complete report data including UserReport, base Report, and all related entities
  */
-export const useUserReportById = (userReportId: string) => {
+export const useUserReportById = (userReportId: string, options?: { enabled?: boolean }) => {
   const queryNormalizer = useQueryNormalizer();
   const country = useCurrentCountry();
+  const isEnabled = options?.enabled !== false;
 
   // Step 1: Fetch UserReport by userReportId to get the base reportId
   const {
     data: userReport,
     isLoading: userReportLoading,
     error: userReportError,
-  } = useReportAssociationById(userReportId);
+  } = useReportAssociationById(userReportId, { enabled: isEnabled });
 
   // Extract base reportId and userId from UserReport
   const baseReportId = userReport?.reportId;
@@ -373,7 +374,7 @@ export const useUserReportById = (userReportId: string) => {
       const metadata = await fetchReportById(country, baseReportId!);
       return ReportAdapter.fromMetadata(metadata);
     },
-    enabled: !!baseReportId, // Removed && !cachedReport to allow invalidation
+    enabled: isEnabled && !!baseReportId, // Removed && !cachedReport to allow invalidation
     staleTime: 5 * 60 * 1000,
   });
 
@@ -389,7 +390,7 @@ export const useUserReportById = (userReportId: string) => {
       const transformed = SimulationAdapter.fromMetadata(metadata);
       return transformed;
     },
-    enabled: simulationIds.length > 0,
+    enabled: isEnabled && simulationIds.length > 0,
     // staleTime: Infinity - Never auto-refetch, rely on invalidateQueries() for targeted refetching
     // When orchestrator calls invalidateQueries({ queryKey: simulationKeys.byId(simId) }),
     // that specific simulation will be marked stale and refetch on next mount
@@ -414,7 +415,7 @@ export const useUserReportById = (userReportId: string) => {
       const metadata = await fetchPolicyById(country, id);
       return PolicyAdapter.fromMetadata(metadata);
     },
-    enabled: policyIds.length > 0,
+    enabled: isEnabled && policyIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -446,7 +447,7 @@ export const useUserReportById = (userReportId: string) => {
       const metadata = await fetchHouseholdById(country, id);
       return HouseholdAdapter.fromMetadata(metadata);
     },
-    enabled: householdIds.length > 0,
+    enabled: isEnabled && householdIds.length > 0,
     staleTime: 5 * 60 * 1000,
   });
 

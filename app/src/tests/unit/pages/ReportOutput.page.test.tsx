@@ -29,6 +29,7 @@ vi.mock('react-router-dom', async () => {
       subpage: 'overview',
       view: undefined,
     }),
+    useSearchParams: () => [new URLSearchParams(), vi.fn()],
   };
 });
 
@@ -57,6 +58,22 @@ vi.mock('@/hooks/useUserReportAssociations', () => ({
   useUpdateReportAssociation: vi.fn(() => ({
     mutate: vi.fn(),
     isPending: false,
+  })),
+  useCreateReportAssociation: vi.fn(() => ({
+    mutateAsync: vi.fn(),
+    isPending: false,
+  })),
+}));
+
+vi.mock('@/hooks/useSharedReportData', () => ({
+  useSharedReportData: vi.fn(() => ({
+    report: undefined,
+    simulations: [],
+    policies: [],
+    households: [],
+    geographies: [],
+    isLoading: false,
+    error: null,
   })),
 }));
 
