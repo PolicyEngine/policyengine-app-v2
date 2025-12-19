@@ -5,6 +5,7 @@
  * or how it's encoded, only this file needs to be modified.
  */
 
+import { CountryId, countryIds } from '@/libs/countries';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
@@ -16,7 +17,7 @@ import { Simulation } from '@/types/ingredients/Simulation';
  */
 export interface ShareData {
   reportId: string;
-  countryId: string;
+  countryId: CountryId;
   year: string;
   simulationIds: string[];
   policyIds: string[];
@@ -74,6 +75,7 @@ export function isValidShareData(data: unknown): data is ShareData {
   const hasRequiredStrings =
     typeof obj.reportId === 'string' &&
     typeof obj.countryId === 'string' &&
+    countryIds.includes(obj.countryId as CountryId) &&
     typeof obj.year === 'string';
 
   const hasRequiredArrays =
@@ -98,7 +100,7 @@ export function isValidShareData(data: unknown): data is ShareData {
  * Returns path + query string (e.g., "/us/report-output/shared?share=...")
  * Caller should prepend origin if full URL is needed
  */
-export function buildSharePath(countryId: string, data: ShareData): string {
+export function buildSharePath(countryId: CountryId, data: ShareData): string {
   const encoded = encodeShareData(data);
   return `/${countryId}/report-output/shared?share=${encoded}`;
 }

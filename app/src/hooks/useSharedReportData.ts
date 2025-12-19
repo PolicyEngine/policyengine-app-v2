@@ -10,8 +10,9 @@ import { useSelector } from 'react-redux';
 import { HouseholdAdapter, PolicyAdapter, ReportAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
-import { CountryId, fetchReportById } from '@/api/report';
+import { fetchReportById } from '@/api/report';
 import { fetchSimulationById } from '@/api/simulation';
+import { DEFAULT_COUNTRY } from '@/libs/countries';
 import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
@@ -45,7 +46,7 @@ export function useSharedReportData(
   options?: UseSharedReportDataOptions
 ): UseSharedReportDataResult {
   const isEnabled = options?.enabled !== false && shareData !== null;
-  const countryId = (shareData?.countryId ?? 'us') as CountryId;
+  const countryId = shareData?.countryId ?? DEFAULT_COUNTRY;
 
   // Get geography metadata for building Geography objects
   const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
