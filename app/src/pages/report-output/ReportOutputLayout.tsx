@@ -1,23 +1,6 @@
-import {
-  IconBookmark,
-  IconCalendar,
-  IconChevronLeft,
-  IconClock,
-  IconPencil,
-  IconShare,
-  IconStack2,
-} from '@tabler/icons-react';
-import {
-  ActionIcon,
-  Anchor,
-  Box,
-  Container,
-  Group,
-  Stack,
-  Text,
-  Title,
-  Tooltip,
-} from '@mantine/core';
+import { IconCalendar, IconChevronLeft, IconClock, IconStack2 } from '@tabler/icons-react';
+import { Anchor, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
@@ -93,52 +76,12 @@ export default function ReportOutputLayout({
               {reportLabel || reportId}
             </Title>
             {isSharedView && <SharedReportTag />}
-            {/* Normal view: Share + Edit buttons */}
-            {!isSharedView && (
-              <>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  aria-label="Share report"
-                  onClick={onShare}
-                >
-                  <IconShare size={18} />
-                </ActionIcon>
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  aria-label="Edit report name"
-                  onClick={onEditName}
-                >
-                  <IconPencil size={18} />
-                </ActionIcon>
-              </>
-            )}
-            {/* Shared view: Save button only */}
-            {isSharedView && (
-              <Tooltip
-                label="Save to my reports"
-                position="right"
-                styles={{
-                  tooltip: {
-                    backgroundColor: colors.gray[700],
-                    fontSize: typography.fontSize.xs,
-                  },
-                }}
-              >
-                <ActionIcon
-                  variant="subtle"
-                  color="gray"
-                  size="lg"
-                  aria-label="Save report to my reports"
-                  onClick={onSave}
-                >
-                  <IconBookmark size={18} />
-                </ActionIcon>
-              </Tooltip>
-            )}
+            <ReportActionButtons
+              isSharedView={isSharedView}
+              onShare={onShare}
+              onSave={onSave}
+              onEdit={onEditName}
+            />
           </Group>
 
           {/* Timestamp and View All */}
