@@ -11,15 +11,10 @@ export {
 } from "./taxBenefitModels";
 
 // Variables
-export { fetchVariables, type Variable } from "./variables";
+export { fetchVariables } from "./variables";
 
 // Parameters
-export {
-  fetchParameters,
-  fetchParameterValues,
-  type Parameter,
-  type ParameterValue,
-} from "./parameters";
+export { fetchParameters, fetchParameterValues } from "./parameters";
 
 // Datasets
-export { fetchDatasets, type Dataset } from "./datasets";
+export { fetchDatasets } from "./datasets";

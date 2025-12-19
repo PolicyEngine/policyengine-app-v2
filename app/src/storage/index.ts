@@ -6,6 +6,7 @@ export {
   type Variable,
   type Parameter,
   type ParameterValue,
+  type Dataset,
   type MetadataDescription,
 } from "./metadataDb";
 
@@ -17,6 +18,7 @@ export {
   clearAndLoadVariables,
   clearAndLoadParameters,
   clearAndLoadParameterValues,
+  clearAndLoadDatasets,
 } from "./metadataBulkLoader";
 
 // Queries
@@ -27,6 +29,7 @@ export {
   getAllVariables,
   getAllParameters,
   getAllParameterValues,
+  getAllDatasets,
   getVariableByName,
   getParameterByName,
   getMetadataDescription,
@@ -39,3 +42,15 @@ export {
   clearAllStores,
   getStoreCounts,
 } from "./metadataBulkLoader";
+
+// Loaders (tiered loading)
+export {
+  loadCoreMetadata,
+  isCoreMetadataCached,
+  loadParameters,
+  isParametersCached,
+  type CoreMetadata,
+  type CoreMetadataLoadResult,
+  type ParametersData,
+  type ParametersLoadResult,
+} from "./loaders";

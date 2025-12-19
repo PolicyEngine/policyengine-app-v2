@@ -3,6 +3,7 @@ import {
   Variable,
   Parameter,
   ParameterValue,
+  Dataset,
   MetadataDescription,
 } from "./metadataDb";
 
@@ -72,6 +73,26 @@ export async function clearAndLoadParameterValues(
     await db.parameterValues.bulkPut(records);
   });
   return records.length;
+}
+
+/**
+ * Clear datasets and load new records atomically
+ */
+export async function clearAndLoadDatasets(
+  records: Dataset[],
+): Promise<number> {
+  await db.transaction("rw", db.datasets, async () => {
+    await db.datasets.clear();
+    await db.datasets.bulkPut(records);
+  });
+  return records.length;
+}
+
+/**
+ * Get all datasets
+ */
+export async function getAllDatasets(): Promise<Dataset[]> {
+  return db.datasets.toArray();
 }
 
 /**
@@ -174,11 +195,12 @@ export async function clearVersionData(versionId: string): Promise<void> {
 export async function clearAllStores(): Promise<void> {
   await db.transaction(
     "rw",
-    [db.variables, db.parameters, db.parameterValues, db.metadataDescriptions],
+    [db.variables, db.parameters, db.parameterValues, db.datasets, db.metadataDescriptions],
     async () => {
       await db.variables.clear();
       await db.parameters.clear();
       await db.parameterValues.clear();
+      await db.datasets.clear();
       await db.metadataDescriptions.clear();
     },
   );
@@ -191,11 +213,13 @@ export async function getStoreCounts(): Promise<{
   variables: number;
   parameters: number;
   parameterValues: number;
+  datasets: number;
 }> {
-  const [variables, parameters, parameterValues] = await Promise.all([
+  const [variables, parameters, parameterValues, datasets] = await Promise.all([
     db.variables.count(),
     db.parameters.count(),
     db.parameterValues.count(),
+    db.datasets.count(),
   ]);
-  return { variables, parameters, parameterValues };
+  return { variables, parameters, parameterValues, datasets };
 }
