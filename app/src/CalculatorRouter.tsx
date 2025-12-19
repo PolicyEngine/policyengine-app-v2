@@ -16,8 +16,8 @@ import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWra
 import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
-import { MetadataGuard } from './routing/guards/MetadataGuard';
-import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
+import { CoreMetadataGuard } from './routing/guards/CoreMetadataGuard';
+import { ParametersGuard } from './routing/guards/ParametersGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 
 /**
@@ -43,55 +43,39 @@ const router = createBrowserRouter(
       path: '/:countryId',
       element: <CountryGuard />,
       children: [
-        // Routes with standard layout that need metadata (blocking)
-        // Layout is OUTSIDE the guard so app shell remains visible during loading
+        // All routes need core metadata (variables + datasets)
         {
-          element: <StandardLayoutOutlet />,
+          element: <CoreMetadataGuard />,
           children: [
+            // Routes that also need parameters (policy editing, reports)
             {
-              element: <MetadataGuard />,
+              element: <ParametersGuard />,
               children: [
                 {
-                  path: 'report-output/:reportId/:subpage?/:view?',
-                  element: <ReportOutputPage />,
+                  element: (
+                    <StandardLayout>
+                      <Outlet />
+                    </StandardLayout>
+                  ),
+                  children: [
+                    {
+                      path: 'report-output/:reportId/:subpage?/:view?',
+                      element: <ReportOutputPage />,
+                    },
+                  ],
+                },
+                {
+                  element: <PathwayLayout />,
+                  children: [
+                    {
+                      path: 'policies/create',
+                      element: <PolicyPathwayWrapper />,
+                    },
+                  ],
                 },
               ],
             },
-          ],
-        },
-        // Pathway routes that need metadata (blocking)
-        // Pathways manage their own AppShell layouts - do NOT wrap in StandardLayoutOutlet
-        // This allows views like PolicyParameterSelectorView to use custom AppShell configurations
-        {
-          element: <MetadataGuard />,
-          children: [
-            {
-              element: <PathwayLayout />,
-              children: [
-                {
-                  path: 'reports/create',
-                  element: <ReportPathwayWrapper />,
-                },
-                {
-                  path: 'simulations/create',
-                  element: <SimulationPathwayWrapper />,
-                },
-                {
-                  path: 'households/create',
-                  element: <PopulationPathwayWrapper />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <PolicyPathwayWrapper />,
-                },
-              ],
-            },
-          ],
-        },
-        // Routes that benefit from metadata but don't require it (lazy loader)
-        {
-          element: <MetadataLazyLoader />,
-          children: [
+            // Routes that only need core metadata
             {
               element: <StandardLayoutOutlet />,
               children: [
@@ -122,6 +106,24 @@ const router = createBrowserRouter(
                 {
                   path: 'account',
                   element: <div>Account settings page</div>,
+                },
+              ],
+            },
+            // Pathway routes (core metadata only)
+            {
+              element: <PathwayLayout />,
+              children: [
+                {
+                  path: 'reports/create',
+                  element: <ReportPathwayWrapper />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create',
+                  element: <PopulationPathwayWrapper />,
                 },
               ],
             },
