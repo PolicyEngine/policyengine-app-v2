@@ -16,8 +16,6 @@ import {
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
   isPolicyWithAssociation: vi.fn((val) => val && val.policy && val.association),
-  // Keep deprecated alias for backwards compatibility
-  isPolicyMetadataWithAssociation: vi.fn((val) => val && val.policy && val.association),
 }));
 
 describe('PolicyExistingView', () => {

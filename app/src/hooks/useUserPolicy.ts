@@ -141,27 +141,21 @@ export interface UserPolicyWithAssociation {
   isError?: boolean;
 }
 
-/**
- * @deprecated Use UserPolicyWithAssociation instead
- */
-export type UserPolicyMetadataWithAssociation = UserPolicyWithAssociation;
-
-export function isPolicyWithAssociation(obj: any): obj is UserPolicyWithAssociation {
+export function isPolicyWithAssociation(obj: unknown): obj is UserPolicyWithAssociation {
   return (
-    obj &&
+    obj !== null &&
     typeof obj === 'object' &&
     'association' in obj &&
     'policy' in obj &&
-    (obj.policy === undefined || typeof obj.policy === 'object') &&
-    typeof obj.isLoading === 'boolean' &&
-    ('error' in obj ? obj.error === null || obj.error instanceof Error : true)
+    ((obj as UserPolicyWithAssociation).policy === undefined ||
+      typeof (obj as UserPolicyWithAssociation).policy === 'object') &&
+    typeof (obj as UserPolicyWithAssociation).isLoading === 'boolean' &&
+    ('error' in obj
+      ? (obj as UserPolicyWithAssociation).error === null ||
+        (obj as UserPolicyWithAssociation).error instanceof Error
+      : true)
   );
 }
-
-/**
- * @deprecated Use isPolicyWithAssociation instead
- */
-export const isPolicyMetadataWithAssociation = isPolicyWithAssociation;
 
 export const useUserPolicies = (userId: string) => {
   const country = useCurrentCountry();
