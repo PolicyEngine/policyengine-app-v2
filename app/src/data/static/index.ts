@@ -19,8 +19,10 @@ export {
   UK_BASIC_INPUTS,
 } from './basicInputs';
 
-// Region definitions
-export { getRegions, US_REGIONS, UK_REGIONS } from './regions';
+// Static region definitions (states and countries only)
+// For full regions including congressional districts, constituencies, etc.,
+// use the versioned regions module: import { resolveRegions } from '@/data/static/regions'
+export { US_REGIONS, UK_REGIONS } from './staticRegions';
 
 // Modelled policies
 export {
@@ -43,18 +45,20 @@ export {
 
 import { getEntities } from './entities';
 import { getBasicInputs } from './basicInputs';
-import { getRegions } from './regions';
 import { getModelledPolicies, getCurrentLawId } from './modelledPolicies';
 import { getTimePeriods } from './timePeriods';
 
 /**
- * Get all static data for a country
+ * Get all static data for a country (excluding regions)
+ *
+ * Regions are handled separately via the versioned regions module
+ * because they vary by simulation year. Use resolveRegions(countryId, year)
+ * from '@/data/static/regions' for year-aware region resolution.
  */
 export function getStaticData(countryId: string) {
   return {
     entities: getEntities(countryId),
     basicInputs: getBasicInputs(countryId),
-    regions: getRegions(countryId),
     modelledPolicies: getModelledPolicies(countryId),
     currentLawId: getCurrentLawId(countryId),
     timePeriods: getTimePeriods(countryId),
