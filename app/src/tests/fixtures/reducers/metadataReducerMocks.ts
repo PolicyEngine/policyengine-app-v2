@@ -15,11 +15,22 @@ export const TEST_PARAMETER_LABEL = 'Income Tax';
 export const TEST_VARIABLE_KEY = 'employment_income';
 export const TEST_ENTITY_KEY = 'person';
 
+// Default V2 tiered loading states
+export const DEFAULT_V2_LOADING_STATES = {
+  coreLoading: false,
+  coreLoaded: false,
+  coreError: null,
+  parametersLoading: false,
+  parametersLoaded: false,
+  parametersError: null,
+} as const;
+
 // Expected initial state
 export const EXPECTED_INITIAL_STATE: MetadataState = {
   loading: false,
   error: null,
   currentCountry: null,
+  ...DEFAULT_V2_LOADING_STATES,
   progress: 0,
   variables: {},
   parameters: {},
@@ -182,6 +193,7 @@ export const createMockStateWithData = (overrides?: Partial<MetadataState>): Met
   loading: false,
   error: null,
   currentCountry: TEST_COUNTRY_US,
+  ...DEFAULT_V2_LOADING_STATES,
   progress: 100,
   variables: MOCK_VARIABLES,
   parameters: MOCK_PARAMETERS,
@@ -222,6 +234,7 @@ export const createExpectedFulfilledState = (
   loading: false,
   error: null,
   currentCountry: country,
+  ...DEFAULT_V2_LOADING_STATES,
   progress: 100,
   variables: apiPayload.result.variables,
   parameters: apiPayload.result.parameters,

@@ -58,9 +58,9 @@ export interface Dataset {
 }
 
 /**
- * Metadata description for tracking loaded state per country
+ * Cache metadata for tracking loaded state per country
  */
-export interface MetadataDescription {
+export interface CacheMetadata {
   countryId: string;
   version: string;
   versionId: string;
@@ -77,7 +77,7 @@ class PolicyEngineDatabase extends Dexie {
   parameters!: EntityTable<Parameter, "id">;
   parameterValues!: EntityTable<ParameterValue, "id">;
   datasets!: EntityTable<Dataset, "id">;
-  metadataDescriptions!: EntityTable<MetadataDescription, "countryId">;
+  cacheMetadata!: EntityTable<CacheMetadata, "countryId">;
 
   constructor() {
     super("policyengine");
@@ -86,15 +86,8 @@ class PolicyEngineDatabase extends Dexie {
       variables: "id, name, tax_benefit_model_version_id",
       parameters: "id, name, tax_benefit_model_version_id",
       parameterValues: "id, parameter_id",
-      metadataDescriptions: "countryId",
-    });
-
-    this.version(2).stores({
-      variables: "id, name, tax_benefit_model_version_id",
-      parameters: "id, name, tax_benefit_model_version_id",
-      parameterValues: "id, parameter_id",
       datasets: "id, name, tax_benefit_model_id",
-      metadataDescriptions: "countryId",
+      cacheMetadata: "countryId",
     });
   }
 }

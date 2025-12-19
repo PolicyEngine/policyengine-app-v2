@@ -170,6 +170,13 @@ export function transformMetadataPayload(
   const data = payload.result;
   return {
     currentCountry: country,
+    // V2 tiered loading states (default to false for V1 transform)
+    coreLoading: false,
+    coreLoaded: false,
+    coreError: null,
+    parametersLoading: false,
+    parametersLoaded: false,
+    parametersError: null,
     progress: 100, // Transformation happens after successful load
     variables: data.variables ?? {},
     parameters: data.parameters ?? {},

@@ -5,13 +5,13 @@ import {
   fetchModelVersionId,
 } from "@/api/v2";
 import {
-  getMetadataDescription,
-  setMetadataDescription,
+  getCacheMetadata,
+  setCacheMetadata,
   clearAndLoadVariables,
   clearAndLoadDatasets,
   getAllVariables,
   getAllDatasets,
-  type MetadataDescription,
+  type CacheMetadata,
   type Variable,
   type Dataset,
 } from "@/storage";
@@ -48,7 +48,7 @@ async function fetchVersionInfo(countryId: string): Promise<VersionInfo> {
  * Check if cached metadata is still valid
  */
 function isCacheValid(
-  cached: MetadataDescription | undefined,
+  cached: CacheMetadata | undefined,
   remote: VersionInfo,
 ): boolean {
   return (
@@ -63,7 +63,7 @@ function isCacheValid(
  * Load core metadata from IndexedDB cache
  */
 async function loadFromCache(
-  cached: MetadataDescription,
+  cached: CacheMetadata,
 ): Promise<CoreMetadata> {
   const [variables, datasets] = await Promise.all([
     getAllVariables(),
@@ -99,14 +99,14 @@ async function storeInCache(
   variables: Variable[],
   datasets: Dataset[],
   versionInfo: VersionInfo,
-  previousCache: MetadataDescription | undefined,
+  previousCache: CacheMetadata | undefined,
 ): Promise<void> {
   await Promise.all([
     clearAndLoadVariables(variables),
     clearAndLoadDatasets(datasets),
   ]);
 
-  await setMetadataDescription({
+  await setCacheMetadata({
     countryId,
     version: versionInfo.version,
     versionId: versionInfo.versionId,
@@ -123,7 +123,7 @@ async function storeInCache(
 export async function loadCoreMetadata(
   countryId: string,
 ): Promise<CoreMetadataLoadResult> {
-  const cached = await getMetadataDescription(countryId);
+  const cached = await getCacheMetadata(countryId);
   const versionInfo = await fetchVersionInfo(countryId);
 
   if (isCacheValid(cached, versionInfo)) {
@@ -146,7 +146,7 @@ export async function loadCoreMetadata(
 export async function isCoreMetadataCached(
   countryId: string,
 ): Promise<boolean> {
-  const cached = await getMetadataDescription(countryId);
+  const cached = await getCacheMetadata(countryId);
   if (!cached?.coreLoaded) return false;
 
   const versionInfo = await fetchVersionInfo(countryId);

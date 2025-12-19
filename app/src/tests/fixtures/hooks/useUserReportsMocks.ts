@@ -12,6 +12,7 @@ import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
+import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 // Test ID constants
 export const TEST_SIMULATION_ID_1 = 'sim-456';
@@ -188,6 +189,7 @@ export const mockMetadataInitialState = {
     currentCountry: TEST_COUNTRIES.US,
     loading: false,
     error: null,
+    ...DEFAULT_V2_LOADING_STATES,
     progress: 100,
     variables: {},
     parameters: {},

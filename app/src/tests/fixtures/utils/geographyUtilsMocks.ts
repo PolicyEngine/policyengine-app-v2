@@ -1,5 +1,6 @@
 import type { MetadataState } from '@/types/metadata';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
+import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 export const TEST_COUNTRY_CODES = {
   US: 'us',
@@ -79,6 +80,7 @@ export const mockMetadataWithRegions = (): MetadataState => ({
   parameterTree: null,
   loading: false,
   error: null,
+  ...DEFAULT_V2_LOADING_STATES,
   progress: 100,
 });
 
@@ -101,4 +103,5 @@ export const mockMetadataEmptyRegions = (): MetadataState => ({
   progress: 100,
   loading: false,
   error: null,
+  ...DEFAULT_V2_LOADING_STATES,
 });

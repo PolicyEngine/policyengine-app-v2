@@ -62,6 +62,14 @@ export interface MetadataState {
   /** Download progress percentage (0-100) for metadata fetch */
   progress: number;
 
+  // V2 tiered loading states
+  coreLoading: boolean;
+  coreLoaded: boolean;
+  coreError: string | null;
+  parametersLoading: boolean;
+  parametersLoaded: boolean;
+  parametersError: string | null;
+
   variables: Record<string, any>;
   parameters: Record<string, any>;
   entities: Record<string, any>;
