@@ -1,12 +1,11 @@
 import { API_V2_BASE_URL, getModelId } from "./taxBenefitModels";
 import type { Variable } from "@/storage";
 
-export type { Variable };
-
+// API defaults to 100 records; set high to fetch all
 const DEFAULT_LIMIT = 10000;
 
 /**
- * Fetch all variables for a country
+ * Fetch all variables for a country.
  */
 export async function fetchVariables(
   countryId: string,
