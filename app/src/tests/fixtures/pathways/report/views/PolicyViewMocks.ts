@@ -8,8 +8,8 @@ export const mockOnCancel = vi.fn();
 export const mockOnSelectPolicy = vi.fn();
 
 export const mockUserPolicyAssociation = {
-  association: { id: 1, label: 'My Policy', policy_id: '456', user_id: 1 },
-  policy: { id: '456', label: 'Current Law', countryId: TEST_COUNTRY_ID, policy_json: {} },
+  association: { id: '1', userId: '1', policyId: '456', label: 'My Policy', countryId: TEST_COUNTRY_ID },
+  policy: { id: '456', countryId: TEST_COUNTRY_ID, parameters: [] },
 };
 
 export const mockUseUserPoliciesEmpty = {

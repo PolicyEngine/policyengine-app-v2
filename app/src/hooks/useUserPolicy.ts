@@ -1,8 +1,9 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
+import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
@@ -132,17 +133,20 @@ export const useDeleteAssociation = () => {
 */
 
 // Type for the combined data structure
-export interface UserPolicyMetadataWithAssociation {
+export interface UserPolicyWithAssociation {
   association: UserPolicy;
-  policy: PolicyMetadata | undefined;
+  policy: Policy | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
   isError?: boolean;
 }
 
-export function isPolicyMetadataWithAssociation(
-  obj: any
-): obj is UserPolicyMetadataWithAssociation {
+/**
+ * @deprecated Use UserPolicyWithAssociation instead
+ */
+export type UserPolicyMetadataWithAssociation = UserPolicyWithAssociation;
+
+export function isPolicyWithAssociation(obj: any): obj is UserPolicyWithAssociation {
   return (
     obj &&
     typeof obj === 'object' &&
@@ -153,6 +157,11 @@ export function isPolicyMetadataWithAssociation(
     ('error' in obj ? obj.error === null || obj.error instanceof Error : true)
   );
 }
+
+/**
+ * @deprecated Use isPolicyWithAssociation instead
+ */
+export const isPolicyMetadataWithAssociation = isPolicyWithAssociation;
 
 export const useUserPolicies = (userId: string) => {
   const country = useCurrentCountry();
@@ -167,11 +176,15 @@ export const useUserPolicies = (userId: string) => {
   // Extract policy IDs
   const policyIds = associations?.map((a) => a.policyId) ?? [];
 
-  // Fetch all policies in parallel
+  // Fetch all policies in parallel and transform to internal Policy type
+  // This ensures cache consistency with useUserReports and useUserSimulations
   const policyQueries = useQueries({
     queries: policyIds.map((policyId) => ({
       queryKey: policyKeys.byId(policyId.toString()),
-      queryFn: () => fetchPolicyById(country, policyId.toString()),
+      queryFn: async () => {
+        const metadata = await fetchPolicyById(country, policyId.toString());
+        return PolicyAdapter.fromMetadata(metadata);
+      },
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),
@@ -183,7 +196,7 @@ export const useUserPolicies = (userId: string) => {
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
-  const policiesWithAssociations: UserPolicyMetadataWithAssociation[] | undefined =
+  const policiesWithAssociations: UserPolicyWithAssociation[] | undefined =
     associations?.map((association, index) => ({
       association,
       policy: policyQueries[index]?.data,

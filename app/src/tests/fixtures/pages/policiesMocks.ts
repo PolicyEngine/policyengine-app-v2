@@ -1,11 +1,12 @@
 import { vi } from 'vitest';
-import { UserPolicyMetadataWithAssociation } from '@/hooks/useUserPolicy';
+import { UserPolicyWithAssociation } from '@/hooks/useUserPolicy';
 
 export const ERROR_MESSAGES = {
   FETCH_FAILED: 'Failed to fetch policies',
 } as const;
 
-export const mockPolicyData: UserPolicyMetadataWithAssociation[] = [
+// Mock data uses the transformed Policy type (camelCase, with parameters array)
+export const mockPolicyData: UserPolicyWithAssociation[] = [
   {
     association: {
       id: 'assoc-1',
@@ -17,18 +18,21 @@ export const mockPolicyData: UserPolicyMetadataWithAssociation[] = [
     },
     policy: {
       id: '101',
-      country_id: 'us',
-      api_version: 'v1',
-      policy_json: {
-        'gov.irs.credits.ctc.amount.base': {
-          '2024-01-01.2024-12-31': 3000,
-          '2025-01-01.2025-12-31': 3500,
+      countryId: 'us',
+      apiVersion: 'v1',
+      parameters: [
+        {
+          name: 'gov.irs.credits.ctc.amount.base',
+          values: [
+            { startDate: '2024-01-01', endDate: '2024-12-31', value: 3000 },
+            { startDate: '2025-01-01', endDate: '2025-12-31', value: 3500 },
+          ],
         },
-        'gov.irs.credits.eitc.max': {
-          '2024-01-01.2024-12-31': 6000,
+        {
+          name: 'gov.irs.credits.eitc.max',
+          values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 6000 }],
         },
-      },
-      policy_hash: 'hash-101',
+      ],
     },
     isLoading: false,
     error: null,
@@ -45,14 +49,14 @@ export const mockPolicyData: UserPolicyMetadataWithAssociation[] = [
     },
     policy: {
       id: '102',
-      country_id: 'us',
-      api_version: 'v1',
-      policy_json: {
-        'gov.irs.income.standard_deduction': {
-          '2024-01-01.2024-12-31': 13850,
+      countryId: 'us',
+      apiVersion: 'v1',
+      parameters: [
+        {
+          name: 'gov.irs.income.standard_deduction',
+          values: [{ startDate: '2024-01-01', endDate: '2024-12-31', value: 13850 }],
         },
-      },
-      policy_hash: 'hash-102',
+      ],
     },
     isLoading: false,
     error: null,

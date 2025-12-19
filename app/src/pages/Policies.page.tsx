@@ -8,7 +8,7 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
-import { countParameterChanges } from '@/utils/countParameterChanges';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function PoliciesPage() {
@@ -102,25 +102,29 @@ export default function PoliciesPage() {
 
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
-      policyName: {
-        text: item.association.label || `Policy #${item.association.policyId}`,
-      } as TextValue,
-      dateCreated: {
-        text: item.association.createdAt
-          ? formatDate(
-              item.association.createdAt,
-              'short-month-day-year',
-              item.association.countryId,
-              true
-            )
-          : '',
-      } as TextValue,
-      provisions: {
-        text: `${countParameterChanges(item.policy)} parameter change${countParameterChanges(item.policy) !== 1 ? 's' : ''}`,
-      } as TextValue,
-    })) || [];
+    data?.map((item) => {
+      const paramCount = countPolicyModifications(item.policy);
+
+      return {
+        id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
+        policyName: {
+          text: item.association.label || `Policy #${item.association.policyId}`,
+        } as TextValue,
+        dateCreated: {
+          text: item.association.createdAt
+            ? formatDate(
+                item.association.createdAt,
+                'short-month-day-year',
+                item.association.countryId,
+                true
+              )
+            : '',
+        } as TextValue,
+        provisions: {
+          text: `${paramCount} parameter change${paramCount !== 1 ? 's' : ''}`,
+        } as TextValue,
+      };
+    }) || [];
 
   return (
     <>
