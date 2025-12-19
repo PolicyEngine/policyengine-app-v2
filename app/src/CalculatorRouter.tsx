@@ -60,34 +60,29 @@ const router = createBrowserRouter(
           ],
         },
         // Pathway routes that need metadata (blocking)
-        // StandardLayout is outside MetadataGuard so app shell shows during loading
-        // Pathway wrappers detect they're inside a layout and skip their own
+        // Pathways manage their own AppShell layouts - do NOT wrap in StandardLayoutOutlet
+        // This allows views like PolicyParameterSelectorView to use custom AppShell configurations
         {
-          element: <StandardLayoutOutlet />,
+          element: <MetadataGuard />,
           children: [
             {
-              element: <MetadataGuard />,
+              element: <PathwayLayout />,
               children: [
                 {
-                  element: <PathwayLayout />,
-                  children: [
-                    {
-                      path: 'reports/create',
-                      element: <ReportPathwayWrapper />,
-                    },
-                    {
-                      path: 'simulations/create',
-                      element: <SimulationPathwayWrapper />,
-                    },
-                    {
-                      path: 'households/create',
-                      element: <PopulationPathwayWrapper />,
-                    },
-                    {
-                      path: 'policies/create',
-                      element: <PolicyPathwayWrapper />,
-                    },
-                  ],
+                  path: 'reports/create',
+                  element: <ReportPathwayWrapper />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create',
+                  element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <PolicyPathwayWrapper />,
                 },
               ],
             },
