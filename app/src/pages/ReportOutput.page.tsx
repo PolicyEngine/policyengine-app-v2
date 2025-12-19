@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { IconCheck } from '@tabler/icons-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Alert, Container, Stack, Text } from '@mantine/core';
+import { Container, Stack, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { SocietyWideReportOutput as SocietyWideOutput } from '@/api/societyWideCalculation';
+import { FloatingAlert } from '@/components/common/FloatingAlert';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
@@ -323,24 +323,10 @@ export default function ReportOutputPage() {
 
   return (
     <ReportYearProvider year={report?.year ?? null}>
-      {/* Floating Alert for clipboard copy notification */}
       {showCopyAlert && (
-        <Alert
-          icon={<IconCheck size={16} />}
-          color="teal"
-          variant="outline"
-          withCloseButton
-          onClose={() => setShowCopyAlert(false)}
-          style={{
-            position: 'fixed',
-            top: `calc(${spacing.appShell.header.height} + ${spacing.xl})`,
-            right: spacing.xl,
-            zIndex: 1000,
-            maxWidth: 400,
-          }}
-        >
+        <FloatingAlert onClose={() => setShowCopyAlert(false)}>
           Share link copied to clipboard!
-        </Alert>
+        </FloatingAlert>
       )}
 
       <ReportOutputLayout
