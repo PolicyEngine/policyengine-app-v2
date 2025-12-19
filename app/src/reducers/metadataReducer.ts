@@ -1,5 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { CURRENT_YEAR } from '@/constants';
 import { getStaticData } from '@/data/static';
+import { resolveRegions } from '@/data/static/regions';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { loadCoreMetadata, loadParameters } from '@/storage';
 import { MetadataState } from '@/types/metadata';
@@ -137,10 +139,16 @@ const metadataSlice = createSlice({
         const staticData = getStaticData(countryId);
         state.entities = staticData.entities;
         state.basicInputs = staticData.basicInputs;
-        state.economyOptions.region = staticData.regions;
         state.economyOptions.time_period = staticData.timePeriods;
         state.modelledPolicies = staticData.modelledPolicies;
         state.currentLawId = staticData.currentLawId;
+
+        // Load regions with year-based versioning
+        // Uses CURRENT_YEAR as default; components needing different years
+        // should use the useRegions(countryId, year) hook directly
+        const currentYear = parseInt(CURRENT_YEAR, 10);
+        const { regions } = resolveRegions(countryId, currentYear);
+        state.economyOptions.region = regions;
       })
       .addCase(fetchCoreMetadataThunk.rejected, (state, action) => {
         state.coreLoading = false;
