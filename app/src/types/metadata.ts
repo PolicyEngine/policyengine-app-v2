@@ -60,6 +60,14 @@ export interface MetadataState {
   loading: boolean;
   error: string | null;
 
+  // V2 tiered loading states
+  coreLoading: boolean;
+  coreLoaded: boolean;
+  coreError: string | null;
+  parametersLoading: boolean;
+  parametersLoaded: boolean;
+  parametersError: string | null;
+
   variables: Record<string, any>;
   parameters: Record<string, any>;
   entities: Record<string, any>;

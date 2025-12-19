@@ -1,6 +1,7 @@
 import { CURRENT_YEAR } from '@/constants';
 import { MetadataState } from '@/types/metadata';
 import { UK_REGION_TYPES, US_REGION_TYPES } from '@/types/regionTypes';
+import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 // Test country IDs
 export const TEST_COUNTRY_US = 'us';
@@ -15,6 +16,7 @@ export const mockInitialMetadataState: MetadataState = {
   loading: false,
   error: null,
   currentCountry: null,
+  ...DEFAULT_V2_LOADING_STATES,
   variables: {},
   parameters: {},
   entities: {},
@@ -37,6 +39,7 @@ export const mockLoadedMetadataState: MetadataState = {
   loading: false,
   error: null,
   currentCountry: TEST_COUNTRY_US,
+  ...DEFAULT_V2_LOADING_STATES,
   variables: {
     income: { label: 'Income', unit: 'currency-USD' },
     age: { label: 'Age', unit: 'year' },
