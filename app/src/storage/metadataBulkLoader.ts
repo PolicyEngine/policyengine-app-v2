@@ -4,7 +4,7 @@ import {
   Parameter,
   ParameterValue,
   Dataset,
-  MetadataDescription,
+  CacheMetadata,
 } from "./metadataDb";
 
 /**
@@ -162,21 +162,21 @@ export async function getParameterByName(
 }
 
 /**
- * Get metadata description for a country
+ * Get cache metadata for a country
  */
-export async function getMetadataDescription(
+export async function getCacheMetadata(
   countryId: string,
-): Promise<MetadataDescription | undefined> {
-  return db.metadataDescriptions.get(countryId);
+): Promise<CacheMetadata | undefined> {
+  return db.cacheMetadata.get(countryId);
 }
 
 /**
- * Update metadata description for a country
+ * Update cache metadata for a country
  */
-export async function setMetadataDescription(
-  metadata: MetadataDescription,
+export async function setCacheMetadata(
+  metadata: CacheMetadata,
 ): Promise<void> {
-  await db.metadataDescriptions.put(metadata);
+  await db.cacheMetadata.put(metadata);
 }
 
 /**
@@ -195,13 +195,13 @@ export async function clearVersionData(versionId: string): Promise<void> {
 export async function clearAllStores(): Promise<void> {
   await db.transaction(
     "rw",
-    [db.variables, db.parameters, db.parameterValues, db.datasets, db.metadataDescriptions],
+    [db.variables, db.parameters, db.parameterValues, db.datasets, db.cacheMetadata],
     async () => {
       await db.variables.clear();
       await db.parameters.clear();
       await db.parameterValues.clear();
       await db.datasets.clear();
-      await db.metadataDescriptions.clear();
+      await db.cacheMetadata.clear();
     },
   );
 }

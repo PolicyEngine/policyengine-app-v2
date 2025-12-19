@@ -1,5 +1,6 @@
 import type { Household } from '@/types/ingredients/Household';
 import type { MetadataState } from '@/types/metadata';
+import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 export const mockHousehold = (_netIncome: number = 50000): Household => ({
   id: 'household-1',
@@ -32,6 +33,7 @@ export const mockMetadata = (): MetadataState => ({
   parameterTree: null,
   loading: false,
   error: null,
+  ...DEFAULT_V2_LOADING_STATES,
   progress: 100,
 });
 

@@ -7,7 +7,7 @@ export {
   type Parameter,
   type ParameterValue,
   type Dataset,
-  type MetadataDescription,
+  type CacheMetadata,
 } from "./metadataDb";
 
 // Bulk loading
@@ -32,8 +32,8 @@ export {
   getAllDatasets,
   getVariableByName,
   getParameterByName,
-  getMetadataDescription,
-  setMetadataDescription,
+  getCacheMetadata,
+  setCacheMetadata,
 } from "./metadataBulkLoader";
 
 // Utilities

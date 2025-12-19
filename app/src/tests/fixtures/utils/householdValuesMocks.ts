@@ -1,6 +1,7 @@
 import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
 import { MetadataState } from '@/types/metadata';
+import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 /**
  * Test fixtures for householdValues utility functions
@@ -74,6 +75,7 @@ export const MOCK_METADATA: MetadataState = {
   version: '1.0.0',
   loading: false,
   error: null,
+  ...DEFAULT_V2_LOADING_STATES,
   progress: 100,
   parameterTree: null,
 };

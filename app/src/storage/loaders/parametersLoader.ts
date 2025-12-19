@@ -4,8 +4,8 @@ import {
   fetchModelVersion,
 } from "@/api/v2";
 import {
-  getMetadataDescription,
-  setMetadataDescription,
+  getCacheMetadata,
+  setCacheMetadata,
   clearAndLoadParameters,
   clearAndLoadParameterValues,
   getAllParameters,
@@ -36,8 +36,8 @@ export interface ParametersLoadResult {
 export async function loadParameters(
   countryId: string,
 ): Promise<ParametersLoadResult> {
-  // Check cached metadata description
-  const cached = await getMetadataDescription(countryId);
+  // Check cached metadata
+  const cached = await getCacheMetadata(countryId);
 
   // Fetch current version from API
   const remoteVersion = await fetchModelVersion(countryId);
@@ -67,16 +67,16 @@ export async function loadParameters(
     clearAndLoadParameterValues(parameterValues),
   ]);
 
-  // Update metadata description
+  // Update cache metadata
   if (cached) {
-    await setMetadataDescription({
+    await setCacheMetadata({
       ...cached,
       parametersLoaded: true,
       timestamp: Date.now(),
     });
   } else {
     // Edge case: parameters loaded before core (shouldn't happen normally)
-    await setMetadataDescription({
+    await setCacheMetadata({
       countryId,
       version: remoteVersion,
       versionId: "",
@@ -96,7 +96,7 @@ export async function loadParameters(
  * Check if parameters are cached for a country
  */
 export async function isParametersCached(countryId: string): Promise<boolean> {
-  const cached = await getMetadataDescription(countryId);
+  const cached = await getCacheMetadata(countryId);
   if (!cached?.parametersLoaded) return false;
 
   // Verify version is still current

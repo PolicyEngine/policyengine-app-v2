@@ -1,5 +1,6 @@
 import type { MetadataState } from '@/types/metadata';
 import type { ReportOutputSocietyWideUK } from '@/types/metadata/ReportOutputSocietyWideUK';
+import { DEFAULT_V2_LOADING_STATES } from '../../reducers/metadataReducerMocks';
 
 /**
  * Mock UK report output with constituency data
@@ -196,6 +197,7 @@ export const MOCK_METADATA: MetadataState = {
   currentCountry: 'uk',
   loading: false,
   error: null,
+  ...DEFAULT_V2_LOADING_STATES,
   progress: 100,
   variables: {},
   parameters: {},
