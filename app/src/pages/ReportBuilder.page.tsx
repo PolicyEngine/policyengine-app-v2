@@ -11,7 +11,7 @@
  * - Row view: Stacked horizontal rows
  * - Horizontal view: Full-width stacked simulations
  */
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import {
   Box,
   Stack,
@@ -28,6 +28,8 @@ import {
   Divider,
   ScrollArea,
   Tabs,
+  UnstyledButton,
+  Skeleton,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -51,6 +53,8 @@ import {
   IconCircleCheck,
   IconCircleDashed,
   IconArrowRight,
+  IconClock,
+  IconFolder,
 } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { colors, spacing, typography } from '@/designTokens';
@@ -1701,8 +1705,663 @@ function IngredientPickerModal({
 }
 
 // ============================================================================
+// POLICY BROWSE MODAL - Augmented policy selection experience
+// ============================================================================
+
+// Local storage key for recent policies
+const RECENT_POLICIES_KEY = 'policyengine_recent_policies';
+const MAX_RECENT_POLICIES = 5;
+
+interface RecentPolicy {
+  id: string;
+  label: string;
+  paramCount: number;
+  timestamp: number;
+}
+
+// Helper to get recent policies from localStorage
+function getRecentPolicies(): RecentPolicy[] {
+  try {
+    const stored = localStorage.getItem(RECENT_POLICIES_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (e) {
+    console.warn('Failed to load recent policies from localStorage');
+  }
+  return [];
+}
+
+// Helper to save a policy to recent
+function saveToRecentPolicies(policy: RecentPolicy) {
+  try {
+    const recent = getRecentPolicies();
+    // Remove if already exists
+    const filtered = recent.filter(p => p.id !== policy.id);
+    // Add to front
+    filtered.unshift({ ...policy, timestamp: Date.now() });
+    // Keep only max items
+    const trimmed = filtered.slice(0, MAX_RECENT_POLICIES);
+    localStorage.setItem(RECENT_POLICIES_KEY, JSON.stringify(trimmed));
+  } catch (e) {
+    console.warn('Failed to save recent policy to localStorage');
+  }
+}
+
+interface PolicyBrowseModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (policy: PolicyStateProps) => void;
+  onCreateNew: () => void;
+}
+
+function PolicyBrowseModal({
+  isOpen,
+  onClose,
+  onSelect,
+  onCreateNew,
+}: PolicyBrowseModalProps) {
+  const countryId = useCurrentCountry() as 'us' | 'uk';
+  const userId = MOCK_USER_ID.toString();
+  const { data: policies, isLoading } = useUserPolicies(userId);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const reportDate = getParamDefinitionDate();
+
+  // State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeSection, setActiveSection] = useState<'my-policies' | 'recent' | 'public'>('my-policies');
+  const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>(null);
+  const [recentPolicies, setRecentPolicies] = useState<RecentPolicy[]>([]);
+
+  // Load recent policies on mount
+  useEffect(() => {
+    if (isOpen) {
+      setRecentPolicies(getRecentPolicies());
+      setSearchQuery('');
+      setExpandedPolicyId(null);
+    }
+  }, [isOpen]);
+
+  // Transform policies data
+  const userPolicies = useMemo(() => {
+    return (policies || []).map((p) => ({
+      id: p.policy?.id || '',
+      label: p.association?.label || 'Unnamed policy',
+      paramCount: Object.keys(p.policy?.policy_json || {}).length,
+      policyJson: p.policy?.policy_json || {},
+      createdAt: p.association?.created_at,
+    }));
+  }, [policies]);
+
+  // Filter policies based on search
+  const filteredPolicies = useMemo(() => {
+    let result = userPolicies;
+
+    // Apply search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(p => {
+        // Search in policy label
+        if (p.label.toLowerCase().includes(query)) return true;
+        // Search in parameter display names (hierarchical labels)
+        const paramDisplayNames = Object.keys(p.policyJson).map(paramName => {
+          const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+          return hierarchicalLabels.length > 0
+            ? formatLabelParts(hierarchicalLabels)
+            : paramName.split('.').pop() || paramName;
+        }).join(' ').toLowerCase();
+        if (paramDisplayNames.includes(query)) return true;
+        return false;
+      });
+    }
+
+    return result;
+  }, [userPolicies, searchQuery, parameters]);
+
+  // Get policies for current section
+  const displayedPolicies = useMemo(() => {
+    if (activeSection === 'recent') {
+      return recentPolicies.map(rp => {
+        const fullPolicy = userPolicies.find(p => p.id === rp.id);
+        return fullPolicy || { id: rp.id, label: rp.label, paramCount: rp.paramCount, policyJson: {}, createdAt: undefined };
+      });
+    }
+    if (activeSection === 'public') {
+      // TODO: Fetch public policies from API when available
+      return [];
+    }
+    return filteredPolicies;
+  }, [activeSection, recentPolicies, filteredPolicies, userPolicies]);
+
+  // Get section title for display
+  const getSectionTitle = () => {
+    switch (activeSection) {
+      case 'my-policies': return 'My policies';
+      case 'recent': return 'Recently used';
+      case 'public': return 'User-created policies';
+      default: return 'Policies';
+    }
+  };
+
+  // Handle policy selection
+  const handleSelectPolicy = (policyId: string, label: string, paramCount: number) => {
+    // Save to recent
+    saveToRecentPolicies({ id: policyId, label, paramCount, timestamp: Date.now() });
+    // Call onSelect with policy state
+    onSelect({ id: policyId, label, parameters: Array(paramCount).fill({}) });
+    onClose();
+  };
+
+  // Handle current law selection
+  const handleSelectCurrentLaw = () => {
+    onSelect({ id: 'current-law', label: 'Current law', parameters: [] });
+    onClose();
+  };
+
+  const colorConfig = INGREDIENT_COLORS.policy;
+
+  // Styles for the modal
+  const modalStyles = {
+    sidebar: {
+      width: 220,
+      borderRight: `1px solid ${colors.border.light}`,
+      paddingRight: spacing.lg,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: spacing.lg,
+    },
+    sidebarSection: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: spacing.xs,
+    },
+    sidebarLabel: {
+      fontSize: FONT_SIZES.small,
+      fontWeight: typography.fontWeight.semibold,
+      color: colors.gray[500],
+      padding: `0 ${spacing.sm}`,
+      marginBottom: spacing.xs,
+    },
+    sidebarItem: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: spacing.sm,
+      padding: `${spacing.sm} ${spacing.md}`,
+      borderRadius: spacing.radius.md,
+      cursor: 'pointer',
+      transition: 'all 0.15s ease',
+      fontSize: FONT_SIZES.small,
+      fontWeight: typography.fontWeight.medium,
+    },
+    mainContent: {
+      flex: 1,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      gap: spacing.lg,
+      minWidth: 0,
+    },
+    searchBar: {
+      position: 'relative' as const,
+    },
+    policyGrid: {
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+      gap: spacing.md,
+    },
+    policyCard: {
+      background: colors.white,
+      border: `1px solid ${colors.border.light}`,
+      borderRadius: spacing.radius.lg,
+      padding: spacing.lg,
+      cursor: 'pointer',
+      transition: 'all 0.2s ease',
+      position: 'relative' as const,
+      overflow: 'hidden',
+    },
+    policyCardHovered: {
+      borderColor: colorConfig.border,
+      boxShadow: `0 4px 12px ${colors.shadow.light}`,
+      transform: 'translateY(-2px)',
+    },
+    policyCardSelected: {
+      borderColor: colorConfig.accent,
+      background: colorConfig.bg,
+    },
+  };
+
+  return (
+    <Modal
+      opened={isOpen}
+      onClose={onClose}
+      title={
+        <Group gap={spacing.sm}>
+          <Box
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: spacing.radius.md,
+              background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+              border: `1px solid ${colorConfig.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <IconScale size={20} color={colorConfig.icon} />
+          </Box>
+          <Stack gap={0}>
+            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+              Select policy
+            </Text>
+            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+              Choose an existing policy or create a new one
+            </Text>
+          </Stack>
+        </Group>
+      }
+      size="90vw"
+      radius="lg"
+      styles={{
+        content: {
+          maxWidth: '1200px',
+          height: '80vh',
+          maxHeight: '700px',
+        },
+        header: {
+          borderBottom: `1px solid ${colors.border.light}`,
+          paddingBottom: spacing.md,
+          paddingLeft: spacing.xl,
+          paddingRight: spacing.xl,
+        },
+        body: {
+          padding: spacing.xl,
+          height: 'calc(100% - 80px)',
+          display: 'flex',
+        },
+      }}
+    >
+      <Group align="stretch" gap={spacing.xl} style={{ height: '100%', width: '100%' }} wrap="nowrap">
+        {/* Left Sidebar */}
+        <Box style={modalStyles.sidebar}>
+          {/* Quick Actions */}
+          <Box style={modalStyles.sidebarSection}>
+            <Text style={modalStyles.sidebarLabel}>Quick select</Text>
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: colors.gray[50],
+                border: `1px solid ${colors.border.light}`,
+              }}
+              onClick={handleSelectCurrentLaw}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = colorConfig.bg;
+                e.currentTarget.style.borderColor = colorConfig.border;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = colors.gray[50];
+                e.currentTarget.style.borderColor = colors.border.light;
+              }}
+            >
+              <IconScale size={16} color={colorConfig.icon} />
+              <Text style={{ fontSize: FONT_SIZES.small, fontWeight: typography.fontWeight.medium }}>
+                Current law
+              </Text>
+            </UnstyledButton>
+          </Box>
+
+          <Divider />
+
+          {/* Navigation Sections */}
+          <Box style={modalStyles.sidebarSection}>
+            <Text style={modalStyles.sidebarLabel}>Library</Text>
+
+            {/* My Policies */}
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: activeSection === 'my-policies' ? colorConfig.bg : 'transparent',
+                color: activeSection === 'my-policies' ? colorConfig.icon : colors.gray[700],
+              }}
+              onClick={() => setActiveSection('my-policies')}
+            >
+              <IconFolder size={16} />
+              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>My policies</Text>
+              <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                {userPolicies.length}
+              </Text>
+            </UnstyledButton>
+
+            {/* Recent */}
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: activeSection === 'recent' ? colorConfig.bg : 'transparent',
+                color: activeSection === 'recent' ? colorConfig.icon : colors.gray[700],
+              }}
+              onClick={() => setActiveSection('recent')}
+            >
+              <IconClock size={16} />
+              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Recent</Text>
+              {recentPolicies.length > 0 && (
+                <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                  {recentPolicies.length}
+                </Text>
+              )}
+            </UnstyledButton>
+
+            {/* User-created policies */}
+            <UnstyledButton
+              style={{
+                ...modalStyles.sidebarItem,
+                background: activeSection === 'public' ? colorConfig.bg : 'transparent',
+                color: activeSection === 'public' ? colorConfig.icon : colors.gray[700],
+              }}
+              onClick={() => setActiveSection('public')}
+            >
+              <IconUsers size={16} />
+              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>User-created policies</Text>
+            </UnstyledButton>
+          </Box>
+
+          {/* Spacer */}
+          <Box style={{ flex: 1 }} />
+
+          {/* Create New Button */}
+          <Button
+            variant="light"
+            color="teal"
+            leftSection={<IconPlus size={16} />}
+            onClick={() => {
+              onCreateNew();
+              onClose();
+            }}
+            fullWidth
+            style={{ marginTop: 'auto' }}
+          >
+            Create new policy
+          </Button>
+        </Box>
+
+        {/* Main Content Area */}
+        <Box style={modalStyles.mainContent}>
+          {/* Search Bar */}
+          <Box style={modalStyles.searchBar}>
+            <TextInput
+              placeholder="Search policies by name or parameter..."
+              leftSection={<IconSearch size={16} color={colors.gray[400]} />}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              size="sm"
+              styles={{
+                input: {
+                  borderRadius: spacing.radius.md,
+                  border: `1px solid ${colors.border.light}`,
+                  fontSize: FONT_SIZES.small,
+                  '&:focus': {
+                    borderColor: colorConfig.accent,
+                  },
+                },
+              }}
+            />
+          </Box>
+
+          {/* Section Header */}
+          <Group justify="space-between" align="center">
+            <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[800] }}>
+              {getSectionTitle()}
+            </Text>
+            <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+              {displayedPolicies.length} {displayedPolicies.length === 1 ? 'policy' : 'policies'}
+            </Text>
+          </Group>
+
+          {/* Policy Grid */}
+          <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+            {isLoading ? (
+              <Stack gap={spacing.md}>
+                {[1, 2, 3].map((i) => (
+                  <Skeleton key={i} height={100} radius="md" />
+                ))}
+              </Stack>
+            ) : displayedPolicies.length === 0 ? (
+              <Box
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: spacing['4xl'],
+                  gap: spacing.md,
+                }}
+              >
+                <Box
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    background: colors.gray[100],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconFolder size={28} color={colors.gray[400]} />
+                </Box>
+                <Text fw={500} c={colors.gray[600]}>
+                  {searchQuery ? 'No policies match your search' : 'No policies yet'}
+                </Text>
+                <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+                  {searchQuery
+                    ? 'Try adjusting your search terms or browse all policies'
+                    : 'Create your first policy to get started'
+                  }
+                </Text>
+                {!searchQuery && (
+                  <Button
+                    variant="light"
+                    color="teal"
+                    leftSection={<IconPlus size={16} />}
+                    onClick={() => {
+                      onCreateNew();
+                      onClose();
+                    }}
+                    mt={spacing.sm}
+                  >
+                    Create policy
+                  </Button>
+                )}
+              </Box>
+            ) : (
+              <Box style={modalStyles.policyGrid}>
+                {displayedPolicies.map((policy) => {
+                  const isExpanded = expandedPolicyId === policy.id;
+
+                  return (
+                    <Paper
+                      key={policy.id}
+                      style={{
+                        ...modalStyles.policyCard,
+                        background: colors.white,
+                        ...(isExpanded ? {
+                          borderColor: colorConfig.border,
+                          gridColumn: 'span 2',
+                        } : {}),
+                      }}
+                      onClick={() => !isExpanded && handleSelectPolicy(policy.id, policy.label, policy.paramCount)}
+                    >
+                      {/* Policy accent bar */}
+                      <Box
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          height: 3,
+                          background: isExpanded
+                            ? `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`
+                            : colors.gray[200],
+                          transition: 'all 0.2s ease',
+                        }}
+                      />
+
+                      <Stack gap={spacing.md}>
+                        <Group justify="space-between" align="flex-start" wrap="nowrap">
+                          <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
+                            <Text
+                              fw={600}
+                              style={{
+                                fontSize: FONT_SIZES.normal,
+                                color: colors.gray[900],
+                                overflow: isExpanded ? 'visible' : 'hidden',
+                                textOverflow: isExpanded ? 'clip' : 'ellipsis',
+                                whiteSpace: isExpanded ? 'normal' : 'nowrap',
+                              }}
+                            >
+                              {policy.label}
+                            </Text>
+                            <Text
+                              c="dimmed"
+                              style={{ fontSize: FONT_SIZES.small }}
+                            >
+                              {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''} changed
+                            </Text>
+                          </Stack>
+
+                          {/* Info button */}
+                          <ActionIcon
+                            variant="subtle"
+                            color="gray"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedPolicyId(isExpanded ? null : policy.id);
+                            }}
+                            style={{ flexShrink: 0 }}
+                          >
+                            {isExpanded ? <IconX size={18} /> : <IconInfoCircle size={18} />}
+                          </ActionIcon>
+                        </Group>
+
+                        {/* Expanded parameter details - shown inline when info button clicked */}
+                        {isExpanded && policy.policyJson && (
+                          <Box
+                            style={{
+                              marginTop: spacing.sm,
+                              padding: spacing.md,
+                              background: colors.gray[50],
+                              borderRadius: spacing.radius.md,
+                            }}
+                          >
+                            {/* Table header */}
+                            <Box
+                              style={{
+                                display: 'grid',
+                                gridTemplateColumns: '1fr 100px 100px',
+                                gap: spacing.sm,
+                                paddingBottom: spacing.sm,
+                                borderBottom: `1px solid ${colors.gray[200]}`,
+                                marginBottom: spacing.sm,
+                              }}
+                            >
+                              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>Parameter</Text>
+                              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>Current</Text>
+                              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>New</Text>
+                            </Box>
+
+                            <Stack gap={0}>
+                              {Object.entries(policy.policyJson).slice(0, 10).map(([paramName, paramValues]) => {
+                                const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+                                const displayLabel = hierarchicalLabels.length > 0
+                                  ? formatLabelParts(hierarchicalLabels)
+                                  : paramName.split('.').pop() || paramName;
+
+                                const currentLawValue = getCurrentLawParameterValue(paramName, parameters, reportDate);
+                                const valueEntries = Object.entries(paramValues as Record<string, unknown>);
+                                const rawValue = valueEntries.length > 0 ? valueEntries[0][1] : undefined;
+                                const metadata = parameters[paramName];
+                                const changedValue = rawValue !== undefined
+                                  ? formatParameterValue(rawValue, metadata?.unit)
+                                  : '—';
+
+                                return (
+                                  <Box
+                                    key={paramName}
+                                    style={{
+                                      display: 'grid',
+                                      gridTemplateColumns: '1fr 100px 100px',
+                                      gap: spacing.sm,
+                                      padding: `${spacing.sm} 0`,
+                                      borderBottom: `1px solid ${colors.gray[100]}`,
+                                    }}
+                                  >
+                                    <Tooltip label={paramName} multiline w={300} withArrow>
+                                      <Text
+                                        style={{
+                                          fontSize: FONT_SIZES.small,
+                                          color: colors.gray[700],
+                                          overflow: 'hidden',
+                                          textOverflow: 'ellipsis',
+                                          whiteSpace: 'nowrap',
+                                        }}
+                                      >
+                                        {displayLabel}
+                                      </Text>
+                                    </Tooltip>
+                                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500], textAlign: 'right' }}>
+                                      {currentLawValue}
+                                    </Text>
+                                    <Text fw={500} style={{ fontSize: FONT_SIZES.small, color: colorConfig.icon, textAlign: 'right' }}>
+                                      {changedValue}
+                                    </Text>
+                                  </Box>
+                                );
+                              })}
+                            </Stack>
+
+                            {Object.keys(policy.policyJson).length > 10 && (
+                              <Text c="dimmed" ta="center" style={{ fontSize: FONT_SIZES.small, paddingTop: spacing.sm }}>
+                                +{Object.keys(policy.policyJson).length - 10} more parameters
+                              </Text>
+                            )}
+
+                            {/* Select button */}
+                            <Button
+                              color="teal"
+                              fullWidth
+                              mt={spacing.md}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSelectPolicy(policy.id, policy.label, policy.paramCount);
+                              }}
+                              rightSection={<IconChevronRight size={16} />}
+                            >
+                              Select this policy
+                            </Button>
+                          </Box>
+                        )}
+                      </Stack>
+                    </Paper>
+                  );
+                })}
+              </Box>
+            )}
+          </ScrollArea>
+        </Box>
+
+      </Group>
+    </Modal>
+  );
+}
+
+// ============================================================================
 // SIMULATION CANVAS
 // ============================================================================
+
+// State for the policy browse modal
+interface PolicyBrowseState {
+  isOpen: boolean;
+  simulationIndex: number;
+}
 
 interface SimulationCanvasProps {
   reportState: ReportBuilderState;
@@ -1724,6 +2383,12 @@ function SimulationCanvas({
   const userId = MOCK_USER_ID.toString();
   const { data: policies } = useUserPolicies(userId);
   const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === countryConfig.nationwideId;
+
+  // State for the augmented policy browse modal
+  const [policyBrowseState, setPolicyBrowseState] = useState<PolicyBrowseState>({
+    isOpen: false,
+    simulationIndex: 0,
+  });
 
   // Transform policies data into SavedPolicy format
   const savedPolicies: SavedPolicy[] = (policies || []).map((p) => ({
@@ -1795,13 +2460,27 @@ function SimulationCanvas({
 
   const handleBrowseMorePolicies = useCallback(
     (simulationIndex: number) => {
-      setPickerState({
+      // Open the augmented policy browse modal
+      setPolicyBrowseState({
         isOpen: true,
         simulationIndex,
-        ingredientType: 'policy',
       });
     },
-    [setPickerState]
+    []
+  );
+
+  // Handle policy selection from the browse modal
+  const handlePolicySelectFromBrowse = useCallback(
+    (policy: PolicyStateProps) => {
+      const { simulationIndex } = policyBrowseState;
+      setReportState((prev) => ({
+        ...prev,
+        simulations: prev.simulations.map((sim, i) =>
+          i === simulationIndex ? { ...sim, policy } : sim
+        ),
+      }));
+    },
+    [policyBrowseState, setReportState]
   );
 
   const handleBrowseMorePopulations = useCallback(
@@ -1959,6 +2638,14 @@ function SimulationCanvas({
         type={pickerState.ingredientType}
         onSelect={handleIngredientSelect}
         onCreateNew={() => handleCreateCustom(pickerState.simulationIndex, pickerState.ingredientType)}
+      />
+
+      {/* Augmented Policy Browse Modal */}
+      <PolicyBrowseModal
+        isOpen={policyBrowseState.isOpen}
+        onClose={() => setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }))}
+        onSelect={handlePolicySelectFromBrowse}
+        onCreateNew={() => handleCreateCustom(policyBrowseState.simulationIndex, 'policy')}
       />
     </>
   );
