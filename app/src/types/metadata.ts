@@ -55,6 +55,13 @@ export interface ParameterTreeNode {
   household?: boolean;
 }
 
+/**
+ * MetadataState - Redux state for API-driven metadata
+ *
+ * This state contains only data fetched from the API.
+ * Static metadata (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
+ * is accessed via hooks from @/hooks/useStaticMetadata or @/hooks/useDerivedMetadata.
+ */
 export interface MetadataState {
   currentCountry: string | null;
   loading: boolean;
@@ -70,21 +77,10 @@ export interface MetadataState {
   parametersLoaded: boolean;
   parametersError: string | null;
 
+  // API-driven data
   variables: Record<string, any>;
   parameters: Record<string, any>;
-  entities: Record<string, any>;
-  variableModules: Record<string, any>;
-  economyOptions: {
-    region: MetadataRegionEntry[];
-    time_period: Array<{ name: number; label: string }>;
-    datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
-  };
-  currentLawId: number;
-  basicInputs: string[];
-  modelledPolicies: {
-    core: Record<string, any>;
-    filtered: Record<string, any>;
-  };
+  datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
   version: string | null;
 
   // Computed parameter tree for policy creation UI (built when metadata is fetched)

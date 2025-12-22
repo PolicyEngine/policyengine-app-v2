@@ -1,6 +1,5 @@
 import type { Household } from '@/types/ingredients/Household';
-import type { MetadataState } from '@/types/metadata';
-import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
+import type { HouseholdMetadataContext } from '@/utils/householdValues';
 
 export const mockHousehold = (_netIncome: number = 50000): Household => ({
   id: 'household-1',
@@ -15,26 +14,13 @@ export const mockHousehold = (_netIncome: number = 50000): Household => ({
   },
 });
 
-export const mockMetadata = (): MetadataState => ({
-  currentCountry: 'us',
+// HouseholdMetadataContext for household comparison tests
+export const mockMetadataContext = (): HouseholdMetadataContext => ({
   variables: {},
-  parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: {
-    region: [],
-    time_period: [],
-    datasets: [],
+  entities: {
+    person: { plural: 'people', label: 'Person' },
+    household: { plural: 'households', label: 'Household' },
   },
-  currentLawId: 1,
-  basicInputs: [],
-  modelledPolicies: { core: {}, filtered: {} },
-  version: '1.0.0',
-  parameterTree: null,
-  loading: false,
-  error: null,
-  ...DEFAULT_V2_LOADING_STATES,
-  progress: 100,
 });
 
 export const TEST_VARIABLE_NAMES = {

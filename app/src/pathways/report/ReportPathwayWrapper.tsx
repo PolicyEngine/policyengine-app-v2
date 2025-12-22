@@ -16,6 +16,7 @@ import { MOCK_USER_ID } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCreateReport } from '@/hooks/useCreateReport';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { useCurrentLawId, useRegionsList } from '@/hooks/useStaticMetadata';
 import { useUserGeographics } from '@/hooks/useUserGeographic';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { useUserSimulations } from '@/hooks/useUserSimulations';
@@ -90,7 +91,9 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
 
   // Get metadata for population views
   const metadata = useSelector((state: RootState) => state.metadata);
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const currentLawId = useCurrentLawId(countryId);
+  const reportYear = parseInt(reportState.year || '2025', 10);
+  const regionData = useRegionsList(countryId, reportYear);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
@@ -491,7 +494,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       currentView = (
         <PopulationScopeView
           countryId={countryId}
-          regionData={metadata.economyOptions?.region || []}
+          regionData={regionData}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/reports`)}
@@ -535,7 +538,7 @@ export default function ReportPathwayWrapper({ onComplete }: ReportPathwayWrappe
       currentView = (
         <GeographicConfirmationView
           population={activeSimulation.population}
-          metadata={metadata}
+          regions={regionData}
           onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
         />

@@ -1,14 +1,14 @@
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
-import { useSelector } from 'react-redux';
 import { Stack } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { CURRENT_YEAR } from '@/constants';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import type { RootState } from '@/store';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { absoluteChangeMessage } from '@/utils/chartMessages';
 import { DEFAULT_CHART_CONFIG, downloadCsv, getClampedChartHeight } from '@/utils/chartUtils';
 import { currencySymbol, formatCurrencyAbbr, localeCode } from '@/utils/formatters';
@@ -22,7 +22,8 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regions = useRegionsList(countryId, currentYear);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
   // Extract data
@@ -94,7 +95,7 @@ export default function BudgetaryImpactSubPage({ output }: Props) {
     });
     const signTerm = budgetaryImpact > 0 ? 'raise' : 'cost';
 
-    const region = regionName(metadata);
+    const region = regionName(regions);
     const regionPhrase = region ? ` in ${region}` : '';
 
     if (budgetaryImpact === 0) {

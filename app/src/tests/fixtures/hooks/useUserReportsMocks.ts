@@ -183,29 +183,16 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
   label: 'Test Household',
 };
 
-// Mock Redux store initial state
+// Mock Redux store initial state (only API-driven data)
 export const mockMetadataInitialState = {
   metadata: {
     currentCountry: TEST_COUNTRIES.US,
-    loading: false,
-    error: null,
     ...DEFAULT_V2_LOADING_STATES,
+    coreLoaded: true,
     progress: 100,
     variables: {},
     parameters: {},
-    entities: {},
-    variableModules: {},
-    economyOptions: {
-      region: [
-        { name: 'state/ca', label: 'California', type: US_REGION_TYPES.STATE },
-        { name: 'state/tx', label: 'Texas', type: US_REGION_TYPES.STATE },
-      ],
-      time_period: [],
-      datasets: [],
-    },
-    currentLawId: 0,
-    basicInputs: [],
-    modelledPolicies: { core: {}, filtered: {} },
+    datasets: [],
     version: 'v1.0.0',
     parameterTree: null,
   } satisfies MetadataState,

@@ -1,10 +1,13 @@
+import { useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { Box, Stack, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useEntities } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { calculateVariableComparison } from '@/utils/householdComparison';
-import { formatVariableValue } from '@/utils/householdValues';
+import { formatVariableValue, HouseholdMetadataContext } from '@/utils/householdValues';
 import HouseholdBreakdown from './HouseholdBreakdown';
 
 interface HouseholdSummaryCardProps {
@@ -22,9 +25,17 @@ export default function HouseholdSummaryCard({
   reform,
   policyLabels,
 }: HouseholdSummaryCardProps) {
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const countryId = useCurrentCountry();
+  const reduxMetadata = useSelector((state: RootState) => state.metadata);
+  const entities = useEntities(countryId);
 
-  const rootVariable = metadata.variables.household_net_income;
+  // Build HouseholdMetadataContext
+  const metadataContext: HouseholdMetadataContext = useMemo(
+    () => ({ variables: reduxMetadata.variables, entities }),
+    [reduxMetadata.variables, entities]
+  );
+
+  const rootVariable = reduxMetadata.variables.household_net_income;
   if (!rootVariable) {
     return (
       <Box>
@@ -39,7 +50,7 @@ export default function HouseholdSummaryCard({
     'household_net_income',
     baseline,
     reform,
-    metadata
+    metadataContext
   );
 
   // Format the value

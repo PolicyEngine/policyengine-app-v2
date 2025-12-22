@@ -191,29 +191,16 @@ export const MOCK_UK_REPORT_OUTPUT_NO_CONSTITUENCY: ReportOutputSocietyWideUK = 
 };
 
 /**
- * Mock metadata state
+ * Mock metadata state (only API-driven data)
  */
 export const MOCK_METADATA: MetadataState = {
   currentCountry: 'uk',
-  loading: false,
-  error: null,
   ...DEFAULT_V2_LOADING_STATES,
+  coreLoaded: true,
   progress: 100,
   variables: {},
   parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: {
-    region: [],
-    time_period: [],
-    datasets: [],
-  },
-  currentLawId: 1,
-  basicInputs: [],
-  modelledPolicies: {
-    core: {},
-    filtered: {},
-  },
+  datasets: [],
   version: '1.0.0',
   parameterTree: null,
 };

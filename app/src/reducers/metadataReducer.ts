@@ -1,14 +1,15 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { CURRENT_YEAR } from '@/constants';
-import { getStaticData } from '@/data/static';
-import { resolveRegions } from '@/data/static/regions';
 import { buildParameterTree } from '@/libs/buildParameterTree';
 import { loadCoreMetadata, loadParameters } from '@/storage';
 import { MetadataState } from '@/types/metadata';
 
+/**
+ * Initial state for API-driven metadata
+ *
+ * Static metadata (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
+ * is no longer stored in Redux. Access it via hooks from @/hooks/useStaticMetadata.
+ */
 const initialState: MetadataState = {
-  loading: false,
-  error: null,
   currentCountry: null,
 
   // Tiered loading states
@@ -20,14 +21,10 @@ const initialState: MetadataState = {
   parametersError: null,
   progress: 0,
 
+  // API-driven data
   variables: {},
   parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: { region: [], time_period: [], datasets: [] },
-  currentLawId: 0,
-  basicInputs: [],
-  modelledPolicies: { core: {}, filtered: {} },
+  datasets: [],
   version: null,
   parameterTree: null,
 };
@@ -80,18 +77,13 @@ const metadataSlice = createSlice({
       // Optionally clear existing metadata when country changes
       // This prevents showing stale data from previous country
       if (state.version !== null || state.coreLoaded) {
-        // Clear metadata and reset V2 loading states
+        // Clear API-driven metadata and reset loading states
         state.variables = {};
         state.parameters = {};
-        state.entities = {};
-        state.variableModules = {};
-        state.economyOptions = { region: [], time_period: [], datasets: [] };
-        state.currentLawId = 0;
-        state.basicInputs = [];
-        state.modelledPolicies = { core: {}, filtered: {} };
+        state.datasets = [];
         state.version = null;
         state.parameterTree = null;
-        // Reset V2 states
+        // Reset loading states
         state.coreLoaded = false;
         state.coreLoading = false;
         state.coreError = null;
@@ -127,28 +119,16 @@ const metadataSlice = createSlice({
         }
         state.variables = variablesRecord;
 
-        // Transform V2 datasets to economyOptions.datasets format
-        state.economyOptions.datasets = data.datasets.map((d, i) => ({
+        // Transform V2 datasets
+        state.datasets = data.datasets.map((d, i) => ({
           name: d.name,
           label: d.name,
           title: d.description || d.name,
           default: i === 0,
         }));
 
-        // Load static data for the country
-        const staticData = getStaticData(countryId);
-        state.entities = staticData.entities;
-        state.basicInputs = staticData.basicInputs;
-        state.economyOptions.time_period = staticData.timePeriods;
-        state.modelledPolicies = staticData.modelledPolicies;
-        state.currentLawId = staticData.currentLawId;
-
-        // Load regions with year-based versioning
-        // Uses CURRENT_YEAR as default; components needing different years
-        // should use the useRegions(countryId, year) hook directly
-        const currentYear = parseInt(CURRENT_YEAR, 10);
-        const { regions } = resolveRegions(countryId, currentYear);
-        state.economyOptions.region = regions;
+        // Static data (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
+        // is no longer stored in Redux. Access it via hooks from @/hooks/useStaticMetadata.
       })
       .addCase(fetchCoreMetadataThunk.rejected, (state, action) => {
         state.coreLoading = false;

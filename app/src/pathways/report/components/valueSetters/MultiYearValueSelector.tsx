@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { getTaxYears } from '@/libs/metadataUtils';
-import { RootState } from '@/store';
+import { getTaxYears } from '@/data/static';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 import { getDefaultValueForParam } from './getDefaultValueForParam';
 import { ValueInputBox } from './ValueInputBox';
@@ -11,9 +10,9 @@ import { ValueSetterProps } from './ValueSetterProps';
 export function MultiYearValueSelector(props: ValueSetterProps) {
   const { param, policy, setIntervals } = props;
 
-  // Get available years from metadata
-  const availableYears = useSelector(getTaxYears);
-  const countryId = useSelector((state: RootState) => state.metadata.currentCountry);
+  // Get available years from static metadata
+  const countryId = useCurrentCountry();
+  const availableYears = getTaxYears(countryId);
 
   // Country-specific max years configuration
   const MAX_YEARS_BY_COUNTRY: Record<string, number> = {

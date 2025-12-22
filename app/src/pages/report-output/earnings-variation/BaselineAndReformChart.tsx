@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
@@ -7,6 +7,7 @@ import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useEntities } from '@/hooks/useStaticMetadata';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import {
@@ -15,7 +16,7 @@ import {
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { currencySymbol, localeCode } from '@/utils/formatters';
-import { getValueFromHousehold } from '@/utils/householdValues';
+import { getValueFromHousehold, HouseholdMetadataContext } from '@/utils/householdValues';
 
 interface Props {
   baseline: Household;
@@ -46,10 +47,17 @@ export default function BaselineAndReformChart({
   const mobile = useMediaQuery('(max-width: 768px)');
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const reduxMetadata = useSelector((state: RootState) => state.metadata);
+  const entities = useEntities(countryId);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
-  const variable = metadata.variables[variableName];
+  // Build HouseholdMetadataContext
+  const metadataContext: HouseholdMetadataContext = useMemo(
+    () => ({ variables: reduxMetadata.variables, entities }),
+    [reduxMetadata.variables, entities]
+  );
+
+  const variable = reduxMetadata.variables[variableName];
   if (!variable) {
     return <div>Variable not found</div>;
   }
@@ -60,9 +68,9 @@ export default function BaselineAndReformChart({
     year,
     null,
     baselineVariation,
-    metadata
+    metadataContext
   );
-  const reformYValues = getValueFromHousehold(variableName, year, null, reformVariation, metadata);
+  const reformYValues = getValueFromHousehold(variableName, year, null, reformVariation, metadataContext);
 
   if (!Array.isArray(baselineYValues) || !Array.isArray(reformYValues)) {
     return <div>No variation data available</div>;
@@ -74,7 +82,7 @@ export default function BaselineAndReformChart({
     year,
     null,
     baseline,
-    metadata
+    metadataContext
   ) as number;
 
   // X-axis is earnings range

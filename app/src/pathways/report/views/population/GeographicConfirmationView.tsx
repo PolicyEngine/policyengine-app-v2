@@ -9,19 +9,20 @@ import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCreateGeographicAssociation } from '@/hooks/useUserGeographic';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
+import { MetadataRegionEntry } from '@/types/metadata';
 import { PopulationStateProps } from '@/types/pathwayState';
 import { getCountryLabel, getRegionLabel, getRegionTypeLabel } from '@/utils/geographyUtils';
 
 interface GeographicConfirmationViewProps {
   population: PopulationStateProps;
-  metadata: any;
+  regions: MetadataRegionEntry[];
   onSubmitSuccess: (geographyId: string, label: string) => void;
   onBack?: () => void;
 }
 
 export default function GeographicConfirmationView({
   population,
-  metadata,
+  regions,
   onSubmitSuccess,
   onBack,
 }: GeographicConfirmationViewProps) {
@@ -87,8 +88,8 @@ export default function GeographicConfirmationView({
 
     // Subnational
     const regionCode = population.geography.geographyId;
-    const regionLabel = getRegionLabel(regionCode, metadata);
-    const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, metadata);
+    const regionLabel = getRegionLabel(regionCode, regions);
+    const regionTypeName = getRegionTypeLabel(geographyCountryId, regionCode, regions);
 
     return (
       <Stack gap="md">
