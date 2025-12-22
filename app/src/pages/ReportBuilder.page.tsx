@@ -37,8 +37,6 @@ import {
   IconCheck,
   IconX,
   IconPencil,
-  IconChevronDown,
-  IconChevronUp,
   IconChevronRight,
   IconInfoCircle,
   IconTrash,
@@ -47,7 +45,6 @@ import {
   IconLayoutList,
   IconLayoutColumns,
   IconHome,
-  IconWorld,
   IconRowInsertBottom,
   IconSearch,
   IconPlayerPlay,
@@ -76,6 +73,10 @@ import {
   buildCompactLabel,
   formatLabelParts,
 } from '@/utils/parameterLabels';
+import {
+  USOutlineIcon,
+  UKOutlineIcon,
+} from '@/components/icons/CountryOutlineIcons';
 import {
   getCurrentLawParameterValue,
   formatParameterValue,
@@ -134,31 +135,63 @@ const INGREDIENT_COLORS = {
   },
 };
 
-// Sample populations with descriptive names
-const SAMPLE_POPULATIONS = {
-  household: {
-    label: 'Smith family (4 members)',
-    type: 'household' as const,
+// Country-specific configuration
+const COUNTRY_CONFIG = {
+  us: {
+    nationwideTitle: 'United States',
+    nationwideSubtitle: 'Nationwide',
+    nationwideLabel: 'United States', // Used for geography name
+    nationwideId: 'us-nationwide',
+    geographyId: 'us',
+  },
+  uk: {
+    nationwideTitle: 'United Kingdom',
+    nationwideSubtitle: 'UK-wide',
+    nationwideLabel: 'United Kingdom', // Used for geography name
+    nationwideId: 'uk-nationwide',
+    geographyId: 'uk',
+  },
+} as const;
+
+// Helper to get sample populations for a country
+const getSamplePopulations = (countryId: 'us' | 'uk') => {
+  const config = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
+  return {
     household: {
-      id: 'sample-household',
-      countryId: 'us' as const,
-      householdData: { people: { person1: { age: { 2025: 40 } } } },
+      label: 'Smith family (4 members)',
+      type: 'household' as const,
+      household: {
+        id: 'sample-household',
+        countryId,
+        householdData: { people: { person1: { age: { 2025: 40 } } } },
+      },
+      geography: null,
     },
-    geography: null,
-  },
-  nationwide: {
-    label: 'United States',
-    type: 'geography' as const,
-    household: null,
-    geography: {
-      id: 'us-nationwide',
-      countryId: 'us' as const,
-      scope: 'national' as const,
-      geographyId: 'us',
-      name: 'United States',
+    nationwide: {
+      label: config.nationwideLabel,
+      type: 'geography' as const,
+      household: null,
+      geography: {
+        id: config.nationwideId,
+        countryId,
+        scope: 'national' as const,
+        geographyId: config.geographyId,
+        name: config.nationwideLabel,
+      },
     },
-  },
+  };
 };
+
+// Country-specific map icon component
+function CountryMapIcon({ countryId, size, color }: { countryId: string; size: number; color: string }) {
+  if (countryId === 'uk') {
+    return <UKOutlineIcon size={size} color={color} />;
+  }
+  return <USOutlineIcon size={size} color={color} />;
+}
+
+// Default sample populations (for backwards compatibility)
+const SAMPLE_POPULATIONS = getSamplePopulations('us');
 
 // ============================================================================
 // STYLES
@@ -227,7 +260,7 @@ const styles = {
   simulationCard: {
     background: colors.white,
     borderRadius: spacing.radius.lg,
-    border: `2px solid ${colors.border.light}`,
+    border: `2px solid ${colors.gray[200]}`,
     padding: spacing.xl,
     transition: 'all 0.2s ease',
     position: 'relative' as const,
@@ -240,7 +273,7 @@ const styles = {
   simulationCardHorizontal: {
     background: colors.white,
     borderRadius: spacing.radius.lg,
-    border: `2px solid ${colors.border.light}`,
+    border: `2px solid ${colors.gray[200]}`,
     padding: spacing.xl,
     width: '100%',
     transition: 'all 0.2s ease',
@@ -738,9 +771,12 @@ function BrowseMoreChip({ label, description, onClick, variant, colorConfig }: B
 interface IngredientSectionProps {
   type: IngredientType;
   currentId?: string;
+  countryId?: 'us' | 'uk';
   onQuickSelectPolicy?: (type: 'current-law') => void;
   onSelectSavedPolicy?: (id: string, label: string, paramCount: number) => void;
   onQuickSelectPopulation?: (type: 'household' | 'nationwide') => void;
+  onDeselectPopulation?: () => void;
+  onDeselectPolicy?: () => void;
   onCreateCustom: () => void;
   onBrowseMore?: () => void;
   isInherited?: boolean;
@@ -752,9 +788,12 @@ interface IngredientSectionProps {
 function IngredientSection({
   type,
   currentId,
+  countryId = 'us',
   onQuickSelectPolicy,
   onSelectSavedPolicy,
   onQuickSelectPopulation,
+  onDeselectPopulation,
+  onDeselectPolicy,
   onCreateCustom,
   onBrowseMore,
   isInherited,
@@ -762,6 +801,7 @@ function IngredientSection({
   savedPolicies = [],
   viewMode,
 }: IngredientSectionProps) {
+  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const colorConfig = INGREDIENT_COLORS[type];
   const IconComponent = {
     policy: IconScale,
@@ -831,15 +871,15 @@ function IngredientSection({
                   {inheritedPopulationType === 'household' ? (
                     <IconHome size={20} color={colors.gray[500]} />
                   ) : (
-                    <IconWorld size={20} color={colors.gray[500]} />
+                    <CountryMapIcon countryId={countryId} size={20} color={colors.gray[500]} />
                   )}
                 </Box>
                 <Stack gap={2} style={{ flex: 1 }}>
                   <Text fw={600} c={colors.gray[500]} style={{ fontSize: FONT_SIZES.normal }}>
-                    {inheritedPopulationType === 'household' ? 'Household' : 'Nationwide'}
+                    {inheritedPopulationType === 'household' ? 'Household' : countryConfig.nationwideTitle}
                   </Text>
                   <Text c={colors.gray[400]} style={{ fontSize: FONT_SIZES.small }}>
-                    Inherited from baseline
+                    {inheritedPopulationType === 'household' ? 'Inherited from baseline' : countryConfig.nationwideSubtitle}
                   </Text>
                 </Stack>
               </>
@@ -859,7 +899,7 @@ function IngredientSection({
                   {inheritedPopulationType === 'household' ? (
                     <IconHome size={16} color={colors.gray[500]} />
                   ) : (
-                    <IconWorld size={16} color={colors.gray[500]} />
+                    <CountryMapIcon countryId={countryId} size={16} color={colors.gray[500]} />
                   )}
                 </Box>
                 <Text
@@ -868,14 +908,14 @@ function IngredientSection({
                   c={colors.gray[500]}
                   style={{ fontSize: FONT_SIZES.small, lineHeight: 1.2 }}
                 >
-                  {inheritedPopulationType === 'household' ? 'Household' : 'Nationwide'}
+                  {inheritedPopulationType === 'household' ? 'Household' : countryConfig.nationwideTitle}
                 </Text>
                 <Text
                   ta="center"
                   c={colors.gray[400]}
                   style={{ fontSize: FONT_SIZES.tiny, lineHeight: 1.2 }}
                 >
-                  Inherited
+                  {inheritedPopulationType === 'household' ? 'Inherited' : countryConfig.nationwideSubtitle}
                 </Text>
               </>
             )}
@@ -891,7 +931,13 @@ function IngredientSection({
                 label="Current law"
                 description="No changes"
                 isSelected={currentId === 'current-law'}
-                onClick={() => onQuickSelectPolicy('current-law')}
+                onClick={() => {
+                  if (currentId === 'current-law' && onDeselectPolicy) {
+                    onDeselectPolicy();
+                  } else {
+                    onQuickSelectPolicy('current-law');
+                  }
+                }}
                 colorConfig={colorConfig}
               />
               {/* Saved policies - up to 3 shown (total 4 with Current law) */}
@@ -902,7 +948,13 @@ function IngredientSection({
                   label={policy.label}
                   description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
                   isSelected={currentId === policy.id}
-                  onClick={() => onSelectSavedPolicy?.(policy.id, policy.label, policy.paramCount)}
+                  onClick={() => {
+                    if (currentId === policy.id && onDeselectPolicy) {
+                      onDeselectPolicy();
+                    } else {
+                      onSelectSavedPolicy?.(policy.id, policy.label, policy.paramCount);
+                    }
+                  }}
                   colorConfig={colorConfig}
                 />
               ))}
@@ -933,15 +985,27 @@ function IngredientSection({
                 label="Household"
                 description="Single family"
                 isSelected={currentId === 'sample-household'}
-                onClick={() => onQuickSelectPopulation('household')}
+                onClick={() => {
+                  if (currentId === 'sample-household' && onDeselectPopulation) {
+                    onDeselectPopulation();
+                  } else {
+                    onQuickSelectPopulation('household');
+                  }
+                }}
                 colorConfig={colorConfig}
               />
               <ChipComponent
-                icon={<IconWorld size={iconSize} color={currentId === 'us-nationwide' ? colorConfig.icon : colors.gray[500]} />}
-                label="Nationwide"
-                description="Economy-wide"
-                isSelected={currentId === 'us-nationwide'}
-                onClick={() => onQuickSelectPopulation('nationwide')}
+                icon={<CountryMapIcon countryId={countryId} size={iconSize} color={currentId === countryConfig.nationwideId ? colorConfig.icon : colors.gray[500]} />}
+                label={countryConfig.nationwideTitle}
+                description={countryConfig.nationwideSubtitle}
+                isSelected={currentId === countryConfig.nationwideId}
+                onClick={() => {
+                  if (currentId === countryConfig.nationwideId && onDeselectPopulation) {
+                    onDeselectPopulation();
+                  } else {
+                    onQuickSelectPopulation('nationwide');
+                  }
+                }}
                 colorConfig={colorConfig}
               />
               {/* Browse more - always shown for searching/browsing all populations */}
@@ -993,10 +1057,13 @@ function IngredientSection({
 interface SimulationBlockProps {
   simulation: SimulationStateProps;
   index: number;
+  countryId: 'us' | 'uk';
   onLabelChange: (label: string) => void;
   onQuickSelectPolicy: (policyType: 'current-law') => void;
   onSelectSavedPolicy: (id: string, label: string, paramCount: number) => void;
   onQuickSelectPopulation: (populationType: 'household' | 'nationwide') => void;
+  onDeselectPolicy: () => void;
+  onDeselectPopulation: () => void;
   onCreateCustomPolicy: () => void;
   onBrowseMorePolicies: () => void;
   onCreateCustomPopulation: () => void;
@@ -1013,10 +1080,13 @@ interface SimulationBlockProps {
 function SimulationBlock({
   simulation,
   index,
+  countryId,
   onLabelChange,
   onQuickSelectPolicy,
   onSelectSavedPolicy,
   onQuickSelectPopulation,
+  onDeselectPolicy,
+  onDeselectPopulation,
   onCreateCustomPolicy,
   onBrowseMorePolicies,
   onCreateCustomPopulation,
@@ -1153,8 +1223,10 @@ function SimulationBlock({
       <IngredientSection
         type="policy"
         currentId={currentPolicyId}
+        countryId={countryId}
         onQuickSelectPolicy={onQuickSelectPolicy}
         onSelectSavedPolicy={onSelectSavedPolicy}
+        onDeselectPolicy={onDeselectPolicy}
         onCreateCustom={onCreateCustomPolicy}
         onBrowseMore={onBrowseMorePolicies}
         savedPolicies={savedPolicies}
@@ -1164,7 +1236,9 @@ function SimulationBlock({
       <IngredientSection
         type="population"
         currentId={currentPopulationId}
+        countryId={countryId}
         onQuickSelectPopulation={onQuickSelectPopulation}
+        onDeselectPopulation={onDeselectPopulation}
         onCreateCustom={onCreateCustomPopulation}
         onBrowseMore={onBrowseMorePopulations}
         isInherited={populationInherited}
@@ -1174,6 +1248,7 @@ function SimulationBlock({
 
       <IngredientSection
         type="dynamics"
+        countryId={countryId}
         onCreateCustom={() => {}}
         viewMode={viewMode}
       />
@@ -1259,6 +1334,8 @@ function IngredientPickerModal({
   onSelect,
   onCreateNew,
 }: IngredientPickerModalProps) {
+  const countryId = useCurrentCountry() as 'us' | 'uk';
+  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
   const { data: policies } = useUserPolicies(userId);
   const { data: households } = useUserHouseholds(userId);
@@ -1298,7 +1375,7 @@ function IngredientPickerModal({
     onSelect({
       label,
       type: 'household',
-      household: { id: householdId, countryId: 'us', householdData: { people: {} } },
+      household: { id: householdId, countryId, householdData: { people: {} } },
       geography: null,
     });
     onClose();
@@ -1309,7 +1386,7 @@ function IngredientPickerModal({
       label,
       type: 'geography',
       household: null,
-      geography: { id: geoId, countryId: 'us', scope, geographyId: geoId, name: label },
+      geography: { id: geoId, countryId, scope, geographyId: geoId, name: label },
     });
     onClose();
   };
@@ -1566,14 +1643,14 @@ function IngredientPickerModal({
 
         {type === 'population' && (
           <>
-            <Paper p="md" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectGeography('us-nationwide', 'Sample nationwide', 'national')}>
+            <Paper p="md" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectGeography(countryConfig.nationwideId, countryConfig.nationwideLabel, 'national')}>
               <Group gap={spacing.md}>
                 <Box style={{ width: 36, height: 36, borderRadius: spacing.radius.md, background: colorConfig.bg, border: `1px solid ${colorConfig.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <IconWorld size={18} color={colorConfig.icon} />
+                  <CountryMapIcon countryId={countryId} size={18} color={colorConfig.icon} />
                 </Box>
                 <Stack gap={2}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>Sample nationwide</Text>
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>Economy-wide simulation</Text>
+                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>{countryConfig.nationwideTitle}</Text>
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>{countryConfig.nationwideSubtitle}</Text>
                 </Stack>
               </Group>
             </Paper>
@@ -1642,10 +1719,11 @@ function SimulationCanvas({
   setPickerState,
   viewMode,
 }: SimulationCanvasProps) {
-  const countryId = useCurrentCountry();
+  const countryId = useCurrentCountry() as 'us' | 'uk';
+  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
   const { data: policies } = useUserPolicies(userId);
-  const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === 'us-nationwide';
+  const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === countryConfig.nationwideId;
 
   // Transform policies data into SavedPolicy format
   const savedPolicies: SavedPolicy[] = (policies || []).map((p) => ({
@@ -1739,7 +1817,8 @@ function SimulationCanvas({
 
   const handleQuickSelectPopulation = useCallback(
     (simulationIndex: number, populationType: 'household' | 'nationwide') => {
-      const populationState = populationType === 'household' ? SAMPLE_POPULATIONS.household : SAMPLE_POPULATIONS.nationwide;
+      const samplePopulations = getSamplePopulations(countryId);
+      const populationState = populationType === 'household' ? samplePopulations.household : samplePopulations.nationwide;
       setReportState((prev) => {
         let newSimulations = prev.simulations.map((sim, i) =>
           i === simulationIndex ? { ...sim, population: { ...populationState } } : sim
@@ -1762,6 +1841,43 @@ function SimulationCanvas({
         } else if (simulationIndex === 0 && newSimulations.length > 1) {
           // Update the reform's inherited population
           newSimulations[1] = { ...newSimulations[1], population: { ...populationState } };
+        }
+
+        return { ...prev, simulations: newSimulations };
+      });
+    },
+    [countryId, setReportState]
+  );
+
+  const handleDeselectPolicy = useCallback(
+    (simulationIndex: number) => {
+      setReportState((prev) => ({
+        ...prev,
+        simulations: prev.simulations.map((sim, i) =>
+          i === simulationIndex
+            ? { ...sim, policy: initializePolicyState() }
+            : sim
+        ),
+      }));
+    },
+    [setReportState]
+  );
+
+  const handleDeselectPopulation = useCallback(
+    (simulationIndex: number) => {
+      setReportState((prev) => {
+        let newSimulations = prev.simulations.map((sim, i) =>
+          i === simulationIndex
+            ? { ...sim, population: initializePopulationState() }
+            : sim
+        );
+
+        // If deselecting baseline population, also clear reform's inherited population
+        if (simulationIndex === 0 && newSimulations.length > 1) {
+          newSimulations[1] = {
+            ...newSimulations[1],
+            population: initializePopulationState(),
+          };
         }
 
         return { ...prev, simulations: newSimulations };
@@ -1792,10 +1908,13 @@ function SimulationCanvas({
           <SimulationBlock
             simulation={reportState.simulations[0]}
             index={0}
+            countryId={countryId}
             onLabelChange={(label) => handleSimulationLabelChange(0, label)}
             onQuickSelectPolicy={() => handleQuickSelectPolicy(0)}
             onSelectSavedPolicy={(id, label, paramCount) => handleSelectSavedPolicy(0, id, label, paramCount)}
             onQuickSelectPopulation={(type) => handleQuickSelectPopulation(0, type)}
+            onDeselectPolicy={() => handleDeselectPolicy(0)}
+            onDeselectPopulation={() => handleDeselectPopulation(0)}
             onCreateCustomPolicy={() => handleCreateCustom(0, 'policy')}
             onBrowseMorePolicies={() => handleBrowseMorePolicies(0)}
             onCreateCustomPopulation={() => handleCreateCustom(0, 'population')}
@@ -1809,10 +1928,13 @@ function SimulationCanvas({
             <SimulationBlock
               simulation={reportState.simulations[1]}
               index={1}
+              countryId={countryId}
               onLabelChange={(label) => handleSimulationLabelChange(1, label)}
               onQuickSelectPolicy={() => handleQuickSelectPolicy(1)}
               onSelectSavedPolicy={(id, label, paramCount) => handleSelectSavedPolicy(1, id, label, paramCount)}
               onQuickSelectPopulation={(type) => handleQuickSelectPopulation(1, type)}
+              onDeselectPolicy={() => handleDeselectPolicy(1)}
+              onDeselectPopulation={() => handleDeselectPopulation(1)}
               onCreateCustomPolicy={() => handleCreateCustom(1, 'policy')}
               onBrowseMorePolicies={() => handleBrowseMorePolicies(1)}
               onCreateCustomPopulation={() => handleCreateCustom(1, 'population')}
@@ -1871,8 +1993,6 @@ function ProgressDot({ filled, pulsing }: { filled: boolean; pulsing?: boolean }
 function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: ReportMetaPanelProps) {
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [labelInput, setLabelInput] = useState('');
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isPinned, setIsPinned] = useState(false);
 
   const handleLabelSubmit = () => {
     setReportState((prev) => ({ ...prev, label: labelInput || 'Untitled report' }));
@@ -1927,13 +2047,9 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
       width: '100%',
     },
     expandedContent: {
-      overflow: 'hidden',
-      maxHeight: isExpanded ? '200px' : '0px',
-      opacity: isExpanded ? 1 : 0,
-      marginTop: isExpanded ? spacing.md : 0,
-      paddingTop: isExpanded ? spacing.md : 0,
-      borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
-      transition: 'all 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+      marginTop: spacing.md,
+      paddingTop: spacing.md,
+      borderTop: `1px solid ${colors.gray[200]}`,
     },
     divider: {
       width: '1px',
@@ -1981,11 +2097,7 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
 
   return (
     <Box style={dockStyles.container}>
-      <Box
-        style={dockStyles.dock}
-        onMouseEnter={() => !isPinned && setIsExpanded(true)}
-        onMouseLeave={() => !isPinned && !isEditingLabel && setIsExpanded(false)}
-      >
+      <Box style={dockStyles.dock}>
         {/* Compact row - always visible */}
         <Box style={dockStyles.compactRow}>
           {/* Document icon */}
@@ -2072,6 +2184,7 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
             w={60}
             variant="unstyled"
             rightSection={null}
+            withCheckIcon={false}
             styles={{
               input: {
                 fontFamily: typography.fontFamily.primary,
@@ -2098,33 +2211,6 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
               />
             ))}
           </Group>
-
-          {/* Divider */}
-          <Box style={{ ...dockStyles.divider, flexShrink: 0 }} />
-
-          {/* Expand/Pin toggle button */}
-          <ActionIcon
-            size="sm"
-            variant="subtle"
-            color="gray"
-            onClick={() => {
-              if (isPinned) {
-                setIsPinned(false);
-                setIsExpanded(false);
-              } else {
-                setIsPinned(true);
-                setIsExpanded(true);
-              }
-            }}
-            aria-label={isPinned ? 'Collapse setup panel' : 'Expand setup panel'}
-            style={{ flexShrink: 0 }}
-          >
-            {isPinned || isExpanded ? (
-              <IconChevronUp size={16} />
-            ) : (
-              <IconChevronDown size={16} />
-            )}
-          </ActionIcon>
 
           {/* Divider */}
           <Box style={dockStyles.divider} />
@@ -2237,6 +2323,8 @@ function ReportMetaPanel({ reportState, setReportState, isReportConfigured }: Re
 // ============================================================================
 
 export default function ReportBuilderPage() {
+  const countryId = useCurrentCountry() as 'us' | 'uk';
+  const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const [activeTab, setActiveTab] = useState<string | null>('cards');
 
   const initialSim = initializeSimulationState();
@@ -2254,7 +2342,7 @@ export default function ReportBuilderPage() {
     ingredientType: 'policy',
   });
 
-  const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === 'us-nationwide';
+  const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === countryConfig.nationwideId;
 
   useEffect(() => {
     if (isNationwideSelected && reportState.simulations.length === 1) {
