@@ -4,6 +4,7 @@ import ParameterTable from '@/components/report/ParameterTable';
 import { getParamDefinitionDate } from '@/constants';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentLawId } from '@/hooks/useStaticMetadata';
 import { useReportYear } from '@/hooks/useReportYear';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
@@ -55,7 +56,7 @@ function collectDynamicsParameterNames(policies: Policy[], countryId: string): s
 export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubPageProps) {
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const currentLawId = useCurrentLawId(countryId);
   const reportYear = useReportYear();
   const reportDate = getParamDefinitionDate(reportYear ?? undefined);
 

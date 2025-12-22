@@ -13,6 +13,7 @@ import { CURRENT_YEAR } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { usePathwayNavigation } from '@/hooks/usePathwayNavigation';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { StandalonePopulationViewMode } from '@/types/pathwayModes/PopulationViewMode';
@@ -40,6 +41,8 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
 
   // Get metadata for views
   const metadata = useSelector((state: RootState) => state.metadata);
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regionData = useRegionsList(countryId, currentYear);
 
   // ========== NAVIGATION ==========
   const { currentMode, navigateToMode, goBack, canGoBack } = usePathwayNavigation(
@@ -76,7 +79,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       currentView = (
         <PopulationScopeView
           countryId={countryId}
-          regionData={metadata.economyOptions?.region || []}
+          regionData={regionData}
           onScopeSelected={populationCallbacks.handleScopeSelected}
           onBack={canGoBack ? goBack : undefined}
           onCancel={() => navigate(`/${countryId}/households`)}
@@ -118,7 +121,7 @@ export default function PopulationPathwayWrapper({ onComplete }: PopulationPathw
       currentView = (
         <GeographicConfirmationView
           population={populationState}
-          metadata={metadata}
+          regions={regionData}
           onSubmitSuccess={populationCallbacks.handleGeographicSubmitSuccess}
           onBack={canGoBack ? goBack : undefined}
         />

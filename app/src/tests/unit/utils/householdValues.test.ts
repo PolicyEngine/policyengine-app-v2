@@ -7,7 +7,7 @@ import {
   MOCK_HOUSEHOLD_DATA_MULTI_PERIOD,
   MOCK_HOUSEHOLD_DATA_REFORM,
   MOCK_HOUSEHOLD_INCOME_VARIABLE,
-  MOCK_METADATA,
+  MOCK_METADATA_CONTEXT,
   MOCK_PARAMETER,
   MOCK_TAX_RATE_VARIABLE,
   TEST_ENTITY_NAMES,
@@ -35,7 +35,7 @@ describe('getValueFromHousehold', () => {
       timePeriod,
       entityName,
       MOCK_HOUSEHOLD_DATA,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then
@@ -54,7 +54,7 @@ describe('getValueFromHousehold', () => {
       timePeriod,
       entityName,
       MOCK_HOUSEHOLD_DATA,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then
@@ -73,7 +73,7 @@ describe('getValueFromHousehold', () => {
       timePeriod,
       entityName,
       MOCK_HOUSEHOLD_DATA,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then
@@ -92,7 +92,7 @@ describe('getValueFromHousehold', () => {
       timePeriod,
       entityName,
       MOCK_HOUSEHOLD_DATA_MULTI_PERIOD,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then
@@ -111,7 +111,7 @@ describe('getValueFromHousehold', () => {
       timePeriod,
       entityName,
       MOCK_HOUSEHOLD_DATA,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then
@@ -130,7 +130,7 @@ describe('getValueFromHousehold', () => {
       timePeriod,
       entityName,
       MOCK_HOUSEHOLD_DATA,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then
@@ -150,7 +150,7 @@ describe('getValueFromHousehold', () => {
       timePeriod,
       entityName,
       MOCK_HOUSEHOLD_DATA,
-      MOCK_METADATA,
+      MOCK_METADATA_CONTEXT,
       valueFromFirstOnly
     );
 
@@ -442,7 +442,7 @@ describe('shouldShowVariable', () => {
     const variableName = TEST_VARIABLE_NAMES.HOUSEHOLD_INCOME;
 
     // When
-    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA);
+    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA_CONTEXT);
 
     // Then
     expect(result).toBe(true);
@@ -453,7 +453,7 @@ describe('shouldShowVariable', () => {
     const variableName = TEST_VARIABLE_NAMES.NONEXISTENT;
 
     // When
-    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA);
+    const result = shouldShowVariable(variableName, MOCK_HOUSEHOLD_DATA, null, MOCK_METADATA_CONTEXT);
 
     // Then
     expect(result).toBe(false);
@@ -479,7 +479,7 @@ describe('shouldShowVariable', () => {
       variableName,
       householdZeroBenefits,
       MOCK_HOUSEHOLD_DATA_REFORM,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then
@@ -496,7 +496,7 @@ describe('shouldShowVariable', () => {
       variableName,
       MOCK_HOUSEHOLD_DATA,
       null,
-      MOCK_METADATA,
+      MOCK_METADATA_CONTEXT,
       forceShow
     );
 
@@ -513,7 +513,7 @@ describe('shouldShowVariable', () => {
       variableName,
       MOCK_HOUSEHOLD_DATA,
       MOCK_HOUSEHOLD_DATA_REFORM,
-      MOCK_METADATA
+      MOCK_METADATA_CONTEXT
     );
 
     // Then

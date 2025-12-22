@@ -192,66 +192,25 @@ describe('metadataUtils', () => {
       // When
       const result = transformMetadataPayload(payload, 'us');
 
-      // Then
+      // Then - only API-driven data is included
       expect(result.currentCountry).toBe('us');
-      expect(result.currentLawId).toBe(1);
-      expect(result.basicInputs).toEqual(['age', 'employment_income']);
       expect(result.version).toBe('1.0.0');
       expect(result.parameterTree).toBeNull();
       expect(result.variables).toHaveProperty('age');
       expect(result.variables).toHaveProperty('state_name');
       expect(result.variables.state_name.possibleValues).toBeDefined();
+      // Static data (entities, basicInputs, economyOptions, etc.) is no longer returned
     });
 
-    it('given missing economy_options then uses default', () => {
+    it('given missing economy_options then datasets uses empty array', () => {
       // Given
       const payload = mockMinimalPayload();
 
       // When
       const result = transformMetadataPayload(payload, 'us');
 
-      // Then
-      expect(result.economyOptions).toEqual({
-        region: [],
-        time_period: [],
-        datasets: [],
-      });
-    });
-
-    it('given missing basicInputs then uses empty array', () => {
-      // Given
-      const payload = mockMinimalPayload();
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then
-      expect(result.basicInputs).toEqual([]);
-    });
-
-    it('given missing currentLawId then uses 0', () => {
-      // Given
-      const payload = mockMinimalPayload();
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then
-      expect(result.currentLawId).toBe(0);
-    });
-
-    it('given missing modelledPolicies then uses empty core and filtered', () => {
-      // Given
-      const payload = mockMinimalPayload();
-
-      // When
-      const result = transformMetadataPayload(payload, 'us');
-
-      // Then
-      expect(result.modelledPolicies).toEqual({
-        core: {},
-        filtered: {},
-      });
+      // Then - datasets is extracted from economy_options
+      expect(result.datasets).toEqual([]);
     });
 
     it('given parameterTree in payload then sets to null', () => {
@@ -263,6 +222,18 @@ describe('metadataUtils', () => {
 
       // Then
       expect(result.parameterTree).toBeNull();
+    });
+
+    it('given payload with datasets then extracts datasets', () => {
+      // Given
+      const payload = mockMetadataPayload();
+
+      // When
+      const result = transformMetadataPayload(payload, 'us');
+
+      // Then
+      expect(result.datasets).toBeDefined();
+      expect(Array.isArray(result.datasets)).toBe(true);
     });
   });
 });

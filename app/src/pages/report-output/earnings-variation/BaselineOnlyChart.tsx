@@ -1,9 +1,11 @@
+import { useMemo } from 'react';
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
 import { useSelector } from 'react-redux';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import { colors } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useEntities } from '@/hooks/useStaticMetadata';
 import type { RootState } from '@/store';
 import type { Household } from '@/types/ingredients/Household';
 import {
@@ -12,7 +14,7 @@ import {
   getClampedChartHeight,
 } from '@/utils/chartUtils';
 import { currencySymbol, localeCode } from '@/utils/formatters';
-import { getValueFromHousehold } from '@/utils/householdValues';
+import { getValueFromHousehold, HouseholdMetadataContext } from '@/utils/householdValues';
 
 interface Props {
   baseline: Household;
@@ -34,16 +36,23 @@ export default function BaselineOnlyChart({
   const mobile = useMediaQuery('(max-width: 768px)');
   const { height: viewportHeight } = useViewportSize();
   const countryId = useCurrentCountry();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const reduxMetadata = useSelector((state: RootState) => state.metadata);
+  const entities = useEntities(countryId);
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
-  const variable = metadata.variables[variableName];
+  // Build HouseholdMetadataContext
+  const metadataContext: HouseholdMetadataContext = useMemo(
+    () => ({ variables: reduxMetadata.variables, entities }),
+    [reduxMetadata.variables, entities]
+  );
+
+  const variable = reduxMetadata.variables[variableName];
   if (!variable) {
     return <div>Variable not found</div>;
   }
 
   // Get variation data (401-point array)
-  const yValues = getValueFromHousehold(variableName, year, null, baselineVariation, metadata);
+  const yValues = getValueFromHousehold(variableName, year, null, baselineVariation, metadataContext);
 
   if (!Array.isArray(yValues)) {
     return <div>No variation data available</div>;
@@ -55,7 +64,7 @@ export default function BaselineOnlyChart({
     year,
     null,
     baseline,
-    metadata
+    metadataContext
   ) as number;
 
   // Get current earnings to show marker position
@@ -64,7 +73,7 @@ export default function BaselineOnlyChart({
     year,
     null,
     baseline,
-    metadata
+    metadataContext
   ) as number;
 
   // X-axis is earnings range

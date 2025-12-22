@@ -1,5 +1,14 @@
+import type { EntitiesRecord } from '@/data/static';
 import { Household } from '@/types/ingredients/Household';
-import { MetadataState } from '@/types/metadata';
+
+/**
+ * Metadata interface for household value extraction
+ * Components should build this by combining Redux metadata.variables with static entities
+ */
+export interface HouseholdMetadataContext {
+  variables: Record<string, any>;
+  entities: EntitiesRecord;
+}
 
 /**
  * Extracts a value from household data for a specific variable
@@ -9,7 +18,7 @@ import { MetadataState } from '@/types/metadata';
  * @param timePeriod - Specific time period (e.g., "2025"), or null to aggregate all periods
  * @param entityName - Specific entity name (e.g., "your household"), or null to aggregate all entities
  * @param household - The household data structure
- * @param metadata - The metadata containing variable definitions
+ * @param metadata - The metadata containing variable definitions and entities
  * @param valueFromFirstOnly - If true, only returns value from first entity (no aggregation)
  * @returns The extracted value (number or array)
  */
@@ -18,7 +27,7 @@ export function getValueFromHousehold(
   timePeriod: string | null,
   entityName: string | null,
   household: Household,
-  metadata: MetadataState,
+  metadata: HouseholdMetadataContext,
   valueFromFirstOnly = false
 ): number | number[] {
   const variable = metadata.variables[variableName];
@@ -277,7 +286,7 @@ export function shouldShowVariable(
   variableName: string,
   householdBaseline: Household,
   householdReform: Household | null,
-  metadata: MetadataState,
+  metadata: HouseholdMetadataContext,
   forceShow = false
 ): boolean {
   if (forceShow) {

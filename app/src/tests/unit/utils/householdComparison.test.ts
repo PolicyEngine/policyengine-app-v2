@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   mockHousehold,
-  mockMetadata,
+  mockMetadataContext,
   TEST_VALUES,
   TEST_VARIABLE_NAMES,
 } from '@/tests/fixtures/utils/householdComparisonMocks';
@@ -23,7 +23,7 @@ describe('householdComparison', () => {
       it('given baseline only then returns baseline value with no-change', () => {
         // Given
         const baseline = mockHousehold();
-        const metadata = mockMetadata();
+        const metadataContext = mockMetadataContext();
         (getValueFromHousehold as any).mockReturnValue(TEST_VALUES.BASELINE_INCOME);
 
         // When
@@ -31,7 +31,7 @@ describe('householdComparison', () => {
           TEST_VARIABLE_NAMES.NET_INCOME,
           baseline,
           null,
-          metadata
+          metadataContext
         );
 
         // Then
@@ -45,7 +45,7 @@ describe('householdComparison', () => {
       it('given non-numeric value then uses 0', () => {
         // Given
         const baseline = mockHousehold();
-        const metadata = mockMetadata();
+        const metadataContext = mockMetadataContext();
         (getValueFromHousehold as any).mockReturnValue('invalid');
 
         // When
@@ -53,7 +53,7 @@ describe('householdComparison', () => {
           TEST_VARIABLE_NAMES.NET_INCOME,
           baseline,
           null,
-          metadata
+          metadataContext
         );
 
         // Then
@@ -67,7 +67,7 @@ describe('householdComparison', () => {
         // Given
         const baseline = mockHousehold();
         const reform = mockHousehold();
-        const metadata = mockMetadata();
+        const metadataContext = mockMetadataContext();
         (getValueFromHousehold as any)
           .mockReturnValueOnce(TEST_VALUES.BASELINE_INCOME)
           .mockReturnValueOnce(TEST_VALUES.REFORM_INCOME_INCREASE);
@@ -77,7 +77,7 @@ describe('householdComparison', () => {
           TEST_VARIABLE_NAMES.NET_INCOME,
           baseline,
           reform,
-          metadata
+          metadataContext
         );
 
         // Then
@@ -93,7 +93,7 @@ describe('householdComparison', () => {
         // Given
         const baseline = mockHousehold();
         const reform = mockHousehold();
-        const metadata = mockMetadata();
+        const metadataContext = mockMetadataContext();
         (getValueFromHousehold as any)
           .mockReturnValueOnce(TEST_VALUES.BASELINE_INCOME)
           .mockReturnValueOnce(TEST_VALUES.REFORM_INCOME_DECREASE);
@@ -103,7 +103,7 @@ describe('householdComparison', () => {
           TEST_VARIABLE_NAMES.NET_INCOME,
           baseline,
           reform,
-          metadata
+          metadataContext
         );
 
         // Then
@@ -119,7 +119,7 @@ describe('householdComparison', () => {
         // Given
         const baseline = mockHousehold();
         const reform = mockHousehold();
-        const metadata = mockMetadata();
+        const metadataContext = mockMetadataContext();
         (getValueFromHousehold as any)
           .mockReturnValueOnce(TEST_VALUES.BASELINE_INCOME)
           .mockReturnValueOnce(TEST_VALUES.REFORM_INCOME_SAME);
@@ -129,7 +129,7 @@ describe('householdComparison', () => {
           TEST_VARIABLE_NAMES.NET_INCOME,
           baseline,
           reform,
-          metadata
+          metadataContext
         );
 
         // Then
@@ -145,7 +145,7 @@ describe('householdComparison', () => {
         // Given
         const baseline = mockHousehold();
         const reform = mockHousehold();
-        const metadata = mockMetadata();
+        const metadataContext = mockMetadataContext();
         (getValueFromHousehold as any)
           .mockReturnValueOnce('invalid')
           .mockReturnValueOnce('invalid');
@@ -155,7 +155,7 @@ describe('householdComparison', () => {
           TEST_VARIABLE_NAMES.NET_INCOME,
           baseline,
           reform,
-          metadata
+          metadataContext
         );
 
         // Then

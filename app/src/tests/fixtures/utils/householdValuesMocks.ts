@@ -1,7 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { Household } from '@/types/ingredients/Household';
-import { MetadataState } from '@/types/metadata';
-import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
+import { HouseholdMetadataContext } from '@/utils/householdValues';
 
 /**
  * Test fixtures for householdValues utility functions
@@ -39,7 +38,8 @@ export const MOCK_TAX_RATE_VARIABLE = {
   valueType: 'float',
 };
 
-export const MOCK_METADATA: MetadataState = {
+// HouseholdMetadataContext for household value tests
+export const MOCK_METADATA_CONTEXT: HouseholdMetadataContext = {
   variables: {
     household_income: MOCK_HOUSEHOLD_INCOME_VARIABLE,
     age: MOCK_AGE_VARIABLE,

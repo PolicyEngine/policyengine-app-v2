@@ -5,9 +5,9 @@
  */
 
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Button, Container, Divider, Group, Stack, Text } from '@mantine/core';
-import { getDateRange } from '@/libs/metadataUtils';
+import { getDateRange } from '@/data/static';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
@@ -25,10 +25,11 @@ export default function PolicyParameterSelectorValueSetter({
   policy,
   onPolicyUpdate,
 }: PolicyParameterSelectorValueSetterProps) {
+  const countryId = useCurrentCountry();
   const [mode, setMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
 
-  // Get date ranges from metadata using utility selector
-  const { minDate, maxDate } = useSelector(getDateRange);
+  // Get date ranges from static metadata
+  const { minDate, maxDate } = getDateRange(countryId);
 
   const [intervals, setIntervals] = useState<ValueInterval[]>([]);
 

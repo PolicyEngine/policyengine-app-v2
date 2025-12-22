@@ -11,8 +11,8 @@ import { HouseholdAdapter } from '@/adapters/HouseholdAdapter';
 import PathwayView from '@/components/common/PathwayView';
 import HouseholdBuilderForm from '@/components/household/HouseholdBuilderForm';
 import { useCreateHousehold } from '@/hooks/useCreateHousehold';
+import { useBasicInputFields } from '@/hooks/useBasicInputFields';
 import { useReportYear } from '@/hooks/useReportYear';
-import { getBasicInputFields } from '@/libs/metadataUtils';
 import { RootState } from '@/store';
 import { Household } from '@/types/ingredients/Household';
 import { PopulationStateProps } from '@/types/pathwayState';
@@ -36,9 +36,9 @@ export default function HouseholdBuilderView({
   const reportYear = useReportYear();
 
   // Get metadata-driven options
-  const basicInputFields = useSelector(getBasicInputFields);
+  const basicInputFields = useBasicInputFields(countryId);
   const metadata = useSelector((state: RootState) => state.metadata);
-  const { loading, error } = metadata;
+  const { coreLoading: loading, coreError: error } = metadata;
 
   // Get all basic non-person fields dynamically (country-agnostic)
   // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically

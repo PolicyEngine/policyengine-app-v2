@@ -1,14 +1,14 @@
 import type { Layout } from 'plotly.js';
 import Plot from 'react-plotly.js';
-import { useSelector } from 'react-redux';
 import { Stack, Text } from '@mantine/core';
 import { useMediaQuery, useViewportSize } from '@mantine/hooks';
 import type { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import { ChartContainer } from '@/components/ChartContainer';
+import { CURRENT_YEAR } from '@/constants';
 import { colors } from '@/designTokens/colors';
 import { spacing } from '@/designTokens/spacing';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import type { RootState } from '@/store';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import {
   DEFAULT_CHART_CONFIG,
   DEFAULT_CHART_LAYOUT,
@@ -58,7 +58,8 @@ const LEGEND_TEXT_MAP: Record<string, string> = {
 export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
   const mobile = useMediaQuery('(max-width: 768px)');
   const countryId = useCurrentCountry();
-  const metadata = useSelector((state: RootState) => state.metadata);
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regions = useRegionsList(countryId, currentYear);
   const { height: viewportHeight } = useViewportSize();
   const chartHeight = getClampedChartHeight(viewportHeight, mobile);
 
@@ -109,7 +110,7 @@ export default function WinnersLosersIncomeDecileSubPage({ output }: Props) {
     const totalAheadTerm = percent(totalAhead);
     const totalBehindTerm = percent(totalBehind);
     const objectTerm = 'the net income';
-    const region = regionName(metadata);
+    const region = regionName(regions);
     const regionPhrase = region ? ` in ${region}` : '';
 
     if (totalAhead > 0 && totalBehind > 0) {

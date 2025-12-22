@@ -1,12 +1,11 @@
 import { useQueryNormalizer } from '@normy/react-query';
 import { useQuery } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { HouseholdAdapter, PolicyAdapter, SimulationAdapter } from '@/adapters';
 import { fetchHouseholdById } from '@/api/household';
 import { fetchPolicyById } from '@/api/policy';
 import { fetchSimulationById } from '@/api/simulation';
+import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { Household } from '@/types/ingredients/Household';
 import { Policy } from '@/types/ingredients/Policy';
@@ -16,6 +15,7 @@ import { UserHouseholdPopulation } from '@/types/ingredients/UserPopulation';
 import { UserSimulation } from '@/types/ingredients/UserSimulation';
 import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { householdKeys, policyKeys, simulationKeys } from '../libs/queryKeys';
+import { useRegionsList } from './useStaticMetadata';
 import { useHouseholdAssociationsByUser } from './useUserHousehold';
 import { usePolicyAssociationsByUser } from './useUserPolicy';
 import { useSimulationAssociationsByUser } from './useUserSimulationAssociations';
@@ -62,8 +62,9 @@ export const useUserSimulations = (userId: string) => {
   const country = useCurrentCountry();
   const queryNormalizer = useQueryNormalizer();
 
-  // Get geography data from metadata
-  const geographyOptions = useSelector((state: RootState) => state.metadata.economyOptions.region);
+  // Get geography data from static metadata
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const geographyOptions = useRegionsList(country, currentYear);
 
   // Step 1: Fetch all user associations in parallel
   const {

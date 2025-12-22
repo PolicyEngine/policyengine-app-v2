@@ -1,20 +1,19 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { Stack } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { BulletsValue, ColumnConfig, IngredientRecord, TextValue } from '@/components/columns';
 import { RenameIngredientModal } from '@/components/common/RenameIngredientModal';
 import IngredientReadView from '@/components/IngredientReadView';
-import { MOCK_USER_ID } from '@/constants';
+import { CURRENT_YEAR, MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import {
   useGeographicAssociationsByUser,
   useUpdateGeographicAssociation,
 } from '@/hooks/useUserGeographic';
 import { useUpdateHouseholdAssociation, useUserHouseholds } from '@/hooks/useUserHousehold';
 import { countryIds } from '@/libs/countries';
-import { RootState } from '@/store';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { formatDate } from '@/utils/dateUtils';
 import { getCountryLabel } from '@/utils/geographyUtils';
@@ -23,8 +22,9 @@ import { extractRegionDisplayValue } from '@/utils/regionStrategies';
 export default function PopulationsPage() {
   const userId = MOCK_USER_ID.toString(); // TODO: Replace with actual user ID retrieval logic
   // TODO: Session storage hard-fixes "anonymous" as user ID; this should really just be anything
-  const metadata = useSelector((state: RootState) => state.metadata);
   const countryId = useCurrentCountry();
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regions = useRegionsList(countryId, currentYear);
 
   // Fetch household associations
   const {
@@ -151,15 +151,15 @@ export default function PopulationsPage() {
       // e.g., "constituency/Sheffield Central" or "country/england"
       let regionLabel = geography.geographyId;
       const fullRegionName = geography.geographyId; // Track the full name with prefix
-      if (metadata.economyOptions?.region) {
+      if (regions.length > 0) {
         // Try exact match first (handles prefixed UK values and US state codes)
-        const region = metadata.economyOptions.region.find((r) => r.name === geography.geographyId);
+        const region = regions.find((r) => r.name === geography.geographyId);
 
         if (region) {
           regionLabel = region.label;
         } else {
           // Fallback: try adding prefixes for backward compatibility
-          const fallbackRegion = metadata.economyOptions.region.find(
+          const fallbackRegion = regions.find(
             (r) =>
               r.name === `state/${geography.geographyId}` ||
               r.name === `constituency/${geography.geographyId}` ||

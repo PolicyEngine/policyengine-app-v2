@@ -1,6 +1,5 @@
 import { Household } from '@/types/ingredients/Household';
-import { MetadataState } from '@/types/metadata';
-import { getValueFromHousehold } from './householdValues';
+import { getValueFromHousehold, HouseholdMetadataContext } from './householdValues';
 
 /**
  * Represents the comparison between baseline and reform values for a variable
@@ -21,14 +20,14 @@ export interface VariableComparison {
  * @param variableName - The variable to compare
  * @param baseline - The baseline household
  * @param reform - The reform household (null for single mode)
- * @param metadata - The metadata
+ * @param metadata - The metadata context (variables from Redux + entities from static data)
  * @returns Comparison result with display value and direction
  */
 export function calculateVariableComparison(
   variableName: string,
   baseline: Household,
   reform: Household | null,
-  metadata: MetadataState
+  metadata: HouseholdMetadataContext
 ): VariableComparison {
   const baselineValue = getValueFromHousehold(variableName, null, null, baseline, metadata);
   const baselineNumeric = typeof baselineValue === 'number' ? baselineValue : 0;

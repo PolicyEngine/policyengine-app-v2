@@ -37,7 +37,7 @@ export default function PolicyParameterSelectorView({
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
 
   // Get metadata from Redux state
-  const { parameterTree, parameters, loading, error } = useSelector(
+  const { parameterTree, parameters, coreLoading, coreError } = useSelector(
     (state: RootState) => state.metadata
   );
 
@@ -45,10 +45,10 @@ export default function PolicyParameterSelectorView({
   const modificationCount = countPolicyModifications(policy);
 
   // Show error if metadata failed to load
-  if (error) {
+  if (coreError) {
     return (
       <div>
-        <Text c="red">Error loading parameters: {error}</Text>
+        <Text c="red">Error loading parameters: {coreError}</Text>
         <Text>Please try refreshing the page.</Text>
       </div>
     );
@@ -110,7 +110,7 @@ export default function PolicyParameterSelectorView({
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
-        {loading || !parameterTree ? (
+        {coreLoading || !parameterTree ? (
           <div>Loading parameters...</div>
         ) : (
           <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
@@ -118,7 +118,7 @@ export default function PolicyParameterSelectorView({
       </AppShell.Navbar>
 
       <AppShell.Main bg="gray.0">
-        {loading || !parameterTree ? (
+        {coreLoading || !parameterTree ? (
           <MainEmpty />
         ) : selectedLeafParam ? (
           <PolicyParameterSelectorMain

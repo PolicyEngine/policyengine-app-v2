@@ -25,21 +25,14 @@ export const DEFAULT_V2_LOADING_STATES = {
   parametersError: null,
 } as const;
 
-// Expected initial state
+// Expected initial state (only contains API-driven data, not static data)
 export const EXPECTED_INITIAL_STATE: MetadataState = {
-  loading: false,
-  error: null,
   currentCountry: null,
   ...DEFAULT_V2_LOADING_STATES,
   progress: 0,
   variables: {},
   parameters: {},
-  entities: {},
-  variableModules: {},
-  economyOptions: { region: [], time_period: [], datasets: [] },
-  currentLawId: 0,
-  basicInputs: [],
-  modelledPolicies: { core: {}, filtered: {} },
+  datasets: [],
   version: null,
   parameterTree: null,
 };
@@ -188,21 +181,16 @@ export const createMockApiPayload = (
   },
 });
 
-// Mock state with data
+// Mock state with data (only API-driven data)
 export const createMockStateWithData = (overrides?: Partial<MetadataState>): MetadataState => ({
-  loading: false,
-  error: null,
   currentCountry: TEST_COUNTRY_US,
   ...DEFAULT_V2_LOADING_STATES,
+  coreLoaded: true,
+  parametersLoaded: true,
   progress: 100,
   variables: MOCK_VARIABLES,
   parameters: MOCK_PARAMETERS,
-  entities: MOCK_ENTITIES,
-  variableModules: MOCK_VARIABLE_MODULES,
-  economyOptions: MOCK_ECONOMY_OPTIONS,
-  currentLawId: TEST_CURRENT_LAW_ID,
-  basicInputs: MOCK_BASIC_INPUTS,
-  modelledPolicies: MOCK_MODELLED_POLICIES,
+  datasets: MOCK_ECONOMY_OPTIONS.datasets,
   version: TEST_VERSION,
   parameterTree: MOCK_PARAMETER_TREE,
   ...overrides,
@@ -211,13 +199,13 @@ export const createMockStateWithData = (overrides?: Partial<MetadataState>): Met
 // Mock loading state
 export const MOCK_LOADING_STATE: MetadataState = {
   ...EXPECTED_INITIAL_STATE,
-  loading: true,
+  coreLoading: true,
 };
 
 // Mock error state
 export const MOCK_ERROR_STATE: MetadataState = {
   ...EXPECTED_INITIAL_STATE,
-  error: TEST_ERROR_MESSAGE,
+  coreError: TEST_ERROR_MESSAGE,
 };
 
 // Mock state after clearing
@@ -226,24 +214,18 @@ export const createMockClearedState = (country: string | null): MetadataState =>
   currentCountry: country,
 });
 
-// Expected state after successful fetch
+// Expected state after successful fetch (only API-driven data)
 export const createExpectedFulfilledState = (
   country: string,
   apiPayload: MetadataApiPayload
 ): MetadataState => ({
-  loading: false,
-  error: null,
   currentCountry: country,
   ...DEFAULT_V2_LOADING_STATES,
+  coreLoaded: true,
   progress: 100,
   variables: apiPayload.result.variables,
   parameters: apiPayload.result.parameters,
-  entities: apiPayload.result.entities,
-  variableModules: apiPayload.result.variableModules,
-  economyOptions: apiPayload.result.economy_options,
-  currentLawId: apiPayload.result.current_law_id,
-  basicInputs: apiPayload.result.basicInputs,
-  modelledPolicies: apiPayload.result.modelled_policies,
+  datasets: apiPayload.result.economy_options.datasets,
   version: apiPayload.result.version,
   parameterTree: null, // Will be built by reducer
 });
@@ -253,12 +235,12 @@ export const expectStateToEqual = (actual: MetadataState, expected: MetadataStat
   expect(actual).toEqual(expected);
 };
 
-export const expectLoadingState = (state: MetadataState, isLoading: boolean) => {
-  expect(state.loading).toBe(isLoading);
+export const expectCoreLoadingState = (state: MetadataState, isLoading: boolean) => {
+  expect(state.coreLoading).toBe(isLoading);
 };
 
-export const expectErrorState = (state: MetadataState, error: string | null) => {
-  expect(state.error).toBe(error);
+export const expectCoreErrorState = (state: MetadataState, error: string | null) => {
+  expect(state.coreError).toBe(error);
 };
 
 export const expectCurrentCountry = (state: MetadataState, country: string | null) => {
@@ -281,12 +263,7 @@ export const expectParameterTree = (state: MetadataState, hasTree: boolean) => {
 export const expectEmptyMetadata = (state: MetadataState) => {
   expect(state.variables).toEqual({});
   expect(state.parameters).toEqual({});
-  expect(state.entities).toEqual({});
-  expect(state.variableModules).toEqual({});
-  expect(state.economyOptions).toEqual({ region: [], time_period: [], datasets: [] });
-  expect(state.currentLawId).toBe(0);
-  expect(state.basicInputs).toEqual([]);
-  expect(state.modelledPolicies).toEqual({ core: {}, filtered: {} });
+  expect(state.datasets).toEqual([]);
   expect(state.version).toBeNull();
   expect(state.parameterTree).toBeNull();
 };

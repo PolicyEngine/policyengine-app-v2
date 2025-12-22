@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { useSelector } from 'react-redux';
 import { Select, TextInput } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { CURRENT_YEAR } from '@/constants';
+import { getTaxYears } from '@/data/static';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { getTaxYears } from '@/libs/metadataUtils';
 
 interface ReportLabelViewProps {
   label: string | null;
@@ -29,8 +28,8 @@ export default function ReportLabelView({
   const [localLabel, setLocalLabel] = useState(label || '');
   const [localYear, setLocalYear] = useState<string>(year || CURRENT_YEAR);
 
-  // Get available years from metadata
-  const availableYears = useSelector(getTaxYears);
+  // Get available years from static metadata
+  const availableYears = getTaxYears(countryId);
 
   // Use British spelling for UK
   const initializeText = countryId === 'uk' ? 'Initialise' : 'Initialize';
