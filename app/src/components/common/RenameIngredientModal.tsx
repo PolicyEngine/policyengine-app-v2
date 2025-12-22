@@ -9,6 +9,8 @@ interface RenameIngredientModalProps {
   onRename: (newLabel: string) => void;
   isLoading?: boolean;
   ingredientType: 'report' | 'simulation' | 'policy' | 'household' | 'geography';
+  /** Error message from a failed rename attempt (e.g., API error) */
+  submissionError?: string | null;
 }
 
 export function RenameIngredientModal({
@@ -18,15 +20,19 @@ export function RenameIngredientModal({
   onRename,
   isLoading = false,
   ingredientType,
+  submissionError = null,
 }: RenameIngredientModalProps) {
   const [localLabel, setLocalLabel] = useState(currentLabel);
-  const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
+
+  // Combine validation and submission errors for display
+  const displayError = validationError || submissionError;
 
   // Reset local state when modal opens with new current label
   useEffect(() => {
     if (opened) {
       setLocalLabel(currentLabel);
-      setError(null);
+      setValidationError(null);
     }
   }, [opened, currentLabel]);
 
@@ -35,12 +41,12 @@ export function RenameIngredientModal({
     const trimmed = localLabel.trim();
 
     if (!trimmed) {
-      setError(`${capitalize(ingredientType)} name cannot be empty`);
+      setValidationError(`${capitalize(ingredientType)} name cannot be empty`);
       return;
     }
 
     if (trimmed.length > 100) {
-      setError(`${capitalize(ingredientType)} name must be 100 characters or less`);
+      setValidationError(`${capitalize(ingredientType)} name must be 100 characters or less`);
       return;
     }
 
@@ -74,10 +80,10 @@ export function RenameIngredientModal({
           value={localLabel}
           onChange={(e) => {
             setLocalLabel(e.currentTarget.value);
-            setError(null); // Clear error on change
+            setValidationError(null); // Clear validation error on change
           }}
           onKeyDown={handleKeyDown}
-          error={error}
+          error={displayError}
           disabled={isLoading}
           data-autofocus
         />

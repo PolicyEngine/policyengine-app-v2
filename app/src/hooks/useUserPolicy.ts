@@ -176,8 +176,18 @@ export const useUserPolicies = (userId: string) => {
     queries: policyIds.map((policyId) => ({
       queryKey: policyKeys.byId(policyId.toString()),
       queryFn: async () => {
-        const metadata = await fetchPolicyById(country, policyId.toString());
-        return PolicyAdapter.fromMetadata(metadata);
+        try {
+          const metadata = await fetchPolicyById(country, policyId.toString());
+          return PolicyAdapter.fromMetadata(metadata);
+        } catch (error) {
+          // Add context to help debug which policy failed
+          const message =
+            error instanceof Error
+              ? `Failed to load policy ${policyId}: ${error.message}`
+              : `Failed to load policy ${policyId}`;
+          console.error(`[useUserPolicies] ${message}`, error);
+          throw new Error(message);
+        }
       },
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,

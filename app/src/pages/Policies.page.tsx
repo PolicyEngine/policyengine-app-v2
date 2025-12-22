@@ -23,6 +23,7 @@ export default function PoliciesPage() {
   // Rename modal state
   const [renamingPolicyId, setRenamingPolicyId] = useState<string | null>(null);
   const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
 
   // Rename mutation hook
   const updateAssociation = useUpdatePolicyAssociation();
@@ -41,12 +42,14 @@ export default function PoliciesPage() {
 
   const handleOpenRename = (userPolicyId: string) => {
     setRenamingPolicyId(userPolicyId);
+    setRenameError(null); // Clear any previous error
     openRename();
   };
 
   const handleCloseRename = () => {
     closeRename();
     setRenamingPolicyId(null);
+    setRenameError(null); // Clear error on close
   };
 
   const handleRename = async (newLabel: string) => {
@@ -62,6 +65,7 @@ export default function PoliciesPage() {
       handleCloseRename();
     } catch (error) {
       console.error('[PoliciesPage] Failed to rename policy:', error);
+      setRenameError('Failed to rename policy. Please try again.');
     }
   };
 
@@ -154,6 +158,7 @@ export default function PoliciesPage() {
         onRename={handleRename}
         isLoading={updateAssociation.isPending}
         ingredientType="policy"
+        submissionError={renameError}
       />
     </>
   );

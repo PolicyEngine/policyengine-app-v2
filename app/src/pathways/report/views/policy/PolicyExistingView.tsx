@@ -43,6 +43,7 @@ export default function PolicyExistingView({
 
   function handlePolicySelect(association: UserPolicyWithAssociation) {
     if (!association) {
+      console.warn('[PolicyExistingView] handlePolicySelect called with null/undefined association');
       return;
     }
 
@@ -51,16 +52,20 @@ export default function PolicyExistingView({
 
   function handleSubmit() {
     if (!localPolicy) {
+      console.warn('[PolicyExistingView] handleSubmit called with no policy selected');
       return;
     }
 
     if (isPolicyWithAssociation(localPolicy)) {
       handleSubmitPolicy();
+    } else {
+      console.warn('[PolicyExistingView] handleSubmit: localPolicy is not a valid PolicyWithAssociation');
     }
   }
 
   function handleSubmitPolicy() {
     if (!localPolicy || !isPolicyWithAssociation(localPolicy)) {
+      console.warn('[PolicyExistingView] handleSubmitPolicy called with invalid localPolicy state');
       return;
     }
 
@@ -73,6 +78,8 @@ export default function PolicyExistingView({
     // Call parent callback instead of dispatching to Redux
     if (policyId) {
       onSelectPolicy(policyId, label, parameters);
+    } else {
+      console.error('[PolicyExistingView] Cannot submit: policy ID is missing from selected policy');
     }
   }
 
@@ -92,7 +99,11 @@ export default function PolicyExistingView({
     return (
       <PathwayView
         title="Select an existing policy"
-        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        content={
+          <Text c="red">
+            Error: {(error as Error)?.message || 'Failed to load policies. Please refresh and try again.'}
+          </Text>
+        }
         buttonPreset="none"
       />
     );
@@ -121,23 +132,23 @@ export default function PolicyExistingView({
 
   // Build card list items from ALL filtered policies (pagination handled by PathwayView)
   const policyCardItems = filteredPolicies.map((association) => {
+    const policyId = association.policy?.id ?? 'unknown';
     let title = '';
     let subtitle = '';
     if ('label' in association.association && association.association.label) {
       title = association.association.label;
-      subtitle = `Policy #${association.policy!.id}`;
+      subtitle = `Policy #${policyId}`;
     } else {
-      title = `Policy #${association.policy!.id}`;
+      title = `Policy #${policyId}`;
     }
 
     return {
-      id: association.association.id?.toString() || association.policy!.id?.toString(), // Use association ID for unique key
+      id: association.association.id?.toString() || policyId.toString(), // Use association ID for unique key
       title,
       subtitle,
       onClick: () => handlePolicySelect(association),
       isSelected:
-        isPolicyWithAssociation(localPolicy) &&
-        localPolicy.policy?.id === association.policy!.id,
+        isPolicyWithAssociation(localPolicy) && localPolicy.policy?.id === association.policy?.id,
     };
   });
 
