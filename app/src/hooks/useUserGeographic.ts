@@ -1,10 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSelector } from 'react-redux';
 import { ApiGeographicStore, LocalStorageGeographicStore } from '@/api/geographicAssociation';
+import { CURRENT_YEAR } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useRegionsList } from '@/hooks/useStaticMetadata';
 import { queryConfig } from '@/libs/queryConfig';
 import { geographicAssociationKeys } from '@/libs/queryKeys';
-import { RootState } from '@/store';
 import { Geography } from '@/types/ingredients/Geography';
 import { UserGeographyPopulation } from '@/types/ingredients/UserPopulation';
 import { getCountryLabel } from '@/utils/geographyUtils';
@@ -131,8 +131,10 @@ export function isGeographicMetadataWithAssociation(
 }
 
 export const useUserGeographics = (userId: string) => {
-  // Get metadata for label lookups
-  const metadata = useSelector((state: RootState) => state.metadata);
+  // Get regions from static metadata for label lookups
+  const countryId = useCurrentCountry();
+  const currentYear = parseInt(CURRENT_YEAR, 10);
+  const regions = useRegionsList(countryId, currentYear);
 
   // First, get the populations
   const {
@@ -141,7 +143,7 @@ export const useUserGeographics = (userId: string) => {
     error: populationsError,
   } = useGeographicAssociationsByUser(userId);
 
-  // Helper function to get proper label from metadata or fallback
+  // Helper function to get proper label from regions or fallback
   const getGeographyName = (population: UserGeographyPopulation): string => {
     // If label exists, use it
     if (population.label) {
@@ -153,19 +155,19 @@ export const useUserGeographics = (userId: string) => {
       return getCountryLabel(population.countryId);
     }
 
-    // For subnational, look up in metadata
+    // For subnational, look up in regions
     // population.geographyId now contains the FULL prefixed value for UK regions
     // e.g., "constituency/Sheffield Central" or "country/england"
-    if (metadata.economyOptions?.region) {
+    if (regions.length > 0) {
       // Try exact match first (handles prefixed UK values)
-      const region = metadata.economyOptions.region.find((r) => r.name === population.geographyId);
+      const region = regions.find((r) => r.name === population.geographyId);
 
       if (region?.label) {
         return region.label;
       }
 
       // Fallback: try adding prefixes (for backward compatibility)
-      const fallbackRegion = metadata.economyOptions.region.find(
+      const fallbackRegion = regions.find(
         (r) =>
           r.name === `state/${population.geographyId}` ||
           r.name === `constituency/${population.geographyId}` ||

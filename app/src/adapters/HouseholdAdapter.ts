@@ -1,3 +1,4 @@
+import { getEntities } from '@/data/static';
 import { countryIds } from '@/libs/countries';
 import { store } from '@/store';
 import { Household, HouseholdData } from '@/types/ingredients/Household';
@@ -5,11 +6,12 @@ import { HouseholdMetadata } from '@/types/metadata/householdMetadata';
 import { HouseholdCreationPayload } from '@/types/payloads';
 
 /**
- * Get entity metadata from the Redux store
+ * Get entity metadata from static data based on current country
  */
 function getEntityMetadata() {
   const state = store.getState();
-  return state.metadata?.entities || {};
+  const countryId = state.metadata?.currentCountry || 'us';
+  return getEntities(countryId);
 }
 
 /**

@@ -13,8 +13,8 @@ import {
   expectCurrentCountry,
   EXPECTED_INITIAL_STATE,
   expectEmptyMetadata,
-  expectErrorState,
-  expectLoadingState,
+  expectCoreErrorState,
+  expectCoreLoadingState,
   expectParameterTree,
   expectStateToEqual,
   MOCK_PARAMETER_TREE,
@@ -75,14 +75,14 @@ describe('metadataReducer', () => {
 
     test('given setCurrentCountry then preserves loading and error states', () => {
       const initialState = createMockStateWithData({
-        loading: true,
-        error: TEST_ERROR_MESSAGE,
+        coreLoading: true,
+        coreError: TEST_ERROR_MESSAGE,
         coreLoaded: true,
       });
       const action = setCurrentCountry(TEST_COUNTRY_CA);
       const state = metadataReducer(initialState, action);
-      expectLoadingState(state, true);
-      expectErrorState(state, TEST_ERROR_MESSAGE);
+      expectCoreLoadingState(state, true);
+      expectCoreErrorState(state, TEST_ERROR_MESSAGE);
     });
   });
 
@@ -140,8 +140,8 @@ describe('metadataReducer', () => {
       expect(state.currentCountry).toBe(TEST_COUNTRY_US);
       expect(state.version).toBe(TEST_VERSION);
       expect(state.variables).toEqual({ income: mockVariables[0] });
-      expect(state.economyOptions.datasets).toHaveLength(1);
-      expect(state.economyOptions.datasets[0].name).toBe('cps_2024');
+      expect(state.datasets).toHaveLength(1);
+      expect(state.datasets[0].name).toBe('cps_2024');
     });
 
     test('given rejected action then sets coreError state', () => {

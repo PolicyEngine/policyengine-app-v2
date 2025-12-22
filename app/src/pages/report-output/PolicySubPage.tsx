@@ -1,7 +1,9 @@
 import { useSelector } from 'react-redux';
 import ParameterTable from '@/components/report/ParameterTable';
 import { getParamDefinitionDate } from '@/constants';
+import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useReportYear } from '@/hooks/useReportYear';
+import { useCurrentLawId } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -30,8 +32,9 @@ interface PolicySubPageProps {
  * all policies in a unified view.
  */
 export default function PolicySubPage({ policies, userPolicies }: PolicySubPageProps) {
+  const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const currentLawId = useCurrentLawId(countryId);
   const reportYear = useReportYear();
   const reportDate = getParamDefinitionDate(reportYear ?? undefined);
 

@@ -43,6 +43,9 @@ export {
   type TimePeriodOption,
 } from './timePeriods';
 
+// Tax year utilities
+export { getTaxYears, getDateRange } from './taxYears';
+
 import { getEntities } from './entities';
 import { getBasicInputs } from './basicInputs';
 import { getModelledPolicies, getCurrentLawId } from './modelledPolicies';

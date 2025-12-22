@@ -3,6 +3,7 @@ import { Box, Text } from '@mantine/core';
 import ParameterTable from '@/components/report/ParameterTable';
 import { colors, spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useCurrentLawId } from '@/hooks/useStaticMetadata';
 import { RootState } from '@/store';
 import { Policy } from '@/types/ingredients/Policy';
 import { UserPolicy } from '@/types/ingredients/UserPolicy';
@@ -53,7 +54,7 @@ function collectDynamicsParameterNames(policies: Policy[], countryId: string): s
 export default function DynamicsSubPage({ policies, userPolicies }: DynamicsSubPageProps) {
   const countryId = useCurrentCountry();
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const currentLawId = useSelector((state: RootState) => state.metadata.currentLawId);
+  const currentLawId = useCurrentLawId(countryId);
 
   if (!policies || policies.length === 0) {
     return <div>No policy data available</div>;

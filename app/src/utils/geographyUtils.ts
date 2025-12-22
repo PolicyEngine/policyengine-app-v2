@@ -1,5 +1,35 @@
 import type { Geography } from '@/types/ingredients/Geography';
-import { MetadataState } from '@/types/metadata';
+import { MetadataRegionEntry } from '@/types/metadata';
+
+/**
+ * Human-readable labels for region types.
+ * Maps the internal type constants to display labels.
+ */
+const REGION_TYPE_LABELS: Record<string, string> = {
+  // Shared
+  national: 'National',
+  // US region types
+  state: 'State',
+  congressional_district: 'Congressional district',
+  city: 'City',
+  // UK region types
+  country: 'Country',
+  constituency: 'Constituency',
+  local_authority: 'Local authority',
+};
+
+/**
+ * Known region type prefixes used in region name strings.
+ * Used for fallback matching when a region code doesn't have its prefix.
+ */
+const KNOWN_PREFIXES = [
+  'state',
+  'congressional_district',
+  'city',
+  'country',
+  'constituency',
+  'local_authority',
+];
 import { UK_REGION_TYPES } from '@/types/regionTypes';
 
 /**
@@ -68,97 +98,69 @@ export function getCountryLabel(countryCode: string): string {
   return countryLabels[countryCode];
 }
 
-export function getRegionLabel(regionCode: string, metadata: MetadataState): string {
-  // regionCode now contains the FULL prefixed value for UK regions
-  // e.g., "constituency/Sheffield Central" or "country/england"
-  // For US: just the state code like "ca"
-
-  // Try exact match first (handles prefixed UK values and US state codes)
-  const region = metadata.economyOptions.region.find((r) => r.name === regionCode);
-
-  if (region) {
-    return region.label;
+/**
+ * Find a region entry by code, trying exact match first then prefixed variants.
+ *
+ * @param regionCode - The region code to find
+ * @param regions - Array of region entries from static metadata
+ * @returns The matched region entry or undefined
+ */
+function findRegion(regionCode: string, regions: MetadataRegionEntry[]): MetadataRegionEntry | undefined {
+  // Try exact match first
+  const exactMatch = regions.find((r) => r.name === regionCode);
+  if (exactMatch) {
+    return exactMatch;
   }
 
-  // Fallback: if no match, try stripping prefix for display
-  // This handles edge cases where we might receive unprefixed values
-  const fallbackRegion = metadata.economyOptions.region.find(
-    (r) =>
-      r.name === `state/${regionCode}` ||
-      r.name === `country/${regionCode}` ||
-      r.name === `constituency/${regionCode}` ||
-      r.name === `local_authority/${regionCode}`
-  );
+  // Try with known prefixes (for legacy codes without prefix)
+  for (const prefix of KNOWN_PREFIXES) {
+    const prefixedMatch = regions.find((r) => r.name === `${prefix}/${regionCode}`);
+    if (prefixedMatch) {
+      return prefixedMatch;
+    }
+  }
 
-  return fallbackRegion?.label || regionCode;
-}
-
-export function getRegionType(countryCode: string): 'state' | 'constituency' {
-  return countryCode === 'us' ? 'state' : 'constituency';
+  return undefined;
 }
 
 /**
- * Get the specific region type label for a geography based on country and metadata.
- * Uses a strategy pattern: checks the actual metadata entry to determine the type.
+ * Get the display label for a region code.
  *
- * @param countryId - The country ID (e.g., 'us', 'uk')
- * @param regionCode - The region code (e.g., 'california', 'wales', 'brighton-pavilion')
- * @param metadata - The metadata containing region definitions
- * @returns The display label for the region type (e.g., 'State', 'Country', 'Constituency', 'Congressional District')
+ * @param regionCode - The region code (e.g., 'constituency/Sheffield Central', 'state/ca')
+ * @param regions - Array of region entries from static metadata
+ * @returns The human-readable label for the region, or the code itself if not found
+ */
+export function getRegionLabel(regionCode: string, regions: MetadataRegionEntry[]): string {
+  const region = findRegion(regionCode, regions);
+  return region?.label || regionCode;
+}
+
+/**
+ * Get the human-readable label for a region's type.
+ * Uses the `type` field from the region entry directly, avoiding country-specific logic.
+ *
+ * @param _countryId - The country ID (unused, kept for API compatibility)
+ * @param regionCode - The region code (e.g., 'state/ca', 'constituency/Sheffield Central')
+ * @param regions - Array of region entries from static metadata
+ * @returns The display label for the region type (e.g., 'State', 'Constituency')
  */
 export function getRegionTypeLabel(
-  countryId: string,
+  _countryId: string,
   regionCode: string,
-  metadata: MetadataState
+  regions: MetadataRegionEntry[]
 ): string {
-  // US strategy: check metadata to determine if it's a state or congressional district
-  if (countryId === 'us') {
-    const region = metadata.economyOptions.region.find(
-      (r) =>
-        r.name === regionCode ||
-        r.name === `state/${regionCode}` ||
-        r.name === `congressional_district/${regionCode}`
-    );
+  const region = findRegion(regionCode, regions);
 
-    if (region) {
-      if (region.name.startsWith('congressional_district/')) {
-        return 'Congressional district';
-      }
-      if (region.name.startsWith('state/')) {
-        return 'State';
-      }
-    }
-
-    // Fallback to State for US if we can't determine
-    return 'State';
+  if (region?.type) {
+    return REGION_TYPE_LABELS[region.type] || 'Region';
   }
 
-  // UK strategy: check metadata to determine if it's a country, constituency, or local authority
-  if (countryId === 'uk') {
-    const region = metadata.economyOptions.region.find(
-      (r) =>
-        r.name === regionCode ||
-        r.name === `country/${regionCode}` ||
-        r.name === `constituency/${regionCode}` ||
-        r.name === `local_authority/${regionCode}`
-    );
-
-    if (region) {
-      if (region.name.startsWith('country/')) {
-        return 'Country';
-      }
-      if (region.name.startsWith('constituency/')) {
-        return 'Constituency';
-      }
-      if (region.name.startsWith('local_authority/')) {
-        return 'Local authority';
-      }
+  // Fallback: try to infer from prefix in the region code
+  for (const prefix of KNOWN_PREFIXES) {
+    if (regionCode.startsWith(`${prefix}/`)) {
+      return REGION_TYPE_LABELS[prefix] || 'Region';
     }
-
-    // Fallback to constituency for UK if we can't determine
-    return 'Constituency';
   }
 
-  // Default fallback
   return 'Region';
 }
