@@ -1,5 +1,6 @@
 import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataRegionEntry } from '@/types/metadata';
+import { UK_REGION_TYPES } from '@/types/regionTypes';
 
 /**
  * Human-readable labels for region types.
@@ -30,7 +31,6 @@ const KNOWN_PREFIXES = [
   'constituency',
   'local_authority',
 ];
-import { UK_REGION_TYPES } from '@/types/regionTypes';
 
 /**
  * Extracts the UK region type from a Geography object based on its geographyId.
