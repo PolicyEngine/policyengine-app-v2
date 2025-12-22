@@ -1,4 +1,57 @@
+import type { Geography } from '@/types/ingredients/Geography';
 import { MetadataState } from '@/types/metadata';
+import { UK_REGION_TYPES } from '@/types/regionTypes';
+
+/**
+ * Extracts the UK region type from a Geography object based on its geographyId.
+ * Returns the region type constant or null if not a UK geography.
+ *
+ * @param geography - The Geography object to analyze
+ * @returns The UK region type ('national', 'country', 'constituency', 'local_authority') or null
+ */
+export function getUKRegionTypeFromGeography(
+  geography: Geography
+): (typeof UK_REGION_TYPES)[keyof typeof UK_REGION_TYPES] | null {
+  if (geography.countryId !== 'uk') {
+    return null;
+  }
+
+  const { geographyId } = geography;
+
+  // National: geographyId equals country code
+  if (geographyId === 'uk') {
+    return UK_REGION_TYPES.NATIONAL;
+  }
+
+  // Check prefixes for subnational types
+  if (geographyId.startsWith('country/')) {
+    return UK_REGION_TYPES.COUNTRY;
+  }
+
+  if (geographyId.startsWith('constituency/')) {
+    return UK_REGION_TYPES.CONSTITUENCY;
+  }
+
+  if (geographyId.startsWith('local_authority/')) {
+    return UK_REGION_TYPES.LOCAL_AUTHORITY;
+  }
+
+  return null;
+}
+
+/**
+ * Checks if a Geography represents a UK local-level region (constituency or local authority).
+ * These regions should not display constituency/local authority maps.
+ *
+ * @param geography - The Geography object to check
+ * @returns true if it's a constituency or local authority, false otherwise
+ */
+export function isUKLocalLevelGeography(geography: Geography): boolean {
+  const regionType = getUKRegionTypeFromGeography(geography);
+  return (
+    regionType === UK_REGION_TYPES.CONSTITUENCY || regionType === UK_REGION_TYPES.LOCAL_AUTHORITY
+  );
+}
 
 const countryLabels: Record<string, string> = {
   us: 'United States',
