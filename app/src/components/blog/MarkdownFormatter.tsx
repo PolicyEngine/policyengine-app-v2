@@ -196,6 +196,7 @@ export function HighlightedBlock({
 
 /**
  * Plotly Chart Code Block Component
+ * Copied as closely as possible from app v1's MarkdownFormatter.jsx
  */
 export function PlotlyChartCode({
   data,
@@ -204,18 +205,18 @@ export function PlotlyChartCode({
   data: string | string[];
   backgroundColor?: string;
 }) {
+  const displayCategory = useDisplayCategory();
+  const mobile = displayCategory === 'mobile';
+
   const plotlyData = safeJsonParse(data);
 
   if (!plotlyData) {
     return null;
   }
 
-  const defaultMargins = {
-    l: blogSpacing.lg,
-    r: blogSpacing.lg,
-    t: blogSpacing.lg,
-    b: blogSpacing.lg,
-  };
+  // Use the margins defined in the plotly data, falling back to reasonable defaults
+  // Don't override what's in the data, but ensure we have at least some margin
+  const defaultMargins = { l: 20, r: 20, t: 20, b: 20 };
   const margins = { ...defaultMargins, ...(plotlyData.layout?.margin || {}) };
 
   return (
@@ -225,20 +226,20 @@ export function PlotlyChartCode({
         width: '100%',
         display: 'flex',
         justifyContent: 'center',
-        marginBottom: blogSpacing.lg,
+        marginBottom: 20,
       }}
     >
       <Plot
         data={plotlyData.data}
         layout={{
           ...plotlyData.layout,
+          width: mobile ? 400 : undefined,
           height: 600,
           plot_bgcolor: backgroundColor || 'transparent',
           paper_bgcolor: backgroundColor || 'transparent',
           margin: margins,
           autosize: true,
         }}
-        frames={plotlyData.frames}
         config={{
           displayModeBar: false,
           responsive: true,
@@ -246,7 +247,6 @@ export function PlotlyChartCode({
         style={{
           width: '100%',
           maxWidth: '100%',
-          boxSizing: 'border-box',
         }}
         useResizeHandler
       />
@@ -261,10 +261,12 @@ export function MarkdownFormatter({
   markdown,
   backgroundColor,
   displayCategory: propDisplayCategory,
+  hideFootnotes = false,
 }: MarkdownFormatterProps & {
   backgroundColor?: string;
   dict?: Record<string, any>;
   pSize?: number;
+  hideFootnotes?: boolean;
 }) {
   const hookDisplayCategory = useDisplayCategory();
   const displayCategory = propDisplayCategory || hookDisplayCategory;
@@ -500,16 +502,16 @@ export function MarkdownFormatter({
 
     // Links with footnote support
     a: ({ href, children }) => {
-      let id: string;
+      let id: string | undefined;
       let footnoteNumber: number | null = null;
+      let isFootnoteRef = false;
 
       if (href?.startsWith('#user-content-fn-')) {
         id = href.replace('#user-content-fn-', 'user-content-fnref-');
         footnoteNumber = parseInt(id?.split('-').pop() || '0', 10);
+        isFootnoteRef = true;
       } else if (href?.startsWith('#user-content-fnref-')) {
         id = href.replace('#user-content-fnref-', 'user-content-fn-');
-      } else {
-        id = href || '';
       }
 
       return (
@@ -525,6 +527,8 @@ export function MarkdownFormatter({
             fontWeight: href?.startsWith('#') ? 'normal' : blogFontWeights.medium,
             transition: 'background-color 0.2s ease, color 0.2s ease',
             borderRadius: blogRadius.sm,
+            // Add scroll margin for footnote references so they don't hide behind navbar
+            scrollMarginTop: isFootnoteRef ? '80px' : undefined,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = blogColors.link;
@@ -711,6 +715,11 @@ export function MarkdownFormatter({
       );
 
       if (className === 'footnotes') {
+        // Hide footnotes section when requested (for notebooks where we consolidate at end)
+        if (hideFootnotes) {
+          return null;
+        }
+
         return (
           <div
             style={{
@@ -851,5 +860,113 @@ export function MarkdownFormatter({
     <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]} components={components}>
       {markdown}
     </ReactMarkdown>
+  );
+}
+
+/**
+ * Parse inline markdown links [text](url) to React elements
+ * Lightweight alternative to full MarkdownFormatter for simple inline content
+ */
+function parseInlineLinks(text: string): React.ReactNode[] {
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  let match;
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    // Add text before the link
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index));
+    }
+    // Add the link
+    parts.push(
+      <a
+        key={match.index}
+        href={match[2]}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          color: blogColors.link,
+          textDecoration: 'none',
+          borderBottom: `1px solid ${blogColors.link}`,
+        }}
+      >
+        {match[1]}
+      </a>
+    );
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add remaining text after last link
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex));
+  }
+
+  return parts.length > 0 ? parts : [text];
+}
+
+/**
+ * FootnotesSection Component
+ * Renders a consolidated footnotes section for notebooks.
+ * Creates elements with the correct IDs that remark-gfm's footnote references link to.
+ */
+export function FootnotesSection({
+  footnotes,
+  displayCategory: propDisplayCategory,
+}: {
+  footnotes: Record<string, string>;
+  displayCategory?: string;
+}) {
+  const hookDisplayCategory = useDisplayCategory();
+  const displayCategory = propDisplayCategory || hookDisplayCategory;
+  const mobile = displayCategory === 'mobile';
+
+  const sortedKeys = Object.keys(footnotes).sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
+
+  if (sortedKeys.length === 0) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        borderTop: `1px solid ${blogColors.borderDark}`,
+        paddingTop: blogSpacing.md,
+        marginTop: blogSpacing.xxl,
+        marginBottom: blogSpacing.lg,
+        backgroundColor: blogColors.backgroundSecondary,
+        borderRadius: blogRadius.md,
+        padding: `${blogSpacing.md}px ${blogSpacing.md}px`,
+        fontSize: mobile ? '0.8rem' : '0.85rem',
+        color: blogColors.textSecondary,
+      }}
+    >
+      <ol style={{ margin: 0, paddingLeft: blogSpacing.lg }}>
+        {sortedKeys.map((key) => (
+          <li
+            key={key}
+            id={`user-content-fn-${key}`}
+            style={{
+              marginBottom: blogSpacing.xs,
+              lineHeight: 1.4,
+              scrollMarginTop: '80px',
+            }}
+          >
+            {parseInlineLinks(footnotes[key])}{' '}
+            <a
+              href={`#user-content-fnref-${key}`}
+              style={{
+                color: blogColors.link,
+                textDecoration: 'none',
+                fontSize: '0.85em',
+              }}
+              aria-label="Back to reference"
+            >
+              ↩
+            </a>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }

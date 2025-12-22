@@ -10,6 +10,7 @@ import { Link, Navigate, useParams } from 'react-router-dom';
 import { Box, Center, Container, Loader, Text } from '@mantine/core';
 import { blogSpacing } from '@/components/blog/blogStyles';
 import { MarkdownFormatter } from '@/components/blog/MarkdownFormatter';
+import { NotebookRenderer } from '@/components/blog/NotebookRenderer';
 import { useDisplayCategory } from '@/components/blog/useDisplayCategory';
 import StaticPageLayout from '@/components/shared/static/StaticPageLayout';
 import authorsData from '@/data/posts/authors.json';
@@ -21,10 +22,17 @@ import {
   topicTags,
 } from '@/data/posts/postTransformers';
 import { colors } from '@/designTokens';
-import type { AuthorsCollection, BlogPost } from '@/types/blog';
+import type { AuthorsCollection, BlogPost, Notebook } from '@/types/blog';
+import { extractMarkdownFromNotebook, isNotebookFile } from '@/utils/notebookUtils';
 
 // Import all markdown files as raw strings using Vite's glob import
-const articleModules = import.meta.glob('../data/posts/articles/*.md', {
+const markdownModules = import.meta.glob('../data/posts/articles/*.md', {
+  query: '?raw',
+  import: 'default',
+}) as Record<string, () => Promise<string>>;
+
+// Import all notebook files as raw strings using Vite's glob import
+const notebookModules = import.meta.glob('../data/posts/articles/*.ipynb', {
   query: '?raw',
   import: 'default',
 }) as Record<string, () => Promise<string>>;
@@ -35,6 +43,7 @@ export default function BlogPage() {
   const { countryId = 'us', slug } = useParams<{ countryId: string; slug: string }>();
   const displayCategory = useDisplayCategory();
   const [content, setContent] = useState<string>('');
+  const [notebook, setNotebook] = useState<Notebook | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,24 +61,39 @@ export default function BlogPage() {
     return <Navigate to={`/${countryId}/research`} replace />;
   }
 
-  // Load markdown content
+  // Determine if this is a notebook file
+  const isNotebook = post?.filename ? isNotebookFile(post.filename) : false;
+
+  // Load article content (markdown or notebook)
   useEffect(() => {
     const loadContent = async () => {
       try {
         setLoading(true);
         setError(null);
+        setNotebook(null);
+        setContent('');
 
-        // Find the module for this article
-        const availableKeys = Object.keys(articleModules);
+        // Choose the appropriate module collection based on file type
+        const modules = isNotebook ? notebookModules : markdownModules;
+        const availableKeys = Object.keys(modules);
         const matchingKey = availableKeys.find((key) => key.endsWith(`/${post.filename}`));
 
         if (!matchingKey) {
           throw new Error(`Article not found: ${post.filename}`);
         }
 
-        const loader = articleModules[matchingKey];
+        const loader = modules[matchingKey];
         const text = await loader();
-        setContent(text);
+
+        if (isNotebook) {
+          // Parse notebook JSON and extract markdown for display purposes
+          const parsedNotebook: Notebook = JSON.parse(text);
+          setNotebook(parsedNotebook);
+          // Also extract markdown for TOC and reading time
+          setContent(extractMarkdownFromNotebook(parsedNotebook));
+        } else {
+          setContent(text);
+        }
       } catch (err) {
         console.error('Failed to load blog post:', err);
         setError('Failed to load article content');
@@ -81,7 +105,7 @@ export default function BlogPage() {
     if (post?.filename) {
       loadContent();
     }
-  }, [post?.filename]);
+  }, [post?.filename, isNotebook]);
 
   // Format date
   const formattedDate = new Date(post.date).toLocaleDateString('en-US', {
@@ -130,6 +154,7 @@ export default function BlogPage() {
         <PostBodySection
           post={post}
           markdown={content}
+          notebook={notebook}
           countryId={countryId}
           displayCategory={displayCategory}
         />
@@ -270,14 +295,23 @@ function PostHeadingSection({
 function PostBodySection({
   post,
   markdown,
+  notebook,
   countryId,
   displayCategory,
 }: {
   post: BlogPost;
   markdown: string;
+  notebook: Notebook | null;
   countryId: string;
   displayCategory: string;
 }) {
+  // Render either notebook or markdown content
+  const bodyContent = notebook ? (
+    <NotebookRenderer notebook={notebook} displayCategory={displayCategory} />
+  ) : (
+    <MarkdownFormatter markdown={markdown} />
+  );
+
   if (displayCategory === 'desktop') {
     return (
       <div style={{ display: 'flex' }}>
@@ -299,7 +333,7 @@ function PostBodySection({
 
         {/* Main content */}
         <div style={{ flex: 4, minWidth: 0 }}>
-          <MarkdownFormatter markdown={markdown} />
+          {bodyContent}
           <AuthorSection post={post} countryId={countryId} />
         </div>
 
@@ -334,7 +368,7 @@ function PostBodySection({
           </div>
         </div>
         <div style={{ flex: 3 }}>
-          <MarkdownFormatter markdown={markdown} />
+          {bodyContent}
           <AuthorSection post={post} countryId={countryId} />
         </div>
       </div>
@@ -356,7 +390,7 @@ function PostBodySection({
         </Text>
         <LeftContents markdown={markdown} />
       </div>
-      <MarkdownFormatter markdown={markdown} />
+      {bodyContent}
       <AuthorSection post={post} countryId={countryId} />
       <div style={{ marginTop: 15 }}>
         <MoreOn post={post} countryId={countryId} />
