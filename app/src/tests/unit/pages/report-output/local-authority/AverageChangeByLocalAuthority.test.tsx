@@ -19,7 +19,7 @@ describe('AverageChangeByLocalAuthority', () => {
 
     // Then
     expect(
-      screen.getByText('Average Household Income Change by Local Authority')
+      screen.getByText('Average household income change by local authority')
     ).toBeInTheDocument();
   });
 
