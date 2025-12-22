@@ -70,6 +70,7 @@ export function BlogPostCard({ item, countryId }: BlogPostCardProps) {
           <img
             src={`/assets/posts/${item.image}`}
             alt={item.title}
+            loading="lazy"
             style={{
               width: '100%',
               height: '100%',
