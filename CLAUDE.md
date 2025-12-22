@@ -1,5 +1,40 @@
 # PolicyEngine App v2 Development Guidelines
 
+## Visual Standards (MUST READ)
+
+Detailed visual standards are documented in `.claude/skills/`. **These are mandatory for all UI code:**
+
+- `.claude/skills/design-tokens.md` - Color, spacing, typography tokens
+- `.claude/skills/chart-standards.md` - Plotly chart patterns
+- `.claude/skills/ingredient-patterns.md` - CRUD page patterns
+
+### Critical Rules
+
+1. **SENTENCE CASE EVERYWHERE** - All UI text must use sentence case (capitalize only first word and proper nouns). No Title Case.
+   - Correct: "Your saved policies", "Date created", "New simulation"
+   - Wrong: "Your Saved Policies", "Date Created", "New Simulation"
+   - Exceptions: Proper nouns (PolicyEngine, California), acronyms (IRS, UK), official program names (Child Tax Credit)
+
+2. **USE DESIGN TOKENS** - Never hardcode colors, spacing, or typography values.
+   ```tsx
+   // WRONG
+   style={{ color: '#319795', marginBottom: '16px' }}
+
+   // CORRECT
+   import { colors, spacing } from '@/designTokens';
+   style={{ color: colors.primary[500], marginBottom: spacing.lg }}
+   ```
+
+3. **CHART COLORS** - Use semantic colors for data:
+   - Positive/gains: `colors.primary[500]` (teal)
+   - Negative/losses: `colors.gray[600]`
+   - Always wrap charts in `<ChartContainer>`
+
+4. **INGREDIENT PAGES** - Follow the standard pattern in `ingredient-patterns.md`:
+   - Use `IngredientReadView` component
+   - Use `RenameIngredientModal` for rename
+   - Transform data to `IngredientRecord[]`
+
 ## Branding & Logos
 
 ### Color Palette
