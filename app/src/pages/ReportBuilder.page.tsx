@@ -40,6 +40,7 @@ import {
   IconChevronDown,
   IconChevronUp,
   IconChevronRight,
+  IconInfoCircle,
   IconTrash,
   IconSparkles,
   IconFileDescription,
@@ -54,6 +55,7 @@ import {
   IconCircleDashed,
   IconArrowRight,
 } from '@tabler/icons-react';
+import { useSelector } from 'react-redux';
 import { colors, spacing, typography } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import {
@@ -64,10 +66,20 @@ import {
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
-import { CURRENT_YEAR } from '@/constants';
+import { CURRENT_YEAR, getParamDefinitionDate } from '@/constants';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { MOCK_USER_ID } from '@/constants';
+import { RootState } from '@/store';
+import {
+  getHierarchicalLabels,
+  buildCompactLabel,
+  formatLabelParts,
+} from '@/utils/parameterLabels';
+import {
+  getCurrentLawParameterValue,
+  formatParameterValue,
+} from '@/utils/policyTableHelpers';
 
 // ============================================================================
 // TYPES
@@ -888,7 +900,7 @@ function IngredientSection({
                   key={policy.id}
                   icon={<IconFileDescription size={iconSize} color={currentId === policy.id ? colorConfig.icon : colors.gray[500]} />}
                   label={policy.label}
-                  description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''}`}
+                  description={`${policy.paramCount} param${policy.paramCount !== 1 ? 's' : ''} changed`}
                   isSelected={currentId === policy.id}
                   onClick={() => onSelectSavedPolicy?.(policy.id, policy.label, policy.paramCount)}
                   colorConfig={colorConfig}
@@ -1251,6 +1263,9 @@ function IngredientPickerModal({
   const { data: policies } = useUserPolicies(userId);
   const { data: households } = useUserHouseholds(userId);
   const colorConfig = INGREDIENT_COLORS[type];
+  const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>(null);
+  const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const reportDate = getParamDefinitionDate();
 
   const getTitle = () => {
     switch (type) {
@@ -1322,9 +1337,10 @@ function IngredientPickerModal({
           <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>{getTitle()}</Text>
         </Group>
       }
-      size="lg"
+      size="xl"
       radius="lg"
       styles={{
+        content: { width: '80vw', maxWidth: '1200px' },
         header: { borderBottom: `1px solid ${colors.border.light}`, paddingBottom: spacing.md },
         body: { padding: spacing.xl },
       }}
@@ -1344,19 +1360,199 @@ function IngredientPickerModal({
               </Group>
             </Paper>
             <Divider label="Or select an existing policy" labelPosition="center" />
-            <ScrollArea h={200}>
+            <ScrollArea h={320}>
               <Stack gap={spacing.sm}>
                 {policies?.map((p) => {
-                  const paramCount = Object.keys(p.policy?.policy_json || {}).length;
+                  const policyId = p.policy?.id || '';
+                  const policyJson = p.policy?.policy_json || {};
+                  const paramEntries = Object.entries(policyJson);
+                  const paramCount = paramEntries.length;
+                  const isExpanded = expandedPolicyId === policyId;
+
                   return (
-                    <Paper key={p.policy?.id} p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectPolicy(p.policy?.id || '', p.association?.label || 'Unnamed', paramCount)}>
-                      <Group justify="space-between">
-                        <Stack gap={2}>
+                    <Paper
+                      key={policyId}
+                      radius="md"
+                      withBorder
+                      style={{
+                        overflow: 'hidden',
+                        transition: 'all 0.2s ease',
+                        borderColor: isExpanded ? colorConfig.border : undefined,
+                      }}
+                    >
+                      {/* Main clickable row */}
+                      <Box
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: spacing.sm,
+                          cursor: 'pointer',
+                          transition: 'background 0.15s ease',
+                        }}
+                        onClick={() => handleSelectPolicy(policyId, p.association?.label || 'Unnamed', paramCount)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = colors.gray[50];
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = 'transparent';
+                        }}
+                      >
+                        {/* Policy info - takes remaining space */}
+                        <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
                           <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{p.association?.label || 'Unnamed'}</Text>
-                          <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>{paramCount} parameters</Text>
+                          <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                            {paramCount} param{paramCount !== 1 ? 's' : ''} changed
+                          </Text>
                         </Stack>
+
+                        {/* Info/expand button - isolated click zone */}
+                        <ActionIcon
+                          variant="subtle"
+                          color="gray"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation(); // Prevent selection
+                            setExpandedPolicyId(isExpanded ? null : policyId);
+                          }}
+                          style={{ marginRight: spacing.sm }}
+                          aria-label={isExpanded ? 'Hide parameter details' : 'Show parameter details'}
+                        >
+                          <IconInfoCircle size={18} />
+                        </ActionIcon>
+
+                        {/* Select indicator */}
                         <IconChevronRight size={16} color={colors.gray[400]} />
-                      </Group>
+                      </Box>
+
+                      {/* Expandable parameter details - table-like display */}
+                      <Box
+                        style={{
+                          maxHeight: isExpanded ? '400px' : '0px',
+                          opacity: isExpanded ? 1 : 0,
+                          overflow: isExpanded ? 'auto' : 'hidden',
+                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                          borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
+                        }}
+                      >
+                        <Box style={{ padding: spacing.md }}>
+                          {/* Table header */}
+                          <Box
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 120px 120px',
+                              gap: spacing.md,
+                              paddingBottom: spacing.xs,
+                              borderBottom: `1px solid ${colors.gray[200]}`,
+                              marginBottom: spacing.sm,
+                            }}
+                          >
+                            <Text fw={600} c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                              Parameter
+                            </Text>
+                            <Text fw={600} c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
+                              Current law
+                            </Text>
+                            <Text fw={600} c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
+                              Changed to
+                            </Text>
+                          </Box>
+
+                          {/* Parameter rows */}
+                          <Stack gap={spacing.xs}>
+                            {paramEntries.length > 0 ? (
+                              paramEntries.slice(0, 15).map(([paramName, paramValues]) => {
+                                // Get full hierarchical label for the parameter (no compacting)
+                                const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+                                const displayLabel = hierarchicalLabels.length > 0
+                                  ? formatLabelParts(hierarchicalLabels)
+                                  : paramName.split('.').pop() || paramName;
+
+                                // Get current law value
+                                const currentLawValue = getCurrentLawParameterValue(paramName, parameters, reportDate);
+
+                                // Get the changed value
+                                const valueEntries = Object.entries(paramValues as Record<string, unknown>);
+                                const rawValue = valueEntries.length > 0 ? valueEntries[0][1] : undefined;
+                                const metadata = parameters[paramName];
+                                const changedValue = rawValue !== undefined
+                                  ? formatParameterValue(rawValue, metadata?.unit)
+                                  : '—';
+
+                                return (
+                                  <Box
+                                    key={paramName}
+                                    style={{
+                                      display: 'grid',
+                                      gridTemplateColumns: '1fr 120px 120px',
+                                      gap: spacing.md,
+                                      padding: `${spacing.xs} 0`,
+                                      borderBottom: `1px solid ${colors.gray[100]}`,
+                                    }}
+                                  >
+                                    {/* Parameter name with code underneath */}
+                                    <Box style={{ minWidth: 0 }}>
+                                      <Text
+                                        fw={500}
+                                        style={{
+                                          fontSize: FONT_SIZES.normal,
+                                          color: colors.gray[800],
+                                          lineHeight: 1.4,
+                                        }}
+                                      >
+                                        {displayLabel}
+                                      </Text>
+                                      <Text
+                                        style={{
+                                          fontSize: FONT_SIZES.small,
+                                          color: colors.gray[500],
+                                          fontFamily: 'monospace',
+                                          wordBreak: 'break-all',
+                                        }}
+                                      >
+                                        {paramName}
+                                      </Text>
+                                    </Box>
+
+                                    {/* Current law value */}
+                                    <Text
+                                      style={{
+                                        fontSize: FONT_SIZES.small,
+                                        color: colors.gray[500],
+                                        textAlign: 'right',
+                                        alignSelf: 'center',
+                                      }}
+                                    >
+                                      {currentLawValue}
+                                    </Text>
+
+                                    {/* Changed value */}
+                                    <Text
+                                      fw={500}
+                                      style={{
+                                        fontSize: FONT_SIZES.small,
+                                        color: colorConfig.icon,
+                                        textAlign: 'right',
+                                        alignSelf: 'center',
+                                      }}
+                                    >
+                                      {changedValue}
+                                    </Text>
+                                  </Box>
+                                );
+                              })
+                            ) : (
+                              <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                                No parameter details available
+                              </Text>
+                            )}
+                            {paramEntries.length > 15 && (
+                              <Text c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textAlign: 'center', paddingTop: spacing.xs }}>
+                                +{paramEntries.length - 15} more parameter{paramEntries.length - 15 !== 1 ? 's' : ''}
+                              </Text>
+                            )}
+                          </Stack>
+                        </Box>
+                      </Box>
                     </Paper>
                   );
                 })}
