@@ -98,11 +98,11 @@ vi.mock('@/components/IngredientReadView', () => ({
 }));
 
 // Mock RenameIngredientModal component
-let mockRenameModalProps: any = null;
 vi.mock('@/components/common/RenameIngredientModal', () => ({
   RenameIngredientModal: vi.fn((props: any) => {
-    mockRenameModalProps = props;
-    if (!props.opened) return null;
+    if (!props.opened) {
+      return null;
+    }
     return (
       <div data-testid="rename-modal">
         <span data-testid="modal-current-label">{props.currentLabel}</span>
@@ -128,7 +128,6 @@ vi.mock('@/components/common/RenameIngredientModal', () => ({
 describe('PoliciesPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockRenameModalProps = null;
     (useUserPolicies as any).mockReturnValue(mockDefaultHookReturn);
     (useUpdatePolicyAssociation as any).mockReturnValue(createMockUpdateAssociationSuccess());
   });

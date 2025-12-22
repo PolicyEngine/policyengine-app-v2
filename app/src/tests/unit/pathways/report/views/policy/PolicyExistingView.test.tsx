@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import PolicyExistingView from '@/pathways/report/views/policy/PolicyExistingView';
 import {
-  ERROR_MESSAGES,
   mockOnBack,
   mockOnCancel,
   mockOnSelectPolicy,
