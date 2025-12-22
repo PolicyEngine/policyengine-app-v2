@@ -9,7 +9,9 @@ import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
+import type { Geography } from '@/types/ingredients/Geography';
 import { formatReportTimestamp } from '@/utils/dateUtils';
+import { isUKLocalLevelGeography } from '@/utils/geographyUtils';
 import { HouseholdReportOutput } from './report-output/HouseholdReportOutput';
 import ReportOutputLayout from './report-output/ReportOutputLayout';
 import { SocietyWideReportOutput } from './report-output/SocietyWideReportOutput';
@@ -87,8 +89,8 @@ export default function ReportOutputPage() {
     }
   }, [subpage, navigate, report, simulations, countryId, userReportId]);
 
-  // Determine which tabs to show based on output type and country
-  const tabs = outputType ? getTabsForOutputType(outputType, report?.countryId) : [];
+  // Determine which tabs to show based on output type, country, and geography scope
+  const tabs = outputType ? getTabsForOutputType(outputType, report?.countryId, geographies) : [];
 
   // Handle tab navigation (absolute path)
   const handleTabClick = (tabValue: string) => {
@@ -231,7 +233,8 @@ export default function ReportOutputPage() {
  */
 function getTabsForOutputType(
   outputType: ReportOutputType,
-  countryId?: string
+  countryId?: string,
+  geographies?: Geography[]
 ): Array<{ value: string; label: string }> {
   if (outputType === 'societyWide') {
     const tabs = [
@@ -242,9 +245,11 @@ function getTabsForOutputType(
       { value: 'dynamics', label: 'Dynamics' },
     ];
 
-    // IMPORTANT: Only show constituencies and local authorities for UK reports
-    // US does not have this capability at this time
-    if (countryId === 'uk') {
+    // Only show constituencies and local authorities for UK national or country-level reports
+    // Hide these tabs for constituency-level or local authority-level reports
+    // US does not have this capability
+    const hasLocalLevelGeography = geographies?.some((g) => isUKLocalLevelGeography(g));
+    if (countryId === 'uk' && !hasLocalLevelGeography) {
       tabs.push({ value: 'constituency', label: 'Constituencies' });
       tabs.push({ value: 'local-authority', label: 'Local authorities' });
     }

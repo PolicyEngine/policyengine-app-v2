@@ -7,11 +7,14 @@ import {
   TEST_COUNTRY_CODES,
   TEST_REGION_CODES,
 } from '@/tests/fixtures/utils/geographyUtilsMocks';
+import type { Geography } from '@/types/ingredients/Geography';
 import {
   getCountryLabel,
   getRegionLabel,
   getRegionType,
   getRegionTypeLabel,
+  getUKRegionTypeFromGeography,
+  isUKLocalLevelGeography,
 } from '@/utils/geographyUtils';
 
 describe('geographyUtils', () => {
@@ -288,6 +291,186 @@ describe('geographyUtils', () => {
 
       // Then
       expect(result).toBe(EXPECTED_REGION_TYPE_LABELS.STATE);
+    });
+  });
+
+  describe('getUKRegionTypeFromGeography', () => {
+    it('given UK national geography then returns national', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-uk',
+        countryId: 'uk',
+        scope: 'national',
+        geographyId: 'uk',
+      };
+
+      // When
+      const result = getUKRegionTypeFromGeography(geography);
+
+      // Then
+      expect(result).toBe('national');
+    });
+
+    it('given UK country-level geography then returns country', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-england',
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: 'country/england',
+      };
+
+      // When
+      const result = getUKRegionTypeFromGeography(geography);
+
+      // Then
+      expect(result).toBe('country');
+    });
+
+    it('given UK constituency geography then returns constituency', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-sheffield-central',
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: 'constituency/Sheffield Central',
+      };
+
+      // When
+      const result = getUKRegionTypeFromGeography(geography);
+
+      // Then
+      expect(result).toBe('constituency');
+    });
+
+    it('given UK local authority geography then returns local_authority', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-manchester',
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: 'local_authority/Manchester',
+      };
+
+      // When
+      const result = getUKRegionTypeFromGeography(geography);
+
+      // Then
+      expect(result).toBe('local_authority');
+    });
+
+    it('given US geography then returns null', () => {
+      // Given
+      const geography: Geography = {
+        id: 'us-ca',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: 'state/ca',
+      };
+
+      // When
+      const result = getUKRegionTypeFromGeography(geography);
+
+      // Then
+      expect(result).toBeNull();
+    });
+
+    it('given UK geography with unknown prefix then returns null', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-unknown',
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: 'unknown/region',
+      };
+
+      // When
+      const result = getUKRegionTypeFromGeography(geography);
+
+      // Then
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('isUKLocalLevelGeography', () => {
+    it('given UK national geography then returns false', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-uk',
+        countryId: 'uk',
+        scope: 'national',
+        geographyId: 'uk',
+      };
+
+      // When
+      const result = isUKLocalLevelGeography(geography);
+
+      // Then
+      expect(result).toBe(false);
+    });
+
+    it('given UK country-level geography then returns false', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-england',
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: 'country/england',
+      };
+
+      // When
+      const result = isUKLocalLevelGeography(geography);
+
+      // Then
+      expect(result).toBe(false);
+    });
+
+    it('given UK constituency geography then returns true', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-sheffield-central',
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: 'constituency/Sheffield Central',
+      };
+
+      // When
+      const result = isUKLocalLevelGeography(geography);
+
+      // Then
+      expect(result).toBe(true);
+    });
+
+    it('given UK local authority geography then returns true', () => {
+      // Given
+      const geography: Geography = {
+        id: 'uk-manchester',
+        countryId: 'uk',
+        scope: 'subnational',
+        geographyId: 'local_authority/Manchester',
+      };
+
+      // When
+      const result = isUKLocalLevelGeography(geography);
+
+      // Then
+      expect(result).toBe(true);
+    });
+
+    it('given US geography then returns false', () => {
+      // Given
+      const geography: Geography = {
+        id: 'us-ca',
+        countryId: 'us',
+        scope: 'subnational',
+        geographyId: 'state/ca',
+      };
+
+      // When
+      const result = isUKLocalLevelGeography(geography);
+
+      // Then
+      expect(result).toBe(false);
     });
   });
 });
