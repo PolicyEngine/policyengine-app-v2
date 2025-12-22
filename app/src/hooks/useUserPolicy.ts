@@ -200,14 +200,15 @@ export const useUserPolicies = (userId: string) => {
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
-  const policiesWithAssociations: UserPolicyWithAssociation[] | undefined =
-    associations?.map((association, index) => ({
+  const policiesWithAssociations: UserPolicyWithAssociation[] | undefined = associations?.map(
+    (association, index) => ({
       association,
       policy: policyQueries[index]?.data,
       isLoading: policyQueries[index]?.isLoading ?? false,
       error: policyQueries[index]?.error ?? null,
       isError: !!error,
-    }));
+    })
+  );
 
   return {
     data: policiesWithAssociations,

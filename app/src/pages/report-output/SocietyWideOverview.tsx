@@ -1,5 +1,5 @@
+import { IconCoin, IconHome, IconUsers } from '@tabler/icons-react';
 import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
-import { IconUsers, IconCoin, IconHome } from '@tabler/icons-react';
 import { SocietyWideReportOutput } from '@/api/societyWideCalculation';
 import MetricCard from '@/components/report/MetricCard';
 import { colors, spacing, typography } from '@/designTokens';
@@ -99,9 +99,7 @@ export default function SocietyWideOverview({ output }: SocietyWideOverviewProps
               label="Budgetary Impact"
               value={budgetValue}
               subtext={budgetSubtext}
-              trend={
-                budgetaryImpact === 0 ? 'neutral' : budgetIsPositive ? 'positive' : 'negative'
-              }
+              trend={budgetaryImpact === 0 ? 'neutral' : budgetIsPositive ? 'positive' : 'negative'}
               hero
             />
           </Box>

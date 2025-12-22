@@ -1,7 +1,7 @@
+import { IconChevronDown, IconChevronRight, IconWallet } from '@tabler/icons-react';
 import { useSelector } from 'react-redux';
 import { Box, Collapse, Group, Stack, Text, UnstyledButton } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconChevronDown, IconChevronRight, IconWallet } from '@tabler/icons-react';
 import HouseholdBreakdown from '@/components/household/HouseholdBreakdown';
 import MetricCard from '@/components/report/MetricCard';
 import { colors, spacing, typography } from '@/designTokens';

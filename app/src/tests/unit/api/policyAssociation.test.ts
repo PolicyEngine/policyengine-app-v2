@@ -418,5 +418,44 @@ describe('LocalStoragePolicyStore', () => {
       // Then
       expect(result).toEqual([]);
     });
+
+    it('given localStorage parse error then logs error with context', async () => {
+      // Given
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (localStorage.getItem as any).mockReturnValue('invalid json {{{');
+
+      // When
+      const result = await store.findByUser('user-123');
+
+      // Then
+      expect(result).toEqual([]);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[LocalStoragePolicyStore.getStoredPolicies]'),
+        expect.any(Error)
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to parse stored policies'),
+        expect.any(Error)
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
+
+    it('given localStorage parse error then error message mentions data corruption', async () => {
+      // Given
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      (localStorage.getItem as any).mockReturnValue('not valid json');
+
+      // When
+      await store.findByUser('user-123');
+
+      // Then
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Data may be corrupted'),
+        expect.any(Error)
+      );
+
+      consoleErrorSpy.mockRestore();
+    });
   });
 });

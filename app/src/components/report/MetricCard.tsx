@@ -1,5 +1,5 @@
-import { Box, Group, Text, ThemeIcon } from '@mantine/core';
 import { IconArrowDown, IconArrowUp, IconMinus } from '@tabler/icons-react';
+import { Box, Group, Text, ThemeIcon } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
 
 type MetricTrend = 'positive' | 'negative' | 'neutral';

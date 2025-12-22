@@ -43,7 +43,9 @@ export default function PolicyExistingView({
 
   function handlePolicySelect(association: UserPolicyWithAssociation) {
     if (!association) {
-      console.warn('[PolicyExistingView] handlePolicySelect called with null/undefined association');
+      console.warn(
+        '[PolicyExistingView] handlePolicySelect called with null/undefined association'
+      );
       return;
     }
 
@@ -59,7 +61,9 @@ export default function PolicyExistingView({
     if (isPolicyWithAssociation(localPolicy)) {
       handleSubmitPolicy();
     } else {
-      console.warn('[PolicyExistingView] handleSubmit: localPolicy is not a valid PolicyWithAssociation');
+      console.warn(
+        '[PolicyExistingView] handleSubmit: localPolicy is not a valid PolicyWithAssociation'
+      );
     }
   }
 
@@ -79,7 +83,9 @@ export default function PolicyExistingView({
     if (policyId) {
       onSelectPolicy(policyId, label, parameters);
     } else {
-      console.error('[PolicyExistingView] Cannot submit: policy ID is missing from selected policy');
+      console.error(
+        '[PolicyExistingView] Cannot submit: policy ID is missing from selected policy'
+      );
     }
   }
 
@@ -101,7 +107,8 @@ export default function PolicyExistingView({
         title="Select an existing policy"
         content={
           <Text c="red">
-            Error: {(error as Error)?.message || 'Failed to load policies. Please refresh and try again.'}
+            Error:{' '}
+            {(error as Error)?.message || 'Failed to load policies. Please refresh and try again.'}
           </Text>
         }
         buttonPreset="none"

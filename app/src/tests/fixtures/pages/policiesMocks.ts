@@ -3,7 +3,24 @@ import { UserPolicyWithAssociation } from '@/hooks/useUserPolicy';
 
 export const ERROR_MESSAGES = {
   FETCH_FAILED: 'Failed to fetch policies',
+  RENAME_FAILED: 'Failed to rename policy. Please try again.',
 } as const;
+
+// Mock mutation return values
+export const createMockUpdateAssociationSuccess = () => ({
+  mutateAsync: vi.fn().mockResolvedValue({ label: 'Updated Label' }),
+  isPending: false,
+});
+
+export const createMockUpdateAssociationFailure = () => ({
+  mutateAsync: vi.fn().mockRejectedValue(new Error('API Error')),
+  isPending: false,
+});
+
+export const createMockUpdateAssociationPending = () => ({
+  mutateAsync: vi.fn(),
+  isPending: true,
+});
 
 // Mock data uses the transformed Policy type (camelCase, with parameters array)
 export const mockPolicyData: UserPolicyWithAssociation[] = [
