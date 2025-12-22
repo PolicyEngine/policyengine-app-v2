@@ -73,7 +73,9 @@ describe('metadataReducer', () => {
       expectEmptyMetadata(state);
     });
 
-    test('given setCurrentCountry then preserves loading and error states', () => {
+    test('given setCurrentCountry when coreLoaded is true then resets loading and error states', () => {
+      // When switching countries with data already loaded, states should reset
+      // so the new country's data can be fetched fresh
       const initialState = createMockStateWithData({
         coreLoading: true,
         coreError: TEST_ERROR_MESSAGE,
@@ -81,8 +83,8 @@ describe('metadataReducer', () => {
       });
       const action = setCurrentCountry(TEST_COUNTRY_CA);
       const state = metadataReducer(initialState, action);
-      expectCoreLoadingState(state, true);
-      expectCoreErrorState(state, TEST_ERROR_MESSAGE);
+      expectCoreLoadingState(state, false);
+      expectCoreErrorState(state, null);
     });
   });
 

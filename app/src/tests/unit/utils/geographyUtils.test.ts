@@ -11,7 +11,6 @@ import type { Geography } from '@/types/ingredients/Geography';
 import {
   getCountryLabel,
   getRegionLabel,
-  getRegionType,
   getRegionTypeLabel,
   getUKRegionTypeFromGeography,
   isUKLocalLevelGeography,
