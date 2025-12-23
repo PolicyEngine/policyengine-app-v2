@@ -3,7 +3,7 @@ import Plot from 'react-plotly.js';
 import { Stack, Text } from '@mantine/core';
 import { CHART_COLORS } from '@/constants/chartColors';
 import { useChartWidth, useIsMobile, useWindowHeight } from '@/hooks/useChartDimensions';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 import {
   extendForDisplay,

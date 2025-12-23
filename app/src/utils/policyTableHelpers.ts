@@ -1,6 +1,6 @@
 import { getParamDefinitionDate } from '@/constants';
 import { Policy } from '@/types/ingredients/Policy';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';
 
 export { determinePolicyColumns } from './policyComparison';

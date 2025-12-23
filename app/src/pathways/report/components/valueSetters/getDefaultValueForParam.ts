@@ -1,4 +1,4 @@
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueIntervalCollection } from '@/types/subIngredients/valueInterval';

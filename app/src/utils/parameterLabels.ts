@@ -1,4 +1,4 @@
-import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadataCollection } from '@/types/metadata';
 
 /**
  * Splits a parameter path into its hierarchical parts.

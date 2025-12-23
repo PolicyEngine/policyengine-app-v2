@@ -133,7 +133,7 @@ export default function VariableArithmetic({
   }
 
   // Get display text and style configuration
-  const displayText = getVariableDisplayText(variable.label, comparison, isComparisonMode);
+  const displayText = getVariableDisplayText(variable.label ?? variable.name, comparison, isComparisonMode);
   const styleConfig = getDisplayStyleConfig(isComparisonMode, comparison.direction, isAdd);
 
   // Create arrow element based on configuration (hide if no change)

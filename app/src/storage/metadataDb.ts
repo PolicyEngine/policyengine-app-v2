@@ -64,8 +64,7 @@ export interface CacheMetadata {
   countryId: string;
   version: string;
   versionId: string;
-  coreLoaded: boolean;
-  parametersLoaded: boolean;
+  loaded: boolean;
   timestamp: number;
 }
 

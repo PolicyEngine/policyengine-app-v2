@@ -38,7 +38,7 @@ export default function HouseholdBuilderView({
   // Get metadata-driven options
   const basicInputFields = useBasicInputFields(countryId);
   const metadata = useSelector((state: RootState) => state.metadata);
-  const { coreLoading: loading, coreError: error } = metadata;
+  const { loading, error } = metadata;
 
   // Get all basic non-person fields dynamically (country-agnostic)
   // This handles US entities (tax_unit, spm_unit, etc.) and UK entities (benunit) automatically

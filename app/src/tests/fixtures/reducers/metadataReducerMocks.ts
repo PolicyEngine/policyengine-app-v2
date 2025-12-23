@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
 import { ParameterTreeNode } from '@/libs/buildParameterTree';
-import { MetadataApiPayload, MetadataState } from '@/types/metadata';
+import { MetadataApiPayload, MetadataState, VariableMetadata, ParameterMetadata } from '@/types/metadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 
 // Test constants
@@ -15,20 +15,17 @@ export const TEST_PARAMETER_LABEL = 'Income Tax';
 export const TEST_VARIABLE_KEY = 'employment_income';
 export const TEST_ENTITY_KEY = 'person';
 
-// Default V2 tiered loading states
-export const DEFAULT_V2_LOADING_STATES = {
-  coreLoading: false,
-  coreLoaded: false,
-  coreError: null,
-  parametersLoading: false,
-  parametersLoaded: false,
-  parametersError: null,
+// Default unified loading states
+export const DEFAULT_LOADING_STATES = {
+  loading: false,
+  loaded: false,
+  error: null,
 } as const;
 
 // Expected initial state (only contains API-driven data, not static data)
 export const EXPECTED_INITIAL_STATE: MetadataState = {
   currentCountry: null,
-  ...DEFAULT_V2_LOADING_STATES,
+  ...DEFAULT_LOADING_STATES,
   progress: 0,
   variables: {},
   parameters: {},
@@ -38,13 +35,19 @@ export const EXPECTED_INITIAL_STATE: MetadataState = {
 };
 
 // Mock variables
-export const MOCK_VARIABLES = {
+export const MOCK_VARIABLES: Record<string, VariableMetadata> = {
   [TEST_VARIABLE_KEY]: {
+    name: TEST_VARIABLE_KEY,
+    entity: 'person',
+    description: 'Annual employment income',
     label: 'Employment Income',
     unit: 'currency-USD',
     documentation: 'Annual employment income',
   },
   marital_status: {
+    name: 'marital_status',
+    entity: 'person',
+    description: 'Marital status of the person',
     label: 'Marital Status',
     possible_values: {
       single: 'Single',
@@ -54,7 +57,7 @@ export const MOCK_VARIABLES = {
 };
 
 // Mock parameters
-export const MOCK_PARAMETERS = {
+export const MOCK_PARAMETERS: Record<string, ParameterMetadata> = {
   [TEST_PARAMETER_KEY]: {
     parameter: TEST_PARAMETER_KEY,
     label: TEST_PARAMETER_LABEL,
@@ -78,12 +81,10 @@ export const MOCK_ENTITIES = {
   [TEST_ENTITY_KEY]: {
     label: 'Person',
     plural: 'people',
-    documentation: 'A person entity',
   },
   household: {
     label: 'Household',
     plural: 'households',
-    documentation: 'A household entity',
   },
 };
 
@@ -91,11 +92,9 @@ export const MOCK_ENTITIES = {
 export const MOCK_VARIABLE_MODULES = {
   'gov.tax': {
     label: 'Taxation',
-    documentation: 'Tax-related variables',
   },
   'gov.benefit': {
     label: 'Benefits',
-    documentation: 'Benefit-related variables',
   },
 };
 
@@ -184,9 +183,8 @@ export const createMockApiPayload = (
 // Mock state with data (only API-driven data)
 export const createMockStateWithData = (overrides?: Partial<MetadataState>): MetadataState => ({
   currentCountry: TEST_COUNTRY_US,
-  ...DEFAULT_V2_LOADING_STATES,
-  coreLoaded: true,
-  parametersLoaded: true,
+  ...DEFAULT_LOADING_STATES,
+  loaded: true,
   progress: 100,
   variables: MOCK_VARIABLES,
   parameters: MOCK_PARAMETERS,
@@ -199,13 +197,13 @@ export const createMockStateWithData = (overrides?: Partial<MetadataState>): Met
 // Mock loading state
 export const MOCK_LOADING_STATE: MetadataState = {
   ...EXPECTED_INITIAL_STATE,
-  coreLoading: true,
+  loading: true,
 };
 
 // Mock error state
 export const MOCK_ERROR_STATE: MetadataState = {
   ...EXPECTED_INITIAL_STATE,
-  coreError: TEST_ERROR_MESSAGE,
+  error: TEST_ERROR_MESSAGE,
 };
 
 // Mock state after clearing
@@ -220,8 +218,8 @@ export const createExpectedFulfilledState = (
   apiPayload: MetadataApiPayload
 ): MetadataState => ({
   currentCountry: country,
-  ...DEFAULT_V2_LOADING_STATES,
-  coreLoaded: true,
+  ...DEFAULT_LOADING_STATES,
+  loaded: true,
   progress: 100,
   variables: apiPayload.result.variables,
   parameters: apiPayload.result.parameters,
@@ -235,12 +233,12 @@ export const expectStateToEqual = (actual: MetadataState, expected: MetadataStat
   expect(actual).toEqual(expected);
 };
 
-export const expectCoreLoadingState = (state: MetadataState, isLoading: boolean) => {
-  expect(state.coreLoading).toBe(isLoading);
+export const expectLoadingState = (state: MetadataState, isLoading: boolean) => {
+  expect(state.loading).toBe(isLoading);
 };
 
-export const expectCoreErrorState = (state: MetadataState, error: string | null) => {
-  expect(state.coreError).toBe(error);
+export const expectErrorState = (state: MetadataState, error: string | null) => {
+  expect(state.error).toBe(error);
 };
 
 export const expectCurrentCountry = (state: MetadataState, country: string | null) => {

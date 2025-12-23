@@ -1,4 +1,4 @@
-import { UK_REGION_TYPES, US_REGION_TYPES } from './regionTypes';
+import { UK_REGION_TYPES, US_REGION_TYPES } from "./regionTypes";
 
 /**
  * Region entry from API metadata
@@ -20,23 +20,118 @@ export interface MetadataApiPayload {
   status: string;
   message: string | null;
   result: {
-    variables: Record<string, any>;
-    parameters: Record<string, any>;
-    entities: Record<string, any>;
-    variableModules: Record<string, any>;
+    variables: Record<string, VariableMetadata>;
+    parameters: Record<string, ParameterMetadata>;
+    entities: Record<string, EntityMetadata>;
+    variableModules: Record<string, ModuleMetadata>;
     economy_options: {
       region: MetadataRegionEntry[];
       time_period: Array<{ name: number; label: string }>;
-      datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
+      datasets: Array<{
+        name: string;
+        label: string;
+        title: string;
+        default: boolean;
+      }>;
     };
     current_law_id: number;
     basicInputs: string[];
     modelled_policies: {
-      core: Record<string, any>;
-      filtered: Record<string, any>;
+      core: Record<string, ModelledPolicy>;
+      filtered: Record<string, ModelledPolicy>;
     };
     version: string;
   };
+}
+
+/**
+ * Variable metadata - represents a variable in the tax-benefit model
+ */
+export interface VariableMetadata {
+  // Core fields from V2 API
+  id?: string;
+  name: string;
+  entity: string;
+  description: string | null;
+  data_type?: string;
+  possible_values?: string[] | Record<string, string> | null;
+  tax_benefit_model_version_id?: string;
+  created_at?: string;
+
+  // V1 API fields (may not be present in V2)
+  label?: string;
+  unit?: string | null;
+  valueType?: string;
+  definitionPeriod?: string;
+  documentation?: string | null;
+  isInputVariable?: boolean;
+  moduleName?: string;
+  indexInModule?: number;
+  hidden?: boolean;
+
+  // Variable arithmetic (for breakdown calculations)
+  adds?: string | string[];
+  subtracts?: string | string[];
+}
+
+/**
+ * Parameter metadata - represents a policy parameter
+ */
+export interface ParameterMetadata {
+  // Core fields
+  id?: string;
+  name?: string;
+  label: string;
+  description?: string | null;
+  unit?: string | null;
+  data_type?: string;
+  tax_benefit_model_version_id?: string;
+  created_at?: string;
+
+  // Parameter tree fields
+  type?: "parameter" | "parameterNode";
+  parameter: string; // Dot-separated path to parameter
+
+  // Values indexed by date
+  values?: Record<string, unknown>;
+
+  // Scope flags
+  economy?: boolean;
+  household?: boolean;
+
+  // Period for time-based parameters
+  period?: string | null;
+}
+
+/**
+ * Collection of parameter metadata indexed by parameter name
+ */
+export type ParameterMetadataCollection = Record<string, ParameterMetadata>;
+
+/**
+ * Entity metadata - represents an entity type (person, household, etc.)
+ */
+export interface EntityMetadata {
+  label: string;
+  plural: string;
+  documentation?: string;
+  is_person?: boolean;
+}
+
+/**
+ * Module metadata - represents a variable module
+ */
+export interface ModuleMetadata {
+  label: string;
+  documentation?: string;
+}
+
+/**
+ * Modelled policy metadata
+ */
+export interface ModelledPolicy {
+  label: string;
+  id: number;
 }
 
 // Re-export ParameterTreeNode type from buildParameterTree
@@ -45,12 +140,12 @@ export interface ParameterTreeNode {
   label: string;
   index: number;
   children?: ParameterTreeNode[];
-  type?: 'parameterNode' | 'parameter';
+  type?: "parameterNode" | "parameter";
   parameter?: string;
   description?: string | null;
   unit?: string | null;
   period?: string | null;
-  values?: Record<string, any>;
+  values?: Record<string, unknown>;
   economy?: boolean;
   household?: boolean;
 }
@@ -69,18 +164,20 @@ export interface MetadataState {
   /** Download progress percentage (0-100) for metadata fetch */
   progress: number;
 
-  // V2 tiered loading states
-  coreLoading: boolean;
-  coreLoaded: boolean;
-  coreError: string | null;
-  parametersLoading: boolean;
-  parametersLoaded: boolean;
-  parametersError: string | null;
+  // Unified loading state
+  loading: boolean;
+  loaded: boolean;
+  error: string | null;
 
   // API-driven data
-  variables: Record<string, any>;
-  parameters: Record<string, any>;
-  datasets: Array<{ name: string; label: string; title: string; default: boolean }>;
+  variables: Record<string, VariableMetadata>;
+  parameters: Record<string, ParameterMetadata>;
+  datasets: Array<{
+    name: string;
+    label: string;
+    title: string;
+    default: boolean;
+  }>;
   version: string | null;
 
   // Computed parameter tree for policy creation UI (built when metadata is fetched)

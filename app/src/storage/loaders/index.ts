@@ -1,13 +1,6 @@
 export {
   loadCoreMetadata,
   isCoreMetadataCached,
-  type CoreMetadata,
-  type CoreMetadataLoadResult,
+  type Metadata,
+  type MetadataLoadResult,
 } from "./coreMetadataLoader";
-
-export {
-  loadParameters,
-  isParametersCached,
-  type ParametersData,
-  type ParametersLoadResult,
-} from "./parametersLoader";

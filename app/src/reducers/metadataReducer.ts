@@ -1,7 +1,11 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { buildParameterTree } from '@/libs/buildParameterTree';
-import { loadCoreMetadata, loadParameters } from '@/storage';
-import { MetadataState } from '@/types/metadata';
+import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { buildParameterTree } from "@/libs/buildParameterTree";
+import { loadCoreMetadata } from "@/storage";
+import {
+  MetadataState,
+  VariableMetadata,
+  ParameterMetadata,
+} from "@/types/metadata";
 
 /**
  * Initial state for API-driven metadata
@@ -12,13 +16,10 @@ import { MetadataState } from '@/types/metadata';
 const initialState: MetadataState = {
   currentCountry: null,
 
-  // Tiered loading states
-  coreLoading: false,
-  coreLoaded: false,
-  coreError: null,
-  parametersLoading: false,
-  parametersLoaded: false,
-  parametersError: null,
+  // Unified loading state
+  loading: false,
+  loaded: false,
+  error: null,
   progress: 0,
 
   // API-driven data
@@ -42,41 +43,30 @@ export const fetchMetadataThunk = createAsyncThunk<
   }
 });
 
-// V2 thunk: Fetch core metadata (variables + datasets)
+// V2 thunk: Fetch all metadata (variables, datasets, parameters, parameterValues)
 export const fetchCoreMetadataThunk = createAsyncThunk(
-  'metadata/fetchCore',
+  "metadata/fetchCore",
   async (countryId: string, { rejectWithValue }) => {
     try {
       const result = await loadCoreMetadata(countryId);
       return { ...result, countryId };
     } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
+      return rejectWithValue(
+        error instanceof Error ? error.message : "Unknown error",
+      );
     }
-  }
-);
-
-// Fetch parameters (lazy load)
-export const fetchParametersThunk = createAsyncThunk(
-  'metadata/fetchParameters',
-  async (countryId: string, { rejectWithValue }) => {
-    try {
-      const result = await loadParameters(countryId);
-      return result;
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
-    }
-  }
+  },
 );
 
 const metadataSlice = createSlice({
-  name: 'metadata',
+  name: "metadata",
   initialState,
   reducers: {
     setCurrentCountry(state, action: PayloadAction<string>) {
       state.currentCountry = action.payload;
       // Optionally clear existing metadata when country changes
       // This prevents showing stale data from previous country
-      if (state.version !== null || state.coreLoaded) {
+      if (state.version !== null || state.loaded) {
         // Clear API-driven metadata and reset loading states
         state.variables = {};
         state.parameters = {};
@@ -84,12 +74,9 @@ const metadataSlice = createSlice({
         state.version = null;
         state.parameterTree = null;
         // Reset loading states
-        state.coreLoaded = false;
-        state.coreLoading = false;
-        state.coreError = null;
-        state.parametersLoaded = false;
-        state.parametersLoading = false;
-        state.parametersError = null;
+        state.loaded = false;
+        state.loading = false;
+        state.error = null;
       }
     },
     clearMetadata(state) {
@@ -98,24 +85,36 @@ const metadataSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Core metadata thunk
       .addCase(fetchCoreMetadataThunk.pending, (state) => {
-        state.coreLoading = true;
-        state.coreError = null;
+        state.loading = true;
+        state.error = null;
       })
       .addCase(fetchCoreMetadataThunk.fulfilled, (state, action) => {
         const { data, countryId } = action.payload;
 
-        state.coreLoading = false;
-        state.coreLoaded = true;
-        state.coreError = null;
+        state.loading = false;
+        state.loaded = true;
+        state.error = null;
         state.currentCountry = countryId;
         state.version = data.version;
 
         // Transform V2 variables array to record format
-        const variablesRecord: Record<string, any> = {};
+        const variablesRecord: Record<string, VariableMetadata> = {};
         for (const v of data.variables) {
-          variablesRecord[v.name] = v;
+          variablesRecord[v.name] = {
+            id: v.id,
+            name: v.name,
+            entity: v.entity,
+            description: v.description,
+            data_type: v.data_type,
+            possible_values: v.possible_values,
+            tax_benefit_model_version_id: v.tax_benefit_model_version_id,
+            created_at: v.created_at,
+            // Generate label from name if not provided
+            label: v.name
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase()),
+          };
         }
         state.variables = variablesRecord;
 
@@ -127,31 +126,20 @@ const metadataSlice = createSlice({
           default: i === 0,
         }));
 
-        // Static data (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
-        // is no longer stored in Redux. Access it via hooks from @/hooks/useStaticMetadata.
-      })
-      .addCase(fetchCoreMetadataThunk.rejected, (state, action) => {
-        state.coreLoading = false;
-        state.coreError = action.payload as string;
-      })
-      // Parameters thunk
-      .addCase(fetchParametersThunk.pending, (state) => {
-        state.parametersLoading = true;
-        state.parametersError = null;
-      })
-      .addCase(fetchParametersThunk.fulfilled, (state, action) => {
-        const { data } = action.payload;
-
-        state.parametersLoading = false;
-        state.parametersLoaded = true;
-        state.parametersError = null;
-
         // Transform V2 parameters array to record format with values
-        const parametersRecord: Record<string, any> = {};
+        const parametersRecord: Record<string, ParameterMetadata> = {};
         for (const p of data.parameters) {
           parametersRecord[p.name] = {
-            ...p,
-            // Parameter values will be associated by parameter_id
+            id: p.id,
+            name: p.name,
+            label: p.label,
+            description: p.description,
+            unit: p.unit,
+            data_type: p.data_type,
+            tax_benefit_model_version_id: p.tax_benefit_model_version_id,
+            created_at: p.created_at,
+            parameter: p.name, // Use name as parameter path
+            type: "parameter",
             values: {},
           };
         }
@@ -161,8 +149,11 @@ const metadataSlice = createSlice({
           const param = data.parameters.find((p) => p.id === pv.parameter_id);
           if (param && parametersRecord[param.name]) {
             // Use start_date as key for values (V1 format compatibility)
-            const dateKey = pv.start_date.split('T')[0];
-            parametersRecord[param.name].values[dateKey] = pv.value_json;
+            const dateKey = pv.start_date.split("T")[0];
+            if (!parametersRecord[param.name].values) {
+              parametersRecord[param.name].values = {};
+            }
+            parametersRecord[param.name].values![dateKey] = pv.value_json;
           }
         }
 
@@ -174,10 +165,13 @@ const metadataSlice = createSlice({
         } catch {
           state.parameterTree = null;
         }
+
+        // Static data (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
+        // is no longer stored in Redux. Access it via hooks from @/hooks/useStaticMetadata.
       })
-      .addCase(fetchParametersThunk.rejected, (state, action) => {
-        state.parametersLoading = false;
-        state.parametersError = action.payload as string;
+      .addCase(fetchCoreMetadataThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

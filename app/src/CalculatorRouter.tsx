@@ -17,7 +17,6 @@ import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
 import { CoreMetadataGuard } from './routing/guards/CoreMetadataGuard';
-import { ParametersGuard } from './routing/guards/ParametersGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 
 /**
@@ -43,39 +42,11 @@ const router = createBrowserRouter(
       path: '/:countryId',
       element: <CountryGuard />,
       children: [
-        // All routes need core metadata (variables + datasets)
+        // All routes need metadata (variables, datasets, parameters, parameterValues)
         {
           element: <CoreMetadataGuard />,
           children: [
-            // Routes that also need parameters (policy editing, reports)
-            {
-              element: <ParametersGuard />,
-              children: [
-                {
-                  element: (
-                    <StandardLayout>
-                      <Outlet />
-                    </StandardLayout>
-                  ),
-                  children: [
-                    {
-                      path: 'report-output/:reportId/:subpage?/:view?',
-                      element: <ReportOutputPage />,
-                    },
-                  ],
-                },
-                {
-                  element: <PathwayLayout />,
-                  children: [
-                    {
-                      path: 'policies/create',
-                      element: <PolicyPathwayWrapper />,
-                    },
-                  ],
-                },
-              ],
-            },
-            // Routes that only need core metadata
+            // Routes with StandardLayout
             {
               element: <StandardLayoutOutlet />,
               children: [
@@ -107,9 +78,13 @@ const router = createBrowserRouter(
                   path: 'account',
                   element: <div>Account settings page</div>,
                 },
+                {
+                  path: 'report-output/:reportId/:subpage?/:view?',
+                  element: <ReportOutputPage />,
+                },
               ],
             },
-            // Pathway routes (core metadata only)
+            // Pathway routes
             {
               element: <PathwayLayout />,
               children: [
@@ -124,6 +99,10 @@ const router = createBrowserRouter(
                 {
                   path: 'households/create',
                   element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <PolicyPathwayWrapper />,
                 },
               ],
             },

@@ -6,17 +6,16 @@ import ErrorPage from '@/pages/report-output/ErrorPage';
 import LoadingPage from '@/pages/report-output/LoadingPage';
 
 /**
- * Guard component that ensures core metadata (variables + datasets) is loaded
- * before rendering child routes.
+ * Guard component that ensures all metadata (variables, datasets, parameters, parameterValues)
+ * is loaded before rendering child routes.
  *
- * This is the V2 tiered loading approach - only loads essential data immediately.
- * For routes that also need parameters, wrap with ParametersGuard.
+ * This is the V2 unified loading approach - loads all metadata in one request.
  *
  * Loading states:
- * 1. coreLoading === true → Shows loading page
- * 2. coreError !== null → Shows error page
- * 3. coreLoaded === false → Shows loading page
- * 4. coreLoaded === true → Renders child routes
+ * 1. loading === true → Shows loading page
+ * 2. error !== null → Shows error page
+ * 3. loaded === false → Shows loading page
+ * 4. loaded === true → Renders child routes
  *
  * Example usage in Router:
  * ```tsx
@@ -32,13 +31,13 @@ export function CoreMetadataGuard() {
   const countryId = useCurrentCountry();
   useFetchCoreMetadata(countryId);
 
-  const { coreLoading, coreLoaded, coreError } = useSelector(selectCoreMetadataState);
+  const { loading, loaded, error } = useSelector(selectCoreMetadataState);
 
-  if (coreError) {
-    return <ErrorPage error={coreError} />;
+  if (error) {
+    return <ErrorPage error={error} />;
   }
 
-  if (coreLoading || !coreLoaded) {
+  if (loading || !loaded) {
     return <LoadingPage message="Loading metadata..." />;
   }
 
