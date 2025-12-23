@@ -40,6 +40,9 @@ vi.mock('@/storage/metadataDb', () => {
 
 // Import after mock setup
 import { db } from '@/storage/metadataDb';
+
+// Cast db to any for mocking chained methods that don't exist on the actual type
+const mockDb = db as any;
 import {
   bulkLoadVariables,
   bulkLoadParameters,
@@ -266,17 +269,17 @@ describe('metadataBulkLoader', () => {
     it('given version id then queries variables by version', async () => {
       // Given
       const variables = createMockVariables(3);
-      vi.mocked(db.variables.where).mockReturnThis();
-      vi.mocked(db.variables.equals).mockReturnThis();
-      vi.mocked(db.variables.toArray).mockResolvedValue(variables);
+      vi.mocked(mockDb.variables.where).mockReturnThis();
+      vi.mocked(mockDb.variables.equals).mockReturnThis();
+      vi.mocked(mockDb.variables.toArray).mockResolvedValue(variables);
 
       // When
       const result = await getVariablesByVersion(TEST_VERSIONS.US_VERSION_ID);
 
       // Then
       expect(result).toEqual(variables);
-      expect(db.variables.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
-      expect(db.variables.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
+      expect(mockDb.variables.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
+      expect(mockDb.variables.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
     });
   });
 
@@ -284,17 +287,17 @@ describe('metadataBulkLoader', () => {
     it('given version id then queries parameters by version', async () => {
       // Given
       const parameters = createMockParameters(3);
-      vi.mocked(db.parameters.where).mockReturnThis();
-      vi.mocked(db.parameters.equals).mockReturnThis();
-      vi.mocked(db.parameters.toArray).mockResolvedValue(parameters);
+      vi.mocked(mockDb.parameters.where).mockReturnThis();
+      vi.mocked(mockDb.parameters.equals).mockReturnThis();
+      vi.mocked(mockDb.parameters.toArray).mockResolvedValue(parameters);
 
       // When
       const result = await getParametersByVersion(TEST_VERSIONS.US_VERSION_ID);
 
       // Then
       expect(result).toEqual(parameters);
-      expect(db.parameters.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
-      expect(db.parameters.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
+      expect(mockDb.parameters.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
+      expect(mockDb.parameters.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
     });
   });
 
@@ -302,17 +305,17 @@ describe('metadataBulkLoader', () => {
     it('given parameter id then queries parameter values by parameter id', async () => {
       // Given
       const parameterValues = createMockParameterValues(2);
-      vi.mocked(db.parameterValues.where).mockReturnThis();
-      vi.mocked(db.parameterValues.equals).mockReturnThis();
-      vi.mocked(db.parameterValues.toArray).mockResolvedValue(parameterValues);
+      vi.mocked(mockDb.parameterValues.where).mockReturnThis();
+      vi.mocked(mockDb.parameterValues.equals).mockReturnThis();
+      vi.mocked(mockDb.parameterValues.toArray).mockResolvedValue(parameterValues);
 
       // When
       const result = await getParameterValues('param-1');
 
       // Then
       expect(result).toEqual(parameterValues);
-      expect(db.parameterValues.where).toHaveBeenCalledWith('parameter_id');
-      expect(db.parameterValues.equals).toHaveBeenCalledWith('param-1');
+      expect(mockDb.parameterValues.where).toHaveBeenCalledWith('parameter_id');
+      expect(mockDb.parameterValues.equals).toHaveBeenCalledWith('param-1');
     });
   });
 
@@ -320,24 +323,24 @@ describe('metadataBulkLoader', () => {
     it('given variable name then queries and returns variable', async () => {
       // Given
       const variable = createMockVariable({ name: 'income_tax' });
-      vi.mocked(db.variables.where).mockReturnThis();
-      vi.mocked(db.variables.equals).mockReturnThis();
-      vi.mocked(db.variables.first).mockResolvedValue(variable);
+      vi.mocked(mockDb.variables.where).mockReturnThis();
+      vi.mocked(mockDb.variables.equals).mockReturnThis();
+      vi.mocked(mockDb.variables.first).mockResolvedValue(variable);
 
       // When
       const result = await getVariableByName('income_tax');
 
       // Then
       expect(result).toEqual(variable);
-      expect(db.variables.where).toHaveBeenCalledWith('name');
-      expect(db.variables.equals).toHaveBeenCalledWith('income_tax');
+      expect(mockDb.variables.where).toHaveBeenCalledWith('name');
+      expect(mockDb.variables.equals).toHaveBeenCalledWith('income_tax');
     });
 
     it('given non-existent variable name then returns undefined', async () => {
       // Given
-      vi.mocked(db.variables.where).mockReturnThis();
-      vi.mocked(db.variables.equals).mockReturnThis();
-      vi.mocked(db.variables.first).mockResolvedValue(undefined);
+      vi.mocked(mockDb.variables.where).mockReturnThis();
+      vi.mocked(mockDb.variables.equals).mockReturnThis();
+      vi.mocked(mockDb.variables.first).mockResolvedValue(undefined);
 
       // When
       const result = await getVariableByName('non_existent');
@@ -351,24 +354,24 @@ describe('metadataBulkLoader', () => {
     it('given parameter name then queries and returns parameter', async () => {
       // Given
       const parameter = createMockParameter({ name: 'basic_rate' });
-      vi.mocked(db.parameters.where).mockReturnThis();
-      vi.mocked(db.parameters.equals).mockReturnThis();
-      vi.mocked(db.parameters.first).mockResolvedValue(parameter);
+      vi.mocked(mockDb.parameters.where).mockReturnThis();
+      vi.mocked(mockDb.parameters.equals).mockReturnThis();
+      vi.mocked(mockDb.parameters.first).mockResolvedValue(parameter);
 
       // When
       const result = await getParameterByName('basic_rate');
 
       // Then
       expect(result).toEqual(parameter);
-      expect(db.parameters.where).toHaveBeenCalledWith('name');
-      expect(db.parameters.equals).toHaveBeenCalledWith('basic_rate');
+      expect(mockDb.parameters.where).toHaveBeenCalledWith('name');
+      expect(mockDb.parameters.equals).toHaveBeenCalledWith('basic_rate');
     });
 
     it('given non-existent parameter name then returns undefined', async () => {
       // Given
-      vi.mocked(db.parameters.where).mockReturnThis();
-      vi.mocked(db.parameters.equals).mockReturnThis();
-      vi.mocked(db.parameters.first).mockResolvedValue(undefined);
+      vi.mocked(mockDb.parameters.where).mockReturnThis();
+      vi.mocked(mockDb.parameters.equals).mockReturnThis();
+      vi.mocked(mockDb.parameters.first).mockResolvedValue(undefined);
 
       // When
       const result = await getParameterByName('non_existent');
@@ -381,22 +384,22 @@ describe('metadataBulkLoader', () => {
   describe('clearVersionData', () => {
     it('given version id then clears variables and parameters for that version', async () => {
       // Given
-      vi.mocked(db.variables.where).mockReturnThis();
-      vi.mocked(db.variables.equals).mockReturnThis();
-      vi.mocked(db.parameters.where).mockReturnThis();
-      vi.mocked(db.parameters.equals).mockReturnThis();
+      vi.mocked(mockDb.variables.where).mockReturnThis();
+      vi.mocked(mockDb.variables.equals).mockReturnThis();
+      vi.mocked(mockDb.parameters.where).mockReturnThis();
+      vi.mocked(mockDb.parameters.equals).mockReturnThis();
 
       // When
       await clearVersionData(TEST_VERSIONS.US_VERSION_ID);
 
       // Then
-      expect(db.transaction).toHaveBeenCalled();
-      expect(db.variables.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
-      expect(db.variables.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
-      expect(db.variables.delete).toHaveBeenCalled();
-      expect(db.parameters.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
-      expect(db.parameters.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
-      expect(db.parameters.delete).toHaveBeenCalled();
+      expect(mockDb.transaction).toHaveBeenCalled();
+      expect(mockDb.variables.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
+      expect(mockDb.variables.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
+      expect(mockDb.variables.delete).toHaveBeenCalled();
+      expect(mockDb.parameters.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
+      expect(mockDb.parameters.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
+      expect(mockDb.parameters.delete).toHaveBeenCalled();
     });
   });
 

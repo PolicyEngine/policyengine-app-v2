@@ -1,7 +1,8 @@
 /**
  * Fixtures for metadata hooks tests
  */
-import { createMockVariables, TEST_COUNTRIES, TEST_VERSIONS } from '../storage/storageMocks';
+import { MetadataState } from '@/types/metadata';
+import { TEST_COUNTRIES, TEST_VERSIONS } from '../storage/storageMocks';
 
 // Re-export shared constants
 export { TEST_COUNTRIES, TEST_VERSIONS };
@@ -10,38 +11,33 @@ export { TEST_COUNTRIES, TEST_VERSIONS };
 export const TEST_YEAR = 2025;
 
 // Mock Redux state for metadata
-export const MOCK_METADATA_STATE_INITIAL = {
-  coreLoading: false,
-  coreLoaded: false,
-  coreError: null,
-  parametersLoading: false,
-  parametersLoaded: false,
-  parametersError: null,
+export const MOCK_METADATA_STATE_INITIAL: MetadataState = {
+  loading: false,
+  loaded: false,
+  error: null,
   currentCountry: null,
   version: null,
-  versionId: null,
   variables: {},
   parameters: {},
-  parameterValues: {},
   datasets: [],
+  parameterTree: null,
 };
 
-export const MOCK_METADATA_STATE_LOADING = {
+export const MOCK_METADATA_STATE_LOADING: MetadataState = {
   ...MOCK_METADATA_STATE_INITIAL,
-  coreLoading: true,
+  loading: true,
 };
 
-export const MOCK_METADATA_STATE_LOADED = {
+export const MOCK_METADATA_STATE_LOADED: MetadataState = {
   ...MOCK_METADATA_STATE_INITIAL,
-  coreLoaded: true,
+  loaded: true,
   currentCountry: TEST_COUNTRIES.US,
   version: TEST_VERSIONS.US_VERSION,
-  versionId: TEST_VERSIONS.US_VERSION_ID,
 };
 
-export const MOCK_METADATA_STATE_ERROR = {
+export const MOCK_METADATA_STATE_ERROR: MetadataState = {
   ...MOCK_METADATA_STATE_INITIAL,
-  coreError: 'Failed to load metadata',
+  error: 'Failed to load metadata',
 };
 
 // Mock variables for entity categorization tests

@@ -198,7 +198,7 @@ describe('metadataUtils', () => {
       expect(result.parameterTree).toBeNull();
       expect(result.variables).toHaveProperty('age');
       expect(result.variables).toHaveProperty('state_name');
-      expect(result.variables.state_name.possibleValues).toBeDefined();
+      expect(result.variables.state_name.possible_values).toBeDefined();
       // Static data (entities, basicInputs, economyOptions, etc.) is no longer returned
     });
 
