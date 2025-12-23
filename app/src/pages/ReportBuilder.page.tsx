@@ -31,6 +31,11 @@ import {
   UnstyledButton,
   Skeleton,
   Drawer,
+  NavLink,
+  Popover,
+  Container,
+  Title,
+  Loader,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -86,6 +91,19 @@ import {
   getCurrentLawParameterValue,
   formatParameterValue,
 } from '@/utils/policyTableHelpers';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { ParameterTreeNode } from '@/types/metadata';
+import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { useCreatePolicy } from '@/hooks/useCreatePolicy';
+import { PolicyAdapter } from '@/adapters';
+import { Policy } from '@/types/ingredients/Policy';
+import { PolicyCreationPayload } from '@/types/payloads';
+import { Parameter, getParameterByName } from '@/types/subIngredients/parameter';
+import { ValueInterval, ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';
+import { getDateRange } from '@/libs/metadataUtils';
+import { capitalize } from '@/utils/stringUtils';
+import { ValueSetterComponents, ValueSetterMode, ModeSelectorButton } from '@/pathways/report/components/valueSetters';
+import HistoricalValues from '@/pathways/report/components/policyParameterSelector/HistoricalValues';
 
 // ============================================================================
 // TYPES
@@ -1792,7 +1810,7 @@ function PolicyBrowseModal({
       label: p.association?.label || 'Unnamed policy',
       paramCount: Object.keys(p.policy?.policy_json || {}).length,
       policyJson: p.policy?.policy_json || {},
-      createdAt: p.association?.created_at,
+      createdAt: p.association?.createdAt,
     }));
   }, [policies]);
 
@@ -2459,6 +2477,608 @@ function PolicyBrowseModal({
 }
 
 // ============================================================================
+// POLICY CREATION MODAL - Single-step integrated policy builder
+// ============================================================================
+
+interface PolicyCreationModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onPolicyCreated: (policy: PolicyStateProps) => void;
+  simulationIndex: number;
+}
+
+function PolicyCreationModal({
+  isOpen,
+  onClose,
+  onPolicyCreated,
+  simulationIndex,
+}: PolicyCreationModalProps) {
+  const countryId = useCurrentCountry() as 'us' | 'uk';
+
+  // Get metadata from Redux state
+  const { parameterTree, parameters, loading: metadataLoading } = useSelector(
+    (state: RootState) => state.metadata
+  );
+  const { minDate, maxDate } = useSelector(getDateRange);
+
+  // Local policy state
+  const [policyLabel, setPolicyLabel] = useState<string>('');
+  const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
+
+  // Parameter selection state
+  const [selectedParam, setSelectedParam] = useState<ParameterMetadata | null>(null);
+  const [expandedMenuItems, setExpandedMenuItems] = useState<Set<string>>(new Set());
+
+  // Value setter state
+  const [valueSetterMode, setValueSetterMode] = useState<ValueSetterMode>(ValueSetterMode.DEFAULT);
+  const [intervals, setIntervals] = useState<ValueInterval[]>([]);
+  const [startDate, setStartDate] = useState<string>('2025-01-01');
+  const [endDate, setEndDate] = useState<string>('2025-12-31');
+
+  // Confirmation popover state
+  const [confirmPopoverOpen, setConfirmPopoverOpen] = useState(false);
+
+  // API hook for creating policy
+  const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      const defaultLabel = simulationIndex === 0 ? 'Baseline policy' : 'Reform policy';
+      setPolicyLabel(defaultLabel);
+      setPolicyParameters([]);
+      setSelectedParam(null);
+      setExpandedMenuItems(new Set());
+      setIntervals([]);
+      setConfirmPopoverOpen(false);
+    }
+  }, [isOpen, simulationIndex]);
+
+  // Create local policy state object for components
+  const localPolicy: PolicyStateProps = useMemo(() => ({
+    label: policyLabel,
+    parameters: policyParameters,
+  }), [policyLabel, policyParameters]);
+
+  // Count modifications
+  const modificationCount = countPolicyModifications(localPolicy);
+
+  // Get modified parameter names for the Changes section
+  const modifiedParams = useMemo(() => {
+    return policyParameters.map(p => {
+      const metadata = parameters[p.name];
+      const label = metadata?.label || p.name.split('.').pop() || p.name;
+      return {
+        name: p.name,
+        label: capitalize(label),
+        valueCount: p.values.length,
+      };
+    });
+  }, [policyParameters, parameters]);
+
+  // Handle policy update from value setter
+  const handlePolicyUpdate = useCallback((updatedPolicy: PolicyStateProps) => {
+    setPolicyParameters(updatedPolicy.parameters || []);
+  }, []);
+
+  // Handle menu item click
+  const handleMenuItemClick = useCallback((paramName: string) => {
+    const param = parameters[paramName];
+    if (param && param.type === 'parameter') {
+      setSelectedParam(param);
+      // Reset value setter state when selecting new parameter
+      setIntervals([]);
+      setValueSetterMode(ValueSetterMode.DEFAULT);
+    }
+    // Toggle expansion for non-leaf nodes
+    setExpandedMenuItems(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(paramName)) {
+        newSet.delete(paramName);
+      } else {
+        newSet.add(paramName);
+      }
+      return newSet;
+    });
+  }, [parameters]);
+
+  // Handle value submission
+  const handleValueSubmit = useCallback(() => {
+    if (!selectedParam || intervals.length === 0) return;
+
+    const updatedParameters = [...policyParameters];
+    let existingParam = updatedParameters.find(p => p.name === selectedParam.parameter);
+
+    if (!existingParam) {
+      existingParam = { name: selectedParam.parameter, values: [] };
+      updatedParameters.push(existingParam);
+    }
+
+    // Use ValueIntervalCollection to properly merge intervals
+    const paramCollection = new ValueIntervalCollection(existingParam.values);
+    intervals.forEach(interval => {
+      paramCollection.addInterval(interval);
+    });
+
+    existingParam.values = paramCollection.getIntervals();
+    setPolicyParameters(updatedParameters);
+    setIntervals([]);
+  }, [selectedParam, intervals, policyParameters]);
+
+  // Handle policy creation
+  const handleCreatePolicy = useCallback(async () => {
+    if (!policyLabel.trim()) {
+      return;
+    }
+
+    const policyData: Partial<Policy> = {
+      parameters: policyParameters,
+    };
+
+    const payload: PolicyCreationPayload = PolicyAdapter.toCreationPayload(policyData as Policy);
+
+    try {
+      const result = await createPolicy(payload);
+      const createdPolicy: PolicyStateProps = {
+        id: result.result.policy_id,
+        label: policyLabel,
+        parameters: policyParameters,
+      };
+      onPolicyCreated(createdPolicy);
+      onClose();
+    } catch (error) {
+      console.error('Failed to create policy:', error);
+    }
+  }, [policyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
+
+  // Render nested menu recursively
+  const renderMenuItems = (items: ParameterTreeNode[]): React.ReactNode => {
+    return items.map(item => (
+      <NavLink
+        key={item.name}
+        label={item.label}
+        active={selectedParam?.parameter === item.name}
+        opened={expandedMenuItems.has(item.name)}
+        onClick={() => handleMenuItemClick(item.name)}
+        childrenOffset={16}
+        style={{
+          borderRadius: spacing.radius.sm,
+        }}
+      >
+        {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
+      </NavLink>
+    ));
+  };
+
+  // Get base and reform values for chart
+  const getChartValues = () => {
+    if (!selectedParam) return { baseValues: null, reformValues: null };
+
+    const baseValues = new ValueIntervalCollection(selectedParam.values as ValuesList);
+    const reformValues = new ValueIntervalCollection(baseValues);
+
+    const paramToChart = policyParameters.find(p => p.name === selectedParam.parameter);
+    if (paramToChart && paramToChart.values && paramToChart.values.length > 0) {
+      const userIntervals = new ValueIntervalCollection(paramToChart.values as ValuesList);
+      for (const interval of userIntervals.getIntervals()) {
+        reformValues.addInterval(interval);
+      }
+    }
+
+    return { baseValues, reformValues };
+  };
+
+  const { baseValues, reformValues } = getChartValues();
+  const colorConfig = INGREDIENT_COLORS.policy;
+
+  const ValueSetterToRender = ValueSetterComponents[valueSetterMode];
+
+  return (
+    <Modal
+      opened={isOpen}
+      onClose={onClose}
+      title={
+        <Group gap={spacing.sm} style={{ flex: 1 }}>
+          <Box
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: spacing.radius.md,
+              background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+              border: `1px solid ${colorConfig.border}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            }}
+          >
+            <IconScale size={20} color={colorConfig.icon} />
+          </Box>
+          {isEditingLabel ? (
+            <TextInput
+              value={policyLabel}
+              onChange={(e) => setPolicyLabel(e.currentTarget.value)}
+              onBlur={() => setIsEditingLabel(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') setIsEditingLabel(false);
+                if (e.key === 'Escape') setIsEditingLabel(false);
+              }}
+              autoFocus
+              size="md"
+              style={{ flex: 1, maxWidth: 300 }}
+              styles={{
+                input: {
+                  fontWeight: 600,
+                  fontSize: FONT_SIZES.normal,
+                },
+              }}
+            />
+          ) : (
+            <Group gap={spacing.xs} style={{ cursor: 'pointer' }} onClick={() => setIsEditingLabel(true)}>
+              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                {policyLabel || 'Untitled policy'}
+              </Text>
+              <ActionIcon variant="subtle" color="gray" size="sm">
+                <IconPencil size={14} />
+              </ActionIcon>
+            </Group>
+          )}
+        </Group>
+      }
+      size="90vw"
+      radius="lg"
+      styles={{
+        content: {
+          maxWidth: '1400px',
+          height: '85vh',
+          maxHeight: '800px',
+          display: 'flex',
+          flexDirection: 'column',
+        },
+        header: {
+          borderBottom: `1px solid ${colors.border.light}`,
+          paddingBottom: spacing.md,
+          paddingLeft: spacing.xl,
+          paddingRight: spacing.xl,
+        },
+        body: {
+          padding: 0,
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+        },
+      }}
+    >
+      {/* Main content area */}
+      <Group align="stretch" gap={0} style={{ flex: 1, overflow: 'hidden' }} wrap="nowrap">
+        {/* Left Sidebar - Parameter Tree + Changes */}
+        <Box
+          style={{
+            width: 280,
+            borderRight: `1px solid ${colors.border.light}`,
+            display: 'flex',
+            flexDirection: 'column',
+            background: colors.gray[50],
+          }}
+        >
+          {/* Parameter Tree */}
+          <Box style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
+              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                PARAMETERS
+              </Text>
+            </Box>
+            <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+              <Box style={{ padding: spacing.sm }}>
+                {metadataLoading || !parameterTree ? (
+                  <Stack gap={spacing.xs}>
+                    <Skeleton height={32} />
+                    <Skeleton height={32} />
+                    <Skeleton height={32} />
+                  </Stack>
+                ) : (
+                  renderMenuItems(parameterTree.children || [])
+                )}
+              </Box>
+            </ScrollArea>
+          </Box>
+
+          {/* Changes Section */}
+          <Box
+            style={{
+              borderTop: `1px solid ${colors.border.light}`,
+              background: colors.white,
+            }}
+          >
+            <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
+              <Group justify="space-between">
+                <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                  CHANGES
+                </Text>
+                {modificationCount > 0 && (
+                  <Box
+                    style={{
+                      background: colorConfig.bg,
+                      border: `1px solid ${colorConfig.border}`,
+                      borderRadius: spacing.radius.sm,
+                      padding: `2px ${spacing.xs}`,
+                    }}
+                  >
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.tiny, color: colorConfig.icon }}>
+                      {modificationCount}
+                    </Text>
+                  </Box>
+                )}
+              </Group>
+            </Box>
+            <ScrollArea style={{ maxHeight: 200 }} offsetScrollbars>
+              <Box style={{ padding: spacing.sm }}>
+                {modifiedParams.length === 0 ? (
+                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small, padding: spacing.sm }}>
+                    No changes yet
+                  </Text>
+                ) : (
+                  <Stack gap={spacing.xs}>
+                    {modifiedParams.map(param => (
+                      <UnstyledButton
+                        key={param.name}
+                        onClick={() => {
+                          const metadata = parameters[param.name];
+                          if (metadata) {
+                            setSelectedParam(metadata);
+                          }
+                        }}
+                        style={{
+                          padding: spacing.xs,
+                          borderRadius: spacing.radius.sm,
+                          background: selectedParam?.parameter === param.name ? colorConfig.bg : 'transparent',
+                          border: `1px solid ${selectedParam?.parameter === param.name ? colorConfig.border : 'transparent'}`,
+                        }}
+                      >
+                        <Group justify="space-between" wrap="nowrap">
+                          <Text
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: colors.gray[700],
+                              flex: 1,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {param.label}
+                          </Text>
+                          <IconCheck size={14} color={colorConfig.icon} />
+                        </Group>
+                      </UnstyledButton>
+                    ))}
+                  </Stack>
+                )}
+              </Box>
+            </ScrollArea>
+          </Box>
+        </Box>
+
+        {/* Main Content - Parameter Editor */}
+        <Box style={{ flex: 1, overflow: 'auto', background: colors.white }}>
+          {!selectedParam ? (
+            <Box
+              style={{
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: spacing.xl,
+              }}
+            >
+              <Stack align="center" gap={spacing.md}>
+                <Box
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: spacing.radius.lg,
+                    background: colors.gray[100],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconScale size={32} color={colors.gray[400]} />
+                </Box>
+                <Text ta="center" style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600], maxWidth: 400 }}>
+                  Select a parameter from the menu to modify its value for your policy reform.
+                </Text>
+              </Stack>
+            </Box>
+          ) : (
+            <Box style={{ padding: spacing.xl }}>
+              <Stack gap={spacing.lg}>
+                {/* Parameter Header */}
+                <Box>
+                  <Title order={3} style={{ marginBottom: spacing.sm }}>
+                    {capitalize(selectedParam.label || 'Label unavailable')}
+                  </Title>
+                  {selectedParam.description && (
+                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                      {selectedParam.description}
+                    </Text>
+                  )}
+                </Box>
+
+                {/* Value Setter */}
+                <Box
+                  style={{
+                    background: colors.gray[50],
+                    border: `1px solid ${colors.border.light}`,
+                    borderRadius: spacing.radius.md,
+                    padding: spacing.lg,
+                  }}
+                >
+                  <Stack gap={spacing.md}>
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.small }}>Set new value</Text>
+                    <Divider />
+                    <Group align="flex-end" wrap="nowrap">
+                      <Box style={{ flex: 1 }}>
+                        <ValueSetterToRender
+                          minDate={minDate}
+                          maxDate={maxDate}
+                          param={selectedParam}
+                          policy={localPolicy}
+                          intervals={intervals}
+                          setIntervals={setIntervals}
+                          startDate={startDate}
+                          setStartDate={setStartDate}
+                          endDate={endDate}
+                          setEndDate={setEndDate}
+                        />
+                      </Box>
+                      <ModeSelectorButton setMode={(mode) => {
+                        setIntervals([]);
+                        setValueSetterMode(mode);
+                      }} />
+                      <Button
+                        onClick={handleValueSubmit}
+                        disabled={intervals.length === 0}
+                        color="teal"
+                      >
+                        Add change
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Box>
+
+                {/* Historical Values Chart */}
+                {baseValues && reformValues && (
+                  <Box>
+                    <HistoricalValues
+                      param={selectedParam}
+                      baseValues={baseValues}
+                      reformValues={reformValues}
+                      policyLabel={policyLabel}
+                      policyId={null}
+                    />
+                  </Box>
+                )}
+              </Stack>
+            </Box>
+          )}
+        </Box>
+      </Group>
+
+      {/* Footer */}
+      <Box
+        style={{
+          borderTop: `1px solid ${colors.border.light}`,
+          padding: spacing.md,
+          paddingLeft: spacing.xl,
+          paddingRight: spacing.xl,
+          background: colors.white,
+        }}
+      >
+        <Group justify="space-between">
+          <Group gap={spacing.md}>
+            {modificationCount > 0 && (
+              <Group gap={spacing.xs}>
+                <Box
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: colorConfig.icon,
+                  }}
+                />
+                <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                  {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+                </Text>
+              </Group>
+            )}
+          </Group>
+          <Group gap={spacing.sm}>
+            <Button variant="default" onClick={onClose}>
+              Cancel
+            </Button>
+            <Popover
+              opened={confirmPopoverOpen}
+              onChange={setConfirmPopoverOpen}
+              position="top-end"
+              withArrow
+              shadow="md"
+            >
+              <Popover.Target>
+                <Button
+                  color="teal"
+                  onClick={() => setConfirmPopoverOpen(true)}
+                  disabled={!policyLabel.trim()}
+                  rightSection={<IconChevronRight size={16} />}
+                >
+                  Create policy
+                </Button>
+              </Popover.Target>
+              <Popover.Dropdown style={{ padding: spacing.lg, maxWidth: 360 }}>
+                <Stack gap={spacing.md}>
+                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
+                    Create "{policyLabel}"?
+                  </Text>
+                  {modificationCount > 0 ? (
+                    <>
+                      <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                        {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} will be modified:
+                      </Text>
+                      <Box
+                        style={{
+                          background: colors.gray[50],
+                          borderRadius: spacing.radius.sm,
+                          padding: spacing.sm,
+                          maxHeight: 150,
+                          overflow: 'auto',
+                        }}
+                      >
+                        <Stack gap={spacing.xs}>
+                          {modifiedParams.slice(0, 5).map(param => (
+                            <Group key={param.name} gap={spacing.xs}>
+                              <IconCheck size={12} color={colorConfig.icon} />
+                              <Text style={{ fontSize: FONT_SIZES.small }}>{param.label}</Text>
+                            </Group>
+                          ))}
+                          {modifiedParams.length > 5 && (
+                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                              +{modifiedParams.length - 5} more
+                            </Text>
+                          )}
+                        </Stack>
+                      </Box>
+                    </>
+                  ) : (
+                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                      This policy has no parameter changes (equivalent to current law).
+                    </Text>
+                  )}
+                  <Group justify="flex-end" gap={spacing.sm}>
+                    <Button variant="default" size="sm" onClick={() => setConfirmPopoverOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      color="teal"
+                      size="sm"
+                      onClick={handleCreatePolicy}
+                      loading={isCreating}
+                    >
+                      Create policy
+                    </Button>
+                  </Group>
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          </Group>
+        </Group>
+      </Box>
+    </Modal>
+  );
+}
+
+// ============================================================================
 // SIMULATION CANVAS
 // ============================================================================
 
@@ -2491,6 +3111,12 @@ function SimulationCanvas({
 
   // State for the augmented policy browse modal
   const [policyBrowseState, setPolicyBrowseState] = useState<PolicyBrowseState>({
+    isOpen: false,
+    simulationIndex: 0,
+  });
+
+  // State for the policy creation modal
+  const [policyCreationState, setPolicyCreationState] = useState<PolicyBrowseState>({
     isOpen: false,
     simulationIndex: 0,
   });
@@ -2673,12 +3299,34 @@ function SimulationCanvas({
   const handleCreateCustom = useCallback(
     (simulationIndex: number, ingredientType: IngredientType) => {
       if (ingredientType === 'policy') {
-        window.location.href = `/${countryId}/policies/create`;
+        // Open the policy creation modal instead of redirecting
+        setPolicyCreationState({ isOpen: true, simulationIndex });
       } else if (ingredientType === 'population') {
         window.location.href = `/${countryId}/households/create`;
       }
     },
     [countryId]
+  );
+
+  // Handle policy created from the creation modal
+  const handlePolicyCreated = useCallback(
+    (simulationIndex: number, policy: PolicyStateProps) => {
+      setReportState((prev) => {
+        const newSimulations = [...prev.simulations];
+        if (newSimulations[simulationIndex]) {
+          newSimulations[simulationIndex] = {
+            ...newSimulations[simulationIndex],
+            policy: {
+              id: policy.id,
+              label: policy.label,
+              parameters: policy.parameters,
+            },
+          };
+        }
+        return { ...prev, simulations: newSimulations };
+      });
+    },
+    [setReportState]
   );
 
   const isHorizontal = viewMode === 'horizontal';
@@ -2751,6 +3399,14 @@ function SimulationCanvas({
         onClose={() => setPolicyBrowseState((prev) => ({ ...prev, isOpen: false }))}
         onSelect={handlePolicySelectFromBrowse}
         onCreateNew={() => handleCreateCustom(policyBrowseState.simulationIndex, 'policy')}
+      />
+
+      {/* Policy Creation Modal */}
+      <PolicyCreationModal
+        isOpen={policyCreationState.isOpen}
+        onClose={() => setPolicyCreationState((prev) => ({ ...prev, isOpen: false }))}
+        onPolicyCreated={(policy) => handlePolicyCreated(policyCreationState.simulationIndex, policy)}
+        simulationIndex={policyCreationState.simulationIndex}
       />
     </>
   );
