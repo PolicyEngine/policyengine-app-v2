@@ -12,7 +12,7 @@ import { SimulationMetadata } from '@/types/metadata/simulationMetadata';
 import { US_REGION_TYPES } from '@/types/regionTypes';
 import { mockReport } from '../adapters/reportMocks';
 import { TEST_USER_ID } from '../api/reportAssociationMocks';
-import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
+import { DEFAULT_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 // Test ID constants
 export const TEST_SIMULATION_ID_1 = 'sim-456';
@@ -187,8 +187,8 @@ export const mockHouseholdMetadata: HouseholdMetadata = {
 export const mockMetadataInitialState = {
   metadata: {
     currentCountry: TEST_COUNTRIES.US,
-    ...DEFAULT_V2_LOADING_STATES,
-    coreLoaded: true,
+    ...DEFAULT_LOADING_STATES,
+    loaded: true,
     progress: 100,
     variables: {},
     parameters: {},

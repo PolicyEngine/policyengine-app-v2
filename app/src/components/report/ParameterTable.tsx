@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Box, Table, Text } from '@mantine/core';
 import { colors, spacing, typography } from '@/designTokens';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import {
   buildCompactLabel,
   formatLabelParts,

@@ -5,7 +5,7 @@
  */
 
 import { Container, Text, Title } from '@mantine/core';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueIntervalCollection, ValuesList } from '@/types/subIngredients/valueInterval';

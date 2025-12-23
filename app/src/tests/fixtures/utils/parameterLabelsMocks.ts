@@ -2,7 +2,7 @@
  * Test fixtures for parameterLabels utility functions
  */
 
-import { ParameterMetadataCollection } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadataCollection } from '@/types/metadata';
 
 /**
  * Test parameter names representing different hierarchical depths

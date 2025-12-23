@@ -8,33 +8,32 @@ import { AppDispatch, RootState } from '@/store';
  */
 export function selectCoreMetadataState(state: RootState) {
   return {
-    coreLoading: state.metadata.coreLoading,
-    coreLoaded: state.metadata.coreLoaded,
-    coreError: state.metadata.coreError,
+    loading: state.metadata.loading,
+    loaded: state.metadata.loaded,
+    error: state.metadata.error,
     currentCountry: state.metadata.currentCountry,
   };
 }
 
 /**
- * Hook that fetches core metadata (variables + datasets) for a country.
+ * Hook that fetches all metadata (variables, datasets, parameters, parameterValues) for a country.
  *
- * This is the V2 tiered loading approach - only loads what's needed immediately.
- * Parameters are loaded separately via useFetchParameters when needed.
+ * This is the V2 unified loading approach - loads all metadata in a single fetch.
  *
  * @param countryId - Country to fetch metadata for (e.g., 'us', 'uk')
  */
 export function useFetchCoreMetadata(countryId: string): void {
   const dispatch = useDispatch<AppDispatch>();
-  const { coreLoading, coreLoaded, currentCountry } = useSelector(selectCoreMetadataState);
+  const { loading, loaded, currentCountry } = useSelector(selectCoreMetadataState);
 
   useEffect(() => {
     // Fetch if:
     // - Not currently loading
     // - Not already loaded for this country
-    const needsFetch = !coreLoading && (!coreLoaded || countryId !== currentCountry);
+    const needsFetch = !loading && (!loaded || countryId !== currentCountry);
 
     if (needsFetch && countryId) {
       dispatch(fetchCoreMetadataThunk(countryId));
     }
-  }, [countryId, coreLoading, coreLoaded, currentCountry, dispatch]);
+  }, [countryId, loading, loaded, currentCountry, dispatch]);
 }

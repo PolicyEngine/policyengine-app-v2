@@ -23,16 +23,22 @@ export const makeGetFieldOptions = () =>
       // Get field variable from metadata
       const fieldVariable = variables?.[fieldName];
 
-      // Check if the variable has possibleValues (array format from API)
-      if (
-        fieldVariable &&
-        fieldVariable.possibleValues &&
-        Array.isArray(fieldVariable.possibleValues)
-      ) {
-        return fieldVariable.possibleValues.map((option: { value: string; label: string }) => ({
-          value: option.value,
-          label: option.label,
-        }));
+      // Check if the variable has possible_values
+      if (fieldVariable && fieldVariable.possible_values) {
+        // Handle array format (V2 API returns string[])
+        if (Array.isArray(fieldVariable.possible_values)) {
+          return fieldVariable.possible_values.map((value: string) => ({
+            value,
+            label: value,
+          }));
+        }
+        // Handle Record format (legacy/V1 format: { value: label })
+        if (typeof fieldVariable.possible_values === 'object') {
+          return Object.entries(fieldVariable.possible_values).map(([value, label]) => ({
+            value,
+            label: String(label),
+          }));
+        }
       }
 
       // Fallback for fields without metadata
@@ -53,8 +59,8 @@ export const isDropdownField = (state: RootState, fieldName: string): boolean =>
   const fieldVariable = state.metadata.variables?.[fieldName];
   return !!(
     fieldVariable &&
-    fieldVariable.possibleValues &&
-    Array.isArray(fieldVariable.possibleValues)
+    fieldVariable.possible_values &&
+    Array.isArray(fieldVariable.possible_values)
   );
 };
 
@@ -86,13 +92,10 @@ export function transformMetadataPayload(
   const data = payload.result;
   return {
     currentCountry: country,
-    // V2 tiered loading states (default to false for V1 transform)
-    coreLoading: false,
-    coreLoaded: false,
-    coreError: null,
-    parametersLoading: false,
-    parametersLoaded: false,
-    parametersError: null,
+    // V2 unified loading states
+    loading: false,
+    loaded: false,
+    error: null,
     progress: 100, // Transformation happens after successful load
     variables: data.variables ?? {},
     parameters: data.parameters ?? {},

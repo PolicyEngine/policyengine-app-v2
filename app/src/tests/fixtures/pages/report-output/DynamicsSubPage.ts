@@ -1,6 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { Policy } from '@/types/ingredients/Policy';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 
 export const MOCK_PARAMETER_METADATA: Record<string, ParameterMetadata> = {
   'gov.irs.credits.ctc.amount': {

@@ -1,6 +1,6 @@
 import { CURRENT_YEAR } from '@/constants';
-import { MetadataState } from '@/types/metadata';
-import { DEFAULT_V2_LOADING_STATES } from '../reducers/metadataReducerMocks';
+import { MetadataState, VariableMetadata, ParameterMetadata } from '@/types/metadata';
+import { DEFAULT_LOADING_STATES } from '../reducers/metadataReducerMocks';
 
 // Test country IDs
 export const TEST_COUNTRY_US = 'us';
@@ -13,7 +13,7 @@ export const TEST_ERROR_MESSAGE = 'Previous fetch failed';
 // Mock metadata states (only API-driven data, not static data)
 export const mockInitialMetadataState: MetadataState = {
   currentCountry: null,
-  ...DEFAULT_V2_LOADING_STATES,
+  ...DEFAULT_LOADING_STATES,
   progress: 0,
   variables: {},
   parameters: {},
@@ -24,22 +24,21 @@ export const mockInitialMetadataState: MetadataState = {
 
 export const mockLoadingMetadataState: MetadataState = {
   ...mockInitialMetadataState,
-  coreLoading: true,
+  loading: true,
   currentCountry: TEST_COUNTRY_US,
 };
 
 export const mockLoadedMetadataState: MetadataState = {
   currentCountry: TEST_COUNTRY_US,
-  ...DEFAULT_V2_LOADING_STATES,
-  coreLoaded: true,
-  parametersLoaded: true,
+  ...DEFAULT_LOADING_STATES,
+  loaded: true,
   progress: 100,
   variables: {
-    income: { label: 'Income', unit: 'currency-USD' },
-    age: { label: 'Age', unit: 'year' },
+    income: { name: 'income', entity: 'person', description: 'Total income', label: 'Income', unit: 'currency-USD' } as VariableMetadata,
+    age: { name: 'age', entity: 'person', description: 'Age in years', label: 'Age', unit: 'year' } as VariableMetadata,
   },
   parameters: {
-    tax_rate: { label: 'Tax Rate', values: { [CURRENT_YEAR]: 0.25 } },
+    tax_rate: { parameter: 'tax_rate', label: 'Tax Rate', values: { [CURRENT_YEAR]: 0.25 } } as ParameterMetadata,
   },
   datasets: [
     {
@@ -62,7 +61,7 @@ export const mockUKMetadataState: MetadataState = {
   ...mockLoadedMetadataState,
   currentCountry: TEST_COUNTRY_UK,
   variables: {
-    income: { label: 'Income', unit: 'currency-GBP' },
+    income: { name: 'income', entity: 'person', description: 'Total income', label: 'Income', unit: 'currency-GBP' } as VariableMetadata,
   },
   datasets: [
     {
@@ -87,6 +86,6 @@ export const mockStateWithoutVersion: MetadataState = {
 
 export const mockErrorState: MetadataState = {
   ...mockInitialMetadataState,
-  coreError: TEST_ERROR_MESSAGE,
+  error: TEST_ERROR_MESSAGE,
   currentCountry: TEST_COUNTRY_US,
 };

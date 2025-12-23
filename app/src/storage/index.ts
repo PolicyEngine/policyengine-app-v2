@@ -43,14 +43,10 @@ export {
   getStoreCounts,
 } from "./metadataBulkLoader";
 
-// Loaders (tiered loading)
+// Loaders (unified metadata loading)
 export {
   loadCoreMetadata,
   isCoreMetadataCached,
-  loadParameters,
-  isParametersCached,
-  type CoreMetadata,
-  type CoreMetadataLoadResult,
-  type ParametersData,
-  type ParametersLoadResult,
+  type Metadata,
+  type MetadataLoadResult,
 } from "./loaders";
