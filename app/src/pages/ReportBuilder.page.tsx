@@ -30,6 +30,7 @@ import {
   Tabs,
   UnstyledButton,
   Skeleton,
+  Drawer,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -285,7 +286,7 @@ const styles = {
   },
 
   simulationCardActive: {
-    borderColor: colors.primary[400],
+    border: `2px solid ${colors.primary[400]}`,
     boxShadow: `0 0 0 4px ${colors.primary[50]}, 0 8px 32px ${colors.shadow.medium}`,
   },
 
@@ -966,7 +967,7 @@ function IngredientSection({
               {onBrowseMore && (
                 <BrowseMoreChip
                   label="Browse more"
-                  description={savedPolicies.length > 3 ? `${savedPolicies.length - 3} more` : 'Search all'}
+                  description="View all your policies"
                   onClick={onBrowseMore}
                   variant={chipVariant}
                   colorConfig={colorConfig}
@@ -1770,7 +1771,8 @@ function PolicyBrowseModal({
   // State
   const [searchQuery, setSearchQuery] = useState('');
   const [activeSection, setActiveSection] = useState<'my-policies' | 'recent' | 'public'>('my-policies');
-  const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>(null);
+  const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
+  const [drawerPolicyId, setDrawerPolicyId] = useState<string | null>(null);
   const [recentPolicies, setRecentPolicies] = useState<RecentPolicy[]>([]);
 
   // Load recent policies on mount
@@ -1778,7 +1780,8 @@ function PolicyBrowseModal({
     if (isOpen) {
       setRecentPolicies(getRecentPolicies());
       setSearchQuery('');
-      setExpandedPolicyId(null);
+      setSelectedPolicyId(null);
+      setDrawerPolicyId(null);
     }
   }, [isOpen]);
 
@@ -1929,6 +1932,12 @@ function PolicyBrowseModal({
     },
   };
 
+  // Policy for drawer preview
+  const drawerPolicy = useMemo(() => {
+    if (!drawerPolicyId) return null;
+    return userPolicies.find(p => p.id === drawerPolicyId) || null;
+  }, [drawerPolicyId, userPolicies]);
+
   return (
     <Modal
       opened={isOpen}
@@ -1966,6 +1975,8 @@ function PolicyBrowseModal({
           maxWidth: '1200px',
           height: '80vh',
           maxHeight: '700px',
+          display: 'flex',
+          flexDirection: 'column',
         },
         header: {
           borderBottom: `1px solid ${colors.border.light}`,
@@ -1974,13 +1985,13 @@ function PolicyBrowseModal({
           paddingRight: spacing.xl,
         },
         body: {
-          padding: spacing.xl,
-          height: 'calc(100% - 80px)',
-          display: 'flex',
+          padding: 0,
+          flex: 1,
+          position: 'relative',
         },
       }}
     >
-      <Group align="stretch" gap={spacing.xl} style={{ height: '100%', width: '100%' }} wrap="nowrap">
+      <Group align="stretch" gap={spacing.xl} style={{ height: '100%', width: '100%', padding: spacing.xl }} wrap="nowrap">
         {/* Left Sidebar */}
         <Box style={modalStyles.sidebar}>
           {/* Quick Actions */}
@@ -2068,8 +2079,8 @@ function PolicyBrowseModal({
 
           {/* Create New Button */}
           <Button
-            variant="light"
-            color="teal"
+            variant="outline"
+            color="gray"
             leftSection={<IconPlus size={16} />}
             onClick={() => {
               onCreateNew();
@@ -2120,9 +2131,41 @@ function PolicyBrowseModal({
             {isLoading ? (
               <Stack gap={spacing.md}>
                 {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} height={100} radius="md" />
+                  <Skeleton key={i} height={80} radius="md" />
                 ))}
               </Stack>
+            ) : activeSection === 'public' ? (
+              // Placeholder for User-created policies section
+              <Box
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: spacing['4xl'],
+                  gap: spacing.md,
+                }}
+              >
+                <Box
+                  style={{
+                    width: 64,
+                    height: 64,
+                    borderRadius: '50%',
+                    background: colors.gray[100],
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <IconUsers size={28} color={colors.gray[400]} />
+                </Box>
+                <Text fw={500} c={colors.gray[600]}>
+                  Coming soon
+                </Text>
+                <Text c="dimmed" ta="center" maw={300} style={{ fontSize: FONT_SIZES.small }}>
+                  Search and browse policies created by other PolicyEngine users.
+                </Text>
+              </Box>
             ) : displayedPolicies.length === 0 ? (
               <Box
                 style={{
@@ -2158,8 +2201,8 @@ function PolicyBrowseModal({
                 </Text>
                 {!searchQuery && (
                   <Button
-                    variant="light"
-                    color="teal"
+                    variant="outline"
+                    color="gray"
                     leftSection={<IconPlus size={16} />}
                     onClick={() => {
                       onCreateNew();
@@ -2174,7 +2217,7 @@ function PolicyBrowseModal({
             ) : (
               <Box style={modalStyles.policyGrid}>
                 {displayedPolicies.map((policy) => {
-                  const isExpanded = expandedPolicyId === policy.id;
+                  const isSelected = selectedPolicyId === policy.id;
 
                   return (
                     <Paper
@@ -2182,12 +2225,12 @@ function PolicyBrowseModal({
                       style={{
                         ...modalStyles.policyCard,
                         background: colors.white,
-                        ...(isExpanded ? {
-                          borderColor: colorConfig.border,
-                          gridColumn: 'span 2',
-                        } : {}),
+                        borderColor: isSelected ? colorConfig.border : colors.gray[200],
                       }}
-                      onClick={() => !isExpanded && handleSelectPolicy(policy.id, policy.label, policy.paramCount)}
+                      onClick={() => {
+                        setSelectedPolicyId(policy.id);
+                        handleSelectPolicy(policy.id, policy.label, policy.paramCount);
+                      }}
                     >
                       {/* Policy accent bar */}
                       <Box
@@ -2197,36 +2240,33 @@ function PolicyBrowseModal({
                           left: 0,
                           right: 0,
                           height: 3,
-                          background: isExpanded
+                          background: isSelected
                             ? `linear-gradient(90deg, ${colorConfig.accent}, ${colorConfig.icon})`
                             : colors.gray[200],
                           transition: 'all 0.2s ease',
                         }}
                       />
 
-                      <Stack gap={spacing.md}>
-                        <Group justify="space-between" align="flex-start" wrap="nowrap">
-                          <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                            <Text
-                              fw={600}
-                              style={{
-                                fontSize: FONT_SIZES.normal,
-                                color: colors.gray[900],
-                                overflow: isExpanded ? 'visible' : 'hidden',
-                                textOverflow: isExpanded ? 'clip' : 'ellipsis',
-                                whiteSpace: isExpanded ? 'normal' : 'nowrap',
-                              }}
-                            >
-                              {policy.label}
-                            </Text>
-                            <Text
-                              c="dimmed"
-                              style={{ fontSize: FONT_SIZES.small }}
-                            >
-                              {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''} changed
-                            </Text>
-                          </Stack>
+                      <Group justify="space-between" align="flex-start" wrap="nowrap">
+                        <Stack gap={spacing.xs} style={{ flex: 1, minWidth: 0 }}>
+                          <Text
+                            fw={600}
+                            style={{
+                              fontSize: FONT_SIZES.normal,
+                              color: colors.gray[900],
+                            }}
+                          >
+                            {policy.label}
+                          </Text>
+                          <Text
+                            c="dimmed"
+                            style={{ fontSize: FONT_SIZES.small }}
+                          >
+                            {policy.paramCount} param{policy.paramCount !== 1 ? 's' : ''} changed
+                          </Text>
+                        </Stack>
 
+                        <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
                           {/* Info button */}
                           <ActionIcon
                             variant="subtle"
@@ -2234,112 +2274,15 @@ function PolicyBrowseModal({
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setExpandedPolicyId(isExpanded ? null : policy.id);
+                              setDrawerPolicyId(policy.id);
                             }}
-                            style={{ flexShrink: 0 }}
                           >
-                            {isExpanded ? <IconX size={18} /> : <IconInfoCircle size={18} />}
+                            <IconInfoCircle size={18} />
                           </ActionIcon>
+                          {/* Select indicator */}
+                          <IconChevronRight size={16} color={colors.gray[400]} />
                         </Group>
-
-                        {/* Expanded parameter details - shown inline when info button clicked */}
-                        {isExpanded && policy.policyJson && (
-                          <Box
-                            style={{
-                              marginTop: spacing.sm,
-                              padding: spacing.md,
-                              background: colors.gray[50],
-                              borderRadius: spacing.radius.md,
-                            }}
-                          >
-                            {/* Table header */}
-                            <Box
-                              style={{
-                                display: 'grid',
-                                gridTemplateColumns: '1fr 100px 100px',
-                                gap: spacing.sm,
-                                paddingBottom: spacing.sm,
-                                borderBottom: `1px solid ${colors.gray[200]}`,
-                                marginBottom: spacing.sm,
-                              }}
-                            >
-                              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>Parameter</Text>
-                              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>Current</Text>
-                              <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>New</Text>
-                            </Box>
-
-                            <Stack gap={0}>
-                              {Object.entries(policy.policyJson).slice(0, 10).map(([paramName, paramValues]) => {
-                                const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
-                                const displayLabel = hierarchicalLabels.length > 0
-                                  ? formatLabelParts(hierarchicalLabels)
-                                  : paramName.split('.').pop() || paramName;
-
-                                const currentLawValue = getCurrentLawParameterValue(paramName, parameters, reportDate);
-                                const valueEntries = Object.entries(paramValues as Record<string, unknown>);
-                                const rawValue = valueEntries.length > 0 ? valueEntries[0][1] : undefined;
-                                const metadata = parameters[paramName];
-                                const changedValue = rawValue !== undefined
-                                  ? formatParameterValue(rawValue, metadata?.unit)
-                                  : '—';
-
-                                return (
-                                  <Box
-                                    key={paramName}
-                                    style={{
-                                      display: 'grid',
-                                      gridTemplateColumns: '1fr 100px 100px',
-                                      gap: spacing.sm,
-                                      padding: `${spacing.sm} 0`,
-                                      borderBottom: `1px solid ${colors.gray[100]}`,
-                                    }}
-                                  >
-                                    <Tooltip label={paramName} multiline w={300} withArrow>
-                                      <Text
-                                        style={{
-                                          fontSize: FONT_SIZES.small,
-                                          color: colors.gray[700],
-                                          overflow: 'hidden',
-                                          textOverflow: 'ellipsis',
-                                          whiteSpace: 'nowrap',
-                                        }}
-                                      >
-                                        {displayLabel}
-                                      </Text>
-                                    </Tooltip>
-                                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500], textAlign: 'right' }}>
-                                      {currentLawValue}
-                                    </Text>
-                                    <Text fw={500} style={{ fontSize: FONT_SIZES.small, color: colorConfig.icon, textAlign: 'right' }}>
-                                      {changedValue}
-                                    </Text>
-                                  </Box>
-                                );
-                              })}
-                            </Stack>
-
-                            {Object.keys(policy.policyJson).length > 10 && (
-                              <Text c="dimmed" ta="center" style={{ fontSize: FONT_SIZES.small, paddingTop: spacing.sm }}>
-                                +{Object.keys(policy.policyJson).length - 10} more parameters
-                              </Text>
-                            )}
-
-                            {/* Select button */}
-                            <Button
-                              color="teal"
-                              fullWidth
-                              mt={spacing.md}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleSelectPolicy(policy.id, policy.label, policy.paramCount);
-                              }}
-                              rightSection={<IconChevronRight size={16} />}
-                            >
-                              Select this policy
-                            </Button>
-                          </Box>
-                        )}
-                      </Stack>
+                      </Group>
                     </Paper>
                   );
                 })}
@@ -2347,8 +2290,170 @@ function PolicyBrowseModal({
             )}
           </ScrollArea>
         </Box>
-
       </Group>
+
+      {/* Sliding panel overlay - click to close */}
+      <Transition mounted={!!drawerPolicy} transition="fade" duration={200}>
+        {(transitionStyles) => (
+          <Box
+            style={{
+              ...transitionStyles,
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'rgba(0, 0, 0, 0.08)',
+              zIndex: 10,
+            }}
+            onClick={() => setDrawerPolicyId(null)}
+          />
+        )}
+      </Transition>
+
+      {/* Sliding panel for policy details */}
+      <Transition mounted={!!drawerPolicy} transition="slide-left" duration={250}>
+        {(transitionStyles) => (
+          <Box
+            style={{
+              ...transitionStyles,
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              bottom: 0,
+              width: 480,
+              background: colors.white,
+              borderLeft: `1px solid ${colors.gray[200]}`,
+              boxShadow: '-8px 0 24px rgba(0, 0, 0, 0.08)',
+              zIndex: 11,
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {drawerPolicy && (
+              <>
+                {/* Panel header */}
+                <Box
+                  style={{
+                    padding: spacing.lg,
+                    borderBottom: `1px solid ${colors.gray[200]}`,
+                  }}
+                >
+                  <Group justify="space-between" align="flex-start">
+                    <Stack gap={spacing.xs} style={{ flex: 1 }}>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
+                        {drawerPolicy.label}
+                      </Text>
+                      <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
+                        {drawerPolicy.paramCount} parameter{drawerPolicy.paramCount !== 1 ? 's' : ''} changed from current law
+                      </Text>
+                    </Stack>
+                    <ActionIcon
+                      variant="subtle"
+                      color="gray"
+                      onClick={() => setDrawerPolicyId(null)}
+                    >
+                      <IconX size={18} />
+                    </ActionIcon>
+                  </Group>
+                </Box>
+
+                {/* Panel body */}
+                <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: spacing.lg }}>
+                  {/* Table header */}
+                  <Box
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 90px 90px',
+                      gap: spacing.md,
+                      paddingBottom: spacing.sm,
+                      borderBottom: `1px solid ${colors.gray[200]}`,
+                      marginBottom: spacing.sm,
+                    }}
+                  >
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                      Parameter
+                    </Text>
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
+                      Current law
+                    </Text>
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
+                      Reform
+                    </Text>
+                  </Box>
+
+                  <ScrollArea style={{ flex: 1 }} offsetScrollbars>
+                    <Stack gap={0}>
+                      {Object.entries(drawerPolicy.policyJson).map(([paramName, paramValues]) => {
+                        const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+                        const displayLabel = hierarchicalLabels.length > 0
+                          ? formatLabelParts(hierarchicalLabels)
+                          : paramName.split('.').pop() || paramName;
+
+                        const currentLawValue = getCurrentLawParameterValue(paramName, parameters, reportDate);
+                        const valueEntries = Object.entries(paramValues as Record<string, unknown>);
+                        const rawValue = valueEntries.length > 0 ? valueEntries[0][1] : undefined;
+                        const metadata = parameters[paramName];
+                        const changedValue = rawValue !== undefined
+                          ? formatParameterValue(rawValue, metadata?.unit)
+                          : '—';
+
+                        return (
+                          <Box
+                            key={paramName}
+                            style={{
+                              display: 'grid',
+                              gridTemplateColumns: '1fr 90px 90px',
+                              gap: spacing.md,
+                              padding: `${spacing.sm} 0`,
+                              borderBottom: `1px solid ${colors.gray[100]}`,
+                              alignItems: 'start',
+                            }}
+                          >
+                            <Tooltip label={paramName} multiline w={300} withArrow>
+                              <Text
+                                style={{
+                                  fontSize: FONT_SIZES.small,
+                                  color: colors.gray[700],
+                                  lineHeight: 1.4,
+                                }}
+                              >
+                                {displayLabel}
+                              </Text>
+                            </Tooltip>
+                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500], textAlign: 'right' }}>
+                              {currentLawValue}
+                            </Text>
+                            <Text fw={500} style={{ fontSize: FONT_SIZES.small, color: colorConfig.icon, textAlign: 'right' }}>
+                              {changedValue}
+                            </Text>
+                          </Box>
+                        );
+                      })}
+                    </Stack>
+                  </ScrollArea>
+                </Box>
+
+                {/* Panel footer */}
+                <Box style={{ padding: spacing.lg, borderTop: `1px solid ${colors.gray[200]}` }}>
+                  <Button
+                    color="teal"
+                    fullWidth
+                    onClick={() => {
+                      handleSelectPolicy(drawerPolicy.id, drawerPolicy.label, drawerPolicy.paramCount);
+                      setDrawerPolicyId(null);
+                    }}
+                    rightSection={<IconChevronRight size={16} />}
+                  >
+                    Select this policy
+                  </Button>
+                </Box>
+              </>
+            )}
+          </Box>
+        )}
+      </Transition>
     </Modal>
   );
 }
