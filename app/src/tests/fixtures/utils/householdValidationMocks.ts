@@ -1,11 +1,11 @@
 import { CURRENT_YEAR } from '@/constants';
 import { RootState } from '@/store';
 import { Household, HouseholdPerson } from '@/types/ingredients/Household';
+import { VariableMetadata } from '@/types/metadata';
 import {
   ValidationError,
   ValidationResult,
   ValidationWarning,
-  VariableMetadata,
 } from '@/utils/HouseholdValidation';
 
 // ============= TEST CONSTANTS =============
@@ -312,43 +312,43 @@ export const mockEmptyHousehold: Household = {
 
 export const mockFloatMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.PEOPLE,
-  valueType: VALIDATION_VALUE_TYPES.FLOAT as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR as any,
+  valueType: VALIDATION_VALUE_TYPES.FLOAT,
+  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR,
   name: VALIDATION_VARIABLE_NAMES.EMPLOYMENT_INCOME,
+  description: 'Employment income',
   label: 'Employment Income',
   unit: 'USD',
   isInputVariable: true,
-  defaultValue: 0,
 };
 
 export const mockIntMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
-  valueType: VALIDATION_VALUE_TYPES.INT as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR as any,
+  valueType: VALIDATION_VALUE_TYPES.INT,
+  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR,
   name: VALIDATION_VARIABLE_NAMES.HOUSEHOLD_SIZE,
+  description: 'Household size',
   label: 'Household Size',
   isInputVariable: false,
-  defaultValue: 1,
 };
 
 export const mockBoolMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.PEOPLE,
-  valueType: VALIDATION_VALUE_TYPES.BOOL as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.ETERNITY as any,
+  valueType: VALIDATION_VALUE_TYPES.BOOL,
+  definitionPeriod: VALIDATION_DEFINITION_PERIODS.ETERNITY,
   name: VALIDATION_VARIABLE_NAMES.IS_MARRIED,
+  description: 'Is married',
   label: 'Is Married',
   isInputVariable: true,
-  defaultValue: false,
 };
 
 export const mockStringMetadata: VariableMetadata = {
   entity: VALIDATION_ENTITY_NAMES.HOUSEHOLDS,
-  valueType: VALIDATION_VALUE_TYPES.STRING as any,
-  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR as any,
+  valueType: VALIDATION_VALUE_TYPES.STRING,
+  definitionPeriod: VALIDATION_DEFINITION_PERIODS.YEAR,
   name: VALIDATION_VARIABLE_NAMES.STATE_CODE,
+  description: 'State code',
   label: 'State Code',
   isInputVariable: true,
-  defaultValue: '',
 };
 
 // ============= MOCK REDUX STATE =============

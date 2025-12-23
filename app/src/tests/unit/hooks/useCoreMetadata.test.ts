@@ -11,8 +11,8 @@ import {
 // Mock dispatch function
 const mockDispatch = vi.fn();
 
-// Mock state values
-let mockState = { metadata: MOCK_METADATA_STATE_INITIAL };
+// Mock state values - type to allow reassignment
+let mockState: { metadata: typeof MOCK_METADATA_STATE_INITIAL } = { metadata: MOCK_METADATA_STATE_INITIAL };
 
 // Mock react-redux
 vi.mock('react-redux', async () => {
@@ -52,9 +52,9 @@ describe('useCoreMetadata', () => {
       const result = selectCoreMetadataState(state);
 
       // Then
-      expect(result.coreLoading).toBe(false);
-      expect(result.coreLoaded).toBe(false);
-      expect(result.coreError).toBeNull();
+      expect(result.loading).toBe(false);
+      expect(result.loaded).toBe(false);
+      expect(result.error).toBeNull();
     });
 
     it('given loading state then returns loading as true', () => {
@@ -65,7 +65,7 @@ describe('useCoreMetadata', () => {
       const result = selectCoreMetadataState(state);
 
       // Then
-      expect(result.coreLoading).toBe(true);
+      expect(result.loading).toBe(true);
     });
 
     it('given loaded state then returns loaded as true with country', () => {
@@ -76,7 +76,7 @@ describe('useCoreMetadata', () => {
       const result = selectCoreMetadataState(state);
 
       // Then
-      expect(result.coreLoaded).toBe(true);
+      expect(result.loaded).toBe(true);
       expect(result.currentCountry).toBe(TEST_COUNTRIES.US);
     });
 
@@ -88,7 +88,7 @@ describe('useCoreMetadata', () => {
       const result = selectCoreMetadataState(state);
 
       // Then
-      expect(result.coreError).toBe('Failed to load metadata');
+      expect(result.error).toBe('Failed to load metadata');
     });
   });
 

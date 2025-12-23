@@ -8,6 +8,7 @@ export const mockMetadataResponse: MetadataApiPayload = {
   result: {
     parameters: {
       income_tax: {
+        parameter: 'income_tax',
         description: 'Income tax',
         label: 'Income tax',
         unit: 'currency-GBP',
@@ -17,6 +18,7 @@ export const mockMetadataResponse: MetadataApiPayload = {
         },
       },
       national_insurance: {
+        parameter: 'national_insurance',
         description: 'National Insurance contributions',
         label: 'National Insurance',
         unit: 'currency-GBP',
@@ -28,12 +30,16 @@ export const mockMetadataResponse: MetadataApiPayload = {
     },
     variables: {
       household_income: {
+        name: 'household_income',
+        entity: 'household',
         description: 'Total household income',
         label: 'Household income',
         unit: 'currency-GBP',
         valueType: 'float',
       },
       age: {
+        name: 'age',
+        entity: 'person',
         description: 'Age of person',
         label: 'Age',
         unit: 'year',
@@ -42,12 +48,10 @@ export const mockMetadataResponse: MetadataApiPayload = {
     },
     entities: {
       person: {
-        description: 'An individual person',
         label: 'Person',
         plural: 'People',
       },
       household: {
-        description: 'A household unit',
         label: 'Household',
         plural: 'Households',
       },
@@ -55,11 +59,9 @@ export const mockMetadataResponse: MetadataApiPayload = {
     variableModules: {
       household: {
         label: 'Household',
-        description: 'Household-related variables',
       },
       person: {
         label: 'Person',
-        description: 'Person-related variables',
       },
     },
     economy_options: {
@@ -95,14 +97,12 @@ export const mockMetadataResponse: MetadataApiPayload = {
         baseline: {
           id: 1,
           label: 'Current law',
-          description: 'The current tax and benefit system',
         },
       },
       filtered: {
         reform: {
           id: 2,
           label: 'Reform proposal',
-          description: 'Proposed changes to the system',
         },
       },
     },
@@ -117,13 +117,18 @@ export const mockEmptyCountryId = '';
 
 // Test constants for assertions
 export const TEST_PARAMETER_KEY = 'test';
-export const TEST_PARAMETER_VALUE = 'value';
 
 export const mockCustomResponse: MetadataApiPayload = {
   status: 'ok',
   message: null,
   result: {
-    parameters: { [TEST_PARAMETER_KEY]: TEST_PARAMETER_VALUE },
+    parameters: {
+      [TEST_PARAMETER_KEY]: {
+        parameter: TEST_PARAMETER_KEY,
+        label: 'Test Parameter',
+        values: { '2024-01-01': 100 },
+      },
+    },
     variables: {},
     entities: {},
     variableModules: {},
