@@ -164,9 +164,9 @@ describe('PopulationsPage', () => {
       // When
       renderPage();
 
-      // Then
+      // Then - Component displays full state label when regions are loaded
       expect(
-        screen.getByText(`${POPULATION_DETAILS.STATE_PREFIX} ${POPULATION_GEO.STATE_CA}`)
+        screen.getByText(`${POPULATION_DETAILS.STATE_PREFIX} ${POPULATION_GEO.STATE_CA_LABEL}`)
       ).toBeInTheDocument();
     });
 

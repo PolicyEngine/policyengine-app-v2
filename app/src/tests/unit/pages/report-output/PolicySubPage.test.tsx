@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { render, screen, within } from '@test-utils';
 import { Provider } from 'react-redux';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import PolicySubPage from '@/pages/report-output/PolicySubPage';
 import {
   createPolicySubPageProps,
@@ -10,6 +10,11 @@ import {
   mockReformPolicy,
   TEST_PARAMETER_NAMES,
 } from '@/tests/fixtures/pages/report-output/PolicySubPage';
+
+// Mock useCurrentCountry hook
+vi.mock('@/hooks/useCurrentCountry', () => ({
+  useCurrentCountry: () => 'us',
+}));
 
 describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
   let store: any;
