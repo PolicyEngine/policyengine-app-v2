@@ -40,6 +40,7 @@ export const POPULATION_GEO = {
   COUNTRY_US: 'us',
   COUNTRY_UK: 'uk',
   STATE_CA: 'ca',
+  STATE_CA_LABEL: 'California', // Full label used when regions are loaded
   STATE_NY: 'ny',
   TYPE_NATIONAL: 'national' as const,
   TYPE_SUBNATIONAL: 'subnational' as const,

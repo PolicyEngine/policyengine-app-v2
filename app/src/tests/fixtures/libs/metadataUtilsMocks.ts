@@ -27,36 +27,53 @@ export const mockMetadataPayload = (overrides?: any): MetadataApiPayload => ({
   message: 'Success',
   result: {
     variables: {
-      age: { label: 'Age' },
+      age: { name: 'age', entity: 'person', description: 'Age', label: 'Age' },
       state_name: {
+        name: 'state_name',
+        entity: 'household',
+        description: 'State Name',
         label: 'State',
-        possibleValues: [
-          { value: 'CA', label: 'California' },
-          { value: 'NY', label: 'New York' },
-        ],
+        possible_values: {
+          CA: 'California',
+          NY: 'New York',
+        },
       },
       region: {
+        name: 'region',
+        entity: 'household',
+        description: 'Region',
         label: 'Region',
-        possibleValues: [
-          { value: 'NORTH_EAST', label: 'North East' },
-          { value: 'SOUTH', label: 'South' },
-        ],
+        possible_values: {
+          NORTH_EAST: 'North East',
+          SOUTH: 'South',
+        },
       },
       brma: {
+        name: 'brma',
+        entity: 'household',
+        description: 'BRMA',
         label: 'BRMA',
-        possibleValues: [
-          { value: 'LONDON', label: 'London' },
-          { value: 'MANCHESTER', label: 'Manchester' },
-        ],
+        possible_values: {
+          LONDON: 'London',
+          MANCHESTER: 'Manchester',
+        },
       },
       local_authority: {
+        name: 'local_authority',
+        entity: 'household',
+        description: 'Local Authority',
         label: 'Local Authority',
-        possibleValues: [
-          { value: 'WESTMINSTER', label: 'Westminster' },
-          { value: 'CAMDEN', label: 'Camden' },
-        ],
+        possible_values: {
+          WESTMINSTER: 'Westminster',
+          CAMDEN: 'Camden',
+        },
       },
-      employment_income: { label: 'Employment Income' },
+      employment_income: {
+        name: 'employment_income',
+        entity: 'person',
+        description: 'Employment Income',
+        label: 'Employment Income',
+      },
     },
     parameters: { tax_rate: {} },
     entities: { person: {} },
