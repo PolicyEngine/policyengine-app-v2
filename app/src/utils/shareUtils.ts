@@ -132,20 +132,26 @@ export function createShareDataFromReport(
     return null;
   }
 
-  const policyIds = policies.map((p) => p.id).filter((id): id is string => !!id);
+  // Ensure all IDs are strings (API may return numbers)
+  const policyIds = policies
+    .map((p) => p.id)
+    .filter((id) => id != null)
+    .map((id) => String(id));
+
+  const simulationIds = report.simulationIds.map((id) => String(id));
 
   // Determine population type from first simulation
   const firstSim = simulations[0];
   const isHousehold = firstSim?.populationType === 'household';
 
-  const householdId = isHousehold ? households[0]?.id : null;
-  const geographyId = !isHousehold ? geographies[0]?.id : null;
+  const householdId = isHousehold && households[0]?.id ? String(households[0].id) : null;
+  const geographyId = !isHousehold && geographies[0]?.id ? String(geographies[0].id) : null;
 
   return {
-    reportId: report.id,
+    reportId: String(report.id),
     countryId: report.countryId,
     year: report.year,
-    simulationIds: report.simulationIds,
+    simulationIds,
     policyIds,
     householdId,
     geographyId,

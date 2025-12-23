@@ -9,11 +9,9 @@ import { CALCULATOR_URL } from '@/constants';
 import { ReportYearProvider } from '@/contexts/ReportYearContext';
 import { spacing } from '@/designTokens';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
+import { useSaveSharedReport } from '@/hooks/useSaveSharedReport';
 import { useSharedReportData } from '@/hooks/useSharedReportData';
-import {
-  useCreateReportAssociation,
-  useUpdateReportAssociation,
-} from '@/hooks/useUserReportAssociations';
+import { useUpdateReportAssociation } from '@/hooks/useUserReportAssociations';
 import { useUserReportById } from '@/hooks/useUserReports';
 import type { Geography } from '@/types/ingredients/Geography';
 import { formatReportTimestamp } from '@/utils/dateUtils';
@@ -174,8 +172,8 @@ export default function ReportOutputPage() {
     }
   };
 
-  // Add mutation hook for saving shared reports
-  const createAssociation = useCreateReportAssociation();
+  // Hook for saving shared reports with all ingredients
+  const { saveSharedReport, saveResult, setSaveResult } = useSaveSharedReport();
 
   // Handle share button click - copy share URL to clipboard
   const handleShare = async () => {
@@ -216,25 +214,13 @@ export default function ReportOutputPage() {
     }
 
     try {
-      // Generate timestamp-based label for saved shared reports
-      const today = new Date();
-      const formattedDate = today.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
+      const newUserReport = await saveSharedReport({
+        report,
+        simulations,
+        policies,
+        households,
+        geographies,
       });
-      const savedReportLabel = `Saved Report - ${formattedDate}`;
-
-      // Create user report association
-      // TODO: Replace 'anonymous' with actual user ID from auth context
-      const newUserReport = await createAssociation.mutateAsync({
-        userId: 'anonymous',
-        reportId: report.id!,
-        countryId: report.countryId,
-        label: report.label || savedReportLabel,
-      });
-
-      // Navigate to the new owned report view (don't use replace to allow back navigation)
       navigate(`/${countryId}/report-output/${newUserReport.id}/${activeTab}`);
     } catch (error) {
       console.error('[ReportOutputPage] Failed to save report:', error);
@@ -326,6 +312,17 @@ export default function ReportOutputPage() {
       {showCopyAlert && (
         <FloatingAlert onClose={() => setShowCopyAlert(false)}>
           Share link copied to clipboard!
+        </FloatingAlert>
+      )}
+
+      {saveResult && (
+        <FloatingAlert
+          type={saveResult === 'success' ? 'success' : 'warning'}
+          onClose={() => setSaveResult(null)}
+        >
+          {saveResult === 'success'
+            ? 'Report and all ingredients saved!'
+            : 'Report saved. Some ingredients could not be added to your lists.'}
         </FloatingAlert>
       )}
 
