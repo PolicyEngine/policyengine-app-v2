@@ -50,7 +50,7 @@ describe('DynamicsSubPage', () => {
     renderWithStore(<DynamicsSubPage {...props} />);
 
     // Then
-    expect(screen.getByText('Dynamics Information')).toBeInTheDocument();
+    expect(screen.getByText('Dynamics information')).toBeInTheDocument();
     expect(
       screen.getByText('No custom dynamics configuration for this report.')
     ).toBeInTheDocument();
@@ -85,7 +85,7 @@ describe('DynamicsSubPage', () => {
     renderWithStore(<DynamicsSubPage {...props} />);
 
     // Then
-    expect(screen.getByText('Dynamics Information')).toBeInTheDocument();
+    expect(screen.getByText('Dynamics information')).toBeInTheDocument();
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.getByText('gov.simulation.time_period')).toBeInTheDocument();
   });
