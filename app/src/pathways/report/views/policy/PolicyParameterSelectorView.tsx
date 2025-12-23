@@ -14,7 +14,7 @@ import LegacyBanner from '@/components/shared/LegacyBanner';
 import { spacing } from '@/designTokens';
 import { colors } from '@/designTokens/colors';
 import { RootState } from '@/store';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import MainEmpty from '../../components/policyParameterSelector/MainEmpty';
@@ -38,7 +38,7 @@ export default function PolicyParameterSelectorView({
   const [mobileOpened, { toggle: toggleMobile }] = useDisclosure();
 
   // Get metadata from Redux state
-  const { parameterTree, parameters, coreLoading, coreError } = useSelector(
+  const { parameterTree, parameters, loading, error } = useSelector(
     (state: RootState) => state.metadata
   );
 
@@ -46,10 +46,10 @@ export default function PolicyParameterSelectorView({
   const modificationCount = countPolicyModifications(policy);
 
   // Show error if metadata failed to load
-  if (coreError) {
+  if (error) {
     return (
       <div>
-        <Text c="red">Error loading parameters: {coreError}</Text>
+        <Text c="red">Error loading parameters: {error}</Text>
         <Text>Please try refreshing the page.</Text>
       </div>
     );
@@ -112,7 +112,7 @@ export default function PolicyParameterSelectorView({
       </AppShell.Header>
 
       <AppShell.Navbar p="md" bg="gray.0">
-        {coreLoading || !parameterTree ? (
+        {loading || !parameterTree ? (
           <div>Loading parameters...</div>
         ) : (
           <Menu setSelectedParamLabel={handleMenuItemClick} parameterTree={parameterTree} />
@@ -120,7 +120,7 @@ export default function PolicyParameterSelectorView({
       </AppShell.Navbar>
 
       <AppShell.Main bg="gray.0">
-        {coreLoading || !parameterTree ? (
+        {loading || !parameterTree ? (
           <MainEmpty />
         ) : selectedLeafParam ? (
           <PolicyParameterSelectorMain

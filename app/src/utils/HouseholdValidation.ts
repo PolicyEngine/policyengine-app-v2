@@ -1,5 +1,6 @@
 import { RootState } from '@/store';
 import { Household, HouseholdGroupEntity } from '@/types/ingredients/Household';
+import { VariableMetadata } from '@/types/metadata';
 import * as HouseholdQueries from './HouseholdQueries';
 
 /**
@@ -21,20 +22,6 @@ export interface ValidationWarning {
   code: string;
   message: string;
   field?: string;
-}
-
-/**
- * Variable metadata structure based on the provided format
- */
-export interface VariableMetadata {
-  entity: string; // Could be any entity type, not limited to specific ones
-  valueType: 'float' | 'int' | 'bool' | 'string';
-  definitionPeriod: 'year' | 'month' | 'day' | 'eternity';
-  name: string;
-  label: string;
-  unit?: string;
-  isInputVariable: boolean;
-  defaultValue: any;
 }
 
 /**
@@ -315,15 +302,7 @@ export const HouseholdValidation = {
       return undefined;
     }
 
-    return {
-      entity: variable.entity,
-      valueType: variable.valueType as any,
-      definitionPeriod: variable.definitionPeriod as any,
-      name: variable.name,
-      label: variable.label,
-      unit: variable.unit,
-      isInputVariable: variable.isInputVariable,
-      defaultValue: variable.defaultValue,
-    };
+    // Return the variable directly - it's already typed as VariableMetadata
+    return variable;
   },
 };

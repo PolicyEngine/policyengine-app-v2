@@ -94,8 +94,7 @@ export function createMockCacheMetadata(
     countryId: TEST_COUNTRIES.US,
     version: TEST_VERSIONS.US_VERSION,
     versionId: TEST_VERSIONS.US_VERSION_ID,
-    coreLoaded: true,
-    parametersLoaded: false,
+    loaded: true,
     timestamp: Date.now(),
     ...overrides,
   };

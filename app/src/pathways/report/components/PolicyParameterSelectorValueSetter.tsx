@@ -8,7 +8,7 @@ import { useState } from 'react';
 import { Button, Container, Divider, Group, Stack, Text } from '@mantine/core';
 import { getDateRange } from '@/data/static';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { getParameterByName } from '@/types/subIngredients/parameter';
 import { ValueInterval, ValueIntervalCollection } from '@/types/subIngredients/valueInterval';

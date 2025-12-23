@@ -1,5 +1,5 @@
 import { Dispatch, SetStateAction } from 'react';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 import { PolicyStateProps } from '@/types/pathwayState';
 import { ValueInterval } from '@/types/subIngredients/valueInterval';
 

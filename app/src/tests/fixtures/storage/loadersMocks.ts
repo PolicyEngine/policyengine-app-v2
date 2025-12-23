@@ -1,8 +1,7 @@
 /**
  * Fixtures for storage loaders tests
  */
-import type { CoreMetadata, CoreMetadataLoadResult } from '@/storage/loaders/coreMetadataLoader';
-import type { ParametersData, ParametersLoadResult } from '@/storage/loaders/parametersLoader';
+import type { Metadata, MetadataLoadResult } from '@/storage/loaders/coreMetadataLoader';
 import {
   createMockVariables,
   createMockParameters,
@@ -16,77 +15,43 @@ import {
 // Re-export shared constants
 export { TEST_COUNTRIES, TEST_VERSIONS };
 
-// Core metadata factory
-export function createMockCoreMetadata(
-  overrides: Partial<CoreMetadata> = {}
-): CoreMetadata {
+// Metadata factory (unified: includes parameters)
+export function createMockMetadata(overrides: Partial<Metadata> = {}): Metadata {
   return {
     variables: createMockVariables(5),
     datasets: createMockDatasets(2),
-    version: TEST_VERSIONS.US_VERSION,
-    versionId: TEST_VERSIONS.US_VERSION_ID,
-    ...overrides,
-  };
-}
-
-// Core metadata load result factory
-export function createMockCoreMetadataLoadResult(
-  overrides: Partial<CoreMetadataLoadResult> = {}
-): CoreMetadataLoadResult {
-  return {
-    data: createMockCoreMetadata(),
-    fromCache: false,
-    ...overrides,
-  };
-}
-
-// Parameters data factory
-export function createMockParametersData(
-  overrides: Partial<ParametersData> = {}
-): ParametersData {
-  return {
     parameters: createMockParameters(5),
     parameterValues: createMockParameterValues(10),
+    version: TEST_VERSIONS.US_VERSION,
+    versionId: TEST_VERSIONS.US_VERSION_ID,
     ...overrides,
   };
 }
 
-// Parameters load result factory
-export function createMockParametersLoadResult(
-  overrides: Partial<ParametersLoadResult> = {}
-): ParametersLoadResult {
+// Metadata load result factory
+export function createMockMetadataLoadResult(
+  overrides: Partial<MetadataLoadResult> = {},
+): MetadataLoadResult {
   return {
-    data: createMockParametersData(),
+    data: createMockMetadata(),
     fromCache: false,
     ...overrides,
   };
 }
 
-// Valid cache metadata for core (already loaded)
-export function createValidCoreCache() {
+// Valid cache metadata (already loaded)
+export function createValidCache() {
   return createMockCacheMetadata({
-    coreLoaded: true,
-    parametersLoaded: false,
-    version: TEST_VERSIONS.US_VERSION,
-    versionId: TEST_VERSIONS.US_VERSION_ID,
-  });
-}
-
-// Valid cache metadata for parameters (already loaded)
-export function createValidParametersCache() {
-  return createMockCacheMetadata({
-    coreLoaded: true,
-    parametersLoaded: true,
+    loaded: true,
     version: TEST_VERSIONS.US_VERSION,
     versionId: TEST_VERSIONS.US_VERSION_ID,
   });
 }
 
 // Stale cache metadata (version mismatch)
-export function createStaleCoreCache() {
+export function createStaleCache() {
   return createMockCacheMetadata({
-    coreLoaded: true,
-    parametersLoaded: false,
+    loaded: true,
     version: 'old-version-0.9.0',
     versionId: 'old-version-id',
   });

@@ -1,5 +1,5 @@
 import { Group, NumberInput, Stack, Switch, Text } from '@mantine/core';
-import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
+import { ParameterMetadata } from '@/types/metadata';
 
 interface ValueInputBoxProps {
   label?: string;
