@@ -123,7 +123,7 @@ function getFormatOptions(formatType: DateFormatType): Intl.DateTimeFormatOption
  */
 export function formatReportTimestamp(dateString?: string, countryId?: string): string {
   if (!dateString) {
-    return 'Run date unknown';
+    return 'Ran recently';
   }
 
   try {
