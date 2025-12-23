@@ -149,7 +149,11 @@ describe('metadataReducer', () => {
       expect(state.error).toBeNull();
       expect(state.currentCountry).toBe(TEST_COUNTRY_US);
       expect(state.version).toBe(TEST_VERSION);
-      expect(state.variables).toEqual({ income: mockVariables[0] });
+      // Reducer transforms variables by adding label and other fields
+      expect(state.variables.income).toBeDefined();
+      expect(state.variables.income.name).toBe('income');
+      expect(state.variables.income.entity).toBe('person');
+      expect(state.variables.income.label).toBe('Income'); // Generated from name
       expect(state.datasets).toHaveLength(1);
       expect(state.datasets[0].name).toBe('cps_2024');
       expect(state.parameters['tax.rate']).toBeDefined();

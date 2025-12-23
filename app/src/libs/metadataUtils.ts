@@ -55,12 +55,14 @@ export const getFieldOptions = (state: RootState, fieldName: string) => {
 };
 
 // Check if a field should be a dropdown based on metadata
+// Accepts both array format (string[]) and record format (Record<string, string>)
 export const isDropdownField = (state: RootState, fieldName: string): boolean => {
   const fieldVariable = state.metadata.variables?.[fieldName];
   return !!(
     fieldVariable &&
     fieldVariable.possible_values &&
-    Array.isArray(fieldVariable.possible_values)
+    (Array.isArray(fieldVariable.possible_values) ||
+      typeof fieldVariable.possible_values === 'object')
   );
 };
 
