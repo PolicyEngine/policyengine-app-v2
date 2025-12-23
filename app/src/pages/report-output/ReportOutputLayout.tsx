@@ -1,5 +1,5 @@
-import { IconCalendar, IconChevronLeft, IconClock, IconStack2 } from '@tabler/icons-react';
-import { Anchor, Box, Container, Group, Stack, Text, Title } from '@mantine/core';
+import { IconCalendar, IconClock, IconStack2 } from '@tabler/icons-react';
+import { Box, Container, Group, Stack, Text, Title } from '@mantine/core';
 import { ReportActionButtons } from '@/components/report/ReportActionButtons';
 import { SharedReportTag } from '@/components/report/SharedReportTag';
 import { colors, spacing, typography } from '@/designTokens';

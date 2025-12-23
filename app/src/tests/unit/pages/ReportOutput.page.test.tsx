@@ -102,6 +102,15 @@ vi.mock('@/hooks/useStartCalculationOnLoad', () => ({
   useStartCalculationOnLoad: vi.fn(),
 }));
 
+vi.mock('@/hooks/useSaveSharedReport', () => ({
+  useSaveSharedReport: vi.fn(() => ({
+    saveSharedReport: vi.fn(),
+    saveResult: null,
+    setSaveResult: vi.fn(),
+    isPending: false,
+  })),
+}));
+
 describe('ReportOutputPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
