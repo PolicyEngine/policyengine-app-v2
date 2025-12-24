@@ -38,7 +38,6 @@ export interface MetadataLoadResult {
   fromCache: boolean;
 }
 
-
 interface VersionInfo {
   version: string;
   versionId: string;
@@ -106,6 +105,7 @@ async function fetchFreshMetadata(countryId: string): Promise<{
     fetchParameters(countryId),
     fetchParameterValues(countryId),
   ]);
+
   return { variables, datasets, parameters, parameterValues };
 }
 
