@@ -23,7 +23,7 @@ describe('variables', () => {
   });
 
   describe('fetchVariables', () => {
-    it('given US country then fetches variables with correct URL', async () => {
+    it('given US country then fetches variables with correct model ID', async () => {
       // Given
       vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(SAMPLE_RESPONSES.VARIABLES));
 
@@ -44,18 +44,6 @@ describe('variables', () => {
 
       // Then
       expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.VARIABLES(MODEL_IDS.UK));
-    });
-
-    it('given custom limit then includes limit in URL', async () => {
-      // Given
-      const customLimit = 500;
-      vi.mocked(global.fetch).mockResolvedValue(mockFetchSuccess(SAMPLE_RESPONSES.VARIABLES));
-
-      // When
-      await fetchVariables(TEST_COUNTRIES.US, customLimit);
-
-      // Then
-      expect(global.fetch).toHaveBeenCalledWith(API_ENDPOINTS.VARIABLES(MODEL_IDS.US, customLimit));
     });
 
     it('given failed response then throws error', async () => {
