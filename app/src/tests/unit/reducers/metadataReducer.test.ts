@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import * as buildParameterTreeModule from '@/libs/buildParameterTree';
 import metadataReducer, {
   clearMetadata,
-  fetchCoreMetadataThunk,
+  fetchMetadataThunk,
   setCurrentCountry,
 } from '@/reducers/metadataReducer';
 import {
@@ -26,7 +26,7 @@ import {
 
 // Mock the storage loaders
 vi.mock('@/storage', () => ({
-  loadCoreMetadata: vi.fn(),
+  loadMetadata: vi.fn(),
 }));
 
 vi.mock('@/libs/buildParameterTree');
@@ -102,10 +102,10 @@ describe('metadataReducer', () => {
     });
   });
 
-  describe('fetchCoreMetadataThunk', () => {
+  describe('fetchMetadataThunk', () => {
     test('given pending action then sets loading state', () => {
       const initialState = EXPECTED_INITIAL_STATE;
-      const action = { type: fetchCoreMetadataThunk.pending.type };
+      const action = { type: fetchMetadataThunk.pending.type };
       const state = metadataReducer(initialState, action);
       expect(state.loading).toBe(true);
       expect(state.error).toBeNull();
@@ -122,17 +122,13 @@ describe('metadataReducer', () => {
       const mockParameters = [
         { id: 'p1', name: 'tax.rate', label: 'Tax Rate' },
       ];
-      const mockParameterValues = [
-        { id: 'pv1', parameter_id: 'p1', start_date: '2024-01-01', value_json: 0.25 },
-      ];
       const action = {
-        type: fetchCoreMetadataThunk.fulfilled.type,
+        type: fetchMetadataThunk.fulfilled.type,
         payload: {
           data: {
             variables: mockVariables,
             datasets: mockDatasets,
             parameters: mockParameters,
-            parameterValues: mockParameterValues,
             version: TEST_VERSION,
             versionId: 'version-123',
           },
@@ -157,14 +153,15 @@ describe('metadataReducer', () => {
       expect(state.datasets).toHaveLength(1);
       expect(state.datasets[0].name).toBe('cps_2024');
       expect(state.parameters['tax.rate']).toBeDefined();
-      expect(state.parameters['tax.rate']?.values?.['2024-01-01']).toBe(0.25);
+      // Parameter values are fetched on-demand, not prefetched
+      expect(state.parameters['tax.rate']?.values).toEqual({});
       expectParameterTree(state, true);
     });
 
     test('given rejected action then sets error state', () => {
       const initialState = { ...EXPECTED_INITIAL_STATE, loading: true };
       const action = {
-        type: fetchCoreMetadataThunk.rejected.type,
+        type: fetchMetadataThunk.rejected.type,
         payload: TEST_ERROR_MESSAGE,
       };
       const state = metadataReducer(initialState, action);
@@ -182,19 +179,18 @@ describe('metadataReducer', () => {
       expectCurrentCountry(state, TEST_COUNTRY_US);
 
       // Start loading
-      state = metadataReducer(state, { type: fetchCoreMetadataThunk.pending.type });
+      state = metadataReducer(state, { type: fetchMetadataThunk.pending.type });
       expect(state.loading).toBe(true);
 
       // Receive data
       vi.mocked(buildParameterTreeModule.buildParameterTree).mockReturnValue(MOCK_PARAMETER_TREE);
       state = metadataReducer(state, {
-        type: fetchCoreMetadataThunk.fulfilled.type,
+        type: fetchMetadataThunk.fulfilled.type,
         payload: {
           data: {
             variables: [{ id: '1', name: 'test', entity: 'person' }],
             datasets: [],
             parameters: [],
-            parameterValues: [],
             version: TEST_VERSION,
             versionId: 'v1',
           },

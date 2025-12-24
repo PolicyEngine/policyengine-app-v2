@@ -1,12 +1,12 @@
 import { useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { selectCoreMetadataState, useFetchCoreMetadata } from '@/hooks/useCoreMetadata';
+import { selectMetadataState, useFetchMetadata } from '@/hooks/useMetadata';
 import ErrorPage from '@/pages/report-output/ErrorPage';
 import LoadingPage from '@/pages/report-output/LoadingPage';
 
 /**
- * Guard component that ensures all metadata (variables, datasets, parameters, parameterValues)
+ * Guard component that ensures all metadata (variables, datasets, parameters)
  * is loaded before rendering child routes.
  *
  * This is the V2 unified loading approach - loads all metadata in one request.
@@ -20,18 +20,18 @@ import LoadingPage from '@/pages/report-output/LoadingPage';
  * Example usage in Router:
  * ```tsx
  * {
- *   element: <CoreMetadataGuard />,
+ *   element: <MetadataGuard />,
  *   children: [
  *     { path: 'household/*', element: <HouseholdPage /> },
  *   ],
  * }
  * ```
  */
-export function CoreMetadataGuard() {
+export function MetadataGuard() {
   const countryId = useCurrentCountry();
-  useFetchCoreMetadata(countryId);
+  useFetchMetadata(countryId);
 
-  const { loading, loaded, error } = useSelector(selectCoreMetadataState);
+  const { loading, loaded, error } = useSelector(selectMetadataState);
 
   if (error) {
     return <ErrorPage error={error} />;

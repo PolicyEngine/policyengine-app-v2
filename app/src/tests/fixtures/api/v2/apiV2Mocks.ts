@@ -5,7 +5,6 @@ import type { TaxBenefitModel, TaxBenefitModelVersion } from '@/api/v2/taxBenefi
 import {
   createMockVariables,
   createMockParameters,
-  createMockParameterValues,
   createMockDatasets,
   TEST_COUNTRIES,
 } from '@/tests/fixtures/storage/storageMocks';
@@ -83,7 +82,6 @@ export const SAMPLE_RESPONSES = {
   EMPTY_VERSIONS: [] as TaxBenefitModelVersion[],
   VARIABLES: createMockVariables(5),
   PARAMETERS: createMockParameters(5),
-  PARAMETER_VALUES: createMockParameterValues(10),
   DATASETS: createMockDatasets(3),
 } as const;
 
@@ -96,7 +94,5 @@ export const API_ENDPOINTS = {
     `${API_V2_BASE_URL}/variables/?tax_benefit_model_id=${modelId}&limit=${limit}`,
   PARAMETERS: (modelId: string, limit: number = 10000) =>
     `${API_V2_BASE_URL}/parameters/?tax_benefit_model_id=${modelId}&limit=${limit}`,
-  PARAMETER_VALUES: (modelId: string) =>
-    `${API_V2_BASE_URL}/parameter-values/?tax_benefit_model_id=${modelId}`,
   DATASETS: (modelId: string) => `${API_V2_BASE_URL}/datasets/?tax_benefit_model_id=${modelId}`,
 } as const;
