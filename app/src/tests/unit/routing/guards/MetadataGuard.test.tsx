@@ -26,9 +26,9 @@ vi.mock('@/hooks/useCurrentCountry', () => ({
   useCurrentCountry: () => TEST_COUNTRIES.US,
 }));
 
-vi.mock('@/hooks/useCoreMetadata', () => ({
-  useFetchCoreMetadata: vi.fn(),
-  selectCoreMetadataState: () => mockMetadataState,
+vi.mock('@/hooks/useMetadata', () => ({
+  useFetchMetadata: vi.fn(),
+  selectMetadataState: () => mockMetadataState,
 }));
 
 // Mock react-redux
@@ -50,7 +50,7 @@ vi.mock('@/pages/report-output/LoadingPage', () => ({
 }));
 
 // Import after mocks
-import { CoreMetadataGuard } from '@/routing/guards/CoreMetadataGuard';
+import { MetadataGuard } from '@/routing/guards/MetadataGuard';
 
 // Create a fresh store for each test
 function createTestStore() {
@@ -69,7 +69,7 @@ function renderWithRouter() {
       <MemoryRouter initialEntries={['/test']}>
         <MantineProvider theme={policyEngineTheme}>
           <Routes>
-            <Route element={<CoreMetadataGuard />}>
+            <Route element={<MetadataGuard />}>
               <Route path="test" element={<div data-testid="child-content">{CHILD_CONTENT}</div>} />
             </Route>
           </Routes>
@@ -79,7 +79,7 @@ function renderWithRouter() {
   );
 }
 
-describe('CoreMetadataGuard', () => {
+describe('MetadataGuard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockMetadataState = METADATA_STATE.INITIAL;

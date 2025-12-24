@@ -1,6 +1,6 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { buildParameterTree } from "@/libs/buildParameterTree";
-import { loadCoreMetadata } from "@/storage";
+import { loadMetadata } from "@/storage";
 import {
   MetadataState,
   VariableMetadata,
@@ -30,25 +30,12 @@ const initialState: MetadataState = {
   parameterTree: null,
 };
 
-// Async thunk for fetching metadata (V1 - legacy)
-export const fetchMetadataThunk = createAsyncThunk<
-  { data: Awaited<ReturnType<typeof fetchMetadataApi>>; country: string },
-  string
->('metadata/fetch', async (country: string, { rejectWithValue }) => {
-  try {
-    const data = await fetchMetadataApi(country);
-    return { data, country };
-  } catch (error) {
-    return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
-  }
-});
-
-// V2 thunk: Fetch all metadata (variables, datasets, parameters, parameterValues)
-export const fetchCoreMetadataThunk = createAsyncThunk(
-  "metadata/fetchCore",
+// Fetch all metadata (variables, datasets, parameters)
+export const fetchMetadataThunk = createAsyncThunk(
+  "metadata/fetch",
   async (countryId: string, { rejectWithValue }) => {
     try {
-      const result = await loadCoreMetadata(countryId);
+      const result = await loadMetadata(countryId);
       return { ...result, countryId };
     } catch (error) {
       return rejectWithValue(
@@ -85,11 +72,11 @@ const metadataSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchCoreMetadataThunk.pending, (state) => {
+      .addCase(fetchMetadataThunk.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(fetchCoreMetadataThunk.fulfilled, (state, action) => {
+      .addCase(fetchMetadataThunk.fulfilled, (state, action) => {
         const { data, countryId } = action.payload;
 
         state.loading = false;
@@ -126,7 +113,8 @@ const metadataSlice = createSlice({
           default: i === 0,
         }));
 
-        // Transform V2 parameters array to record format with values
+        // Transform V2 parameters array to record format
+        // Note: Parameter values are fetched on-demand, not prefetched
         const parametersRecord: Record<string, ParameterMetadata> = {};
         for (const p of data.parameters) {
           parametersRecord[p.name] = {
@@ -144,19 +132,6 @@ const metadataSlice = createSlice({
           };
         }
 
-        // Associate parameter values with their parameters
-        for (const pv of data.parameterValues) {
-          const param = data.parameters.find((p) => p.id === pv.parameter_id);
-          if (param && parametersRecord[param.name]) {
-            // Use start_date as key for values (V1 format compatibility)
-            const dateKey = pv.start_date.split("T")[0];
-            if (!parametersRecord[param.name].values) {
-              parametersRecord[param.name].values = {};
-            }
-            parametersRecord[param.name].values![dateKey] = pv.value_json;
-          }
-        }
-
         state.parameters = parametersRecord;
 
         // Build parameter tree
@@ -169,7 +144,7 @@ const metadataSlice = createSlice({
         // Static data (entities, basicInputs, timePeriods, regions, modelledPolicies, currentLawId)
         // is no longer stored in Redux. Access it via hooks from @/hooks/useStaticMetadata.
       })
-      .addCase(fetchCoreMetadataThunk.rejected, (state, action) => {
+      .addCase(fetchMetadataThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

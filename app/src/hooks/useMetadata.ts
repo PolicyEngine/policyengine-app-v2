@@ -1,12 +1,12 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchCoreMetadataThunk } from '@/reducers/metadataReducer';
+import { fetchMetadataThunk } from '@/reducers/metadataReducer';
 import { AppDispatch, RootState } from '@/store';
 
 /**
- * Selects core metadata loading state from Redux.
+ * Selects metadata loading state from Redux.
  */
-export function selectCoreMetadataState(state: RootState) {
+export function selectMetadataState(state: RootState) {
   return {
     loading: state.metadata.loading,
     loaded: state.metadata.loaded,
@@ -16,15 +16,15 @@ export function selectCoreMetadataState(state: RootState) {
 }
 
 /**
- * Hook that fetches all metadata (variables, datasets, parameters, parameterValues) for a country.
+ * Hook that fetches all metadata (variables, datasets, parameters) for a country.
  *
  * This is the V2 unified loading approach - loads all metadata in a single fetch.
  *
  * @param countryId - Country to fetch metadata for (e.g., 'us', 'uk')
  */
-export function useFetchCoreMetadata(countryId: string): void {
+export function useFetchMetadata(countryId: string): void {
   const dispatch = useDispatch<AppDispatch>();
-  const { loading, loaded, currentCountry } = useSelector(selectCoreMetadataState);
+  const { loading, loaded, currentCountry } = useSelector(selectMetadataState);
 
   useEffect(() => {
     // Fetch if:
@@ -33,7 +33,7 @@ export function useFetchCoreMetadata(countryId: string): void {
     const needsFetch = !loading && (!loaded || countryId !== currentCountry);
 
     if (needsFetch && countryId) {
-      dispatch(fetchCoreMetadataThunk(countryId));
+      dispatch(fetchMetadataThunk(countryId));
     }
   }, [countryId, loading, loaded, currentCountry, dispatch]);
 }

@@ -4,7 +4,6 @@
 import type {
   Variable,
   Parameter,
-  ParameterValue,
   Dataset,
   CacheMetadata,
 } from '@/storage/metadataDb';
@@ -48,23 +47,6 @@ export function createMockParameter(overrides: Partial<Parameter> = {}): Paramet
     data_type: 'float',
     unit: 'currency-USD',
     tax_benefit_model_version_id: TEST_VERSIONS.US_VERSION_ID,
-    created_at: '2024-01-01T00:00:00Z',
-    ...overrides,
-  };
-}
-
-// Mock parameter value factory
-export function createMockParameterValue(
-  overrides: Partial<ParameterValue> = {}
-): ParameterValue {
-  return {
-    id: 'pv-1',
-    parameter_id: 'param-1',
-    value_json: 0.2,
-    start_date: '2024-01-01',
-    end_date: '2024-12-31',
-    policy_id: null,
-    dynamic_id: null,
     created_at: '2024-01-01T00:00:00Z',
     ...overrides,
   };
@@ -116,18 +98,6 @@ export function createMockParameters(count: number): Parameter[] {
     createMockParameter({
       id: `param-${i + 1}`,
       name: `parameter_${i + 1}`,
-    })
-  );
-}
-
-// Create multiple mock parameter values
-export function createMockParameterValues(count: number): ParameterValue[] {
-  return Array.from({ length: count }, (_, i) =>
-    createMockParameterValue({
-      id: `pv-${i + 1}`,
-      parameter_id: `param-${(i % 3) + 1}`,
-      start_date: `202${i}-01-01`,
-      end_date: `202${i}-12-31`,
     })
   );
 }

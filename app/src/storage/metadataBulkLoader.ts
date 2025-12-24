@@ -1,11 +1,4 @@
-import {
-  db,
-  Variable,
-  Parameter,
-  ParameterValue,
-  Dataset,
-  CacheMetadata,
-} from "./metadataDb";
+import { db, Variable, Parameter, Dataset, CacheMetadata } from "./metadataDb";
 
 /**
  * Bulk load variables, replacing any existing records
@@ -22,17 +15,6 @@ export async function bulkLoadVariables(records: Variable[]): Promise<number> {
 export async function bulkLoadParameters(records: Parameter[]): Promise<number> {
   if (records.length === 0) return 0;
   await db.parameters.bulkPut(records);
-  return records.length;
-}
-
-/**
- * Bulk load parameter values, replacing any existing records
- */
-export async function bulkLoadParameterValues(
-  records: ParameterValue[],
-): Promise<number> {
-  if (records.length === 0) return 0;
-  await db.parameterValues.bulkPut(records);
   return records.length;
 }
 
@@ -58,19 +40,6 @@ export async function clearAndLoadParameters(
   await db.transaction("rw", db.parameters, async () => {
     await db.parameters.clear();
     await db.parameters.bulkPut(records);
-  });
-  return records.length;
-}
-
-/**
- * Clear parameter values and load new records atomically
- */
-export async function clearAndLoadParameterValues(
-  records: ParameterValue[],
-): Promise<number> {
-  await db.transaction("rw", db.parameterValues, async () => {
-    await db.parameterValues.clear();
-    await db.parameterValues.bulkPut(records);
   });
   return records.length;
 }
@@ -114,15 +83,6 @@ export async function getParametersByVersion(
 }
 
 /**
- * Get all parameter values for a specific parameter
- */
-export async function getParameterValues(
-  parameterId: string,
-): Promise<ParameterValue[]> {
-  return db.parameterValues.where("parameter_id").equals(parameterId).toArray();
-}
-
-/**
  * Get all variables
  */
 export async function getAllVariables(): Promise<Variable[]> {
@@ -134,13 +94,6 @@ export async function getAllVariables(): Promise<Variable[]> {
  */
 export async function getAllParameters(): Promise<Parameter[]> {
   return db.parameters.toArray();
-}
-
-/**
- * Get all parameter values
- */
-export async function getAllParameterValues(): Promise<ParameterValue[]> {
-  return db.parameterValues.toArray();
 }
 
 /**
@@ -195,11 +148,10 @@ export async function clearVersionData(versionId: string): Promise<void> {
 export async function clearAllStores(): Promise<void> {
   await db.transaction(
     "rw",
-    [db.variables, db.parameters, db.parameterValues, db.datasets, db.cacheMetadata],
+    [db.variables, db.parameters, db.datasets, db.cacheMetadata],
     async () => {
       await db.variables.clear();
       await db.parameters.clear();
-      await db.parameterValues.clear();
       await db.datasets.clear();
       await db.cacheMetadata.clear();
     },
@@ -212,14 +164,12 @@ export async function clearAllStores(): Promise<void> {
 export async function getStoreCounts(): Promise<{
   variables: number;
   parameters: number;
-  parameterValues: number;
   datasets: number;
 }> {
-  const [variables, parameters, parameterValues, datasets] = await Promise.all([
+  const [variables, parameters, datasets] = await Promise.all([
     db.variables.count(),
     db.parameters.count(),
-    db.parameterValues.count(),
     db.datasets.count(),
   ]);
-  return { variables, parameters, parameterValues, datasets };
+  return { variables, parameters, datasets };
 }

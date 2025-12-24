@@ -14,7 +14,7 @@ export {
 export { fetchVariables } from "./variables";
 
 // Parameters
-export { fetchParameters, fetchParameterValues } from "./parameters";
+export { fetchParameters } from "./parameters";
 
 // Datasets
 export { fetchDatasets } from "./datasets";

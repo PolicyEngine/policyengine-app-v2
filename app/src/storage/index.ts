@@ -5,7 +5,6 @@ export {
   _deleteDb,
   type Variable,
   type Parameter,
-  type ParameterValue,
   type Dataset,
   type CacheMetadata,
 } from "./metadataDb";
@@ -14,10 +13,8 @@ export {
 export {
   bulkLoadVariables,
   bulkLoadParameters,
-  bulkLoadParameterValues,
   clearAndLoadVariables,
   clearAndLoadParameters,
-  clearAndLoadParameterValues,
   clearAndLoadDatasets,
 } from "./metadataBulkLoader";
 
@@ -25,10 +22,8 @@ export {
 export {
   getVariablesByVersion,
   getParametersByVersion,
-  getParameterValues,
   getAllVariables,
   getAllParameters,
-  getAllParameterValues,
   getAllDatasets,
   getVariableByName,
   getParameterByName,
@@ -45,8 +40,8 @@ export {
 
 // Loaders (unified metadata loading)
 export {
-  loadCoreMetadata,
-  isCoreMetadataCached,
+  loadMetadata,
+  isMetadataCached,
   type Metadata,
   type MetadataLoadResult,
 } from "./loaders";

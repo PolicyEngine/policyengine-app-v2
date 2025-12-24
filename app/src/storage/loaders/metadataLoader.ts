@@ -2,7 +2,6 @@ import {
   fetchVariables,
   fetchDatasets,
   fetchParameters,
-  fetchParameterValues,
   fetchModelVersion,
   fetchModelVersionId,
 } from "@/api/v2";
@@ -12,23 +11,19 @@ import {
   clearAndLoadVariables,
   clearAndLoadDatasets,
   clearAndLoadParameters,
-  clearAndLoadParameterValues,
   getAllVariables,
   getAllDatasets,
   getAllParameters,
-  getAllParameterValues,
   type CacheMetadata,
   type Variable,
   type Dataset,
   type Parameter,
-  type ParameterValue,
 } from "@/storage";
 
 export interface Metadata {
   variables: Variable[];
   datasets: Dataset[];
   parameters: Parameter[];
-  parameterValues: ParameterValue[];
   version: string;
   versionId: string;
 }
@@ -73,18 +68,16 @@ function isCacheValid(
  * Load metadata from IndexedDB cache
  */
 async function loadFromCache(cached: CacheMetadata): Promise<Metadata> {
-  const [variables, datasets, parameters, parameterValues] = await Promise.all([
+  const [variables, datasets, parameters] = await Promise.all([
     getAllVariables(),
     getAllDatasets(),
     getAllParameters(),
-    getAllParameterValues(),
   ]);
 
   return {
     variables,
     datasets,
     parameters,
-    parameterValues,
     version: cached.version,
     versionId: cached.versionId,
   };
@@ -97,16 +90,14 @@ async function fetchFreshMetadata(countryId: string): Promise<{
   variables: Variable[];
   datasets: Dataset[];
   parameters: Parameter[];
-  parameterValues: ParameterValue[];
 }> {
-  const [variables, datasets, parameters, parameterValues] = await Promise.all([
+  const [variables, datasets, parameters] = await Promise.all([
     fetchVariables(countryId),
     fetchDatasets(countryId),
     fetchParameters(countryId),
-    fetchParameterValues(countryId),
   ]);
 
-  return { variables, datasets, parameters, parameterValues };
+  return { variables, datasets, parameters };
 }
 
 /**
@@ -117,14 +108,12 @@ async function storeInCache(
   variables: Variable[],
   datasets: Dataset[],
   parameters: Parameter[],
-  parameterValues: ParameterValue[],
   versionInfo: VersionInfo,
 ): Promise<void> {
   await Promise.all([
     clearAndLoadVariables(variables),
     clearAndLoadDatasets(datasets),
     clearAndLoadParameters(parameters),
-    clearAndLoadParameterValues(parameterValues),
   ]);
 
   await setCacheMetadata({
@@ -137,10 +126,10 @@ async function storeInCache(
 }
 
 /**
- * Load all metadata (variables, datasets, parameters, parameterValues) for a country.
+ * Load all metadata (variables, datasets, parameters) for a country.
  * Uses IndexedDB cache with version-based invalidation.
  */
-export async function loadCoreMetadata(
+export async function loadMetadata(
   countryId: string,
 ): Promise<MetadataLoadResult> {
   const cached = await getCacheMetadata(countryId);
@@ -151,19 +140,18 @@ export async function loadCoreMetadata(
     return { data, fromCache: true };
   }
 
-  const { variables, datasets, parameters, parameterValues } =
+  const { variables, datasets, parameters } =
     await fetchFreshMetadata(countryId);
   await storeInCache(
     countryId,
     variables,
     datasets,
     parameters,
-    parameterValues,
     versionInfo,
   );
 
   return {
-    data: { variables, datasets, parameters, parameterValues, ...versionInfo },
+    data: { variables, datasets, parameters, ...versionInfo },
     fromCache: false,
   };
 }
@@ -171,7 +159,7 @@ export async function loadCoreMetadata(
 /**
  * Check if metadata is cached and valid for a country
  */
-export async function isCoreMetadataCached(
+export async function isMetadataCached(
   countryId: string,
 ): Promise<boolean> {
   const cached = await getCacheMetadata(countryId);

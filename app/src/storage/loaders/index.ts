@@ -1,6 +1,6 @@
 export {
-  loadCoreMetadata,
-  isCoreMetadataCached,
+  loadMetadata,
+  isMetadataCached,
   type Metadata,
   type MetadataLoadResult,
-} from "./coreMetadataLoader";
+} from "./metadataLoader";

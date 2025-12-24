@@ -1,11 +1,10 @@
 /**
  * Fixtures for storage loaders tests
  */
-import type { Metadata, MetadataLoadResult } from '@/storage/loaders/coreMetadataLoader';
+import type { Metadata, MetadataLoadResult } from '@/storage/loaders/metadataLoader';
 import {
   createMockVariables,
   createMockParameters,
-  createMockParameterValues,
   createMockDatasets,
   createMockCacheMetadata,
   TEST_COUNTRIES,
@@ -21,7 +20,6 @@ export function createMockMetadata(overrides: Partial<Metadata> = {}): Metadata 
     variables: createMockVariables(5),
     datasets: createMockDatasets(2),
     parameters: createMockParameters(5),
-    parameterValues: createMockParameterValues(10),
     version: TEST_VERSIONS.US_VERSION,
     versionId: TEST_VERSIONS.US_VERSION_ID,
     ...overrides,
