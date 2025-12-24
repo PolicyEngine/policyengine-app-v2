@@ -82,7 +82,7 @@ export function useSharedReportData(
     }
   );
 
-  const simulations = simulationResults.queries
+  const fetchedSimulations = simulationResults.queries
     .map((q) => q.data)
     .filter((s): s is Simulation => !!s);
 
@@ -97,7 +97,7 @@ export function useSharedReportData(
     staleTime: 5 * 60 * 1000,
   });
 
-  const policies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
+  const fetchedPolicies = policyResults.queries.map((q) => q.data).filter((p): p is Policy => !!p);
 
   // Step 4: Fetch household if this is a household report
   const householdIds = shareData?.householdId ? [shareData.householdId] : [];
@@ -112,10 +112,12 @@ export function useSharedReportData(
     staleTime: 5 * 60 * 1000,
   });
 
-  const households = householdResults.queries.map((q) => q.data).filter((h): h is Household => !!h);
+  const fetchedHouseholds = householdResults.queries
+    .map((q) => q.data)
+    .filter((h): h is Household => !!h);
 
   // Step 5: Build geography objects from ShareData and metadata
-  const geographies: Geography[] = [];
+  const fetchedGeographies: Geography[] = [];
   if (isEnabled && shareData?.geographyId) {
     const geographyId = shareData.geographyId;
     const isNational = geographyId === countryId;
@@ -131,7 +133,7 @@ export function useSharedReportData(
       name = regionData?.label || geographyId;
     }
 
-    geographies.push({
+    fetchedGeographies.push({
       id: geographyId,
       countryId,
       scope: isNational ? 'national' : 'subnational',
@@ -148,8 +150,51 @@ export function useSharedReportData(
     { isLoading: householdResults.isLoading, error: householdResults.error }
   );
 
+  // Step 6: Apply labels from ShareData to fetched objects
+  // This ensures the recipient sees the exact same labels as the sharer
+
+  // Apply report label
+  const reportWithLabel = report
+    ? {
+        ...report,
+        label: shareData?.reportLabel ?? report.label,
+      }
+    : undefined;
+
+  // Apply simulation labels (positional, matches simulationIds order)
+  // Since parallel queries may return in different order, we need to match by ID
+  const simulations = fetchedSimulations.map((sim) => {
+    const index = shareData?.simulationIds?.findIndex((id) => id === String(sim.id));
+    const labelFromShare =
+      index !== undefined && index >= 0 ? shareData?.simulationLabels?.[index] : null;
+    return {
+      ...sim,
+      label: labelFromShare ?? sim.label,
+    };
+  });
+
+  // Apply policy labels (positional, matches policyIds order)
+  const policies = fetchedPolicies.map((policy) => {
+    const index = shareData?.policyIds?.findIndex((id) => id === String(policy.id));
+    const labelFromShare =
+      index !== undefined && index >= 0 ? shareData?.policyLabels?.[index] : null;
+    return {
+      ...policy,
+      label: labelFromShare ?? policy.label,
+    };
+  });
+
+  // Households - keep as-is (label is on user association, not base ingredient)
+  const households = fetchedHouseholds;
+
+  // Apply geography label
+  const geographies = fetchedGeographies.map((geo) => ({
+    ...geo,
+    name: shareData?.geographyLabel ?? geo.name,
+  }));
+
   return {
-    report,
+    report: reportWithLabel,
     simulations,
     policies,
     households,
