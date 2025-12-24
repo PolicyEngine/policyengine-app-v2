@@ -16,7 +16,7 @@ import PopulationPathwayWrapper from './pathways/population/PopulationPathwayWra
 import ReportPathwayWrapper from './pathways/report/ReportPathwayWrapper';
 import SimulationPathwayWrapper from './pathways/simulation/SimulationPathwayWrapper';
 import { CountryGuard } from './routing/guards/CountryGuard';
-import { CoreMetadataGuard } from './routing/guards/CoreMetadataGuard';
+import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 
 /**
@@ -42,9 +42,9 @@ const router = createBrowserRouter(
       path: '/:countryId',
       element: <CountryGuard />,
       children: [
-        // All routes need metadata (variables, datasets, parameters, parameterValues)
+        // All routes need metadata (variables, datasets, parameters)
         {
-          element: <CoreMetadataGuard />,
+          element: <MetadataGuard />,
           children: [
             // Routes with StandardLayout
             {

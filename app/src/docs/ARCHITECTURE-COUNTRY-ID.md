@@ -97,7 +97,7 @@ While the URL is the source of truth for components, Redux stores a copy for spe
 
 - Set by CountryGuard via `setCurrentCountry()`
 - Used by:
-  - `useFetchCoreMetadata` to determine which country's metadata to load
+  - `useFetchMetadata` to determine which country's metadata to load
   - `clearReport` thunk to set report.countryId
 
 **report.countryId**:
@@ -177,11 +177,11 @@ clearAllPopulations();
 
 ## Metadata Loading
 
-### CoreMetadataGuard
+### MetadataGuard
 
-A single guard handles all metadata loading (variables, datasets, parameters, parameterValues):
+A single guard handles all metadata loading (variables, datasets, parameters):
 
-**CoreMetadataGuard** (Blocking):
+**MetadataGuard** (Blocking):
 
 - Blocks rendering until all metadata loads
 - Shows loading/error pages
@@ -191,7 +191,7 @@ A single guard handles all metadata loading (variables, datasets, parameters, pa
 **The guard**:
 
 - Uses `useCurrentCountry()` to read country from URL
-- Calls `useFetchCoreMetadata(countryId)` to trigger fetch
+- Calls `useFetchMetadata(countryId)` to trigger fetch
 - Smart caching with version-based invalidation prevents duplicate fetches
 
 **Flow**:
@@ -201,17 +201,17 @@ User navigates to /uk/reports
   ↓
 CountryGuard validates 'uk' and sets metadata.currentCountry = 'uk'
   ↓
-CoreMetadataGuard renders
+MetadataGuard renders
   ↓
 Calls useCurrentCountry() → returns 'uk' from URL
   ↓
-Calls useFetchCoreMetadata('uk')
+Calls useFetchMetadata('uk')
   ↓
-useFetchCoreMetadata checks if metadata.loaded === true and currentCountry === 'uk'
+useFetchMetadata checks if metadata.loaded === true and currentCountry === 'uk'
   ↓
-If not, dispatches fetchCoreMetadataThunk('uk')
+If not, dispatches fetchMetadataThunk('uk')
   ↓
-All metadata (variables, datasets, parameters, parameterValues) loads for UK
+All metadata (variables, datasets, parameters) loads for UK
 ```
 
 ## Data Flow Diagram
@@ -371,11 +371,11 @@ All of these patterns have been replaced with the URL-as-source-of-truth archite
 
 - `src/routing/guards/CountryGuard.tsx` - Entry point and state management
 - `src/hooks/useCurrentCountry.ts` - Hook to read country from URL
-- `src/hooks/useCoreMetadata.ts` - Hook for fetching metadata
+- `src/hooks/useMetadata.ts` - Hook for fetching metadata
 - `src/reducers/reportReducer.ts` - Report state with clearReport thunk
 - `src/reducers/metadataReducer.ts` - Metadata state with unified loading
-- `src/routing/guards/CoreMetadataGuard.tsx` - Unified metadata loader (blocking)
-- `src/storage/loaders/coreMetadataLoader.ts` - V2 API + IndexedDB caching
+- `src/routing/guards/MetadataGuard.tsx` - Unified metadata loader (blocking)
+- `src/storage/loaders/metadataLoader.ts` - V2 API + IndexedDB caching
 
 ### Tests
 

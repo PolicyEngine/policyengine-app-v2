@@ -29,20 +29,6 @@ export interface Parameter {
 }
 
 /**
- * Parameter value record from V2 API
- */
-export interface ParameterValue {
-  id: string;
-  parameter_id: string;
-  value_json: unknown;
-  start_date: string;
-  end_date: string;
-  policy_id: string | null;
-  dynamic_id: string | null;
-  created_at: string;
-}
-
-/**
  * Dataset record from V2 API
  */
 export interface Dataset {
@@ -74,7 +60,6 @@ export interface CacheMetadata {
 class PolicyEngineDatabase extends Dexie {
   variables!: EntityTable<Variable, "id">;
   parameters!: EntityTable<Parameter, "id">;
-  parameterValues!: EntityTable<ParameterValue, "id">;
   datasets!: EntityTable<Dataset, "id">;
   cacheMetadata!: EntityTable<CacheMetadata, "countryId">;
 
@@ -84,7 +69,6 @@ class PolicyEngineDatabase extends Dexie {
     this.version(1).stores({
       variables: "id, name, tax_benefit_model_version_id",
       parameters: "id, name, tax_benefit_model_version_id",
-      parameterValues: "id, parameter_id",
       datasets: "id, name, tax_benefit_model_id",
       cacheMetadata: "countryId",
     });

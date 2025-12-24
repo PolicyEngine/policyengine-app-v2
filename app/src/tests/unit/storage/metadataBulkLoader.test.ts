@@ -2,7 +2,6 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import {
   createMockVariables,
   createMockParameters,
-  createMockParameterValues,
   createMockDatasets,
   createMockCacheMetadata,
   createMockVariable,
@@ -30,7 +29,6 @@ vi.mock('@/storage/metadataDb', () => {
     db: {
       variables: { ...mockTable },
       parameters: { ...mockTable },
-      parameterValues: { ...mockTable },
       datasets: { ...mockTable },
       cacheMetadata: { ...mockTable },
       transaction: vi.fn((mode, tables, callback) => callback()),
@@ -46,18 +44,14 @@ const mockDb = db as any;
 import {
   bulkLoadVariables,
   bulkLoadParameters,
-  bulkLoadParameterValues,
   clearAndLoadVariables,
   clearAndLoadParameters,
-  clearAndLoadParameterValues,
   clearAndLoadDatasets,
   getAllVariables,
   getAllParameters,
-  getAllParameterValues,
   getAllDatasets,
   getVariablesByVersion,
   getParametersByVersion,
-  getParameterValues,
   getVariableByName,
   getParameterByName,
   getCacheMetadata,
@@ -118,29 +112,6 @@ describe('metadataBulkLoader', () => {
     });
   });
 
-  describe('bulkLoadParameterValues', () => {
-    it('given empty array then returns 0 without database call', async () => {
-      // When
-      const result = await bulkLoadParameterValues([]);
-
-      // Then
-      expect(result).toBe(0);
-      expect(db.parameterValues.bulkPut).not.toHaveBeenCalled();
-    });
-
-    it('given array of parameter values then calls bulkPut and returns count', async () => {
-      // Given
-      const parameterValues = createMockParameterValues(5);
-
-      // When
-      const result = await bulkLoadParameterValues(parameterValues);
-
-      // Then
-      expect(result).toBe(5);
-      expect(db.parameterValues.bulkPut).toHaveBeenCalledWith(parameterValues);
-    });
-  });
-
   describe('clearAndLoadVariables', () => {
     it('given array of variables then clears and loads in transaction', async () => {
       // Given
@@ -170,22 +141,6 @@ describe('metadataBulkLoader', () => {
       expect(db.transaction).toHaveBeenCalled();
       expect(db.parameters.clear).toHaveBeenCalled();
       expect(db.parameters.bulkPut).toHaveBeenCalledWith(parameters);
-    });
-  });
-
-  describe('clearAndLoadParameterValues', () => {
-    it('given array of parameter values then clears and loads in transaction', async () => {
-      // Given
-      const parameterValues = createMockParameterValues(10);
-
-      // When
-      const result = await clearAndLoadParameterValues(parameterValues);
-
-      // Then
-      expect(result).toBe(10);
-      expect(db.transaction).toHaveBeenCalled();
-      expect(db.parameterValues.clear).toHaveBeenCalled();
-      expect(db.parameterValues.bulkPut).toHaveBeenCalledWith(parameterValues);
     });
   });
 
@@ -250,21 +205,6 @@ describe('metadataBulkLoader', () => {
     });
   });
 
-  describe('getAllParameterValues', () => {
-    it('given database with parameter values then returns all parameter values', async () => {
-      // Given
-      const parameterValues = createMockParameterValues(5);
-      vi.mocked(db.parameterValues.toArray).mockResolvedValue(parameterValues);
-
-      // When
-      const result = await getAllParameterValues();
-
-      // Then
-      expect(result).toEqual(parameterValues);
-      expect(db.parameterValues.toArray).toHaveBeenCalled();
-    });
-  });
-
   describe('getVariablesByVersion', () => {
     it('given version id then queries variables by version', async () => {
       // Given
@@ -298,24 +238,6 @@ describe('metadataBulkLoader', () => {
       expect(result).toEqual(parameters);
       expect(mockDb.parameters.where).toHaveBeenCalledWith('tax_benefit_model_version_id');
       expect(mockDb.parameters.equals).toHaveBeenCalledWith(TEST_VERSIONS.US_VERSION_ID);
-    });
-  });
-
-  describe('getParameterValues', () => {
-    it('given parameter id then queries parameter values by parameter id', async () => {
-      // Given
-      const parameterValues = createMockParameterValues(2);
-      vi.mocked(mockDb.parameterValues.where).mockReturnThis();
-      vi.mocked(mockDb.parameterValues.equals).mockReturnThis();
-      vi.mocked(mockDb.parameterValues.toArray).mockResolvedValue(parameterValues);
-
-      // When
-      const result = await getParameterValues('param-1');
-
-      // Then
-      expect(result).toEqual(parameterValues);
-      expect(mockDb.parameterValues.where).toHaveBeenCalledWith('parameter_id');
-      expect(mockDb.parameterValues.equals).toHaveBeenCalledWith('param-1');
     });
   });
 
@@ -447,7 +369,6 @@ describe('metadataBulkLoader', () => {
       // Given
       vi.mocked(db.variables.count).mockResolvedValueOnce(100);
       vi.mocked(db.parameters.count).mockResolvedValueOnce(50);
-      vi.mocked(db.parameterValues.count).mockResolvedValueOnce(500);
       vi.mocked(db.datasets.count).mockResolvedValueOnce(5);
 
       // When
@@ -456,7 +377,6 @@ describe('metadataBulkLoader', () => {
       // Then
       expect(result.variables).toBe(100);
       expect(result.parameters).toBe(50);
-      expect(result.parameterValues).toBe(500);
       expect(result.datasets).toBe(5);
     });
   });
@@ -470,7 +390,6 @@ describe('metadataBulkLoader', () => {
       expect(db.transaction).toHaveBeenCalled();
       expect(db.variables.clear).toHaveBeenCalled();
       expect(db.parameters.clear).toHaveBeenCalled();
-      expect(db.parameterValues.clear).toHaveBeenCalled();
       expect(db.datasets.clear).toHaveBeenCalled();
       expect(db.cacheMetadata.clear).toHaveBeenCalled();
     });

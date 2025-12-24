@@ -1,5 +1,5 @@
 import { API_V2_BASE_URL, getModelId } from "./taxBenefitModels";
-import type { Parameter, ParameterValue } from "@/storage";
+import type { Parameter } from "@/storage";
 
 /**
  * Fetch all parameters for a country.
@@ -12,24 +12,6 @@ export async function fetchParameters(countryId: string): Promise<Parameter[]> {
 
   if (!res.ok) {
     throw new Error(`Failed to fetch parameters for ${countryId}`);
-  }
-
-  return res.json();
-}
-
-/**
- * Fetch all parameter values for a country.
- */
-export async function fetchParameterValues(
-  countryId: string,
-): Promise<ParameterValue[]> {
-  const modelId = getModelId(countryId);
-  const res = await fetch(
-    `${API_V2_BASE_URL}/parameter-values/?tax_benefit_model_id=${modelId}`,
-  );
-
-  if (!res.ok) {
-    throw new Error(`Failed to fetch parameter values for ${countryId}`);
   }
 
   return res.json();
