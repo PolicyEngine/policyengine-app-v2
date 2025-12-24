@@ -74,3 +74,4 @@ venv/
 .venv
 .vercel
 .turbo
+.env*.local
