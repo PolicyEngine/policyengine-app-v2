@@ -80,7 +80,6 @@ import { MOCK_USER_ID } from '@/constants';
 import { RootState } from '@/store';
 import {
   getHierarchicalLabels,
-  buildCompactLabel,
   formatLabelParts,
 } from '@/utils/parameterLabels';
 import {
@@ -2519,6 +2518,9 @@ function PolicyCreationModal({
   // Confirmation popover state
   const [confirmPopoverOpen, setConfirmPopoverOpen] = useState(false);
 
+  // Changes panel expanded state
+  const [changesExpanded, setChangesExpanded] = useState(false);
+
   // API hook for creating policy
   const { createPolicy, isPending: isCreating } = useCreatePolicy(policyLabel || undefined);
 
@@ -2544,15 +2546,30 @@ function PolicyCreationModal({
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
 
-  // Get modified parameter names for the Changes section
+  // Get modified parameter data for the Changes section (with current law and reform values)
   const modifiedParams = useMemo(() => {
     return policyParameters.map(p => {
       const metadata = parameters[p.name];
-      const label = metadata?.label || p.name.split('.').pop() || p.name;
+
+      // Get full hierarchical label for the parameter (no compacting) - same as report builder
+      const hierarchicalLabels = getHierarchicalLabels(p.name, parameters);
+      const displayLabel = hierarchicalLabels.length > 0
+        ? formatLabelParts(hierarchicalLabels)
+        : p.name.split('.').pop() || p.name;
+
+      // Get current law value using the helper function
+      const currentLawDisplay = getCurrentLawParameterValue(p.name, parameters);
+
+      // Get reform value (first value interval for simplicity)
+      const reformValue = p.values.length > 0 ? p.values[0].value : null;
+      const reformDisplay = reformValue !== null ? formatParameterValue(reformValue, metadata?.unit) : '—';
+
       return {
         name: p.name,
-        label: capitalize(label),
+        label: displayLabel,
         valueCount: p.values.length,
+        currentLawValue: currentLawDisplay,
+        reformValue: reformDisplay,
       };
     });
   }, [policyParameters, parameters]);
@@ -2674,58 +2691,42 @@ function PolicyCreationModal({
 
   const ValueSetterToRender = ValueSetterComponents[valueSetterMode];
 
+  // Dock styles matching ReportMetaPanel
+  const dockStyles = {
+    dock: {
+      background: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(20px) saturate(180%)',
+      WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+      borderRadius: spacing.radius.lg,
+      border: `1px solid ${modificationCount > 0 ? colorConfig.border : colors.border.light}`,
+      boxShadow: modificationCount > 0
+        ? `0 4px 20px rgba(0, 0, 0, 0.08), 0 0 0 1px ${colorConfig.border}`
+        : `0 2px 12px ${colors.shadow.light}`,
+      padding: `${spacing.sm} ${spacing.lg}`,
+      transition: 'all 0.3s ease',
+      margin: spacing.md,
+      marginBottom: 0,
+    },
+    divider: {
+      width: '1px',
+      height: '24px',
+      background: colors.gray[200],
+      flexShrink: 0,
+    },
+    changesPanel: {
+      background: colors.white,
+      borderRadius: spacing.radius.md,
+      border: `1px solid ${colors.border.light}`,
+      marginTop: spacing.sm,
+      overflow: 'hidden',
+    },
+  };
+
   return (
     <Modal
       opened={isOpen}
       onClose={onClose}
-      title={
-        <Group gap={spacing.sm} style={{ flex: 1 }}>
-          <Box
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: spacing.radius.md,
-              background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
-              border: `1px solid ${colorConfig.border}`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <IconScale size={20} color={colorConfig.icon} />
-          </Box>
-          {isEditingLabel ? (
-            <TextInput
-              value={policyLabel}
-              onChange={(e) => setPolicyLabel(e.currentTarget.value)}
-              onBlur={() => setIsEditingLabel(false)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') setIsEditingLabel(false);
-                if (e.key === 'Escape') setIsEditingLabel(false);
-              }}
-              autoFocus
-              size="md"
-              style={{ flex: 1, maxWidth: 300 }}
-              styles={{
-                input: {
-                  fontWeight: 600,
-                  fontSize: FONT_SIZES.normal,
-                },
-              }}
-            />
-          ) : (
-            <Group gap={spacing.xs} style={{ cursor: 'pointer' }} onClick={() => setIsEditingLabel(true)}>
-              <Text fw={600} style={{ fontSize: FONT_SIZES.normal, color: colors.gray[900] }}>
-                {policyLabel || 'Untitled policy'}
-              </Text>
-              <ActionIcon variant="subtle" color="gray" size="sm">
-                <IconPencil size={14} />
-              </ActionIcon>
-            </Group>
-          )}
-        </Group>
-      }
+      withCloseButton={false}
       size="90vw"
       radius="lg"
       styles={{
@@ -2737,10 +2738,13 @@ function PolicyCreationModal({
           flexDirection: 'column',
         },
         header: {
-          borderBottom: `1px solid ${colors.border.light}`,
-          paddingBottom: spacing.md,
+          padding: spacing.md,
           paddingLeft: spacing.xl,
           paddingRight: spacing.xl,
+          borderBottom: `1px solid ${colors.border.light}`,
+        },
+        title: {
+          flex: 1,
         },
         body: {
           padding: 0,
@@ -2750,10 +2754,253 @@ function PolicyCreationModal({
           overflow: 'hidden',
         },
       }}
+      title={
+        <Box style={{ width: '100%' }}>
+          <Group justify="space-between" align="center" wrap="nowrap">
+            {/* Left side: Policy icon and name */}
+            <Group gap={spacing.md} align="center" wrap="nowrap" style={{ minWidth: 0 }}>
+              {/* Policy icon */}
+              <Box
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: spacing.radius.md,
+                  background: `linear-gradient(135deg, ${colorConfig.bg} 0%, ${colors.white} 100%)`,
+                  border: `1px solid ${colorConfig.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
+                <IconScale size={18} color={colorConfig.icon} />
+              </Box>
+
+              {/* Editable policy name */}
+              <Box style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                {isEditingLabel ? (
+                  <TextInput
+                    value={policyLabel}
+                    onChange={(e) => setPolicyLabel(e.currentTarget.value)}
+                    onBlur={() => setIsEditingLabel(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') setIsEditingLabel(false);
+                      if (e.key === 'Escape') setIsEditingLabel(false);
+                    }}
+                    autoFocus
+                    size="xs"
+                    style={{ width: 250 }}
+                    styles={{
+                      input: {
+                        fontFamily: typography.fontFamily.primary,
+                        fontWeight: 600,
+                        fontSize: FONT_SIZES.normal,
+                        border: 'none',
+                        background: 'transparent',
+                        padding: 0,
+                      },
+                    }}
+                  />
+                ) : (
+                  <>
+                    <Text
+                      fw={600}
+                      style={{
+                        fontFamily: typography.fontFamily.primary,
+                        fontSize: FONT_SIZES.normal,
+                        color: colors.gray[800],
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {policyLabel || 'Untitled policy'}
+                    </Text>
+                    <ActionIcon
+                      size="sm"
+                      variant="subtle"
+                      color="gray"
+                      onClick={() => setIsEditingLabel(true)}
+                      style={{ flexShrink: 0 }}
+                    >
+                      <IconPencil size={14} />
+                    </ActionIcon>
+                  </>
+                )}
+              </Box>
+            </Group>
+
+            {/* Right side: Modification count, View changes, Close */}
+            <Group gap={spacing.md} align="center" wrap="nowrap" style={{ flexShrink: 0 }}>
+              {/* Modification count */}
+              <Group gap={spacing.xs} style={{ flexShrink: 0 }}>
+                {modificationCount > 0 ? (
+                  <>
+                    <Box
+                      style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        background: colors.primary[500],
+                      }}
+                    />
+                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                      {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[400] }}>
+                    No changes yet
+                  </Text>
+                )}
+              </Group>
+
+              {/* Divider */}
+              <Box style={dockStyles.divider} />
+
+              {/* View Changes button */}
+              <UnstyledButton
+                onClick={() => setChangesExpanded(!changesExpanded)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: spacing.xs,
+                  padding: `${spacing.xs} ${spacing.sm}`,
+                  borderRadius: spacing.radius.md,
+                  background: changesExpanded ? colorConfig.bg : 'transparent',
+                  border: `1px solid ${changesExpanded ? colorConfig.border : 'transparent'}`,
+                  transition: 'all 0.1s ease',
+                }}
+              >
+                <Text
+                  fw={500}
+                  style={{
+                    fontSize: FONT_SIZES.small,
+                    color: changesExpanded ? colorConfig.icon : colors.gray[600],
+                  }}
+                >
+                  View changes
+                </Text>
+                <IconChevronRight
+                  size={14}
+                  color={changesExpanded ? colorConfig.icon : colors.gray[400]}
+                  style={{
+                    transform: changesExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.1s ease',
+                  }}
+                />
+              </UnstyledButton>
+
+              {/* Close button */}
+              <ActionIcon
+                variant="subtle"
+                color="gray"
+                onClick={onClose}
+                style={{ flexShrink: 0 }}
+              >
+                <IconX size={18} />
+              </ActionIcon>
+            </Group>
+          </Group>
+
+          {/* Expandable changes panel */}
+          {changesExpanded && (
+            <Box style={dockStyles.changesPanel}>
+              <Box style={{ maxHeight: 250, overflow: 'auto' }}>
+                {modifiedParams.length === 0 ? (
+                  <Box style={{ padding: spacing.md }}>
+                    <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
+                      No parameters have been modified yet. Select a parameter from the menu to make changes.
+                    </Text>
+                  </Box>
+                ) : (
+                  <>
+                    {/* Header row */}
+                    <Box
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 100px 100px',
+                        gap: spacing.md,
+                        padding: `${spacing.sm} ${spacing.md}`,
+                        borderBottom: `1px solid ${colors.border.light}`,
+                        background: colors.gray[50],
+                      }}
+                    >
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                        Parameter
+                      </Text>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
+                        Current law
+                      </Text>
+                      <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
+                        Reform
+                      </Text>
+                    </Box>
+                    {/* Data rows */}
+                    <Stack gap={0}>
+                      {modifiedParams.map(param => (
+                        <UnstyledButton
+                          key={param.name}
+                          onClick={() => {
+                            const metadata = parameters[param.name];
+                            if (metadata) {
+                              setSelectedParam(metadata);
+                              setChangesExpanded(false);
+                            }
+                          }}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 100px 100px',
+                            gap: spacing.md,
+                            padding: `${spacing.sm} ${spacing.md}`,
+                            borderBottom: `1px solid ${colors.border.light}`,
+                            background: selectedParam?.parameter === param.name ? colorConfig.bg : colors.white,
+                          }}
+                        >
+                          <Text
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: colors.gray[700],
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {param.label}
+                          </Text>
+                          <Text
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: colors.gray[500],
+                              textAlign: 'right',
+                            }}
+                          >
+                            {param.currentLawValue}
+                          </Text>
+                          <Text
+                            fw={500}
+                            style={{
+                              fontSize: FONT_SIZES.small,
+                              color: colors.primary[600],
+                              textAlign: 'right',
+                            }}
+                          >
+                            {param.reformValue}
+                          </Text>
+                        </UnstyledButton>
+                      ))}
+                    </Stack>
+                  </>
+                )}
+              </Box>
+            </Box>
+          )}
+        </Box>
+      }
     >
       {/* Main content area */}
       <Group align="stretch" gap={0} style={{ flex: 1, overflow: 'hidden' }} wrap="nowrap">
-        {/* Left Sidebar - Parameter Tree + Changes */}
+        {/* Left Sidebar - Parameter Tree */}
         <Box
           style={{
             width: 280,
@@ -2780,81 +3027,6 @@ function PolicyCreationModal({
                   </Stack>
                 ) : (
                   renderMenuItems(parameterTree.children || [])
-                )}
-              </Box>
-            </ScrollArea>
-          </Box>
-
-          {/* Changes Section */}
-          <Box
-            style={{
-              borderTop: `1px solid ${colors.border.light}`,
-              background: colors.white,
-            }}
-          >
-            <Box style={{ padding: spacing.md, borderBottom: `1px solid ${colors.border.light}` }}>
-              <Group justify="space-between">
-                <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                  CHANGES
-                </Text>
-                {modificationCount > 0 && (
-                  <Box
-                    style={{
-                      background: colorConfig.bg,
-                      border: `1px solid ${colorConfig.border}`,
-                      borderRadius: spacing.radius.sm,
-                      padding: `2px ${spacing.xs}`,
-                    }}
-                  >
-                    <Text fw={600} style={{ fontSize: FONT_SIZES.tiny, color: colorConfig.icon }}>
-                      {modificationCount}
-                    </Text>
-                  </Box>
-                )}
-              </Group>
-            </Box>
-            <ScrollArea style={{ maxHeight: 200 }} offsetScrollbars>
-              <Box style={{ padding: spacing.sm }}>
-                {modifiedParams.length === 0 ? (
-                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small, padding: spacing.sm }}>
-                    No changes yet
-                  </Text>
-                ) : (
-                  <Stack gap={spacing.xs}>
-                    {modifiedParams.map(param => (
-                      <UnstyledButton
-                        key={param.name}
-                        onClick={() => {
-                          const metadata = parameters[param.name];
-                          if (metadata) {
-                            setSelectedParam(metadata);
-                          }
-                        }}
-                        style={{
-                          padding: spacing.xs,
-                          borderRadius: spacing.radius.sm,
-                          background: selectedParam?.parameter === param.name ? colorConfig.bg : 'transparent',
-                          border: `1px solid ${selectedParam?.parameter === param.name ? colorConfig.border : 'transparent'}`,
-                        }}
-                      >
-                        <Group justify="space-between" wrap="nowrap">
-                          <Text
-                            style={{
-                              fontSize: FONT_SIZES.small,
-                              color: colors.gray[700],
-                              flex: 1,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {param.label}
-                          </Text>
-                          <IconCheck size={14} color={colorConfig.icon} />
-                        </Group>
-                      </UnstyledButton>
-                    ))}
-                  </Stack>
                 )}
               </Box>
             </ScrollArea>
@@ -2901,7 +3073,7 @@ function PolicyCreationModal({
                     {capitalize(selectedParam.label || 'Label unavailable')}
                   </Title>
                   {selectedParam.description && (
-                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
+                    <Text style={{ fontSize: FONT_SIZES.normal, color: colors.gray[600] }}>
                       {selectedParam.description}
                     </Text>
                   )}
@@ -2917,7 +3089,7 @@ function PolicyCreationModal({
                   }}
                 >
                   <Stack gap={spacing.md}>
-                    <Text fw={600} style={{ fontSize: FONT_SIZES.small }}>Set new value</Text>
+                    <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>Set new value</Text>
                     <Divider />
                     <Group align="flex-end" wrap="nowrap">
                       <Box style={{ flex: 1 }}>
@@ -2977,24 +3149,7 @@ function PolicyCreationModal({
           background: colors.white,
         }}
       >
-        <Group justify="space-between">
-          <Group gap={spacing.md}>
-            {modificationCount > 0 && (
-              <Group gap={spacing.xs}>
-                <Box
-                  style={{
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: colorConfig.icon,
-                  }}
-                />
-                <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                  {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} modified
-                </Text>
-              </Group>
-            )}
-          </Group>
+        <Group justify="flex-end">
           <Group gap={spacing.sm}>
             <Button variant="default" onClick={onClose}>
               Cancel
