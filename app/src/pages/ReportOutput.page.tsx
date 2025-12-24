@@ -125,22 +125,36 @@ export default function ReportOutputPage() {
   // For shared views, preserve the share param in the URL
   useEffect(() => {
     if (!subpage && report && simulations) {
-      if (isSharedView) {
-        // For shared views, navigate to overview while preserving share param
-        navigate(`/${countryId}/report-output/shared/${DEFAULT_PAGE}?${searchParams.toString()}`);
+      if (isSharedView && shareData?.userReportId) {
+        // For shared views, navigate to overview using userReportId from shareData
+        navigate(
+          `/${countryId}/report-output/${shareData.userReportId}/${DEFAULT_PAGE}?${searchParams.toString()}`
+        );
       } else if (userReportId) {
         navigate(`/${countryId}/report-output/${userReportId}/${DEFAULT_PAGE}`);
       }
     }
-  }, [subpage, navigate, report, simulations, countryId, userReportId, isSharedView, searchParams]);
+  }, [
+    subpage,
+    navigate,
+    report,
+    simulations,
+    countryId,
+    userReportId,
+    isSharedView,
+    searchParams,
+    shareData?.userReportId,
+  ]);
 
   // Determine which tabs to show based on output type, country, and geography scope
   const tabs = outputType ? getTabsForOutputType(outputType, report?.countryId, geographies) : [];
 
   // Handle tab navigation (absolute path, preserve search params for shared views)
   const handleTabClick = (tabValue: string) => {
-    if (isSharedView) {
-      navigate(`/${countryId}/report-output/shared/${tabValue}?${searchParams.toString()}`);
+    if (isSharedView && shareData?.userReportId) {
+      navigate(
+        `/${countryId}/report-output/${shareData.userReportId}/${tabValue}?${searchParams.toString()}`
+      );
     } else {
       navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
     }
@@ -181,12 +195,19 @@ export default function ReportOutputPage() {
       return;
     }
 
+    // Pass user associations for labels and user IDs
+    // Convert null to undefined for optional parameters
     const shareDataToEncode = createShareDataFromReport(
       report,
       simulations,
       policies,
       households,
-      geographies
+      geographies,
+      userReport ?? undefined,
+      userSimulations ?? undefined,
+      userPolicies ?? undefined,
+      userHouseholds ?? undefined,
+      userGeographies ?? undefined
     );
 
     if (!shareDataToEncode) {
@@ -220,7 +241,9 @@ export default function ReportOutputPage() {
         policies,
         households,
         geographies,
+        shareData, // Pass shareData for idempotent save and label preservation
       });
+      // Navigate to owned view (same URL pattern but now in localStorage)
       navigate(`/${countryId}/report-output/${newUserReport.id}/${activeTab}`);
     } catch (error) {
       console.error('[ReportOutputPage] Failed to save report:', error);
@@ -254,9 +277,9 @@ export default function ReportOutputPage() {
 
   // Handle sidebar navigation (absolute path, preserve search params for shared views)
   const handleSidebarNavigate = (viewName: string) => {
-    if (isSharedView) {
+    if (isSharedView && shareData?.userReportId) {
       navigate(
-        `/${countryId}/report-output/shared/comparative-analysis/${viewName}?${searchParams.toString()}`
+        `/${countryId}/report-output/${shareData.userReportId}/comparative-analysis/${viewName}?${searchParams.toString()}`
       );
     } else {
       navigate(`/${countryId}/report-output/${userReportId}/comparative-analysis/${viewName}`);
@@ -265,7 +288,9 @@ export default function ReportOutputPage() {
 
   // Determine the display label and ID for the report
   const displayLabel = isSharedView ? report?.label : userReport?.label;
-  const displayReportId = isSharedView ? (shareData?.reportId ?? 'shared') : userReportId;
+  const displayReportId = isSharedView
+    ? (shareData?.userReportId ?? shareData?.reportId)
+    : userReportId;
 
   // Render content based on output type
   const renderContent = () => {
@@ -317,12 +342,14 @@ export default function ReportOutputPage() {
 
       {saveResult && (
         <FloatingAlert
-          type={saveResult === 'success' ? 'success' : 'warning'}
+          type={saveResult === 'success' || saveResult === 'already_saved' ? 'success' : 'warning'}
           onClose={() => setSaveResult(null)}
         >
           {saveResult === 'success'
             ? 'Report and all ingredients saved!'
-            : 'Report saved. Some ingredients could not be added to your lists.'}
+            : saveResult === 'already_saved'
+              ? 'This report is already saved to your list!'
+              : 'Report saved. Some ingredients could not be added to your lists.'}
         </FloatingAlert>
       )}
 

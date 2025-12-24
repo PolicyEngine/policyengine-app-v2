@@ -39,6 +39,7 @@ const MOCK_SHARE_DATA: ShareData = {
   policyIds: ['policy-1'],
   householdId: null,
   geographyId: 'us',
+  userReportId: 'sur-test123',
 };
 
 const MOCK_HOUSEHOLD_SHARE_DATA: ShareData = {
@@ -49,6 +50,7 @@ const MOCK_HOUSEHOLD_SHARE_DATA: ShareData = {
   policyIds: ['policy-2'],
   householdId: 'hh-1',
   geographyId: null,
+  userReportId: 'sur-test456',
 };
 
 // Mock metadata - cast to any for test simplicity

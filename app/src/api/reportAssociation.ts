@@ -4,6 +4,7 @@ import { UserReport } from '../types/ingredients/UserReport';
 
 export interface UserReportStore {
   create: (report: Omit<UserReport, 'id' | 'createdAt'>) => Promise<UserReport>;
+  createWithId: (report: Omit<UserReport, 'createdAt'>) => Promise<UserReport>;
   findByUser: (userId: string, countryId?: string) => Promise<UserReport[]>;
   findById: (userId: string, reportId: string) => Promise<UserReport | null>;
   findByUserReportId: (userReportId: string) => Promise<UserReport | null>;
@@ -23,6 +24,25 @@ export class ApiReportStore implements UserReportStore {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to create report association');
+    }
+
+    const apiResponse = await response.json();
+    return UserReportAdapter.fromApiResponse(apiResponse);
+  }
+
+  // Added for interface consistency; may be removed when user auth is implemented
+  async createWithId(report: Omit<UserReport, 'createdAt'>): Promise<UserReport> {
+    // For API store, we pass the ID to the backend and let it handle idempotency
+    const payload: UserReportCreationPayload = UserReportAdapter.toCreationPayload(report);
+
+    const response = await fetch(`${this.BASE_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...payload, id: report.id }),
     });
 
     if (!response.ok) {
@@ -133,6 +153,27 @@ export class LocalStorageReportStore implements UserReportStore {
 
     const reports = this.getStoredReports();
 
+    const updatedReports = [...reports, newReport];
+    this.setStoredReports(updatedReports);
+
+    return newReport;
+  }
+
+  async createWithId(report: Omit<UserReport, 'createdAt'>): Promise<UserReport> {
+    // Check if ID already exists (idempotent - don't create duplicates)
+    const existing = await this.findByUserReportId(report.id!);
+    if (existing) {
+      throw new Error(`Association with id ${report.id} already exists`);
+    }
+
+    const newReport: UserReport = {
+      ...report,
+      id: report.id!,
+      createdAt: new Date().toISOString(),
+      isCreated: true,
+    };
+
+    const reports = this.getStoredReports();
     const updatedReports = [...reports, newReport];
     this.setStoredReports(updatedReports);
 

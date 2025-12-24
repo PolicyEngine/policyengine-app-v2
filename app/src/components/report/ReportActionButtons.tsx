@@ -53,19 +53,19 @@ export function ReportActionButtons({
         variant="subtle"
         color="gray"
         size="lg"
-        aria-label="Share report"
-        onClick={onShare}
+        aria-label="Edit report name"
+        onClick={onEdit}
       >
-        <IconShare size={18} />
+        <IconPencil size={18} />
       </ActionIcon>
       <ActionIcon
         variant="subtle"
         color="gray"
         size="lg"
-        aria-label="Edit report name"
-        onClick={onEdit}
+        aria-label="Share report"
+        onClick={onShare}
       >
-        <IconPencil size={18} />
+        <IconShare size={18} />
       </ActionIcon>
     </>
   );
