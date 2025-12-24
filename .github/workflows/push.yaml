@@ -1,20 +1,9 @@
-name: Deploy Production
+name: Push checks
 
 on:
   push:
     branches: [master]
   workflow_dispatch:
-
-permissions:
-  contents: read
-  deployments: write
-
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-
-concurrency:
-  group: production-deploy
-  cancel-in-progress: false
 
 jobs:
   lint:
@@ -99,167 +88,27 @@ jobs:
         working-directory: ./app
         run: npm test
 
-  deploy-app-v2:
-    name: Deploy App V2
-    needs: [lint, typecheck, test]
+  build:
+    name: Build
     runs-on: ubuntu-latest
-    environment:
-      name: production-app-v2
-      url: ${{ steps.deploy.outputs.url }}
-    env:
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_APP_V2_PROJECT_ID }}
 
     steps:
-      - name: Checkout
+      - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Vercel CLI
-        run: npm install -g vercel
+      - name: Build design system
+        run: npm run design-system:build
 
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Create GitHub deployment
-        uses: chrnorm/deployment-action@v2
-        id: deployment
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          environment: production-app-v2
-
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$url" >> $GITHUB_OUTPUT
-
-      - name: Update deployment status
-        if: always()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: ${{ job.status == 'success' && 'success' || 'failure' }}
-          environment-url: ${{ steps.deploy.outputs.url }}
-
-  deploy-website:
-    name: Deploy Website
-    needs: [lint, typecheck, test]
-    runs-on: ubuntu-latest
-    environment:
-      name: production-website
-      url: ${{ steps.deploy.outputs.url }}
-    env:
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_WEBSITE_PROJECT_ID }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Create GitHub deployment
-        uses: chrnorm/deployment-action@v2
-        id: deployment
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          environment: production-website
-
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$url" >> $GITHUB_OUTPUT
-
-      - name: Update deployment status
-        if: always()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: ${{ job.status == 'success' && 'success' || 'failure' }}
-          environment-url: ${{ steps.deploy.outputs.url }}
-
-  deploy-calculator:
-    name: Deploy Calculator
-    needs: [lint, typecheck, test]
-    runs-on: ubuntu-latest
-    environment:
-      name: production-calculator
-      url: ${{ steps.deploy.outputs.url }}
-    env:
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_CALCULATOR_PROJECT_ID }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Vercel CLI
-        run: npm install -g vercel
-
-      - name: Pull Vercel environment
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: ./calculator
-
-      - name: Build
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        working-directory: ./calculator
-
-      - name: Create GitHub deployment
-        uses: chrnorm/deployment-action@v2
-        id: deployment
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          environment: production-calculator
-
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "url=$url" >> $GITHUB_OUTPUT
-        working-directory: ./calculator
-
-      - name: Update deployment status
-        if: always()
-        uses: chrnorm/deployment-status@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          deployment-id: ${{ steps.deployment.outputs.deployment_id }}
-          state: ${{ job.status == 'success' && 'success' || 'failure' }}
-          environment-url: ${{ steps.deploy.outputs.url }}
+      - name: Build application
+        working-directory: ./app
+        run: npm run build
