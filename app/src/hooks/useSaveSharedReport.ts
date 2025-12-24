@@ -77,49 +77,33 @@ export function useSaveSharedReport() {
       }
     }
 
-    // Get labels from shareData if available (for exact UI reproduction)
-    const getSimulationLabel = (simId: string, index: number): string | undefined => {
-      if (shareData?.simulationLabels?.[index] !== undefined) {
-        return shareData.simulationLabels[index] ?? undefined;
-      }
-      const sim = simulations.find((s) => String(s.id) === simId);
-      return sim?.label ?? undefined;
-    };
-
-    const getPolicyLabel = (policyId: string, index: number): string | undefined => {
-      if (shareData?.policyLabels?.[index] !== undefined) {
-        return shareData.policyLabels[index] ?? undefined;
-      }
-      const policy = policies.find((p) => String(p.id) === policyId);
-      return policy?.label ?? undefined;
-    };
-
-    // Save all simulations with labels from shareData
+    // Save all simulations (labels already applied by useSharedReportData)
     const simPromises = simulations
       .filter((s) => s.id)
-      .map((sim, index) =>
+      .map((sim) =>
         createSimulationAssociation.mutateAsync({
           userId,
           simulationId: sim.id!,
           countryId: sim.countryId!,
-          label: getSimulationLabel(String(sim.id), index),
+          label: sim.label ?? undefined,
         })
       );
 
-    // Save all policies with labels from shareData
+    // Save all policies (labels already applied by useSharedReportData)
     // Skip current law policies - they're pre-defined, not user-created
     const policyPromises = policies
       .filter((p) => p.id && String(p.id) !== String(currentLawId))
-      .map((policy, index) =>
+      .map((policy) =>
         createPolicyAssociation.mutateAsync({
           userId,
           policyId: policy.id!,
           countryId: policy.countryId!,
-          label: getPolicyLabel(String(policy.id), index),
+          label: policy.label ?? undefined,
         })
       );
 
-    // Save households if present (with label from shareData)
+    // Save households if present
+    // Note: Household base type doesn't have label, only UserHousehold association does
     const householdPromises = households
       .filter((h) => h.id)
       .map((hh) =>
@@ -131,7 +115,7 @@ export function useSaveSharedReport() {
         })
       );
 
-    // Save geographies if present (with label from shareData)
+    // Save geographies (name already has sharer's label applied by useSharedReportData)
     const geographyPromises = geographies
       .filter((g) => g.id)
       .map((geo) =>
@@ -140,7 +124,7 @@ export function useSaveSharedReport() {
           geographyId: geo.geographyId,
           countryId: geo.countryId,
           scope: geo.scope,
-          label: shareData?.geographyLabel ?? geo.name ?? undefined,
+          label: geo.name,
         })
       );
 
@@ -152,9 +136,8 @@ export function useSaveSharedReport() {
       ...geographyPromises,
     ]);
 
-    // Use label from shareData, or generate timestamp-based label for saved shared reports
+    // Use report label (already has sharer's label applied by useSharedReportData)
     const savedReportLabel =
-      shareData?.reportLabel ??
       report.label ??
       `Saved Report - ${new Date().toLocaleDateString('en-US', {
         month: 'short',
