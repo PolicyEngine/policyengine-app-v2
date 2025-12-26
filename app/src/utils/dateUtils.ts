@@ -189,3 +189,68 @@ export function formatReportTimestamp(dateString?: string, countryId?: string): 
     return 'Run date unknown';
   }
 }
+
+/**
+ * Formats a date period (start to end) with smart formatting:
+ * - If endDate is FOREVER (2100-12-31), shows formatted start date + " onward"
+ * - If start is Jan 1 and end is Dec 31 (any years), shows "XXXX" or "XXXX - YYYY"
+ * - Otherwise shows full dates "MMM D, YYYY - MMM D, YYYY"
+ *
+ * @param startDate - ISO date string (YYYY-MM-DD)
+ * @param endDate - ISO date string (YYYY-MM-DD)
+ * @returns Formatted period string
+ */
+export function formatPeriod(startDate: string, endDate: string): string {
+  const FOREVER = '2100-12-31';
+
+  // Handle missing or invalid dates
+  if (!startDate || !endDate) {
+    return '—';
+  }
+
+  // Extract year, month, day from dates
+  const startParts = startDate.split('-');
+  const endParts = endDate.split('-');
+
+  // Validate date format (should have 3 parts: YYYY-MM-DD)
+  if (startParts.length !== 3 || endParts.length !== 3) {
+    return '—';
+  }
+
+  const [startYear, startMonth, startDay] = startParts;
+  const [endYear, endMonth, endDay] = endParts;
+
+  // Helper to format a single date
+  const formatFullDate = (dateStr: string): string => {
+    const date = new Date(dateStr);
+    return new Intl.DateTimeFormat('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC',
+    }).format(date);
+  };
+
+  // Check for "onward" case (FOREVER end date)
+  if (endDate === FOREVER) {
+    // If start is Jan 1, just show "YYYY onward"
+    if (startMonth === '01' && startDay === '01') {
+      return `${startYear} onward`;
+    }
+    // Otherwise show full start date + onward
+    return `${formatFullDate(startDate)} onward`;
+  }
+
+  // Check for year-aligned case (Jan 1 to Dec 31)
+  if (startMonth === '01' && startDay === '01' && endMonth === '12' && endDay === '31') {
+    // Same year: just show "YYYY"
+    if (startYear === endYear) {
+      return startYear;
+    }
+    // Different years: show "XXXX - YYYY"
+    return `${startYear} - ${endYear}`;
+  }
+
+  // Default: format as full date range
+  return `${formatFullDate(startDate)} - ${formatFullDate(endDate)}`;
+}
