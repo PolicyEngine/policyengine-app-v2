@@ -1,11 +1,13 @@
 import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { buildParameterTree } from "@/libs/buildParameterTree";
-import { loadMetadata } from "@/storage";
 import {
-  MetadataState,
-  VariableMetadata,
-  ParameterMetadata,
-} from "@/types/metadata";
+  fetchVariables,
+  fetchDatasets,
+  fetchParameters,
+  fetchModelVersion,
+} from "@/api/v2";
+import { MetadataAdapter } from "@/adapters";
+import { buildParameterTree } from "@/libs/buildParameterTree";
+import { MetadataState } from "@/types/metadata";
 
 /**
  * Initial state for API-driven metadata
@@ -30,13 +32,21 @@ const initialState: MetadataState = {
   parameterTree: null,
 };
 
-// Fetch all metadata (variables, datasets, parameters)
+// Fetch all metadata (variables, datasets, parameters) directly from API
 export const fetchMetadataThunk = createAsyncThunk(
   "metadata/fetch",
   async (countryId: string, { rejectWithValue }) => {
     try {
-      const result = await loadMetadata(countryId);
-      return { ...result, countryId };
+      const [variables, datasets, parameters, version] = await Promise.all([
+        fetchVariables(countryId),
+        fetchDatasets(countryId),
+        fetchParameters(countryId),
+        fetchModelVersion(countryId),
+      ]);
+      return {
+        data: { variables, datasets, parameters, version },
+        countryId,
+      };
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : "Unknown error",
@@ -85,53 +95,12 @@ const metadataSlice = createSlice({
         state.currentCountry = countryId;
         state.version = data.version;
 
-        // Transform V2 variables array to record format
-        const variablesRecord: Record<string, VariableMetadata> = {};
-        for (const v of data.variables) {
-          variablesRecord[v.name] = {
-            id: v.id,
-            name: v.name,
-            entity: v.entity,
-            description: v.description,
-            data_type: v.data_type,
-            possible_values: v.possible_values,
-            tax_benefit_model_version_id: v.tax_benefit_model_version_id,
-            created_at: v.created_at,
-            // Generate label from name if not provided
-            label: v.name
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (c) => c.toUpperCase()),
-          };
-        }
-        state.variables = variablesRecord;
-
-        // Transform V2 datasets
-        state.datasets = data.datasets.map((d, i) => ({
-          name: d.name,
-          label: d.name,
-          title: d.description || d.name,
-          default: i === 0,
-        }));
-
-        // Transform V2 parameters array to record format
-        // Note: Parameter values are fetched on-demand, not prefetched
-        const parametersRecord: Record<string, ParameterMetadata> = {};
-        for (const p of data.parameters) {
-          parametersRecord[p.name] = {
-            id: p.id,
-            name: p.name,
-            label: p.label,
-            description: p.description,
-            unit: p.unit,
-            data_type: p.data_type,
-            tax_benefit_model_version_id: p.tax_benefit_model_version_id,
-            created_at: p.created_at,
-            parameter: p.name, // Use name as parameter path
-            type: "parameter",
-            values: {},
-          };
-        }
-
+        // Convert V2 API data to frontend format using adapters
+        state.variables = MetadataAdapter.variablesFromV2(data.variables);
+        state.datasets = MetadataAdapter.datasetsFromV2(data.datasets);
+        const parametersRecord = MetadataAdapter.parametersFromV2(
+          data.parameters
+        );
         state.parameters = parametersRecord;
 
         // Build parameter tree

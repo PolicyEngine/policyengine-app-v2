@@ -24,9 +24,12 @@ import {
   TEST_VERSION,
 } from '@/tests/fixtures/reducers/metadataReducerMocks';
 
-// Mock the storage loaders
-vi.mock('@/storage', () => ({
-  loadMetadata: vi.fn(),
+// Mock the API calls (not used in reducer tests, but prevents actual network calls)
+vi.mock('@/api/v2', () => ({
+  fetchVariables: vi.fn(),
+  fetchDatasets: vi.fn(),
+  fetchParameters: vi.fn(),
+  fetchModelVersion: vi.fn(),
 }));
 
 vi.mock('@/libs/buildParameterTree');
