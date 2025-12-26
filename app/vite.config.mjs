@@ -7,6 +7,15 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 // All dev/build scripts must explicitly set this variable
 const appMode = process.env.VITE_APP_MODE;
 
+// Port configuration - automatically discovered by scripts/dev-server.mjs
+// Falls back to defaults if not set (e.g., during build)
+const websitePort = parseInt(process.env.WEBSITE_PORT || '3000', 10);
+const calculatorPort = parseInt(process.env.CALCULATOR_PORT || '3001', 10);
+
+// Derive URLs from ports - allows explicit override via VITE_*_URL env vars
+const websiteUrl = process.env.VITE_WEBSITE_URL || `http://localhost:${websitePort}`;
+const calculatorUrl = process.env.VITE_CALCULATOR_URL || `http://localhost:${calculatorPort}`;
+
 // Validate for dev/build; skip for tests (vitest loads this config but doesn't use appMode)
 if (!process.env.VITEST && (!appMode || !['website', 'calculator'].includes(appMode))) {
   throw new Error(
@@ -60,9 +69,15 @@ function spaFallbackPlugin() {
 export default defineConfig({
   plugins: [react(), tsconfigPaths(), spaFallbackPlugin()],
   base: process.env.BASE_URL || '/',
+  server: {
+    port: appMode === 'calculator' ? calculatorPort : websitePort,
+    strictPort: true,
+  },
   define: {
-    // Expose VITE_APP_MODE to client-side code
+    // Expose VITE_APP_MODE and derived URLs to client-side code
     'import.meta.env.VITE_APP_MODE': JSON.stringify(appMode),
+    'import.meta.env.VITE_WEBSITE_URL': JSON.stringify(websiteUrl),
+    'import.meta.env.VITE_CALCULATOR_URL': JSON.stringify(calculatorUrl),
   },
   // Use separate cache directories for website and calculator to avoid conflicts
   cacheDir: `node_modules/.vite-${appMode || 'default'}`,
