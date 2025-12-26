@@ -75,7 +75,7 @@ import { initializeSimulationState } from '@/utils/pathwayState/initializeSimula
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
 import { CURRENT_YEAR } from '@/constants';
-import { useUserPolicies } from '@/hooks/useUserPolicy';
+import { useUserPolicies, useUpdatePolicyAssociation } from '@/hooks/useUserPolicy';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { MOCK_USER_ID } from '@/constants';
 import { RootState } from '@/store';
@@ -89,7 +89,7 @@ import {
 } from '@/components/icons/CountryOutlineIcons';
 import { formatParameterValue } from '@/utils/policyTableHelpers';
 import { formatPeriod } from '@/utils/dateUtils';
-import { countPolicyModifications } from '@/utils/countParameterChanges';
+import { countPolicyModifications, countParameterChanges } from '@/utils/countParameterChanges';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
@@ -699,6 +699,8 @@ interface SavedPolicy {
   id: string;
   label: string;
   paramCount: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface BrowseMoreChipProps {
@@ -1358,8 +1360,8 @@ function IngredientPickerModal({
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
-  const { data: policies } = useUserPolicies(userId);
-  const { data: households } = useUserHouseholds(userId);
+  const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
+  const { data: households, isLoading: householdsLoading } = useUserHouseholds(userId);
   const colorConfig = INGREDIENT_COLORS[type];
   const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>(null);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
@@ -1458,12 +1460,19 @@ function IngredientPickerModal({
             </Paper>
             <Divider label="Or select an existing policy" labelPosition="center" />
             <ScrollArea h={320}>
+              {policiesLoading ? (
+                <Box p={spacing.xl} ta="center">
+                  <Loader size="sm" />
+                </Box>
+              ) : (
               <Stack gap={spacing.sm}>
                 {policies?.map((p) => {
-                  const policyId = p.policy?.id || '';
+                  // Use association data for display (like Policies page)
+                  const policyId = p.association.policyId.toString();
+                  const label = p.association.label || `Policy #${policyId}`;
+                  const paramCount = countParameterChanges(p.policy); // Handles undefined gracefully
                   const policyJson = p.policy?.policy_json || {};
                   const paramEntries = Object.entries(policyJson);
-                  const paramCount = paramEntries.length;
                   const isExpanded = expandedPolicyId === policyId;
 
                   return (
@@ -1486,7 +1495,7 @@ function IngredientPickerModal({
                           cursor: 'pointer',
                           transition: 'background 0.15s ease',
                         }}
-                        onClick={() => handleSelectPolicy(policyId, p.association?.label || `Policy #${policyId}`, paramCount)}
+                        onClick={() => handleSelectPolicy(policyId, label, paramCount)}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.gray[50];
                         }}
@@ -1496,7 +1505,7 @@ function IngredientPickerModal({
                       >
                         {/* Policy info - takes remaining space */}
                         <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                          <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{p.association?.label || `Policy #${policyId}`}</Text>
+                          <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{label}</Text>
                           <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
                             {paramCount} param{paramCount !== 1 ? 's' : ''} changed
                           </Text>
@@ -1686,6 +1695,7 @@ function IngredientPickerModal({
                 })}
                 {(!policies || policies.length === 0) && <Text c="dimmed" ta="center" py="lg">No saved policies</Text>}
               </Stack>
+              )}
             </ScrollArea>
             <Divider />
             <Button variant="light" color="teal" leftSection={<IconPlus size={16} />} onClick={() => { onCreateNew(); onClose(); }}>Create new policy</Button>
@@ -1755,46 +1765,6 @@ function IngredientPickerModal({
 // POLICY BROWSE MODAL - Augmented policy selection experience
 // ============================================================================
 
-// Local storage key for recent policies
-const RECENT_POLICIES_KEY = 'policyengine_recent_policies';
-const MAX_RECENT_POLICIES = 5;
-
-interface RecentPolicy {
-  id: string;
-  label: string;
-  paramCount: number;
-  timestamp: number;
-}
-
-// Helper to get recent policies from localStorage
-function getRecentPolicies(): RecentPolicy[] {
-  try {
-    const stored = localStorage.getItem(RECENT_POLICIES_KEY);
-    if (stored) {
-      return JSON.parse(stored);
-    }
-  } catch (e) {
-    console.warn('Failed to load recent policies from localStorage');
-  }
-  return [];
-}
-
-// Helper to save a policy to recent
-function saveToRecentPolicies(policy: RecentPolicy) {
-  try {
-    const recent = getRecentPolicies();
-    // Remove if already exists
-    const filtered = recent.filter(p => p.id !== policy.id);
-    // Add to front
-    filtered.unshift({ ...policy, timestamp: Date.now() });
-    // Keep only max items
-    const trimmed = filtered.slice(0, MAX_RECENT_POLICIES);
-    localStorage.setItem(RECENT_POLICIES_KEY, JSON.stringify(trimmed));
-  } catch (e) {
-    console.warn('Failed to save recent policy to localStorage');
-  }
-}
-
 interface PolicyBrowseModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -1812,36 +1782,45 @@ function PolicyBrowseModal({
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
+  const updatePolicyAssociation = useUpdatePolicyAssociation();
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeSection, setActiveSection] = useState<'my-policies' | 'recent' | 'public'>('my-policies');
+  const [activeSection, setActiveSection] = useState<'my-policies' | 'public'>('my-policies');
   const [selectedPolicyId, setSelectedPolicyId] = useState<string | null>(null);
   const [drawerPolicyId, setDrawerPolicyId] = useState<string | null>(null);
-  const [recentPolicies, setRecentPolicies] = useState<RecentPolicy[]>([]);
 
-  // Load recent policies on mount
+  // Reset state on mount
   useEffect(() => {
     if (isOpen) {
-      setRecentPolicies(getRecentPolicies());
       setSearchQuery('');
       setSelectedPolicyId(null);
       setDrawerPolicyId(null);
     }
   }, [isOpen]);
 
-  // Transform policies data
+  // Transform policies data, sorted by most recent
+  // Uses association data for display (like Policies page), policy data only for param count
   const userPolicies = useMemo(() => {
-    return (policies || []).map((p) => {
-      const id = p.policy?.id || '';
-      return {
-        id,
-        label: p.association?.label || `Policy #${id}`,
-        paramCount: Object.keys(p.policy?.policy_json || {}).length,
-        policyJson: p.policy?.policy_json || {},
-        createdAt: p.association?.createdAt,
-      };
-    });
+    return (policies || [])
+      .map((p) => {
+        const policyId = p.association.policyId.toString();
+        return {
+          id: policyId,
+          associationId: p.association.id, // For updating updatedAt on selection
+          label: p.association.label || `Policy #${policyId}`,
+          paramCount: countParameterChanges(p.policy), // Handles undefined gracefully
+          policyJson: p.policy?.policy_json || {},
+          createdAt: p.association.createdAt,
+          updatedAt: p.association.updatedAt,
+        };
+      })
+      .sort((a, b) => {
+        // Sort by most recent timestamp (prefer updatedAt, fallback to createdAt)
+        const aTime = a.updatedAt || a.createdAt || '';
+        const bTime = b.updatedAt || b.createdAt || '';
+        return bTime.localeCompare(aTime); // Descending (most recent first)
+      });
   }, [policies]);
 
   // Filter policies based on search
@@ -1871,33 +1850,32 @@ function PolicyBrowseModal({
 
   // Get policies for current section
   const displayedPolicies = useMemo(() => {
-    if (activeSection === 'recent') {
-      return recentPolicies.map(rp => {
-        const fullPolicy = userPolicies.find(p => p.id === rp.id);
-        return fullPolicy || { id: rp.id, label: rp.label, paramCount: rp.paramCount, policyJson: {}, createdAt: undefined };
-      });
-    }
     if (activeSection === 'public') {
       // TODO: Fetch public policies from API when available
       return [];
     }
+    // 'my-policies' - already sorted by most recent
     return filteredPolicies;
-  }, [activeSection, recentPolicies, filteredPolicies, userPolicies]);
+  }, [activeSection, filteredPolicies]);
 
   // Get section title for display
   const getSectionTitle = () => {
     switch (activeSection) {
       case 'my-policies': return 'My policies';
-      case 'recent': return 'Recently used';
       case 'public': return 'User-created policies';
       default: return 'Policies';
     }
   };
 
   // Handle policy selection
-  const handleSelectPolicy = (policyId: string, label: string, paramCount: number) => {
-    // Save to recent
-    saveToRecentPolicies({ id: policyId, label, paramCount, timestamp: Date.now() });
+  const handleSelectPolicy = (policyId: string, label: string, paramCount: number, associationId?: string) => {
+    // Update the association's updatedAt to track "recently used"
+    if (associationId) {
+      updatePolicyAssociation.mutate({
+        userPolicyId: associationId,
+        updates: {}, // updatedAt is set automatically by the store
+      });
+    }
     // Call onSelect with policy state
     onSelect({ id: policyId, label, parameters: Array(paramCount).fill({}) });
     onClose();
@@ -2074,7 +2052,7 @@ function PolicyBrowseModal({
           <Box style={modalStyles.sidebarSection}>
             <Text style={modalStyles.sidebarLabel}>Library</Text>
 
-            {/* My Policies */}
+            {/* My Policies (sorted by most recent) */}
             <UnstyledButton
               style={{
                 ...modalStyles.sidebarItem,
@@ -2088,24 +2066,6 @@ function PolicyBrowseModal({
               <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
                 {userPolicies.length}
               </Text>
-            </UnstyledButton>
-
-            {/* Recent */}
-            <UnstyledButton
-              style={{
-                ...modalStyles.sidebarItem,
-                background: activeSection === 'recent' ? colorConfig.bg : 'transparent',
-                color: activeSection === 'recent' ? colorConfig.icon : colors.gray[700],
-              }}
-              onClick={() => setActiveSection('recent')}
-            >
-              <IconClock size={16} />
-              <Text style={{ fontSize: FONT_SIZES.small, flex: 1 }}>Recent</Text>
-              {recentPolicies.length > 0 && (
-                <Text fw={700} style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                  {recentPolicies.length}
-                </Text>
-              )}
             </UnstyledButton>
 
             {/* User-created policies */}
@@ -2277,7 +2237,7 @@ function PolicyBrowseModal({
                       }}
                       onClick={() => {
                         setSelectedPolicyId(policy.id);
-                        handleSelectPolicy(policy.id, policy.label, policy.paramCount);
+                        handleSelectPolicy(policy.id, policy.label, policy.paramCount, policy.associationId);
                       }}
                     >
                       {/* Policy accent bar */}
@@ -2552,7 +2512,7 @@ function PolicyBrowseModal({
                     color="teal"
                     fullWidth
                     onClick={() => {
-                      handleSelectPolicy(drawerPolicy.id, drawerPolicy.label, drawerPolicy.paramCount);
+                      handleSelectPolicy(drawerPolicy.id, drawerPolicy.label, drawerPolicy.paramCount, drawerPolicy.associationId);
                       setDrawerPolicyId(null);
                     }}
                     rightSection={<IconChevronRight size={16} />}
@@ -3358,7 +3318,7 @@ function SimulationCanvas({
   const countryId = useCurrentCountry() as 'us' | 'uk';
   const countryConfig = COUNTRY_CONFIG[countryId] || COUNTRY_CONFIG.us;
   const userId = MOCK_USER_ID.toString();
-  const { data: policies } = useUserPolicies(userId);
+  const { data: policies, isLoading: policiesLoading } = useUserPolicies(userId);
   const isNationwideSelected = reportState.simulations[0]?.population?.geography?.id === countryConfig.nationwideId;
 
   // State for the augmented policy browse modal
@@ -3373,15 +3333,27 @@ function SimulationCanvas({
     simulationIndex: 0,
   });
 
-  // Transform policies data into SavedPolicy format
-  const savedPolicies: SavedPolicy[] = (policies || []).map((p) => {
-    const id = p.policy?.id || '';
-    return {
-      id,
-      label: p.association?.label || `Policy #${id}`,
-      paramCount: Object.keys(p.policy?.policy_json || {}).length,
-    };
-  });
+  // Transform policies data into SavedPolicy format, sorted by most recent
+  // Uses association data for display (like Policies page), policy data only for param count
+  const savedPolicies: SavedPolicy[] = useMemo(() => {
+    return (policies || [])
+      .map((p) => {
+        const policyId = p.association.policyId.toString();
+        return {
+          id: policyId,
+          label: p.association.label || `Policy #${policyId}`,
+          paramCount: countParameterChanges(p.policy), // Handles undefined gracefully
+          createdAt: p.association.createdAt,
+          updatedAt: p.association.updatedAt,
+        };
+      })
+      .sort((a, b) => {
+        // Sort by most recent timestamp (prefer updatedAt, fallback to createdAt)
+        const aTime = a.updatedAt || a.createdAt || '';
+        const bTime = b.updatedAt || b.createdAt || '';
+        return bTime.localeCompare(aTime); // Descending (most recent first)
+      });
+  }, [policies]);
 
   const handleAddSimulation = useCallback(() => {
     if (reportState.simulations.length >= 2) return;
