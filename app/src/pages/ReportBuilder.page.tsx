@@ -11,7 +11,7 @@
  * - Row view: Stacked horizontal rows
  * - Horizontal view: Full-width stacked simulations
  */
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, Fragment } from 'react';
 import {
   Box,
   Stack,
@@ -73,7 +73,7 @@ import {
 import { initializeSimulationState } from '@/utils/pathwayState/initializeSimulationState';
 import { initializePolicyState } from '@/utils/pathwayState/initializePolicyState';
 import { initializePopulationState } from '@/utils/pathwayState/initializePopulationState';
-import { CURRENT_YEAR, getParamDefinitionDate } from '@/constants';
+import { CURRENT_YEAR } from '@/constants';
 import { useUserPolicies } from '@/hooks/useUserPolicy';
 import { useUserHouseholds } from '@/hooks/useUserHousehold';
 import { MOCK_USER_ID } from '@/constants';
@@ -86,15 +86,13 @@ import {
   USOutlineIcon,
   UKOutlineIcon,
 } from '@/components/icons/CountryOutlineIcons';
-import {
-  getCurrentLawParameterValue,
-  formatParameterValue,
-} from '@/utils/policyTableHelpers';
+import { formatParameterValue } from '@/utils/policyTableHelpers';
+import { formatPeriod } from '@/utils/dateUtils';
 import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { ParameterTreeNode } from '@/types/metadata';
 import { ParameterMetadata } from '@/types/metadata/parameterMetadata';
 import { useCreatePolicy } from '@/hooks/useCreatePolicy';
-import { PolicyAdapter } from '@/adapters';
+import { PolicyAdapter, convertDateRangeMapToValueIntervals } from '@/adapters';
 import { Policy } from '@/types/ingredients/Policy';
 import { PolicyCreationPayload } from '@/types/payloads';
 import { Parameter, getParameterByName } from '@/types/subIngredients/parameter';
@@ -408,7 +406,7 @@ const styles = {
     flexShrink: 0,
   },
 
-  // Perforated "Create custom" chip (expands to fill grid cell)
+  // Perforated "Create new policy" chip (expands to fill grid cell)
   chipCustomSquare: {
     minHeight: 80,
     borderRadius: spacing.radius.md,
@@ -990,9 +988,9 @@ function IngredientSection({
                   colorConfig={colorConfig}
                 />
               )}
-              {/* Create custom - always last */}
+              {/* Create new policy - always last */}
               <CreateCustomChip
-                label="Create custom"
+                label="Create new policy"
                 onClick={onCreateCustom}
                 variant={chipVariant}
                 colorConfig={colorConfig}
@@ -1041,7 +1039,7 @@ function IngredientSection({
                 />
               )}
               <CreateCustomChip
-                label="Create custom"
+                label="Create new policy"
                 onClick={onCreateCustom}
                 variant={chipVariant}
                 colorConfig={colorConfig}
@@ -1364,7 +1362,6 @@ function IngredientPickerModal({
   const colorConfig = INGREDIENT_COLORS[type];
   const [expandedPolicyId, setExpandedPolicyId] = useState<string | null>(null);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const reportDate = getParamDefinitionDate();
 
   const getTitle = () => {
     switch (type) {
@@ -1488,7 +1485,7 @@ function IngredientPickerModal({
                           cursor: 'pointer',
                           transition: 'background 0.15s ease',
                         }}
-                        onClick={() => handleSelectPolicy(policyId, p.association?.label || 'Unnamed', paramCount)}
+                        onClick={() => handleSelectPolicy(policyId, p.association?.label || `Policy #${policyId}`, paramCount)}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.background = colors.gray[50];
                         }}
@@ -1498,7 +1495,7 @@ function IngredientPickerModal({
                       >
                         {/* Policy info - takes remaining space */}
                         <Stack gap={2} style={{ flex: 1, minWidth: 0 }}>
-                          <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{p.association?.label || 'Unnamed'}</Text>
+                          <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{p.association?.label || `Policy #${policyId}`}</Text>
                           <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
                             {paramCount} param{paramCount !== 1 ? 's' : ''} changed
                           </Text>
@@ -1533,123 +1530,154 @@ function IngredientPickerModal({
                           borderTop: isExpanded ? `1px solid ${colors.gray[200]}` : 'none',
                         }}
                       >
-                        <Box style={{ padding: spacing.md }}>
-                          {/* Table header */}
-                          <Box
+                        {/* Unified grid for header and data rows */}
+                        <Box
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 180px',
+                            gap: `0 ${spacing.md}`,
+                          }}
+                        >
+                          {/* Header row */}
+                          <Text
+                            fw={600}
+                            c="dimmed"
                             style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 120px 120px',
-                              gap: spacing.md,
+                              fontSize: FONT_SIZES.tiny,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              padding: spacing.md,
                               paddingBottom: spacing.xs,
                               borderBottom: `1px solid ${colors.gray[200]}`,
-                              marginBottom: spacing.sm,
                             }}
                           >
-                            <Text fw={600} c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                              Parameter
-                            </Text>
-                            <Text fw={600} c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
-                              Current law
-                            </Text>
-                            <Text fw={600} c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'right' }}>
-                              Changed to
-                            </Text>
-                          </Box>
+                            Parameter
+                          </Text>
+                          <Text
+                            fw={600}
+                            c="dimmed"
+                            style={{
+                              fontSize: FONT_SIZES.tiny,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em',
+                              textAlign: 'right',
+                              padding: spacing.md,
+                              paddingBottom: spacing.xs,
+                              borderBottom: `1px solid ${colors.gray[200]}`,
+                            }}
+                          >
+                            Changes
+                          </Text>
 
-                          {/* Parameter rows */}
-                          <Stack gap={spacing.xs}>
-                            {paramEntries.length > 0 ? (
-                              paramEntries.slice(0, 15).map(([paramName, paramValues]) => {
-                                // Get full hierarchical label for the parameter (no compacting)
-                                const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
-                                const displayLabel = hierarchicalLabels.length > 0
-                                  ? formatLabelParts(hierarchicalLabels)
-                                  : paramName.split('.').pop() || paramName;
+                          {/* Data rows - grouped by parameter */}
+                          {(() => {
+                            // Build grouped list of parameters with their changes
+                            const groupedParams: Array<{
+                              paramName: string;
+                              label: string;
+                              changes: Array<{ period: string; value: string }>;
+                            }> = [];
 
-                                // Get current law value
-                                const currentLawValue = getCurrentLawParameterValue(paramName, parameters, reportDate);
+                            paramEntries.forEach(([paramName, paramValues]) => {
+                              const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+                              const displayLabel = hierarchicalLabels.length > 0
+                                ? formatLabelParts(hierarchicalLabels)
+                                : paramName.split('.').pop() || paramName;
+                              const metadata = parameters[paramName];
 
-                                // Get the changed value
-                                const valueEntries = Object.entries(paramValues as Record<string, unknown>);
-                                const rawValue = valueEntries.length > 0 ? valueEntries[0][1] : undefined;
-                                const metadata = parameters[paramName];
-                                const changedValue = rawValue !== undefined
-                                  ? formatParameterValue(rawValue, metadata?.unit)
-                                  : '—';
+                              // Convert date range map (e.g. {"2024-01-01.2024-12-31": 3000}) to value intervals
+                              const valueIntervals = convertDateRangeMapToValueIntervals(
+                                paramValues as Record<string, unknown>
+                              );
 
-                                return (
-                                  <Box
-                                    key={paramName}
+                              const changes = valueIntervals.map((interval) => ({
+                                period: formatPeriod(interval.startDate, interval.endDate),
+                                value: formatParameterValue(interval.value, metadata?.unit),
+                              }));
+
+                              groupedParams.push({ paramName, label: displayLabel, changes });
+                            });
+
+                            if (groupedParams.length === 0) {
+                              return (
+                                <>
+                                  <Text c="dimmed" style={{ fontSize: FONT_SIZES.small, padding: spacing.md, gridColumn: '1 / -1' }}>
+                                    No parameter details available
+                                  </Text>
+                                </>
+                              );
+                            }
+
+                            const displayParams = groupedParams.slice(0, 10);
+                            const remainingCount = groupedParams.length - 10;
+
+                            return (
+                              <>
+                                {displayParams.map((param) => (
+                                  <Fragment key={param.paramName}>
+                                    {/* Parameter name cell */}
+                                    <Box
+                                      style={{
+                                        padding: `${spacing.sm} ${spacing.md}`,
+                                        borderBottom: `1px solid ${colors.gray[100]}`,
+                                        minWidth: 0,
+                                      }}
+                                    >
+                                      <Tooltip label={param.paramName} multiline w={300} withArrow>
+                                        <Text
+                                          style={{
+                                            fontSize: FONT_SIZES.small,
+                                            color: colors.gray[700],
+                                            lineHeight: 1.4,
+                                          }}
+                                        >
+                                          {param.label}
+                                        </Text>
+                                      </Tooltip>
+                                    </Box>
+                                    {/* Changes cell - multiple lines */}
+                                    <Box
+                                      style={{
+                                        padding: `${spacing.sm} ${spacing.md}`,
+                                        borderBottom: `1px solid ${colors.gray[100]}`,
+                                        textAlign: 'right',
+                                      }}
+                                    >
+                                      {param.changes.map((change, idx) => (
+                                        <Text
+                                          key={idx}
+                                          style={{
+                                            fontSize: FONT_SIZES.small,
+                                            lineHeight: 1.5,
+                                          }}
+                                        >
+                                          <Text component="span" style={{ color: colors.gray[500] }}>
+                                            {change.period}:
+                                          </Text>{' '}
+                                          <Text component="span" fw={500} style={{ color: colorConfig.icon }}>
+                                            {change.value}
+                                          </Text>
+                                        </Text>
+                                      ))}
+                                    </Box>
+                                  </Fragment>
+                                ))}
+                                {remainingCount > 0 && (
+                                  <Text
+                                    c="dimmed"
                                     style={{
-                                      display: 'grid',
-                                      gridTemplateColumns: '1fr 120px 120px',
-                                      gap: spacing.md,
-                                      padding: `${spacing.xs} 0`,
-                                      borderBottom: `1px solid ${colors.gray[100]}`,
+                                      fontSize: FONT_SIZES.tiny,
+                                      textAlign: 'center',
+                                      padding: spacing.sm,
+                                      gridColumn: '1 / -1',
                                     }}
                                   >
-                                    {/* Parameter name with code underneath */}
-                                    <Box style={{ minWidth: 0 }}>
-                                      <Text
-                                        fw={500}
-                                        style={{
-                                          fontSize: FONT_SIZES.normal,
-                                          color: colors.gray[800],
-                                          lineHeight: 1.4,
-                                        }}
-                                      >
-                                        {displayLabel}
-                                      </Text>
-                                      <Text
-                                        style={{
-                                          fontSize: FONT_SIZES.small,
-                                          color: colors.gray[500],
-                                          fontFamily: 'monospace',
-                                          wordBreak: 'break-all',
-                                        }}
-                                      >
-                                        {paramName}
-                                      </Text>
-                                    </Box>
-
-                                    {/* Current law value */}
-                                    <Text
-                                      style={{
-                                        fontSize: FONT_SIZES.small,
-                                        color: colors.gray[500],
-                                        textAlign: 'right',
-                                        alignSelf: 'center',
-                                      }}
-                                    >
-                                      {currentLawValue}
-                                    </Text>
-
-                                    {/* Changed value */}
-                                    <Text
-                                      fw={500}
-                                      style={{
-                                        fontSize: FONT_SIZES.small,
-                                        color: colorConfig.icon,
-                                        textAlign: 'right',
-                                        alignSelf: 'center',
-                                      }}
-                                    >
-                                      {changedValue}
-                                    </Text>
-                                  </Box>
-                                );
-                              })
-                            ) : (
-                              <Text c="dimmed" style={{ fontSize: FONT_SIZES.small }}>
-                                No parameter details available
-                              </Text>
-                            )}
-                            {paramEntries.length > 15 && (
-                              <Text c="dimmed" style={{ fontSize: FONT_SIZES.tiny, textAlign: 'center', paddingTop: spacing.xs }}>
-                                +{paramEntries.length - 15} more parameter{paramEntries.length - 15 !== 1 ? 's' : ''}
-                              </Text>
-                            )}
-                          </Stack>
+                                    +{remainingCount} more parameter{remainingCount !== 1 ? 's' : ''}
+                                  </Text>
+                                )}
+                              </>
+                            );
+                          })()}
                         </Box>
                       </Box>
                     </Paper>
@@ -1783,7 +1811,6 @@ function PolicyBrowseModal({
   const userId = MOCK_USER_ID.toString();
   const { data: policies, isLoading } = useUserPolicies(userId);
   const parameters = useSelector((state: RootState) => state.metadata.parameters);
-  const reportDate = getParamDefinitionDate();
 
   // State
   const [searchQuery, setSearchQuery] = useState('');
@@ -1804,13 +1831,16 @@ function PolicyBrowseModal({
 
   // Transform policies data
   const userPolicies = useMemo(() => {
-    return (policies || []).map((p) => ({
-      id: p.policy?.id || '',
-      label: p.association?.label || 'Unnamed policy',
-      paramCount: Object.keys(p.policy?.policy_json || {}).length,
-      policyJson: p.policy?.policy_json || {},
-      createdAt: p.association?.createdAt,
-    }));
+    return (policies || []).map((p) => {
+      const id = p.policy?.id || '';
+      return {
+        id,
+        label: p.association?.label || `Policy #${id}`,
+        paramCount: Object.keys(p.policy?.policy_json || {}).length,
+        policyJson: p.policy?.policy_json || {},
+        createdAt: p.association?.createdAt,
+      };
+    });
   }, [policies]);
 
   // Filter policies based on search
@@ -2377,78 +2407,141 @@ function PolicyBrowseModal({
                 </Box>
 
                 {/* Panel body */}
-                <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, padding: spacing.lg }}>
-                  {/* Table header */}
-                  <Box
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 90px 90px',
-                      gap: spacing.md,
-                      paddingBottom: spacing.sm,
-                      borderBottom: `1px solid ${colors.gray[200]}`,
-                      marginBottom: spacing.sm,
-                    }}
-                  >
-                    <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                      Parameter
-                    </Text>
-                    <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
-                      Current law
-                    </Text>
-                    <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
-                      Reform
-                    </Text>
-                  </Box>
-
+                <Box style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                   <ScrollArea style={{ flex: 1 }} offsetScrollbars>
-                    <Stack gap={0}>
-                      {Object.entries(drawerPolicy.policyJson).map(([paramName, paramValues]) => {
-                        const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
-                        const displayLabel = hierarchicalLabels.length > 0
-                          ? formatLabelParts(hierarchicalLabels)
-                          : paramName.split('.').pop() || paramName;
+                    {/* Unified grid for header and data rows */}
+                    <Box
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr auto auto',
+                        gap: `0`,
+                      }}
+                    >
+                      {/* Header row */}
+                      <Text
+                        fw={600}
+                        style={{
+                          fontSize: FONT_SIZES.small,
+                          color: colors.gray[600],
+                          padding: spacing.lg,
+                          paddingBottom: spacing.sm,
+                          borderBottom: `1px solid ${colors.gray[200]}`,
+                        }}
+                      >
+                        Parameter
+                      </Text>
+                      <Text
+                        fw={600}
+                        style={{
+                          fontSize: FONT_SIZES.small,
+                          color: colors.gray[600],
+                          textAlign: 'right',
+                          padding: spacing.lg,
+                          paddingBottom: spacing.sm,
+                          borderBottom: `1px solid ${colors.gray[200]}`,
+                          gridColumn: 'span 2',
+                        }}
+                      >
+                        Changes
+                      </Text>
 
-                        const currentLawValue = getCurrentLawParameterValue(paramName, parameters, reportDate);
-                        const valueEntries = Object.entries(paramValues as Record<string, unknown>);
-                        const rawValue = valueEntries.length > 0 ? valueEntries[0][1] : undefined;
-                        const metadata = parameters[paramName];
-                        const changedValue = rawValue !== undefined
-                          ? formatParameterValue(rawValue, metadata?.unit)
-                          : '—';
+                      {/* Data rows - grouped by parameter */}
+                      {(() => {
+                        const groupedParams: Array<{
+                          paramName: string;
+                          label: string;
+                          changes: Array<{ period: string; value: string }>;
+                        }> = [];
 
-                        return (
-                          <Box
-                            key={paramName}
-                            style={{
-                              display: 'grid',
-                              gridTemplateColumns: '1fr 90px 90px',
-                              gap: spacing.md,
-                              padding: `${spacing.sm} 0`,
-                              borderBottom: `1px solid ${colors.gray[100]}`,
-                              alignItems: 'start',
-                            }}
-                          >
-                            <Tooltip label={paramName} multiline w={300} withArrow>
-                              <Text
-                                style={{
-                                  fontSize: FONT_SIZES.small,
-                                  color: colors.gray[700],
-                                  lineHeight: 1.4,
-                                }}
-                              >
-                                {displayLabel}
-                              </Text>
-                            </Tooltip>
-                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500], textAlign: 'right' }}>
-                              {currentLawValue}
-                            </Text>
-                            <Text fw={500} style={{ fontSize: FONT_SIZES.small, color: colorConfig.icon, textAlign: 'right' }}>
-                              {changedValue}
-                            </Text>
-                          </Box>
-                        );
-                      })}
-                    </Stack>
+                        Object.entries(drawerPolicy.policyJson).forEach(([paramName, paramValues]) => {
+                          const hierarchicalLabels = getHierarchicalLabels(paramName, parameters);
+                          const displayLabel = hierarchicalLabels.length > 0
+                            ? formatLabelParts(hierarchicalLabels)
+                            : paramName.split('.').pop() || paramName;
+                          const metadata = parameters[paramName];
+
+                          // Convert date range map (e.g. {"2024-01-01.2024-12-31": 3000}) to value intervals
+                          const valueIntervals = convertDateRangeMapToValueIntervals(
+                            paramValues as Record<string, unknown>
+                          );
+
+                          const changes = valueIntervals.map((interval) => ({
+                            period: formatPeriod(interval.startDate, interval.endDate),
+                            value: formatParameterValue(interval.value, metadata?.unit),
+                          }));
+
+                          groupedParams.push({ paramName, label: displayLabel, changes });
+                        });
+
+                        return groupedParams.map((param) => (
+                          <Fragment key={param.paramName}>
+                            {/* Parameter name cell */}
+                            <Box
+                              style={{
+                                padding: `${spacing.sm} ${spacing.lg}`,
+                                borderBottom: `1px solid ${colors.gray[100]}`,
+                              }}
+                            >
+                              <Tooltip label={param.paramName} multiline w={300} withArrow>
+                                <Text
+                                  style={{
+                                    fontSize: FONT_SIZES.small,
+                                    color: colors.gray[700],
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  {param.label}
+                                </Text>
+                              </Tooltip>
+                            </Box>
+                            {/* Period column */}
+                            <Box
+                              style={{
+                                padding: `${spacing.sm} ${spacing.md}`,
+                                borderBottom: `1px solid ${colors.gray[100]}`,
+                                textAlign: 'right',
+                              }}
+                            >
+                              {param.changes.map((change, idx) => (
+                                <Text
+                                  key={idx}
+                                  style={{
+                                    fontSize: FONT_SIZES.small,
+                                    color: colors.gray[500],
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  {change.period}
+                                </Text>
+                              ))}
+                            </Box>
+                            {/* Value column */}
+                            <Box
+                              style={{
+                                padding: `${spacing.sm} ${spacing.lg}`,
+                                paddingLeft: spacing.sm,
+                                borderBottom: `1px solid ${colors.gray[100]}`,
+                                textAlign: 'right',
+                              }}
+                            >
+                              {param.changes.map((change, idx) => (
+                                <Text
+                                  key={idx}
+                                  fw={500}
+                                  style={{
+                                    fontSize: FONT_SIZES.small,
+                                    color: colorConfig.icon,
+                                    lineHeight: 1.4,
+                                  }}
+                                >
+                                  {change.value}
+                                </Text>
+                              ))}
+                            </Box>
+                          </Fragment>
+                        ));
+                      })()}
+                    </Box>
                   </ScrollArea>
                 </Box>
 
@@ -2501,7 +2594,7 @@ function PolicyCreationModal({
   const { minDate, maxDate } = useSelector(getDateRange);
 
   // Local policy state
-  const [policyLabel, setPolicyLabel] = useState<string>('');
+  const [policyLabel, setPolicyLabel] = useState<string>('Untitled policy');
   const [policyParameters, setPolicyParameters] = useState<Parameter[]>([]);
   const [isEditingLabel, setIsEditingLabel] = useState(false);
 
@@ -2515,9 +2608,6 @@ function PolicyCreationModal({
   const [startDate, setStartDate] = useState<string>('2025-01-01');
   const [endDate, setEndDate] = useState<string>('2025-12-31');
 
-  // Confirmation popover state
-  const [confirmPopoverOpen, setConfirmPopoverOpen] = useState(false);
-
   // Changes panel expanded state
   const [changesExpanded, setChangesExpanded] = useState(false);
 
@@ -2527,15 +2617,13 @@ function PolicyCreationModal({
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
-      const defaultLabel = simulationIndex === 0 ? 'Baseline policy' : 'Reform policy';
-      setPolicyLabel(defaultLabel);
+      setPolicyLabel('Untitled policy');
       setPolicyParameters([]);
       setSelectedParam(null);
       setExpandedMenuItems(new Set());
       setIntervals([]);
-      setConfirmPopoverOpen(false);
     }
-  }, [isOpen, simulationIndex]);
+  }, [isOpen]);
 
   // Create local policy state object for components
   const localPolicy: PolicyStateProps = useMemo(() => ({
@@ -2546,7 +2634,7 @@ function PolicyCreationModal({
   // Count modifications
   const modificationCount = countPolicyModifications(localPolicy);
 
-  // Get modified parameter data for the Changes section (with current law and reform values)
+  // Get modified parameter data for the Changes section - grouped by parameter with multiple changes each
   const modifiedParams = useMemo(() => {
     return policyParameters.map(p => {
       const metadata = parameters[p.name];
@@ -2557,19 +2645,16 @@ function PolicyCreationModal({
         ? formatLabelParts(hierarchicalLabels)
         : p.name.split('.').pop() || p.name;
 
-      // Get current law value using the helper function
-      const currentLawDisplay = getCurrentLawParameterValue(p.name, parameters);
-
-      // Get reform value (first value interval for simplicity)
-      const reformValue = p.values.length > 0 ? p.values[0].value : null;
-      const reformDisplay = reformValue !== null ? formatParameterValue(reformValue, metadata?.unit) : '—';
+      // Build changes array for this parameter
+      const changes = p.values.map((interval) => ({
+        period: formatPeriod(interval.startDate, interval.endDate),
+        value: formatParameterValue(interval.value, metadata?.unit),
+      }));
 
       return {
-        name: p.name,
+        paramName: p.name,
         label: displayLabel,
-        valueCount: p.values.length,
-        currentLawValue: currentLawDisplay,
-        reformValue: reformDisplay,
+        changes,
       };
     });
   }, [policyParameters, parameters]);
@@ -2649,8 +2734,8 @@ function PolicyCreationModal({
     }
   }, [policyLabel, policyParameters, createPolicy, onPolicyCreated, onClose]);
 
-  // Render nested menu recursively
-  const renderMenuItems = (items: ParameterTreeNode[]): React.ReactNode => {
+  // Render nested menu recursively - memoized to prevent expensive re-renders
+  const renderMenuItems = useCallback((items: ParameterTreeNode[]): React.ReactNode => {
     return items.map(item => (
       <NavLink
         key={item.name}
@@ -2666,7 +2751,13 @@ function PolicyCreationModal({
         {item.children && expandedMenuItems.has(item.name) && renderMenuItems(item.children)}
       </NavLink>
     ));
-  };
+  }, [selectedParam?.parameter, expandedMenuItems, handleMenuItemClick]);
+
+  // Memoize the rendered tree to avoid expensive re-renders on unrelated state changes
+  const renderedMenuTree = useMemo(() => {
+    if (metadataLoading || !parameterTree) return null;
+    return renderMenuItems(parameterTree.children || []);
+  }, [metadataLoading, parameterTree, renderMenuItems]);
 
   // Get base and reform values for chart
   const getChartValues = () => {
@@ -2919,7 +3010,7 @@ function PolicyCreationModal({
                     <Box
                       style={{
                         display: 'grid',
-                        gridTemplateColumns: '1fr 100px 100px',
+                        gridTemplateColumns: '1fr 180px',
                         gap: spacing.md,
                         padding: `${spacing.sm} ${spacing.md}`,
                         borderBottom: `1px solid ${colors.border.light}`,
@@ -2930,19 +3021,16 @@ function PolicyCreationModal({
                         Parameter
                       </Text>
                       <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
-                        Current law
-                      </Text>
-                      <Text fw={600} style={{ fontSize: FONT_SIZES.small, color: colors.gray[600], textAlign: 'right' }}>
-                        Reform
+                        Changes
                       </Text>
                     </Box>
-                    {/* Data rows */}
+                    {/* Data rows - one per parameter with multiple change lines */}
                     <Stack gap={0}>
-                      {modifiedParams.map(param => (
+                      {modifiedParams.map((param) => (
                         <UnstyledButton
-                          key={param.name}
+                          key={param.paramName}
                           onClick={() => {
-                            const metadata = parameters[param.name];
+                            const metadata = parameters[param.paramName];
                             if (metadata) {
                               setSelectedParam(metadata);
                               setChangesExpanded(false);
@@ -2950,43 +3038,41 @@ function PolicyCreationModal({
                           }}
                           style={{
                             display: 'grid',
-                            gridTemplateColumns: '1fr 100px 100px',
+                            gridTemplateColumns: '1fr 180px',
                             gap: spacing.md,
                             padding: `${spacing.sm} ${spacing.md}`,
                             borderBottom: `1px solid ${colors.border.light}`,
-                            background: selectedParam?.parameter === param.name ? colorConfig.bg : colors.white,
+                            background: selectedParam?.parameter === param.paramName ? colorConfig.bg : colors.white,
+                            alignItems: 'start',
                           }}
                         >
                           <Text
                             style={{
                               fontSize: FONT_SIZES.small,
                               color: colors.gray[700],
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
+                              lineHeight: 1.5,
                             }}
                           >
                             {param.label}
                           </Text>
-                          <Text
-                            style={{
-                              fontSize: FONT_SIZES.small,
-                              color: colors.gray[500],
-                              textAlign: 'right',
-                            }}
-                          >
-                            {param.currentLawValue}
-                          </Text>
-                          <Text
-                            fw={500}
-                            style={{
-                              fontSize: FONT_SIZES.small,
-                              color: colors.primary[600],
-                              textAlign: 'right',
-                            }}
-                          >
-                            {param.reformValue}
-                          </Text>
+                          <Box style={{ textAlign: 'right' }}>
+                            {param.changes.map((change, idx) => (
+                              <Text
+                                key={idx}
+                                style={{
+                                  fontSize: FONT_SIZES.small,
+                                  lineHeight: 1.5,
+                                }}
+                              >
+                                <Text component="span" style={{ color: colors.gray[500] }}>
+                                  {change.period}:
+                                </Text>{' '}
+                                <Text component="span" fw={500} style={{ color: colors.primary[600] }}>
+                                  {change.value}
+                                </Text>
+                              </Text>
+                            ))}
+                          </Box>
                         </UnstyledButton>
                       ))}
                     </Stack>
@@ -3026,7 +3112,7 @@ function PolicyCreationModal({
                     <Skeleton height={32} />
                   </Stack>
                 ) : (
-                  renderMenuItems(parameterTree.children || [])
+                  renderedMenuTree
                 )}
               </Box>
             </ScrollArea>
@@ -3154,78 +3240,13 @@ function PolicyCreationModal({
             <Button variant="default" onClick={onClose}>
               Cancel
             </Button>
-            <Popover
-              opened={confirmPopoverOpen}
-              onChange={setConfirmPopoverOpen}
-              position="top-end"
-              withArrow
-              shadow="md"
+            <Button
+              color="teal"
+              onClick={handleCreatePolicy}
+              loading={isCreating}
             >
-              <Popover.Target>
-                <Button
-                  color="teal"
-                  onClick={() => setConfirmPopoverOpen(true)}
-                  disabled={!policyLabel.trim()}
-                  rightSection={<IconChevronRight size={16} />}
-                >
-                  Create policy
-                </Button>
-              </Popover.Target>
-              <Popover.Dropdown style={{ padding: spacing.lg, maxWidth: 360 }}>
-                <Stack gap={spacing.md}>
-                  <Text fw={600} style={{ fontSize: FONT_SIZES.normal }}>
-                    Create "{policyLabel}"?
-                  </Text>
-                  {modificationCount > 0 ? (
-                    <>
-                      <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                        {modificationCount} parameter{modificationCount !== 1 ? 's' : ''} will be modified:
-                      </Text>
-                      <Box
-                        style={{
-                          background: colors.gray[50],
-                          borderRadius: spacing.radius.sm,
-                          padding: spacing.sm,
-                          maxHeight: 150,
-                          overflow: 'auto',
-                        }}
-                      >
-                        <Stack gap={spacing.xs}>
-                          {modifiedParams.slice(0, 5).map(param => (
-                            <Group key={param.name} gap={spacing.xs}>
-                              <IconCheck size={12} color={colorConfig.icon} />
-                              <Text style={{ fontSize: FONT_SIZES.small }}>{param.label}</Text>
-                            </Group>
-                          ))}
-                          {modifiedParams.length > 5 && (
-                            <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[500] }}>
-                              +{modifiedParams.length - 5} more
-                            </Text>
-                          )}
-                        </Stack>
-                      </Box>
-                    </>
-                  ) : (
-                    <Text style={{ fontSize: FONT_SIZES.small, color: colors.gray[600] }}>
-                      This policy has no parameter changes (equivalent to current law).
-                    </Text>
-                  )}
-                  <Group justify="flex-end" gap={spacing.sm}>
-                    <Button variant="default" size="sm" onClick={() => setConfirmPopoverOpen(false)}>
-                      Cancel
-                    </Button>
-                    <Button
-                      color="teal"
-                      size="sm"
-                      onClick={handleCreatePolicy}
-                      loading={isCreating}
-                    >
-                      Create policy
-                    </Button>
-                  </Group>
-                </Stack>
-              </Popover.Dropdown>
-            </Popover>
+              Create policy
+            </Button>
           </Group>
         </Group>
       </Box>
@@ -3277,11 +3298,14 @@ function SimulationCanvas({
   });
 
   // Transform policies data into SavedPolicy format
-  const savedPolicies: SavedPolicy[] = (policies || []).map((p) => ({
-    id: p.policy?.id || '',
-    label: p.association?.label || 'Unnamed policy',
-    paramCount: Object.keys(p.policy?.policy_json || {}).length,
-  }));
+  const savedPolicies: SavedPolicy[] = (policies || []).map((p) => {
+    const id = p.policy?.id || '';
+    return {
+      id,
+      label: p.association?.label || `Policy #${id}`,
+      paramCount: Object.keys(p.policy?.policy_json || {}).length,
+    };
+  });
 
   const handleAddSimulation = useCallback(() => {
     if (reportState.simulations.length >= 2) return;
