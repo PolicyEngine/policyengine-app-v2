@@ -1728,17 +1728,28 @@ function IngredientPickerModal({
             </Paper>
             <Divider label="Or select an existing household" labelPosition="center" />
             <ScrollArea h={150}>
+              {householdsLoading ? (
+                <Box p={spacing.xl} ta="center">
+                  <Loader size="sm" />
+                </Box>
+              ) : (
               <Stack gap={spacing.sm}>
-                {households?.map((h) => (
-                  <Paper key={h.household?.id} p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectHousehold(h.household?.id || '', h.association?.label || 'Unnamed')}>
-                    <Group justify="space-between">
-                      <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{h.association?.label || 'Unnamed'}</Text>
-                      <IconChevronRight size={16} color={colors.gray[400]} />
-                    </Group>
-                  </Paper>
-                ))}
+                {households?.map((h) => {
+                  // Use association data for display (like Populations page)
+                  const householdId = h.association.householdId.toString();
+                  const label = h.association.label || `Household #${householdId}`;
+                  return (
+                    <Paper key={householdId} p="sm" radius="md" withBorder style={{ cursor: 'pointer' }} onClick={() => handleSelectHousehold(householdId, label)}>
+                      <Group justify="space-between">
+                        <Text fw={500} style={{ fontSize: FONT_SIZES.normal }}>{label}</Text>
+                        <IconChevronRight size={16} color={colors.gray[400]} />
+                      </Group>
+                    </Paper>
+                  );
+                })}
                 {(!households || households.length === 0) && <Text c="dimmed" ta="center" py="lg">No saved households</Text>}
               </Stack>
+              )}
             </ScrollArea>
             <Divider />
             <Button variant="light" color="teal" leftSection={<IconPlus size={16} />} onClick={() => { onCreateNew(); onClose(); }}>Create new household</Button>
