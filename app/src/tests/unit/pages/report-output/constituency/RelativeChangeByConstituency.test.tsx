@@ -19,7 +19,7 @@ describe('RelativeChangeByConstituency', () => {
 
     // Then
     expect(
-      screen.getByText('Relative Household Income Change by Constituency')
+      screen.getByText('Relative household income change by constituency')
     ).toBeInTheDocument();
   });
 

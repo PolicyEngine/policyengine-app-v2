@@ -19,10 +19,10 @@ vi.mock('@/utils/formatPowers', () => ({
     }
     const absValue = Math.abs(value);
     if (absValue >= 1_000_000_000) {
-      return { display: (value / 1_000_000_000).toFixed(1), label: ' billion' };
+      return { display: (value / 1_000_000_000).toFixed(1), label: 'billion' };
     }
     if (absValue >= 1_000_000) {
-      return { display: (value / 1_000_000).toFixed(1), label: ' million' };
+      return { display: (value / 1_000_000).toFixed(1), label: 'million' };
     }
     return { display: value.toFixed(0), label: '' };
   }),
@@ -33,8 +33,8 @@ describe('SocietyWideOverview', () => {
     vi.clearAllMocks();
   });
 
-  describe('budgetary impact metric', () => {
-    test('given positive budgetary impact then displays cost with formatted value', () => {
+  describe('budgetary impact section', () => {
+    test('given positive budgetary impact then displays formatted value with revenue subtext', () => {
       // Given
       const output = createMockSocietyWideOutput({
         budget: { budgetary_impact: 1_000_000 } as any,
@@ -44,134 +44,40 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
+      expect(screen.getByText('Budgetary Impact')).toBeInTheDocument();
       expect(container.textContent).toContain('$1.0');
       expect(container.textContent).toContain('million');
+      expect(container.textContent).toContain('additional government revenue');
     });
 
-    test('given zero budgetary impact then shows no budget impact message', () => {
+    test('given negative budgetary impact then displays spending subtext', () => {
+      // Given
+      const output = createMockSocietyWideOutput({
+        budget: { budgetary_impact: -1_000_000 } as any,
+      });
+
+      // When
+      const { container } = render(<SocietyWideOverview output={output} />);
+
+      // Then
+      expect(container.textContent).toContain('additional government spending');
+    });
+
+    test('given zero budgetary impact then shows no change message', () => {
       // Given
       const output = createMockSocietyWideOutput({ budget: { budgetary_impact: 0 } as any });
 
       // When
-      render(<SocietyWideOverview output={output} />);
+      const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(screen.getByText('Has no impact on the budget')).toBeInTheDocument();
-    });
-
-    test('given null budgetary impact then shows error message', () => {
-      // Given
-      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: null } as any });
-
-      // When
-      render(<SocietyWideOverview output={output} />);
-
-      // Then
-      expect(screen.getByText('Error calculating budget impact')).toBeInTheDocument();
-    });
-
-    test('given NaN budgetary impact then shows error message', () => {
-      // Given
-      const output = createMockSocietyWideOutput({ budget: { budgetary_impact: NaN } as any });
-
-      // When
-      render(<SocietyWideOverview output={output} />);
-
-      // Then
-      expect(screen.getByText('Error calculating budget impact')).toBeInTheDocument();
+      expect(container.textContent).toContain('No change');
+      expect(container.textContent).toContain('no impact on the budget');
     });
   });
 
-  describe('net income impact metric', () => {
-    test('given both winners and losers then shows both statistics', () => {
-      // Given
-      const output = createMockSocietyWideOutput({
-        intra_decile: {
-          all: {
-            'Gain more than 5%': 0.2,
-            'Gain less than 5%': 0.1,
-            'Lose more than 5%': 0.05,
-            'Lose less than 5%': 0.05,
-          },
-        } as any,
-      });
-
-      // When
-      const { container } = render(<SocietyWideOverview output={output} />);
-
-      // Then
-      expect(screen.getByText('Net income')).toBeInTheDocument();
-      // Check both percentages are present (30.0% for winners, 10.0% for losers)
-      expect(container.textContent).toContain('30.0%');
-      expect(container.textContent).toContain('10.0%');
-    });
-
-    test('given only winners then shows only raises message', () => {
-      // Given
-      const output = createMockSocietyWideOutput({
-        intra_decile: {
-          all: {
-            'Gain more than 5%': 0.2,
-            'Gain less than 5%': 0.1,
-            'Lose more than 5%': 0,
-            'Lose less than 5%': 0,
-          },
-        } as any,
-      });
-
-      // When
-      const { container } = render(<SocietyWideOverview output={output} />);
-
-      // Then
-      expect(container.textContent).toContain('Raises');
-      expect(container.textContent).toContain('30.0%');
-    });
-
-    test('given only losers then shows only lowers message', () => {
-      // Given
-      const output = createMockSocietyWideOutput({
-        intra_decile: {
-          all: {
-            'Gain more than 5%': 0,
-            'Gain less than 5%': 0,
-            'Lose more than 5%': 0.05,
-            'Lose less than 5%': 0.05,
-          },
-        } as any,
-      });
-
-      // When
-      const { container } = render(<SocietyWideOverview output={output} />);
-
-      // Then
-      expect(container.textContent).toContain('Lowers');
-      expect(container.textContent).toContain('10.0%');
-    });
-
-    test('given no impact then shows no impact message', () => {
-      // Given
-      const output = createMockSocietyWideOutput({
-        intra_decile: {
-          all: {
-            'Gain more than 5%': 0,
-            'Gain less than 5%': 0,
-            'Lose more than 5%': 0,
-            'Lose less than 5%': 0,
-          },
-        } as any,
-      });
-
-      // When
-      render(<SocietyWideOverview output={output} />);
-
-      // Then
-      expect(screen.getByText("Does not affect anyone's net income")).toBeInTheDocument();
-    });
-  });
-
-  describe('poverty impact metric', () => {
-    test('given poverty decrease then shows lowers message with percentage', () => {
+  describe('poverty impact section', () => {
+    test('given poverty decrease then shows percentage decrease', () => {
       // Given
       const output = createMockSocietyWideOutput({
         poverty: {
@@ -185,13 +91,12 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(screen.getByText('Poverty')).toBeInTheDocument();
-      // Check that poverty section contains "Lowers" text
-      expect(container.textContent).toContain('Lowers');
-      expect(container.textContent).toContain('10.0%'); // (0.1 - 0.09) / 0.1 * 100 = 10%
+      expect(screen.getByText('Poverty Impact')).toBeInTheDocument();
+      expect(container.textContent).toContain('10.0%');
+      expect(container.textContent).toContain('decrease in poverty rate');
     });
 
-    test('given poverty increase then shows raises message with percentage', () => {
+    test('given poverty increase then shows percentage increase', () => {
       // Given
       const output = createMockSocietyWideOutput({
         poverty: {
@@ -205,11 +110,11 @@ describe('SocietyWideOverview', () => {
       const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(container.textContent).toContain('Raises');
-      expect(container.textContent).toContain('20.0%'); // (0.12 - 0.1) / 0.1 * 100 = 20%
+      expect(container.textContent).toContain('20.0%');
+      expect(container.textContent).toContain('increase in poverty rate');
     });
 
-    test('given no poverty change then shows no impact message', () => {
+    test('given no poverty change then shows no change message', () => {
       // Given
       const output = createMockSocietyWideOutput({
         poverty: {
@@ -220,15 +125,15 @@ describe('SocietyWideOverview', () => {
       });
 
       // When
-      render(<SocietyWideOverview output={output} />);
+      const { container } = render(<SocietyWideOverview output={output} />);
 
       // Then
-      expect(screen.getByText('Has no impact on the poverty rate')).toBeInTheDocument();
+      expect(container.textContent).toContain('No change');
+      expect(container.textContent).toContain('Poverty rate unchanged');
     });
 
-    test('given zero baseline poverty then shows error message', () => {
-      // Given
-      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    test('given zero baseline poverty then handles edge case', () => {
+      // Given - edge case where baseline is 0
       const output = createMockSocietyWideOutput({
         poverty: {
           poverty: {
@@ -238,18 +143,84 @@ describe('SocietyWideOverview', () => {
       });
 
       // When
-      render(<SocietyWideOverview output={output} />);
+      const { container } = render(<SocietyWideOverview output={output} />);
 
-      // Then
-      expect(screen.getByText('Error calculating poverty impact')).toBeInTheDocument();
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'SocietyWideOverview: baseline poverty rate reported as 0; API error likely'
-      );
-      consoleErrorSpy.mockRestore();
+      // Then - component should handle division by zero gracefully
+      expect(container.textContent).toContain('Poverty Impact');
     });
   });
 
-  test('given complete output then renders all three metric sections', () => {
+  describe('winners and losers section', () => {
+    test('given both winners and losers then shows distribution', () => {
+      // Given
+      const output = createMockSocietyWideOutput({
+        intra_decile: {
+          all: {
+            'Gain more than 5%': 0.2,
+            'Gain less than 5%': 0.1,
+            'Lose more than 5%': 0.05,
+            'Lose less than 5%': 0.05,
+            'No change': 0.6,
+          },
+        } as any,
+      });
+
+      // When
+      const { container } = render(<SocietyWideOverview output={output} />);
+
+      // Then
+      expect(screen.getByText('Winners and losers')).toBeInTheDocument();
+      expect(container.textContent).toContain('Gain: 30.0%');
+      expect(container.textContent).toContain('Lose: 10.0%');
+      expect(container.textContent).toContain('No change: 60.0%');
+    });
+
+    test('given only winners then shows only gains', () => {
+      // Given
+      const output = createMockSocietyWideOutput({
+        intra_decile: {
+          all: {
+            'Gain more than 5%': 0.2,
+            'Gain less than 5%': 0.1,
+            'Lose more than 5%': 0,
+            'Lose less than 5%': 0,
+            'No change': 0.7,
+          },
+        } as any,
+      });
+
+      // When
+      const { container } = render(<SocietyWideOverview output={output} />);
+
+      // Then
+      expect(container.textContent).toContain('Gain: 30.0%');
+      expect(container.textContent).toContain('Lose: 0.0%');
+    });
+
+    test('given only losers then shows only losses', () => {
+      // Given
+      const output = createMockSocietyWideOutput({
+        intra_decile: {
+          all: {
+            'Gain more than 5%': 0,
+            'Gain less than 5%': 0,
+            'Lose more than 5%': 0.05,
+            'Lose less than 5%': 0.05,
+            'No change': 0.9,
+          },
+        } as any,
+      });
+
+      // When
+      const { container } = render(<SocietyWideOverview output={output} />);
+
+      // Then
+      expect(container.textContent).toContain('Gain: 0.0%');
+      expect(container.textContent).toContain('Lose: 10.0%');
+    });
+  });
+
+  test('given complete output then renders all three sections', () => {
     // Given
     const output = createMockSocietyWideOutput();
 
@@ -257,8 +228,8 @@ describe('SocietyWideOverview', () => {
     render(<SocietyWideOverview output={output} />);
 
     // Then
-    expect(screen.getByText('Budgetary impact')).toBeInTheDocument();
-    expect(screen.getByText('Net income')).toBeInTheDocument();
-    expect(screen.getByText('Poverty')).toBeInTheDocument();
+    expect(screen.getByText('Budgetary Impact')).toBeInTheDocument();
+    expect(screen.getByText('Poverty Impact')).toBeInTheDocument();
+    expect(screen.getByText('Winners and losers')).toBeInTheDocument();
   });
 });

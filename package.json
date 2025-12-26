@@ -23,5 +23,9 @@
   "packageManager": "npm@10.8.0",
   "engines": {
     "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@policyengine/design-system": "^0.1.0",
+    "concurrently": "^9.2.1"
   }
 }

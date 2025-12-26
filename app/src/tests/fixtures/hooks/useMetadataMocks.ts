@@ -15,6 +15,7 @@ export const mockInitialMetadataState: MetadataState = {
   loading: false,
   error: null,
   currentCountry: null,
+  progress: 0,
   variables: {},
   parameters: {},
   entities: {},
@@ -37,6 +38,7 @@ export const mockLoadedMetadataState: MetadataState = {
   loading: false,
   error: null,
   currentCountry: TEST_COUNTRY_US,
+  progress: 100,
   variables: {
     income: { label: 'Income', unit: 'currency-USD' },
     age: { label: 'Age', unit: 'year' },

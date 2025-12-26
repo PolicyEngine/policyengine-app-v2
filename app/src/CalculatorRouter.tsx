@@ -20,6 +20,19 @@ import { MetadataGuard } from './routing/guards/MetadataGuard';
 import { MetadataLazyLoader } from './routing/guards/MetadataLazyLoader';
 import { RedirectToCountry } from './routing/RedirectToCountry';
 
+/**
+ * Layout wrapper that renders StandardLayout with Outlet for nested routes.
+ * This allows the app shell (header, sidebar) to remain visible while
+ * child guards like MetadataGuard show their loading states.
+ */
+function StandardLayoutOutlet() {
+  return (
+    <StandardLayout>
+      <Outlet />
+    </StandardLayout>
+  );
+}
+
 const router = createBrowserRouter(
   [
     {
@@ -30,16 +43,13 @@ const router = createBrowserRouter(
       path: '/:countryId',
       element: <CountryGuard />,
       children: [
-        // Routes that need metadata immediately (blocking guard)
+        // Routes with standard layout that need metadata (blocking)
+        // Layout is OUTSIDE the guard so app shell remains visible during loading
         {
-          element: <MetadataGuard />,
+          element: <StandardLayoutOutlet />,
           children: [
             {
-              element: (
-                <StandardLayout>
-                  <Outlet />
-                </StandardLayout>
-              ),
+              element: <MetadataGuard />,
               children: [
                 {
                   path: 'report-output/:reportId/:subpage?/:view?',
@@ -49,17 +59,41 @@ const router = createBrowserRouter(
             },
           ],
         },
+        // Pathway routes that need metadata (blocking)
+        // Pathways manage their own AppShell layouts - do NOT wrap in StandardLayoutOutlet
+        // This allows views like PolicyParameterSelectorView to use custom AppShell configurations
+        {
+          element: <MetadataGuard />,
+          children: [
+            {
+              element: <PathwayLayout />,
+              children: [
+                {
+                  path: 'reports/create',
+                  element: <ReportPathwayWrapper />,
+                },
+                {
+                  path: 'simulations/create',
+                  element: <SimulationPathwayWrapper />,
+                },
+                {
+                  path: 'households/create',
+                  element: <PopulationPathwayWrapper />,
+                },
+                {
+                  path: 'policies/create',
+                  element: <PolicyPathwayWrapper />,
+                },
+              ],
+            },
+          ],
+        },
         // Routes that benefit from metadata but don't require it (lazy loader)
         {
           element: <MetadataLazyLoader />,
           children: [
-            // Regular routes with standard layout
             {
-              element: (
-                <StandardLayout>
-                  <Outlet />
-                </StandardLayout>
-              ),
+              element: <StandardLayoutOutlet />,
               children: [
                 {
                   index: true,
@@ -88,28 +122,6 @@ const router = createBrowserRouter(
                 {
                   path: 'account',
                   element: <div>Account settings page</div>,
-                },
-              ],
-            },
-            // Pathway routes that manage their own layouts
-            {
-              element: <PathwayLayout />,
-              children: [
-                {
-                  path: 'reports/create',
-                  element: <ReportPathwayWrapper />,
-                },
-                {
-                  path: 'simulations/create',
-                  element: <SimulationPathwayWrapper />,
-                },
-                {
-                  path: 'households/create',
-                  element: <PopulationPathwayWrapper />,
-                },
-                {
-                  path: 'policies/create',
-                  element: <PolicyPathwayWrapper />,
                 },
               ],
             },

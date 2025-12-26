@@ -19,7 +19,7 @@ describe('RelativeChangeByLocalAuthority', () => {
 
     // Then
     expect(
-      screen.getByText('Relative Household Income Change by Local Authority')
+      screen.getByText('Relative household income change by local authority')
     ).toBeInTheDocument();
   });
 

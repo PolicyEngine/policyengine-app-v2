@@ -23,16 +23,6 @@ export function isPolicy(obj: BaseIngredient): obj is Policy {
 }
 
 /**
- * Type guard to check if an object is a Population
- * COMMENTED OUT - DO NOT USE YET
- */
-/*
-export function isPopulation(obj: BaseIngredient): obj is Population {
-  return 'populationData' in obj;
-}
-*/
-
-/**
  * Type guard to check if an object is a Simulation
  */
 export function isSimulation(obj: BaseIngredient): obj is Simulation {

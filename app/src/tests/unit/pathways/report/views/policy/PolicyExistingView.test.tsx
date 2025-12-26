@@ -8,14 +8,16 @@ import {
   mockOnSelectPolicy,
   mockUseUserPoliciesEmpty,
   mockUseUserPoliciesError,
+  mockUseUserPoliciesErrorNoMessage,
   mockUseUserPoliciesLoading,
   mockUseUserPoliciesWithData,
+  mockUseUserPoliciesWithMissingId,
   resetAllMocks,
 } from '@/tests/fixtures/pathways/report/views/PolicyViewMocks';
 
 vi.mock('@/hooks/useUserPolicy', () => ({
   useUserPolicies: vi.fn(),
-  isPolicyMetadataWithAssociation: vi.fn((val) => val && val.policy && val.association),
+  isPolicyWithAssociation: vi.fn((val) => val && val.policy && val.association),
 }));
 
 describe('PolicyExistingView', () => {
@@ -48,6 +50,20 @@ describe('PolicyExistingView', () => {
       // Then
       expect(screen.getByText(/error/i)).toBeInTheDocument();
       expect(screen.getByText(/failed to load policies/i)).toBeInTheDocument();
+    });
+
+    test('given error without message then displays fallback error message', () => {
+      // Given
+      vi.mocked(useUserPolicies).mockReturnValue(mockUseUserPoliciesErrorNoMessage as any);
+
+      // When
+      render(<PolicyExistingView onSelectPolicy={mockOnSelectPolicy} />);
+
+      // Then
+      expect(screen.getByText(/error/i)).toBeInTheDocument();
+      // The fallback message may be split across elements, so use a flexible matcher
+      expect(screen.getByText(/failed to load policies/i)).toBeInTheDocument();
+      expect(screen.getByText(/please refresh and try again/i)).toBeInTheDocument();
     });
   });
 
@@ -96,6 +112,19 @@ describe('PolicyExistingView', () => {
 
       // Then
       expect(screen.getByRole('button', { name: /next/i })).toBeDisabled();
+    });
+
+    test('given policy with missing ID then handles gracefully with unknown fallback', () => {
+      // Given
+      vi.mocked(useUserPolicies).mockReturnValue(mockUseUserPoliciesWithMissingId as any);
+
+      // When
+      render(<PolicyExistingView onSelectPolicy={mockOnSelectPolicy} />);
+
+      // Then - should display policy with fallback ID text
+      expect(screen.getByText(/policy without id/i)).toBeInTheDocument();
+      // The subtitle should show "Policy #unknown" when ID is missing
+      expect(screen.getByText(/policy #unknown/i)).toBeInTheDocument();
     });
   });
 

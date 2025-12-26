@@ -145,7 +145,12 @@ export class LocalStoragePolicyStore implements UserPolicyStore {
         userId: String(data.userId),
         policyId: String(data.policyId),
       }));
-    } catch {
+    } catch (error) {
+      console.error(
+        '[LocalStoragePolicyStore.getStoredPolicies] Failed to parse stored policies. ' +
+          'Data may be corrupted. Returning empty array.',
+        error
+      );
       return [];
     }
   }

@@ -110,7 +110,7 @@ describe('getHierarchicalLabels', () => {
     const result = getHierarchicalLabels(paramName, partialMetadata);
 
     // Then
-    expect(result).toEqual(['Irs']); // Only the one available label, in sentence case
+    expect(result).toEqual(['IRS']); // Only the one available label, first char already uppercase
   });
 });
 
@@ -272,7 +272,7 @@ describe('formatLabelParts', () => {
   });
 });
 
-describe('sentence case formatting', () => {
+describe('capitalize first formatting', () => {
   test('given lowercase string then capitalizes first letter only', () => {
     // Given
     const { input, expected } = SENTENCE_CASE_TESTS.LOWERCASE;
@@ -286,7 +286,7 @@ describe('sentence case formatting', () => {
     expect(result[0]).toBe(expected);
   });
 
-  test('given uppercase string then capitalizes first letter and lowercases rest', () => {
+  test('given uppercase string then preserves case (first already uppercase)', () => {
     // Given
     const { input, expected } = SENTENCE_CASE_TESTS.UPPERCASE;
 
@@ -299,7 +299,7 @@ describe('sentence case formatting', () => {
     expect(result[0]).toBe(expected);
   });
 
-  test('given mixed case string then capitalizes first letter and lowercases rest', () => {
+  test('given mixed case string then preserves case after first character', () => {
     // Given
     const { input, expected } = SENTENCE_CASE_TESTS.MIXED_CASE;
 
@@ -312,7 +312,7 @@ describe('sentence case formatting', () => {
     expect(result[0]).toBe(expected);
   });
 
-  test('given string with special characters then preserves structure but applies case rules', () => {
+  test('given string with proper nouns then preserves their capitalization', () => {
     // Given
     const { input, expected } = SENTENCE_CASE_TESTS.WITH_SPECIAL_CHARS;
 

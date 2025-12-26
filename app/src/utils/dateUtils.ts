@@ -114,34 +114,46 @@ function getFormatOptions(formatType: DateFormatType): Intl.DateTimeFormatOption
 /**
  * Formats a timestamp for display in report output pages
  * Shows relative time (today) or absolute date with time
+ * Uses country-specific locale formatting:
+ * - US: "Ran Dec 17, 2025 at 2:34 PM"
+ * - UK: "Ran 17 Dec 2025 at 14:34"
  * @param dateString - ISO date string or timestamp
- * @returns Formatted timestamp string (e.g., "Ran today at 14:23:41" or "Ran on Jan 15 at 14:23:41")
+ * @param countryId - Optional country ID for locale formatting ('uk' or 'us')
+ * @returns Formatted timestamp string
  */
-export function formatReportTimestamp(dateString?: string): string {
+export function formatReportTimestamp(dateString?: string, countryId?: string): string {
   if (!dateString) {
     return 'Ran recently';
   }
 
-  const date = new Date(dateString);
-  const now = new Date();
-  const isToday = date.toDateString() === now.toDateString();
+  try {
+    const date = new Date(dateString);
 
-  const timeString = date.toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-  });
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return 'Run date unknown';
+    }
 
-  if (isToday) {
-    return `Ran today at ${timeString}`;
+    // Determine locale based on country
+    const locale = countryId === 'uk' ? 'en-GB' : 'en-US';
+    const use24Hour = countryId === 'uk';
+
+    // Format date part: "Dec 17, 2025" (US) or "17 Dec 2025" (UK)
+    const datePart = date.toLocaleDateString(locale, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+
+    // Format time part: "2:34 PM" (US) or "14:34" (UK)
+    const timePart = date.toLocaleTimeString(locale, {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: !use24Hour,
+    });
+
+    return `Ran ${datePart} at ${timePart}`;
+  } catch {
+    return 'Run date unknown';
   }
-
-  const dateStr = date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-  });
-
-  return `Ran on ${dateStr} at ${timeString}`;
 }

@@ -1,8 +1,9 @@
 // Import auth hook here in future; for now, mocked out below
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { PolicyAdapter } from '@/adapters';
 import { fetchPolicyById } from '@/api/policy';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
-import { PolicyMetadata } from '@/types/metadata/policyMetadata';
+import { Policy } from '@/types/ingredients/Policy';
 import { ApiPolicyStore, LocalStoragePolicyStore } from '../api/policyAssociation';
 import { queryConfig } from '../libs/queryConfig';
 import { policyAssociationKeys, policyKeys } from '../libs/queryKeys';
@@ -132,25 +133,27 @@ export const useDeleteAssociation = () => {
 */
 
 // Type for the combined data structure
-export interface UserPolicyMetadataWithAssociation {
+export interface UserPolicyWithAssociation {
   association: UserPolicy;
-  policy: PolicyMetadata | undefined;
+  policy: Policy | undefined;
   isLoading: boolean;
   error: Error | null | undefined;
   isError?: boolean;
 }
 
-export function isPolicyMetadataWithAssociation(
-  obj: any
-): obj is UserPolicyMetadataWithAssociation {
+export function isPolicyWithAssociation(obj: unknown): obj is UserPolicyWithAssociation {
   return (
-    obj &&
+    obj !== null &&
     typeof obj === 'object' &&
     'association' in obj &&
     'policy' in obj &&
-    (obj.policy === undefined || typeof obj.policy === 'object') &&
-    typeof obj.isLoading === 'boolean' &&
-    ('error' in obj ? obj.error === null || obj.error instanceof Error : true)
+    ((obj as UserPolicyWithAssociation).policy === undefined ||
+      typeof (obj as UserPolicyWithAssociation).policy === 'object') &&
+    typeof (obj as UserPolicyWithAssociation).isLoading === 'boolean' &&
+    ('error' in obj
+      ? (obj as UserPolicyWithAssociation).error === null ||
+        (obj as UserPolicyWithAssociation).error instanceof Error
+      : true)
   );
 }
 
@@ -167,11 +170,25 @@ export const useUserPolicies = (userId: string) => {
   // Extract policy IDs
   const policyIds = associations?.map((a) => a.policyId) ?? [];
 
-  // Fetch all policies in parallel
+  // Fetch all policies in parallel and transform to internal Policy type
+  // This ensures cache consistency with useUserReports and useUserSimulations
   const policyQueries = useQueries({
     queries: policyIds.map((policyId) => ({
       queryKey: policyKeys.byId(policyId.toString()),
-      queryFn: () => fetchPolicyById(country, policyId.toString()),
+      queryFn: async () => {
+        try {
+          const metadata = await fetchPolicyById(country, policyId.toString());
+          return PolicyAdapter.fromMetadata(metadata);
+        } catch (error) {
+          // Add context to help debug which policy failed
+          const message =
+            error instanceof Error
+              ? `Failed to load policy ${policyId}: ${error.message}`
+              : `Failed to load policy ${policyId}`;
+          console.error(`[useUserPolicies] ${message}`, error);
+          throw new Error(message);
+        }
+      },
       enabled: !!associations, // Only run when associations are loaded
       staleTime: 5 * 60 * 1000,
     })),
@@ -183,14 +200,15 @@ export const useUserPolicies = (userId: string) => {
   const isError = !!error;
 
   // Simple index-based mapping since queries are in same order as associations
-  const policiesWithAssociations: UserPolicyMetadataWithAssociation[] | undefined =
-    associations?.map((association, index) => ({
+  const policiesWithAssociations: UserPolicyWithAssociation[] | undefined = associations?.map(
+    (association, index) => ({
       association,
       policy: policyQueries[index]?.data,
       isLoading: policyQueries[index]?.isLoading ?? false,
       error: policyQueries[index]?.error ?? null,
       isError: !!error,
-    }));
+    })
+  );
 
   return {
     data: policiesWithAssociations,

@@ -9,8 +9,8 @@ import { Text } from '@mantine/core';
 import PathwayView from '@/components/common/PathwayView';
 import { MOCK_USER_ID } from '@/constants';
 import {
-  isPolicyMetadataWithAssociation,
-  UserPolicyMetadataWithAssociation,
+  isPolicyWithAssociation,
+  UserPolicyWithAssociation,
   useUserPolicies,
 } from '@/hooks/useUserPolicy';
 import { Parameter } from '@/types/subIngredients/parameter';
@@ -29,20 +29,23 @@ export default function PolicyExistingView({
   const userId = MOCK_USER_ID.toString();
 
   const { data, isLoading, isError, error } = useUserPolicies(userId);
-  const [localPolicy, setLocalPolicy] = useState<UserPolicyMetadataWithAssociation | null>(null);
+  const [localPolicy, setLocalPolicy] = useState<UserPolicyWithAssociation | null>(null);
 
   function canProceed() {
     if (!localPolicy) {
       return false;
     }
-    if (isPolicyMetadataWithAssociation(localPolicy)) {
+    if (isPolicyWithAssociation(localPolicy)) {
       return localPolicy.policy?.id !== null && localPolicy.policy?.id !== undefined;
     }
     return false;
   }
 
-  function handlePolicySelect(association: UserPolicyMetadataWithAssociation) {
+  function handlePolicySelect(association: UserPolicyWithAssociation) {
     if (!association) {
+      console.warn(
+        '[PolicyExistingView] handlePolicySelect called with null/undefined association'
+      );
       return;
     }
 
@@ -51,48 +54,38 @@ export default function PolicyExistingView({
 
   function handleSubmit() {
     if (!localPolicy) {
+      console.warn('[PolicyExistingView] handleSubmit called with no policy selected');
       return;
     }
 
-    if (isPolicyMetadataWithAssociation(localPolicy)) {
+    if (isPolicyWithAssociation(localPolicy)) {
       handleSubmitPolicy();
+    } else {
+      console.warn(
+        '[PolicyExistingView] handleSubmit: localPolicy is not a valid PolicyWithAssociation'
+      );
     }
   }
 
   function handleSubmitPolicy() {
-    if (!localPolicy || !isPolicyMetadataWithAssociation(localPolicy)) {
+    if (!localPolicy || !isPolicyWithAssociation(localPolicy)) {
+      console.warn('[PolicyExistingView] handleSubmitPolicy called with invalid localPolicy state');
       return;
     }
 
     const policyId = localPolicy.policy?.id?.toString();
     const label = localPolicy.association?.label || '';
 
-    // Convert policy_json to Parameter[] format
-    const parameters: Parameter[] = [];
-
-    if (localPolicy.policy?.policy_json) {
-      const policyJson = localPolicy.policy.policy_json;
-
-      Object.entries(policyJson).forEach(([paramName, valueIntervals]) => {
-        if (Array.isArray(valueIntervals) && valueIntervals.length > 0) {
-          // Convert each value interval to the proper format
-          const values = valueIntervals.map((vi: any) => ({
-            startDate: vi.start || vi.startDate,
-            endDate: vi.end || vi.endDate,
-            value: vi.value,
-          }));
-
-          parameters.push({
-            name: paramName,
-            values,
-          });
-        }
-      });
-    }
+    // Policy now has parameters directly (already transformed from policy_json)
+    const parameters = localPolicy.policy?.parameters || [];
 
     // Call parent callback instead of dispatching to Redux
     if (policyId) {
       onSelectPolicy(policyId, label, parameters);
+    } else {
+      console.error(
+        '[PolicyExistingView] Cannot submit: policy ID is missing from selected policy'
+      );
     }
   }
 
@@ -112,7 +105,12 @@ export default function PolicyExistingView({
     return (
       <PathwayView
         title="Select an existing policy"
-        content={<Text c="red">Error: {(error as Error)?.message || 'Something went wrong.'}</Text>}
+        content={
+          <Text c="red">
+            Error:{' '}
+            {(error as Error)?.message || 'Failed to load policies. Please refresh and try again.'}
+          </Text>
+        }
         buttonPreset="none"
       />
     );
@@ -136,28 +134,28 @@ export default function PolicyExistingView({
 
   // Filter policies with loaded data
   const filteredPolicies = userPolicies.filter((association) =>
-    isPolicyMetadataWithAssociation(association)
+    isPolicyWithAssociation(association)
   );
 
   // Build card list items from ALL filtered policies (pagination handled by PathwayView)
   const policyCardItems = filteredPolicies.map((association) => {
+    const policyId = association.policy?.id ?? 'unknown';
     let title = '';
     let subtitle = '';
     if ('label' in association.association && association.association.label) {
       title = association.association.label;
-      subtitle = `Policy #${association.policy!.id}`;
+      subtitle = `Policy #${policyId}`;
     } else {
-      title = `Policy #${association.policy!.id}`;
+      title = `Policy #${policyId}`;
     }
 
     return {
-      id: association.association.id?.toString() || association.policy!.id?.toString(), // Use association ID for unique key
+      id: association.association.id?.toString() || policyId.toString(), // Use association ID for unique key
       title,
       subtitle,
       onClick: () => handlePolicySelect(association),
       isSelected:
-        isPolicyMetadataWithAssociation(localPolicy) &&
-        localPolicy.policy?.id === association.policy!.id,
+        isPolicyWithAssociation(localPolicy) && localPolicy.policy?.id === association.policy?.id,
     };
   });
 

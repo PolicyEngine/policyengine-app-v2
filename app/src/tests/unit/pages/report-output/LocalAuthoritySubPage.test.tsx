@@ -18,8 +18,8 @@ describe('LocalAuthoritySubPage', () => {
     render(<LocalAuthoritySubPage output={output} />);
 
     // Then
-    expect(screen.getByText('Average Change')).toBeInTheDocument();
-    expect(screen.getByText('Relative Change')).toBeInTheDocument();
+    expect(screen.getByText('Average change')).toBeInTheDocument();
+    expect(screen.getByText('Relative change')).toBeInTheDocument();
   });
 
   test('given UK report with local authority data then renders average change by default', () => {
@@ -31,7 +31,7 @@ describe('LocalAuthoritySubPage', () => {
 
     // Then
     expect(
-      screen.getByText('Average Household Income Change by Local Authority')
+      screen.getByText('Average household income change by local authority')
     ).toBeInTheDocument();
   });
 

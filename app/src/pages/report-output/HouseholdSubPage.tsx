@@ -61,7 +61,7 @@ export default function HouseholdSubPage({
 
   return (
     <div>
-      <h2>Population Information</h2>
+      <h2>Population information</h2>
 
       {sortedEntityTypes.map((entityType) => {
         // Find the group entities for this type in both baseline and reform

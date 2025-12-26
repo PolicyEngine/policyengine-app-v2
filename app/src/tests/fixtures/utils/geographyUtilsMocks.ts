@@ -79,6 +79,7 @@ export const mockMetadataWithRegions = (): MetadataState => ({
   parameterTree: null,
   loading: false,
   error: null,
+  progress: 100,
 });
 
 export const mockMetadataEmptyRegions = (): MetadataState => ({
@@ -97,6 +98,7 @@ export const mockMetadataEmptyRegions = (): MetadataState => ({
   modelledPolicies: { core: {}, filtered: {} },
   version: '1.0.0',
   parameterTree: null,
+  progress: 100,
   loading: false,
   error: null,
 });

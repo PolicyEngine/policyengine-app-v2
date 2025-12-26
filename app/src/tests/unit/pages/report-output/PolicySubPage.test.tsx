@@ -93,9 +93,9 @@ describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
       // Should display parameter label
       expect(screen.getByText(/maximum eitc for 0 children/i)).toBeInTheDocument();
 
-      // Should display values
-      expect(screen.getByText('$1,000')).toBeInTheDocument();
-      expect(screen.getByText('$1,500')).toBeInTheDocument();
+      // Should display values (with 1 decimal place for consistency)
+      expect(screen.getByText('$1,000.0')).toBeInTheDocument();
+      expect(screen.getByText('$1,500.0')).toBeInTheDocument();
     });
   });
 
@@ -110,9 +110,9 @@ describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
       const reformHeaders = screen.getAllByRole('columnheader', { name: /reform/i });
       expect(reformHeaders.length).toBeGreaterThanOrEqual(1);
 
-      // Should have two different values
-      expect(screen.getByText('$1,000')).toBeInTheDocument(); // Baseline
-      expect(screen.getByText('$1,500')).toBeInTheDocument(); // Reform
+      // Should have two different values (with 1 decimal place)
+      expect(screen.getByText('$1,000.0')).toBeInTheDocument(); // Baseline
+      expect(screen.getByText('$1,500.0')).toBeInTheDocument(); // Reform
     });
 
     test('given baseline equals reform then displays single merged column', () => {
@@ -121,7 +121,7 @@ describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
 
       // When policies are equal, values should only appear once per row in the merged column
       // Note: value may also appear in current law column if present
-      const values = screen.getAllByText('$1,000');
+      const values = screen.getAllByText('$1,000.0');
       // Should have at most 2 instances: current law + merged column
       expect(values.length).toBeLessThanOrEqual(2);
     });
@@ -132,15 +132,15 @@ describe('PolicySubPage - Design 4 Table Format (No Current Law)', () => {
       const props = createPolicySubPageProps.baselineOnly();
       renderWithStore(<PolicySubPage {...props} />);
 
-      expect(screen.getByText('$1,000')).toBeInTheDocument();
+      expect(screen.getByText('$1,000.0')).toBeInTheDocument();
     });
 
     test('given percentage parameter then formats with percent sign', () => {
       const props = createPolicySubPageProps.multipleParameters();
       renderWithStore(<PolicySubPage {...props} />);
 
-      // 0.15 * 100 = 15 (integer), so no decimal places
-      expect(screen.getByText('15%')).toBeInTheDocument();
+      // 0.15 * 100 = 15.0 (always 1 decimal place for consistency)
+      expect(screen.getByText('15.0%')).toBeInTheDocument();
     });
 
     test('given missing value then displays em dash', () => {

@@ -196,6 +196,7 @@ export const MOCK_METADATA: MetadataState = {
   currentCountry: 'uk',
   loading: false,
   error: null,
+  progress: 100,
   variables: {},
   parameters: {},
   entities: {},

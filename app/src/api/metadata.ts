@@ -1,6 +1,11 @@
 import { BASE_URL } from '@/constants';
 import { MetadataApiPayload } from '@/types/metadata';
 
+/**
+ * Fetch metadata for a country
+ *
+ * @param countryId - Country code (us, uk)
+ */
 export async function fetchMetadata(countryId: string): Promise<MetadataApiPayload> {
   const url = `${BASE_URL}/${countryId}/metadata`;
 
@@ -16,7 +21,5 @@ export async function fetchMetadata(countryId: string): Promise<MetadataApiPaylo
     throw new Error(`Failed to fetch metadata for ${countryId}`);
   }
 
-  const json = await res.json();
-
-  return json;
+  return res.json();
 }

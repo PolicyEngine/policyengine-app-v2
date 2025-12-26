@@ -166,10 +166,11 @@ export const getFieldLabel = (fieldName: string) => {
 export function transformMetadataPayload(
   payload: MetadataApiPayload,
   country: string
-): Omit<MetadataState, 'loading' | 'error' | 'lastFetched'> {
+): Omit<MetadataState, 'loading' | 'error'> {
   const data = payload.result;
   return {
     currentCountry: country,
+    progress: 100, // Transformation happens after successful load
     variables: data.variables ?? {},
     parameters: data.parameters ?? {},
     entities: data.entities ?? {},

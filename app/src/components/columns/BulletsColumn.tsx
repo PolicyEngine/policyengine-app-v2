@@ -7,17 +7,13 @@ interface BulletsColumnProps {
   value: BulletsValue;
 }
 
-// TODO: This is probably better described as "pills"
 export function BulletsColumn({ value }: BulletsColumnProps) {
   return (
     <Stack gap={spacing.xs}>
       {value.items.map((item, idx) => (
-        <Group key={idx} gap={spacing.xs}>
-          <Text size="xs" c={colors.text.secondary}>
-            •
-          </Text>
-          <Text size="xs" c={colors.text.secondary}>
-            {item.text}
+        <Group key={idx} gap={spacing.xs} wrap="nowrap">
+          <Text size="sm" c={colors.text.primary}>
+            • {item.text}
           </Text>
           {item.badge && (
             <Badge size="xs" variant="light" color="gray" radius={spacing.radius.sm}>

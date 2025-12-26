@@ -80,34 +80,34 @@ export const MOCK_PARAMETER_METADATA: ParameterMetadataCollection = {
 
 /**
  * Expected hierarchical labels after processing
- * Note: Sentence case is applied (first letter capitalized, rest lowercase)
+ * Note: Only the first character is capitalized; rest of the string is preserved as-is
  * Note: Paths like 'gov.irs.credits.eitc.max[0].amount' split to parts that skip intermediate 'max' level
  */
 export const EXPECTED_HIERARCHICAL_LABELS = {
   SINGLE_LEVEL: [],
-  TWO_LEVELS: ['Internal revenue service (irs)'],
-  THREE_LEVELS: ['Internal revenue service (irs)', 'Credits'],
-  FOUR_LEVELS: ['Internal revenue service (irs)', 'Credits', 'Earned income tax credit'],
+  TWO_LEVELS: ['Internal Revenue Service (IRS)'],
+  THREE_LEVELS: ['Internal Revenue Service (IRS)', 'Credits'],
+  FOUR_LEVELS: ['Internal Revenue Service (IRS)', 'Credits', 'Earned Income Tax Credit'],
   FIVE_LEVELS: [
-    'Internal revenue service (irs)',
+    'Internal Revenue Service (IRS)',
     'Credits',
-    'Earned income tax credit',
-    'Eitc maximum amount by number of children',
+    'Earned Income Tax Credit',
+    'EITC maximum amount by number of children',
   ],
   // For SIX_LEVELS: path splits to [...'eitc', 'max[0]', 'amount'] so 'max' level is skipped
   SIX_LEVELS: [
-    'Internal revenue service (irs)',
+    'Internal Revenue Service (IRS)',
     'Credits',
-    'Earned income tax credit',
+    'Earned Income Tax Credit',
     'Bracket 1',
     'Amount',
   ],
   // For WITH_BRACKETS: path ends at rates[1] which has no metadata, so rates level is last
-  WITH_BRACKETS: ['Internal revenue service (irs)', 'Income', 'Bracket'],
+  WITH_BRACKETS: ['Internal Revenue Service (IRS)', 'Income', 'Bracket'],
 } as const;
 
 /**
- * Expected compact label results (first + last strategy)
+ * Expected compact label results (no truncation - returns all items)
  */
 export const EXPECTED_COMPACT_LABELS = {
   ZERO_ITEMS: {
@@ -127,16 +127,16 @@ export const EXPECTED_COMPACT_LABELS = {
     hasMore: false,
   },
   FOUR_ITEMS: {
-    displayParts: ['First', '...', 'Third', 'Fourth'] as string[],
-    hasMore: true,
+    displayParts: ['First', 'Second', 'Third', 'Fourth'] as string[],
+    hasMore: false,
   },
   FIVE_ITEMS: {
-    displayParts: ['First', '...', 'Fourth', 'Fifth'] as string[],
-    hasMore: true,
+    displayParts: ['First', 'Second', 'Third', 'Fourth', 'Fifth'] as string[],
+    hasMore: false,
   },
   SIX_ITEMS: {
-    displayParts: ['First', '...', 'Fifth', 'Sixth'] as string[],
-    hasMore: true,
+    displayParts: ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth'] as string[],
+    hasMore: false,
   },
 };
 
@@ -161,13 +161,14 @@ export const EXPECTED_FORMATTED_STRINGS = {
   ONE_ITEM: 'First',
   TWO_ITEMS: 'First → Second',
   THREE_ITEMS: 'First → Second → Third',
-  FOUR_ITEMS_COMPACT: 'First → ... → Third → Fourth',
-  FIVE_ITEMS_COMPACT: 'First → ... → Fourth → Fifth',
-  SIX_ITEMS_COMPACT: 'First → ... → Fifth → Sixth',
+  FOUR_ITEMS_COMPACT: 'First → Second → Third → Fourth',
+  FIVE_ITEMS_COMPACT: 'First → Second → Third → Fourth → Fifth',
+  SIX_ITEMS_COMPACT: 'First → Second → Third → Fourth → Fifth → Sixth',
 } as const;
 
 /**
- * Test strings for sentence case conversion
+ * Test strings for capitalize first behavior
+ * Note: Only the first character is capitalized; rest of the string is preserved as-is
  */
 export const SENTENCE_CASE_TESTS = {
   LOWERCASE: {
@@ -176,15 +177,15 @@ export const SENTENCE_CASE_TESTS = {
   },
   UPPERCASE: {
     input: 'INTERNAL REVENUE SERVICE',
-    expected: 'Internal revenue service',
+    expected: 'INTERNAL REVENUE SERVICE', // Only first char touched, already uppercase
   },
   MIXED_CASE: {
     input: 'InTeRnAl ReVeNuE SeRvIcE',
-    expected: 'Internal revenue service',
+    expected: 'InTeRnAl ReVeNuE SeRvIcE', // Rest preserved as-is
   },
   WITH_SPECIAL_CHARS: {
     input: 'internal revenue service (IRS)',
-    expected: 'Internal revenue service (irs)',
+    expected: 'Internal revenue service (IRS)', // Proper noun IRS preserved
   },
   SINGLE_CHAR: {
     input: 'a',

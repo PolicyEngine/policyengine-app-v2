@@ -43,13 +43,13 @@ export function RelativeChangeByLocalAuthority({ output }: RelativeChangeByLocal
   return (
     <Stack gap="md">
       <div>
-        <Title order={3}>Relative Household Income Change by Local Authority</Title>
+        <Title order={3}>Relative household income change by local authority</Title>
       </div>
 
       <HexagonalMap
         data={hexMapData}
         config={{
-          hexSize: 18,
+          hexSize: 11,
           colorScale: {
             colors: DIVERGING_GRAY_TEAL.colors,
             tickFormat: '.1%',

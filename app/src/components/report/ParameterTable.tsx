@@ -149,7 +149,7 @@ export default function ParameterTable({
                 </TableCell>
                 {needsCurrentLawColumn && (
                   <TableCell align="right">
-                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.secondary}>
+                    <Text size="sm" fw={typography.fontWeight.medium} c={colors.text.primary}>
                       {renderCurrentLawValue(paramName)}
                     </Text>
                   </TableCell>

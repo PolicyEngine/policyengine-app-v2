@@ -8,15 +8,15 @@ export function getHouseholdOutputTree(): TreeNode[] {
   return [
     {
       name: 'net-income',
-      label: 'Net Income',
+      label: 'Net income',
     },
     {
       name: 'earnings-variation',
-      label: 'Varying Your Earnings',
+      label: 'Varying your earnings',
     },
     {
       name: 'marginal-tax-rates',
-      label: 'Marginal Tax Rates',
+      label: 'Marginal tax rates',
     },
   ];
 }

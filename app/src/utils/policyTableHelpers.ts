@@ -70,35 +70,31 @@ export function getParameterValueFromPolicy(
 
 /**
  * Format a parameter value with appropriate unit formatting
+ * Always uses 1 decimal place for consistency across all columns
  */
 export function formatParameterValue(value: any, unit?: string): string {
   if (typeof value === 'number') {
     const DECIMAL_PRECISION = 1;
-    const INTEGER_PRECISION = 0;
-    const precision = Number.isInteger(value) ? INTEGER_PRECISION : DECIMAL_PRECISION;
 
     if (unit === '/1') {
       const percentValue = value * 100;
-      const percentPrecision = Number.isInteger(percentValue)
-        ? INTEGER_PRECISION
-        : DECIMAL_PRECISION;
-      return `${percentValue.toFixed(percentPrecision)}%`;
+      return `${percentValue.toFixed(DECIMAL_PRECISION)}%`;
     }
     if (unit === 'currency-USD') {
       return `$${value.toLocaleString('en-US', {
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision,
+        minimumFractionDigits: DECIMAL_PRECISION,
+        maximumFractionDigits: DECIMAL_PRECISION,
       })}`;
     }
     if (unit === 'currency-GBP') {
       return `£${value.toLocaleString('en-GB', {
-        minimumFractionDigits: precision,
-        maximumFractionDigits: precision,
+        minimumFractionDigits: DECIMAL_PRECISION,
+        maximumFractionDigits: DECIMAL_PRECISION,
       })}`;
     }
     return value.toLocaleString('en-US', {
-      minimumFractionDigits: precision,
-      maximumFractionDigits: precision,
+      minimumFractionDigits: DECIMAL_PRECISION,
+      maximumFractionDigits: DECIMAL_PRECISION,
     });
   }
   return String(value);

@@ -5,7 +5,9 @@ import {
   createClosedModalProps,
   createDefaultModalProps,
   createLoadingModalProps,
+  createModalPropsWithSubmissionError,
   INGREDIENT_TYPES,
+  SUBMISSION_ERRORS,
   TEST_LABELS,
 } from '@/tests/fixtures/components/common/RenameIngredientModalFixtures';
 
@@ -307,6 +309,72 @@ describe('RenameIngredientModal', () => {
       // When - close modal (errors should clear on reopen)
       rerender(<RenameIngredientModal {...props} opened={false} />);
       rerender(<RenameIngredientModal {...props} opened />);
+
+      // Then
+      const input = screen.getByRole('textbox', { name: /report name/i });
+      expect(input).toHaveAttribute('aria-invalid', 'false');
+    });
+  });
+
+  describe('submission error handling', () => {
+    test('given submission error then displays error message on input', () => {
+      // Given & When
+      render(<RenameIngredientModal {...createModalPropsWithSubmissionError()} />);
+
+      // Then
+      const input = screen.getByRole('textbox', { name: /report name/i });
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+      expect(input).toHaveAccessibleDescription(SUBMISSION_ERRORS.API_FAILURE);
+    });
+
+    test('given submission error then user can still type to clear validation error only', async () => {
+      // Given
+      const user = userEvent.setup();
+      const props = createModalPropsWithSubmissionError();
+      render(<RenameIngredientModal {...props} />);
+      const input = screen.getByRole('textbox', { name: /report name/i });
+
+      // When - user types (which should NOT clear submission error, only validation errors)
+      await user.clear(input);
+      await user.type(input, TEST_LABELS.NEW);
+
+      // Then - submission error should still be displayed (parent controls it)
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+    });
+
+    test('given submission error cleared by parent then error no longer displays', () => {
+      // Given
+      const props = createModalPropsWithSubmissionError();
+      const { rerender } = render(<RenameIngredientModal {...props} />);
+      const input = screen.getByRole('textbox', { name: /report name/i });
+      expect(input).toHaveAttribute('aria-invalid', 'true');
+
+      // When - parent clears the submission error
+      rerender(<RenameIngredientModal {...props} submissionError={null} />);
+
+      // Then
+      expect(input).toHaveAttribute('aria-invalid', 'false');
+    });
+
+    test('given validation error takes precedence when both exist', async () => {
+      // Given
+      const user = userEvent.setup();
+      const props = createModalPropsWithSubmissionError();
+      render(<RenameIngredientModal {...props} />);
+      const input = screen.getByRole('textbox', { name: /report name/i });
+
+      // When - trigger validation error (too long label)
+      await user.clear(input);
+      await user.type(input, TEST_LABELS.TOO_LONG);
+      await user.click(screen.getByRole('button', { name: /^rename$/i }));
+
+      // Then - validation error should be shown (validation takes precedence)
+      expect(input).toHaveAccessibleDescription(/must be 100 characters or less/i);
+    });
+
+    test('given no submission error and no validation error then input is valid', () => {
+      // Given & When
+      render(<RenameIngredientModal {...createDefaultModalProps()} />);
 
       // Then
       const input = screen.getByRole('textbox', { name: /report name/i });

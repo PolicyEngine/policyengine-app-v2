@@ -8,6 +8,7 @@ const initialState: MetadataState = {
   loading: false,
   error: null,
   currentCountry: null,
+  progress: 0,
 
   variables: {},
   parameters: {},
@@ -22,20 +23,17 @@ const initialState: MetadataState = {
 };
 
 // Async thunk for fetching metadata
-export const fetchMetadataThunk = createAsyncThunk(
-  'metadata/fetch',
-  async (country: string, { rejectWithValue }) => {
-    try {
-      // Use the API layer function
-      const data = await fetchMetadataApi(country);
-
-      // Return both API data and the country that was fetched
-      return { data, country };
-    } catch (error) {
-      return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
-    }
+export const fetchMetadataThunk = createAsyncThunk<
+  { data: Awaited<ReturnType<typeof fetchMetadataApi>>; country: string },
+  string
+>('metadata/fetch', async (country: string, { rejectWithValue }) => {
+  try {
+    const data = await fetchMetadataApi(country);
+    return { data, country };
+  } catch (error) {
+    return rejectWithValue(error instanceof Error ? error.message : 'Unknown error');
   }
-);
+});
 
 const metadataSlice = createSlice({
   name: 'metadata',

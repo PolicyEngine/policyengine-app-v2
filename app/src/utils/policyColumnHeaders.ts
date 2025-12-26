@@ -18,14 +18,24 @@ export function getPolicyLabel(policy: Policy | undefined, userPolicies?: UserPo
  * Examples:
  * - Single policy: "Policy Name (BASELINE)"
  * - Merged column: "Policy Name (BASELINE / REFORM)"
+ * - Current law policy: "Policy Name (CURRENT LAW / BASELINE)"
  */
-export function buildColumnHeaderText(column: PolicyColumn, userPolicies?: UserPolicy[]): string {
+export function buildColumnHeaderText(
+  column: PolicyColumn,
+  userPolicies?: UserPolicy[],
+  currentLawId?: number
+): string {
   const policyNames = column.policies.map((p) => getPolicyLabel(p, userPolicies));
   const roleLabels = column.label.toUpperCase().split(' / ');
 
-  // If single policy, show "Name (ROLE)"
-  // If merged, show "Name (ROLE1 / ROLE2)"
-  return policyNames.length === 1
-    ? `${policyNames[0].toUpperCase()} (${roleLabels[0]})`
-    : `${policyNames[0].toUpperCase()} (${roleLabels.join(' / ')})`;
+  // Check if the first policy is current law
+  const isCurrentLaw =
+    currentLawId !== undefined && column.policies[0]?.id === String(currentLawId);
+
+  // Build role text - prepend "CURRENT LAW / " to role if this policy is current law
+  const roleText = isCurrentLaw
+    ? `CURRENT LAW / ${roleLabels.join(' / ')}`
+    : roleLabels.join(' / ');
+
+  return `${policyNames[0].toUpperCase()} (${roleText})`;
 }

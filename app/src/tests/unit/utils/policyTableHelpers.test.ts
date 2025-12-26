@@ -4,36 +4,36 @@ import { formatParameterValue } from '@/utils/policyTableHelpers';
 describe('policyTableHelpers', () => {
   describe('formatParameterValue', () => {
     describe('Integer formatting', () => {
-      test('given integer with currency-USD unit then formats without decimals', () => {
+      test('given integer with currency-USD unit then formats with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(1000, 'currency-USD');
 
         // Then
-        expect(result).toBe('$1,000');
+        expect(result).toBe('$1,000.0');
       });
 
-      test('given integer with currency-GBP unit then formats without decimals', () => {
+      test('given integer with currency-GBP unit then formats with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(2500, 'currency-GBP');
 
         // Then
-        expect(result).toBe('£2,500');
+        expect(result).toBe('£2,500.0');
       });
 
-      test('given integer with /1 unit then formats as percentage without decimals', () => {
+      test('given integer with /1 unit then formats as percentage with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(0.15, '/1');
 
         // Then
-        expect(result).toBe('15%');
+        expect(result).toBe('15.0%');
       });
 
-      test('given integer with no unit then formats with commas', () => {
+      test('given integer with no unit then formats with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(5000);
 
         // Then
-        expect(result).toBe('5,000');
+        expect(result).toBe('5,000.0');
       });
     });
 
@@ -72,15 +72,15 @@ describe('policyTableHelpers', () => {
     });
 
     describe('Percentage edge cases', () => {
-      test('given decimal that becomes integer when multiplied by 100 then formats without decimals', () => {
+      test('given decimal that becomes integer when multiplied by 100 then formats with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(0.2, '/1'); // 0.2 * 100 = 20
 
         // Then
-        expect(result).toBe('20%');
+        expect(result).toBe('20.0%');
       });
 
-      test('given decimal that stays decimal when multiplied by 100 then formats with decimals', () => {
+      test('given decimal that stays decimal when multiplied by 100 then formats with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(0.125, '/1'); // 0.125 * 100 = 12.5
 
@@ -88,20 +88,20 @@ describe('policyTableHelpers', () => {
         expect(result).toBe('12.5%');
       });
 
-      test('given zero then formats as 0%', () => {
+      test('given zero then formats as 0.0%', () => {
         // Given / When
         const result = formatParameterValue(0, '/1');
 
         // Then
-        expect(result).toBe('0%');
+        expect(result).toBe('0.0%');
       });
 
-      test('given one then formats as 100%', () => {
+      test('given one then formats as 100.0%', () => {
         // Given / When
         const result = formatParameterValue(1, '/1');
 
         // Then
-        expect(result).toBe('100%');
+        expect(result).toBe('100.0%');
       });
     });
 
@@ -140,12 +140,12 @@ describe('policyTableHelpers', () => {
     });
 
     describe('Large numbers', () => {
-      test('given large integer then formats with commas', () => {
+      test('given large integer then formats with commas and one decimal place', () => {
         // Given / When
         const result = formatParameterValue(1000000, 'currency-USD');
 
         // Then
-        expect(result).toBe('$1,000,000');
+        expect(result).toBe('$1,000,000.0');
       });
 
       test('given large decimal then formats with commas and one decimal place', () => {
@@ -158,12 +158,12 @@ describe('policyTableHelpers', () => {
     });
 
     describe('Negative numbers', () => {
-      test('given negative integer with currency then formats correctly', () => {
+      test('given negative integer with currency then formats with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(-1000, 'currency-USD');
 
         // Then
-        expect(result).toBe('$-1,000');
+        expect(result).toBe('$-1,000.0');
       });
 
       test('given negative decimal with currency then formats correctly', () => {
@@ -174,38 +174,38 @@ describe('policyTableHelpers', () => {
         expect(result).toBe('$-1,234.5');
       });
 
-      test('given negative percentage then formats correctly', () => {
+      test('given negative percentage then formats with one decimal place', () => {
         // Given / When
         const result = formatParameterValue(-0.1, '/1');
 
         // Then
-        expect(result).toBe('-10%');
+        expect(result).toBe('-10.0%');
       });
     });
 
     describe('Zero values', () => {
-      test('given zero with currency-USD then formats as $0', () => {
+      test('given zero with currency-USD then formats as $0.0', () => {
         // Given / When
         const result = formatParameterValue(0, 'currency-USD');
 
         // Then
-        expect(result).toBe('$0');
+        expect(result).toBe('$0.0');
       });
 
-      test('given zero with currency-GBP then formats as £0', () => {
+      test('given zero with currency-GBP then formats as £0.0', () => {
         // Given / When
         const result = formatParameterValue(0, 'currency-GBP');
 
         // Then
-        expect(result).toBe('£0');
+        expect(result).toBe('£0.0');
       });
 
-      test('given zero with no unit then formats as 0', () => {
+      test('given zero with no unit then formats as 0.0', () => {
         // Given / When
         const result = formatParameterValue(0);
 
         // Then
-        expect(result).toBe('0');
+        expect(result).toBe('0.0');
       });
     });
   });

@@ -18,7 +18,7 @@ describe('AverageChangeByConstituency', () => {
     render(<AverageChangeByConstituency output={output} />);
 
     // Then
-    expect(screen.getByText('Average Household Income Change by Constituency')).toBeInTheDocument();
+    expect(screen.getByText('Average household income change by constituency')).toBeInTheDocument();
   });
 
   test('given no constituency data then shows no data message', () => {

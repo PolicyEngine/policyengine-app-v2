@@ -8,7 +8,7 @@ import IngredientReadView from '@/components/IngredientReadView';
 import { MOCK_USER_ID } from '@/constants';
 import { useCurrentCountry } from '@/hooks/useCurrentCountry';
 import { useUpdatePolicyAssociation, useUserPolicies } from '@/hooks/useUserPolicy';
-import { countParameterChanges } from '@/utils/countParameterChanges';
+import { countPolicyModifications } from '@/utils/countParameterChanges';
 import { formatDate } from '@/utils/dateUtils';
 
 export default function PoliciesPage() {
@@ -23,6 +23,7 @@ export default function PoliciesPage() {
   // Rename modal state
   const [renamingPolicyId, setRenamingPolicyId] = useState<string | null>(null);
   const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
+  const [renameError, setRenameError] = useState<string | null>(null);
 
   // Rename mutation hook
   const updateAssociation = useUpdatePolicyAssociation();
@@ -41,12 +42,14 @@ export default function PoliciesPage() {
 
   const handleOpenRename = (userPolicyId: string) => {
     setRenamingPolicyId(userPolicyId);
+    setRenameError(null); // Clear any previous error
     openRename();
   };
 
   const handleCloseRename = () => {
     closeRename();
     setRenamingPolicyId(null);
+    setRenameError(null); // Clear error on close
   };
 
   const handleRename = async (newLabel: string) => {
@@ -62,6 +65,7 @@ export default function PoliciesPage() {
       handleCloseRename();
     } catch (error) {
       console.error('[PoliciesPage] Failed to rename policy:', error);
+      setRenameError('Failed to rename policy. Please try again.');
     }
   };
 
@@ -102,25 +106,29 @@ export default function PoliciesPage() {
 
   // Transform the data to match the new structure
   const transformedData: IngredientRecord[] =
-    data?.map((item) => ({
-      id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
-      policyName: {
-        text: item.association.label || `Policy #${item.association.policyId}`,
-      } as TextValue,
-      dateCreated: {
-        text: item.association.createdAt
-          ? formatDate(
-              item.association.createdAt,
-              'short-month-day-year',
-              item.association.countryId,
-              true
-            )
-          : '',
-      } as TextValue,
-      provisions: {
-        text: `${countParameterChanges(item.policy)} parameter change${countParameterChanges(item.policy) !== 1 ? 's' : ''}`,
-      } as TextValue,
-    })) || [];
+    data?.map((item) => {
+      const paramCount = countPolicyModifications(item.policy);
+
+      return {
+        id: item.association.id?.toString() || item.association.policyId.toString(), // Use user association ID, not base policy ID
+        policyName: {
+          text: item.association.label || `Policy #${item.association.policyId}`,
+        } as TextValue,
+        dateCreated: {
+          text: item.association.createdAt
+            ? formatDate(
+                item.association.createdAt,
+                'short-month-day-year',
+                item.association.countryId,
+                true
+              )
+            : '',
+        } as TextValue,
+        provisions: {
+          text: `${paramCount} parameter change${paramCount !== 1 ? 's' : ''}`,
+        } as TextValue,
+      };
+    }) || [];
 
   return (
     <>
@@ -150,6 +158,7 @@ export default function PoliciesPage() {
         onRename={handleRename}
         isLoading={updateAssociation.isPending}
         ingredientType="policy"
+        submissionError={renameError}
       />
     </>
   );

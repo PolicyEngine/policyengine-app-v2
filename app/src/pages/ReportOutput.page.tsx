@@ -97,8 +97,8 @@ export default function ReportOutputPage() {
     navigate(`/${countryId}/report-output/${userReportId}/${tabValue}`);
   };
 
-  // Format timestamp from userReport createdAt
-  const timestamp = formatReportTimestamp(userReport?.createdAt);
+  // Format the report creation timestamp using the current country's locale
+  const timestamp = formatReportTimestamp(userReport?.createdAt, countryId);
 
   // Add modal state for rename
   const [renameOpened, { open: openRename, close: closeRename }] = useDisclosure(false);
@@ -283,5 +283,3 @@ export function isUSSocietyWideOutput(output: SocietyWideOutput): boolean {
 export function isUKSocietyWideOutput(output: SocietyWideOutput): boolean {
   return 'constituency_impact' in output && output.constituency_impact !== null;
 }
-
-// Duplicate getTabsForOutputType removed - using the one defined above at line 304

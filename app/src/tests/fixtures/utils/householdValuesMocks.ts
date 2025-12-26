@@ -74,6 +74,7 @@ export const MOCK_METADATA: MetadataState = {
   version: '1.0.0',
   loading: false,
   error: null,
+  progress: 100,
   parameterTree: null,
 };
 

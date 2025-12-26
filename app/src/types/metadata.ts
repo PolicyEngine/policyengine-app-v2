@@ -59,6 +59,8 @@ export interface MetadataState {
   currentCountry: string | null;
   loading: boolean;
   error: string | null;
+  /** Download progress percentage (0-100) for metadata fetch */
+  progress: number;
 
   variables: Record<string, any>;
   parameters: Record<string, any>;
