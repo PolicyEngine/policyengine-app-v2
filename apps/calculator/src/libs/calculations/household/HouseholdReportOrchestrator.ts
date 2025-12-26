@@ -33,7 +33,7 @@ export class HouseholdReportOrchestrator {
   private simulationResults: Map<string, Map<string, HouseholdData>>; // reportId -> (simId -> result)
   private progressCoordinators: Map<
     string,
-    { coordinator: HouseholdProgressCoordinator; timer: NodeJS.Timeout }
+    { coordinator: HouseholdProgressCoordinator; timer: ReturnType<typeof setInterval> }
   >; // reportId -> coordinator
 
   private constructor(queryClient: QueryClient) {

@@ -218,7 +218,7 @@ export class HouseholdProgressCoordinator {
    * Start the progress update timer
    * Returns the timer so it can be cleaned up later
    */
-  startProgressTimer(): NodeJS.Timeout {
+  startProgressTimer(): ReturnType<typeof setInterval> {
     return setInterval(() => {
       this.updateProgress();
     }, 500); // Update every 500ms for smooth progress bar
@@ -227,7 +227,7 @@ export class HouseholdProgressCoordinator {
   /**
    * Stop the timer and cleanup
    */
-  cleanup(timer: NodeJS.Timeout): void {
+  cleanup(timer: ReturnType<typeof setInterval>): void {
     clearInterval(timer);
   }
 }
