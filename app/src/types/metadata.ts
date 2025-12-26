@@ -40,6 +40,19 @@ export interface V2DatasetMetadata {
 }
 
 /**
+ * V2 API parameter value - represents a single value entry for a parameter
+ * Fetched on-demand when parameter values are needed (e.g., in policy creator)
+ */
+export interface V2ParameterValueMetadata {
+  id: string;
+  parameter_id: string;
+  policy_id: string | null;
+  start_date: string; // ISO date string (YYYY-MM-DD)
+  value: number | string | boolean;
+  created_at: string;
+}
+
+/**
  * Region entry from API metadata
  * All regions have: name, label, type
  * Congressional districts also have: state_abbreviation, state_name

@@ -2,9 +2,11 @@ import {
   V2VariableMetadata,
   V2ParameterMetadata,
   V2DatasetMetadata,
+  V2ParameterValueMetadata,
   VariableMetadata,
   ParameterMetadata,
 } from "@/types/metadata";
+import { ValuesList } from "@/types/subIngredients/valueInterval";
 
 /**
  * Dataset type used in the frontend (simplified from V2DatasetMetadata)
@@ -105,5 +107,19 @@ export class MetadataAdapter {
    */
   static datasetsFromV2(datasets: V2DatasetMetadata[]): DatasetEntry[] {
     return datasets.map((d, i) => MetadataAdapter.datasetFromV2(d, i === 0));
+  }
+
+  /**
+   * Convert V2 parameter values array to ValuesList format
+   * ValuesList is a Record<startDate, value> used by the frontend
+   * @param values Array of V2 parameter value records
+   * @returns ValuesList format (e.g., { "2023-01-01": 100, "2024-01-01": 150 })
+   */
+  static parameterValuesFromV2(values: V2ParameterValueMetadata[]): ValuesList {
+    const valuesList: ValuesList = {};
+    for (const v of values) {
+      valuesList[v.start_date] = v.value;
+    }
+    return valuesList;
   }
 }

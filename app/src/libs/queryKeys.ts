@@ -46,7 +46,6 @@ export const reportAssociationKeys = {
     [...reportAssociationKeys.all, 'user_report_id', userReportId] as const,
 };
 
-// Keep your existing keys unchanged
 export const policyKeys = {
   all: ['policies'] as const,
   byId: (policyId: string) => [...policyKeys.all, 'policy_id', policyId] as const,
@@ -103,4 +102,11 @@ export const householdVariationKeys = {
       'country',
       countryId,
     ] as const,
+};
+
+export const parameterValueKeys = {
+  all: ['parameter-values'] as const,
+  /** Query key for values of a parameter under a specific policy */
+  byPolicyAndParameter: (policyId: string, parameterId: string) =>
+    [...parameterValueKeys.all, 'policy', policyId, 'parameter', parameterId] as const,
 };
